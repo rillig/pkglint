@@ -516,8 +516,9 @@ func (s *Scope) Define(varname string, mkline MkLine) {
 		s.lastDef[name] = mkline
 
 		// In most cases the defining lines are indeed variable assignments.
-		// Exceptions are comments that only document the variable but still mark
-		// it as defined so that it doesn't produce the "used but not defined" warning.
+		// Exceptions are comments from documentation sections, which still mark
+		// it as defined so that it doesn't produce the "used but not defined" warning;
+		// see MkLines.collectDocumentedVariables.
 		if mkline.IsVarassign() || mkline.IsCommentedVarassign() {
 
 			switch mkline.Op() {
@@ -611,6 +612,11 @@ func (s *Scope) UsedAtLoadTime(varname string) bool {
 // FirstDefinition returns the line in which the variable has been defined first.
 //
 // Having multiple definitions is typical in the branches of "if" statements.
+//
+// Another typical case involves two files: the included file defines a default
+// value, and the including file later overrides that value. Or the other way
+// round: the including file sets a value first, and the included file then
+// assigns a default value using ?=.
 func (s *Scope) FirstDefinition(varname string) MkLine {
 	mkline := s.firstDef[varname]
 	if mkline != nil && mkline.IsVarassign() {
@@ -629,13 +635,42 @@ func (s *Scope) FirstDefinition(varname string) MkLine {
 // Having multiple definitions is typical in the branches of "if" statements.
 //
 // Another typical case involves two files: the included file defines a default
-// value, and the including file later overrides that value.
+// value, and the including file later overrides that value. Or the other way
+// round: the including file sets a value first, and the included file then
+// assigns a default value using ?=.
 func (s *Scope) LastDefinition(varname string) MkLine {
 	mkline := s.lastDef[varname]
 	if mkline != nil && mkline.IsVarassign() {
 		return mkline
 	}
 	return nil // See NewPackage and G.Pkgsrc.UserDefinedVars
+}
+
+// Commented returns whether the variable has only been defined in commented
+// variable assignments. These are ignored by bmake but used heavily in
+// mk/defaults/mk.conf for documentation.
+func (s *Scope) Commented(varname string) MkLine {
+	var mklines []MkLine
+	if first := s.firstDef[varname]; first != nil {
+		mklines = append(mklines, first)
+	}
+	if last := s.lastDef[varname]; last != nil {
+		mklines = append(mklines, last)
+	}
+
+	for _, mkline := range mklines {
+		if mkline != nil && mkline.IsVarassign() {
+			return nil
+		}
+	}
+
+	for _, mkline := range mklines {
+		if mkline != nil && mkline.IsCommentedVarassign() {
+			return mkline
+		}
+	}
+
+	return nil
 }
 
 func (s *Scope) FirstUse(varname string) MkLine {

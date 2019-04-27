@@ -462,6 +462,39 @@ func (s *Suite) Test_Scope__no_tracing(c *check.C) {
 	t.Check(scope.DefinedSimilar("OTHER"), equals, false)
 }
 
+func (s *Suite) Test_Scope__commented_varassign(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("mk/defaults/mk.conf", 3, "#VAR=default")
+	scope := NewScope()
+	scope.Define("VAR", mkline)
+
+	// FIXME: should be false since it is not actually defined
+	t.Check(scope.Defined("VAR"), equals, true)
+	t.Check(scope.FirstDefinition("VAR"), check.IsNil)
+	t.Check(scope.LastDefinition("VAR"), check.IsNil)
+
+	t.Check(scope.Commented("VAR"), equals, mkline)
+
+	// FIXME: should return false since it is not actually defined
+	value, found := scope.LastValueFound("VAR")
+	t.Check(value, equals, "default")
+	t.Check(found, equals, true)
+}
+
+func (s *Suite) Test_Scope_Commented(c *check.C) {
+	t := s.Init(c)
+
+	commented := t.NewMkLine("filename.mk", 4, "#COMMENTED=\tvalue")
+	scope := NewScope()
+	scope.Define("VAR", t.NewMkLine("filename.mk", 3, "VAR=\tvalue"))
+	scope.Define("COMMENTED", commented)
+
+	t.Check(scope.Commented("VAR"), check.IsNil)
+	t.Check(scope.Commented("COMMENTED"), equals, commented)
+	t.Check(scope.Commented("UNKNOWN"), check.IsNil)
+}
+
 func (s *Suite) Test_naturalLess(c *check.C) {
 	c.Check(naturalLess("", "a"), equals, true)
 	c.Check(naturalLess("a", ""), equals, false)

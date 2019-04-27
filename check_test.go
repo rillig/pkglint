@@ -779,7 +779,10 @@ func (t *Tester) NewLine(filename string, lineno int, text string) Line {
 func (t *Tester) NewMkLine(filename string, lineno int, text string) MkLine {
 	basename := path.Base(filename)
 	G.Assertf(
-		hasSuffix(basename, ".mk") || basename == "Makefile" || hasPrefix(basename, "Makefile."),
+		hasSuffix(basename, ".mk") ||
+			basename == "Makefile" ||
+			hasPrefix(basename, "Makefile.") ||
+			basename == "mk.conf",
 		"filename %q must be realistic, otherwise the variable permissions are wrong", filename)
 
 	return MkLineParser{}.Parse(t.NewLine(filename, lineno, text))
