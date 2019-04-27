@@ -79,6 +79,44 @@ func (s *Suite) Test_Pkgsrc_checkToplevelUnusedLicenses(c *check.C) {
 		"0 errors and 2 warnings found.")
 }
 
+func (s *Suite) Test_Pkgsrc_loadUntypedVars(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.SetUpTool("echo", "ECHO", AtRunTime)
+	t.CreateFileLines("mk/infra.mk",
+		MkRcsID,
+		"",
+		".if !defined(INFRA_MK)",
+		"INFRA_MK:=",
+		"",
+		"UNTYPED.one=\tone",
+		"UNTYPED.two=\ttwo",
+		"ECHO=\t\techo",
+		"_UNTYPED=\tinfrastructure only",
+		".for p in param",
+		"PARAMETERIZED.${p}=\tparameterized",
+		"INDIRECT_${p}=\tindirect",
+		".endfor",
+		".endif")
+	t.FinishSetUp()
+
+	mklines := t.NewMkLines("filename.mk",
+		MkRcsID,
+		"",
+		"do-build:",
+		"\t: ${INFRA_MK} ${UNTYPED.three} ${ECHO}",
+		"\t: ${_UNTYPED} ${PARAMETERIZED.param}",
+		"\t: ${INDIRECT_param}")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:4: INFRA_MK is used but not defined.",
+		"WARN: filename.mk:5: _UNTYPED is used but not defined.",
+		"WARN: filename.mk:6: INDIRECT_param is used but not defined.")
+}
+
 func (s *Suite) Test_Pkgsrc_loadTools(c *check.C) {
 	t := s.Init(c)
 
