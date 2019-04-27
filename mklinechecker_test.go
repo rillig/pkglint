@@ -92,7 +92,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeft__infrastructure(c *check.C
 		"WARN: ~/mk/infra.mk:2: _VARNAME is defined but not used.")
 }
 
-func (s *Suite) Test_MkLineChecker_checkVarassignLeftUserDefined(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkVarassignLeftUserSettable(c *check.C) {
 	t := s.Init(c)
 
 	// TODO: Allow CreateFileLines before SetUpPackage, since it matches
@@ -123,20 +123,16 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftUserDefined(c *check.C) {
 	G.Check(".")
 
 	t.CheckOutputLines(
-		"WARN: Makefile:20: Package defines \"ASSIGN_DIFF\" with different value "+
-			"than default value \"default\" from mk/defaults/mk.conf.",
-		// TODO: note for ASSIGN_SAME
+		"WARN: Makefile:20: Package sets user-defined \"ASSIGN_DIFF\" to \"pkg\", "+
+			"which differs from the default value \"default\" from mk/defaults/mk.conf.",
+		"NOTE: Makefile:21: Redundant definition for ASSIGN_SAME from mk/defaults/mk.conf.",
 		"WARN: Makefile:22: Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".",
-		"WARN: Makefile:22: Package defines \"DEFAULT_DIFF\" with different value "+
-			"than default value \"default\" from mk/defaults/mk.conf.",
-		// TODO: note for DEFAULT_SAME
-		// FIXME: nothing for FETCH_USING
-		"WARN: Makefile:24: The variable FETCH_USING should not be set by any package.",
-		"WARN: Makefile:24: Package defines \"FETCH_USING\" with different value than default value \"auto\" from mk/defaults/mk.conf.",
-		// FIXME: special warning for APPEND_DIRS
-		"WARN: Makefile:25: Package defines \"APPEND_DIRS\" with different value than default value \"default\" from mk/defaults/mk.conf.",
-		// TODO: warning for COMMENTED_DIFF
-	)
+		"WARN: Makefile:22: Package sets user-defined \"DEFAULT_DIFF\" to \"pkg\", "+
+			"which differs from the default value \"default\" from mk/defaults/mk.conf.",
+		"NOTE: Makefile:23: Redundant definition for DEFAULT_SAME from mk/defaults/mk.conf.",
+		"WARN: Makefile:25: Packages should not append to user-settable APPEND_DIRS.",
+		"WARN: Makefile:27: Package sets user-defined \"COMMENTED_DIFF\" to \"pkg\", "+
+			"which differs from the default value \"default\" from mk/defaults/mk.conf.")
 }
 
 func (s *Suite) Test_MkLineChecker_Check__url2pkg(c *check.C) {
@@ -672,8 +668,8 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: options.mk:2: The variable PKG_DEVELOPER should not be given a default value by any package.",
 		"WARN: options.mk:2: Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".",
+		"WARN: options.mk:2: The variable PKG_DEVELOPER should not be given a default value by any package.",
 		"WARN: options.mk:3: The variable BUILD_DEFS should not be given a default value (only appended to) in this file.",
 		"WARN: options.mk:4: USE_TOOLS should not be used at load time in this file; "+
 			"it would be ok in Makefile.common or builtin.mk, but not buildlink3.mk or *.",
