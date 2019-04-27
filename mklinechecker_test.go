@@ -2017,6 +2017,35 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__deprecated_PKG_DEBUG(c *check.C)
 		"WARN: module.mk:123: Use of _PKG_SILENT and _PKG_DEBUG is deprecated. Use ${RUN} instead.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkVaruseUndefined(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.CreateFileLines("mk/infra.mk",
+		MkRcsID,
+		"#",
+		"# User-settable variables:",
+		"#",
+		"# DOCUMENTED",
+		"",
+		"ASSIGNED=\tassigned",
+		"#COMMENTED=\tcommented")
+	t.FinishSetUp()
+
+	mklines := t.NewMkLines("filename.mk",
+		MkRcsID,
+		"",
+		"do-build:",
+		"\t: ${ASSIGNED} ${COMMENTED} ${DOCUMENTED} ${UNKNOWN}")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		// FIXME: this warning should not appear.
+		"WARN: filename.mk:4: COMMENTED is used but not defined.",
+		"WARN: filename.mk:4: UNKNOWN is used but not defined.")
+}
+
 // PR 46570, item "15. net/uucp/Makefile has a make loop"
 func (s *Suite) Test_MkLineChecker_checkVaruseUndefined__indirect_variables(c *check.C) {
 	t := s.Init(c)
