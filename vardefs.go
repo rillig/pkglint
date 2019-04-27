@@ -231,6 +231,25 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 			"*: use, use-loadtime")
 	}
 
+	// A few variables from mk/defaults/mk.conf may be overridden by packages.
+	// Therefore they need a separate definition of "user-settable".
+	//
+	// It is debatable whether packages should be allowed to override these
+	// variables at all since then there are two competing sources for the
+	// default values. Current practice is to have exactly this ambiguity,
+	// combined with some package Makefiles including bsd.prefs.mk and others
+	// omitting this necessary inclusion.
+	//
+	// TODO: parse all the below information directly from mk/defaults/mk.conf.
+	usrpkg := func(varname string, basicType *BasicType) {
+		acl(varname, basicType,
+			PackageSettable|UserSettable,
+			"Makefile: default, set, use, use-loadtime",
+			"buildlink3.mk, builtin.mk: none",
+			"Makefile.*, *.mk: default, set, use, use-loadtime",
+			"*: use, use-loadtime")
+	}
+
 	// sysload declares a system-provided variable that may already be used at load time.
 	sysload := func(varname string, basicType *BasicType) {
 		acl(varname, basicType,
@@ -499,25 +518,6 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	usrlist("BINPKG_SITES", BtURL)
 	usrlist("BIN_INSTALL_FLAGS", BtShellWord)
 	usr("LOCALPATCHES", BtPathname)
-
-	// The remaining variables from mk/defaults/mk.conf may be overridden by packages.
-	// Therefore they need a separate definition of "user-settable".
-	//
-	// It is debatable whether packages should be allowed to override these
-	// variables at all since then there are two competing sources for the
-	// default values. Current practice is to have exactly this ambiguity,
-	// combined with some package Makefiles including bsd.prefs.mk and others
-	// omitting this necessary inclusion.
-	//
-	// TODO: parse all the below information directly from mk/defaults/mk.conf.
-	usrpkg := func(varname string, basicType *BasicType) {
-		acl(varname, basicType,
-			PackageSettable|UserSettable,
-			"Makefile: default, set, use, use-loadtime",
-			"buildlink3.mk, builtin.mk: none",
-			"Makefile.*, *.mk: default, set, use, use-loadtime",
-			"*: use, use-loadtime")
-	}
 
 	usr("ACROREAD_FONTPATH", BtPathlist)
 	usr("AMANDA_USER", BtUserGroupName)
