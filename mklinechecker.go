@@ -430,7 +430,10 @@ func (ck MkLineChecker) checkVarassignLeftRationale() {
 		"Since this variable prevents the package from being built in some situations,",
 		"the reasons for this restriction must be documented.",
 		"Otherwise it becomes too difficult to check whether these restrictions still apply",
-		"when the package is updated by someone else later.")
+		"when the package is updated by someone else later.",
+		"",
+		"To add the rationale, put it in a comment at the end of this line,",
+		"or in a separate comment in the line above.")
 }
 
 // CheckVaruse checks a single use of a variable in a specific context.
