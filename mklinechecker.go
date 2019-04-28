@@ -453,7 +453,15 @@ func (ck MkLineChecker) checkVarassignLeftRationale() {
 		"when the package is updated by someone else later.",
 		"",
 		"To add the rationale, put it in a comment at the end of this line,",
-		"or in a separate comment in the line above.")
+		"or in a separate comment in the lines above.",
+		"",
+		"The rationale should try to answer these questions:",
+		"",
+		"* which platforms are affected?",
+		"* is someone working on it?",
+		"* in which situation does a crash occur, if any?",
+		"* which particular programs are affected?",
+		"* has it been reported upstream?")
 }
 
 // CheckVaruse checks a single use of a variable in a specific context.
