@@ -763,9 +763,9 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftRationale(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:2: Setting variable ONLY_FOR_PLATFORM requires a rationale.",
-		"WARN: filename.mk:3: Setting variable NOT_FOR_PLATFORM requires a rationale.",
-		"WARN: filename.mk:11: Setting variable ONLY_FOR_PLATFORM requires a rationale.")
+		"WARN: filename.mk:2: Setting variable ONLY_FOR_PLATFORM should have a rationale.",
+		"WARN: filename.mk:3: Setting variable NOT_FOR_PLATFORM should have a rationale.",
+		"WARN: filename.mk:11: Setting variable ONLY_FOR_PLATFORM should have a rationale.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarassignOpShell(c *check.C) {
@@ -1257,11 +1257,11 @@ func (s *Suite) Test_MkLineChecker_checkVarassignDecreasingVersions(c *check.C) 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
-		"PYTHON_VERSIONS_ACCEPTED=\t36 __future__",
-		"PYTHON_VERSIONS_ACCEPTED=\t36 -13",
-		"PYTHON_VERSIONS_ACCEPTED=\t36 ${PKGVERSION_NOREV}",
-		"PYTHON_VERSIONS_ACCEPTED=\t36 37",
-		"PYTHON_VERSIONS_ACCEPTED=\t37 36 27 25")
+		"PYTHON_VERSIONS_ACCEPTED=\t36 __future__ # rationale",
+		"PYTHON_VERSIONS_ACCEPTED=\t36 -13 # rationale",
+		"PYTHON_VERSIONS_ACCEPTED=\t36 ${PKGVERSION_NOREV} # rationale",
+		"PYTHON_VERSIONS_ACCEPTED=\t36 37 # rationale",
+		"PYTHON_VERSIONS_ACCEPTED=\t37 36 27 25 # rationale")
 
 	// TODO: All but the last of the above assignments should be flagged as
 	//  redundant by RedundantScope; as of March 2019, that check is only
@@ -1276,21 +1276,16 @@ func (s *Suite) Test_MkLineChecker_checkVarassignDecreasingVersions(c *check.C) 
 	// This is probably ok.
 	// TODO: Fix this.
 	t.CheckOutputLines(
-		"WARN: Makefile:2: Setting variable PYTHON_VERSIONS_ACCEPTED requires a rationale.",
 		"WARN: Makefile:2: Invalid version number \"__future__\".",
 		"ERROR: Makefile:2: Value \"__future__\" for "+
 			"PYTHON_VERSIONS_ACCEPTED must be a positive integer.",
-		"WARN: Makefile:3: Setting variable PYTHON_VERSIONS_ACCEPTED requires a rationale.",
 		"WARN: Makefile:3: Invalid version number \"-13\".",
 		"ERROR: Makefile:3: Value \"-13\" for "+
 			"PYTHON_VERSIONS_ACCEPTED must be a positive integer.",
-		"WARN: Makefile:4: Setting variable PYTHON_VERSIONS_ACCEPTED requires a rationale.",
 		"ERROR: Makefile:4: Value \"${PKGVERSION_NOREV}\" for "+
 			"PYTHON_VERSIONS_ACCEPTED must be a positive integer.",
-		"WARN: Makefile:5: Setting variable PYTHON_VERSIONS_ACCEPTED requires a rationale.",
 		"WARN: Makefile:5: The values for PYTHON_VERSIONS_ACCEPTED "+
-			"should be in decreasing order (37 before 36).",
-		"WARN: Makefile:6: Setting variable PYTHON_VERSIONS_ACCEPTED requires a rationale.")
+			"should be in decreasing order (37 before 36).")
 }
 
 func (s *Suite) Test_MkLineChecker_warnVaruseToolLoadTime(c *check.C) {

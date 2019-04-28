@@ -420,10 +420,7 @@ func (ck MkLineChecker) checkVarassignLeftRationale() {
 	}
 
 	mkline := ck.MkLine
-	varname := mkline.Varname()
-
-	vartype := G.Pkgsrc.VariableType(ck.MkLines, varname)
-	if vartype == nil || !vartype.NeedsRationale() {
+	if !needsRationale(mkline) {
 		return
 	}
 
@@ -445,22 +442,20 @@ func (ck MkLineChecker) checkVarassignLeftRationale() {
 		}
 	}
 
-	mkline.Warnf("Setting variable %s requires a rationale.", varname)
+	mkline.Warnf("Setting variable %s should have a rationale.", mkline.Varname())
 	mkline.Explain(
 		"Since this variable prevents the package from being built in some situations,",
-		"the reasons for this restriction must be documented.",
+		"the reasons for this restriction should be documented.",
 		"Otherwise it becomes too difficult to check whether these restrictions still apply",
 		"when the package is updated by someone else later.",
 		"",
 		"To add the rationale, put it in a comment at the end of this line,",
-		"or in a separate comment in the lines above.",
-		"",
+		"or in a separate comment in the line above.",
 		"The rationale should try to answer these questions:",
 		"",
-		"* which platforms are affected?",
-		"* is someone working on it?",
-		"* in which situation does a crash occur, if any?",
-		"* which particular programs are affected?",
+		"* which specific aspects of the package are affected?",
+		"* if it's a dependency, is the dependency too old or too new?",
+		"* in which situations does a crash occur, if any?",
 		"* has it been reported upstream?")
 }
 
