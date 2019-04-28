@@ -736,6 +736,33 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions__infrastructure
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_MkLineChecker_checkVarassignLeftRationale(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("filename.mk",
+		MkRcsID,
+		"ONLY_FOR_PLATFORM=\t*-*-*", // TODO: The CVS Id above is not really a rationale.
+		"NOT_FOR_PLATFORM=\t*-*-*",
+		"",
+		"ONLY_FOR_PLATFORM+=\t*-*-* # rationale",
+		"",
+		"# rationale in the line above",
+		"ONLY_FOR_PLATFORM+=\t*-*-*",
+		"",
+		"#VAR=\tvalue", // This comment is not a rationale.
+		"ONLY_FOR_PLATFORM+=\t*-*-*",
+		"",
+		"PKGNAME=\tpackage-1.0", // Does not need a rationale.
+		"UNKNOWN=\t${UNKNOWN}")  // Unknown type, does not need a rationale.
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:3: Setting variable NOT_FOR_PLATFORM requires a rationale.",
+		"WARN: filename.mk:11: Setting variable ONLY_FOR_PLATFORM requires a rationale.")
+}
+
 func (s *Suite) Test_MkLineChecker_checkVarassignOpShell(c *check.C) {
 	t := s.Init(c)
 
@@ -1247,13 +1274,17 @@ func (s *Suite) Test_MkLineChecker_checkVarassignDecreasingVersions(c *check.C) 
 		"WARN: Makefile:2: Invalid version number \"__future__\".",
 		"ERROR: Makefile:2: Value \"__future__\" for "+
 			"PYTHON_VERSIONS_ACCEPTED must be a positive integer.",
+		"WARN: Makefile:3: Setting variable PYTHON_VERSIONS_ACCEPTED requires a rationale.",
 		"WARN: Makefile:3: Invalid version number \"-13\".",
 		"ERROR: Makefile:3: Value \"-13\" for "+
 			"PYTHON_VERSIONS_ACCEPTED must be a positive integer.",
+		"WARN: Makefile:4: Setting variable PYTHON_VERSIONS_ACCEPTED requires a rationale.",
 		"ERROR: Makefile:4: Value \"${PKGVERSION_NOREV}\" for "+
 			"PYTHON_VERSIONS_ACCEPTED must be a positive integer.",
+		"WARN: Makefile:5: Setting variable PYTHON_VERSIONS_ACCEPTED requires a rationale.",
 		"WARN: Makefile:5: The values for PYTHON_VERSIONS_ACCEPTED "+
-			"should be in decreasing order (37 before 36).")
+			"should be in decreasing order (37 before 36).",
+		"WARN: Makefile:6: Setting variable PYTHON_VERSIONS_ACCEPTED requires a rationale.")
 }
 
 func (s *Suite) Test_MkLineChecker_warnVaruseToolLoadTime(c *check.C) {

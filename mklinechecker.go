@@ -402,6 +402,37 @@ func (ck MkLineChecker) explainPermissions(varname string, vartype *Vartype, int
 	ck.MkLine.Explain(expl...)
 }
 
+func (ck MkLineChecker) checkVarassignLeftRationale() {
+	mkline := ck.MkLine
+	varname := mkline.Varname()
+
+	vartype := G.Pkgsrc.VariableType(ck.MkLines, varname)
+	if vartype == nil || !vartype.NeedsRationale() {
+		return
+	}
+
+	if mkline.VarassignComment() != "" {
+		return
+	}
+
+	// Check whether there is a comment directly above.
+	for i, other := range ck.MkLines.mklines {
+		if other == mkline && i > 0 {
+			above := ck.MkLines.mklines[i-1]
+			if above.IsComment() && !above.IsCommentedVarassign() {
+				return
+			}
+		}
+	}
+
+	mkline.Warnf("Setting variable %s requires a rationale.", varname)
+	mkline.Explain(
+		"Since this variable prevents the package from being built in some situations,",
+		"the reasons for this restriction must be documented.",
+		"Otherwise it becomes too difficult to check whether these restrictions still apply",
+		"when the package is updated by someone else later.")
+}
+
 // CheckVaruse checks a single use of a variable in a specific context.
 func (ck MkLineChecker) CheckVaruse(varuse *MkVarUse, vuc *VarUseContext) {
 	mkline := ck.MkLine
@@ -932,6 +963,7 @@ func (ck MkLineChecker) checkVarassignLeft() {
 	if !ck.checkVarassignLeftUserSettable() {
 		ck.checkVarassignLeftPermissions()
 	}
+	ck.checkVarassignLeftRationale()
 
 	ck.checkTextVarUse(
 		ck.MkLine.Varname(),
