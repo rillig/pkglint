@@ -184,6 +184,14 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 			"Makefile, Makefile.*, *.mk: default, set, append, use")
 	}
 
+	// Like pkgappend, but always needs a rationale.
+	pkgappendrat := func(varname string, basicType *BasicType) {
+		acl(varname, basicType,
+			PackageSettable|NeedsRationale,
+			"buildlink3.mk, builtin.mk: none",
+			"Makefile, Makefile.*, *.mk: default, set, append, use")
+	}
+
 	// Some package-defined variables may be modified in buildlink3.mk files.
 	// These variables are typically related to compiling and linking files
 	// from C and related languages.
@@ -799,10 +807,10 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkglist("BOOTSTRAP_DEPENDS", BtDependencyWithPath)
 	pkg("BOOTSTRAP_PKG", BtYesNo)
 	// BROKEN should better be a list of messages instead of a simple string.
-	pkgappend("BROKEN", BtMessage)
+	pkgappendrat("BROKEN", BtMessage)
 	pkg("BROKEN_GETTEXT_DETECTION", BtYesNo)
-	pkglist("BROKEN_EXCEPT_ON_PLATFORM", BtMachinePlatformPattern)
-	pkglist("BROKEN_ON_PLATFORM", BtMachinePlatformPattern)
+	pkglistrat("BROKEN_EXCEPT_ON_PLATFORM", BtMachinePlatformPattern)
+	pkglistrat("BROKEN_ON_PLATFORM", BtMachinePlatformPattern)
 	syslist("BSD_MAKE_ENV", BtShellWord)
 	// TODO: Align the permissions of the various BUILDLINK_*.* variables with each other.
 	acllist("BUILDLINK_ABI_DEPENDS.*", BtDependency,

@@ -742,16 +742,20 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftRationale(c *check.C) {
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("filename.mk",
 		MkRcsID,
-		"ONLY_FOR_PLATFORM=\t*-*-*", // TODO: The CVS Id above is not really a rationale.
-		"NOT_FOR_PLATFORM=\t*-*-*",
+		"ONLY_FOR_PLATFORM=\t*-*-*", // The CVS Id above is not a rationale.
+		"NOT_FOR_PLATFORM=\t*-*-*",  // Neither does this line have a rationale.
 		"",
 		"ONLY_FOR_PLATFORM+=\t*-*-* # rationale",
 		"",
 		"# rationale in the line above",
 		"ONLY_FOR_PLATFORM+=\t*-*-*",
 		"",
-		"#VAR=\tvalue", // This comment is not a rationale.
-		"ONLY_FOR_PLATFORM+=\t*-*-*",
+		"#VAR=\tvalue",               // This comment is not a rationale.
+		"ONLY_FOR_PLATFORM+=\t*-*-*", // Needs a rationale.
+		"",
+		"# rationale",
+		"BROKEN_ON_PLATFORM+=\t*-*-*",
+		"BROKEN_ON_PLATFORM+=\t*-*-*", // The rationale applies to this line, too.
 		"",
 		"PKGNAME=\tpackage-1.0", // Does not need a rationale.
 		"UNKNOWN=\t${UNKNOWN}")  // Unknown type, does not need a rationale.
@@ -759,6 +763,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftRationale(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
+		"WARN: filename.mk:2: Setting variable ONLY_FOR_PLATFORM requires a rationale.",
 		"WARN: filename.mk:3: Setting variable NOT_FOR_PLATFORM requires a rationale.",
 		"WARN: filename.mk:11: Setting variable ONLY_FOR_PLATFORM requires a rationale.")
 }
@@ -1271,6 +1276,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassignDecreasingVersions(c *check.C) 
 	// This is probably ok.
 	// TODO: Fix this.
 	t.CheckOutputLines(
+		"WARN: Makefile:2: Setting variable PYTHON_VERSIONS_ACCEPTED requires a rationale.",
 		"WARN: Makefile:2: Invalid version number \"__future__\".",
 		"ERROR: Makefile:2: Value \"__future__\" for "+
 			"PYTHON_VERSIONS_ACCEPTED must be a positive integer.",

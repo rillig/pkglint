@@ -403,6 +403,22 @@ func (ck MkLineChecker) explainPermissions(varname string, vartype *Vartype, int
 }
 
 func (ck MkLineChecker) checkVarassignLeftRationale() {
+
+	isRationale := func(mkline MkLine) bool {
+		if mkline.IsVarassign() || mkline.IsCommentedVarassign() {
+			return mkline.VarassignComment() != ""
+		}
+		return mkline.IsComment() && !hasPrefix(mkline.Text, "# $")
+	}
+
+	needsRationale := func(mkline MkLine) bool {
+		if !mkline.IsVarassign() && !mkline.IsCommentedVarassign() {
+			return false
+		}
+		vartype := G.Pkgsrc.VariableType(ck.MkLines, mkline.Varname())
+		return vartype != nil && vartype.NeedsRationale()
+	}
+
 	mkline := ck.MkLine
 	varname := mkline.Varname()
 
@@ -418,8 +434,12 @@ func (ck MkLineChecker) checkVarassignLeftRationale() {
 	// Check whether there is a comment directly above.
 	for i, other := range ck.MkLines.mklines {
 		if other == mkline && i > 0 {
-			above := ck.MkLines.mklines[i-1]
-			if above.IsComment() && !above.IsCommentedVarassign() {
+			aboveIndex := i - 1
+			for aboveIndex > 0 && needsRationale(ck.MkLines.mklines[aboveIndex]) {
+				aboveIndex--
+			}
+
+			if isRationale(ck.MkLines.mklines[aboveIndex]) {
 				return
 			}
 		}
