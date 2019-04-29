@@ -552,7 +552,7 @@ func (t *Tester) Remove(relativeFileName string) {
 //              "VAR= env")))
 //
 //  mklines := get("including.mk")
-//  module := get("module.mk")
+//  module := get("subdir/module.mk")
 //
 // The filenames passed to the include function are all relative to the
 // same location, but that location is irrelevant in practice. The generated
