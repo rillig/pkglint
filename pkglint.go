@@ -99,6 +99,10 @@ func (ip *InterPackage) LicenseUsed(name string) bool {
 // Since these names must be unique, there should be no other location where
 // the same name is used.
 func (ip *InterPackage) Bl3(name string, loc *Location) *Location {
+	if ip.bl3Names == nil {
+		return nil
+	}
+
 	if prev, found := ip.bl3Names[name]; found {
 		return &prev
 	}

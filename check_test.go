@@ -497,6 +497,14 @@ func (t *Tester) File(relativeFileName string) string {
 	return path.Clean(t.tmpdir + "/" + relativeFileName)
 }
 
+// Copy copies a file inside the temporary directory.
+func (t *Tester) Copy(relativeSrc, relativeDst string) {
+	data, err := ioutil.ReadFile(t.File(relativeSrc))
+	G.AssertNil(err, "Copy.Read")
+	err = ioutil.WriteFile(t.File(relativeDst), data, 0777)
+	G.AssertNil(err, "Copy.Write")
+}
+
 // Chdir changes the current working directory to the given subdirectory
 // of the temporary directory, creating it if necessary.
 //
