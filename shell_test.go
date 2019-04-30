@@ -409,7 +409,8 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__dollar_without_vari
 
 	ck.CheckShellCommandLine("pax -rwpp -s /.*~$$//g . ${DESTDIR}${PREFIX}")
 
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: filename.mk:1: Substitution commands like \"/.*~$$//g\" should always be quoted.")
 }
 
 func (s *Suite) Test_ShellLineChecker_CheckWord(c *check.C) {
@@ -1204,22 +1205,18 @@ func (s *Suite) Test_SimpleCommandChecker_checkRegexReplace(c *check.C) {
 	test("${PAX} -s s,.*,, src dst",
 		"WARN: Makefile:3: Substitution commands like \"s,.*,,\" should always be quoted.")
 
-	// FIXME: warn for "pax -s".
 	test("pax -s s,.*,, src dst",
-		nil...)
+		"WARN: Makefile:3: Substitution commands like \"s,.*,,\" should always be quoted.")
 
 	test("${SED} -e s,.*,, src dst",
 		"WARN: Makefile:3: Substitution commands like \"s,.*,,\" should always be quoted.")
 
-	// FIXME: warn for "sed -e".
 	test("sed -e s,.*,, src dst",
-		nil...)
+		"WARN: Makefile:3: Substitution commands like \"s,.*,,\" should always be quoted.")
 
-	// TODO: don't warn for "pax .orig".
 	test("pax -s s,\\.orig,, src dst",
 		nil...)
 
-	// TODO: don't warn for "s,a,b,g".
 	test("sed -e s,a,b,g src dst",
 		nil...)
 

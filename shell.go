@@ -623,17 +623,42 @@ func (scc *SimpleCommandChecker) checkRegexReplace() {
 		defer trace.Call0()()
 	}
 
-	cmdname := scc.strcmd.Name
-	isSubst := false
-	for _, arg := range scc.strcmd.Args {
-		if G.Testing && isSubst && !matches(arg, `"^[\"\'].*[\"\']$`) {
-			scc.Warnf("Substitution commands like %q should always be quoted.", arg)
-			scc.Explain(
-				"Usually these substitution commands contain characters like '*' or",
-				"other shell metacharacters that might lead to lookup of matching",
-				"filenames and then expand to more than one word.")
+	if !G.Testing {
+		return
+	}
+
+	checkArg := func(arg string) {
+		if matches(arg, `"^[\"\'].*[\"\']$`) {
+			return
 		}
-		isSubst = cmdname == "${PAX}" && arg == "-s" || cmdname == "${SED}" && arg == "-e"
+
+		// Substitution commands that consist only of safe characters cannot
+		// have any side effects, therefore they don't need to be quoted.
+		if matches(arg, `^([\w,.]|\\[.])+$`) {
+			return
+		}
+
+		scc.Warnf("Substitution commands like %q should always be quoted.", arg)
+		scc.Explain(
+			"Usually these substitution commands contain characters like '*' or",
+			"other shell metacharacters that might lead to lookup of matching",
+			"filenames and then expand to more than one word.")
+	}
+
+	checkArgAfter := func(opt string) {
+		args := scc.strcmd.Args
+		for i, arg := range args {
+			if i > 0 && args[i-1] == opt {
+				checkArg(arg)
+			}
+		}
+	}
+
+	switch scc.strcmd.Name {
+	case "${PAX}", "pax":
+		checkArgAfter("-s")
+	case "${SED}", "sed":
+		checkArgAfter("-e")
 	}
 }
 
