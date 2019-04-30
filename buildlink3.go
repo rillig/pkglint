@@ -2,6 +2,7 @@ package pkglint
 
 import (
 	"netbsd.org/pkglint/pkgver"
+	"path"
 	"strings"
 )
 
@@ -96,6 +97,11 @@ func (ck *Buildlink3Checker) checkFirstParagraph(mlex *MkLinesLexer) bool {
 func (ck *Buildlink3Checker) checkUniquePkgbase(pkgbase string, mkline MkLine) {
 	prev := G.InterPackage.Bl3(pkgbase, &mkline.Location)
 	if prev == nil {
+		return
+	}
+
+	base, name := trimCommon(pkgbase, path.Base(path.Dir(mkline.Filename)))
+	if base == "" && matches(name, `^\d+$`) {
 		return
 	}
 
