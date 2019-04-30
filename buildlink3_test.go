@@ -525,8 +525,8 @@ func (s *Suite) Test_Buildlink3Checker_checkUniquePkgbase(c *check.C) {
 
 	G.InterPackage.Enable()
 
-	test := func(pkgbase, pkgname string, diagnostics ...string) {
-		mkline := t.NewMkLine(t.File("category/"+pkgname+"/buildlink3.mk"), 123, "")
+	test := func(pkgbase, pkgpath string, diagnostics ...string) {
+		mkline := t.NewMkLine(t.File(pkgpath+"/buildlink3.mk"), 123, "")
 
 		(*Buildlink3Checker).checkUniquePkgbase(nil, pkgbase, mkline)
 
@@ -534,37 +534,43 @@ func (s *Suite) Test_Buildlink3Checker_checkUniquePkgbase(c *check.C) {
 	}
 
 	// From now on, the pkgbase "php" may only be used for "php\d+".
-	test("php", "php56",
+	test("php", "lang/php56",
 		nil...)
 
 	// No warning since "php" is a valid buildlink3 basename for "php56".
-	test("php", "php72",
+	test("php", "lang/php72",
 		nil...)
 
 	// But this is a clear typo.
-	test("php", "pgp",
-		"ERROR: ~/category/pgp/buildlink3.mk:123: "+
+	test("php", "security/pgp",
+		"ERROR: ~/security/pgp/buildlink3.mk:123: "+
 			"Duplicate package identifier \"php\" already appeared "+
-			"in ../../category/php56/buildlink3.mk:123.")
+			"in ../../lang/php56/buildlink3.mk:123.")
 
 	// This combination is not allowed because the names "php" and "php-pcre"
 	// differ too much. The only allowed inexact match is that the pkgname
 	// has one more number than the pkgbase, no matter at which position.
-	test("php", "php-pcre",
-		"ERROR: ~/category/php-pcre/buildlink3.mk:123: "+
+	test("php", "textproc/php-pcre",
+		"ERROR: ~/textproc/php-pcre/buildlink3.mk:123: "+
 			"Duplicate package identifier \"php\" already appeared "+
-			"in ../../category/php56/buildlink3.mk:123.")
+			"in ../../lang/php56/buildlink3.mk:123.")
 
-	test("ruby-module", "ruby24-module",
+	test("ruby-module", "net/ruby24-module",
 		nil...)
 
-	test("ruby-module", "ruby26-module",
+	test("ruby-module", "net/ruby26-module",
 		nil...)
 
-	test("ruby-module", "ruby26-module12",
-		"ERROR: ~/category/ruby26-module12/buildlink3.mk:123: "+
+	test("ruby-module", "net/ruby26-module12",
+		"ERROR: ~/net/ruby26-module12/buildlink3.mk:123: "+
 			"Duplicate package identifier \"ruby-module\" already appeared "+
-			"in ../../category/ruby24-module/buildlink3.mk:123.")
+			"in ../../net/ruby24-module/buildlink3.mk:123.")
+
+	test("package", "devel/package",
+		nil...)
+
+	test("package", "wip/package",
+		nil...)
 }
 
 func (s *Suite) Test_Buildlink3Checker_checkMainPart__if_else_endif(c *check.C) {

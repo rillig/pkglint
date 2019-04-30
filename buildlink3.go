@@ -101,7 +101,7 @@ func (ck *Buildlink3Checker) checkUniquePkgbase(pkgbase string, mkline MkLine) {
 	}
 
 	base, name := trimCommon(pkgbase, path.Base(path.Dir(mkline.Filename)))
-	if base == "" && matches(name, `^\d+$`) {
+	if base == "" && matches(name, `^\d*$`) {
 		return
 	}
 
