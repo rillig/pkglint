@@ -626,6 +626,10 @@ func CheckFileMk(filename string) {
 		return
 	}
 
+	if G.Pkg != nil {
+		G.Pkg.checkFileMakefileExt(filename)
+	}
+
 	mklines.Check()
 	mklines.SaveAutofixChanges()
 }

@@ -1456,6 +1456,10 @@ func (s *Suite) Test_Package__Makefile_files(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
+	t.CreateFileLines("category/package/Makefile.common",
+		MkRcsID)
+	t.CreateFileLines("category/package/Makefile.orig",
+		MkRcsID)
 	t.CreateFileLines("category/package/Makefile.php",
 		MkRcsID)
 	t.CreateFileLines("category/package/ext.mk",
@@ -1464,6 +1468,9 @@ func (s *Suite) Test_Package__Makefile_files(c *check.C) {
 
 	G.Check(t.File("category/package"))
 
-	// TODO: Add warning about renaming Makefile.php to php.mk.
-	t.CheckOutputEmpty()
+	// No warning for the Makefile.orig since the package is not
+	// being imported at the moment; see Pkglint.checkReg.
+	t.CheckOutputLines(
+		"NOTE: ~/category/package/Makefile.php: " +
+			"Consider renaming \"Makefile.php\" to \"php.mk\".")
 }
