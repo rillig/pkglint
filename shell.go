@@ -189,10 +189,30 @@ func (ck *ShellLineChecker) checkVaruseToken(atoms *[]*ShAtom, quoting ShQuoting
 		// This is ok as long as these variables don't have embedded [$\\"'`].
 
 	case quoting == shqDquot && varuse.IsQ():
-		ck.mkline.Warnf("The :Q modifier should not be used inside double quotes.")
-		ck.mkline.Explain(
+		ck.Warnf("The :Q modifier should not be used inside double quotes.")
+		ck.Explain(
+			"The :Q modifier is intended for embedding a string into a shell program.",
+			"It escapes all characters that have a special meaning in shell programs.",
+			"It only works correctly when it appears outside of \"double\" or 'single'",
+			"quotes or `backticks`.",
+			"",
+			"When it is used inside double quotes or backticks, the resulting string may",
+			"contain more backslashes than intended.",
+			"",
+			"When it is used inside single quotes and the string contains a single quote",
+			"itself, it produces syntax errors in the shell.",
+			"",
 			"To fix this warning, either remove the :Q or the double quotes.",
-			"In most cases, it is more appropriate to remove the double quotes.")
+			"In most cases, it is more appropriate to remove the double quotes.",
+			"",
+			"A special case is for empty strings.",
+			"If the empty string should be preserved as an empty string,",
+			"the correct form is ${VAR:Q}'' with either leading or trailing single or double quotes.",
+			"If the empty string should just be skipped,",
+			"a simple ${VAR:Q} without any surrounding quotes is correct.")
+
+		// TODO: What about single quotes?
+		// TODO: What about backticks?
 	}
 
 	if ck.checkVarUse {
