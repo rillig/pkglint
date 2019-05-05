@@ -2150,6 +2150,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassignMisc(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPkgsrc()
+	t.SetUpMasterSite("MASTER_SITE_GITHUB", "https://download.github.com/")
 	t.SetUpCommandLine("-Wall,no-space")
 	mklines := t.SetUpFileMkLines("module.mk",
 		MkRcsID,

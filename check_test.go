@@ -177,6 +177,13 @@ func (t *Tester) SetUpVartypes() {
 }
 
 func (t *Tester) SetUpMasterSite(varname string, urls ...string) {
+	if !G.Pkgsrc.vartypes.DefinedExact(varname) {
+		G.Pkgsrc.vartypes.DefineParse(varname, BtFetchURL,
+			List|SystemProvided,
+			"buildlink3.mk: none",
+			"*: use")
+	}
+
 	for _, url := range urls {
 		G.Pkgsrc.registerMasterSite(varname, url)
 	}
@@ -271,6 +278,8 @@ func (t *Tester) SetUpPkgsrc() {
 
 	// The various MASTER_SITE_* variables for use in the
 	// MASTER_SITES are defined in this file.
+	//
+	// To define a MASTER_SITE for a pkglint test, call t.SetUpMasterSite.
 	//
 	// See Pkgsrc.loadMasterSites.
 	t.CreateFileLines("mk/fetch/sites.mk",

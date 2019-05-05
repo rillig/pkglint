@@ -1228,44 +1228,18 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	sys("MANMODE", BtFileMode)
 	sys("MANOWN", BtUserGroupName)
 	pkglist("MASTER_SITES", BtFetchURL)
-	// TODO: Extract the MASTER_SITE_* definitions from mk/fetch/sites.mk
-	//  instead of listing them here.
-	syslist("MASTER_SITE_APACHE", BtFetchURL)
-	syslist("MASTER_SITE_BACKUP", BtFetchURL)
-	syslist("MASTER_SITE_CRATESIO", BtFetchURL)
-	syslist("MASTER_SITE_CYGWIN", BtFetchURL)
-	syslist("MASTER_SITE_DEBIAN", BtFetchURL)
-	syslist("MASTER_SITE_FREEBSD", BtFetchURL)
-	syslist("MASTER_SITE_FREEBSD_LOCAL", BtFetchURL)
-	syslist("MASTER_SITE_GENTOO", BtFetchURL)
-	syslist("MASTER_SITE_GITHUB", BtFetchURL)
-	syslist("MASTER_SITE_GNOME", BtFetchURL)
-	syslist("MASTER_SITE_GNU", BtFetchURL)
-	syslist("MASTER_SITE_GNUSTEP", BtFetchURL)
-	syslist("MASTER_SITE_IFARCHIVE", BtFetchURL)
-	syslist("MASTER_SITE_HASKELL_HACKAGE", BtFetchURL)
-	syslist("MASTER_SITE_KDE", BtFetchURL)
-	syslist("MASTER_SITE_LOCAL", BtFetchURL)
-	syslist("MASTER_SITE_MOZILLA", BtFetchURL)
-	syslist("MASTER_SITE_MOZILLA_ALL", BtFetchURL)
-	syslist("MASTER_SITE_MOZILLA_ESR", BtFetchURL)
-	syslist("MASTER_SITE_MYSQL", BtFetchURL)
-	syslist("MASTER_SITE_NETLIB", BtFetchURL)
-	syslist("MASTER_SITE_OPENBSD", BtFetchURL)
-	syslist("MASTER_SITE_OPENOFFICE", BtFetchURL)
-	syslist("MASTER_SITE_OSDN", BtFetchURL)
-	syslist("MASTER_SITE_PERL_CPAN", BtFetchURL)
-	syslist("MASTER_SITE_PGSQL", BtFetchURL)
-	syslist("MASTER_SITE_PYPI", BtFetchURL)
-	syslist("MASTER_SITE_R_CRAN", BtFetchURL)
-	syslist("MASTER_SITE_RUBYGEMS", BtFetchURL)
-	syslist("MASTER_SITE_SOURCEFORGE", BtFetchURL)
-	syslist("MASTER_SITE_SUNSITE", BtFetchURL)
-	syslist("MASTER_SITE_SUSE", BtFetchURL)
-	syslist("MASTER_SITE_TEX_CTAN", BtFetchURL)
-	syslist("MASTER_SITE_XCONTRIB", BtFetchURL)
-	syslist("MASTER_SITE_XEMACS", BtFetchURL)
-	syslist("MASTER_SITE_XORG", BtFetchURL)
+
+	sitesMk := LoadMk(src.File("mk/fetch/sites.mk"), NotEmpty)
+	if sitesMk != nil {
+		sitesMk.ForEach(func(mkline MkLine) {
+			if mkline.IsVarassign() && hasPrefix(mkline.Varname(), "MASTER_SITE_") {
+				syslist(mkline.Varname(), BtFetchURL)
+			}
+		})
+	} else {
+		// During tests, use t.SetUpMasterSite instead to declare these variables.
+	}
+
 	pkglist("MESSAGE_SRC", BtPathname)
 	pkglist("MESSAGE_SUBST", BtShellWord)
 	pkg("META_PACKAGE", BtYes)
