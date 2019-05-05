@@ -1220,7 +1220,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkg("MAKE_FILE", BtPathname)
 	pkglist("MAKE_FLAGS", BtShellWord)
 	pkglist("MAKE_FLAGS.*", BtShellWord)
-	pkg("MAKE_JOBS_SAFE", BtYesNo)
+	pkgrat("MAKE_JOBS_SAFE", BtYesNo)
 	pkg("MAKE_PROGRAM", BtShellCommand)
 	pkg("MANCOMPRESSED", BtYesNo)
 	pkg("MANCOMPRESSED_IF_MANZ", BtYes)
