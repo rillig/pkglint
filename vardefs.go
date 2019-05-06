@@ -1229,15 +1229,17 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	sys("MANOWN", BtUserGroupName)
 	pkglist("MASTER_SITES", BtFetchURL)
 
-	sitesMk := LoadMk(src.File("mk/fetch/sites.mk"), NotEmpty)
-	if sitesMk != nil {
-		sitesMk.ForEach(func(mkline MkLine) {
-			if mkline.IsVarassign() && hasPrefix(mkline.Varname(), "MASTER_SITE_") {
-				syslist(mkline.Varname(), BtFetchURL)
-			}
-		})
-	} else {
-		// During tests, use t.SetUpMasterSite instead to declare these variables.
+	for _, filename := range []string{"mk/fetch/sites.mk", "mk/fetch/fetch.mk"} {
+		sitesMk := LoadMk(src.File(filename), NotEmpty)
+		if sitesMk != nil {
+			sitesMk.ForEach(func(mkline MkLine) {
+				if mkline.IsVarassign() && hasPrefix(mkline.Varname(), "MASTER_SITE_") {
+					syslist(mkline.Varname(), BtFetchURL)
+				}
+			})
+		} else {
+			// During tests, use t.SetUpMasterSite instead to declare these variables.
+		}
 	}
 
 	pkglist("MESSAGE_SRC", BtPathname)
