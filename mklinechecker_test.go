@@ -766,6 +766,13 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftRationale(c *check.C) {
 		"WARN: filename.mk:2: Setting variable ONLY_FOR_PLATFORM should have a rationale.",
 		"WARN: filename.mk:3: Setting variable NOT_FOR_PLATFORM should have a rationale.",
 		"WARN: filename.mk:11: Setting variable ONLY_FOR_PLATFORM should have a rationale.")
+
+	// This check is only enabled when -Wextra is given.
+	t.SetUpCommandLine()
+
+	mklines.Check()
+
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarassignOpShell(c *check.C) {
