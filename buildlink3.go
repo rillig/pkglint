@@ -112,7 +112,7 @@ func (ck *Buildlink3Checker) checkUniquePkgbase(pkgbase string, mkline MkLine) {
 		"These identifiers are used for multiple-inclusion guards,",
 		"and using the same identifier for different packages",
 		"(often by copy-and-paste) may change the dependencies",
-		"of a package is subtle and unexpected ways.")
+		"of a package in subtle and unexpected ways.")
 }
 
 // checkSecondParagraph checks the multiple inclusion protection and
