@@ -609,8 +609,9 @@ func (ck MkLineChecker) checkVaruseModifiersRange(varuse *MkVarUse) {
 	}
 }
 
-// checkVarusePermissions checks the permissions for the right-hand side
-// of a variable assignment line.
+// checkVarusePermissions checks the permissions when a variable is used,
+// be it in a variable assignment, in a shell command, a conditional, or
+// somewhere else.
 //
 // See checkVarassignLeftPermissions.
 func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype, vuc *VarUseContext) {
