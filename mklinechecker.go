@@ -716,7 +716,7 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 	ck.warnVarusePermissions(varname, vartype, directly, indirectly)
 }
 
-func (ck *MkLineChecker) warnVarusePermissions(varname string, vartype *Vartype, directly, indirectly bool) {
+func (ck MkLineChecker) warnVarusePermissions(varname string, vartype *Vartype, directly, indirectly bool) {
 	mkline := ck.MkLine
 
 	anyPerms := vartype.Union()
