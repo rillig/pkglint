@@ -59,6 +59,11 @@ func NewPkglint() Pkglint {
 		interner:  NewStringInterner()}
 }
 
+// unusablePkglint returns a pkglint object that crashes as early as possible.
+// This is to ensure that tests are properly initialized and shut down.
+func unusablePkglint() Pkglint        { return Pkglint{} }
+func (pkglint *Pkglint) Usable() bool { return pkglint != nil }
+
 type InterPackage struct {
 	hashes       map[string]*Hash    // Maps "alg:filename" => hash (inter-package check).
 	usedLicenses map[string]struct{} // Maps "license name" => true (inter-package check).
@@ -160,8 +165,8 @@ func Main() int {
 	trace.Out = os.Stdout
 	exitCode := G.Main(os.Args...)
 	if G.Opts.Profiling {
-		G = Pkglint{} // Free all memory.
-		runtime.GC()  // For detecting possible memory leaks; see qa-pkglint.
+		G = unusablePkglint() // Free all memory.
+		runtime.GC()          // For detecting possible memory leaks; see qa-pkglint.
 	}
 	return exitCode
 }

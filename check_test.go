@@ -114,7 +114,7 @@ func (s *Suite) TearDownTest(c *check.C) {
 	t.tmpdir = ""
 	t.DisableTracing()
 
-	G = Pkglint{} // unusable because of missing Logger.out and Logger.err
+	G = unusablePkglint()
 }
 
 var _ = check.Suite(new(Suite))
@@ -857,10 +857,12 @@ func (t *Tester) Output() string {
 
 	t.stdout.Reset()
 	t.stderr.Reset()
-	G.Logger.logged = Once{}
-	if G.Logger.out != nil { // Necessary because Main resets the G variable.
-		G.Logger.out.state = 0 // Prevent an empty line at the beginning of the next output.
-		G.Logger.err.state = 0
+	if G.Usable() {
+		G.Logger.logged = Once{}
+		if G.Logger.out != nil { // Necessary because Main resets the G variable.
+			G.Logger.out.state = 0 // Prevent an empty line at the beginning of the next output.
+			G.Logger.err.state = 0
+		}
 	}
 
 	G.Assertf(t.tmpdir != "", "Tester must be initialized before checking the output.")
@@ -1053,7 +1055,9 @@ func (t *Tester) EnableSilentTracing() {
 // The diagnostics go to the in-memory buffer again,
 // ready to be checked with CheckOutputLines.
 func (t *Tester) DisableTracing() {
-	G.out = NewSeparatorWriter(&t.stdout)
+	if G.Usable() {
+		G.out = NewSeparatorWriter(&t.stdout)
+	}
 	trace.Tracing = false
 	trace.Out = nil
 }
