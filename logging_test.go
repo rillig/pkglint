@@ -409,6 +409,35 @@ func (s *Suite) Test_Logger_Explain__empty_lines(c *check.C) {
 		"")
 }
 
+// In an explanation, it can happen that the pkgsrc directory is mentioned.
+// While pkgsrc does not support either PKGSRCDIR or PREFIX or really any
+// other directory name to contain spaces, during pkglint development this
+// may happen because the pkgsrc root is in the temporary directory.
+//
+// In this situation, the ~ placeholder must still be properly substituted.
+func (s *Suite) Test_Logger_Explain__line_wrapped_temporary_directory(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--explain")
+	filename := t.File("filename.mk")
+	mkline := t.NewMkLine(filename, 123, "")
+
+	mkline.Notef("Just a note to get the below explanation.")
+	G.Explain(
+		sprintf("%[1]s %[1]s %[1]s %[1]s %[1]s %[1]q", filename))
+
+	t.CheckOutputLinesIgnoreSpace(
+		"NOTE: ~/filename.mk:123: Just a note to get the below explanation.",
+		"",
+		"\t~/filename.mk",
+		"\t~/filename.mk",
+		"\t~/filename.mk",
+		"\t~/filename.mk",
+		"\t~/filename.mk",
+		"\t\"~/filename.mk\"",
+		"")
+}
+
 func (s *Suite) Test_Logger_ShowSummary__explanations_with_only(c *check.C) {
 	t := s.Init(c)
 
