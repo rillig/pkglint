@@ -1,6 +1,7 @@
 package pkglint
 
 import (
+	"netbsd.org/pkglint/regex"
 	"path"
 	"sort"
 	"strings"
@@ -543,28 +544,38 @@ func (cv *VartypeCheck) FetchURL() {
 //
 // See http://www.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap03.html#tag_03_169
 func (cv *VartypeCheck) Filename() {
-	switch {
-	case cv.Op == opUseMatch:
-		break
-	case contains(cv.ValueNoVar, "/"):
-		cv.Warnf("A filename should not contain a slash.")
-	case !matches(cv.ValueNoVar, `^[-0-9@A-Za-z.,_~+%]*$`):
-		cv.Warnf("%q is not a valid filename.", cv.Value)
+	valid := regex.Pattern(ifelseStr(
+		cv.Op == opUseMatch,
+		`[%*+,\-.0-9?@A-Z\[\]_a-z~]`,
+		`[%+,\-.0-9@A-Z_a-z~]`))
+
+	invalid := replaceAll(cv.ValueNoVar, valid, "")
+	if invalid == "" {
+		return
 	}
+
+	cv.Warnf(
+		ifelseStr(cv.Op == opUseMatch,
+			"The filename pattern %q contains the invalid character%s %q.",
+			"The filename %q contains the invalid character%s %q."),
+		cv.Value,
+		ifelseStr(len(invalid) > 1, "s", ""),
+		invalid)
 }
 
 func (cv *VartypeCheck) FileMask() {
 
 	// TODO: Decide whether to call this a "mask" or a "pattern", and use only that word everywhere.
 
-	switch {
-	case cv.Op == opUseMatch:
-		break
-	case contains(cv.ValueNoVar, "/"):
-		cv.Warnf("A filename mask should not contain a slash.")
-	case !matches(cv.ValueNoVar, `^[#%*+\-./0-9?@A-Z\[\]_a-z~]*$`):
-		cv.Warnf("%q is not a valid filename mask.", cv.Value)
+	invalid := replaceAll(cv.ValueNoVar, `[%*+,\-.0-9?@A-Z\[\]_a-z~]`, "")
+	if invalid == "" {
+		return
 	}
+
+	cv.Warnf("The filename pattern %q contains the invalid character%s %q.",
+		cv.Value,
+		ifelseStr(len(invalid) > 1, "s", ""),
+		invalid)
 }
 
 func (cv *VartypeCheck) FileMode() {
@@ -835,13 +846,15 @@ func (cv *VartypeCheck) Pathlist() {
 //
 // See FileMask.
 func (cv *VartypeCheck) PathMask() {
-	if cv.Op == opUseMatch {
+	invalid := replaceAll(cv.ValueNoVar, `[%*+,\-./0-9?@A-Z\[\]_a-z~]`, "")
+	if invalid == "" {
 		return
 	}
 
-	if !matches(cv.ValueNoVar, `^[#%*+\-./0-9?@A-Z\[\]_a-z~]*$`) {
-		cv.Warnf("%q is not a valid pathname mask.", cv.Value)
-	}
+	cv.Warnf("The pathname pattern %q contains the invalid character%s %q.",
+		cv.Value,
+		ifelseStr(len(invalid) > 1, "s", ""),
+		invalid)
 }
 
 // Pathname checks for pathnames.
@@ -850,13 +863,22 @@ func (cv *VartypeCheck) PathMask() {
 //
 // See http://www.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap03.html#tag_03_266
 func (cv *VartypeCheck) Pathname() {
-	if cv.Op == opUseMatch {
+	valid := regex.Pattern(ifelseStr(
+		cv.Op == opUseMatch,
+		`[%*+,\-./0-9?@A-Z\[\]_a-z~]`,
+		`[%+,\-./0-9@A-Z_a-z~]`))
+	invalid := replaceAll(cv.ValueNoVar, valid, "")
+	if invalid == "" {
 		return
 	}
 
-	if !matches(cv.ValueNoVar, `^[#\-0-9A-Za-z._~+%/]*$`) {
-		cv.Warnf("%q is not a valid pathname.", cv.Value)
-	}
+	cv.Warnf(
+		ifelseStr(cv.Op == opUseMatch,
+			"The pathname pattern %q contains the invalid character%s %q.",
+			"The pathname %q contains the invalid character%s %q."),
+		cv.Value,
+		ifelseStr(len(invalid) > 1, "s", ""),
+		invalid)
 }
 
 func (cv *VartypeCheck) Perl5Packlist() {

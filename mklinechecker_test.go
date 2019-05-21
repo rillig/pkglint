@@ -1515,7 +1515,8 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond__compare_pattern_with_empt
 	// TODO: There should be a warning about "<>" containing invalid
 	//  characters for a path. See VartypeCheck.Pathname
 	t.CheckOutputLines(
-		"WARN: filename.mk:5: \"*\" is not a valid pathname.")
+		"WARN: filename.mk:5: The pathname pattern \"<>\" contains the invalid characters \"<>\".",
+		"WARN: filename.mk:5: The pathname \"*\" contains the invalid character \"*\".")
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
@@ -1556,8 +1557,10 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 
 	test(
 		".if ${PKGPATH:Mpattern}",
+
 		"NOTE: module.mk:2: PKGPATH should be compared using == instead of matching against \":Mpattern\".",
 		"AUTOFIX: module.mk:2: Replacing \"${PKGPATH:Mpattern}\" with \"${PKGPATH} == pattern\".",
+
 		".if ${PKGPATH} == pattern")
 
 	// When the pattern contains placeholders, it cannot be converted to == or !=.
@@ -1568,13 +1571,17 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 	// The :tl modifier prevents the autofix.
 	test(
 		".if ${PKGPATH:tl:Mpattern}",
+
 		"NOTE: module.mk:2: PKGPATH should be compared using == instead of matching against \":Mpattern\".",
+
 		".if ${PKGPATH:tl:Mpattern}")
 
 	test(
 		".if ${PKGPATH:Ncategory/package}",
+
 		"NOTE: module.mk:2: PKGPATH should be compared using != instead of matching against \":Ncategory/package\".",
 		"AUTOFIX: module.mk:2: Replacing \"${PKGPATH:Ncategory/package}\" with \"${PKGPATH} != category/package\".",
+
 		".if ${PKGPATH} != category/package")
 
 	// ${PKGPATH:None:Ntwo} is a short variant of ${PKGPATH} != "one" &&
@@ -1586,26 +1593,34 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 
 	// Note: this combination doesn't make sense since the patterns "one" and "two" don't overlap.
 	test(".if ${PKGPATH:Mone:Mtwo}",
+
 		"NOTE: module.mk:2: PKGPATH should be compared using == instead of matching against \":Mone\".",
 		"NOTE: module.mk:2: PKGPATH should be compared using == instead of matching against \":Mtwo\".",
+
 		".if ${PKGPATH:Mone:Mtwo}")
 
 	test(".if !empty(PKGPATH:Mpattern)",
+
 		"NOTE: module.mk:2: PKGPATH should be compared using == instead of matching against \":Mpattern\".",
 		"AUTOFIX: module.mk:2: Replacing \"!empty(PKGPATH:Mpattern)\" with \"${PKGPATH} == pattern\".",
+
 		".if ${PKGPATH} == pattern")
 
 	test(".if empty(PKGPATH:Mpattern)",
+
 		"NOTE: module.mk:2: PKGPATH should be compared using != instead of matching against \":Mpattern\".",
 		"AUTOFIX: module.mk:2: Replacing \"empty(PKGPATH:Mpattern)\" with \"${PKGPATH} != pattern\".",
+
 		".if ${PKGPATH} != pattern")
 
 	test(".if !!empty(PKGPATH:Mpattern)",
+
 		// TODO: When taking all the ! into account, this is actually a
 		//  test for emptiness, therefore the diagnostics should suggest
 		//  the != operator instead of ==.
 		"NOTE: module.mk:2: PKGPATH should be compared using == instead of matching against \":Mpattern\".",
 		"AUTOFIX: module.mk:2: Replacing \"!empty(PKGPATH:Mpattern)\" with \"(${PKGPATH} == pattern)\".",
+
 		// TODO: This condition could be simplified even more.
 		//  Luckily the !! pattern doesn't occur in practice.
 		".if !(${PKGPATH} == pattern)")
@@ -1616,31 +1631,46 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 
 	test(
 		".if ${PKGPATH:Mpattern}",
+
 		"NOTE: module.mk:2: PKGPATH should be compared using == instead of matching against \":Mpattern\".",
 		"AUTOFIX: module.mk:2: Replacing \"${PKGPATH:Mpattern}\" with \"${PKGPATH} == pattern\".",
+
 		".if ${PKGPATH} == pattern")
 
 	test(
 		".if !${PKGPATH:Mpattern}",
+
 		"NOTE: module.mk:2: PKGPATH should be compared using != instead of matching against \":Mpattern\".",
 		"AUTOFIX: module.mk:2: Replacing \"!${PKGPATH:Mpattern}\" with \"${PKGPATH} != pattern\".",
+
 		".if ${PKGPATH} != pattern")
 
 	// This pattern with spaces doesn't make sense at all in the :M
 	// modifier since it can never match.
+	// Or can it, if the PKGPATH contains quotes?
+	// How exactly does bmake apply the matching here, are both values unquoted?
 	test(
 		".if ${PKGPATH:Mpattern with spaces}",
-		nil...)
+
+		"WARN: module.mk:2: The pathname pattern \"pattern with spaces\" contains the invalid characters \"  \".",
+
+		".if ${PKGPATH:Mpattern with spaces}")
 	// TODO: ".if ${PKGPATH} == \"pattern with spaces\"")
 
 	test(
 		".if ${PKGPATH:M'pattern with spaces'}",
-		nil...)
+
+		"WARN: module.mk:2: The pathname pattern \"'pattern with spaces'\" contains the invalid characters \"'  '\".",
+
+		".if ${PKGPATH:M'pattern with spaces'}")
 	// TODO: ".if ${PKGPATH} == 'pattern with spaces'")
 
 	test(
 		".if ${PKGPATH:M&&}",
-		nil...)
+
+		"WARN: module.mk:2: The pathname pattern \"&&\" contains the invalid characters \"&&\".",
+
+		".if ${PKGPATH:M&&}")
 	// TODO: ".if ${PKGPATH} == '&&'")
 
 	// If PKGPATH is "", the condition is false.
@@ -1657,8 +1687,10 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 	// has been included, like everywhere else.
 	test(
 		".if ${PKGPATH:Nnegative-pattern}",
+
 		"NOTE: module.mk:2: PKGPATH should be compared using != instead of matching against \":Nnegative-pattern\".",
 		"AUTOFIX: module.mk:2: Replacing \"${PKGPATH:Nnegative-pattern}\" with \"${PKGPATH} != negative-pattern\".",
+
 		".if ${PKGPATH} != negative-pattern")
 
 	// Since UNKNOWN is not a well-known system-provided variable that is
@@ -1670,17 +1702,21 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 
 	test(
 		".if ${PKGPATH:Mpath1} || ${PKGPATH:Mpath2}",
+
 		"NOTE: module.mk:2: PKGPATH should be compared using == instead of matching against \":Mpath1\".",
 		"NOTE: module.mk:2: PKGPATH should be compared using == instead of matching against \":Mpath2\".",
 		"AUTOFIX: module.mk:2: Replacing \"${PKGPATH:Mpath1}\" with \"(${PKGPATH} == path1)\".",
 		"AUTOFIX: module.mk:2: Replacing \"${PKGPATH:Mpath2}\" with \"(${PKGPATH} == path2)\".",
+
 		// TODO: remove the redundant parentheses
 		".if (${PKGPATH} == path1) || (${PKGPATH} == path2)")
 
 	test(
 		".if (((((${PKGPATH:Mpath})))))",
+
 		"NOTE: module.mk:2: PKGPATH should be compared using == instead of matching against \":Mpath\".",
 		"AUTOFIX: module.mk:2: Replacing \"${PKGPATH:Mpath}\" with \"${PKGPATH} == path\".",
+
 		".if (((((${PKGPATH} == path)))))")
 }
 

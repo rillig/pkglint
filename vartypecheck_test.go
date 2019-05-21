@@ -505,8 +505,8 @@ func (s *Suite) Test_VartypeCheck_Filename(c *check.C) {
 		"OS/2-manual.txt")
 
 	vt.Output(
-		"WARN: filename.mk:1: \"Filename with spaces.docx\" is not a valid filename.",
-		"WARN: filename.mk:2: A filename should not contain a slash.")
+		"WARN: filename.mk:1: The filename \"Filename with spaces.docx\" contains the invalid characters \"  \".",
+		"WARN: filename.mk:2: The filename \"OS/2-manual.txt\" contains the invalid character \"/\".")
 
 	vt.Op(opUseMatch)
 	vt.Values(
@@ -514,7 +514,9 @@ func (s *Suite) Test_VartypeCheck_Filename(c *check.C) {
 
 	// There's no guarantee that a filename only contains [A-Za-z0-9.].
 	// Therefore there are no useful checks in this situation.
-	vt.OutputEmpty()
+	vt.Output(
+		"WARN: filename.mk:11: The filename pattern \"Filename with spaces.docx\" " +
+			"contains the invalid characters \"  \".")
 }
 
 func (s *Suite) Test_VartypeCheck_FileMask(c *check.C) {
@@ -526,16 +528,21 @@ func (s *Suite) Test_VartypeCheck_FileMask(c *check.C) {
 		"OS/2-manual.txt")
 
 	vt.Output(
-		"WARN: filename.mk:1: \"FileMask with spaces.docx\" is not a valid filename mask.",
-		"WARN: filename.mk:2: A filename mask should not contain a slash.")
+		"WARN: filename.mk:1: The filename pattern \"FileMask with spaces.docx\" "+
+			"contains the invalid characters \"  \".",
+		"WARN: filename.mk:2: The filename pattern \"OS/2-manual.txt\" "+
+			"contains the invalid character \"/\".")
 
 	vt.Op(opUseMatch)
 	vt.Values(
 		"FileMask with spaces.docx")
 
 	// There's no guarantee that a filename only contains [A-Za-z0-9.].
-	// Therefore there are no useful checks in this situation.
-	vt.OutputEmpty()
+	// Therefore it might be necessary to allow all characters here.
+	// TODO: Investigate whether this restriction is useful in practice.
+	vt.Output(
+		"WARN: filename.mk:11: The filename pattern \"FileMask with spaces.docx\" " +
+			"contains the invalid characters \"  \".")
 }
 
 func (s *Suite) Test_VartypeCheck_FileMode(c *check.C) {
@@ -902,7 +909,7 @@ func (s *Suite) Test_VartypeCheck_PathMask(c *check.C) {
 		"src/*/*")
 
 	vt.Output(
-		"WARN: filename.mk:2: \"src/*&*\" is not a valid pathname mask.")
+		"WARN: filename.mk:2: The pathname pattern \"src/*&*\" contains the invalid character \"&\".")
 
 	vt.Op(opUseMatch)
 	vt.Values("any")
@@ -924,7 +931,7 @@ func (s *Suite) Test_VartypeCheck_Pathname(c *check.C) {
 		"anything")
 
 	vt.Output(
-		"WARN: filename.mk:1: \"${PREFIX}/*\" is not a valid pathname.")
+		"WARN: filename.mk:1: The pathname \"${PREFIX}/*\" contains the invalid character \"*\".")
 }
 
 func (s *Suite) Test_VartypeCheck_Perl5Packlist(c *check.C) {
