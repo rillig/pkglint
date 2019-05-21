@@ -1230,8 +1230,13 @@ func (s *Suite) Test_VartypeCheck_URL(c *check.C) {
 		"https://www.netbsd.org/",
 		"https://www.example.org",
 		"ftp://example.org/pub/",
-		"gopher://example.org/",
+		"gopher://example.org/")
 
+	vt.Output(
+		"WARN: filename.mk:4: Please write NetBSD.org instead of www.netbsd.org.",
+		"NOTE: filename.mk:5: For consistency, please add a trailing slash to \"https://www.example.org\".")
+
+	vt.Values(
 		"",
 		"ftp://example.org/<",
 		"gopher://example.org/<",
@@ -1243,17 +1248,15 @@ func (s *Suite) Test_VartypeCheck_URL(c *check.C) {
 		"string with spaces")
 
 	vt.Output(
-		"WARN: filename.mk:4: Please write NetBSD.org instead of www.netbsd.org.",
-		"NOTE: filename.mk:5: For consistency, please add a trailing slash to \"https://www.example.org\".",
-		"WARN: filename.mk:8: \"\" is not a valid URL.",
-		"WARN: filename.mk:9: \"ftp://example.org/<\" is not a valid URL.",
-		"WARN: filename.mk:10: \"gopher://example.org/<\" is not a valid URL.",
-		"WARN: filename.mk:11: \"http://example.org/<\" is not a valid URL.",
-		"WARN: filename.mk:12: \"https://example.org/<\" is not a valid URL.",
-		"WARN: filename.mk:13: \"https://www.example.org/path with spaces\" is not a valid URL.",
-		"WARN: filename.mk:14: \"httpxs://www.example.org\" is not a valid URL. Only ftp, gopher, http, and https URLs are allowed here.",
-		"WARN: filename.mk:15: \"mailto:someone@example.org\" is not a valid URL.",
-		"WARN: filename.mk:16: \"string with spaces\" is not a valid URL.")
+		"WARN: filename.mk:11: \"\" is not a valid URL.",
+		"WARN: filename.mk:12: \"ftp://example.org/<\" is not a valid URL.",
+		"WARN: filename.mk:13: \"gopher://example.org/<\" is not a valid URL.",
+		"WARN: filename.mk:14: \"http://example.org/<\" is not a valid URL.",
+		"WARN: filename.mk:15: \"https://example.org/<\" is not a valid URL.",
+		"WARN: filename.mk:16: \"https://www.example.org/path with spaces\" is not a valid URL.",
+		"WARN: filename.mk:17: \"httpxs://www.example.org\" is not a valid URL. Only ftp, gopher, http, and https URLs are allowed here.",
+		"WARN: filename.mk:18: \"mailto:someone@example.org\" is not a valid URL.",
+		"WARN: filename.mk:19: \"string with spaces\" is not a valid URL.")
 
 	// Yes, even in 2019, some pkgsrc-wip packages really use a gopher HOMEPAGE.
 	vt.Values(
