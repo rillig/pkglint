@@ -62,8 +62,8 @@ func (s *Suite) SetUpTest(c *check.C) {
 
 	G = NewPkglint()
 	G.Testing = true
-	G.out = NewSeparatorWriter(&t.stdout)
-	G.err = NewSeparatorWriter(&t.stderr)
+	G.Logger.out = NewSeparatorWriter(&t.stdout)
+	G.Logger.err = NewSeparatorWriter(&t.stderr)
 	trace.Out = &t.stdout
 
 	// XXX: Maybe the tests can run a bit faster when they don't
@@ -675,9 +675,9 @@ func (t *Tester) Main(args ...string) int {
 	t.seenMain = true
 
 	// Reset the logger, for tests where t.Main is called multiple times.
-	G.errors = 0
-	G.warnings = 0
-	G.logged = Once{}
+	G.Logger.errors = 0
+	G.Logger.warnings = 0
+	G.Logger.logged = Once{}
 
 	argv := []string{"pkglint"}
 	for _, arg := range args {
@@ -1026,7 +1026,7 @@ func (t *Tester) CheckOutput(expectedLines []string) {
 // This is useful when stepping through the code, especially
 // in combination with SetUpCommandLine("--debug").
 func (t *Tester) EnableTracing() {
-	G.out = NewSeparatorWriter(io.MultiWriter(os.Stdout, &t.stdout))
+	G.Logger.out = NewSeparatorWriter(io.MultiWriter(os.Stdout, &t.stdout))
 	trace.Out = os.Stdout
 	trace.Tracing = true
 }
@@ -1034,7 +1034,7 @@ func (t *Tester) EnableTracing() {
 // EnableTracingToLog enables the tracing and writes the tracing output
 // to the test log that can be examined with Tester.Output.
 func (t *Tester) EnableTracingToLog() {
-	G.out = NewSeparatorWriter(&t.stdout)
+	G.Logger.out = NewSeparatorWriter(&t.stdout)
 	trace.Out = &t.stdout
 	trace.Tracing = true
 }
@@ -1046,7 +1046,7 @@ func (t *Tester) EnableTracingToLog() {
 // It is used to check all calls to trace.Result, since the compiler
 // cannot check them.
 func (t *Tester) EnableSilentTracing() {
-	G.out = NewSeparatorWriter(&t.stdout)
+	G.Logger.out = NewSeparatorWriter(&t.stdout)
 	trace.Out = ioutil.Discard
 	trace.Tracing = true
 }
@@ -1056,7 +1056,7 @@ func (t *Tester) EnableSilentTracing() {
 // ready to be checked with CheckOutputLines.
 func (t *Tester) DisableTracing() {
 	if G.Usable() {
-		G.out = NewSeparatorWriter(&t.stdout)
+		G.Logger.out = NewSeparatorWriter(&t.stdout)
 	}
 	trace.Tracing = false
 	trace.Out = nil
