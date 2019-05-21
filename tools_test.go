@@ -621,7 +621,6 @@ func (s *Suite) Test_Tools__autoconf213(c *check.C) {
 
 	G.Check(t.File("category/package"))
 
-	// FIXME
-	t.CheckOutputLines(
-		"WARN: ~/category/package/Makefile:23: Unknown shell command \"autoconf\".")
+	// No warning, since autoconf213 defines autoconf implicitly.
+	t.CheckOutputEmpty()
 }
