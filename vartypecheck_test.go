@@ -490,8 +490,10 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 	vt.Values(
 		"${MASTER_SITE_GITHUB:S,^,-,:=project/archive/${DISTFILE}}")
 
-	vt.Output(
-		"ERROR: filename.mk:31: The subdirectory in MASTER_SITE_GITHUB must end with a slash.")
+	// No warning since there is more than a single := modifier.
+	// In this case, because of the hyphen that is added at the beginning,
+	// the URL is not required to end with a slash anymore.
+	vt.OutputEmpty()
 }
 
 func (s *Suite) Test_VartypeCheck_Filename(c *check.C) {

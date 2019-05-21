@@ -512,11 +512,27 @@ func (cv *VartypeCheck) FetchURL() {
 		}
 	}
 
-	// TODO: Replace the regular expression by accessing the MkVarUse.
-	if m, name, subdir := match2(cv.Value, `\$\{(MASTER_SITE_[^:]*).*:=(.*)\}$`); m {
+	tokens := cv.MkLine.Tokenize(cv.Value, false)
+	for _, token := range tokens {
+		varUse := token.Varuse
+		if varUse == nil {
+			continue
+		}
+
+		name := varUse.varname
+		if !hasPrefix(name, "MASTER_SITE_") {
+			continue
+		}
+
+		if len(varUse.modifiers) != 1 || !hasPrefix(varUse.modifiers[0].Text, "=") {
+			continue
+		}
+
 		if G.Pkgsrc.MasterSiteVarToURL[name] == "" {
 			cv.Errorf("The site %s does not exist.", name)
 		}
+
+		subdir := varUse.modifiers[0].Text[1:]
 		if !hasSuffix(subdir, "/") {
 			cv.Errorf("The subdirectory in %s must end with a slash.", name)
 		}
