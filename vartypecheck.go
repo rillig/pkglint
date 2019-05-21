@@ -526,7 +526,9 @@ func (cv *VartypeCheck) FetchURL() {
 		}
 
 		if G.Pkgsrc.MasterSiteVarToURL[name] == "" {
-			cv.Errorf("The site %s does not exist.", name)
+			if !(G.Pkg != nil && G.Pkg.vars.Defined(name)) {
+				cv.Errorf("The site %s does not exist.", name)
+			}
 		}
 
 		if len(varUse.modifiers) != 1 || !hasPrefix(varUse.modifiers[0].Text, "=") {

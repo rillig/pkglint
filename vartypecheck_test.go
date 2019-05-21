@@ -452,17 +452,27 @@ func (s *Suite) Test_VartypeCheck_Enum__use_match(c *check.C) {
 
 func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 	t := s.Init(c)
+
+	t.SetUpPackage("category/own-master-site",
+		"MASTER_SITE_OWN=\thttps://example.org/")
+	t.FinishSetUp()
+
 	vt := NewVartypeCheckTester(t, (*VartypeCheck).FetchURL)
 
 	t.SetUpMasterSite("MASTER_SITE_GNU", "http://ftp.gnu.org/pub/gnu/")
 	t.SetUpMasterSite("MASTER_SITE_GITHUB", "https://github.com/")
+
+	G.Pkg = NewPackage(t.File("category/own-master-site"))
+	G.Pkg.load()
 
 	vt.Varname("MASTER_SITES")
 	vt.Values(
 		"https://github.com/example/project/",
 		"http://ftp.gnu.org/pub/gnu/bison", // Missing a slash at the end
 		"${MASTER_SITE_GNU:=bison}",
-		"${MASTER_SITE_INVALID:=subdir/}")
+		"${MASTER_SITE_INVALID:=subdir/}",
+		"${MASTER_SITE_OWN}",
+		"${MASTER_SITE_OWN:=subdir/}")
 
 	vt.Output(
 		"WARN: filename.mk:1: Please use ${MASTER_SITE_GITHUB:=example/} "+
