@@ -524,12 +524,12 @@ func (cv *VartypeCheck) FetchURL() {
 			continue
 		}
 
-		if len(varUse.modifiers) != 1 || !hasPrefix(varUse.modifiers[0].Text, "=") {
-			continue
-		}
-
 		if G.Pkgsrc.MasterSiteVarToURL[name] == "" {
 			cv.Errorf("The site %s does not exist.", name)
+		}
+
+		if len(varUse.modifiers) != 1 || !hasPrefix(varUse.modifiers[0].Text, "=") {
+			continue
 		}
 
 		subdir := varUse.modifiers[0].Text[1:]
