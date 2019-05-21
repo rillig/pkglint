@@ -529,6 +529,40 @@ func (s *Suite) Test_MkLineChecker_checkVarassign__URL_with_shell_special_charac
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_MkLineChecker_checkVarassign__list(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpMasterSite("MASTER_SITE_GITHUB", "https://github.com/")
+	t.SetUpVartypes()
+	t.SetUpCommandLine("-Wall", "--explain")
+	mklines := t.NewMkLines("filename.mk",
+		MkRcsID,
+		"SITES.distfile=\t-${MASTER_SITE_GITHUB:=project/}")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:2: The list variable MASTER_SITE_GITHUB should not be embedded in a word.",
+		"",
+		"\tWhen a list variable has multiple elements, this expression expands",
+		"\tto something unexpected:",
+		"",
+		"\tExample: ${MASTER_SITE_SOURCEFORGE}directory/ expands to",
+		"",
+		"\t\thttps://mirror1.sf.net/ https://mirror2.sf.net/directory/",
+		"",
+		"\tThe first URL is missing the directory. To fix this, write",
+		"\t\t${MASTER_SITE_SOURCEFORGE:=directory/}.",
+		"",
+		"\tExample: -l${LIBS} expands to",
+		"",
+		"\t\t-llib1 lib2",
+		"",
+		"\tThe second library is missing the -l. To fix this, write",
+		"\t${LIBS:S,^,-l,}.",
+		"")
+}
+
 func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 	t := s.Init(c)
 

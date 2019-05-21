@@ -486,6 +486,12 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 
 	vt.Output(
 		"WARN: filename.mk:23: \"http://example.org/download?filename=<distfile>;version=<version>\" is not a valid URL.")
+
+	vt.Values(
+		"${MASTER_SITE_GITHUB:S,^,-,:=project/archive/${DISTFILE}}")
+
+	vt.Output(
+		"ERROR: filename.mk:31: The subdirectory in MASTER_SITE_GITHUB must end with a slash.")
 }
 
 func (s *Suite) Test_VartypeCheck_Filename(c *check.C) {
