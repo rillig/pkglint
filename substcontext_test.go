@@ -550,7 +550,7 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_sed(c *check.C)
 		"NOTE: subst.mk:6: The substitution command \"s,@PREFIX@,${PREFIX},g\" " +
 			"can be replaced with \"SUBST_VARS.pfx= PREFIX\".")
 
-	t.SetUpCommandLine("--autofix")
+	t.SetUpCommandLine("-Wall", "--autofix")
 
 	mklines.Check()
 
@@ -574,7 +574,7 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_sed(c *check.C)
 func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_vars(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("--autofix")
+	t.SetUpCommandLine("-Wall", "--autofix")
 	t.SetUpVartypes()
 	t.Chdir(".")
 
@@ -608,7 +608,7 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_vars(c *check.C
 func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_indentation(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("--autofix")
+	t.SetUpCommandLine("-Wall", "--autofix")
 	t.SetUpVartypes()
 	t.Chdir(".")
 
