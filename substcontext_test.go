@@ -11,23 +11,23 @@ func (s *Suite) Test_SubstContext__incomplete(c *check.C) {
 	t.SetUpCommandLine("-Wextra")
 	ctx := NewSubstContext()
 
-	ctx.Varassign(newSubstLine(t, 10, "PKGNAME=pkgname-1.0"))
+	ctx.Varassign(t.NewMkLine("Makefile", 10, "PKGNAME=pkgname-1.0"))
 
 	c.Check(ctx.id, equals, "")
 
-	ctx.Varassign(newSubstLine(t, 11, "SUBST_CLASSES+=interp"))
+	ctx.Varassign(t.NewMkLine("Makefile", 11, "SUBST_CLASSES+=interp"))
 
 	c.Check(ctx.id, equals, "interp")
 
-	ctx.Varassign(newSubstLine(t, 12, "SUBST_FILES.interp=Makefile"))
+	ctx.Varassign(t.NewMkLine("Makefile", 12, "SUBST_FILES.interp=Makefile"))
 
 	c.Check(ctx.IsComplete(), equals, false)
 
-	ctx.Varassign(newSubstLine(t, 13, "SUBST_SED.interp=s,@PREFIX@,${PREFIX},g"))
+	ctx.Varassign(t.NewMkLine("Makefile", 13, "SUBST_SED.interp=s,@PREFIX@,${PREFIX},g"))
 
 	c.Check(ctx.IsComplete(), equals, false)
 
-	ctx.Finish(newSubstLine(t, 14, ""))
+	ctx.Finish(t.NewMkLine("Makefile", 14, ""))
 
 	t.CheckOutputLines(
 		"NOTE: Makefile:13: The substitution command \"s,@PREFIX@,${PREFIX},g\" "+
@@ -41,18 +41,18 @@ func (s *Suite) Test_SubstContext__complete(c *check.C) {
 	t.SetUpCommandLine("-Wextra")
 	ctx := NewSubstContext()
 
-	ctx.Varassign(newSubstLine(t, 10, "PKGNAME=pkgname-1.0"))
-	ctx.Varassign(newSubstLine(t, 11, "SUBST_CLASSES+=p"))
-	ctx.Varassign(newSubstLine(t, 12, "SUBST_FILES.p=Makefile"))
-	ctx.Varassign(newSubstLine(t, 13, "SUBST_SED.p=s,@PREFIX@,${PREFIX},g"))
+	ctx.Varassign(t.NewMkLine("Makefile", 10, "PKGNAME=pkgname-1.0"))
+	ctx.Varassign(t.NewMkLine("Makefile", 11, "SUBST_CLASSES+=p"))
+	ctx.Varassign(t.NewMkLine("Makefile", 12, "SUBST_FILES.p=Makefile"))
+	ctx.Varassign(t.NewMkLine("Makefile", 13, "SUBST_SED.p=s,@PREFIX@,${PREFIX},g"))
 
 	c.Check(ctx.IsComplete(), equals, false)
 
-	ctx.Varassign(newSubstLine(t, 14, "SUBST_STAGE.p=post-configure"))
+	ctx.Varassign(t.NewMkLine("Makefile", 14, "SUBST_STAGE.p=post-configure"))
 
 	c.Check(ctx.IsComplete(), equals, true)
 
-	ctx.Finish(newSubstLine(t, 15, ""))
+	ctx.Finish(t.NewMkLine("Makefile", 15, ""))
 
 	t.CheckOutputLines(
 		"NOTE: Makefile:13: The substitution command \"s,@PREFIX@,${PREFIX},g\" " +
@@ -66,15 +66,15 @@ func (s *Suite) Test_SubstContext__OPSYSVARS(c *check.C) {
 	ctx := NewSubstContext()
 
 	// SUBST_CLASSES is added to OPSYSVARS in mk/bsd.pkg.mk.
-	ctx.Varassign(newSubstLine(t, 11, "SUBST_CLASSES.SunOS+=prefix"))
-	ctx.Varassign(newSubstLine(t, 12, "SUBST_CLASSES.NetBSD+=prefix"))
-	ctx.Varassign(newSubstLine(t, 13, "SUBST_FILES.prefix=Makefile"))
-	ctx.Varassign(newSubstLine(t, 14, "SUBST_SED.prefix=s,@PREFIX@,${PREFIX},g"))
-	ctx.Varassign(newSubstLine(t, 15, "SUBST_STAGE.prefix=post-configure"))
+	ctx.Varassign(t.NewMkLine("Makefile", 11, "SUBST_CLASSES.SunOS+=prefix"))
+	ctx.Varassign(t.NewMkLine("Makefile", 12, "SUBST_CLASSES.NetBSD+=prefix"))
+	ctx.Varassign(t.NewMkLine("Makefile", 13, "SUBST_FILES.prefix=Makefile"))
+	ctx.Varassign(t.NewMkLine("Makefile", 14, "SUBST_SED.prefix=s,@PREFIX@,${PREFIX},g"))
+	ctx.Varassign(t.NewMkLine("Makefile", 15, "SUBST_STAGE.prefix=post-configure"))
 
 	c.Check(ctx.IsComplete(), equals, true)
 
-	ctx.Finish(newSubstLine(t, 15, ""))
+	ctx.Finish(t.NewMkLine("Makefile", 15, ""))
 
 	t.CheckOutputLines(
 		"NOTE: Makefile:14: The substitution command \"s,@PREFIX@,${PREFIX},g\" " +
@@ -87,10 +87,10 @@ func (s *Suite) Test_SubstContext__no_class(c *check.C) {
 	t.SetUpCommandLine("-Wextra")
 	ctx := NewSubstContext()
 
-	ctx.Varassign(newSubstLine(t, 10, "UNRELATED=anything"))
-	ctx.Varassign(newSubstLine(t, 11, "SUBST_FILES.repl+=Makefile.in"))
-	ctx.Varassign(newSubstLine(t, 12, "SUBST_SED.repl+=-e s,from,to,g"))
-	ctx.Finish(newSubstLine(t, 13, ""))
+	ctx.Varassign(t.NewMkLine("Makefile", 10, "UNRELATED=anything"))
+	ctx.Varassign(t.NewMkLine("Makefile", 11, "SUBST_FILES.repl+=Makefile.in"))
+	ctx.Varassign(t.NewMkLine("Makefile", 12, "SUBST_SED.repl+=-e s,from,to,g"))
+	ctx.Finish(t.NewMkLine("Makefile", 13, ""))
 
 	t.CheckOutputLines(
 		"WARN: Makefile:11: SUBST_CLASSES should come before the definition of \"SUBST_FILES.repl\".",
@@ -580,7 +580,7 @@ func simulateSubstLines(t *Tester, texts ...string) {
 		_, err := fmt.Sscanf(lineText[0:4], "%d: ", &lineno)
 		G.AssertNil(err, "")
 		text := lineText[4:]
-		line := newSubstLine(t, lineno, text)
+		line := t.NewMkLine("Makefile", lineno, text)
 
 		switch {
 		case text == "":
@@ -591,8 +591,4 @@ func simulateSubstLines(t *Tester, texts ...string) {
 			ctx.Varassign(line)
 		}
 	}
-}
-
-func newSubstLine(t *Tester, lineno int, text string) MkLine {
-	return t.NewMkLine("Makefile", lineno, text)
 }
