@@ -571,6 +571,40 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_sed(c *check.C)
 		"SUBST_SED.pfx+=         -e s,@PREFIX@,other,g")
 }
 
+func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_vars(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--autofix")
+	t.SetUpVartypes()
+	t.Chdir(".")
+
+	mklines := t.SetUpFileMkLines("subst.mk",
+		MkRcsID,
+		"",
+		"SUBST_CLASSES+=\tid",
+		"SUBST_STAGE.id=\tpre-configure",
+		"SUBST_FILES.id=\tfilename",
+		"SUBST_SED.id=\t-e s,@PREFIX@,${PREFIX},g",
+		"SUBST_VARS.id=\tPKGMANDIR")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"AUTOFIX: subst.mk:6: Replacing \"SUBST_SED.id=\\t-e s,@PREFIX@,${PREFIX},g\" " +
+			"with \"SUBST_VARS.id=\\tPREFIX\".")
+
+	t.CheckFileLinesDetab("subst.mk",
+		"# $NetBSD$",
+		"",
+		"SUBST_CLASSES+= id",
+		"SUBST_STAGE.id= pre-configure",
+		"SUBST_FILES.id= filename",
+		"SUBST_VARS.id=  PREFIX",
+		// FIXME: This must be += instead of = since the previous line already uses =.
+		//  Luckily the check for redundant assignments catches this already.
+		"SUBST_VARS.id=  PKGMANDIR")
+}
+
 // simulateSubstLines only tests some of the inner workings of SubstContext.
 // It is not realistic for all cases. If in doubt, use MkLines.Check.
 func simulateSubstLines(t *Tester, texts ...string) {
