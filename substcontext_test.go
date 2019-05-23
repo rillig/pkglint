@@ -482,6 +482,53 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__plus(c *check.C) {
 			"with \"SUBST_VARS.gtk+ +=\\tSH\".")
 }
 
+// The last of the SUBST_SED variables is 15 characters wide. When SUBST_SED
+// is replaced with SUBST_VARS, this becomes 16 characters and therefore
+// requires the whole paragraph to be indented by one more tab.
+func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_realign_paragraph(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	t.Chdir(".")
+
+	mklines := t.SetUpFileMkLines("subst.mk",
+		MkRcsID,
+		"",
+		"SUBST_CLASSES+=\t\tpfx",
+		"SUBST_STAGE.pfx=\tpre-configure",
+		"SUBST_FILES.pfx=\tfilename",
+		"SUBST_SED.pfx=\t\t-e s,@PREFIX@,${PREFIX},g",
+		"SUBST_SED.pfx+=\t\t-e s,@PREFIX@,${PREFIX},g")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"NOTE: subst.mk:6: The substitution command \"s,@PREFIX@,${PREFIX},g\" "+
+			"can be replaced with \"SUBST_VARS.pfx= PREFIX\".",
+		"NOTE: subst.mk:7: The substitution command \"s,@PREFIX@,${PREFIX},g\" "+
+			"can be replaced with \"SUBST_VARS.pfx+= PREFIX\".")
+
+	t.SetUpCommandLine("--autofix")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"AUTOFIX: subst.mk:6: Replacing \"SUBST_SED.pfx=\\t\\t-e s,@PREFIX@,${PREFIX},g\" "+
+			"with \"SUBST_VARS.pfx=\\tPREFIX\".",
+		"AUTOFIX: subst.mk:7: Replacing \"SUBST_SED.pfx+=\\t\\t-e s,@PREFIX@,${PREFIX},g\" "+
+			"with \"SUBST_VARS.pfx+=\\tPREFIX\".")
+
+	// TODO: The second-to-last line should be aligned with the other lines.
+	t.CheckFileLinesDetab("subst.mk",
+		"# $NetBSD$",
+		"",
+		"SUBST_CLASSES+=         pfx",
+		"SUBST_STAGE.pfx=        pre-configure",
+		"SUBST_FILES.pfx=        filename",
+		"SUBST_VARS.pfx= PREFIX",
+		"SUBST_VARS.pfx+=        PREFIX")
+}
+
 // simulateSubstLines only tests some of the inner workings of SubstContext.
 // It is not realistic for all cases. If in doubt, use MkLines.Check.
 func simulateSubstLines(t *Tester, texts ...string) {
