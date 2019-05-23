@@ -47,6 +47,17 @@ func (st *SubstContextStats) Or(other SubstContextStats) {
 	st.seenTransform = st.seenTransform || other.seenTransform
 }
 
+func (ctx *SubstContext) Process(mkline MkLine) {
+	switch {
+	case mkline.IsEmpty():
+		ctx.Finish(mkline)
+	case mkline.IsVarassign():
+		ctx.Varassign(mkline)
+	case mkline.IsDirective():
+		ctx.Directive(mkline)
+	}
+}
+
 func (ctx *SubstContext) Varassign(mkline MkLine) {
 	if trace.Tracing {
 		trace.Stepf("SubstContext.Varassign curr=%v all=%v", ctx.curr, ctx.inAllBranches)
