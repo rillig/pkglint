@@ -605,6 +605,39 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_vars(c *check.C
 		"SUBST_VARS.id=  PKGMANDIR")
 }
 
+func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_indentation(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--autofix")
+	t.SetUpVartypes()
+	t.Chdir(".")
+
+	mklines := t.SetUpFileMkLines("subst.mk",
+		MkRcsID,
+		"",
+		"SUBST_CLASSES+=\t\t\tfix-paths",
+		"SUBST_STAGE.fix-paths=\t\tpre-configure",
+		"SUBST_MESSAGE.fix-paths=\tMessage",
+		"SUBST_FILES.fix-paths=\t\tfilename",
+		"SUBST_SED.fix-paths=\t\t-e s,@PREFIX@,${PREFIX},g")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"AUTOFIX: subst.mk:7: Replacing \"SUBST_SED.fix-paths=\\t\\t-e s,@PREFIX@,${PREFIX},g\" " +
+			"with \"SUBST_VARS.fix-paths=\\tPREFIX\".")
+
+	t.CheckFileLinesDetab("subst.mk",
+		"# $NetBSD$",
+		"",
+		"SUBST_CLASSES+=                 fix-paths",
+		"SUBST_STAGE.fix-paths=          pre-configure",
+		"SUBST_MESSAGE.fix-paths=        Message",
+		"SUBST_FILES.fix-paths=          filename",
+		// FIXME: Must be indented the same as the other lines.
+		"SUBST_VARS.fix-paths=   PREFIX")
+}
+
 // simulateSubstLines only tests some of the inner workings of SubstContext.
 // It is not realistic for all cases. If in doubt, use MkLines.Check.
 func simulateSubstLines(t *Tester, texts ...string) {
