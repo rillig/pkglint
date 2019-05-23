@@ -965,6 +965,31 @@ func (s *Suite) Test_Autofix_Apply__source_without_explain(c *check.C) {
 		"+\ttext again")
 }
 
+// After fixing part of a line, the whole line needs to be parsed again.
+//
+// As of May 2019, this is not done yet.
+func (s *Suite) Test_Autofix_Apply__text_after_fix(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--autofix")
+	mkline := t.NewMkLine("filename.mk", 123, "VAR=\tvalue")
+
+	fix := mkline.Autofix()
+	fix.Notef("Just a demo.")
+	fix.Replace("value", "new value")
+	fix.Apply()
+
+	t.CheckOutputLines(
+		"AUTOFIX: filename.mk:123: Replacing \"value\" with \"new value\".")
+
+	t.Check(mkline.raw[0].textnl, equals, "VAR=\tnew value\n")
+	t.Check(mkline.raw[0].orignl, equals, "VAR=\tvalue\n")
+	// FIXME: should be updated as well, for both single lines and continuation lines.
+	t.Check(mkline.Text, equals, "VAR=\tvalue")
+	// FIXME: should be updated as well.
+	t.Check(mkline.Value(), equals, "value")
+}
+
 func (s *Suite) Test_Autofix_Realign__wrong_line_type(c *check.C) {
 	t := s.Init(c)
 
