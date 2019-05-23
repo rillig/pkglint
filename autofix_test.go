@@ -984,8 +984,7 @@ func (s *Suite) Test_Autofix_Apply__text_after_fix(c *check.C) {
 
 	t.Check(mkline.raw[0].textnl, equals, "VAR=\tnew value\n")
 	t.Check(mkline.raw[0].orignl, equals, "VAR=\tvalue\n")
-	// FIXME: should be updated as well, for both single lines and continuation lines.
-	t.Check(mkline.Text, equals, "VAR=\tvalue")
+	t.Check(mkline.Text, equals, "VAR=\tnew value")
 	// FIXME: should be updated as well.
 	t.Check(mkline.Value(), equals, "value")
 }
