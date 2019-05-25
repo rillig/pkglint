@@ -28,16 +28,18 @@ func NewRedundantScope() *RedundantScope {
 }
 
 func (s *RedundantScope) Check(mklines MkLines) {
-	mklines.ForEach(func(mkline MkLine) {
-		s.updateIncludePath(mkline)
+	mklines.ForEach(func(mkline MkLine) { s.checkLine(mklines, mkline) })
+}
 
-		switch {
-		case mkline.IsVarassign():
-			s.handleVarassign(mkline, mklines.indentation)
-		}
+func (s *RedundantScope) checkLine(mklines MkLines, mkline MkLine) {
+	s.updateIncludePath(mkline)
 
-		s.handleVarUse(mkline)
-	})
+	switch {
+	case mkline.IsVarassign():
+		s.handleVarassign(mkline, mklines.indentation)
+	}
+
+	s.handleVarUse(mkline)
 }
 
 func (s *RedundantScope) updateIncludePath(mkline MkLine) {
