@@ -648,7 +648,7 @@ func (scc *SimpleCommandChecker) checkRegexReplace() {
 	}
 
 	checkArg := func(arg string) {
-		if matches(arg, `"^[\"\'].*[\"\']$`) {
+		if matches(arg, `^["'].*["']$`) {
 			return
 		}
 
