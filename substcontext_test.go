@@ -208,6 +208,25 @@ func (s *Suite) Test_SubstContext__directives_around_everything_else(c *check.C)
 			"SUBST_FILTER_CMD.os missing.")
 }
 
+func (s *Suite) Test_SubstContext__empty_directive(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wextra")
+
+	simulateSubstLines(t,
+		"10: SUBST_CLASSES+=         os",
+		"11: SUBST_VARS.os=          OPSYS",
+		"12: SUBST_SED.os=           -e s,@OPSYS@,NetBSD,",
+		"13: SUBST_STAGE.os=         post-configure",
+		"14: SUBST_MESSAGE.os=       Guessing operating system",
+		"15: SUBST_FILES.os=         guess-os.h",
+		"16: .if ${OPSYS} == NetBSD",
+		"17: .else",
+		"18: .endif")
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_SubstContext__missing_transformation_in_one_branch(c *check.C) {
 	t := s.Init(c)
 
