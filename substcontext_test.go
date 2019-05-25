@@ -279,6 +279,27 @@ func (s *Suite) Test_SubstContext__nested_conditionals(c *check.C) {
 		"WARN: Makefile:25: Incomplete SUBST block: SUBST_FILES.os missing.")
 }
 
+func (s *Suite) Test_SubstContext__pre_patch(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wextra,no-space", "--show-autofix")
+	t.SetUpVartypes()
+
+	mklines := t.NewMkLines("os.mk",
+		MkRcsID,
+		"",
+		"SUBST_CLASSES+=         os",
+		"SUBST_STAGE.os=         pre-patch",
+		"SUBST_FILES.os=         guess-os.h",
+		"SUBST_SED.os=           -e s,@OPSYS@,Darwin,")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: os.mk:4: Substitutions should not happen in the patch phase.",
+		"AUTOFIX: os.mk:4: Replacing \"pre-patch\" with \"post-extract\".")
+}
+
 func (s *Suite) Test_SubstContext__post_patch(c *check.C) {
 	t := s.Init(c)
 
