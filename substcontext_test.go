@@ -129,8 +129,7 @@ func (s *Suite) Test_SubstContext__multiple_classes_in_one_block(c *check.C) {
 		"15: SUBST_SED.one=          s,one,1,g",
 		"16: SUBST_STAGE.two=        post-configure",
 		"17: SUBST_FILES.two=        two.txt",
-		"18: SUBST_SED.two=          s,two,2,g",
-		"19: ")
+		"18: SUBST_SED.two=          s,two,2,g")
 
 	t.CheckOutputLines(
 		"WARN: Makefile:12: Duplicate definition of \"SUBST_STAGE.one\".",
@@ -226,8 +225,7 @@ func (s *Suite) Test_SubstContext__missing_transformation_in_one_branch(c *check
 		"18: SUBST_SED.os=           -e s,@OPSYS@,Darwin2,",
 		"19: .else",
 		"20: SUBST_VARS.os=           OPSYS",
-		"21: .endif",
-		"22: ")
+		"21: .endif")
 
 	t.CheckOutputLines(
 		"WARN: Makefile:15: All but the first \"SUBST_FILES.os\" lines should use the \"+=\" operator.",
