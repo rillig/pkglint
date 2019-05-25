@@ -692,13 +692,13 @@ func (s *Scope) Commented(varname string) MkLine {
 	}
 
 	for _, mkline := range mklines {
-		if mkline != nil && mkline.IsVarassign() {
+		if mkline.IsVarassign() {
 			return nil
 		}
 	}
 
 	for _, mkline := range mklines {
-		if mkline != nil && mkline.IsCommentedVarassign() {
+		if mkline.IsCommentedVarassign() {
 			return mkline
 		}
 	}
