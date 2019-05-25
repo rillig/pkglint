@@ -309,7 +309,7 @@ func (ctx *SubstContext) suggestSubstVars(mkline MkLine) {
 			// TODO: Extract the alignment computation somewhere else, so that it is generally available.
 			alignBefore := tabWidth(mkline.ValueAlign())
 			alignAfter := tabWidth(varop + "\t")
-			tabs := strings.Repeat("\t", imax((alignAfter-alignBefore)/8, 0))
+			tabs := strings.Repeat("\t", imax((alignBefore-alignAfter)/8, 0))
 			fix.Replace(mkline.Text, varop+"\t"+tabs+varname)
 		}
 		fix.Anyway()

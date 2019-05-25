@@ -514,7 +514,7 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_realign_paragraph(c 
 
 	t.CheckOutputLines(
 		"AUTOFIX: subst.mk:6: Replacing \"SUBST_SED.pfx=\\t\\t-e s,@PREFIX@,${PREFIX},g\" "+
-			"with \"SUBST_VARS.pfx=\\tPREFIX\".",
+			"with \"SUBST_VARS.pfx=\\t\\tPREFIX\".",
 		"AUTOFIX: subst.mk:7: Replacing \"SUBST_SED.pfx+=\\t\\t-e s,@PREFIX@,${PREFIX},g\" "+
 			"with \"SUBST_VARS.pfx+=\\tPREFIX\".")
 
@@ -524,8 +524,7 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_realign_paragraph(c 
 		"SUBST_CLASSES+=         pfx",
 		"SUBST_STAGE.pfx=        pre-configure",
 		"SUBST_FILES.pfx=        filename",
-		// TODO: This line should be aligned with the other lines.
-		"SUBST_VARS.pfx= PREFIX",
+		"SUBST_VARS.pfx=         PREFIX",
 		"SUBST_VARS.pfx+=        PREFIX")
 }
 
@@ -556,7 +555,7 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_sed(c *check.C)
 
 	t.CheckOutputLines(
 		"AUTOFIX: subst.mk:6: Replacing \"SUBST_SED.pfx=\\t\\t-e s,@PREFIX@,${PREFIX},g\" " +
-			"with \"SUBST_VARS.pfx=\\tPREFIX\".")
+			"with \"SUBST_VARS.pfx=\\t\\tPREFIX\".")
 
 	t.CheckFileLinesDetab("subst.mk",
 		"# $NetBSD$",
@@ -564,8 +563,7 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_sed(c *check.C)
 		"SUBST_CLASSES+=         pfx",
 		"SUBST_STAGE.pfx=        pre-configure",
 		"SUBST_FILES.pfx=        filename",
-		// TODO: This line should be aligned with the other lines.
-		"SUBST_VARS.pfx= PREFIX",
+		"SUBST_VARS.pfx=         PREFIX",
 		// TODO: If this subst class is used nowhere else, pkglint could
 		//  replace this += with a simple =.
 		"SUBST_SED.pfx+=         -e s,@PREFIX@,other,g")
@@ -625,7 +623,7 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_indentation(c *check
 
 	t.CheckOutputLines(
 		"AUTOFIX: subst.mk:7: Replacing \"SUBST_SED.fix-paths=\\t\\t-e s,@PREFIX@,${PREFIX},g\" " +
-			"with \"SUBST_VARS.fix-paths=\\tPREFIX\".")
+			"with \"SUBST_VARS.fix-paths=\\t\\tPREFIX\".")
 
 	t.CheckFileLinesDetab("subst.mk",
 		"# $NetBSD$",
@@ -634,8 +632,7 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_indentation(c *check
 		"SUBST_STAGE.fix-paths=          pre-configure",
 		"SUBST_MESSAGE.fix-paths=        Message",
 		"SUBST_FILES.fix-paths=          filename",
-		// FIXME: Must be indented the same as the other lines.
-		"SUBST_VARS.fix-paths=   PREFIX")
+		"SUBST_VARS.fix-paths=           PREFIX")
 }
 
 // simulateSubstLines only tests some of the inner workings of SubstContext.
