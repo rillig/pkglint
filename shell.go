@@ -654,7 +654,7 @@ func (scc *SimpleCommandChecker) checkRegexReplace() {
 
 		// Substitution commands that consist only of safe characters cannot
 		// have any side effects, therefore they don't need to be quoted.
-		if matches(arg, `^([\w,.]|\\[.])+$`) {
+		if matches(arg, `^([\w,.]|\\.)+$`) {
 			return
 		}
 
