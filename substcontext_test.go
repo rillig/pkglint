@@ -167,6 +167,48 @@ func (s *Suite) Test_SubstContext__directives(c *check.C) {
 		"WARN: Makefile:18: All but the first \"SUBST_SED.os\" lines should use the \"+=\" operator.")
 }
 
+func (s *Suite) Test_SubstContext__directives_around_everything_then(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wextra")
+
+	simulateSubstLines(t,
+		"10: SUBST_CLASSES+=         os",
+		"11: .if ${OPSYS} == NetBSD",
+		"12: SUBST_VARS.os=          OPSYS",
+		"13: SUBST_SED.os=           -e s,@OPSYS@,NetBSD,",
+		"14: SUBST_STAGE.os=         post-configure",
+		"15: SUBST_MESSAGE.os=       Guessing operating system",
+		"16: SUBST_FILES.os=         guess-os.h",
+		"17: .endif")
+
+	// TODO: The SUBST variables are not guaranteed to be defined in all cases.
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_SubstContext__directives_around_everything_else(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wextra")
+
+	simulateSubstLines(t,
+		"10: SUBST_CLASSES+=         os",
+		"11: .if ${OPSYS} == NetBSD",
+		"12: .else",
+		"13: SUBST_VARS.os=          OPSYS",
+		"14: SUBST_SED.os=           -e s,@OPSYS@,NetBSD,",
+		"15: SUBST_STAGE.os=         post-configure",
+		"16: SUBST_MESSAGE.os=       Guessing operating system",
+		"17: SUBST_FILES.os=         guess-os.h",
+		"18: .endif")
+
+	// FIXME: The warnings must be the same as in the "then" test case.
+	t.CheckOutputLines(
+		"WARN: Makefile:19: Incomplete SUBST block: SUBST_FILES.os missing.",
+		"WARN: Makefile:19: Incomplete SUBST block: SUBST_SED.os, SUBST_VARS.os or "+
+			"SUBST_FILTER_CMD.os missing.")
+}
+
 func (s *Suite) Test_SubstContext__missing_transformation_in_one_branch(c *check.C) {
 	t := s.Init(c)
 
