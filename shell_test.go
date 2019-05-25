@@ -1214,8 +1214,12 @@ func (s *Suite) Test_SimpleCommandChecker_checkRegexReplace(c *check.C) {
 	test("sed -e s,.*,, src dst",
 		"WARN: Makefile:3: Substitution commands like \"s,.*,,\" should always be quoted.")
 
-	test("sed -e 's,.*,,' -e \"s,-*,,\" src dst",
+	test("sed -e 's,.*,,' -e \"s,-*,,\"",
 		nil...)
+
+	test("sed -e s,.\\*,,",
+		// FIXME
+		"WARN: Makefile:3: Substitution commands like \"s,.\\\\*,,\" should always be quoted.")
 
 	test("pax -s s,\\.orig,, src dst",
 		nil...)
