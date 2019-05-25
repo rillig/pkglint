@@ -1154,6 +1154,23 @@ func (s *Suite) Test_MkLine_ValueTokens(c *check.C) {
 		"WARN: Makefile:1: Missing closing \"}\" for \"UNFINISHED\".")
 }
 
+func (s *Suite) Test_MkLine_ValueTokens__parse_error(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("filename.mk", 123, "VAR=\t$")
+
+	tokens, rest := mkline.ValueTokens()
+
+	t.Check(tokens, check.IsNil)
+	t.Check(rest, equals, "$")
+
+	// Returns the same values, this time from the cache.
+	tokens, rest = mkline.ValueTokens()
+
+	t.Check(tokens, check.IsNil)
+	t.Check(rest, equals, "$")
+}
+
 func (s *Suite) Test_MkLine_ValueTokens__caching(c *check.C) {
 	t := s.Init(c)
 
