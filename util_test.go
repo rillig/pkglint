@@ -330,6 +330,37 @@ func (s *Suite) Test_trimHspace(c *check.C) {
 	t.Check(trimHspace(" \t a b\t \t"), equals, "a b")
 }
 
+func (s *Suite) Test_trimCommon(c *check.C) {
+	t := s.Init(c)
+
+	test := func(a, b, trimmedA, trimmedB string) {
+		ta, tb := trimCommon(a, b)
+		t.Check(ta, equals, trimmedA)
+		t.Check(tb, equals, trimmedB)
+	}
+
+	test("", "",
+		"", "")
+
+	test("equal", "equal",
+		"", "")
+
+	test("prefixA", "prefixB",
+		"A", "B")
+
+	test("ASuffix", "BSuffix",
+		"A", "B")
+
+	test("PreMiddlePost", "PreCenterPost",
+		"Middle", "Center")
+
+	test("", "b",
+		"", "b")
+
+	test("a", "",
+		"a", "")
+}
+
 func (s *Suite) Test_isLocallyModified(c *check.C) {
 	t := s.Init(c)
 
