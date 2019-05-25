@@ -983,6 +983,14 @@ func (src *Pkgsrc) guessVariableType(varname string) (vartype *Vartype) {
 		return listType(BtPathmask, aclpAllRuntime)
 	}
 
+	// Variables whose name doesn't match the above patterns may be
+	// looked up from the pkgsrc infrastructure.
+	//
+	// As of May 2019, pkglint only distinguishes plain variables and
+	// list variables, but not "unknown". Therefore the above patterns
+	// must take precedence over this rule, because otherwise, list
+	// variables from the infrastructure would be guessed to be plain
+	// variables.
 	vartype = src.vartypes.Canon(varname)
 	if vartype != nil {
 		return vartype
