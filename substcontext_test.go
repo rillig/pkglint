@@ -321,15 +321,25 @@ func (s *Suite) Test_SubstContext__post_patch(c *check.C) {
 		"AUTOFIX: os.mk:4: Replacing \"post-patch\" with \"pre-configure\".")
 }
 
-func (s *Suite) Test_SubstContext__pre_configure_with_NO_CONFIGURE(c *check.C) {
+func (s *Suite) Test_SubstContext__with_NO_CONFIGURE(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("-Wall,no-space")
 	pkg := t.SetUpPackage("category/package",
-		"SUBST_CLASSES+=         os",
-		"SUBST_STAGE.os=         pre-configure",
-		"SUBST_FILES.os=         guess-os.h",
-		"SUBST_SED.os=           -e s,@OPSYS@,Darwin,",
+		"SUBST_CLASSES+=         pre",
+		"SUBST_STAGE.pre=        pre-configure",
+		"SUBST_FILES.pre=        guess-os.h",
+		"SUBST_SED.pre=          -e s,@OPSYS@,Darwin,",
+		"",
+		"SUBST_CLASSES+=         post",
+		"SUBST_STAGE.post=       post-configure",
+		"SUBST_FILES.post=       guess-os.h",
+		"SUBST_SED.post=         -e s,@OPSYS@,Darwin,",
+		"",
+		"SUBST_CLASSES+=         e",
+		"SUBST_STAGE.e=          post-extract",
+		"SUBST_FILES.e=          guess-os.h",
+		"SUBST_SED.e=            -e s,@OPSYS@,Darwin,",
 		"",
 		"NO_CONFIGURE=           yes")
 	t.FinishSetUp()
@@ -337,7 +347,26 @@ func (s *Suite) Test_SubstContext__pre_configure_with_NO_CONFIGURE(c *check.C) {
 	G.Check(pkg)
 
 	t.CheckOutputLines(
-		"WARN: ~/category/package/Makefile:21: SUBST_STAGE pre-configure has no effect when NO_CONFIGURE is set (in line 25).")
+		"WARN: ~/category/package/Makefile:21: SUBST_STAGE pre-configure has no effect "+
+			"when NO_CONFIGURE is set (in line 35).",
+		"WARN: ~/category/package/Makefile:26: SUBST_STAGE post-configure has no effect "+
+			"when NO_CONFIGURE is set (in line 35).")
+}
+
+func (s *Suite) Test_SubstContext__without_NO_CONFIGURE(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall,no-space")
+	pkg := t.SetUpPackage("category/package",
+		"SUBST_CLASSES+=         pre",
+		"SUBST_STAGE.pre=        pre-configure",
+		"SUBST_FILES.pre=        guess-os.h",
+		"SUBST_SED.pre=          -e s,@OPSYS@,Darwin,")
+	t.FinishSetUp()
+
+	G.Check(pkg)
+
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_SubstContext__adjacent(c *check.C) {
@@ -434,6 +463,25 @@ func (s *Suite) Test_SubstContext__SUBST_VARS_in_next_paragraph(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: os.mk:9: TODAY2 is defined but not used.")
+}
+
+func (s *Suite) Test_SubstContext__multiple_SUBST_VARS(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wextra,no-space")
+	t.SetUpVartypes()
+
+	mklines := t.NewMkLines("os.mk",
+		MkRcsID,
+		"",
+		"SUBST_CLASSES+=         os",
+		"SUBST_STAGE.os=         pre-configure",
+		"SUBST_FILES.os=         guess-os.h",
+		"SUBST_VARS.os=          PREFIX VARBASE")
+
+	mklines.Check()
+
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {
