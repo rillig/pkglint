@@ -108,12 +108,11 @@ func (s *Suite) Test_SubstContext__multiple_classes_in_one_line(c *check.C) {
 		"12: SUBST_FILES.one=        one.txt",
 		"13: SUBST_SED.one=          s,one,1,g",
 		"14: SUBST_STAGE.two=        post-configure",
-		"15: SUBST_FILES.two=        two.txt",
-		"17: ")
+		"15: SUBST_FILES.two=        two.txt")
 
 	t.CheckOutputLines(
 		"WARN: Makefile:10: Please add only one class at a time to SUBST_CLASSES.",
-		"WARN: Makefile:17: Incomplete SUBST block: SUBST_SED.two, SUBST_VARS.two or SUBST_FILTER_CMD.two missing.")
+		"WARN: Makefile:16: Incomplete SUBST block: SUBST_SED.two, SUBST_VARS.two or SUBST_FILTER_CMD.two missing.")
 }
 
 func (s *Suite) Test_SubstContext__multiple_classes_in_one_block(c *check.C) {
@@ -156,11 +155,10 @@ func (s *Suite) Test_SubstContext__directives(c *check.C) {
 		"17: SUBST_SED.os=           -e s,@OPSYS@,Darwin1,",
 		"18: SUBST_SED.os=           -e s,@OPSYS@,Darwin2,",
 		"19: .elif ${OPSYS} == Linux",
-		"18: SUBST_SED.os=           -e s,@OPSYS@,Linux,",
-		"19: .else",
-		"20: SUBST_VARS.os=           OPSYS",
-		"21: .endif",
-		"22: ")
+		"20: SUBST_SED.os=           -e s,@OPSYS@,Linux,",
+		"21: .else",
+		"22: SUBST_VARS.os=           OPSYS",
+		"23: .endif")
 
 	// All the other lines are correctly determined as being alternatives
 	// to each other. And since every branch contains some transformation
@@ -204,8 +202,8 @@ func (s *Suite) Test_SubstContext__nested_conditionals(c *check.C) {
 		"10: SUBST_CLASSES+=         os",
 		"11: SUBST_STAGE.os=         post-configure",
 		"12: SUBST_MESSAGE.os=       Guessing operating system",
-		"14: .if ${OPSYS} == NetBSD",
-		"13: SUBST_FILES.os=         guess-netbsd.h",
+		"13: .if ${OPSYS} == NetBSD",
+		"14: SUBST_FILES.os=         guess-netbsd.h",
 		"15: .  if ${ARCH} == i386",
 		"16: SUBST_FILTER_CMD.os=    ${SED} -e s,@OPSYS,NetBSD-i386,",
 		"17: .  elif ${ARCH} == x86_64",
@@ -215,8 +213,7 @@ func (s *Suite) Test_SubstContext__nested_conditionals(c *check.C) {
 		"21: .  endif",
 		"22: .else",
 		"23: SUBST_SED.os=           -e s,@OPSYS@,unknown,",
-		"24: .endif",
-		"25: ")
+		"24: .endif")
 
 	// The branch in line 23 omits SUBST_FILES.
 	t.CheckOutputLines(
@@ -661,12 +658,18 @@ func (s *Suite) Test_SubstContext__unusual_variable_order(c *check.C) {
 // It is not realistic for all cases. If in doubt, use MkLines.Check.
 func simulateSubstLines(t *Tester, texts ...string) {
 	ctx := NewSubstContext()
+	lineno := 0
 	for _, lineText := range texts {
-		var lineno int
-		_, err := fmt.Sscanf(lineText[0:4], "%d: ", &lineno)
+		var curr int
+		_, err := fmt.Sscanf(lineText[0:4], "%d: ", &curr)
 		G.AssertNil(err, "")
+
+		if lineno != 0 {
+			t.Check(curr, equals, lineno)
+		}
+
 		text := lineText[4:]
-		line := t.NewMkLine("Makefile", lineno, text)
+		line := t.NewMkLine("Makefile", curr, text)
 
 		switch {
 		case text == "":
@@ -676,5 +679,9 @@ func simulateSubstLines(t *Tester, texts ...string) {
 		default:
 			ctx.Varassign(line)
 		}
+
+		lineno = curr + 1
 	}
+
+	ctx.Finish(t.NewMkLine("Makefile", lineno, ""))
 }
