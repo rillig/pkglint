@@ -28,7 +28,9 @@ func NewRedundantScope() *RedundantScope {
 }
 
 func (s *RedundantScope) Check(mklines MkLines) {
-	mklines.ForEach(func(mkline MkLine) { s.checkLine(mklines, mkline) })
+	mklines.ForEach(func(mkline MkLine) {
+		s.checkLine(mklines, mkline)
+	})
 }
 
 func (s *RedundantScope) checkLine(mklines MkLines, mkline MkLine) {
