@@ -265,7 +265,7 @@ func detab(s string) string {
 		if r == '\t' {
 			detabbed.WriteString("        "[:8-detabbed.Len()%8])
 		} else {
-			detabbed.WriteString(string(r))
+			detabbed.WriteRune(r)
 		}
 	}
 	return detabbed.String()
