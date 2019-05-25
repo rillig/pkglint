@@ -564,11 +564,6 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__LDFLAGS_in_single_quotes(c *ch
 }
 
 // No quoting is necessary when lists of options are appended to each other.
-// PKG_OPTIONS are declared as "lkShell" although they are processed
-// using make's .for loop, which splits them at whitespace and usually
-// requires the variable to be declared as "lkSpace".
-// In this case it doesn't matter though since each option is an identifier,
-// and these do not pose any quoting or escaping problems.
 func (s *Suite) Test_MkLine_VariableNeedsQuoting__package_options(c *check.C) {
 	t := s.Init(c)
 

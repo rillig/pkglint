@@ -143,7 +143,6 @@ func (s *Suite) Test_VarTypeRegistry_Init__LP64PLATFORMS(c *check.C) {
 	G.Check(pkg)
 
 	// No warning about a missing :Q operator.
-	// All PLATFORM variables must be either lkNone or lkSpace.
 	t.CheckOutputEmpty()
 }
 
