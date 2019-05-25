@@ -635,6 +635,28 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_indentation(c *check
 		"SUBST_VARS.fix-paths=           PREFIX")
 }
 
+// As of May 2019, pkglint does not check the order of the variables in
+// a SUBST block. Enforcing this order, or at least suggesting it, would
+// make pkgsrc packages more uniform, which is a good idea, but not urgent.
+func (s *Suite) Test_SubstContext__unusual_variable_order(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+
+	mklines := t.NewMkLines("subst.mk",
+		MkRcsID,
+		"",
+		"SUBST_CLASSES+=\t\tid",
+		"SUBST_SED.id=\t\t-e /deleteme/d",
+		"SUBST_FILES.id=\t\tfile",
+		"SUBST_MESSAGE.id=\tMessage",
+		"SUBST_STAGE.id=\t\tpre-configure")
+
+	mklines.Check()
+
+	t.CheckOutputEmpty()
+}
+
 // simulateSubstLines only tests some of the inner workings of SubstContext.
 // It is not realistic for all cases. If in doubt, use MkLines.Check.
 func simulateSubstLines(t *Tester, texts ...string) {
