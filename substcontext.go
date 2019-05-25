@@ -211,10 +211,7 @@ func (ctx *SubstContext) Directive(mkline MkLine) {
 }
 
 func (ctx *SubstContext) IsComplete() bool {
-	return ctx.id != "" &&
-		ctx.stage != "" &&
-		ctx.curr.seenFiles &&
-		ctx.curr.seenTransform
+	return ctx.stage != "" && ctx.curr.seenFiles && ctx.curr.seenTransform
 }
 
 func (ctx *SubstContext) Finish(mkline MkLine) {

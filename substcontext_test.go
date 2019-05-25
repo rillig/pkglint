@@ -138,6 +138,25 @@ func (s *Suite) Test_SubstContext__multiple_classes_in_one_block(c *check.C) {
 		"WARN: Makefile:15: Variable \"SUBST_SED.one\" does not match SUBST class \"two\".")
 }
 
+func (s *Suite) Test_SubstContext__files_missing(c *check.C) {
+	t := s.Init(c)
+
+	simulateSubstLines(t,
+		"10: SUBST_CLASSES+=         one",
+		"11: SUBST_STAGE.one=        pre-configure",
+		"12: SUBST_CLASSES+=         two",
+		"13: SUBST_STAGE.two=        pre-configure",
+		"14: SUBST_FILES.two=        two.txt",
+		"15: SUBST_SED.two=          s,two,2,g")
+
+	t.CheckOutputLines(
+		"WARN: Makefile:12: Incomplete SUBST block: SUBST_FILES.one missing.",
+		"WARN: Makefile:12: Incomplete SUBST block: "+
+			"SUBST_SED.one, SUBST_VARS.one or SUBST_FILTER_CMD.one missing.",
+		"WARN: Makefile:12: Subst block \"one\" should be finished "+
+			"before adding the next class to SUBST_CLASSES.")
+}
+
 func (s *Suite) Test_SubstContext__directives(c *check.C) {
 	t := s.Init(c)
 
@@ -482,6 +501,32 @@ func (s *Suite) Test_SubstContext__multiple_SUBST_VARS(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputEmpty()
+}
+
+// Since the SUBST_CLASSES definition starts the SUBST block, all
+// directives above it are ignored by the SUBST context.
+func (s *Suite) Test_SubstContext_Directive__before_SUBST_CLASSES(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wextra,no-space")
+	t.SetUpVartypes()
+	t.DisableTracing() // Just for branch coverage.
+
+	mklines := t.NewMkLines("os.mk",
+		MkRcsID,
+		"",
+		".if 0",
+		".endif",
+		"SUBST_CLASSES+=         os",
+		".elif 0") // Just for branch coverage.
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: os.mk:EOF: Incomplete SUBST block: SUBST_STAGE.os missing.",
+		"WARN: os.mk:EOF: Incomplete SUBST block: SUBST_FILES.os missing.",
+		"WARN: os.mk:EOF: Incomplete SUBST block: "+
+			"SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
 }
 
 func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {
