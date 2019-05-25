@@ -887,7 +887,9 @@ func (c *FileCache) Put(filename string, options LoadOptions, lines Lines) {
 }
 
 func (c *FileCache) removeOldEntries() {
-	sort.Slice(c.table, func(i, j int) bool { return c.table[j].count < c.table[i].count })
+	sort.Slice(c.table, func(i, j int) bool {
+		return c.table[j].count < c.table[i].count
+	})
 
 	if G.Testing {
 		for _, e := range c.table {

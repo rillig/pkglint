@@ -682,6 +682,28 @@ func (s *Suite) Test_FileCache(c *check.C) {
 		"TRACE:   FileCache.Halve \"Makefile\" with count 4.")
 }
 
+func (s *Suite) Test_FileCache_removeOldEntries__branch_coverage(c *check.C) {
+	t := s.Init(c)
+
+	t.EnableTracingToLog()
+	G.Testing = false
+
+	lines := t.NewLines("filename.mk",
+		MkRcsID)
+	cache := NewFileCache(3)
+	cache.Put("filename1.mk", 0, lines)
+	cache.Put("filename2.mk", 0, lines)
+	cache.Get("filename2.mk", 0)
+	cache.Get("filename2.mk", 0)
+	cache.Put("filename3.mk", 0, lines)
+	cache.Put("filename4.mk", 0, lines)
+
+	t.CheckOutputLines(
+		"TRACE:   FileCache.Evict \"filename3.mk\" with count 1.",
+		"TRACE:   FileCache.Evict \"filename1.mk\" with count 1.",
+		"TRACE:   FileCache.Halve \"filename2.mk\" with count 3.")
+}
+
 func (s *Suite) Test_makeHelp(c *check.C) {
 	c.Check(makeHelp("subst"), equals, confMake+" help topic=subst")
 }
