@@ -1,9 +1,6 @@
 package pkglint
 
-import (
-	"netbsd.org/pkglint/textproc"
-	"strings"
-)
+import "netbsd.org/pkglint/textproc"
 
 // SubstContext records the state of a block of variable assignments
 // that make up a SUBST class (see `mk/subst.mk`).
@@ -306,11 +303,7 @@ func (ctx *SubstContext) suggestSubstVars(mkline MkLine) {
 			"Replacing @VAR@ with ${VAR} is such a typical pattern that pkgsrc has built-in support for it,",
 			"requiring only the variable name instead of the full sed command.")
 		if mkline.VarassignComment() == "" && len(tokens) == 2 && tokens[0] == "-e" {
-			// TODO: Extract the alignment computation somewhere else, so that it is generally available.
-			alignBefore := tabWidth(mkline.ValueAlign())
-			alignAfter := tabWidth(varop + "\t")
-			tabs := strings.Repeat("\t", imax((alignBefore-alignAfter)/8, 0))
-			fix.Replace(mkline.Text, varop+"\t"+tabs+varname)
+			fix.Replace(mkline.Text, alignWith(varop, mkline.ValueAlign())+varname)
 		}
 		fix.Anyway()
 		fix.Apply()

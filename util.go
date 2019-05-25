@@ -271,6 +271,15 @@ func detab(s string) string {
 	return detabbed.String()
 }
 
+// alignWith extends str with as many tabs as needed to reach
+// the same screen width as the other string.
+func alignWith(str, other string) string {
+	alignBefore := (tabWidth(other) + 7) & -8
+	alignAfter := tabWidth(str) & -8
+	tabsNeeded := imax((alignBefore-alignAfter)/8, 1)
+	return str + strings.Repeat("\t", tabsNeeded)
+}
+
 func shorten(s string, maxChars int) string {
 	codePoints := 0
 	for i := range s {

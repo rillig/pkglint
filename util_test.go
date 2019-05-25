@@ -238,6 +238,25 @@ func (s *Suite) Test_detab(c *check.C) {
 	c.Check(detab("12345678\t"), equals, "12345678        ")
 }
 
+func (s *Suite) Test_alignWith(c *check.C) {
+	t := s.Init(c)
+
+	test := func(str, other, expected string) {
+		t.Check(alignWith(str, other), equals, expected)
+	}
+
+	// At least one tab is _always_ added.
+	test("", "", "\t")
+
+	test("VAR=", "1234567", "VAR=\t")
+	test("VAR=", "12345678", "VAR=\t")
+	test("VAR=", "123456789", "VAR=\t\t")
+
+	// At least one tab is added in any case,
+	// even if the other string is shorter.
+	test("1234567890=", "V=", "1234567890=\t")
+}
+
 const reMkIncludeBenchmark = `^\.([\t ]*)(s?include)[\t ]+\"([^\"]+)\"[\t ]*(?:#.*)?$`
 const reMkIncludeBenchmarkPositive = `^\.([\t ]*)(s?include)[\t ]+\"(.+)\"[\t ]*(?:#.*)?$`
 
