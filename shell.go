@@ -35,7 +35,7 @@ func (ck *ShellLineChecker) Explain(explanation ...string) {
 	ck.mkline.Explain(explanation...)
 }
 
-var shellCommandsType = &Vartype{BtShellCommands, NoVartypeOptions, []ACLEntry{{"*", aclpAllRuntime}}}
+var shellCommandsType = NewVartype(BtShellCommands, NoVartypeOptions, NewACLEntry("*", aclpAllRuntime))
 var shellWordVuc = &VarUseContext{shellCommandsType, vucTimeUnknown, VucQuotPlain, false}
 
 func (ck *ShellLineChecker) CheckWord(token string, checkQuoting bool, time ToolTime) {
