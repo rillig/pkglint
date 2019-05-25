@@ -377,7 +377,7 @@ func relpath(from, to string) (result string) {
 	}
 
 	// Take a shortcut for the common case from "dir" to "dir/subdir/...".
-	if hasPrefix(cto, cfrom) && len(cto) > len(cfrom)+1 && cto[len(cfrom)] == '/' {
+	if hasPrefix(cto, cfrom) && hasPrefix(cto[len(cfrom):], "/") {
 		return cleanpath(cto[len(cfrom)+1:])
 	}
 

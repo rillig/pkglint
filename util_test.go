@@ -122,6 +122,7 @@ func (s *Suite) Test_relpath(c *check.C) {
 	}
 
 	test("some/dir", "some/directory", "../../some/directory")
+	test("some/directory", "some/dir", "../../some/dir")
 
 	test("category/package/.", ".", "../..")
 
@@ -130,6 +131,9 @@ func (s *Suite) Test_relpath(c *check.C) {
 		"./.",
 		"x11/frameworkintegration/../../meta-pkgs/kde/kf5.mk",
 		"meta-pkgs/kde/kf5.mk")
+
+	test(".hidden/dir", ".", "../..")
+	test("dir/.hidden", ".", "../..")
 
 	// This happens when "pkglint -r x11" is run.
 	G.Pkgsrc.topdir = "x11/.."
