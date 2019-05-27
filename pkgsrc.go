@@ -390,7 +390,7 @@ func (src *Pkgsrc) loadUntypedVars() {
 	}
 
 	handleFile := func(pathName string, info os.FileInfo, err error) error {
-		G.AssertNil(err, "handleFile %q", pathName)
+		assertNil(err, "handleFile %q", pathName)
 		baseName := info.Name()
 		if hasSuffix(baseName, ".mk") || baseName == "mk.conf" {
 			handleMkFile(filepath.ToSlash(pathName))
@@ -399,7 +399,7 @@ func (src *Pkgsrc) loadUntypedVars() {
 	}
 
 	err := filepath.Walk(src.File("mk"), handleFile)
-	G.AssertNil(err, "Walk error in pkgsrc infrastructure")
+	assertNil(err, "Walk error in pkgsrc infrastructure")
 }
 
 func (src *Pkgsrc) parseSuggestedUpdates(lines Lines) []SuggestedUpdate {

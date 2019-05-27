@@ -1,11 +1,22 @@
 package pkglint
 
 import (
+	"errors"
 	"gopkg.in/check.v1"
 	"os"
 	"testing"
 	"time"
 )
+
+func (s *Suite) Test_assertNil(c *check.C) {
+	t := s.Init(c)
+
+	assertNil(nil, "this is not an error")
+
+	t.ExpectPanic(
+		func() { assertNil(errors.New("unexpected error"), "Oops") },
+		"Pkglint internal error: Oops: unexpected error")
+}
 
 func (s *Suite) Test_YesNoUnknown_String(c *check.C) {
 	c.Check(yes.String(), equals, "yes")

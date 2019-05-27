@@ -75,12 +75,12 @@ func (pkglint *Pkglint) Main(argv ...string) (exitCode int) {
 			runtime.GC()
 
 			fd, err := os.Create("pkglint.heapdump")
-			G.AssertNil(err, "heapDump.create")
+			assertNil(err, "heapDump.create")
 
 			debug.WriteHeapDump(fd.Fd())
 
 			err = fd.Close()
-			G.AssertNil(err, "heapDump.close")
+			assertNil(err, "heapDump.close")
 		}()
 
 		f, err := os.Create("pkglint.pprof")
@@ -90,7 +90,7 @@ func (pkglint *Pkglint) Main(argv ...string) (exitCode int) {
 		defer f.Close()
 
 		err = pprof.StartCPUProfile(f)
-		G.AssertNil(err, "Cannot start profiling")
+		assertNil(err, "Cannot start profiling")
 		defer pprof.StopCPUProfile()
 
 		pkglint.res.Profiling()

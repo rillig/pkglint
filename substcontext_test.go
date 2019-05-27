@@ -835,7 +835,7 @@ func simulateSubstLines(t *Tester, texts ...string) {
 	for _, lineText := range texts {
 		var curr int
 		_, err := fmt.Sscanf(lineText[0:4], "%d: ", &curr)
-		G.AssertNil(err, "")
+		assertNil(err, "")
 
 		if lineno != 0 {
 			t.Check(curr, equals, lineno)

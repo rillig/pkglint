@@ -134,6 +134,13 @@ func imax(a, b int) int {
 	return b
 }
 
+// assertNil ensures that the given error is nil.
+//
+// Contrary to other diagnostics, the format should not end in a period
+// since it is followed by the error.
+//
+// Other than Assertf, this method does not require any comparison operator in the calling code.
+// This makes it possible to get 100% branch coverage for cases that "really can never fail".
 func assertNil(err error, format string, args ...interface{}) {
 	if err != nil {
 		panic("Pkglint internal error: " + sprintf(format, args...) + ": " + err.Error())
@@ -399,10 +406,10 @@ func relpath(from, to string) (result string) {
 	absTo := abspath(cto)
 
 	toTop, err := filepath.Rel(absFrom, absTopdir)
-	G.AssertNil(err, "relpath from %q to topdir %q", absFrom, absTopdir)
+	assertNil(err, "relpath from %q to topdir %q", absFrom, absTopdir)
 
 	fromTop, err := filepath.Rel(absTopdir, absTo)
-	G.AssertNil(err, "relpath from topdir %q to %q", absTopdir, absTo)
+	assertNil(err, "relpath from topdir %q to %q", absTopdir, absTo)
 
 	result = cleanpath(filepath.ToSlash(toTop) + "/" + filepath.ToSlash(fromTop))
 

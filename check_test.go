@@ -509,9 +509,9 @@ func (t *Tester) File(relativeFileName string) string {
 // Copy copies a file inside the temporary directory.
 func (t *Tester) Copy(relativeSrc, relativeDst string) {
 	data, err := ioutil.ReadFile(t.File(relativeSrc))
-	G.AssertNil(err, "Copy.Read")
+	assertNil(err, "Copy.Read")
 	err = ioutil.WriteFile(t.File(relativeDst), data, 0777)
-	G.AssertNil(err, "Copy.Write")
+	assertNil(err, "Copy.Write")
 }
 
 // Chdir changes the current working directory to the given subdirectory

@@ -16,7 +16,7 @@ type Vartype struct {
 func NewVartype(basicType *BasicType, options vartypeOptions, aclEntries ...ACLEntry) *Vartype {
 	for _, aclEntry := range aclEntries {
 		_, err := path.Match(aclEntry.glob, "")
-		G.AssertNil(err, "path.Match")
+		assertNil(err, "path.Match")
 	}
 
 	return &Vartype{basicType, options, aclEntries}
@@ -141,7 +141,7 @@ func (vt *Vartype) AlternativeFiles(perms ACLPermissions) string {
 			redundant := false
 			for _, late := range slice[si+1:] {
 				matched, err := path.Match(late, early)
-				G.AssertNil(err, "path.Match")
+				assertNil(err, "path.Match")
 				if matched {
 					redundant = true
 					break

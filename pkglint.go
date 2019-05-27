@@ -202,12 +202,12 @@ func (pkglint *Pkglint) Main(argv ...string) (exitCode int) {
 			runtime.GC()
 
 			fd, err := os.Create("pkglint.heapdump")
-			G.AssertNil(err, "heapDump.create")
+			assertNil(err, "heapDump.create")
 
 			debug.WriteHeapDump(fd.Fd())
 
 			err = fd.Close()
-			G.AssertNil(err, "heapDump.close")
+			assertNil(err, "heapDump.close")
 		}()
 
 		f, err := os.Create("pkglint.pprof")
@@ -217,7 +217,7 @@ func (pkglint *Pkglint) Main(argv ...string) (exitCode int) {
 		defer f.Close()
 
 		err = pprof.StartCPUProfile(f)
-		G.AssertNil(err, "Cannot start profiling")
+		assertNil(err, "Cannot start profiling")
 		defer pprof.StopCPUProfile()
 
 		pkglint.res.Profiling()
@@ -455,17 +455,6 @@ func (*Pkglint) Assertf(cond bool, format string, args ...interface{}) {
 	if !cond {
 		panic("Pkglint internal error: " + sprintf(format, args...))
 	}
-}
-
-// AssertNil ensures that the given error is nil.
-//
-// Contrary to other diagnostics, the format should not end in a period
-// since it is followed by the error.
-//
-// Other than Assertf, this method does not require any comparison operator in the calling code.
-// This makes it possible to get 100% branch coverage for cases that "really can never fail".
-func (*Pkglint) AssertNil(err error, format string, args ...interface{}) {
-	assertNil(err, format, args...)
 }
 
 // Returns the pkgsrc top-level directory, relative to the given directory.
