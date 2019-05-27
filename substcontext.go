@@ -233,14 +233,14 @@ func (ctx *SubstContext) Finish(mkline MkLine) {
 	*ctx = *NewSubstContext()
 }
 
-func (ctx *SubstContext) dupString(mkline MkLine, pstr *string, varname, value string) {
+func (*SubstContext) dupString(mkline MkLine, pstr *string, varname, value string) {
 	if *pstr != "" {
 		mkline.Warnf("Duplicate definition of %q.", varname)
 	}
 	*pstr = value
 }
 
-func (ctx *SubstContext) dupBool(mkline MkLine, flag *bool, varname string, op MkOperator, value string) {
+func (*SubstContext) dupBool(mkline MkLine, flag *bool, varname string, op MkOperator, value string) {
 	if *flag && op != opAssignAppend {
 		mkline.Warnf("All but the first %q lines should use the \"+=\" operator.", varname)
 	}
@@ -279,7 +279,7 @@ func (ctx *SubstContext) suggestSubstVars(mkline MkLine) {
 
 // extractVarname extracts the variable name from a sed command of the form
 // s,@VARNAME@,${VARNAME}, and some related variants thereof.
-func (ctx *SubstContext) extractVarname(token string) string {
+func (*SubstContext) extractVarname(token string) string {
 	parser := NewMkParser(nil, token, false)
 	lexer := parser.lexer
 	if !lexer.SkipByte('s') {

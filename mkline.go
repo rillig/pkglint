@@ -579,7 +579,7 @@ func (mkline *MkLineImpl) Fields() []string {
 
 }
 
-func (mkline *MkLineImpl) WithoutMakeVariables(value string) string {
+func (*MkLineImpl) WithoutMakeVariables(value string) string {
 	var valueNovar strings.Builder
 	for _, token := range NewMkParser(nil, value, false).MkTokens() {
 		if token.Varuse == nil {
@@ -1029,7 +1029,7 @@ func (mkline *MkLineImpl) ForEachUsed(action func(varUse *MkVarUse, time vucTime
 	}
 }
 
-func (mkline *MkLineImpl) UnquoteShell(str string) string {
+func (*MkLineImpl) UnquoteShell(str string) string {
 	var sb strings.Builder
 	n := len(str)
 

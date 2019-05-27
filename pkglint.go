@@ -451,7 +451,7 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 //
 // This method must only be used for programming errors.
 // For runtime errors, use dummyLine.Fatalf.
-func (pkglint *Pkglint) Assertf(cond bool, format string, args ...interface{}) {
+func (*Pkglint) Assertf(cond bool, format string, args ...interface{}) {
 	if !cond {
 		panic("Pkglint internal error: " + sprintf(format, args...))
 	}
@@ -464,7 +464,7 @@ func (pkglint *Pkglint) Assertf(cond bool, format string, args ...interface{}) {
 //
 // Other than Assertf, this method does not require any comparison operator in the calling code.
 // This makes it possible to get 100% branch coverage for cases that "really can never fail".
-func (pkglint *Pkglint) AssertNil(err error, format string, args ...interface{}) {
+func (*Pkglint) AssertNil(err error, format string, args ...interface{}) {
 	assertNil(err, format, args...)
 }
 
