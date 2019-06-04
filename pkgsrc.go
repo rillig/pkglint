@@ -184,7 +184,7 @@ func (src *Pkgsrc) Latest(category string, re regex.Pattern, repl string) string
 //      => {"php-53", "php-56", "php-73"}
 func (src *Pkgsrc) ListVersions(category string, re regex.Pattern, repl string, errorIfEmpty bool) []string {
 	if G.Testing {
-		G.Assertf(
+		assertf(
 			hasPrefix(string(re), "^") && hasSuffix(string(re), "$"),
 			"Regular expression %q must be anchored at both ends.", re)
 	}

@@ -446,17 +446,6 @@ func (pkglint *Pkglint) checkdirPackage(dir string) {
 	pkg.check(files, mklines, allLines)
 }
 
-// Assertf checks that the condition is true. Otherwise it terminates the
-// process with a fatal error message, prefixed with "Pkglint internal error".
-//
-// This method must only be used for programming errors.
-// For runtime errors, use dummyLine.Fatalf.
-func (*Pkglint) Assertf(cond bool, format string, args ...interface{}) {
-	if !cond {
-		panic("Pkglint internal error: " + sprintf(format, args...))
-	}
-}
-
 // Returns the pkgsrc top-level directory, relative to the given directory.
 func findPkgsrcTopdir(dirname string) string {
 	for _, dir := range [...]string{".", "..", "../..", "../../.."} {

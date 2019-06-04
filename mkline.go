@@ -432,7 +432,7 @@ func (mkline *MkLineImpl) Tokenize(text string, warn bool) []*MkToken {
 //
 // When several separators are adjacent, this results in empty words in the output.
 func (mkline *MkLineImpl) ValueSplit(value string, separator string) []string {
-	G.Assertf(separator != "", "Separator must not be empty; use ValueFields to split on whitespace")
+	assertf(separator != "", "Separator must not be empty; use ValueFields to split on whitespace")
 
 	tokens := mkline.Tokenize(value, false)
 	var split []string
@@ -609,7 +609,7 @@ func (mkline *MkLineImpl) ResolveVarsInRelativePath(relativePath string) string 
 			// Relative pkgsrc paths usually only contain two or three levels.
 			// A possible reason for reaching this assertion is a pkglint unit test
 			// that uses t.NewMkLines instead of the correct t.SetUpFileMkLines.
-			G.Assertf(!contains(pkgsrcdir, "../../../../.."),
+			assertf(!contains(pkgsrcdir, "../../../../.."),
 				"Relative path %q for %q is too deep below the pkgsrc root %q.",
 				pkgsrcdir, basedir, G.Pkgsrc.File("."))
 		}
@@ -735,7 +735,7 @@ again:
 			return main, lexer.Rest()
 		}
 
-		G.Assertf(lexer.EOF(), "unescapeComment(%q): sb = %q, rest = %q", text, main, lexer.Rest())
+		assertf(lexer.EOF(), "unescapeComment(%q): sb = %q, rest = %q", text, main, lexer.Rest())
 		return main, ""
 	}
 
@@ -803,7 +803,7 @@ func (p MkLineParser) split(line Line, text string) mkLineSplitResult {
 			tokens = append(tokens, &MkToken{other, nil})
 
 		} else {
-			G.Assertf(lexer.SkipByte('$'), "Parse error for %q.", text)
+			assertf(lexer.SkipByte('$'), "Parse error for %q.", text)
 			tokens = append(tokens, &MkToken{"$", nil})
 		}
 	}
@@ -813,7 +813,7 @@ func (p MkLineParser) split(line Line, text string) mkLineSplitResult {
 		comment = comment[1:]
 	}
 
-	G.Assertf(lexer.Rest() == "", "Parse error for %q.", text)
+	assertf(lexer.Rest() == "", "Parse error for %q.", text)
 
 	mainWithSpaces := main
 	main = rtrimHspace(main)
@@ -1307,7 +1307,7 @@ func (ind *Indentation) Varnames() []string {
 	var varnames []string
 	for _, level := range ind.levels {
 		for _, levelVarname := range level.conditionalVars {
-			G.Assertf(
+			assertf(
 				!hasSuffix(levelVarname, "_MK"),
 				"multiple-inclusion guard must be filtered out earlier.")
 			varnames = append(varnames, levelVarname)

@@ -147,6 +147,17 @@ func assertNil(err error, format string, args ...interface{}) {
 	}
 }
 
+// assertf checks that the condition is true. Otherwise it terminates the
+// process with a fatal error message, prefixed with "Pkglint internal error".
+//
+// This method must only be used for programming errors.
+// For runtime errors, use dummyLine.Fatalf.
+func assertf(cond bool, format string, args ...interface{}) {
+	if !cond {
+		panic("Pkglint internal error: " + sprintf(format, args...))
+	}
+}
+
 func isEmptyDir(filename string) bool {
 	if hasSuffix(filename, "/CVS") {
 		return true

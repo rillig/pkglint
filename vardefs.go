@@ -58,7 +58,7 @@ func (reg *VarTypeRegistry) DefineType(varcanon string, vartype *Vartype) {
 
 func (reg *VarTypeRegistry) Define(varname string, basicType *BasicType, options vartypeOptions, aclEntries ...ACLEntry) {
 	m, varbase, varparam := match2(varname, `^([A-Z_.][A-Z0-9_]*|@)(|\*|\.\*)$`)
-	G.Assertf(m, "invalid variable name")
+	assertf(m, "invalid variable name")
 
 	vartype := NewVartype(basicType, options, aclEntries...)
 
@@ -100,7 +100,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	//  - why the predefined permission set is not good enough
 	//  - which packages need this custom permission set.
 	acl := func(varname string, basicType *BasicType, options vartypeOptions, aclEntries ...string) {
-		G.Assertf(!reg.DefinedExact(varname), "Variable %q must only be defined once.", varname)
+		assertf(!reg.DefinedExact(varname), "Variable %q must only be defined once.", varname)
 		reg.DefineParse(varname, basicType, options, aclEntries...)
 	}
 
@@ -1690,7 +1690,7 @@ func enum(values string) *BasicType {
 
 func (reg *VarTypeRegistry) parseACLEntries(varname string, aclEntries ...string) []ACLEntry {
 
-	G.Assertf(len(aclEntries) > 0, "At least one ACL entry must be given.")
+	assertf(len(aclEntries) > 0, "At least one ACL entry must be given.")
 
 	// TODO: Use separate rules for infrastructure files.
 	//  These rules would have the "infra:" prefix
@@ -1702,10 +1702,10 @@ func (reg *VarTypeRegistry) parseACLEntries(varname string, aclEntries ...string
 	prevperms := "(first)"
 	for _, arg := range aclEntries {
 		fields := strings.Split(arg, ": ")
-		G.Assertf(len(fields) == 2, "ACL entry %q must have exactly 1 colon.", arg)
+		assertf(len(fields) == 2, "ACL entry %q must have exactly 1 colon.", arg)
 		globs, perms := fields[0], fields[1]
 
-		G.Assertf(perms != prevperms, "Repeated permissions %q for %q.", perms, varname)
+		assertf(perms != prevperms, "Repeated permissions %q for %q.", perms, varname)
 		prevperms = perms
 
 		permissions := reg.parsePermissions(varname, globs, perms)
@@ -1719,7 +1719,7 @@ func (reg *VarTypeRegistry) parseACLEntries(varname string, aclEntries ...string
 			default:
 				withoutSpecial := strings.TrimPrefix(glob, "special:")
 				if withoutSpecial == glob {
-					G.Assertf(false, "Invalid ACL glob %q for %q.", glob, varname)
+					assertf(false, "Invalid ACL glob %q for %q.", glob, varname)
 				} else {
 					glob = withoutSpecial
 				}
@@ -1727,7 +1727,7 @@ func (reg *VarTypeRegistry) parseACLEntries(varname string, aclEntries ...string
 			for _, prev := range result {
 				matched, err := path.Match(prev.glob, glob)
 				assertNil(err, "Invalid ACL pattern %q for %q", glob, varname)
-				G.Assertf(!matched, "Unreachable ACL pattern %q for %q.", glob, varname)
+				assertf(!matched, "Unreachable ACL pattern %q for %q.", glob, varname)
 			}
 			result = append(result, NewACLEntry(glob, permissions))
 		}
@@ -1769,7 +1769,7 @@ func (reg *VarTypeRegistry) parsePermissions(varname, globs, perms string) ACLPe
 	remove("use-loadtime", aclpUseLoadtime)
 
 	if len(splitPerms) > 0 {
-		G.Assertf(
+		assertf(
 			false,
 			"Invalid ACL permission %q for %q in %q. "+
 				"Remaining parts are %q. "+

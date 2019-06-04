@@ -384,7 +384,7 @@ func (tr *Tools) Usable(tool *Tool, time ToolTime) bool {
 }
 
 func (tr *Tools) Fallback(other *Tools) {
-	G.Assertf(tr.fallback == nil, "Tools.Fallback must only be called once.")
+	assertf(tr.fallback == nil, "Tools.Fallback must only be called once.")
 	tr.fallback = other
 }
 
