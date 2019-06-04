@@ -810,6 +810,18 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_indentation(c *check
 		"SUBST_VARS.fix-paths=           PREFIX")
 }
 
+func (s *Suite) Test_SubstContext_extractVarname(c *check.C) {
+	t := s.Init(c)
+
+	test := func(input, expected string) {
+		t.Check((*SubstContext).extractVarname(nil, input), equals, expected)
+	}
+
+	test("s,@VAR@,${VAR},", "VAR")
+	test("s,@VAR.param@,${VAR.param},", "VAR.param")
+	test("s,@VAR,VAR@,${VAR},", "")
+}
+
 // As of May 2019, pkglint does not check the order of the variables in
 // a SUBST block. Enforcing this order, or at least suggesting it, would
 // make pkgsrc packages more uniform, which is a good idea, but not urgent.
