@@ -817,9 +817,44 @@ func (s *Suite) Test_SubstContext_extractVarname(c *check.C) {
 		t.Check((*SubstContext).extractVarname(nil, input), equals, expected)
 	}
 
+	// A simple variable name.
 	test("s,@VAR@,${VAR},", "VAR")
+
+	// A parameterized variable name.
 	test("s,@VAR.param@,${VAR.param},", "VAR.param")
+
+	// Only substitution commands can be replaced with SUBST_VARS.
+	test("/pattern/d", "")
+
+	// An incomplete substitution command.
+	test("s", "")
+
+	// Wrong placeholder character, only @ works.
+	test("s,!VAR!,${VAR},", "")
+
+	// The placeholder must have exactly 1 @ on each side.
+	test("s,@@VAR@@,${VAR},", "")
+
+	// Malformed because the comma is the separator.
 	test("s,@VAR,VAR@,${VAR},", "")
+
+	// The replacement pattern is not a simple variable name enclosed in @.
+	test("s,@VAR!VAR@,${VAR},", "")
+
+	// The replacement may only contain the :Q modifier.
+	test("s,@VAR@,${VAR:Mpattern},", "")
+
+	// The :Q modifier is allowed in the replacement.
+	test("s,@VAR@,${VAR:Q},", "VAR")
+
+	// The replacement may contain the :Q modifier only once.
+	test("s,@VAR@,${VAR:Q:Q},", "")
+
+	// The replacement must be a plain variable expression, without prefix.
+	test("s,@VAR@,prefix${VAR},", "")
+
+	// The replacement must be a plain variable expression, without suffix.
+	test("s,@VAR@,${VAR}suffix,", "")
 }
 
 // As of May 2019, pkglint does not check the order of the variables in
