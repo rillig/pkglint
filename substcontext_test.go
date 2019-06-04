@@ -553,7 +553,8 @@ func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {
 		"SUBST_SED.test+=\t-e s,@SH@,'\"'${SH:Q}'\"',g",  // Cannot be replaced since the double quotes are added.
 		"SUBST_SED.test+=\t-e s",                         // Just to get 100% code coverage.
 		"SUBST_SED.test+=\t-e s,@SH@,${SH:Q}",            // Just to get 100% code coverage.
-		"SUBST_SED.test+=\t-e s,@SH@,${SH:Q}, # comment", // This is not fixed automatically.
+		"SUBST_SED.test+=\t-e s,@SH@,${SH:Q}, # comment", // Just a note; not fixed because of the comment.
+		"SUBST_SED.test+=\t-n s,@SH@,${SH:Q},",           // Just a note; not fixed because of the -n.
 		"# end")
 
 	mklines.Check()
@@ -579,6 +580,10 @@ func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {
 		"NOTE: subst.mk:13: The substitution command \"s,'@SH@','${SH}',\" "+
 			"can be replaced with \"SUBST_VARS.test+= SH\".",
 		"NOTE: subst.mk:18: The substitution command \"s,@SH@,${SH:Q},\" "+
+			"can be replaced with \"SUBST_VARS.test+= SH\".",
+		"NOTE: subst.mk:19: Please always use \"-e\" in sed commands, "+
+			"even if there is only one substitution.",
+		"NOTE: subst.mk:19: The substitution command \"s,@SH@,${SH:Q},\" "+
 			"can be replaced with \"SUBST_VARS.test+= SH\".")
 
 	t.SetUpCommandLine("--show-autofix")
