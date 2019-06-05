@@ -60,6 +60,7 @@ func (s *Suite) Test_Paragraph_AlignTo(c *check.C) {
 		"# comment",
 		"VAR=value",
 		"VAR=\t\tvalue",
+		"VAR=\t \tvalue",
 		"VAR=\t\t\tvalue")
 	para := NewParagraph(nil)
 	for _, mkline := range mklines.mklines {
@@ -73,12 +74,14 @@ func (s *Suite) Test_Paragraph_AlignTo(c *check.C) {
 
 	t.CheckOutputLines(
 		"AUTOFIX: ~/filename.mk:4: Replacing \"\" with \"\\t\\t\".",
-		"AUTOFIX: ~/filename.mk:6: Replacing \"\\t\\t\\t\" with \"\\t\\t\".")
+		"AUTOFIX: ~/filename.mk:6: Replacing \"\\t \\t\" with \"\\t\\t\".",
+		"AUTOFIX: ~/filename.mk:7: Replacing \"\\t\\t\\t\" with \"\\t\\t\".")
 
 	t.CheckFileLinesDetab("filename.mk",
 		MkRcsID,
 		"",
 		"# comment",
+		"VAR=            value",
 		"VAR=            value",
 		"VAR=            value",
 		"VAR=            value")
