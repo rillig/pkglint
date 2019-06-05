@@ -1152,7 +1152,7 @@ func (si *StringInterner) Intern(str string) string {
 	return key
 }
 
-// StringSets stores unique strings in insertion order.
+// StringSet stores unique strings in insertion order.
 type StringSet struct {
 	Elements []string
 	seen     map[string]struct{}
