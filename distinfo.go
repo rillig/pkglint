@@ -436,7 +436,7 @@ func computePatchSha1Hex(patchFilename string) (string, error) {
 	skipText := []byte("$" + "NetBSD")
 	for _, patchLine := range bytes.SplitAfter(patchBytes, []byte("\n")) {
 		if !bytes.Contains(patchLine, skipText) {
-			hasher.Write(patchLine)
+			_, _ = hasher.Write(patchLine)
 		}
 	}
 	return sprintf("%x", hasher.Sum(nil)), nil
