@@ -1291,6 +1291,24 @@ func (s *Suite) Test_MkLine_ResolveVarsInRelativePath__directory_depth(c *check.
 		"ERROR: ~/multimedia/totem/bla.mk:2: Relative path \"../../multimedia/totem/Makefile\" does not exist.")
 }
 
+// Just for code coverage
+func (s *Suite) Test_MkLine_ResolveVarsInRelativePath__without_tracing(c *check.C) {
+	t := s.Init(c)
+
+	t.DisableTracing()
+	t.SetUpVartypes()
+	mklines := t.SetUpFileMkLines("buildlink3.mk",
+		MkRcsID,
+		"BUILDLINK_PKGSRCDIR.totem?=\t../../${PKGPATH.multimedia/totem}")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		// FIXME: It's ok to have variable parameters including a slash.
+		"WARN: ~/buildlink3.mk:2: Invalid part \"/totem\" after variable name \"PKGPATH.multimedia\".",
+		"WARN: ~/buildlink3.mk:2: PKGPATH.multimedia/totem is used but not defined.")
+}
+
 func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 	t := s.Init(c)
 
