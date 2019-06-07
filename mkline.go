@@ -813,8 +813,6 @@ func (p MkLineParser) split(line Line, text string) mkLineSplitResult {
 		comment = comment[1:]
 	}
 
-	assertf(lexer.Rest() == "", "Parse error for %q.", text)
-
 	mainWithSpaces := main
 	main = rtrimHspace(main)
 	spaceBeforeComment := ifelseStr(true, mainWithSpaces[len(main):], "")
