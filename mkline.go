@@ -764,14 +764,6 @@ func (p MkLineParser) split(line Line, text string) mkLineSplitResult {
 	parser := NewMkParser(line, main, line != nil)
 	lexer := parser.lexer
 
-	rtrimHspace := func(s string) string {
-		end := len(s)
-		for end > 0 && isHspace(s[end-1]) {
-			end--
-		}
-		return s[:end]
-	}
-
 	parseOther := func() string {
 		var sb strings.Builder
 

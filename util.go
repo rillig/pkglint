@@ -91,6 +91,14 @@ func trimHspace(str string) string {
 	return str[start:end]
 }
 
+func rtrimHspace(str string) string {
+	end := len(str)
+	for end > 0 && isHspace(str[end-1]) {
+		end--
+	}
+	return str[:end]
+}
+
 func trimCommon(a, b string) (string, string) {
 	// trim common prefix
 	for len(a) > 0 && len(b) > 0 && a[0] == b[0] {
