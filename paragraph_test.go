@@ -11,7 +11,7 @@ func (s *Suite) Test_Paragraph_Clear(c *check.C) {
 
 	t.Check(para.mklines, check.IsNil)
 
-	para.Add(t.NewMkLine("filename.mk", 123, ""))
+	para.Add(t.NewMkLine("filename.mk", 123, "#"))
 
 	para.Clear()
 
@@ -24,8 +24,6 @@ func (s *Suite) Test_Paragraph_Align(c *check.C) {
 	t.SetUpCommandLine("-Wall", "--autofix")
 	mklines := t.SetUpFileMkLines("filename.mk",
 		MkRcsID,
-		"",
-		"# comment",
 		"VAR=value",
 		"VAR=\t\t\tvalue")
 	para := NewParagraph(nil)
@@ -39,13 +37,11 @@ func (s *Suite) Test_Paragraph_Align(c *check.C) {
 	mklines.SaveAutofixChanges()
 
 	t.CheckOutputLines(
-		"AUTOFIX: ~/filename.mk:4: Replacing \"\" with \"\\t\".",
-		"AUTOFIX: ~/filename.mk:5: Replacing \"\\t\\t\\t\" with \"\\t\".")
+		"AUTOFIX: ~/filename.mk:2: Replacing \"\" with \"\\t\".",
+		"AUTOFIX: ~/filename.mk:3: Replacing \"\\t\\t\\t\" with \"\\t\".")
 
 	t.CheckFileLinesDetab("filename.mk",
 		MkRcsID,
-		"",
-		"# comment",
 		"VAR=    value",
 		"VAR=    value")
 }
@@ -56,8 +52,6 @@ func (s *Suite) Test_Paragraph_AlignTo(c *check.C) {
 	t.SetUpCommandLine("-Wall", "--autofix")
 	mklines := t.SetUpFileMkLines("filename.mk",
 		MkRcsID,
-		"",
-		"# comment",
 		"VAR=value",
 		"VAR=\t\tvalue",
 		"VAR=\t \tvalue",
@@ -73,14 +67,12 @@ func (s *Suite) Test_Paragraph_AlignTo(c *check.C) {
 	mklines.SaveAutofixChanges()
 
 	t.CheckOutputLines(
-		"AUTOFIX: ~/filename.mk:4: Replacing \"\" with \"\\t\\t\".",
-		"AUTOFIX: ~/filename.mk:6: Replacing \"\\t \\t\" with \"\\t\\t\".",
-		"AUTOFIX: ~/filename.mk:7: Replacing \"\\t\\t\\t\" with \"\\t\\t\".")
+		"AUTOFIX: ~/filename.mk:2: Replacing \"\" with \"\\t\\t\".",
+		"AUTOFIX: ~/filename.mk:4: Replacing \"\\t \\t\" with \"\\t\\t\".",
+		"AUTOFIX: ~/filename.mk:5: Replacing \"\\t\\t\\t\" with \"\\t\\t\".")
 
 	t.CheckFileLinesDetab("filename.mk",
 		MkRcsID,
-		"",
-		"# comment",
 		"VAR=            value",
 		"VAR=            value",
 		"VAR=            value",

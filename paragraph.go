@@ -21,6 +21,7 @@ func (p *Paragraph) Clear() {
 }
 
 func (p *Paragraph) Add(mkline MkLine) {
+	assertf(!mkline.IsEmpty(), "A paragraph must not contain empty lines.")
 	p.mklines = append(p.mklines, mkline)
 }
 
