@@ -2107,6 +2107,13 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 				varuse("pattern"),
 				text(")")),
 		})
+
+	test("   # comment after spaces",
+		mkLineSplitResult{
+			spaceBeforeComment: "   ",
+			hasComment:         true,
+			comment:            " comment after spaces",
+		})
 }
 
 func (s *Suite) Test_MkLineParser_parseDirective(c *check.C) {

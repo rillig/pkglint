@@ -759,9 +759,9 @@ type mkLineSplitResult struct {
 // have comments.
 func (p MkLineParser) split(line Line, text string) mkLineSplitResult {
 
-	main, comment := p.unescapeComment(text)
+	mainWithSpaces, comment := p.unescapeComment(text)
 
-	parser := NewMkParser(line, main, line != nil)
+	parser := NewMkParser(line, mainWithSpaces, line != nil)
 	lexer := parser.lexer
 
 	parseOther := func() string {
@@ -805,18 +805,21 @@ func (p MkLineParser) split(line Line, text string) mkLineSplitResult {
 		comment = comment[1:]
 	}
 
-	mainWithSpaces := main
-	main = rtrimHspace(main)
-	spaceBeforeComment := ifelseStr(true, mainWithSpaces[len(main):], "")
-	if spaceBeforeComment != "" && len(tokens) > 0 {
+	mainTrimmed := rtrimHspace(mainWithSpaces)
+	spaceBeforeComment := mainWithSpaces[len(mainTrimmed):]
+	if spaceBeforeComment != "" {
 		tokenText := &tokens[len(tokens)-1].Text
 		*tokenText = rtrimHspace(*tokenText)
 		if *tokenText == "" {
-			tokens = tokens[:len(tokens)-1]
+			if len(tokens) == 1 {
+				tokens = nil
+			} else {
+				tokens = tokens[:len(tokens)-1]
+			}
 		}
 	}
 
-	return mkLineSplitResult{main, tokens, spaceBeforeComment, hasComment, comment}
+	return mkLineSplitResult{mainTrimmed, tokens, spaceBeforeComment, hasComment, comment}
 }
 
 func (p MkLineParser) parseDirective(line Line, data mkLineSplitResult) MkLine {
