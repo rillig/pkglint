@@ -33,6 +33,12 @@ func (p *Paragraph) Align() {
 	align.Finish()
 }
 
+// AlignTo realigns all variable assignments in the paragraph so that their
+// values start in the same column. Variable assignments that are commented
+// out are also realigned.
+//
+// No warning or note is logged. Therefore this method must only be used to
+// realign the whole paragraph after one of its lines has been modified.
 func (p *Paragraph) AlignTo(column int) {
 	for _, mkline := range p.mklines {
 		if !mkline.IsVarassign() {
