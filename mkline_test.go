@@ -260,6 +260,35 @@ func (s *Suite) Test_MkLine_ValueAlign__commented(c *check.C) {
 	c.Check(valueAlign, equals, "#SUBST_SED.${param}=\t")
 }
 
+func (s *Suite) Test_MkLine_FirstLineContainsValue(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("filename.mk",
+		MkRcsID,
+		"VAR=\tvalue",
+		"VAR= value \\",
+		"\tstarts in first line",
+		"VAR= \\",
+		"\tvalue starts in second line",
+		"#VAR= value \\",
+		"\tstarts in first line",
+		"#VAR= \\",
+		"\tvalue starts in second line")
+
+	t.ExpectPanic(
+		func() { mklines.mklines[0].FirstLineContainsValue() },
+		"Pkglint internal error: Line must be a variable assignment.")
+
+	t.ExpectPanic(
+		func() { mklines.mklines[1].FirstLineContainsValue() },
+		"Pkglint internal error: Line must be multiline.")
+
+	t.Check(mklines.mklines[2].FirstLineContainsValue(), equals, true)
+	t.Check(mklines.mklines[3].FirstLineContainsValue(), equals, false)
+	t.Check(mklines.mklines[4].FirstLineContainsValue(), equals, true)
+	t.Check(mklines.mklines[5].FirstLineContainsValue(), equals, false)
+}
+
 // Demonstrates how a simple condition is structured internally.
 // For most of the checks, using cond.Walk is the simplest way to go.
 func (s *Suite) Test_MkLine_Cond(c *check.C) {

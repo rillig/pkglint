@@ -320,6 +320,24 @@ func (mkline *MkLineImpl) Value() string { return mkline.data.(mkLineAssign).val
 // The leading "#" is included so that pkglint can distinguish between no comment at all and an empty comment.
 func (mkline *MkLineImpl) VarassignComment() string { return mkline.data.(mkLineAssign).comment }
 
+// FirstLineContainsValue returns whether the variable assignment of a
+// multiline contains a textual value in the first line.
+//
+//  VALUE_IN_FIRST_LINE= value \
+//          starts in first line
+//  NO_VALUE_IN_FIRST_LINE= \
+//          value starts in second line
+func (mkline *MkLineImpl) FirstLineContainsValue() bool {
+	assertf(mkline.IsVarassign() || mkline.IsCommentedVarassign(), "Line must be a variable assignment.")
+	assertf(mkline.IsMultiline(), "Line must be multiline.")
+
+	// Parsing the continuation marker as variable value is cheating but works well.
+	text := strings.TrimSuffix(mkline.raw[0].orignl, "\n")
+	data := MkLineParser{}.split(nil, text)
+	_, a := MkLineParser{}.MatchVarassign(mkline.Line, text, data)
+	return a.value != "\\"
+}
+
 func (mkline *MkLineImpl) ShellCommand() string { return mkline.data.(mkLineShell).command }
 
 func (mkline *MkLineImpl) Indent() string {
