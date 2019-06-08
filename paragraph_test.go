@@ -140,18 +140,15 @@ func (s *Suite) Test_Paragraph_AlignTo__outlier(c *check.C) {
 		para.Add(mkline)
 	}
 
-	para.AlignTo(16)
+	para.AlignTo(8)
 	mklines.SaveAutofixChanges()
 
 	t.CheckOutputLines(
-		"AUTOFIX: ~/filename.mk:2: Replacing \" \" with \"\\t\\t\".",
-		"AUTOFIX: ~/filename.mk:3: Replacing \" \" with \"\".")
+		"AUTOFIX: ~/filename.mk:2: Replacing \" \" with \"\\t\".")
 
 	t.CheckFileLinesDetab("filename.mk",
 		MkRcsID,
-		// FIXME: Since the long line is an outlier, this value does not
-		//  need to be aligned in column 17.
-		"VAR=            value",
-		// FIXME: The space must be preserved.
-		"VERY_LONG_VARIABLE_NAME=value1")
+		"VAR=    value",
+		// The space is preserved since this line is an outlier.
+		"VERY_LONG_VARIABLE_NAME= value1")
 }

@@ -51,6 +51,9 @@ func (p *Paragraph) AlignTo(column int) {
 
 		align := mkline.ValueAlign()
 		oldWidth := tabWidth(align)
+		if tabWidth(rtrimHspace(align)) > column {
+			continue
+		}
 		if oldWidth == column && !hasSuffix(strings.TrimRight(align, "\t"), " ") {
 			continue
 		}
