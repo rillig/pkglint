@@ -303,6 +303,27 @@ func (s *Suite) Test_Varalign__continuation_lines(c *check.C) {
 	vt.Run()
 }
 
+// FIXME: The continuation line must not be fixed. It should either stay
+//  as it is, or the whole paragraph should be aligned to column 9, putting
+//  all variable values from the continuation line into the actual
+//  continuation line.
+func (s *Suite) Test_Varalign__continuation_line_one_tab_ahead(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR=\t\tvalue",
+		"MASTER_SITE_NEDIT=\thttps://example.org \\",
+		"\t\t\thttps://example.org")
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:2--3: This line should be aligned with \"\\t\\t\".")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:3: Replacing indentation \"\\t\\t\\t\" with \"\\t\\t\".")
+	vt.Fixed(
+		"VAR=            value",
+		"MASTER_SITE_NEDIT=      https://example.org \\",
+		"                https://example.org")
+	vt.Run()
+}
+
 // Ensures that a wrong warning introduced in ccb56a5 is not logged.
 func (s *Suite) Test_Varalign__aligned_continuation(c *check.C) {
 	vt := NewVaralignTester(s, c)
