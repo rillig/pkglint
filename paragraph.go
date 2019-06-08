@@ -57,6 +57,9 @@ func (p *Paragraph) AlignTo(column int) {
 		if oldWidth == column && !hasSuffix(strings.TrimRight(align, "\t"), " ") {
 			continue
 		}
+		if mkline.IsMultiline() && !mkline.FirstLineContainsValue() {
+			continue
+		}
 
 		trimmed := strings.TrimRightFunc(align, isHspaceRune)
 		newSpace := strings.Repeat("\t", (7+column-tabWidth(trimmed))/8)

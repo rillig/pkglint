@@ -113,13 +113,12 @@ func (s *Suite) Test_Paragraph_AlignTo__continued_lines(c *check.C) {
 	mklines.SaveAutofixChanges()
 
 	t.CheckOutputLines(
-		"AUTOFIX: ~/filename.mk:2: Replacing \" \" with \"\\t\\t\".",
 		"AUTOFIX: ~/filename.mk:4: Replacing \" \" with \"\\t\\t\".")
 
 	t.CheckFileLinesDetab("filename.mk",
 		MkRcsID,
-		// FIXME: Since this line does not contain the actual value, it doesn't need to be aligned.
-		"VAR=            \\",
+		// Since this line does not contain the actual value, it doesn't need to be aligned.
+		"VAR= \\",
 		"  value",
 		"VAR=            value1 \\",
 		// TODO: The continuation lines should be indented with at least one tab.
