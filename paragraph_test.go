@@ -18,6 +18,20 @@ func (s *Suite) Test_Paragraph_Clear(c *check.C) {
 	t.Check(para.mklines, check.IsNil)
 }
 
+func (s *Suite) Test_Paragraph_Add__empty_line(c *check.C) {
+	t := s.Init(c)
+
+	para := NewParagraph(nil)
+
+	para.Clear()
+
+	t.Check(para.mklines, check.IsNil)
+
+	t.ExpectPanic(
+		func() { para.Add(t.NewMkLine("filename.mk", 123, "")) },
+		"Pkglint internal error: A paragraph must not contain empty lines.")
+}
+
 func (s *Suite) Test_Paragraph_Align(c *check.C) {
 	t := s.Init(c)
 
@@ -77,4 +91,67 @@ func (s *Suite) Test_Paragraph_AlignTo(c *check.C) {
 		"VAR=            value",
 		"VAR=            value",
 		"VAR=            value")
+}
+
+func (s *Suite) Test_Paragraph_AlignTo__continued_lines(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--autofix")
+	mklines := t.SetUpFileMkLines("filename.mk",
+		MkRcsID,
+		"VAR= \\",
+		"  value",
+		"VAR= value1 \\",
+		"value2 \\",
+		"\t\tvalue3")
+	para := NewParagraph(nil)
+	for _, mkline := range mklines.mklines {
+		para.Add(mkline)
+	}
+
+	para.AlignTo(16)
+	mklines.SaveAutofixChanges()
+
+	t.CheckOutputLines(
+		"AUTOFIX: ~/filename.mk:2: Replacing \" \" with \"\\t\\t\".",
+		"AUTOFIX: ~/filename.mk:4: Replacing \" \" with \"\\t\\t\".")
+
+	t.CheckFileLinesDetab("filename.mk",
+		MkRcsID,
+		// FIXME: Since this line does not contain the actual value, it doesn't need to be aligned.
+		"VAR=            \\",
+		"  value",
+		"VAR=            value1 \\",
+		// TODO: The continuation lines should be indented with at least one tab.
+		"value2 \\",
+		"                value3")
+}
+
+func (s *Suite) Test_Paragraph_AlignTo__outlier(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--autofix")
+	mklines := t.SetUpFileMkLines("filename.mk",
+		MkRcsID,
+		"VAR= value",
+		"VERY_LONG_VARIABLE_NAME= value1")
+	para := NewParagraph(nil)
+	for _, mkline := range mklines.mklines {
+		para.Add(mkline)
+	}
+
+	para.AlignTo(16)
+	mklines.SaveAutofixChanges()
+
+	t.CheckOutputLines(
+		"AUTOFIX: ~/filename.mk:2: Replacing \" \" with \"\\t\\t\".",
+		"AUTOFIX: ~/filename.mk:3: Replacing \" \" with \"\".")
+
+	t.CheckFileLinesDetab("filename.mk",
+		MkRcsID,
+		// FIXME: Since the long line is an outlier, this value does not
+		//  need to be aligned in column 17.
+		"VAR=            value",
+		// FIXME: The space must be preserved.
+		"VERY_LONG_VARIABLE_NAME=value1")
 }

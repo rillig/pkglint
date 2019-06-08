@@ -25,12 +25,15 @@ func (p *Paragraph) Add(mkline MkLine) {
 	p.mklines = append(p.mklines, mkline)
 }
 
+func (p *Paragraph) ForEach(action func(mkline MkLine)) {
+	for _, mkline := range p.mklines {
+		action(mkline)
+	}
+}
+
 func (p *Paragraph) Align() {
 	var align VaralignBlock
-	for _, mkline := range p.mklines {
-		align.Process(mkline)
-	}
-
+	p.ForEach(align.Process)
 	align.Finish()
 }
 
