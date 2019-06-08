@@ -324,6 +324,30 @@ func (s *Suite) Test_Varalign__continuation_line_one_tab_ahead(c *check.C) {
 	vt.Run()
 }
 
+// As of June 2019, the long variable name doesn't count as an outlier
+// because it only needs one more tab than the second-longest variable.
+// This contradicts the visual impression, in which the variable names
+// differ largely in their length.
+//
+// TODO: The long variable name should count as an outlier since it is
+//  more than 8 characters longer, no matter how many tabs are needed.
+//
+// See cad/ghdl/Makefile revision 1.6.
+func (s *Suite) Test_Varalign__outlier_more_than_8_spaces(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"V2=\tvalue",
+		"V0000000000014=\tvalue")
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:1: This variable value should be aligned to column 17.")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\" with \"\\t\\t\".")
+	vt.Fixed(
+		"V2=             value",
+		"V0000000000014= value")
+	vt.Run()
+}
+
 // Ensures that a wrong warning introduced in ccb56a5 is not logged.
 func (s *Suite) Test_Varalign__aligned_continuation(c *check.C) {
 	vt := NewVaralignTester(s, c)
