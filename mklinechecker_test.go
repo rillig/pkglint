@@ -1832,17 +1832,6 @@ func (s *Suite) Test_MkLineChecker_checkVartype__CFLAGS(c *check.C) {
 		"WARN: Makefile:2: Compiler flag \"%s\\\\\\\"\" should start with a hyphen.")
 }
 
-func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation(c *check.C) {
-	t := s.Init(c)
-
-	mkline := t.NewMkLine("filename.mk", 123, ".if 0")
-
-	// Calling this method is only useful in the context of a whole file.
-	MkLineChecker{nil, mkline}.checkDirectiveIndentation(4)
-
-	t.CheckOutputEmpty()
-}
-
 func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation__autofix(c *check.C) {
 	t := s.Init(c)
 

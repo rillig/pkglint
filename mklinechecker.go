@@ -234,7 +234,7 @@ func (ck MkLineChecker) checkDirectiveFor(forVars map[string]bool, indentation *
 }
 
 func (ck MkLineChecker) checkDirectiveIndentation(expectedDepth int) {
-	if ck.MkLines == nil || !G.Opts.WarnSpace {
+	if !G.Opts.WarnSpace {
 		return
 	}
 	mkline := ck.MkLine
@@ -549,7 +549,7 @@ func (ck MkLineChecker) checkVaruseUndefined(vartype *Vartype, varname string) {
 	case G.Pkgsrc.vartypes.DefinedCanon(varname):
 		return
 
-	case ck.MkLines == nil || !ck.MkLines.FirstTimeSlice("used but not defined: ", varname):
+	case !ck.MkLines.FirstTimeSlice("used but not defined: ", varname):
 		return
 	}
 
@@ -1118,7 +1118,7 @@ func (ck MkLineChecker) checkVarassignLeftNotUsed() {
 		return
 	}
 
-	if ck.MkLines == nil || !ck.MkLines.FirstTimeSlice("defined but not used: ", varname) {
+	if !ck.MkLines.FirstTimeSlice("defined but not used: ", varname) {
 		return
 	}
 

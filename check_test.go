@@ -807,8 +807,9 @@ func (t *Tester) NewMkLine(filename string, lineno int, text string) MkLine {
 	return MkLineParser{}.Parse(t.NewLine(filename, lineno, text))
 }
 
-func (t *Tester) NewShellLineChecker(mklines MkLines, filename string, lineno int, text string) *ShellLineChecker {
-	return NewShellLineChecker(mklines, t.NewMkLine(filename, lineno, text))
+func (t *Tester) NewShellLineChecker(text string) *ShellLineChecker {
+	mklines := t.NewMkLines("filename.mk", text)
+	return NewShellLineChecker(mklines, mklines.mklines[0])
 }
 
 // NewLines returns a list of simple lines that belong together.
