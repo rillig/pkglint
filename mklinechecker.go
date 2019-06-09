@@ -408,10 +408,9 @@ func (ck MkLineChecker) checkVarassignLeftRationale() {
 	}
 
 	isRationale := func(mkline MkLine) bool {
-		if mkline.IsVarassign() || mkline.IsCommentedVarassign() {
-			return mkline.VarassignComment() != ""
-		}
-		return mkline.IsComment() && !hasPrefix(mkline.Text, "# $")
+		return mkline.IsComment() &&
+			!hasPrefix(mkline.Text, "# $") &&
+			!mkline.IsCommentedVarassign()
 	}
 
 	needsRationale := func(mkline MkLine) bool {

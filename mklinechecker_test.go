@@ -806,11 +806,18 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftRationale(c *check.C) {
 			"ONLY_FOR_PLATFORM+=\t*-*-*"),
 		nil...)
 
-	// A commented variable assignment does not count as a comment.
-	// Therefore it is not a rationale.
+	// A commented variable assignment does not count as a rationale,
+	// since it is not in plain text.
 	test(
 		lines(
 			"#VAR=\tvalue",
+			"ONLY_FOR_PLATFORM+=\t*-*-*"),
+		"WARN: filename.mk:4: Setting variable ONLY_FOR_PLATFORM should have a rationale.")
+
+	// Another variable assignment with comment does not count as a rationale.
+	test(
+		lines(
+			"PKGNAME=\t\tpackage-1.0 # this is not a rationale",
 			"ONLY_FOR_PLATFORM+=\t*-*-*"),
 		"WARN: filename.mk:4: Setting variable ONLY_FOR_PLATFORM should have a rationale.")
 
