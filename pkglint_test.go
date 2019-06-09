@@ -594,6 +594,27 @@ func (s *Suite) Test_Pkglint_checkReg__alternatives(c *check.C) {
 		"(Run \"pkglint -e\" to show explanations.)")
 }
 
+func (s *Suite) Test_Pkglint_checkReg__file_not_found(c *check.C) {
+	t := s.Init(c)
+
+	t.Chdir(".")
+
+	G.checkReg("buildlink3.mk", "buildlink3.mk", 2)
+	G.checkReg("DESCR", "DESCR", 2)
+	G.checkReg("distinfo", "distinfo", 2)
+	G.checkReg("MESSAGE", "MESSAGE", 2)
+	G.checkReg("patches/patch-aa", "patch-aa", 2)
+	G.checkReg("PLIST", "PLIST", 2)
+
+	t.CheckOutputLines(
+		"ERROR: buildlink3.mk: Cannot be read.",
+		"ERROR: DESCR: Cannot be read.",
+		"ERROR: distinfo: Cannot be read.",
+		"ERROR: MESSAGE: Cannot be read.",
+		"ERROR: patches/patch-aa: Cannot be read.",
+		"ERROR: PLIST: Cannot be read.")
+}
+
 func (s *Suite) Test_Pkglint__profiling(c *check.C) {
 	t := s.Init(c)
 
