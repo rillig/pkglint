@@ -174,7 +174,7 @@ func (v *Var) Write(mkline MkLine, conditional bool, conditionVarnames ...string
 
 	v.writeLocations = append(v.writeLocations, mkline)
 
-	if conditional || len(conditionVarnames) > 0 {
+	if conditional {
 		v.conditional = true
 	}
 	v.conditionalVars.AddAll(conditionVarnames)
