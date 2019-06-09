@@ -259,10 +259,9 @@ func (pkglint *Pkglint) Main(argv ...string) (exitCode int) {
 	pkglint.Pkgsrc.LoadInfrastructure()
 
 	currentUser, err := user.Current()
-	if err == nil {
-		// On Windows, this is `Computername\Username`.
-		pkglint.Username = replaceAll(currentUser.Username, `^.*\\`, "")
-	}
+	assertNil(err, "user.Current")
+	// On Windows, this is `Computername\Username`.
+	pkglint.Username = replaceAll(currentUser.Username, `^.*\\`, "")
 
 	for len(pkglint.Todo) > 0 {
 		item := pkglint.Todo[0]
