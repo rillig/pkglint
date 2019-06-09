@@ -418,68 +418,52 @@ func (s *Suite) Test_ShellLineChecker_CheckWord(c *check.C) {
 
 	t.SetUpVartypes()
 
-	test := func(shellWord string, checkQuoting bool) {
+	test := func(shellWord string, checkQuoting bool, diagnostics ...string) {
 		// See checkVaruseUndefined and checkVarassignLeftNotUsed.
 		ck := t.NewShellLineChecker("\t echo " + shellWord)
 		ck.CheckWord(shellWord, checkQuoting, RunTime)
+		t.CheckOutput(diagnostics)
 	}
-
-	test("${${list}}", false)
 
 	// No warning for the outer variable since it is completely indirect.
 	// The inner variable ${list} must still be defined, though.
-	t.CheckOutputLines(
+	test("${${list}}", false,
 		"WARN: filename.mk:1: list is used but not defined.")
-
-	test("${SED_FILE.${id}}", false)
 
 	// No warning for variables that are partly indirect.
 	// TODO: Why not?
-	t.CheckOutputLines(
+	test("${SED_FILE.${id}}", false,
 		"WARN: filename.mk:1: id is used but not defined.")
 
 	// TODO: Since $@ refers to ${.TARGET} and not sh.argv, there is no point in checking for quotes.
 	// TODO: Having the same tests for $$@ would be much more interesting.
 
 	// The unquoted $@ takes a different code path in pkglint than the quoted $@.
-	test("$@", false)
-
-	t.CheckOutputLines(
+	test("$@", false,
 		"WARN: filename.mk:1: Please use \"${.TARGET}\" instead of \"$@\".")
 
 	// When $@ appears as part of a shell token, it takes another code path in pkglint.
-	test("-$@-", false)
-
-	t.CheckOutputLines(
+	test("-$@-", false,
 		"WARN: filename.mk:1: Please use \"${.TARGET}\" instead of \"$@\".")
 
 	// The unquoted $@ takes a different code path in pkglint than the quoted $@.
-	test("\"$@\"", false)
-
-	t.CheckOutputLines(
+	test("\"$@\"", false,
 		"WARN: filename.mk:1: Please use \"${.TARGET}\" instead of \"$@\".")
 
-	test("${COMMENT:Q}", true)
+	test("${COMMENT:Q}", true,
+		nil...)
 
-	t.CheckOutputEmpty()
-
-	test("\"${DISTINFO_FILE:Q}\"", true)
-
-	t.CheckOutputLines(
+	test("\"${DISTINFO_FILE:Q}\"", true,
 		"NOTE: filename.mk:1: The :Q operator isn't necessary for ${DISTINFO_FILE} here.")
 
-	test("embed${DISTINFO_FILE:Q}ded", true)
-
-	t.CheckOutputLines(
+	test("embed${DISTINFO_FILE:Q}ded", true,
 		"NOTE: filename.mk:1: The :Q operator isn't necessary for ${DISTINFO_FILE} here.")
 
-	test("s,\\.,,", true)
+	test("s,\\.,,", true,
+		nil...)
 
-	t.CheckOutputEmpty()
-
-	test("\"s,\\.,,\"", true)
-
-	t.CheckOutputEmpty()
+	test("\"s,\\.,,\"", true,
+		nil...)
 }
 
 func (s *Suite) Test_ShellLineChecker_CheckWord__dollar_without_variable(c *check.C) {
