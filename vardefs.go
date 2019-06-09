@@ -86,351 +86,391 @@ func (reg *VarTypeRegistry) DefineParse(varname string, basicType *BasicType, op
 	reg.Define(varname, basicType, options, parsedEntries...)
 }
 
+// acl defines the permissions of a variable by listing the permissions
+// individually.
+//
+// Each variable that uses this function directly must document:
+//  - which of the predefined permission sets is the closest
+//  - how this individual permission set differs
+//  - why the predefined permission set is not good enough
+//  - which packages need this custom permission set.
+func (reg *VarTypeRegistry) acl(varname string, basicType *BasicType, options vartypeOptions, aclEntries ...string) {
+	assertf(!reg.DefinedExact(varname), "Variable %q must only be defined once.", varname)
+	reg.DefineParse(varname, basicType, options, aclEntries...)
+}
+
+// acllist defines the permissions of a list variable by listing
+// the permissions individually.
+//
+// Each variable that uses this function directly must document:
+//  - which of the predefined permission sets is the closest
+//  - how this individual permission set differs
+//  - why the predefined permission set is not good enough
+//  - which packages need this custom permission set.
+func (reg *VarTypeRegistry) acllist(varname string, basicType *BasicType, options vartypeOptions, aclEntries ...string) {
+	reg.acl(varname, basicType, options|List, aclEntries...)
+}
+
+// A package-settable variable may be set in all Makefiles except buildlink3.mk and builtin.mk.
+func (reg *VarTypeRegistry) pkg(varname string, basicType *BasicType) {
+	reg.acl(varname, basicType,
+		PackageSettable,
+		"buildlink3.mk, builtin.mk: none",
+		"Makefile, Makefile.*, *.mk: default, set, use")
+}
+
+// Like pkg, but always needs a rationale.
+func (reg *VarTypeRegistry) pkgrat(varname string, basicType *BasicType) {
+	reg.acl(varname, basicType,
+		PackageSettable|NeedsRationale,
+		"buildlink3.mk, builtin.mk: none",
+		"Makefile, Makefile.*, *.mk: default, set, use")
+}
+
+// pkgload is the same as pkg, except that the variable may be accessed at load time.
+func (reg *VarTypeRegistry) pkgload(varname string, basicType *BasicType) {
+	reg.acl(varname, basicType,
+		PackageSettable,
+		"buildlink3.mk: none",
+		"builtin.mk: use, use-loadtime",
+		"Makefile, Makefile.*, *.mk: default, set, use, use-loadtime")
+}
+
+// A package-defined list may be defined and appended to in all Makefiles
+// except buildlink3.mk and builtin.mk. Simple assignment (instead of
+// appending) is also allowed. If this leads of an unconditional
+// assignment overriding a previous value, the redundancy check will
+// catch it.
+func (reg *VarTypeRegistry) pkglist(varname string, basicType *BasicType) {
+	reg.acllist(varname, basicType,
+		List|PackageSettable,
+		"buildlink3.mk, builtin.mk: none",
+		"Makefile, Makefile.*, *.mk: default, set, append, use")
+}
+
+// Like pkglist, but always needs a rationale.
+func (reg *VarTypeRegistry) pkglistrat(varname string, basicType *BasicType) {
+	reg.acllist(varname, basicType,
+		List|PackageSettable|NeedsRationale,
+		"buildlink3.mk, builtin.mk: none",
+		"Makefile, Makefile.*, *.mk: default, set, append, use")
+}
+
+// pkgappend declares a variable that may use the += operator,
+// even though it is not a list where each item can be interpreted
+// on its own.
+//
+// This applies to lists in which a single logical list item is
+// composed of several syntactical words, such as CONF_FILES, which is
+// a list of filename pairs.
+//
+// This also applies to COMMENT, which is not a list at all but a string
+// that is sometimes composed of a common prefix and a package-specific
+// suffix.
+func (reg *VarTypeRegistry) pkgappend(varname string, basicType *BasicType) {
+	reg.acl(varname, basicType,
+		PackageSettable,
+		"buildlink3.mk, builtin.mk: none",
+		"Makefile, Makefile.*, *.mk: default, set, append, use")
+}
+
+func (reg *VarTypeRegistry) pkgappendbl3(varname string, basicType *BasicType) {
+	reg.acl(varname, basicType,
+		PackageSettable,
+		"Makefile, Makefile.*, *.mk: default, set, append, use")
+}
+
+// Like pkgappend, but always needs a rationale.
+func (reg *VarTypeRegistry) pkgappendrat(varname string, basicType *BasicType) {
+	reg.acl(varname, basicType,
+		PackageSettable|NeedsRationale,
+		"buildlink3.mk, builtin.mk: none",
+		"Makefile, Makefile.*, *.mk: default, set, append, use")
+}
+
+// Some package-defined variables may be modified in buildlink3.mk files.
+// These variables are typically related to compiling and linking files
+// from C and related languages.
+func (reg *VarTypeRegistry) pkgbl3(varname string, basicType *BasicType) {
+	reg.acl(varname, basicType,
+		PackageSettable,
+		"Makefile, Makefile.*, *.mk: default, set, use")
+}
+
+// Some package-defined lists may also be modified in buildlink3.mk files,
+// for example platform-specific CFLAGS and LDFLAGS.
+func (reg *VarTypeRegistry) pkglistbl3(varname string, basicType *BasicType) {
+	reg.acl(varname, basicType,
+		List|PackageSettable,
+		"Makefile, Makefile.*, *.mk: default, set, append, use")
+}
+
+// Like pkglistbl3, but always needs a rationale.
+func (reg *VarTypeRegistry) pkglistbl3rat(varname string, basicType *BasicType) {
+	reg.acl(varname, basicType,
+		List|PackageSettable|NeedsRationale,
+		"Makefile, Makefile.*, *.mk: default, set, append, use")
+}
+
+// sys declares a user-defined or system-defined variable that must not
+// be modified by packages.
+//
+// It also must not be used in buildlink3.mk and builtin.mk files or at
+// load time since the system/user preferences may not have been loaded
+// when these files are included.
+//
+// TODO: These timing issues should be handled separately from the permissions.
+//  They can be made more precise.
+func (reg *VarTypeRegistry) sys(varname string, basicType *BasicType) {
+	reg.acl(varname, basicType,
+		SystemProvided,
+		"buildlink3.mk: none",
+		"*: use")
+}
+
+func (reg *VarTypeRegistry) sysbl3(varname string, basicType *BasicType) {
+	reg.acl(varname, basicType,
+		SystemProvided,
+		"*: use")
+}
+
+func (reg *VarTypeRegistry) syslist(varname string, basicType *BasicType) {
+	reg.acllist(varname, basicType,
+		List|SystemProvided,
+		"buildlink3.mk: none",
+		"*: use")
+}
+
+// usr declares a user-defined variable that must not be modified by packages.
+func (reg *VarTypeRegistry) usr(varname string, basicType *BasicType) {
+	reg.acl(varname, basicType,
+		// TODO: why is builtin.mk missing here?
+		UserSettable,
+		"buildlink3.mk: none",
+		"*: use, use-loadtime")
+}
+
+// usr declares a user-defined list variable that must not be modified by packages.
+func (reg *VarTypeRegistry) usrlist(varname string, basicType *BasicType) {
+	reg.acllist(varname, basicType,
+		// TODO: why is builtin.mk missing here?
+		List|UserSettable,
+		"buildlink3.mk: none",
+		"*: use, use-loadtime")
+}
+
+// A few variables from mk/defaults/mk.conf may be overridden by packages.
+// Therefore they need a separate definition of "user-settable".
+//
+// It is debatable whether packages should be allowed to override these
+// variables at all since then there are two competing sources for the
+// default values. Current practice is to have exactly this ambiguity,
+// combined with some package Makefiles including bsd.prefs.mk and others
+// omitting this necessary inclusion.
+//
+// TODO: parse all the below information directly from mk/defaults/mk.conf.
+func (reg *VarTypeRegistry) usrpkg(varname string, basicType *BasicType) {
+	reg.acl(varname, basicType,
+		PackageSettable|UserSettable,
+		"Makefile: default, set, use, use-loadtime",
+		"buildlink3.mk, builtin.mk: none",
+		"Makefile.*, *.mk: default, set, use, use-loadtime",
+		"*: use, use-loadtime")
+}
+
+// sysload declares a system-provided variable that may already be used at load time.
+func (reg *VarTypeRegistry) sysload(varname string, basicType *BasicType) {
+	reg.acl(varname, basicType,
+		SystemProvided,
+		"*: use, use-loadtime")
+}
+
+func (reg *VarTypeRegistry) sysloadlist(varname string, basicType *BasicType) {
+	reg.acl(varname, basicType,
+		List|SystemProvided,
+		"*: use, use-loadtime")
+}
+
+// bl3list declares a list variable that is defined by buildlink3.mk and
+// builtin.mk and can later be used by the package.
+func (reg *VarTypeRegistry) bl3list(varname string, basicType *BasicType) {
+	reg.acl(varname, basicType,
+		List, // not PackageSettable since the package uses it more than setting it.
+		"buildlink3.mk, builtin.mk: append",
+		"*: use")
+}
+
+// cmdline declares a variable that is defined on the command line. There
+// are only few variables of this type, such as PKG_DEBUG_LEVEL.
+func (reg *VarTypeRegistry) cmdline(varname string, basicType *BasicType) {
+	reg.acl(varname, basicType,
+		CommandLineProvided,
+		"buildlink3.mk, builtin.mk: none",
+		"*: use, use-loadtime")
+}
+
+// Only for infrastructure files; see mk/misc/show.mk
+func (reg *VarTypeRegistry) infralist(varname string, basicType *BasicType) {
+	reg.acllist(varname, basicType,
+		List,
+		"*: append")
+}
+
+// compilerLanguages reads the available languages that are typically
+// bundled in a single compiler framework, such as GCC or Clang.
+func (reg *VarTypeRegistry) compilerLanguages(src *Pkgsrc) *BasicType {
+	mklines := LoadMk(src.File("mk/compiler.mk"), NotEmpty)
+	languages := make(map[string]bool)
+	if mklines != nil {
+		for _, mkline := range mklines.mklines {
+			if mkline.IsDirective() && mkline.Directive() == "for" {
+				words := mkline.ValueFields(mkline.Args())
+				if len(words) > 2 && words[0] == "_version_" {
+					for _, word := range words[2:] {
+						languages[intern(word)] = true
+					}
+				}
+			}
+		}
+	}
+	alwaysAvailable := [...]string{
+		"ada", "c", "c99", "c++", "c++11", "c++14",
+		"fortran", "fortran77", "java", "objc", "obj-c++"}
+	for _, language := range alwaysAvailable {
+		languages[language] = true
+	}
+
+	joined := keysJoined(languages)
+	if trace.Tracing {
+		trace.Stepf("Languages from mk/compiler.mk: %s", joined)
+	}
+
+	return enum(joined)
+}
+
+// enumFrom parses all variable definitions for the given file,
+// and for all variables matching one of the varcanons, all values
+// are added as allowed values.
+//
+// If the file cannot be found, the allowed values are taken from
+// defval. This is mostly useful when testing pkglint.
+func (reg *VarTypeRegistry) enumFrom(pkgsrc *Pkgsrc, filename string, defval string, varcanons ...string) *BasicType {
+	mklines := LoadMk(pkgsrc.File(filename), NotEmpty)
+	if mklines == nil {
+		return enum(defval)
+	}
+
+	values := make(map[string]bool)
+	for _, mkline := range mklines.mklines {
+		if !mkline.IsVarassign() {
+			continue
+		}
+
+		varcanon := mkline.Varcanon()
+		for _, vc := range varcanons {
+			if vc != varcanon {
+				continue
+			}
+
+			words := mkline.ValueFields(mkline.Value())
+			for _, word := range words {
+				if !contains(word, "$") {
+					values[intern(word)] = true
+				}
+			}
+		}
+	}
+
+	if len(values) > 0 {
+		joined := keysJoined(values)
+		if trace.Tracing {
+			trace.Stepf("Enum from %s in %s with values: %s",
+				strings.Join(varcanons, " "), filename, joined)
+		}
+		return enum(joined)
+	}
+
+	if trace.Tracing {
+		trace.Stepf("Enum from default value: %s", defval)
+	}
+	return enum(defval)
+}
+
+// enumFromDirs reads the package directories from category, takes all
+// that have a single number in them (such as php72) and ranks them
+// from earliest to latest.
+//
+// If the directories cannot be found, the allowed values are taken
+// from defval. This is mostly useful when testing pkglint.
+func (reg *VarTypeRegistry) enumFromDirs(pkgsrc *Pkgsrc, category string, re regex.Pattern, repl string, defval string) *BasicType {
+	versions := pkgsrc.ListVersions(category, re, repl, false)
+	if len(versions) == 0 {
+		return enum(defval)
+	}
+	return enum(strings.Join(versions, " "))
+}
+
+// enumFromFiles reads the files from the given base directory,
+// filtering it through the regular expression and the replacement.
+//
+// If no files are found, the allowed values are taken
+// from defval. This should only happen in the pkglint tests.
+func (reg *VarTypeRegistry) enumFromFiles(basedir string, re regex.Pattern, repl string, defval string) *BasicType {
+	var relevant []string
+	for _, filename := range dirglob(G.Pkgsrc.File(basedir)) {
+		basename := path.Base(filename)
+		if matches(basename, re) {
+			relevant = append(relevant, replaceAll(basename, re, repl))
+		}
+	}
+	if len(relevant) == 0 {
+		return enum(defval)
+	}
+	return enum(strings.Join(relevant, " "))
+}
+
 // Init initializes the long list of predefined pkgsrc variables.
 // After this is done, PKGNAME, MAKE_ENV and all the other variables
 // can be used in Makefiles without triggering warnings about typos.
 func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 
-	// acl defines the permissions of a variable by listing the permissions
-	// individually.
-	//
-	// Each variable that uses this function directly must document:
-	//  - which of the predefined permission sets is the closest
-	//  - how this individual permission set differs
-	//  - why the predefined permission set is not good enough
-	//  - which packages need this custom permission set.
-	acl := func(varname string, basicType *BasicType, options vartypeOptions, aclEntries ...string) {
-		assertf(!reg.DefinedExact(varname), "Variable %q must only be defined once.", varname)
-		reg.DefineParse(varname, basicType, options, aclEntries...)
-	}
+	acl := reg.acl
+	acllist := reg.acllist
 
-	// acllist defines the permissions of a list variable by listing
-	// the permissions individually.
-	//
-	// Each variable that uses this function directly must document:
-	//  - which of the predefined permission sets is the closest
-	//  - how this individual permission set differs
-	//  - why the predefined permission set is not good enough
-	//  - which packages need this custom permission set.
-	acllist := func(varname string, basicType *BasicType, options vartypeOptions, aclEntries ...string) {
-		acl(varname, basicType, options|List, aclEntries...)
-	}
+	pkg := reg.pkg
+	pkgrat := reg.pkgrat
+	pkgload := reg.pkgload
+	pkglist := reg.pkglist
+	pkglistrat := reg.pkglistrat
+	pkgappend := reg.pkgappend
+	pkgappendbl3 := reg.pkgappendbl3
+	pkgappendrat := reg.pkgappendrat
+	pkgbl3 := reg.pkgbl3
+	pkglistbl3 := reg.pkglistbl3
+	pkglistbl3rat := reg.pkglistbl3rat
 
-	// A package-settable variable may be set in all Makefiles except buildlink3.mk and builtin.mk.
-	pkg := func(varname string, basicType *BasicType) {
-		acl(varname, basicType,
-			PackageSettable,
-			"buildlink3.mk, builtin.mk: none",
-			"Makefile, Makefile.*, *.mk: default, set, use")
-	}
+	sys := reg.sys
+	syslist := reg.syslist
+	sysload := reg.sysload
+	sysloadlist := reg.sysloadlist
 
-	// Like pkg, but always needs a rationale.
-	pkgrat := func(varname string, basicType *BasicType) {
-		acl(varname, basicType,
-			PackageSettable|NeedsRationale,
-			"buildlink3.mk, builtin.mk: none",
-			"Makefile, Makefile.*, *.mk: default, set, use")
-	}
+	usr := reg.usr
+	usrlist := reg.usrlist
+	usrpkg := reg.usrpkg
+	bl3list := reg.bl3list
+	sysbl3 := reg.sysbl3
+	cmdline := reg.cmdline
+	infralist := reg.infralist
 
-	// pkgload is the same as pkg, except that the variable may be accessed at load time.
-	pkgload := func(varname string, basicType *BasicType) {
-		acl(varname, basicType,
-			PackageSettable,
-			"buildlink3.mk: none",
-			"builtin.mk: use, use-loadtime",
-			"Makefile, Makefile.*, *.mk: default, set, use, use-loadtime")
-	}
-
-	// A package-defined list may be defined and appended to in all Makefiles
-	// except buildlink3.mk and builtin.mk. Simple assignment (instead of
-	// appending) is also allowed. If this leads of an unconditional
-	// assignment overriding a previous value, the redundancy check will
-	// catch it.
-	pkglist := func(varname string, basicType *BasicType) {
-		acllist(varname, basicType,
-			List|PackageSettable,
-			"buildlink3.mk, builtin.mk: none",
-			"Makefile, Makefile.*, *.mk: default, set, append, use")
-	}
-
-	// Like pkglist, but always needs a rationale.
-	pkglistrat := func(varname string, basicType *BasicType) {
-		acllist(varname, basicType,
-			List|PackageSettable|NeedsRationale,
-			"buildlink3.mk, builtin.mk: none",
-			"Makefile, Makefile.*, *.mk: default, set, append, use")
-	}
-
-	// pkgappend declares a variable that may use the += operator,
-	// even though it is not a list where each item can be interpreted
-	// on its own.
-	//
-	// This applies to lists in which a single logical list item is
-	// composed of several syntactical words, such as CONF_FILES, which is
-	// a list of filename pairs.
-	//
-	// This also applies to COMMENT, which is not a list at all but a string
-	// that is sometimes composed of a common prefix and a package-specific
-	// suffix.
-	pkgappend := func(varname string, basicType *BasicType) {
-		acl(varname, basicType,
-			PackageSettable,
-			"buildlink3.mk, builtin.mk: none",
-			"Makefile, Makefile.*, *.mk: default, set, append, use")
-	}
-	pkgappendbl3 := func(varname string, basicType *BasicType) {
-		acl(varname, basicType,
-			PackageSettable,
-			"Makefile, Makefile.*, *.mk: default, set, append, use")
-	}
-
-	// Like pkgappend, but always needs a rationale.
-	pkgappendrat := func(varname string, basicType *BasicType) {
-		acl(varname, basicType,
-			PackageSettable|NeedsRationale,
-			"buildlink3.mk, builtin.mk: none",
-			"Makefile, Makefile.*, *.mk: default, set, append, use")
-	}
-
-	// Some package-defined variables may be modified in buildlink3.mk files.
-	// These variables are typically related to compiling and linking files
-	// from C and related languages.
-	pkgbl3 := func(varname string, basicType *BasicType) {
-		acl(varname, basicType,
-			PackageSettable,
-			"Makefile, Makefile.*, *.mk: default, set, use")
-	}
-	// Some package-defined lists may also be modified in buildlink3.mk files,
-	// for example platform-specific CFLAGS and LDFLAGS.
-	pkglistbl3 := func(varname string, basicType *BasicType) {
-		acl(varname, basicType,
-			List|PackageSettable,
-			"Makefile, Makefile.*, *.mk: default, set, append, use")
-	}
-
-	// Like pkglistbl3, but always needs a rationale.
-	pkglistbl3rat := func(varname string, basicType *BasicType) {
-		acl(varname, basicType,
-			List|PackageSettable|NeedsRationale,
-			"Makefile, Makefile.*, *.mk: default, set, append, use")
-	}
-
-	// sys declares a user-defined or system-defined variable that must not
-	// be modified by packages.
-	//
-	// It also must not be used in buildlink3.mk and builtin.mk files or at
-	// load time since the system/user preferences may not have been loaded
-	// when these files are included.
-	//
-	// TODO: These timing issues should be handled separately from the permissions.
-	//  They can be made more precise.
-	sys := func(varname string, basicType *BasicType) {
-		acl(varname, basicType,
-			SystemProvided,
-			"buildlink3.mk: none",
-			"*: use")
-	}
-
-	sysbl3 := func(varname string, basicType *BasicType) {
-		acl(varname, basicType,
-			SystemProvided,
-			"*: use")
-	}
-
-	syslist := func(varname string, basicType *BasicType) {
-		acllist(varname, basicType,
-			List|SystemProvided,
-			"buildlink3.mk: none",
-			"*: use")
-	}
-
-	// usr declares a user-defined variable that must not be modified by packages.
-	usr := func(varname string, basicType *BasicType) {
-		acl(varname, basicType,
-			// TODO: why is builtin.mk missing here?
-			UserSettable,
-			"buildlink3.mk: none",
-			"*: use, use-loadtime")
-	}
-
-	// usr declares a user-defined list variable that must not be modified by packages.
-	usrlist := func(varname string, basicType *BasicType) {
-		acllist(varname, basicType,
-			// TODO: why is builtin.mk missing here?
-			List|UserSettable,
-			"buildlink3.mk: none",
-			"*: use, use-loadtime")
-	}
-
-	// A few variables from mk/defaults/mk.conf may be overridden by packages.
-	// Therefore they need a separate definition of "user-settable".
-	//
-	// It is debatable whether packages should be allowed to override these
-	// variables at all since then there are two competing sources for the
-	// default values. Current practice is to have exactly this ambiguity,
-	// combined with some package Makefiles including bsd.prefs.mk and others
-	// omitting this necessary inclusion.
-	//
-	// TODO: parse all the below information directly from mk/defaults/mk.conf.
-	usrpkg := func(varname string, basicType *BasicType) {
-		acl(varname, basicType,
-			PackageSettable|UserSettable,
-			"Makefile: default, set, use, use-loadtime",
-			"buildlink3.mk, builtin.mk: none",
-			"Makefile.*, *.mk: default, set, use, use-loadtime",
-			"*: use, use-loadtime")
-	}
-
-	// sysload declares a system-provided variable that may already be used at load time.
-	sysload := func(varname string, basicType *BasicType) {
-		acl(varname, basicType,
-			SystemProvided,
-			"*: use, use-loadtime")
-	}
-
-	sysloadlist := func(varname string, basicType *BasicType) {
-		acl(varname, basicType,
-			List|SystemProvided,
-			"*: use, use-loadtime")
-	}
-
-	// bl3list declares a list variable that is defined by buildlink3.mk and
-	// builtin.mk and can later be used by the package.
-	bl3list := func(varname string, basicType *BasicType) {
-		acl(varname, basicType,
-			List, // not PackageSettable since the package uses it more than setting it.
-			"buildlink3.mk, builtin.mk: append",
-			"*: use")
-	}
-
-	// cmdline declares a variable that is defined on the command line. There
-	// are only few variables of this type, such as PKG_DEBUG_LEVEL.
-	cmdline := func(varname string, basicType *BasicType) {
-		acl(varname, basicType,
-			CommandLineProvided,
-			"buildlink3.mk, builtin.mk: none",
-			"*: use, use-loadtime")
-	}
-
-	// Only for infrastructure files; see mk/misc/show.mk
-	infralist := func(varname string, basicType *BasicType) {
-		acllist(varname, basicType,
-			List,
-			"*: append")
-	}
-
-	// compilerLanguages reads the available languages that are typically
-	// bundled in a single compiler framework, such as GCC or Clang.
-	compilerLanguages := enum(
-		func() string {
-			mklines := LoadMk(src.File("mk/compiler.mk"), NotEmpty)
-			languages := make(map[string]bool)
-			if mklines != nil {
-				for _, mkline := range mklines.mklines {
-					if mkline.IsDirective() && mkline.Directive() == "for" {
-						words := mkline.ValueFields(mkline.Args())
-						if len(words) > 2 && words[0] == "_version_" {
-							for _, word := range words[2:] {
-								languages[intern(word)] = true
-							}
-						}
-					}
-				}
-			}
-			alwaysAvailable := [...]string{
-				"ada", "c", "c99", "c++", "c++11", "c++14",
-				"fortran", "fortran77", "java", "objc", "obj-c++"}
-			for _, language := range alwaysAvailable {
-				languages[language] = true
-			}
-
-			joined := keysJoined(languages)
-			if trace.Tracing {
-				trace.Stepf("Languages from mk/compiler.mk: %s", joined)
-			}
-			return joined
-		}())
-
-	// enumFrom parses all variable definitions for the given file,
-	// and for all variables matching one of the varcanons, all values
-	// are added as allowed values.
-	//
-	// If the file cannot be found, the allowed values are taken from
-	// defval. This is mostly useful when testing pkglint.
 	enumFrom := func(filename string, defval string, varcanons ...string) *BasicType {
-		mklines := LoadMk(src.File(filename), NotEmpty)
-		if mklines == nil {
-			return enum(defval)
-		}
-
-		values := make(map[string]bool)
-		for _, mkline := range mklines.mklines {
-			if !mkline.IsVarassign() {
-				continue
-			}
-
-			varcanon := mkline.Varcanon()
-			for _, vc := range varcanons {
-				if vc != varcanon {
-					continue
-				}
-
-				words := mkline.ValueFields(mkline.Value())
-				for _, word := range words {
-					if !contains(word, "$") {
-						values[intern(word)] = true
-					}
-				}
-			}
-		}
-
-		if len(values) > 0 {
-			joined := keysJoined(values)
-			if trace.Tracing {
-				trace.Stepf("Enum from %s in %s with values: %s",
-					strings.Join(varcanons, " "), filename, joined)
-			}
-			return enum(joined)
-		}
-
-		if trace.Tracing {
-			trace.Stepf("Enum from default value: %s", defval)
-		}
-		return enum(defval)
+		return reg.enumFrom(src, filename, defval, varcanons...)
 	}
 
-	// enumFromDirs reads the package directories from category, takes all
-	// that have a single number in them (such as php72) and ranks them
-	// from earliest to latest.
-	//
-	// If the directories cannot be found, the allowed values are taken
-	// from defval. This is mostly useful when testing pkglint.
 	enumFromDirs := func(category string, re regex.Pattern, repl string, defval string) *BasicType {
-		versions := src.ListVersions(category, re, repl, false)
-		if len(versions) == 0 {
-			return enum(defval)
-		}
-		return enum(strings.Join(versions, " "))
+		return reg.enumFromDirs(src, category, re, repl, defval)
 	}
 
-	// enumFromFiles reads the files from the given base directory,
-	// filtering it through the regular expression and the replacement.
-	//
-	// If no files are found, the allowed values are taken
-	// from defval. This should only happen in the pkglint tests.
-	enumFromFiles := func(basedir string, re regex.Pattern, repl string, defval string) *BasicType {
-		var relevant []string
-		for _, filename := range dirglob(G.Pkgsrc.File(basedir)) {
-			basename := path.Base(filename)
-			if matches(basename, re) {
-				relevant = append(relevant, replaceAll(basename, re, repl))
-			}
-		}
-		if len(relevant) == 0 {
-			return enum(defval)
-		}
-		return enum(strings.Join(relevant, " "))
-	}
+	enumFromFiles := reg.enumFromFiles
 
 	compilers := enumFrom(
 		"mk/compiler.mk",
@@ -1616,7 +1656,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	pkg("USE_IMAKE", BtYes)
 	pkg("USE_JAVA", enum("run yes build"))
 	pkg("USE_JAVA2", enum("YES yes no 1.4 1.5 6 7 8"))
-	pkglist("USE_LANGUAGES", compilerLanguages)
+	pkglist("USE_LANGUAGES", reg.compilerLanguages(src))
 	pkg("USE_LIBTOOL", BtYes)
 	pkg("USE_MAKEINFO", BtYes)
 	pkg("USE_MSGFMT_PLURALS", BtYes)
