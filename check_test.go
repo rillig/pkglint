@@ -858,7 +858,7 @@ func (t *Tester) Output() string {
 
 	t.stdout.Reset()
 	t.stderr.Reset()
-	if G.Usable() {
+	if G.usable() {
 		G.Logger.logged = Once{}
 		if G.Logger.out != nil { // Necessary because Main resets the G variable.
 			G.Logger.out.state = 0 // Prevent an empty line at the beginning of the next output.
@@ -1056,7 +1056,7 @@ func (t *Tester) EnableSilentTracing() {
 // The diagnostics go to the in-memory buffer again,
 // ready to be checked with CheckOutputLines.
 func (t *Tester) DisableTracing() {
-	if G.Usable() {
+	if G.usable() {
 		G.Logger.out = NewSeparatorWriter(&t.stdout)
 	}
 	trace.Tracing = false

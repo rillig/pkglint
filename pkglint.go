@@ -61,8 +61,9 @@ func NewPkglint() Pkglint {
 
 // unusablePkglint returns a pkglint object that crashes as early as possible.
 // This is to ensure that tests are properly initialized and shut down.
-func unusablePkglint() Pkglint        { return Pkglint{} }
-func (pkglint *Pkglint) Usable() bool { return pkglint != nil }
+func unusablePkglint() Pkglint { return Pkglint{} }
+
+func (pkglint *Pkglint) usable() bool { return pkglint != nil }
 
 type InterPackage struct {
 	hashes       map[string]*Hash    // Maps "alg:filename" => hash (inter-package check).
