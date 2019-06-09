@@ -657,6 +657,21 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_in_message(c *check.C)
 	t.CheckOutputEmpty()
 }
 
+// Since a comment may be appended to, it is not necessary to mention
+// BtComment in the SUBST_MESSAGE case in VariableNeedsQuoting.
+func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_in_package_comment(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("benchmarks/iozone/Makefile",
+		"COMMENT=\tUtility for replacing ${REPLACE_PERL}")
+
+	MkLineChecker{mklines, mklines.mklines[0]}.Check()
+
+	// Don't suggest ${REPLACE_PERL:Q}.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_MkLine_VariableNeedsQuoting__guessed_list_variable_in_quotes(c *check.C) {
 	t := s.Init(c)
 

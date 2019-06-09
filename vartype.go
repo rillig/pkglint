@@ -195,9 +195,6 @@ func (vt *Vartype) MayBeAppendedTo() bool {
 	switch vt.basicType {
 	case BtAwkCommand, BtSedCommands, BtShellCommand, BtShellCommands, BtConfFiles:
 		return true
-	}
-
-	switch vt.basicType {
 	case BtComment, BtLicense:
 		return true
 	}
@@ -284,10 +281,6 @@ func (bt *BasicType) NeedsQ() bool {
 		return false
 	}
 	return !bt.IsEnum()
-}
-
-func (vt *Vartype) IsPlainString() bool {
-	return vt.basicType == BtComment || vt.basicType == BtMessage
 }
 
 type BasicType struct {

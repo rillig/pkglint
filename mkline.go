@@ -951,7 +951,7 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(mklines MkLines, varuse *MkVarUse
 	}
 
 	// SUBST_MESSAGE.perl= Replacing in ${REPLACE_PERL}
-	if vucVartype.IsPlainString() {
+	if vucVartype.basicType == BtMessage {
 		return no
 	}
 
