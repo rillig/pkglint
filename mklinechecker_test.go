@@ -774,39 +774,71 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftRationale(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
-	mklines := t.NewMkLines("filename.mk",
-		MkRcsID,
-		"ONLY_FOR_PLATFORM=\t*-*-*", // The CVS Id above is not a rationale.
-		"NOT_FOR_PLATFORM=\t*-*-*",  // Neither does this line have a rationale.
-		"",
-		"ONLY_FOR_PLATFORM+=\t*-*-* # rationale",
-		"",
-		"# rationale in the line above",
-		"ONLY_FOR_PLATFORM+=\t*-*-*",
-		"",
-		"#VAR=\tvalue",               // This comment is not a rationale.
-		"ONLY_FOR_PLATFORM+=\t*-*-*", // Needs a rationale.
-		"",
-		"# rationale",
-		"BROKEN_ON_PLATFORM+=\t*-*-*",
-		"BROKEN_ON_PLATFORM+=\t*-*-*", // The rationale applies to this line, too.
-		"",
-		"PKGNAME=\tpackage-1.0", // Does not need a rationale.
-		"UNKNOWN=\t${UNKNOWN}")  // Unknown type, does not need a rationale.
 
-	mklines.Check()
+	test := func(lines []string, diagnostics ...string) {
+		mklines := t.NewMkLines("filename.mk",
+			append([]string{MkRcsID, ""}, lines...)...)
 
-	t.CheckOutputLines(
-		"WARN: filename.mk:2: Setting variable ONLY_FOR_PLATFORM should have a rationale.",
-		"WARN: filename.mk:3: Setting variable NOT_FOR_PLATFORM should have a rationale.",
-		"WARN: filename.mk:11: Setting variable ONLY_FOR_PLATFORM should have a rationale.")
+		mklines.Check()
 
-	// This check is only enabled when -Wextra is given.
+		t.CheckOutput(diagnostics)
+	}
+	lines := func(lines ...string) []string { return lines }
+
+	test(
+		lines(
+			MkRcsID,
+			"ONLY_FOR_PLATFORM=\t*-*-*", // The CVS Id above is not a rationale.
+			"NOT_FOR_PLATFORM=\t*-*-*",  // Neither does this line have a rationale.
+		),
+		"WARN: filename.mk:4: Setting variable ONLY_FOR_PLATFORM should have a rationale.",
+		"WARN: filename.mk:5: Setting variable NOT_FOR_PLATFORM should have a rationale.")
+
+	test(
+		lines(
+			"ONLY_FOR_PLATFORM+=\t*-*-* # rationale in the same line"),
+		nil...)
+
+	test(
+		lines(
+			"",
+			"# rationale in the line above",
+			"ONLY_FOR_PLATFORM+=\t*-*-*"),
+		nil...)
+
+	// A commented variable assignment does not count as a comment.
+	// Therefore it is not a rationale.
+	test(
+		lines(
+			"#VAR=\tvalue",
+			"ONLY_FOR_PLATFORM+=\t*-*-*"),
+		"WARN: filename.mk:4: Setting variable ONLY_FOR_PLATFORM should have a rationale.")
+
+	// A rationale applies to all variable assignments directly below it.
+	test(
+		lines(
+			"# rationale",
+			"BROKEN_ON_PLATFORM+=\t*-*-*",
+			"BROKEN_ON_PLATFORM+=\t*-*-*"), // The rationale applies to this line, too.
+		nil...)
+
+	// Just for code coverage.
+	test(
+		lines(
+			"PKGNAME=\tpackage-1.0", // Does not need a rationale.
+			"UNKNOWN=\t${UNKNOWN}"), // Unknown type, does not need a rationale.
+		nil...)
+
+	// The whole rationale check is only enabled when -Wextra is given.
 	t.SetUpCommandLine()
 
-	mklines.Check()
-
-	t.CheckOutputEmpty()
+	test(
+		lines(
+			MkRcsID,
+			"ONLY_FOR_PLATFORM=\t*-*-*", // The CVS Id above is not a rationale.
+			"NOT_FOR_PLATFORM=\t*-*-*",  // Neither does this line have a rationale.
+		),
+		nil...)
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarassignOpShell(c *check.C) {
