@@ -16,7 +16,6 @@ type MkLineChecker struct {
 }
 
 func (ck MkLineChecker) Check() {
-	assertf(ck.MkLines != nil, "")
 	mkline := ck.MkLine
 
 	LineChecker{mkline.Line}.CheckTrailingWhitespace()
