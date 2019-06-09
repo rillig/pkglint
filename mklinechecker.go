@@ -16,6 +16,7 @@ type MkLineChecker struct {
 }
 
 func (ck MkLineChecker) Check() {
+	assertf(ck.MkLines != nil, "")
 	mkline := ck.MkLine
 
 	LineChecker{mkline.Line}.CheckTrailingWhitespace()
@@ -530,13 +531,13 @@ func (ck MkLineChecker) checkVaruseUndefined(vartype *Vartype, varname string) {
 		// Well-known variables are probably defined by the infrastructure.
 		return
 
-	case ck.MkLines != nil && ck.MkLines.vars.DefinedSimilar(varname):
+	case ck.MkLines.vars.DefinedSimilar(varname):
 		return
 
-	case ck.MkLines != nil && ck.MkLines.forVars[varname]:
+	case ck.MkLines.forVars[varname]:
 		return
 
-	case ck.MkLines != nil && ck.MkLines.vars.Mentioned(varname) != nil:
+	case ck.MkLines.vars.Mentioned(varname) != nil:
 		return
 
 	case G.Pkg != nil && G.Pkg.vars.DefinedSimilar(varname):
@@ -688,7 +689,7 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 		return
 	}
 
-	if ck.MkLines != nil && !ck.MkLines.FirstTimeSlice("checkVarusePermissions", varname) {
+	if !ck.MkLines.FirstTimeSlice("checkVarusePermissions", varname) {
 		return
 	}
 
@@ -1099,7 +1100,7 @@ func (ck MkLineChecker) checkVarassignLeftNotUsed() {
 		return
 	}
 
-	if ck.MkLines != nil && ck.MkLines.vars.UsedSimilar(varname) {
+	if ck.MkLines.vars.UsedSimilar(varname) {
 		return
 	}
 
@@ -1688,7 +1689,7 @@ func (ck MkLineChecker) CheckRelativePath(relativePath string, mustExist bool) {
 
 	abs := path.Dir(mkline.Filename) + "/" + resolvedPath
 	if _, err := os.Stat(abs); err != nil {
-		if mustExist && !(ck.MkLines != nil && ck.MkLines.indentation.IsCheckedFile(resolvedPath)) {
+		if mustExist && !ck.MkLines.indentation.IsCheckedFile(resolvedPath) {
 			mkline.Errorf("Relative path %q does not exist.", resolvedPath)
 		}
 		return

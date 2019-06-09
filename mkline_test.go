@@ -410,14 +410,17 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__append_URL_to_list_of_URLs(c *
 
 	t.SetUpVartypes()
 	t.SetUpMasterSite("MASTER_SITE_SOURCEFORGE", "http://downloads.sourceforge.net/sourceforge/")
-	mkline := t.NewMkLine("Makefile", 95, "MASTER_SITES=\t${HOMEPAGE}")
+	mklines := t.NewMkLines("Makefile",
+		MkRcsID,
+		"MASTER_SITES=\t${HOMEPAGE}")
+	mkline := mklines.mklines[1]
 
 	vuc := VarUseContext{G.Pkgsrc.vartypes.Canon("MASTER_SITES"), vucTimeRun, VucQuotPlain, false}
 	nq := mkline.VariableNeedsQuoting(nil, &MkVarUse{"HOMEPAGE", nil}, G.Pkgsrc.vartypes.Canon("HOMEPAGE"), &vuc)
 
 	c.Check(nq, equals, no)
 
-	MkLineChecker{nil, mkline}.checkVarassign()
+	MkLineChecker{mklines, mkline}.checkVarassign()
 
 	t.CheckOutputEmpty() // Up to version 5.3.6, pkglint warned about a missing :Q here, which was wrong.
 }
@@ -427,9 +430,11 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__append_list_to_list(c *check.C
 
 	t.SetUpVartypes()
 	t.SetUpMasterSite("MASTER_SITE_SOURCEFORGE", "http://downloads.sourceforge.net/sourceforge/")
-	mkline := t.NewMkLine("Makefile", 96, "MASTER_SITES=\t${MASTER_SITE_SOURCEFORGE:=squirrel-sql/}")
+	mklines := t.NewMkLines("Makefile",
+		MkRcsID,
+		"MASTER_SITES=\t${MASTER_SITE_SOURCEFORGE:=squirrel-sql/}")
 
-	MkLineChecker{nil, mkline}.checkVarassign()
+	MkLineChecker{mklines, mklines.mklines[1]}.checkVarassign()
 
 	// Assigning lists to lists is ok.
 	t.CheckOutputEmpty()
@@ -439,26 +444,28 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__eval_shell(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
-	mkline := t.NewMkLine("builtin.mk", 3,
+	mklines := t.NewMkLines("builtin.mk",
+		MkRcsID,
 		"USE_BUILTIN.Xfixes!=\t${PKG_ADMIN} pmatch 'pkg-[0-9]*' ${BUILTIN_PKG.Xfixes:Q}")
 
-	MkLineChecker{nil, mkline}.checkVarassign()
+	MkLineChecker{mklines, mklines.mklines[1]}.checkVarassign()
 
 	t.CheckOutputLines(
-		"NOTE: builtin.mk:3: The :Q operator isn't necessary for ${BUILTIN_PKG.Xfixes} here.")
+		"NOTE: builtin.mk:2: The :Q operator isn't necessary for ${BUILTIN_PKG.Xfixes} here.")
 }
 
 func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_in_single_quotes(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
-	mkline := t.NewMkLine("Makefile", 3,
+	mklines := t.NewMkLines("Makefile",
+		MkRcsID,
 		"SUBST_SED.hpath=\t-e 's|^\\(INSTALL[\t:]*=\\).*|\\1${INSTALL}|'")
 
-	MkLineChecker{nil, mkline}.checkVarassign()
+	MkLineChecker{mklines, mklines.mklines[1]}.checkVarassign()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:3: Please use ${INSTALL:Q} instead of ${INSTALL} " +
+		"WARN: Makefile:2: Please use ${INSTALL:Q} instead of ${INSTALL} " +
 			"and make sure the variable appears outside of any quoting characters.")
 }
 

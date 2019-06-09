@@ -1583,8 +1583,7 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 			MkRcsID,
 			before,
 			".endif")
-		mkline := mklines.mklines[1]
-		ck := MkLineChecker{nil, mkline}
+		ck := MkLineChecker{mklines, mklines.mklines[1]}
 
 		t.SetUpCommandLine("-Wall")
 		ck.checkDirectiveCond()
@@ -1679,7 +1678,10 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 
 	// No note in this case since there is no implicit !empty around the varUse.
 	test(".if ${PKGPATH:Mpattern} != ${OTHER}",
-		nil...)
+
+		"WARN: module.mk:2: OTHER is used but not defined.",
+
+		".if ${PKGPATH:Mpattern} != ${OTHER}")
 
 	test(
 		".if ${PKGPATH:Mpattern}",
@@ -1750,7 +1752,10 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 	// transformed at all.
 	test(
 		".if ${UNKNOWN:Nnegative-pattern}",
-		nil...)
+
+		"WARN: module.mk:2: UNKNOWN is used but not defined.",
+
+		".if ${UNKNOWN:Nnegative-pattern}")
 
 	test(
 		".if ${PKGPATH:Mpath1} || ${PKGPATH:Mpath2}",
@@ -2025,7 +2030,11 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__varcanon(c *check.C) {
 		"CPPPATH.Linux=\t/usr/bin/cpp")
 	t.FinishSetUp()
 
-	ck := MkLineChecker{nil, t.NewMkLine("module.mk", 101, "COMMENT=\t${CPPPATH.SunOS}")}
+	mklines := t.NewMkLines("module.mk",
+		MkRcsID,
+		"COMMENT=\t${CPPPATH.SunOS}")
+
+	ck := MkLineChecker{mklines, mklines.mklines[1]}
 
 	ck.CheckVaruse(NewMkVarUse("CPPPATH.SunOS"), &VarUseContext{
 		vartype: &Vartype{
@@ -2153,21 +2162,22 @@ func (s *Suite) Test_MkLineChecker_checkVaruseModifiersRange(c *check.C) {
 
 	t.SetUpCommandLine("--show-autofix", "--source")
 	t.SetUpVartypes()
-	mkline := t.NewMkLine("mk/compiler/gcc.mk", 150,
+	mklines := t.NewMkLines("mk/compiler/gcc.mk",
+		MkRcsID,
 		"CC:=\t${CC:C/^/_asdf_/1:M_asdf_*:S/^_asdf_//}")
 
-	MkLineChecker{nil, mkline}.Check()
+	mklines.Check()
 
 	t.CheckOutputLines(
-		"NOTE: mk/compiler/gcc.mk:150: "+
+		"NOTE: mk/compiler/gcc.mk:2: "+
 			"The modifier \":C/^/_asdf_/1:M_asdf_*:S/^_asdf_//\" can be written as \":[1]\".",
-		"AUTOFIX: mk/compiler/gcc.mk:150: "+
+		"AUTOFIX: mk/compiler/gcc.mk:2: "+
 			"Replacing \":C/^/_asdf_/1:M_asdf_*:S/^_asdf_//\" with \":[1]\".",
 		"-\tCC:=\t${CC:C/^/_asdf_/1:M_asdf_*:S/^_asdf_//}",
 		"+\tCC:=\t${CC:[1]}")
 
 	// Now go through all the "almost" cases, to reach full branch coverage.
-	mklines := t.NewMkLines("gcc.mk",
+	mklines = t.NewMkLines("gcc.mk",
 		MkRcsID,
 		"\t: ${CC:M1:M2:M3}",
 		"\t: ${CC:C/^begin//:M2:M3}",                    // M1 pattern not exactly ^
@@ -2191,13 +2201,14 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__deprecated_PKG_DEBUG(c *check.C)
 	t.SetUpVartypes()
 	G.Pkgsrc.initDeprecatedVars()
 
-	mkline := t.NewMkLine("module.mk", 123,
+	mklines := t.NewMkLines("module.mk",
+		MkRcsID,
 		"\t${_PKG_SILENT}${_PKG_DEBUG} :")
 
-	MkLineChecker{nil, mkline}.Check()
+	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: module.mk:123: Use of _PKG_SILENT and _PKG_DEBUG is deprecated. Use ${RUN} instead.")
+		"WARN: module.mk:2: Use of _PKG_SILENT and _PKG_DEBUG is deprecated. Use ${RUN} instead.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVaruseUndefined(c *check.C) {

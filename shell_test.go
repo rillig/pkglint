@@ -679,9 +679,12 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__shell_variables(c *
 	t.SetUpTool("mv", "MV", AtRunTime)
 	t.SetUpTool("sed", "SED", AtRunTime)
 	text := "for f in *.pl; do ${SED} s,@PREFIX@,${PREFIX}, < $f > $f.tmp && ${MV} $f.tmp $f; done"
+	mklines := t.NewMkLines("Makefile",
+		MkRcsID,
+		"",
+		"\t"+text)
 
-	ck := t.NewShellLineChecker(nil, "Makefile", 3, "\t# dummy")
-	ck.mkline.Tokenize(text, true)
+	ck := NewShellLineChecker(mklines, mklines.mklines[2])
 	ck.CheckShellCommandLine(text)
 
 	t.CheckOutputLines(
@@ -689,7 +692,8 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__shell_variables(c *
 		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Make variable or $$f if you mean a shell variable.",
 		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Make variable or $$f if you mean a shell variable.",
 		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Make variable or $$f if you mean a shell variable.",
-		"NOTE: Makefile:3: Please use the SUBST framework instead of ${SED} and ${MV}.")
+		"NOTE: Makefile:3: Please use the SUBST framework instead of ${SED} and ${MV}.",
+		"WARN: Makefile:3: f is used but not defined.")
 
 	ck.CheckShellCommandLine("install -c manpage.1 ${PREFIX}/man/man1/manpage.1")
 
@@ -913,12 +917,14 @@ func (s *Suite) Test_ShellLineChecker_unescapeBackticks__dquotBacktDquot(c *chec
 	t := s.Init(c)
 
 	t.SetUpTool("echo", "", AtRunTime)
-	mkline := t.NewMkLine("dummy.mk", 13, "\t var=\"`echo \"\"`\"")
+	mklines := t.NewMkLines("dummy.mk",
+		MkRcsID,
+		"\t var=\"`echo \"\"`\"")
 
-	MkLineChecker{nil, mkline}.Check()
+	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: dummy.mk:13: Double quotes inside backticks inside double quotes are error prone.")
+		"WARN: dummy.mk:2: Double quotes inside backticks inside double quotes are error prone.")
 }
 
 func (s *Suite) Test_ShellLineChecker__variable_outside_quotes(c *check.C) {
@@ -1099,12 +1105,14 @@ func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable__from_package(c 
 func (s *Suite) Test_SimpleCommandChecker_handleComment(c *check.C) {
 	t := s.Init(c)
 
-	mkline := t.NewMkLine("file.mk", 3, "\t# comment; continuation")
+	mklines := t.NewMkLines("file.mk",
+		MkRcsID,
+		"\t# comment; continuation")
 
-	MkLineChecker{nil, mkline}.Check()
+	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: file.mk:3: A shell comment should not contain semicolons.")
+		"WARN: file.mk:2: A shell comment should not contain semicolons.")
 }
 
 // This test ensures that the command line options to INSTALL_*_DIR are properly
