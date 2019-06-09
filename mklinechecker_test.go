@@ -775,13 +775,16 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftRationale(c *check.C) {
 
 	t.SetUpVartypes()
 
-	test := func(lines []string, diagnostics ...string) {
+	testLines := func(lines []string, diagnostics ...string) {
 		mklines := t.NewMkLines("filename.mk",
-			append([]string{MkRcsID, ""}, lines...)...)
+			lines...)
 
 		mklines.Check()
 
 		t.CheckOutput(diagnostics)
+	}
+	test := func(lines []string, diagnostics ...string) {
+		testLines(append([]string{MkRcsID, ""}, lines...), diagnostics...)
 	}
 	lines := func(lines ...string) []string { return lines }
 
@@ -835,6 +838,16 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftRationale(c *check.C) {
 			"PKGNAME=\tpackage-1.0", // Does not need a rationale.
 			"UNKNOWN=\t${UNKNOWN}"), // Unknown type, does not need a rationale.
 		nil...)
+
+	// When a line requiring a rationale appears in the very first line
+	// or in the second line of a file, there is no index out of bounds error.
+	testLines(
+		lines(
+			"NOT_FOR_PLATFORM=\t*-*-*",
+			"NOT_FOR_PLATFORM=\t*-*-*"),
+		sprintf("ERROR: filename.mk:1: Expected %q.", MkRcsID),
+		"WARN: filename.mk:1: Setting variable NOT_FOR_PLATFORM should have a rationale.",
+		"WARN: filename.mk:2: Setting variable NOT_FOR_PLATFORM should have a rationale.")
 
 	// The whole rationale check is only enabled when -Wextra is given.
 	t.SetUpCommandLine()
