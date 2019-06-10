@@ -1296,6 +1296,24 @@ func (s *Suite) Test_Package_checkLocallyModified(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+// Just for code coverage.
+func (s *Suite) Test_Package_checkLocallyModified__no_tracing(c *check.C) {
+	t := s.Init(c)
+
+	G.Username = "example-user"
+	t.CreateFileLines("category/package/CVS/Entries",
+		"/Makefile//modified//")
+
+	pkg := t.SetUpPackage("category/package",
+		"MAINTAINER=\tmaintainer@example.org")
+	t.FinishSetUp()
+	t.DisableTracing()
+
+	G.Check(pkg)
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Package_checkLocallyModified__directory(c *check.C) {
 	t := s.Init(c)
 
