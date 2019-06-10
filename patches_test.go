@@ -520,7 +520,7 @@ func (s *Suite) Test_CheckLinesPatch__invalid_line_in_hunk(c *check.C) {
 }
 
 // Just for code coverage.
-func (s *Suite) Test_PatchChecker_checkLineContext__no_tracing(c *check.C) {
+func (s *Suite) Test_PatchChecker_checklineContext__no_tracing(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("patch-WithComment",

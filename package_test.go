@@ -1340,7 +1340,9 @@ func (s *Suite) Test_Package_checkLocallyModified__no_tracing(c *check.C) {
 
 	G.Check(pkg)
 
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"NOTE: ~/category/package/Makefile: Please only commit changes " +
+			"that maintainer@example.org would approve.")
 }
 
 func (s *Suite) Test_Package_checkLocallyModified__directory(c *check.C) {

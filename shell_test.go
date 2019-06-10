@@ -1042,7 +1042,8 @@ func (s *Suite) Test_ShellLineChecker_checkHiddenAndSuppress__no_tracing(c *chec
 
 	mklines.Check()
 
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: Makefile:4: The shell command \"ls\" should not be hidden.")
 }
 
 func (s *Suite) Test_SimpleCommandChecker_handleForbiddenCommand(c *check.C) {
