@@ -399,7 +399,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__unknown_rhs(c *check.C) {
 	mkline := t.NewMkLine("filename.mk", 1, "PKGNAME:= ${UNKNOWN}")
 	t.SetUpVartypes()
 
-	vuc := VarUseContext{G.Pkgsrc.VariableType(nil, "PKGNAME"), vucTimeParse, VucQuotUnknown, false}
+	vuc := VarUseContext{G.Pkgsrc.VariableType(nil, "PKGNAME"), vucTimeLoad, VucQuotUnknown, false}
 	nq := mkline.VariableNeedsQuoting(nil, &MkVarUse{"UNKNOWN", nil}, nil, &vuc)
 
 	c.Check(nq, equals, unknown)

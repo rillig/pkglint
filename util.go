@@ -629,7 +629,7 @@ func (s *Scope) Use(varname string, line MkLine, time vucTime) {
 				trace.Step2("Using %q in %s", name, line.String())
 			}
 		}
-		if time == vucTimeParse {
+		if time == vucTimeLoad {
 			s.usedAtLoadTime[name] = true
 		}
 	}

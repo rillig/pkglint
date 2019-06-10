@@ -1016,27 +1016,27 @@ func (mkline *MkLineImpl) ForEachUsed(action func(varUse *MkVarUse, time vucTime
 	switch {
 
 	case mkline.IsVarassign():
-		searchIn(mkline.Varname(), vucTimeParse)
+		searchIn(mkline.Varname(), vucTimeLoad)
 		searchIn(mkline.Value(), mkline.Op().Time())
 
 	case mkline.IsDirective() && mkline.Directive() == "for":
-		searchIn(mkline.Args(), vucTimeParse)
+		searchIn(mkline.Args(), vucTimeLoad)
 
 	case mkline.IsDirective() && mkline.Cond() != nil:
 		mkline.Cond().Walk(&MkCondCallback{
 			VarUse: func(varuse *MkVarUse) {
-				searchInVarUse(varuse, vucTimeParse)
+				searchInVarUse(varuse, vucTimeLoad)
 			}})
 
 	case mkline.IsShellCommand():
 		searchIn(mkline.ShellCommand(), vucTimeRun)
 
 	case mkline.IsDependency():
-		searchIn(mkline.Targets(), vucTimeParse)
-		searchIn(mkline.Sources(), vucTimeParse)
+		searchIn(mkline.Targets(), vucTimeLoad)
+		searchIn(mkline.Sources(), vucTimeLoad)
 
 	case mkline.IsInclude():
-		searchIn(mkline.IncludedFile(), vucTimeParse)
+		searchIn(mkline.IncludedFile(), vucTimeLoad)
 	}
 }
 
@@ -1117,7 +1117,7 @@ func (op MkOperator) String() string {
 // evaluated.
 func (op MkOperator) Time() vucTime {
 	if op == opAssignShell || op == opAssignEval {
-		return vucTimeParse
+		return vucTimeLoad
 	}
 	return vucTimeRun
 }
@@ -1155,7 +1155,7 @@ const (
 	// right-hand side, as well as the directives .if, .elif and .for.
 	// During loading, not all variables are available yet.
 	// Variable values are still subject to change, especially lists.
-	vucTimeParse
+	vucTimeLoad
 
 	// All files have been read, all variables can be referenced.
 	// Variable values don't change anymore.
