@@ -1779,6 +1779,13 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 		//  Luckily the !! pattern doesn't occur in practice.
 		".if !(${PKGPATH} == pattern)")
 
+	test(".if empty(PKGPATH:Mpattern) || 0",
+
+		"NOTE: module.mk:2: PKGPATH should be compared using != instead of matching against \":Mpattern\".",
+		"AUTOFIX: module.mk:2: Replacing \"empty(PKGPATH:Mpattern)\" with \"(${PKGPATH} != pattern)\".",
+
+		".if (${PKGPATH} != pattern) || 0")
+
 	// No note in this case since there is no implicit !empty around the varUse.
 	test(".if ${PKGPATH:Mpattern} != ${OTHER}",
 
@@ -1801,6 +1808,14 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 		"AUTOFIX: module.mk:2: Replacing \"!${PKGPATH:Mpattern}\" with \"${PKGPATH} != pattern\".",
 
 		".if ${PKGPATH} != pattern")
+
+	test(
+		".if !!${PKGPATH:Mpattern}",
+
+		"NOTE: module.mk:2: PKGPATH should be compared using != instead of matching against \":Mpattern\".",
+		"AUTOFIX: module.mk:2: Replacing \"!${PKGPATH:Mpattern}\" with \"(${PKGPATH} != pattern)\".",
+
+		".if !(${PKGPATH} != pattern)")
 
 	// This pattern with spaces doesn't make sense at all in the :M
 	// modifier since it can never match.
