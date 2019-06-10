@@ -2591,14 +2591,18 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePath__wip_mk(c *check.C) {
 
 	t.CreateFileLines("wip/mk/git-package.mk",
 		MkRcsID)
+	t.CreateFileLines("wip/other/version.mk",
+		MkRcsID)
 	t.SetUpPackage("wip/package",
-		".include \"../mk/git-package.mk\"")
+		".include \"../mk/git-package.mk\"",
+		".include \"../other/version.mk\"")
 	t.FinishSetUp()
 
 	G.Check(t.File("wip/package"))
 
 	t.CheckOutputLines(
-		"WARN: ~/wip/package/Makefile:20: " +
-			"References to the pkgsrc-wip infrastructure should look like \"../../wip/mk\", " +
-			"not \"../mk\".")
+		"WARN: ~/wip/package/Makefile:20: References to the pkgsrc-wip "+
+			"infrastructure should look like \"../../wip/mk\", not \"../mk\".",
+		"WARN: ~/wip/package/Makefile:21: References to other packages "+
+			"should look like \"../../category/package\", not \"../package\".")
 }
