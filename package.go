@@ -807,6 +807,9 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 		return
 	}
 
+	// TODO: Extract all this code into a separate VarOrderChecker
+	//  since it is equally useful for PKG_OPTIONS in options.mk.
+
 	type Repetition uint8
 	const (
 		optional Repetition = iota

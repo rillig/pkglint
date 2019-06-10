@@ -98,31 +98,60 @@ func (s *Suite) Test_Package_pkgnameFromDistname(c *check.C) {
 	test("${DISTFILE:C,\\..*,,}", "aspell-af-0.50-0", "")
 }
 
-func (s *Suite) Test_Package_CheckVarorder(c *check.C) {
+func (s *Suite) Test_Package_CheckVarorder__only_required_variables(c *check.C) {
 	t := s.Init(c)
 
 	pkg := NewPackage(t.File("x11/9term"))
+	mklines := t.NewMkLines("Makefile",
+		MkRcsID,
+		"",
+		"DISTNAME=9term",
+		"CATEGORIES=x11",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
 
-	pkg.CheckVarorder(t.NewMkLines("Makefile",
+	pkg.CheckVarorder(mklines)
+
+	t.CheckOutputLines(
+		"WARN: Makefile:3: The canonical order of the variables is " +
+			"DISTNAME, CATEGORIES, empty line, COMMENT, LICENSE.")
+}
+
+func (s *Suite) Test_Package_CheckVarorder__with_optional_variables(c *check.C) {
+	t := s.Init(c)
+
+	pkg := NewPackage(t.File("x11/9term"))
+	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"",
 		"GITHUB_PROJECT=project",
 		"DISTNAME=9term",
-		"CATEGORIES=x11"))
+		"CATEGORIES=x11")
+
+	pkg.CheckVarorder(mklines)
 
 	// TODO: Make this warning more specific to the actual situation.
 	t.CheckOutputLines(
 		"WARN: Makefile:3: The canonical order of the variables is " +
 			"GITHUB_PROJECT, DISTNAME, CATEGORIES, GITHUB_PROJECT, empty line, " +
 			"COMMENT, LICENSE.")
+}
 
-	pkg.CheckVarorder(t.NewMkLines("Makefile",
+// Just for code coverage.
+func (s *Suite) Test_Package_CheckVarorder__no_tracing(c *check.C) {
+	t := s.Init(c)
+
+	pkg := NewPackage(t.File("x11/9term"))
+	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"",
 		"DISTNAME=9term",
 		"CATEGORIES=x11",
 		"",
-		".include \"../../mk/bsd.pkg.mk\""))
+		".include \"../../mk/bsd.pkg.mk\"")
+	t.DisableTracing()
+
+	pkg.CheckVarorder(mklines)
 
 	t.CheckOutputLines(
 		"WARN: Makefile:3: The canonical order of the variables is " +
