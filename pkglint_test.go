@@ -1095,6 +1095,11 @@ func (s *Suite) Test_Pkglint_checkdirPackage__filename_with_variable(c *check.C)
 	G.Check(pkg)
 
 	t.CheckOutputEmpty()
+
+	// Just for code coverage.
+	t.DisableTracing()
+	G.Check(pkg)
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_Pkglint_checkdirPackage__ALTERNATIVES(c *check.C) {
