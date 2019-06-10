@@ -1138,6 +1138,18 @@ func (s *Suite) Test_CheckFileMk__enoent(c *check.C) {
 		"ERROR: ~/filename.mk: Cannot be read.")
 }
 
+// Just for code coverage.
+func (s *Suite) Test_CheckFileOther__no_tracing(c *check.C) {
+	t := s.Init(c)
+
+	t.DisableTracing()
+
+	CheckFileOther(t.File("filename.mk"))
+
+	t.CheckOutputLines(
+		"ERROR: ~/filename.mk: Cannot be read.")
+}
+
 func (s *Suite) Test_Pkglint_checkExecutable(c *check.C) {
 	t := s.Init(c)
 
