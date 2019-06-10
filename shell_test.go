@@ -1029,6 +1029,22 @@ func (s *Suite) Test_ShellLineChecker_checkHiddenAndSuppress(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_ShellLineChecker_checkHiddenAndSuppress__no_tracing(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpTool("ls", "LS", AtRunTime)
+	mklines := t.NewMkLines("Makefile",
+		MkRcsID,
+		"",
+		"pre-configure:",
+		"\t@ls -l")
+	t.DisableTracing()
+
+	mklines.Check()
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_SimpleCommandChecker_handleForbiddenCommand(c *check.C) {
 	t := s.Init(c)
 
