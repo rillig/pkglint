@@ -33,3 +33,60 @@ func (s *Suite) Test_CheckdirToplevel(c *check.C) {
 		// Ideally it would be at the same place as the other warning from Makefile:3.
 		"NOTE: ~/Makefile:3: This variable value should be aligned with tabs, not spaces, to column 17.")
 }
+
+func (s *Suite) Test_CheckdirToplevel__recursive(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("mk/misc/category.mk",
+		MkRcsID)
+	t.SetUpPackage("category/package",
+		"UNKNOWN=\tvalue")
+	t.CreateFileLines("Makefile",
+		MkRcsID,
+		"",
+		"SUBDIR+=\tcategory")
+	t.CreateFileLines("category/Makefile",
+		MkRcsID,
+		"",
+		"COMMENT=\tThe category",
+		"",
+		"SUBDIR+=\tpackage",
+		"",
+		".include \"../mk/misc/category.mk\"")
+
+	t.Main("-Wall", "-r", ".")
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile:20: UNKNOWN is defined but not used.",
+		"0 errors and 1 warning found.",
+		"(Run \"pkglint -e\" to show explanations.)")
+}
+
+func (s *Suite) Test_CheckdirToplevel__recursive_inter_package(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("mk/misc/category.mk",
+		MkRcsID)
+	t.SetUpPackage("category/package",
+		"UNKNOWN=\tvalue")
+	t.CreateFileLines("Makefile",
+		MkRcsID,
+		"",
+		"SUBDIR+=\tcategory")
+	t.CreateFileLines("category/Makefile",
+		MkRcsID,
+		"",
+		"COMMENT=\tThe category",
+		"",
+		"SUBDIR+=\tpackage",
+		"",
+		".include \"../mk/misc/category.mk\"")
+
+	t.Main("-Wall", "-Call", "-r", ".")
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile:20: UNKNOWN is defined but not used.",
+		"WARN: ~/licenses/gnu-gpl-v2: This license seems to be unused.",
+		"0 errors and 2 warnings found.",
+		"(Run \"pkglint -e\" to show explanations.)")
+}
