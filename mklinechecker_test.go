@@ -153,6 +153,20 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftUserSettable(c *check.C) {
 			"which differs from the default value \"default\" from mk/defaults/mk.conf.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkVarassignLeftBsdPrefs__vartype_nil(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("builtin.mk",
+		MkRcsID,
+		"VAR_SH?=\tvalue")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: builtin.mk:2: VAR_SH is defined but not used.",
+		"WARN: builtin.mk:2: Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
+}
+
 func (s *Suite) Test_MkLineChecker_Check__url2pkg(c *check.C) {
 	t := s.Init(c)
 
