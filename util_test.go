@@ -735,11 +735,40 @@ func (s *Suite) Test_FileCache_removeOldEntries__no_tracing(c *check.C) {
 
 // Covers the newLen > 0 condition.
 func (s *Suite) Test_FileCache_removeOldEntries__zero_capacity(c *check.C) {
+	t := s.Init(c)
+
 	lines := t.NewLines("filename.mk",
 		MkRcsID)
 	cache := NewFileCache(1)
 	cache.Put("filename1.mk", 0, lines)
+
+	// This call removes all existing entries from the cache,
+	// as the cache's capacity is only 1.
 	cache.Put("filename2.mk", 0, lines)
+}
+
+func (s *Suite) Test_FileCache_Evict__sort(c *check.C) {
+	t := s.Init(c)
+
+	lines := t.NewLines("filename.mk",
+		MkRcsID)
+	cache := NewFileCache(10)
+	cache.Put("filename0.mk", 0, lines)
+	cache.Put("filename1.mk", 0, lines)
+	cache.Put("filename2.mk", 0, lines)
+	cache.Put("filename3.mk", 0, lines)
+	cache.Put("filename4.mk", 0, lines)
+	cache.Put("filename5.mk", 0, lines)
+	cache.Put("filename6.mk", 0, lines)
+	cache.Put("filename7.mk", 0, lines)
+	cache.Put("filename8.mk", 0, lines)
+	cache.Put("filename9.mk", 0, lines)
+
+	cache.Evict("filename5.mk")
+
+	t.Check(cache.table, check.HasLen, 9)
+	t.Check(cache.Get("filename5.mk", 0), check.IsNil)
+	t.Check(cache.Get("filename6.mk", 0), check.NotNil)
 }
 
 func (s *Suite) Test_makeHelp(c *check.C) {

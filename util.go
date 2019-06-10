@@ -993,14 +993,14 @@ func (c *FileCache) Get(filename string, options LoadOptions) Lines {
 func (c *FileCache) Evict(filename string) {
 	key := c.key(filename)
 	entry, found := c.mapping[key]
-	if found {
-		delete(c.mapping, key)
-
-		sort.Slice(c.table, func(i, j int) bool {
-			return c.table[j] == entry && c.table[i] != entry
-		})
-		c.table = c.table[0 : len(c.table)-1]
+	if !found {
+		return
 	}
+
+	delete(c.mapping, key)
+
+	sort.SliceStable(c.table, func(i, j int) bool { return c.table[j] == entry })
+	c.table = c.table[:len(c.table)-1]
 }
 
 func (c *FileCache) key(filename string) string {
