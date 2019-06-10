@@ -47,6 +47,22 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftNotUsed__procedure_call(c *
 		"WARN: ~/category/package/filename.mk:6: VAR is defined but not used.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkVarassignLeftNotUsed__procedure_call_no_tracing(c *check.C) {
+	t := s.Init(c)
+
+	t.DisableTracing() // Just for code coverage
+	t.CreateFileLines("mk/pkg-build-options.mk")
+	mklines := t.SetUpFileMkLines("category/package/filename.mk",
+		MkRcsID,
+		"",
+		"pkgbase := glib2",
+		".include \"../../mk/pkg-build-options.mk\"")
+
+	mklines.Check()
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_MkLineChecker_checkVarassignLeftNotUsed__infra(c *check.C) {
 	t := s.Init(c)
 
