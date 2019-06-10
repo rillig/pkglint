@@ -73,6 +73,25 @@ func (s *Suite) Test_Tools_ParseToolLine__invalid_tool_name(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_Tools_parseUseTools(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.CreateFileLines("mk/tools/defaults.mk",
+		MkRcsID,
+		"",
+		".include \"triple.mk\"")
+	t.CreateFileLines("mk/tools/triple.mk",
+		MkRcsID,
+		"",
+		"USE_TOOLS+=\techo echo echo")
+	t.FinishSetUp()
+
+	t.Check(G.Pkgsrc.Tools.ByName("echo").String(), equals, "echo:ECHO:var:AfterPrefsMk")
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Tools_Define__invalid_tool_name(c *check.C) {
 	t := s.Init(c)
 
