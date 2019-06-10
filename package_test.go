@@ -205,8 +205,7 @@ func (s *Suite) Test_Package_CheckVarorder__skip_if_there_are_directives(c *chec
 	t := s.Init(c)
 
 	pkg := NewPackage(t.File("category/package"))
-
-	pkg.CheckVarorder(t.NewMkLines("Makefile",
+	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"",
 		"DISTNAME=\tdistname-1.0",
@@ -215,10 +214,17 @@ func (s *Suite) Test_Package_CheckVarorder__skip_if_there_are_directives(c *chec
 		".if ${DISTNAME:Mdistname-*}",
 		"MAINTAINER=\tpkgsrc-users@NetBSD.org",
 		".endif",
-		"LICENSE=\tgnu-gpl-v2"))
+		"LICENSE=\tgnu-gpl-v2")
+
+	pkg.CheckVarorder(mklines)
 
 	// No warning about the missing COMMENT since the .if directive
 	// causes the whole check to be skipped.
+	t.CheckOutputEmpty()
+
+	// Just for code coverage.
+	t.DisableTracing()
+	pkg.CheckVarorder(mklines)
 	t.CheckOutputEmpty()
 }
 
