@@ -529,6 +529,23 @@ func (s *Suite) Test_MkLineChecker_checkVartype__append_to_non_list(c *check.C) 
 		"WARN: filename.mk:2: The \"+=\" operator should only be used with lists, not with DISTNAME.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkVartype__no_tracing(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("filename.mk",
+		MkRcsID,
+		"UNKNOWN=\tvalue",
+		"CUR_DIR!=\tpwd")
+	t.DisableTracing()
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:2: UNKNOWN is defined but not used.",
+		"WARN: filename.mk:3: CUR_DIR is defined but not used.")
+}
+
 // Pkglint once interpreted all lists as consisting of shell tokens,
 // splitting this URL at the ampersand.
 func (s *Suite) Test_MkLineChecker_checkVarassign__URL_with_shell_special_characters(c *check.C) {
