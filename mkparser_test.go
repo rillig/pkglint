@@ -102,7 +102,9 @@ func (s *Suite) Test_MkParser_VarUse(c *check.C) {
 	testRest := func(input string, expectedTokens []*MkToken, expectedRest string, diagnostics ...string) {
 		line := t.NewLines("Test_MkParser_VarUse.mk", input).Lines[0]
 		p := NewMkParser(line, input, true)
+
 		actualTokens := p.MkTokens()
+
 		c.Check(actualTokens, deepEquals, expectedTokens)
 		for i, expectedToken := range expectedTokens {
 			if i < len(actualTokens) {
@@ -255,6 +257,10 @@ func (s *Suite) Test_MkParser_VarUse(c *check.C) {
 
 	test("${RUBY_RAILS_SUPPORTED:[#]}",
 		varuse("RUBY_RAILS_SUPPORTED", "[#]"))
+
+	test("${GZIP_CMD:[asdf]:Q}",
+		varuseText("${GZIP_CMD:[asdf]:Q}", "GZIP_CMD", "Q"),
+		"WARN: Test_MkParser_VarUse.mk:1: Invalid variable modifier \"[asdf]\" for \"GZIP_CMD\".")
 
 	test("${DISTNAME:C/-[0-9]+$$//:C/_/-/}",
 		varuse("DISTNAME", "C/-[0-9]+$$//", "C/_/-/"))
@@ -409,6 +415,20 @@ func (s *Suite) Test_MkParser_VarUseModifiers__invalid_ts_modifier_without_warni
 
 	t.Check(modifiers, deepEquals, []MkVarUseModifier{{"tsabc"}})
 	t.Check(p.Rest(), equals, "}")
+}
+
+func (s *Suite) Test_MkParser_varUseModifier__square_bracket(c *check.C) {
+	t := s.Init(c)
+
+	line := t.NewLine("filename.mk", 123, "\t${VAR:[asdf]}")
+	p := NewMkParser(line, ":[asdf]", true)
+
+	modifier := p.varUseModifier("VAR", '}')
+
+	t.Check(modifier, equals, "")
+	t.Check(p.Rest(), equals, ":[asdf]")
+
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkParser_VarUse__ambiguous(c *check.C) {
