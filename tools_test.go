@@ -77,17 +77,13 @@ func (s *Suite) Test_Tools_parseUseTools(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPkgsrc()
-	t.CreateFileLines("mk/tools/defaults.mk",
+	t.CreateFileLines("mk/triple-tool.mk",
 		MkRcsID,
 		"",
-		".include \"triple.mk\"")
-	t.CreateFileLines("mk/tools/triple.mk",
-		MkRcsID,
-		"",
-		"USE_TOOLS+=\techo echo echo")
+		"USE_TOOLS+=\tunknown unknown unknown")
 	t.FinishSetUp()
 
-	t.Check(G.Pkgsrc.Tools.ByName("echo").String(), equals, "echo:ECHO:var:AfterPrefsMk")
+	t.Check(G.Pkgsrc.Tools.ByName("unknown"), check.IsNil)
 
 	t.CheckOutputEmpty()
 }
