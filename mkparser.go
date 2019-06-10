@@ -197,6 +197,8 @@ func (p *MkParser) VarUseModifiers(varname string, closing byte) []MkVarUseModif
 	return modifiers
 }
 
+// varUseModifier parses a single variable modifier such as :Q or :S,from,to,.
+// The actual parsing starts after the leading colon.
 func (p *MkParser) varUseModifier(varname string, closing byte) string {
 	lexer := p.lexer
 	mark := lexer.Mark()
