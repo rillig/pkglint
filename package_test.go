@@ -46,6 +46,21 @@ func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__package_but_not_file
 		"TRACE: - (*Package).checkLinesBuildlink3Inclusion()")
 }
 
+// Just for code coverage.
+func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__no_tracing(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"PKGNAME=\tpackage-1.0")
+	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk")
+	t.FinishSetUp()
+
+	t.DisableTracing()
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Package_pkgnameFromDistname(c *check.C) {
 	t := s.Init(c)
 
