@@ -999,8 +999,13 @@ func (c *FileCache) Evict(filename string) {
 
 	delete(c.mapping, key)
 
-	sort.SliceStable(c.table, func(i, j int) bool { return c.table[j] == entry })
-	c.table = c.table[:len(c.table)-1]
+	for i, e := range c.table {
+		if e == entry {
+			c.table[i] = c.table[len(c.table)-1]
+			c.table = c.table[:len(c.table)-1]
+			return
+		}
+	}
 }
 
 func (c *FileCache) key(filename string) string {
