@@ -62,17 +62,19 @@ func (s *Suite) Test_VarTypeRegistry_enumFrom(c *check.C) {
 func (s *Suite) Test_VarTypeRegistry_enumFrom__no_tracing(c *check.C) {
 	t := s.Init(c)
 
-	t.CreateFileLines("mk/exists.mk",
+	t.CreateFileLines("mk/existing.mk",
 		MkRcsID,
 		"VAR=\tfirst second")
 	reg := NewVarTypeRegistry()
 	t.DisableTracing()
 
-	existingType := reg.enumFrom(&G.Pkgsrc, "mk/exists.mk", "defval", "VAR")
-	defaultType := reg.enumFrom(&G.Pkgsrc, "mk/nonexisting.mk", "defval", "VAR")
+	existingType := reg.enumFrom(&G.Pkgsrc, "mk/existing.mk", "defval", "VAR")
+	noAssignmentsType := reg.enumFrom(&G.Pkgsrc, "mk/existing.mk", "defval", "OTHER_VAR")
+	nonexistentType := reg.enumFrom(&G.Pkgsrc, "mk/nonexistent.mk", "defval", "VAR")
 
 	t.Check(existingType.AllowedEnums(), equals, "first second")
-	t.Check(defaultType.AllowedEnums(), equals, "defval")
+	t.Check(noAssignmentsType.AllowedEnums(), equals, "defval")
+	t.Check(nonexistentType.AllowedEnums(), equals, "defval")
 }
 
 func (s *Suite) Test_VarTypeRegistry_enumFromDirs(c *check.C) {
