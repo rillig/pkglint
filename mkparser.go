@@ -198,8 +198,8 @@ func (p *MkParser) VarUseModifiers(varname string, closing byte) []MkVarUseModif
 		switch lexer.PeekByte() {
 		case 'E', 'H', 'L', 'O', 'Q', 'R', 'T', 's', 't', 'u':
 			mod := lexer.NextBytesSet(textproc.Alnum)
-			switch mod {
 
+			switch mod {
 			case
 				"E",  // Extension, e.g. path/file.suffix => suffix
 				"H",  // Head, e.g. dir/subdir/file.suffix => dir/subdir
@@ -218,10 +218,11 @@ func (p *MkParser) VarUseModifiers(varname string, closing byte) []MkVarUseModif
 				"u":  // Remove adjacent duplicate words (like uniq(1))
 				appendModifier(mod)
 				continue
+			}
 
-			case "ts":
+			if hasPrefix(mod, "ts") {
 				// See devel/bmake/files/var.c:/case 't'
-				sep := p.varUseText(closing)
+				sep := mod[2:] + p.varUseText(closing)
 				switch {
 				case sep == "":
 					lexer.SkipString(":")
@@ -232,6 +233,10 @@ func (p *MkParser) VarUseModifiers(varname string, closing byte) []MkVarUseModif
 				default:
 					if p.EmitWarnings {
 						p.Line.Warnf("Invalid separator %q for :ts modifier of %q.", sep, varname)
+						p.Line.Explain(
+							"The separator for the :ts modifier must be either a single character",
+							"or an escape sequence like \\t or \\n or an octal or decimal escape",
+							"sequence; see the bmake man page for further details.")
 					}
 				}
 				appendModifier(lexer.Since(modifierMark))

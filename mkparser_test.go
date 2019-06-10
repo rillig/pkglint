@@ -5,6 +5,19 @@ import (
 	"strings"
 )
 
+func (s *Suite) Test_NewMkParser__invalid_arguments(c *check.C) {
+	t := s.Init(c)
+
+	line := t.NewLine("filename.mk", 123, "")
+
+	t.ExpectPanic(
+		func() { NewMkParser(line, "", false) },
+		"Pkglint internal error: line must be given iff emitWarnings is set")
+	t.ExpectPanic(
+		func() { NewMkParser(nil, "", true) },
+		"Pkglint internal error: line must be given iff emitWarnings is set")
+}
+
 func (s *Suite) Test_MkParser_MkTokens(c *check.C) {
 	t := s.Init(c)
 
@@ -365,6 +378,37 @@ func (s *Suite) Test_MkParser_VarUse(c *check.C) {
 		varuseText("${${", "${"),
 		"WARN: Test_MkParser_VarUse.mk:1: Missing closing \"}\" for \"\".",
 		"WARN: Test_MkParser_VarUse.mk:1: Missing closing \"}\" for \"${\".")
+}
+
+func (s *Suite) Test_MkParser_VarUseModifiers__invalid_ts_modifier_with_warning(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--explain")
+	line := t.NewLine("filename.mk", 123, "${VAR:tsabc}")
+	p := NewMkParser(line, ":tsabc}", true)
+
+	modifiers := p.VarUseModifiers("VAR", '}')
+
+	t.Check(modifiers, deepEquals, []MkVarUseModifier{{"tsabc"}})
+	t.Check(p.Rest(), equals, "}")
+	t.CheckOutputLines(
+		"WARN: filename.mk:123: Invalid separator \"abc\" for :ts modifier of \"VAR\".",
+		"",
+		"\tThe separator for the :ts modifier must be either a single character",
+		"\tor an escape sequence like \\t or \\n or an octal or decimal escape",
+		"\tsequence; see the bmake man page for further details.",
+		"")
+}
+
+func (s *Suite) Test_MkParser_VarUseModifiers__invalid_ts_modifier_without_warning(c *check.C) {
+	t := s.Init(c)
+
+	p := NewMkParser(nil, ":tsabc}", false)
+
+	modifiers := p.VarUseModifiers("VAR", '}')
+
+	t.Check(modifiers, deepEquals, []MkVarUseModifier{{"tsabc"}})
+	t.Check(p.Rest(), equals, "}")
 }
 
 func (s *Suite) Test_MkParser_VarUse__ambiguous(c *check.C) {
