@@ -594,6 +594,7 @@ func (s *Suite) Test_Pkglint_checkReg__alternatives(c *check.C) {
 		"(Run \"pkglint -e\" to show explanations.)")
 }
 
+// Just for branch coverage.
 func (s *Suite) Test_Pkglint_checkReg__file_not_found(c *check.C) {
 	t := s.Init(c)
 
@@ -613,6 +614,18 @@ func (s *Suite) Test_Pkglint_checkReg__file_not_found(c *check.C) {
 		"ERROR: MESSAGE: Cannot be read.",
 		"ERROR: patches/patch-aa: Cannot be read.",
 		"ERROR: PLIST: Cannot be read.")
+}
+
+// Just for branch coverage.
+func (s *Suite) Test_Pkglint_checkReg__no_tracing(c *check.C) {
+	t := s.Init(c)
+
+	t.Chdir(".")
+	t.DisableTracing()
+
+	G.checkReg("patches/manual-aa", "manual-aa", 2)
+
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_Pkglint__profiling(c *check.C) {
