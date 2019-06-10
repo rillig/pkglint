@@ -98,9 +98,9 @@ func (s *Suite) Test_Tools_Define__invalid_tool_name(c *check.C) {
 	mkline := t.NewMkLine("dummy.mk", 123, "DUMMY=\tvalue")
 	reg := NewTools()
 
-	reg.Define("tool_name", "", mkline)
-	reg.Define("tool:dependency", "", mkline)
-	reg.Define("tool:build", "", mkline)
+	t.Check(reg.Define("tool_name", "", mkline), check.IsNil)
+	t.Check(reg.Define("tool:dependency", "", mkline), check.IsNil)
+	t.Check(reg.Define("tool:build", "", mkline), check.IsNil)
 
 	// As of October 2018, the underscore is not used in any tool name.
 	// If there should ever be such a case, just use a different character for testing.
@@ -108,6 +108,8 @@ func (s *Suite) Test_Tools_Define__invalid_tool_name(c *check.C) {
 		"ERROR: dummy.mk:123: Invalid tool name \"tool_name\".",
 		"ERROR: dummy.mk:123: Invalid tool name \"tool:dependency\".",
 		"ERROR: dummy.mk:123: Invalid tool name \"tool:build\".")
+
+	t.Check(reg.byName, check.HasLen, 0)
 }
 
 func (s *Suite) Test_Tools_Trace__coverage(c *check.C) {

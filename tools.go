@@ -142,6 +142,7 @@ func (tr *Tools) Define(name, varname string, mkline MkLine) *Tool {
 
 	if !tr.IsValidToolName(name) {
 		mkline.Errorf("Invalid tool name %q.", name)
+		return nil
 	}
 
 	validity := tr.validity(mkline.Basename, false)
