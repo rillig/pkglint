@@ -1268,6 +1268,35 @@ func (s *Suite) Test_Package_readMakefile__included(c *check.C) {
 	t.Check(seen.seen, check.HasLen, 5)
 }
 
+// Just for code coverage.
+func (s *Suite) Test_Package_findIncludedFile__no_tracing(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".include \"../../${UNKNOWN_PKGPATH}/buildlink3.mk\"",
+		".include \"../../lang/language/buildlink3.mk\"")
+	t.CreateFileLines("lang/language/buildlink3.mk",
+		MkRcsID)
+	t.FinishSetUp()
+	pkg := NewPackage(t.File("category/package"))
+	t.DisableTracing()
+
+	pkg.loadPackageMakefile()
+
+	expected := []string{
+		"../../lang/language/buildlink3.mk",
+		"../../lang/language/builtin.mk",
+		"suppress-varorder.mk"}
+
+	seen := pkg.included
+	for _, filename := range expected {
+		if !seen.Seen(filename) {
+			c.Errorf("File %q is not seen.", filename)
+		}
+	}
+	t.Check(seen.seen, check.HasLen, 3)
+}
+
 func (s *Suite) Test_Package_checkLocallyModified(c *check.C) {
 	t := s.Init(c)
 
