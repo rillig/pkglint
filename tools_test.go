@@ -34,7 +34,7 @@ func (s *Suite) Test_Tool_UsableAtRunTime(c *check.C) {
 // which confused an earlier version of pkglint into
 // thinking that the below definition was about a tool
 // called "NetBSD".
-func (s *Suite) Test_Tools_ParseToolLine(c *check.C) {
+func (s *Suite) Test_Tools_ParseToolLine__opsys(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpTool("tool1", "", Nowhere)
@@ -47,6 +47,29 @@ func (s *Suite) Test_Tools_ParseToolLine(c *check.C) {
 	CheckdirToplevel(t.File("."))
 
 	// No error about "Unknown tool \"NetBSD\"."
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_Tools_ParseToolLine__invalid_tool_name(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("Makefile",
+		MkRcsID,
+		"",
+		".for t in abc ${UNDEFINED}",
+		"TOOLS_CREATE+=\t\t${t}",
+		"_TOOLS_VARNAME.${t}=\tVARNAME",
+		"TOOLS_PATH.${t}=\t/bin/${t}",
+		"TOOLS_ALIASES.${t}=\t${t} ${u} ${t}-arm64",
+		"TOOLS_ALIASES.tool=\t${t} ${u} ${t}-arm64",
+		"_TOOLS.${t}=\t${t}",
+		".endfor")
+
+	mklines.collectDefinedVariables()
+	t.Check(mklines.Tools.byName, check.HasLen, 1)
+	t.Check(mklines.Tools.ByName("tool").String(), equals, "tool:::Nowhere:abc")
+
 	t.CheckOutputEmpty()
 }
 

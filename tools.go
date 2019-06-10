@@ -248,6 +248,10 @@ func (tr *Tools) ParseToolLine(mklines MkLines, mkline MkLine, fromInfrastructur
 			}
 
 		case "TOOLS_ALIASES.*":
+			if containsVarRef(varparam) {
+				break
+			}
+
 			tool := tr.def(varparam, "", false, Nowhere, nil)
 
 			for _, alias := range mkline.ValueFields(value) {
