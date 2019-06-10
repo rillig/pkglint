@@ -737,7 +737,15 @@ func (s *Suite) Test_MkLines_collectDocumentedVariables(c *check.C) {
 		"",
 		"# VARBASE1.<param1>",
 		"# VARBASE2.*",
-		"# VARBASE3.${id}")
+		"# VARBASE3.${id}",
+		"",
+		"# NETBSD/amd64",
+		"#\tThis is not a variable name.",
+		"#\tThe slash must not appear in a variable name.",
+		"",
+		"# _____",
+		"#\tThis is not a variable name.",
+		"#\tVariable names must have at least one letter.")
 
 	// The variables that appear in the documentation are marked as
 	// both used and defined, to prevent the "defined but not used" warnings.
