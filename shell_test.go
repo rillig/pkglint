@@ -1276,6 +1276,23 @@ func (s *Suite) Test_ShellProgramChecker_checkSetE__compound_commands(c *check.C
 			"(after \"touch 1\") to separate commands.")
 }
 
+func (s *Suite) Test_ShellProgramChecker_checkSetE__no_tracing(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpTool("touch", "", AtRunTime)
+	mklines := t.NewMkLines("Makefile",
+		MkRcsID,
+		"pre-configure:",
+		"\ttouch 1; touch 2")
+	t.DisableTracing()
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon " +
+			"(after \"touch 1\") to separate commands.")
+}
+
 func (s *Suite) Test_ShellProgramChecker_canFail(c *check.C) {
 	t := s.Init(c)
 
