@@ -884,7 +884,7 @@ func (t *Tester) CheckOutputEmpty() {
 //
 // See CheckOutputEmpty, CheckOutputLinesIgnoreSpace.
 func (t *Tester) CheckOutputLines(expectedLines ...string) {
-	assertf(len(expectedLines) > 0, "To check empty lines, use CheckLinesEmpty instead.")
+	assertf(len(expectedLines) > 0, "To check empty lines, use CheckOutputEmpty instead.")
 	t.CheckOutput(expectedLines)
 }
 
@@ -897,7 +897,7 @@ func (t *Tester) CheckOutputLines(expectedLines ...string) {
 //
 // See CheckOutputEmpty, CheckOutputLines.
 func (t *Tester) CheckOutputLinesIgnoreSpace(expectedLines ...string) {
-	assertf(len(expectedLines) > 0, "To check empty lines, use CheckLinesEmpty instead.")
+	assertf(len(expectedLines) > 0, "To check empty lines, use CheckOutputEmpty instead.")
 	assertf(t.tmpdir != "", "Tester must be initialized before checking the output.")
 
 	rawOutput := t.stdout.String() + t.stderr.String()
