@@ -1810,6 +1810,21 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond__comparing_PKGSRC_COMPILER
 		"WARN: Makefile:3: Use ${PKGSRC_COMPILER:Ngcc} instead of the != operator.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkDirectiveCondCompareVarStr__no_tracing(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("filename.mk",
+		".if ${DISTFILES:Mpattern:O:u} == NetBSD")
+	t.DisableTracing()
+
+	ck := MkLineChecker{mklines, mklines.mklines[0]}
+	varUse := NewMkVarUse("DISTFILES", "Mpattern", "O", "u")
+	ck.checkDirectiveCondCompareVarStr(varUse, "==", "distfile-1.0.tar.gz")
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_MkLineChecker_checkVartype__CFLAGS_with_backticks(c *check.C) {
 	t := s.Init(c)
 
