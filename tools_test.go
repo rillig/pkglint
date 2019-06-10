@@ -548,6 +548,19 @@ func (s *Suite) Test_Tools_Fallback__tools_having_the_same_variable_name_unreali
 	c.Check(local2.ByVarname("SED").String(), equals, "sed:SED::AfterPrefsMk")
 }
 
+func (s *Suite) Test_Tools_Fallback__called_twice(c *check.C) {
+	t := s.Init(c)
+
+	tools := NewTools()
+	fallback := NewTools()
+
+	tools.Fallback(fallback)
+
+	t.ExpectPanic(
+		func() { tools.Fallback(fallback) },
+		"Pkglint internal error: Tools.Fallback must only be called once.")
+}
+
 func (s *Suite) Test_Tools__aliases(c *check.C) {
 	t := s.Init(c)
 
