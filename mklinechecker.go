@@ -1311,8 +1311,8 @@ func (ck MkLineChecker) checkVarassignLeftUserSettable() bool {
 	// A few of the user-settable variables can also be set by packages.
 	// That's an unfortunate situation since there is no definite source
 	// of truth, but luckily only a few variables make use of it.
-	vartype := G.Pkgsrc.VariableType(nil, varname)
-	if vartype != nil && vartype.PackageSettable() {
+	vartype := G.Pkgsrc.VariableType(ck.MkLines, varname)
+	if vartype.PackageSettable() {
 		return true
 	}
 

@@ -153,6 +153,34 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftUserSettable(c *check.C) {
 			"which differs from the default value \"default\" from mk/defaults/mk.conf.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkVarassignLeftUserSettable__vartype_nil(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("category/package/vars.mk",
+		MkRcsID,
+		"#",
+		"# User-settable variables:",
+		"#",
+		"# USER_SETTABLE",
+		"#\tDocumentation for USER_SETTABLE.",
+		"",
+		".include \"../../mk/bsd.prefs.mk\"",
+		"",
+		"USER_SETTABLE?=\tdefault")
+	t.SetUpPackage("category/package",
+		"USER_SETTABLE=\tvalue")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	// TODO: As of June 2019, pkglint doesn't parse the "User-settable variables"
+	//  comment. Therefore it doesn't know that USER_SETTABLE is intended to be
+	//  used by other packages. There should be no warning.
+	t.CheckOutputLines(
+		"WARN: Makefile:20: USER_SETTABLE is defined but not used.")
+}
+
 func (s *Suite) Test_MkLineChecker_checkVarassignLeftBsdPrefs__vartype_nil(c *check.C) {
 	t := s.Init(c)
 
