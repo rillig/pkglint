@@ -733,6 +733,15 @@ func (s *Suite) Test_FileCache_removeOldEntries__no_tracing(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+// Covers the newLen > 0 condition.
+func (s *Suite) Test_FileCache_removeOldEntries__zero_capacity(c *check.C) {
+	lines := t.NewLines("filename.mk",
+		MkRcsID)
+	cache := NewFileCache(1)
+	cache.Put("filename1.mk", 0, lines)
+	cache.Put("filename2.mk", 0, lines)
+}
+
 func (s *Suite) Test_makeHelp(c *check.C) {
 	c.Check(makeHelp("subst"), equals, confMake+" help topic=subst")
 }
