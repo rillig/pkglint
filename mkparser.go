@@ -183,22 +183,16 @@ func (p *MkParser) varUseAlnum() *MkVarUse {
 func (p *MkParser) VarUseModifiers(varname string, closing byte) []MkVarUseModifier {
 	lexer := p.lexer
 
-	// TODO: Split into VarUseModifier for parsing a single modifier.
-
 	var modifiers []MkVarUseModifier
-	appendModifier := func(s string) { modifiers = append(modifiers, MkVarUseModifier{s}) }
-
 	// The :S and :C modifiers may be chained without using the : as separator.
 	mayOmitColon := false
 
 	for lexer.SkipByte(':') || mayOmitColon {
-		mayOmitColon = false
-
 		ok, modifier := p.varUseModifier(varname, closing)
 		if ok {
-			appendModifier(modifier)
-			mayOmitColon = modifier[0] == 'S' || modifier[0] == 'C'
+			modifiers = append(modifiers, MkVarUseModifier{modifier})
 		}
+		mayOmitColon = ok && (modifier[0] == 'S' || modifier[0] == 'C')
 	}
 	return modifiers
 }
