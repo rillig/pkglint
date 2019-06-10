@@ -347,7 +347,7 @@ func (tr *Tools) validity(basename string, useTools bool) Validity {
 		return AfterPrefsMk
 	case basename == "Makefile" && !tr.SeenPrefs:
 		return AfterPrefsMk
-	case useTools, basename == "bsd.pkg.mk":
+	case useTools:
 		return AtRunTime
 	default:
 		return Nowhere
