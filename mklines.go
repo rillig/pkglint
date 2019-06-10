@@ -230,7 +230,7 @@ func (mklines *MkLinesImpl) ForEachEnd(action func(mkline MkLine) bool, atEnd fu
 // variable and returns a slice containing all its values, fully
 // expanded.
 //
-// It can only be used during a active ForEach call.
+// It can only be used during an active ForEach call.
 func (mklines *MkLinesImpl) ExpandLoopVar(varname string) []string {
 
 	// From the inner loop to the outer loop, just in case
@@ -239,7 +239,7 @@ func (mklines *MkLinesImpl) ExpandLoopVar(varname string) []string {
 		ind := mklines.indentation.levels[i]
 
 		mkline := ind.mkline
-		if mkline == nil || !mkline.IsDirective() || mkline.Directive() != "for" {
+		if mkline == nil || mkline.Directive() != "for" {
 			continue
 		}
 

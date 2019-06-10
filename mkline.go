@@ -1204,7 +1204,7 @@ type Indentation struct {
 
 func NewIndentation() *Indentation {
 	ind := Indentation{}
-	ind.Push(nil, 0, "") // Dummy
+	ind.levels = []indentationLevel{{}} // one dummy level
 	return &ind
 }
 
@@ -1264,6 +1264,7 @@ func (ind *Indentation) Pop() {
 }
 
 func (ind *Indentation) Push(mkline MkLine, indent int, condition string) {
+	assertf(mkline.IsDirective(), "Indentation line must be a directive.")
 	ind.levels = append(ind.levels, indentationLevel{mkline, indent, condition, nil, nil})
 }
 

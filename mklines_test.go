@@ -3,6 +3,7 @@ package pkglint
 import (
 	"gopkg.in/check.v1"
 	"sort"
+	"strings"
 )
 
 func (s *Suite) Test_MkLines_Check__unusual_target(c *check.C) {
@@ -302,6 +303,80 @@ func (s *Suite) Test_MkLines_CheckForUsedComment(c *check.C) {
 	// TODO: What if the "used by" comments appear in the second paragraph, preceded by only comments and empty lines?
 
 	c.Check(G.Logger.autofixAvailable, equals, true)
+}
+
+func (s *Suite) Test_MkLines_ExpandLoopVar(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("filename.mk",
+		MkRcsID,
+		"",
+		".for file in a b c d e f g h",
+		".  for rank in 1 2 3 4 5 6 7 8",
+		"CHESS_BOARD+=\t${file}${rank}",
+		".  endfor",
+		".endfor")
+
+	var files []string
+	var ranks []string
+	var diagonals []string
+	mklines.ForEach(func(mkline MkLine) {
+		if mkline.IsVarassign() {
+			ranks = mklines.ExpandLoopVar("rank")
+			files = mklines.ExpandLoopVar("file")
+			diagonals = mklines.ExpandLoopVar("diagonals")
+		}
+	})
+
+	t.Check(files, deepEquals, strings.Split("abcdefgh", ""))
+	t.Check(ranks, deepEquals, strings.Split("12345678", ""))
+	t.Check(diagonals, check.HasLen, 0)
+}
+
+func (s *Suite) Test_MkLines_ExpandLoopVar__multi(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("filename.mk",
+		MkRcsID,
+		"",
+		".if 1",
+		".  for key value in 1 one 2 two 3 three",
+		"VAR.${key}=\t${value}",
+		".  endfor",
+		".endif")
+
+	var keys []string
+	var values []string
+	mklines.ForEach(func(mkline MkLine) {
+		if mkline.IsVarassign() {
+			keys = mklines.ExpandLoopVar("key")
+			values = mklines.ExpandLoopVar("value")
+		}
+	})
+
+	// As of June 2019, multi-variable .for loops are not yet implemented.
+	t.Check(keys, check.HasLen, 0)
+	t.Check(values, check.HasLen, 0)
+}
+
+func (s *Suite) Test_MkLines_ExpandLoopVar__malformed_for(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("filename.mk",
+		MkRcsID,
+		"",
+		".for var in",
+		"VAR=\t${var}",
+		".endfor")
+
+	var values = []string{"uninitialized"}
+	mklines.ForEach(func(mkline MkLine) {
+		if mkline.IsVarassign() {
+			values = mklines.ExpandLoopVar("key")
+		}
+	})
+
+	t.Check(values, check.HasLen, 0)
 }
 
 func (s *Suite) Test_MkLines_collectDefinedVariables(c *check.C) {
