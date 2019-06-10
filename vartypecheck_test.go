@@ -506,6 +506,25 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 	// That modifier adds a hyphen at the beginning (but pkglint doesn't
 	// inspect this), therefore the URL is not required to end with a slash anymore.
 	vt.OutputEmpty()
+
+	// As of June 2019, the :S modifier is not analyzed since it is unusual.
+	vt.Values(
+		"${MASTER_SITE_GNU:S,$,subdir/,}")
+	vt.OutputEmpty()
+}
+
+func (s *Suite) Test_VartypeCheck_FetchURL__without_package(c *check.C) {
+	t := s.Init(c)
+
+	vt := NewVartypeCheckTester(t, (*VartypeCheck).FetchURL)
+
+	vt.Varname("MASTER_SITES")
+	vt.Values(
+		"https://github.com/example/project/",
+		"${MASTER_SITE_OWN}")
+
+	vt.Output(
+		"ERROR: filename.mk:2: The site MASTER_SITE_OWN does not exist.")
 }
 
 func (s *Suite) Test_VartypeCheck_Filename(c *check.C) {
