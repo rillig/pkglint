@@ -193,113 +193,115 @@ func (p *MkParser) VarUseModifiers(varname string, closing byte) []MkVarUseModif
 
 	for lexer.SkipByte(':') || mayOmitColon {
 		mayOmitColon = false
-		modifierMark := lexer.Mark()
 
-		switch lexer.PeekByte() {
-		case 'E', 'H', 'L', 'O', 'Q', 'R', 'T', 's', 't', 'u':
-			mod := lexer.NextBytesSet(textproc.Alnum)
-
-			switch mod {
-			case
-				"E",  // Extension, e.g. path/file.suffix => suffix
-				"H",  // Head, e.g. dir/subdir/file.suffix => dir/subdir
-				"L",  // XXX: Shouldn't this be handled specially?
-				"O",  // Order alphabetically
-				"Ox", // Shuffle
-				"Q",  // Quote shell meta-characters
-				"R",  // Strip the file suffix, e.g. path/file.suffix => file
-				"T",  // Basename, e.g. path/file.suffix => file.suffix
-				"sh", // Evaluate the variable value as shell command
-				"tA", // Try to convert to absolute path
-				"tW", // Causes the value to be treated as a single word
-				"tl", // To lowercase
-				"tu", // To uppercase
-				"tw", // Causes the value to be treated as list of words
-				"u":  // Remove adjacent duplicate words (like uniq(1))
-				appendModifier(mod)
-				continue
-			}
-
-			if hasPrefix(mod, "ts") {
-				// See devel/bmake/files/var.c:/case 't'
-				sep := mod[2:] + p.varUseText(closing)
-				switch {
-				case sep == "":
-					lexer.SkipString(":")
-				case len(sep) == 1:
-					break
-				case matches(sep, `^\\\d+`):
-					break
-				default:
-					if p.EmitWarnings {
-						p.Line.Warnf("Invalid separator %q for :ts modifier of %q.", sep, varname)
-						p.Line.Explain(
-							"The separator for the :ts modifier must be either a single character",
-							"or an escape sequence like \\t or \\n or an octal or decimal escape",
-							"sequence; see the bmake man page for further details.")
-					}
-				}
-				appendModifier(lexer.Since(modifierMark))
-				continue
-			}
-
-		case '=', 'D', 'M', 'N', 'U':
-			lexer.Skip(1)
-			re := G.res.Compile(regex.Pattern(ifelseStr(closing == '}', `^([^$:\\}]|\$\$|\\.)+`, `^([^$:\\)]|\$\$|\\.)+`)))
-			for p.VarUse() != nil || lexer.SkipRegexp(re) {
-			}
-			arg := lexer.Since(modifierMark)
-			appendModifier(strings.Replace(arg, "\\:", ":", -1))
-			continue
-
-		case 'C', 'S':
-			if ok, _, _, _, _ := p.varUseModifierSubst(closing); ok {
-				appendModifier(lexer.Since(modifierMark))
-				mayOmitColon = true
-				continue
-			}
-
-		case '@':
-			if p.varUseModifierAt(lexer, varname) {
-				appendModifier(lexer.Since(modifierMark))
-				continue
-			}
-
-		case '[':
-			if lexer.SkipRegexp(G.res.Compile(`^\[(?:[-.\d]+|#)\]`)) {
-				appendModifier(lexer.Since(modifierMark))
-				continue
-			}
-
-		case '?':
-			lexer.Skip(1)
-			p.varUseText(closing)
-			if lexer.SkipByte(':') {
-				p.varUseText(closing)
-				appendModifier(lexer.Since(modifierMark))
-				continue
-			}
-		}
-
-		lexer.Reset(modifierMark)
-
-		re := G.res.Compile(regex.Pattern(ifelseStr(closing == '}', `^([^:$}]|\$\$)+`, `^([^:$)]|\$\$)+`)))
-		for p.VarUse() != nil || lexer.SkipRegexp(re) {
-		}
-		modifier := lexer.Since(modifierMark)
-
-		// ${SOURCES:%.c=%.o} or ${:!uname -a:[2]}
-		if contains(modifier, "=") || (hasPrefix(modifier, "!") && hasSuffix(modifier, "!")) {
+		ok, modifier := p.varUseModifier(varname, closing)
+		if ok {
 			appendModifier(modifier)
-			continue
+			mayOmitColon = modifier[0] == 'S' || modifier[0] == 'C'
 		}
-
-		if p.EmitWarnings && modifier != "" {
-			p.Line.Warnf("Invalid variable modifier %q for %q.", modifier, varname)
-		}
-
 	}
 	return modifiers
+}
+
+func (p *MkParser) varUseModifier(varname string, closing byte) (bool, string) {
+	lexer := p.lexer
+	modifierMark := lexer.Mark()
+
+	switch lexer.PeekByte() {
+	case 'E', 'H', 'L', 'O', 'Q', 'R', 'T', 's', 't', 'u':
+		mod := lexer.NextBytesSet(textproc.Alnum)
+
+		switch mod {
+		case
+			"E",  // Extension, e.g. path/file.suffix => suffix
+			"H",  // Head, e.g. dir/subdir/file.suffix => dir/subdir
+			"L",  // XXX: Shouldn't this be handled specially?
+			"O",  // Order alphabetically
+			"Ox", // Shuffle
+			"Q",  // Quote shell meta-characters
+			"R",  // Strip the file suffix, e.g. path/file.suffix => file
+			"T",  // Basename, e.g. path/file.suffix => file.suffix
+			"sh", // Evaluate the variable value as shell command
+			"tA", // Try to convert to absolute path
+			"tW", // Causes the value to be treated as a single word
+			"tl", // To lowercase
+			"tu", // To uppercase
+			"tw", // Causes the value to be treated as list of words
+			"u":  // Remove adjacent duplicate words (like uniq(1))
+			return true, mod
+		}
+
+		if hasPrefix(mod, "ts") {
+			// See devel/bmake/files/var.c:/case 't'
+			sep := mod[2:] + p.varUseText(closing)
+			switch {
+			case sep == "":
+				lexer.SkipString(":")
+			case len(sep) == 1:
+				break
+			case matches(sep, `^\\\d+`):
+				break
+			default:
+				if p.EmitWarnings {
+					p.Line.Warnf("Invalid separator %q for :ts modifier of %q.", sep, varname)
+					p.Line.Explain(
+						"The separator for the :ts modifier must be either a single character",
+						"or an escape sequence like \\t or \\n or an octal or decimal escape",
+						"sequence; see the bmake man page for further details.")
+				}
+			}
+			return true, lexer.Since(modifierMark)
+		}
+
+	case '=', 'D', 'M', 'N', 'U':
+		lexer.Skip(1)
+		re := G.res.Compile(regex.Pattern(ifelseStr(closing == '}', `^([^$:\\}]|\$\$|\\.)+`, `^([^$:\\)]|\$\$|\\.)+`)))
+		for p.VarUse() != nil || lexer.SkipRegexp(re) {
+		}
+		arg := lexer.Since(modifierMark)
+		return true, strings.Replace(arg, "\\:", ":", -1)
+
+	case 'C', 'S':
+		if ok, _, _, _, _ := p.varUseModifierSubst(closing); ok {
+			return true, lexer.Since(modifierMark)
+		}
+
+	case '@':
+		if p.varUseModifierAt(lexer, varname) {
+			return true, lexer.Since(modifierMark)
+		}
+
+	case '[':
+		if lexer.SkipRegexp(G.res.Compile(`^\[(?:[-.\d]+|#)\]`)) {
+			return true, lexer.Since(modifierMark)
+		}
+
+	case '?':
+		lexer.Skip(1)
+		p.varUseText(closing)
+		if lexer.SkipByte(':') {
+			p.varUseText(closing)
+			return true, lexer.Since(modifierMark)
+		}
+	}
+
+	lexer.Reset(modifierMark)
+
+	re := G.res.Compile(regex.Pattern(ifelseStr(closing == '}', `^([^:$}]|\$\$)+`, `^([^:$)]|\$\$)+`)))
+	for p.VarUse() != nil || lexer.SkipRegexp(re) {
+	}
+	modifier := lexer.Since(modifierMark)
+
+	// ${SOURCES:%.c=%.o} or ${:!uname -a:[2]}
+	if contains(modifier, "=") || (hasPrefix(modifier, "!") && hasSuffix(modifier, "!")) {
+		return true, modifier
+	}
+
+	if p.EmitWarnings && modifier != "" {
+		p.Line.Warnf("Invalid variable modifier %q for %q.", modifier, varname)
+	}
+
+	return false, ""
 }
 
 // varUseText parses any text up to the next colon or closing mark.
