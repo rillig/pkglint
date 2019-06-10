@@ -188,18 +188,18 @@ func (p *MkParser) VarUseModifiers(varname string, closing byte) []MkVarUseModif
 	mayOmitColon := false
 
 	for lexer.SkipByte(':') || mayOmitColon {
-		ok, modifier := p.varUseModifier(varname, closing)
-		if ok {
+		modifier := p.varUseModifier(varname, closing)
+		if modifier != "" {
 			modifiers = append(modifiers, MkVarUseModifier{modifier})
 		}
-		mayOmitColon = ok && (modifier[0] == 'S' || modifier[0] == 'C')
+		mayOmitColon = modifier != "" && (modifier[0] == 'S' || modifier[0] == 'C')
 	}
 	return modifiers
 }
 
-func (p *MkParser) varUseModifier(varname string, closing byte) (bool, string) {
+func (p *MkParser) varUseModifier(varname string, closing byte) string {
 	lexer := p.lexer
-	modifierMark := lexer.Mark()
+	mark := lexer.Mark()
 
 	switch lexer.PeekByte() {
 	case 'E', 'H', 'L', 'O', 'Q', 'R', 'T', 's', 't', 'u':
@@ -222,7 +222,7 @@ func (p *MkParser) varUseModifier(varname string, closing byte) (bool, string) {
 			"tu", // To uppercase
 			"tw", // Causes the value to be treated as list of words
 			"u":  // Remove adjacent duplicate words (like uniq(1))
-			return true, mod
+			return mod
 		}
 
 		if hasPrefix(mod, "ts") {
@@ -244,7 +244,7 @@ func (p *MkParser) varUseModifier(varname string, closing byte) (bool, string) {
 						"sequence; see the bmake man page for further details.")
 				}
 			}
-			return true, lexer.Since(modifierMark)
+			return lexer.Since(mark)
 		}
 
 	case '=', 'D', 'M', 'N', 'U':
@@ -252,22 +252,22 @@ func (p *MkParser) varUseModifier(varname string, closing byte) (bool, string) {
 		re := G.res.Compile(regex.Pattern(ifelseStr(closing == '}', `^([^$:\\}]|\$\$|\\.)+`, `^([^$:\\)]|\$\$|\\.)+`)))
 		for p.VarUse() != nil || lexer.SkipRegexp(re) {
 		}
-		arg := lexer.Since(modifierMark)
-		return true, strings.Replace(arg, "\\:", ":", -1)
+		arg := lexer.Since(mark)
+		return strings.Replace(arg, "\\:", ":", -1)
 
 	case 'C', 'S':
 		if ok, _, _, _, _ := p.varUseModifierSubst(closing); ok {
-			return true, lexer.Since(modifierMark)
+			return lexer.Since(mark)
 		}
 
 	case '@':
 		if p.varUseModifierAt(lexer, varname) {
-			return true, lexer.Since(modifierMark)
+			return lexer.Since(mark)
 		}
 
 	case '[':
 		if lexer.SkipRegexp(G.res.Compile(`^\[(?:[-.\d]+|#)\]`)) {
-			return true, lexer.Since(modifierMark)
+			return lexer.Since(mark)
 		}
 
 	case '?':
@@ -275,27 +275,27 @@ func (p *MkParser) varUseModifier(varname string, closing byte) (bool, string) {
 		p.varUseText(closing)
 		if lexer.SkipByte(':') {
 			p.varUseText(closing)
-			return true, lexer.Since(modifierMark)
+			return lexer.Since(mark)
 		}
 	}
 
-	lexer.Reset(modifierMark)
+	lexer.Reset(mark)
 
 	re := G.res.Compile(regex.Pattern(ifelseStr(closing == '}', `^([^:$}]|\$\$)+`, `^([^:$)]|\$\$)+`)))
 	for p.VarUse() != nil || lexer.SkipRegexp(re) {
 	}
-	modifier := lexer.Since(modifierMark)
+	modifier := lexer.Since(mark)
 
 	// ${SOURCES:%.c=%.o} or ${:!uname -a:[2]}
 	if contains(modifier, "=") || (hasPrefix(modifier, "!") && hasSuffix(modifier, "!")) {
-		return true, modifier
+		return modifier
 	}
 
 	if p.EmitWarnings && modifier != "" {
 		p.Line.Warnf("Invalid variable modifier %q for %q.", modifier, varname)
 	}
 
-	return false, ""
+	return ""
 }
 
 // varUseText parses any text up to the next colon or closing mark.
