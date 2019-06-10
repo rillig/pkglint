@@ -1391,8 +1391,7 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__multiple_times_per_fi
 			"it is a write-only variable.")
 }
 
-// This test covers the case where alternativeFiles == "" && !directly.
-func (s *Suite) Test_MkLineChecker_warnVarusePermissions__run_time(c *check.C) {
+func (s *Suite) Test_MkLineChecker_warnVarusePermissions__not_directly_and_no_alternative_files(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
@@ -1403,11 +1402,21 @@ func (s *Suite) Test_MkLineChecker_warnVarusePermissions__run_time(c *check.C) {
 
 	mklines.Check()
 
+	toolDependsType := G.Pkgsrc.VariableType(nil, "TOOL_DEPENDS")
+	t.Check(toolDependsType.String(), equals, "DependencyWithPath (list, package-settable)")
+	t.Check(toolDependsType.AlternativeFiles(aclpAppend), equals, "Makefile, Makefile.* or *.mk")
+	t.Check(toolDependsType.AlternativeFiles(aclpUse), equals, "Makefile, Makefile.* or *.mk")
+	t.Check(toolDependsType.AlternativeFiles(aclpUseLoadtime), equals, "")
+
+	apiDependsType := G.Pkgsrc.VariableType(nil, "BUILDLINK_API_DEPENDS.*")
+	t.Check(apiDependsType.String(), equals, "Dependency (list, package-settable)")
+	t.Check(apiDependsType.AlternativeFiles(aclpUse), equals, "")
+	t.Check(apiDependsType.AlternativeFiles(aclpUseLoadtime), equals, "buildlink3.mk or builtin.mk only")
+
 	t.CheckOutputLines(
-		// FIXME: Since alternativeFiles is empty, it must not be converted to a list.
-		"WARN: mk-c.mk:3: BUILDLINK_API_DEPENDS.mk-c should not be used in this file; it would be ok in .",
+		"WARN: mk-c.mk:3: BUILDLINK_API_DEPENDS.mk-c should not be used in any file.",
 		"WARN: mk-c.mk:3: The list variable BUILDLINK_API_DEPENDS.mk-c should not be embedded in a word.",
-		"WARN: mk-c.mk:3: BUILDLINK_PKGSRCDIR.mk-c should not be used in this file; it would be ok in .")
+		"WARN: mk-c.mk:3: BUILDLINK_PKGSRCDIR.mk-c should not be used in any file.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarassignDecreasingVersions(c *check.C) {
