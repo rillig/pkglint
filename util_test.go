@@ -755,6 +755,23 @@ func (s *Suite) Test_Once(c *check.C) {
 	c.Check(once.FirstTimeSlice("str", "str2"), equals, false)
 }
 
+func (s *Suite) Test_Once__trace(c *check.C) {
+	t := s.Init(c)
+
+	var once Once
+	once.Trace = true
+
+	c.Check(once.FirstTime("str"), equals, true)
+	c.Check(once.FirstTime("str"), equals, false)
+	c.Check(once.FirstTimeSlice("str"), equals, false)
+	c.Check(once.FirstTimeSlice("str", "str2"), equals, true)
+	c.Check(once.FirstTimeSlice("str", "str2"), equals, false)
+
+	t.CheckOutputLines(
+		"FirstTime: str",
+		"FirstTime: str, str2")
+}
+
 func (s *Suite) Test_wrap(c *check.C) {
 
 	wrapped := wrap(20,

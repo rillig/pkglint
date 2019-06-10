@@ -498,23 +498,46 @@ func hasAlnumPrefix(s string) bool { return s != "" && textproc.AlnumU.Contains(
 // and only returns true on each first call.
 type Once struct {
 	seen map[uint64]struct{}
+
+	// Only used during testing, to trace the actual arguments,
+	// since hashing is a one-way function.
+	Trace bool
 }
 
 func (o *Once) FirstTime(what string) bool {
-	return o.check(crc64.Checksum([]byte(what), crc64.MakeTable(crc64.ECMA)))
+	firstTime := o.check(o.keyString(what))
+	if firstTime && o.Trace {
+		G.Logger.out.WriteLine(sprintf("FirstTime: %s", what))
+	}
+	return firstTime
 }
 
 func (o *Once) FirstTimeSlice(whats ...string) bool {
-	crc := crc64.New(crc64.MakeTable(crc64.ECMA))
-	for _, what := range whats {
-		_, _ = crc.Write([]byte(what))
+	firstTime := o.check(o.keyStrings(whats))
+	if firstTime && o.Trace {
+		G.Logger.out.WriteLine(sprintf("FirstTime: %s", strings.Join(whats, ", ")))
 	}
-	return o.check(crc.Sum64())
+	return firstTime
 }
 
 func (o *Once) Seen(what string) bool {
-	_, seen := o.seen[crc64.Checksum([]byte(what), crc64.MakeTable(crc64.ECMA))]
+	_, seen := o.seen[o.keyString(what)]
 	return seen
+}
+
+func (*Once) keyString(what string) uint64 {
+	return crc64.Checksum([]byte(what), crc64.MakeTable(crc64.ECMA))
+}
+
+func (*Once) keyStrings(whats []string) uint64 {
+	crc := crc64.New(crc64.MakeTable(crc64.ECMA))
+	for i, what := range whats {
+		if i != 0 {
+			_, _ = crc.Write([]byte{0})
+		}
+		_, _ = crc.Write([]byte(what))
+	}
+	return crc.Sum64()
 }
 
 func (o *Once) check(key uint64) bool {
