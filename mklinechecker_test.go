@@ -1391,6 +1391,25 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__multiple_times_per_fi
 			"it is a write-only variable.")
 }
 
+// This test covers the case where alternativeFiles == "" && !directly.
+func (s *Suite) Test_MkLineChecker_warnVarusePermissions__run_time(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("mk-c.mk",
+		MkRcsID,
+		"",
+		"TOOL_DEPENDS+=\t${BUILDLINK_API_DEPENDS.mk-c}:${BUILDLINK_PKGSRCDIR.mk-c}")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		// FIXME: Since alternativeFiles is empty, it must not be converted to a list.
+		"WARN: mk-c.mk:3: BUILDLINK_API_DEPENDS.mk-c should not be used in this file; it would be ok in .",
+		"WARN: mk-c.mk:3: The list variable BUILDLINK_API_DEPENDS.mk-c should not be embedded in a word.",
+		"WARN: mk-c.mk:3: BUILDLINK_PKGSRCDIR.mk-c should not be used in this file; it would be ok in .")
+}
+
 func (s *Suite) Test_MkLineChecker_checkVarassignDecreasingVersions(c *check.C) {
 	t := s.Init(c)
 
