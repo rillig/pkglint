@@ -153,6 +153,48 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftUserSettable(c *check.C) {
 			"which differs from the default value \"default\" from mk/defaults/mk.conf.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkVarassignLeftUserSettable__before_prefs(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--explain")
+	t.SetUpPackage("category/package",
+		"BEFORE=\tvalue",
+		".include \"../../mk/bsd.prefs.mk\"")
+	t.CreateFileLines("mk/defaults/mk.conf",
+		MkRcsID,
+		"BEFORE?=\tvalue")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	t.CheckOutputLines(
+		"NOTE: Makefile:20: Redundant definition for BEFORE from mk/defaults/mk.conf.",
+		"",
+		"\tInstead of defining the variable redundantly, it suffices to include",
+		"\t../../mk/bsd.prefs.mk, which provides all user-settable variables.",
+		"")
+}
+
+func (s *Suite) Test_MkLineChecker_checkVarassignLeftUserSettable__after_prefs(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--explain")
+	t.SetUpPackage("category/package",
+		".include \"../../mk/bsd.prefs.mk\"",
+		"AFTER=\tvalue")
+	t.CreateFileLines("mk/defaults/mk.conf",
+		MkRcsID,
+		"AFTER?=\t\tvalue")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	t.CheckOutputLines(
+		"NOTE: Makefile:21: Redundant definition for AFTER from mk/defaults/mk.conf.")
+}
+
 func (s *Suite) Test_MkLineChecker_checkVarassignLeftUserSettable__vartype_nil(c *check.C) {
 	t := s.Init(c)
 
