@@ -246,7 +246,7 @@ func (mklines *MkLinesImpl) ExpandLoopVar(varname string) []string {
 		// TODO: If needed, add support for multi-variable .for loops.
 		resolved := resolveVariableRefs(mklines, mkline.Args())
 		words := mkline.ValueFields(resolved)
-		if 1 < len(words) && words[0] == varname && words[1] == "in" {
+		if len(words) >= 3 && words[0] == varname && words[1] == "in" {
 			return words[2:]
 		}
 	}
