@@ -561,7 +561,8 @@ func (va *VaralignBlock) processVarassign(mkline MkLine) {
 		text := strings.TrimSuffix(mkline.raw[0].orignl, "\n")
 		data := MkLineParser{}.split(nil, text)
 		m, a := MkLineParser{}.MatchVarassign(mkline.Line, text, data)
-		continuation = m && a.value == "\\"
+		assertf(m, "")
+		continuation = a.value == "\\"
 	}
 
 	valueAlign := mkline.ValueAlign()
