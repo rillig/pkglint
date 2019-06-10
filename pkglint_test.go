@@ -270,8 +270,6 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 //
 // See https://github.com/rillig/gobco for the tool to measure the branch coverage.
 func (s *Suite) Test_Pkglint__realistic(c *check.C) {
-	t := s.Init(c)
-
 	if cwd := os.Getenv("PKGLINT_TESTDIR"); cwd != "" {
 		err := os.Chdir(cwd)
 		c.Assert(err, check.IsNil)
@@ -282,7 +280,7 @@ func (s *Suite) Test_Pkglint__realistic(c *check.C) {
 		G.Logger.out = NewSeparatorWriter(os.Stdout)
 		G.Logger.err = NewSeparatorWriter(os.Stderr)
 		trace.Out = os.Stdout
-		t.Main(strings.Fields(cmdline)...)
+		G.Main(append([]string{"pkglint"}, strings.Fields(cmdline)...)...)
 	}
 }
 
