@@ -681,3 +681,19 @@ func (s *Suite) Test_Tools__autoconf213(c *check.C) {
 	// No warning, since autoconf213 defines autoconf implicitly.
 	t.CheckOutputEmpty()
 }
+
+func (s *Suite) Test_Tools_IsValidToolName(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	t.SetUpTool("[", "", AtRunTime)
+	t.SetUpTool("echo -n", "ECHO_N", AtRunTime)
+	mklines := t.NewMkLines("filename.mk",
+		MkRcsID,
+		"",
+		"USE_TOOLS+=\t[")
+
+	mklines.Check()
+
+	t.CheckOutputEmpty()
+}

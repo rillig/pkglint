@@ -150,6 +150,8 @@ func (tr *Tools) Define(name, varname string, mkline MkLine) *Tool {
 }
 
 func (tr *Tools) def(name, varname string, mustUseVarForm bool, validity Validity, aliases []string) *Tool {
+	assertf(tr.IsValidToolName(name), "Invalid tool name %q", name)
+
 	fresh := Tool{name, varname, mustUseVarForm, validity, aliases}
 
 	tool := tr.byName[name]
