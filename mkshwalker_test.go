@@ -239,6 +239,32 @@ func (s *Suite) Test_MkShWalker_Walk(c *check.C) {
 		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.[]MkShRedirection.Redirection[2].ShToken[2]")
 }
 
+func (s *Suite) Test_MkShWalker_Walk__empty_callback(c *check.C) {
+
+	test := func(program string) {
+		list, err := parseShellProgram(dummyLine, program)
+		assertNil(err, "")
+
+		walker := NewMkShWalker()
+		walker.Walk(list)
+
+		c.Check(walker.Parent(0), equals, nil)
+	}
+
+	test("" +
+		"if condition; then action; else case selector in pattern) case-item-action ;; esac; fi; " +
+		"set -e; " +
+		"cd ${WRKSRC}/locale; " +
+		"for lang in *.po; do " +
+		"  [ \"$${lang}\" = \"wxstd.po\" ] && continue; " +
+		"  ${TOOLS_PATH.msgfmt} -c -o \"$${lang%.po}.mo\" \"$${lang}\"; " +
+		"done; " +
+		"while :; do fun() { :; } 1>&2; done")
+
+	test(
+		"echo 'hello world' 1>/dev/null 2>&1 0</dev/random")
+}
+
 func (s *Suite) Test_MkShWalker_Walk__assertion(c *check.C) {
 	list, err := parseShellProgram(dummyLine, "echo \"hello, world\"")
 	assertNil(err, "")
