@@ -764,12 +764,6 @@ func (p *MkParser) Dependency() *DependencyPattern {
 		return &dp
 	}
 
-	if hasSuffix(dp.Pkgbase, "-*") {
-		dp.Pkgbase = strings.TrimSuffix(dp.Pkgbase, "-*")
-		dp.Wildcard = "*"
-		return &dp
-	}
-
 	lexer.Reset(mark)
 	return nil
 }
