@@ -761,6 +761,40 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 		&mkCond{CompareVarStr: &MkCondCompareVarStr{varuse("VAR"), "==", "${VAR}+1"}})
 }
 
+func (s *Suite) Test_MkParser_Varname(c *check.C) {
+	t := s.Init(c)
+
+	test := func(text string) {
+		line := t.NewLine("filename.mk", 1, text)
+		p := NewMkParser(line, text, true)
+
+		varname := p.Varname()
+
+		t.Check(varname, equals, text)
+		t.Check(p.Rest(), equals, "")
+	}
+
+	testRest := func(text string, expectedVarname string, expectedRest string) {
+		line := t.NewLine("filename.mk", 1, text)
+		p := NewMkParser(line, text, true)
+
+		varname := p.Varname()
+
+		t.Check(varname, equals, expectedVarname)
+		t.Check(p.Rest(), equals, expectedRest)
+	}
+
+	test("VARNAME")
+	test("VARNAME.param")
+	test("VARNAME.${param}")
+	test("SITES_${param}")
+	test("SITES_distfile-1.0.tar.gz")
+	test("SITES.gtk+-2.0")
+
+	testRest("VARNAME/rest", "VARNAME", "/rest")
+	testRest("VARNAME.param/rest", "VARNAME.param", "/rest")
+}
+
 // Pkglint can replace $(VAR) with ${VAR}. It doesn't look at all components
 // of nested variables though because this case is not important enough to
 // invest much development time. It occurs so seldom that it is acceptable
