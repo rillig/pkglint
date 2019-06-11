@@ -436,7 +436,8 @@ func (s *Suite) Test_MkParser_varUseModifier__condition_without_colon(c *check.C
 	t := s.Init(c)
 
 	line := t.NewLine("filename.mk", 123, "${${VAR}:?yes:no}${${VAR}:?yes}")
-	p := NewMkParser(nil, line.Text, false)
+	p := NewMkParser(line, line.Text, true)
+
 	varUse1 := p.VarUse()
 	varUse2 := p.VarUse()
 
@@ -444,36 +445,39 @@ func (s *Suite) Test_MkParser_varUseModifier__condition_without_colon(c *check.C
 	t.Check(varUse2, deepEquals, NewMkVarUse("${VAR}"))
 	t.Check(p.Rest(), equals, "")
 
-	// FIXME: The error message about the malformed conditional modifier is missing.
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: filename.mk:123: Invalid variable modifier \"?yes\" for \"${VAR}\".")
 }
 
 func (s *Suite) Test_MkParser_varUseModifier__malformed_in_parentheses(c *check.C) {
 	t := s.Init(c)
 
 	line := t.NewLine("filename.mk", 123, "$(${VAR}:?yes)")
-	p := NewMkParser(nil, line.Text, false)
+	p := NewMkParser(line, line.Text, true)
+
 	varUse := p.VarUse()
 
 	t.Check(varUse, deepEquals, NewMkVarUse("${VAR}"))
 	t.Check(p.Rest(), equals, "")
 
-	// FIXME: The error message about the malformed conditional modifier is missing.
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: filename.mk:123: Invalid variable modifier \"?yes\" for \"${VAR}\".",
+		"WARN: filename.mk:123: Please use curly braces {} instead of round parentheses () for ${VAR}.")
 }
 
 func (s *Suite) Test_MkParser_varUseModifier__varuse_in_malformed_modifier(c *check.C) {
 	t := s.Init(c)
 
-	line := t.NewLine("filename.mk", 123, "$(${VAR}:?yes${INNER})")
-	p := NewMkParser(nil, line.Text, false)
+	line := t.NewLine("filename.mk", 123, "${${VAR}:?yes${INNER}}")
+	p := NewMkParser(line, line.Text, true)
+
 	varUse := p.VarUse()
 
 	t.Check(varUse, deepEquals, NewMkVarUse("${VAR}"))
 	t.Check(p.Rest(), equals, "")
 
-	// FIXME: The error message about the malformed conditional modifier is missing.
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: filename.mk:123: Invalid variable modifier \"?yes${INNER}\" for \"${VAR}\".")
 }
 
 func (s *Suite) Test_MkParser_VarUse__ambiguous(c *check.C) {
