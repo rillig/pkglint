@@ -625,28 +625,27 @@ func (p *MkParser) Varname() string {
 	return lexer.Since(mark)
 }
 
-func (p *MkParser) PkgbasePattern() string {
+// isPkgbasePart returns whether str, when following a hyphen,
+// continues the package base (as in "mysql-client"), or whether it
+// starts the version (as in "mysql-1.0").
+func (*MkParser) isPkgbasePart(str string) bool {
+	lexer := textproc.NewLexer(str)
 
-	// isVersion returns true for "1.2", "[0-9]*", "${PKGVERSION}", "${PKGNAME:C/^.*-//}",
-	// but not for "client", "${PKGNAME}", "[a-z]".
-	isVersion := func(s string) bool {
-		lexer := textproc.NewLexer(s)
-
-		lexer.SkipByte('[')
-		if lexer.NextByteSet(textproc.Digit) != -1 {
-			return true
-		}
-
-		lookaheadParser := NewMkParser(nil, lexer.Rest(), false)
-		varUse := lookaheadParser.VarUse()
-		if varUse != nil {
-			if contains(varUse.varname, "VER") || len(varUse.modifiers) > 0 {
-				return true
-			}
-		}
-
-		return false
+	lexer.SkipByte('{')
+	lexer.SkipByte('[')
+	if lexer.NextByteSet(textproc.Alpha) != -1 || lexer.SkipByte('_') {
+		return true
 	}
+
+	varUse := NewMkParser(nil, lexer.Rest(), false).VarUse()
+	if varUse != nil {
+		return !contains(varUse.varname, "VER") && len(varUse.modifiers) == 0
+	}
+
+	return false
+}
+
+func (p *MkParser) PkgbasePattern() string {
 
 	lexer := p.lexer
 	start := lexer.Mark()
@@ -658,11 +657,11 @@ func (p *MkParser) PkgbasePattern() string {
 			continue
 		}
 
-		if lexer.PeekByte() != '-' || isVersion(lexer.Rest()[1:]) {
+		if lexer.PeekByte() == '-' && p.isPkgbasePart(lexer.Rest()[1:]) {
+			lexer.Skip(1)
+		} else {
 			break
 		}
-
-		lexer.Skip(1 /* the hyphen */)
 	}
 
 	pkgbase := lexer.Since(start)

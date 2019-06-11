@@ -955,18 +955,41 @@ func (s *Suite) Test_MkParser_varUseModifierAt(c *check.C) {
 		"")
 }
 
+func (s *Suite) Test_MkParser_isPkgbasePart(c *check.C) {
+
+	test := func(str string, expected bool) {
+		actual := (*MkParser)(nil).isPkgbasePart(str)
+
+		c.Check(actual, equals, expected)
+	}
+
+	test("X11", true)
+	test("client", true)
+	test("${PKGNAME}", true)
+	test("[a-z]", true)
+	test("{client,server}", true)
+
+	test("1.2", false)
+	test("[0-9]*", false)
+	test("{5.[1-7].*,6.[0-9]*}", false)
+	test("${PKGVERSION}", false)
+	test("${PKGNAME:C/^.*-//}", false)
+	test(">=1.0", false)
+}
+
 func (s *Suite) Test_MkParser_PkgbasePattern(c *check.C) {
 
 	test := func(pattern, expected, rest string) {
 		parser := NewMkParser(nil, pattern, false)
+
 		actual := parser.PkgbasePattern()
+
 		c.Check(actual, equals, expected)
 		c.Check(parser.Rest(), equals, rest)
 	}
 
 	test("fltk", "fltk", "")
-	// FIXME: pkgbase must not end with a hyphen.
-	test("fltk-", "fltk-", "")
+	test("fltk-", "fltk", "-")
 	test("fltk|", "fltk", "|")
 	test("boost-build-1.59.*", "boost-build", "-1.59.*")
 	test("${PHP_PKG_PREFIX}-pdo-5.*", "${PHP_PKG_PREFIX}-pdo", "-5.*")
