@@ -480,6 +480,20 @@ func (s *Suite) Test_MkParser_varUseModifier__varuse_in_malformed_modifier(c *ch
 		"WARN: filename.mk:123: Invalid variable modifier \"?yes${INNER}\" for \"${VAR}\".")
 }
 
+func (s *Suite) Test_MkParser_varUseModifierAt__missing_at_after_variable_name(c *check.C) {
+	t := s.Init(c)
+
+	line := t.NewLine("filename.mk", 123, "${VAR:@varname}")
+	p := NewMkParser(line, line.Text, true)
+
+	varUse := p.VarUse()
+
+	t.Check(varUse, deepEquals, NewMkVarUse("VAR"))
+	t.Check(p.Rest(), equals, "")
+	t.CheckOutputLines(
+		"WARN: filename.mk:123: Invalid variable modifier \"@varname\" for \"VAR\".")
+}
+
 func (s *Suite) Test_MkParser_VarUse__ambiguous(c *check.C) {
 	t := s.Init(c)
 
