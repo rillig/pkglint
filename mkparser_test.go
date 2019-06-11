@@ -957,26 +957,26 @@ func (s *Suite) Test_MkParser_varUseModifierAt(c *check.C) {
 
 func (s *Suite) Test_MkParser_PkgbasePattern(c *check.C) {
 
-	testRest := func(pattern, expected, rest string) {
+	test := func(pattern, expected, rest string) {
 		parser := NewMkParser(nil, pattern, false)
 		actual := parser.PkgbasePattern()
 		c.Check(actual, equals, expected)
 		c.Check(parser.Rest(), equals, rest)
 	}
 
-	testRest("fltk", "fltk", "")
-	testRest("fltk|", "fltk", "|")
-	testRest("boost-build-1.59.*", "boost-build", "-1.59.*")
-	testRest("${PHP_PKG_PREFIX}-pdo-5.*", "${PHP_PKG_PREFIX}-pdo", "-5.*")
-	testRest("${PYPKGPREFIX}-metakit-[0-9]*", "${PYPKGPREFIX}-metakit", "-[0-9]*")
+	test("fltk", "fltk", "")
+	test("fltk|", "fltk", "|")
+	test("boost-build-1.59.*", "boost-build", "-1.59.*")
+	test("${PHP_PKG_PREFIX}-pdo-5.*", "${PHP_PKG_PREFIX}-pdo", "-5.*")
+	test("${PYPKGPREFIX}-metakit-[0-9]*", "${PYPKGPREFIX}-metakit", "-[0-9]*")
 
-	testRest("pkgbase-[0-9]*", "pkgbase", "-[0-9]*")
+	test("pkgbase-[0-9]*", "pkgbase", "-[0-9]*")
 
-	testRest("pkgbase-client-[0-9]*", "pkgbase-client", "-[0-9]*")
+	test("pkgbase-client-[0-9]*", "pkgbase-client", "-[0-9]*")
 
-	testRest("pkgbase-${VARIANT}-[0-9]*", "pkgbase-${VARIANT}", "-[0-9]*")
+	test("pkgbase-${VARIANT}-[0-9]*", "pkgbase-${VARIANT}", "-[0-9]*")
 
-	testRest("pkgbase-${VERSION}-[0-9]*", "pkgbase", "-${VERSION}-[0-9]*")
+	test("pkgbase-${VERSION}-[0-9]*", "pkgbase", "-${VERSION}-[0-9]*")
 
 	// This PKGNAME pattern is the one from bsd.pkg.mk.
 	// The pattern assumes that the version number does not contain a hyphen,
@@ -985,16 +985,16 @@ func (s *Suite) Test_MkParser_PkgbasePattern(c *check.C) {
 	// Since variable substitutions are more common for version numbers
 	// than for parts of the package name, pkglint treats the PKGNAME
 	// as a version number.
-	testRest("pkgbase-${PKGNAME:C/^.*-//}-[0-9]*", "pkgbase", "-${PKGNAME:C/^.*-//}-[0-9]*")
+	test("pkgbase-${PKGNAME:C/^.*-//}-[0-9]*", "pkgbase", "-${PKGNAME:C/^.*-//}-[0-9]*")
 
 	// Using the [a-z] pattern in the package base is only rarely seen in the wild.
-	testRest("pkgbase-[a-z]*-1.0", "pkgbase-[a-z]*", "-1.0")
+	test("pkgbase-[a-z]*-1.0", "pkgbase-[a-z]*", "-1.0")
 
 	// This is a valid dependency pattern, but it's more complicated
 	// than the patterns pkglint can handle as of January 2019.
 	//
 	// This pattern doesn't have a single package base, which means it cannot be parsed at all.
-	testRest("{ssh{,6}-[0-9]*,openssh-[0-9]*}", "", "{ssh{,6}-[0-9]*,openssh-[0-9]*}")
+	test("{ssh{,6}-[0-9]*,openssh-[0-9]*}", "", "{ssh{,6}-[0-9]*,openssh-[0-9]*}")
 }
 
 func (s *Suite) Test_MkParser_Dependency(c *check.C) {
