@@ -71,9 +71,10 @@ func NewMkShWalker() *MkShWalker {
 func (w *MkShWalker) Path() string {
 	var path []string
 	for _, level := range w.Context {
-		typeName := reflect.TypeOf(level.Element).Elem().Name()
-		if typeName == "" && reflect.TypeOf(level.Element).Kind() == reflect.Slice {
-			typeName = "[]" + reflect.TypeOf(level.Element).Elem().Elem().Name()
+		elementType := reflect.TypeOf(level.Element)
+		typeName := elementType.Elem().Name()
+		if typeName == "" {
+			typeName = "[]" + elementType.Elem().Elem().Name()
 		}
 		abbreviated := strings.TrimPrefix(typeName, "MkSh")
 		if level.Index == -1 {
