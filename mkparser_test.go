@@ -494,6 +494,34 @@ func (s *Suite) Test_MkParser_varUseModifierAt__missing_at_after_variable_name(c
 		"WARN: filename.mk:123: Invalid variable modifier \"@varname\" for \"VAR\".")
 }
 
+func (s *Suite) Test_MkParser_varUseModifierAt__dollar(c *check.C) {
+	t := s.Init(c)
+
+	line := t.NewLine("filename.mk", 123, "${VAR:@var@$$var@}")
+	p := NewMkParser(line, line.Text, true)
+
+	varUse := p.VarUse()
+
+	t.Check(varUse, deepEquals, NewMkVarUse("VAR", "@var@$$var@"))
+	t.Check(p.Rest(), equals, "")
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_MkParser_varUseModifierAt__incomplete_without_warning(c *check.C) {
+	t := s.Init(c)
+
+	p := NewMkParser(nil, "${VAR:@var@$$var}rest", false)
+
+	varUse := p.VarUse()
+
+	// TODO: It's inconsistent that this syntax error still produces a
+	//  variable modifier, while most other syntax errors don't.
+	// FIXME: The } must not be part of the variable modifier.
+	t.Check(varUse, deepEquals, NewMkVarUse("VAR", "@var@$$var}rest"))
+	t.Check(p.Rest(), equals, "")
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_MkParser_VarUse__ambiguous(c *check.C) {
 	t := s.Init(c)
 
@@ -689,6 +717,24 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	testRest("${VAR} == \"unfinished string literal",
 		nil,
 		"${VAR} == \"unfinished string literal")
+
+	// A logical not must always be followed by an expression.
+	testRest("!<",
+		nil,
+		"!<")
+
+	// Empty parentheses are a syntax error.
+	testRest("()",
+		nil,
+		"()")
+
+	// Unfinished conditions are a syntax error.
+	testRest("(${VAR}",
+		nil,
+		"(${VAR}")
+
+	test("${VAR} == \"${VAR}+1\"",
+		&mkCond{CompareVarStr: &MkCondCompareVarStr{varuse("VAR"), "==", "${VAR}+1"}})
 }
 
 // Pkglint can replace $(VAR) with ${VAR}. It doesn't look at all components
