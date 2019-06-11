@@ -7,9 +7,7 @@ func (s *Suite) Test_MkShWalker_Walk(c *check.C) {
 	pathFor := map[string]bool{}
 
 	outputPathFor := func(kinds ...string) {
-		for key := range pathFor {
-			pathFor[key] = false
-		}
+		pathFor = make(map[string]bool)
 		for _, kind := range kinds {
 			pathFor[kind] = true
 		}
@@ -212,7 +210,7 @@ func (s *Suite) Test_MkShWalker_Walk(c *check.C) {
 		"            Word 2")
 
 	outputPathFor("Redirects", "Redirect", "Word")
-	test(""+
+	test(
 		"echo 'hello world' 1>/dev/null 2>&1 0</dev/random",
 
 		"            List with 1 andOrs",
@@ -239,4 +237,19 @@ func (s *Suite) Test_MkShWalker_Walk(c *check.C) {
 		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.[]MkShRedirection.Redirection[2]",
 		"            Word /dev/random",
 		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.[]MkShRedirection.Redirection[2].ShToken[2]")
+}
+
+func (s *Suite) Test_MkShWalker_Walk__assertion(c *check.C) {
+	list, err := parseShellProgram(dummyLine, "echo \"hello, world\"")
+	assertNil(err, "")
+
+	walker := NewMkShWalker()
+
+	// This callback intentionally breaks the assertion.
+	walker.Callback.Word = func(word *ShToken) { walker.push(0, "extra word") }
+
+	c.Check(
+		func() { walker.Walk(list) },
+		check.PanicMatches,
+		`Pkglint internal error: MkShWalker\.Walk .+`)
 }
