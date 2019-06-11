@@ -151,3 +151,16 @@ func (s *Suite) Test_MkVarUseModifier_Subst__no_tracing(c *check.C) {
 	c.Check(ok, equals, true)
 	c.Check(result, equals, "to a to b")
 }
+
+// Since the replacement text is not a simple string, the :C modifier
+// cannot be treated like the :S modifier. The variable could contain
+// one of the special characters that would need to be escaped in the
+// replacement text.
+func (s *Suite) Test_MkVarUseModifier_Subst__C_with_complex_replacement(c *check.C) {
+	mod := MkVarUseModifier{"C,from,${VAR},"}
+
+	result, ok := mod.Subst("from a to b")
+
+	c.Check(ok, equals, false)
+	c.Check(result, equals, "")
+}
