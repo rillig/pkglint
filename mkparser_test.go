@@ -693,6 +693,30 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 
 	// Errors
 
+	testRest("defined()",
+		nil,
+		"defined()")
+
+	testRest("empty()",
+		nil,
+		"empty()")
+
+	testRest("empty(UNFINISHED",
+		nil,
+		"empty(UNFINISHED")
+
+	testRest("empty(UNFINISHED:Mpattern",
+		nil,
+		"empty(UNFINISHED:Mpattern")
+
+	testRest("exists(/$$sys)",
+		nil,
+		"exists(/$$sys)")
+
+	testRest("exists(/unfinished",
+		nil,
+		"exists(/unfinished")
+
 	testRest("!empty(PKG_OPTIONS:Msndfile) || defined(PKG_OPTIONS:Msamplerate)",
 		&mkCond{Not: &mkCond{Empty: varuse("PKG_OPTIONS", "Msndfile")}},
 		"|| defined(PKG_OPTIONS:Msamplerate)")
