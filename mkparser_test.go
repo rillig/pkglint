@@ -1171,3 +1171,23 @@ func (s *Suite) Test_MkCondWalker_Walk(c *check.C) {
 		"           var  NONEMPTY",
 		"        varUse  NONEMPTY"})
 }
+
+// Ensure that the code works even if none of the callbacks are set.
+// This is only for code coverage.
+func (s *Suite) Test_MkCondWalker_Walk__empty_callbacks(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("Makefile", 4, ""+
+		".if ${VAR:Mmatch} == ${OTHER} || "+
+		"${STR} == Str || "+
+		"${VAR} == \"${PRE}text${POST}\" || "+
+		"${NUM} == 3 && "+
+		"defined(VAR) && "+
+		"!exists(file.mk) && "+
+		"exists(${FILE}) && "+
+		"(((${NONEMPTY})))")
+
+	mkline.Cond().Walk(&MkCondCallback{})
+
+	t.CheckOutputEmpty()
+}
