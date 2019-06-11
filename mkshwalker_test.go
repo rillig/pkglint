@@ -279,3 +279,15 @@ func (s *Suite) Test_MkShWalker_Walk__assertion(c *check.C) {
 		check.PanicMatches,
 		`Pkglint internal error: MkShWalker\.Walk .+`)
 }
+
+// Just for code coverage, to keep the main code symmetrical.
+func (s *Suite) Test_MkShWalker_walkCommand__empty(c *check.C) {
+	walker := NewMkShWalker()
+	walker.walkCommand(0, &MkShCommand{})
+}
+
+// Just for code coverage, to keep the main code symmetrical.
+func (s *Suite) Test_MkShWalker_walkCompoundCommand__empty(c *check.C) {
+	walker := NewMkShWalker()
+	walker.walkCompoundCommand(0, &MkShCompoundCommand{})
+}
