@@ -334,10 +334,24 @@ func (p *MkParser) varUseModifierSubst(closing byte) (ok bool, regex bool, from 
 	}
 
 	skipOther := func() {
-		for p.VarUse() != nil ||
-			lexer.SkipString("$$") ||
-			(len(lexer.Rest()) >= 2 && lexer.PeekByte() == '\\' && separator != '\\' && lexer.Skip(2)) ||
-			lexer.NextBytesFunc(isOther) != "" {
+		for {
+			switch {
+
+			case p.VarUse() != nil:
+				break
+
+			case lexer.SkipString("$$"):
+				break
+
+			case len(lexer.Rest()) >= 2 && lexer.PeekByte() == '\\' && separator != '\\':
+				_ = lexer.Skip(2)
+
+			case lexer.NextBytesFunc(isOther) != "":
+				break
+
+			default:
+				return
+			}
 		}
 	}
 
