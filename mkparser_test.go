@@ -442,6 +442,35 @@ func (s *Suite) Test_MkParser_varUseModifier__condition_without_colon(c *check.C
 
 	t.Check(varUse1, deepEquals, NewMkVarUse("${VAR}", "?yes:no"))
 	t.Check(varUse2, deepEquals, NewMkVarUse("${VAR}"))
+	t.Check(p.Rest(), equals, "")
+
+	// FIXME: The error message about the malformed conditional modifier is missing.
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_MkParser_varUseModifier__malformed_in_parentheses(c *check.C) {
+	t := s.Init(c)
+
+	line := t.NewLine("filename.mk", 123, "$(${VAR}:?yes)")
+	p := NewMkParser(nil, line.Text, false)
+	varUse := p.VarUse()
+
+	t.Check(varUse, deepEquals, NewMkVarUse("${VAR}"))
+	t.Check(p.Rest(), equals, "")
+
+	// FIXME: The error message about the malformed conditional modifier is missing.
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_MkParser_varUseModifier__varuse_in_malformed_modifier(c *check.C) {
+	t := s.Init(c)
+
+	line := t.NewLine("filename.mk", 123, "$(${VAR}:?yes${INNER})")
+	p := NewMkParser(nil, line.Text, false)
+	varUse := p.VarUse()
+
+	t.Check(varUse, deepEquals, NewMkVarUse("${VAR}"))
+	t.Check(p.Rest(), equals, "")
 
 	// FIXME: The error message about the malformed conditional modifier is missing.
 	t.CheckOutputEmpty()
