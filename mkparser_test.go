@@ -1014,6 +1014,18 @@ func (s *Suite) Test_MkParser_Dependency(c *check.C) {
 		testRest(pattern, expected, "")
 	}
 
+	test("pkgbase>=1.0",
+		DependencyPattern{"pkgbase", ">=", "1.0", "", "", ""})
+
+	test("pkgbase>1.0",
+		DependencyPattern{"pkgbase", ">", "1.0", "", "", ""})
+
+	test("pkgbase<=1.0",
+		DependencyPattern{"pkgbase", "", "", "<=", "1.0", ""})
+
+	test("pkgbase<1.0",
+		DependencyPattern{"pkgbase", "", "", "<", "1.0", ""})
+
 	test("fltk>=1.1.5rc1<1.3",
 		DependencyPattern{"fltk", ">=", "1.1.5rc1", "<", "1.3", ""})
 
@@ -1058,6 +1070,12 @@ func (s *Suite) Test_MkParser_Dependency(c *check.C) {
 
 	testRest("gnome-control-center>=2.20.1{,nb*}",
 		DependencyPattern{"gnome-control-center", ">=", "2.20.1", "", "", ""}, "{,nb*}")
+
+	testNil("pkgbase")
+
+	testNil("pkgbase-")
+
+	testNil("pkgbase-client")
 
 	testNil(">=2.20.1{,nb*}")
 
