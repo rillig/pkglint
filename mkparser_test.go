@@ -965,6 +965,8 @@ func (s *Suite) Test_MkParser_PkgbasePattern(c *check.C) {
 	}
 
 	test("fltk", "fltk", "")
+	// FIXME: pkgbase must not end with a hyphen.
+	test("fltk-", "fltk-", "")
 	test("fltk|", "fltk", "|")
 	test("boost-build-1.59.*", "boost-build", "-1.59.*")
 	test("${PHP_PKG_PREFIX}-pdo-5.*", "${PHP_PKG_PREFIX}-pdo", "-5.*")
