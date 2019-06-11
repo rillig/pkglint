@@ -975,6 +975,7 @@ func (s *Suite) Test_MkParser_isPkgbasePart(c *check.C) {
 	test("${PKGVERSION}", false)
 	test("${PKGNAME:C/^.*-//}", false)
 	test(">=1.0", false)
+	test("_client", false) // The combination foo-_client looks strange.
 }
 
 func (s *Suite) Test_MkParser_PkgbasePattern(c *check.C) {

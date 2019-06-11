@@ -633,7 +633,7 @@ func (*MkParser) isPkgbasePart(str string) bool {
 
 	lexer.SkipByte('{')
 	lexer.SkipByte('[')
-	if lexer.NextByteSet(textproc.Alpha) != -1 || lexer.SkipByte('_') {
+	if lexer.NextByteSet(textproc.Alpha) != -1 {
 		return true
 	}
 
