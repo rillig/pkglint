@@ -642,6 +642,9 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 			{Var: varuse("MACHINE_ARCH", "Mi386")},
 			{Var: varuse("MACHINE_OPSYS", "MNetBSD")}}})
 
+	test("${VAR} == \"${VAR}suffix\"",
+		&mkCond{CompareVarStr: &MkCondCompareVarStr{varuse("VAR"), "==", "${VAR}suffix"}})
+
 	// Exotic cases
 
 	// ".if 0" can be used to skip over a block of code.
@@ -757,8 +760,11 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 		nil,
 		"(${VAR}")
 
-	test("${VAR} == \"${VAR}+1\"",
-		&mkCond{CompareVarStr: &MkCondCompareVarStr{varuse("VAR"), "==", "${VAR}+1"}})
+	// The left-hand side of the comparison can only be a variable.
+	// FIXME: bmake accepts this, and so should pkglint.
+	testRest("\"${VAR}suffix\" == value",
+		nil,
+		"\"${VAR}suffix\" == value")
 }
 
 func (s *Suite) Test_MkParser_Varname(c *check.C) {
