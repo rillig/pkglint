@@ -432,6 +432,21 @@ func (s *Suite) Test_MkParser_varUseModifier__square_bracket(c *check.C) {
 		"WARN: filename.mk:123: Invalid variable modifier \"[asdf]\" for \"VAR\".")
 }
 
+func (s *Suite) Test_MkParser_varUseModifier__condition_without_colon(c *check.C) {
+	t := s.Init(c)
+
+	line := t.NewLine("filename.mk", 123, "${${VAR}:?yes:no}${${VAR}:?yes}")
+	p := NewMkParser(nil, line.Text, false)
+	varUse1 := p.VarUse()
+	varUse2 := p.VarUse()
+
+	t.Check(varUse1, deepEquals, NewMkVarUse("${VAR}", "?yes:no"))
+	t.Check(varUse2, deepEquals, NewMkVarUse("${VAR}"))
+
+	// FIXME: The error message about the malformed conditional modifier is missing.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_MkParser_VarUse__ambiguous(c *check.C) {
 	t := s.Init(c)
 
