@@ -556,9 +556,7 @@ func (s *Suite) Test_Package_checkPossibleDowngrade__locally_modified_update(c *
 		"/Makefile//modified//")
 	t.FinishSetUp()
 
-	pkg := NewPackage(t.File("category/package"))
-	pkg.load()
-	pkg.checkPossibleDowngrade()
+	G.Check(t.File("category/package"))
 
 	// Since the Makefile is locally modified, pkglint doesn't issue
 	// any warning since it assumes the package is being upgraded.
@@ -569,7 +567,7 @@ func (s *Suite) Test_Package_checkPossibleDowngrade__locally_modified_update(c *
 	t.Remove("category/package/CVS/Entries")
 	G.cvsEntriesDir = ""
 
-	pkg.checkPossibleDowngrade()
+	G.Check(t.File("category/package"))
 
 	t.CheckOutputLines(
 		"NOTE: ~/category/package/Makefile:4: Package version \"1.8\" " +
