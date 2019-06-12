@@ -530,8 +530,7 @@ func (s *Suite) Test_Package_checkPossibleDowngrade__moved(c *check.C) {
 		"PKGNAME=\tpackage-1.0")
 	t.CreateFileLines("doc/CHANGES-2018",
 		"\tUpdated category/old-package to 1.8 [committer 2018-01-05]",
-		"\tMoved category/old-package to category/pkgbase [committer 2018-01-05]",
-	)
+		"\tMoved category/old-package to category/pkgbase [committer 2018-01-05]")
 	t.FinishSetUp()
 
 	pkg := NewPackage(t.File("category/pkgbase"))
@@ -542,6 +541,37 @@ func (s *Suite) Test_Package_checkPossibleDowngrade__moved(c *check.C) {
 	t.Check(G.Pkgsrc.LastChange["category/pkgbase"].Action, equals, Moved)
 	// No warning because the latest action is not Updated.
 	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_Package_checkPossibleDowngrade__locally_modified_update(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"PKGNAME=\tpackage-1.8")
+	t.CreateFileLines("doc/CHANGES-2018",
+		"\tUpdated category/package to 1.0 [committer 2018-01-05]")
+	t.CreateFileLines("category/package/CVS/Entries",
+		"/Makefile//modified//")
+	t.FinishSetUp()
+
+	pkg := NewPackage(t.File("category/package"))
+	pkg.load()
+	pkg.checkPossibleDowngrade()
+
+	// Since the Makefile is locally modified, pkglint doesn't issue
+	// any warning since it assumes the package is being upgraded.
+	t.CheckOutputEmpty()
+
+	// When the Makefile is no longer locally modified, the warning
+	// is activated again.
+	t.Remove("category/package/CVS/Entries")
+	G.cvsEntriesDir = ""
+
+	pkg.checkPossibleDowngrade()
+
+	t.CheckOutputLines(
+		"NOTE: ~/category/package/Makefile:4: Package version \"1.8\" " +
+			"is greater than the latest \"1.0\" from ../../doc/CHANGES-2018:1.")
 }
 
 func (s *Suite) Test_Package_loadPackageMakefile__dump(c *check.C) {
