@@ -9,11 +9,13 @@ func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__file_but_not_package
 	t := s.Init(c)
 
 	t.CreateFileLines("category/dependency/buildlink3.mk")
+	t.CreateFileLines("category/dependency/module.mk")
 	G.Pkg = NewPackage(t.File("category/package"))
 	mklines := t.NewMkLines("category/package/buildlink3.mk",
 		MkRcsID,
 		"",
-		".include \"../../category/dependency/buildlink3.mk\"")
+		".include \"../../category/dependency/buildlink3.mk\"",
+		".include \"../../category/dependency/module.mk\"")
 
 	G.Pkg.checkLinesBuildlink3Inclusion(mklines)
 
