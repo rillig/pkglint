@@ -29,6 +29,18 @@ func (s *Suite) Test_ShQuoting_String(c *check.C) {
 	c.Check(shqDquotBacktSquot.String(), equals, "dbs")
 }
 
+func (s *Suite) Test_NewShToken__no_atoms(c *check.C) {
+	t := s.Init(c)
+
+	t.ExpectPanic(
+		func() { NewShToken("", NewShAtom(shtText, "text", shqPlain)) },
+		"Pkglint internal error: ")
+
+	t.ExpectPanic(
+		func() { NewShToken(" ", nil...) },
+		"Pkglint internal error: ")
+}
+
 func (s *Suite) Test_ShToken_String(c *check.C) {
 	tokenizer := NewShTokenizer(dummyLine, "${ECHO} \"hello, world\"", false)
 

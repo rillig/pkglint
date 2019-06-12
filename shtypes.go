@@ -133,6 +133,8 @@ type ShToken struct {
 }
 
 func NewShToken(mkText string, atoms ...*ShAtom) *ShToken {
+	assertf(mkText != "", "")
+	assertf(len(atoms) > 0, "")
 	return &ShToken{mkText, atoms}
 }
 
