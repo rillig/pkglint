@@ -121,14 +121,14 @@ func (pkg *Package) checkPossibleDowngrade() {
 		return
 	}
 
-	if change.Action == "Updated" {
+	if change.Action == Updated {
 		pkgversionNorev := replaceAll(pkgversion, `nb\d+$`, "")
-		changeNorev := replaceAll(change.Version, `nb\d+$`, "")
+		changeNorev := replaceAll(change.Version(), `nb\d+$`, "")
 		cmp := pkgver.Compare(pkgversionNorev, changeNorev)
 		switch {
 		case cmp < 0:
 			mkline.Warnf("The package is being downgraded from %s (see %s) to %s.",
-				change.Version, mkline.Line.RefToLocation(change.Location), pkgversion)
+				change.Version(), mkline.Line.RefToLocation(change.Location), pkgversion)
 			mkline.Explain(
 				"The files in doc/CHANGES-*, in which all version changes are",
 				"recorded, have a higher version number than what the package says.",
@@ -137,7 +137,7 @@ func (pkg *Package) checkPossibleDowngrade() {
 
 		case cmp > 0 && !isLocallyModified(mkline.Filename):
 			mkline.Notef("Package version %q is greater than the latest %q from %s.",
-				pkgversion, change.Version, mkline.Line.RefToLocation(change.Location))
+				pkgversion, change.Version(), mkline.Line.RefToLocation(change.Location))
 			mkline.Explain(
 				"Each update to a package should be mentioned in the doc/CHANGES file.",
 				"To do this after updating a package, run",

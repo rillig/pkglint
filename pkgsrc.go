@@ -480,12 +480,30 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename string) []*Change {
 		}
 		author, date = author[1:], date[:len(date)-1]
 
+		toAction := func(action string) ChangeAction {
+			switch action {
+			case "Added":
+				return Added
+			case "Updated":
+				return Updated
+			case "Downgraded":
+				return Downgraded
+			case "Renamed":
+				return Renamed
+			case "Moved":
+				return Moved
+			case "Removed":
+				return Removed
+			}
+			panic(sprintf("Pkglint internal error: Invalid change action: %s", action))
+		}
+
 		newChange := func(version string) *Change {
 			return &Change{
 				Location: line.Location,
-				Action:   intern(action),
+				Action:   toAction(action),
 				Pkgpath:  intern(pkgpath),
-				Version:  intern(version),
+				target:   intern(version),
 				Author:   intern(author),
 				Date:     intern(date),
 			}
@@ -1005,11 +1023,44 @@ func (src *Pkgsrc) guessVariableType(varname string) (vartype *Vartype) {
 // Change describes a modification to a single package, from the doc/CHANGES-* files.
 type Change struct {
 	Location Location
-	Action   string
-	Pkgpath  string
-	Version  string
+	Action   ChangeAction // Added, Updated, Downgraded, Renamed, Moved, Removed
+	Pkgpath  string       // For renamed or moved packages, the previous PKGPATH
+	target   string
 	Author   string
 	Date     string
+}
+
+// Version returns the version number for an Added, Updated or Downgraded package.
+func (ch *Change) Version() string {
+	assertf(ch.Action == Added || ch.Action == Updated || ch.Action == Downgraded, "Change.Version")
+	return ch.target
+}
+
+// Target returns the target PKGPATH for a Renamed or Moved package.
+func (ch *Change) Target() string {
+	assertf(ch.Action == Renamed || ch.Action == Moved, "Change.Target")
+	return ch.target
+}
+
+// Successor returns the successor for a Removed package.
+func (ch *Change) Successor() string {
+	assertf(ch.Action == Removed, "Change.Successor")
+	return ch.target
+}
+
+type ChangeAction uint8
+
+const (
+	Added ChangeAction = 1 + iota
+	Updated
+	Downgraded
+	Renamed
+	Moved
+	Removed
+)
+
+func (ca ChangeAction) String() string {
+	return [...]string{"", "Added", "Updated", "Downgraded", "Renamed", "Moved", "Removed"}[ca]
 }
 
 // SuggestedUpdate describes a desired package update, from the doc/TODO file.

@@ -516,10 +516,28 @@ func (s *Suite) Test_Package_checkPossibleDowngrade(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: Makefile:5: The package is being downgraded from 1.8 (see ../../doc/CHANGES-2018:1) to 1.0nb15.")
 
-	G.Pkgsrc.LastChange["category/pkgbase"].Version = "1.0nb22"
+	G.Pkgsrc.LastChange["category/pkgbase"].target = "1.0nb22"
 
 	G.Pkg.checkPossibleDowngrade()
 
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_Package_checkPossibleDowngrade__moved(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"PKGNAME=\tpackage-1.0")
+	t.CreateFileLines("doc/CHANGES-2018",
+		"\tUpdated category/old-package to 1.8 [committer 2018-01-05]",
+		"\tMoved category/old-package to category/pkgbase [committer 2018-01-05]",
+	)
+	t.FinishSetUp()
+
+	pkg := NewPackage(t.File("category/pkgbase"))
+	pkg.checkPossibleDowngrade()
+
+	// No warning because the latest action is not Updated.
 	t.CheckOutputEmpty()
 }
 

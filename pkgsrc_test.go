@@ -251,19 +251,19 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile(c *check.C) {
 
 	c.Assert(len(changes), equals, 7)
 	c.Check(*changes[0], equals, Change{changes[0].Location,
-		"Added", "category/package", "1.0", "author1", "2015-01-01"})
+		Added, "category/package", "1.0", "author1", "2015-01-01"})
 	c.Check(*changes[1], equals, Change{changes[1].Location,
-		"Updated", "category/package", "1.5", "author2", "2018-01-02"})
+		Updated, "category/package", "1.5", "author2", "2018-01-02"})
 	c.Check(*changes[2], equals, Change{changes[2].Location,
-		"Renamed", "category/package", "", "author3", "2018-01-03"})
+		Renamed, "category/package", "", "author3", "2018-01-03"})
 	c.Check(*changes[3], equals, Change{changes[3].Location,
-		"Moved", "category/package", "", "author4", "2018-01-04"})
+		Moved, "category/package", "", "author4", "2018-01-04"})
 	c.Check(*changes[4], equals, Change{changes[4].Location,
-		"Removed", "category/package", "", "author5", "2018-01-09"})
+		Removed, "category/package", "", "author5", "2018-01-09"})
 	c.Check(*changes[5], equals, Change{changes[5].Location,
-		"Removed", "category/package", "", "author6", "2018-01-06"})
+		Removed, "category/package", "", "author6", "2018-01-06"})
 	c.Check(*changes[6], equals, Change{changes[6].Location,
-		"Downgraded", "category/package", "1.2", "author7", "2018-01-07"})
+		Downgraded, "category/package", "1.2", "author7", "2018-01-07"})
 
 	t.CheckOutputLines(
 		"WARN: ~/doc/CHANGES-2018:1: Year 2015 for category/package does not match the filename ~/doc/CHANGES-2018.",
@@ -740,4 +740,51 @@ func (s *Suite) Test_Pkgsrc_guessVariableType__SKIP(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: filename.mk:2: The pathname pattern \"\\\"bad*pathname\\\"\" " +
 			"contains the invalid characters \"\\\"\\\"\".")
+}
+
+func (s *Suite) Test_Change_Version(c *check.C) {
+	t := s.Init(c)
+
+	loc := Location{"doc/CHANGES-2019", 5, 5}
+	added := Change{loc, Added, "category/path", "1.0", "author", "2019-01-01"}
+	updated := Change{loc, Updated, "category/path", "1.0", "author", "2019-01-01"}
+	downgraded := Change{loc, Downgraded, "category/path", "1.0", "author", "2019-01-01"}
+	removed := Change{loc, Removed, "category/path", "1.0", "author", "2019-01-01"}
+
+	t.Check(added.Version(), equals, "1.0")
+	t.Check(updated.Version(), equals, "1.0")
+	t.Check(downgraded.Version(), equals, "1.0")
+	t.ExpectPanic(
+		func() { removed.Version() },
+		"Pkglint internal error: Change.Version")
+}
+
+func (s *Suite) Test_Change_Target(c *check.C) {
+	t := s.Init(c)
+
+	loc := Location{"doc/CHANGES-2019", 5, 5}
+	renamed := Change{loc, Renamed, "category/path", "category/other", "author", "2019-01-01"}
+	moved := Change{loc, Moved, "category/path", "category/other", "author", "2019-01-01"}
+	downgraded := Change{loc, Downgraded, "category/path", "1.0", "author", "2019-01-01"}
+
+	t.Check(renamed.Target(), equals, "category/other")
+	t.Check(moved.Target(), equals, "category/other")
+	t.ExpectPanic(
+		func() { downgraded.Target() },
+		"Pkglint internal error: Change.Target")
+}
+
+func (s *Suite) Test_Change_Successor(c *check.C) {
+	t := s.Init(c)
+
+	loc := Location{"doc/CHANGES-2019", 5, 5}
+	removed := Change{loc, Removed, "category/path", "", "author", "2019-01-01"}
+	removedSucc := Change{loc, Removed, "category/path", "category/successor", "author", "2019-01-01"}
+	downgraded := Change{loc, Downgraded, "category/path", "1.0", "author", "2019-01-01"}
+
+	t.Check(removed.Successor(), equals, "")
+	t.Check(removedSucc.Successor(), equals, "category/successor")
+	t.ExpectPanic(
+		func() { downgraded.Successor() },
+		"Pkglint internal error: Change.Successor")
 }
