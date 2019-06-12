@@ -241,6 +241,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile(c *check.C) {
 		"\tRemoved category/package [author5 2018-01-09]", // Too far in the future
 		"\tRemoved category/package successor category/package2 [author6 2018-01-06]",
 		"\tDowngraded category/package to 1.2 [author7 2018-01-07]",
+		"\tReworked category/package to 1.2 [author8 2018-01-08]",
 		"",
 		"\ttoo few fields",
 		"\ttoo many many many many many fields",
@@ -255,20 +256,21 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile(c *check.C) {
 	c.Check(*changes[1], equals, Change{changes[1].Location,
 		Updated, "category/package", "1.5", "author2", "2018-01-02"})
 	c.Check(*changes[2], equals, Change{changes[2].Location,
-		Renamed, "category/package", "", "author3", "2018-01-03"})
+		Renamed, "category/package", "category/pkg", "author3", "2018-01-03"})
 	c.Check(*changes[3], equals, Change{changes[3].Location,
-		Moved, "category/package", "", "author4", "2018-01-04"})
+		Moved, "category/package", "other/package", "author4", "2018-01-04"})
 	c.Check(*changes[4], equals, Change{changes[4].Location,
 		Removed, "category/package", "", "author5", "2018-01-09"})
 	c.Check(*changes[5], equals, Change{changes[5].Location,
-		Removed, "category/package", "", "author6", "2018-01-06"})
+		Removed, "category/package", "category/package2", "author6", "2018-01-06"})
 	c.Check(*changes[6], equals, Change{changes[6].Location,
 		Downgraded, "category/package", "1.2", "author7", "2018-01-07"})
 
 	t.CheckOutputLines(
 		"WARN: ~/doc/CHANGES-2018:1: Year 2015 for category/package does not match the filename ~/doc/CHANGES-2018.",
 		"WARN: ~/doc/CHANGES-2018:6: Date 2018-01-06 for category/package is earlier than 2018-01-09 in line 5.",
-		"WARN: ~/doc/CHANGES-2018:12: Unknown doc/CHANGES line: \tAdded another [new package]")
+		"WARN: ~/doc/CHANGES-2018:8: Unknown doc/CHANGES line: \tReworked category/package to 1.2 [author8 2018-01-08]",
+		"WARN: ~/doc/CHANGES-2018:13: Unknown doc/CHANGES line: \tAdded another [new package]")
 }
 
 func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__not_found(c *check.C) {

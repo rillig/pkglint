@@ -474,53 +474,43 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename string) []*Change {
 			return nil
 		}
 
-		action, pkgpath, author, date := f[0], f[1], f[len(f)-2], f[len(f)-1]
+		var action ChangeAction
+		switch f[0] {
+		case "Added":
+			action = Added
+		case "Updated":
+			action = Updated
+		case "Downgraded":
+			action = Downgraded
+		case "Renamed":
+			action = Renamed
+		case "Moved":
+			action = Moved
+		case "Removed":
+			action = Removed
+		}
+
+		pkgpath, author, date := f[1], f[len(f)-2], f[len(f)-1]
 		if !hasPrefix(author, "[") || !hasSuffix(date, "]") {
 			return nil
 		}
 		author, date = author[1:], date[:len(date)-1]
 
-		toAction := func(action string) ChangeAction {
-			switch action {
-			case "Added":
-				return Added
-			case "Updated":
-				return Updated
-			case "Downgraded":
-				return Downgraded
-			case "Renamed":
-				return Renamed
-			case "Moved":
-				return Moved
-			case "Removed":
-				return Removed
-			}
-			panic(sprintf("Pkglint internal error: Invalid change action: %s", action))
-		}
-
-		newChange := func(version string) *Change {
+		switch {
+		case
+			action == Added && f[2] == "version" && n == 6,
+			action == Updated && f[2] == "to" && n == 6,
+			action == Downgraded && f[2] == "to" && n == 6,
+			action == Removed && (f[2] == "successor" || n == 4),
+			(action == Renamed || action == Moved) && f[2] == "to" && n == 6:
 			return &Change{
 				Location: line.Location,
-				Action:   toAction(action),
+				Action:   action,
 				Pkgpath:  intern(pkgpath),
-				target:   intern(version),
+				target:   intern(ifelseStr(n == 6, f[3], "")),
 				Author:   intern(author),
 				Date:     intern(date),
 			}
-		}
-
-		switch {
-		case action == "Added" && f[2] == "version" && n == 6:
-			return newChange(f[3])
-
-		case (action == "Updated" || action == "Downgraded") && f[2] == "to" && n == 6:
-			return newChange(f[3])
-
-		case action == "Removed" && (n == 6 && f[2] == "successor" || n == 4):
-			return newChange("")
-
-		case (action == "Renamed" || action == "Moved") && f[2] == "to" && n == 6:
-			return newChange("")
 		}
 
 		line.Warnf("Unknown doc/CHANGES line: %s", line.Text)
@@ -621,6 +611,9 @@ func (src *Pkgsrc) loadDocChanges() {
 		changes := src.loadDocChangesFromFile(docDir + "/" + filename)
 		for _, change := range changes {
 			src.LastChange[change.Pkgpath] = change
+			if change.Action == Renamed || change.Action == Moved {
+				src.LastChange[change.Target()] = change
+			}
 		}
 	}
 }

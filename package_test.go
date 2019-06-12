@@ -537,6 +537,7 @@ func (s *Suite) Test_Package_checkPossibleDowngrade__moved(c *check.C) {
 	pkg := NewPackage(t.File("category/pkgbase"))
 	pkg.checkPossibleDowngrade()
 
+	t.Check(G.Pkgsrc.LastChange["category/pkgbase"].Action, equals, Moved)
 	// No warning because the latest action is not Updated.
 	t.CheckOutputEmpty()
 }
