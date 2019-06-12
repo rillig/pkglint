@@ -526,7 +526,7 @@ func (s *Suite) Test_Package_checkPossibleDowngrade(c *check.C) {
 func (s *Suite) Test_Package_checkPossibleDowngrade__moved(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpPackage("category/package",
+	t.SetUpPackage("category/pkgbase",
 		"PKGNAME=\tpackage-1.0")
 	t.CreateFileLines("doc/CHANGES-2018",
 		"\tUpdated category/old-package to 1.8 [committer 2018-01-05]",
@@ -535,6 +535,8 @@ func (s *Suite) Test_Package_checkPossibleDowngrade__moved(c *check.C) {
 	t.FinishSetUp()
 
 	pkg := NewPackage(t.File("category/pkgbase"))
+	pkg.load()
+	pkg.determineEffectivePkgVars()
 	pkg.checkPossibleDowngrade()
 
 	t.Check(G.Pkgsrc.LastChange["category/pkgbase"].Action, equals, Moved)
