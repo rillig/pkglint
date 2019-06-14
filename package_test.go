@@ -1433,6 +1433,50 @@ func (s *Suite) Test_Package_readMakefile__included(c *check.C) {
 	t.Check(seen.seen, check.HasLen, 5)
 }
 
+func (s *Suite) Test_Package_readMakefile__include_Makefile_common_same_directory(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/dependency")
+	t.CreateFileLines("category/dependency/Makefile.common",
+		MkRcsID,
+		"#",
+		"#")
+	t.SetUpPackage("category/package",
+		".include \"../../category/dependency/Makefile.common\"",
+		".include \"Makefile.common\"")
+	t.CreateFileLines("category/package/Makefile.common",
+		MkRcsID)
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputLines(
+		"WARN: ~/category/dependency/Makefile.common:3: " +
+			"Please add a line \"# used by category/package/Makefile\" here.")
+}
+
+func (s *Suite) Test_Package_readMakefile__include_Makefile_common_explicit(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/dependency")
+	t.CreateFileLines("category/dependency/Makefile.common",
+		MkRcsID,
+		"#",
+		"#")
+	t.SetUpPackage("category/package",
+		".include \"../../category/dependency/Makefile.common\"",
+		".include \"../../category/package/Makefile.common\"")
+	t.CreateFileLines("category/package/Makefile.common",
+		MkRcsID)
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputLines(
+		"WARN: ~/category/dependency/Makefile.common:3: " +
+			"Please add a line \"# used by category/package/Makefile\" here.")
+}
+
 // Just for code coverage.
 func (s *Suite) Test_Package_findIncludedFile__no_tracing(c *check.C) {
 	t := s.Init(c)
