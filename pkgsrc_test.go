@@ -790,3 +790,10 @@ func (s *Suite) Test_Change_Successor(c *check.C) {
 		func() { downgraded.Successor() },
 		"Pkglint internal error: Change.Successor")
 }
+
+func (s *Suite) Test_ChangeAction_String(c *check.C) {
+	t := s.Init(c)
+
+	t.Check(Added.String(), equals, "Added")
+	t.Check(Removed.String(), equals, "Removed")
+}
