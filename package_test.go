@@ -181,8 +181,7 @@ func (s *Suite) Test_Package_CheckVarorder__comments_do_not_crash(c *check.C) {
 	t := s.Init(c)
 
 	pkg := NewPackage(t.File("x11/9term"))
-
-	pkg.CheckVarorder(t.NewMkLines("Makefile",
+	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"",
 		"GITHUB_PROJECT=project",
@@ -191,7 +190,9 @@ func (s *Suite) Test_Package_CheckVarorder__comments_do_not_crash(c *check.C) {
 		"",
 		"DISTNAME=9term",
 		"# comment",
-		"CATEGORIES=x11"))
+		"CATEGORIES=x11")
+
+	pkg.CheckVarorder(mklines)
 
 	t.CheckOutputLines(
 		"WARN: Makefile:3: The canonical order of the variables is " +
@@ -203,8 +204,7 @@ func (s *Suite) Test_Package_CheckVarorder__comments_are_ignored(c *check.C) {
 	t := s.Init(c)
 
 	pkg := NewPackage(t.File("x11/9term"))
-
-	pkg.CheckVarorder(t.NewMkLines("Makefile",
+	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"",
 		"DISTNAME=\tdistname-1.0",
@@ -213,7 +213,9 @@ func (s *Suite) Test_Package_CheckVarorder__comments_are_ignored(c *check.C) {
 		"MAINTAINER=\tpkgsrc-users@NetBSD.org",
 		"# comment",
 		"COMMENT=\tComment",
-		"LICENSE=\tgnu-gpl-v2"))
+		"LICENSE=\tgnu-gpl-v2")
+
+	pkg.CheckVarorder(mklines)
 
 	t.CheckOutputEmpty()
 }
@@ -251,8 +253,7 @@ func (s *Suite) Test_Package_CheckVarorder__GITHUB_PROJECT_at_the_top(c *check.C
 	t := s.Init(c)
 
 	pkg := NewPackage(t.File("x11/9term"))
-
-	pkg.CheckVarorder(t.NewMkLines("Makefile",
+	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"",
 		"GITHUB_PROJECT=\t\tautocutsel",
@@ -262,7 +263,9 @@ func (s *Suite) Test_Package_CheckVarorder__GITHUB_PROJECT_at_the_top(c *check.C
 		"GITHUB_TAG=\t\t${PKGVERSION_NOREV}",
 		"",
 		"COMMENT=\tComment",
-		"LICENSE=\tgnu-gpl-v2"))
+		"LICENSE=\tgnu-gpl-v2")
+
+	pkg.CheckVarorder(mklines)
 
 	t.CheckOutputEmpty()
 }
@@ -271,8 +274,7 @@ func (s *Suite) Test_Package_CheckVarorder__GITHUB_PROJECT_at_the_bottom(c *chec
 	t := s.Init(c)
 
 	pkg := NewPackage(t.File("x11/9term"))
-
-	pkg.CheckVarorder(t.NewMkLines("Makefile",
+	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"",
 		"DISTNAME=\t\tautocutsel-0.10.0",
@@ -282,7 +284,9 @@ func (s *Suite) Test_Package_CheckVarorder__GITHUB_PROJECT_at_the_bottom(c *chec
 		"GITHUB_TAG=\t\t${PKGVERSION_NOREV}",
 		"",
 		"COMMENT=\tComment",
-		"LICENSE=\tgnu-gpl-v2"))
+		"LICENSE=\tgnu-gpl-v2")
+
+	pkg.CheckVarorder(mklines)
 
 	t.CheckOutputEmpty()
 }
@@ -320,8 +324,7 @@ func (s *Suite) Test_Package_CheckVarorder__MASTER_SITES(c *check.C) {
 	t := s.Init(c)
 
 	pkg := NewPackage(t.File("category/package"))
-
-	pkg.CheckVarorder(t.NewMkLines("Makefile",
+	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"",
 		"PKGNAME=\tpackage-1.0",
@@ -330,7 +333,9 @@ func (s *Suite) Test_Package_CheckVarorder__MASTER_SITES(c *check.C) {
 		"MASTER_SITES+=\thttp://mirror.example.org/",
 		"",
 		"COMMENT=\tComment",
-		"LICENSE=\tgnu-gpl-v2"))
+		"LICENSE=\tgnu-gpl-v2")
+
+	pkg.CheckVarorder(mklines)
 
 	// No warning that "MASTER_SITES appears too late"
 	t.CheckOutputEmpty()
@@ -341,8 +346,7 @@ func (s *Suite) Test_Package_CheckVarorder__diagnostics(c *check.C) {
 
 	t.SetUpVartypes()
 	pkg := NewPackage(t.File("category/package"))
-
-	pkg.CheckVarorder(t.NewMkLines("Makefile",
+	mklines := t.NewMkLines("Makefile",
 		MkRcsID,
 		"",
 		"CATEGORIES=     net",
@@ -359,7 +363,9 @@ func (s *Suite) Test_Package_CheckVarorder__diagnostics(c *check.C) {
 		"MAINTAINER=     maintainer@example.org",
 		"HOMEPAGE=       https://github.com/project/pkgbase/",
 		"",
-		".include \"../../mk/bsd.pkg.mk\""))
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	pkg.CheckVarorder(mklines)
 
 	t.CheckOutputLines(
 		"WARN: Makefile:3: The canonical order of the variables is " +
@@ -368,7 +374,7 @@ func (s *Suite) Test_Package_CheckVarorder__diagnostics(c *check.C) {
 			"MAINTAINER, HOMEPAGE, COMMENT, LICENSE.")
 
 	// After moving the variables according to the warning:
-	pkg.CheckVarorder(t.NewMkLines("Makefile",
+	mklines = t.NewMkLines("Makefile",
 		MkRcsID,
 		"",
 		"GITHUB_PROJECT= pkgbase",
@@ -383,7 +389,9 @@ func (s *Suite) Test_Package_CheckVarorder__diagnostics(c *check.C) {
 		"COMMENT=        Comment",
 		"LICENSE=        gnu-gpl-v3",
 		"",
-		".include \"../../mk/bsd.pkg.mk\""))
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	pkg.CheckVarorder(mklines)
 
 	t.CheckOutputEmpty()
 }
