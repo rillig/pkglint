@@ -711,6 +711,72 @@ func (s *Suite) Test_Package__varuse_at_load_time(c *check.C) {
 		"NOTE: ~/category/pkgbase/Makefile:26: Consider the :sh modifier instead of != for \"echo true=${TRUE:Q}\".")
 }
 
+// Demonstrates that Makefile fragments are handled differently,
+// depending on the directory they are in.
+func (s *Suite) Test_Package_load__extra_files(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"PKGDIR=\t../../category/other")
+	t.SetUpPackage("category/other")
+	t.Chdir("category/package")
+	t.CreateFileLines("gnu-style.mk",
+		"ifeq ($(CC),gcc)",
+		"IS_GCC=\tyes",
+		"else",
+		"IS_GCC=\tno",
+		"endif")
+	t.Copy("gnu-style.mk", "files/gnu-style.mk")
+	t.Copy("gnu-style.mk", "../../category/other/gnu-style.mk")
+
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	t.CheckOutputLines(
+		// All *.mk files in the package directory are assumed
+		// to be BSD-style Makefiles, therefore the many warnings.
+		"WARN: gnu-style.mk:1: Please use curly braces {} instead of round parentheses () for CC.",
+		"ERROR: gnu-style.mk:1: Unknown Makefile line format: \"ifeq ($(CC),gcc)\".",
+		"ERROR: gnu-style.mk:3: Unknown Makefile line format: \"else\".",
+		"ERROR: gnu-style.mk:5: Unknown Makefile line format: \"endif\".",
+
+		// The following diagnostics are duplicated because the files from
+		// the package directory are loaded once during Package.load, just
+		// for collecting the used variables. And then a second time in
+		// Package.check to perform the actual checks.
+		//
+		// The above diagnostics are only those from parsing the file, to
+		// correctly classify the lines. This is because the main purpose
+		// of Package.load above is to load the files and collect some
+		// data, not to perform the actual checks.
+		//
+		// Therefore, the below lines contain two more diagnostics.
+		"WARN: gnu-style.mk:1: Please use curly braces {} instead of round parentheses () for CC.",
+		"ERROR: gnu-style.mk:1: Unknown Makefile line format: \"ifeq ($(CC),gcc)\".",
+		"ERROR: gnu-style.mk:3: Unknown Makefile line format: \"else\".",
+		"ERROR: gnu-style.mk:5: Unknown Makefile line format: \"endif\".",
+		"ERROR: gnu-style.mk:1: Expected \"# $NetBSD$\".",
+		"WARN: gnu-style.mk:2: IS_GCC is defined but not used.",
+
+		// There is no warning about files/gnu-style.mk since pkglint
+		// doesn't even attempt at guessing the file type. Files placed
+		// in this directory can have an arbitrary format.
+
+		// All *.mk files from PKGDIR are loaded to see which variables
+		// they define, in order to make the check for unused variables
+		// more reliable.
+		//
+		// All files that belong to the package itself, and not to pkgsrc
+		// should therefore be placed in the files/ directory.
+		"WARN: ../../category/other/gnu-style.mk:1: Please use curly braces {} instead of round parentheses () for CC.",
+		"ERROR: ../../category/other/gnu-style.mk:1: Unknown Makefile line format: \"ifeq ($(CC),gcc)\".",
+		"ERROR: ../../category/other/gnu-style.mk:3: Unknown Makefile line format: \"else\".",
+		"ERROR: ../../category/other/gnu-style.mk:5: Unknown Makefile line format: \"endif\".",
+		"ERROR: ../../category/other/gnu-style.mk:1: Expected \"# $NetBSD$\".",
+		"WARN: ../../category/other/gnu-style.mk:2: IS_GCC is defined but not used.")
+}
+
 func (s *Suite) Test_Package_loadPackageMakefile(c *check.C) {
 	t := s.Init(c)
 

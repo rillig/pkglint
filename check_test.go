@@ -508,9 +508,14 @@ func (t *Tester) File(relativeFileName string) string {
 
 // Copy copies a file inside the temporary directory.
 func (t *Tester) Copy(relativeSrc, relativeDst string) {
-	data, err := ioutil.ReadFile(t.File(relativeSrc))
+	src := t.File(relativeSrc)
+	dst := t.File(relativeDst)
+
+	data, err := ioutil.ReadFile(src)
 	assertNil(err, "Copy.Read")
-	err = ioutil.WriteFile(t.File(relativeDst), data, 0777)
+	err = os.MkdirAll(path.Dir(dst), 0777)
+	assertNil(err, "Copy.MkdirAll")
+	err = ioutil.WriteFile(dst, data, 0777)
 	assertNil(err, "Copy.Write")
 }
 
