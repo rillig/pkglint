@@ -726,6 +726,18 @@ func (s *Suite) Test_Package_load__extra_files(c *check.C) {
 		"else",
 		"IS_GCC=\tno",
 		"endif")
+	t.CreateFileLines("patches/patch-Makefile.mk",
+		RcsID,
+		"",
+		"Documentation",
+		"",
+		"--- Makefile.mk.orig",
+		"--- Makefile.mk",
+		"@@ -1,1 +1,1 @@",
+		"- old",
+		"+ new")
+	t.CreateFileLines("patches/readme.mk",
+		"This is not a BSD-style Makefile.")
 	t.Copy("gnu-style.mk", "files/gnu-style.mk")
 	t.Copy("gnu-style.mk", "../../category/other/gnu-style.mk")
 
@@ -740,6 +752,12 @@ func (s *Suite) Test_Package_load__extra_files(c *check.C) {
 		"ERROR: gnu-style.mk:1: Unknown Makefile line format: \"ifeq ($(CC),gcc)\".",
 		"ERROR: gnu-style.mk:3: Unknown Makefile line format: \"else\".",
 		"ERROR: gnu-style.mk:5: Unknown Makefile line format: \"endif\".",
+
+		// Since the patches directory should contain only patches,
+		// each other file is treated as a file belonging to pkgsrc,
+		// therefore *.mk is interpreted as a Makefile fragment.
+		"ERROR: patches/readme.mk:1: Unknown Makefile line format: \"This is not a BSD-style Makefile.\".",
+		"ERROR: distinfo: Patch \"patches/patch-Makefile.mk\" is not recorded. Run \"@BMAKE@ makepatchsum\".",
 
 		// The following diagnostics are duplicated because the files from
 		// the package directory are loaded once during Package.load, just
@@ -763,18 +781,25 @@ func (s *Suite) Test_Package_load__extra_files(c *check.C) {
 		// doesn't even attempt at guessing the file type. Files placed
 		// in this directory can have an arbitrary format.
 
+		"ERROR: ../../category/other/distinfo: Patch \"../../category/package/patches/"+
+			"patch-Makefile.mk\" is not recorded. Run \"@BMAKE@ makepatchsum\".",
+
 		// All *.mk files from PKGDIR are loaded to see which variables
 		// they define, in order to make the check for unused variables
 		// more reliable.
 		//
 		// All files that belong to the package itself, and not to pkgsrc
 		// should therefore be placed in the files/ directory.
-		"WARN: ../../category/other/gnu-style.mk:1: Please use curly braces {} instead of round parentheses () for CC.",
+		"WARN: ../../category/other/gnu-style.mk:1: "+
+			"Please use curly braces {} instead of round parentheses () for CC.",
 		"ERROR: ../../category/other/gnu-style.mk:1: Unknown Makefile line format: \"ifeq ($(CC),gcc)\".",
 		"ERROR: ../../category/other/gnu-style.mk:3: Unknown Makefile line format: \"else\".",
 		"ERROR: ../../category/other/gnu-style.mk:5: Unknown Makefile line format: \"endif\".",
 		"ERROR: ../../category/other/gnu-style.mk:1: Expected \"# $NetBSD$\".",
-		"WARN: ../../category/other/gnu-style.mk:2: IS_GCC is defined but not used.")
+		"WARN: ../../category/other/gnu-style.mk:2: IS_GCC is defined but not used.",
+
+		"ERROR: patches/patch-Makefile.mk: Contains no patch.",
+		"WARN: patches/readme.mk: Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
 }
 
 func (s *Suite) Test_Package_loadPackageMakefile(c *check.C) {
