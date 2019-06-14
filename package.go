@@ -206,9 +206,8 @@ func (pkg *Package) load() ([]string, MkLines, MkLines) {
 			!matches(filename, `patch-`) &&
 			!contains(filename, pkg.Pkgdir+"/") &&
 			!contains(filename, pkg.Filesdir+"/") {
-			if fragmentMklines := LoadMk(filename, MustSucceed); fragmentMklines != nil {
-				fragmentMklines.collectUsedVariables()
-			}
+			fragmentMklines := LoadMk(filename, MustSucceed)
+			fragmentMklines.collectUsedVariables()
 		}
 		if hasPrefix(basename, "PLIST") {
 			pkg.loadPlistDirs(filename)
