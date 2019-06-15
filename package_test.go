@@ -1528,6 +1528,9 @@ func (s *Suite) Test_Package_diveInto(c *check.C) {
 	test("../../mk/pthread.buildlink3.mk", "pthread.builtin.mk", true)
 	test("../../mk/pthread.buildlink3.mk", "../../mk/pthread.builtin.mk", true)
 
+	// Files other than the companion builtin.mk are ignored.
+	test("../../mk/pthread.buildlink3.mk", "pthread.internals.mk", false)
+
 	// Files that are included from within the pkgsrc infrastructure are not
 	// interesting since their content is largely modeled by pkglint in the
 	// file vardefs.go.
