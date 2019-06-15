@@ -404,8 +404,8 @@ func (pkg *Package) parseLine(mklines MkLines, mkline MkLine, allLines MkLines) 
 	return true
 }
 
-// loadIncluded loads the lines from a Makefile fragment that is specified
-// in the given .include line.
+// loadIncluded loads the lines from the Makefile fragment given by filename,
+// which is relative to the current working directory.
 //
 // The returned lines may be nil in two different cases: if skip is true,
 // the included file is not processed further for whatever reason. But if
