@@ -489,7 +489,7 @@ func (pkg *Package) diveInto(includingFile string, includedFile string) bool {
 	// This case is needed for getting the redundancy check right. Without it
 	// there will be warnings about redundant assignments to the
 	// BUILTIN_CHECK.pthread variable.
-	if contains(includingFile, "buildlink3.mk") && contains(includedFile, "builtin.mk") {
+	if hasSuffix(includingFile, "buildlink3.mk") && hasSuffix(includedFile, "builtin.mk") {
 		return true
 	}
 
