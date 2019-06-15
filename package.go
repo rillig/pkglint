@@ -340,81 +340,12 @@ func (pkg *Package) parse(mklines MkLines, allLines MkLines, includingFileForUse
 	filename := mklines.lines.FileName
 	result := true
 
-	handleIncludeLine := func(mkline MkLine) (skip bool, includedMklines MkLines) {
-		includedFile, incDir, incBase := pkg.findIncludedFile(mkline, filename)
-
-		if includedFile == "" {
-			return true, nil
-		}
-
-		dirname, _ := path.Split(filename)
-		dirname = cleanpath(dirname)
-		fullIncluded := dirname + "/" + includedFile
-		relIncludedFile := relpath(pkg.dir, fullIncluded)
-
-		if !pkg.diveInto(filename, includedFile) {
-			return true, nil
-		}
-
-		if !pkg.included.FirstTime(relIncludedFile) {
-			return true, nil
-		}
-
-		pkg.collectUsedBy(mkline, incDir, incBase, includedFile)
-
-		if trace.Tracing {
-			trace.Step1("Including %q.", fullIncluded)
-		}
-		includedMklines = LoadMk(fullIncluded, 0)
-
-		// Only look in the directory relative to the current file
-		// and in the package directory; see
-		// devel/bmake/files/parse.c, function Parse_include_file.
-		//
-		// Bmake has a list of include directories that can be specified
-		// on the command line using the -I option, but pkgsrc doesn't
-		// make use of that, so pkglint also doesn't need this extra
-		// complexity.
-		if includedMklines == nil {
-			pkgBasedir := pkg.File(".")
-			if dirname != pkgBasedir { // Prevent unnecessary syscalls
-				dirname = pkgBasedir
-
-				fullIncludedFallback := dirname + "/" + includedFile
-				includedMklines = LoadMk(fullIncludedFallback, 0)
-
-				if includedMklines != nil {
-					mkline.Notef("The path to the included file should be %q.",
-						relpath(path.Dir(mkline.Filename), fullIncludedFallback))
-					mkline.Explain(
-						"The .include directive first searches the file relative to the including file.",
-						"And if that doesn't exist, falls back to the current directory, which in the",
-						"case of a pkgsrc package is the package directory.",
-						"",
-						"This fallback mechanism is not necessary for pkgsrc, therefore it should not",
-						"be used. One less thing to learn for package developers.")
-				}
-			}
-		}
-
-		if includedMklines == nil {
-			if mklines.indentation.HasExists(includedFile) {
-				return true, nil // See https://github.com/rillig/pkglint/issues/1
-			}
-			mkline.Errorf("Cannot read %q.", includedFile)
-			result = false
-			return false, nil
-		}
-
-		return false, includedMklines
-	}
-
 	lineAction := func(mkline MkLine) bool {
 		allLines.mklines = append(allLines.mklines, mkline)
 		allLines.lines.Lines = append(allLines.lines.Lines, mkline.Line)
 
 		if mkline.IsInclude() {
-			skip, includedMkLines := handleIncludeLine(mkline)
+			skip, includedMkLines := pkg.loadIncluded(mklines.indentation, mkline, filename)
 
 			if includedMkLines != nil {
 				filenameForUsedCheck := ""
@@ -424,10 +355,10 @@ func (pkg *Package) parse(mklines MkLines, allLines MkLines, includingFileForUse
 				if !pkg.parse(includedMkLines, allLines, filenameForUsedCheck) {
 					return false
 				}
-			}
-
-			if skip && includedMkLines == nil {
+			} else if skip {
 				return true
+			} else {
+				result = false
 			}
 		}
 
@@ -463,6 +394,81 @@ func (pkg *Package) parse(mklines MkLines, allLines MkLines, includingFileForUse
 	}
 
 	return result
+}
+
+// loadIncluded loads the lines from a Makefile fragment that is specified
+// in the given .include line.
+//
+// The returned lines may be nil in two different cases: if skip is true,
+// the included file is not processed further for whatever reason. But if
+// skip is false, the file could not be read and an appropriate error message
+// has already been logged.
+func (pkg *Package) loadIncluded(ind *Indentation, mkline MkLine, filename string) (skip bool, includedMklines MkLines) {
+	includedFile, incDir, incBase := pkg.findIncludedFile(mkline, filename)
+
+	if includedFile == "" {
+		return true, nil
+	}
+
+	dirname, _ := path.Split(filename)
+	dirname = cleanpath(dirname)
+	fullIncluded := dirname + "/" + includedFile
+	relIncludedFile := relpath(pkg.dir, fullIncluded)
+
+	if !pkg.diveInto(filename, includedFile) {
+		return true, nil
+	}
+
+	if !pkg.included.FirstTime(relIncludedFile) {
+		return true, nil
+	}
+
+	pkg.collectUsedBy(mkline, incDir, incBase, includedFile)
+
+	if trace.Tracing {
+		trace.Step1("Including %q.", fullIncluded)
+	}
+	includedMklines = LoadMk(fullIncluded, 0)
+
+	// Only look in the directory relative to the current file
+	// and in the package directory; see
+	// devel/bmake/files/parse.c, function Parse_include_file.
+	//
+	// Bmake has a list of include directories that can be specified
+	// on the command line using the -I option, but pkgsrc doesn't
+	// make use of that, so pkglint also doesn't need this extra
+	// complexity.
+	if includedMklines == nil {
+		pkgBasedir := pkg.File(".")
+		if dirname != pkgBasedir { // Prevent unnecessary syscalls
+			dirname = pkgBasedir
+
+			fullIncludedFallback := dirname + "/" + includedFile
+			includedMklines = LoadMk(fullIncludedFallback, 0)
+
+			if includedMklines != nil {
+				mkline.Notef("The path to the included file should be %q.",
+					relpath(path.Dir(mkline.Filename), fullIncludedFallback))
+				mkline.Explain(
+					"The .include directive first searches the file relative to the including file.",
+					"And if that doesn't exist, falls back to the current directory, which in the",
+					"case of a pkgsrc package is the package directory.",
+					"",
+					"This fallback mechanism is not necessary for pkgsrc, therefore it should not",
+					"be used. One less thing to learn for package developers.")
+			}
+		}
+	}
+
+	if includedMklines == nil {
+		if ind.HasExists(includedFile) {
+			return true, nil // See https://github.com/rillig/pkglint/issues/1
+		}
+		mkline.Errorf("Cannot read %q.", includedFile)
+		return false, nil
+	}
+
+	return false, includedMklines
 }
 
 // diveInto decides whether to load the includedFile.
