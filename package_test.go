@@ -1306,6 +1306,163 @@ func (s *Suite) Test_Package_checkUseLanguagesCompilerMk__compiler_mk(c *check.C
 			"Modifying USE_LANGUAGES after including ../../mk/compiler.mk has no effect.")
 }
 
+func (s *Suite) Test_Package_readMakefile__simple(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.Pkg = NewPackage(".")
+	G.Pkg.included.Trace = true
+	G.Pkg.load()
+
+	t.CheckOutputLines(
+		"FirstTime: suppress-varorder.mk")
+}
+
+func (s *Suite) Test_Package_readMakefile__nonexistent_Makefile(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.Chdir("category/package")
+	t.Remove("Makefile")
+	t.FinishSetUp()
+
+	G.Pkg = NewPackage(".")
+	G.Pkg.included.Trace = true
+	G.Pkg.load()
+
+	t.CheckOutputLines(
+		"ERROR: Makefile: Cannot be read.")
+}
+
+func (s *Suite) Test_Package_readMakefile__include_in_same_directory(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".include \"version.mk\"")
+	t.Chdir("category/package")
+	t.CreateFileLines("version.mk",
+		MkRcsID)
+	t.FinishSetUp()
+
+	G.Pkg = NewPackage(".")
+	G.Pkg.included.Trace = true
+	G.Pkg.load()
+
+	t.CheckOutputLines(
+		"FirstTime: suppress-varorder.mk",
+		"FirstTime: version.mk")
+}
+
+func (s *Suite) Test_Package_readMakefile__nonexistent_include(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".include \"version.mk\"")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.Pkg = NewPackage(".")
+	G.Pkg.included.Trace = true
+	G.Pkg.load()
+
+	t.CheckOutputLines(
+		"FirstTime: suppress-varorder.mk",
+		"FirstTime: version.mk",
+		"ERROR: Makefile:20: Cannot read \"version.mk\".")
+}
+
+// When reading the package Makefile, pkglint loads and interprets each
+// file only once. This is especially important for packages with a large
+// dependency graph containing many common subdependencies.
+func (s *Suite) Test_Package_readMakefile__include_twice(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".include \"version.mk\"",
+		".include \"version.mk\"")
+	t.Chdir("category/package")
+	t.CreateFileLines("version.mk",
+		MkRcsID)
+	t.FinishSetUp()
+
+	G.Pkg = NewPackage(".")
+	G.Pkg.included.Trace = true
+	G.Pkg.load()
+
+	t.CheckOutputLines(
+		"FirstTime: suppress-varorder.mk",
+		"FirstTime: version.mk")
+}
+
+func (s *Suite) Test_Package_readMakefile__include_in_other_directory(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".include \"../../category/other/version.mk\"")
+	t.Chdir("category/package")
+	t.CreateFileLines("../../category/other/version.mk",
+		MkRcsID)
+	t.FinishSetUp()
+
+	G.Pkg = NewPackage(".")
+	G.Pkg.included.Trace = true
+	G.Pkg.load()
+
+	t.CheckOutputLines(
+		"FirstTime: suppress-varorder.mk",
+		"FirstTime: ../../category/other/version.mk")
+}
+
+// Demonstrates that Package.included contains the file paths of the
+// included files, relative to the package directory.
+func (s *Suite) Test_Package_readMakefile__includes_in_other_directory(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".include \"../../category/other/module.mk\"")
+	t.Chdir("category/package")
+	t.CreateFileLines("../../category/other/module.mk",
+		MkRcsID,
+		".include \"version.mk\"")
+	t.CreateFileLines("../../category/other/version.mk",
+		MkRcsID)
+	t.FinishSetUp()
+
+	G.Pkg = NewPackage(".")
+	G.Pkg.included.Trace = true
+	G.Pkg.load()
+
+	t.CheckOutputLines(
+		"FirstTime: suppress-varorder.mk",
+		"FirstTime: ../../category/other/module.mk",
+		"FirstTime: ../../category/other/version.mk")
+}
+
+func (s *Suite) Test_Package_readMakefile__nonexistent_in_other_directory(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".include \"../../category/other/module.mk\"")
+	t.Chdir("category/package")
+	t.CreateFileLines("../../category/other/module.mk",
+		MkRcsID,
+		".include \"version.mk\"")
+	t.FinishSetUp()
+
+	G.Pkg = NewPackage(".")
+	G.Pkg.included.Trace = true
+	G.Pkg.load()
+
+	t.CheckOutputLines(
+		"FirstTime: suppress-varorder.mk",
+		"FirstTime: ../../category/other/module.mk",
+		"FirstTime: ../../category/other/version.mk",
+		"ERROR: ../../category/other/module.mk:2: Cannot read \"version.mk\".")
+}
+
 func (s *Suite) Test_Package_readMakefile__skipping(c *check.C) {
 	t := s.Init(c)
 
