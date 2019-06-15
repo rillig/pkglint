@@ -514,17 +514,15 @@ func (pkg *Package) findIncludedFile(mkline MkLine, includingFilename string) (i
 			trace.Stepf("%s:%s: Skipping include file %q. This may result in false warnings.",
 				mkline.Filename, mkline.Linenos(), includedFile)
 		}
-		includedFile = ""
+		return "", "", ""
 	}
-	incDir, incBase = path.Split(includedFile)
 
-	if includedFile != "" {
-		if mkline.Basename != "buildlink3.mk" {
-			if matches(includedFile, `^\.\./\.\./(.*)/buildlink3\.mk$`) {
-				pkg.bl3[includedFile] = mkline
-				if trace.Tracing {
-					trace.Step1("Buildlink3 file in package: %q", includedFile)
-				}
+	incDir, incBase = path.Split(includedFile)
+	if mkline.Basename != "buildlink3.mk" {
+		if matches(includedFile, `^\.\./\.\./(.*)/buildlink3\.mk$`) {
+			pkg.bl3[includedFile] = mkline
+			if trace.Tracing {
+				trace.Step1("Buildlink3 file in package: %q", includedFile)
 			}
 		}
 	}
