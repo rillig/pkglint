@@ -377,17 +377,32 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 				return yes // See https://github.com/rillig/pkglint/issues/1
 			}
 
-			// Only look in the directory relative to the
-			// current file and in the package directory.
-			// Make(1) has a list of include directories, but pkgsrc
-			// doesn't make use of that, so pkglint also doesn't
-			// need this extra complexity.
+			// Only look in the directory relative to the current file
+			// and in the package directory; see
+			// devel/bmake/files/parse.c, function Parse_include_file.
+			//
+			// Bmake has a list of include directories that can be specified
+			// on the command line using the -I option, but pkgsrc doesn't
+			// make use of that, so pkglint also doesn't need this extra
+			// complexity.
 			pkgBasedir := pkg.File(".")
 			if dirname != pkgBasedir { // Prevent unnecessary syscalls
 				dirname = pkgBasedir
 
 				fullIncludedFallback := dirname + "/" + includedFile
 				innerExists, innerResult = pkg.readMakefile(fullIncludedFallback, mainLines, allLines, fullIncluding)
+
+				if innerExists {
+					mkline.Notef("The path to the included file should be %q.",
+						relpath(path.Dir(mkline.Filename), fullIncludedFallback))
+					mkline.Explain(
+						"The .include directive first searches the file relative to the including file.",
+						"And if that doesn't exist, falls back to the current directory, which in the",
+						"case of a pkgsrc package is the package directory.",
+						"",
+						"This fallback mechanism is not necessary for pkgsrc, therefore it should not",
+						"be used. One less thing to learn for package developers.")
+				}
 			}
 
 			if !innerExists {

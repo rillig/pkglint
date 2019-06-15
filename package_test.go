@@ -1477,6 +1477,25 @@ func (s *Suite) Test_Package_readMakefile__include_Makefile_common_explicit(c *c
 			"Please add a line \"# used by category/package/Makefile\" here.")
 }
 
+func (s *Suite) Test_Package_readMakefile__fallback_lookup_in_package_directory(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("mk/pthread.buildlink3.mk",
+		MkRcsID,
+		".include \"../../mk/pthread.builtin.mk\"")
+	t.CreateFileLines("mk/pthread.builtin.mk",
+		MkRcsID)
+	t.SetUpPackage("category/package",
+		".include \"../../mk/pthread.buildlink3.mk\"")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputLines(
+		"NOTE: ~/mk/pthread.buildlink3.mk:2: " +
+			"The path to the included file should be \"pthread.builtin.mk\".")
+}
+
 // Just for code coverage.
 func (s *Suite) Test_Package_findIncludedFile__no_tracing(c *check.C) {
 	t := s.Init(c)
