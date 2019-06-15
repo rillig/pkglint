@@ -1570,24 +1570,18 @@ func (s *Suite) Test_Package_readMakefile__included(c *check.C) {
 	t.CreateFileLines("lang/language/version.mk",
 		MkRcsID)
 	t.FinishSetUp()
-	pkg := NewPackage(t.File("category/package"))
+	t.Chdir("category/package")
+	pkg := NewPackage(".")
 
+	pkg.included.Trace = true
 	pkg.loadPackageMakefile()
 
-	expected := []string{
-		"../../devel/library/buildlink3.mk",
-		"../../devel/library/builtin.mk",
-		"../../lang/language/module.mk",
-		"../../lang/language/version.mk",
-		"suppress-varorder.mk"}
-
-	seen := pkg.included
-	for _, filename := range expected {
-		if !seen.Seen(filename) {
-			c.Errorf("File %q is not seen.", filename)
-		}
-	}
-	t.Check(seen.seen, check.HasLen, 5)
+	t.CheckOutputLines(
+		"FirstTime: suppress-varorder.mk",
+		"FirstTime: ../../devel/library/buildlink3.mk",
+		"FirstTime: ../../devel/library/builtin.mk",
+		"FirstTime: ../../lang/language/module.mk",
+		"FirstTime: ../../lang/language/version.mk")
 }
 
 func (s *Suite) Test_Package_readMakefile__include_Makefile_common_same_directory(c *check.C) {
@@ -1709,20 +1703,13 @@ func (s *Suite) Test_Package_findIncludedFile__no_tracing(c *check.C) {
 	pkg := NewPackage(t.File("category/package"))
 	t.DisableTracing()
 
+	pkg.included.Trace = true
 	pkg.loadPackageMakefile()
 
-	expected := []string{
-		"../../lang/language/buildlink3.mk",
-		"../../lang/language/builtin.mk",
-		"suppress-varorder.mk"}
-
-	seen := pkg.included
-	for _, filename := range expected {
-		if !seen.Seen(filename) {
-			c.Errorf("File %q is not seen.", filename)
-		}
-	}
-	t.Check(seen.seen, check.HasLen, 3)
+	t.CheckOutputLines(
+		"FirstTime: suppress-varorder.mk",
+		"FirstTime: ../../lang/language/buildlink3.mk",
+		"FirstTime: ../../lang/language/builtin.mk")
 }
 
 func (s *Suite) Test_Package_checkLocallyModified(c *check.C) {
