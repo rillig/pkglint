@@ -345,20 +345,24 @@ func (pkg *Package) parse(mklines MkLines, allLines MkLines, includingFileForUse
 		allLines.lines.Lines = append(allLines.lines.Lines, mkline.Line)
 
 		if mkline.IsInclude() {
-			skip, includedMkLines := pkg.loadIncluded(mklines.indentation, mkline, filename)
+			includedFile := mkline.IncludedFile()
+			skip, includedMkLines := pkg.loadIncluded(mkline, filename)
 
-			if includedMkLines != nil {
-				filenameForUsedCheck := ""
-				if path.Base(includedMkLines.lines.FileName) == "Makefile.common" {
-					filenameForUsedCheck = filename
+			if includedMkLines == nil {
+				if skip || mklines.indentation.HasExists(includedFile) {
+					return true // See https://github.com/rillig/pkglint/issues/1
 				}
-				if !pkg.parse(includedMkLines, allLines, filenameForUsedCheck) {
-					return false
-				}
-			} else if skip {
-				return true
-			} else {
+				mkline.Errorf("Cannot read %q.", includedFile)
 				result = false
+				return false
+			}
+
+			filenameForUsedCheck := ""
+			if path.Base(includedMkLines.lines.FileName) == "Makefile.common" {
+				filenameForUsedCheck = filename
+			}
+			if !pkg.parse(includedMkLines, allLines, filenameForUsedCheck) {
+				return false
 			}
 		}
 
@@ -403,7 +407,7 @@ func (pkg *Package) parse(mklines MkLines, allLines MkLines, includingFileForUse
 // the included file is not processed further for whatever reason. But if
 // skip is false, the file could not be read and an appropriate error message
 // has already been logged.
-func (pkg *Package) loadIncluded(ind *Indentation, mkline MkLine, filename string) (skip bool, includedMklines MkLines) {
+func (pkg *Package) loadIncluded(mkline MkLine, filename string) (skip bool, includedMklines MkLines) {
 	includedFile, incDir, incBase := pkg.findIncludedFile(mkline, filename)
 
 	if includedFile == "" {
@@ -458,14 +462,6 @@ func (pkg *Package) loadIncluded(ind *Indentation, mkline MkLine, filename strin
 					"be used. One less thing to learn for package developers.")
 			}
 		}
-	}
-
-	if includedMklines == nil {
-		if ind.HasExists(includedFile) {
-			return true, nil // See https://github.com/rillig/pkglint/issues/1
-		}
-		mkline.Errorf("Cannot read %q.", includedFile)
-		return false, nil
 	}
 
 	return false, includedMklines
