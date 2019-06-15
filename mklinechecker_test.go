@@ -336,7 +336,7 @@ func (s *Suite) Test_MkLineChecker_checkInclude__Makefile_exists(c *check.C) {
 	G.checkdirPackage(t.File("category/package"))
 
 	t.CheckOutputLines(
-		"ERROR: ~/category/package/Makefile:20: Cannot read \"../../other/existing/Makefile\".")
+		"ERROR: ~/category/package/Makefile:21: Cannot read \"../../other/not-found/Makefile\".")
 }
 
 func (s *Suite) Test_MkLineChecker_checkInclude__hacks(c *check.C) {

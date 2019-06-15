@@ -272,10 +272,13 @@ func (pkg *Package) loadPackageMakefile() (MkLines, MkLines) {
 		defer trace.Call1(filename)()
 	}
 
-	mainLines := NewMkLines(NewLines(filename, nil))
+	mainLines := LoadMk(filename, NotEmpty|LogErrors)
+	if mainLines == nil {
+		return nil, nil
+	}
+
 	allLines := NewMkLines(NewLines("", nil))
-	if _, result := pkg.readMakefile(filename, mainLines, allLines, ""); !result {
-		LoadMk(filename, NotEmpty|LogErrors) // Just for the LogErrors.
+	if !pkg.parse(mainLines, allLines, "") {
 		return nil, nil
 	}
 
@@ -329,26 +332,19 @@ func (pkg *Package) loadPackageMakefile() (MkLines, MkLines) {
 }
 
 // TODO: What is allLines used for, is it still necessary? Would it be better as a field in Package?
-func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines MkLines, includingFileForUsedCheck string) (exists bool, result bool) {
+func (pkg *Package) parse(mklines MkLines, allLines MkLines, includingFileForUsedCheck string) bool {
 	if trace.Tracing {
-		defer trace.Call1(filename)()
+		defer trace.Call1(mklines.lines.FileName)()
 	}
 
-	fileMklines := LoadMk(filename, NotEmpty) // TODO: Document why omitting LogErrors is correct here.
-	if fileMklines == nil {
-		return false, false
-	}
+	filename := mklines.lines.FileName
+	result := true
 
-	exists = true
-	result = true
-
-	isMainMakefile := len(mainLines.mklines) == 0
-
-	handleIncludeLine := func(mkline MkLine) YesNoUnknown {
+	handleIncludeLine := func(mkline MkLine) (skip bool, includedMklines MkLines) {
 		includedFile, incDir, incBase := pkg.findIncludedFile(mkline, filename)
 
 		if includedFile == "" {
-			return unknown
+			return true, nil
 		}
 
 		dirname, _ := path.Split(filename)
@@ -357,11 +353,11 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 		relIncludedFile := relpath(pkg.dir, fullIncluded)
 
 		if !pkg.diveInto(filename, includedFile) {
-			return unknown
+			return true, nil
 		}
 
 		if !pkg.included.FirstTime(relIncludedFile) {
-			return unknown
+			return true, nil
 		}
 
 		pkg.collectUsedBy(mkline, incDir, incBase, includedFile)
@@ -369,30 +365,25 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 		if trace.Tracing {
 			trace.Step1("Including %q.", fullIncluded)
 		}
-		fullIncluding := ifelseStr(incBase == "Makefile.common" && incDir != "", filename, "")
-		innerExists, innerResult := pkg.readMakefile(fullIncluded, mainLines, allLines, fullIncluding)
+		includedMklines = LoadMk(fullIncluded, 0)
 
-		if !innerExists {
-			if fileMklines.indentation.HasExists(includedFile) {
-				return yes // See https://github.com/rillig/pkglint/issues/1
-			}
-
-			// Only look in the directory relative to the current file
-			// and in the package directory; see
-			// devel/bmake/files/parse.c, function Parse_include_file.
-			//
-			// Bmake has a list of include directories that can be specified
-			// on the command line using the -I option, but pkgsrc doesn't
-			// make use of that, so pkglint also doesn't need this extra
-			// complexity.
+		// Only look in the directory relative to the current file
+		// and in the package directory; see
+		// devel/bmake/files/parse.c, function Parse_include_file.
+		//
+		// Bmake has a list of include directories that can be specified
+		// on the command line using the -I option, but pkgsrc doesn't
+		// make use of that, so pkglint also doesn't need this extra
+		// complexity.
+		if includedMklines == nil {
 			pkgBasedir := pkg.File(".")
 			if dirname != pkgBasedir { // Prevent unnecessary syscalls
 				dirname = pkgBasedir
 
 				fullIncludedFallback := dirname + "/" + includedFile
-				innerExists, innerResult = pkg.readMakefile(fullIncludedFallback, mainLines, allLines, fullIncluding)
+				includedMklines = LoadMk(fullIncludedFallback, 0)
 
-				if innerExists {
+				if includedMklines != nil {
 					mkline.Notef("The path to the included file should be %q.",
 						relpath(path.Dir(mkline.Filename), fullIncludedFallback))
 					mkline.Explain(
@@ -404,32 +395,39 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 						"be used. One less thing to learn for package developers.")
 				}
 			}
+		}
 
-			if !innerExists {
-				mkline.Errorf("Cannot read %q.", includedFile)
+		if includedMklines == nil {
+			if mklines.indentation.HasExists(includedFile) {
+				return true, nil // See https://github.com/rillig/pkglint/issues/1
 			}
-		}
-
-		if !innerResult {
+			mkline.Errorf("Cannot read %q.", includedFile)
 			result = false
-			return no
+			return false, nil
 		}
 
-		return unknown
+		return false, includedMklines
 	}
 
 	lineAction := func(mkline MkLine) bool {
-		if isMainMakefile {
-			mainLines.mklines = append(mainLines.mklines, mkline)
-			mainLines.lines.Lines = append(mainLines.lines.Lines, mkline.Line)
-		}
 		allLines.mklines = append(allLines.mklines, mkline)
 		allLines.lines.Lines = append(allLines.lines.Lines, mkline.Line)
 
 		if mkline.IsInclude() {
-			includeResult := handleIncludeLine(mkline)
-			if includeResult != unknown {
-				return includeResult == yes
+			skip, includedMkLines := handleIncludeLine(mkline)
+
+			if includedMkLines != nil {
+				filenameForUsedCheck := ""
+				if path.Base(includedMkLines.lines.FileName) == "Makefile.common" {
+					filenameForUsedCheck = filename
+				}
+				if !pkg.parse(includedMkLines, allLines, filenameForUsedCheck) {
+					return false
+				}
+			}
+
+			if skip && includedMkLines == nil {
+				return true
 			}
 		}
 
@@ -447,10 +445,10 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 	}
 
 	atEnd := func(mkline MkLine) {}
-	fileMklines.ForEachEnd(lineAction, atEnd)
+	mklines.ForEachEnd(lineAction, atEnd)
 
 	if includingFileForUsedCheck != "" {
-		fileMklines.CheckForUsedComment(G.Pkgsrc.ToRel(includingFileForUsedCheck))
+		mklines.CheckForUsedComment(G.Pkgsrc.ToRel(includingFileForUsedCheck))
 	}
 
 	// For every included buildlink3.mk, include the corresponding builtin.mk
@@ -459,11 +457,12 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 		builtin := cleanpath(path.Dir(filename) + "/builtin.mk")
 		builtinRel := relpath(pkg.dir, builtin)
 		if pkg.included.FirstTime(builtinRel) && fileExists(builtin) {
-			pkg.readMakefile(builtin, mainLines, allLines, "")
+			builtinMkLines := LoadMk(builtin, MustSucceed|LogErrors)
+			pkg.parse(builtinMkLines, allLines, "")
 		}
 	}
 
-	return
+	return result
 }
 
 // diveInto decides whether to load the includedFile.

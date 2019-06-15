@@ -222,7 +222,9 @@ func (mklines *MkLinesImpl) ForEachEnd(action func(mkline MkLine) bool, atEnd fu
 		mklines.indentation.TrackAfter(mkline)
 	}
 
-	atEnd(mklines.mklines[len(mklines.mklines)-1])
+	if len(mklines.mklines) > 0 {
+		atEnd(mklines.mklines[len(mklines.mklines)-1])
+	}
 	mklines.indentation = nil
 }
 

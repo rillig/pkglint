@@ -943,7 +943,7 @@ func (s *Suite) Test_Package__include_after_exists(c *check.C) {
 }
 
 // See https://github.com/rillig/pkglint/issues/1
-func (s *Suite) Test_Package_readMakefile__include_other_after_exists(c *check.C) {
+func (s *Suite) Test_Package_parse__include_other_after_exists(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package",
@@ -1306,7 +1306,7 @@ func (s *Suite) Test_Package_checkUseLanguagesCompilerMk__compiler_mk(c *check.C
 			"Modifying USE_LANGUAGES after including ../../mk/compiler.mk has no effect.")
 }
 
-func (s *Suite) Test_Package_readMakefile__simple(c *check.C) {
+func (s *Suite) Test_Package_parse__simple(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
@@ -1321,7 +1321,7 @@ func (s *Suite) Test_Package_readMakefile__simple(c *check.C) {
 		"FirstTime: suppress-varorder.mk")
 }
 
-func (s *Suite) Test_Package_readMakefile__nonexistent_Makefile(c *check.C) {
+func (s *Suite) Test_Package_parse__nonexistent_Makefile(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
@@ -1337,7 +1337,7 @@ func (s *Suite) Test_Package_readMakefile__nonexistent_Makefile(c *check.C) {
 		"ERROR: Makefile: Cannot be read.")
 }
 
-func (s *Suite) Test_Package_readMakefile__include_in_same_directory(c *check.C) {
+func (s *Suite) Test_Package_parse__include_in_same_directory(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package",
@@ -1356,7 +1356,7 @@ func (s *Suite) Test_Package_readMakefile__include_in_same_directory(c *check.C)
 		"FirstTime: version.mk")
 }
 
-func (s *Suite) Test_Package_readMakefile__nonexistent_include(c *check.C) {
+func (s *Suite) Test_Package_parse__nonexistent_include(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package",
@@ -1377,7 +1377,7 @@ func (s *Suite) Test_Package_readMakefile__nonexistent_include(c *check.C) {
 // When reading the package Makefile, pkglint loads and interprets each
 // file only once. This is especially important for packages with a large
 // dependency graph containing many common subdependencies.
-func (s *Suite) Test_Package_readMakefile__include_twice(c *check.C) {
+func (s *Suite) Test_Package_parse__include_twice(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package",
@@ -1397,7 +1397,7 @@ func (s *Suite) Test_Package_readMakefile__include_twice(c *check.C) {
 		"FirstTime: version.mk")
 }
 
-func (s *Suite) Test_Package_readMakefile__include_in_other_directory(c *check.C) {
+func (s *Suite) Test_Package_parse__include_in_other_directory(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package",
@@ -1418,7 +1418,7 @@ func (s *Suite) Test_Package_readMakefile__include_in_other_directory(c *check.C
 
 // Demonstrates that Package.included contains the file paths of the
 // included files, relative to the package directory.
-func (s *Suite) Test_Package_readMakefile__includes_in_other_directory(c *check.C) {
+func (s *Suite) Test_Package_parse__includes_in_other_directory(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package",
@@ -1441,7 +1441,7 @@ func (s *Suite) Test_Package_readMakefile__includes_in_other_directory(c *check.
 		"FirstTime: ../../category/other/version.mk")
 }
 
-func (s *Suite) Test_Package_readMakefile__nonexistent_in_other_directory(c *check.C) {
+func (s *Suite) Test_Package_parse__nonexistent_in_other_directory(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package",
@@ -1463,7 +1463,7 @@ func (s *Suite) Test_Package_readMakefile__nonexistent_in_other_directory(c *che
 		"ERROR: ../../category/other/module.mk:2: Cannot read \"version.mk\".")
 }
 
-func (s *Suite) Test_Package_readMakefile__skipping(c *check.C) {
+func (s *Suite) Test_Package_parse__skipping(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("-Wall,no-space")
@@ -1495,7 +1495,7 @@ func (s *Suite) Test_Package_readMakefile__skipping(c *check.C) {
 			"This may result in false warnings."})
 }
 
-func (s *Suite) Test_Package_readMakefile__not_found(c *check.C) {
+func (s *Suite) Test_Package_parse__not_found(c *check.C) {
 	t := s.Init(c)
 
 	pkg := t.SetUpPackage("category/package",
@@ -1510,7 +1510,7 @@ func (s *Suite) Test_Package_readMakefile__not_found(c *check.C) {
 		"ERROR: ~/devel/zlib/buildlink3.mk:1: Cannot read \"../../enoent/enoent/buildlink3.mk\".")
 }
 
-func (s *Suite) Test_Package_readMakefile__relative(c *check.C) {
+func (s *Suite) Test_Package_parse__relative(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("category/package/extra.mk",
@@ -1530,7 +1530,7 @@ func (s *Suite) Test_Package_readMakefile__relative(c *check.C) {
 // When a buildlink3.mk file is included, the corresponding builtin.mk
 // file is included by the pkgsrc infrastructure. Therefore all variables
 // declared in the builtin.mk file become known in the package.
-func (s *Suite) Test_Package_readMakefile__builtin_mk(c *check.C) {
+func (s *Suite) Test_Package_parse__builtin_mk(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpTool("echo", "ECHO", AtRunTime)
@@ -1554,7 +1554,7 @@ func (s *Suite) Test_Package_readMakefile__builtin_mk(c *check.C) {
 
 // Ensures that the paths in Package.included are indeed relative to the
 // package directory. This hadn't been the case until March 2019.
-func (s *Suite) Test_Package_readMakefile__included(c *check.C) {
+func (s *Suite) Test_Package_parse__included(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package",
@@ -1584,7 +1584,7 @@ func (s *Suite) Test_Package_readMakefile__included(c *check.C) {
 		"FirstTime: ../../lang/language/version.mk")
 }
 
-func (s *Suite) Test_Package_readMakefile__include_Makefile_common_same_directory(c *check.C) {
+func (s *Suite) Test_Package_parse__include_Makefile_common_same_directory(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/dependency")
@@ -1606,7 +1606,7 @@ func (s *Suite) Test_Package_readMakefile__include_Makefile_common_same_director
 			"Please add a line \"# used by category/package/Makefile\" here.")
 }
 
-func (s *Suite) Test_Package_readMakefile__include_Makefile_common_explicit(c *check.C) {
+func (s *Suite) Test_Package_parse__include_Makefile_common_explicit(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/dependency")
@@ -1628,7 +1628,7 @@ func (s *Suite) Test_Package_readMakefile__include_Makefile_common_explicit(c *c
 			"Please add a line \"# used by category/package/Makefile\" here.")
 }
 
-func (s *Suite) Test_Package_readMakefile__fallback_lookup_in_package_directory(c *check.C) {
+func (s *Suite) Test_Package_parse__fallback_lookup_in_package_directory(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("mk/pthread.buildlink3.mk",
@@ -1894,7 +1894,7 @@ func (s *Suite) Test_Package__redundant_variable_in_unrelated_files(c *check.C) 
 // This is necessary to load the correct variable assignments for the
 // redundancy check, in particular variable assignments that serve as
 // arguments to "procedure calls", such as mk/find-files.mk.
-func (s *Suite) Test_Package_readMakefile__include_infrastructure(c *check.C) {
+func (s *Suite) Test_Package_parse__include_infrastructure(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("--dumpmakefile")
