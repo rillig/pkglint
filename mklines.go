@@ -207,7 +207,7 @@ func (mklines *MkLinesImpl) ForEach(action func(mkline MkLine)) {
 func (mklines *MkLinesImpl) ForEachEnd(action func(mkline MkLine) bool, atEnd func(lastMkline MkLine)) {
 
 	// XXX: To avoid looping over the lines multiple times, it would
-	// be nice to have an interface LinesChecker that checks a single thing.
+	// be nice to have an interface LinesChecker that checks a single topic.
 	// Multiple of these line checkers could be run in parallel, so that
 	// the diagnostics appear in the correct order, from top to bottom.
 
