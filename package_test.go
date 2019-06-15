@@ -1496,6 +1496,46 @@ func (s *Suite) Test_Package_readMakefile__fallback_lookup_in_package_directory(
 			"The path to the included file should be \"pthread.builtin.mk\".")
 }
 
+func (s *Suite) Test_Package_diveInto(c *check.C) {
+	t := s.Init(c)
+
+	test := func(including, included string, expected bool) {
+		actual := (*Package)(nil).diveInto(including, included)
+		t.Check(actual, equals, expected)
+	}
+
+	// The variables that appear in these files are largely modeled by
+	// pkglint in the file vardefs.go. Therefore parsing these files again
+	// doesn't make much sense.
+	test("Makefile", "../../mk/bsd.pkg.mk", false)
+	test("Makefile", "../../mk/bsd.prefs.mk", false)
+	test("Makefile", "../../mk/bsd.fast.prefs.mk", false)
+
+	// All files that are included from outside of the pkgsrc infrastructure
+	// are relevant. This is typically mk/compiler.mk or the various
+	// mk/*.buildlink3.mk files.
+	test("Makefile", "Makefile.common", true)
+	test("Makefile", "../../mk/compiler.mk", true)
+
+	// The mk/*.buildlink3.mk files often come with a companion file called
+	// mk/*.builtin.mk, which also defines variables that are visible from
+	// the package.
+	//
+	// This case is needed for getting the redundancy check right. Without it
+	// there will be warnings about redundant assignments to the
+	// BUILTIN_CHECK.pthread variable.
+	test("pthread.buildlink3.mk", "pthread.builtin.mk", true)
+	test("../../mk/pthread.buildlink3.mk", "pthread.builtin.mk", true)
+	test("../../mk/pthread.buildlink3.mk", "../../mk/pthread.builtin.mk", true)
+
+	// Files that are included from within the pkgsrc infrastructure are not
+	// interesting since their content is largely modeled by pkglint in the
+	// file vardefs.go.
+	test("../../mk/one.mk", "two.mk", false)
+	test("../../mk/one.mk", "../../mk/two.mk", false)
+	test("../../mk/one.mk", "../lang/go/version.mk", false)
+}
+
 // Just for code coverage.
 func (s *Suite) Test_Package_findIncludedFile__no_tracing(c *check.C) {
 	t := s.Init(c)

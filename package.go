@@ -466,29 +466,20 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 	return
 }
 
-func (pkg *Package) diveInto(includingFile string, includedFile string) bool {
+// diveInto decides whether to load the includedFile.
+//
+// The includingFile is relative to the current working directory,
+// the includedFile is taken directly from the .include directive.
+func (*Package) diveInto(includingFile string, includedFile string) bool {
 
-	// The variables that appear in these files are largely modeled by
-	// pkglint in the file vardefs.go. Therefore parsing these files again
-	// doesn't make much sense.
 	if hasSuffix(includedFile, "/bsd.pkg.mk") || IsPrefs(includedFile) {
 		return false
 	}
 
-	// All files that are included from outside of the pkgsrc infrastructure
-	// are relevant. This is typically mk/compiler.mk or the various
-	// mk/*.buildlink3.mk files.
 	if !contains(includingFile, "/mk/") {
 		return true
 	}
 
-	// The mk/*.buildlink3.mk files often come with a companion file called
-	// mk/*.builtin.mk, which also defines variables that are visible from
-	// the package.
-	//
-	// This case is needed for getting the redundancy check right. Without it
-	// there will be warnings about redundant assignments to the
-	// BUILTIN_CHECK.pthread variable.
 	if hasSuffix(includingFile, "buildlink3.mk") && hasSuffix(includedFile, "builtin.mk") {
 		return true
 	}
