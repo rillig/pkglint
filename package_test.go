@@ -1596,13 +1596,18 @@ func (s *Suite) Test_Package_parse__include_Makefile_common_same_directory(c *ch
 		".include \"../../category/dependency/Makefile.common\"",
 		".include \"Makefile.common\"")
 	t.CreateFileLines("category/package/Makefile.common",
-		MkRcsID)
+		MkRcsID,
+		"#",
+		"#")
 	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))
 
 	t.CheckOutputLines(
-		"WARN: ~/category/dependency/Makefile.common:3: " +
+		"WARN: ~/category/dependency/Makefile.common:3: "+
+			"Please add a line \"# used by category/package/Makefile\" here.",
+		// FIXME: This line is unnecessary since the package Makefile is near enough.
+		"WARN: ~/category/package/Makefile.common:3: "+
 			"Please add a line \"# used by category/package/Makefile\" here.")
 }
 
