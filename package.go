@@ -337,46 +337,11 @@ func (pkg *Package) parse(mklines MkLines, allLines MkLines, includingFileForUse
 		defer trace.Call1(mklines.lines.FileName)()
 	}
 
-	filename := mklines.lines.FileName
 	result := true
 
 	lineAction := func(mkline MkLine) bool {
-		allLines.mklines = append(allLines.mklines, mkline)
-		allLines.lines.Lines = append(allLines.lines.Lines, mkline.Line)
-
-		if mkline.IsInclude() {
-			includedFile := mkline.IncludedFile()
-			skip, includedMkLines := pkg.loadIncluded(mkline, filename)
-
-			if includedMkLines == nil {
-				if skip || mklines.indentation.HasExists(includedFile) {
-					return true // See https://github.com/rillig/pkglint/issues/1
-				}
-				mkline.Errorf("Cannot read %q.", includedFile)
-				result = false
-				return false
-			}
-
-			filenameForUsedCheck := ""
-			if path.Base(includedMkLines.lines.FileName) == "Makefile.common" {
-				filenameForUsedCheck = filename
-			}
-			if !pkg.parse(includedMkLines, allLines, filenameForUsedCheck) {
-				return false
-			}
-		}
-
-		if mkline.IsVarassign() {
-			varname, op, value := mkline.Varname(), mkline.Op(), mkline.Value()
-
-			if op != opAssignDefault || !pkg.vars.Defined(varname) {
-				if trace.Tracing {
-					trace.Stepf("varassign(%q, %q, %q)", varname, op, value)
-				}
-				pkg.vars.Define(varname, mkline)
-			}
-		}
-		return true
+		result = pkg.parseLine(mklines, mkline, allLines)
+		return result
 	}
 
 	atEnd := func(mkline MkLine) {}
@@ -388,6 +353,7 @@ func (pkg *Package) parse(mklines MkLines, allLines MkLines, includingFileForUse
 
 	// For every included buildlink3.mk, include the corresponding builtin.mk
 	// automatically since the pkgsrc infrastructure does the same.
+	filename := mklines.lines.FileName
 	if path.Base(filename) == "buildlink3.mk" {
 		builtin := cleanpath(path.Dir(filename) + "/builtin.mk")
 		builtinRel := relpath(pkg.dir, builtin)
@@ -398,6 +364,44 @@ func (pkg *Package) parse(mklines MkLines, allLines MkLines, includingFileForUse
 	}
 
 	return result
+}
+
+func (pkg *Package) parseLine(mklines MkLines, mkline MkLine, allLines MkLines) bool {
+	allLines.mklines = append(allLines.mklines, mkline)
+	allLines.lines.Lines = append(allLines.lines.Lines, mkline.Line)
+
+	if mkline.IsInclude() {
+		includedFile := mkline.IncludedFile()
+		skip, includedMkLines := pkg.loadIncluded(mkline, mkline.Filename)
+
+		if includedMkLines == nil {
+			if skip || mklines.indentation.HasExists(includedFile) {
+				return true // See https://github.com/rillig/pkglint/issues/1
+			}
+			mkline.Errorf("Cannot read %q.", includedFile)
+			return false
+		}
+
+		filenameForUsedCheck := ""
+		if path.Base(includedMkLines.lines.FileName) == "Makefile.common" {
+			filenameForUsedCheck = mkline.Filename
+		}
+		if !pkg.parse(includedMkLines, allLines, filenameForUsedCheck) {
+			return false
+		}
+	}
+
+	if mkline.IsVarassign() {
+		varname, op, value := mkline.Varname(), mkline.Op(), mkline.Value()
+
+		if op != opAssignDefault || !pkg.vars.Defined(varname) {
+			if trace.Tracing {
+				trace.Stepf("varassign(%q, %q, %q)", varname, op, value)
+			}
+			pkg.vars.Define(varname, mkline)
+		}
+	}
+	return true
 }
 
 // loadIncluded loads the lines from a Makefile fragment that is specified
