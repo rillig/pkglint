@@ -371,8 +371,9 @@ func (pkg *Package) parseLine(mklines MkLines, mkline MkLine, allLines MkLines) 
 	allLines.lines.Lines = append(allLines.lines.Lines, mkline.Line)
 
 	if mkline.IsInclude() {
+		includingFile := mkline.Filename
 		includedFile := mkline.IncludedFile()
-		skip, includedMkLines := pkg.loadIncluded(mkline, mkline.Filename)
+		skip, includedMkLines := pkg.loadIncluded(mkline, includingFile)
 
 		if includedMkLines == nil {
 			if skip || mklines.indentation.HasExists(includedFile) {
@@ -383,8 +384,9 @@ func (pkg *Package) parseLine(mklines MkLines, mkline MkLine, allLines MkLines) 
 		}
 
 		filenameForUsedCheck := ""
-		if path.Base(includedMkLines.lines.FileName) == "Makefile.common" {
-			filenameForUsedCheck = mkline.Filename
+		dir, base := path.Split(includedFile)
+		if dir != "" && base == "Makefile.common" && dir != "../../"+pkg.Pkgpath+"/" {
+			filenameForUsedCheck = includingFile
 		}
 		if !pkg.parse(includedMkLines, allLines, filenameForUsedCheck) {
 			return false
@@ -404,26 +406,26 @@ func (pkg *Package) parseLine(mklines MkLines, mkline MkLine, allLines MkLines) 
 	return true
 }
 
-// loadIncluded loads the lines from the Makefile fragment given by filename,
-// which is relative to the current working directory.
+// loadIncluded loads the lines from the file given by the .include directive
+// in mkline.
 //
 // The returned lines may be nil in two different cases: if skip is true,
 // the included file is not processed further for whatever reason. But if
 // skip is false, the file could not be read and an appropriate error message
 // has already been logged.
-func (pkg *Package) loadIncluded(mkline MkLine, filename string) (skip bool, includedMklines MkLines) {
-	includedFile, incDir, incBase := pkg.findIncludedFile(mkline, filename)
+func (pkg *Package) loadIncluded(mkline MkLine, includingFile string) (skip bool, includedMklines MkLines) {
+	includedFile, incDir, incBase := pkg.findIncludedFile(mkline, includingFile)
 
 	if includedFile == "" {
 		return true, nil
 	}
 
-	dirname, _ := path.Split(filename)
+	dirname, _ := path.Split(includingFile)
 	dirname = cleanpath(dirname)
 	fullIncluded := dirname + "/" + includedFile
 	relIncludedFile := relpath(pkg.dir, fullIncluded)
 
-	if !pkg.diveInto(filename, includedFile) {
+	if !pkg.diveInto(includingFile, includedFile) {
 		return true, nil
 	}
 
