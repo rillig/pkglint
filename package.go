@@ -373,7 +373,7 @@ func (pkg *Package) readMakefile(filename string, mainLines MkLines, allLines Mk
 		innerExists, innerResult := pkg.readMakefile(fullIncluded, mainLines, allLines, fullIncluding)
 
 		if !innerExists {
-			if fileMklines.indentation.IsCheckedFile(includedFile) {
+			if fileMklines.indentation.HasExists(includedFile) {
 				return yes // See https://github.com/rillig/pkglint/issues/1
 			}
 

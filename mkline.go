@@ -1338,9 +1338,9 @@ func (ind *Indentation) AddCheckedFile(filename string) {
 	top.checkedFiles = append(top.checkedFiles, filename)
 }
 
-// IsCheckedFile returns whether the given filename has been tested in an
+// HasExists returns whether the given filename has been tested in an
 // exists(filename) condition and thus may or may not exist.
-func (ind *Indentation) IsCheckedFile(filename string) bool {
+func (ind *Indentation) HasExists(filename string) bool {
 	for _, level := range ind.levels {
 		for _, levelFilename := range level.checkedFiles {
 			if filename == levelFilename {
