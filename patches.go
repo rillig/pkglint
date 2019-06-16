@@ -8,10 +8,6 @@ import (
 )
 
 func CheckLinesPatch(lines Lines) {
-	if trace.Tracing {
-		defer trace.Call1(lines.Filename)()
-	}
-
 	(&PatchChecker{lines, NewLinesLexer(lines), false, false}).Check()
 }
 
@@ -29,10 +25,6 @@ const (
 )
 
 func (ck *PatchChecker) Check() {
-	if trace.Tracing {
-		defer trace.Call0()()
-	}
-
 	if ck.lines.CheckCvsID(0, ``, "") {
 		ck.llex.Skip()
 	}
@@ -106,14 +98,7 @@ func (ck *PatchChecker) Check() {
 
 // See https://www.gnu.org/software/diffutils/manual/html_node/Detailed-Unified.html
 func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
-	if trace.Tracing {
-		defer trace.Call0()()
-	}
-
 	patchedFileType := guessFileType(patchedFile)
-	if trace.Tracing {
-		trace.Stepf("guessFileType(%q) = %s", patchedFile, patchedFileType)
-	}
 
 	hasHunks := false
 	for {
@@ -126,9 +111,6 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 		hasHunks = true
 		linesToDel := toInt(m[2], 1)
 		linesToAdd := toInt(m[4], 1)
-		if trace.Tracing {
-			trace.Stepf("hunk -%d +%d", linesToDel, linesToAdd)
-		}
 
 		ck.checktextUniHunkCr()
 		ck.checktextCvsID(text)
@@ -198,10 +180,6 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 }
 
 func (ck *PatchChecker) checkBeginDiff(line Line, patchedFiles int) {
-	if trace.Tracing {
-		defer trace.Call0()()
-	}
-
 	if !ck.seenDocumentation && patchedFiles == 0 {
 		line.Errorf("Each patch must be documented.")
 		line.Explain(
@@ -232,10 +210,6 @@ func (ck *PatchChecker) checkBeginDiff(line Line, patchedFiles int) {
 }
 
 func (ck *PatchChecker) checklineAdded(addedText string, patchedFileType FileType) {
-	if trace.Tracing {
-		defer trace.Call2(addedText, patchedFileType.String())()
-	}
-
 	line := ck.llex.PreviousLine()
 	switch patchedFileType {
 	case ftConfigure:
@@ -251,10 +225,6 @@ func (ck *PatchChecker) checklineAdded(addedText string, patchedFileType FileTyp
 }
 
 func (ck *PatchChecker) checktextUniHunkCr() {
-	if trace.Tracing {
-		defer trace.Call0()()
-	}
-
 	line := ck.llex.PreviousLine()
 	if hasSuffix(line.Text, "\r") {
 		// This code has been introduced around 2006.
@@ -308,10 +278,6 @@ func (ft FileType) String() string {
 
 // This is used to select the proper subroutine for detecting absolute pathnames.
 func guessFileType(filename string) (fileType FileType) {
-	if trace.Tracing {
-		defer trace.Call(filename, trace.Result(&fileType))()
-	}
-
 	basename := path.Base(filename)
 	basename = strings.TrimSuffix(basename, ".in") // doesn't influence the content type
 
