@@ -1321,36 +1321,65 @@ func (s *Suite) Test_ShellProgramChecker_canFail(c *check.C) {
 	t.SetUpTool("touch", "", AtRunTime)
 	t.SetUpTool("tr", "tr", AtRunTime)
 	t.SetUpTool("true", "TRUE", AtRunTime)
-	mklines := t.NewMkLines("Makefile",
-		MkCvsID,
-		"pre-configure:",
-		"\tsocklen=`${GREP} 'expr' ${WRKSRC}/config.h`; echo 'done.'",
-		"\tsocklen=`${GREP} 'expr' ${WRKSRC}/config.h || ${TRUE}`; echo 'done.'",
-		"\t${ECHO_MSG} \"Message\"; echo 'done.'",
-		"\t${FAIL_MSG} \"Failure\"; echo 'done.'",
-		"\tset -x; echo 'done.'",
-		"\techo 'input' | sed -e s,in,out,; echo 'done.'",
-		"\tsed -e s,in,out,; echo 'done.'",
-		"\tsed s,in,out,; echo 'done.'",
-		"\tgrep input; echo 'done.'",
-		"\ttouch file; echo 'done.'",
-		"\techo 'starting'; echo 'done.'",
-		"\techo 'logging' > log; echo 'done.'",
-		"\techo 'to stderr' 1>&2; echo 'done.'",
-		"\techo 'hello' | tr -d 'aeiou'",
-		"\tenv | grep '^PATH='")
 
-	mklines.Check()
+	test := func(cmd string, diagnostics ...string) {
+		mklines := t.NewMkLines("Makefile",
+			MkCvsID,
+			"pre-configure:",
+			"\t"+cmd+" ; echo 'done.'")
 
-	t.CheckOutputLines(
+		mklines.Check()
+
+		t.CheckOutput(diagnostics)
+	}
+
+	test("socklen=`${GREP} 'expr' ${WRKSRC}/config.h`",
 		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon "+
-			"(after \"socklen=`${GREP} 'expr' ${WRKSRC}/config.h`\") to separate commands.",
-		"WARN: Makefile:6: Please switch to \"set -e\" mode before using a semicolon "+
-			"(after \"${FAIL_MSG} \\\"Failure\\\"\") to separate commands.",
-		"WARN: Makefile:7: Please switch to \"set -e\" mode before using a semicolon "+
-			"(after \"set -x\") to separate commands.",
-		"WARN: Makefile:12: Please switch to \"set -e\" mode before using a semicolon "+
-			"(after \"touch file\") to separate commands.",
-		"WARN: Makefile:14: Please switch to \"set -e\" mode before using a semicolon "+
+			"(after \"socklen=`${GREP} 'expr' ${WRKSRC}/config.h`\") to separate commands.")
+
+	test("socklen=`${GREP} 'expr' ${WRKSRC}/config.h || ${TRUE}`",
+		nil...)
+
+	test("${ECHO_MSG} \"Message\"",
+		nil...)
+
+	test("${FAIL_MSG} \"Failure\"",
+		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon "+
+			"(after \"${FAIL_MSG} \\\"Failure\\\"\") to separate commands.")
+
+	test("set -x",
+		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon "+
+			"(after \"set -x\") to separate commands.")
+
+	test("echo 'input' | sed -e s,in,out,",
+		nil...)
+
+	test("sed -e s,in,out,",
+		nil...)
+
+	test("sed s,in,out,",
+		nil...)
+
+	test("grep input",
+		nil...)
+
+	test("touch file",
+		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon "+
+			"(after \"touch file\") to separate commands.")
+
+	test("echo 'starting'",
+		nil...)
+
+	test("echo 'logging' > log",
+		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon "+
 			"(after \"echo 'logging'\") to separate commands.")
+
+	test("echo 'to stderr' 1>&2",
+		nil...)
+
+	test("echo 'hello' | tr -d 'aeiou'",
+		nil...)
+
+	test("env | grep '^PATH='",
+		nil...)
 }
