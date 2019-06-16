@@ -1192,6 +1192,7 @@ func (s *Suite) Test_ShellProgramChecker_checkConditionalCd(c *check.C) {
 		"\t${RUN} while cd ..; do printf .; done",
 		"\t${RUN} if cd ..; then printf .; fi",
 		"\t${RUN} ! cd ..",
+		"\t${RUN} if cd ..; printf 'ok\\n'; then printf .; fi",
 		"\t${RUN} if cd .. && cd ..; then printf .; fi") // For code coverage
 
 	mklines.Check()
