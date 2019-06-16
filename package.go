@@ -591,7 +591,7 @@ func (pkg *Package) checkfilePackageMakefile(filename string, mklines MkLines, a
 		}
 	}
 
-	if !vars.Defined("LICENSE") && !vars.Defined("META_PACKAGE") && pkg.once.FirstTime("LICENSE") {
+	if !vars.Defined("LICENSE") && !vars.Defined("META_PACKAGE") {
 		line := NewLineWhole(filename)
 		line.Errorf("Each package must define its LICENSE.")
 		// TODO: Explain why the LICENSE is necessary.
