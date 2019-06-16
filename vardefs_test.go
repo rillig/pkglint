@@ -179,6 +179,16 @@ func (s *Suite) Test_VarTypeRegistry_Init__no_tracing(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_VarTypeRegistry_Init__no_testing(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.Remove("mk/fetch/sites.mk")
+	t.ExpectFatal(
+		t.FinishSetUp,
+		"FATAL: ~/mk/fetch/sites.mk: Cannot be read.")
+}
+
 func (s *Suite) Test_VarTypeRegistry_Init__MASTER_SITES(c *check.C) {
 	t := s.Init(c)
 
