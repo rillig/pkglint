@@ -262,9 +262,7 @@ func (src *Pkgsrc) checkToplevelUnusedLicenses() {
 		licenseName := licenseFile.Name()
 		if !G.InterPackage.LicenseUsed(licenseName) {
 			licensePath := licensesDir + "/" + licenseName
-			if fileExists(licensePath) {
-				NewLineWhole(licensePath).Warnf("This license seems to be unused.")
-			}
+			NewLineWhole(licensePath).Warnf("This license seems to be unused.")
 		}
 	}
 }
