@@ -19,7 +19,7 @@ type MkLinesImpl struct {
 	Tools         *Tools            // Tools defined in file scope.
 	indentation   *Indentation      // Indentation depth of preprocessing directives; only available during MkLines.ForEach.
 	forVars       map[string]bool   // The variables currently used in .for loops; only available during MkLines.checkAll.
-	Once
+	once          Once
 
 	// TODO: Consider extracting plistVarAdded, plistVarSet, plistVarSkip into an own type.
 	// TODO: Describe where each of the above fields is valid.

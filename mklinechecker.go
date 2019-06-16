@@ -506,7 +506,7 @@ func (ck MkLineChecker) checkVarUseBuildDefs(varname string) {
 		return
 	}
 
-	if !(!ck.MkLines.buildDefs[varname] && ck.MkLines.FirstTimeSlice("BUILD_DEFS", varname)) {
+	if !(!ck.MkLines.buildDefs[varname] && ck.MkLines.once.FirstTimeSlice("BUILD_DEFS", varname)) {
 		return
 	}
 
@@ -548,7 +548,7 @@ func (ck MkLineChecker) checkVaruseUndefined(vartype *Vartype, varname string) {
 	case G.Pkgsrc.vartypes.DefinedCanon(varname):
 		return
 
-	case !ck.MkLines.FirstTimeSlice("used but not defined: ", varname):
+	case !ck.MkLines.once.FirstTimeSlice("used but not defined: ", varname):
 		return
 	}
 
@@ -700,7 +700,7 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 		}
 	}
 
-	if ck.MkLines.FirstTimeSlice("checkVarusePermissions", varname) {
+	if ck.MkLines.once.FirstTimeSlice("checkVarusePermissions", varname) {
 		ck.warnVarusePermissions(varname, vartype, directly, indirectly)
 	}
 }
@@ -1112,7 +1112,7 @@ func (ck MkLineChecker) checkVarassignLeftNotUsed() {
 		return
 	}
 
-	if !ck.MkLines.FirstTimeSlice("defined but not used: ", varname) {
+	if !ck.MkLines.once.FirstTimeSlice("defined but not used: ", varname) {
 		return
 	}
 
@@ -1265,7 +1265,7 @@ func (ck MkLineChecker) checkVarassignLeftBsdPrefs() {
 		G.Infrastructure ||
 		mkline.Op() != opAssignDefault ||
 		ck.MkLines.Tools.SeenPrefs ||
-		!ck.MkLines.FirstTime("include bsd.prefs.mk before using ?=") {
+		!ck.MkLines.once.FirstTime("include bsd.prefs.mk before using ?=") {
 		return
 	}
 

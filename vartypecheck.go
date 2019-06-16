@@ -791,7 +791,7 @@ func (cv *VartypeCheck) Option() {
 	}
 
 	if m, optname := match1(value, `^-?([a-z][-0-9a-z+]*)$`); m {
-		if !cv.MkLines.FirstTimeSlice("option:", optname) {
+		if !cv.MkLines.once.FirstTimeSlice("option:", optname) {
 			return
 		}
 
