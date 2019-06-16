@@ -730,6 +730,14 @@ func (s *Suite) Test_Pkgsrc_ListVersions__invalid_argument(c *check.C) {
 	t.ExpectPanic(
 		func() { G.Pkgsrc.ListVersions("databases", `postgresql[0-9]+`, "$0", true) },
 		"Pkglint internal error: Regular expression \"postgresql[0-9]+\" must be anchored at both ends.")
+	t.ExpectPanic(
+		func() { G.Pkgsrc.ListVersions("databases", `^postgresql[0-9]+`, "$0", true) },
+		"Pkglint internal error: Regular expression \"^postgresql[0-9]+\" must be anchored at both ends.")
+
+	G.Testing = false
+	versions := G.Pkgsrc.ListVersions("databases", `^postgresql[0-9]+`, "$0", false)
+
+	t.Check(versions, check.HasLen, 0)
 }
 
 func (s *Suite) Test_Pkgsrc_loadPkgOptions(c *check.C) {
