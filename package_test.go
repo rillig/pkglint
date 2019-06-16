@@ -1714,6 +1714,7 @@ func (s *Suite) Test_Package_resolveIncludedFile__no_tracing(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package",
+		".include \"../../mk/${UNKNOWN_PKGPATH}.mk\"",
 		".include \"../../${UNKNOWN_PKGPATH}/buildlink3.mk\"",
 		".include \"../../lang/language/buildlink3.mk\"")
 	t.CreateFileLines("lang/language/buildlink3.mk",
