@@ -1157,6 +1157,20 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__USE_IMAKE_and_USE_X11(c *
 		"NOTE: ~/category/package/Makefile:21: USE_IMAKE makes USE_X11 in line 20 redundant.")
 }
 
+func (s *Suite) Test_Package_checkfilePackageMakefile__PLIST_common(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.Copy("category/package/PLIST", "category/package/PLIST.common")
+	t.Remove("category/package/PLIST")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package"))
+
+	// No warning about missing PLIST file.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__no_C(c *check.C) {
 	t := s.Init(c)
 
