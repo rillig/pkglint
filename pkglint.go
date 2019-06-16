@@ -63,8 +63,6 @@ func NewPkglint() Pkglint {
 // This is to ensure that tests are properly initialized and shut down.
 func unusablePkglint() Pkglint { return Pkglint{} }
 
-func (pkglint *Pkglint) usable() bool { return pkglint != nil }
-
 type InterPackage struct {
 	hashes       map[string]*Hash    // Maps "alg:filename" => hash (inter-package check).
 	usedLicenses map[string]struct{} // Maps "license name" => true (inter-package check).
