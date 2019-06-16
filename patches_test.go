@@ -557,6 +557,35 @@ func (s *Suite) Test_PatchChecker_checkUnifiedDiff__lines_at_end(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_PatchChecker_checkBeginDiff__multiple_patches_without_documentation(c *check.C) {
+	t := s.Init(c)
+
+	lines := t.SetUpFileLines("patch-aa",
+		CvsID,
+		"",
+		"--- old",
+		"+++ new",
+		"@@ -1,1 +1,1 @@",
+		"- old",
+		"+ new",
+		"",
+		"--- old",
+		"+++ new",
+		"@@ -1,1 +1,1 @@",
+		"- old",
+		"+ new")
+
+	CheckLinesPatch(lines)
+
+	// The "must be documented" error message is only given before the first
+	// patch since that's the only place where the documentation is expected.
+	// Since each pkgsrc patch should only patch a single file, this situation
+	// is an edge case anyway.
+	t.CheckOutputLines(
+		"ERROR: ~/patch-aa:3: Each patch must be documented.",
+		"WARN: ~/patch-aa: Contains patches for 2 files, should be only one.")
+}
+
 // Just for code coverage.
 func (s *Suite) Test_PatchChecker_checklineContext__no_tracing(c *check.C) {
 	t := s.Init(c)
