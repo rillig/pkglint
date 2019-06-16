@@ -926,7 +926,7 @@ func (spc *ShellProgramChecker) canFail(cmd *MkShCommand) bool {
 	}
 
 	for _, redirect := range simple.Redirections {
-		if redirect.Target != nil && !hasSuffix(redirect.Op, "&") {
+		if !hasSuffix(redirect.Op, "&") {
 			return true
 		}
 	}
