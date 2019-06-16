@@ -649,6 +649,32 @@ func (s *Suite) Test_PlistChecker_checkPathShare__gnome_icon_theme(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_PlistChecker_checkPathShare__icons(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("graphics/hicolor-icon-theme")
+	t.CreateFileLines("graphics/hicolor-icon-theme/PLIST",
+		PlistCvsID,
+		"share/icons/hicolor/icon-theme.cache",
+		"share/icons/hicolor/open.svg")
+	t.SetUpPackage("graphics/other")
+	t.Copy("graphics/hicolor-icon-theme/PLIST", "graphics/other/PLIST")
+	t.Chdir(".")
+	t.FinishSetUp()
+
+	G.Check("graphics/hicolor-icon-theme")
+	G.Check("graphics/other")
+
+	t.CheckOutputLines(
+		"WARN: graphics/hicolor-icon-theme/PLIST:2: "+
+			"Packages that install icon theme files should set ICON_THEMES.",
+		"ERROR: graphics/other/PLIST:2: Packages that install hicolor icons "+
+			"must include \"../../graphics/hicolor-icon-theme/buildlink3.mk\" in the Makefile.",
+		"ERROR: graphics/other/PLIST:2: The file icon-theme.cache must not appear in any PLIST file.",
+		"WARN: graphics/other/PLIST:2: "+
+			"Packages that install icon theme files should set ICON_THEMES.")
+}
+
 func (s *Suite) Test_PlistLine_CheckTrailingWhitespace(c *check.C) {
 	t := s.Init(c)
 
