@@ -279,8 +279,8 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile(c *check.C) {
 		Downgraded, "category/package", "1.2", "author7", "2018-01-07"})
 
 	t.CheckOutputLines(
-		"WARN: ~/doc/CHANGES-2018:1: Year 2015 for category/package does not match the filename ~/doc/CHANGES-2018.",
-		"WARN: ~/doc/CHANGES-2018:6: Date 2018-01-06 for category/package is earlier than 2018-01-09 in line 5.",
+		"WARN: ~/doc/CHANGES-2018:1: Year \"2015\" for category/package does not match the filename ~/doc/CHANGES-2018.",
+		"WARN: ~/doc/CHANGES-2018:6: Date \"2018-01-06\" for category/package is earlier than \"2018-01-09\" in line 5.",
 		"WARN: ~/doc/CHANGES-2018:8: Unknown doc/CHANGES line: \tReworked category/package to 1.2 [author8 2018-01-08]",
 		"WARN: ~/doc/CHANGES-2018:13: Unknown doc/CHANGES line: \tAdded another [new package]")
 }
@@ -439,6 +439,30 @@ func (s *Suite) Test_Pkgsrc_parseDocChange(c *check.C) {
 	// TODO: Add a warning since this is probably a typo.
 	test("\tSplit pkgpath into a and b [author date]",
 		nil...)
+}
+
+func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__old(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.CreateFileLines("doc/CHANGES-2015",
+		CvsID,
+		"",
+		"Changes to the packages collection and infrastructure in 2015:",
+		"",
+		"\tUpdated pkgpath to 1.0 [author date]")
+	t.CreateFileLines("doc/CHANGES-2018",
+		CvsID,
+		"",
+		"Changes to the packages collection and infrastructure in 2018:",
+		"",
+		"\tUpdated pkgpath to 1.0 [author date]",
+		"\tUpdated pkgpath to 1.0 [author d]")
+	t.FinishSetUp()
+
+	t.CheckOutputLines(
+		"WARN: ~/doc/CHANGES-2018:5: Year \"date\" for pkgpath does not match the filename ~/doc/CHANGES-2018.",
+		"WARN: ~/doc/CHANGES-2018:6: Date \"d\" for pkgpath is earlier than \"date\" in line 5.")
 }
 
 func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates__wip(c *check.C) {

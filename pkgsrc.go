@@ -533,14 +533,14 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename string) []*Change {
 			continue
 		}
 
-		if year != "" && change.Date[0:4] != year {
-			line.Warnf("Year %s for %s does not match the filename %s.",
+		if year != "" && len(change.Date) >= 4 && change.Date[0:4] != year {
+			line.Warnf("Year %q for %s does not match the filename %s.",
 				change.Date[0:4], change.Pkgpath, filename)
 		}
 
 		if len(changes) >= 2 && year != "" {
 			if prev := changes[len(changes)-2]; change.Date < prev.Date {
-				line.Warnf("Date %s for %s is earlier than %s in %s.",
+				line.Warnf("Date %q for %s is earlier than %q in %s.",
 					change.Date, change.Pkgpath, prev.Date, line.RefToLocation(prev.Location))
 				line.Explain(
 					"The entries in doc/CHANGES should be in chronological order, and",
