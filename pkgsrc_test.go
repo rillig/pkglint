@@ -961,3 +961,23 @@ func (s *Suite) Test_ChangeAction_String(c *check.C) {
 	t.Check(Added.String(), equals, "Added")
 	t.Check(Removed.String(), equals, "Removed")
 }
+
+func (s *Suite) Test_Pkgsrc_ReadDir(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("dir/aaa-subdir/file")
+	t.CreateFileLines("dir/subdir/file")
+	t.CreateFileLines("dir/file")
+	t.CreateFileLines("dir/.git/file")
+	t.CreateFileLines("dir/CVS/Entries")
+	t.CreateFileLines("dir/empty/empty/empty/empty/CVS/Entries")
+
+	infos := G.Pkgsrc.ReadDir("dir")
+
+	var names []string
+	for _, info := range infos {
+		names = append(names, info.Name())
+	}
+
+	t.Check(names, deepEquals, []string{"aaa-subdir", "file", "subdir"})
+}

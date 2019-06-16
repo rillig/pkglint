@@ -783,8 +783,9 @@ func (src *Pkgsrc) LoadMk(filename string, options LoadOptions) MkLines {
 	return LoadMk(src.File(filename), options)
 }
 
-// ReadDir reads the file listing from the given directory (relative to the pkgsrc root),
-// filtering out any ignored files (CVS/*) and empty directories.
+// ReadDir lists the files and subdirectories from the given directory
+// (relative to the pkgsrc root), filtering out any ignored files (CVS/*)
+// and empty directories.
 func (src *Pkgsrc) ReadDir(dirName string) []os.FileInfo {
 	dir := src.File(dirName)
 	files, err := ioutil.ReadDir(dir)
