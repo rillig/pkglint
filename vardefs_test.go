@@ -184,6 +184,7 @@ func (s *Suite) Test_VarTypeRegistry_Init__no_testing(c *check.C) {
 
 	t.SetUpPackage("category/package")
 	t.Remove("mk/fetch/sites.mk")
+	G.Testing = false
 	t.ExpectFatal(
 		t.FinishSetUp,
 		"FATAL: ~/mk/fetch/sites.mk: Cannot be read.")
