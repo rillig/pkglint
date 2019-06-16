@@ -519,6 +519,22 @@ func (s *Suite) Test_CheckLinesPatch__invalid_line_in_hunk(c *check.C) {
 		"ERROR: ~/patch-aa:10: Invalid line in unified patch hunk: <<<<<<<<")
 }
 
+func (s *Suite) Test_PatchChecker_Check__missing_CVS_Id(c *check.C) {
+	t := s.Init(c)
+
+	lines := t.SetUpFileLines("patch-aa",
+		"This first line is missing the RCS Id",
+		"",
+		"Documentation")
+
+	CheckLinesPatch(lines)
+
+	t.CheckOutputLines(
+		sprintf("ERROR: ~/patch-aa:1: Expected %q.", RcsID),
+		"NOTE: ~/patch-aa:1: Empty line expected before this line.",
+		"ERROR: ~/patch-aa: Contains no patch.")
+}
+
 // Just for code coverage.
 func (s *Suite) Test_PatchChecker_checklineContext__no_tracing(c *check.C) {
 	t := s.Init(c)
