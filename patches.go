@@ -94,10 +94,11 @@ func (ck *PatchChecker) Check() {
 	}
 
 	CheckLinesTrailingEmptyLines(ck.lines)
-	sha1Before, err := computePatchSha1Hex(ck.lines.Filename)
-	if SaveAutofixChanges(ck.lines) && G.Pkg != nil && err == nil {
-		sha1After, err := computePatchSha1Hex(ck.lines.Filename)
-		if err == nil {
+	sha1Before := computePatchSha1Hex(ck.lines)
+	if SaveAutofixChanges(ck.lines) && G.Pkg != nil {
+		linesAfter := Load(ck.lines.Filename, 0)
+		if linesAfter != nil {
+			sha1After := computePatchSha1Hex(linesAfter)
 			G.Pkg.AutofixDistinfo(sha1Before, sha1After)
 		}
 	}
