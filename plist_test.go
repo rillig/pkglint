@@ -653,13 +653,17 @@ func (s *Suite) Test_PlistLine_CheckTrailingWhitespace(c *check.C) {
 
 	lines := t.SetUpFileLines("PLIST",
 		PlistCvsID,
-		"bin/program \t")
+		"bin/space ",
+		"bin/space-tab \t",
+		"bin/tab\t")
 
 	CheckLinesPlist(nil, lines)
 
 	t.CheckOutputLines(
-		"WARN: ~/PLIST:2: Non-ASCII filename \"bin/program \\t\".",
-		"ERROR: ~/PLIST:2: Pkgsrc does not support filenames ending in whitespace.")
+		"ERROR: ~/PLIST:2: Pkgsrc does not support filenames ending in whitespace.",
+		"WARN: ~/PLIST:3: Non-ASCII filename \"bin/space-tab \\t\".",
+		"ERROR: ~/PLIST:3: Pkgsrc does not support filenames ending in whitespace.",
+		"ERROR: ~/PLIST:4: Pkgsrc does not support filenames ending in whitespace.")
 }
 
 func (s *Suite) Test_PlistLine_CheckDirective(c *check.C) {
