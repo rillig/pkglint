@@ -487,6 +487,20 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__invalid_DISTNAME(c *chec
 			"As DISTNAME is not a valid package name, please define the PKGNAME explicitly.")
 }
 
+func (s *Suite) Test_Package_determineEffectivePkgVars__indirect_DISTNAME(c *check.C) {
+	t := s.Init(c)
+
+	pkg := t.SetUpPackage("category/package",
+		"DISTNAME=\t${DISTFILES:[1]:C,\\..*,,}")
+	t.FinishSetUp()
+
+	G.Check(pkg)
+
+	// No warning since the case of DISTNAME being dependent on another
+	// variable is too difficult to analyze.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Package_determineEffectivePkgVars__C_modifier(c *check.C) {
 	t := s.Init(c)
 
