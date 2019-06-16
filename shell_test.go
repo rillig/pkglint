@@ -352,7 +352,8 @@ func (s *Suite) Test_ShellProgramChecker_checkPipeExitcode(c *check.C) {
 		"\t sed s,s,s < input | right-side",
 		"\t ./unknown | right-side",
 		"\t var=value | right-side",
-		"\t if :; then :; fi | right-side")
+		"\t if :; then :; fi | right-side",
+		"\t var=`cat file` | right-side")
 
 	for _, mkline := range mklines.mklines {
 		ck := NewShellLineChecker(mklines, mkline)
@@ -366,7 +367,8 @@ func (s *Suite) Test_ShellProgramChecker_checkPipeExitcode(c *check.C) {
 		"WARN: Makefile:7: The exitcode of \"sed\" at the left of the | operator is ignored.",
 		"WARN: Makefile:8: The exitcode of \"sed\" at the left of the | operator is ignored.",
 		"WARN: Makefile:9: The exitcode of \"./unknown\" at the left of the | operator is ignored.",
-		"WARN: Makefile:11: The exitcode of the command at the left of the | operator is ignored.")
+		"WARN: Makefile:11: The exitcode of the command at the left of the | operator is ignored.",
+		"WARN: Makefile:12: The exitcode of the command at the left of the | operator is ignored.")
 }
 
 // TODO: Document the exact purpose of this test, or split it into useful tests.
