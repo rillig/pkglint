@@ -359,6 +359,88 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__infrastructure(c *check.C) {
 		"Looks fine.")
 }
 
+func (s *Suite) Test_Pkgsrc_parseDocChange(c *check.C) {
+	t := s.Init(c)
+
+	test := func(text string, diagnostics ...string) {
+		line := t.NewLine("doc/CHANGES-2019", 123, text)
+		_ = (*Pkgsrc)(nil).parseDocChange(line, true)
+		t.CheckOutput(diagnostics)
+	}
+
+	test(CvsID,
+		nil...)
+	test("",
+		nil...)
+	test("Changes to the packages collection and infrastructure in 2019:",
+		nil...)
+
+	test("\tAdded something [author date]",
+		"WARN: doc/CHANGES-2019:123: Unknown doc/CHANGES line: \tAdded something [author date]")
+
+	test("\t\tToo large indentation",
+		"WARN: doc/CHANGES-2019:123: Package changes should be indented using a single tab, not \"\\t\\t\".")
+	test("\t Too large indentation",
+		"WARN: doc/CHANGES-2019:123: Package changes should be indented using a single tab, not \"\\t \".")
+
+	// TODO: Add a warning here, since it's easy to forget a bracket.
+	test("\t1 2 3 4",
+		nil...)
+	test("\t1 2 3 4 5",
+		nil...)
+	test("\t1 2 3 4 5 6",
+		nil...)
+	test("\t1 2 3 4 5 6 7",
+		nil...)
+	test("\t1 2 [3 4",
+		nil...)
+	test("\t1 2 [3 4]",
+		"WARN: doc/CHANGES-2019:123: Unknown doc/CHANGES line: \t1 2 [3 4]")
+	test("\tAdded 2 [3 4]",
+		"WARN: doc/CHANGES-2019:123: Unknown doc/CHANGES line: \tAdded 2 [3 4]")
+
+	test("\tAdded pkgpath version 1.0 [author date]",
+		nil...)
+	// "to" is wrong
+	test("\tAdded pkgpath to 1.0 [author date]",
+		"WARN: doc/CHANGES-2019:123: Unknown doc/CHANGES line: \tAdded pkgpath to 1.0 [author date]")
+
+	test("\tUpdated pkgpath to 1.0 [author date]",
+		nil...)
+	// "from" is wrong
+	test("\tUpdated pkgpath from 1.0 [author date]",
+		"WARN: doc/CHANGES-2019:123: Unknown doc/CHANGES line: \tUpdated pkgpath from 1.0 [author date]")
+	test("\tDowngraded pkgpath to 1.0 [author date]",
+		nil...)
+	// "from" is wrong
+	test("\tDowngraded pkgpath from 1.0 [author date]",
+		"WARN: doc/CHANGES-2019:123: Unknown doc/CHANGES line: \tDowngraded pkgpath from 1.0 [author date]")
+	test("\tRemoved pkgpath [author date]",
+		nil...)
+	test("\tRemoved pkgpath successor pkgpath [author date]",
+		nil...)
+	// "and" is wrong
+	test("\tRemoved pkgpath and pkgpath [author date]",
+		"WARN: doc/CHANGES-2019:123: Unknown doc/CHANGES line: \tRemoved pkgpath and pkgpath [author date]")
+
+	test("\tRenamed pkgpath to other [author date]",
+		nil...)
+	// "from" is wrong
+	test("\tRenamed pkgpath from previous [author date]",
+		"WARN: doc/CHANGES-2019:123: Unknown doc/CHANGES line: \tRenamed pkgpath from previous [author date]")
+
+	test("\tMoved pkgpath to other [author date]",
+		nil...)
+	// "from" is wrong
+	test("\tMoved pkgpath from previous [author date]",
+		"WARN: doc/CHANGES-2019:123: Unknown doc/CHANGES line: \tMoved pkgpath from previous [author date]")
+
+	// "Split" is wrong
+	// TODO: Add a warning since this is probably a typo.
+	test("\tSplit pkgpath into a and b [author date]",
+		nil...)
+}
+
 func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates__wip(c *check.C) {
 	t := s.Init(c)
 

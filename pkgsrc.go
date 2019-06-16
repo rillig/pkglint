@@ -462,8 +462,10 @@ func (*Pkgsrc) parseDocChange(line Line, warn bool) *Change {
 	}
 
 	action := ParseChangeAction(f[0])
+	pkgpath := f[1]
+	author := f[len(f)-2]
+	date := f[len(f)-1]
 
-	pkgpath, author, date := f[1], f[len(f)-2], f[len(f)-1]
 	if !hasPrefix(author, "[") || !hasSuffix(date, "]") {
 		return nil
 	}
@@ -471,11 +473,11 @@ func (*Pkgsrc) parseDocChange(line Line, warn bool) *Change {
 
 	switch {
 	case
-		action == Added && f[2] == "version" && n == 6,
-		action == Updated && f[2] == "to" && n == 6,
-		action == Downgraded && f[2] == "to" && n == 6,
+		action == Added && f[2] == "version",
+		action == Updated && f[2] == "to",
+		action == Downgraded && f[2] == "to",
 		action == Removed && (f[2] == "successor" || n == 4),
-		(action == Renamed || action == Moved) && f[2] == "to" && n == 6:
+		(action == Renamed || action == Moved) && f[2] == "to":
 		return &Change{
 			Location: line.Location,
 			Action:   action,

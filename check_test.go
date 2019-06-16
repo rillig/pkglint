@@ -251,9 +251,6 @@ func (t *Tester) LoadMkInclude(relativeFileName string) MkLines {
 // Individual files may be overwritten by calling other SetUp* methods.
 //
 // This setup is especially interesting for testing Pkglint.Main.
-//
-// If the test works on a lower level than Pkglint.Main,
-// LoadInfrastructure must be called to actually load the infrastructure files.
 func (t *Tester) SetUpPkgsrc() {
 
 	// This file is needed to locate the pkgsrc root directory.
