@@ -89,10 +89,8 @@ func (ck *PatchChecker) Check() {
 	sha1Before := computePatchSha1Hex(ck.lines)
 	if SaveAutofixChanges(ck.lines) && G.Pkg != nil {
 		linesAfter := Load(ck.lines.Filename, 0)
-		if linesAfter != nil {
-			sha1After := computePatchSha1Hex(linesAfter)
-			G.Pkg.AutofixDistinfo(sha1Before, sha1After)
-		}
+		sha1After := computePatchSha1Hex(linesAfter)
+		G.Pkg.AutofixDistinfo(sha1Before, sha1After)
 	}
 }
 
