@@ -1143,6 +1143,26 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__META_PACKAGE_with_distinf
 			"This file should not exist since NO_CHECKSUM or META_PACKAGE is set.")
 }
 
+func (s *Suite) Test_Package_checkfilePackageMakefile__META_PACKAGE_with_patch(c *check.C) {
+	t := s.Init(c)
+
+	pkg := t.SetUpPackage("category/package",
+		"META_PACKAGE=\tyes")
+	t.CreateFileDummyPatch("category/package/patches/patch-aa")
+	t.CreateFileLines("category/package/distinfo",
+		CvsID,
+		"",
+		"SHA1 (patch-aa) = ebbf34b0641bcb508f17d5a27f2bf2a536d810ac")
+
+	t.FinishSetUp()
+
+	G.Check(pkg)
+
+	// TODO: It's strange to have a META_PACKAGE with patches.
+	//  Does this really happen in the wild?
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Package_checkfilePackageMakefile__USE_IMAKE_and_USE_X11(c *check.C) {
 	t := s.Init(c)
 
