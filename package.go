@@ -53,7 +53,6 @@ type Package struct {
 	// These are cross-checked with buildlink3.mk whether they are unconditional there, too.
 	unconditionalIncludes map[string]MkLine
 
-	once                 Once
 	IgnoreMissingPatches bool // In distinfo, don't warn about patches that cannot be found.
 }
 
@@ -240,7 +239,7 @@ func (pkg *Package) check(filenames []string, mklines, allLines MkLines) {
 			// since all those files come from calls to dirglob.
 			break
 
-		case path.Base(filename) == "Makefile":
+		case path.Base(filename) == "Makefile" && strings.Count(G.Pkgsrc.ToRel(filename), "/") == 2:
 			G.checkExecutable(filename, st.Mode())
 			pkg.checkfilePackageMakefile(filename, mklines, allLines)
 
@@ -592,9 +591,7 @@ func (pkg *Package) checkfilePackageMakefile(filename string, mklines MkLines, a
 		}
 	}
 
-	// TODO: Remove the FirstTime, as it hides a bug;
-	//  files/Makefile must never be treated as a package Makefile.
-	if !vars.Defined("LICENSE") && !vars.Defined("META_PACKAGE") && pkg.once.FirstTime("LICENSE") {
+	if !vars.Defined("LICENSE") && !vars.Defined("META_PACKAGE") {
 		line := NewLineWhole(filename)
 		line.Errorf("Each package must define its LICENSE.")
 		// TODO: Explain why the LICENSE is necessary.

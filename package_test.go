@@ -1260,9 +1260,7 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__files_Makefile(c *check.C
 	G.Check(t.File("category/package"))
 
 	t.CheckOutputLines(
-		"ERROR: ~/category/package/Makefile: Each package must define its LICENSE.",
-		// FIXME: files/Makefile is not a package Makefile.
-	) //"ERROR: ~/category/package/files/Makefile: Each package must define its LICENSE.")
+		"ERROR: ~/category/package/Makefile: Each package must define its LICENSE.")
 }
 
 func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__no_C(c *check.C) {
