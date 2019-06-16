@@ -435,67 +435,67 @@ func (src *Pkgsrc) loadSuggestedUpdates() {
 	src.suggestedWipUpdates = src.parseSuggestedUpdates(Load(src.File("wip/TODO"), NotEmpty))
 }
 
-func (src *Pkgsrc) loadDocChangesFromFile(filename string) []*Change {
+func (*Pkgsrc) parseDocChange(line Line, warn bool) *Change {
+	lex := textproc.NewLexer(line.Text)
 
-	warn := !G.Wip
+	space := lex.NextHspace()
+	if space == "" {
+		return nil
+	}
 
-	parseChange := func(line Line) *Change {
-		lex := textproc.NewLexer(line.Text)
-
-		space := lex.NextHspace()
-		if space == "" {
-			return nil
+	if space != "\t" {
+		if warn {
+			line.Warnf("Package changes should be indented using a single tab, not %q.", space)
+			line.Explain(
+				"To avoid this formatting mistake in the future, just run",
+				sprintf("%q", bmake("cce")),
+				"after committing the update to the package.")
 		}
-
-		if space != "\t" {
-			if warn {
-				line.Warnf("Package changes should be indented using a single tab, not %q.", space)
-				line.Explain(
-					"To avoid this formatting mistake in the future, just run",
-					sprintf("%q", bmake("cce")),
-					"after committing the update to the package.")
-			}
-
-			return nil
-		}
-
-		f := strings.Fields(lex.Rest())
-		n := len(f)
-		if n != 4 && n != 6 {
-			return nil
-		}
-
-		action := ParseChangeAction(f[0])
-
-		pkgpath, author, date := f[1], f[len(f)-2], f[len(f)-1]
-		if !hasPrefix(author, "[") || !hasSuffix(date, "]") {
-			return nil
-		}
-		author, date = author[1:], date[:len(date)-1]
-
-		switch {
-		case
-			action == Added && f[2] == "version" && n == 6,
-			action == Updated && f[2] == "to" && n == 6,
-			action == Downgraded && f[2] == "to" && n == 6,
-			action == Removed && (f[2] == "successor" || n == 4),
-			(action == Renamed || action == Moved) && f[2] == "to" && n == 6:
-			return &Change{
-				Location: line.Location,
-				Action:   action,
-				Pkgpath:  intern(pkgpath),
-				target:   intern(ifelseStr(n == 6, f[3], "")),
-				Author:   intern(author),
-				Date:     intern(date),
-			}
-		}
-
-		line.Warnf("Unknown doc/CHANGES line: %s", line.Text)
-		line.Explain(
-			"See mk/misc/developer.mk for the rules.")
 
 		return nil
 	}
+
+	f := strings.Fields(lex.Rest())
+	n := len(f)
+	if n != 4 && n != 6 {
+		return nil
+	}
+
+	action := ParseChangeAction(f[0])
+
+	pkgpath, author, date := f[1], f[len(f)-2], f[len(f)-1]
+	if !hasPrefix(author, "[") || !hasSuffix(date, "]") {
+		return nil
+	}
+	author, date = author[1:], date[:len(date)-1]
+
+	switch {
+	case
+		action == Added && f[2] == "version" && n == 6,
+		action == Updated && f[2] == "to" && n == 6,
+		action == Downgraded && f[2] == "to" && n == 6,
+		action == Removed && (f[2] == "successor" || n == 4),
+		(action == Renamed || action == Moved) && f[2] == "to" && n == 6:
+		return &Change{
+			Location: line.Location,
+			Action:   action,
+			Pkgpath:  intern(pkgpath),
+			target:   intern(ifelseStr(n == 6, f[3], "")),
+			Author:   intern(author),
+			Date:     intern(date),
+		}
+	}
+
+	line.Warnf("Unknown doc/CHANGES line: %s", line.Text)
+	line.Explain(
+		"See mk/misc/developer.mk for the rules.")
+
+	return nil
+}
+
+func (src *Pkgsrc) loadDocChangesFromFile(filename string) []*Change {
+
+	warn := !G.Wip
 
 	// Each date in the file should be from the same year as the filename says.
 	// This check has been added in 2018.
@@ -520,7 +520,7 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename string) []*Change {
 			continue
 		}
 
-		change := parseChange(line)
+		change := src.parseDocChange(line, warn)
 		if change == nil {
 			continue
 		}
