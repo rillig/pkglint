@@ -163,7 +163,7 @@ func (s *Suite) Test_plistLineSorter_Sort(c *check.C) {
 	cleanedLines := append(append(lines.Lines[0:5], lines.Lines[6:8]...), lines.Lines[9:]...) // Remove ${UNKNOWN} and @exec
 
 	sorter2 := NewPlistLineSorter((&PlistChecker{nil, nil, nil, "", Once{}, false}).
-		NewLines(NewLines(lines.FileName, cleanedLines)))
+		NewLines(NewLines(lines.Filename, cleanedLines)))
 
 	c.Check(sorter2.unsortable, check.IsNil)
 

@@ -21,7 +21,7 @@ func CheckLinesBuildlink3Mk(mklines MkLines) {
 func (ck *Buildlink3Checker) Check() {
 	mklines := ck.mklines
 	if trace.Tracing {
-		defer trace.Call1(mklines.lines.FileName)()
+		defer trace.Call1(mklines.lines.Filename)()
 	}
 
 	mklines.Check()

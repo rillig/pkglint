@@ -18,7 +18,7 @@ func (llex *LinesLexer) CurrentLine() Line {
 	if llex.index < llex.lines.Len() {
 		return llex.lines.Lines[llex.index]
 	}
-	return NewLineEOF(llex.lines.FileName)
+	return NewLineEOF(llex.lines.Filename)
 }
 
 func (llex *LinesLexer) PreviousLine() Line {

@@ -9,7 +9,7 @@ import (
 
 func CheckLinesPatch(lines Lines) {
 	if trace.Tracing {
-		defer trace.Call1(lines.FileName)()
+		defer trace.Call1(lines.Filename)()
 	}
 
 	(&PatchChecker{lines, NewLinesLexer(lines), false, false}).Check()
@@ -94,9 +94,9 @@ func (ck *PatchChecker) Check() {
 	}
 
 	CheckLinesTrailingEmptyLines(ck.lines)
-	sha1Before, err := computePatchSha1Hex(ck.lines.FileName)
+	sha1Before, err := computePatchSha1Hex(ck.lines.Filename)
 	if SaveAutofixChanges(ck.lines) && G.Pkg != nil && err == nil {
-		sha1After, err := computePatchSha1Hex(ck.lines.FileName)
+		sha1After, err := computePatchSha1Hex(ck.lines.Filename)
 		if err == nil {
 			G.Pkg.AutofixDistinfo(sha1Before, sha1After)
 		}

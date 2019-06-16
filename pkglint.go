@@ -509,7 +509,7 @@ func CheckFileOther(filename string) {
 
 func CheckLinesDescr(lines Lines) {
 	if trace.Tracing {
-		defer trace.Call1(lines.FileName)()
+		defer trace.Call1(lines.Filename)()
 	}
 
 	for _, line := range lines.Lines {
@@ -543,7 +543,7 @@ func CheckLinesDescr(lines Lines) {
 
 func CheckLinesMessage(lines Lines) {
 	if trace.Tracing {
-		defer trace.Call1(lines.FileName)()
+		defer trace.Call1(lines.Filename)()
 	}
 
 	// For now, skip all checks when the MESSAGE may be built from multiple

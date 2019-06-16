@@ -8,7 +8,7 @@ import (
 type Lines = *LinesImpl
 
 type LinesImpl struct {
-	FileName string
+	Filename string
 	BaseName string
 	Lines    []Line
 }
@@ -21,14 +21,14 @@ func (ls *LinesImpl) Len() int { return len(ls.Lines) }
 
 func (ls *LinesImpl) LastLine() Line { return ls.Lines[ls.Len()-1] }
 
-func (ls *LinesImpl) EOFLine() Line { return NewLineMulti(ls.FileName, -1, -1, "", nil) }
+func (ls *LinesImpl) EOFLine() Line { return NewLineMulti(ls.Filename, -1, -1, "", nil) }
 
 func (ls *LinesImpl) Errorf(format string, args ...interface{}) {
-	NewLineWhole(ls.FileName).Errorf(format, args...)
+	NewLineWhole(ls.Filename).Errorf(format, args...)
 }
 
 func (ls *LinesImpl) Warnf(format string, args ...interface{}) {
-	NewLineWhole(ls.FileName).Warnf(format, args...)
+	NewLineWhole(ls.Filename).Warnf(format, args...)
 }
 
 func (ls *LinesImpl) SaveAutofixChanges() bool {

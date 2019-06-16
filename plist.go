@@ -9,7 +9,7 @@ import (
 
 func CheckLinesPlist(pkg *Package, lines Lines) {
 	if trace.Tracing {
-		defer trace.Call1(lines.FileName)()
+		defer trace.Call1(lines.Filename)()
 	}
 
 	lines.CheckRcsID(0, `@comment `, "@comment ")

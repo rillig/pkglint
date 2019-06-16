@@ -601,7 +601,7 @@ func (t *Tester) SetUpHierarchy() (
 			case string:
 				addLine(arg)
 			case MkLines:
-				text := sprintf(".include %q", relpath(path.Dir(filename), arg.lines.FileName))
+				text := sprintf(".include %q", relpath(path.Dir(filename), arg.lines.Filename))
 				addLine(text)
 				lines = append(lines, arg.lines.Lines...)
 			default:

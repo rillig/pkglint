@@ -83,7 +83,7 @@ func (mklines *MkLinesImpl) UseVar(mkline MkLine, varname string, time vucTime) 
 
 func (mklines *MkLinesImpl) Check() {
 	if trace.Tracing {
-		defer trace.Call1(mklines.lines.FileName)()
+		defer trace.Call1(mklines.lines.Filename)()
 	}
 
 	// In the first pass, all additions to BUILD_DEFS and USE_TOOLS
@@ -161,7 +161,7 @@ func (mklines *MkLinesImpl) checkAll() {
 	}
 
 	atEnd := func(mkline MkLine) {
-		mklines.indentation.CheckFinish(mklines.lines.FileName)
+		mklines.indentation.CheckFinish(mklines.lines.Filename)
 	}
 
 	if trace.Tracing {

@@ -584,7 +584,7 @@ func (s *Suite) Test_Pkglint_checkReg__alternatives(c *check.C) {
 	lines := t.SetUpFileLines("category/package/ALTERNATIVES",
 		"bin/tar bin/gnu-tar")
 
-	t.Main(lines.FileName)
+	t.Main(lines.Filename)
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/ALTERNATIVES:1: Alternative implementation \"bin/gnu-tar\" must be an absolute path.",

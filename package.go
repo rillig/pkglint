@@ -334,7 +334,7 @@ func (pkg *Package) loadPackageMakefile() (MkLines, MkLines) {
 // TODO: What is allLines used for, is it still necessary? Would it be better as a field in Package?
 func (pkg *Package) parse(mklines MkLines, allLines MkLines, includingFileForUsedCheck string) bool {
 	if trace.Tracing {
-		defer trace.Call1(mklines.lines.FileName)()
+		defer trace.Call1(mklines.lines.Filename)()
 	}
 
 	result := true
@@ -353,7 +353,7 @@ func (pkg *Package) parse(mklines MkLines, allLines MkLines, includingFileForUse
 
 	// For every included buildlink3.mk, include the corresponding builtin.mk
 	// automatically since the pkgsrc infrastructure does the same.
-	filename := mklines.lines.FileName
+	filename := mklines.lines.Filename
 	if path.Base(filename) == "buildlink3.mk" {
 		builtin := cleanpath(path.Dir(filename) + "/builtin.mk")
 		builtinRel := relpath(pkg.dir, builtin)

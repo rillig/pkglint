@@ -15,10 +15,10 @@ import (
 
 func CheckLinesDistinfo(pkg *Package, lines Lines) {
 	if trace.Tracing {
-		defer trace.Call1(lines.FileName)()
+		defer trace.Call1(lines.Filename)()
 	}
 
-	filename := lines.FileName
+	filename := lines.Filename
 	patchdir := "patches"
 	if pkg != nil && dirExists(pkg.File(pkg.Patchdir)) {
 		patchdir = pkg.Patchdir
@@ -313,7 +313,7 @@ func (ck *distinfoLinesChecker) checkUnrecordedPatches() {
 	for _, file := range patchFiles {
 		patchName := file.Name()
 		if file.Mode().IsRegular() && ck.infos[patchName].isPatch != yes && hasPrefix(patchName, "patch-") {
-			line := NewLineWhole(ck.lines.FileName)
+			line := NewLineWhole(ck.lines.Filename)
 			line.Errorf("Patch %q is not recorded. Run %q.",
 				line.PathToFile(ck.pkg.File(ck.patchdir+"/"+patchName)),
 				bmake("makepatchsum"))
