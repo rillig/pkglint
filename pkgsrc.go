@@ -488,9 +488,11 @@ func (*Pkgsrc) parseDocChange(line Line, warn bool) *Change {
 		}
 	}
 
-	line.Warnf("Unknown doc/CHANGES line: %s", line.Text)
-	line.Explain(
-		"See mk/misc/developer.mk for the rules.")
+	if warn {
+		line.Warnf("Unknown doc/CHANGES line: %s", line.Text)
+		line.Explain(
+			"See mk/misc/developer.mk for the rules.")
+	}
 
 	return nil
 }

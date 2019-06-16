@@ -326,7 +326,9 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__wip_suppresses_warnings(c *c
 		"Changes to the packages collection and infrastructure in 2018:",
 		"",
 		"\tUpdated sysutils/checkperms to 1.10 [rillig 2018-01-05]",
-		"\tUpdated sysutils/checkperms to 1.11 [rillig 2018-01-01]")
+		"\tUpdated sysutils/checkperms to 1.11 [rillig 2018-01-01]",
+		"\t\tWrong indentation",
+		"\tInvalid pkgpath to 1.16 [rillig 2019-06-16]")
 
 	t.Main(t.File("wip/package"))
 
