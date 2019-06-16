@@ -229,6 +229,21 @@ func (s *Suite) Test_Pkgsrc_loadTools__BUILD_DEFS(c *check.C) {
 			"The user-defined variable VARBASE is used but not added to BUILD_DEFS.")
 }
 
+func (s *Suite) Test_Pkgsrc_loadDocChanges(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.CreateFileLines("doc/CHANGES-2018",
+		CvsID,
+		"",
+		"\tUpdated pkgpath to 1.0 [author 2018-01-01]",
+		"\tRenamed pkgpath to new-pkg [author 2018-02-01]",
+		"\tMoved pkgpath to category/new-pkg [author 2018-03-01]")
+	t.FinishSetUp()
+
+	t.Check(G.Pkgsrc.LastChange["pkgpath"].Action, equals, Moved)
+}
+
 func (s *Suite) Test_Pkgsrc_loadDocChanges__not_found(c *check.C) {
 	t := s.Init(c)
 
