@@ -147,6 +147,7 @@ func (s *Suite) Test_Pkgsrc_loadTools(c *check.C) {
 	t.CreateFileLines("mk/tools/bsd.tools.mk",
 		".include \"flex.mk\"",
 		".include \"gettext.mk\"",
+		".include \"../nonexistent.mk\"", // Is skipped because of the slash.
 		".include \"strip.mk\"",
 		".include \"replace.mk\"")
 	t.CreateFileLines("mk/tools/defaults.mk",
