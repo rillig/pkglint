@@ -1345,11 +1345,8 @@ func (s *Suite) Test_ShellProgramChecker_canFail(c *check.C) {
 		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon "+
 			"(after \"socklen=$$(expr 16)\") to separate commands.")
 
-	// FIXME: The "|| true" is enough for handling errors.
 	test("socklen=$$(expr 16 || true)",
-		"WARN: Makefile:3: Invoking subshells via $(...) is not portable enough.",
-		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon "+
-			"(after \"socklen=$$(expr 16 || true)\") to separate commands.")
+		"WARN: Makefile:3: Invoking subshells via $(...) is not portable enough.")
 
 	test("socklen=$$(expr 16 || ${TRUE})",
 		"WARN: Makefile:3: Invoking subshells via $(...) is not portable enough.")

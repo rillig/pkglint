@@ -916,8 +916,9 @@ func (spc *ShellProgramChecker) canFail(cmd *MkShCommand) bool {
 
 	if simple.Name == nil {
 		for _, assignment := range simple.Assignments {
-			if contains(assignment.MkText, "`") || contains(assignment.MkText, "$(") {
-				if !contains(assignment.MkText, "|| ${TRUE}") {
+			text := assignment.MkText
+			if contains(text, "`") || contains(text, "$(") {
+				if !contains(text, "|| ${TRUE}") && !contains(text, "|| true") {
 					return true
 				}
 			}
