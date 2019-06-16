@@ -125,6 +125,18 @@ func (s *Suite) Test_Pkgsrc_loadUntypedVars(c *check.C) {
 		"WARN: filename.mk:6: INDIRECT_param is used but not defined.")
 }
 
+func (s *Suite) Test_Pkgsrc_loadUntypedVars__badly_named_directory(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.CreateFileLines("mk/subdir.mk/file.mk",
+		MkCvsID)
+	t.FinishSetUp()
+
+	// Even when a directory is named *.mk, pkglint doesn't crash.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Pkgsrc_loadTools(c *check.C) {
 	t := s.Init(c)
 
