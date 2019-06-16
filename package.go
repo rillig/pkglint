@@ -414,7 +414,7 @@ func (pkg *Package) parseLine(mklines MkLines, mkline MkLine, allLines MkLines) 
 // skip is false, the file could not be read and an appropriate error message
 // has already been logged.
 func (pkg *Package) loadIncluded(mkline MkLine, includingFile string) (skip bool, includedMklines MkLines) {
-	includedFile, incDir, incBase := pkg.findIncludedFile(mkline, includingFile)
+	includedFile, incDir, incBase := pkg.resolveIncludedFile(mkline, includingFile)
 
 	if includedFile == "" {
 		return true, nil
@@ -511,7 +511,9 @@ func (pkg *Package) collectSeenMakefileCommon(mkline MkLine, incDir string, incB
 	pkg.seenMakefileCommon = true
 }
 
-func (pkg *Package) findIncludedFile(mkline MkLine, includingFilename string) (includedFile, incDir, incBase string) {
+// resolveIncludedFile resolves Makefile variables such as ${PKGPATH} to
+// their actual values.
+func (pkg *Package) resolveIncludedFile(mkline MkLine, includingFilename string) (includedFile, incDir, incBase string) {
 
 	// TODO: resolveVariableRefs uses G.Pkg implicitly. It should be made explicit.
 	// TODO: Try to combine resolveVariableRefs and ResolveVarsInRelativePath.

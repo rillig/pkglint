@@ -1710,7 +1710,7 @@ func (s *Suite) Test_Package_diveInto(c *check.C) {
 }
 
 // Just for code coverage.
-func (s *Suite) Test_Package_findIncludedFile__no_tracing(c *check.C) {
+func (s *Suite) Test_Package_resolveIncludedFile__no_tracing(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package",
