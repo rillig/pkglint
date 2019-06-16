@@ -1177,6 +1177,18 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__USE_IMAKE_and_USE_X11(c *
 		"NOTE: ~/category/package/Makefile:21: USE_IMAKE makes USE_X11 in line 20 redundant.")
 }
 
+func (s *Suite) Test_Package_checkfilePackageMakefile__USE_IMAKE_without_USE_X11(c *check.C) {
+	t := s.Init(c)
+
+	pkg := t.SetUpPackage("category/package",
+		"USE_IMAKE=\tyes")
+	t.FinishSetUp()
+
+	G.Check(pkg)
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Package_checkfilePackageMakefile__PLIST_common(c *check.C) {
 	t := s.Init(c)
 
