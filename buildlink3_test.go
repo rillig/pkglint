@@ -9,9 +9,9 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__package(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("category/dependency1/buildlink3.mk",
-		MkRcsID)
+		MkCvsID)
 	t.CreateFileLines("category/dependency2/buildlink3.mk",
-		MkRcsID)
+		MkCvsID)
 	t.SetUpPackage("category/package",
 		"PKGNAME=\tpackage-1.0",
 		"",
@@ -36,7 +36,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__unfinished_url2pkg(c *check.C) {
 	t.CreateFileLines("x11/Xbae/Makefile")
 	t.CreateFileLines("mk/motif.buildlink3.mk")
 	mklines := t.SetUpFileMkLines("category/package/buildlink3.mk",
-		MkRcsID,
+		MkCvsID,
 		"# XXX This file was created automatically using createbuildlink-@PKGVERSION@",
 		"",
 		"BUILDLINK_TREE+=\tXbae",
@@ -73,7 +73,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch_Haskell_incomplete(c 
 		"DISTNAME=\tX11-1.0")
 	t.Chdir("x11/hs-X11")
 	t.CreateFileLines("buildlink3.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"BUILDLINK_TREE+=\ths-X11",
 		"",
@@ -105,7 +105,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch_Haskell_complete(c *c
 	t := s.Init(c)
 
 	t.CreateFileLines("mk/haskell.mk",
-		MkRcsID,
+		MkCvsID,
 		"PKGNAME?=\ths-${DISTNAME}")
 	t.SetUpPackage("x11/hs-X11",
 		"DISTNAME=\tX11-1.0",
@@ -113,7 +113,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch_Haskell_complete(c *c
 		".include \"../../mk/haskell.mk\"")
 	t.Chdir("x11/hs-X11")
 	t.CreateFileLines("buildlink3.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"BUILDLINK_TREE+=\ths-X11",
 		"",
@@ -140,7 +140,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch__Perl(c *check.C) {
 		"DISTNAME=\tGtk2-1.0",
 		"PKGNAME=\t${DISTNAME:C:Gtk2:p5-gtk2:}")
 	t.CreateFileLines("x11/p5-gtk2/buildlink3.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"BUILDLINK_TREE+=\tp5-gtk2",
 		"",
@@ -171,7 +171,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch_multiple_inclusion(c 
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("buildlink3.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"BUILDLINK_TREE+=\tpkgbase1",
 		"",
@@ -195,7 +195,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch_abi_api(c *check.C) {
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("buildlink3.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"BUILDLINK_TREE+=\ths-X11",
 		"",
@@ -222,7 +222,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__abi_api_versions(c *check.C) {
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("buildlink3.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"BUILDLINK_TREE+=\ths-X11",
 		"",
@@ -252,7 +252,7 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__abi_api_versions_brace(c 
 	t.SetUpVartypes()
 	t.CreateFileLines("multimedia/totem/Makefile")
 	mklines := t.SetUpFileMkLines("multimedia/totem/buildlink3.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"BUILDLINK_TREE+=\ttotem",
 		"",
@@ -279,7 +279,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__missing_BUILDLINK_TREE_at_beginning
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("buildlink3.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		".if !defined(HS_X11_BUILDLINK3_MK)",
 		"HS_X11_BUILDLINK3_MK:=",
@@ -298,7 +298,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__missing_BUILDLINK_TREE_at_end(c *ch
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("buildlink3.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"BUILDLINK_TREE+=\ths-X11",
 		"",
@@ -324,7 +324,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__DEPMETHOD_placement(c *check.C) {
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("buildlink3.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"BUILDLINK_DEPMETHOD.hs-X11?=\tfull",
 		"",
@@ -351,7 +351,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__multiple_inclusion_wrong(c *check.C
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("buildlink3.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"BUILDLINK_TREE+=\ths-X11",
 		"",
@@ -372,7 +372,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__missing_endif(c *check.C) {
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("buildlink3.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"BUILDLINK_TREE+=\tpkgbase1",
 		"",
@@ -391,7 +391,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__invalid_dependency_patterns(c *chec
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("buildlink3.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"BUILDLINK_TREE+=\ths-X11",
 		"",
@@ -418,7 +418,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__PKGBASE_with_variable(c *check.C) {
 
 	t.SetUpVartypes()
 	mklinesPhp := t.NewMkLines("x11/php-wxwidgets/buildlink3.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"BUILDLINK_TREE+=\t${PHP_PKG_PREFIX}-wxWidgets",
 		"",
@@ -432,7 +432,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__PKGBASE_with_variable(c *check.C) {
 		"",
 		"BUILDLINK_TREE+=\t-${PHP_PKG_PREFIX}-wxWidgets")
 	mklinesPy := t.NewMkLines("x11/py-wxwidgets/buildlink3.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"BUILDLINK_TREE+=\t${PYPKGPREFIX}-wxWidgets",
 		"",
@@ -446,7 +446,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__PKGBASE_with_variable(c *check.C) {
 		"",
 		"BUILDLINK_TREE+=\t-${PYPKGPREFIX}-wxWidgets")
 	mklinesRuby1 := t.NewMkLines("x11/ruby1-wxwidgets/buildlink3.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"BUILDLINK_TREE+=\t${RUBY_BASE}-wxWidgets",
 		"",
@@ -460,7 +460,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__PKGBASE_with_variable(c *check.C) {
 		"",
 		"BUILDLINK_TREE+=\t-${RUBY_BASE}-wxWidgets")
 	mklinesRuby2 := t.NewMkLines("x11/ruby2-wxwidgets/buildlink3.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"BUILDLINK_TREE+=\t${RUBY_PKGPREFIX}-wxWidgets",
 		"",
@@ -491,7 +491,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__PKGBASE_with_unknown_variable(c *ch
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("buildlink3.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"BUILDLINK_TREE+=\t${LICENSE}-wxWidgets",
 		"",
@@ -617,7 +617,7 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__abi_without_api(c *check.
 		"PKGNAME=\tpackage-1.0")
 	// t.CreateFileDummyBuildlink3() cannot be used here since it always adds an API line.
 	t.CreateFileLines("category/package/buildlink3.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"BUILDLINK_TREE+=\tpackage",
 		"",
@@ -772,7 +772,7 @@ func (s *Suite) Test_Buildlink3Checker_checkMainPart__nested_if(c *check.C) {
 
 	t.SetUpVartypes()
 	mklines := t.SetUpFileMkLines("category/package/buildlink3.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"BUILDLINK_TREE+=\ths-X11",
 		"",
@@ -799,7 +799,7 @@ func (s *Suite) Test_Buildlink3Checker_checkMainPart__comment_at_end_of_file(c *
 
 	t.SetUpVartypes()
 	mklines := t.SetUpFileMkLines("category/package/buildlink3.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"BUILDLINK_TREE+=\ths-X11",
 		"",

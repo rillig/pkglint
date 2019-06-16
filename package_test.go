@@ -12,7 +12,7 @@ func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__file_but_not_package
 	t.CreateFileLines("category/dependency/module.mk")
 	G.Pkg = NewPackage(t.File("category/package"))
 	mklines := t.NewMkLines("category/package/buildlink3.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		".include \"../../category/dependency/buildlink3.mk\"",
 		".include \"../../category/dependency/module.mk\"")
@@ -33,7 +33,7 @@ func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__package_but_not_file
 	G.Pkg.bl3["../../category/dependency/buildlink3.mk"] =
 		t.NewMkLine("../../category/dependency/buildlink3.mk", 1, "")
 	mklines := t.NewMkLines("category/package/buildlink3.mk",
-		MkRcsID)
+		MkCvsID)
 
 	t.EnableTracingToLog()
 	G.Pkg.checkLinesBuildlink3Inclusion(mklines)
@@ -120,7 +120,7 @@ func (s *Suite) Test_Package_CheckVarorder__only_required_variables(c *check.C) 
 
 	pkg := NewPackage(t.File("x11/9term"))
 	mklines := t.NewMkLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"DISTNAME=9term",
 		"CATEGORIES=x11",
@@ -139,7 +139,7 @@ func (s *Suite) Test_Package_CheckVarorder__with_optional_variables(c *check.C) 
 
 	pkg := NewPackage(t.File("x11/9term"))
 	mklines := t.NewMkLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"GITHUB_PROJECT=project",
 		"DISTNAME=9term",
@@ -160,7 +160,7 @@ func (s *Suite) Test_Package_CheckVarorder__no_tracing(c *check.C) {
 
 	pkg := NewPackage(t.File("x11/9term"))
 	mklines := t.NewMkLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"DISTNAME=9term",
 		"CATEGORIES=x11",
@@ -182,7 +182,7 @@ func (s *Suite) Test_Package_CheckVarorder__comments_do_not_crash(c *check.C) {
 
 	pkg := NewPackage(t.File("x11/9term"))
 	mklines := t.NewMkLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"GITHUB_PROJECT=project",
 		"",
@@ -205,7 +205,7 @@ func (s *Suite) Test_Package_CheckVarorder__comments_are_ignored(c *check.C) {
 
 	pkg := NewPackage(t.File("x11/9term"))
 	mklines := t.NewMkLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"DISTNAME=\tdistname-1.0",
 		"CATEGORIES=\tsysutils",
@@ -225,7 +225,7 @@ func (s *Suite) Test_Package_CheckVarorder__skip_if_there_are_directives(c *chec
 
 	pkg := NewPackage(t.File("category/package"))
 	mklines := t.NewMkLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"DISTNAME=\tdistname-1.0",
 		"CATEGORIES=\tsysutils",
@@ -254,7 +254,7 @@ func (s *Suite) Test_Package_CheckVarorder__GITHUB_PROJECT_at_the_top(c *check.C
 
 	pkg := NewPackage(t.File("x11/9term"))
 	mklines := t.NewMkLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"GITHUB_PROJECT=\t\tautocutsel",
 		"DISTNAME=\t\tautocutsel-0.10.0",
@@ -275,7 +275,7 @@ func (s *Suite) Test_Package_CheckVarorder__GITHUB_PROJECT_at_the_bottom(c *chec
 
 	pkg := NewPackage(t.File("x11/9term"))
 	mklines := t.NewMkLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"DISTNAME=\t\tautocutsel-0.10.0",
 		"CATEGORIES=\t\tx11",
@@ -295,10 +295,10 @@ func (s *Suite) Test_Package_CheckVarorder__license(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("mk/bsd.pkg.mk", "# dummy")
-	t.CreateFileLines("x11/Makefile", MkRcsID)
-	t.CreateFileLines("x11/9term/PLIST", PlistRcsID, "bin/9term")
+	t.CreateFileLines("x11/Makefile", MkCvsID)
+	t.CreateFileLines("x11/9term/PLIST", PlistCvsID, "bin/9term")
 	t.CreateFileLines("x11/9term/Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"DISTNAME=\t9term-1.0",
 		"CATEGORIES=\tx11",
@@ -325,7 +325,7 @@ func (s *Suite) Test_Package_CheckVarorder__MASTER_SITES(c *check.C) {
 
 	pkg := NewPackage(t.File("category/package"))
 	mklines := t.NewMkLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"PKGNAME=\tpackage-1.0",
 		"CATEGORIES=\tcategory",
@@ -347,7 +347,7 @@ func (s *Suite) Test_Package_CheckVarorder__diagnostics(c *check.C) {
 	t.SetUpVartypes()
 	pkg := NewPackage(t.File("category/package"))
 	mklines := t.NewMkLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"CATEGORIES=     net",
 		"",
@@ -375,7 +375,7 @@ func (s *Suite) Test_Package_CheckVarorder__diagnostics(c *check.C) {
 
 	// After moving the variables according to the warning:
 	mklines = t.NewMkLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"GITHUB_PROJECT= pkgbase",
 		"DISTNAME=       v1.0",
@@ -589,17 +589,17 @@ func (s *Suite) Test_Package_loadPackageMakefile__dump(c *check.C) {
 	t.SetUpPkgsrc()
 	t.CreateFileLines("category/Makefile")
 	t.CreateFileLines("category/package/PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"bin/program")
 	t.CreateFileLines("category/package/distinfo",
-		RcsID,
+		CvsID,
 		"",
 		"SHA1 (distfile-1.0.tar.gz) = 12341234...",
 		"RMD160 (distfile-1.0.tar.gz) = 12341234...",
 		"SHA512 (distfile-1.0.tar.gz) = 12341234...",
 		"Size (distfile-1.0.tar.gz) = 12341234...")
 	t.CreateFileLines("category/package/Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"CATEGORIES=category",
 		"",
@@ -613,7 +613,7 @@ func (s *Suite) Test_Package_loadPackageMakefile__dump(c *check.C) {
 
 	t.CheckOutputLines(
 		"Whole Makefile (with all included files) follows:",
-		"~/category/package/Makefile:1: "+MkRcsID,
+		"~/category/package/Makefile:1: "+MkCvsID,
 		"~/category/package/Makefile:2: ",
 		"~/category/package/Makefile:3: CATEGORIES=category",
 		"~/category/package/Makefile:4: ",
@@ -636,7 +636,7 @@ func (s *Suite) Test_Package__varuse_at_load_time(c *check.C) {
 		"_TOOLS_VARNAME.nice=NICE")
 
 	t.CreateFileLines("category/pkgbase/Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"PKGNAME=        loadtime-vartest-1.0",
 		"CATEGORIES=     misc",
@@ -727,7 +727,7 @@ func (s *Suite) Test_Package_load__extra_files(c *check.C) {
 		"IS_GCC=\tno",
 		"endif")
 	t.CreateFileLines("patches/patch-Makefile.mk",
-		RcsID,
+		CvsID,
 		"",
 		"Documentation",
 		"",
@@ -806,7 +806,7 @@ func (s *Suite) Test_Package_loadPackageMakefile(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("category/package/Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"PKGNAME=pkgname-1.67",
 		"DISTNAME=distfile_1_67",
@@ -830,7 +830,7 @@ func (s *Suite) Test_Package__relative_included_filenames_in_same_directory(c *c
 		"DISTNAME=\tdistfile_1_67",
 		".include \"../../category/package/other.mk\"")
 	t.CreateFileLines("category/package/other.mk",
-		MkRcsID,
+		MkCvsID,
 		"PKGNAME=\tpkgname-1.67",
 		"DISTNAME=\tdistfile_1_67",
 		".include \"../../category/package/other.mk\"")
@@ -856,7 +856,7 @@ func (s *Suite) Test_Package_loadPackageMakefile__PECL_VERSION(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("lang/php/ext.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"PHPEXT_MK=      # defined",
 		"PHPPKGSRCDIR=   ../../lang/php72",
@@ -891,7 +891,7 @@ func (s *Suite) Test_Package_checkIncludeConditionally__conditional_and_uncondit
 	t.CreateFileLines("sysutils/coreutils/buildlink3.mk", "")
 
 	t.CreateFileLines("category/package/options.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		".if !empty(PKG_OPTIONS:Mzlib)",
 		".  include \"../../devel/zlib/buildlink3.mk\"",
@@ -965,7 +965,7 @@ func (s *Suite) Test_Package__redundant_master_sites(c *check.C) {
 	t.SetUpPkgsrc()
 	t.SetUpMasterSite("MASTER_SITE_R_CRAN", "http://cran.r-project.org/src/")
 	t.CreateFileLines("math/R/Makefile.extension",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"PKGNAME?=\tR-${R_PKGNAME}-${R_PKGVER}",
 		"MASTER_SITES?=\t${MASTER_SITE_R_CRAN:=contrib/}",
@@ -973,7 +973,7 @@ func (s *Suite) Test_Package__redundant_master_sites(c *check.C) {
 		"NO_CHECKSUM=\tyes",
 		"LICENSE?=\tgnu-gpl-v2")
 	t.CreateFileLines("math/R-date/Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"R_PKGNAME=\tdate",
 		"R_PKGVER=\t1.2.3",
@@ -1038,7 +1038,7 @@ func (s *Suite) Test_NewPackage(c *check.C) {
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("category/Makefile",
-		MkRcsID)
+		MkCvsID)
 	t.FinishSetUp()
 
 	c.Check(
@@ -1059,17 +1059,17 @@ func (s *Suite) Test__distinfo_from_other_package(c *check.C) {
 	t.SetUpPkgsrc()
 	t.Chdir(".")
 	t.CreateFileLines("x11/gst-x11/Makefile",
-		MkRcsID,
+		MkCvsID,
 		".include \"../../multimedia/gst-base/Makefile.common\"",
 		".include \"../../mk/bsd.pkg.mk\"")
 	t.CreateFileLines("multimedia/gst-base/Makefile.common",
-		MkRcsID,
+		MkCvsID,
 		".include \"plugins.mk\"")
 	t.CreateFileLines("multimedia/gst-base/plugins.mk",
-		MkRcsID,
+		MkCvsID,
 		"DISTINFO_FILE=\t${.CURDIR}/../../multimedia/gst-base/distinfo")
 	t.CreateFileLines("multimedia/gst-base/distinfo",
-		RcsID,
+		CvsID,
 		"",
 		"SHA1 (patch-aa) = 1234")
 	t.FinishSetUp()
@@ -1209,7 +1209,7 @@ func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__realistic_compiler_m
 		"",
 		".include \"../../mk/compiler.mk\"")
 	t.CreateFileLines("mk/compiler.mk",
-		MkRcsID,
+		MkCvsID,
 		".include \"bsd.prefs.mk\"",
 		"",
 		"USE_LANGUAGES?=\tc",
@@ -1273,7 +1273,7 @@ func (s *Suite) Test_Package_checkUseLanguagesCompilerMk__too_late(c *check.C) {
 		".include \"../../mk/compiler.mk\"",
 		"USE_LANGUAGES=\tc c99 fortran ada c++14")
 	t.CreateFileLines("mk/compiler.mk",
-		MkRcsID)
+		MkCvsID)
 	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))
@@ -1292,9 +1292,9 @@ func (s *Suite) Test_Package_checkUseLanguagesCompilerMk__compiler_mk(c *check.C
 		".include \"../../mk/compiler.mk\"",
 		"USE_LANGUAGES=\tc c99 fortran ada c++14")
 	t.CreateFileLines("category/package/compiler.mk",
-		MkRcsID)
+		MkCvsID)
 	t.CreateFileLines("mk/compiler.mk",
-		MkRcsID)
+		MkCvsID)
 	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))
@@ -1344,7 +1344,7 @@ func (s *Suite) Test_Package_parse__include_in_same_directory(c *check.C) {
 		".include \"version.mk\"")
 	t.Chdir("category/package")
 	t.CreateFileLines("version.mk",
-		MkRcsID)
+		MkCvsID)
 	t.FinishSetUp()
 
 	G.Pkg = NewPackage(".")
@@ -1385,7 +1385,7 @@ func (s *Suite) Test_Package_parse__include_twice(c *check.C) {
 		".include \"version.mk\"")
 	t.Chdir("category/package")
 	t.CreateFileLines("version.mk",
-		MkRcsID)
+		MkCvsID)
 	t.FinishSetUp()
 
 	G.Pkg = NewPackage(".")
@@ -1404,7 +1404,7 @@ func (s *Suite) Test_Package_parse__include_in_other_directory(c *check.C) {
 		".include \"../../category/other/version.mk\"")
 	t.Chdir("category/package")
 	t.CreateFileLines("../../category/other/version.mk",
-		MkRcsID)
+		MkCvsID)
 	t.FinishSetUp()
 
 	G.Pkg = NewPackage(".")
@@ -1425,10 +1425,10 @@ func (s *Suite) Test_Package_parse__includes_in_other_directory(c *check.C) {
 		".include \"../../category/other/module.mk\"")
 	t.Chdir("category/package")
 	t.CreateFileLines("../../category/other/module.mk",
-		MkRcsID,
+		MkCvsID,
 		".include \"version.mk\"")
 	t.CreateFileLines("../../category/other/version.mk",
-		MkRcsID)
+		MkCvsID)
 	t.FinishSetUp()
 
 	G.Pkg = NewPackage(".")
@@ -1448,7 +1448,7 @@ func (s *Suite) Test_Package_parse__nonexistent_in_other_directory(c *check.C) {
 		".include \"../../category/other/module.mk\"")
 	t.Chdir("category/package")
 	t.CreateFileLines("../../category/other/module.mk",
-		MkRcsID,
+		MkCvsID,
 		".include \"version.mk\"")
 	t.FinishSetUp()
 
@@ -1514,7 +1514,7 @@ func (s *Suite) Test_Package_parse__relative(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("category/package/extra.mk",
-		MkRcsID)
+		MkCvsID)
 	pkg := t.SetUpPackage("category/package",
 		".include \"../package/extra.mk\"")
 	t.FinishSetUp()
@@ -1541,7 +1541,7 @@ func (s *Suite) Test_Package_parse__builtin_mk(c *check.C) {
 		"\techo ${VAR_FROM_BUILTIN} ${OTHER_VAR}")
 	t.CreateFileDummyBuildlink3("category/lib1/buildlink3.mk")
 	t.CreateFileLines("category/lib1/builtin.mk",
-		MkRcsID,
+		MkCvsID,
 		"VAR_FROM_BUILTIN=\t# defined")
 	t.FinishSetUp()
 
@@ -1563,12 +1563,12 @@ func (s *Suite) Test_Package_parse__included(c *check.C) {
 	t.SetUpPackage("devel/library")
 	t.CreateFileDummyBuildlink3("devel/library/buildlink3.mk")
 	t.CreateFileLines("devel/library/builtin.mk",
-		MkRcsID)
+		MkCvsID)
 	t.CreateFileLines("lang/language/module.mk",
-		MkRcsID,
+		MkCvsID,
 		".include \"version.mk\"")
 	t.CreateFileLines("lang/language/version.mk",
-		MkRcsID)
+		MkCvsID)
 	t.FinishSetUp()
 	t.Chdir("category/package")
 	pkg := NewPackage(".")
@@ -1589,14 +1589,14 @@ func (s *Suite) Test_Package_parse__include_Makefile_common_same_directory(c *ch
 
 	t.SetUpPackage("category/dependency")
 	t.CreateFileLines("category/dependency/Makefile.common",
-		MkRcsID,
+		MkCvsID,
 		"#",
 		"#")
 	t.SetUpPackage("category/package",
 		".include \"../../category/dependency/Makefile.common\"",
 		".include \"Makefile.common\"")
 	t.CreateFileLines("category/package/Makefile.common",
-		MkRcsID,
+		MkCvsID,
 		"#",
 		"#")
 	t.FinishSetUp()
@@ -1613,14 +1613,14 @@ func (s *Suite) Test_Package_parse__include_Makefile_common_explicit(c *check.C)
 
 	t.SetUpPackage("category/dependency")
 	t.CreateFileLines("category/dependency/Makefile.common",
-		MkRcsID,
+		MkCvsID,
 		"#",
 		"#")
 	t.SetUpPackage("category/package",
 		".include \"../../category/dependency/Makefile.common\"",
 		".include \"../../category/package/Makefile.common\"")
 	t.CreateFileLines("category/package/Makefile.common",
-		MkRcsID,
+		MkCvsID,
 		"#",
 		"#")
 	t.FinishSetUp()
@@ -1636,10 +1636,10 @@ func (s *Suite) Test_Package_parse__fallback_lookup_in_package_directory(c *chec
 	t := s.Init(c)
 
 	t.CreateFileLines("mk/pthread.buildlink3.mk",
-		MkRcsID,
+		MkCvsID,
 		".include \"../../mk/pthread.builtin.mk\"")
 	t.CreateFileLines("mk/pthread.builtin.mk",
-		MkRcsID)
+		MkCvsID)
 	t.SetUpPackage("category/package",
 		".include \"../../mk/pthread.buildlink3.mk\"")
 	t.FinishSetUp()
@@ -1657,7 +1657,7 @@ func (s *Suite) Test_Package_collectSeenMakefileCommon__builtin_mk(c *check.C) {
 	t.SetUpPackage("category/package",
 		".include \"builtin.mk\"")
 	t.CreateFileLines("category/package/builtin.mk",
-		MkRcsID)
+		MkCvsID)
 	t.FinishSetUp()
 
 	pkg := NewPackage(t.File("category/package"))
@@ -1717,7 +1717,7 @@ func (s *Suite) Test_Package_resolveIncludedFile__no_tracing(c *check.C) {
 		".include \"../../${UNKNOWN_PKGPATH}/buildlink3.mk\"",
 		".include \"../../lang/language/buildlink3.mk\"")
 	t.CreateFileLines("lang/language/buildlink3.mk",
-		MkRcsID)
+		MkCvsID)
 	t.FinishSetUp()
 	pkg := NewPackage(t.File("category/package"))
 	t.DisableTracing()
@@ -1826,7 +1826,7 @@ func (s *Suite) Test_Package_checkLocallyModified__directory(c *check.C) {
 	pkg := t.SetUpPackage("category/package",
 		"MAINTAINER=\tmaintainer@example.org")
 	t.CreateFileLines("category/package/distinfo",
-		RcsID,
+		CvsID,
 		"",
 		"SHA1 (patch-aa) = ebbf34b0641bcb508f17d5a27f2bf2a536d810ac")
 	t.FinishSetUp()
@@ -1860,14 +1860,14 @@ func (s *Suite) Test_Package__using_common_Makefile_overriding_DISTINFO_FILE(c *
 
 	t.SetUpPackage("security/pinentry")
 	t.CreateFileLines("security/pinentry/Makefile.common",
-		MkRcsID,
+		MkCvsID,
 		"DISTINFO_FILE=\t${.CURDIR}/../../security/pinentry/distinfo")
 	t.SetUpPackage("security/pinentry-fltk",
 		".include \"../../security/pinentry/Makefile.common\"",
 		"DISTINFO_FILE=\t${.CURDIR}/distinfo")
 	t.CreateFileDummyPatch("security/pinentry-fltk/patches/patch-aa")
 	t.CreateFileLines("security/pinentry-fltk/distinfo",
-		RcsID,
+		CvsID,
 		"",
 		"SHA1 (patch-aa) = ebbf34b0641bcb508f17d5a27f2bf2a536d810ac")
 	t.FinishSetUp()
@@ -1891,10 +1891,10 @@ func (s *Suite) Test_Package__redundant_variable_in_unrelated_files(c *check.C) 
 		".include \"../../devel/py-trytond/Makefile.common\"",
 		".include \"../../lang/python/egg.mk\"")
 	t.CreateFileLines("devel/py-trytond/Makefile.common",
-		MkRcsID,
+		MkCvsID,
 		"PY_PATCHPLIST=\tyes")
 	t.CreateFileLines("lang/python/egg.mk",
-		MkRcsID,
+		MkCvsID,
 		"PY_PATCHPLIST=\tyes")
 	t.FinishSetUp()
 
@@ -1934,7 +1934,7 @@ func (s *Suite) Test_Package_parse__include_infrastructure(c *check.C) {
 
 	t.CheckOutputLines(
 		"Whole Makefile (with all included files) follows:",
-		"~/category/package/Makefile:1: "+MkRcsID,
+		"~/category/package/Makefile:1: "+MkCvsID,
 		"~/category/package/Makefile:2: ",
 		"~/category/package/Makefile:3: DISTNAME=\tdistname-1.0",
 		"~/category/package/Makefile:4: #PKGNAME=\tpackage-1.0",
@@ -1947,7 +1947,7 @@ func (s *Suite) Test_Package_parse__include_infrastructure(c *check.C) {
 		"~/category/package/Makefile:11: LICENSE=\t2-clause-bsd",
 		"~/category/package/Makefile:12: ",
 		"~/category/package/Makefile:13: .include \"suppress-varorder.mk\"",
-		"~/category/package/suppress-varorder.mk:1: "+MkRcsID,
+		"~/category/package/suppress-varorder.mk:1: "+MkCvsID,
 		"~/category/package/Makefile:14: # empty",
 		"~/category/package/Makefile:15: # empty",
 		"~/category/package/Makefile:16: # empty",
@@ -1975,13 +1975,13 @@ func (s *Suite) Test_Package__Makefile_files(c *check.C) {
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("category/package/Makefile.common",
-		MkRcsID)
+		MkCvsID)
 	t.CreateFileLines("category/package/Makefile.orig",
-		MkRcsID)
+		MkCvsID)
 	t.CreateFileLines("category/package/Makefile.php",
-		MkRcsID)
+		MkCvsID)
 	t.CreateFileLines("category/package/ext.mk",
-		MkRcsID)
+		MkCvsID)
 	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))

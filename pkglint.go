@@ -558,7 +558,7 @@ func CheckLinesMessage(lines Lines) {
 	explanation := func() []string {
 		return []string{
 			"A MESSAGE file should consist of a header line, having 75 \"=\"",
-			"characters, followed by a line containing only the RCS Id, then an",
+			"characters, followed by a line containing only the CVS Id, then an",
 			"empty line, your text and finally the footer line, which is the",
 			"same as the header line."}
 	}
@@ -577,9 +577,9 @@ func CheckLinesMessage(lines Lines) {
 		fix.Explain(explanation()...)
 		fix.InsertBefore(hline)
 		fix.Apply()
-		lines.CheckRcsID(0, ``, "")
+		lines.CheckCvsID(0, ``, "")
 	} else if 1 < lines.Len() {
-		lines.CheckRcsID(1, ``, "")
+		lines.CheckCvsID(1, ``, "")
 	}
 	for _, line := range lines.Lines {
 		ck := LineChecker{line}

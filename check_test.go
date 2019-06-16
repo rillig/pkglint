@@ -19,9 +19,9 @@ import (
 var equals = check.Equals
 var deepEquals = check.DeepEquals
 
-const RcsID = "$" + "NetBSD$"
-const MkRcsID = "# $" + "NetBSD$"
-const PlistRcsID = "@comment $" + "NetBSD$"
+const CvsID = "$" + "NetBSD$"
+const MkCvsID = "# $" + "NetBSD$"
+const PlistCvsID = "@comment $" + "NetBSD$"
 
 type Suite struct {
 	Tester *Tester
@@ -259,15 +259,15 @@ func (t *Tester) SetUpPkgsrc() {
 	// This file is needed to locate the pkgsrc root directory.
 	// See findPkgsrcTopdir.
 	t.CreateFileLines("mk/bsd.pkg.mk",
-		MkRcsID)
+		MkCvsID)
 
 	// See Pkgsrc.loadDocChanges.
 	t.CreateFileLines("doc/CHANGES-2018",
-		RcsID)
+		CvsID)
 
 	// See Pkgsrc.loadSuggestedUpdates.
 	t.CreateFileLines("doc/TODO",
-		RcsID)
+		CvsID)
 
 	// Some example licenses so that the tests for whole packages
 	// don't need to define them on their own.
@@ -283,7 +283,7 @@ func (t *Tester) SetUpPkgsrc() {
 	//
 	// See Pkgsrc.loadMasterSites.
 	t.CreateFileLines("mk/fetch/sites.mk",
-		MkRcsID)
+		MkCvsID)
 
 	// The options for the PKG_OPTIONS framework are defined here.
 	//
@@ -295,7 +295,7 @@ func (t *Tester) SetUpPkgsrc() {
 	// The user-defined variables are read in to check for missing
 	// BUILD_DEFS declarations in the package Makefile.
 	t.CreateFileLines("mk/defaults/mk.conf",
-		MkRcsID)
+		MkCvsID)
 
 	// The tool definitions are defined in various files in mk/tools/.
 	// The relevant files are listed in bsd.tools.mk.
@@ -303,14 +303,14 @@ func (t *Tester) SetUpPkgsrc() {
 	t.CreateFileLines("mk/tools/bsd.tools.mk",
 		".include \"defaults.mk\"")
 	t.CreateFileLines("mk/tools/defaults.mk",
-		MkRcsID)
+		MkCvsID)
 
 	// Those tools that are added to USE_TOOLS in bsd.prefs.mk may be
 	// used at load time by packages.
 	t.CreateFileLines("mk/bsd.prefs.mk",
-		MkRcsID)
+		MkCvsID)
 	t.CreateFileLines("mk/bsd.fast.prefs.mk",
-		MkRcsID)
+		MkCvsID)
 
 	// Category Makefiles require this file for the common definitions.
 	t.CreateFileLines("mk/misc/category.mk")
@@ -325,7 +325,7 @@ func (t *Tester) SetUpCategory(name string) {
 
 	if _, err := os.Stat(t.File(name + "/Makefile")); os.IsNotExist(err) {
 		t.CreateFileLines(name+"/Makefile",
-			MkRcsID)
+			MkCvsID)
 	}
 }
 
@@ -354,7 +354,7 @@ func (t *Tester) SetUpPackage(pkgpath string, makefileLines ...string) string {
 	t.CreateFileLines(pkgpath+"/DESCR",
 		"Package description")
 	t.CreateFileLines(pkgpath+"/PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"bin/program")
 
 	// Because the package Makefile includes this file, the check for the
@@ -364,12 +364,12 @@ func (t *Tester) SetUpPackage(pkgpath string, makefileLines ...string) string {
 	// unrelated warnings about the variable order, that check is suppressed
 	// here.
 	t.CreateFileLines(pkgpath+"/suppress-varorder.mk",
-		MkRcsID)
+		MkCvsID)
 
 	// This distinfo file contains dummy hashes since pkglint cannot check the
 	// distfiles hashes anyway. It can only check the hashes for the patches.
 	t.CreateFileLines(pkgpath+"/distinfo",
-		RcsID,
+		CvsID,
 		"",
 		"SHA1 (distfile-1.0.tar.gz) = 12341234",
 		"RMD160 (distfile-1.0.tar.gz) = 12341234",
@@ -377,7 +377,7 @@ func (t *Tester) SetUpPackage(pkgpath string, makefileLines ...string) string {
 		"Size (distfile-1.0.tar.gz) = 12341234")
 
 	mlines := []string{
-		MkRcsID,
+		MkCvsID,
 		"",
 		"DISTNAME=\tdistname-1.0",
 		"#PKGNAME=\tpackage-1.0",
@@ -444,7 +444,7 @@ func (t *Tester) CreateFileLines(relativeFileName string, lines ...string) (file
 // temporary directory.
 func (t *Tester) CreateFileDummyPatch(relativeFileName string) {
 	t.CreateFileLines(relativeFileName,
-		RcsID,
+		CvsID,
 		"",
 		"Documentation",
 		"",
@@ -472,7 +472,7 @@ func (t *Tester) CreateFileDummyBuildlink3(relativeFileName string, customLines 
 
 	var lines []string
 	lines = append(lines,
-		MkRcsID,
+		MkCvsID,
 		"",
 		sprintf("BUILDLINK_TREE+=\t%s", lower),
 		"",

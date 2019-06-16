@@ -420,7 +420,7 @@ func (s *Suite) Test_VartypeCheck_Enum__use_match(c *check.C) {
 	t.SetUpCommandLine("-Wall", "--explain")
 
 	mklines := t.NewMkLines("module.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		".if !empty(MACHINE_ARCH:Mi386) || ${MACHINE_ARCH} == i386",
 		".endif",
@@ -762,7 +762,7 @@ func (s *Suite) Test_VartypeCheck_License(c *check.C) {
 	G.Pkg = NewPackage(t.File("category/package"))
 
 	mklines := t.NewMkLines("perl5.mk",
-		MkRcsID,
+		MkCvsID,
 		"PERL5_LICENSE= gnu-gpl-v2 OR artistic")
 	// Also registers the PERL5_LICENSE variable in the package.
 	mklines.collectDefinedVariables()

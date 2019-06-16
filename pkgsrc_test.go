@@ -10,7 +10,7 @@ func (s *Suite) Test_Pkgsrc_loadMasterSites(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("mk/fetch/sites.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"MASTER_SITE_A+= https://example.org/distfiles/",
 		"MASTER_SITE_B+= https://b.example.org/distfiles/ \\",
@@ -57,11 +57,11 @@ func (s *Suite) Test_Pkgsrc_checkToplevelUnusedLicenses(c *check.C) {
 	t.CreateFileLines("licenses/gnu-gpl-v3")
 
 	t.CreateFileLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"SUBDIR+=\tcategory")
 
 	t.CreateFileLines("category/Makefile",
-		MkRcsID,
+		MkCvsID,
 		"COMMENT=\tExample category",
 		"",
 		"SUBDIR+=\tpackage",
@@ -85,7 +85,7 @@ func (s *Suite) Test_Pkgsrc_loadUntypedVars(c *check.C) {
 	t.SetUpPkgsrc()
 	t.SetUpTool("echo", "ECHO", AtRunTime)
 	t.CreateFileLines("mk/infra.mk",
-		MkRcsID,
+		MkCvsID,
 		"#",
 		"# System-provided variables:",
 		"#",
@@ -109,7 +109,7 @@ func (s *Suite) Test_Pkgsrc_loadUntypedVars(c *check.C) {
 	t.FinishSetUp()
 
 	mklines := t.NewMkLines("filename.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"do-build:",
 		"\t: ${INFRA_MK} ${UNTYPED.three} ${ECHO}",
@@ -197,10 +197,10 @@ func (s *Suite) Test_Pkgsrc_loadTools__BUILD_DEFS(c *check.C) {
 		"pre-configure:",
 		"\t@${ECHO} ${PKG_SYSCONFDIR} ${VARBASE}")
 	t.CreateFileLines("mk/bsd.pkg.mk",
-		MkRcsID,
+		MkCvsID,
 		"_BUILD_DEFS+=\tPKG_SYSCONFBASEDIR PKG_SYSCONFDIR")
 	t.CreateFileLines("mk/defaults/mk.conf",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"VARBASE=\t\t/var/pkg",
 		"PKG_SYSCONFBASEDIR=\t/usr/pkg/etc",
@@ -289,7 +289,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__wip_suppresses_warnings(c *c
 
 	t.SetUpPackage("wip/package")
 	t.CreateFileLines("doc/CHANGES-2018",
-		RcsID,
+		CvsID,
 		"",
 		"Changes to the packages collection and infrastructure in 2018:",
 		"",
@@ -307,7 +307,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__wrong_indentation(c *check.C
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("doc/CHANGES-2018",
-		RcsID,
+		CvsID,
 		"",
 		"Changes to the packages collection and infrastructure in 2018:",
 		"",
@@ -330,7 +330,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__infrastructure(c *check.C) {
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("doc/CHANGES-2018",
-		RcsID,
+		CvsID,
 		"",
 		"Changes to the packages collection and infrastructure in 2018:",
 		"",
@@ -353,7 +353,7 @@ func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates__wip(c *check.C) {
 	pkg := t.SetUpPackage("wip/package",
 		"DISTNAME=\tpackage-1.11")
 	t.CreateFileLines("wip/TODO",
-		RcsID,
+		CvsID,
 		"",
 		"Suggested package updates",
 		"",
@@ -374,7 +374,7 @@ func (s *Suite) Test_Pkgsrc__deprecated(c *check.C) {
 	t.SetUpVartypes()
 	G.Pkgsrc.initDeprecatedVars()
 	mklines := t.NewMkLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"USE_PERL5=\t\tyes",
 		"SUBST_POSTCMD.class=\t${ECHO}",
 		"CPPFLAGS+=\t\t${BUILDLINK_CPPFLAGS.${PKG_JVM}}")
@@ -614,7 +614,7 @@ func (s *Suite) Test_Pkgsrc_loadTools__no_tools_found(c *check.C) {
 		"FATAL: ~/mk/tools/bsd.tools.mk: Must not be empty.")
 
 	t.CreateFileLines("mk/tools/bsd.tools.mk",
-		MkRcsID)
+		MkCvsID)
 
 	t.ExpectFatal(
 		G.Pkgsrc.loadTools,
@@ -680,7 +680,7 @@ func (s *Suite) Test_Pkgsrc_VariableType__from_mk(c *check.C) {
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/sys-vars.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"PKGSRC_MAKE_ENV?=\t# none",
 		"CPPPATH?=\tcpp",
@@ -719,7 +719,7 @@ func (s *Suite) Test_Pkgsrc_guessVariableType__SKIP(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("filename.mk",
-		MkRcsID,
+		MkCvsID,
 		"MY_CHECK_SKIP=\t*.c \"bad*pathname\"",
 		"MY_CHECK_SKIP+=\t*.cpp",
 		".if ${MY_CHECK_SKIP}",

@@ -131,7 +131,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 	t.SetUpPkgsrc()
 
 	t.CreateFileLines("doc/CHANGES-2018",
-		RcsID,
+		CvsID,
 		"",
 		"Changes to the packages collection and infrastructure in 2018:",
 		"",
@@ -139,7 +139,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 
 	// See Pkgsrc.loadSuggestedUpdates.
 	t.CreateFileLines("doc/TODO",
-		RcsID,
+		CvsID,
 		"",
 		"Suggested package updates",
 		"",
@@ -148,7 +148,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 	// The MASTER_SITES in the package Makefile are searched here.
 	// See Pkgsrc.loadMasterSites.
 	t.CreateFileLines("mk/fetch/sites.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"MASTER_SITE_GITHUB+=\thttps://github.com/")
 
@@ -163,7 +163,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 	// so that it can be used in CATEGORIES in the package Makefile.
 	// The category "tools" on the other hand is not valid.
 	t.CreateFileLines("sysutils/Makefile",
-		MkRcsID)
+		MkCvsID)
 
 	// The package Makefile in this test is quite simple, containing just the
 	// standard variable definitions. The data for checking the variable
@@ -171,7 +171,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 	// (as defined in the previous lines), and partly in the pkglint
 	// code directly. Many details can be found in vartypecheck.go.
 	t.CreateFileLines("sysutils/checkperms/Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"DISTNAME=\tcheckperms-1.11",
 		"CATEGORIES=\tsysutils tools",
@@ -186,14 +186,14 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 
 	t.CreateFileLines("sysutils/checkperms/MESSAGE",
 		"===========================================================================",
-		RcsID,
+		CvsID,
 		"",
 		"After installation, this package has to be configured in a special way.",
 		"",
 		"===========================================================================")
 
 	t.CreateFileLines("sysutils/checkperms/PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"bin/checkperms",
 		"man/man1/checkperms.1")
 
@@ -204,7 +204,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		"Make the package work on MS-DOS")
 
 	t.CreateFileLines("sysutils/checkperms/patches/patch-checkperms.c",
-		RcsID,
+		CvsID,
 		"",
 		"A simple patch demonstrating that pkglint checks for missing",
 		"removed lines. The hunk headers says that one line is to be",
@@ -217,7 +217,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		"+// Header 2",
 		"+// Header 3")
 	t.CreateFileLines("sysutils/checkperms/distinfo",
-		RcsID,
+		CvsID,
 		"",
 		"SHA1 (checkperms-1.12.tar.gz) = 34c084b4d06bcd7a8bba922ff57677e651eeced5",
 		"RMD160 (checkperms-1.12.tar.gz) = cd95029aa930b6201e9580b3ab7e36dd30b8f925",
@@ -385,7 +385,7 @@ func (s *Suite) Test_Pkglint_Check(c *check.C) {
 	t.CreateFileLines("mk/bsd.pkg.mk")
 	t.CreateFileLines("category/package/Makefile")
 	t.CreateFileLines("category/Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"COMMENT=\tCategory\u0007",
 		"",
@@ -393,7 +393,7 @@ func (s *Suite) Test_Pkglint_Check(c *check.C) {
 		"",
 		".include \"../mk/misc/category.mk\"")
 	t.CreateFileLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"COMMENT=\tToplevel\u0005")
 
 	G.Check(t.File("."))
@@ -546,7 +546,7 @@ func (s *Suite) Test_CheckLinesMessage__autofix(c *check.C) {
 			"=============================================\" after this line.")
 	t.CheckFileLines("MESSAGE",
 		"===========================================================================",
-		RcsID,
+		CvsID,
 		"1",
 		"2",
 		"3",
@@ -564,7 +564,7 @@ func (s *Suite) Test_CheckLinesMessage__common(c *check.C) {
 		"MESSAGE_SRC+=\t${.CURDIR}/MESSAGE")
 	t.CreateFileLines("category/package/MESSAGE.common",
 		hline,
-		RcsID,
+		CvsID,
 		"common line")
 	t.CreateFileLines("category/package/MESSAGE",
 		hline)
@@ -679,7 +679,7 @@ func (s *Suite) Test_Pkglint_Tool__prefer_mk_over_pkgsrc(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("dummy.mk", 123, "DUMMY=\tvalue")
-	mklines := t.NewMkLines("Makefile", MkRcsID)
+	mklines := t.NewMkLines("Makefile", MkCvsID)
 	global := G.Pkgsrc.Tools.Define("tool", "TOOL", mkline)
 	local := mklines.Tools.Define("tool", "TOOL", mkline)
 
@@ -698,7 +698,7 @@ func (s *Suite) Test_Pkglint_Tool__prefer_mk_over_pkgsrc(c *check.C) {
 func (s *Suite) Test_Pkglint_Tool__lookup_by_name_fallback(c *check.C) {
 	t := s.Init(c)
 
-	mklines := t.NewMkLines("Makefile", MkRcsID)
+	mklines := t.NewMkLines("Makefile", MkCvsID)
 	t.SetUpTool("tool", "", Nowhere)
 
 	loadTimeTool, loadTimeUsable := G.Tool(mklines, "tool", LoadTime)
@@ -718,7 +718,7 @@ func (s *Suite) Test_Pkglint_Tool__lookup_by_varname(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("dummy.mk", 123, "DUMMY=\tvalue")
-	mklines := t.NewMkLines("Makefile", MkRcsID)
+	mklines := t.NewMkLines("Makefile", MkCvsID)
 	global := G.Pkgsrc.Tools.Define("tool", "TOOL", mkline)
 	local := mklines.Tools.Define("tool", "TOOL", mkline)
 
@@ -738,7 +738,7 @@ func (s *Suite) Test_Pkglint_Tool__lookup_by_varname(c *check.C) {
 func (s *Suite) Test_Pkglint_Tool__lookup_by_varname_fallback(c *check.C) {
 	t := s.Init(c)
 
-	mklines := t.NewMkLines("Makefile", MkRcsID)
+	mklines := t.NewMkLines("Makefile", MkCvsID)
 	G.Pkgsrc.Tools.def("tool", "TOOL", false, Nowhere, nil)
 
 	loadTimeTool, loadTimeUsable := G.Tool(mklines, "${TOOL}", LoadTime)
@@ -754,7 +754,7 @@ func (s *Suite) Test_Pkglint_Tool__lookup_by_varname_fallback(c *check.C) {
 func (s *Suite) Test_Pkglint_Tool__lookup_by_varname_fallback_runtime(c *check.C) {
 	t := s.Init(c)
 
-	mklines := t.NewMkLines("Makefile", MkRcsID)
+	mklines := t.NewMkLines("Makefile", MkCvsID)
 	G.Pkgsrc.Tools.def("tool", "TOOL", false, AtRunTime, nil)
 
 	loadTimeTool, loadTimeUsable := G.Tool(mklines, "${TOOL}", LoadTime)
@@ -770,7 +770,7 @@ func (s *Suite) Test_Pkglint_ToolByVarname__prefer_mk_over_pkgsrc(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("dummy.mk", 123, "DUMMY=\tvalue")
-	mklines := t.NewMkLines("Makefile", MkRcsID)
+	mklines := t.NewMkLines("Makefile", MkCvsID)
 	global := G.Pkgsrc.Tools.Define("tool", "TOOL", mkline)
 	local := mklines.Tools.Define("tool", "TOOL", mkline)
 
@@ -783,7 +783,7 @@ func (s *Suite) Test_Pkglint_ToolByVarname__prefer_mk_over_pkgsrc(c *check.C) {
 func (s *Suite) Test_Pkglint_ToolByVarname(c *check.C) {
 	t := s.Init(c)
 
-	mklines := t.NewMkLines("Makefile", MkRcsID)
+	mklines := t.NewMkLines("Makefile", MkCvsID)
 	G.Pkgsrc.Tools.def("tool", "TOOL", false, AtRunTime, nil)
 
 	c.Check(G.ToolByVarname(mklines, "TOOL").String(), equals, "tool:TOOL::AtRunTime")
@@ -850,11 +850,11 @@ func (s *Suite) Test_Pkglint_checkDirent__file_selection(c *check.C) {
 	t.SetUpCommandLine("-Call", "-Wall,no-space")
 	t.SetUpPkgsrc()
 	t.CreateFileLines("doc/CHANGES-2018",
-		RcsID)
+		CvsID)
 	t.CreateFileLines("category/package/buildlink3.mk",
-		MkRcsID)
+		MkCvsID)
 	t.CreateFileLines("category/package/unexpected.txt",
-		RcsID)
+		CvsID)
 	t.FinishSetUp()
 
 	G.checkDirent(t.File("doc/CHANGES-2018"), 0444)
@@ -870,26 +870,26 @@ func (s *Suite) Test_Pkglint_checkReg__readme_and_todo(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("category/Makefile",
-		MkRcsID)
+		MkCvsID)
 
 	t.CreateFileLines("category/package/files/README",
 		"Extra file that is installed later.")
 	t.CreateFileDummyPatch("category/package/patches/patch-README")
 	t.CreateFileLines("category/package/Makefile",
-		MkRcsID,
+		MkCvsID,
 		"CATEGORIES=category",
 		"",
 		"COMMENT=Comment",
 		"LICENSE=2-clause-bsd")
 	t.CreateFileLines("category/package/PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"bin/program")
 	t.CreateFileLines("category/package/README",
 		"This package ...")
 	t.CreateFileLines("category/package/TODO",
 		"Make this package work.")
 	t.CreateFileLines("category/package/distinfo",
-		RcsID,
+		CvsID,
 		"",
 		"SHA1 (patch-README) = ebbf34b0641bcb508f17d5a27f2bf2a536d810ac")
 
@@ -991,7 +991,7 @@ func (s *Suite) Test_Pkglint_checkdirPackage(c *check.C) {
 
 	t.Chdir("category/package")
 	t.CreateFileLines("Makefile",
-		MkRcsID)
+		MkCvsID)
 
 	G.checkdirPackage(".")
 
@@ -1008,19 +1008,19 @@ func (s *Suite) Test_Pkglint_checkdirPackage__PKGDIR(c *check.C) {
 	t.SetUpPkgsrc()
 	t.CreateFileLines("category/Makefile")
 	t.CreateFileLines("other/package/Makefile",
-		MkRcsID)
+		MkCvsID)
 	t.CreateFileLines("other/package/PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"bin/program")
 	t.CreateFileLines("other/package/distinfo",
-		RcsID,
+		CvsID,
 		"",
 		"SHA1 (patch-aa) = da39a3ee5e6b4b0d3255bfef95601890afd80709")
 	t.CreateFileLines("category/package/patches/patch-aa",
-		RcsID)
+		CvsID)
 	t.Chdir("category/package")
 	t.CreateFileLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"CATEGORIES=\tcategory",
 		"",
@@ -1057,7 +1057,7 @@ func (s *Suite) Test_Pkglint_checkdirPackage__meta_package_without_license(c *ch
 
 	t.Chdir("category/package")
 	t.CreateFileLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"META_PACKAGE=\tyes")
 	t.SetUpVartypes()

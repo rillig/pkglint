@@ -55,7 +55,7 @@ func (s *Suite) Test_CheckLinesPlist__multiple_libtool_libraries(c *check.C) {
 
 	G.Pkg = NewPackage(t.File("category/pkgbase"))
 	lines := t.NewLines("PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"lib/libc.la",
 		"lib/libm.la")
 
@@ -69,7 +69,7 @@ func (s *Suite) Test_CheckLinesPlist__empty(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("PLIST",
-		PlistRcsID)
+		PlistCvsID)
 
 	CheckLinesPlist(nil, lines)
 
@@ -81,10 +81,10 @@ func (s *Suite) Test_CheckLinesPlist__common_end(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("PLIST.common",
-		PlistRcsID,
+		PlistCvsID,
 		"bin/common")
 	lines := t.SetUpFileLines("PLIST.common_end",
-		PlistRcsID,
+		PlistCvsID,
 		"sbin/common_end")
 
 	CheckLinesPlist(nil, lines)
@@ -97,7 +97,7 @@ func (s *Suite) Test_CheckLinesPlist__condition(c *check.C) {
 
 	G.Pkg = NewPackage(t.File("category/pkgbase"))
 	lines := t.NewLines("PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"${PLIST.bincmds}bin/subdir/command")
 
 	CheckLinesPlist(G.Pkg, lines)
@@ -110,7 +110,7 @@ func (s *Suite) Test_CheckLinesPlist__sorting(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"@comment Do not remove",
 		"sbin/i386/6c",
 		"sbin/program",
@@ -137,7 +137,7 @@ func (s *Suite) Test_plistLineSorter_Sort(c *check.C) {
 
 	t.SetUpCommandLine("--autofix")
 	lines := t.SetUpFileLines("PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"@comment Do not remove",
 		"A",
 		"b",
@@ -172,7 +172,7 @@ func (s *Suite) Test_plistLineSorter_Sort(c *check.C) {
 	t.CheckOutputLines(
 		"AUTOFIX: ~/PLIST:3: Sorting the whole file.")
 	t.CheckFileLines("PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"@comment Do not remove", // The header ends here
 		"A",
 		"C",
@@ -193,7 +193,7 @@ func (s *Suite) Test_PlistChecker_checkLine(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"bin/program",
 		"${PLIST.var}bin/conditional-program",
 		"${PLIST.linux}${PLIST.arm}bin/arm-linux-only",
@@ -227,7 +227,7 @@ func (s *Suite) Test_PlistChecker_checkPathMan__gz(c *check.C) {
 
 	G.Pkg = NewPackage(t.File("category/pkgbase"))
 	lines := t.NewLines("PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"man/man3/strerror.3.gz")
 
 	CheckLinesPlist(G.Pkg, lines)
@@ -240,7 +240,7 @@ func (s *Suite) Test_PlistChecker_checkPath__PKGMANDIR(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"${PKGMANDIR}/man1/sh.1")
 
 	CheckLinesPlist(nil, lines)
@@ -253,7 +253,7 @@ func (s *Suite) Test_PlistChecker_checkPath__python_egg(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"${PYSITELIB}/gdspy-${PKGVERSION}-py${PYVERSSUFFIX}.egg-info/PKG-INFO")
 
 	CheckLinesPlist(nil, lines)
@@ -266,7 +266,7 @@ func (s *Suite) Test_PlistChecker__autofix(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"lib/libvirt/connection-driver/libvirt_driver_storage.la",
 		"${PLIST.hal}lib/libvirt/connection-driver/libvirt_driver_nodedev.la",
 		"${PLIST.xen}lib/libvirt/connection-driver/libvirt_driver_libxl.la",
@@ -304,7 +304,7 @@ func (s *Suite) Test_PlistChecker__autofix(c *check.C) {
 		"AUTOFIX: ~/PLIST:6: Replacing \"${PKGMANDIR}/\" with \"man/\".",
 		"AUTOFIX: ~/PLIST:2: Sorting the whole file.")
 	t.CheckFileLines("PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"${PLIST.xen}lib/libvirt/connection-driver/libvirt_driver_libxl.la",
 		"${PLIST.hal}lib/libvirt/connection-driver/libvirt_driver_nodedev.la",
 		"lib/libvirt/connection-driver/libvirt_driver_storage.la",
@@ -334,7 +334,7 @@ func (s *Suite) Test_PlistChecker__remove_same_entries(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"${PLIST.option1}bin/true",
 		"bin/true",
 		"${PLIST.option1}bin/true",
@@ -363,7 +363,7 @@ func (s *Suite) Test_PlistChecker__remove_same_entries(c *check.C) {
 		"AUTOFIX: ~/PLIST:8: Deleting this line.",
 		"AUTOFIX: ~/PLIST:2: Sorting the whole file.")
 	t.CheckFileLines("PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"${PLIST.option2}bin/false",
 		"${PLIST.option3}bin/false",
 		"bin/true")
@@ -378,7 +378,7 @@ func (s *Suite) Test_PlistChecker__autofix_with_only(c *check.C) {
 	t.SetUpCommandLine("-Wall", "--autofix", "--only", "matches nothing")
 
 	lines := t.SetUpFileLines("PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"sbin/program",
 		"bin/program")
 
@@ -386,7 +386,7 @@ func (s *Suite) Test_PlistChecker__autofix_with_only(c *check.C) {
 
 	t.CheckOutputEmpty()
 	t.CheckFileLines("PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"sbin/program",
 		"bin/program")
 }
@@ -395,7 +395,7 @@ func (s *Suite) Test_PlistChecker__exec_MKDIR(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"bin/program",
 		"@exec ${MKDIR} %D/share/mk/subdir")
 
@@ -408,7 +408,7 @@ func (s *Suite) Test_PlistChecker__empty_line(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"",
 		"bin/program")
 
@@ -424,7 +424,7 @@ func (s *Suite) Test_PlistChecker__empty_line(c *check.C) {
 	t.CheckOutputLines(
 		"AUTOFIX: ~/PLIST:2: Deleting this line.")
 	t.CheckFileLines("PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"bin/program")
 }
 
@@ -432,7 +432,7 @@ func (s *Suite) Test_PlistChecker__invalid_line_type(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"---invalid",
 		"+++invalid",
 		"<<<<<<<< merge conflict",
@@ -454,7 +454,7 @@ func (s *Suite) Test_PlistChecker_checkPathNonAscii(c *check.C) {
 
 	t.SetUpCommandLine("-Wall", "--explain")
 	lines := t.NewLines("PLIST",
-		PlistRcsID,
+		PlistCvsID,
 
 		"dir1/fr\xFCher", // German, "back then", encoded in ISO 8859-1
 
@@ -506,7 +506,7 @@ func (s *Suite) Test_PlistChecker__doc(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"doc/html/index.html")
 
 	CheckLinesPlist(nil, lines)
@@ -519,7 +519,7 @@ func (s *Suite) Test_PlistChecker__PKGLOCALEDIR(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"${PKGLOCALEDIR}/file")
 	G.Pkg = NewPackage(t.File("category/package"))
 
@@ -533,7 +533,7 @@ func (s *Suite) Test_PlistChecker_checkPath__unwanted_entries(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"share/perllocal.pod",
 		"share/pkgbase/CVS/Entries",
 		"share/pkgbase/Makefile.orig")
@@ -550,7 +550,7 @@ func (s *Suite) Test_PlistChecker_checkPathInfo(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"info/gmake.1.info")
 	G.Pkg = NewPackage(t.File("category/package"))
 
@@ -564,7 +564,7 @@ func (s *Suite) Test_PlistChecker_checkPathLib(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"lib/charset.alias",
 		"lib/liberty-1.0.la",
 		"lib/locale/de_DE/liberty.mo",
@@ -585,7 +585,7 @@ func (s *Suite) Test_PlistChecker_checkPathMan(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"man/man1/program.8",
 		"man/manx/program.x")
 
@@ -600,7 +600,7 @@ func (s *Suite) Test_PlistChecker_checkPathShare(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"share/doc/html/package/index.html",
 		"share/doc/package/index.html",
 		"share/icons/hicolor/icon-theme.cache",
@@ -628,7 +628,7 @@ func (s *Suite) Test_PlistChecker_checkPathShare__gnome_icon_theme(c *check.C) {
 		"ICON_THEMES=\tyes",
 		".include \"../../graphics/gnome-icon-theme/buildlink3.mk\"")
 	t.CreateFileLines("graphics/gnome-icon-theme-extras/PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"share/icons/gnome/16x16/devices/media-optical-cd-audio.png",
 		"share/icons/gnome/16x16/devices/media-optical-dvd.png")
 	t.FinishSetUp()
@@ -652,7 +652,7 @@ func (s *Suite) Test_PlistLine_CheckTrailingWhitespace(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"bin/program \t")
 
 	CheckLinesPlist(nil, lines)
@@ -666,7 +666,7 @@ func (s *Suite) Test_PlistLine_CheckDirective(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"@unexec rmdir %D/bin",
 		"@exec ldconfig",
 		"@comment This is a comment",
@@ -691,7 +691,7 @@ func (s *Suite) Test_plistLineSorter__unsortable(c *check.C) {
 
 	t.SetUpCommandLine("-Wall", "--show-autofix")
 	lines := t.SetUpFileLines("PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"bin/program${OPSYS}",
 		"@exec true",
 		"bin/program1")
@@ -701,8 +701,8 @@ func (s *Suite) Test_plistLineSorter__unsortable(c *check.C) {
 
 	t.CheckOutputLines(
 		"TRACE: + CheckLinesPlist(\"~/PLIST\")",
-		"TRACE: 1 + (*LinesImpl).CheckRcsID(\"@comment \", \"@comment \")",
-		"TRACE: 1 - (*LinesImpl).CheckRcsID(\"@comment \", \"@comment \")",
+		"TRACE: 1 + (*LinesImpl).CheckCvsID(\"@comment \", \"@comment \")",
+		"TRACE: 1 - (*LinesImpl).CheckCvsID(\"@comment \", \"@comment \")",
 		"TRACE: 1   ~/PLIST:2: bin/program${OPSYS}: This line prevents pkglint from sorting the PLIST automatically.",
 		"TRACE: 1 + SaveAutofixChanges()",
 		"TRACE: 1 - SaveAutofixChanges()",

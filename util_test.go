@@ -500,7 +500,7 @@ func (s *Suite) Test_Scope_LastValue(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("file.mk",
-		MkRcsID,
+		MkCvsID,
 		"VAR=\tfirst",
 		"VAR=\tsecond",
 		".if 1",
@@ -637,7 +637,7 @@ func (s *Suite) Test_FileCache(c *check.C) {
 	cache := NewFileCache(3)
 
 	lines := t.NewLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"# line 2")
 
 	c.Check(cache.Get("Makefile", 0), check.IsNil)
@@ -700,7 +700,7 @@ func (s *Suite) Test_FileCache_removeOldEntries__branch_coverage(c *check.C) {
 	G.Testing = false
 
 	lines := t.NewLines("filename.mk",
-		MkRcsID)
+		MkCvsID)
 	cache := NewFileCache(3)
 	cache.Put("filename1.mk", 0, lines)
 	cache.Put("filename2.mk", 0, lines)
@@ -721,7 +721,7 @@ func (s *Suite) Test_FileCache_removeOldEntries__no_tracing(c *check.C) {
 	t.DisableTracing()
 
 	lines := t.NewLines("filename.mk",
-		MkRcsID)
+		MkCvsID)
 	cache := NewFileCache(3)
 	cache.Put("filename1.mk", 0, lines)
 	cache.Put("filename2.mk", 0, lines)
@@ -738,7 +738,7 @@ func (s *Suite) Test_FileCache_removeOldEntries__zero_capacity(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("filename.mk",
-		MkRcsID)
+		MkCvsID)
 	cache := NewFileCache(1)
 	cache.Put("filename1.mk", 0, lines)
 
@@ -751,7 +751,7 @@ func (s *Suite) Test_FileCache_Evict__sort(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("filename.mk",
-		MkRcsID)
+		MkCvsID)
 	cache := NewFileCache(10)
 	cache.Put("filename0.mk", 0, lines)
 	cache.Put("filename1.mk", 0, lines)

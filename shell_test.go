@@ -530,7 +530,7 @@ func (s *Suite) Test_ShellLineChecker_CheckWord__PKGMANDIR(c *check.C) {
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("chat/ircII/Makefile",
-		MkRcsID,
+		MkCvsID,
 		"CONFIGURE_ARGS+=--mandir=${DESTDIR}${PREFIX}/man",
 		"CONFIGURE_ARGS+=--mandir=${DESTDIR}${PREFIX}/${PKGMANDIR}")
 
@@ -546,7 +546,7 @@ func (s *Suite) Test_ShellLineChecker_unescapeBackticks__unfinished(c *check.C) 
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("filename.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"pre-configure:",
 		"\t`${VAR}",      // Error in first shell word
@@ -616,7 +616,7 @@ func (s *Suite) Test_ShellLineChecker_variableNeedsQuoting__integration(c *check
 	t.SetUpVartypes()
 	t.SetUpTool("cp", "", AtRunTime)
 	mklines := t.NewMkLines("filename.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		// It's a bit silly to use shell variables in CONFIGURE_ARGS,
 		// but as of January 2019 that's the only way to run ShellLine.variableNeedsQuoting.
@@ -661,7 +661,7 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__shell_variables(c *
 	t.SetUpTool("sed", "SED", AtRunTime)
 	text := "for f in *.pl; do ${SED} s,@PREFIX@,${PREFIX}, < $f > $f.tmp && ${MV} $f.tmp $f; done"
 	mklines := t.NewMkLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"\t"+text)
 
@@ -776,7 +776,7 @@ func (s *Suite) Test_ShellLineChecker__shell_comment_with_line_continuation(c *c
 	t := s.Init(c)
 
 	mklines := t.SetUpFileMkLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"pre-install:",
 		"\t"+"# comment\\",
 		"\t"+"echo \"hello\"")
@@ -907,7 +907,7 @@ func (s *Suite) Test_ShellLineChecker_unescapeBackticks__dquotBacktDquot(c *chec
 
 	t.SetUpTool("echo", "", AtRunTime)
 	mklines := t.NewMkLines("dummy.mk",
-		MkRcsID,
+		MkCvsID,
 		"\t var=\"`echo \"\"`\"")
 
 	mklines.Check()
@@ -921,7 +921,7 @@ func (s *Suite) Test_ShellLineChecker__variable_outside_quotes(c *check.C) {
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("dummy.mk",
-		MkRcsID,
+		MkCvsID,
 		"GZIP=\t${ECHO} $$comment")
 
 	mklines.Check()
@@ -938,7 +938,7 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommand__cd_inside_if(c *check.C
 	t.SetUpVartypes()
 	t.SetUpTool("echo", "ECHO", AtRunTime)
 	mklines := t.NewMkLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"\t${RUN} if cd /bin; then echo \"/bin exists.\"; fi")
 
@@ -955,7 +955,7 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommand__negated_pipe(c *check.C
 	t.SetUpTool("echo", "ECHO", AtRunTime)
 	t.SetUpTool("test", "TEST", AtRunTime)
 	mklines := t.NewMkLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"\t${RUN} if ! test -f /etc/passwd; then echo \"passwd is missing.\"; fi")
 
@@ -971,7 +971,7 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommand__subshell(c *check.C) {
 	t.SetUpTool("echo", "ECHO", AtRunTime)
 	t.SetUpTool("expr", "EXPR", AtRunTime)
 	mklines := t.NewMkLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"pre-configure:",
 		"\t@(echo ok)",
@@ -998,7 +998,7 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommand__case_patterns_from_vari
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"pre-configure:",
 		"\tcase $$file in ${CHECK_PERMS_SKIP:@pattern@${pattern}) ;;@} *) continue; esac")
@@ -1017,7 +1017,7 @@ func (s *Suite) Test_ShellLineChecker_checkHiddenAndSuppress(c *check.C) {
 	t.SetUpTool("echo", "ECHO", AtRunTime)
 	t.SetUpTool("ls", "LS", AtRunTime)
 	mklines := t.NewMkLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"show-all-targets: .PHONY",
 		"\t@echo 'hello'",
@@ -1034,7 +1034,7 @@ func (s *Suite) Test_ShellLineChecker_checkHiddenAndSuppress__no_tracing(c *chec
 
 	t.SetUpTool("ls", "LS", AtRunTime)
 	mklines := t.NewMkLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"pre-configure:",
 		"\t@ls -l")
@@ -1050,7 +1050,7 @@ func (s *Suite) Test_SimpleCommandChecker_handleForbiddenCommand(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"\t${RUN} mktexlsr; texconfig")
 
@@ -1067,7 +1067,7 @@ func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable(c *check.C) {
 	t.SetUpTool("perl", "PERL5", AtRunTime)
 	t.SetUpTool("perl6", "PERL6", Nowhere)
 	mklines := t.NewMkLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"PERL5_VARS_CMD=\t${PERL5:Q}",
 		"PERL5_VARS_CMD=\t${PERL6:Q}")
@@ -1099,7 +1099,7 @@ func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable__from_package(c 
 		"",
 		".include \"extra.mk\"")
 	t.CreateFileLines("category/package/extra.mk",
-		MkRcsID,
+		MkCvsID,
 		"PYTHON_BIN=\tmy_cmd")
 	t.FinishSetUp()
 
@@ -1112,7 +1112,7 @@ func (s *Suite) Test_SimpleCommandChecker_handleComment(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("file.mk",
-		MkRcsID,
+		MkCvsID,
 		"\t# comment; continuation")
 
 	mklines.Check()
@@ -1128,7 +1128,7 @@ func (s *Suite) Test_SimpleCommandChecker_checkInstallMulti(c *check.C) {
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("install.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"do-install:",
 		"\t${INSTALL_PROGRAM_DIR} -m 0555 -g ${APACHE_GROUP} -o ${APACHE_USER} \\",
@@ -1147,7 +1147,7 @@ func (s *Suite) Test_SimpleCommandChecker_checkPaxPe(c *check.C) {
 	t.SetUpVartypes()
 	t.SetUpTool("pax", "PAX", AtRunTime)
 	mklines := t.NewMkLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"do-install:",
 		"\t${RUN} pax -pe ${WRKSRC} ${DESTDIR}${PREFIX}",
@@ -1166,7 +1166,7 @@ func (s *Suite) Test_SimpleCommandChecker_checkEchoN(c *check.C) {
 	t.SetUpTool("echo", "ECHO", AtRunTime)
 	t.SetUpTool("echo -n", "ECHO_N", AtRunTime)
 	mklines := t.NewMkLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"do-install:",
 		"\t${RUN} ${ECHO} -n 'Computing...'",
@@ -1185,7 +1185,7 @@ func (s *Suite) Test_ShellProgramChecker_checkConditionalCd(c *check.C) {
 	t.SetUpTool("ls", "LS", AtRunTime)
 	t.SetUpTool("printf", "PRINTF", AtRunTime)
 	mklines := t.NewMkLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"pre-configure:",
 		"\t${RUN} while cd ..; do printf .; done",
 		"\t${RUN} if cd ..; then printf .; fi",
@@ -1207,7 +1207,7 @@ func (s *Suite) Test_SimpleCommandChecker_checkRegexReplace(c *check.C) {
 		t.SetUpTool("pax", "PAX", AtRunTime)
 		t.SetUpTool("sed", "SED", AtRunTime)
 		mklines := t.NewMkLines("Makefile",
-			MkRcsID,
+			MkCvsID,
 			"pre-configure:",
 			"\t"+cmd)
 
@@ -1259,7 +1259,7 @@ func (s *Suite) Test_ShellProgramChecker_checkSetE__simple_commands(c *check.C) 
 	t.SetUpTool("rm", "", AtRunTime)
 	t.SetUpTool("touch", "", AtRunTime)
 	mklines := t.NewMkLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"pre-configure:",
 		"\techo 1; echo 2; echo 3",
 		"\techo 1; touch file; rm file",
@@ -1278,7 +1278,7 @@ func (s *Suite) Test_ShellProgramChecker_checkSetE__compound_commands(c *check.C
 	t.SetUpTool("echo", "", AtRunTime)
 	t.SetUpTool("touch", "", AtRunTime)
 	mklines := t.NewMkLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"pre-configure:",
 		"\ttouch file; for f in file; do echo \"$$f\"; done",
 		"\tfor f in file; do echo \"$$f\"; done; touch file",
@@ -1298,7 +1298,7 @@ func (s *Suite) Test_ShellProgramChecker_checkSetE__no_tracing(c *check.C) {
 
 	t.SetUpTool("touch", "", AtRunTime)
 	mklines := t.NewMkLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"pre-configure:",
 		"\ttouch 1; touch 2")
 	t.DisableTracing()
@@ -1322,7 +1322,7 @@ func (s *Suite) Test_ShellProgramChecker_canFail(c *check.C) {
 	t.SetUpTool("tr", "tr", AtRunTime)
 	t.SetUpTool("true", "TRUE", AtRunTime)
 	mklines := t.NewMkLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"pre-configure:",
 		"\tsocklen=`${GREP} 'expr' ${WRKSRC}/config.h`; echo 'done.'",
 		"\tsocklen=`${GREP} 'expr' ${WRKSRC}/config.h || ${TRUE}`; echo 'done.'",

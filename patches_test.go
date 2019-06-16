@@ -7,7 +7,7 @@ func (s *Suite) Test_CheckLinesPatch__with_comment(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("patch-WithComment",
-		RcsID,
+		CvsID,
 		"",
 		"This part describes:",
 		"* the purpose of the patch,",
@@ -35,7 +35,7 @@ func (s *Suite) Test_CheckLinesPatch__without_empty_line__autofix(c *check.C) {
 
 	t.Chdir("category/package")
 	patchLines := t.SetUpFileLines("patch-WithoutEmptyLines",
-		RcsID,
+		CvsID,
 		"Text",
 		"--- file.orig",
 		"+++ file",
@@ -45,7 +45,7 @@ func (s *Suite) Test_CheckLinesPatch__without_empty_line__autofix(c *check.C) {
 		"+new line",
 		" context after")
 	t.CreateFileLines("distinfo",
-		RcsID,
+		CvsID,
 		"",
 		// The hash is taken from a breakpoint at the beginning of AutofixDistinfo, oldSha1
 		"SHA1 (some patch) = 49abd735b7e706ea9ed6671628bb54e91f7f5ffb")
@@ -62,7 +62,7 @@ func (s *Suite) Test_CheckLinesPatch__without_empty_line__autofix(c *check.C) {
 			"with \"4938fc8c0b483dc2e33e741b0da883d199e78164\".")
 
 	t.CheckFileLines("patch-WithoutEmptyLines",
-		RcsID,
+		CvsID,
 		"",
 		"Text",
 		"",
@@ -74,7 +74,7 @@ func (s *Suite) Test_CheckLinesPatch__without_empty_line__autofix(c *check.C) {
 		"+new line",
 		" context after")
 	t.CheckFileLines("distinfo",
-		RcsID,
+		CvsID,
 		"",
 		"SHA1 (some patch) = 4938fc8c0b483dc2e33e741b0da883d199e78164")
 }
@@ -83,7 +83,7 @@ func (s *Suite) Test_CheckLinesPatch__no_comment_and_no_empty_lines(c *check.C) 
 	t := s.Init(c)
 
 	patchLines := t.SetUpFileLines("patch-WithoutEmptyLines",
-		RcsID,
+		CvsID,
 		"--- file.orig",
 		"+++ file",
 		"@@ -1,1 +1,1 @@",
@@ -107,7 +107,7 @@ func (s *Suite) Test_CheckLinesPatch__without_comment(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("patch-WithoutComment",
-		RcsID,
+		CvsID,
 		"",
 		"--- file.orig",
 		"+++ file",
@@ -129,7 +129,7 @@ func (s *Suite) Test_CheckLinesPatch__git_without_comment(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("patch-aa",
-		RcsID,
+		CvsID,
 		"",
 		"diff --git a/aa b/aa",
 		"index 1234567..1234567 100644",
@@ -152,7 +152,7 @@ func (s *Suite) Test_CheckLinesPatch__error_code(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("patch-ErrorCode",
-		RcsID,
+		CvsID,
 		"",
 		"*** Error code 1", // Looks like a context diff but isn't.
 		"",
@@ -173,7 +173,7 @@ func (s *Suite) Test_CheckLinesPatch__wrong_header_order(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("patch-WrongOrder",
-		RcsID,
+		CvsID,
 		"",
 		"Text",
 		"Text",
@@ -197,7 +197,7 @@ func (s *Suite) Test_CheckLinesPatch__context_diff(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("patch-ctx",
-		RcsID,
+		CvsID,
 		"",
 		"diff -cr history.c.orig history.c",
 		"*** history.c.orig",
@@ -214,7 +214,7 @@ func (s *Suite) Test_CheckLinesPatch__no_patch(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("patch-aa",
-		RcsID,
+		CvsID,
 		"",
 		"-- oldfile",
 		"++ newfile")
@@ -229,7 +229,7 @@ func (s *Suite) Test_CheckLinesPatch__two_patched_files(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("patch-aa",
-		RcsID,
+		CvsID,
 		"",
 		"A single patch file can apply to more than one file at a time.",
 		"It shouldn't though, to keep the relation between patch files",
@@ -257,7 +257,7 @@ func (s *Suite) Test_CheckLinesPatch__documentation_that_looks_like_patch_lines(
 	t := s.Init(c)
 
 	lines := t.NewLines("patch-aa",
-		RcsID,
+		CvsID,
 		"",
 		"--- oldfile",
 		"",
@@ -275,7 +275,7 @@ func (s *Suite) Test_CheckLinesPatch__only_unified_header_but_no_content(c *chec
 	t := s.Init(c)
 
 	lines := t.NewLines("patch-unified",
-		RcsID,
+		CvsID,
 		"",
 		"Documentation for the patch",
 		"",
@@ -292,7 +292,7 @@ func (s *Suite) Test_CheckLinesPatch__only_context_header_but_no_content(c *chec
 	t := s.Init(c)
 
 	lines := t.NewLines("patch-context",
-		RcsID,
+		CvsID,
 		"",
 		"Documentation for the patch",
 		"",
@@ -311,7 +311,7 @@ func (s *Suite) Test_CheckLinesPatch__no_newline_with_text_following(c *check.C)
 	t := s.Init(c)
 
 	lines := t.NewLines("patch-aa",
-		RcsID,
+		CvsID,
 		"",
 		"comment",
 		"",
@@ -334,7 +334,7 @@ func (s *Suite) Test_CheckLinesPatch__no_newline(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("patch-aa",
-		RcsID,
+		CvsID,
 		"",
 		"comment",
 		"",
@@ -357,7 +357,7 @@ func (s *Suite) Test_CheckLinesPatch__empty_lines_left_out_at_eof(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("patch-aa",
-		RcsID,
+		CvsID,
 		"",
 		"comment",
 		"",
@@ -382,7 +382,7 @@ func (s *Suite) Test_CheckLinesPatch__context_lines_with_tab_instead_of_space(c 
 	t := s.Init(c)
 
 	lines := t.NewLines("patch-aa",
-		RcsID,
+		CvsID,
 		"",
 		"comment",
 		"",
@@ -406,7 +406,7 @@ func (s *Suite) Test_CheckLinesPatch__autofix_empty_patch(c *check.C) {
 
 	t.SetUpCommandLine("-Wall", "--autofix")
 	lines := t.NewLines("patch-aa",
-		RcsID)
+		CvsID)
 
 	CheckLinesPatch(lines)
 
@@ -420,7 +420,7 @@ func (s *Suite) Test_CheckLinesPatch__autofix_long_empty_patch(c *check.C) {
 
 	t.SetUpCommandLine("-Wall", "--autofix")
 	lines := t.NewLines("patch-aa",
-		RcsID,
+		CvsID,
 		"")
 
 	CheckLinesPatch(lines)
@@ -433,7 +433,7 @@ func (s *Suite) Test_CheckLinesPatch__crlf_autofix(c *check.C) {
 
 	t.SetUpCommandLine("-Wall", "--autofix")
 	lines := t.SetUpFileLines("patch-aa",
-		RcsID,
+		CvsID,
 		"",
 		"Documentation",
 		"",
@@ -456,7 +456,7 @@ func (s *Suite) Test_CheckLinesPatch__autogenerated(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("patch-aa",
-		RcsID,
+		CvsID,
 		"",
 		"Documentation",
 		"",
@@ -476,7 +476,7 @@ func (s *Suite) Test_CheckLinesPatch__empty_context_lines_in_hunk(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("patch-aa",
-		RcsID,
+		CvsID,
 		"",
 		"Documentation",
 		"",
@@ -501,7 +501,7 @@ func (s *Suite) Test_CheckLinesPatch__invalid_line_in_hunk(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("patch-aa",
-		RcsID,
+		CvsID,
 		"",
 		"Documentation",
 		"",
@@ -523,14 +523,14 @@ func (s *Suite) Test_PatchChecker_Check__missing_CVS_Id(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("patch-aa",
-		"This first line is missing the RCS Id",
+		"This first line is missing the CVS Id",
 		"",
 		"Documentation")
 
 	CheckLinesPatch(lines)
 
 	t.CheckOutputLines(
-		sprintf("ERROR: ~/patch-aa:1: Expected %q.", RcsID),
+		sprintf("ERROR: ~/patch-aa:1: Expected %q.", CvsID),
 		"NOTE: ~/patch-aa:1: Empty line expected before this line.",
 		"ERROR: ~/patch-aa: Contains no patch.")
 }
@@ -540,7 +540,7 @@ func (s *Suite) Test_PatchChecker_checklineContext__no_tracing(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("patch-WithComment",
-		RcsID,
+		CvsID,
 		"",
 		"Documentation",
 		"",
@@ -562,7 +562,7 @@ func (s *Suite) Test_PatchChecker_checklineAdded__shell(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("patch-aa",
-		RcsID,
+		CvsID,
 		"",
 		"Documentation",
 		"",
@@ -581,7 +581,7 @@ func (s *Suite) Test_PatchChecker_checklineAdded__text(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("patch-aa",
-		RcsID,
+		CvsID,
 		"",
 		"Documentation",
 		"",
@@ -600,7 +600,7 @@ func (s *Suite) Test_PatchChecker_checklineAdded__unknown(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("patch-aa",
-		RcsID,
+		CvsID,
 		"",
 		"Documentation",
 		"",
@@ -615,11 +615,11 @@ func (s *Suite) Test_PatchChecker_checklineAdded__unknown(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_PatchChecker_checktextRcsid(c *check.C) {
+func (s *Suite) Test_PatchChecker_checktextCvsID(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("patch-aa",
-		RcsID,
+		CvsID,
 		"",
 		"Documentation",
 		"",
@@ -634,9 +634,9 @@ func (s *Suite) Test_PatchChecker_checktextRcsid(c *check.C) {
 	CheckLinesPatch(lines)
 
 	t.CheckOutputLines(
-		"WARN: ~/patch-aa:7: Found RCS tag \"$"+"Id$\". Please remove it.",
-		"WARN: ~/patch-aa:8: Found RCS tag \"$"+"Id$\". Please remove it by reducing the number of context lines using pkgdiff or \"diff -U[210]\".",
-		"WARN: ~/patch-aa:11: Found RCS tag \"$"+"Author$\". Please remove it by reducing the number of context lines using pkgdiff or \"diff -U[210]\".")
+		"WARN: ~/patch-aa:7: Found CVS tag \"$"+"Id$\". Please remove it.",
+		"WARN: ~/patch-aa:8: Found CVS tag \"$"+"Id$\". Please remove it by reducing the number of context lines using pkgdiff or \"diff -U[210]\".",
+		"WARN: ~/patch-aa:11: Found CVS tag \"$"+"Author$\". Please remove it by reducing the number of context lines using pkgdiff or \"diff -U[210]\".")
 }
 
 func (s *Suite) Test_FileType_String(c *check.C) {

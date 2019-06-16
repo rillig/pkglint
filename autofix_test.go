@@ -468,7 +468,7 @@ func (s *Suite) Test_Autofix__show_autofix_and_source_continuation_line(c *check
 
 	t.SetUpCommandLine("--show-autofix", "--source")
 	mklines := t.SetUpFileMkLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"# before \\",
 		"The old song \\",
 		"after")
@@ -534,7 +534,7 @@ func (s *Suite) Test_Autofix_Delete__continuation_line(c *check.C) {
 
 	t.SetUpCommandLine("--show-autofix", "--source")
 	mklines := t.SetUpFileMkLines("Makefile",
-		MkRcsID,
+		MkCvsID,
 		"# line 1 \\",
 		"continued")
 	line := mklines.lines.Lines[1]
@@ -1017,7 +1017,7 @@ func (s *Suite) Test_Autofix_Realign__wrong_line_type(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("file.mk",
-		MkRcsID,
+		MkCvsID,
 		".if \\",
 		"${PKGSRC_RUN_TESTS}")
 
@@ -1034,7 +1034,7 @@ func (s *Suite) Test_Autofix_Realign__short_continuation_line(c *check.C) {
 
 	t.SetUpCommandLine("--autofix")
 	mklines := t.SetUpFileMkLines("file.mk",
-		MkRcsID,
+		MkCvsID,
 		"BUILD_DIRS= \\",
 		"\tdir \\",
 		"")
@@ -1050,7 +1050,7 @@ func (s *Suite) Test_Autofix_Realign__short_continuation_line(c *check.C) {
 
 	t.CheckOutputEmpty()
 	t.CheckFileLines("file.mk",
-		MkRcsID,
+		MkCvsID,
 		"BUILD_DIRS= \\",
 		"\tdir \\",
 		"")
@@ -1061,7 +1061,7 @@ func (s *Suite) Test_Autofix_Realign__multiline_indented_with_spaces(c *check.C)
 
 	t.SetUpCommandLine("--autofix")
 	mklines := t.SetUpFileMkLines("file.mk",
-		MkRcsID,
+		MkCvsID,
 		"BUILD_DIRS= \\",
 		"\t        dir1 \\",
 		"\t\tdir2 \\",
@@ -1079,7 +1079,7 @@ func (s *Suite) Test_Autofix_Realign__multiline_indented_with_spaces(c *check.C)
 	t.CheckOutputLines(
 		"AUTOFIX: ~/file.mk:3: Replacing indentation \"\\t        \" with \"\\t\\t\".")
 	t.CheckFileLines("file.mk",
-		MkRcsID,
+		MkCvsID,
 		"BUILD_DIRS= \\",
 		"\t\tdir1 \\",
 		"\t\tdir2 \\",
@@ -1220,7 +1220,7 @@ func (s *Suite) Test_Autofix__lonely_source(c *check.C) {
 		"DISTNAME=\txorgproto-1.0")
 	t.CreateFileDummyBuildlink3("x11/xorgproto/buildlink3.mk")
 	t.CreateFileLines("x11/xorgproto/builtin.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"BUILTIN_PKG:=\txorgproto",
 		"",

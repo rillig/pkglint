@@ -12,7 +12,7 @@ func CheckLinesPlist(pkg *Package, lines Lines) {
 		defer trace.Call1(lines.Filename)()
 	}
 
-	lines.CheckRcsID(0, `@comment `, "@comment ")
+	lines.CheckCvsID(0, `@comment `, "@comment ")
 
 	if lines.Len() == 1 {
 		line := lines.Lines[0]

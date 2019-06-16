@@ -33,7 +33,7 @@ func (ck *PatchChecker) Check() {
 		defer trace.Call0()()
 	}
 
-	if ck.lines.CheckRcsID(0, ``, "") {
+	if ck.lines.CheckCvsID(0, ``, "") {
 		ck.llex.Skip()
 	}
 	if ck.llex.EOF() {
@@ -130,7 +130,7 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 		}
 
 		ck.checktextUniHunkCr()
-		ck.checktextRcsid(text)
+		ck.checktextCvsID(text)
 
 		for !ck.llex.EOF() && (linesToDel > 0 || linesToAdd > 0 || hasPrefix(ck.llex.CurrentLine().Text, "\\")) {
 			line := ck.llex.CurrentLine()
@@ -156,7 +156,7 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 
 			case hasPrefix(text, "+"):
 				linesToAdd--
-				ck.checktextRcsid(text)
+				ck.checktextCvsID(text)
 				ck.checklineAdded(text[1:], patchedFileType)
 
 			case hasPrefix(text, "\\"):
@@ -235,7 +235,7 @@ func (ck *PatchChecker) checklineContext(text string, patchedFileType FileType) 
 		defer trace.Call2(text, patchedFileType.String())()
 	}
 
-	ck.checktextRcsid(text)
+	ck.checktextCvsID(text)
 
 	if G.Opts.WarnExtra {
 		ck.checklineAdded(text, patchedFileType)
@@ -279,15 +279,15 @@ func (ck *PatchChecker) checktextUniHunkCr() {
 	}
 }
 
-func (ck *PatchChecker) checktextRcsid(text string) {
+func (ck *PatchChecker) checktextCvsID(text string) {
 	if strings.IndexByte(text, '$') == -1 {
 		return
 	}
 	if m, tagname := match1(text, `\$(Author|Date|Header|Id|Locker|Log|Name|RCSfile|Revision|Source|State|NetBSD)(?::[^\$]*)?\$`); m {
 		if matches(text, rePatchUniHunk) {
-			ck.llex.PreviousLine().Warnf("Found RCS tag \"$%s$\". Please remove it.", tagname)
+			ck.llex.PreviousLine().Warnf("Found CVS tag \"$%s$\". Please remove it.", tagname)
 		} else {
-			ck.llex.PreviousLine().Warnf("Found RCS tag \"$%s$\". Please remove it by reducing the number of context lines using pkgdiff or \"diff -U[210]\".", tagname)
+			ck.llex.PreviousLine().Warnf("Found CVS tag \"$%s$\". Please remove it by reducing the number of context lines using pkgdiff or \"diff -U[210]\".", tagname)
 		}
 	}
 }

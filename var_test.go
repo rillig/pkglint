@@ -216,7 +216,7 @@ func (s *Suite) Test_Var_Write__conditional_without_variables(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("filename.mk",
-		MkRcsID,
+		MkCvsID,
 		".if exists(/usr/bin)",
 		"VAR=\tvalue",
 		".endif")

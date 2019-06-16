@@ -113,7 +113,7 @@ func (mklines *MkLinesImpl) checkAll() {
 		"pre-package": true, "do-package": true, "post-package": true,
 		"pre-clean": true, "do-clean": true, "post-clean": true}
 
-	mklines.lines.CheckRcsID(0, `#[\t ]+`, "# ")
+	mklines.lines.CheckCvsID(0, `#[\t ]+`, "# ")
 
 	substContext := NewSubstContext()
 	var varalign VaralignBlock

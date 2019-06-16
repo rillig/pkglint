@@ -37,7 +37,7 @@ func (s *Suite) Test_Paragraph_Align(c *check.C) {
 
 	t.SetUpCommandLine("-Wall", "--autofix")
 	mklines := t.SetUpFileMkLines("filename.mk",
-		MkRcsID,
+		MkCvsID,
 		"VAR=value",
 		"VAR=\t\t\tvalue")
 	para := NewParagraph(nil)
@@ -55,7 +55,7 @@ func (s *Suite) Test_Paragraph_Align(c *check.C) {
 		"AUTOFIX: ~/filename.mk:3: Replacing \"\\t\\t\\t\" with \"\\t\".")
 
 	t.CheckFileLinesDetab("filename.mk",
-		MkRcsID,
+		MkCvsID,
 		"VAR=    value",
 		"VAR=    value")
 }
@@ -65,7 +65,7 @@ func (s *Suite) Test_Paragraph_AlignTo(c *check.C) {
 
 	t.SetUpCommandLine("-Wall", "--autofix")
 	mklines := t.SetUpFileMkLines("filename.mk",
-		MkRcsID,
+		MkCvsID,
 		"VAR=value",
 		"VAR=\t\tvalue",
 		"VAR=\t \tvalue",
@@ -86,7 +86,7 @@ func (s *Suite) Test_Paragraph_AlignTo(c *check.C) {
 		"AUTOFIX: ~/filename.mk:5: Replacing \"\\t\\t\\t\" with \"\\t\\t\".")
 
 	t.CheckFileLinesDetab("filename.mk",
-		MkRcsID,
+		MkCvsID,
 		"VAR=            value",
 		"VAR=            value",
 		"VAR=            value",
@@ -98,7 +98,7 @@ func (s *Suite) Test_Paragraph_AlignTo__continued_lines(c *check.C) {
 
 	t.SetUpCommandLine("-Wall", "--autofix")
 	mklines := t.SetUpFileMkLines("filename.mk",
-		MkRcsID,
+		MkCvsID,
 		"VAR= \\",
 		"  value",
 		"VAR= value1 \\",
@@ -116,7 +116,7 @@ func (s *Suite) Test_Paragraph_AlignTo__continued_lines(c *check.C) {
 		"AUTOFIX: ~/filename.mk:4: Replacing \" \" with \"\\t\\t\".")
 
 	t.CheckFileLinesDetab("filename.mk",
-		MkRcsID,
+		MkCvsID,
 		// Since this line does not contain the actual value, it doesn't need to be aligned.
 		"VAR= \\",
 		"  value",
@@ -131,7 +131,7 @@ func (s *Suite) Test_Paragraph_AlignTo__outlier(c *check.C) {
 
 	t.SetUpCommandLine("-Wall", "--autofix")
 	mklines := t.SetUpFileMkLines("filename.mk",
-		MkRcsID,
+		MkCvsID,
 		"VAR= value",
 		"VERY_LONG_VARIABLE_NAME= value1")
 	para := NewParagraph(nil)
@@ -146,7 +146,7 @@ func (s *Suite) Test_Paragraph_AlignTo__outlier(c *check.C) {
 		"AUTOFIX: ~/filename.mk:2: Replacing \" \" with \"\\t\".")
 
 	t.CheckFileLinesDetab("filename.mk",
-		MkRcsID,
+		MkCvsID,
 		"VAR=    value",
 		// The space is preserved since this line is an outlier.
 		"VERY_LONG_VARIABLE_NAME= value1")
