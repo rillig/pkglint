@@ -474,21 +474,7 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename string) []*Change {
 			return nil
 		}
 
-		var action ChangeAction
-		switch f[0] {
-		case "Added":
-			action = Added
-		case "Updated":
-			action = Updated
-		case "Downgraded":
-			action = Downgraded
-		case "Renamed":
-			action = Renamed
-		case "Moved":
-			action = Moved
-		case "Removed":
-			action = Removed
-		}
+		action := ParseChangeAction(f[0])
 
 		pkgpath, author, date := f[1], f[len(f)-2], f[len(f)-1]
 		if !hasPrefix(author, "[") || !hasSuffix(date, "]") {
@@ -1051,6 +1037,24 @@ const (
 	Moved
 	Removed
 )
+
+func ParseChangeAction(s string) ChangeAction {
+	switch s {
+	case "Added":
+		return Added
+	case "Updated":
+		return Updated
+	case "Downgraded":
+		return Downgraded
+	case "Renamed":
+		return Renamed
+	case "Moved":
+		return Moved
+	case "Removed":
+		return Removed
+	}
+	return 0
+}
 
 func (ca ChangeAction) String() string {
 	return [...]string{"", "Added", "Updated", "Downgraded", "Renamed", "Moved", "Removed"}[ca]
