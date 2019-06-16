@@ -445,12 +445,19 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__old(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPkgsrc()
+	t.CreateFileLines("doc/CHANGES-2010",
+		CvsID,
+		"",
+		"Changes to the packages collection and infrastructure in 2015:",
+		"",
+		"\tInvalid line [3 4]")
 	t.CreateFileLines("doc/CHANGES-2015",
 		CvsID,
 		"",
 		"Changes to the packages collection and infrastructure in 2015:",
 		"",
-		"\tUpdated pkgpath to 1.0 [author date]")
+		"\tUpdated pkgpath to 1.0 [author date]",
+		"\tInvalid line [3 4]")
 	t.CreateFileLines("doc/CHANGES-2018",
 		CvsID,
 		"",
@@ -460,7 +467,11 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__old(c *check.C) {
 		"\tUpdated pkgpath to 1.0 [author d]")
 	t.FinishSetUp()
 
+	// The 2010 file is so old that it is skipped completely.
+	// The 2015 file is so old that the date is not checked.
+	// Since 2018, each date in the file must match the filename.
 	t.CheckOutputLines(
+		"WARN: ~/doc/CHANGES-2015:6: Unknown doc/CHANGES line: \tInvalid line [3 4]",
 		"WARN: ~/doc/CHANGES-2018:5: Year \"date\" for pkgpath does not match the filename ~/doc/CHANGES-2018.",
 		"WARN: ~/doc/CHANGES-2018:6: Date \"d\" for pkgpath is earlier than \"date\" in line 5.")
 }
