@@ -1329,6 +1329,36 @@ func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__ok(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__not_constant_1(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".if 0",
+		"GNU_CONFIGURE=\tyes",
+		".endif",
+		"USE_LANGUAGES=\tc++ objc")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__not_constant_2(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"GNU_CONFIGURE=\tyes",
+		".if 0",
+		"USE_LANGUAGES=\tc++ objc",
+		".endif")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Package_checkUseLanguagesCompilerMk__too_late(c *check.C) {
 	t := s.Init(c)
 
