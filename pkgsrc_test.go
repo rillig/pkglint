@@ -410,11 +410,13 @@ func (s *Suite) Test_Pkgsrc_parseDocChange(c *check.C) {
 	// "from" is wrong
 	test("\tUpdated pkgpath from 1.0 [author date]",
 		"WARN: doc/CHANGES-2019:123: Unknown doc/CHANGES line: \tUpdated pkgpath from 1.0 [author date]")
+
 	test("\tDowngraded pkgpath to 1.0 [author date]",
 		nil...)
 	// "from" is wrong
 	test("\tDowngraded pkgpath from 1.0 [author date]",
 		"WARN: doc/CHANGES-2019:123: Unknown doc/CHANGES line: \tDowngraded pkgpath from 1.0 [author date]")
+
 	test("\tRemoved pkgpath [author date]",
 		nil...)
 	test("\tRemoved pkgpath successor pkgpath [author date]",

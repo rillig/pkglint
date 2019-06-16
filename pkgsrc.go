@@ -503,7 +503,7 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename string) []*Change {
 	// This check has been added in 2018.
 	// For years earlier than 2018 pkglint doesn't care because it's not a big issue anyway.
 	year := ""
-	if m, yyyy := match1(filename, `-(\d+)$`); m && yyyy >= "2018" {
+	if _, yyyy := match1(filename, `-(\d\d\d\d)$`); yyyy >= "2018" {
 		year = yyyy
 	}
 
