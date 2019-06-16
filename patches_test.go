@@ -640,7 +640,7 @@ func (s *Suite) Test_PatchChecker_checktextCvsID(c *check.C) {
 		"@@ -1,3 +1,3 @@ $"+"Id$",
 		" $"+"Id$",
 		"-old line",
-		"+new line",
+		"+new line $varname",
 		" $"+"Author: authorship $")
 
 	CheckLinesPatch(lines)
