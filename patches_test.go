@@ -586,7 +586,7 @@ func (s *Suite) Test_PatchChecker_checkBeginDiff__multiple_patches_without_docum
 		"WARN: ~/patch-aa: Contains patches for 2 files, should be only one.")
 }
 
-func (s *Suite) Test_PatchChecker_checklineAdded__shell(c *check.C) {
+func (s *Suite) Test_PatchChecker_checkConfigure__no_GNU(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("patch-aa",
@@ -598,14 +598,16 @@ func (s *Suite) Test_PatchChecker_checklineAdded__shell(c *check.C) {
 		"+++ configure.sh",
 		"@@ -1,1 +1,1 @@",
 		"-old line",
-		"+new line")
+		"+: Avoid regenerating within pkgsrc")
 
 	CheckLinesPatch(lines)
 
+	// No warning since configure.sh is probably not a GNU-style
+	// configure file.
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_PatchChecker_checklineAdded__text(c *check.C) {
+func (s *Suite) Test_PatchChecker_checkConfigure__GNU(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("patch-aa",
@@ -613,34 +615,16 @@ func (s *Suite) Test_PatchChecker_checklineAdded__text(c *check.C) {
 		"",
 		"Documentation",
 		"",
-		"--- configure.tex.orig",
-		"+++ configure.tex",
+		"--- configure.orig",
+		"+++ configure",
 		"@@ -1,1 +1,1 @@",
 		"-old line",
-		"+new line")
+		"+: Avoid regenerating within pkgsrc")
 
 	CheckLinesPatch(lines)
 
-	t.CheckOutputEmpty()
-}
-
-func (s *Suite) Test_PatchChecker_checklineAdded__unknown(c *check.C) {
-	t := s.Init(c)
-
-	lines := t.SetUpFileLines("patch-aa",
-		CvsID,
-		"",
-		"Documentation",
-		"",
-		"--- configure.unknown.orig",
-		"+++ configure.unknown",
-		"@@ -1,1 +1,1 @@",
-		"-old line",
-		"+new line")
-
-	CheckLinesPatch(lines)
-
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"ERROR: ~/patch-aa:9: This code must not be included in patches.")
 }
 
 func (s *Suite) Test_PatchChecker_checktextCvsID(c *check.C) {
@@ -665,8 +649,4 @@ func (s *Suite) Test_PatchChecker_checktextCvsID(c *check.C) {
 		"WARN: ~/patch-aa:7: Found CVS tag \"$"+"Id$\". Please remove it.",
 		"WARN: ~/patch-aa:8: Found CVS tag \"$"+"Id$\". Please remove it by reducing the number of context lines using pkgdiff or \"diff -U[210]\".",
 		"WARN: ~/patch-aa:11: Found CVS tag \"$"+"Author$\". Please remove it by reducing the number of context lines using pkgdiff or \"diff -U[210]\".")
-}
-
-func (s *Suite) Test_FileType_String(c *check.C) {
-	c.Check(ftUnknown.String(), equals, "unknown")
 }

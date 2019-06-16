@@ -98,7 +98,7 @@ func (ck *PatchChecker) Check() {
 
 // See https://www.gnu.org/software/diffutils/manual/html_node/Detailed-Unified.html
 func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
-	patchedFileType := guessFileType(patchedFile)
+	isConfigure := ck.isConfigure(patchedFile)
 
 	hasHunks := false
 	for {
@@ -140,7 +140,7 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 			case hasPrefix(text, "+"):
 				linesToAdd--
 				ck.checktextCvsID(text)
-				ck.checklineAdded(text[1:], patchedFileType)
+				ck.checkConfigure(text[1:], isConfigure)
 
 			case hasPrefix(text, "\\"):
 				// \ No newline at end of file (or a translation of that message)
@@ -201,6 +201,7 @@ func (ck *PatchChecker) checkBeginDiff(line Line, patchedFiles int) {
 			"After submitting a patch upstream, the corresponding bug report should",
 			"be mentioned in this file, to prevent duplicate work.")
 	}
+
 	if G.Opts.WarnSpace && !ck.previousLineEmpty {
 		fix := line.Autofix()
 		fix.Notef("Empty line expected.")
@@ -209,33 +210,37 @@ func (ck *PatchChecker) checkBeginDiff(line Line, patchedFiles int) {
 	}
 }
 
-func (ck *PatchChecker) checklineAdded(addedText string, patchedFileType FileType) {
-	line := ck.llex.PreviousLine()
-	switch patchedFileType {
-	case ftConfigure:
-		if hasSuffix(addedText, ": Avoid regenerating within pkgsrc") {
-			line.Errorf("This code must not be included in patches.")
-			line.Explain(
-				"It is generated automatically by pkgsrc after the patch phase.",
-				"",
-				"For more details, look for \"configure-scripts-override\" in",
-				"mk/configure/gnu-configure.mk.")
-		}
+func (ck *PatchChecker) checkConfigure(addedText string, isConfigure bool) {
+	if !isConfigure {
+		return
 	}
+	if !hasSuffix(addedText, ": Avoid regenerating within pkgsrc") {
+		return
+	}
+
+	line := ck.llex.PreviousLine()
+	line.Errorf("This code must not be included in patches.")
+	line.Explain(
+		"It is generated automatically by pkgsrc after the patch phase.",
+		"",
+		"For more details, look for \"configure-scripts-override\" in",
+		"mk/configure/gnu-configure.mk.")
 }
 
 func (ck *PatchChecker) checktextUniHunkCr() {
 	line := ck.llex.PreviousLine()
-	if hasSuffix(line.Text, "\r") {
-		// This code has been introduced around 2006.
-		// As of 2018, this might be fixed by now.
-		fix := line.Autofix()
-		fix.Errorf("The hunk header must not end with a CR character.")
-		fix.Explain(
-			"The MacOS X patch utility cannot handle these.")
-		fix.Replace("\r\n", "\n")
-		fix.Apply()
+	if !hasSuffix(line.Text, "\r") {
+		return
 	}
+
+	// This code has been introduced around 2006.
+	// As of 2018, this might be fixed by now.
+	fix := line.Autofix()
+	fix.Errorf("The hunk header must not end with a CR character.")
+	fix.Explain(
+		"The MacOS X patch utility cannot handle these.")
+	fix.Replace("\r\n", "\n")
+	fix.Apply()
 }
 
 func (ck *PatchChecker) checktextCvsID(text string) {
@@ -262,28 +267,10 @@ func (ck *PatchChecker) isEmptyLine(text string) bool {
 		hasPrefix(text, "=============")
 }
 
-type FileType uint8
-
-const (
-	ftConfigure FileType = iota
-	ftUnknown
-)
-
-func (ft FileType) String() string {
-	return [...]string{
-		"configure file",
-		"unknown",
-	}[ft]
-}
-
-// This is used to select the proper subroutine for detecting absolute pathnames.
-func guessFileType(filename string) (fileType FileType) {
-	basename := path.Base(filename)
-	basename = strings.TrimSuffix(basename, ".in") // doesn't influence the content type
-
-	switch {
-	case basename == "configure" || basename == "configure.ac":
-		return ftConfigure
+func (*PatchChecker) isConfigure(filename string) bool {
+	switch path.Base(filename) {
+	case "configure", "configure.in", "configure.ac":
+		return true
 	}
-	return ftUnknown
+	return false
 }
