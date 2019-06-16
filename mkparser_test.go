@@ -1142,7 +1142,7 @@ func (s *Suite) Test_MkCondWalker_Walk(c *check.C) {
 	var events []string
 
 	varuseStr := func(varuse *MkVarUse) string {
-		strs := make([]string, 1+len(varuse.modifiers), 1+len(varuse.modifiers))
+		strs := make([]string, 1+len(varuse.modifiers))
 		strs[0] = varuse.varname
 		for i, mod := range varuse.modifiers {
 			strs[1+i] = mod.Text

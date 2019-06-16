@@ -1232,16 +1232,20 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.pkglist("MASTER_SITES", BtFetchURL)
 
 	for _, filename := range []string{"mk/fetch/sites.mk", "mk/fetch/fetch.mk"} {
-		sitesMk := LoadMk(src.File(filename), NotEmpty)
+		loadOptions := NotEmpty | MustSucceed
+		if G.Testing {
+			loadOptions = NotEmpty
+		}
+		sitesMk := LoadMk(src.File(filename), loadOptions)
 		if sitesMk != nil {
 			sitesMk.ForEach(func(mkline MkLine) {
 				if mkline.IsVarassign() && hasPrefix(mkline.Varname(), "MASTER_SITE_") {
 					reg.syslist(mkline.Varname(), BtFetchURL)
 				}
 			})
-		} else {
-			// During tests, use t.SetUpMasterSite instead to declare these variables.
 		}
+
+		// During tests, use t.SetUpMasterSite instead to declare these variables.
 	}
 
 	reg.pkglist("MESSAGE_SRC", BtPathname)

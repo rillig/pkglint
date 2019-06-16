@@ -291,10 +291,7 @@ func (ck *ShellLineChecker) variableNeedsQuoting(shVarname string) bool {
 	case "d", "f", "i", "id", "file", "src", "dst", "prefix":
 		return false // Probably ok
 	}
-	if hasSuffix(shVarname, "dir") {
-		return false // Probably ok
-	}
-	return true
+	return !hasSuffix(shVarname, "dir") // Probably ok
 }
 
 func (ck *ShellLineChecker) CheckShellCommandLine(shelltext string) {

@@ -243,7 +243,7 @@ func (src *Pkgsrc) ListVersions(category string, re regex.Pattern, repl string, 
 		return naturalLess(names[i], names[j])
 	})
 
-	var repls = make([]string, len(names), len(names))
+	var repls = make([]string, len(names))
 	for i, name := range names {
 		repls[i] = replaceAll(name, re, repl)
 	}
