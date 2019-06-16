@@ -1340,6 +1340,20 @@ func (s *Suite) Test_ShellProgramChecker_canFail(c *check.C) {
 	test("socklen=`${GREP} 'expr' ${WRKSRC}/config.h || ${TRUE}`",
 		nil...)
 
+	test("socklen=$$(expr 16)",
+		"WARN: Makefile:3: Invoking subshells via $(...) is not portable enough.",
+		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon "+
+			"(after \"socklen=$$(expr 16)\") to separate commands.")
+
+	// FIXME: The "|| true" is enough for handling errors.
+	test("socklen=$$(expr 16 || true)",
+		"WARN: Makefile:3: Invoking subshells via $(...) is not portable enough.",
+		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon "+
+			"(after \"socklen=$$(expr 16 || true)\") to separate commands.")
+
+	test("socklen=$$(expr 16 || ${TRUE})",
+		"WARN: Makefile:3: Invoking subshells via $(...) is not portable enough.")
+
 	test("${ECHO_MSG} \"Message\"",
 		nil...)
 
@@ -1362,6 +1376,10 @@ func (s *Suite) Test_ShellProgramChecker_canFail(c *check.C) {
 
 	test("grep input",
 		nil...)
+
+	test("grep pattern file...",
+		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon "+
+			"(after \"grep pattern file...\") to separate commands.")
 
 	test("touch file",
 		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon "+
