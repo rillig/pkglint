@@ -546,7 +546,8 @@ func (t *Tester) Chdir(relativeDirName string) {
 	G.cwd = absDirName
 }
 
-// Remove removes the file from the temporary directory. The file must exist.
+// Remove removes the file or directory from the temporary directory.
+// The file or directory must exist.
 func (t *Tester) Remove(relativeFileName string) {
 	filename := t.File(relativeFileName)
 	err := os.Remove(filename)
