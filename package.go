@@ -592,7 +592,9 @@ func (pkg *Package) checkfilePackageMakefile(filename string, mklines MkLines, a
 		}
 	}
 
-	if !vars.Defined("LICENSE") && !vars.Defined("META_PACKAGE") {
+	// TODO: Remove the FirstTime, as it hides a bug;
+	//  files/Makefile must never be treated as a package Makefile.
+	if !vars.Defined("LICENSE") && !vars.Defined("META_PACKAGE") && pkg.once.FirstTime("LICENSE") {
 		line := NewLineWhole(filename)
 		line.Errorf("Each package must define its LICENSE.")
 		// TODO: Explain why the LICENSE is necessary.

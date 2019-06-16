@@ -1247,6 +1247,24 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__PLIST_common(c *check.C) 
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_Package_checkfilePackageMakefile__files_Makefile(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "-Call")
+	t.SetUpPackage("category/package",
+		"#LICENSE=\t# none")
+	t.CreateFileLines("category/package/files/Makefile",
+		"#")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputLines(
+		"ERROR: ~/category/package/Makefile: Each package must define its LICENSE.",
+		// FIXME: files/Makefile is not a package Makefile.
+	) //"ERROR: ~/category/package/files/Makefile: Each package must define its LICENSE.")
+}
+
 func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__no_C(c *check.C) {
 	t := s.Init(c)
 
