@@ -535,6 +535,28 @@ func (s *Suite) Test_PatchChecker_Check__missing_CVS_Id(c *check.C) {
 		"ERROR: ~/patch-aa: Contains no patch.")
 }
 
+func (s *Suite) Test_PatchChecker_checkUnifiedDiff__lines_at_end(c *check.C) {
+	t := s.Init(c)
+
+	lines := t.SetUpFileLines("patch-aa",
+		CvsID,
+		"",
+		"Documentation",
+		"",
+		"--- old",
+		"+++ new",
+		"@@ -1,1 +1,1 @@",
+		"- old",
+		"+ new",
+		"",
+		"This line is not part of the patch. Since it is separated from",
+		"the patch by an empty line, there is no reason for a warning.")
+
+	CheckLinesPatch(lines)
+
+	t.CheckOutputEmpty()
+}
+
 // Just for code coverage.
 func (s *Suite) Test_PatchChecker_checklineContext__no_tracing(c *check.C) {
 	t := s.Init(c)
