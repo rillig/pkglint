@@ -683,8 +683,8 @@ func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
 		NewLineWhole(filename).Warnf("Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
 
 	case (hasPrefix(basename, "Makefile") || hasSuffix(basename, ".mk")) &&
-		!(hasPrefix(filename, "files/") || contains(filename, "/files/")) &&
-		!(hasPrefix(filename, "patches/") || contains(filename, "/patches/")):
+		!pathContainsDir(filename, "files") &&
+		!pathContainsDir(filename, "patches"):
 		CheckFileMk(filename)
 
 	case hasPrefix(basename, "PLIST"):
@@ -697,7 +697,7 @@ func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
 		_ = pkglint.Pkgsrc.loadDocChangesFromFile(filename)
 
 	case matches(filename, `(?:^|/)files/[^/]*$`):
-		// Skip
+		// Skip files directly in the files/ directory, but not those further down.
 
 	case basename == "spec":
 		if !hasPrefix(pkglint.Pkgsrc.ToRel(filename), "regress/") {

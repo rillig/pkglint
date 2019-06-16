@@ -175,6 +175,60 @@ func (s *Suite) Test_relpath__quick(c *check.C) {
 	test("some/dir/.", ".", "../..")
 }
 
+func (s *Suite) Test_pathContains(c *check.C) {
+	t := s.Init(c)
+
+	test := func(haystack, needle string, expected bool) {
+		actual := pathContains(haystack, needle)
+		t.Check(actual, equals, expected)
+	}
+
+	test("", "", true)
+	test("a", "a", true)
+	test("a", "b", false)
+	test("a", "A", false)
+	test("a/b/c", "a", true)
+	test("a/b/c", "b", true)
+	test("a/b/c", "c", true)
+	test("a/b/c", "a/b", true)
+	test("a/b/c", "b/c", true)
+	test("a/b/c", "a/b/c", true)
+	test("aa/bb/cc", "a/b", false)
+	test("aa/bb/cc", "a/bb", false)
+	test("aa/bb/cc", "aa/b", false)
+	test("aa/bb/cc", "aa/bb", true)
+	test("aa/bb/cc", "a", false)
+	test("aa/bb/cc", "b", false)
+	test("aa/bb/cc", "c", false)
+}
+
+func (s *Suite) Test_pathContainsDir(c *check.C) {
+	t := s.Init(c)
+
+	test := func(haystack, needle string, expected bool) {
+		actual := pathContainsDir(haystack, needle)
+		t.Check(actual, equals, expected)
+	}
+
+	test("", "", false)
+	test("a", "a", false)
+	test("a", "b", false)
+	test("a", "A", false)
+	test("a/b/c", "a", true)
+	test("a/b/c", "b", true)
+	test("a/b/c", "c", false)
+	test("a/b/c", "a/b", true)
+	test("a/b/c", "b/c", false)
+	test("a/b/c", "a/b/c", false)
+	test("aa/bb/cc", "a/b", false)
+	test("aa/bb/cc", "a/bb", false)
+	test("aa/bb/cc", "aa/b", false)
+	test("aa/bb/cc", "aa/bb", true)
+	test("aa/bb/cc", "a", false)
+	test("aa/bb/cc", "b", false)
+	test("aa/bb/cc", "c", false)
+}
+
 func (s *Suite) Test_fileExists(c *check.C) {
 	t := s.Init(c)
 
