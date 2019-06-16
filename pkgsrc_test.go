@@ -800,6 +800,7 @@ func (s *Suite) Test_Pkgsrc_VariableType(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
+	t.SetUpTool("echo", "ECHO", AtRunTime)
 
 	test := func(varname string, vartype string) {
 		actualType := G.Pkgsrc.VariableType(nil, varname)
@@ -823,6 +824,8 @@ func (s *Suite) Test_Pkgsrc_VariableType(c *check.C) {
 	test("MY_CMD_CFLAGS", "CFlag (list, guessed)")
 	test("MY_CMD_LDFLAGS", "LdFlag (list, guessed)")
 	test("PLIST.abcde", "Yes (package-settable)")
+	test("TOOLS_ECHO", "Pathname")
+	test("TOOLS_UNKNOWN", "")
 }
 
 // Guessing the variable type works for both plain and parameterized variable names.
