@@ -291,20 +291,11 @@ func (src *Pkgsrc) loadTools() {
 	}
 
 	// TODO: parse bsd.prefs.mk and bsd.pkg.mk instead of hardcoding this.
-	toolDefs := [...]struct {
-		Name     string
-		Varname  string
-		Validity Validity
-	}{
-		{"echo", "ECHO", AfterPrefsMk},
-		{"echo -n", "ECHO_N", AfterPrefsMk},
-		{"false", "FALSE", AtRunTime}, // from bsd.pkg.mk
-		{"test", "TEST", AfterPrefsMk},
-		{"true", "TRUE", AfterPrefsMk}}
-
-	for _, toolDef := range toolDefs {
-		tools.def(toolDef.Name, toolDef.Varname, true, toolDef.Validity, nil)
-	}
+	tools.def("echo", "ECHO", true, AfterPrefsMk, nil)
+	tools.def("echo -n", "ECHO_N", true, AfterPrefsMk, nil)
+	tools.def("false", "FALSE", true, AtRunTime, nil) // from bsd.pkg.mk
+	tools.def("test", "TEST", true, AfterPrefsMk, nil)
+	tools.def("true", "TRUE", true, AfterPrefsMk, nil)
 
 	for _, basename := range toolFiles {
 		mklines := src.LoadMk("mk/tools/"+basename, MustSucceed|NotEmpty)
