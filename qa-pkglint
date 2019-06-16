@@ -51,7 +51,7 @@ install_notest() {
 
 analyze() {
   step_msg "Analyzing code style"
-  (cd ~/pkglint && gometalinter --exclude "exported method|unexported|drop this else") | less
+  (cd ~/pkglint && golangci-lint run)
 }
 
 netbsd() {
