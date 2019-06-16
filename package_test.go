@@ -1771,7 +1771,7 @@ func (s *Suite) Test_Package_parse__fallback_lookup_in_package_directory(c *chec
 			"The path to the included file should be \"pthread.builtin.mk\".")
 }
 
-func (s *Suite) Test_Package_collectSeenMakefileCommon__builtin_mk(c *check.C) {
+func (s *Suite) Test_Package_collectSeenInclude__builtin_mk(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package",
@@ -1783,7 +1783,7 @@ func (s *Suite) Test_Package_collectSeenMakefileCommon__builtin_mk(c *check.C) {
 	pkg := NewPackage(t.File("category/package"))
 	pkg.load()
 
-	t.Check(pkg.seenMakefileCommon, equals, true)
+	t.Check(pkg.seenInclude, equals, true)
 }
 
 func (s *Suite) Test_Package_diveInto(c *check.C) {
@@ -1827,6 +1827,29 @@ func (s *Suite) Test_Package_diveInto(c *check.C) {
 	test("../../mk/one.mk", "two.mk", false)
 	test("../../mk/one.mk", "../../mk/two.mk", false)
 	test("../../mk/one.mk", "../lang/go/version.mk", false)
+}
+
+func (s *Suite) Test_Package_collectSeenInclude__multiple(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".include \"001.mk\"",
+		".include \"002.mk\"")
+	t.CreateFileLines("category/package/001.mk",
+		MkCvsID)
+	t.CreateFileLines("category/package/002.mk",
+		MkCvsID)
+	t.FinishSetUp()
+
+	t.EnableTracingToLog()
+	G.Check(t.File("category/package"))
+	t.EnableSilentTracing()
+
+	// TODO: It's not necessary to trace this message three times.
+	t.CheckOutputLinesMatching(`^TRACE: .*seenInclude`,
+		"TRACE: 1 2 3 4   Including \"suppress-varorder.mk\" sets seenInclude.",
+		"TRACE: 1 2 3 4   Including \"001.mk\" sets seenInclude.",
+		"TRACE: 1 2 3 4   Including \"002.mk\" sets seenInclude.")
 }
 
 // Just for code coverage.

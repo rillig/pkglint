@@ -43,7 +43,8 @@ type Package struct {
 	// TODO: Set an upper limit, to prevent denial of service.
 	included Once
 
-	seenMakefileCommon bool // Does the package have any .includes?
+	// Does the package have any .includes?
+	seenInclude bool
 
 	// Files from .include lines that are nested inside .if.
 	// They often depend on OPSYS or on the existence of files in the build environment.
@@ -433,7 +434,7 @@ func (pkg *Package) loadIncluded(mkline MkLine, includingFile string) (includedM
 		return nil, true
 	}
 
-	pkg.collectSeenMakefileCommon(mkline, includedFile)
+	pkg.collectSeenInclude(mkline, includedFile)
 
 	if trace.Tracing {
 		trace.Step1("Including %q.", fullIncluded)
@@ -500,7 +501,7 @@ func (*Package) diveInto(includingFile string, includedFile string) bool {
 	return false
 }
 
-func (pkg *Package) collectSeenMakefileCommon(mkline MkLine, includedFile string) {
+func (pkg *Package) collectSeenInclude(mkline MkLine, includedFile string) {
 	if mkline.Basename != "Makefile" {
 		return
 	}
@@ -516,9 +517,9 @@ func (pkg *Package) collectSeenMakefileCommon(mkline MkLine, includedFile string
 	}
 
 	if trace.Tracing {
-		trace.Step1("Including %q sets seenMakefileCommon.", includedFile)
+		trace.Step1("Including %q sets seenInclude.", includedFile)
 	}
-	pkg.seenMakefileCommon = true
+	pkg.seenInclude = true
 }
 
 // resolveIncludedFile resolves Makefile variables such as ${PKGPATH} to
@@ -824,7 +825,7 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 		defer trace.Call0()()
 	}
 
-	if pkg.seenMakefileCommon {
+	if pkg.seenInclude {
 		return
 	}
 
