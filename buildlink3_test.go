@@ -762,6 +762,8 @@ func (s *Suite) Test_Buildlink3Checker_checkSecondParagraph__missing_mkbase(c *c
 	// There is no warning from buildlink3.mk about mismatched package names
 	// since that is only a follow-up error of being unable to parse the pkgbase.
 	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile:3: As DISTNAME is not a valid package name, "+
+			"please define the PKGNAME explicitly.",
 		"WARN: ~/category/package/Makefile:4: \"\" is not a valid package name.")
 }
 
