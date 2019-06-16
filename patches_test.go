@@ -586,29 +586,6 @@ func (s *Suite) Test_PatchChecker_checkBeginDiff__multiple_patches_without_docum
 		"WARN: ~/patch-aa: Contains patches for 2 files, should be only one.")
 }
 
-// Just for code coverage.
-func (s *Suite) Test_PatchChecker_checklineContext__no_tracing(c *check.C) {
-	t := s.Init(c)
-
-	lines := t.NewLines("patch-WithComment",
-		CvsID,
-		"",
-		"Documentation",
-		"",
-		"--- file.orig",
-		"+++ file",
-		"@@ -5,3 +5,3 @@",
-		" context before",
-		"-old line",
-		"+new line",
-		" context after")
-	t.DisableTracing()
-
-	CheckLinesPatch(lines)
-
-	t.CheckOutputEmpty()
-}
-
 func (s *Suite) Test_PatchChecker_checklineAdded__shell(c *check.C) {
 	t := s.Init(c)
 

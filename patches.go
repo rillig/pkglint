@@ -150,7 +150,7 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 			case hasPrefix(text, " "), hasPrefix(text, "\t"):
 				linesToDel--
 				linesToAdd--
-				ck.checklineContext(text[1:], patchedFileType)
+				ck.checktextCvsID(text)
 
 			case hasPrefix(text, "-"):
 				linesToDel--
@@ -228,18 +228,6 @@ func (ck *PatchChecker) checkBeginDiff(line Line, patchedFiles int) {
 		fix.Notef("Empty line expected.")
 		fix.InsertBefore("")
 		fix.Apply()
-	}
-}
-
-func (ck *PatchChecker) checklineContext(text string, patchedFileType FileType) {
-	if trace.Tracing {
-		defer trace.Call2(text, patchedFileType.String())()
-	}
-
-	ck.checktextCvsID(text)
-
-	if G.Opts.WarnExtra {
-		ck.checklineAdded(text, patchedFileType)
 	}
 }
 
