@@ -65,18 +65,22 @@ func (s *Suite) Test_Pkgsrc_checkToplevelUnusedLicenses(c *check.C) {
 		"COMMENT=\tExample category",
 		"",
 		"SUBDIR+=\tpackage",
+		"SUBDIR+=\tpackage2",
 		"",
 		".include \"../mk/misc/category.mk\"")
 
 	t.SetUpPackage("category/package",
 		"LICENSE=\t2-clause-bsd")
+	t.SetUpPackage("category/package2",
+		"LICENSE=\tmissing")
 
 	t.Main("-r", "-Cglobal", t.File("."))
 
 	t.CheckOutputLines(
+		"WARN: ~/category/package2/Makefile:11: License file ~/licenses/missing does not exist.",
 		"WARN: ~/licenses/gnu-gpl-v2: This license seems to be unused.", // Added by Tester.SetUpPkgsrc
 		"WARN: ~/licenses/gnu-gpl-v3: This license seems to be unused.",
-		"0 errors and 2 warnings found.")
+		"0 errors and 3 warnings found.")
 }
 
 func (s *Suite) Test_Pkgsrc_loadUntypedVars(c *check.C) {
