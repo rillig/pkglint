@@ -1190,6 +1190,22 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__USE_IMAKE_without_USE_X11
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_Package_checkfilePackageMakefile__USE_IMAKE_and_USE_X11_in_infra(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("mk/x11.buildlink3.mk",
+		MkCvsID,
+		"USE_X11=\tyes")
+	pkg := t.SetUpPackage("category/package",
+		".include \"../../mk/x11.buildlink3.mk\"",
+		"USE_IMAKE=\tyes")
+	t.FinishSetUp()
+
+	G.Check(pkg)
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Package_checkfilePackageMakefile__PLIST_common(c *check.C) {
 	t := s.Init(c)
 
