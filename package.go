@@ -705,7 +705,7 @@ func (pkg *Package) determineEffectivePkgVars() {
 		}
 	}
 
-	if pkgname != "" && (pkgname == distname || pkgname == "${DISTNAME}") {
+	if pkgnameLine != nil && (pkgname == distname || pkgname == "${DISTNAME}") {
 		if pkgnameLine.VarassignComment() == "" {
 			pkgnameLine.Notef("This assignment is probably redundant " +
 				"since PKGNAME is ${DISTNAME} by default.")
@@ -714,7 +714,7 @@ func (pkg *Package) determineEffectivePkgVars() {
 		}
 	}
 
-	if pkgname == "" && distname != "" && !containsVarRef(distname) && !matches(distname, rePkgname) {
+	if pkgname == "" && distnameLine != nil && !containsVarRef(distname) && !matches(distname, rePkgname) {
 		distnameLine.Warnf("As DISTNAME is not a valid package name, please define the PKGNAME explicitly.")
 	}
 
