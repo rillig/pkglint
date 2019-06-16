@@ -604,6 +604,7 @@ func (s *Suite) Test_PlistChecker_checkPathShare(c *check.C) {
 		"share/doc/html/package/index.html",
 		"share/doc/package/index.html",
 		"share/icons/hicolor/icon-theme.cache",
+		"share/icons/open_24x24.svg",
 		"share/info/program.1.info",
 		"share/man/man1/program.1")
 	G.Pkg = NewPackage(t.File("category/package"))
@@ -616,8 +617,8 @@ func (s *Suite) Test_PlistChecker_checkPathShare(c *check.C) {
 		"ERROR: ~/PLIST:4: Packages that install hicolor icons must include \"../../graphics/hicolor-icon-theme/buildlink3.mk\" in the Makefile.",
 		"ERROR: ~/PLIST:4: The file icon-theme.cache must not appear in any PLIST file.",
 		"WARN: ~/PLIST:4: Packages that install icon theme files should set ICON_THEMES.",
-		"WARN: ~/PLIST:5: Info pages should be installed into info/, not share/info/.",
-		"WARN: ~/PLIST:6: Man pages should be installed into man/, not share/man/.")
+		"WARN: ~/PLIST:6: Info pages should be installed into info/, not share/info/.",
+		"WARN: ~/PLIST:7: Man pages should be installed into man/, not share/man/.")
 }
 
 func (s *Suite) Test_PlistChecker_checkPathShare__gnome_icon_theme(c *check.C) {
