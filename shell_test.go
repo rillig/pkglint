@@ -544,6 +544,21 @@ func (s *Suite) Test_ShellLineChecker_CheckWord__PKGMANDIR(c *check.C) {
 		"NOTE: chat/ircII/Makefile:3: This variable value should be aligned to column 25.")
 }
 
+func (s *Suite) Test_ShellLineChecker_CheckWord__empty(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"JAVA_CLASSPATH=\t# empty")
+
+	mklines.Check()
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_ShellLineChecker_unescapeBackticks__unfinished(c *check.C) {
 	t := s.Init(c)
 
