@@ -706,6 +706,7 @@ func (s *Suite) Test_PlistLine_CheckDirective(c *check.C) {
 		"@dirrm %D/bin",
 		"@imake-man 1 2 3 4",
 		"@imake-man 1 2 ${IMAKE_MANNEWSUFFIX}",
+		"@imake-man 1 2 3",
 		"@unknown")
 
 	CheckLinesPlist(nil, lines)
@@ -716,7 +717,7 @@ func (s *Suite) Test_PlistLine_CheckDirective(c *check.C) {
 		"WARN: ~/PLIST:7: @dirrm is obsolete. Please remove this line.",
 		"WARN: ~/PLIST:8: Invalid number of arguments for imake-man, should be 3.",
 		"WARN: ~/PLIST:9: IMAKE_MANNEWSUFFIX is not meant to appear in PLISTs.",
-		"WARN: ~/PLIST:10: Unknown PLIST directive \"@unknown\".")
+		"WARN: ~/PLIST:11: Unknown PLIST directive \"@unknown\".")
 }
 
 func (s *Suite) Test_plistLineSorter__unsortable(c *check.C) {
