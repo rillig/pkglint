@@ -458,8 +458,11 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__old(c *check.C) {
 		"",
 		"Changes to the packages collection and infrastructure in 2015:",
 		"",
-		"\tUpdated pkgpath to 1.0 [author date]",
-		"\tInvalid line [3 4]")
+		"\tUpdated pkgpath to 1.0 [author 2015-07-01]",
+		"\tInvalid line [3 4]",
+		// The date of the below entry is earlier than that of the above entry;
+		// this error is ignored because the 2015 file is too old.
+		"\tUpdated pkgpath to 1.2 [author 2015-02-01]")
 	t.CreateFileLines("doc/CHANGES-2018",
 		CvsID,
 		"",
