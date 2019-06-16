@@ -1651,6 +1651,21 @@ func (s *Suite) Test_Package_parse__fallback_lookup_in_package_directory(c *chec
 			"The path to the included file should be \"pthread.builtin.mk\".")
 }
 
+func (s *Suite) Test_Package_collectSeenMakefileCommon__builtin_mk(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".include \"builtin.mk\"")
+	t.CreateFileLines("category/package/builtin.mk",
+		MkRcsID)
+	t.FinishSetUp()
+
+	pkg := NewPackage(t.File("category/package"))
+	pkg.load()
+
+	t.Check(pkg.seenMakefileCommon, equals, true)
+}
+
 func (s *Suite) Test_Package_diveInto(c *check.C) {
 	t := s.Init(c)
 

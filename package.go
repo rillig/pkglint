@@ -433,7 +433,7 @@ func (pkg *Package) loadIncluded(mkline MkLine, includingFile string) (skip bool
 		return true, nil
 	}
 
-	pkg.collectUsedBy(mkline, incDir, incBase, includedFile)
+	pkg.collectSeenMakefileCommon(mkline, incDir, incBase, includedFile)
 
 	if trace.Tracing {
 		trace.Step1("Including %q.", fullIncluded)
@@ -494,7 +494,7 @@ func (*Package) diveInto(includingFile string, includedFile string) bool {
 	return false
 }
 
-func (pkg *Package) collectUsedBy(mkline MkLine, incDir string, incBase string, includedFile string) {
+func (pkg *Package) collectSeenMakefileCommon(mkline MkLine, incDir string, incBase string, includedFile string) {
 	switch {
 	case
 		mkline.Basename != "Makefile",
