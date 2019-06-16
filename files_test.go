@@ -194,6 +194,12 @@ func (s *Suite) Test_Load(c *check.C) {
 	t.CheckOutputLines(
 		"ERROR: ~/nonexistent: Cannot be read.")
 
+	t.Check(Load(nonexistent, NotEmpty), check.IsNil)
+	t.Check(Load(empty, NotEmpty), check.IsNil)
+	t.Check(Load(oneLiner, NotEmpty).Lines[0].Text, equals, "hello, world")
+
+	t.CheckOutputEmpty()
+
 	t.Check(Load(nonexistent, NotEmpty|LogErrors), check.IsNil)
 	t.Check(Load(empty, NotEmpty|LogErrors), check.IsNil)
 	t.Check(Load(oneLiner, NotEmpty|LogErrors).Lines[0].Text, equals, "hello, world")
