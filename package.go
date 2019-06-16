@@ -373,7 +373,7 @@ func (pkg *Package) parseLine(mklines MkLines, mkline MkLine, allLines MkLines) 
 	if mkline.IsInclude() {
 		includingFile := mkline.Filename
 		includedFile := mkline.IncludedFile()
-		skip, includedMkLines := pkg.loadIncluded(mkline, includingFile)
+		includedMkLines, skip := pkg.loadIncluded(mkline, includingFile)
 
 		if includedMkLines == nil {
 			if skip || mklines.indentation.HasExists(includedFile) {
@@ -413,11 +413,11 @@ func (pkg *Package) parseLine(mklines MkLines, mkline MkLine, allLines MkLines) 
 // the included file is not processed further for whatever reason. But if
 // skip is false, the file could not be read and an appropriate error message
 // has already been logged.
-func (pkg *Package) loadIncluded(mkline MkLine, includingFile string) (skip bool, includedMklines MkLines) {
+func (pkg *Package) loadIncluded(mkline MkLine, includingFile string) (includedMklines MkLines, skip bool) {
 	includedFile := pkg.resolveIncludedFile(mkline, includingFile)
 
 	if includedFile == "" {
-		return true, nil
+		return nil, true
 	}
 
 	dirname, _ := path.Split(includingFile)
@@ -426,11 +426,11 @@ func (pkg *Package) loadIncluded(mkline MkLine, includingFile string) (skip bool
 	relIncludedFile := relpath(pkg.dir, fullIncluded)
 
 	if !pkg.diveInto(includingFile, includedFile) {
-		return true, nil
+		return nil, true
 	}
 
 	if !pkg.included.FirstTime(relIncludedFile) {
-		return true, nil
+		return nil, true
 	}
 
 	pkg.collectSeenMakefileCommon(mkline, includedFile)
@@ -439,6 +439,9 @@ func (pkg *Package) loadIncluded(mkline MkLine, includingFile string) (skip bool
 		trace.Step1("Including %q.", fullIncluded)
 	}
 	includedMklines = LoadMk(fullIncluded, 0)
+	if includedMklines != nil {
+		return includedMklines, false
+	}
 
 	// Only look in the directory relative to the current file
 	// and in the package directory; see
@@ -448,29 +451,32 @@ func (pkg *Package) loadIncluded(mkline MkLine, includingFile string) (skip bool
 	// on the command line using the -I option, but pkgsrc doesn't
 	// make use of that, so pkglint also doesn't need this extra
 	// complexity.
-	if includedMklines == nil {
-		pkgBasedir := pkg.File(".")
-		if dirname != pkgBasedir { // Prevent unnecessary syscalls
-			dirname = pkgBasedir
+	pkgBasedir := pkg.File(".")
 
-			fullIncludedFallback := dirname + "/" + includedFile
-			includedMklines = LoadMk(fullIncludedFallback, 0)
-
-			if includedMklines != nil {
-				mkline.Notef("The path to the included file should be %q.",
-					relpath(path.Dir(mkline.Filename), fullIncludedFallback))
-				mkline.Explain(
-					"The .include directive first searches the file relative to the including file.",
-					"And if that doesn't exist, falls back to the current directory, which in the",
-					"case of a pkgsrc package is the package directory.",
-					"",
-					"This fallback mechanism is not necessary for pkgsrc, therefore it should not",
-					"be used. One less thing to learn for package developers.")
-			}
-		}
+	// Prevent unnecessary syscalls
+	if dirname == pkgBasedir {
+		return nil, false
 	}
 
-	return false, includedMklines
+	dirname = pkgBasedir
+
+	fullIncludedFallback := dirname + "/" + includedFile
+	includedMklines = LoadMk(fullIncludedFallback, 0)
+	if includedMklines == nil {
+		return nil, false
+	}
+
+	mkline.Notef("The path to the included file should be %q.",
+		relpath(path.Dir(mkline.Filename), fullIncludedFallback))
+	mkline.Explain(
+		"The .include directive first searches the file relative to the including file.",
+		"And if that doesn't exist, falls back to the current directory, which in the",
+		"case of a pkgsrc package is the package directory.",
+		"",
+		"This fallback mechanism is not necessary for pkgsrc, therefore it should not",
+		"be used. One less thing to learn for package developers.")
+
+	return includedMklines, false
 }
 
 // diveInto decides whether to load the includedFile.
