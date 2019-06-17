@@ -1108,11 +1108,7 @@ func (pkg *Package) checkLocallyModified(filename string) {
 }
 
 func (pkg *Package) checkIncludeConditionally(mkline MkLine, indentation *Indentation) {
-	conditionalVars := mkline.ConditionalVars()
-	if len(conditionalVars) == 0 {
-		conditionalVars = indentation.Varnames()
-		mkline.SetConditionalVars(conditionalVars)
-	}
+	mkline.SetConditionalVars(indentation.Varnames())
 
 	if path.Dir(abspath(mkline.Filename)) == abspath(pkg.File(".")) {
 		includedFile := mkline.IncludedFile()
