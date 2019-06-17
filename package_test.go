@@ -921,6 +921,26 @@ func (s *Suite) Test_Package_check__files_Makefile(c *check.C) {
 	// been enabled by the -Call command line option.
 	t.CheckOutputLines(
 		"Looks fine.")
+
+	t.Main("category/package")
+
+	t.CheckOutputLines(
+		"Looks fine.")
+}
+
+func (s *Suite) Test_Package_check__patches_Makefile(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.CreateFileLines("category/package/patches/Makefile",
+		"This file may contain anything.")
+
+	t.Main("category/package")
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/patches/Makefile: Patch files should be "+
+			"named \"patch-\", followed by letters, '-', '_', '.', and digits only.",
+		"0 errors and 1 warning found.")
 }
 
 func (s *Suite) Test_Package_checkIncludeConditionally__conditional_and_unconditional_include(c *check.C) {
