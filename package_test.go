@@ -1917,67 +1917,108 @@ func (s *Suite) Test_Package_resolveIncludedFile__skipping(c *check.C) {
 			"Skipping unresolvable include file \"../../${UNKNOWN_PKGPATH}/buildlink3.mk\".")
 }
 
-func (s *Suite) Test_Package_checkLocallyModified(c *check.C) {
+// In packages without specific MAINTAINER, everyone may commit changes.
+func (s *Suite) Test_Package_checkLocallyModified__no_maintainer(c *check.C) {
 	t := s.Init(c)
 
 	G.Username = "example-user"
 	t.CreateFileLines("category/package/CVS/Entries",
 		"/Makefile//modified//")
-
-	// In packages without specific MAINTAINER, everyone may commit changes.
-
-	pkg := t.SetUpPackage("category/package",
+	t.SetUpPackage("category/package",
 		"MAINTAINER=\tpkgsrc-users@NetBSD.org")
 	t.FinishSetUp()
 
-	G.Check(pkg)
+	G.Check(t.File("category/package"))
 
 	t.CheckOutputEmpty()
+}
 
-	// A package with a MAINTAINER may be edited with care.
+// A package with a MAINTAINER may be edited by the maintainer itself.
+func (s *Suite) Test_Package_checkLocallyModified__maintainer_equal(c *check.C) {
+	t := s.Init(c)
 
+	G.Username = "maintainer"
+	t.CreateFileLines("category/package/CVS/Entries",
+		"/Makefile//modified//")
 	t.SetUpPackage("category/package",
 		"MAINTAINER=\tmaintainer@example.org")
+	t.FinishSetUp()
 
-	G.Check(pkg)
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputEmpty()
+}
+
+// A package with a MAINTAINER may be edited by everyone, with care.
+func (s *Suite) Test_Package_checkLocallyModified__maintainer_unequal(c *check.C) {
+	t := s.Init(c)
+
+	G.Username = "example-user"
+	t.CreateFileLines("category/package/CVS/Entries",
+		"/Makefile//modified//")
+	t.SetUpPackage("category/package",
+		"MAINTAINER=\tmaintainer@example.org")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package"))
 
 	t.CheckOutputLines(
 		"NOTE: ~/category/package/Makefile: " +
 			"Please only commit changes that maintainer@example.org would approve.")
+}
 
-	// A package with an OWNER may NOT be edited by others.
+// A package with an OWNER may be edited by the owner itself.
+func (s *Suite) Test_Package_checkLocallyModified__owner_equal(c *check.C) {
+	t := s.Init(c)
 
-	pkg = t.SetUpPackage("category/package",
-		"#MAINTAINER=\t# undefined",
+	G.Username = "owner"
+	t.CreateFileLines("category/package/CVS/Entries",
+		"/Makefile//modified//")
+	t.SetUpPackage("category/package",
 		"OWNER=\towner@example.org")
+	t.FinishSetUp()
 
-	G.Check(pkg)
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_Package_checkLocallyModified__owner_unequal(c *check.C) {
+	t := s.Init(c)
+
+	G.Username = "example-user"
+	t.CreateFileLines("category/package/CVS/Entries",
+		"/Makefile//modified//")
+	t.SetUpPackage("category/package",
+		"OWNER=\towner@example.org")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package"))
 
 	t.CheckOutputLines(
 		"WARN: ~/category/package/Makefile: " +
 			"Don't commit changes to this file without asking the OWNER, owner@example.org.")
+}
 
-	// In a package with both OWNER and MAINTAINER, OWNER wins.
+// In a package with both OWNER and MAINTAINER, OWNER wins.
+func (s *Suite) Test_Package_checkLocallyModified__both_owner_and_maintainer(c *check.C) {
+	t := s.Init(c)
 
-	pkg = t.SetUpPackage("category/package",
+	G.Username = "example-user"
+	t.CreateFileLines("category/package/CVS/Entries",
+		"/Makefile//modified//")
+	t.SetUpPackage("category/package",
 		"MAINTAINER=\tmaintainer@example.org",
 		"OWNER=\towner@example.org")
+	t.FinishSetUp()
 
-	G.Check(pkg)
+	G.Check(t.File("category/package"))
 
 	t.CheckOutputLines(
 		"WARN: ~/category/package/Makefile: "+
 			"Don't commit changes to this file without asking the OWNER, owner@example.org.",
 		"NOTE: ~/category/package/Makefile: "+
 			"Please only commit changes that maintainer@example.org would approve.")
-
-	// ... unless you are the owner, of course.
-
-	G.Username = "owner"
-
-	G.Check(pkg)
-
-	t.CheckOutputEmpty()
 }
 
 // Just for code coverage.
