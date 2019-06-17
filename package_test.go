@@ -1009,6 +1009,34 @@ func (s *Suite) Test_Package_checkIncludeConditionally__mixed(c *check.C) {
 			"conditionally here (depending on OPSYS) and unconditionally in line 8.")
 }
 
+func (s *Suite) Test_Package_checkIncludeConditionally__other_directory(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".include \"../../category/package-base/including.mk\"")
+	t.CreateFileLines("category/package-base/including.mk",
+		MkCvsID,
+		"",
+		".include \"included.mk\"",
+		".if ${OPSYS} == \"Linux\"",
+		".include \"included.mk\"",
+		".endif",
+		"",
+		".include \"included.mk\"",
+		".if ${OPSYS} == \"Linux\"",
+		".include \"included.mk\"",
+		".endif")
+	t.CreateFileLines("category/package-base/included.mk",
+		MkCvsID)
+
+	t.Main("-Wall", "-Call", "category/package")
+
+	// TODO: Understand why ../../category/package-base/including.mk is
+	//  not checked for (un)conditional includes.
+	t.CheckOutputLines(
+		"Looks fine.")
+}
+
 // See https://github.com/rillig/pkglint/issues/1
 func (s *Suite) Test_Package__include_without_exists(c *check.C) {
 	t := s.Init(c)

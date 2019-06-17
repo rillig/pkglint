@@ -101,6 +101,16 @@ func (pkg *Package) File(relativeFileName string) string {
 	return cleanpath(resolveVariableRefs(nil, pkg.dir+"/"+relativeFileName))
 }
 
+// Rel returns the path by which the given filename (as seen from the
+// current working directory) can be reached as a relative path from
+// the package directory.
+//
+// Example:
+//  NewPackage("category/package").Rel("other/package") == "../../other/package"
+func (pkg *Package) Rel(filename string) string {
+	return relpath(pkg.dir, filename)
+}
+
 func (pkg *Package) checkPossibleDowngrade() {
 	if trace.Tracing {
 		defer trace.Call0()()
@@ -1110,33 +1120,32 @@ func (pkg *Package) checkLocallyModified(filename string) {
 func (pkg *Package) checkIncludeConditionally(mkline MkLine, indentation *Indentation) {
 	mkline.SetConditionalVars(indentation.Varnames())
 
-	if path.Dir(abspath(mkline.Filename)) == abspath(pkg.File(".")) {
-		includedFile := mkline.IncludedFile()
+	includedFile := mkline.IncludedFile()
+	key := pkg.Rel(mkline.IncludedFile())
 
-		if indentation.IsConditional() {
-			pkg.conditionalIncludes[includedFile] = mkline
-			if other := pkg.unconditionalIncludes[includedFile]; other != nil {
-				mkline.Warnf(
-					"%q is included conditionally here (depending on %s) "+
-						"and unconditionally in %s.",
-					cleanpath(includedFile), strings.Join(mkline.ConditionalVars(), ", "), mkline.RefTo(other))
-			}
-
-		} else {
-			pkg.unconditionalIncludes[includedFile] = mkline
-			if other := pkg.conditionalIncludes[includedFile]; other != nil {
-				mkline.Warnf(
-					"%q is included unconditionally here "+
-						"and conditionally in %s (depending on %s).",
-					cleanpath(includedFile), mkline.RefTo(other), strings.Join(other.ConditionalVars(), ", "))
-			}
+	if indentation.IsConditional() {
+		pkg.conditionalIncludes[key] = mkline
+		if other := pkg.unconditionalIncludes[key]; other != nil {
+			mkline.Warnf(
+				"%q is included conditionally here (depending on %s) "+
+					"and unconditionally in %s.",
+				cleanpath(includedFile), strings.Join(mkline.ConditionalVars(), ", "), mkline.RefTo(other))
 		}
 
-		// TODO: Check whether the conditional variables are the same on both places.
-		//  Ideally they should match, but there may be some differences in internal
-		//  variables, which need to be filtered out before comparing them, like it is
-		//  already done with *_MK variables.
+	} else {
+		pkg.unconditionalIncludes[key] = mkline
+		if other := pkg.conditionalIncludes[key]; other != nil {
+			mkline.Warnf(
+				"%q is included unconditionally here "+
+					"and conditionally in %s (depending on %s).",
+				cleanpath(includedFile), mkline.RefTo(other), strings.Join(other.ConditionalVars(), ", "))
+		}
 	}
+
+	// TODO: Check whether the conditional variables are the same on both places.
+	//  Ideally they should match, but there may be some differences in internal
+	//  variables, which need to be filtered out before comparing them, like it is
+	//  already done with *_MK variables.
 }
 
 func (pkg *Package) loadPlistDirs(plistFilename string) {
