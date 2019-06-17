@@ -977,6 +977,38 @@ func (s *Suite) Test_Package_checkIncludeConditionally__conditional_and_uncondit
 		"WARN: options.mk:3: Expected definition of PKG_OPTIONS_VAR.")
 }
 
+func (s *Suite) Test_Package_checkIncludeConditionally__mixed(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.Chdir("category/package")
+	t.CreateFileLines("including.mk",
+		MkCvsID,
+		"",
+		".include \"included.mk\"",
+		".if ${OPSYS} == \"Linux\"",
+		".include \"included.mk\"",
+		".endif",
+		"",
+		".include \"included.mk\"",
+		".if ${OPSYS} == \"Linux\"",
+		".include \"included.mk\"",
+		".endif")
+	t.CreateFileLines("included.mk",
+		MkCvsID)
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	t.CheckOutputLines(
+		"WARN: including.mk:5: \"included.mk\" is included "+
+			"conditionally here (depending on OPSYS) and unconditionally in line 3.",
+		"WARN: including.mk:8: \"included.mk\" is included "+
+			"unconditionally here and conditionally in line 5 (depending on OPSYS).",
+		"WARN: including.mk:10: \"included.mk\" is included "+
+			"conditionally here (depending on OPSYS) and unconditionally in line 8.")
+}
+
 // See https://github.com/rillig/pkglint/issues/1
 func (s *Suite) Test_Package__include_without_exists(c *check.C) {
 	t := s.Init(c)
