@@ -1442,12 +1442,13 @@ func (s *Suite) Test_Package_checkUseLanguagesCompilerMk__compiler_mk(c *check.C
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package",
-		".include \"compiler.mk\"",
 		"USE_LANGUAGES=\tc c99 fortran ada c++14",
 		".include \"../../mk/compiler.mk\"",
+		".include \"compiler.mk\"",
 		"USE_LANGUAGES=\tc c99 fortran ada c++14")
 	t.CreateFileLines("category/package/compiler.mk",
-		MkCvsID)
+		MkCvsID,
+		"USE_LANGUAGES=\tc++")
 	t.CreateFileLines("mk/compiler.mk",
 		MkCvsID)
 	t.FinishSetUp()
@@ -1455,8 +1456,10 @@ func (s *Suite) Test_Package_checkUseLanguagesCompilerMk__compiler_mk(c *check.C
 	G.Check(t.File("category/package"))
 
 	t.CheckOutputLines(
-		"NOTE: ~/category/package/Makefile:23: "+
-			"Definition of USE_LANGUAGES is redundant because of line 21.",
+		"WARN: ~/category/package/Makefile:20: "+
+			"Variable USE_LANGUAGES is overwritten in compiler.mk:2.",
+		"WARN: ~/category/package/compiler.mk:2: "+
+			"Modifying USE_LANGUAGES after including ../../mk/compiler.mk has no effect.",
 		"WARN: ~/category/package/Makefile:23: "+
 			"Modifying USE_LANGUAGES after including ../../mk/compiler.mk has no effect.")
 }
