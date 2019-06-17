@@ -1402,6 +1402,25 @@ func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__not_constant_2(c *ch
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_Package_loadPlistDirs(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.CreateFileLines("category/package/PLIST.common",
+		PlistCvsID,
+		"@exec echo hello",
+		"${PLIST.condition}dir/subdir/file",
+		"@unexec echo bye")
+	t.FinishSetUp()
+
+	pkg := NewPackage(t.File("category/package"))
+	pkg.load()
+
+	// FIXME: dir/subdir should also be included in pkg.Plist.Dirs.
+	t.Check(pkg.Plist.Dirs, deepEquals, map[string]bool{
+		"bin": true})
+}
+
 func (s *Suite) Test_Package_checkUseLanguagesCompilerMk__too_late(c *check.C) {
 	t := s.Init(c)
 
