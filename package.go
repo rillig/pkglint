@@ -530,7 +530,7 @@ func (pkg *Package) resolveIncludedFile(mkline MkLine, includingFilename string)
 	includedFile := resolveVariableRefs(nil, mkline.ResolveVarsInRelativePath(mkline.IncludedFile()))
 	if containsVarRef(includedFile) {
 		if trace.Tracing && !contains(includingFilename, "/mk/") {
-			trace.Stepf("%s:%s: Skipping include file %q. This may result in false warnings.",
+			trace.Stepf("%s:%s: Skipping unresolvable include file %q.",
 				mkline.Filename, mkline.Linenos(), includedFile)
 		}
 		return ""

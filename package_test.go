@@ -1627,8 +1627,7 @@ func (s *Suite) Test_Package_parse__skipping(c *check.C) {
 
 	c.Check(relevant, deepEquals, []string{
 		"TRACE: 1 2 3 4   ~/category/package/Makefile:20: " +
-			"Skipping include file \"${MYSQL_PKGSRCDIR:S/-client$/-server/}/buildlink3.mk\". " +
-			"This may result in false warnings."})
+			"Skipping unresolvable include file \"${MYSQL_PKGSRCDIR:S/-client$/-server/}/buildlink3.mk\"."})
 }
 
 func (s *Suite) Test_Package_parse__not_found(c *check.C) {
@@ -1915,8 +1914,7 @@ func (s *Suite) Test_Package_resolveIncludedFile__skipping(c *check.C) {
 	// logging anything about these files.
 	t.CheckOutputLinesMatching(`.*Skipping.*`,
 		"TRACE: 1 2   ~/category/package/Makefile:21: "+
-			"Skipping include file \"../../${UNKNOWN_PKGPATH}/buildlink3.mk\". "+
-			"This may result in false warnings.")
+			"Skipping unresolvable include file \"../../${UNKNOWN_PKGPATH}/buildlink3.mk\".")
 }
 
 func (s *Suite) Test_Package_checkLocallyModified(c *check.C) {
