@@ -1461,6 +1461,29 @@ func (s *Suite) Test_Package_checkUseLanguagesCompilerMk__compiler_mk(c *check.C
 			"Modifying USE_LANGUAGES after including ../../mk/compiler.mk has no effect.")
 }
 
+func (s *Suite) Test_Package_checkUseLanguagesCompilerMk__endian_mk(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".include \"endian.mk\"",
+		"USE_LANGUAGES=\tc c99 fortran ada c++14",
+		".include \"../../mk/endian.mk\"",
+		"USE_LANGUAGES=\tc c99 fortran ada c++14")
+	t.CreateFileLines("category/package/endian.mk",
+		MkCvsID)
+	t.CreateFileLines("mk/endian.mk",
+		MkCvsID)
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputLines(
+		"NOTE: ~/category/package/Makefile:23: "+
+			"Definition of USE_LANGUAGES is redundant because of line 21.",
+		"WARN: ~/category/package/Makefile:23: "+
+			"Modifying USE_LANGUAGES after including ../../mk/compiler.mk has no effect.")
+}
+
 func (s *Suite) Test_Package_parse__simple(c *check.C) {
 	t := s.Init(c)
 
