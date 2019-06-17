@@ -2238,3 +2238,21 @@ func (s *Suite) Test_Package__Makefile_files(c *check.C) {
 		"NOTE: ~/category/package/Makefile.php: " +
 			"Consider renaming \"Makefile.php\" to \"php.mk\".")
 }
+
+func (s *Suite) Test_Package__patch_in_FILESDIR(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "-Call")
+	t.SetUpPackage("category/package")
+	t.CreateFileLines("category/package/files/patch-aa",
+		"This file can contain anything, no matter what the filename says.")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package"))
+
+	// FIXME: All these errors are wrong.
+	t.CheckOutputLines(
+		"ERROR: ~/category/package/files/patch-aa:1: Expected \"$NetBSD$\".",
+		"NOTE: ~/category/package/files/patch-aa:1: Empty line expected before this line.",
+		"ERROR: ~/category/package/files/patch-aa: Contains no patch.")
+}
