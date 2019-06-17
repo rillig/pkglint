@@ -905,6 +905,24 @@ func (s *Suite) Test_Package_loadPackageMakefile__PECL_VERSION(c *check.C) {
 	G.Check(pkg)
 }
 
+func (s *Suite) Test_Package_check__files_Makefile(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.CreateFileLines("category/package/files/Makefile",
+		"This file may contain anything.")
+
+	t.Main("category/package/files/Makefile")
+
+	// Since there is nothing to check in files/*, pkglint could
+	// as well report this as a usage error.
+	//
+	// Until June 2019, checking individual files in FILESDIR had
+	// been enabled by the -Call command line option.
+	t.CheckOutputLines(
+		"Looks fine.")
+}
+
 func (s *Suite) Test_Package_checkIncludeConditionally__conditional_and_unconditional_include(c *check.C) {
 	t := s.Init(c)
 
