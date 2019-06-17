@@ -1891,6 +1891,34 @@ func (s *Suite) Test_Package_resolveIncludedFile__no_tracing(c *check.C) {
 		"FirstTime: ../../lang/language/builtin.mk")
 }
 
+func (s *Suite) Test_Package_resolveIncludedFile__skipping(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".include \"../../mk/known.mk\"",
+		".include \"../../${UNKNOWN_PKGPATH}/buildlink3.mk\"",
+		".include \"../../lang/language/buildlink3.mk\"")
+	t.CreateFileLines("mk/known.mk",
+		MkCvsID,
+		".include \"${UNKNOWN}.mk\"")
+	t.CreateFileLines("lang/language/buildlink3.mk",
+		MkCvsID)
+	t.FinishSetUp()
+	pkg := NewPackage(t.File("category/package"))
+
+	t.EnableTracingToLog()
+	pkg.loadPackageMakefile()
+
+	// The trace log does not contain the message that mk/known.mk includes
+	// a file that is skipped. This is because most package authors are not
+	// involved in the pkgsrc infrastructure, therefore there's no point in
+	// logging anything about these files.
+	t.CheckOutputLinesMatching(`.*Skipping.*`,
+		"TRACE: 1 2   ~/category/package/Makefile:21: "+
+			"Skipping include file \"../../${UNKNOWN_PKGPATH}/buildlink3.mk\". "+
+			"This may result in false warnings.")
+}
+
 func (s *Suite) Test_Package_checkLocallyModified(c *check.C) {
 	t := s.Init(c)
 
