@@ -2250,9 +2250,8 @@ func (s *Suite) Test_Package__patch_in_FILESDIR(c *check.C) {
 
 	G.Check(t.File("category/package"))
 
-	// FIXME: All these errors are wrong.
-	t.CheckOutputLines(
-		"ERROR: ~/category/package/files/patch-aa:1: Expected \"$NetBSD$\".",
-		"NOTE: ~/category/package/files/patch-aa:1: Empty line expected before this line.",
-		"ERROR: ~/category/package/files/patch-aa: Contains no patch.")
+	// No warnings. The files in FILESDIR are independent of pkgsrc
+	// and may contain anything. There are no naming conventions or
+	// anything else.
+	t.CheckOutputEmpty()
 }

@@ -116,7 +116,6 @@ func (ip *InterPackage) Bl3(name string, loc *Location) *Location {
 }
 
 type CmdOpts struct {
-	CheckExtra,
 	CheckGlobal bool
 
 	// TODO: Are these Warn* options really all necessary?
@@ -299,7 +298,6 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) int {
 	opts.AddFlagVar('V', "version", &gopts.ShowVersion, false, "show the version number of pkglint")
 	warn := opts.AddFlagGroup('W', "warning", "warning,...", "enable or disable groups of warnings")
 
-	check.AddFlagVar("extra", &gopts.CheckExtra, false, "check various additional files")
 	check.AddFlagVar("global", &gopts.CheckGlobal, false, "inter-package checks")
 
 	warn.AddFlagVar("extra", &gopts.WarnExtra, false, "enable some extra warnings")
@@ -709,9 +707,6 @@ func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
 
 	default:
 		NewLineWhole(filename).Warnf("Unexpected file found.")
-		if pkglint.Opts.CheckExtra {
-			CheckFileOther(filename)
-		}
 	}
 }
 

@@ -41,7 +41,6 @@ func (s *Suite) Test_Pkglint_Main__help(c *check.C) {
 		"  Flags for -C, --check:",
 		"    all      all of the following",
 		"    none     none of the following",
-		"    extra    check various additional files (disabled)",
 		"    global   inter-package checks (disabled)",
 		"",
 		"  Flags for -W, --warning:",

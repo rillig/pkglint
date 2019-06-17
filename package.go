@@ -190,9 +190,6 @@ func (pkg *Package) load() ([]string, MkLines, MkLines) {
 	if pkg.Pkgdir != "." {
 		files = append(files, dirglob(pkg.File(pkg.Pkgdir))...)
 	}
-	if G.Opts.CheckExtra {
-		files = append(files, dirglob(pkg.File(pkg.Filesdir))...)
-	}
 	files = append(files, dirglob(pkg.File(pkg.Patchdir))...)
 	if pkg.DistinfoFile != pkg.vars.fallback["DISTINFO_FILE"] {
 		files = append(files, pkg.File(pkg.DistinfoFile))
