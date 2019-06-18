@@ -1133,6 +1133,32 @@ func (s *Suite) Test_CheckFileOther__no_tracing(c *check.C) {
 func (s *Suite) Test_Pkglint_checkExecutable(c *check.C) {
 	t := s.Init(c)
 
+	filename := t.CreateFileLines("file.mk")
+
+	G.checkExecutable(filename, 0555)
+
+	t.CheckOutputLines(
+		"WARN: ~/file.mk: Should not be executable.")
+
+	t.SetUpCommandLine("--autofix")
+
+	G.checkExecutable(filename, 0555)
+
+	t.CheckOutputMatches(
+		"AUTOFIX: ~/file.mk: Clearing executable bits")
+
+	// On Windows, this is effectively a no-op test since there is no
+	// execute-bit. The only relevant permissions bit is whether a
+	// file is readonly or not.
+	st, err := os.Lstat(filename)
+	if t.Check(err, check.IsNil) {
+		t.Check(st.Mode()&0111, equals, os.FileMode(0))
+	}
+}
+
+func (s *Suite) Test_Pkglint_checkExecutable__error(c *check.C) {
+	t := s.Init(c)
+
 	filename := t.File("file.mk")
 
 	G.checkExecutable(filename, 0555)
