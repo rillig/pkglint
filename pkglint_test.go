@@ -925,6 +925,17 @@ func (s *Suite) Test_Pkglint_checkReg__unknown_file_in_patches(c *check.C) {
 			"Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
 }
 
+func (s *Suite) Test_Pkglint_checkReg__patch_for_Makefile_fragment(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileDummyPatch("category/package/patches/patch-compiler.mk")
+	t.Chdir("category/package")
+
+	G.checkReg(t.File("patches/patch-compiler.mk"), "patch-compiler.mk", 3)
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Pkglint_checkReg__file_in_files(c *check.C) {
 	t := s.Init(c)
 

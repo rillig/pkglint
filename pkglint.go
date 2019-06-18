@@ -655,8 +655,7 @@ func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
 		NewLineWhole(filename).Warnf("Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
 
 	case (hasPrefix(basename, "Makefile") || hasSuffix(basename, ".mk")) &&
-		!pathContainsDir(filename, "files") &&
-		!pathContainsDir(filename, "patches"):
+		!pathContainsDir(filename, "files"):
 		CheckFileMk(filename)
 
 	case hasPrefix(basename, "PLIST"):
