@@ -419,6 +419,15 @@ func (s *Suite) Test_Pkglint_Check(c *check.C) {
 		"ERROR: ~/category/package/nonexistent: No such file or directory.")
 }
 
+func (s *Suite) Test_Pkglint_checkMode__neither_file_nor_directory(c *check.C) {
+	t := s.Init(c)
+
+	G.checkMode("/dev/null", os.ModeCharDevice)
+
+	t.CheckOutputLines(
+		"ERROR: /dev/null: No such file or directory.")
+}
+
 // Pkglint must never be trapped in an endless loop, even when
 // resolving the value of a variable that refers back to itself.
 func (s *Suite) Test_resolveVariableRefs__circular_reference(c *check.C) {

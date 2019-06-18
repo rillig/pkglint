@@ -345,12 +345,21 @@ func (pkglint *Pkglint) Check(dirent string) {
 	}
 
 	st, err := os.Lstat(dirent)
-	if err != nil || !st.Mode().IsDir() && !st.Mode().IsRegular() {
+	if err != nil {
 		NewLineWhole(dirent).Errorf("No such file or directory.")
 		return
 	}
-	isDir := st.Mode().IsDir()
-	isReg := st.Mode().IsRegular()
+
+	pkglint.checkMode(dirent, st.Mode())
+}
+
+func (pkglint *Pkglint) checkMode(dirent string, mode os.FileMode) {
+	isDir := mode.IsDir()
+	isReg := mode.IsRegular()
+	if !isDir && !isReg {
+		NewLineWhole(dirent).Errorf("No such file or directory.")
+		return
+	}
 
 	dir := dirent
 	if !isDir {
@@ -370,7 +379,7 @@ func (pkglint *Pkglint) Check(dirent string) {
 
 	if isReg {
 		depth := strings.Count(pkgsrcRel, "/")
-		pkglint.checkExecutable(dirent, st.Mode())
+		pkglint.checkExecutable(dirent, mode)
 		pkglint.checkReg(dirent, basename, depth)
 		return
 	}
