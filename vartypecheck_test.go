@@ -100,18 +100,27 @@ func (s *Suite) Test_VartypeCheck_CFlag(c *check.C) {
 		"-c",
 		"-no-integrated-as",
 		"-pthread",
-		"`pkg-config`_plus",
+		"`pkg-config`_plus")
+	vt.OutputEmpty()
+
+	vt.Values(
 		"-L${PREFIX}/lib",
 		"-L${PREFIX}/lib64",
-		"-lncurses")
+		"-lncurses",
+		"-DMACRO=\\\"",
+		"-DMACRO=\\'")
 
 	vt.Output(
-		"WARN: filename.mk:12: \"-L${PREFIX}/lib\" is a linker flag "+
+		"WARN: filename.mk:21: \"-L${PREFIX}/lib\" is a linker flag "+
 			"and belong to LDFLAGS, LIBS or LDADD instead of CFLAGS.",
-		"WARN: filename.mk:13: \"-L${PREFIX}/lib64\" is a linker flag "+
+		"WARN: filename.mk:22: \"-L${PREFIX}/lib64\" is a linker flag "+
 			"and belong to LDFLAGS, LIBS or LDADD instead of CFLAGS.",
-		"WARN: filename.mk:14: \"-lncurses\" is a linker flag "+
-			"and belong to LDFLAGS, LIBS or LDADD instead of CFLAGS.")
+		"WARN: filename.mk:23: \"-lncurses\" is a linker flag "+
+			"and belong to LDFLAGS, LIBS or LDADD instead of CFLAGS.",
+		"WARN: filename.mk:24: Compiler flag \"-DMACRO=\\\\\\\"\" "+
+			"has unbalanced double quotes.",
+		"WARN: filename.mk:25: Compiler flag \"-DMACRO=\\\\'\" "+
+			"has unbalanced single quotes.")
 
 	vt.Op(opUseMatch)
 	vt.Values(
