@@ -201,21 +201,19 @@ func (cv *VartypeCheck) CFlag() {
 	if cv.Op == opUseMatch {
 		return
 	}
+
 	cflag := cv.Value
 	switch {
-	case matches(cflag, `^-[DILOUWfgm]`),
-		hasPrefix(cflag, "-std="),
-		cflag == "-c99",
-		cflag == "-c",
-		cflag == "-no-integrated-as",
-		cflag == "-pthread",
-		hasPrefix(cflag, "`") && hasSuffix(cflag, "`"),
-		containsVarRef(cflag):
-		return
-	case hasPrefix(cflag, "-"):
-		cv.Warnf("Unknown compiler flag %q.", cflag)
-	default:
-		cv.Warnf("Compiler flag %q should start with a hyphen.", cflag)
+	case hasPrefix(cflag, "-l"), hasPrefix(cflag, "-L"):
+		cv.Warnf("%q is a linker flag and belong to LDFLAGS, LIBS or LDADD instead of %s.",
+			cflag, cv.Varname)
+	}
+
+	if strings.Count(cflag, "\"")%2 != 0 {
+		cv.Warnf("Compiler flag %q has unbalanced double quotes.", cflag)
+	}
+	if strings.Count(cflag, "'")%2 != 0 {
+		cv.Warnf("Compiler flag %q has unbalanced single quotes.", cflag)
 	}
 }
 
@@ -679,6 +677,7 @@ func (cv *VartypeCheck) LdFlag() {
 	if cv.Op == opUseMatch {
 		return
 	}
+
 	ldflag := cv.Value
 	if m, rpathFlag := match1(ldflag, `^(-Wl,(?:-R|-rpath|--rpath))`); m {
 		cv.Warnf("Please use \"${COMPILER_RPATH_FLAG}\" instead of %q.", rpathFlag)
@@ -686,19 +685,12 @@ func (cv *VartypeCheck) LdFlag() {
 	}
 
 	switch {
-	case hasPrefix(ldflag, "-L"),
-		hasPrefix(ldflag, "-l"),
-		ldflag == "-pthread",
-		ldflag == "-static",
-		hasPrefix(ldflag, "-static-"),
-		hasPrefix(ldflag, "-Wl,-"),
-		hasPrefix(ldflag, "`") && hasSuffix(ldflag, "`"),
-		ldflag != cv.ValueNoVar:
-		return
-	case hasPrefix(ldflag, "-"):
-		cv.Warnf("Unknown linker flag %q.", cv.Value)
-	default:
-		cv.Warnf("Linker flag %q should start with a hyphen.", cv.Value)
+	case ldflag == "-P",
+		ldflag == "-E",
+		hasPrefix(ldflag, "-D"),
+		hasPrefix(ldflag, "-U"),
+		hasPrefix(ldflag, "-I"):
+		cv.Warnf("%q is a compiler flag and belongs on CFLAGS, CPPFLAGS, CXXFLAGS or FFLAGS instead of %s.", cv.Value, cv.Varname)
 	}
 }
 

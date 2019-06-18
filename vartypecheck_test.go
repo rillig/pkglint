@@ -100,13 +100,18 @@ func (s *Suite) Test_VartypeCheck_CFlag(c *check.C) {
 		"-c",
 		"-no-integrated-as",
 		"-pthread",
-		"`pkg-config`_plus")
+		"`pkg-config`_plus",
+		"-L${PREFIX}/lib",
+		"-L${PREFIX}/lib64",
+		"-lncurses")
 
 	vt.Output(
-		"WARN: filename.mk:2: Compiler flag \"/W3\" should start with a hyphen.",
-		"WARN: filename.mk:3: Compiler flag \"target:sparc64\" should start with a hyphen.",
-		"WARN: filename.mk:5: Unknown compiler flag \"-XX:+PrintClassHistogramAfterFullGC\".",
-		"WARN: filename.mk:11: Compiler flag \"`pkg-config`_plus\" should start with a hyphen.")
+		"WARN: filename.mk:12: \"-L${PREFIX}/lib\" is a linker flag "+
+			"and belong to LDFLAGS, LIBS or LDADD instead of CFLAGS.",
+		"WARN: filename.mk:13: \"-L${PREFIX}/lib64\" is a linker flag "+
+			"and belong to LDFLAGS, LIBS or LDADD instead of CFLAGS.",
+		"WARN: filename.mk:14: \"-lncurses\" is a linker flag "+
+			"and belong to LDFLAGS, LIBS or LDADD instead of CFLAGS.")
 
 	vt.Op(opUseMatch)
 	vt.Values(
@@ -740,16 +745,28 @@ func (s *Suite) Test_VartypeCheck_LdFlag(c *check.C) {
 		"-static-something",
 		"${LDFLAGS.NetBSD}",
 		"-l${LIBNCURSES}",
-		"`pkg-config`_plus")
+		"`pkg-config`_plus",
+		"-DMACRO",
+		"-UMACRO",
+		"-P",
+		"-E",
+		"-I${PREFIX}/include")
 	vt.Op(opUseMatch)
 	vt.Values(
 		"anything")
 
 	vt.Output(
-		"WARN: filename.mk:4: Unknown linker flag \"-unknown\".",
-		"WARN: filename.mk:5: Linker flag \"no-hyphen\" should start with a hyphen.",
 		"WARN: filename.mk:6: Please use \"${COMPILER_RPATH_FLAG}\" instead of \"-Wl,--rpath\".",
-		"WARN: filename.mk:12: Linker flag \"`pkg-config`_plus\" should start with a hyphen.")
+		"WARN: filename.mk:13: \"-DMACRO\" is a compiler flag "+
+			"and belongs on CFLAGS, CPPFLAGS, CXXFLAGS or FFLAGS instead of LDFLAGS.",
+		"WARN: filename.mk:14: \"-UMACRO\" is a compiler flag "+
+			"and belongs on CFLAGS, CPPFLAGS, CXXFLAGS or FFLAGS instead of LDFLAGS.",
+		"WARN: filename.mk:15: \"-P\" is a compiler flag "+
+			"and belongs on CFLAGS, CPPFLAGS, CXXFLAGS or FFLAGS instead of LDFLAGS.",
+		"WARN: filename.mk:16: \"-E\" is a compiler flag "+
+			"and belongs on CFLAGS, CPPFLAGS, CXXFLAGS or FFLAGS instead of LDFLAGS.",
+		"WARN: filename.mk:17: \"-I${PREFIX}/include\" is a compiler flag "+
+			"and belongs on CFLAGS, CPPFLAGS, CXXFLAGS or FFLAGS instead of LDFLAGS.")
 }
 
 func (s *Suite) Test_VartypeCheck_License(c *check.C) {

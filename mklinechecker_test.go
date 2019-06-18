@@ -2003,8 +2003,8 @@ func (s *Suite) Test_MkLineChecker_checkVartype__CFLAGS(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:2: Unknown compiler flag \"-bs\".",
-		"WARN: Makefile:2: Compiler flag \"%s\\\\\\\"\" should start with a hyphen.")
+		"WARN: Makefile:2: Compiler flag \"-DPIPECOMMAND=\\\\\\\"/usr/sbin/sendmail\" has unbalanced double quotes.",
+		"WARN: Makefile:2: Compiler flag \"%s\\\\\\\"\" has unbalanced double quotes.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation__autofix(c *check.C) {
