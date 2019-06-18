@@ -1468,7 +1468,12 @@ func (s *Suite) Test_MkLineChecker_warnVarusePermissions__not_directly_and_no_al
 	mklines := t.NewMkLines("mk-c.mk",
 		MkCvsID,
 		"",
-		"TOOL_DEPENDS+=\t${BUILDLINK_API_DEPENDS.mk-c}:${BUILDLINK_PKGSRCDIR.mk-c}")
+		"# GUESSED_FLAGS",
+		"#\tDocumented here to suppress the \"defined but not used\"",
+		"#\twarning.",
+		"",
+		"TOOL_DEPENDS+=\t${BUILDLINK_API_DEPENDS.mk-c}:${BUILDLINK_PKGSRCDIR.mk-c}",
+		"GUESSED_FLAGS+=\t${BUILDLINK_CPPFLAGS}")
 
 	mklines.Check()
 
@@ -1484,9 +1489,11 @@ func (s *Suite) Test_MkLineChecker_warnVarusePermissions__not_directly_and_no_al
 	t.Check(apiDependsType.AlternativeFiles(aclpUseLoadtime), equals, "buildlink3.mk or builtin.mk only")
 
 	t.CheckOutputLines(
-		"WARN: mk-c.mk:3: BUILDLINK_API_DEPENDS.mk-c should not be used in any file.",
-		"WARN: mk-c.mk:3: The list variable BUILDLINK_API_DEPENDS.mk-c should not be embedded in a word.",
-		"WARN: mk-c.mk:3: BUILDLINK_PKGSRCDIR.mk-c should not be used in any file.")
+		"WARN: mk-c.mk:7: BUILDLINK_API_DEPENDS.mk-c should not be used in any file.",
+		"WARN: mk-c.mk:7: The list variable BUILDLINK_API_DEPENDS.mk-c should not be embedded in a word.",
+		"WARN: mk-c.mk:7: BUILDLINK_PKGSRCDIR.mk-c should not be used in any file.",
+		// FIXME
+		"WARN: mk-c.mk:8: BUILDLINK_CPPFLAGS should not be used indirectly at load time (via GUESSED_FLAGS).")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarassignDecreasingVersions(c *check.C) {
