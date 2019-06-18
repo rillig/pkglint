@@ -295,11 +295,13 @@ func (pkg *Package) checkDirent(dirent string, mode os.FileMode) {
 
 	case mode.IsDir():
 		switch {
-		case basename == "files" || basename == "patches" || isIgnoredFilename(basename):
-			// Ok
-		case matches(dirent, `(?:^|/)files/[^/]*$`):
-			// Ok
-		case !isEmptyDir(dirent):
+		case basename == "files",
+			basename == "patches",
+			matches(dirent, `(?:^|/)files/[^/]*$`),
+			isEmptyDir(dirent):
+			break
+
+		default:
 			NewLineWhole(dirent).Warnf("Unknown directory name.")
 		}
 
