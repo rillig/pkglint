@@ -841,7 +841,9 @@ func (ck MkLineChecker) checkVarUseQuoting(varUse *MkVarUse, vartype *Vartype, v
 
 	mkline := ck.MkLine
 	if mod == ":M*:Q" && !needMstar {
-		mkline.Notef("The :M* modifier is not needed here.")
+		if vartype != nil && !vartype.Guessed() {
+			mkline.Notef("The :M* modifier is not needed here.")
+		}
 
 	} else if needsQuoting == yes {
 		modNoQ := strings.TrimSuffix(mod, ":Q")

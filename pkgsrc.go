@@ -967,6 +967,8 @@ func (src *Pkgsrc) guessVariableType(varname string) (vartype *Vartype) {
 		return listType(BtCFlag, aclpAllRuntime)
 	case hasSuffix(varname, "_LDFLAGS"):
 		return listType(BtLdFlag, aclpAllRuntime)
+	case hasSuffix(varname, "FLAGS"):
+		return listType(BtShellWord, aclpAll)
 	case hasSuffix(varbase, "_MK"):
 		// TODO: Add BtGuard for inclusion guards, since these variables may only be checked using defined().
 		return plainType(BtUnknown, aclpAll)
