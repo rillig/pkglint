@@ -384,7 +384,7 @@ func (pkglint *Pkglint) checkMode(dirent string, mode os.FileMode) {
 		return
 	}
 
-	if isDir && isEmptyDir(dirent) {
+	if isEmptyDir(dirent) {
 		return
 	}
 
