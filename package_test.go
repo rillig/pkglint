@@ -993,8 +993,10 @@ func (s *Suite) Test_Package_checkDirent__skipped(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
+	t.FinishSetUp()
 	t.Chdir("category/package")
 	pkg := NewPackage(".")
+
 	pkg.checkDirent("work", os.ModeSymlink)
 	pkg.checkDirent("work.i386", os.ModeSymlink)
 	pkg.checkDirent("work.hostname", os.ModeSymlink)
