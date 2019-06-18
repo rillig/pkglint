@@ -701,12 +701,12 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 	}
 
 	if ck.MkLines.once.FirstTimeSlice("checkVarusePermissions", varname) {
-		ck.warnVarusePermissions(varname, vartype, directly, indirectly)
+		ck.warnVarusePermissions(vuc.vartype, varname, vartype, directly, indirectly)
 	}
 }
 
 func (ck MkLineChecker) warnVarusePermissions(
-	varname string, vartype *Vartype, directly, indirectly bool) {
+	vucVartype *Vartype, varname string, vartype *Vartype, directly, indirectly bool) {
 
 	mkline := ck.MkLine
 
@@ -718,6 +718,13 @@ func (ck MkLineChecker) warnVarusePermissions(
 	}
 
 	if indirectly {
+		// Some of the guessed variables may be used at load time. But since the
+		// variable type and these permissions are guessed, pkglint should not
+		// issue the following warning, since it is often wrong.
+		if vucVartype != nil && vucVartype.Guessed() {
+			return
+		}
+
 		mkline.Warnf("%s should not be used indirectly at load time (via %s).",
 			varname, mkline.Varname())
 		ck.explainPermissions(varname, vartype,
