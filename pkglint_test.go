@@ -507,11 +507,23 @@ func (s *Suite) Test_CheckLinesDescr(c *check.C) {
 		"WARN: DESCR:25: File too long (should be no more than 24 lines).")
 }
 
-func (s *Suite) Test_CheckLinesMessage__short(c *check.C) {
+func (s *Suite) Test_CheckLinesMessage__one_line_of_text(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("MESSAGE",
 		"one line")
+
+	CheckLinesMessage(lines)
+
+	t.CheckOutputLines(
+		"WARN: MESSAGE:1: File too short.")
+}
+
+func (s *Suite) Test_CheckLinesMessage__one_hline(c *check.C) {
+	t := s.Init(c)
+
+	lines := t.NewLines("MESSAGE",
+		strings.Repeat("=", 75))
 
 	CheckLinesMessage(lines)
 

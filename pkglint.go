@@ -548,7 +548,7 @@ func CheckLinesMessage(lines Lines) {
 		fix.InsertBefore(hline)
 		fix.Apply()
 		lines.CheckCvsID(0, ``, "")
-	} else if 1 < lines.Len() {
+	} else {
 		lines.CheckCvsID(1, ``, "")
 	}
 	for _, line := range lines.Lines {
