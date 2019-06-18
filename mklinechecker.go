@@ -721,7 +721,7 @@ func (ck MkLineChecker) warnVarusePermissions(
 		// Some of the guessed variables may be used at load time. But since the
 		// variable type and these permissions are guessed, pkglint should not
 		// issue the following warning, since it is often wrong.
-		if vucVartype != nil && vucVartype.Guessed() {
+		if vucVartype.Guessed() {
 			return
 		}
 
@@ -848,7 +848,7 @@ func (ck MkLineChecker) checkVarUseQuoting(varUse *MkVarUse, vartype *Vartype, v
 
 	mkline := ck.MkLine
 	if mod == ":M*:Q" && !needMstar {
-		if vartype != nil && !vartype.Guessed() {
+		if !vartype.Guessed() {
 			mkline.Notef("The :M* modifier is not needed here.")
 		}
 
