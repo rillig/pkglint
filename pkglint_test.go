@@ -433,15 +433,17 @@ func (s *Suite) Test_Pkglint_checkMode__neither_file_nor_directory(c *check.C) {
 func (s *Suite) Test_resolveVariableRefs__circular_reference(c *check.C) {
 	t := s.Init(c)
 
-	mkline := t.NewMkLine("filename.mk", 1, "GCC_VERSION=${GCC_VERSION}")
+	mkline := t.NewMkLine("filename.mk", 1, "VAR=\t1:${VAR}+ 2:${VAR}")
 	G.Pkg = NewPackage(t.File("category/pkgbase"))
-	G.Pkg.vars.Define("GCC_VERSION", mkline)
+	G.Pkg.vars.Define("VAR", mkline)
 
 	// TODO: It may be better to define MkLines.Resolve and Package.Resolve,
 	//  to clearly state the scope of the involved variables.
-	resolved := resolveVariableRefs(nil, "gcc-${GCC_VERSION}")
+	resolved := resolveVariableRefs(nil, "the a:${VAR} b:${VAR}")
 
-	c.Check(resolved, equals, "gcc-${GCC_VERSION}")
+	// TODO: The ${VAR} after "b:" should also be expanded since there
+	//  is no recursion.
+	c.Check(resolved, equals, "the a:1:${VAR}+ 2:${VAR} b:${VAR}")
 }
 
 func (s *Suite) Test_resolveVariableRefs__multilevel(c *check.C) {
