@@ -743,29 +743,15 @@ func CheckLinesTrailingEmptyLines(lines Lines) {
 // If a tool is returned, usable tells whether that tool has been added
 // to USE_TOOLS in the current scope (file or package).
 func (pkglint *Pkglint) Tool(mklines MkLines, command string, time ToolTime) (tool *Tool, usable bool) {
-	varname := ""
-	if varUse := ToVarUse(command); varUse != nil {
-		varname = varUse.varname
-	}
-
 	tools := pkglint.tools(mklines)
 
-	if t := tools.ByName(command); t != nil {
-		if tools.Usable(t, time) {
-			return t, true
-		}
-		tool = t
+	if varUse := ToVarUse(command); varUse != nil {
+		tool = tools.ByVarname(varUse.varname)
+	} else {
+		tool = tools.ByName(command)
 	}
 
-	if t := tools.ByVarname(varname); t != nil {
-		if tools.Usable(t, time) {
-			return t, true
-		}
-		if tool == nil {
-			tool = t
-		}
-	}
-	return
+	return tool, tool != nil && tools.Usable(tool, time)
 }
 
 // ToolByVarname looks up the tool by its variable name, e.g. "SED".
