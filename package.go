@@ -251,7 +251,7 @@ func (pkg *Package) check(filenames []string, mklines, allLines MkLines) {
 			pkg.checkfilePackageMakefile(filename, mklines, allLines)
 
 		default:
-			G.checkDirent(filename, st.Mode())
+			pkg.checkDirent(filename, st.Mode())
 		}
 
 		if contains(filename, "/patches/patch-") {
@@ -270,6 +270,44 @@ func (pkg *Package) check(filenames []string, mklines, allLines MkLines) {
 				"To generate a distinfo file for the existing patches, run",
 				sprintf("%q.", bmake("makepatchsum")))
 		}
+	}
+}
+
+// checkDirent checks a directory entry based on its filename and its mode
+// (regular file, directory, symlink).
+func (pkg *Package) checkDirent(dirent string, mode os.FileMode) {
+	// TODO: merge duplicate code in Pkglint.checkMode
+
+	basename := path.Base(dirent)
+
+	switch {
+
+	case mode.IsRegular():
+		pkgsrcRel := G.Pkgsrc.ToRel(dirent)
+		depth := strings.Count(pkgsrcRel, "/")
+		G.checkReg(dirent, basename, depth)
+
+	case hasPrefix(basename, "work"):
+		if G.Opts.Import {
+			NewLineWhole(dirent).Errorf("Must be cleaned up before committing the package.")
+		}
+		return
+
+	case mode.IsDir():
+		switch {
+		case basename == "files" || basename == "patches" || isIgnoredFilename(basename):
+			// Ok
+		case matches(dirent, `(?:^|/)files/[^/]*$`):
+			// Ok
+		case !isEmptyDir(dirent):
+			NewLineWhole(dirent).Warnf("Unknown directory name.")
+		}
+
+	case mode&os.ModeSymlink != 0:
+		NewLineWhole(dirent).Warnf("Invalid symlink name.")
+
+	default:
+		NewLineWhole(dirent).Errorf("Only files and directories are allowed in pkgsrc.")
 	}
 }
 

@@ -835,47 +835,6 @@ func (s *Suite) Test_Pkglint_Check__invalid_files_before_import(c *check.C) {
 		"ERROR: ~/category/package/work: Must be cleaned up before committing the package.")
 }
 
-func (s *Suite) Test_Pkglint_checkDirent__errors(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpCommandLine("-Call", "-Wall,no-space")
-	t.SetUpPkgsrc()
-	t.CreateFileLines("category/package/files/subdir/file")
-	t.CreateFileLines("category/package/files/subdir/subsub/file")
-	t.FinishSetUp()
-
-	G.checkDirent(t.File("category/package/options.mk"), 0444)
-	G.checkDirent(t.File("category/package/files/subdir"), 0555|os.ModeDir)
-	G.checkDirent(t.File("category/package/files/subdir/subsub"), 0555|os.ModeDir)
-	G.checkDirent(t.File("category/package/files"), 0555|os.ModeDir)
-
-	t.CheckOutputLines(
-		"ERROR: ~/category/package/options.mk: Cannot be read.",
-		"WARN: ~/category/package/files/subdir/subsub: Unknown directory name.")
-}
-
-func (s *Suite) Test_Pkglint_checkDirent__file_selection(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpCommandLine("-Call", "-Wall,no-space")
-	t.SetUpPkgsrc()
-	t.CreateFileLines("doc/CHANGES-2018",
-		CvsID)
-	t.CreateFileLines("category/package/buildlink3.mk",
-		MkCvsID)
-	t.CreateFileLines("category/package/unexpected.txt",
-		CvsID)
-	t.FinishSetUp()
-
-	G.checkDirent(t.File("doc/CHANGES-2018"), 0444)
-	G.checkDirent(t.File("category/package/buildlink3.mk"), 0444)
-	G.checkDirent(t.File("category/package/unexpected.txt"), 0444)
-
-	t.CheckOutputLines(
-		"WARN: ~/category/package/buildlink3.mk:EOF: Expected a BUILDLINK_TREE line.",
-		"WARN: ~/category/package/unexpected.txt: Unexpected file found.")
-}
-
 func (s *Suite) Test_Pkglint_checkReg__readme_and_todo(c *check.C) {
 	t := s.Init(c)
 
@@ -974,23 +933,6 @@ func (s *Suite) Test_Pkglint_checkReg__spec(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: ~/category/package/spec: Only packages in regress/ may have spec files.")
-}
-
-// Since all required information is passed to G.checkDirent via parameters,
-// this test produces the expected results even though none of these files actually exists.
-func (s *Suite) Test_Pkglint_checkDirent__skipped(c *check.C) {
-	t := s.Init(c)
-
-	G.checkDirent("work", os.ModeSymlink)
-	G.checkDirent("work.i386", os.ModeSymlink)
-	G.checkDirent("work.hostname", os.ModeSymlink)
-	G.checkDirent("other", os.ModeSymlink)
-
-	G.checkDirent("device", os.ModeDevice)
-
-	t.CheckOutputLines(
-		"WARN: other: Invalid symlink name.",
-		"ERROR: device: Only files and directories are allowed in pkgsrc.")
 }
 
 // A package that is very incomplete may produce lots of warnings.

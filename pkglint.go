@@ -354,6 +354,7 @@ func (pkglint *Pkglint) Check(dirent string) {
 }
 
 func (pkglint *Pkglint) checkMode(dirent string, mode os.FileMode) {
+	// TODO: merge duplicate code in Package.checkDirent
 	isDir := mode.IsDir()
 	isReg := mode.IsRegular()
 	if !isDir && !isReg {
@@ -397,42 +398,6 @@ func (pkglint *Pkglint) checkMode(dirent string, mode os.FileMode) {
 		CheckdirToplevel(dir)
 	default:
 		NewLineWhole(dirent).Errorf("Cannot check directories outside a pkgsrc tree.")
-	}
-}
-
-// checkDirent checks a directory entry based on its filename and its mode
-// (regular file, directory, symlink).
-func (pkglint *Pkglint) checkDirent(dirent string, mode os.FileMode) {
-	basename := path.Base(dirent)
-
-	switch {
-
-	case mode.IsRegular():
-		pkgsrcRel := pkglint.Pkgsrc.ToRel(dirent)
-		depth := strings.Count(pkgsrcRel, "/")
-		pkglint.checkReg(dirent, basename, depth)
-
-	case hasPrefix(basename, "work"):
-		if pkglint.Opts.Import {
-			NewLineWhole(dirent).Errorf("Must be cleaned up before committing the package.")
-		}
-		return
-
-	case mode.IsDir():
-		switch {
-		case basename == "files" || basename == "patches" || isIgnoredFilename(basename):
-			// Ok
-		case matches(dirent, `(?:^|/)files/[^/]*$`):
-			// Ok
-		case !isEmptyDir(dirent):
-			NewLineWhole(dirent).Warnf("Unknown directory name.")
-		}
-
-	case mode&os.ModeSymlink != 0:
-		NewLineWhole(dirent).Warnf("Invalid symlink name.")
-
-	default:
-		NewLineWhole(dirent).Errorf("Only files and directories are allowed in pkgsrc.")
 	}
 }
 

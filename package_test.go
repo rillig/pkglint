@@ -2,6 +2,7 @@ package pkglint
 
 import (
 	"gopkg.in/check.v1"
+	"os"
 	"strings"
 )
 
@@ -941,6 +942,69 @@ func (s *Suite) Test_Package_check__patches_Makefile(c *check.C) {
 		"WARN: ~/category/package/patches/Makefile: Patch files should be "+
 			"named \"patch-\", followed by letters, '-', '_', '.', and digits only.",
 		"0 errors and 1 warning found.")
+}
+
+func (s *Suite) Test_Package_checkDirent__errors(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Call", "-Wall,no-space")
+	t.SetUpPkgsrc()
+	t.CreateFileLines("category/package/files/subdir/file")
+	t.CreateFileLines("category/package/files/subdir/subsub/file")
+	t.FinishSetUp()
+
+	pkg := NewPackage(t.File("category/package"))
+	pkg.checkDirent(t.File("category/package/options.mk"), 0444)
+	pkg.checkDirent(t.File("category/package/files/subdir"), 0555|os.ModeDir)
+	pkg.checkDirent(t.File("category/package/files/subdir/subsub"), 0555|os.ModeDir)
+	pkg.checkDirent(t.File("category/package/files"), 0555|os.ModeDir)
+
+	t.CheckOutputLines(
+		"ERROR: ~/category/package/options.mk: Cannot be read.",
+		"WARN: ~/category/package/files/subdir/subsub: Unknown directory name.")
+}
+
+func (s *Suite) Test_Package_checkDirent__file_selection(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Call", "-Wall,no-space")
+	t.SetUpPkgsrc()
+	t.CreateFileLines("doc/CHANGES-2018",
+		CvsID)
+	t.CreateFileLines("category/package/buildlink3.mk",
+		MkCvsID)
+	t.CreateFileLines("category/package/unexpected.txt",
+		CvsID)
+	t.FinishSetUp()
+
+	pkg := NewPackage(t.File("category/package"))
+	pkg.checkDirent(t.File("doc/CHANGES-2018"), 0444)
+	pkg.checkDirent(t.File("category/package/buildlink3.mk"), 0444)
+	pkg.checkDirent(t.File("category/package/unexpected.txt"), 0444)
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/buildlink3.mk:EOF: Expected a BUILDLINK_TREE line.",
+		"WARN: ~/category/package/unexpected.txt: Unexpected file found.")
+}
+
+// Since all required information is passed to G.checkDirent via parameters,
+// this test produces the expected results even though none of these files actually exists.
+func (s *Suite) Test_Package_checkDirent__skipped(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.Chdir("category/package")
+	pkg := NewPackage(".")
+	pkg.checkDirent("work", os.ModeSymlink)
+	pkg.checkDirent("work.i386", os.ModeSymlink)
+	pkg.checkDirent("work.hostname", os.ModeSymlink)
+	pkg.checkDirent("other", os.ModeSymlink)
+
+	pkg.checkDirent("device", os.ModeDevice)
+
+	t.CheckOutputLines(
+		"WARN: other: Invalid symlink name.",
+		"ERROR: device: Only files and directories are allowed in pkgsrc.")
 }
 
 func (s *Suite) Test_Package_checkIncludeConditionally__conditional_and_unconditional_include(c *check.C) {
