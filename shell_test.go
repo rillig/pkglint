@@ -1332,6 +1332,8 @@ func (s *Suite) Test_ShellProgramChecker_canFail(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
+	t.SetUpTool("basename", "", AtRunTime)
+	t.SetUpTool("dirname", "", AtRunTime)
 	t.SetUpTool("echo", "", AtRunTime)
 	t.SetUpTool("env", "", AtRunTime)
 	t.SetUpTool("grep", "GREP", AtRunTime)
@@ -1414,5 +1416,11 @@ func (s *Suite) Test_ShellProgramChecker_canFail(c *check.C) {
 		nil...)
 
 	test("env | grep '^PATH='",
+		nil...)
+
+	test("basename dir/file",
+		nil...)
+
+	test("dirname dir/file",
 		nil...)
 }
