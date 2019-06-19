@@ -785,7 +785,7 @@ func (s *Suite) Test_Package_load__extra_files(c *check.C) {
 		// each other file is treated as a file belonging to pkgsrc,
 		// therefore *.mk is interpreted as a Makefile fragment.
 		"ERROR: patches/readme.mk:1: Unknown Makefile line format: \"This is not a BSD-style Makefile.\".",
-		"ERROR: distinfo: Patch \"patches/patch-Makefile.mk\" is not recorded. Run \"@BMAKE@ makepatchsum\".",
+		"ERROR: distinfo: Patch \"patches/patch-Makefile.mk\" is not recorded. Run \""+confMake+" makepatchsum\".",
 
 		// The following diagnostics are duplicated because the files from
 		// the package directory are loaded once during Package.load, just
@@ -810,7 +810,7 @@ func (s *Suite) Test_Package_load__extra_files(c *check.C) {
 		// in this directory can have an arbitrary format.
 
 		"ERROR: ../../category/other/distinfo: Patch \"../../category/package/patches/"+
-			"patch-Makefile.mk\" is not recorded. Run \"@BMAKE@ makepatchsum\".",
+			"patch-Makefile.mk\" is not recorded. Run \""+confMake+" makepatchsum\".",
 
 		// All *.mk files from PKGDIR are loaded to see which variables
 		// they define, in order to make the check for unused variables
