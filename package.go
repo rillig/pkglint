@@ -601,14 +601,7 @@ func (pkg *Package) checkfilePackageMakefile(filename string, mklines MkLines, a
 	}
 
 	vars := pkg.vars
-	if !vars.Defined("PLIST_SRC") &&
-		!vars.Defined("GENERATE_PLIST") &&
-		!vars.Defined("META_PACKAGE") &&
-		!fileExists(pkg.File(pkg.Pkgdir+"/PLIST")) &&
-		!fileExists(pkg.File(pkg.Pkgdir+"/PLIST.common")) {
-		// TODO: Move these technical details into the explanation, making space for an understandable warning.
-		NewLineWhole(filename).Warnf("Neither PLIST nor PLIST.common exist, and PLIST_SRC is unset.")
-	}
+	pkg.checkPlist()
 
 	if (vars.Defined("NO_CHECKSUM") || vars.Defined("META_PACKAGE")) &&
 		isEmptyDir(pkg.File(pkg.Patchdir)) {
@@ -668,11 +661,46 @@ func (pkg *Package) checkfilePackageMakefile(filename string, mklines MkLines, a
 	}
 
 	pkg.checkUpdate()
+
 	allLines.collectDefinedVariables() // To get the tool definitions
 	mklines.Tools = allLines.Tools     // TODO: also copy the other collected data
 	mklines.Check()
+
 	pkg.CheckVarorder(mklines)
+
 	SaveAutofixChanges(mklines.lines)
+}
+
+func (pkg *Package) checkPlist() {
+
+	needsPlist, line := func() (bool, Line) {
+		vars := pkg.vars
+
+		if vars.Defined("PERL5_PACKLIST") {
+			return false, vars.LastDefinition("PERL5_PACKLIST").Line
+		}
+		if vars.Defined("PERL5_USE_PACKLIST") {
+			needed := strings.ToLower(vars.LastValue("PERL5_USE_PACKLIST")) == "no"
+			return needed, vars.LastDefinition("PERL5_USE_PACKLIST").Line
+		}
+
+		needed := !vars.Defined("PLIST_SRC") &&
+			!vars.Defined("GENERATE_PLIST") &&
+			!vars.Defined("META_PACKAGE")
+		return needed, NewLineWhole(pkg.File("Makefile"))
+	}()
+
+	hasPlist := fileExists(pkg.File(pkg.Pkgdir+"/PLIST")) ||
+		fileExists(pkg.File(pkg.Pkgdir+"/PLIST.common"))
+
+	if needsPlist && !hasPlist {
+		// TODO: Move these technical details into the explanation, making space for an understandable warning.
+		line.Warnf("Neither PLIST nor PLIST.common exist, and PLIST_SRC is unset.")
+	}
+
+	if hasPlist && !needsPlist {
+		line.Warnf("This package should not have a PLIST file.")
+	}
 }
 
 func (pkg *Package) checkGnuConfigureUseLanguages(s *RedundantScope) {

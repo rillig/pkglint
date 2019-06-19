@@ -1330,7 +1330,8 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__META_PACKAGE_with_distinf
 	G.Check(pkg)
 
 	t.CheckOutputLines(
-		"WARN: ~/category/package/distinfo: " +
+		"WARN: ~/category/package/Makefile: This package should not have a PLIST file.",
+		"WARN: ~/category/package/distinfo: "+
 			"This file should not exist since NO_CHECKSUM or META_PACKAGE is set.")
 }
 
@@ -1339,6 +1340,7 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__META_PACKAGE_with_patch(c
 
 	pkg := t.SetUpPackage("category/package",
 		"META_PACKAGE=\tyes")
+	t.Remove("category/package/PLIST")
 	t.CreateFileDummyPatch("category/package/patches/patch-aa")
 	t.CreateFileLines("category/package/distinfo",
 		CvsID,
@@ -2455,8 +2457,8 @@ func (s *Suite) Test_Package__Perl5_packlist(c *check.C) {
 
 	G.Check(t.File("category/p5-Packlist"))
 
-	// TODO: Should not have a PLIST file.
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: ~/category/p5-Packlist/Makefile:20: This package should not have a PLIST file.")
 }
 
 func (s *Suite) Test_Package__Perl5_no_packlist(c *check.C) {
@@ -2469,4 +2471,17 @@ func (s *Suite) Test_Package__Perl5_no_packlist(c *check.C) {
 	G.Check(t.File("category/p5-NoPacklist"))
 
 	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_Package__Perl5_use_packlist_yes(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/p5-Packlist",
+		"PERL5_USE_PACKLIST=\tyes")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/p5-Packlist"))
+
+	t.CheckOutputLines(
+		"WARN: ~/category/p5-Packlist/Makefile:20: This package should not have a PLIST file.")
 }
