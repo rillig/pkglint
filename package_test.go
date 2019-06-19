@@ -2448,7 +2448,10 @@ func (s *Suite) Test_Package__patch_in_FILESDIR(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Package__PLIST_SRC(c *check.C) {
+// When a package defines PLIST_SRC, it may or may not use the
+// PLIST file from the package directory. Therefore the check
+// is skipped completely.
+func (s *Suite) Test_Package_checkPlist__PLIST_SRC(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package",
@@ -2457,12 +2460,10 @@ func (s *Suite) Test_Package__PLIST_SRC(c *check.C) {
 
 	G.Check(t.File("category/package"))
 
-	t.CheckOutputLines(
-		// FIXME
-		"WARN: ~/category/package/Makefile: This package should not have a PLIST file.")
+	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Package__Perl5_packlist(c *check.C) {
+func (s *Suite) Test_Package_checkPlist__Perl5_packlist(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/p5-Packlist",
@@ -2475,7 +2476,7 @@ func (s *Suite) Test_Package__Perl5_packlist(c *check.C) {
 		"WARN: ~/category/p5-Packlist/Makefile:20: This package should not have a PLIST file.")
 }
 
-func (s *Suite) Test_Package__Perl5_no_packlist(c *check.C) {
+func (s *Suite) Test_Package_checkPlist__PERL5_USE_PACKLIST_no(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/p5-NoPacklist",
@@ -2487,7 +2488,7 @@ func (s *Suite) Test_Package__Perl5_no_packlist(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Package__Perl5_use_packlist_yes(c *check.C) {
+func (s *Suite) Test_Package_checkPlist__PERL5_USE_PACKLIST_yes(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/p5-Packlist",
