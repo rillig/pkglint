@@ -361,6 +361,7 @@ func (pkglint *Pkglint) checkMode(dirent string, mode os.FileMode) {
 		NewLineWhole(dirent).Errorf("No such file or directory.")
 		return
 	}
+	println("dirent", dirent, "isDir", isDir, "isReg", isReg)
 
 	dir := dirent
 	if !isDir {
