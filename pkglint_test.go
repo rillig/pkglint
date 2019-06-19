@@ -422,7 +422,7 @@ func (s *Suite) Test_Pkglint_Check(c *check.C) {
 func (s *Suite) Test_Pkglint_checkMode__neither_file_nor_directory(c *check.C) {
 	t := s.Init(c)
 
-	G.checkMode("/dev/null", os.ModeCharDevice)
+	G.checkMode("/dev/null", os.ModeDevice)
 
 	t.CheckOutputLines(
 		"ERROR: /dev/null: No such file or directory.")
