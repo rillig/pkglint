@@ -94,7 +94,7 @@ func (s *Suite) TearDownTest(c *check.C) {
 	}
 
 	if t.seenSetupPkgsrc > 0 && !t.seenFinish && !t.seenMain {
-		t.Errorf("After t.SetupPkgsrc(), t.FinishSetUp() or t.Main() must be called.")
+		t.Errorf("After t.SetupPkgsrc(), either t.FinishSetUp() or t.Main() must be called.")
 	}
 
 	if out := t.Output(); out != "" {
