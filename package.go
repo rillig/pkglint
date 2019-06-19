@@ -684,8 +684,14 @@ func (pkg *Package) checkPlist() {
 		fileExists(pkg.File(pkg.Pkgdir+"/PLIST.common"))
 
 	if needsPlist && !hasPlist {
-		// TODO: Move these technical details into the explanation, making space for an understandable warning.
-		line.Warnf("Neither PLIST nor PLIST.common exist, and PLIST_SRC is unset.")
+		line.Warnf("This package should have a PLIST file.")
+		line.Explain(
+			"The PLIST file provides the list of files that will be",
+			"installed by the package. Having this list ensures that",
+			"a package update doesn't accidentally modify the list",
+			"of installed files.",
+			"",
+			seeGuide("PLIST issues", "plist"))
 	}
 
 	if hasPlist && !needsPlist {

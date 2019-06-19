@@ -1268,7 +1268,7 @@ func (s *Suite) Test__distinfo_from_other_package(c *check.C) {
 	G.Check("x11/gst-x11")
 
 	t.CheckOutputLines(
-		"WARN: x11/gst-x11/Makefile: Neither PLIST nor PLIST.common exist, and PLIST_SRC is unset.",
+		"WARN: x11/gst-x11/Makefile: This package should have a PLIST file.",
 		"ERROR: x11/gst-x11/Makefile: Each package must define its LICENSE.",
 		"WARN: x11/gst-x11/Makefile: Each package should define a COMMENT.",
 		"WARN: x11/gst-x11/../../multimedia/gst-base/distinfo:3: Patch file \"patch-aa\" does not exist in directory \"../../x11/gst-x11/patches\".")

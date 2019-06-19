@@ -973,7 +973,7 @@ func (s *Suite) Test_Pkglint_checkdirPackage(c *check.C) {
 	G.checkdirPackage(".")
 
 	t.CheckOutputLines(
-		"WARN: Makefile: Neither PLIST nor PLIST.common exist, and PLIST_SRC is unset.",
+		"WARN: Makefile: This package should have a PLIST file.",
 		"WARN: distinfo: A package that downloads files should have a distinfo file.",
 		"ERROR: Makefile: Each package must define its LICENSE.",
 		"WARN: Makefile: Each package should define a COMMENT.")
