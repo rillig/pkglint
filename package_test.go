@@ -2448,6 +2448,20 @@ func (s *Suite) Test_Package__patch_in_FILESDIR(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_Package__PLIST_SRC(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"PLIST_SRC=\t${WRKDIR}/PLIST")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputLines(
+		// FIXME
+		"WARN: ~/category/package/Makefile: This package should not have a PLIST file.")
+}
+
 func (s *Suite) Test_Package__Perl5_packlist(c *check.C) {
 	t := s.Init(c)
 
