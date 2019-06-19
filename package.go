@@ -696,6 +696,9 @@ func (pkg *Package) checkPlist() {
 func (pkg *Package) needsPlist() (bool, Line) {
 	vars := pkg.vars
 
+	// TODO: In the below code, it shouldn't be necessary to mention
+	//  each variable name twice.
+
 	if vars.Defined("PERL5_PACKLIST") {
 		return false, vars.LastDefinition("PERL5_PACKLIST").Line
 	}
@@ -705,7 +708,11 @@ func (pkg *Package) needsPlist() (bool, Line) {
 		return needed, vars.LastDefinition("PERL5_USE_PACKLIST").Line
 	}
 
-	return !vars.Defined("META_PACKAGE"), NewLineWhole(pkg.File("Makefile"))
+	if vars.Defined("META_PACKAGE") {
+		return false, vars.LastDefinition("META_PACKAGE").Line
+	}
+
+	return true, NewLineWhole(pkg.File("Makefile"))
 }
 
 func (pkg *Package) checkGnuConfigureUseLanguages(s *RedundantScope) {

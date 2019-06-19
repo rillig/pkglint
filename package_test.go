@@ -2463,6 +2463,21 @@ func (s *Suite) Test_Package_checkPlist__PLIST_SRC(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_Package_checkPlist__META_PACKAGE(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"META_PACKAGE=\tyes")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile:20: This package should not have a PLIST file.",
+		"WARN: ~/category/package/distinfo: This file should not exist "+
+			"since NO_CHECKSUM or META_PACKAGE is set.")
+}
+
 func (s *Suite) Test_Package_checkPlist__Perl5_packlist(c *check.C) {
 	t := s.Init(c)
 
