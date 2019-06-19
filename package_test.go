@@ -2445,3 +2445,28 @@ func (s *Suite) Test_Package__patch_in_FILESDIR(c *check.C) {
 	// anything else.
 	t.CheckOutputEmpty()
 }
+
+func (s *Suite) Test_Package__Perl5_packlist(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/p5-Packlist",
+		"PERL5_PACKLIST=\tauto/Packlist/.packlist")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/p5-Packlist"))
+
+	// TODO: Should not have a PLIST file.
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_Package__Perl5_no_packlist(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/p5-NoPacklist",
+		"PERL5_USE_PACKLIST=\tno")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/p5-NoPacklist"))
+
+	t.CheckOutputEmpty()
+}
