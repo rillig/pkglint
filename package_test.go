@@ -1330,7 +1330,7 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__META_PACKAGE_with_distinf
 	G.Check(pkg)
 
 	t.CheckOutputLines(
-		"WARN: ~/category/package/Makefile: This package should not have a PLIST file.",
+		"WARN: ~/category/package/Makefile:20: This package should not have a PLIST file.",
 		"WARN: ~/category/package/distinfo: "+
 			"This file should not exist since NO_CHECKSUM or META_PACKAGE is set.")
 }
