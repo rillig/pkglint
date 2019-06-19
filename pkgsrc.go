@@ -381,7 +381,7 @@ func (src *Pkgsrc) loadUntypedVars() {
 	handleFile := func(pathName string, info os.FileInfo, err error) error {
 		assertNil(err, "handleFile %q", pathName)
 		baseName := info.Name()
-		if hasSuffix(baseName, ".mk") || baseName == "mk.conf" {
+		if info.Mode().IsRegular() && hasSuffix(baseName, ".mk") || baseName == "mk.conf" {
 			handleMkFile(filepath.ToSlash(pathName))
 		}
 		return nil
