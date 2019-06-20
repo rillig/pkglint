@@ -92,6 +92,18 @@ func (s *Suite) Test_CheckLinesPlist__common_end(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_CheckLinesPlist__common_end_without_common(c *check.C) {
+	t := s.Init(c)
+
+	lines := t.SetUpFileLines("PLIST.common_end",
+		PlistCvsID,
+		"sbin/common_end")
+
+	CheckLinesPlist(nil, lines)
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_CheckLinesPlist__condition(c *check.C) {
 	t := s.Init(c)
 
