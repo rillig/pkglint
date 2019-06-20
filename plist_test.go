@@ -653,6 +653,21 @@ func (s *Suite) Test_PlistChecker_checkPathLib(c *check.C) {
 			"Use ${PKGLOCALEDIR}/locale and set USE_PKGLOCALEDIR instead.")
 }
 
+func (s *Suite) Test_PlistChecker_checkPathLib__libiconv(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("converters/libiconv")
+	t.Chdir("converters/libiconv")
+	t.CreateFileLines("PLIST",
+		PlistCvsID,
+		"lib/charset.alias")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_PlistChecker_checkPathMan(c *check.C) {
 	t := s.Init(c)
 

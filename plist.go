@@ -312,8 +312,10 @@ func (ck *PlistChecker) checkPathLib(pline *PlistLine, dirname, basename string)
 	case pkg != nil && pkg.EffectivePkgbase != "" && hasPrefix(pline.text, "lib/"+pkg.EffectivePkgbase+"/"):
 		return
 
-	case pline.text == "lib/charset.alias" && (pkg == nil || pkg.Pkgpath != "converters/libiconv"):
-		pline.Errorf("Only the libiconv package may install lib/charset.alias.")
+	case pline.text == "lib/charset.alias":
+		if pkg != nil && pkg.Pkgpath != "converters/libiconv" {
+			pline.Errorf("Only the libiconv package may install lib/charset.alias.")
+		}
 		return
 
 	case hasPrefix(pline.text, "lib/locale/"):
