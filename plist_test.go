@@ -530,15 +530,30 @@ func (s *Suite) Test_PlistChecker__doc(c *check.C) {
 func (s *Suite) Test_PlistChecker__PKGLOCALEDIR(c *check.C) {
 	t := s.Init(c)
 
-	lines := t.SetUpFileLines("PLIST",
+	t.SetUpPackage("category/package")
+	t.CreateFileLines("category/package/PLIST",
 		PlistCvsID,
 		"${PKGLOCALEDIR}/file")
-	G.Pkg = NewPackage(t.File("category/package"))
+	t.FinishSetUp()
 
-	CheckLinesPlist(G.Pkg, lines)
+	G.Check(t.File("category/package"))
 
 	t.CheckOutputLines(
-		"WARN: ~/PLIST:2: PLIST contains ${PKGLOCALEDIR}, but USE_PKGLOCALEDIR is not set in the package Makefile.")
+		"WARN: ~/category/package/PLIST:2: PLIST contains ${PKGLOCALEDIR}, " +
+			"but USE_PKGLOCALEDIR is not set in the package Makefile.")
+}
+
+func (s *Suite) Test_PlistChecker__PKGLOCALEDIR_with_USE_PKGLOCALEDIR(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"USE_PKGLOCALEDIR=\tyes")
+	t.CreateFileLines("category/package/PLIST",
+		PlistCvsID,
+		"${PKGLOCALEDIR}/file")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package"))
 }
 
 func (s *Suite) Test_PlistChecker__PKGLOCALEDIR_without_package(c *check.C) {
