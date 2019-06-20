@@ -541,6 +541,21 @@ func (s *Suite) Test_PlistChecker__PKGLOCALEDIR(c *check.C) {
 		"WARN: ~/PLIST:2: PLIST contains ${PKGLOCALEDIR}, but USE_PKGLOCALEDIR is not set in the package Makefile.")
 }
 
+func (s *Suite) Test_PlistChecker__PKGLOCALEDIR_without_package(c *check.C) {
+	t := s.Init(c)
+
+	lines := t.SetUpFileLines("PLIST",
+		PlistCvsID,
+		"${PKGLOCALEDIR}/file")
+
+	CheckLinesPlist(nil, lines)
+
+	// When a PLIST file is checked on its own, outside of checking a
+	// package, there can be no warning that USE_PKGLOCALEDIR is missing
+	// in the package.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_PlistChecker_checkPath__unwanted_entries(c *check.C) {
 	t := s.Init(c)
 
