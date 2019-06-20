@@ -591,15 +591,45 @@ func (s *Suite) Test_PlistChecker_checkPath__unwanted_entries(c *check.C) {
 func (s *Suite) Test_PlistChecker_checkPathInfo(c *check.C) {
 	t := s.Init(c)
 
+	t.SetUpPackage("category/package")
+	t.Chdir("category/package")
+	t.CreateFileLines("PLIST",
+		PlistCvsID,
+		"info/gmake.1.info")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	t.CheckOutputLines(
+		"WARN: PLIST:2: Packages that install info files should set INFO_FILES in the Makefile.")
+}
+
+func (s *Suite) Test_PlistChecker_checkPathInfo__with_package(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"INFO_FILES=\tyes")
+	t.Chdir("category/package")
+	t.CreateFileLines("PLIST",
+		PlistCvsID,
+		"info/gmake.1.info")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_PlistChecker_checkPathInfo__without_package(c *check.C) {
+	t := s.Init(c)
+
 	lines := t.SetUpFileLines("PLIST",
 		PlistCvsID,
 		"info/gmake.1.info")
-	G.Pkg = NewPackage(t.File("category/package"))
 
-	CheckLinesPlist(G.Pkg, lines)
+	CheckLinesPlist(nil, lines)
 
-	t.CheckOutputLines(
-		"WARN: ~/PLIST:2: Packages that install info files should set INFO_FILES in the Makefile.")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_PlistChecker_checkPathLib(c *check.C) {
