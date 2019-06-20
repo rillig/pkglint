@@ -365,16 +365,14 @@ func (src *Pkgsrc) loadUntypedVars() {
 	}
 
 	handleMkFile := func(path string) {
-		mklines := LoadMk(path, 0)
-		if mklines != nil && len(mklines.mklines) > 0 {
-			mklines.collectDefinedVariables()
-			mklines.collectUsedVariables()
-			for varname, mkline := range mklines.vars.firstDef {
-				define(varnameCanon(varname), mkline)
-			}
-			for varname, mkline := range mklines.vars.used {
-				define(varnameCanon(varname), mkline)
-			}
+		mklines := LoadMk(path, MustSucceed)
+		mklines.collectDefinedVariables()
+		mklines.collectUsedVariables()
+		for varname, mkline := range mklines.vars.firstDef {
+			define(varnameCanon(varname), mkline)
+		}
+		for varname, mkline := range mklines.vars.used {
+			define(varnameCanon(varname), mkline)
 		}
 	}
 
