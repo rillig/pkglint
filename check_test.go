@@ -891,7 +891,7 @@ func (t *Tester) CheckOutputLines(expectedLines ...string) {
 	t.CheckOutput(expectedLines)
 }
 
-// CheckOutputLines checks that the lines from the output that match
+// CheckOutputLinesMatching checks that the lines from the output that match
 // the given pattern equal the given lines.
 //
 // After the comparison, the output buffers are cleared so that later
@@ -901,6 +901,7 @@ func (t *Tester) CheckOutputLines(expectedLines ...string) {
 func (t *Tester) CheckOutputLinesMatching(pattern regex.Pattern, expectedLines ...string) {
 	output := t.Output()
 	var actualLines []string
+	actualLines = append(actualLines)
 	for _, line := range strings.Split(strings.TrimSuffix(output, "\n"), "\n") {
 		if matches(line, pattern) {
 			actualLines = append(actualLines, line)
