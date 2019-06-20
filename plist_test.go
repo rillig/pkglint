@@ -692,14 +692,16 @@ func (s *Suite) Test_PlistChecker_checkPathMan(c *check.C) {
 
 	lines := t.SetUpFileLines("PLIST",
 		PlistCvsID,
+		"man/cat1/formatted.0",
+		"man/man1/formatted.1",
 		"man/man1/program.8",
 		"man/manx/program.x")
 
 	CheckLinesPlist(nil, lines)
 
 	t.CheckOutputLines(
-		"WARN: ~/PLIST:2: Mismatch between the section (1) and extension (8) of the manual page.",
-		"WARN: ~/PLIST:3: Unknown section \"x\" for manual page.")
+		"WARN: ~/PLIST:4: Mismatch between the section (1) and extension (8) of the manual page.",
+		"WARN: ~/PLIST:5: Unknown section \"x\" for manual page.")
 }
 
 func (s *Suite) Test_PlistChecker_checkPathShare(c *check.C) {
