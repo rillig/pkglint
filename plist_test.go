@@ -668,6 +668,22 @@ func (s *Suite) Test_PlistChecker_checkPathLib__libiconv(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_PlistChecker_checkPathLib__libtool(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"USE_LIBTOOL=\tyes")
+	t.Chdir("category/package")
+	t.CreateFileLines("PLIST",
+		PlistCvsID,
+		"lib/libname.la")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_PlistChecker_checkPathMan(c *check.C) {
 	t := s.Init(c)
 
