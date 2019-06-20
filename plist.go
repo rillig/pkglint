@@ -306,28 +306,12 @@ func (ck *PlistChecker) checkPathInfo(pline *PlistLine, dirname, basename string
 }
 
 func (ck *PlistChecker) checkPathLib(pline *PlistLine, dirname, basename string) {
-	pkg := ck.pkg
 
 	switch {
-	case pkg != nil && pkg.EffectivePkgbase != "" && hasPrefix(pline.text, "lib/"+pkg.EffectivePkgbase+"/"):
-		return
-
-	case pline.text == "lib/charset.alias":
-		if pkg != nil && pkg.Pkgpath != "converters/libiconv" {
-			pline.Errorf("Only the libiconv package may install lib/charset.alias.")
-		}
-		return
 
 	case hasPrefix(pline.text, "lib/locale/"):
 		pline.Errorf("\"lib/locale\" must not be listed. Use ${PKGLOCALEDIR}/locale and set USE_PKGLOCALEDIR instead.")
 		return
-	}
-
-	switch ext := path.Ext(basename); ext {
-	case ".la":
-		if pkg != nil && !pkg.vars.Defined("USE_LIBTOOL") && ck.once.FirstTime("USE_LIBTOOL") {
-			pline.Warnf("Packages that install libtool libraries should define USE_LIBTOOL.")
-		}
 	}
 
 	if contains(basename, ".a") || contains(basename, ".so") {
@@ -335,6 +319,21 @@ func (ck *PlistChecker) checkPathLib(pline *PlistLine, dirname, basename string)
 			if laLine := ck.allFiles[noext+".la"]; laLine != nil {
 				pline.Warnf("Redundant library found. The libtool library is in %s.", pline.RefTo(laLine.Line))
 			}
+		}
+	}
+
+	pkg := ck.pkg
+	if pkg == nil {
+		return
+	}
+
+	if pline.text == "lib/charset.alias" && pkg.Pkgpath != "converters/libiconv" {
+		pline.Errorf("Only the libiconv package may install lib/charset.alias.")
+	}
+
+	if hasSuffix(basename, ".la") && !pkg.vars.Defined("USE_LIBTOOL") {
+		if ck.once.FirstTime("USE_LIBTOOL") {
+			pline.Warnf("Packages that install libtool libraries should define USE_LIBTOOL.")
 		}
 	}
 }
