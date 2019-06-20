@@ -639,6 +639,7 @@ func (s *Suite) Test_PlistChecker_checkPathLib(c *check.C) {
 		PlistCvsID,
 		"lib/charset.alias",
 		"lib/liberty-1.0.a",
+		"lib/liberty-1.0.archive",
 		"lib/liberty-1.0.la",
 		"lib/locale/de_DE/liberty.mo",
 		"lib/package/liberty-1.0.so")
@@ -649,9 +650,9 @@ func (s *Suite) Test_PlistChecker_checkPathLib(c *check.C) {
 
 	t.CheckOutputLines(
 		"ERROR: ~/PLIST:2: Only the libiconv package may install lib/charset.alias.",
-		"WARN: ~/PLIST:3: Redundant library found. The libtool library is in line 4.",
-		"WARN: ~/PLIST:4: Packages that install libtool libraries should define USE_LIBTOOL.",
-		"ERROR: ~/PLIST:5: \"lib/locale\" must not be listed. "+
+		"WARN: ~/PLIST:3: Redundant library found. The libtool library is in line 5.",
+		"WARN: ~/PLIST:5: Packages that install libtool libraries should define USE_LIBTOOL.",
+		"ERROR: ~/PLIST:6: \"lib/locale\" must not be listed. "+
 			"Use ${PKGLOCALEDIR}/locale and set USE_PKGLOCALEDIR instead.")
 }
 
