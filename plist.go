@@ -387,10 +387,6 @@ func (ck *PlistChecker) checkPathShare(pline *PlistLine) {
 	case hasPrefix(text, "share/doc/html/"):
 		pline.Warnf("Use of \"share/doc/html\" is deprecated. Use \"share/doc/${PKGBASE}\" instead.")
 
-	case pkg != nil && pkg.EffectivePkgbase != "" && (hasPrefix(text, "share/doc/"+pkg.EffectivePkgbase+"/") ||
-		hasPrefix(text, "share/examples/"+pkg.EffectivePkgbase+"/")):
-		// Fine.
-
 	case hasPrefix(text, "share/info/"):
 		pline.Warnf("Info pages should be installed into info/, not share/info/.")
 		pline.Explain(
