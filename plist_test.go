@@ -846,6 +846,7 @@ func (s *Suite) Test_PlistLine_CheckDirective(c *check.C) {
 		"@unexec rmdir %D/bin",
 		"@unexec rmdir %D/bin || true",
 		"@unexec rmdir %D/bin || ${TRUE}",
+		"@unexec echo 'uninstalling'",
 		"@exec ldconfig",
 		"@exec ldconfig || /usr/bin/true",
 		"@comment This is a comment",
@@ -859,11 +860,11 @@ func (s *Suite) Test_PlistLine_CheckDirective(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: ~/PLIST:2: Please remove this line. It is no longer necessary.",
-		"ERROR: ~/PLIST:5: The ldconfig command must be used with \"||/usr/bin/true\".",
-		"WARN: ~/PLIST:8: @dirrm is obsolete. Please remove this line.",
-		"WARN: ~/PLIST:9: Invalid number of arguments for imake-man, should be 3.",
-		"WARN: ~/PLIST:10: IMAKE_MANNEWSUFFIX is not meant to appear in PLISTs.",
-		"WARN: ~/PLIST:12: Unknown PLIST directive \"@unknown\".")
+		"ERROR: ~/PLIST:6: The ldconfig command must be used with \"||/usr/bin/true\".",
+		"WARN: ~/PLIST:9: @dirrm is obsolete. Please remove this line.",
+		"WARN: ~/PLIST:10: Invalid number of arguments for imake-man, should be 3.",
+		"WARN: ~/PLIST:11: IMAKE_MANNEWSUFFIX is not meant to appear in PLISTs.",
+		"WARN: ~/PLIST:13: Unknown PLIST directive \"@unknown\".")
 }
 
 func (s *Suite) Test_plistLineSorter__unsortable(c *check.C) {
