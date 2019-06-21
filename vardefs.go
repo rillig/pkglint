@@ -1132,7 +1132,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.pkgload("HAS_CONFIGURE", BtYes)
 	reg.pkglist("HEADER_TEMPLATES", BtPathname)
 	reg.pkg("HOMEPAGE", BtHomepage)
-	reg.pkg("ICON_THEMES", BtYes)
+	reg.pkgbl3("ICON_THEMES", BtYes)
 	reg.acl("IGNORE_PKG.*", BtYes,
 		PackageSettable,
 		"*: set, use-loadtime")

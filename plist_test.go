@@ -775,8 +775,6 @@ func (s *Suite) Test_PlistChecker_checkPathShareIcons__gnome_icon_theme_itself(c
 
 	t.CheckOutputLines(
 		// FIXME
-		"WARN: graphics/gnome-icon-theme/buildlink3.mk:12: The variable ICON_THEMES should not be set in this file; it would be ok in Makefile, Makefile.* or *.mk, but not buildlink3.mk or builtin.mk.",
-		// FIXME
 		"ERROR: graphics/gnome-icon-theme/buildlink3.mk:5: Package name mismatch between multiple-inclusion guard \"GNOME-ICON-THEME\" (expected \"GNOME_ICON_THEME\") and package name \"gnome-icon-theme\" (from line 3).")
 }
 
