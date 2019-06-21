@@ -729,7 +729,7 @@ func (s *Suite) Test_PlistChecker_checkPathShare(c *check.C) {
 		"WARN: ~/PLIST:7: Man pages should be installed into man/, not share/man/.")
 }
 
-func (s *Suite) Test_PlistChecker_checkPathShare__gnome_icon_theme(c *check.C) {
+func (s *Suite) Test_PlistChecker_checkPathShareIcons__gnome_icon_theme(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileDummyBuildlink3("graphics/gnome-icon-theme/buildlink3.mk")
@@ -757,7 +757,7 @@ func (s *Suite) Test_PlistChecker_checkPathShare__gnome_icon_theme(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_PlistChecker_checkPathShare__icons(c *check.C) {
+func (s *Suite) Test_PlistChecker_checkPathShareIcons(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("graphics/hicolor-icon-theme")
@@ -781,6 +781,24 @@ func (s *Suite) Test_PlistChecker_checkPathShare__icons(c *check.C) {
 		"ERROR: graphics/other/PLIST:2: The file icon-theme.cache must not appear in any PLIST file.",
 		"WARN: graphics/other/PLIST:2: "+
 			"Packages that install icon theme files should set ICON_THEMES.")
+}
+
+func (s *Suite) Test_PlistChecker_checkPathShareIcons__hicolor_ok(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".include \"../../graphics/hicolor-icon-theme/buildlink3.mk\"")
+	t.CreateFileLines("category/package/PLIST",
+		PlistCvsID,
+		"share/icons/hicolor/open.svg")
+	t.CreateFileLines("graphics/hicolor-icon-theme/buildlink3.mk",
+		MkCvsID,
+		"ICON_THEMES=\tyes")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_PlistLine_CheckTrailingWhitespace(c *check.C) {
