@@ -566,7 +566,7 @@ func (scc *SimpleCommandChecker) handleCommandVariable() bool {
 
 		// When the package author has explicitly defined a command
 		// variable, assume it to be valid.
-		if scc.MkLines != nil && scc.MkLines.vars.DefinedSimilar(varname) {
+		if scc.MkLines.vars.DefinedSimilar(varname) {
 			return true
 		}
 		if G.Pkg != nil && G.Pkg.vars.DefinedSimilar(varname) {
