@@ -729,7 +729,7 @@ func (s *Suite) Test_PlistChecker_checkPathShare(c *check.C) {
 		"WARN: ~/PLIST:7: Man pages should be installed into man/, not share/man/.")
 }
 
-func (s *Suite) Test_PlistChecker_checkPathShareIcons__gnome_icon_theme(c *check.C) {
+func (s *Suite) Test_PlistChecker_checkPathShareIcons__using_gnome_icon_theme(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileDummyBuildlink3("graphics/gnome-icon-theme/buildlink3.mk")
@@ -755,6 +755,29 @@ func (s *Suite) Test_PlistChecker_checkPathShareIcons__gnome_icon_theme(c *check
 	// Up to March 2019, a bug in relpath produced different behavior
 	// depending on the leading dot.
 	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_PlistChecker_checkPathShareIcons__gnome_icon_theme_itself(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileDummyBuildlink3("graphics/gnome-icon-theme/buildlink3.mk",
+		"ICON_THEMES=\tyes")
+	t.SetUpPackage("graphics/gnome-icon-theme",
+		".include \"../../graphics/gnome-icon-theme/buildlink3.mk\"")
+	t.CreateFileLines("graphics/gnome-icon-theme-extras/PLIST",
+		PlistCvsID,
+		"share/icons/gnome/16x16/devices/media-optical-cd-audio.png",
+		"share/icons/gnome/16x16/devices/media-optical-dvd.png")
+	t.FinishSetUp()
+	t.Chdir(".")
+
+	G.Check("graphics/gnome-icon-theme")
+
+	t.CheckOutputLines(
+		// FIXME
+		"WARN: graphics/gnome-icon-theme/buildlink3.mk:12: The variable ICON_THEMES should not be set in this file; it would be ok in Makefile, Makefile.* or *.mk, but not buildlink3.mk or builtin.mk.",
+		// FIXME
+		"ERROR: graphics/gnome-icon-theme/buildlink3.mk:5: Package name mismatch between multiple-inclusion guard \"GNOME-ICON-THEME\" (expected \"GNOME_ICON_THEME\") and package name \"gnome-icon-theme\" (from line 3).")
 }
 
 func (s *Suite) Test_PlistChecker_checkPathShareIcons(c *check.C) {
