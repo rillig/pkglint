@@ -1089,11 +1089,16 @@ func (s *Suite) Test_ShellLineChecker_checkHiddenAndSuppress(c *check.C) {
 		"",
 		"show-all-targets: .PHONY",
 		"\t@echo 'hello'",
-		"\t@ls -l")
+		"\t@ls -l",
+		"",
+		"anything-message: .PHONY",
+		"\t@echo 'may be hidden'",
+		"\t@ls 'may be hidden'")
 
 	mklines.Check()
 
-	// No warning about the hidden ls since the target name starts with "show-".
+	// No warning about the hidden ls since the target names start
+	// with "show-" or end with "-message".
 	t.CheckOutputEmpty()
 }
 
