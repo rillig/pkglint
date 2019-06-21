@@ -1093,7 +1093,10 @@ func (s *Suite) Test_ShellLineChecker_checkHiddenAndSuppress(c *check.C) {
 		"",
 		"anything-message: .PHONY",
 		"\t@echo 'may be hidden'",
-		"\t@ls 'may be hidden'")
+		"\t@ls 'may be hidden'",
+		"",
+		"pre-configure:",
+		"\t@")
 
 	mklines.Check()
 
