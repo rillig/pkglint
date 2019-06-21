@@ -856,6 +856,10 @@ func (s *Suite) Test_ShellLineChecker_checkWordQuoting(c *check.C) {
 	test(
 		"$$$$",
 		nil...)
+
+	test(
+		"``",
+		nil...)
 }
 
 func (s *Suite) Test_ShellLineChecker_unescapeBackticks(c *check.C) {
