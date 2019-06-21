@@ -582,17 +582,19 @@ func (s *Suite) Test_ShellLineChecker_unescapeBackticks__unfinished(c *check.C) 
 func (s *Suite) Test_ShellLineChecker_unescapeBackticks__unfinished_direct(c *check.C) {
 	t := s.Init(c)
 
-	mkline := t.NewMkLine("dummy.mk", 123, "\t# shell command")
+	mklines := t.NewMkLines("dummy.mk",
+		MkCvsID,
+		"\t# shell command")
 
 	// This call is unrealistic. It doesn't happen in practice, and this
 	// direct, forcing test is only to reach the code coverage.
 	atoms := []*ShAtom{
 		NewShAtom(shtText, "`", shqBackt)}
-	NewShellLineChecker(nil, mkline).
+	NewShellLineChecker(mklines, mklines.mklines[1]).
 		unescapeBackticks(&atoms, shqBackt)
 
 	t.CheckOutputLines(
-		"ERROR: dummy.mk:123: Unfinished backticks after \"\".")
+		"ERROR: dummy.mk:2: Unfinished backticks after \"\".")
 }
 
 func (s *Suite) Test_ShellLineChecker_variableNeedsQuoting(c *check.C) {

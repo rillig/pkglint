@@ -25,6 +25,7 @@ type ShellLineChecker struct {
 }
 
 func NewShellLineChecker(mklines MkLines, mkline MkLine) *ShellLineChecker {
+	assertNotNil(mklines)
 	return &ShellLineChecker{mklines, mkline, true}
 }
 

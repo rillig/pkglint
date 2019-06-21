@@ -18,6 +18,19 @@ func (s *Suite) Test_assertNil(c *check.C) {
 		"Pkglint internal error: Oops: unexpected error")
 }
 
+func (s *Suite) Test_assertNotNil(c *check.C) {
+	t := s.Init(c)
+
+	assertNotNil("this string is not nil")
+
+	t.ExpectPanic(
+		func() { assertNotNil(nil) },
+		"Pkglint internal error: unexpected nil pointer")
+	t.ExpectPanic(
+		func() { var ptr *string; assertNotNil(ptr) },
+		"Pkglint internal error: unexpected nil pointer")
+}
+
 func (s *Suite) Test_YesNoUnknown_String(c *check.C) {
 	c.Check(yes.String(), equals, "yes")
 	c.Check(no.String(), equals, "no")

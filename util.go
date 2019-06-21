@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"sort"
 	"strconv"
@@ -156,6 +157,19 @@ func imax(a, b int) int {
 func assertNil(err error, format string, args ...interface{}) {
 	if err != nil {
 		panic("Pkglint internal error: " + sprintf(format, args...) + ": " + err.Error())
+	}
+}
+
+func assertNotNil(obj interface{}) {
+
+	// https://stackoverflow.com/questions/13476349/check-for-nil-and-nil-interface-in-go
+	isNil := func() bool {
+		defer func() { _ = recover() }()
+		return reflect.ValueOf(obj).IsNil()
+	}
+
+	if obj == nil || isNil() {
+		panic("Pkglint internal error: unexpected nil pointer")
 	}
 }
 
