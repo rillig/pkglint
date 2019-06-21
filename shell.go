@@ -482,9 +482,7 @@ func (scc *SimpleCommandChecker) checkCommandStart() {
 	scc.checkInstallCommand(shellword)
 
 	switch {
-	case shellword == "${RUN}" || shellword == "":
-		// FIXME: ${RUN} must never appear as a simple command.
-		//  It should always be trimmed before passing the shell program to the SimpleCommandChecker.
+	case shellword == "":
 		break
 	case scc.handleForbiddenCommand():
 		break
