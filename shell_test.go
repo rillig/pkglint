@@ -862,6 +862,53 @@ func (s *Suite) Test_ShellLineChecker_checkWordQuoting(c *check.C) {
 		nil...)
 }
 
+func (s *Suite) Test_ShellLineChecker_checkShVarUsePlain__default_warning_level(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine( /* none */ )
+	t.SetUpVartypes()
+	t.SetUpTool("echo", "", AtRunTime)
+
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"CONFIGURE_ARGS+=\techo $$@ $$var",
+		"",
+		"pre-configure:",
+		"\techo $$@ $$var")
+
+	mklines.Check()
+
+	// Using $@ outside of double quotes is so obviously wrong that
+	// the warning is issued by default.
+	t.CheckOutputLines(
+		"WARN: filename.mk:2: The $@ shell variable should only be used in double quotes.",
+		"WARN: filename.mk:5: The $@ shell variable should only be used in double quotes.")
+}
+
+func (s *Suite) Test_ShellLineChecker_checkShVarUsePlain__Wall(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	t.SetUpTool("echo", "", AtRunTime)
+
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"CONFIGURE_ARGS+=\techo $$@ $$var",
+		"",
+		"pre-configure:",
+		"\techo $$@ $$var")
+
+	mklines.Check()
+
+	// FIXME: It is inconsistent that the check for unquoted shell
+	//  variables is enabled for CONFIGURE_ARGS (where shell variables
+	//  don't make sense at all) but not for real shell commands.
+	t.CheckOutputLines(
+		"WARN: filename.mk:2: The $@ shell variable should only be used in double quotes.",
+		"WARN: filename.mk:2: Unquoted shell variable \"var\".",
+		"WARN: filename.mk:5: The $@ shell variable should only be used in double quotes.")
+}
+
 func (s *Suite) Test_ShellLineChecker_unescapeBackticks(c *check.C) {
 	t := s.Init(c)
 
