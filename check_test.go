@@ -338,7 +338,9 @@ func (t *Tester) SetUpCategory(name string) {
 // At the end of the setup phase, t.FinishSetUp() must be called to load all
 // the files.
 func (t *Tester) SetUpPackage(pkgpath string, makefileLines ...string) string {
+	assertf(matches(pkgpath, `^[^/]+/[^/]+$`), "pkgpath %q must have the form \"category/package\"", pkgpath)
 
+	distname := path.Base(pkgpath)
 	category := path.Dir(pkgpath)
 	if category == "wip" {
 		// To avoid boilerplate CATEGORIES definitions for wip packages.
@@ -376,7 +378,7 @@ func (t *Tester) SetUpPackage(pkgpath string, makefileLines ...string) string {
 	mlines := []string{
 		MkCvsID,
 		"",
-		"DISTNAME=\tdistname-1.0",
+		"DISTNAME=\t" + distname + "-1.0",
 		"#PKGNAME=\tpackage-1.0",
 		"CATEGORIES=\t" + category,
 		"MASTER_SITES=\t# none",

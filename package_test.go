@@ -53,8 +53,7 @@ func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__package_but_not_file
 func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__no_tracing(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpPackage("category/package",
-		"PKGNAME=\tpackage-1.0")
+	t.SetUpPackage("category/package")
 	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk")
 	t.FinishSetUp()
 
@@ -2374,7 +2373,7 @@ func (s *Suite) Test_Package_parse__include_infrastructure(c *check.C) {
 		"Whole Makefile (with all included files) follows:",
 		"~/category/package/Makefile:1: "+MkCvsID,
 		"~/category/package/Makefile:2: ",
-		"~/category/package/Makefile:3: DISTNAME=\tdistname-1.0",
+		"~/category/package/Makefile:3: DISTNAME=\tpackage-1.0",
 		"~/category/package/Makefile:4: #PKGNAME=\tpackage-1.0",
 		"~/category/package/Makefile:5: CATEGORIES=\tcategory",
 		"~/category/package/Makefile:6: MASTER_SITES=\t# none",

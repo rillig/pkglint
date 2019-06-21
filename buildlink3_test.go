@@ -13,8 +13,6 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__package(c *check.C) {
 	t.CreateFileLines("category/dependency2/buildlink3.mk",
 		MkCvsID)
 	t.SetUpPackage("category/package",
-		"PKGNAME=\tpackage-1.0",
-		"",
 		".include \"../../category/dependency1/buildlink3.mk\"")
 
 	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
@@ -576,8 +574,7 @@ func (s *Suite) Test_Buildlink3Checker_checkUniquePkgbase(c *check.C) {
 func (s *Suite) Test_Buildlink3Checker_checkMainPart__if_else_endif(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpPackage("category/package",
-		"PKGNAME=\tpackage-1.0")
+	t.SetUpPackage("category/package")
 	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
 		".if ${X11_TYPE} == modular",
 		".else",
@@ -592,8 +589,7 @@ func (s *Suite) Test_Buildlink3Checker_checkMainPart__if_else_endif(c *check.C) 
 func (s *Suite) Test_Buildlink3Checker_checkVarassign__dependencies_with_path(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpPackage("category/package",
-		"PKGNAME=\tpackage-1.0")
+	t.SetUpPackage("category/package")
 	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
 		"BUILDLINK_ABI_DEPENDS.package+=\tpackage>=1.0:../../category/package",
 		"BUILDLINK_API_DEPENDS.package+=\tpackage>=1.5:../../category/package")
@@ -613,8 +609,7 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__dependencies_with_path(c 
 func (s *Suite) Test_Buildlink3Checker_checkVarassign__abi_without_api(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpPackage("category/package",
-		"PKGNAME=\tpackage-1.0")
+	t.SetUpPackage("category/package")
 	// t.CreateFileDummyBuildlink3() cannot be used here since it always adds an API line.
 	t.CreateFileLines("category/package/buildlink3.mk",
 		MkCvsID,
@@ -643,8 +638,7 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__abi_without_api(c *check.
 func (s *Suite) Test_Buildlink3Checker_checkVarassign__abi_and_api_with_variables(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpPackage("category/package",
-		"PKGNAME=\tpackage-1.0")
+	t.SetUpPackage("category/package")
 	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
 		"BUILDLINK_ABI_DEPENDS.package+=\tpackage>=${ABI_VERSION}",
 		"BUILDLINK_API_DEPENDS.package+=\tpackage>=${API_VERSION}",
@@ -662,8 +656,7 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__abi_and_api_with_variable
 func (s *Suite) Test_Buildlink3Checker_checkVarassign__api_with_variable(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpPackage("category/package",
-		"PKGNAME=\tpackage-1.0")
+	t.SetUpPackage("category/package")
 	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
 		"BUILDLINK_ABI_DEPENDS.package+=\tpackage>=1.0",
 		"BUILDLINK_API_DEPENDS.package+=\tpackage>=${API_VERSION}",
@@ -680,8 +673,7 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__api_with_variable(c *chec
 func (s *Suite) Test_Buildlink3Checker_checkVarassign__abi_and_api_with_pattern(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpPackage("category/package",
-		"PKGNAME=\tpackage-1.0")
+	t.SetUpPackage("category/package")
 	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
 		"BUILDLINK_ABI_DEPENDS.package+=\tpackage-1.*",
 		"BUILDLINK_API_DEPENDS.package+=\tpackage-2.*")
@@ -697,8 +689,7 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__abi_and_api_with_pattern(
 func (s *Suite) Test_Buildlink3Checker_checkVarassign__api_with_pattern(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpPackage("category/package",
-		"PKGNAME=\tpackage-1.0")
+	t.SetUpPackage("category/package")
 	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
 		"BUILDLINK_ABI_DEPENDS.package+=\tpackage>=1",
 		"BUILDLINK_API_DEPENDS.package+=\tpackage-1.*")
@@ -714,8 +705,7 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__api_with_pattern(c *check
 func (s *Suite) Test_Buildlink3Checker_checkVarassign__other_variables(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpPackage("category/package",
-		"PKGNAME=\tpackage-1.0")
+	t.SetUpPackage("category/package")
 	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
 		"BUILDLINK_TREE+=\tmistake", // Wrong, but doesn't happen in practice.
 		"",
