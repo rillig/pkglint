@@ -764,7 +764,7 @@ func (s *Suite) Test_PlistChecker_checkPathShareIcons__gnome_icon_theme_itself(c
 		"ICON_THEMES=\tyes")
 	t.SetUpPackage("graphics/gnome-icon-theme",
 		".include \"../../graphics/gnome-icon-theme/buildlink3.mk\"")
-	t.CreateFileLines("graphics/gnome-icon-theme-extras/PLIST",
+	t.CreateFileLines("graphics/gnome-icon-theme/PLIST",
 		PlistCvsID,
 		"share/icons/gnome/16x16/devices/media-optical-cd-audio.png",
 		"share/icons/gnome/16x16/devices/media-optical-dvd.png")
