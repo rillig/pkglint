@@ -457,7 +457,8 @@ func (t *Tester) CreateFileDummyPatch(relativeFileName string) {
 func (t *Tester) CreateFileDummyBuildlink3(relativeFileName string, customLines ...string) {
 	dir := path.Dir(relativeFileName)
 	lower := path.Base(dir)
-	upper := strings.ToUpper(lower)
+	// see pkgtools/createbuildlink/files/createbuildlink, "package specific variables"
+	upper := strings.Replace(strings.ToUpper(lower), "-", "_", -1)
 
 	width := tabWidth(sprintf("BUILDLINK_API_DEPENDS.%s+=\t", lower))
 

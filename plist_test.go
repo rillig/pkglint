@@ -773,9 +773,7 @@ func (s *Suite) Test_PlistChecker_checkPathShareIcons__gnome_icon_theme_itself(c
 
 	G.Check("graphics/gnome-icon-theme")
 
-	t.CheckOutputLines(
-		// FIXME
-		"ERROR: graphics/gnome-icon-theme/buildlink3.mk:5: Package name mismatch between multiple-inclusion guard \"GNOME-ICON-THEME\" (expected \"GNOME_ICON_THEME\") and package name \"gnome-icon-theme\" (from line 3).")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_PlistChecker_checkPathShareIcons(c *check.C) {
