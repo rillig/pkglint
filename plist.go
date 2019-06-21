@@ -381,35 +381,8 @@ func (ck *PlistChecker) checkPathShare(pline *PlistLine) {
 	text := pline.text
 
 	switch {
-	case hasPrefix(text, "share/icons/") && pkg != nil:
-		if hasPrefix(text, "share/icons/hicolor/") && pkg.Pkgpath != "graphics/hicolor-icon-theme" {
-			f := "../../graphics/hicolor-icon-theme/buildlink3.mk"
-			if !pkg.included.Seen(f) && ck.once.FirstTime("hicolor-icon-theme") {
-				pline.Errorf("Packages that install hicolor icons must include %q in the Makefile.", f)
-			}
-		}
-
-		if text == "share/icons/hicolor/icon-theme.cache" && pkg.Pkgpath != "graphics/hicolor-icon-theme" {
-			pline.Errorf("The file icon-theme.cache must not appear in any PLIST file.")
-			pline.Explain(
-				"Remove this line and add the following line to the package Makefile.",
-				"",
-				".include \"../../graphics/hicolor-icon-theme/buildlink3.mk\"")
-		}
-
-		if hasPrefix(text, "share/icons/gnome") && pkg.Pkgpath != "graphics/gnome-icon-theme" {
-			f := "../../graphics/gnome-icon-theme/buildlink3.mk"
-			if !pkg.included.Seen(f) {
-				pline.Errorf("The package Makefile must include %q.", f)
-				pline.Explain(
-					"Packages that install GNOME icons must maintain the icon theme",
-					"cache.")
-			}
-		}
-
-		if contains(text[12:], "/") && !pkg.vars.Defined("ICON_THEMES") && ck.once.FirstTime("ICON_THEMES") {
-			pline.Warnf("Packages that install icon theme files should set ICON_THEMES.")
-		}
+	case pkg != nil && hasPrefix(text, "share/icons/"):
+		ck.checkPathShareIcons(pline)
 
 	case hasPrefix(text, "share/doc/html/"):
 		pline.Warnf("Use of \"share/doc/html\" is deprecated. Use \"share/doc/${PKGBASE}\" instead.")
@@ -425,6 +398,40 @@ func (ck *PlistChecker) checkPathShare(pline *PlistLine) {
 
 	case hasPrefix(text, "share/man/"):
 		pline.Warnf("Man pages should be installed into man/, not share/man/.")
+	}
+}
+
+func (ck *PlistChecker) checkPathShareIcons(pline *PlistLine) {
+	pkg := ck.pkg
+	text := pline.text
+
+	if hasPrefix(text, "share/icons/hicolor/") && pkg.Pkgpath != "graphics/hicolor-icon-theme" {
+		f := "../../graphics/hicolor-icon-theme/buildlink3.mk"
+		if !pkg.included.Seen(f) && ck.once.FirstTime("hicolor-icon-theme") {
+			pline.Errorf("Packages that install hicolor icons must include %q in the Makefile.", f)
+		}
+	}
+
+	if text == "share/icons/hicolor/icon-theme.cache" && pkg.Pkgpath != "graphics/hicolor-icon-theme" {
+		pline.Errorf("The file icon-theme.cache must not appear in any PLIST file.")
+		pline.Explain(
+			"Remove this line and add the following line to the package Makefile.",
+			"",
+			".include \"../../graphics/hicolor-icon-theme/buildlink3.mk\"")
+	}
+
+	if hasPrefix(text, "share/icons/gnome") && pkg.Pkgpath != "graphics/gnome-icon-theme" {
+		f := "../../graphics/gnome-icon-theme/buildlink3.mk"
+		if !pkg.included.Seen(f) {
+			pline.Errorf("The package Makefile must include %q.", f)
+			pline.Explain(
+				"Packages that install GNOME icons must maintain the icon theme",
+				"cache.")
+		}
+	}
+
+	if contains(text[12:], "/") && !pkg.vars.Defined("ICON_THEMES") && ck.once.FirstTime("ICON_THEMES") {
+		pline.Warnf("Packages that install icon theme files should set ICON_THEMES.")
 	}
 }
 
