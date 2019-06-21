@@ -500,7 +500,7 @@ func (scc *SimpleCommandChecker) checkCommandStart() {
 	case scc.handleComment():
 		break
 	default:
-		if G.Opts.WarnExtra && !(scc.MkLines != nil && scc.MkLines.indentation.DependsOn("OPSYS")) {
+		if G.Opts.WarnExtra && !scc.MkLines.indentation.DependsOn("OPSYS") {
 			scc.mkline.Warnf("Unknown shell command %q.", shellword)
 			scc.mkline.Explain(
 				"To make the package portable to all platforms that pkgsrc supports,",
