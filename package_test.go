@@ -220,6 +220,26 @@ func (s *Suite) Test_Package_CheckVarorder__comments_are_ignored(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_Package_CheckVarorder__commented_variable_assignment(c *check.C) {
+	t := s.Init(c)
+
+	pkg := NewPackage(t.File("x11/9term"))
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"DISTNAME=\tdistname-1.0",
+		"CATEGORIES=\tsysutils",
+		"",
+		"MAINTAINER=\tpkgsrc-users@NetBSD.org",
+		"#HOMEPAGE=\thttps://example.org/",
+		"COMMENT=\tComment",
+		"LICENSE=\tgnu-gpl-v2")
+
+	pkg.CheckVarorder(mklines)
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Package_CheckVarorder__skip_if_there_are_directives(c *check.C) {
 	t := s.Init(c)
 

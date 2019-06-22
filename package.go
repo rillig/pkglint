@@ -1052,7 +1052,7 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 			for len(interesting) > 0 && interesting[0].IsComment() {
 				interesting = interesting[1:]
 			}
-			if len(interesting) > 0 && (interesting[0].IsVarassign() || interesting[0].IsCommentedVarassign()) {
+			if len(interesting) > 0 && interesting[0].IsVarassign() {
 				return interesting[0].Varcanon()
 			}
 			return ""
