@@ -1383,6 +1383,10 @@ func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs(c *check.C) {
 		t.CheckOutput(diagnostics)
 	}
 
+	// AUTO_MKDIRS applies only when installing directories.
+	test("${RUN} ${INSTALL} -c ${WRKSRC}/file ${PREFIX}/bin/",
+		nil...)
+
 	// TODO: Warn that ${INSTALL} -d can only handle a single directory.
 	test("${RUN} ${INSTALL} -m 0755 -d ${PREFIX}/first ${PREFIX}/second",
 		"NOTE: filename.mk:1: You can use \"INSTALLATION_DIRS+= first\" instead of \"${INSTALL} -d\".",
