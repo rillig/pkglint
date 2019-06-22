@@ -240,6 +240,29 @@ func (s *Suite) Test_Package_CheckVarorder__commented_variable_assignment(c *che
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_Package_CheckVarorder__skip_because_of_foreign_variable(c *check.C) {
+	t := s.Init(c)
+
+	pkg := NewPackage(t.File("x11/9term"))
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"DISTNAME=\tdistname-1.0",
+		"USE_TOOLS+=gmake",
+		"CATEGORIES=\tsysutils",
+		"",
+		"MAINTAINER=\tpkgsrc-users@NetBSD.org",
+		"#HOMEPAGE=\thttps://example.org/",
+		"COMMENT=\tComment",
+		"LICENSE=\tgnu-gpl-v2")
+
+	t.EnableTracingToLog()
+	pkg.CheckVarorder(mklines)
+
+	t.CheckOutputLinesMatching(`.*varorder.*`,
+		"TRACE: 1   Skipping varorder because of line 4.")
+}
+
 func (s *Suite) Test_Package_CheckVarorder__skip_if_there_are_directives(c *check.C) {
 	t := s.Init(c)
 

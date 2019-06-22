@@ -1045,6 +1045,8 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 		return mklines.mklines[firstRelevant : lastRelevant+1]
 	})()
 
+	// If there are foreign variables, skip the whole check.
+	// The check is only intended for the most simple packages.
 	skip := func() bool {
 		interesting := relevantLines
 
@@ -1069,6 +1071,10 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 					if varcanon() == variable.varname {
 						interesting = interesting[1:]
 					} else if section.repetition == once {
+						// The above condition is redundant because in the above listing,
+						// all sections that contain "once" variables are themselves marked
+						// as "once" as well. This may be different in the general case.
+
 						if variable.varname != "LICENSE" {
 							if trace.Tracing {
 								trace.Stepf("Wrong varorder because %s is missing.", variable.varname)
