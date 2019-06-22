@@ -1335,6 +1335,50 @@ func (s *Suite) Test_SimpleCommandChecker_checkRegexReplace(c *check.C) {
 	G.Testing = true
 }
 
+func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	t.SetUpTool("awk", "AWK", AtRunTime)
+	t.SetUpTool("cp", "CP", AtRunTime)
+	t.SetUpTool("echo", "", AtRunTime)
+	t.SetUpTool("mkdir", "MKDIR", AtRunTime) // This is actually "mkdir -p".
+	t.SetUpTool("unzip", "UNZIP_CMD", AtRunTime)
+
+	test := func(shellCommand string, diagnostics ...string) {
+		mklines := t.NewMkLines("filename.mk",
+			"\t"+shellCommand)
+		ck := NewShellLineChecker(mklines, mklines.mklines[0])
+
+		mklines.ForEach(func(mkline MkLine) {
+			ck.CheckShellCommandLine(ck.mkline.ShellCommand())
+		})
+
+		t.CheckOutput(diagnostics)
+	}
+
+	G.Pkg = NewPackage(t.File("category/pkgbase"))
+	G.Pkg.Plist.Dirs["share/pkgbase"] = true
+
+	// A directory that is found in the PLIST.
+	// TODO: Add a test for using this command inside a conditional;
+	//  the note should not appear then.
+	test("${RUN} ${INSTALL_DATA_DIR} share/pkgbase ${PREFIX}/share/pkgbase",
+		"NOTE: filename.mk:1: You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= share/pkgbase\" "+
+			"instead of \"${INSTALL_DATA_DIR}\".",
+		"WARN: filename.mk:1: The INSTALL_*_DIR commands can only handle one directory at a time.")
+
+	// Directories from .for loops are too dynamic to be replaced with AUTO_MKDIRS.
+	// TODO: Expand simple .for loops.
+	test("${RUN} ${INSTALL_DATA_DIR} ${PREFIX}/${dir}",
+		"WARN: filename.mk:1: dir is used but not defined.")
+
+	// A directory that is not found in the PLIST would not be created by AUTO_MKDIRS,
+	// therefore only INSTALLATION_DIRS is suggested.
+	test("${RUN} ${INSTALL_DATA_DIR} ${PREFIX}/share/other",
+		"NOTE: filename.mk:1: You can use \"INSTALLATION_DIRS+= share/other\" instead of \"${INSTALL_DATA_DIR}\".")
+}
+
 func (s *Suite) Test_ShellProgramChecker_checkSetE__simple_commands(c *check.C) {
 	t := s.Init(c)
 
