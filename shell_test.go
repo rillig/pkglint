@@ -1260,8 +1260,9 @@ func (s *Suite) Test_SimpleCommandChecker_checkEchoN(c *check.C) {
 func (s *Suite) Test_ShellProgramChecker_checkConditionalCd(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpTool("ls", "LS", AtRunTime)
-	t.SetUpTool("printf", "PRINTF", AtRunTime)
+	t.SetUpTool("ls", "", AtRunTime)
+	t.SetUpTool("printf", "", AtRunTime)
+	t.SetUpTool("wc", "", AtRunTime)
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
 		"pre-configure:",
@@ -1270,6 +1271,7 @@ func (s *Suite) Test_ShellProgramChecker_checkConditionalCd(c *check.C) {
 		"\t${RUN} if cd ..; then printf .; fi",
 		"\t${RUN} ! cd ..",
 		"\t${RUN} if cd ..; printf 'ok\\n'; then printf .; fi",
+		"\t${RUN} if cd .. | wc -l; then printf .; fi",  // Unusual, therefore no warning.
 		"\t${RUN} if cd .. && cd ..; then printf .; fi") // Unusual, therefore no warning.
 
 	mklines.Check()
@@ -1277,7 +1279,8 @@ func (s *Suite) Test_ShellProgramChecker_checkConditionalCd(c *check.C) {
 	t.CheckOutputLines(
 		"ERROR: Makefile:3: The Solaris /bin/sh cannot handle \"cd\" inside conditionals.",
 		"ERROR: Makefile:5: The Solaris /bin/sh cannot handle \"cd\" inside conditionals.",
-		"WARN: Makefile:6: The Solaris /bin/sh does not support negation of shell commands.")
+		"WARN: Makefile:6: The Solaris /bin/sh does not support negation of shell commands.",
+		"WARN: Makefile:8: The exitcode of \"cd\" at the left of the | operator is ignored.")
 }
 
 func (s *Suite) Test_SimpleCommandChecker_checkRegexReplace(c *check.C) {
