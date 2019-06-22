@@ -1148,14 +1148,40 @@ func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable(c *check.C) {
 		MkCvsID,
 		"",
 		"PERL5_VARS_CMD=\t${PERL5:Q}",
-		"PERL5_VARS_CMD=\t${PERL6:Q}")
+		"PERL5_VARS_CMD=\t${PERL6:Q}",
+		"",
+		"pre-configure:",
+		"\t${PERL5_VARS_CMD} -e 'print 12345'")
 
 	mklines.Check()
 
 	// FIXME: In PERL5:Q and PERL6:Q, the :Q is wrong.
 	t.CheckOutputLines(
-		"WARN: Makefile:3: PERL5_VARS_CMD is defined but not used.",
 		"WARN: Makefile:4: The \"${PERL6:Q}\" tool is used but not added to USE_TOOLS.")
+}
+
+func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable__parameterized(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	G.Pkg = NewPackage(t.File("category/package"))
+	t.FinishSetUp()
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"MY_TOOL.i386=\t${PREFIX}/bin/tool-i386",
+		"MY_TOOL.x86_64=\t${PREFIX}/bin/tool-x86_64",
+		"",
+		"pre-configure:",
+		"\t${MY_TOOL.amd64} -e 'print 12345'",
+		"\t${UNKNOWN_TOOL}")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:8: Unknown shell command \"${UNKNOWN_TOOL}\".",
+		"WARN: Makefile:8: UNKNOWN_TOOL is used but not defined.")
 }
 
 // The package Makefile and other .mk files in a package directory
@@ -1356,6 +1382,11 @@ func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs(c *check.C) {
 
 		t.CheckOutput(diagnostics)
 	}
+
+	// TODO: Warn that ${INSTALL} -d can only handle a single directory.
+	test("${RUN} ${INSTALL} -m 0755 -d ${PREFIX}/first ${PREFIX}/second",
+		"NOTE: filename.mk:1: You can use \"INSTALLATION_DIRS+= first\" instead of \"${INSTALL} -d\".",
+		"NOTE: filename.mk:1: You can use \"INSTALLATION_DIRS+= second\" instead of \"${INSTALL} -d\".")
 
 	G.Pkg = NewPackage(t.File("category/pkgbase"))
 	G.Pkg.Plist.Dirs["share/pkgbase"] = true
