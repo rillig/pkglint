@@ -1266,17 +1266,18 @@ func (s *Suite) Test_ShellProgramChecker_checkConditionalCd(c *check.C) {
 		MkCvsID,
 		"pre-configure:",
 		"\t${RUN} while cd ..; do printf .; done",
+		"\t${RUN} while cd .. && cd ..; do printf .; done", // Unusual, therefore no warning.
 		"\t${RUN} if cd ..; then printf .; fi",
 		"\t${RUN} ! cd ..",
 		"\t${RUN} if cd ..; printf 'ok\\n'; then printf .; fi",
-		"\t${RUN} if cd .. && cd ..; then printf .; fi") // For code coverage
+		"\t${RUN} if cd .. && cd ..; then printf .; fi") // Unusual, therefore no warning.
 
 	mklines.Check()
 
 	t.CheckOutputLines(
 		"ERROR: Makefile:3: The Solaris /bin/sh cannot handle \"cd\" inside conditionals.",
-		"ERROR: Makefile:4: The Solaris /bin/sh cannot handle \"cd\" inside conditionals.",
-		"WARN: Makefile:5: The Solaris /bin/sh does not support negation of shell commands.")
+		"ERROR: Makefile:5: The Solaris /bin/sh cannot handle \"cd\" inside conditionals.",
+		"WARN: Makefile:6: The Solaris /bin/sh does not support negation of shell commands.")
 }
 
 func (s *Suite) Test_SimpleCommandChecker_checkRegexReplace(c *check.C) {
