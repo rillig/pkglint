@@ -467,6 +467,40 @@ func (s *Suite) Test_Package_CheckVarorder__comment_at_end_of_section(c *check.C
 		nil...)
 }
 
+func (s *Suite) Test_Package_CheckVarorder__comments_between_sections(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	pkg := NewPackage(t.File("category/package"))
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"CATEGORIES=     net",
+		"",
+		"# comment 1",
+		"",
+		"# comment 2",
+		"",
+		"MAINTAINER=     maintainer@example.org",
+		"HOMEPAGE=       https://github.com/project/pkgbase/",
+		"COMMENT=        Comment",
+		"LICENSE=        gnu-gpl-v3",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	t.EnableTracingToLog()
+	pkg.CheckVarorder(mklines)
+
+	// FIXME: The empty line between the comments must not be treated
+	//  as a section separator.
+	t.CheckOutputLines(
+		"TRACE: + (*Package).CheckVarorder()",
+		"TRACE: 1   Wrong varorder because COMMENT is missing.",
+		"WARN: Makefile:3: The canonical order of the variables is "+
+			"CATEGORIES, empty line, MAINTAINER, HOMEPAGE, COMMENT, LICENSE.",
+		"TRACE: - (*Package).CheckVarorder()")
+}
+
 func (s *Suite) Test_Package_nbPart(c *check.C) {
 	t := s.Init(c)
 
