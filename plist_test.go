@@ -879,6 +879,18 @@ func (s *Suite) Test_PlistLine_CheckDirective(c *check.C) {
 		"WARN: ~/PLIST:13: Unknown PLIST directive \"@unknown\".")
 }
 
+func (s *Suite) Test_NewPlistLineSorter__only_comments(c *check.C) {
+	t := s.Init(c)
+
+	lines := t.NewLines("PLIST",
+		PlistCvsID,
+		"@comment intentionally left empty")
+
+	CheckLinesPlist(nil, lines)
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_plistLineSorter__unsortable(c *check.C) {
 	t := s.Init(c)
 
