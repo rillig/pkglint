@@ -936,62 +936,57 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 		repetition Repetition
 	}
 
-	type Section struct {
-		vars []Variable
-	}
-
-	variable := func(name string, repetition Repetition) Variable { return Variable{name, repetition} }
 	emptyLine := Variable{"", once}
 
 	// See doc/Makefile-example.
 	// See https://netbsd.org/docs/pkgsrc/pkgsrc.html#components.Makefile.
 	var variables = []Variable{
-		variable("GITHUB_PROJECT", optional), // either here or below MASTER_SITES
-		variable("GITHUB_TAG", optional),
-		variable("DISTNAME", optional),
-		variable("PKGNAME", optional),
-		variable("PKGREVISION", optional),
-		variable("CATEGORIES", once),
-		variable("MASTER_SITES", many),
-		variable("GITHUB_PROJECT", optional), // either here or at the very top
-		variable("GITHUB_TAG", optional),
-		variable("DIST_SUBDIR", optional),
-		variable("EXTRACT_SUFX", optional),
-		variable("DISTFILES", many),
-		variable("SITES.*", many),
+		{"GITHUB_PROJECT", optional}, // either here or below MASTER_SITES
+		{"GITHUB_TAG", optional},
+		{"DISTNAME", optional},
+		{"PKGNAME", optional},
+		{"PKGREVISION", optional},
+		{"CATEGORIES", once},
+		{"MASTER_SITES", many},
+		{"GITHUB_PROJECT", optional}, // either here or at the very top
+		{"GITHUB_TAG", optional},
+		{"DIST_SUBDIR", optional},
+		{"EXTRACT_SUFX", optional},
+		{"DISTFILES", many},
+		{"SITES.*", many},
 		emptyLine,
-		variable("PATCH_SITES", optional), // or once?
-		variable("PATCH_SITE_SUBDIR", optional),
-		variable("PATCHFILES", optional), // or once?
-		variable("PATCH_DIST_ARGS", optional),
-		variable("PATCH_DIST_STRIP", optional),
-		variable("PATCH_DIST_CAT", optional),
+		{"PATCH_SITES", optional}, // or once?
+		{"PATCH_SITE_SUBDIR", optional},
+		{"PATCHFILES", optional}, // or once?
+		{"PATCH_DIST_ARGS", optional},
+		{"PATCH_DIST_STRIP", optional},
+		{"PATCH_DIST_CAT", optional},
 		emptyLine,
-		variable("MAINTAINER", optional),
-		variable("OWNER", optional),
-		variable("HOMEPAGE", optional),
-		variable("COMMENT", once),
-		variable("LICENSE", once),
+		{"MAINTAINER", optional},
+		{"OWNER", optional},
+		{"HOMEPAGE", optional},
+		{"COMMENT", once},
+		{"LICENSE", once},
 		emptyLine,
-		variable("LICENSE_FILE", optional),
-		variable("RESTRICTED", optional),
-		variable("NO_BIN_ON_CDROM", optional),
-		variable("NO_BIN_ON_FTP", optional),
-		variable("NO_SRC_ON_CDROM", optional),
-		variable("NO_SRC_ON_FTP", optional),
+		{"LICENSE_FILE", optional},
+		{"RESTRICTED", optional},
+		{"NO_BIN_ON_CDROM", optional},
+		{"NO_BIN_ON_FTP", optional},
+		{"NO_SRC_ON_CDROM", optional},
+		{"NO_SRC_ON_FTP", optional},
 		emptyLine,
-		variable("BROKEN_EXCEPT_ON_PLATFORM", many),
-		variable("BROKEN_ON_PLATFORM", many),
-		variable("NOT_FOR_PLATFORM", many),
-		variable("ONLY_FOR_PLATFORM", many),
-		variable("NOT_FOR_COMPILER", many),
-		variable("ONLY_FOR_COMPILER", many),
-		variable("NOT_FOR_UNPRIVILEGED", optional),
-		variable("ONLY_FOR_UNPRIVILEGED", optional),
+		{"BROKEN_EXCEPT_ON_PLATFORM", many},
+		{"BROKEN_ON_PLATFORM", many},
+		{"NOT_FOR_PLATFORM", many},
+		{"ONLY_FOR_PLATFORM", many},
+		{"NOT_FOR_COMPILER", many},
+		{"ONLY_FOR_COMPILER", many},
+		{"NOT_FOR_UNPRIVILEGED", optional},
+		{"ONLY_FOR_UNPRIVILEGED", optional},
 		emptyLine,
-		variable("BUILD_DEPENDS", many),
-		variable("TOOL_DEPENDS", many),
-		variable("DEPENDS", many)}
+		{"BUILD_DEPENDS", many},
+		{"TOOL_DEPENDS", many},
+		{"DEPENDS", many}}
 
 	relevantLines := (func() []MkLine {
 		firstRelevant := -1
