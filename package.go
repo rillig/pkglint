@@ -1047,6 +1047,7 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 			for len(interesting) > 0 && interesting[0].IsComment() {
 				interesting = interesting[1:]
 			}
+
 			if len(interesting) > 0 && interesting[0].IsVarassign() {
 				return interesting[0].Varcanon()
 			}
@@ -1055,7 +1056,7 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 
 		for _, variable := range variables {
 			if variable == emptyLine {
-				for len(interesting) > 0 && (interesting[0].IsEmpty() || interesting[0].IsComment()) {
+				for len(interesting) > 0 && interesting[0].IsEmpty() {
 					interesting = interesting[1:]
 				}
 				continue

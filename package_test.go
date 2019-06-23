@@ -439,6 +439,34 @@ func (s *Suite) Test_Package_CheckVarorder__diagnostics(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_Package_CheckVarorder__comment_at_end_of_section(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	pkg := NewPackage(t.File("category/package"))
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"CATEGORIES=     net",
+		"SITES.*=        # none",
+		"# comment after the last variable of a section",
+		"",
+		"MAINTAINER=     maintainer@example.org",
+		"HOMEPAGE=       https://github.com/project/pkgbase/",
+		"COMMENT=        Comment",
+		"LICENSE=        gnu-gpl-v3",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	t.EnableTracingToLog()
+	pkg.CheckVarorder(mklines)
+
+	// The varorder code is not skipped, not even because of the comment
+	// after SITES.*.
+	t.CheckOutputLinesMatching(`.*varorder.*`,
+		nil...)
+}
+
 func (s *Suite) Test_Package_nbPart(c *check.C) {
 	t := s.Init(c)
 
