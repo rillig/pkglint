@@ -994,7 +994,7 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 
 		relevantVars := make(map[string]bool)
 		for _, variable := range variables {
-			if variable.Name != "" {
+			if variable != emptyLine {
 				relevantVars[variable.Name] = true
 			}
 		}
@@ -1054,7 +1054,7 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 		}
 
 		for _, variable := range variables {
-			if variable.Name == "" {
+			if variable == emptyLine {
 				for len(interesting) > 0 && (interesting[0].IsEmpty() || interesting[0].IsComment()) {
 					interesting = interesting[1:]
 				}
