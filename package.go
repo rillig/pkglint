@@ -932,8 +932,8 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 	)
 
 	type Variable struct {
-		varname    string
-		repetition Repetition
+		Name       string
+		Repetition Repetition
 	}
 
 	emptyLine := Variable{"", once}
@@ -994,8 +994,8 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 
 		relevantVars := make(map[string]bool)
 		for _, variable := range variables {
-			if variable.varname != "" {
-				relevantVars[variable.varname] = true
+			if variable.Name != "" {
+				relevantVars[variable.Name] = true
 			}
 		}
 
@@ -1054,29 +1054,29 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 		}
 
 		for _, variable := range variables {
-			if variable.varname == "" {
+			if variable.Name == "" {
 				for len(interesting) > 0 && (interesting[0].IsEmpty() || interesting[0].IsComment()) {
 					interesting = interesting[1:]
 				}
 				continue
 			}
 
-			switch variable.repetition {
+			switch variable.Repetition {
 			case optional:
-				if varcanon() == variable.varname {
+				if varcanon() == variable.Name {
 					interesting = interesting[1:]
 				}
 			case once:
-				if varcanon() == variable.varname {
+				if varcanon() == variable.Name {
 					interesting = interesting[1:]
-				} else if variable.varname != "LICENSE" {
+				} else if variable.Name != "LICENSE" {
 					if trace.Tracing {
-						trace.Stepf("Wrong varorder because %s is missing.", variable.varname)
+						trace.Stepf("Wrong varorder because %s is missing.", variable.Name)
 					}
 					return false
 				}
 			case many:
-				for varcanon() == variable.varname {
+				for varcanon() == variable.Name {
 					interesting = interesting[1:]
 				}
 			}
@@ -1091,7 +1091,7 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 
 	var canonical []string
 	for _, variable := range variables {
-		if variable.varname == "" {
+		if variable.Name == "" {
 			if len(canonical) > 0 && canonical[len(canonical)-1] != "empty line" {
 				canonical = append(canonical, "empty line")
 			}
@@ -1101,14 +1101,14 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 		found := false
 		for _, mkline := range relevantLines {
 			if mkline.IsVarassign() || mkline.IsCommentedVarassign() {
-				if mkline.Varcanon() == variable.varname {
+				if mkline.Varcanon() == variable.Name {
 					canonical = append(canonical, mkline.Varname())
 					found = true
 				}
 			}
 		}
-		if !found && variable.repetition == once {
-			canonical = append(canonical, variable.varname)
+		if !found && variable.Repetition == once {
+			canonical = append(canonical, variable.Name)
 		}
 	}
 	if len(canonical) > 0 && canonical[len(canonical)-1] == "empty line" {
