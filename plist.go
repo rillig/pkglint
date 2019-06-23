@@ -12,9 +12,9 @@ func CheckLinesPlist(pkg *Package, lines Lines) {
 		defer trace.Call1(lines.Filename)()
 	}
 
-	lines.CheckCvsID(0, `@comment `, "@comment ")
+	idOk := lines.CheckCvsID(0, `@comment `, "@comment ")
 
-	if lines.Len() == 1 {
+	if idOk && lines.Len() == 1 {
 		line := lines.Lines[0]
 		line.Warnf("PLIST files shouldn't be empty.")
 		line.Explain(
@@ -26,6 +26,7 @@ func CheckLinesPlist(pkg *Package, lines Lines) {
 			"",
 			"Meta packages also don't need a PLIST file",
 			"since their only purpose is to declare dependencies.")
+		return
 	}
 
 	ck := PlistChecker{

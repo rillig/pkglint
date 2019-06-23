@@ -56,10 +56,8 @@ func (s *Suite) Test_CheckLinesPlist__single_file_no_comment(c *check.C) {
 
 	CheckLinesPlist(nil, lines)
 
-	// FIXME: The PLIST file is not really empty.
 	t.CheckOutputLines(
-		"ERROR: PLIST:1: Expected \""+PlistCvsID+"\".",
-		"WARN: PLIST:1: PLIST files shouldn't be empty.")
+		"ERROR: PLIST:1: Expected \"" + PlistCvsID + "\".")
 }
 
 // When a PLIST contains multiple libtool libraries, USE_LIBTOOL needs only
