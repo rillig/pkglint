@@ -937,17 +937,16 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 	}
 
 	type Section struct {
-		repetition Repetition
-		vars       []Variable
+		vars []Variable
 	}
 
 	variable := func(name string, repetition Repetition) Variable { return Variable{name, repetition} }
-	section := func(repetition Repetition, vars ...Variable) Section { return Section{repetition, vars} }
+	section := func(vars ...Variable) Section { return Section{vars} }
 
 	// See doc/Makefile-example.
 	// See https://netbsd.org/docs/pkgsrc/pkgsrc.html#components.Makefile.
 	var sections = []Section{
-		section(once,
+		section(
 			variable("GITHUB_PROJECT", optional), // either here or below MASTER_SITES
 			variable("GITHUB_TAG", optional),
 			variable("DISTNAME", optional),
@@ -961,27 +960,27 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 			variable("EXTRACT_SUFX", optional),
 			variable("DISTFILES", many),
 			variable("SITES.*", many)),
-		section(optional,
+		section(
 			variable("PATCH_SITES", optional), // or once?
 			variable("PATCH_SITE_SUBDIR", optional),
 			variable("PATCHFILES", optional), // or once?
 			variable("PATCH_DIST_ARGS", optional),
 			variable("PATCH_DIST_STRIP", optional),
 			variable("PATCH_DIST_CAT", optional)),
-		section(once,
+		section(
 			variable("MAINTAINER", optional),
 			variable("OWNER", optional),
 			variable("HOMEPAGE", optional),
 			variable("COMMENT", once),
 			variable("LICENSE", once)),
-		section(optional,
+		section(
 			variable("LICENSE_FILE", optional),
 			variable("RESTRICTED", optional),
 			variable("NO_BIN_ON_CDROM", optional),
 			variable("NO_BIN_ON_FTP", optional),
 			variable("NO_SRC_ON_CDROM", optional),
 			variable("NO_SRC_ON_FTP", optional)),
-		section(optional,
+		section(
 			variable("BROKEN_EXCEPT_ON_PLATFORM", many),
 			variable("BROKEN_ON_PLATFORM", many),
 			variable("NOT_FOR_PLATFORM", many),
@@ -990,7 +989,7 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 			variable("ONLY_FOR_COMPILER", many),
 			variable("NOT_FOR_UNPRIVILEGED", optional),
 			variable("ONLY_FOR_UNPRIVILEGED", optional)),
-		section(optional,
+		section(
 			variable("BUILD_DEPENDS", many),
 			variable("TOOL_DEPENDS", many),
 			variable("DEPENDS", many))}
@@ -1070,17 +1069,11 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 				case once:
 					if varcanon() == variable.varname {
 						interesting = interesting[1:]
-					} else if section.repetition == once {
-						// The above condition is redundant because in the above listing,
-						// all sections that contain "once" variables are themselves marked
-						// as "once" as well. This may be different in the general case.
-
-						if variable.varname != "LICENSE" {
-							if trace.Tracing {
-								trace.Stepf("Wrong varorder because %s is missing.", variable.varname)
-							}
-							return false
+					} else if variable.varname != "LICENSE" {
+						if trace.Tracing {
+							trace.Stepf("Wrong varorder because %s is missing.", variable.varname)
 						}
+						return false
 					}
 				case many:
 					for varcanon() == variable.varname {
@@ -1113,7 +1106,7 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 					}
 				}
 			}
-			if !found && section.repetition == once && variable.repetition == once {
+			if !found && variable.repetition == once {
 				canonical = append(canonical, variable.varname)
 			}
 		}
