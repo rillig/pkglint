@@ -48,6 +48,20 @@ func (s *Suite) Test_CheckLinesPlist(c *check.C) {
 		"ERROR: PLIST:18: Duplicate filename \"share/tzinfo\", already appeared in line 17.")
 }
 
+func (s *Suite) Test_CheckLinesPlist__single_file_no_comment(c *check.C) {
+	t := s.Init(c)
+
+	lines := t.NewLines("PLIST",
+		"bin/program")
+
+	CheckLinesPlist(nil, lines)
+
+	// FIXME: The PLIST file is not really empty.
+	t.CheckOutputLines(
+		"ERROR: PLIST:1: Expected \""+PlistCvsID+"\".",
+		"WARN: PLIST:1: PLIST files shouldn't be empty.")
+}
+
 // When a PLIST contains multiple libtool libraries, USE_LIBTOOL needs only
 // be defined once in the package Makefile. Therefore, a single warning is enough.
 func (s *Suite) Test_CheckLinesPlist__multiple_libtool_libraries(c *check.C) {
