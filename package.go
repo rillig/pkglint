@@ -1085,41 +1085,46 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 		return len(interesting) == 0
 	}
 
-	if len(relevantLines) == 0 || skip() {
-		return
-	}
-
-	var canonical []string
-	for _, variable := range variables {
-		if variable.Name == "" {
-			if len(canonical) > 0 && canonical[len(canonical)-1] != "empty line" {
-				canonical = append(canonical, "empty line")
+	// canonical returns the canonical ordering of the variables. It mentions all the
+	// variables that occur in the relevant section, as well as the "once" variables.
+	canonical := func() string {
+		var canonical []string
+		for _, variable := range variables {
+			if variable.Name == "" {
+				if len(canonical) > 0 && canonical[len(canonical)-1] != "empty line" {
+					canonical = append(canonical, "empty line")
+				}
+				continue
 			}
-			continue
-		}
 
-		found := false
-		for _, mkline := range relevantLines {
-			if mkline.IsVarassign() || mkline.IsCommentedVarassign() {
-				if mkline.Varcanon() == variable.Name {
-					canonical = append(canonical, mkline.Varname())
-					found = true
+			found := false
+			for _, mkline := range relevantLines {
+				if mkline.IsVarassign() || mkline.IsCommentedVarassign() {
+					if mkline.Varcanon() == variable.Name {
+						canonical = append(canonical, mkline.Varname())
+						found = true
+					}
 				}
 			}
+			if !found && variable.Repetition == once {
+				canonical = append(canonical, variable.Name)
+			}
 		}
-		if !found && variable.Repetition == once {
-			canonical = append(canonical, variable.Name)
+		if len(canonical) > 0 && canonical[len(canonical)-1] == "empty line" {
+			canonical = canonical[:len(canonical)-1]
 		}
+		return strings.Join(canonical, ", ")
 	}
-	if len(canonical) > 0 && canonical[len(canonical)-1] == "empty line" {
-		canonical = canonical[:len(canonical)-1]
+
+	if len(relevantLines) == 0 || skip() {
+		return
 	}
 
 	// TODO: This leads to very long and complicated warnings.
 	//  Those parts that are correct should not be mentioned,
 	//  except if they are helpful for locating the mistakes.
 	mkline := relevantLines[0]
-	mkline.Warnf("The canonical order of the variables is %s.", strings.Join(canonical, ", "))
+	mkline.Warnf("The canonical order of the variables is %s.", canonical())
 	mkline.Explain(
 		"In simple package Makefiles, some common variables should be",
 		"arranged in a specific order.",
