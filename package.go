@@ -941,66 +941,65 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 	}
 
 	variable := func(name string, repetition Repetition) Variable { return Variable{name, repetition} }
-	section := func(vars ...Variable) Section { return Section{vars} }
+	emptyLine := Variable{"", once}
 
 	// See doc/Makefile-example.
 	// See https://netbsd.org/docs/pkgsrc/pkgsrc.html#components.Makefile.
-	var sections = []Section{
-		section(
-			variable("GITHUB_PROJECT", optional), // either here or below MASTER_SITES
-			variable("GITHUB_TAG", optional),
-			variable("DISTNAME", optional),
-			variable("PKGNAME", optional),
-			variable("PKGREVISION", optional),
-			variable("CATEGORIES", once),
-			variable("MASTER_SITES", many),
-			variable("GITHUB_PROJECT", optional), // either here or at the very top
-			variable("GITHUB_TAG", optional),
-			variable("DIST_SUBDIR", optional),
-			variable("EXTRACT_SUFX", optional),
-			variable("DISTFILES", many),
-			variable("SITES.*", many)),
-		section(
-			variable("PATCH_SITES", optional), // or once?
-			variable("PATCH_SITE_SUBDIR", optional),
-			variable("PATCHFILES", optional), // or once?
-			variable("PATCH_DIST_ARGS", optional),
-			variable("PATCH_DIST_STRIP", optional),
-			variable("PATCH_DIST_CAT", optional)),
-		section(
-			variable("MAINTAINER", optional),
-			variable("OWNER", optional),
-			variable("HOMEPAGE", optional),
-			variable("COMMENT", once),
-			variable("LICENSE", once)),
-		section(
-			variable("LICENSE_FILE", optional),
-			variable("RESTRICTED", optional),
-			variable("NO_BIN_ON_CDROM", optional),
-			variable("NO_BIN_ON_FTP", optional),
-			variable("NO_SRC_ON_CDROM", optional),
-			variable("NO_SRC_ON_FTP", optional)),
-		section(
-			variable("BROKEN_EXCEPT_ON_PLATFORM", many),
-			variable("BROKEN_ON_PLATFORM", many),
-			variable("NOT_FOR_PLATFORM", many),
-			variable("ONLY_FOR_PLATFORM", many),
-			variable("NOT_FOR_COMPILER", many),
-			variable("ONLY_FOR_COMPILER", many),
-			variable("NOT_FOR_UNPRIVILEGED", optional),
-			variable("ONLY_FOR_UNPRIVILEGED", optional)),
-		section(
-			variable("BUILD_DEPENDS", many),
-			variable("TOOL_DEPENDS", many),
-			variable("DEPENDS", many))}
+	var variables = []Variable{
+		variable("GITHUB_PROJECT", optional), // either here or below MASTER_SITES
+		variable("GITHUB_TAG", optional),
+		variable("DISTNAME", optional),
+		variable("PKGNAME", optional),
+		variable("PKGREVISION", optional),
+		variable("CATEGORIES", once),
+		variable("MASTER_SITES", many),
+		variable("GITHUB_PROJECT", optional), // either here or at the very top
+		variable("GITHUB_TAG", optional),
+		variable("DIST_SUBDIR", optional),
+		variable("EXTRACT_SUFX", optional),
+		variable("DISTFILES", many),
+		variable("SITES.*", many),
+		emptyLine,
+		variable("PATCH_SITES", optional), // or once?
+		variable("PATCH_SITE_SUBDIR", optional),
+		variable("PATCHFILES", optional), // or once?
+		variable("PATCH_DIST_ARGS", optional),
+		variable("PATCH_DIST_STRIP", optional),
+		variable("PATCH_DIST_CAT", optional),
+		emptyLine,
+		variable("MAINTAINER", optional),
+		variable("OWNER", optional),
+		variable("HOMEPAGE", optional),
+		variable("COMMENT", once),
+		variable("LICENSE", once),
+		emptyLine,
+		variable("LICENSE_FILE", optional),
+		variable("RESTRICTED", optional),
+		variable("NO_BIN_ON_CDROM", optional),
+		variable("NO_BIN_ON_FTP", optional),
+		variable("NO_SRC_ON_CDROM", optional),
+		variable("NO_SRC_ON_FTP", optional),
+		emptyLine,
+		variable("BROKEN_EXCEPT_ON_PLATFORM", many),
+		variable("BROKEN_ON_PLATFORM", many),
+		variable("NOT_FOR_PLATFORM", many),
+		variable("ONLY_FOR_PLATFORM", many),
+		variable("NOT_FOR_COMPILER", many),
+		variable("ONLY_FOR_COMPILER", many),
+		variable("NOT_FOR_UNPRIVILEGED", optional),
+		variable("ONLY_FOR_UNPRIVILEGED", optional),
+		emptyLine,
+		variable("BUILD_DEPENDS", many),
+		variable("TOOL_DEPENDS", many),
+		variable("DEPENDS", many)}
 
 	relevantLines := (func() []MkLine {
 		firstRelevant := -1
 		lastRelevant := -1
 
 		relevantVars := make(map[string]bool)
-		for _, section := range sections {
-			for _, variable := range section.vars {
+		for _, variable := range variables {
+			if variable.varname != "" {
 				relevantVars[variable.varname] = true
 			}
 		}
@@ -1059,31 +1058,32 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 			return ""
 		}
 
-		for _, section := range sections {
-			for _, variable := range section.vars {
-				switch variable.repetition {
-				case optional:
-					if varcanon() == variable.varname {
-						interesting = interesting[1:]
-					}
-				case once:
-					if varcanon() == variable.varname {
-						interesting = interesting[1:]
-					} else if variable.varname != "LICENSE" {
-						if trace.Tracing {
-							trace.Stepf("Wrong varorder because %s is missing.", variable.varname)
-						}
-						return false
-					}
-				case many:
-					for varcanon() == variable.varname {
-						interesting = interesting[1:]
-					}
+		for _, variable := range variables {
+			if variable.varname == "" {
+				for len(interesting) > 0 && (interesting[0].IsEmpty() || interesting[0].IsComment()) {
+					interesting = interesting[1:]
 				}
+				continue
 			}
 
-			for len(interesting) > 0 && (interesting[0].IsEmpty() || interesting[0].IsComment()) {
-				interesting = interesting[1:]
+			switch variable.repetition {
+			case optional:
+				if varcanon() == variable.varname {
+					interesting = interesting[1:]
+				}
+			case once:
+				if varcanon() == variable.varname {
+					interesting = interesting[1:]
+				} else if variable.varname != "LICENSE" {
+					if trace.Tracing {
+						trace.Stepf("Wrong varorder because %s is missing.", variable.varname)
+					}
+					return false
+				}
+			case many:
+				for varcanon() == variable.varname {
+					interesting = interesting[1:]
+				}
 			}
 		}
 
@@ -1095,23 +1095,25 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 	}
 
 	var canonical []string
-	for _, section := range sections {
-		for _, variable := range section.vars {
-			found := false
-			for _, mkline := range relevantLines {
-				if mkline.IsVarassign() || mkline.IsCommentedVarassign() {
-					if mkline.Varcanon() == variable.varname {
-						canonical = append(canonical, mkline.Varname())
-						found = true
-					}
+	for _, variable := range variables {
+		if variable.varname == "" {
+			if len(canonical) > 0 && canonical[len(canonical)-1] != "empty line" {
+				canonical = append(canonical, "empty line")
+			}
+			continue
+		}
+
+		found := false
+		for _, mkline := range relevantLines {
+			if mkline.IsVarassign() || mkline.IsCommentedVarassign() {
+				if mkline.Varcanon() == variable.varname {
+					canonical = append(canonical, mkline.Varname())
+					found = true
 				}
 			}
-			if !found && variable.repetition == once {
-				canonical = append(canonical, variable.varname)
-			}
 		}
-		if len(canonical) > 0 && canonical[len(canonical)-1] != "empty line" {
-			canonical = append(canonical, "empty line")
+		if !found && variable.repetition == once {
+			canonical = append(canonical, variable.varname)
 		}
 	}
 	if len(canonical) > 0 && canonical[len(canonical)-1] == "empty line" {
