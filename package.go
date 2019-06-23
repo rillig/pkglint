@@ -1091,7 +1091,7 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 	canonical := func() string {
 		var canonical []string
 		for _, variable := range variables {
-			if variable.Name == "" {
+			if variable == emptyLine {
 				if len(canonical) > 0 && canonical[len(canonical)-1] != "empty line" {
 					canonical = append(canonical, "empty line")
 				}
@@ -1100,17 +1100,17 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 
 			found := false
 			for _, mkline := range relevantLines {
-				if mkline.IsVarassign() || mkline.IsCommentedVarassign() {
-					if mkline.Varcanon() == variable.Name {
-						canonical = append(canonical, mkline.Varname())
-						found = true
-					}
+				if mkline.IsVarassign() && mkline.Varcanon() == variable.Name {
+					canonical = append(canonical, mkline.Varname())
+					found = true
 				}
 			}
+
 			if !found && variable.Repetition == once {
 				canonical = append(canonical, variable.Name)
 			}
 		}
+
 		if len(canonical) > 0 && canonical[len(canonical)-1] == "empty line" {
 			canonical = canonical[:len(canonical)-1]
 		}
