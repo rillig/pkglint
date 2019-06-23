@@ -1100,9 +1100,12 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 
 			found := false
 			for _, mkline := range relevantLines {
-				if mkline.IsVarassign() && mkline.Varcanon() == variable.Name {
+				if (mkline.IsVarassign() || mkline.IsCommentedVarassign()) &&
+					mkline.Varcanon() == variable.Name {
+
 					canonical = append(canonical, mkline.Varname())
 					found = true
+					break
 				}
 			}
 

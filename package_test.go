@@ -503,12 +503,13 @@ func (s *Suite) Test_Package_CheckVarorder__commented_varassign(c *check.C) {
 		MkCvsID,
 		"",
 		"CATEGORIES=     net",
+		"#MASTER_SITES=  # none",
 		"",
 		"HOMEPAGE=       https://github.com/project/pkgbase/",
-		"#HOMEPAGE=       https://github.com/project/pkgbase/",
-		"#HOMEPAGE=       https://github.com/project/pkgbase/",
-		"#HOMEPAGE=       https://github.com/project/pkgbase/",
-		"#HOMEPAGE=       https://github.com/project/pkgbase/",
+		"#HOMEPAGE=      https://github.com/project/pkgbase/",
+		"#HOMEPAGE=      https://github.com/project/pkgbase/",
+		"#HOMEPAGE=      https://github.com/project/pkgbase/",
+		"#HOMEPAGE=      https://github.com/project/pkgbase/",
 		"LICENSE=        gnu-gpl-v3",
 		"COMMENT=        Comment",
 		"",
@@ -520,12 +521,15 @@ func (s *Suite) Test_Package_CheckVarorder__commented_varassign(c *check.C) {
 	// wrong to force the warning.
 	//
 	// Up to June 2019 (308099138a62) pkglint mentioned in the warning
-	// the commented variable assignments although they were not effective.
-	// This led to warnings that were unnecessarily long and would
-	// confusingly mention HOMEPAGE 5 times in the above example.
+	// each commented variable assignment, even repeatedly for the same
+	// variable name.
+	//
+	// These variable assignments should be in the correct order, even
+	// if they are commented out. It's not necessary though to list a
+	// variable more than once.
 	t.CheckOutputLines(
 		"WARN: Makefile:3: The canonical order of the variables is " +
-			"CATEGORIES, empty line, HOMEPAGE, COMMENT, LICENSE.")
+			"CATEGORIES, MASTER_SITES, empty line, HOMEPAGE, COMMENT, LICENSE.")
 }
 
 func (s *Suite) Test_Package_nbPart(c *check.C) {
