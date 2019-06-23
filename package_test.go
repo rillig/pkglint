@@ -494,6 +494,40 @@ func (s *Suite) Test_Package_CheckVarorder__comments_between_sections(c *check.C
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_Package_CheckVarorder__commented_varassign(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	pkg := NewPackage(t.File("category/package"))
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"CATEGORIES=     net",
+		"",
+		"HOMEPAGE=       https://github.com/project/pkgbase/",
+		"#HOMEPAGE=       https://github.com/project/pkgbase/",
+		"#HOMEPAGE=       https://github.com/project/pkgbase/",
+		"#HOMEPAGE=       https://github.com/project/pkgbase/",
+		"#HOMEPAGE=       https://github.com/project/pkgbase/",
+		"LICENSE=        gnu-gpl-v3",
+		"COMMENT=        Comment",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	pkg.CheckVarorder(mklines)
+
+	// The order of the variables LICENSE and COMMENT is intentionally
+	// wrong to force the warning.
+	//
+	// Up to June 2019 (308099138a62) pkglint mentioned in the warning
+	// the commented variable assignments although they were not effective.
+	// This led to warnings that were unnecessarily long and would
+	// confusingly mention HOMEPAGE 5 times in the above example.
+	t.CheckOutputLines(
+		"WARN: Makefile:3: The canonical order of the variables is " +
+			"CATEGORIES, empty line, HOMEPAGE, COMMENT, LICENSE.")
+}
+
 func (s *Suite) Test_Package_nbPart(c *check.C) {
 	t := s.Init(c)
 
