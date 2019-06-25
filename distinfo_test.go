@@ -286,7 +286,7 @@ func (s *Suite) Test_distinfoLinesChecker_checkUncommittedPatch__bad(c *check.C)
 	t.Chdir("category/package")
 	t.CreateFileDummyPatch("patches/patch-aa")
 	t.CreateFileLines("CVS/Entries",
-		"/distinfo/modified///")
+		"/distinfo//modified//")
 	t.SetUpFileLines("distinfo",
 		CvsID,
 		"",
