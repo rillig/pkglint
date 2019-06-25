@@ -1181,7 +1181,7 @@ func (s *Suite) Test_Pkglint_checkExecutable__already_committed(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("CVS/Entries",
-		"/file.mk/modified////")
+		"/file.mk/modified///")
 	filename := t.File("file.mk")
 
 	G.checkExecutable(filename, 0555)

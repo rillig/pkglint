@@ -25,13 +25,14 @@ type Pkglint struct {
 	Pkgsrc Pkgsrc   // Global data, mostly extracted from mk/*.
 	Pkg    *Package // The package that is currently checked, or nil.
 
-	Todo            []string // The files or directories that still need to be checked.
-	Wip             bool     // Is the currently checked file or package from pkgsrc-wip?
-	Infrastructure  bool     // Is the currently checked file from the pkgsrc infrastructure?
-	Testing         bool     // Is pkglint in self-testing mode (only during development)?
-	Username        string   // For checking against OWNER and MAINTAINER
-	cvsEntriesDir   string   // Cached to avoid I/O
-	cvsEntriesLines Lines
+	Todo           []string // The files or directories that still need to be checked.
+	Wip            bool     // Is the currently checked file or package from pkgsrc-wip?
+	Infrastructure bool     // Is the currently checked file from the pkgsrc infrastructure?
+	Testing        bool     // Is pkglint in self-testing mode (only during development)?
+	Username       string   // For checking against OWNER and MAINTAINER
+
+	cvsEntriesDir string // Cached to avoid I/O
+	cvsEntries    map[string]CvsEntry
 
 	Logger Logger
 
@@ -772,18 +773,30 @@ func (pkglint *Pkglint) tools(mklines MkLines) *Tools {
 	}
 }
 
-func (pkglint *Pkglint) loadCvsEntries(filename string) Lines {
+func (pkglint *Pkglint) loadCvsEntries(filename string) map[string]CvsEntry {
 	dir := path.Dir(filename)
 	if dir == pkglint.cvsEntriesDir {
-		return pkglint.cvsEntriesLines
+		return pkglint.cvsEntries
 	}
 
 	lines := Load(dir+"/CVS/Entries", 0)
-	if lines == nil {
-		return nil
+	var entries map[string]CvsEntry
+	if lines != nil {
+		entries = make(map[string]CvsEntry)
+		for _, line := range lines.Lines {
+			if hasPrefix(line.Text, "/") {
+				fields := strings.Split(line.Text, "/")
+				if len(fields) == 6 {
+					entries[fields[1]] =
+						CvsEntry{fields[1], fields[2], fields[3], fields[4], fields[5]}
+				}
+			}
+		}
 	}
 
+	// TODO: Also load Entries.Log; see http://cvsman.com/cvs-1.12.12/cvs_19.php.
+
 	pkglint.cvsEntriesDir = dir
-	pkglint.cvsEntriesLines = lines
-	return lines
+	pkglint.cvsEntries = entries
+	return entries
 }

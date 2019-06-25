@@ -1189,7 +1189,7 @@ func (pkg *Package) checkOwnerMaintainer(filename string) {
 		return
 	}
 
-	if !isLocallyModified(filename) || !fileExists(filename) {
+	if !isLocallyModified(filename) {
 		return
 	}
 
@@ -1215,7 +1215,7 @@ func (pkg *Package) checkFreeze(filename string) {
 		return
 	}
 
-	if !isLocallyModified(filename) || !fileExists(filename) {
+	if !isLocallyModified(filename) {
 		return
 	}
 

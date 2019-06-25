@@ -247,46 +247,47 @@ func dirglob(dirname string) []string {
 
 // Checks whether a file is already committed to the CVS repository.
 func isCommitted(filename string) bool {
-	lines := G.loadCvsEntries(filename)
-	if lines == nil {
-		return false
-	}
-	needle := "/" + path.Base(filename) + "/"
-	for _, line := range lines.Lines {
-		if hasPrefix(line.Text, needle) {
-			return true
-		}
-	}
-	return false
+	entries := G.loadCvsEntries(filename)
+	_, found := entries[path.Base(filename)]
+	return found
 }
 
+// isLocallyModified tests whether a file (not a directory) is modified,
+// as seen by CVS.
+//
+// There is no corresponding test for Git (as used by pkgsrc-wip) since that
+// is more difficult to implement than simply reading a CVS/Entries file.
 func isLocallyModified(filename string) bool {
-	baseName := path.Base(filename)
-
-	lines := G.loadCvsEntries(filename)
-	if lines == nil {
+	entries := G.loadCvsEntries(filename)
+	entry, found := entries[path.Base(filename)]
+	if !found {
 		return false
 	}
 
-	for _, line := range lines.Lines {
-		fields := strings.Split(line.Text, "/")
-		if 3 < len(fields) && fields[1] == baseName {
-			st, err := os.Stat(filename)
-			if err != nil {
-				return true
-			}
-
-			// Following http://cvsman.com/cvs-1.12.12/cvs_19.php, format both timestamps.
-			cvsModTime := fields[3]
-			fsModTime := st.ModTime().UTC().Format(time.ANSIC)
-			if trace.Tracing {
-				trace.Stepf("cvs.time=%q fs.time=%q", cvsModTime, fsModTime)
-			}
-
-			return cvsModTime != fsModTime
-		}
+	st, err := os.Stat(filename)
+	if err != nil {
+		return true
 	}
-	return false
+
+	// Following http://cvsman.com/cvs-1.12.12/cvs_19.php, format both timestamps.
+	cvsModTime := entry.Timestamp
+	fsModTime := st.ModTime().UTC().Format(time.ANSIC)
+	if trace.Tracing {
+		trace.Stepf("cvs.time=%q fs.time=%q", cvsModTime, fsModTime)
+	}
+
+	return cvsModTime != fsModTime
+}
+
+// CvsEntry is one of the entries in a CVS/Entries file.
+//
+// See http://cvsman.com/cvs-1.12.12/cvs_19.php.
+type CvsEntry struct {
+	Name      string
+	Revision  string
+	Timestamp string
+	Options   string
+	TagDate   string
 }
 
 // Returns the number of columns that a string occupies when printed with
