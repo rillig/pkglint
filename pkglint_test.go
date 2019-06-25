@@ -1251,3 +1251,17 @@ func (s *Suite) Test_InterPackage_Bl3__same_identifier(c *check.C) {
 		"ERROR: category/package2/buildlink3.mk:3: Duplicate package identifier " +
 			"\"package1\" already appeared in ../../category/package1/buildlink3.mk:3.")
 }
+
+func (s *Suite) Test_Pkglint_loadCvsEntries(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("CVS/Entries",
+		"/invalid/",
+		"must be silently ignored",
+		"/name/revision/timestamp/options/tagdate")
+
+	t.Check(isCommitted(t.File("name")), equals, true)
+
+	t.CheckOutputLines(
+		"ERROR: ~/CVS/Entries:1: Invalid line: /invalid/")
+}
