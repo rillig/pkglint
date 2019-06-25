@@ -259,7 +259,8 @@ func (pkg *Package) check(filenames []string, mklines, allLines MkLines) {
 		} else if hasSuffix(filename, "/distinfo") {
 			haveDistinfo = true
 		}
-		pkg.checkLocallyModified(filename)
+		pkg.checkOwnerMaintainer(filename)
+		pkg.checkFreeze(filename)
 	}
 
 	if pkg.Pkgdir == "." {
@@ -1159,13 +1160,13 @@ func (pkg *Package) checkFileMakefileExt(filename string) {
 		sprintf("content can be queried using %q.", makeHelp("help")))
 }
 
-// checkLocallyModified checks files that are about to be committed.
+// checkOwnerMaintainer checks files that are about to be committed.
 // Depending on whether the package has a MAINTAINER or an OWNER,
 // the wording differs.
 //
 // Pkglint assumes that the local username is the same as the NetBSD
 // username, which fits most scenarios.
-func (pkg *Package) checkLocallyModified(filename string) {
+func (pkg *Package) checkOwnerMaintainer(filename string) {
 	if trace.Tracing {
 		defer trace.Call(filename)()
 	}
@@ -1206,6 +1207,23 @@ func (pkg *Package) checkLocallyModified(filename string) {
 			"See the pkgsrc guide, section \"Package components\",",
 			"keyword \"maintainer\", for more information.")
 	}
+}
+
+func (pkg *Package) checkFreeze(filename string) {
+	freezeStart := G.Pkgsrc.FreezeStart
+	if freezeStart == "" {
+		return
+	}
+
+	if !isLocallyModified(filename) || !fileExists(filename) {
+		return
+	}
+
+	line := NewLineWhole(filename)
+	line.Notef("Pkgsrc is frozen since %s.", freezeStart)
+	line.Explain(
+		"During a pkgsrc freeze, changes to pkgsrc should only be made very carefully.",
+		"See https://www.netbsd.org/developers/pkgsrc/ for the exact rules.")
 }
 
 func (pkg *Package) checkIncludeConditionally(mkline MkLine, indentation *Indentation) {

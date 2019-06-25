@@ -2264,7 +2264,7 @@ func (s *Suite) Test_Package_resolveIncludedFile__skipping(c *check.C) {
 }
 
 // In packages without specific MAINTAINER, everyone may commit changes.
-func (s *Suite) Test_Package_checkLocallyModified__no_maintainer(c *check.C) {
+func (s *Suite) Test_Package_checkOwnerMaintainer__no_maintainer(c *check.C) {
 	t := s.Init(c)
 
 	G.Username = "example-user"
@@ -2280,7 +2280,7 @@ func (s *Suite) Test_Package_checkLocallyModified__no_maintainer(c *check.C) {
 }
 
 // A package with a MAINTAINER may be edited by the maintainer itself.
-func (s *Suite) Test_Package_checkLocallyModified__maintainer_equal(c *check.C) {
+func (s *Suite) Test_Package_checkOwnerMaintainer__maintainer_equal(c *check.C) {
 	t := s.Init(c)
 
 	G.Username = "maintainer"
@@ -2296,7 +2296,7 @@ func (s *Suite) Test_Package_checkLocallyModified__maintainer_equal(c *check.C) 
 }
 
 // A package with a MAINTAINER may be edited by everyone, with care.
-func (s *Suite) Test_Package_checkLocallyModified__maintainer_unequal(c *check.C) {
+func (s *Suite) Test_Package_checkOwnerMaintainer__maintainer_unequal(c *check.C) {
 	t := s.Init(c)
 
 	G.Username = "example-user"
@@ -2314,7 +2314,7 @@ func (s *Suite) Test_Package_checkLocallyModified__maintainer_unequal(c *check.C
 }
 
 // A package with an OWNER may be edited by the owner itself.
-func (s *Suite) Test_Package_checkLocallyModified__owner_equal(c *check.C) {
+func (s *Suite) Test_Package_checkOwnerMaintainer__owner_equal(c *check.C) {
 	t := s.Init(c)
 
 	G.Username = "owner"
@@ -2329,7 +2329,7 @@ func (s *Suite) Test_Package_checkLocallyModified__owner_equal(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Package_checkLocallyModified__owner_unequal(c *check.C) {
+func (s *Suite) Test_Package_checkOwnerMaintainer__owner_unequal(c *check.C) {
 	t := s.Init(c)
 
 	G.Username = "example-user"
@@ -2347,7 +2347,7 @@ func (s *Suite) Test_Package_checkLocallyModified__owner_unequal(c *check.C) {
 }
 
 // In a package with both OWNER and MAINTAINER, OWNER wins.
-func (s *Suite) Test_Package_checkLocallyModified__both_owner_and_maintainer(c *check.C) {
+func (s *Suite) Test_Package_checkOwnerMaintainer__both(c *check.C) {
 	t := s.Init(c)
 
 	G.Username = "example-user"
@@ -2363,12 +2363,13 @@ func (s *Suite) Test_Package_checkLocallyModified__both_owner_and_maintainer(c *
 	t.CheckOutputLines(
 		"WARN: ~/category/package/Makefile: "+
 			"Don't commit changes to this file without asking the OWNER, owner@example.org.",
+		// FIXME: OWNER is stronger than MAINTAINER, therefore this note should disappear.
 		"NOTE: ~/category/package/Makefile: "+
 			"Please only commit changes that maintainer@example.org would approve.")
 }
 
 // Just for code coverage.
-func (s *Suite) Test_Package_checkLocallyModified__no_tracing(c *check.C) {
+func (s *Suite) Test_Package_checkOwnerMaintainer__no_tracing(c *check.C) {
 	t := s.Init(c)
 
 	G.Username = "example-user"
@@ -2387,7 +2388,7 @@ func (s *Suite) Test_Package_checkLocallyModified__no_tracing(c *check.C) {
 			"that maintainer@example.org would approve.")
 }
 
-func (s *Suite) Test_Package_checkLocallyModified__directory(c *check.C) {
+func (s *Suite) Test_Package_checkOwnerMaintainer__directory(c *check.C) {
 	t := s.Init(c)
 
 	G.Username = "example-user"
@@ -2410,6 +2411,28 @@ func (s *Suite) Test_Package_checkLocallyModified__directory(c *check.C) {
 		"NOTE: ~/category/package/Makefile: " +
 			"Please only commit changes that " +
 			"maintainer@example.org would approve.")
+}
+
+func (s *Suite) Test_Package_checkFreeze(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--explain")
+	pkg := t.SetUpPackage("category/package")
+	t.CreateFileLines("category/package/CVS/Entries",
+		"/Makefile//modified//")
+	t.CreateFileLines("doc/CHANGES-2018",
+		"\tmk/bsd.pkg.mk: started freeze for 2018Q2 [freezer 2018-03-20]")
+	t.FinishSetUp()
+
+	G.Check(pkg)
+
+	t.CheckOutputLines(
+		"NOTE: ~/category/package/Makefile: Pkgsrc is frozen since 2018-03-20.",
+		"",
+		"\tDuring a pkgsrc freeze, changes to pkgsrc should only be made very",
+		"\tcarefully. See https://www.netbsd.org/developers/pkgsrc/ for the",
+		"\texact rules.",
+		"")
 }
 
 // In practice the distinfo file can always be autofixed since it has

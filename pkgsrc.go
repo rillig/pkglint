@@ -33,10 +33,13 @@ type Pkgsrc struct {
 
 	PkgOptions map[string]string // "x11" => "Provides X11 support"
 
-	suggestedUpdates    []SuggestedUpdate   //
-	suggestedWipUpdates []SuggestedUpdate   //
-	LastChange          map[string]*Change  //
-	listVersions        map[string][]string // See ListVersions
+	suggestedUpdates    []SuggestedUpdate
+	suggestedWipUpdates []SuggestedUpdate
+
+	LastChange  map[string]*Change
+	FreezeStart string // e.g. "2018-01-01", or ""
+
+	listVersions map[string][]string // See Pkgsrc.ListVersions
 
 	// Variables that may be overridden by the pkgsrc user.
 	// They are typically defined in mk/defaults/mk.conf.
@@ -60,6 +63,7 @@ func NewPkgsrc(dir string) Pkgsrc {
 		nil,
 		nil,
 		make(map[string]*Change),
+		"",
 		make(map[string][]string),
 		NewScope(),
 		make(map[string]string),
@@ -512,6 +516,13 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename string) []*Change {
 
 		if hasPrefix(line.Text, "\tmk/") {
 			infra = true
+			if hasPrefix(line.Text, "\tmk/bsd.pkg.mk: started freeze for") {
+				if m, freezeDate := match1(line.Text, `(\d\d\d\d-\d\d-\d\d)\]$`); m {
+					src.FreezeStart = freezeDate
+				}
+			} else if hasPrefix(line.Text, "\tmk/bsd.pkg.mk: freeze ended for") {
+				src.FreezeStart = ""
+			}
 		}
 		if infra {
 			if hasSuffix(line.Text, "]") {
@@ -582,7 +593,6 @@ func (src *Pkgsrc) loadDocChanges() {
 		}
 	}
 
-	sort.Strings(filenames)
 	src.LastChange = make(map[string]*Change)
 	for _, filename := range filenames {
 		changes := src.loadDocChangesFromFile(docDir + "/" + filename)
