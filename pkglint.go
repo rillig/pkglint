@@ -784,11 +784,14 @@ func (pkglint *Pkglint) loadCvsEntries(filename string) map[string]CvsEntry {
 	if lines != nil {
 		entries = make(map[string]CvsEntry)
 		for _, line := range lines.Lines {
-			if hasPrefix(line.Text, "/") {
-				fields := strings.Split(line.Text, "/")
+			text := line.Text
+			if hasPrefix(text, "/") {
+				fields := strings.Split(text, "/")
 				if len(fields) == 6 {
 					entries[fields[1]] =
 						CvsEntry{fields[1], fields[2], fields[3], fields[4], fields[5]}
+				} else {
+					line.Errorf("Invalid line: %s", text)
 				}
 			}
 		}
