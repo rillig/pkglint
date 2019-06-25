@@ -1265,3 +1265,29 @@ func (s *Suite) Test_Pkglint_loadCvsEntries(c *check.C) {
 	t.CheckOutputLines(
 		"ERROR: ~/CVS/Entries:1: Invalid line: /invalid/")
 }
+
+func (s *Suite) Test_Pkglint_loadCvsEntries__with_Entries_Log(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("CVS/Entries",
+		"/invalid/",
+		"must be silently ignored",
+		"/name//modified//",
+		"/removed//modified//")
+
+	t.CreateFileLines("CVS/Entries.Log",
+		"A /invalid/",
+		"A /added//modified//",
+		"must be silently ignored",
+		"R /invalid/",
+		"R /removed//modified//")
+
+	t.Check(isCommitted(t.File("name")), equals, true)
+	t.Check(isCommitted(t.File("added")), equals, true)
+	t.Check(isCommitted(t.File("removed")), equals, false)
+
+	t.CheckOutputLines(
+		"ERROR: ~/CVS/Entries:1: Invalid line: /invalid/",
+		"ERROR: ~/CVS/Entries.Log:1: Invalid line: A /invalid/",
+		"ERROR: ~/CVS/Entries.Log:4: Invalid line: R /invalid/")
+}

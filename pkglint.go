@@ -779,25 +779,45 @@ func (pkglint *Pkglint) loadCvsEntries(filename string) map[string]CvsEntry {
 		return pkglint.cvsEntries
 	}
 
-	lines := Load(dir+"/CVS/Entries", 0)
 	var entries map[string]CvsEntry
+
+	handle := func(line Line, add bool, text string) {
+		if !hasPrefix(text, "/") {
+			return
+		}
+
+		fields := strings.Split(text, "/")
+		if len(fields) != 6 {
+			line.Errorf("Invalid line: %s", line.Text)
+			return
+		}
+
+		if add {
+			entries[fields[1]] = CvsEntry{fields[1], fields[2], fields[3], fields[4], fields[5]}
+		} else {
+			delete(entries, fields[1])
+		}
+	}
+
+	lines := Load(dir+"/CVS/Entries", 0)
 	if lines != nil {
 		entries = make(map[string]CvsEntry)
 		for _, line := range lines.Lines {
-			text := line.Text
-			if hasPrefix(text, "/") {
-				fields := strings.Split(text, "/")
-				if len(fields) == 6 {
-					entries[fields[1]] =
-						CvsEntry{fields[1], fields[2], fields[3], fields[4], fields[5]}
-				} else {
-					line.Errorf("Invalid line: %s", text)
+			handle(line, true, line.Text)
+		}
+
+		logLines := Load(dir+"/CVS/Entries.Log", 0)
+		if logLines != nil {
+			for _, line := range logLines.Lines {
+				text := line.Text
+				if hasPrefix(text, "A ") {
+					handle(line, true, text[2:])
+				} else if hasPrefix(text, "R ") {
+					handle(line, false, text[2:])
 				}
 			}
 		}
 	}
-
-	// TODO: Also load Entries.Log; see http://cvsman.com/cvs-1.12.12/cvs_19.php.
 
 	pkglint.cvsEntriesDir = dir
 	pkglint.cvsEntries = entries
