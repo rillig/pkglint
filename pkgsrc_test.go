@@ -925,8 +925,6 @@ func (s *Suite) Test_Pkgsrc__frozen(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
-	t.CreateFileLines("category/package/CVS/Entries",
-		"/Makefile/modified////")
 	t.CreateFileLines("doc/CHANGES-2018",
 		"\tmk/bsd.pkg.mk: started freeze for pkgsrc-2018Q2 branch [freezer 2018-03-25]")
 	t.FinishSetUp()
@@ -938,8 +936,6 @@ func (s *Suite) Test_Pkgsrc__not_frozen(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
-	t.CreateFileLines("category/package/CVS/Entries",
-		"/Makefile/modified////")
 	t.CreateFileLines("doc/CHANGES-2018",
 		"\tmk/bsd.pkg.mk: started freeze for pkgsrc-2018Q2 branch [freezer 2018-03-25]",
 		"\tmk/bsd.pkg.mk: freeze ended for pkgsrc-2018Q2 branch [freezer 2018-03-27]")
@@ -952,8 +948,6 @@ func (s *Suite) Test_Pkgsrc__frozen_with_typo(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
-	t.CreateFileLines("category/package/CVS/Entries",
-		"/Makefile/modified////")
 	t.CreateFileLines("doc/CHANGES-2018",
 		// The closing bracket is missing.
 		"\tmk/bsd.pkg.mk: started freeze for pkgsrc-2018Q2 branch [freezer 2018-03-25")

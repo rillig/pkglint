@@ -481,7 +481,6 @@ func (s *Suite) Test_isLocallyModified(c *check.C) {
 	modified := t.CreateFileLines("modified")
 
 	t.CreateFileLines("CVS/Entries",
-		"//", // Just for code coverage.
 		"/unmodified//"+modTime.Format(time.ANSIC)+"//",
 		"/modified//"+modTime.Format(time.ANSIC)+"//",
 		"/enoent//"+modTime.Format(time.ANSIC)+"//")
