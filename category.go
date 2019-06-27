@@ -23,7 +23,7 @@ func CheckdirCategory(dir string) {
 	}
 	mlex.SkipEmptyOrNote()
 
-	if mlex.SkipIf(func(mkline MkLine) bool { return mkline.IsVarassign() && mkline.Varname() == "COMMENT" }) {
+	if mlex.SkipIf(func(mkline *MkLineImpl) bool { return mkline.IsVarassign() && mkline.Varname() == "COMMENT" }) {
 		mkline := mlex.PreviousMkLine()
 
 		lex := textproc.NewLexer(mkline.Value())
@@ -50,7 +50,7 @@ func CheckdirCategory(dir string) {
 
 	type subdir struct {
 		name string
-		line MkLine
+		line *MkLineImpl
 	}
 
 	// And now to the most complicated part of the category Makefiles,
@@ -60,7 +60,7 @@ func CheckdirCategory(dir string) {
 	fSubdirs := getSubdirs(dir)
 	var mSubdirs []subdir
 
-	seen := make(map[string]MkLine)
+	seen := make(map[string]*MkLineImpl)
 	for !mlex.EOF() {
 		mkline := mlex.CurrentMkLine()
 

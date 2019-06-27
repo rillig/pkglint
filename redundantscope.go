@@ -28,12 +28,12 @@ func NewRedundantScope() *RedundantScope {
 }
 
 func (s *RedundantScope) Check(mklines MkLines) {
-	mklines.ForEach(func(mkline MkLine) {
+	mklines.ForEach(func(mkline *MkLineImpl) {
 		s.checkLine(mklines, mkline)
 	})
 }
 
-func (s *RedundantScope) checkLine(mklines MkLines, mkline MkLine) {
+func (s *RedundantScope) checkLine(mklines MkLines, mkline *MkLineImpl) {
 	s.updateIncludePath(mkline)
 
 	switch {
@@ -44,7 +44,7 @@ func (s *RedundantScope) checkLine(mklines MkLines, mkline MkLine) {
 	s.handleVarUse(mkline)
 }
 
-func (s *RedundantScope) updateIncludePath(mkline MkLine) {
+func (s *RedundantScope) updateIncludePath(mkline *MkLineImpl) {
 	if mkline.firstLine == 1 {
 		s.includePath.push(mkline.Location.Filename)
 	} else {
@@ -52,7 +52,7 @@ func (s *RedundantScope) updateIncludePath(mkline MkLine) {
 	}
 }
 
-func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
+func (s *RedundantScope) handleVarassign(mkline *MkLineImpl, ind *Indentation) {
 	varname := mkline.Varname()
 	info := s.get(varname)
 
@@ -154,7 +154,7 @@ func (s *RedundantScope) handleVarassign(mkline MkLine, ind *Indentation) {
 	}
 }
 
-func (s *RedundantScope) handleVarUse(mkline MkLine) {
+func (s *RedundantScope) handleVarUse(mkline *MkLineImpl) {
 	switch {
 	case mkline.IsVarassign():
 		mkline.ForEachUsed(func(varUse *MkVarUse, time vucTime) {
@@ -195,7 +195,7 @@ func (s *RedundantScope) access(varname string) {
 	info.includePaths = append(info.includePaths, s.includePath.copy())
 }
 
-func (s *RedundantScope) onRedundant(redundant MkLine, because MkLine) {
+func (s *RedundantScope) onRedundant(redundant *MkLineImpl, because *MkLineImpl) {
 	if redundant.Op() == opAssignDefault {
 		redundant.Notef("Default assignment of %s has no effect because of %s.",
 			because.Varname(), redundant.RefTo(because))
@@ -205,7 +205,7 @@ func (s *RedundantScope) onRedundant(redundant MkLine, because MkLine) {
 	}
 }
 
-func (s *RedundantScope) onOverwrite(overwritten MkLine, by MkLine) {
+func (s *RedundantScope) onOverwrite(overwritten *MkLineImpl, by *MkLineImpl) {
 	overwritten.Warnf("Variable %s is overwritten in %s.",
 		overwritten.Varname(), overwritten.RefTo(by))
 	overwritten.Explain(

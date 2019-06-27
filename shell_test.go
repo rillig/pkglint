@@ -144,7 +144,7 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine(c *check.C) {
 			"\t"+shellCommand)
 		ck := NewShellLineChecker(mklines, mklines.mklines[0])
 
-		mklines.ForEach(func(mkline MkLine) {
+		mklines.ForEach(func(mkline *MkLineImpl) {
 			ck.CheckShellCommandLine(ck.mkline.ShellCommand())
 		})
 
@@ -262,7 +262,7 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__strip(c *check.C) {
 		mklines := t.NewMkLines("filename.mk",
 			"\t"+shellCommand)
 
-		mklines.ForEach(func(mkline MkLine) {
+		mklines.ForEach(func(mkline *MkLineImpl) {
 			ck := NewShellLineChecker(mklines, mkline)
 			ck.CheckShellCommandLine(mkline.ShellCommand())
 		})
@@ -388,12 +388,12 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__implementation(c *c
 	c.Check(tokens, deepEquals, []string{text})
 	c.Check(rest, equals, "")
 
-	mklines.ForEach(func(mkline MkLine) { ck.CheckWord(text, false, RunTime) })
+	mklines.ForEach(func(mkline *MkLineImpl) { ck.CheckWord(text, false, RunTime) })
 
 	t.CheckOutputLines(
 		"WARN: filename.mk:1: Unknown shell command \"echo\".")
 
-	mklines.ForEach(func(mkline MkLine) { ck.CheckShellCommandLine(text) })
+	mklines.ForEach(func(mkline *MkLineImpl) { ck.CheckShellCommandLine(text) })
 
 	// No parse errors
 	t.CheckOutputLines(
@@ -1376,7 +1376,7 @@ func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs(c *check.C) {
 			"\t"+shellCommand)
 		ck := NewShellLineChecker(mklines, mklines.mklines[0])
 
-		mklines.ForEach(func(mkline MkLine) {
+		mklines.ForEach(func(mkline *MkLineImpl) {
 			ck.CheckShellCommandLine(ck.mkline.ShellCommand())
 		})
 

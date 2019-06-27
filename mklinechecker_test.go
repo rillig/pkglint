@@ -688,7 +688,7 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 	test := func(cond string, output ...string) {
 		mklines := t.NewMkLines("filename.mk",
 			cond)
-		mklines.ForEach(func(mkline MkLine) {
+		mklines.ForEach(func(mkline *MkLineImpl) {
 			MkLineChecker{mklines, mkline}.checkDirectiveCond()
 		})
 		t.CheckOutput(output)
@@ -1612,7 +1612,7 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePkgdir(c *check.C) {
 		mklines := t.SetUpFileMkLines("category/package/Makefile",
 			"# dummy")
 
-		checkRelativePkgdir := func(mkline MkLine) {
+		checkRelativePkgdir := func(mkline *MkLineImpl) {
 			MkLineChecker{mklines, mkline}.CheckRelativePkgdir(relativePkgdir)
 		}
 

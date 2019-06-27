@@ -339,7 +339,7 @@ func (fix *Autofix) Apply() {
 	reset()
 }
 
-func (fix *Autofix) Realign(mkline MkLine, newWidth int) {
+func (fix *Autofix) Realign(mkline *MkLineImpl, newWidth int) {
 
 	// XXX: Check whether this method can be implemented as Custom fix.
 	// This complicated code should not be in the Autofix type.

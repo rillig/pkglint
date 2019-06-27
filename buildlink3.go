@@ -9,8 +9,8 @@ import (
 type Buildlink3Checker struct {
 	mklines          MkLines
 	pkgbase          string
-	pkgbaseLine      MkLine
-	abiLine, apiLine MkLine
+	pkgbaseLine      *MkLineImpl
+	abiLine, apiLine *MkLineImpl
 	abi, api         *DependencyPattern
 }
 
@@ -28,7 +28,7 @@ func (ck *Buildlink3Checker) Check() {
 
 	llex := NewMkLinesLexer(mklines)
 
-	for llex.SkipIf(MkLine.IsComment) {
+	for llex.SkipIf((*MkLineImpl).IsComment) {
 		line := llex.PreviousLine()
 		// See pkgtools/createbuildlink/files/createbuildlink
 		if hasPrefix(line.Text, "# XXX This file was created automatically") {
@@ -94,7 +94,7 @@ func (ck *Buildlink3Checker) checkFirstParagraph(mlex *MkLinesLexer) bool {
 	return true
 }
 
-func (ck *Buildlink3Checker) checkUniquePkgbase(pkgbase string, mkline MkLine) {
+func (ck *Buildlink3Checker) checkUniquePkgbase(pkgbase string, mkline *MkLineImpl) {
 	prev := G.InterPackage.Bl3(pkgbase, &mkline.Location)
 	if prev == nil {
 		return
@@ -182,7 +182,7 @@ func (ck *Buildlink3Checker) checkMainPart(mlex *MkLinesLexer) bool {
 	return true
 }
 
-func (ck *Buildlink3Checker) checkVarassign(mlex *MkLinesLexer, mkline MkLine, pkgbase string) {
+func (ck *Buildlink3Checker) checkVarassign(mlex *MkLinesLexer, mkline *MkLineImpl, pkgbase string) {
 	varname, value := mkline.Varname(), mkline.Value()
 	doCheck := false
 
@@ -229,7 +229,7 @@ func (ck *Buildlink3Checker) checkVarassign(mlex *MkLinesLexer, mkline MkLine, p
 	}
 }
 
-func (ck *Buildlink3Checker) checkVaruseInPkgbase(pkgbase string, pkgbaseLine MkLine) {
+func (ck *Buildlink3Checker) checkVaruseInPkgbase(pkgbase string, pkgbaseLine *MkLineImpl) {
 	tokens, _ := pkgbaseLine.ValueTokens()
 	for _, token := range tokens {
 		if token.Varuse == nil {

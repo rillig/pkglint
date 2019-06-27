@@ -17,14 +17,14 @@ import (
 // side variable that is of some shell-like type; see Vartype.IsShell.
 type ShellLineChecker struct {
 	MkLines MkLines
-	mkline  MkLine
+	mkline  *MkLineImpl
 
 	// checkVarUse is set to false when checking a single shell word
 	// in order to skip duplicate warnings in variable assignments.
 	checkVarUse bool
 }
 
-func NewShellLineChecker(mklines MkLines, mkline MkLine) *ShellLineChecker {
+func NewShellLineChecker(mklines MkLines, mkline *MkLineImpl) *ShellLineChecker {
 	assertNotNil(mklines)
 	return &ShellLineChecker{mklines, mkline, true}
 }

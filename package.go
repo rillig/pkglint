@@ -26,11 +26,11 @@ type Package struct {
 	EffectivePkgname     string       // PKGNAME or DISTNAME from the package Makefile, including nb13
 	EffectivePkgbase     string       // EffectivePkgname without the version
 	EffectivePkgversion  string       // The version part of the effective PKGNAME, excluding nb13
-	EffectivePkgnameLine MkLine       // The origin of the three Effective* values
+	EffectivePkgnameLine *MkLineImpl  // The origin of the three Effective* values
 	Plist                PlistContent // Files and directories mentioned in the PLIST files
 
 	vars Scope
-	bl3  map[string]MkLine // buildlink3.mk name => line; contains only buildlink3.mk files that are directly included.
+	bl3  map[string]*MkLineImpl // buildlink3.mk name => line; contains only buildlink3.mk files that are directly included.
 
 	// Remembers the Makefile fragments that have already been included.
 	// The key to the map is the filename relative to the package directory.
@@ -48,10 +48,10 @@ type Package struct {
 
 	// Files from .include lines that are nested inside .if.
 	// They often depend on OPSYS or on the existence of files in the build environment.
-	conditionalIncludes map[string]MkLine
+	conditionalIncludes map[string]*MkLineImpl
 	// Files from .include lines that are not nested.
 	// These are cross-checked with buildlink3.mk whether they are unconditional there, too.
-	unconditionalIncludes map[string]MkLine
+	unconditionalIncludes map[string]*MkLineImpl
 
 	IgnoreMissingPatches bool // In distinfo, don't warn about patches that cannot be found.
 }
@@ -72,10 +72,10 @@ func NewPackage(dir string) *Package {
 		DistinfoFile:          "${PKGDIR}/distinfo", // TODO: Redundant, see the vars.Fallback below.
 		Plist:                 NewPlistContent(),
 		vars:                  NewScope(),
-		bl3:                   make(map[string]MkLine),
+		bl3:                   make(map[string]*MkLineImpl),
 		included:              Once{},
-		conditionalIncludes:   make(map[string]MkLine),
-		unconditionalIncludes: make(map[string]MkLine),
+		conditionalIncludes:   make(map[string]*MkLineImpl),
+		unconditionalIncludes: make(map[string]*MkLineImpl),
 	}
 	pkg.vars.DefineAll(G.Pkgsrc.UserDefinedVars)
 
@@ -166,7 +166,7 @@ func (pkg *Package) checkLinesBuildlink3Inclusion(mklines MkLines) {
 	}
 
 	// Collect all the included buildlink3.mk files from the file.
-	includedFiles := make(map[string]MkLine)
+	includedFiles := make(map[string]*MkLineImpl)
 	for _, mkline := range mklines.mklines {
 		if mkline.IsInclude() {
 			includedFile := mkline.IncludedFile()
@@ -387,12 +387,12 @@ func (pkg *Package) parse(mklines MkLines, allLines MkLines, includingFileForUse
 
 	result := true
 
-	lineAction := func(mkline MkLine) bool {
+	lineAction := func(mkline *MkLineImpl) bool {
 		result = pkg.parseLine(mklines, mkline, allLines)
 		return result
 	}
 
-	atEnd := func(mkline MkLine) {}
+	atEnd := func(mkline *MkLineImpl) {}
 	mklines.ForEachEnd(lineAction, atEnd)
 
 	if includingFileForUsedCheck != "" {
@@ -414,7 +414,7 @@ func (pkg *Package) parse(mklines MkLines, allLines MkLines, includingFileForUse
 	return result
 }
 
-func (pkg *Package) parseLine(mklines MkLines, mkline MkLine, allLines MkLines) bool {
+func (pkg *Package) parseLine(mklines MkLines, mkline *MkLineImpl, allLines MkLines) bool {
 	allLines.mklines = append(allLines.mklines, mkline)
 	allLines.lines.Lines = append(allLines.lines.Lines, mkline.Line)
 
@@ -461,7 +461,7 @@ func (pkg *Package) parseLine(mklines MkLines, mkline MkLine, allLines MkLines) 
 // the included file is not processed further for whatever reason. But if
 // skip is false, the file could not be read and an appropriate error message
 // has already been logged.
-func (pkg *Package) loadIncluded(mkline MkLine, includingFile string) (includedMklines MkLines, skip bool) {
+func (pkg *Package) loadIncluded(mkline *MkLineImpl, includingFile string) (includedMklines MkLines, skip bool) {
 	includedFile := pkg.resolveIncludedFile(mkline, includingFile)
 
 	if includedFile == "" {
@@ -548,7 +548,7 @@ func (*Package) diveInto(includingFile string, includedFile string) bool {
 	return false
 }
 
-func (pkg *Package) collectSeenInclude(mkline MkLine, includedFile string) {
+func (pkg *Package) collectSeenInclude(mkline *MkLineImpl, includedFile string) {
 	if mkline.Basename != "Makefile" {
 		return
 	}
@@ -571,7 +571,7 @@ func (pkg *Package) collectSeenInclude(mkline MkLine, includedFile string) {
 
 // resolveIncludedFile resolves Makefile variables such as ${PKGPATH} to
 // their actual values.
-func (pkg *Package) resolveIncludedFile(mkline MkLine, includingFilename string) string {
+func (pkg *Package) resolveIncludedFile(mkline *MkLineImpl, includingFilename string) string {
 
 	// TODO: resolveVariableRefs uses G.Pkg implicitly. It should be made explicit.
 	// TODO: Try to combine resolveVariableRefs and ResolveVarsInRelativePath.
@@ -734,7 +734,7 @@ func (pkg *Package) checkGnuConfigureUseLanguages(s *RedundantScope) {
 		return
 	}
 
-	var wrongLines []MkLine
+	var wrongLines []*MkLineImpl
 	for _, mkline := range useLanguages.vari.WriteLocations() {
 
 		if G.Pkgsrc.IsInfra(mkline.Line.Filename) {
@@ -989,7 +989,7 @@ func (pkg *Package) CheckVarorder(mklines MkLines) {
 		{"TOOL_DEPENDS", many},
 		{"DEPENDS", many}}
 
-	relevantLines := (func() []MkLine {
+	relevantLines := (func() []*MkLineImpl {
 		firstRelevant := -1
 		lastRelevant := -1
 
@@ -1226,7 +1226,7 @@ func (pkg *Package) checkFreeze(filename string) {
 		"See https://www.netbsd.org/developers/pkgsrc/ for the exact rules.")
 }
 
-func (pkg *Package) checkIncludeConditionally(mkline MkLine, indentation *Indentation) {
+func (pkg *Package) checkIncludeConditionally(mkline *MkLineImpl, indentation *Indentation) {
 	mkline.SetConditionalVars(indentation.Varnames())
 
 	includedFile := mkline.IncludedFile()
@@ -1291,7 +1291,7 @@ func (pkg *Package) checkUseLanguagesCompilerMk(mklines MkLines) {
 
 	var seen Once
 
-	handleVarassign := func(mkline MkLine) {
+	handleVarassign := func(mkline *MkLineImpl) {
 		if mkline.Varname() != "USE_LANGUAGES" {
 			return
 		}
@@ -1311,7 +1311,7 @@ func (pkg *Package) checkUseLanguagesCompilerMk(mklines MkLines) {
 			"The file compiler.mk guards itself against multiple inclusion.")
 	}
 
-	handleInclude := func(mkline MkLine) {
+	handleInclude := func(mkline *MkLineImpl) {
 		dirname, _ := path.Split(mkline.Filename)
 		dirname = cleanpath(dirname)
 		fullIncluded := dirname + "/" + mkline.IncludedFile()
@@ -1320,7 +1320,7 @@ func (pkg *Package) checkUseLanguagesCompilerMk(mklines MkLines) {
 		seen.FirstTime(relIncludedFile)
 	}
 
-	mklines.ForEach(func(mkline MkLine) {
+	mklines.ForEach(func(mkline *MkLineImpl) {
 		switch {
 		case mkline.IsVarassign():
 			handleVarassign(mkline)

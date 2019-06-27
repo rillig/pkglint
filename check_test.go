@@ -642,7 +642,7 @@ func (s *Suite) Test_Tester_SetUpHierarchy(c *check.C) {
 
 	mklines := get("including.mk")
 
-	mklines.ForEach(func(mkline MkLine) { mkline.Notef("Text is: %s", mkline.Text) })
+	mklines.ForEach(func(mkline *MkLineImpl) { mkline.Notef("Text is: %s", mkline.Text) })
 
 	t.CheckOutputLines(
 		"NOTE: including.mk:1: Text is: .include \"other.mk\"",
@@ -801,7 +801,7 @@ func (t *Tester) NewLine(filename string, lineno int, text string) *Line {
 }
 
 // NewMkLine creates an in-memory line in the Makefile format with the given text.
-func (t *Tester) NewMkLine(filename string, lineno int, text string) MkLine {
+func (t *Tester) NewMkLine(filename string, lineno int, text string) *MkLineImpl {
 	basename := path.Base(filename)
 	assertf(
 		hasSuffix(basename, ".mk") ||

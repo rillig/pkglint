@@ -12,8 +12,6 @@ import (
 // There are several types of lines.
 // The most common types in pkgsrc are variable assignments,
 // shell commands and directives like .if and .for.
-type MkLine = *MkLineImpl
-
 type MkLineImpl struct {
 	*Line
 	data interface{} // One of the following mkLine* types
@@ -44,10 +42,10 @@ type mkLineDirectiveImpl struct {
 	indent    string // the space between the leading "." and the directive
 	directive string // "if", "else", "for", etc.
 	args      string
-	comment   string   // mainly interesting for .endif and .endfor
-	elseLine  MkLine   // for .if (filled in later)
-	cond      MkCond   // for .if and .elif (filled in on first access)
-	fields    []string // the arguments for the .for loop (filled in on first access)
+	comment   string      // mainly interesting for .endif and .endfor
+	elseLine  *MkLineImpl // for .if (filled in later)
+	cond      MkCond      // for .if and .elif (filled in on first access)
+	fields    []string    // the arguments for the .for loop (filled in on first access)
 }
 type mkLineInclude = *mkLineIncludeImpl // See https://github.com/golang/go/issues/28045
 type mkLineIncludeImpl struct {
@@ -114,7 +112,7 @@ func (p MkLineParser) Parse(line *Line) *MkLineImpl {
 	return &MkLineImpl{line, nil}
 }
 
-func (p MkLineParser) parseVarassign(line *Line, data mkLineSplitResult) MkLine {
+func (p MkLineParser) parseVarassign(line *Line, data mkLineSplitResult) *MkLineImpl {
 	m, a := p.MatchVarassign(line, line.Text, data)
 	if !m {
 		return nil
@@ -150,11 +148,11 @@ func (p MkLineParser) parseVarassign(line *Line, data mkLineSplitResult) MkLine 
 	return &MkLineImpl{line, a}
 }
 
-func (p MkLineParser) parseShellcmd(line *Line) MkLine {
+func (p MkLineParser) parseShellcmd(line *Line) *MkLineImpl {
 	return &MkLineImpl{line, mkLineShell{line.Text[1:]}}
 }
 
-func (p MkLineParser) parseCommentOrEmpty(line *Line) MkLine {
+func (p MkLineParser) parseCommentOrEmpty(line *Line) *MkLineImpl {
 	trimmedText := trimHspace(line.Text)
 
 	if strings.HasPrefix(trimmedText, "#") {
@@ -168,7 +166,7 @@ func (p MkLineParser) parseCommentOrEmpty(line *Line) MkLine {
 	return nil
 }
 
-func (p MkLineParser) parseInclude(line *Line) MkLine {
+func (p MkLineParser) parseInclude(line *Line) *MkLineImpl {
 	m, indent, directive, includedFile := MatchMkInclude(line.Text)
 	if !m {
 		return nil
@@ -177,7 +175,7 @@ func (p MkLineParser) parseInclude(line *Line) MkLine {
 	return &MkLineImpl{line, &mkLineIncludeImpl{directive == "include", false, indent, includedFile, nil}}
 }
 
-func (p MkLineParser) parseSysinclude(line *Line) MkLine {
+func (p MkLineParser) parseSysinclude(line *Line) *MkLineImpl {
 	m, indent, directive, includedFile := match3(line.Text, `^\.([\t ]*)(s?include)[\t ]+<([^>]+)>[\t ]*(?:#.*)?$`)
 	if !m {
 		return nil
@@ -186,7 +184,7 @@ func (p MkLineParser) parseSysinclude(line *Line) MkLine {
 	return &MkLineImpl{line, &mkLineIncludeImpl{directive == "include", true, indent, includedFile, nil}}
 }
 
-func (p MkLineParser) parseDependency(line *Line) MkLine {
+func (p MkLineParser) parseDependency(line *Line) *MkLineImpl {
 	// XXX: Replace this regular expression with proper parsing.
 	// There might be a ${VAR:M*.c} in these variables, which the below regular expression cannot handle.
 	m, targets, whitespace, sources := match3(line.Text, `^([^\t :]+(?:[\t ]*[^\t :]+)*)([\t ]*):[\t ]*([^#]*?)(?:[\t ]*#.*)?$`)
@@ -200,7 +198,7 @@ func (p MkLineParser) parseDependency(line *Line) MkLine {
 	return &MkLineImpl{line, mkLineDependency{targets, sources}}
 }
 
-func (p MkLineParser) parseMergeConflict(line *Line) MkLine {
+func (p MkLineParser) parseMergeConflict(line *Line) *MkLineImpl {
 	if !matches(line.Text, `^(<<<<<<<|=======|>>>>>>>)`) {
 		return nil
 	}
@@ -374,7 +372,7 @@ func (mkline *MkLineImpl) DirectiveComment() string { return mkline.data.(mkLine
 
 func (mkline *MkLineImpl) HasElseBranch() bool { return mkline.data.(mkLineDirective).elseLine != nil }
 
-func (mkline *MkLineImpl) SetHasElseBranch(elseLine MkLine) {
+func (mkline *MkLineImpl) SetHasElseBranch(elseLine *MkLineImpl) {
 	data := mkline.data.(mkLineDirective)
 	data.elseLine = elseLine
 	mkline.data = data
@@ -694,7 +692,7 @@ func (mkline *MkLineImpl) ExplainRelativeDirs() {
 //
 // If there is a type mismatch when calling this function, try to add ".line" to
 // either the method receiver or the other line.
-func (mkline *MkLineImpl) RefTo(other MkLine) string {
+func (mkline *MkLineImpl) RefTo(other *MkLineImpl) string {
 	return mkline.Line.RefTo(other.Line)
 }
 
@@ -840,7 +838,7 @@ func (p MkLineParser) split(line *Line, text string) mkLineSplitResult {
 	return mkLineSplitResult{mainTrimmed, tokens, spaceBeforeComment, hasComment, comment}
 }
 
-func (p MkLineParser) parseDirective(line *Line, data mkLineSplitResult) MkLine {
+func (p MkLineParser) parseDirective(line *Line, data mkLineSplitResult) *MkLineImpl {
 	text := line.Text
 	if !hasPrefix(text, ".") {
 		return nil
@@ -1225,10 +1223,10 @@ func (ind *Indentation) RememberUsedVariables(cond MkCond) {
 }
 
 type indentationLevel struct {
-	mkline          MkLine   // The line in which the indentation started; the .if/.for
-	depth           int      // Number of space characters; always a multiple of 2
-	args            string   // The arguments from the .if or .for, or the latest .elif
-	conditionalVars []string // Variables on which the current path depends
+	mkline          *MkLineImpl // The line in which the indentation started; the .if/.for
+	depth           int         // Number of space characters; always a multiple of 2
+	args            string      // The arguments from the .if or .for, or the latest .elif
+	conditionalVars []string    // Variables on which the current path depends
 
 	// Files whose existence has been checked in an if branch that is
 	// related to the current indentation. After a .if exists(fname),
@@ -1263,7 +1261,7 @@ func (ind *Indentation) Pop() {
 	ind.levels = ind.levels[:ind.Len()-1]
 }
 
-func (ind *Indentation) Push(mkline MkLine, indent int, condition string) {
+func (ind *Indentation) Push(mkline *MkLineImpl, indent int, condition string) {
 	assertf(mkline.IsDirective(), "Indentation line must be a directive.")
 	ind.levels = append(ind.levels, indentationLevel{mkline, indent, condition, nil, nil})
 }
@@ -1351,7 +1349,7 @@ func (ind *Indentation) HasExists(filename string) bool {
 	return false
 }
 
-func (ind *Indentation) TrackBefore(mkline MkLine) {
+func (ind *Indentation) TrackBefore(mkline *MkLineImpl) {
 	if !mkline.IsDirective() {
 		return
 	}
@@ -1365,7 +1363,7 @@ func (ind *Indentation) TrackBefore(mkline MkLine) {
 	}
 }
 
-func (ind *Indentation) TrackAfter(mkline MkLine) {
+func (ind *Indentation) TrackAfter(mkline *MkLineImpl) {
 	if !mkline.IsDirective() {
 		return
 	}

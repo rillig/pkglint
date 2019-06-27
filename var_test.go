@@ -222,7 +222,7 @@ func (s *Suite) Test_Var_Write__conditional_without_variables(c *check.C) {
 		".endif")
 
 	scope := NewRedundantScope()
-	mklines.ForEach(func(mkline MkLine) {
+	mklines.ForEach(func(mkline *MkLineImpl) {
 		if mkline.IsVarassign() {
 			t.Check(scope.get("VAR").vari.Conditional(), equals, false)
 		}
@@ -321,7 +321,7 @@ func (s *Suite) Test_Var_ReadLocations(c *check.C) {
 	mkline123 := t.NewMkLine("read.mk", 123, "OTHER=\t${VAR}")
 	v.Read(mkline123)
 
-	t.Check(v.ReadLocations(), deepEquals, []MkLine{mkline123})
+	t.Check(v.ReadLocations(), deepEquals, []*MkLineImpl{mkline123})
 
 	mkline124 := t.NewMkLine("read.mk", 124, "OTHER=\t${VAR} ${VAR}")
 	v.Read(mkline124)
@@ -329,7 +329,7 @@ func (s *Suite) Test_Var_ReadLocations(c *check.C) {
 
 	// For now, count every read of the variable. I'm not yet sure
 	// whether that's the best way or whether to make the lines unique.
-	t.Check(v.ReadLocations(), deepEquals, []MkLine{mkline123, mkline124, mkline124})
+	t.Check(v.ReadLocations(), deepEquals, []*MkLineImpl{mkline123, mkline124, mkline124})
 }
 
 func (s *Suite) Test_Var_WriteLocations(c *check.C) {
@@ -342,7 +342,7 @@ func (s *Suite) Test_Var_WriteLocations(c *check.C) {
 	mkline123 := t.NewMkLine("write.mk", 123, "VAR=\tvalue")
 	v.Write(mkline123, false)
 
-	t.Check(v.WriteLocations(), deepEquals, []MkLine{mkline123})
+	t.Check(v.WriteLocations(), deepEquals, []*MkLineImpl{mkline123})
 
 	// Multiple writes from the same line may happen because of a .for loop.
 	mkline125 := t.NewMkLine("write.mk", 125, "VAR+=\t${var}")
@@ -351,7 +351,7 @@ func (s *Suite) Test_Var_WriteLocations(c *check.C) {
 
 	// For now, count every write of the variable. I'm not yet sure
 	// whether that's the best way or whether to make the lines unique.
-	t.Check(v.WriteLocations(), deepEquals, []MkLine{mkline123, mkline125, mkline125})
+	t.Check(v.WriteLocations(), deepEquals, []*MkLineImpl{mkline123, mkline125, mkline125})
 }
 
 func (s *Suite) Test_Var_Refs(c *check.C) {

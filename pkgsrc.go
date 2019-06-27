@@ -301,7 +301,7 @@ func (src *Pkgsrc) loadTools() {
 
 	for _, basename := range toolFiles {
 		mklines := src.LoadMk("mk/tools/"+basename, MustSucceed|NotEmpty)
-		mklines.ForEach(func(mkline MkLine) {
+		mklines.ForEach(func(mkline *MkLineImpl) {
 			tools.ParseToolLine(mklines, mkline, true, !mklines.indentation.IsConditional())
 		})
 	}
@@ -309,7 +309,7 @@ func (src *Pkgsrc) loadTools() {
 	for _, relativeName := range [...]string{"mk/bsd.prefs.mk", "mk/bsd.pkg.mk"} {
 
 		mklines := src.LoadMk(relativeName, MustSucceed|NotEmpty)
-		mklines.ForEach(func(mkline MkLine) {
+		mklines.ForEach(func(mkline *MkLineImpl) {
 			if mkline.IsVarassign() {
 				varname := mkline.Varname()
 				switch varname {
@@ -342,7 +342,7 @@ func (src *Pkgsrc) loadUntypedVars() {
 	// Setting guessed to false prevents the vartype.guessed case in MkLineChecker.CheckVaruse.
 	unknownType := NewVartype(BtUnknown, NoVartypeOptions, NewACLEntry("*", aclpAll))
 
-	define := func(varcanon string, mkline MkLine) {
+	define := func(varcanon string, mkline *MkLineImpl) {
 		switch {
 		case src.vartypes.DefinedCanon(varcanon):
 			// Already defined, can also be a tool.

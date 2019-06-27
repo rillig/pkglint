@@ -8,17 +8,17 @@ import (
 type MkLines = *MkLinesImpl
 
 type MkLinesImpl struct {
-	mklines       []MkLine
+	mklines       []*MkLineImpl
 	lines         Lines
-	target        string            // Current make(1) target; only available during checkAll
-	vars          Scope             //
-	buildDefs     map[string]bool   // Variables that are registered in BUILD_DEFS, to ensure that all user-defined variables are added to it.
-	plistVarAdded map[string]MkLine // Identifiers that are added to PLIST_VARS.
-	plistVarSet   map[string]MkLine // Identifiers for which PLIST.${id} is defined.
-	plistVarSkip  bool              // True if any of the PLIST_VARS identifiers refers to a variable.
-	Tools         *Tools            // Tools defined in file scope.
-	indentation   *Indentation      // Indentation depth of preprocessing directives; only available during MkLines.ForEach.
-	forVars       map[string]bool   // The variables currently used in .for loops; only available during MkLines.checkAll.
+	target        string                 // Current make(1) target; only available during checkAll
+	vars          Scope                  //
+	buildDefs     map[string]bool        // Variables that are registered in BUILD_DEFS, to ensure that all user-defined variables are added to it.
+	plistVarAdded map[string]*MkLineImpl // Identifiers that are added to PLIST_VARS.
+	plistVarSet   map[string]*MkLineImpl // Identifiers for which PLIST.${id} is defined.
+	plistVarSkip  bool                   // True if any of the PLIST_VARS identifiers refers to a variable.
+	Tools         *Tools                 // Tools defined in file scope.
+	indentation   *Indentation           // Indentation depth of preprocessing directives; only available during MkLines.ForEach.
+	forVars       map[string]bool        // The variables currently used in .for loops; only available during MkLines.checkAll.
 	once          Once
 
 	// TODO: Consider extracting plistVarAdded, plistVarSet, plistVarSkip into an own type.
@@ -26,7 +26,7 @@ type MkLinesImpl struct {
 }
 
 func NewMkLines(lines Lines) MkLines {
-	mklines := make([]MkLine, lines.Len())
+	mklines := make([]*MkLineImpl, lines.Len())
 	for i, line := range lines.Lines {
 		mklines[i] = MkLineParser{}.Parse(line)
 	}
@@ -40,8 +40,8 @@ func NewMkLines(lines Lines) MkLines {
 		"",
 		NewScope(),
 		make(map[string]bool),
-		make(map[string]MkLine),
-		make(map[string]MkLine),
+		make(map[string]*MkLineImpl),
+		make(map[string]*MkLineImpl),
 		false,
 		tools,
 		nil,
@@ -74,7 +74,7 @@ func NewMkLines(lines Lines) MkLines {
 
 // UseVar remembers that the given variable is used in the given line.
 // This controls the "defined but not used" warning.
-func (mklines *MkLinesImpl) UseVar(mkline MkLine, varname string, time vucTime) {
+func (mklines *MkLinesImpl) UseVar(mkline *MkLineImpl, varname string, time vucTime) {
 	mklines.vars.Use(varname, mkline, time)
 	if G.Pkg != nil {
 		G.Pkg.vars.Use(varname, mkline, time)
@@ -119,7 +119,7 @@ func (mklines *MkLinesImpl) checkAll() {
 	var varalign VaralignBlock
 	isHacksMk := mklines.lines.BaseName == "hacks.mk"
 
-	lineAction := func(mkline MkLine) bool {
+	lineAction := func(mkline *MkLineImpl) bool {
 		if isHacksMk {
 			// Needs to be set here because it is reset in MkLines.ForEach.
 			mklines.Tools.SeenPrefs = true
@@ -160,7 +160,7 @@ func (mklines *MkLinesImpl) checkAll() {
 		return true
 	}
 
-	atEnd := func(mkline MkLine) {
+	atEnd := func(mkline *MkLineImpl) {
 		mklines.indentation.CheckFinish(mklines.lines.Filename)
 	}
 
@@ -175,7 +175,7 @@ func (mklines *MkLinesImpl) checkAll() {
 	CheckLinesTrailingEmptyLines(mklines.lines)
 }
 
-func (mklines *MkLinesImpl) checkVarassignPlist(mkline MkLine) {
+func (mklines *MkLinesImpl) checkVarassignPlist(mkline *MkLineImpl) {
 	switch mkline.Varcanon() {
 	case "PLIST_VARS":
 		for _, id := range mkline.ValueFields(resolveVariableRefs(mklines, mkline.Value())) {
@@ -195,16 +195,16 @@ func (mklines *MkLinesImpl) checkVarassignPlist(mkline MkLine) {
 // ForEach calls the action for each line, until the action returns false.
 // It keeps track of the indentation (see MkLines.indentation)
 // and all conditional variables (see Indentation.IsConditional).
-func (mklines *MkLinesImpl) ForEach(action func(mkline MkLine)) {
+func (mklines *MkLinesImpl) ForEach(action func(mkline *MkLineImpl)) {
 	mklines.ForEachEnd(
-		func(mkline MkLine) bool { action(mkline); return true },
-		func(mkline MkLine) {})
+		func(mkline *MkLineImpl) bool { action(mkline); return true },
+		func(mkline *MkLineImpl) {})
 }
 
 // ForEachEnd calls the action for each line, until the action returns false.
 // It keeps track of the indentation and all conditional variables.
 // At the end, atEnd is called with the last line as its argument.
-func (mklines *MkLinesImpl) ForEachEnd(action func(mkline MkLine) bool, atEnd func(lastMkline MkLine)) {
+func (mklines *MkLinesImpl) ForEachEnd(action func(mkline *MkLineImpl) bool, atEnd func(lastMkline *MkLineImpl)) {
 
 	// XXX: To avoid looping over the lines multiple times, it would
 	// be nice to have an interface LinesChecker that checks a single topic.
@@ -264,7 +264,7 @@ func (mklines *MkLinesImpl) collectDefinedVariables() {
 		defer trace.Call0()()
 	}
 
-	mklines.ForEach(func(mkline MkLine) {
+	mklines.ForEach(func(mkline *MkLineImpl) {
 		mklines.Tools.ParseToolLine(mklines, mkline, false, true)
 
 		if !mkline.IsVarassign() && !mkline.IsCommentedVarassign() {
@@ -325,7 +325,7 @@ func (mklines *MkLinesImpl) collectDefinedVariables() {
 }
 
 // defineVar marks a variable as defined in both the current package and the current file.
-func (mklines *MkLinesImpl) defineVar(pkg *Package, mkline MkLine, varname string) {
+func (mklines *MkLinesImpl) defineVar(pkg *Package, mkline *MkLineImpl, varname string) {
 	mklines.vars.Define(varname, mkline)
 	if pkg != nil {
 		pkg.vars.Define(varname, mkline)
@@ -359,7 +359,7 @@ func (mklines *MkLinesImpl) collectPlistVars() {
 
 func (mklines *MkLinesImpl) collectElse() {
 	// Make a dry-run over the lines, which sets data.elseLine (in mkline.go) as a side-effect.
-	mklines.ForEach(func(mkline MkLine) {})
+	mklines.ForEach(func(mkline *MkLineImpl) {})
 	// TODO: Check whether this ForEach is redundant because it is already run somewhere else.
 }
 
@@ -488,7 +488,7 @@ func (mklines *MkLinesImpl) SaveAutofixChanges() {
 	mklines.lines.SaveAutofixChanges()
 }
 
-func (mklines *MkLinesImpl) EOFLine() MkLine {
+func (mklines *MkLinesImpl) EOFLine() *MkLineImpl {
 	return MkLineParser{}.Parse(mklines.lines.EOFLine())
 }
 
@@ -506,7 +506,7 @@ type VaralignBlock struct {
 }
 
 type varalignBlockInfo struct {
-	mkline         MkLine
+	mkline         *MkLineImpl
 	varnameOp      string // Variable name + assignment operator
 	varnameOpWidth int    // Screen width of varnameOp
 	space          string // Whitespace between varnameOp and the variable value
@@ -514,7 +514,7 @@ type varalignBlockInfo struct {
 	continuation   bool   // A continuation line with no value in the first line.
 }
 
-func (va *VaralignBlock) Process(mkline MkLine) {
+func (va *VaralignBlock) Process(mkline *MkLineImpl) {
 	switch {
 	case !G.Opts.WarnSpace:
 		return
@@ -536,7 +536,7 @@ func (va *VaralignBlock) Process(mkline MkLine) {
 	}
 }
 
-func (va *VaralignBlock) processVarassign(mkline MkLine) {
+func (va *VaralignBlock) processVarassign(mkline *MkLineImpl) {
 	switch {
 	case mkline.Op() == opAssignEval && matches(mkline.Varname(), `^[a-z]`):
 		// Arguments to procedures do not take part in block alignment.
@@ -666,7 +666,7 @@ func (va *VaralignBlock) optimalWidth(infos []*varalignBlockInfo) int {
 	return (minVarnameOpWidth & -8) + 8
 }
 
-func (va *VaralignBlock) realign(mkline MkLine, varnameOp, oldSpace string, continuation bool, newWidth int) {
+func (va *VaralignBlock) realign(mkline *MkLineImpl, varnameOp, oldSpace string, continuation bool, newWidth int) {
 	hasSpace := contains(oldSpace, " ")
 
 	newSpace := ""
@@ -691,7 +691,7 @@ func (va *VaralignBlock) realign(mkline MkLine, varnameOp, oldSpace string, cont
 	}
 }
 
-func (va *VaralignBlock) realignInitialLine(mkline MkLine, varnameOp string, oldSpace string, newSpace string, hasSpace bool, newWidth int) {
+func (va *VaralignBlock) realignInitialLine(mkline *MkLineImpl, varnameOp string, oldSpace string, newSpace string, hasSpace bool, newWidth int) {
 	wrongColumn := tabWidth(varnameOp+oldSpace) != tabWidth(varnameOp+newSpace)
 
 	fix := mkline.Autofix()
@@ -729,7 +729,7 @@ func (va *VaralignBlock) realignInitialLine(mkline MkLine, varnameOp string, old
 	fix.Apply()
 }
 
-func (va *VaralignBlock) realignContinuationLines(mkline MkLine, newWidth int) {
+func (va *VaralignBlock) realignContinuationLines(mkline *MkLineImpl, newWidth int) {
 	indentation := strings.Repeat("\t", newWidth/8) + strings.Repeat(" ", newWidth%8)
 	fix := mkline.Autofix()
 	fix.Notef("This line should be aligned with %q.", indentation)

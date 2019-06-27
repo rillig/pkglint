@@ -3,8 +3,8 @@ package pkglint
 func CheckLinesOptionsMk(mklines MkLines) {
 	ck := OptionsLinesChecker{
 		mklines,
-		make(map[string]MkLine),
-		make(map[string]MkLine),
+		make(map[string]*MkLineImpl),
+		make(map[string]*MkLineImpl),
 		nil}
 
 	ck.Check()
@@ -16,8 +16,8 @@ func CheckLinesOptionsMk(mklines MkLines) {
 type OptionsLinesChecker struct {
 	mklines MkLines
 
-	declaredOptions           map[string]MkLine
-	handledOptions            map[string]MkLine
+	declaredOptions           map[string]*MkLineImpl
+	handledOptions            map[string]*MkLineImpl
 	optionsInDeclarationOrder []string
 }
 
@@ -27,7 +27,7 @@ func (ck *OptionsLinesChecker) Check() {
 	mklines.Check()
 
 	mlex := NewMkLinesLexer(mklines)
-	mlex.SkipWhile(func(mkline MkLine) bool { return mkline.IsComment() || mkline.IsEmpty() })
+	mlex.SkipWhile(func(mkline *MkLineImpl) bool { return mkline.IsComment() || mkline.IsEmpty() })
 
 	if !ck.lookingAtPkgOptionsVar(mlex) {
 		return
@@ -70,7 +70,7 @@ func (ck *OptionsLinesChecker) lookingAtPkgOptionsVar(mlex *MkLinesLexer) bool {
 
 // checkLineUpper checks a line from the upper part of an options.mk file,
 // before bsd.options.mk is included.
-func (ck *OptionsLinesChecker) handleUpperLine(mkline MkLine) bool {
+func (ck *OptionsLinesChecker) handleUpperLine(mkline *MkLineImpl) bool {
 	switch {
 	case mkline.IsComment():
 		break
@@ -110,7 +110,7 @@ func (ck *OptionsLinesChecker) handleUpperLine(mkline MkLine) bool {
 	return true
 }
 
-func (ck *OptionsLinesChecker) handleLowerLine(mkline MkLine) {
+func (ck *OptionsLinesChecker) handleLowerLine(mkline *MkLineImpl) {
 	if mkline.IsDirective() {
 		directive := mkline.Directive()
 		if directive == "if" || directive == "elif" {
@@ -122,7 +122,7 @@ func (ck *OptionsLinesChecker) handleLowerLine(mkline MkLine) {
 	}
 }
 
-func (ck *OptionsLinesChecker) handleLowerCondition(mkline MkLine, cond MkCond) {
+func (ck *OptionsLinesChecker) handleLowerCondition(mkline *MkLineImpl, cond MkCond) {
 
 	recordUsedOption := func(varuse *MkVarUse) {
 		if varuse.varname == "PKG_OPTIONS" && len(varuse.modifiers) == 1 {

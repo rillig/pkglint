@@ -12,7 +12,7 @@ import (
 // MkLineChecker provides checks for a single line from a Makefile fragment.
 type MkLineChecker struct {
 	MkLines MkLines
-	MkLine  MkLine
+	MkLine  *MkLineImpl
 }
 
 func (ck MkLineChecker) Check() {
@@ -407,13 +407,13 @@ func (ck MkLineChecker) checkVarassignLeftRationale() {
 		return
 	}
 
-	isRationale := func(mkline MkLine) bool {
+	isRationale := func(mkline *MkLineImpl) bool {
 		return mkline.IsComment() &&
 			!hasPrefix(mkline.Text, "# $") &&
 			!mkline.IsCommentedVarassign()
 	}
 
-	needsRationale := func(mkline MkLine) bool {
+	needsRationale := func(mkline *MkLineImpl) bool {
 		if !mkline.IsVarassign() && !mkline.IsCommentedVarassign() {
 			return false
 		}
