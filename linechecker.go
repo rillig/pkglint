@@ -6,7 +6,7 @@ import (
 )
 
 type LineChecker struct {
-	line Line
+	line *LineImpl
 }
 
 func (ck LineChecker) CheckLength(maxLength int) {

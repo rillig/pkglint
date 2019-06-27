@@ -59,11 +59,7 @@ func (loc *Location) Linenos() string {
 	}
 }
 
-// Line represents a line of text from a file.
-// It aliases a pointer type to reduces the number of *Line occurrences in the code.
-// Using a type alias is more efficient than an interface type, I guess.
-type Line = *LineImpl
-
+// LineImpl represents a line of text from a file.
 type LineImpl struct {
 	// TODO: Consider storing pointers to the Filename and Basename instead of strings to save memory.
 	//  But first find out where and why pkglint needs so much memory (200 MB for a full recursive run over pkgsrc + wip).
@@ -82,29 +78,29 @@ type LineImpl struct {
 	// XXX: Filename and Basename could be replaced with a pointer to a Lines object.
 }
 
-func NewLine(filename string, lineno int, text string, rawLine *RawLine) Line {
+func NewLine(filename string, lineno int, text string, rawLine *RawLine) *LineImpl {
 	assertf(rawLine != nil, "use NewLineMulti for creating a Line with no RawLine attached to it")
 	return NewLineMulti(filename, lineno, lineno, text, []*RawLine{rawLine})
 }
 
 // NewLineMulti is for logical Makefile lines that end with backslash.
-func NewLineMulti(filename string, firstLine, lastLine int, text string, rawLines []*RawLine) Line {
+func NewLineMulti(filename string, firstLine, lastLine int, text string, rawLines []*RawLine) *LineImpl {
 	return &LineImpl{NewLocation(filename, firstLine, lastLine), path.Base(filename), text, rawLines, nil, Once{}}
 }
 
 // NewLineEOF creates a dummy line for logging, with the "line number" EOF.
-func NewLineEOF(filename string) Line {
+func NewLineEOF(filename string) *LineImpl {
 	return NewLineMulti(filename, -1, 0, "", nil)
 }
 
 // NewLineWhole creates a dummy line for logging messages that affect a file as a whole.
-func NewLineWhole(filename string) Line {
+func NewLineWhole(filename string) *LineImpl {
 	return NewLineMulti(filename, 0, 0, "", nil)
 }
 
 // RefTo returns a reference to another line,
 // which can be in the same file or in a different file.
-func (line *LineImpl) RefTo(other Line) string {
+func (line *LineImpl) RefTo(other *LineImpl) string {
 	return line.RefToLocation(other.Location)
 }
 

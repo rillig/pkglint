@@ -1023,7 +1023,7 @@ func (c *FileCache) Get(filename string, options LoadOptions) Lines {
 		c.hits++
 		entry.count++
 
-		lines := make([]Line, entry.lines.Len())
+		lines := make([]*LineImpl, entry.lines.Len())
 		for i, line := range entry.lines.Lines {
 			lines[i] = NewLineMulti(filename, int(line.firstLine), int(line.lastLine), line.Text, line.raw)
 		}

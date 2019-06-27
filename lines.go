@@ -10,18 +10,18 @@ type Lines = *LinesImpl
 type LinesImpl struct {
 	Filename string
 	BaseName string
-	Lines    []Line
+	Lines    []*LineImpl
 }
 
-func NewLines(filename string, lines []Line) Lines {
+func NewLines(filename string, lines []*LineImpl) Lines {
 	return &LinesImpl{filename, path.Base(filename), lines}
 }
 
 func (ls *LinesImpl) Len() int { return len(ls.Lines) }
 
-func (ls *LinesImpl) LastLine() Line { return ls.Lines[ls.Len()-1] }
+func (ls *LinesImpl) LastLine() *LineImpl { return ls.Lines[ls.Len()-1] }
 
-func (ls *LinesImpl) EOFLine() Line { return NewLineMulti(ls.Filename, -1, -1, "", nil) }
+func (ls *LinesImpl) EOFLine() *LineImpl { return NewLineMulti(ls.Filename, -1, -1, "", nil) }
 
 func (ls *LinesImpl) Errorf(format string, args ...interface{}) {
 	NewLineWhole(ls.Filename).Errorf(format, args...)

@@ -177,7 +177,7 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile string) {
 	}
 }
 
-func (ck *PatchChecker) checkBeginDiff(line Line, patchedFiles int) {
+func (ck *PatchChecker) checkBeginDiff(line *LineImpl, patchedFiles int) {
 	if !ck.seenDocumentation && patchedFiles == 0 {
 		line.Errorf("Each patch must be documented.")
 		line.Explain(

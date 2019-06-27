@@ -781,7 +781,7 @@ func (pkglint *Pkglint) loadCvsEntries(filename string) map[string]CvsEntry {
 
 	var entries map[string]CvsEntry
 
-	handle := func(line Line, add bool, text string) {
+	handle := func(line *LineImpl, add bool, text string) {
 		if !hasPrefix(text, "/") {
 			return
 		}

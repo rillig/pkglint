@@ -13,7 +13,7 @@ import (
 // The modifications are kept in memory only,
 // until they are written to disk by SaveAutofixChanges.
 type Autofix struct {
-	line        Line
+	line        *LineImpl
 	linesBefore []string // Newly inserted lines, including \n
 	linesAfter  []string // Newly inserted lines, including \n
 	// Whether an actual fix has been applied (or, without --show-autofix,
@@ -51,7 +51,7 @@ const SilentAutofixFormat = "SilentAutofixFormat"
 // Since these are not really diagnostics, duplicates are not suppressed.
 const AutofixFormat = "AutofixFormat"
 
-func NewAutofix(line Line) *Autofix {
+func NewAutofix(line *LineImpl) *Autofix {
 	return &Autofix{line: line}
 }
 

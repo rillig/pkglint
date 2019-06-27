@@ -62,7 +62,7 @@ func LoadMk(filename string, options LoadOptions) MkLines {
 	return NewMkLines(lines)
 }
 
-func nextLogicalLine(filename string, rawLines []*RawLine, index int) (Line, int) {
+func nextLogicalLine(filename string, rawLines []*RawLine, index int) (*LineImpl, int) {
 	{ // Handle the common case efficiently
 		rawLine := rawLines[index]
 		textnl := rawLine.textnl
@@ -145,7 +145,7 @@ func convertToLogicalLines(filename string, rawText string, joinBackslashLines b
 		}
 	}
 
-	var loglines []Line
+	var loglines []*LineImpl
 	if joinBackslashLines {
 		for lineno := 0; lineno < len(rawLines); {
 			line, nextLineno := nextLogicalLine(filename, rawLines, lineno)

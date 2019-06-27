@@ -9,7 +9,7 @@ import (
 // MkParser wraps a Parser and provides methods for parsing
 // things related to Makefiles.
 type MkParser struct {
-	Line         Line
+	Line         *LineImpl
 	lexer        *textproc.Lexer
 	EmitWarnings bool
 }
@@ -28,7 +28,7 @@ func (p *MkParser) Rest() string {
 // The text argument is assumed to be after unescaping the # character,
 // which means the # is a normal character and does not introduce a Makefile comment.
 // For VarUse, this distinction is irrelevant.
-func NewMkParser(line Line, text string, emitWarnings bool) *MkParser {
+func NewMkParser(line *LineImpl, text string, emitWarnings bool) *MkParser {
 	assertf((line != nil) == emitWarnings, "line must be given iff emitWarnings is set")
 	return &MkParser{line, textproc.NewLexer(text), emitWarnings}
 }

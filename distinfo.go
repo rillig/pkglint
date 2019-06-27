@@ -273,7 +273,7 @@ func (ck *distinfoLinesChecker) checkAlgorithmsDistfile(info distinfoFileInfo) {
 	// that the distfile is the expected one. Now generate the missing hashes
 	// and insert them, in the correct order.
 
-	var insertion Line
+	var insertion *LineImpl
 	var remainingHashes = info.hashes
 	for _, alg := range algorithms {
 		if missing[alg] {
@@ -381,7 +381,7 @@ func (ck *distinfoLinesChecker) checkUncommittedPatch(info distinfoHash) {
 	}
 }
 
-func (ck *distinfoLinesChecker) checkPatchSha1(line Line, patchFileName, distinfoSha1Hex string) {
+func (ck *distinfoLinesChecker) checkPatchSha1(line *LineImpl, patchFileName, distinfoSha1Hex string) {
 	lines := Load(ck.pkg.File(patchFileName), 0)
 	if lines == nil {
 		line.Errorf("Patch %s does not exist.", patchFileName)
@@ -410,7 +410,7 @@ type distinfoFileInfo struct {
 }
 
 func (info *distinfoFileInfo) filename() string { return info.hashes[0].filename }
-func (info *distinfoFileInfo) line() Line       { return info.hashes[0].line }
+func (info *distinfoFileInfo) line() *LineImpl  { return info.hashes[0].line }
 
 func (info *distinfoFileInfo) algorithms() string {
 	var algs []string
@@ -421,7 +421,7 @@ func (info *distinfoFileInfo) algorithms() string {
 }
 
 type distinfoHash struct {
-	line      Line
+	line      *LineImpl
 	filename  string
 	algorithm string
 	hash      string

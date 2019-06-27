@@ -1059,7 +1059,7 @@ func (ck *ShellLineChecker) checkInstallCommand(shellcmd string) {
 // Example: "word1 word2;;;" => "word1", "word2", ";;", ";"
 //
 // TODO: Document what this function should be used for.
-func splitIntoShellTokens(line Line, text string) (tokens []string, rest string) {
+func splitIntoShellTokens(line *LineImpl, text string) (tokens []string, rest string) {
 	if trace.Tracing {
 		defer trace.Call(line, text)()
 	}

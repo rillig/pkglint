@@ -2,7 +2,7 @@ package pkglint
 
 import "fmt"
 
-func parseShellProgram(line Line, program string) (*MkShList, error) {
+func parseShellProgram(line *LineImpl, program string) (*MkShList, error) {
 	if trace.Tracing {
 		defer trace.Call(program)()
 	}

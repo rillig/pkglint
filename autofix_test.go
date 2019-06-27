@@ -713,7 +713,7 @@ func (s *Suite) Test_Autofix_Custom__in_memory(c *check.C) {
 		"line2",
 		"line3")
 
-	doFix := func(line Line) {
+	doFix := func(line *LineImpl) {
 		fix := line.Autofix()
 		fix.Warnf("Please write in ALL-UPPERCASE.")
 		fix.Custom(func(showAutofix, autofix bool) {
