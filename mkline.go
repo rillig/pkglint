@@ -15,8 +15,7 @@ import (
 type MkLine = *MkLineImpl
 
 type MkLineImpl struct {
-	*LineImpl
-	Line *LineImpl   // FIXME: remove this field
+	*Line
 	data interface{} // One of the following mkLine* types
 }
 type mkLineAssign = *mkLineAssignImpl // See https://github.com/golang/go/issues/28045
@@ -69,7 +68,7 @@ type MkLineParser struct{}
 // it is: variable assignment, include, comment, etc.
 //
 // See devel/bmake/parse.c:/^Parse_File/
-func (p MkLineParser) Parse(line *LineImpl) *MkLineImpl {
+func (p MkLineParser) Parse(line *Line) *MkLineImpl {
 	text := line.Text
 
 	// XXX: This check should be moved somewhere else. NewMkLine should only be concerned with parsing.
@@ -112,10 +111,10 @@ func (p MkLineParser) Parse(line *LineImpl) *MkLineImpl {
 
 	// The %q is deliberate here since it shows possible strange characters.
 	line.Errorf("Unknown Makefile line format: %q.", text)
-	return &MkLineImpl{line, line, nil}
+	return &MkLineImpl{line, nil}
 }
 
-func (p MkLineParser) parseVarassign(line *LineImpl, data mkLineSplitResult) MkLine {
+func (p MkLineParser) parseVarassign(line *Line, data mkLineSplitResult) MkLine {
 	m, a := p.MatchVarassign(line, line.Text, data)
 	if !m {
 		return nil
@@ -148,46 +147,46 @@ func (p MkLineParser) parseVarassign(line *LineImpl, data mkLineSplitResult) MkL
 			"it should be preceded by a space in order to make it more visible.")
 	}
 
-	return &MkLineImpl{line, line, a}
+	return &MkLineImpl{line, a}
 }
 
-func (p MkLineParser) parseShellcmd(line *LineImpl) MkLine {
-	return &MkLineImpl{line, line, mkLineShell{line.Text[1:]}}
+func (p MkLineParser) parseShellcmd(line *Line) MkLine {
+	return &MkLineImpl{line, mkLineShell{line.Text[1:]}}
 }
 
-func (p MkLineParser) parseCommentOrEmpty(line *LineImpl) MkLine {
+func (p MkLineParser) parseCommentOrEmpty(line *Line) MkLine {
 	trimmedText := trimHspace(line.Text)
 
 	if strings.HasPrefix(trimmedText, "#") {
-		return &MkLineImpl{line, line, mkLineComment{}}
+		return &MkLineImpl{line, mkLineComment{}}
 	}
 
 	if trimmedText == "" {
-		return &MkLineImpl{line, line, mkLineEmpty{}}
+		return &MkLineImpl{line, mkLineEmpty{}}
 	}
 
 	return nil
 }
 
-func (p MkLineParser) parseInclude(line *LineImpl) MkLine {
+func (p MkLineParser) parseInclude(line *Line) MkLine {
 	m, indent, directive, includedFile := MatchMkInclude(line.Text)
 	if !m {
 		return nil
 	}
 
-	return &MkLineImpl{line, line, &mkLineIncludeImpl{directive == "include", false, indent, includedFile, nil}}
+	return &MkLineImpl{line, &mkLineIncludeImpl{directive == "include", false, indent, includedFile, nil}}
 }
 
-func (p MkLineParser) parseSysinclude(line *LineImpl) MkLine {
+func (p MkLineParser) parseSysinclude(line *Line) MkLine {
 	m, indent, directive, includedFile := match3(line.Text, `^\.([\t ]*)(s?include)[\t ]+<([^>]+)>[\t ]*(?:#.*)?$`)
 	if !m {
 		return nil
 	}
 
-	return &MkLineImpl{line, line, &mkLineIncludeImpl{directive == "include", true, indent, includedFile, nil}}
+	return &MkLineImpl{line, &mkLineIncludeImpl{directive == "include", true, indent, includedFile, nil}}
 }
 
-func (p MkLineParser) parseDependency(line *LineImpl) MkLine {
+func (p MkLineParser) parseDependency(line *Line) MkLine {
 	// XXX: Replace this regular expression with proper parsing.
 	// There might be a ${VAR:M*.c} in these variables, which the below regular expression cannot handle.
 	m, targets, whitespace, sources := match3(line.Text, `^([^\t :]+(?:[\t ]*[^\t :]+)*)([\t ]*):[\t ]*([^#]*?)(?:[\t ]*#.*)?$`)
@@ -198,15 +197,15 @@ func (p MkLineParser) parseDependency(line *LineImpl) MkLine {
 	if whitespace != "" {
 		line.Notef("Space before colon in dependency line.")
 	}
-	return &MkLineImpl{line, line, mkLineDependency{targets, sources}}
+	return &MkLineImpl{line, mkLineDependency{targets, sources}}
 }
 
-func (p MkLineParser) parseMergeConflict(line *LineImpl) MkLine {
+func (p MkLineParser) parseMergeConflict(line *Line) MkLine {
 	if !matches(line.Text, `^(<<<<<<<|=======|>>>>>>>)`) {
 		return nil
 	}
 
-	return &MkLineImpl{line, line, nil}
+	return &MkLineImpl{line, nil}
 }
 
 // String returns the filename and line numbers.
@@ -776,7 +775,7 @@ type mkLineSplitResult struct {
 // This applies to all line types except those starting with a tab, which
 // contain the shell commands to be associated with make targets. These cannot
 // have comments.
-func (p MkLineParser) split(line *LineImpl, text string) mkLineSplitResult {
+func (p MkLineParser) split(line *Line, text string) mkLineSplitResult {
 
 	mainWithSpaces, comment := p.unescapeComment(text)
 
@@ -841,7 +840,7 @@ func (p MkLineParser) split(line *LineImpl, text string) mkLineSplitResult {
 	return mkLineSplitResult{mainTrimmed, tokens, spaceBeforeComment, hasComment, comment}
 }
 
-func (p MkLineParser) parseDirective(line *LineImpl, data mkLineSplitResult) MkLine {
+func (p MkLineParser) parseDirective(line *Line, data mkLineSplitResult) MkLine {
 	text := line.Text
 	if !hasPrefix(text, ".") {
 		return nil
@@ -872,7 +871,7 @@ func (p MkLineParser) parseDirective(line *LineImpl, data mkLineSplitResult) MkL
 	// it must be trimmed.
 	trimmedComment := trimHspace(data.comment)
 
-	return &MkLineImpl{line, line, &mkLineDirectiveImpl{indent, directive, args, trimmedComment, nil, nil, nil}}
+	return &MkLineImpl{line, &mkLineDirectiveImpl{indent, directive, args, trimmedComment, nil, nil, nil}}
 }
 
 // VariableNeedsQuoting determines whether the given variable needs the :Q operator
@@ -1455,7 +1454,7 @@ var (
 	VarparamBytes = textproc.NewByteSet("A-Za-z_0-9#*+---.[")
 )
 
-func (p MkLineParser) MatchVarassign(line *LineImpl, text string, asdfData mkLineSplitResult) (m bool, assignment mkLineAssign) {
+func (p MkLineParser) MatchVarassign(line *Line, text string, asdfData mkLineSplitResult) (m bool, assignment mkLineAssign) {
 
 	// A commented variable assignment does not have leading whitespace.
 	// Otherwise line 1 of almost every Makefile fragment would need to

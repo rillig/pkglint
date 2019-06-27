@@ -700,7 +700,7 @@ func (pkg *Package) checkPlist() {
 	}
 }
 
-func (pkg *Package) needsPlist() (bool, *LineImpl) {
+func (pkg *Package) needsPlist() (bool, *Line) {
 	vars := pkg.vars
 
 	// TODO: In the below code, it shouldn't be necessary to mention

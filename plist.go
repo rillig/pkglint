@@ -49,10 +49,9 @@ type PlistChecker struct {
 }
 
 type PlistLine struct {
-	*LineImpl
-	Line       *LineImpl // FIXME: remove this field
-	conditions []string  // e.g. PLIST.docs
-	text       string    // Line.Text without any conditions of the form ${PLIST.cond}
+	*Line
+	conditions []string // e.g. PLIST.docs
+	text       string   // Line.Text without any conditions of the form ${PLIST.cond}
 }
 
 func (ck *PlistChecker) Check(plainLines Lines) {
@@ -94,7 +93,7 @@ func (ck *PlistChecker) NewLines(lines Lines) []*PlistLine {
 			}
 		}
 
-		plines[i] = &PlistLine{line, line, conditions, text}
+		plines[i] = &PlistLine{line, conditions, text}
 	}
 	return plines
 }
@@ -505,7 +504,7 @@ type plistLineSorter struct {
 	header     []*PlistLine // Does not take part in sorting
 	middle     []*PlistLine // Only this part is sorted
 	footer     []*PlistLine // Does not take part in sorting, typically contains @exec or @pkgdir
-	unsortable *LineImpl    // Some lines are so difficult to sort that only humans can do that
+	unsortable *Line        // Some lines are so difficult to sort that only humans can do that
 	changed    bool         // Whether the sorting actually changed something
 	autofixed  bool         // Whether the newly sorted file has been written to disk
 }
@@ -524,7 +523,7 @@ func NewPlistLineSorter(plines []*PlistLine) *plistLineSorter {
 	header := plines[0:headerEnd]
 	middle := plines[headerEnd:footerStart]
 	footer := plines[footerStart:]
-	var unsortable *LineImpl
+	var unsortable *Line
 
 	for _, pline := range middle {
 		if unsortable == nil && (hasPrefix(pline.text, "@") || contains(pline.text, "$")) {
@@ -570,7 +569,7 @@ func (s *plistLineSorter) Sort() {
 	fix.Describef(int(firstLine.firstLine), "Sorting the whole file.")
 	fix.Apply()
 
-	var lines []*LineImpl
+	var lines []*Line
 	for _, pline := range s.header {
 		lines = append(lines, pline.Line)
 	}

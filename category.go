@@ -113,7 +113,7 @@ func CheckdirCategory(dir string) {
 		if len(fRest) > 0 && (len(mRest) == 0 || fRest[0] < mRest[0].name) {
 			fCurrent := fRest[0]
 			if !mCheck[fCurrent] {
-				var line *LineImpl
+				var line *Line
 				if len(mRest) > 0 {
 					line = mRest[0].line.Line
 				} else {

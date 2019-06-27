@@ -14,14 +14,14 @@ func NewLinesLexer(lines Lines) *LinesLexer {
 
 // CurrentLine returns the line that the lexer is currently looking at.
 // If it is at the end of file, the line number of the line is EOF.
-func (llex *LinesLexer) CurrentLine() *LineImpl {
+func (llex *LinesLexer) CurrentLine() *Line {
 	if llex.index < llex.lines.Len() {
 		return llex.lines.Lines[llex.index]
 	}
 	return NewLineEOF(llex.lines.Filename)
 }
 
-func (llex *LinesLexer) PreviousLine() *LineImpl {
+func (llex *LinesLexer) PreviousLine() *Line {
 	return llex.lines.Lines[llex.index-1]
 }
 

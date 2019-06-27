@@ -59,8 +59,8 @@ func (loc *Location) Linenos() string {
 	}
 }
 
-// LineImpl represents a line of text from a file.
-type LineImpl struct {
+// Line represents a line of text from a file.
+type Line struct {
 	// TODO: Consider storing pointers to the Filename and Basename instead of strings to save memory.
 	//  But first find out where and why pkglint needs so much memory (200 MB for a full recursive run over pkgsrc + wip).
 	Location
@@ -78,33 +78,33 @@ type LineImpl struct {
 	// XXX: Filename and Basename could be replaced with a pointer to a Lines object.
 }
 
-func NewLine(filename string, lineno int, text string, rawLine *RawLine) *LineImpl {
+func NewLine(filename string, lineno int, text string, rawLine *RawLine) *Line {
 	assertf(rawLine != nil, "use NewLineMulti for creating a Line with no RawLine attached to it")
 	return NewLineMulti(filename, lineno, lineno, text, []*RawLine{rawLine})
 }
 
 // NewLineMulti is for logical Makefile lines that end with backslash.
-func NewLineMulti(filename string, firstLine, lastLine int, text string, rawLines []*RawLine) *LineImpl {
-	return &LineImpl{NewLocation(filename, firstLine, lastLine), path.Base(filename), text, rawLines, nil, Once{}}
+func NewLineMulti(filename string, firstLine, lastLine int, text string, rawLines []*RawLine) *Line {
+	return &Line{NewLocation(filename, firstLine, lastLine), path.Base(filename), text, rawLines, nil, Once{}}
 }
 
 // NewLineEOF creates a dummy line for logging, with the "line number" EOF.
-func NewLineEOF(filename string) *LineImpl {
+func NewLineEOF(filename string) *Line {
 	return NewLineMulti(filename, -1, 0, "", nil)
 }
 
 // NewLineWhole creates a dummy line for logging messages that affect a file as a whole.
-func NewLineWhole(filename string) *LineImpl {
+func NewLineWhole(filename string) *Line {
 	return NewLineMulti(filename, 0, 0, "", nil)
 }
 
 // RefTo returns a reference to another line,
 // which can be in the same file or in a different file.
-func (line *LineImpl) RefTo(other *LineImpl) string {
+func (line *Line) RefTo(other *Line) string {
 	return line.RefToLocation(other.Location)
 }
 
-func (line *LineImpl) RefToLocation(other Location) string {
+func (line *Line) RefToLocation(other Location) string {
 	if line.Filename != other.Filename {
 		return line.PathToFile(other.Filename) + ":" + other.Linenos()
 	}
@@ -114,15 +114,15 @@ func (line *LineImpl) RefToLocation(other Location) string {
 // PathToFile returns the relative path from this line to the given file path.
 // This is typically used for arguments in diagnostics, which should always be
 // relative to the line with which the diagnostic is associated.
-func (line *LineImpl) PathToFile(filePath string) string {
+func (line *Line) PathToFile(filePath string) string {
 	return relpath(path.Dir(line.Filename), filePath)
 }
 
-func (line *LineImpl) IsMultiline() bool {
+func (line *Line) IsMultiline() bool {
 	return line.firstLine > 0 && line.firstLine != line.lastLine
 }
 
-func (line *LineImpl) showSource(out *SeparatorWriter) {
+func (line *Line) showSource(out *SeparatorWriter) {
 	if !G.Logger.Opts.ShowSource {
 		return
 	}
@@ -168,28 +168,28 @@ func (line *LineImpl) showSource(out *SeparatorWriter) {
 	}
 }
 
-func (line *LineImpl) Fatalf(format string, args ...interface{}) {
+func (line *Line) Fatalf(format string, args ...interface{}) {
 	if trace.Tracing {
 		trace.Stepf("Fatalf: %q, %v", format, args)
 	}
 	G.Logger.Diag(line, Fatal, format, args...)
 }
 
-func (line *LineImpl) Errorf(format string, args ...interface{}) {
+func (line *Line) Errorf(format string, args ...interface{}) {
 	G.Logger.Diag(line, Error, format, args...)
 }
 
-func (line *LineImpl) Warnf(format string, args ...interface{}) {
+func (line *Line) Warnf(format string, args ...interface{}) {
 	G.Logger.Diag(line, Warn, format, args...)
 }
 
-func (line *LineImpl) Notef(format string, args ...interface{}) {
+func (line *Line) Notef(format string, args ...interface{}) {
 	G.Logger.Diag(line, Note, format, args...)
 }
 
-func (line *LineImpl) Explain(explanation ...string) { G.Logger.Explain(explanation...) }
+func (line *Line) Explain(explanation ...string) { G.Logger.Explain(explanation...) }
 
-func (line *LineImpl) String() string {
+func (line *Line) String() string {
 	return sprintf("%s:%s: %s", line.Filename, line.Linenos(), line.Text)
 }
 
@@ -216,7 +216,7 @@ func (line *LineImpl) String() string {
 //  fix.Custom(func(showAutofix, autofix bool) {})
 //
 //  fix.Apply()
-func (line *LineImpl) Autofix() *Autofix {
+func (line *Line) Autofix() *Autofix {
 	if line.autofix == nil {
 		line.autofix = NewAutofix(line)
 	}

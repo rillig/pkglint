@@ -221,7 +221,7 @@ func (t *Tester) SetUpFileMkLines(relativeFileName string, lines ...string) MkLi
 //
 // This is useful for testing code related to Package.readMakefile.
 func (t *Tester) LoadMkInclude(relativeFileName string) MkLines {
-	var lines []*LineImpl
+	var lines []*Line
 
 	// TODO: Include files with multiple-inclusion guard only once.
 	// TODO: Include files without multiple-inclusion guard as often as needed.
@@ -589,7 +589,7 @@ func (t *Tester) SetUpHierarchy() (
 	files := map[string]MkLines{}
 
 	include = func(filename string, args ...interface{}) MkLines {
-		var lines []*LineImpl
+		var lines []*Line
 		lineno := 1
 
 		addLine := func(text string) {
@@ -794,7 +794,7 @@ func (t *Tester) NewRawLines(args ...interface{}) []*RawLine {
 
 // NewLine creates an in-memory line with the given text.
 // This line does not correspond to any line in a file.
-func (t *Tester) NewLine(filename string, lineno int, text string) *LineImpl {
+func (t *Tester) NewLine(filename string, lineno int, text string) *Line {
 	textnl := text + "\n"
 	rawLine := RawLine{lineno, textnl, textnl}
 	return NewLine(filename, lineno, text, &rawLine)
@@ -829,7 +829,7 @@ func (t *Tester) NewLines(filename string, lines ...string) Lines {
 //
 // To work with line continuations like in Makefiles, use SetUpFileMkLines.
 func (t *Tester) NewLinesAt(filename string, firstLine int, texts ...string) Lines {
-	lines := make([]*LineImpl, len(texts))
+	lines := make([]*Line, len(texts))
 	for i, text := range texts {
 		lines[i] = t.NewLine(filename, i+firstLine, text)
 	}

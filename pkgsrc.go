@@ -435,7 +435,7 @@ func (src *Pkgsrc) loadSuggestedUpdates() {
 	src.suggestedWipUpdates = src.parseSuggestedUpdates(Load(src.File("wip/TODO"), NotEmpty))
 }
 
-func (*Pkgsrc) parseDocChange(line *LineImpl, warn bool) *Change {
+func (*Pkgsrc) parseDocChange(line *Line, warn bool) *Change {
 	lex := textproc.NewLexer(line.Text)
 
 	space := lex.NextHspace()

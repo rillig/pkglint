@@ -1625,7 +1625,7 @@ func (vt *VartypeCheckTester) Values(values ...string) {
 		text := toText(value)
 
 		line := vt.tester.NewLine(vt.filename, vt.lineno, text)
-		mklines := NewMkLines(NewLines(vt.filename, []*LineImpl{line}))
+		mklines := NewMkLines(NewLines(vt.filename, []*Line{line}))
 		vt.lineno++
 
 		mklines.ForEach(func(mkline MkLine) { test(mklines, mkline, value) })

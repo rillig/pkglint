@@ -6,7 +6,7 @@ type ShTokenizer struct {
 	parser *MkParser
 }
 
-func NewShTokenizer(line *LineImpl, text string, emitWarnings bool) *ShTokenizer {
+func NewShTokenizer(line *Line, text string, emitWarnings bool) *ShTokenizer {
 	// TODO: Switching to NewMkParser is nontrivial since emitWarnings must equal (line != nil).
 	p := MkParser{line, textproc.NewLexer(text), emitWarnings}
 	return &ShTokenizer{&p}
