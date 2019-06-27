@@ -7,12 +7,12 @@ import (
 	"strings"
 )
 
-func CheckLinesPatch(lines Lines) {
+func CheckLinesPatch(lines *Lines) {
 	(&PatchChecker{lines, NewLinesLexer(lines), false, false}).Check()
 }
 
 type PatchChecker struct {
-	lines             Lines
+	lines             *Lines
 	llex              *LinesLexer
 	seenDocumentation bool
 	previousLineEmpty bool

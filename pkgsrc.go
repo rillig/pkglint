@@ -393,7 +393,7 @@ func (src *Pkgsrc) loadUntypedVars() {
 	assertNil(err, "Walk error in pkgsrc infrastructure")
 }
 
-func (src *Pkgsrc) parseSuggestedUpdates(lines Lines) []SuggestedUpdate {
+func (src *Pkgsrc) parseSuggestedUpdates(lines *Lines) []SuggestedUpdate {
 	if lines == nil {
 		return nil
 	}
@@ -780,7 +780,7 @@ func (src *Pkgsrc) initDeprecatedVars() {
 }
 
 // Load loads the file relative to the pkgsrc top directory.
-func (src *Pkgsrc) Load(filename string, options LoadOptions) Lines {
+func (src *Pkgsrc) Load(filename string, options LoadOptions) *Lines {
 	return Load(src.File(filename), options)
 }
 

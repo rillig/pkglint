@@ -906,8 +906,8 @@ func (s *Suite) Test_plistLineSorter__unsortable(c *check.C) {
 
 	t.CheckOutputLines(
 		"TRACE: + CheckLinesPlist(\"~/PLIST\")",
-		"TRACE: 1 + (*LinesImpl).CheckCvsID(\"@comment \", \"@comment \")",
-		"TRACE: 1 - (*LinesImpl).CheckCvsID(\"@comment \", \"@comment \")",
+		"TRACE: 1 + (*Lines).CheckCvsID(\"@comment \", \"@comment \")",
+		"TRACE: 1 - (*Lines).CheckCvsID(\"@comment \", \"@comment \")",
 		"TRACE: 1   ~/PLIST:2: bin/program${OPSYS}: This line prevents pkglint from sorting the PLIST automatically.",
 		"TRACE: 1 + SaveAutofixChanges()",
 		"TRACE: 1 - SaveAutofixChanges()",

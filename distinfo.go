@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-func CheckLinesDistinfo(pkg *Package, lines Lines) {
+func CheckLinesDistinfo(pkg *Package, lines *Lines) {
 	if trace.Tracing {
 		defer trace.Call1(lines.Filename)()
 	}
@@ -41,7 +41,7 @@ func CheckLinesDistinfo(pkg *Package, lines Lines) {
 
 type distinfoLinesChecker struct {
 	pkg                 *Package
-	lines               Lines
+	lines               *Lines
 	patchdir            string // Relative to pkg
 	distinfoIsCommitted bool
 
@@ -428,7 +428,7 @@ type distinfoHash struct {
 }
 
 // Same as in mk/checksum/distinfo.awk:/function patchsum/
-func computePatchSha1Hex(lines Lines) string {
+func computePatchSha1Hex(lines *Lines) string {
 
 	hasher := sha1.New()
 	skipText := "$" + "NetBSD"

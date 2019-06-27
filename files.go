@@ -16,7 +16,7 @@ const (
 	LogErrors                           //
 )
 
-func Load(filename string, options LoadOptions) Lines {
+func Load(filename string, options LoadOptions) *Lines {
 	if fromCache := G.fileCache.Get(filename, options); fromCache != nil {
 		return fromCache
 	}
@@ -137,7 +137,7 @@ func matchContinuationLine(textnl string) (leadingWhitespace, text, trailingWhit
 	return
 }
 
-func convertToLogicalLines(filename string, rawText string, joinBackslashLines bool) Lines {
+func convertToLogicalLines(filename string, rawText string, joinBackslashLines bool) *Lines {
 	var rawLines []*RawLine
 	for lineno, rawLine := range strings.SplitAfter(rawText, "\n") {
 		if rawLine != "" {

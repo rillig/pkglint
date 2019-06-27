@@ -202,7 +202,7 @@ func (t *Tester) SetUpTool(name, varname string, validity Validity) *Tool {
 // The file is then read in, without interpreting line continuations.
 //
 // See SetUpFileMkLines for loading a Makefile fragment.
-func (t *Tester) SetUpFileLines(relativeFileName string, lines ...string) Lines {
+func (t *Tester) SetUpFileLines(relativeFileName string, lines ...string) *Lines {
 	filename := t.CreateFileLines(relativeFileName, lines...)
 	return Load(filename, MustSucceed)
 }
@@ -821,14 +821,14 @@ func (t *Tester) NewShellLineChecker(text string) *ShellLineChecker {
 // NewLines returns a list of simple lines that belong together.
 //
 // To work with line continuations like in Makefiles, use SetUpFileMkLines.
-func (t *Tester) NewLines(filename string, lines ...string) Lines {
+func (t *Tester) NewLines(filename string, lines ...string) *Lines {
 	return t.NewLinesAt(filename, 1, lines...)
 }
 
 // NewLinesAt returns a list of simple lines that belong together.
 //
 // To work with line continuations like in Makefiles, use SetUpFileMkLines.
-func (t *Tester) NewLinesAt(filename string, firstLine int, texts ...string) Lines {
+func (t *Tester) NewLinesAt(filename string, firstLine int, texts ...string) *Lines {
 	lines := make([]*Line, len(texts))
 	for i, text := range texts {
 		lines[i] = t.NewLine(filename, i+firstLine, text)

@@ -478,7 +478,7 @@ func CheckFileOther(filename string) {
 	}
 }
 
-func CheckLinesDescr(lines Lines) {
+func CheckLinesDescr(lines *Lines) {
 	if trace.Tracing {
 		defer trace.Call1(lines.Filename)()
 	}
@@ -512,7 +512,7 @@ func CheckLinesDescr(lines Lines) {
 	SaveAutofixChanges(lines)
 }
 
-func CheckLinesMessage(lines Lines) {
+func CheckLinesMessage(lines *Lines) {
 	if trace.Tracing {
 		defer trace.Call1(lines.Filename)()
 	}
@@ -726,7 +726,7 @@ func (pkglint *Pkglint) checkExecutable(filename string, mode os.FileMode) {
 	fix.Apply()
 }
 
-func CheckLinesTrailingEmptyLines(lines Lines) {
+func CheckLinesTrailingEmptyLines(lines *Lines) {
 	max := lines.Len()
 
 	last := max

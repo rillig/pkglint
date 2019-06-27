@@ -951,7 +951,7 @@ type fileCacheEntry struct {
 	count   int
 	key     string
 	options LoadOptions
-	lines   Lines
+	lines   *Lines
 }
 
 func NewFileCache(size int) *FileCache {
@@ -962,7 +962,7 @@ func NewFileCache(size int) *FileCache {
 		0}
 }
 
-func (c *FileCache) Put(filename string, options LoadOptions, lines Lines) {
+func (c *FileCache) Put(filename string, options LoadOptions, lines *Lines) {
 	key := c.key(filename)
 
 	entry := c.mapping[key]
@@ -1016,7 +1016,7 @@ func (c *FileCache) removeOldEntries() {
 	}
 }
 
-func (c *FileCache) Get(filename string, options LoadOptions) Lines {
+func (c *FileCache) Get(filename string, options LoadOptions) *Lines {
 	key := c.key(filename)
 	entry, found := c.mapping[key]
 	if found && entry.options == options {

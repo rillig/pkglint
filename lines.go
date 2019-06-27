@@ -5,38 +5,36 @@ import (
 	"path"
 )
 
-type Lines = *LinesImpl
-
-type LinesImpl struct {
+type Lines struct {
 	Filename string
 	BaseName string
 	Lines    []*Line
 }
 
-func NewLines(filename string, lines []*Line) Lines {
-	return &LinesImpl{filename, path.Base(filename), lines}
+func NewLines(filename string, lines []*Line) *Lines {
+	return &Lines{filename, path.Base(filename), lines}
 }
 
-func (ls *LinesImpl) Len() int { return len(ls.Lines) }
+func (ls *Lines) Len() int { return len(ls.Lines) }
 
-func (ls *LinesImpl) LastLine() *Line { return ls.Lines[ls.Len()-1] }
+func (ls *Lines) LastLine() *Line { return ls.Lines[ls.Len()-1] }
 
-func (ls *LinesImpl) EOFLine() *Line { return NewLineMulti(ls.Filename, -1, -1, "", nil) }
+func (ls *Lines) EOFLine() *Line { return NewLineMulti(ls.Filename, -1, -1, "", nil) }
 
-func (ls *LinesImpl) Errorf(format string, args ...interface{}) {
+func (ls *Lines) Errorf(format string, args ...interface{}) {
 	NewLineWhole(ls.Filename).Errorf(format, args...)
 }
 
-func (ls *LinesImpl) Warnf(format string, args ...interface{}) {
+func (ls *Lines) Warnf(format string, args ...interface{}) {
 	NewLineWhole(ls.Filename).Warnf(format, args...)
 }
 
-func (ls *LinesImpl) SaveAutofixChanges() bool {
+func (ls *Lines) SaveAutofixChanges() bool {
 	return SaveAutofixChanges(ls)
 }
 
 // CheckCvsID returns true if the expected CVS Id was found.
-func (ls *LinesImpl) CheckCvsID(index int, prefixRe regex.Pattern, suggestedPrefix string) bool {
+func (ls *Lines) CheckCvsID(index int, prefixRe regex.Pattern, suggestedPrefix string) bool {
 	if trace.Tracing {
 		defer trace.Call(prefixRe, suggestedPrefix)()
 	}

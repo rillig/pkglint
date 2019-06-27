@@ -4,11 +4,11 @@ import "netbsd.org/pkglint/regex"
 
 // LinesLexer records the state when checking a list of lines from top to bottom.
 type LinesLexer struct {
-	lines Lines
+	lines *Lines
 	index int
 }
 
-func NewLinesLexer(lines Lines) *LinesLexer {
+func NewLinesLexer(lines *Lines) *LinesLexer {
 	return &LinesLexer{lines, 0}
 }
 

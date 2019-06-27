@@ -9,7 +9,7 @@ type MkLines = *MkLinesImpl
 
 type MkLinesImpl struct {
 	mklines       []*MkLine
-	lines         Lines
+	lines         *Lines
 	target        string             // Current make(1) target; only available during checkAll
 	vars          Scope              //
 	buildDefs     map[string]bool    // Variables that are registered in BUILD_DEFS, to ensure that all user-defined variables are added to it.
@@ -25,7 +25,7 @@ type MkLinesImpl struct {
 	// TODO: Describe where each of the above fields is valid.
 }
 
-func NewMkLines(lines Lines) MkLines {
+func NewMkLines(lines *Lines) MkLines {
 	mklines := make([]*MkLine, lines.Len())
 	for i, line := range lines.Lines {
 		mklines[i] = MkLineParser{}.Parse(line)

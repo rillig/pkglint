@@ -433,7 +433,7 @@ func (fix *Autofix) assertRealLine() {
 // applying the autofix changes.
 // The lines may come from different files.
 // Only files that actually have changed lines are saved.
-func SaveAutofixChanges(lines Lines) (autofixed bool) {
+func SaveAutofixChanges(lines *Lines) (autofixed bool) {
 	if trace.Tracing {
 		defer trace.Call0()()
 	}

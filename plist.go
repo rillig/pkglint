@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func CheckLinesPlist(pkg *Package, lines Lines) {
+func CheckLinesPlist(pkg *Package, lines *Lines) {
 	if trace.Tracing {
 		defer trace.Call1(lines.Filename)()
 	}
@@ -54,7 +54,7 @@ type PlistLine struct {
 	text       string   // Line.Text without any conditions of the form ${PLIST.cond}
 }
 
-func (ck *PlistChecker) Check(plainLines Lines) {
+func (ck *PlistChecker) Check(plainLines *Lines) {
 	plines := ck.NewLines(plainLines)
 	ck.collectFilesAndDirs(plines)
 
@@ -78,7 +78,7 @@ func (ck *PlistChecker) Check(plainLines Lines) {
 	}
 }
 
-func (ck *PlistChecker) NewLines(lines Lines) []*PlistLine {
+func (ck *PlistChecker) NewLines(lines *Lines) []*PlistLine {
 	plines := make([]*PlistLine, lines.Len())
 	for i, line := range lines.Lines {
 		var conditions []string
