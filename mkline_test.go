@@ -1372,7 +1372,7 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 			return
 		}
 
-		expected := mkLineAssignImpl{
+		expected := mkLineAssign{
 			commented:         commented,
 			varname:           varname,
 			varcanon:          varnameCanon(varname),
