@@ -122,7 +122,7 @@ func (ck *OptionsLinesChecker) handleLowerLine(mkline *MkLine) {
 	}
 }
 
-func (ck *OptionsLinesChecker) handleLowerCondition(mkline *MkLine, cond MkCond) {
+func (ck *OptionsLinesChecker) handleLowerCondition(mkline *MkLine, cond *MkCond) {
 
 	recordUsedOption := func(varuse *MkVarUse) {
 		if varuse.varname == "PKG_OPTIONS" && len(varuse.modifiers) == 1 {

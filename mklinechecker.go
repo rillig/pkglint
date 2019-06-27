@@ -1473,7 +1473,7 @@ func (ck MkLineChecker) checkDirectiveCond() {
 	// Skip subconditions that have already been handled as part of the !(...).
 	done := make(map[interface{}]bool)
 
-	checkNotEmpty := func(not MkCond) {
+	checkNotEmpty := func(not *MkCond) {
 		empty := not.Empty
 		if empty != nil {
 			ck.checkDirectiveCondEmpty(empty, true, true, not == cond.Not)

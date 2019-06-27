@@ -405,13 +405,13 @@ func (p *MkParser) varUseModifierAt(lexer *textproc.Lexer, varname string) bool 
 // MkCond parses a condition like ${OPSYS} == "NetBSD".
 //
 // See devel/bmake/files/cond.c.
-func (p *MkParser) MkCond() MkCond {
+func (p *MkParser) MkCond() *MkCond {
 	and := p.mkCondAnd()
 	if and == nil {
 		return nil
 	}
 
-	ands := []MkCond{and}
+	ands := []*MkCond{and}
 	for {
 		mark := p.lexer.Mark()
 		p.lexer.SkipHspace()
@@ -428,16 +428,16 @@ func (p *MkParser) MkCond() MkCond {
 	if len(ands) == 1 {
 		return and
 	}
-	return &mkCond{Or: ands}
+	return &MkCond{Or: ands}
 }
 
-func (p *MkParser) mkCondAnd() MkCond {
+func (p *MkParser) mkCondAnd() *MkCond {
 	atom := p.mkCondAtom()
 	if atom == nil {
 		return nil
 	}
 
-	atoms := []MkCond{atom}
+	atoms := []*MkCond{atom}
 	for {
 		mark := p.lexer.Mark()
 		p.lexer.SkipHspace()
@@ -454,10 +454,10 @@ func (p *MkParser) mkCondAnd() MkCond {
 	if len(atoms) == 1 {
 		return atom
 	}
-	return &mkCond{And: atoms}
+	return &MkCond{And: atoms}
 }
 
-func (p *MkParser) mkCondAtom() MkCond {
+func (p *MkParser) mkCondAtom() *MkCond {
 	if trace.Tracing {
 		defer trace.Call1(p.Rest())()
 	}
@@ -469,7 +469,7 @@ func (p *MkParser) mkCondAtom() MkCond {
 	case lexer.SkipByte('!'):
 		cond := p.mkCondAtom()
 		if cond != nil {
-			return &mkCond{Not: cond}
+			return &MkCond{Not: cond}
 		}
 
 	case lexer.SkipByte('('):
@@ -499,28 +499,28 @@ func (p *MkParser) mkCondAtom() MkCond {
 			lexer.SkipHspace()
 
 			if m := lexer.NextRegexp(G.res.Compile(`^(<|<=|==|!=|>=|>)[\t ]*(0x[0-9A-Fa-f]+|\d+(?:\.\d+)?)`)); m != nil {
-				return &mkCond{CompareVarNum: &MkCondCompareVarNum{lhs, m[1], m[2]}}
+				return &MkCond{CompareVarNum: &MkCondCompareVarNum{lhs, m[1], m[2]}}
 			}
 
 			m := lexer.NextRegexp(G.res.Compile(`^(?:<|<=|==|!=|>=|>)`))
 			if m == nil {
-				return &mkCond{Var: lhs} // See devel/bmake/files/cond.c:/\* For \.if \$/
+				return &MkCond{Var: lhs} // See devel/bmake/files/cond.c:/\* For \.if \$/
 			}
 			lexer.SkipHspace()
 
 			op := m[0]
 			if op == "==" || op == "!=" {
 				if mrhs := lexer.NextRegexp(G.res.Compile(`^"([^"\$\\]*)"`)); mrhs != nil {
-					return &mkCond{CompareVarStr: &MkCondCompareVarStr{lhs, op, mrhs[1]}}
+					return &MkCond{CompareVarStr: &MkCondCompareVarStr{lhs, op, mrhs[1]}}
 				}
 			}
 
 			if str := lexer.NextBytesSet(textproc.AlnumU); str != "" {
-				return &mkCond{CompareVarStr: &MkCondCompareVarStr{lhs, op, str}}
+				return &MkCond{CompareVarStr: &MkCondCompareVarStr{lhs, op, str}}
 			}
 
 			if rhs := p.VarUse(); rhs != nil {
-				return &mkCond{CompareVarVar: &MkCondCompareVarVar{lhs, op, rhs}}
+				return &MkCond{CompareVarVar: &MkCondCompareVarVar{lhs, op, rhs}}
 			}
 
 			if lexer.PeekByte() == '"' {
@@ -528,7 +528,7 @@ func (p *MkParser) mkCondAtom() MkCond {
 				lexer.Skip(1)
 				if quotedRHS := p.VarUse(); quotedRHS != nil {
 					if lexer.SkipByte('"') {
-						return &mkCond{CompareVarVar: &MkCondCompareVarVar{lhs, op, quotedRHS}}
+						return &MkCond{CompareVarVar: &MkCondCompareVarVar{lhs, op, quotedRHS}}
 					}
 				}
 				lexer.Reset(mark)
@@ -549,7 +549,7 @@ func (p *MkParser) mkCondAtom() MkCond {
 						rhsText.WriteByte(lexer.Since(m)[1])
 
 					case lexer.SkipByte('"'):
-						return &mkCond{CompareVarStr: &MkCondCompareVarStr{lhs, op, rhsText.String()}}
+						return &MkCond{CompareVarStr: &MkCondCompareVarStr{lhs, op, rhsText.String()}}
 					default:
 						break loop
 					}
@@ -560,14 +560,14 @@ func (p *MkParser) mkCondAtom() MkCond {
 
 		// See devel/bmake/files/cond.c:/^CondCvtArg
 		if m := lexer.NextRegexp(G.res.Compile(`^(?:0x[0-9A-Fa-f]+|\d+(?:\.\d+)?)`)); m != nil {
-			return &mkCond{Num: m[0]}
+			return &MkCond{Num: m[0]}
 		}
 	}
 	lexer.Reset(mark)
 	return nil
 }
 
-func (p *MkParser) mkCondFunc() *mkCond {
+func (p *MkParser) mkCondFunc() *MkCond {
 	lexer := p.lexer
 	mark := lexer.Mark()
 
@@ -581,14 +581,14 @@ func (p *MkParser) mkCondFunc() *mkCond {
 	case "defined":
 		varname := p.Varname()
 		if varname != "" && lexer.SkipByte(')') {
-			return &mkCond{Defined: varname}
+			return &MkCond{Defined: varname}
 		}
 
 	case "empty":
 		if varname := p.Varname(); varname != "" {
 			modifiers := p.VarUseModifiers(varname, ')')
 			if lexer.SkipByte(')') {
-				return &mkCond{Empty: &MkVarUse{varname, modifiers}}
+				return &MkCond{Empty: &MkVarUse{varname, modifiers}}
 			}
 		}
 
@@ -602,7 +602,7 @@ func (p *MkParser) mkCondFunc() *mkCond {
 		}
 		arg := lexer.Since(argMark)
 		if lexer.SkipByte(')') {
-			return &mkCond{Call: &MkCondCall{funcName, arg}}
+			return &MkCond{Call: &MkCondCall{funcName, arg}}
 		}
 	}
 
@@ -786,12 +786,10 @@ func ToVarUse(str string) *MkVarUse {
 // Unnecessary parentheses are omitted in this representation,
 // but !empty(VARNAME) is represented differently from ${VARNAME} != "".
 // For higher level analysis, a unified representation might be better.
-type MkCond = *mkCond
-
-type mkCond struct {
-	Or  []*mkCond
-	And []*mkCond
-	Not *mkCond
+type MkCond struct {
+	Or  []*MkCond
+	And []*MkCond
+	Not *MkCond
 
 	Defined       string
 	Empty         *MkVarUse
@@ -823,7 +821,7 @@ type MkCondCall struct {
 }
 
 type MkCondCallback struct {
-	Not           func(cond MkCond)
+	Not           func(cond *MkCond)
 	Defined       func(varname string)
 	Empty         func(empty *MkVarUse)
 	CompareVarNum func(varuse *MkVarUse, op string, num string)
@@ -834,13 +832,13 @@ type MkCondCallback struct {
 	VarUse        func(varuse *MkVarUse)
 }
 
-func (cond *mkCond) Walk(callback *MkCondCallback) {
+func (cond *MkCond) Walk(callback *MkCondCallback) {
 	(&MkCondWalker{}).Walk(cond, callback)
 }
 
 type MkCondWalker struct{}
 
-func (w *MkCondWalker) Walk(cond MkCond, callback *MkCondCallback) {
+func (w *MkCondWalker) Walk(cond *MkCond, callback *MkCondCallback) {
 	switch {
 	case cond.Or != nil:
 		for _, or := range cond.Or {

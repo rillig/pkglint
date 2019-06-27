@@ -44,7 +44,7 @@ type mkLineDirectiveImpl struct {
 	args      string
 	comment   string   // mainly interesting for .endif and .endfor
 	elseLine  *MkLine  // for .if (filled in later)
-	cond      MkCond   // for .if and .elif (filled in on first access)
+	cond      *MkCond  // for .if and .elif (filled in on first access)
 	fields    []string // the arguments for the .for loop (filled in on first access)
 }
 type mkLineInclude = *mkLineIncludeImpl // See https://github.com/golang/go/issues/28045
@@ -358,7 +358,7 @@ func (mkline *MkLine) Args() string { return mkline.data.(mkLineDirective).args 
 //
 // If a parse error occurs, it is silently swallowed, returning a
 // best-effort part of the condition, or even nil.
-func (mkline *MkLine) Cond() MkCond {
+func (mkline *MkLine) Cond() *MkCond {
 	cond := mkline.data.(mkLineDirective).cond
 	if cond == nil {
 		cond = NewMkParser(mkline.Line, mkline.Args(), true).MkCond()
@@ -1217,7 +1217,7 @@ func (ind *Indentation) String() string {
 	return "[" + trimHspace(s.String()) + "]"
 }
 
-func (ind *Indentation) RememberUsedVariables(cond MkCond) {
+func (ind *Indentation) RememberUsedVariables(cond *MkCond) {
 	cond.Walk(&MkCondCallback{
 		VarUse: func(varuse *MkVarUse) { ind.AddVar(varuse.varname) }})
 }

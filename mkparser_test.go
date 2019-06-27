@@ -555,13 +555,13 @@ func (s *Suite) Test_MkParser_VarUse__ambiguous(c *check.C) {
 func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	t := s.Init(c)
 
-	testRest := func(input string, expectedTree MkCond, expectedRest string) {
+	testRest := func(input string, expectedTree *MkCond, expectedRest string) {
 		p := NewMkParser(nil, input, false)
 		actualTree := p.MkCond()
 		c.Check(actualTree, deepEquals, expectedTree)
 		c.Check(p.Rest(), equals, expectedRest)
 	}
-	test := func(input string, expectedTree MkCond) {
+	test := func(input string, expectedTree *MkCond) {
 		testRest(input, expectedTree, "")
 	}
 	varuse := NewMkVarUse
@@ -569,122 +569,122 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	t.Use(testRest, test, varuse)
 
 	test("${OPSYS:MNetBSD}",
-		&mkCond{Var: varuse("OPSYS", "MNetBSD")})
+		&MkCond{Var: varuse("OPSYS", "MNetBSD")})
 
 	test("defined(VARNAME)",
-		&mkCond{Defined: "VARNAME"})
+		&MkCond{Defined: "VARNAME"})
 
 	test("empty(VARNAME)",
-		&mkCond{Empty: varuse("VARNAME")})
+		&MkCond{Empty: varuse("VARNAME")})
 
 	test("!empty(VARNAME)",
-		&mkCond{Not: &mkCond{Empty: varuse("VARNAME")}})
+		&MkCond{Not: &MkCond{Empty: varuse("VARNAME")}})
 
 	test("!empty(VARNAME:M[yY][eE][sS])",
-		&mkCond{Not: &mkCond{Empty: varuse("VARNAME", "M[yY][eE][sS]")}})
+		&MkCond{Not: &MkCond{Empty: varuse("VARNAME", "M[yY][eE][sS]")}})
 
 	// Colons are unescaped at this point because they cannot be mistaken for separators anymore.
 	test("!empty(USE_TOOLS:Mautoconf\\:run)",
-		&mkCond{Not: &mkCond{Empty: varuse("USE_TOOLS", "Mautoconf:run")}})
+		&MkCond{Not: &MkCond{Empty: varuse("USE_TOOLS", "Mautoconf:run")}})
 
 	test("${VARNAME} != \"Value\"",
-		&mkCond{CompareVarStr: &MkCondCompareVarStr{varuse("VARNAME"), "!=", "Value"}})
+		&MkCond{CompareVarStr: &MkCondCompareVarStr{varuse("VARNAME"), "!=", "Value"}})
 
 	test("${VARNAME:Mi386} != \"Value\"",
-		&mkCond{CompareVarStr: &MkCondCompareVarStr{varuse("VARNAME", "Mi386"), "!=", "Value"}})
+		&MkCond{CompareVarStr: &MkCondCompareVarStr{varuse("VARNAME", "Mi386"), "!=", "Value"}})
 
 	test("${VARNAME} != Value",
-		&mkCond{CompareVarStr: &MkCondCompareVarStr{varuse("VARNAME"), "!=", "Value"}})
+		&MkCond{CompareVarStr: &MkCondCompareVarStr{varuse("VARNAME"), "!=", "Value"}})
 
 	test("\"${VARNAME}\" != Value",
-		&mkCond{CompareVarStr: &MkCondCompareVarStr{varuse("VARNAME"), "!=", "Value"}})
+		&MkCond{CompareVarStr: &MkCondCompareVarStr{varuse("VARNAME"), "!=", "Value"}})
 
 	test("${pkg} == \"${name}\"",
-		&mkCond{CompareVarVar: &MkCondCompareVarVar{varuse("pkg"), "==", varuse("name")}})
+		&MkCond{CompareVarVar: &MkCondCompareVarVar{varuse("pkg"), "==", varuse("name")}})
 
 	test("\"${pkg}\" == \"${name}\"",
-		&mkCond{CompareVarVar: &MkCondCompareVarVar{varuse("pkg"), "==", varuse("name")}})
+		&MkCond{CompareVarVar: &MkCondCompareVarVar{varuse("pkg"), "==", varuse("name")}})
 
 	// The right-hand side is not analyzed further to keep the data types simple.
 	test("${ABC} == \"${A}B${C}\"",
-		&mkCond{CompareVarStr: &MkCondCompareVarStr{varuse("ABC"), "==", "${A}B${C}"}})
+		&MkCond{CompareVarStr: &MkCondCompareVarStr{varuse("ABC"), "==", "${A}B${C}"}})
 
 	test("${ABC} == \"${A}\\\"${B}\\\\${C}$${shellvar}${D}\"",
-		&mkCond{CompareVarStr: &MkCondCompareVarStr{varuse("ABC"), "==", "${A}\"${B}\\${C}$${shellvar}${D}"}})
+		&MkCond{CompareVarStr: &MkCondCompareVarStr{varuse("ABC"), "==", "${A}\"${B}\\${C}$${shellvar}${D}"}})
 
 	test("exists(/etc/hosts)",
-		&mkCond{Call: &MkCondCall{"exists", "/etc/hosts"}})
+		&MkCond{Call: &MkCondCall{"exists", "/etc/hosts"}})
 
 	test("exists(${PREFIX}/var)",
-		&mkCond{Call: &MkCondCall{"exists", "${PREFIX}/var"}})
+		&MkCond{Call: &MkCondCall{"exists", "${PREFIX}/var"}})
 
 	test("${OPSYS} == \"NetBSD\" || ${OPSYS} == \"OpenBSD\"",
-		&mkCond{Or: []*mkCond{
+		&MkCond{Or: []*MkCond{
 			{CompareVarStr: &MkCondCompareVarStr{varuse("OPSYS"), "==", "NetBSD"}},
 			{CompareVarStr: &MkCondCompareVarStr{varuse("OPSYS"), "==", "OpenBSD"}}}})
 
 	test("${OPSYS} == \"NetBSD\" && ${MACHINE_ARCH} == \"i386\"",
-		&mkCond{And: []*mkCond{
+		&MkCond{And: []*MkCond{
 			{CompareVarStr: &MkCondCompareVarStr{varuse("OPSYS"), "==", "NetBSD"}},
 			{CompareVarStr: &MkCondCompareVarStr{varuse("MACHINE_ARCH"), "==", "i386"}}}})
 
 	test("defined(A) && defined(B) || defined(C) && defined(D)",
-		&mkCond{Or: []*mkCond{
-			{And: []*mkCond{
+		&MkCond{Or: []*MkCond{
+			{And: []*MkCond{
 				{Defined: "A"},
 				{Defined: "B"}}},
-			{And: []*mkCond{
+			{And: []*MkCond{
 				{Defined: "C"},
 				{Defined: "D"}}}}})
 
 	test("${MACHINE_ARCH:Mi386} || ${MACHINE_OPSYS:MNetBSD}",
-		&mkCond{Or: []*mkCond{
+		&MkCond{Or: []*MkCond{
 			{Var: varuse("MACHINE_ARCH", "Mi386")},
 			{Var: varuse("MACHINE_OPSYS", "MNetBSD")}}})
 
 	test("${VAR} == \"${VAR}suffix\"",
-		&mkCond{CompareVarStr: &MkCondCompareVarStr{varuse("VAR"), "==", "${VAR}suffix"}})
+		&MkCond{CompareVarStr: &MkCondCompareVarStr{varuse("VAR"), "==", "${VAR}suffix"}})
 
 	// Exotic cases
 
 	// ".if 0" can be used to skip over a block of code.
 	test("0",
-		&mkCond{Num: "0"})
+		&MkCond{Num: "0"})
 
 	test("0xCAFEBABE",
-		&mkCond{Num: "0xCAFEBABE"})
+		&MkCond{Num: "0xCAFEBABE"})
 
 	test("${VAR} == 0xCAFEBABE",
-		&mkCond{
+		&MkCond{
 			CompareVarNum: &MkCondCompareVarNum{
 				Var: varuse("VAR"),
 				Op:  "==",
 				Num: "0xCAFEBABE"}})
 
 	test("! ( defined(A)  && empty(VARNAME) )",
-		&mkCond{Not: &mkCond{
-			And: []*mkCond{
+		&MkCond{Not: &MkCond{
+			And: []*MkCond{
 				{Defined: "A"},
 				{Empty: varuse("VARNAME")}}}})
 
 	test("${REQD_MAJOR} > ${MAJOR}",
-		&mkCond{CompareVarVar: &MkCondCompareVarVar{varuse("REQD_MAJOR"), ">", varuse("MAJOR")}})
+		&MkCond{CompareVarVar: &MkCondCompareVarVar{varuse("REQD_MAJOR"), ">", varuse("MAJOR")}})
 
 	test("${OS_VERSION} >= 6.5",
-		&mkCond{CompareVarNum: &MkCondCompareVarNum{varuse("OS_VERSION"), ">=", "6.5"}})
+		&MkCond{CompareVarNum: &MkCondCompareVarNum{varuse("OS_VERSION"), ">=", "6.5"}})
 
 	test("${OS_VERSION} == 5.3",
-		&mkCond{CompareVarNum: &MkCondCompareVarNum{varuse("OS_VERSION"), "==", "5.3"}})
+		&MkCond{CompareVarNum: &MkCondCompareVarNum{varuse("OS_VERSION"), "==", "5.3"}})
 
 	test("!empty(${OS_VARIANT:MIllumos})", // Probably not intended
-		&mkCond{Not: &mkCond{Empty: varuse("${OS_VARIANT:MIllumos}")}})
+		&MkCond{Not: &MkCond{Empty: varuse("${OS_VARIANT:MIllumos}")}})
 
 	// There may be whitespace before the parenthesis; see devel/bmake/files/cond.c:^compare_function.
 	test("defined (VARNAME)",
-		&mkCond{Defined: "VARNAME"})
+		&MkCond{Defined: "VARNAME"})
 
 	test("${\"${PKG_OPTIONS:Moption}\":?--enable-option:--disable-option}",
-		&mkCond{Var: varuse("\"${PKG_OPTIONS:Moption}\"", "?--enable-option:--disable-option")})
+		&MkCond{Var: varuse("\"${PKG_OPTIONS:Moption}\"", "?--enable-option:--disable-option")})
 
 	// Contrary to most other programming languages, the == operator binds
 	// more tightly that the ! operator.
@@ -692,7 +692,7 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	// TODO: Since this operator precedence is surprising there should be a warning,
 	//  suggesting to replace "!${VAR} == value" with "${VAR} != value".
 	test("!${VAR} == value",
-		&mkCond{Not: &mkCond{CompareVarStr: &MkCondCompareVarStr{varuse("VAR"), "==", "value"}}})
+		&MkCond{Not: &MkCond{CompareVarStr: &MkCondCompareVarStr{varuse("VAR"), "==", "value"}}})
 
 	// Errors
 
@@ -721,11 +721,11 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 		"exists(/unfinished")
 
 	testRest("!empty(PKG_OPTIONS:Msndfile) || defined(PKG_OPTIONS:Msamplerate)",
-		&mkCond{Not: &mkCond{Empty: varuse("PKG_OPTIONS", "Msndfile")}},
+		&MkCond{Not: &MkCond{Empty: varuse("PKG_OPTIONS", "Msndfile")}},
 		"|| defined(PKG_OPTIONS:Msamplerate)")
 
 	testRest("${LEFT} &&",
-		&mkCond{Var: varuse("LEFT")},
+		&MkCond{Var: varuse("LEFT")},
 		"&&")
 
 	testRest("\"unfinished string literal",
