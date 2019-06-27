@@ -68,41 +68,7 @@ func (pkglint *Pkglint) Main(argv ...string) (exitCode int) {
 	}
 
 	if pkglint.Opts.Profiling {
-
-		defer func() {
-			pkglint.fileCache.table = nil
-			pkglint.fileCache.mapping = nil
-			runtime.GC()
-
-			fd, err := os.Create("pkglint.heapdump")
-			assertNil(err, "heapDump.create")
-
-			debug.WriteHeapDump(fd.Fd())
-
-			err = fd.Close()
-			assertNil(err, "heapDump.close")
-		}()
-
-		f, err := os.Create("pkglint.pprof")
-		if err != nil {
-			dummyLine.Fatalf("Cannot create profiling file: %s", err)
-		}
-		defer f.Close()
-
-		err = pprof.StartCPUProfile(f)
-		assertNil(err, "Cannot start profiling")
-		defer pprof.StopCPUProfile()
-
-		pkglint.res.Profiling()
-		pkglint.Logger.histo = histogram.New()
-		pkglint.loaded = histogram.New()
-		defer func() {
-			pkglint.Logger.out.Write("")
-			pkglint.Logger.histo.PrintStats(pkglint.Logger.out.out, "loghisto", -1)
-			pkglint.res.PrintStats(pkglint.Logger.out.out)
-			pkglint.loaded.PrintStats(pkglint.Logger.out.out, "loaded", 10)
-			pkglint.Logger.out.WriteLine(sprintf("fileCache: %d hits, %d misses", pkglint.fileCache.hits, pkglint.fileCache.misses))
-		}()
+		defer pkglint.setUpProfiling()()
 	}
 
 	for _, arg := range pkglint.Opts.args {
@@ -262,7 +228,7 @@ The argument `DESCR` is saved in the `TODO` list.
 The default use case for pkglint is to check the package from the
 current working directory, therefore this is done if no arguments are given.
 
-> from [pkglint.go](pkglint.go#L234):
+> from [pkglint.go](pkglint.go#L200):
 
 ```go
 	for _, arg := range pkglint.Opts.args {
@@ -283,7 +249,7 @@ In this example run, the first (and only) argument is `DESCR`.
 From there, the pkgsrc root is usually reachable via `../../`,
 and this is what pkglint tries.
 
-> from [pkglint.go](pkglint.go#L241):
+> from [pkglint.go](pkglint.go#L207):
 
 ```go
 	firstDir := pkglint.Todo[0]
@@ -311,7 +277,7 @@ one after another. When pkglint is called with the `-r` option,
 some entries may be added to the Todo list,
 but that doesn't happen in this simple example run.
 
-> from [pkglint.go](pkglint.go#L264):
+> from [pkglint.go](pkglint.go#L230):
 
 ```go
 	for len(pkglint.Todo) > 0 {
@@ -323,7 +289,7 @@ but that doesn't happen in this simple example run.
 
 The main work is done in `Pkglint.Check`:
 
-> from [pkglint.go](pkglint.go#L382):
+> from [pkglint.go](pkglint.go#L397):
 
 ```go
 	if isReg {
@@ -338,7 +304,7 @@ Since `DESCR` is a regular file, the next function to call is `checkReg`.
 For directories, the next function would depend on the depth from the
 pkgsrc root directory.
 
-> from [pkglint.go](pkglint.go#L591):
+> from [pkglint.go](pkglint.go#L606):
 
 ```go
 func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
@@ -438,7 +404,7 @@ func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
 }
 ```
 
-> from [pkglint.go](pkglint.go#L617):
+> from [pkglint.go](pkglint.go#L632):
 
 ```go
 	case basename == "buildlink3.mk":
@@ -469,7 +435,7 @@ The actual checks usually work on `Line` objects instead of files
 because the lines offer nice methods for logging the diagnostics
 and for automatically fixing the text (in pkglint's `--autofix` mode).
 
-> from [pkglint.go](pkglint.go#L481):
+> from [pkglint.go](pkglint.go#L496):
 
 ```go
 func CheckLinesDescr(lines *Lines) {
