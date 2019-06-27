@@ -194,41 +194,7 @@ func (pkglint *Pkglint) Main(argv ...string) (exitCode int) {
 	}
 
 	if pkglint.Opts.Profiling {
-
-		defer func() {
-			pkglint.fileCache.table = nil
-			pkglint.fileCache.mapping = nil
-			runtime.GC()
-
-			fd, err := os.Create("pkglint.heapdump")
-			assertNil(err, "heapDump.create")
-
-			debug.WriteHeapDump(fd.Fd())
-
-			err = fd.Close()
-			assertNil(err, "heapDump.close")
-		}()
-
-		f, err := os.Create("pkglint.pprof")
-		if err != nil {
-			dummyLine.Fatalf("Cannot create profiling file: %s", err)
-		}
-		defer f.Close()
-
-		err = pprof.StartCPUProfile(f)
-		assertNil(err, "Cannot start profiling")
-		defer pprof.StopCPUProfile()
-
-		pkglint.res.Profiling()
-		pkglint.Logger.histo = histogram.New()
-		pkglint.loaded = histogram.New()
-		defer func() {
-			pkglint.Logger.out.Write("")
-			pkglint.Logger.histo.PrintStats(pkglint.Logger.out.out, "loghisto", -1)
-			pkglint.res.PrintStats(pkglint.Logger.out.out)
-			pkglint.loaded.PrintStats(pkglint.Logger.out.out, "loaded", 10)
-			pkglint.Logger.out.WriteLine(sprintf("fileCache: %d hits, %d misses", pkglint.fileCache.hits, pkglint.fileCache.misses))
-		}()
+		defer pkglint.setUpProfiling()()
 	}
 
 	for _, arg := range pkglint.Opts.args {
@@ -274,6 +240,55 @@ func (pkglint *Pkglint) Main(argv ...string) (exitCode int) {
 		return 1
 	}
 	return 0
+}
+
+func (pkglint *Pkglint) setUpProfiling() func() {
+
+	var cleanups []func()
+	atExit := func(cleanup func()) {
+		cleanups = append(cleanups, cleanup)
+	}
+
+	atExit(func() {
+		pkglint.fileCache.table = nil
+		pkglint.fileCache.mapping = nil
+		runtime.GC()
+
+		fd, err := os.Create("pkglint.heapdump")
+		assertNil(err, "heapDump.create")
+
+		debug.WriteHeapDump(fd.Fd())
+
+		err = fd.Close()
+		assertNil(err, "heapDump.close")
+	})
+
+	f, err := os.Create("pkglint.pprof")
+	if err != nil {
+		dummyLine.Fatalf("Cannot create profiling file: %s", err)
+	}
+	atExit(func() { assertNil(f.Close(), "") })
+
+	err = pprof.StartCPUProfile(f)
+	assertNil(err, "Cannot start profiling")
+	atExit(pprof.StopCPUProfile)
+
+	pkglint.res.Profiling()
+	pkglint.Logger.histo = histogram.New()
+	pkglint.loaded = histogram.New()
+	atExit(func() {
+		pkglint.Logger.out.Write("")
+		pkglint.Logger.histo.PrintStats(pkglint.Logger.out.out, "loghisto", -1)
+		pkglint.res.PrintStats(pkglint.Logger.out.out)
+		pkglint.loaded.PrintStats(pkglint.Logger.out.out, "loaded", 10)
+		pkglint.Logger.out.WriteLine(sprintf("fileCache: %d hits, %d misses", pkglint.fileCache.hits, pkglint.fileCache.misses))
+	})
+
+	return func() {
+		for i := range cleanups {
+			cleanups[len(cleanups)-1-i]()
+		}
+	}
 }
 
 func (pkglint *Pkglint) ParseCommandLine(args []string) int {
