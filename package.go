@@ -150,6 +150,8 @@ func (pkg *Package) checkPossibleDowngrade() {
 				pkgversion, change.Version(), mkline.Line.RefToLocation(change.Location))
 			mkline.Explain(
 				"Each update to a package should be mentioned in the doc/CHANGES file.",
+				"That file is used for the quarterly statistics of updated packages.",
+				"",
 				"To do this after updating a package, run",
 				sprintf("%q,", bmake("cce")),
 				"which is the abbreviation for commit-changes-entry.")
