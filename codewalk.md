@@ -25,23 +25,23 @@ therefore the decision whether each element should be exported or not is not car
 If you want to use some of the code in your own pkgsrc programs,
 [just ask](mailto:%72%69%6C%6C%69%67%40NetBSD.org).
 
-> from [pkglint.go](pkglint.go#L106):
+> from [pkglint.go](pkglint.go#L161):
 
 ```go
 func Main() int {
-	G.out = NewSeparatorWriter(os.Stdout)
-	G.err = NewSeparatorWriter(os.Stderr)
+	G.Logger.out = NewSeparatorWriter(os.Stdout)
+	G.Logger.err = NewSeparatorWriter(os.Stderr)
 	trace.Out = os.Stdout
 	exitCode := G.Main(os.Args...)
 	if G.Opts.Profiling {
-		G = Pkglint{} // Free all memory.
-		runtime.GC()  // For detecting possible memory leaks; see qa-pkglint.
+		G = unusablePkglint() // Free all memory.
+		runtime.GC()          // For detecting possible memory leaks; see qa-pkglint.
 	}
 	return exitCode
 }
 ```
 
-> from [pkglint.go](pkglint.go#L118):
+> from [pkglint.go](pkglint.go#L173):
 
 ```go
 // Main runs the main program with the given arguments.
@@ -94,14 +94,14 @@ func (pkglint *Pkglint) Main(argv ...string) (exitCode int) {
 		defer pprof.StopCPUProfile()
 
 		pkglint.res.Profiling()
-		pkglint.histo = histogram.New()
+		pkglint.Logger.histo = histogram.New()
 		pkglint.loaded = histogram.New()
 		defer func() {
-			pkglint.out.Write("")
-			pkglint.histo.PrintStats(pkglint.out.out, "loghisto", -1)
-			pkglint.res.PrintStats(pkglint.out.out)
-			pkglint.loaded.PrintStats(pkglint.out.out, "loaded", 10)
-			pkglint.out.WriteLine(sprintf("fileCache: %d hits, %d misses", pkglint.fileCache.hits, pkglint.fileCache.misses))
+			pkglint.Logger.out.Write("")
+			pkglint.Logger.histo.PrintStats(pkglint.Logger.out.out, "loghisto", -1)
+			pkglint.res.PrintStats(pkglint.Logger.out.out)
+			pkglint.loaded.PrintStats(pkglint.Logger.out.out, "loaded", 10)
+			pkglint.Logger.out.WriteLine(sprintf("fileCache: %d hits, %d misses", pkglint.fileCache.hits, pkglint.fileCache.misses))
 		}()
 	}
 
@@ -131,10 +131,9 @@ func (pkglint *Pkglint) Main(argv ...string) (exitCode int) {
 	pkglint.Pkgsrc.LoadInfrastructure()
 
 	currentUser, err := user.Current()
-	if err == nil {
-		// On Windows, this is `Computername\Username`.
-		pkglint.Username = replaceAll(currentUser.Username, `^.*\\`, "")
-	}
+	assertNil(err, "user.Current")
+	// On Windows, this is `Computername\Username`.
+	pkglint.Username = replaceAll(currentUser.Username, `^.*\\`, "")
 
 	for len(pkglint.Todo) > 0 {
 		item := pkglint.Todo[0]
@@ -144,8 +143,8 @@ func (pkglint *Pkglint) Main(argv ...string) (exitCode int) {
 
 	pkglint.Pkgsrc.checkToplevelUnusedLicenses()
 
-	pkglint.ShowSummary()
-	if pkglint.errors != 0 {
+	pkglint.Logger.ShowSummary()
+	if pkglint.Logger.errors != 0 {
 		return 1
 	}
 	return 0
@@ -171,8 +170,8 @@ func (s *Suite) SetUpTest(c *check.C) {
 
 	G = NewPkglint()
 	G.Testing = true
-	G.out = NewSeparatorWriter(&t.stdout)
-	G.err = NewSeparatorWriter(&t.stderr)
+	G.Logger.out = NewSeparatorWriter(&t.stdout)
+	G.Logger.err = NewSeparatorWriter(&t.stderr)
 	trace.Out = &t.stdout
 
 	// XXX: Maybe the tests can run a bit faster when they don't
@@ -207,7 +206,7 @@ func (s *Suite) TearDownTest(c *check.C) {
 	}
 
 	if t.seenSetupPkgsrc > 0 && !t.seenFinish && !t.seenMain {
-		t.Errorf("After t.SetupPkgsrc(), t.FinishSetUp() or t.Main() must be called.")
+		t.Errorf("After t.SetupPkgsrc(), either t.FinishSetUp() or t.Main() must be called.")
 	}
 
 	if out := t.Output(); out != "" {
@@ -227,7 +226,7 @@ func (s *Suite) TearDownTest(c *check.C) {
 	t.tmpdir = ""
 	t.DisableTracing()
 
-	G = Pkglint{} // unusable because of missing Logger.out and Logger.err
+	G = unusablePkglint()
 }
 ```
 
@@ -248,7 +247,7 @@ func main() {
 }
 ```
 
-> from [pkglint.go](pkglint.go#L137):
+> from [pkglint.go](pkglint.go#L192):
 
 ```go
 	if exitcode := pkglint.ParseCommandLine(argv); exitcode != -1 {
@@ -263,7 +262,7 @@ The argument `DESCR` is saved in the `TODO` list.
 The default use case for pkglint is to check the package from the
 current working directory, therefore this is done if no arguments are given.
 
-> from [pkglint.go](pkglint.go#L179):
+> from [pkglint.go](pkglint.go#L234):
 
 ```go
 	for _, arg := range pkglint.Opts.args {
@@ -284,7 +283,7 @@ In this example run, the first (and only) argument is `DESCR`.
 From there, the pkgsrc root is usually reachable via `../../`,
 and this is what pkglint tries.
 
-> from [pkglint.go](pkglint.go#L186):
+> from [pkglint.go](pkglint.go#L241):
 
 ```go
 	firstDir := pkglint.Todo[0]
@@ -312,7 +311,7 @@ one after another. When pkglint is called with the `-r` option,
 some entries may be added to the Todo list,
 but that doesn't happen in this simple example run.
 
-> from [pkglint.go](pkglint.go#L210):
+> from [pkglint.go](pkglint.go#L264):
 
 ```go
 	for len(pkglint.Todo) > 0 {
@@ -324,12 +323,12 @@ but that doesn't happen in this simple example run.
 
 The main work is done in `Pkglint.Check`:
 
-> from [pkglint.go](pkglint.go#L319):
+> from [pkglint.go](pkglint.go#L382):
 
 ```go
 	if isReg {
 		depth := strings.Count(pkgsrcRel, "/")
-		pkglint.checkExecutable(dirent, st.Mode())
+		pkglint.checkExecutable(dirent, mode)
 		pkglint.checkReg(dirent, basename, depth)
 		return
 	}
@@ -339,7 +338,7 @@ Since `DESCR` is a regular file, the next function to call is `checkReg`.
 For directories, the next function would depend on the depth from the
 pkgsrc root directory.
 
-> from [pkglint.go](pkglint.go#L582):
+> from [pkglint.go](pkglint.go#L591):
 
 ```go
 func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
@@ -410,8 +409,7 @@ func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
 		NewLineWhole(filename).Warnf("Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
 
 	case (hasPrefix(basename, "Makefile") || hasSuffix(basename, ".mk")) &&
-		!(hasPrefix(filename, "files/") || contains(filename, "/files/")) &&
-		!(hasPrefix(filename, "patches/") || contains(filename, "/patches/")):
+		!pathContainsDir(filename, "files"):
 		CheckFileMk(filename)
 
 	case hasPrefix(basename, "PLIST"):
@@ -424,7 +422,7 @@ func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
 		_ = pkglint.Pkgsrc.loadDocChangesFromFile(filename)
 
 	case matches(filename, `(?:^|/)files/[^/]*$`):
-		// Skip
+		// Skip files directly in the files/ directory, but not those further down.
 
 	case basename == "spec":
 		if !hasPrefix(pkglint.Pkgsrc.ToRel(filename), "regress/") {
@@ -436,14 +434,11 @@ func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
 
 	default:
 		NewLineWhole(filename).Warnf("Unexpected file found.")
-		if pkglint.Opts.CheckExtra {
-			CheckFileOther(filename)
-		}
 	}
 }
 ```
 
-> from [pkglint.go](pkglint.go#L608):
+> from [pkglint.go](pkglint.go#L617):
 
 ```go
 	case basename == "buildlink3.mk":
@@ -474,12 +469,12 @@ The actual checks usually work on `Line` objects instead of files
 because the lines offer nice methods for logging the diagnostics
 and for automatically fixing the text (in pkglint's `--autofix` mode).
 
-> from [pkglint.go](pkglint.go#L476):
+> from [pkglint.go](pkglint.go#L481):
 
 ```go
-func CheckLinesDescr(lines Lines) {
+func CheckLinesDescr(lines *Lines) {
 	if trace.Tracing {
-		defer trace.Call1(lines.FileName)()
+		defer trace.Call1(lines.Filename)()
 	}
 
 	for _, line := range lines.Lines {
@@ -557,7 +552,7 @@ and at its typical call site `Line.Autofix()`:
 // The modifications are kept in memory only,
 // until they are written to disk by SaveAutofixChanges.
 type Autofix struct {
-	line        Line
+	line        *Line
 	linesBefore []string // Newly inserted lines, including \n
 	linesAfter  []string // Newly inserted lines, including \n
 	// Whether an actual fix has been applied (or, without --show-autofix,
@@ -568,7 +563,7 @@ type Autofix struct {
 }
 ```
 
-> from [line.go](line.go#L200):
+> from [line.go](line.go#L196):
 
 ```go
 // Autofix returns the autofix instance belonging to the line.
@@ -594,7 +589,7 @@ type Autofix struct {
 //  fix.Custom(func(showAutofix, autofix bool) {})
 //
 //  fix.Apply()
-func (line *LineImpl) Autofix() *Autofix {
+func (line *Line) Autofix() *Autofix {
 	if line.autofix == nil {
 		line.autofix = NewAutofix(line)
 	}
@@ -605,7 +600,7 @@ func (line *LineImpl) Autofix() *Autofix {
 The journey ends here, and it hasn't been that difficult.
 If that was too easy, have a look at the complex cases here:
 
-> from [mkline.go](mkline.go#L866):
+> from [mkline.go](mkline.go#L886):
 
 ```go
 // VariableNeedsQuoting determines whether the given variable needs the :Q operator
@@ -614,7 +609,7 @@ If that was too easy, have a look at the complex cases here:
 // This decision depends on many factors, such as whether the type of the context is
 // a list of things, whether the variable is a list, whether it can contain only
 // safe characters, and so on.
-func (mkline *MkLineImpl) VariableNeedsQuoting(mklines MkLines, varuse *MkVarUse, vartype *Vartype, vuc *VarUseContext) (needsQuoting YesNoUnknown) {
+func (mkline *MkLine) VariableNeedsQuoting(mklines *MkLines, varuse *MkVarUse, vartype *Vartype, vuc *VarUseContext) (needsQuoting YesNoUnknown) {
 	if trace.Tracing {
 		defer trace.Call(varuse, vartype, vuc, trace.Result(&needsQuoting))()
 	}
@@ -685,7 +680,7 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(mklines MkLines, varuse *MkVarUse
 	}
 
 	// SUBST_MESSAGE.perl= Replacing in ${REPLACE_PERL}
-	if vucVartype.IsPlainString() {
+	if vucVartype.basicType == BtMessage {
 		return no
 	}
 
@@ -741,16 +736,11 @@ WARN: Makefile:3: COMMENT should not start with "A" or "An".
 
 The definition for the `Line` type is:
 
-> from [line.go](line.go#L65):
+> from [line.go](line.go#L62):
 
 ```go
-type Line = *LineImpl
-```
-
-> from [line.go](line.go#L67):
-
-```go
-type LineImpl struct {
+// Line represents a line of text from a file.
+type Line struct {
 	// TODO: Consider storing pointers to the Filename and Basename instead of strings to save memory.
 	//  But first find out where and why pkglint needs so much memory (200 MB for a full recursive run over pkgsrc + wip).
 	Location
@@ -776,18 +766,21 @@ In these, there may be line continuations  (the ones ending in backslash).
 Plus, they may contain Make variables of the form `${VARNAME}` or `${VARNAME:Modifiers}`,
 and these are handled specially.
 
-> from [mkline.go](mkline.go#L15):
+> from [mkline.go](mkline.go#L11):
 
 ```go
-type MkLine = *MkLineImpl
-```
+// MkLine is a line from a Makefile fragment.
+// There are several types of lines.
+// The most common types in pkgsrc are variable assignments,
+// shell commands and directives like .if and .for.
+type MkLine struct {
+	*Line
 
-> from [mkline.go](mkline.go#L17):
-
-```go
-type MkLineImpl struct {
-	Line
-	data interface{} // One of the following mkLine* types
+	// One of the following mkLine* types.
+	//
+	// For the larger of these types, a pointer is used instead of a direct
+	// struct because of https://github.com/golang/go/issues/28045.
+	data interface{}
 }
 ```
 
@@ -806,8 +799,8 @@ The `ShellLineChecker` type provides methods for checking shell commands and the
 // Or it is a variable assignment line from a Makefile with a left-hand
 // side variable that is of some shell-like type; see Vartype.IsShell.
 type ShellLineChecker struct {
-	MkLines MkLines
-	mkline  MkLine
+	MkLines *MkLines
+	mkline  *MkLine
 
 	// checkVarUse is set to false when checking a single shell word
 	// in order to skip duplicate warnings in variable assignments.
@@ -868,7 +861,7 @@ which is the underlying testing framework.
 Most pkglint tests don't need this variable.
 Low-level tests call `c.Check` to compare their results to the expected values.
 
-> from [util_test.go](util_test.go#L58):
+> from [util_test.go](util_test.go#L82):
 
 ```go
 func (s *Suite) Test_tabWidth(c *check.C) {
@@ -914,7 +907,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 	t.SetUpPkgsrc()
 
 	t.CreateFileLines("doc/CHANGES-2018",
-		RcsID,
+		CvsID,
 		"",
 		"Changes to the packages collection and infrastructure in 2018:",
 		"",
@@ -922,7 +915,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 
 	// See Pkgsrc.loadSuggestedUpdates.
 	t.CreateFileLines("doc/TODO",
-		RcsID,
+		CvsID,
 		"",
 		"Suggested package updates",
 		"",
@@ -931,7 +924,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 	// The MASTER_SITES in the package Makefile are searched here.
 	// See Pkgsrc.loadMasterSites.
 	t.CreateFileLines("mk/fetch/sites.mk",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"MASTER_SITE_GITHUB+=\thttps://github.com/")
 
@@ -946,7 +939,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 	// so that it can be used in CATEGORIES in the package Makefile.
 	// The category "tools" on the other hand is not valid.
 	t.CreateFileLines("sysutils/Makefile",
-		MkRcsID)
+		MkCvsID)
 
 	// The package Makefile in this test is quite simple, containing just the
 	// standard variable definitions. The data for checking the variable
@@ -954,7 +947,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 	// (as defined in the previous lines), and partly in the pkglint
 	// code directly. Many details can be found in vartypecheck.go.
 	t.CreateFileLines("sysutils/checkperms/Makefile",
-		MkRcsID,
+		MkCvsID,
 		"",
 		"DISTNAME=\tcheckperms-1.11",
 		"CATEGORIES=\tsysutils tools",
@@ -969,14 +962,14 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 
 	t.CreateFileLines("sysutils/checkperms/MESSAGE",
 		"===========================================================================",
-		RcsID,
+		CvsID,
 		"",
 		"After installation, this package has to be configured in a special way.",
 		"",
 		"===========================================================================")
 
 	t.CreateFileLines("sysutils/checkperms/PLIST",
-		PlistRcsID,
+		PlistCvsID,
 		"bin/checkperms",
 		"man/man1/checkperms.1")
 
@@ -987,7 +980,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		"Make the package work on MS-DOS")
 
 	t.CreateFileLines("sysutils/checkperms/patches/patch-checkperms.c",
-		RcsID,
+		CvsID,
 		"",
 		"A simple patch demonstrating that pkglint checks for missing",
 		"removed lines. The hunk headers says that one line is to be",
@@ -1000,7 +993,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		"+// Header 2",
 		"+// Header 3")
 	t.CreateFileLines("sysutils/checkperms/distinfo",
-		RcsID,
+		CvsID,
 		"",
 		"SHA1 (checkperms-1.12.tar.gz) = 34c084b4d06bcd7a8bba922ff57677e651eeced5",
 		"RMD160 (checkperms-1.12.tar.gz) = cd95029aa930b6201e9580b3ab7e36dd30b8f925",

@@ -184,7 +184,7 @@ go:type Autofix
 
 ```codewalk
 file line.go
-go:func LineImpl.Autofix
+go:func Line.Autofix
 ```
 
 The journey ends here, and it hasn't been that difficult.
@@ -192,7 +192,7 @@ If that was too easy, have a look at the complex cases here:
 
 ```codewalk
 file mkline.go
-go:func MkLineImpl.VariableNeedsQuoting
+go:func MkLine.VariableNeedsQuoting
 ```
 
 ## Basic ingredients
@@ -221,11 +221,6 @@ file     line.go
 go:type  Line
 ```
 
-```codewalk
-file     line.go
-go:type  LineImpl
-```
-
 ### MkLine
 
 Most of the pkgsrc infrastructure is written in Makefiles. 
@@ -236,11 +231,6 @@ and these are handled specially.
 ```codewalk
 file     mkline.go
 go:type  MkLine
-```
-
-```codewalk
-file    mkline.go
-go:type MkLineImpl
 ```
 
 ### ShellLine
