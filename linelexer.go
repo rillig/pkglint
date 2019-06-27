@@ -123,15 +123,15 @@ func NewMkLinesLexer(mklines MkLines) *MkLinesLexer {
 	return &MkLinesLexer{mklines, *NewLinesLexer(mklines.lines)}
 }
 
-func (mlex *MkLinesLexer) PreviousMkLine() *MkLineImpl {
+func (mlex *MkLinesLexer) PreviousMkLine() *MkLine {
 	return mlex.mklines.mklines[mlex.index-1]
 }
 
-func (mlex *MkLinesLexer) CurrentMkLine() *MkLineImpl {
+func (mlex *MkLinesLexer) CurrentMkLine() *MkLine {
 	return mlex.mklines.mklines[mlex.index]
 }
 
-func (mlex *MkLinesLexer) SkipWhile(pred func(mkline *MkLineImpl) bool) {
+func (mlex *MkLinesLexer) SkipWhile(pred func(mkline *MkLine) bool) {
 	if trace.Tracing {
 		defer trace.Call(mlex.CurrentMkLine().Text)()
 	}
@@ -141,7 +141,7 @@ func (mlex *MkLinesLexer) SkipWhile(pred func(mkline *MkLineImpl) bool) {
 	}
 }
 
-func (mlex *MkLinesLexer) SkipIf(pred func(mkline *MkLineImpl) bool) bool {
+func (mlex *MkLinesLexer) SkipIf(pred func(mkline *MkLine) bool) bool {
 	if !mlex.EOF() && pred(mlex.CurrentMkLine()) {
 		mlex.Skip()
 		return true

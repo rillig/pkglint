@@ -31,8 +31,8 @@ type Var struct {
 	value      string
 	valueInfra string
 
-	readLocations  []*MkLineImpl
-	writeLocations []*MkLineImpl
+	readLocations  []*MkLine
+	writeLocations []*MkLine
 
 	conditional     bool
 	conditionalVars StringSet
@@ -146,7 +146,7 @@ func (v *Var) ValueInfra() string {
 // are not listed.
 //
 // Variable uses in the pkgsrc infrastructure are taken into account.
-func (v *Var) ReadLocations() []*MkLineImpl {
+func (v *Var) ReadLocations() []*MkLine {
 	return v.readLocations
 }
 
@@ -156,11 +156,11 @@ func (v *Var) ReadLocations() []*MkLineImpl {
 // reachable in practice.
 //
 // Variable assignments in the pkgsrc infrastructure are taken into account.
-func (v *Var) WriteLocations() []*MkLineImpl {
+func (v *Var) WriteLocations() []*MkLine {
 	return v.writeLocations
 }
 
-func (v *Var) Read(mkline *MkLineImpl) {
+func (v *Var) Read(mkline *MkLine) {
 	v.readLocations = append(v.readLocations, mkline)
 	v.constantState = [...]uint8{3, 2, 2, 3}[v.constantState]
 }
@@ -169,7 +169,7 @@ func (v *Var) Read(mkline *MkLineImpl) {
 // Only standard assignments (VAR=value) are handled.
 // Side-effect assignments (${VAR::=value}) are not handled here since
 // they don't occur in practice.
-func (v *Var) Write(mkline *MkLineImpl, conditional bool, conditionVarnames ...string) {
+func (v *Var) Write(mkline *MkLine, conditional bool, conditionVarnames ...string) {
 	assertf(mkline.Varname() == v.Name, "wrong variable name")
 
 	v.writeLocations = append(v.writeLocations, mkline)
@@ -192,7 +192,7 @@ func (v *Var) Write(mkline *MkLineImpl, conditional bool, conditionVarnames ...s
 	v.updateConstantValue(mkline)
 }
 
-func (v *Var) update(mkline *MkLineImpl, update *string) {
+func (v *Var) update(mkline *MkLine, update *string) {
 	firstWrite := len(v.writeLocations) == 1
 	if v.Conditional() && !firstWrite {
 		return
@@ -218,7 +218,7 @@ func (v *Var) update(mkline *MkLineImpl, update *string) {
 	}
 }
 
-func (v *Var) updateConstantValue(mkline *MkLineImpl) {
+func (v *Var) updateConstantValue(mkline *MkLine) {
 	if v.constantState == 3 {
 		return
 	}

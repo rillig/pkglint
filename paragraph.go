@@ -9,10 +9,10 @@ import "strings"
 // If the paragraph adds an identifier to SUBST_CLASSES, the rest of the SUBST
 // block should be defined in the same paragraph.
 type Paragraph struct {
-	mklines []*MkLineImpl
+	mklines []*MkLine
 }
 
-func NewParagraph(mklines []*MkLineImpl) *Paragraph {
+func NewParagraph(mklines []*MkLine) *Paragraph {
 	return &Paragraph{mklines}
 }
 
@@ -20,12 +20,12 @@ func (p *Paragraph) Clear() {
 	p.mklines = nil
 }
 
-func (p *Paragraph) Add(mkline *MkLineImpl) {
+func (p *Paragraph) Add(mkline *MkLine) {
 	assertf(!mkline.IsEmpty(), "A paragraph must not contain empty lines.")
 	p.mklines = append(p.mklines, mkline)
 }
 
-func (p *Paragraph) ForEach(action func(mkline *MkLineImpl)) {
+func (p *Paragraph) ForEach(action func(mkline *MkLine)) {
 	for _, mkline := range p.mklines {
 		action(mkline)
 	}

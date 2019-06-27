@@ -1501,7 +1501,7 @@ func (s *Suite) Test_RedundantScope_handleVarassign__conditional(c *check.C) {
 	t.Check(
 		writeLocations,
 		deepEquals,
-		[]*MkLineImpl{mklines.mklines[0], mklines.mklines[2]})
+		[]*MkLine{mklines.mklines[0], mklines.mklines[2]})
 }
 
 // Ensures that commented variables do not influence the redundancy check.

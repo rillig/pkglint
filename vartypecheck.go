@@ -15,10 +15,10 @@ type VartypeCheck struct {
 	// See https://github.com/golang/go/issues/28972.
 	// That doesn't help though since pkglint contains these "more convoluted alias declarations"
 	// mentioned in https://github.com/golang/go/commit/6971090515ba.
-	// Therefore MkLine is declared as *MkLineImpl here.
+	// Therefore MkLine is declared as *MkLine here.
 	// Ideally the "more convoluted cyclic type declaration" should be broken up.
 
-	MkLine *MkLineImpl
+	MkLine *MkLine
 
 	// The name of the variable being checked.
 	//
@@ -812,7 +812,7 @@ func (cv *VartypeCheck) Pathlist() {
 	value := cv.Value
 
 	// Sometimes, variables called PATH contain a single pathname,
-	// especially those with auto-guessed type from MkLineImpl.VariableType.
+	// especially those with auto-guessed type from MkLine.VariableType.
 	if !contains(value, ":") && cv.Guessed {
 		cv.Pathname()
 		return

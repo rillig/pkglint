@@ -1711,7 +1711,7 @@ func (s *Suite) Test_MkLine_UnquoteShell(c *check.C) {
 	t := s.Init(c)
 
 	test := func(input, output string) {
-		unquoted := (*MkLineImpl).UnquoteShell(nil, input)
+		unquoted := (*MkLine).UnquoteShell(nil, input)
 		t.Check(unquoted, equals, output)
 	}
 

@@ -688,7 +688,7 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 	test := func(cond string, output ...string) {
 		mklines := t.NewMkLines("filename.mk",
 			cond)
-		mklines.ForEach(func(mkline *MkLineImpl) {
+		mklines.ForEach(func(mkline *MkLine) {
 			MkLineChecker{mklines, mkline}.checkDirectiveCond()
 		})
 		t.CheckOutput(output)
@@ -767,8 +767,8 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 		"TRACE: 1 2 + MkLineChecker.checkVarusePermissions(\"VAR\", (no-type time:parse quoting:plain wordpart:false))",
 		"TRACE: 1 2 3   No type definition found for \"VAR\".",
 		"TRACE: 1 2 - MkLineChecker.checkVarusePermissions(\"VAR\", (no-type time:parse quoting:plain wordpart:false))",
-		"TRACE: 1 2 + (*MkLineImpl).VariableNeedsQuoting(${VAR:Mpattern1:Mpattern2}, (*pkglint.Vartype)(nil), (no-type time:parse quoting:plain wordpart:false))",
-		"TRACE: 1 2 - (*MkLineImpl).VariableNeedsQuoting(${VAR:Mpattern1:Mpattern2}, (*pkglint.Vartype)(nil), (no-type time:parse quoting:plain wordpart:false), \"=>\", unknown)",
+		"TRACE: 1 2 + (*MkLine).VariableNeedsQuoting(${VAR:Mpattern1:Mpattern2}, (*pkglint.Vartype)(nil), (no-type time:parse quoting:plain wordpart:false))",
+		"TRACE: 1 2 - (*MkLine).VariableNeedsQuoting(${VAR:Mpattern1:Mpattern2}, (*pkglint.Vartype)(nil), (no-type time:parse quoting:plain wordpart:false), \"=>\", unknown)",
 		"TRACE: 1 - MkLineChecker.CheckVaruse(filename.mk:1, ${VAR:Mpattern1:Mpattern2}, (no-type time:parse quoting:plain wordpart:false))",
 		"TRACE: - MkLineChecker.checkDirectiveCond(\"${VAR:Mpattern1:Mpattern2} == comparison\")",
 		"TRACE: + (*MkParser).mkCondAtom(\"${VAR:Mpattern1:Mpattern2} == comparison\")",
@@ -1612,7 +1612,7 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePkgdir(c *check.C) {
 		mklines := t.SetUpFileMkLines("category/package/Makefile",
 			"# dummy")
 
-		checkRelativePkgdir := func(mkline *MkLineImpl) {
+		checkRelativePkgdir := func(mkline *MkLine) {
 			MkLineChecker{mklines, mkline}.CheckRelativePkgdir(relativePkgdir)
 		}
 

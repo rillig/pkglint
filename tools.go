@@ -135,7 +135,7 @@ func NewTools() *Tools {
 //
 // After this tool is added to USE_TOOLS, it may be used by this name
 // (e.g. "awk") or by its variable (e.g. ${AWK}).
-func (tr *Tools) Define(name, varname string, mkline *MkLineImpl) *Tool {
+func (tr *Tools) Define(name, varname string, mkline *MkLine) *Tool {
 	if trace.Tracing {
 		trace.Stepf("Tools.Define: %q %q in %s", name, varname, mkline)
 	}
@@ -225,7 +225,7 @@ func (tr *Tools) Trace() {
 //
 // If addToUseTools is true, a USE_TOOLS line makes a tool immediately
 // usable. This should only be done if the current line is unconditional.
-func (tr *Tools) ParseToolLine(mklines MkLines, mkline *MkLineImpl, fromInfrastructure bool, addToUseTools bool) {
+func (tr *Tools) ParseToolLine(mklines MkLines, mkline *MkLine, fromInfrastructure bool, addToUseTools bool) {
 	switch {
 
 	case mkline.IsVarassign():
@@ -303,7 +303,7 @@ func (tr *Tools) addAlias(tool *Tool, alias string) {
 // This can be done only in the pkgsrc infrastructure files, where the
 // actual definition is assumed to be in some other file. In packages
 // though, this assumption cannot be made and pkglint needs to be strict.
-func (tr *Tools) parseUseTools(mkline *MkLineImpl, createIfAbsent bool, addToUseTools bool) {
+func (tr *Tools) parseUseTools(mkline *MkLine, createIfAbsent bool, addToUseTools bool) {
 	value := mkline.Value()
 	if containsVarRef(value) {
 		return

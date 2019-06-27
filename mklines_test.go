@@ -320,7 +320,7 @@ func (s *Suite) Test_MkLines_ExpandLoopVar(c *check.C) {
 	var files []string
 	var ranks []string
 	var diagonals []string
-	mklines.ForEach(func(mkline *MkLineImpl) {
+	mklines.ForEach(func(mkline *MkLine) {
 		if mkline.IsVarassign() {
 			ranks = mklines.ExpandLoopVar("rank")
 			files = mklines.ExpandLoopVar("file")
@@ -347,7 +347,7 @@ func (s *Suite) Test_MkLines_ExpandLoopVar__multi(c *check.C) {
 
 	var keys []string
 	var values []string
-	mklines.ForEach(func(mkline *MkLineImpl) {
+	mklines.ForEach(func(mkline *MkLine) {
 		if mkline.IsVarassign() {
 			keys = mklines.ExpandLoopVar("key")
 			values = mklines.ExpandLoopVar("value")
@@ -370,7 +370,7 @@ func (s *Suite) Test_MkLines_ExpandLoopVar__malformed_for(c *check.C) {
 		".endfor")
 
 	var values = []string{"uninitialized"}
-	mklines.ForEach(func(mkline *MkLineImpl) {
+	mklines.ForEach(func(mkline *MkLine) {
 		if mkline.IsVarassign() {
 			values = mklines.ExpandLoopVar("key")
 		}
@@ -466,7 +466,7 @@ func (s *Suite) Test_MkLines_collectUsedVariables__simple(c *check.C) {
 
 	mklines.collectUsedVariables()
 
-	c.Check(mklines.vars.used, deepEquals, map[string]*MkLineImpl{"VAR": mkline})
+	c.Check(mklines.vars.used, deepEquals, map[string]*MkLine{"VAR": mkline})
 	c.Check(mklines.vars.FirstUse("VAR"), equals, mkline)
 }
 
@@ -1078,7 +1078,7 @@ func (s *Suite) Test_MkLines_ForEach__conditional_variables(c *check.C) {
 	seenDeveloper := false
 	seenUsesGettext := false
 
-	mklines.ForEach(func(mkline *MkLineImpl) {
+	mklines.ForEach(func(mkline *MkLine) {
 		if mkline.IsVarassign() {
 			switch mkline.Varname() {
 			case "DEVELOPER":

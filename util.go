@@ -604,26 +604,26 @@ func (o *Once) check(key uint64) bool {
 // TODO: Merge this code with Var, which defines essentially the
 //  same features.
 type Scope struct {
-	firstDef       map[string]*MkLineImpl // TODO: Can this be removed?
-	lastDef        map[string]*MkLineImpl
+	firstDef       map[string]*MkLine // TODO: Can this be removed?
+	lastDef        map[string]*MkLine
 	value          map[string]string
-	used           map[string]*MkLineImpl
+	used           map[string]*MkLine
 	usedAtLoadTime map[string]bool
 	fallback       map[string]string
 }
 
 func NewScope() Scope {
 	return Scope{
-		make(map[string]*MkLineImpl),
-		make(map[string]*MkLineImpl),
+		make(map[string]*MkLine),
+		make(map[string]*MkLine),
 		make(map[string]string),
-		make(map[string]*MkLineImpl),
+		make(map[string]*MkLine),
 		make(map[string]bool),
 		make(map[string]string)}
 }
 
 // Define marks the variable and its canonicalized form as defined.
-func (s *Scope) Define(varname string, mkline *MkLineImpl) {
+func (s *Scope) Define(varname string, mkline *MkLine) {
 	def := func(name string) {
 		if s.firstDef[name] == nil {
 			s.firstDef[name] = mkline
@@ -664,7 +664,7 @@ func (s *Scope) Fallback(varname string, value string) {
 }
 
 // Use marks the variable and its canonicalized form as used.
-func (s *Scope) Use(varname string, line *MkLineImpl, time vucTime) {
+func (s *Scope) Use(varname string, line *MkLine, time vucTime) {
 	use := func(name string) {
 		if s.used[name] == nil {
 			s.used[name] = line
@@ -685,7 +685,7 @@ func (s *Scope) Use(varname string, line *MkLineImpl, time vucTime) {
 //  - defined,
 //  - mentioned in a commented variable assignment,
 //  - mentioned in a documentation comment.
-func (s *Scope) Mentioned(varname string) *MkLineImpl {
+func (s *Scope) Mentioned(varname string) *MkLine {
 	return s.firstDef[varname]
 }
 
@@ -746,7 +746,7 @@ func (s *Scope) UsedAtLoadTime(varname string) bool {
 // value, and the including file later overrides that value. Or the other way
 // round: the including file sets a value first, and the included file then
 // assigns a default value using ?=.
-func (s *Scope) FirstDefinition(varname string) *MkLineImpl {
+func (s *Scope) FirstDefinition(varname string) *MkLine {
 	mkline := s.firstDef[varname]
 	if mkline != nil && mkline.IsVarassign() {
 		lastLine := s.LastDefinition(varname)
@@ -767,7 +767,7 @@ func (s *Scope) FirstDefinition(varname string) *MkLineImpl {
 // value, and the including file later overrides that value. Or the other way
 // round: the including file sets a value first, and the included file then
 // assigns a default value using ?=.
-func (s *Scope) LastDefinition(varname string) *MkLineImpl {
+func (s *Scope) LastDefinition(varname string) *MkLine {
 	mkline := s.lastDef[varname]
 	if mkline != nil && mkline.IsVarassign() {
 		return mkline
@@ -778,8 +778,8 @@ func (s *Scope) LastDefinition(varname string) *MkLineImpl {
 // Commented returns whether the variable has only been defined in commented
 // variable assignments. These are ignored by bmake but used heavily in
 // mk/defaults/mk.conf for documentation.
-func (s *Scope) Commented(varname string) *MkLineImpl {
-	var mklines []*MkLineImpl
+func (s *Scope) Commented(varname string) *MkLine {
+	var mklines []*MkLine
 	if first := s.firstDef[varname]; first != nil {
 		mklines = append(mklines, first)
 	}
@@ -802,7 +802,7 @@ func (s *Scope) Commented(varname string) *MkLineImpl {
 	return nil
 }
 
-func (s *Scope) FirstUse(varname string) *MkLineImpl {
+func (s *Scope) FirstUse(varname string) *MkLine {
 	return s.used[varname]
 }
 

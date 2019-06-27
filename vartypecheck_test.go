@@ -1591,7 +1591,7 @@ func (vt *VartypeCheckTester) Values(values ...string) {
 		return varname + space + opStr + value
 	}
 
-	test := func(mklines MkLines, mkline *MkLineImpl, value string) {
+	test := func(mklines MkLines, mkline *MkLine, value string) {
 		varname := vt.varname
 		comment := ""
 		if mkline.IsVarassign() {
@@ -1628,7 +1628,7 @@ func (vt *VartypeCheckTester) Values(values ...string) {
 		mklines := NewMkLines(NewLines(vt.filename, []*Line{line}))
 		vt.lineno++
 
-		mklines.ForEach(func(mkline *MkLineImpl) { test(mklines, mkline, value) })
+		mklines.ForEach(func(mkline *MkLine) { test(mklines, mkline, value) })
 	}
 }
 

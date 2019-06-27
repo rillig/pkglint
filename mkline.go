@@ -12,7 +12,7 @@ import (
 // There are several types of lines.
 // The most common types in pkgsrc are variable assignments,
 // shell commands and directives like .if and .for.
-type MkLineImpl struct {
+type MkLine struct {
 	*Line
 	data interface{} // One of the following mkLine* types
 }
@@ -42,10 +42,10 @@ type mkLineDirectiveImpl struct {
 	indent    string // the space between the leading "." and the directive
 	directive string // "if", "else", "for", etc.
 	args      string
-	comment   string      // mainly interesting for .endif and .endfor
-	elseLine  *MkLineImpl // for .if (filled in later)
-	cond      MkCond      // for .if and .elif (filled in on first access)
-	fields    []string    // the arguments for the .for loop (filled in on first access)
+	comment   string   // mainly interesting for .endif and .endfor
+	elseLine  *MkLine  // for .if (filled in later)
+	cond      MkCond   // for .if and .elif (filled in on first access)
+	fields    []string // the arguments for the .for loop (filled in on first access)
 }
 type mkLineInclude = *mkLineIncludeImpl // See https://github.com/golang/go/issues/28045
 type mkLineIncludeImpl struct {
@@ -66,7 +66,7 @@ type MkLineParser struct{}
 // it is: variable assignment, include, comment, etc.
 //
 // See devel/bmake/parse.c:/^Parse_File/
-func (p MkLineParser) Parse(line *Line) *MkLineImpl {
+func (p MkLineParser) Parse(line *Line) *MkLine {
 	text := line.Text
 
 	// XXX: This check should be moved somewhere else. NewMkLine should only be concerned with parsing.
@@ -109,10 +109,10 @@ func (p MkLineParser) Parse(line *Line) *MkLineImpl {
 
 	// The %q is deliberate here since it shows possible strange characters.
 	line.Errorf("Unknown Makefile line format: %q.", text)
-	return &MkLineImpl{line, nil}
+	return &MkLine{line, nil}
 }
 
-func (p MkLineParser) parseVarassign(line *Line, data mkLineSplitResult) *MkLineImpl {
+func (p MkLineParser) parseVarassign(line *Line, data mkLineSplitResult) *MkLine {
 	m, a := p.MatchVarassign(line, line.Text, data)
 	if !m {
 		return nil
@@ -145,46 +145,46 @@ func (p MkLineParser) parseVarassign(line *Line, data mkLineSplitResult) *MkLine
 			"it should be preceded by a space in order to make it more visible.")
 	}
 
-	return &MkLineImpl{line, a}
+	return &MkLine{line, a}
 }
 
-func (p MkLineParser) parseShellcmd(line *Line) *MkLineImpl {
-	return &MkLineImpl{line, mkLineShell{line.Text[1:]}}
+func (p MkLineParser) parseShellcmd(line *Line) *MkLine {
+	return &MkLine{line, mkLineShell{line.Text[1:]}}
 }
 
-func (p MkLineParser) parseCommentOrEmpty(line *Line) *MkLineImpl {
+func (p MkLineParser) parseCommentOrEmpty(line *Line) *MkLine {
 	trimmedText := trimHspace(line.Text)
 
 	if strings.HasPrefix(trimmedText, "#") {
-		return &MkLineImpl{line, mkLineComment{}}
+		return &MkLine{line, mkLineComment{}}
 	}
 
 	if trimmedText == "" {
-		return &MkLineImpl{line, mkLineEmpty{}}
+		return &MkLine{line, mkLineEmpty{}}
 	}
 
 	return nil
 }
 
-func (p MkLineParser) parseInclude(line *Line) *MkLineImpl {
+func (p MkLineParser) parseInclude(line *Line) *MkLine {
 	m, indent, directive, includedFile := MatchMkInclude(line.Text)
 	if !m {
 		return nil
 	}
 
-	return &MkLineImpl{line, &mkLineIncludeImpl{directive == "include", false, indent, includedFile, nil}}
+	return &MkLine{line, &mkLineIncludeImpl{directive == "include", false, indent, includedFile, nil}}
 }
 
-func (p MkLineParser) parseSysinclude(line *Line) *MkLineImpl {
+func (p MkLineParser) parseSysinclude(line *Line) *MkLine {
 	m, indent, directive, includedFile := match3(line.Text, `^\.([\t ]*)(s?include)[\t ]+<([^>]+)>[\t ]*(?:#.*)?$`)
 	if !m {
 		return nil
 	}
 
-	return &MkLineImpl{line, &mkLineIncludeImpl{directive == "include", true, indent, includedFile, nil}}
+	return &MkLine{line, &mkLineIncludeImpl{directive == "include", true, indent, includedFile, nil}}
 }
 
-func (p MkLineParser) parseDependency(line *Line) *MkLineImpl {
+func (p MkLineParser) parseDependency(line *Line) *MkLine {
 	// XXX: Replace this regular expression with proper parsing.
 	// There might be a ${VAR:M*.c} in these variables, which the below regular expression cannot handle.
 	m, targets, whitespace, sources := match3(line.Text, `^([^\t :]+(?:[\t ]*[^\t :]+)*)([\t ]*):[\t ]*([^#]*?)(?:[\t ]*#.*)?$`)
@@ -195,26 +195,26 @@ func (p MkLineParser) parseDependency(line *Line) *MkLineImpl {
 	if whitespace != "" {
 		line.Notef("Space before colon in dependency line.")
 	}
-	return &MkLineImpl{line, mkLineDependency{targets, sources}}
+	return &MkLine{line, mkLineDependency{targets, sources}}
 }
 
-func (p MkLineParser) parseMergeConflict(line *Line) *MkLineImpl {
+func (p MkLineParser) parseMergeConflict(line *Line) *MkLine {
 	if !matches(line.Text, `^(<<<<<<<|=======|>>>>>>>)`) {
 		return nil
 	}
 
-	return &MkLineImpl{line, nil}
+	return &MkLine{line, nil}
 }
 
 // String returns the filename and line numbers.
-func (mkline *MkLineImpl) String() string {
+func (mkline *MkLine) String() string {
 	return sprintf("%s:%s", mkline.Filename, mkline.Linenos())
 }
 
 // IsVarassign returns true for variable assignments of the form VAR=value.
 //
 // See IsCommentedVarassign.
-func (mkline *MkLineImpl) IsVarassign() bool {
+func (mkline *MkLine) IsVarassign() bool {
 	data, ok := mkline.data.(mkLineAssign)
 	return ok && !data.commented
 }
@@ -222,7 +222,7 @@ func (mkline *MkLineImpl) IsVarassign() bool {
 // IsCommentedVarassign returns true for commented-out variable assignments.
 // In most cases these are treated as ordinary comments, but in some others
 // they are treated like variable assignments, just inactive ones.
-func (mkline *MkLineImpl) IsCommentedVarassign() bool {
+func (mkline *MkLine) IsCommentedVarassign() bool {
 	data, ok := mkline.data.(mkLineAssign)
 	return ok && data.commented
 }
@@ -232,18 +232,18 @@ func (mkline *MkLineImpl) IsCommentedVarassign() bool {
 //
 //  pre-configure:    # IsDependency
 //          ${ECHO}   # IsShellCommand
-func (mkline *MkLineImpl) IsShellCommand() bool {
+func (mkline *MkLine) IsShellCommand() bool {
 	_, ok := mkline.data.(mkLineShell)
 	return ok
 }
 
 // IsComment returns true for lines that consist entirely of a comment.
-func (mkline *MkLineImpl) IsComment() bool {
+func (mkline *MkLine) IsComment() bool {
 	_, ok := mkline.data.(mkLineComment)
 	return ok || mkline.IsCommentedVarassign()
 }
 
-func (mkline *MkLineImpl) IsEmpty() bool {
+func (mkline *MkLine) IsEmpty() bool {
 	_, ok := mkline.data.(mkLineEmpty)
 	return ok
 }
@@ -251,7 +251,7 @@ func (mkline *MkLineImpl) IsEmpty() bool {
 // IsDirective returns true for conditionals (.if/.elif/.else/.if) or loops (.for/.endfor).
 //
 // See IsInclude.
-func (mkline *MkLineImpl) IsDirective() bool {
+func (mkline *MkLine) IsDirective() bool {
 	_, ok := mkline.data.(mkLineDirective)
 	return ok
 }
@@ -259,7 +259,7 @@ func (mkline *MkLineImpl) IsDirective() bool {
 // IsInclude returns true for lines like: .include "other.mk"
 //
 // See IsSysinclude for lines like: .include <sys.mk>
-func (mkline *MkLineImpl) IsInclude() bool {
+func (mkline *MkLine) IsInclude() bool {
 	incl, ok := mkline.data.(mkLineInclude)
 	return ok && !incl.sys
 }
@@ -267,13 +267,13 @@ func (mkline *MkLineImpl) IsInclude() bool {
 // IsSysinclude returns true for lines like: .include <sys.mk>
 //
 // See IsInclude for lines like: .include "other.mk"
-func (mkline *MkLineImpl) IsSysinclude() bool {
+func (mkline *MkLine) IsSysinclude() bool {
 	incl, ok := mkline.data.(mkLineInclude)
 	return ok && incl.sys
 }
 
 // IsDependency returns true for dependency lines like "target: source".
-func (mkline *MkLineImpl) IsDependency() bool {
+func (mkline *MkLine) IsDependency() bool {
 	_, ok := mkline.data.(mkLineDependency)
 	return ok
 }
@@ -283,30 +283,30 @@ func (mkline *MkLineImpl) IsDependency() bool {
 //
 // Example:
 //  VARNAME.${param}?=      value   # Varname is "VARNAME.${param}"
-func (mkline *MkLineImpl) Varname() string { return mkline.data.(mkLineAssign).varname }
+func (mkline *MkLine) Varname() string { return mkline.data.(mkLineAssign).varname }
 
 // Varcanon applies to variable assignments and returns the canonicalized variable name for parameterized variables.
 // Examples:
 //  HOMEPAGE           => "HOMEPAGE"
 //  SUBST_SED.anything => "SUBST_SED.*"
 //  SUBST_SED.${param} => "SUBST_SED.*"
-func (mkline *MkLineImpl) Varcanon() string { return mkline.data.(mkLineAssign).varcanon }
+func (mkline *MkLine) Varcanon() string { return mkline.data.(mkLineAssign).varcanon }
 
 // Varparam applies to variable assignments and returns the parameter for parameterized variables.
 // Examples:
 //  HOMEPAGE           => ""
 //  SUBST_SED.anything => "anything"
 //  SUBST_SED.${param} => "${param}"
-func (mkline *MkLineImpl) Varparam() string { return mkline.data.(mkLineAssign).varparam }
+func (mkline *MkLine) Varparam() string { return mkline.data.(mkLineAssign).varparam }
 
 // Op applies to variable assignments and returns the assignment operator.
-func (mkline *MkLineImpl) Op() MkOperator { return mkline.data.(mkLineAssign).op }
+func (mkline *MkLine) Op() MkOperator { return mkline.data.(mkLineAssign).op }
 
 // ValueAlign applies to variable assignments and returns all the text
 // before the variable value, e.g. "VARNAME+=\t".
-func (mkline *MkLineImpl) ValueAlign() string { return mkline.data.(mkLineAssign).valueAlign }
+func (mkline *MkLine) ValueAlign() string { return mkline.data.(mkLineAssign).valueAlign }
 
-func (mkline *MkLineImpl) Value() string { return mkline.data.(mkLineAssign).value }
+func (mkline *MkLine) Value() string { return mkline.data.(mkLineAssign).value }
 
 // VarassignComment applies to variable assignments and returns the comment.
 //
@@ -316,7 +316,7 @@ func (mkline *MkLineImpl) Value() string { return mkline.data.(mkLineAssign).val
 // In the above line, the comment is "# comment".
 //
 // The leading "#" is included so that pkglint can distinguish between no comment at all and an empty comment.
-func (mkline *MkLineImpl) VarassignComment() string { return mkline.data.(mkLineAssign).comment }
+func (mkline *MkLine) VarassignComment() string { return mkline.data.(mkLineAssign).comment }
 
 // FirstLineContainsValue returns whether the variable assignment of a
 // multiline contains a textual value in the first line.
@@ -325,7 +325,7 @@ func (mkline *MkLineImpl) VarassignComment() string { return mkline.data.(mkLine
 //          starts in first line
 //  NO_VALUE_IN_FIRST_LINE= \
 //          value starts in second line
-func (mkline *MkLineImpl) FirstLineContainsValue() bool {
+func (mkline *MkLine) FirstLineContainsValue() bool {
 	assertf(mkline.IsVarassign() || mkline.IsCommentedVarassign(), "Line must be a variable assignment.")
 	assertf(mkline.IsMultiline(), "Line must be multiline.")
 
@@ -336,9 +336,9 @@ func (mkline *MkLineImpl) FirstLineContainsValue() bool {
 	return a.value != "\\"
 }
 
-func (mkline *MkLineImpl) ShellCommand() string { return mkline.data.(mkLineShell).command }
+func (mkline *MkLine) ShellCommand() string { return mkline.data.(mkLineShell).command }
 
-func (mkline *MkLineImpl) Indent() string {
+func (mkline *MkLine) Indent() string {
 	if mkline.IsDirective() {
 		return mkline.data.(mkLineDirective).indent
 	} else {
@@ -349,16 +349,16 @@ func (mkline *MkLineImpl) Indent() string {
 // Directive returns the preprocessing directive, like "if", "for", "endfor", etc.
 //
 // See matchMkDirective.
-func (mkline *MkLineImpl) Directive() string { return mkline.data.(mkLineDirective).directive }
+func (mkline *MkLine) Directive() string { return mkline.data.(mkLineDirective).directive }
 
 // Args returns the arguments from an .if, .ifdef, .ifndef, .elif, .for, .undef.
-func (mkline *MkLineImpl) Args() string { return mkline.data.(mkLineDirective).args }
+func (mkline *MkLine) Args() string { return mkline.data.(mkLineDirective).args }
 
 // Cond applies to an .if or .elif line and returns the parsed condition.
 //
 // If a parse error occurs, it is silently swallowed, returning a
 // best-effort part of the condition, or even nil.
-func (mkline *MkLineImpl) Cond() MkCond {
+func (mkline *MkLine) Cond() MkCond {
 	cond := mkline.data.(mkLineDirective).cond
 	if cond == nil {
 		cond = NewMkParser(mkline.Line, mkline.Args(), true).MkCond()
@@ -368,31 +368,31 @@ func (mkline *MkLineImpl) Cond() MkCond {
 }
 
 // DirectiveComment is the trailing end-of-line comment, typically at a deeply nested .endif or .endfor.
-func (mkline *MkLineImpl) DirectiveComment() string { return mkline.data.(mkLineDirective).comment }
+func (mkline *MkLine) DirectiveComment() string { return mkline.data.(mkLineDirective).comment }
 
-func (mkline *MkLineImpl) HasElseBranch() bool { return mkline.data.(mkLineDirective).elseLine != nil }
+func (mkline *MkLine) HasElseBranch() bool { return mkline.data.(mkLineDirective).elseLine != nil }
 
-func (mkline *MkLineImpl) SetHasElseBranch(elseLine *MkLineImpl) {
+func (mkline *MkLine) SetHasElseBranch(elseLine *MkLine) {
 	data := mkline.data.(mkLineDirective)
 	data.elseLine = elseLine
 	mkline.data = data
 }
 
-func (mkline *MkLineImpl) MustExist() bool { return mkline.data.(mkLineInclude).mustExist }
+func (mkline *MkLine) MustExist() bool { return mkline.data.(mkLineInclude).mustExist }
 
-func (mkline *MkLineImpl) IncludedFile() string { return mkline.data.(mkLineInclude).includedFile }
+func (mkline *MkLine) IncludedFile() string { return mkline.data.(mkLineInclude).includedFile }
 
-func (mkline *MkLineImpl) Targets() string { return mkline.data.(mkLineDependency).targets }
+func (mkline *MkLine) Targets() string { return mkline.data.(mkLineDependency).targets }
 
-func (mkline *MkLineImpl) Sources() string { return mkline.data.(mkLineDependency).sources }
+func (mkline *MkLine) Sources() string { return mkline.data.(mkLineDependency).sources }
 
 // ConditionalVars applies to .include lines and is a space-separated
 // list of those variable names on which the inclusion depends.
 // It is initialized later, step by step, when parsing other lines.
-func (mkline *MkLineImpl) ConditionalVars() []string {
+func (mkline *MkLine) ConditionalVars() []string {
 	return mkline.data.(mkLineInclude).conditionalVars
 }
-func (mkline *MkLineImpl) SetConditionalVars(varnames []string) {
+func (mkline *MkLine) SetConditionalVars(varnames []string) {
 	include := mkline.data.(mkLineInclude)
 	include.conditionalVars = varnames
 	mkline.data = include
@@ -413,7 +413,7 @@ func (mkline *MkLineImpl) SetConditionalVars(varnames []string) {
 //  output: [MkToken("${PREFIX}", MkVarUse("PREFIX")), MkToken("/bin abc")]
 //
 // See ValueTokens, which is the tokenized version of Value.
-func (mkline *MkLineImpl) Tokenize(text string, warn bool) []*MkToken {
+func (mkline *MkLine) Tokenize(text string, warn bool) []*MkToken {
 	if trace.Tracing {
 		defer trace.Call(mkline, text)()
 	}
@@ -447,7 +447,7 @@ func (mkline *MkLineImpl) Tokenize(text string, warn bool) []*MkToken {
 // at that point since the colon is inside a variable use.
 //
 // When several separators are adjacent, this results in empty words in the output.
-func (mkline *MkLineImpl) ValueSplit(value string, separator string) []string {
+func (mkline *MkLine) ValueSplit(value string, separator string) []string {
 	assertf(separator != "", "Separator must not be empty; use ValueFields to split on whitespace")
 
 	tokens := mkline.Tokenize(value, false)
@@ -506,7 +506,7 @@ var notSpace = textproc.Space.Inverse()
 // Compare devel/bmake/files/str.c, function brk_string.
 //
 // TODO: Compare with brk_string from devel/bmake, especially for backticks.
-func (mkline *MkLineImpl) ValueFields(value string) []string {
+func (mkline *MkLine) ValueFields(value string) []string {
 	if trace.Tracing {
 		defer trace.Call(mkline, value)()
 	}
@@ -541,7 +541,7 @@ func (mkline *MkLineImpl) ValueFields(value string) []string {
 	return words
 }
 
-func (mkline *MkLineImpl) ValueTokens() ([]*MkToken, string) {
+func (mkline *MkLine) ValueTokens() ([]*MkToken, string) {
 	value := mkline.Value()
 	if value == "" {
 		return nil, ""
@@ -563,7 +563,7 @@ func (mkline *MkLineImpl) ValueTokens() ([]*MkToken, string) {
 // Fields applies to variable assignments and .for loops.
 // For variable assignments, it returns the right-hand side, properly split into words.
 // For .for loops, it returns all arguments (including variable names), properly split into words.
-func (mkline *MkLineImpl) Fields() []string {
+func (mkline *MkLine) Fields() []string {
 	if mkline.IsVarassign() || mkline.IsCommentedVarassign() {
 		value := mkline.Value()
 		if value == "" {
@@ -595,7 +595,7 @@ func (mkline *MkLineImpl) Fields() []string {
 
 }
 
-func (*MkLineImpl) WithoutMakeVariables(value string) string {
+func (*MkLine) WithoutMakeVariables(value string) string {
 	var valueNovar strings.Builder
 	for _, token := range NewMkParser(nil, value, false).MkTokens() {
 		if token.Varuse == nil {
@@ -605,7 +605,7 @@ func (*MkLineImpl) WithoutMakeVariables(value string) string {
 	return valueNovar.String()
 }
 
-func (mkline *MkLineImpl) ResolveVarsInRelativePath(relativePath string) string {
+func (mkline *MkLine) ResolveVarsInRelativePath(relativePath string) string {
 	if !contains(relativePath, "$") {
 		return cleanpath(relativePath)
 	}
@@ -680,7 +680,7 @@ func (mkline *MkLineImpl) ResolveVarsInRelativePath(relativePath string) string 
 	return tmp
 }
 
-func (mkline *MkLineImpl) ExplainRelativeDirs() {
+func (mkline *MkLine) ExplainRelativeDirs() {
 	mkline.Explain(
 		"Directories in the form \"../../category/package\" make it easier to",
 		"move a package around in pkgsrc, for example from pkgsrc-wip to the",
@@ -692,7 +692,7 @@ func (mkline *MkLineImpl) ExplainRelativeDirs() {
 //
 // If there is a type mismatch when calling this function, try to add ".line" to
 // either the method receiver or the other line.
-func (mkline *MkLineImpl) RefTo(other *MkLineImpl) string {
+func (mkline *MkLine) RefTo(other *MkLine) string {
 	return mkline.Line.RefTo(other.Line)
 }
 
@@ -838,7 +838,7 @@ func (p MkLineParser) split(line *Line, text string) mkLineSplitResult {
 	return mkLineSplitResult{mainTrimmed, tokens, spaceBeforeComment, hasComment, comment}
 }
 
-func (p MkLineParser) parseDirective(line *Line, data mkLineSplitResult) *MkLineImpl {
+func (p MkLineParser) parseDirective(line *Line, data mkLineSplitResult) *MkLine {
 	text := line.Text
 	if !hasPrefix(text, ".") {
 		return nil
@@ -869,7 +869,7 @@ func (p MkLineParser) parseDirective(line *Line, data mkLineSplitResult) *MkLine
 	// it must be trimmed.
 	trimmedComment := trimHspace(data.comment)
 
-	return &MkLineImpl{line, &mkLineDirectiveImpl{indent, directive, args, trimmedComment, nil, nil, nil}}
+	return &MkLine{line, &mkLineDirectiveImpl{indent, directive, args, trimmedComment, nil, nil, nil}}
 }
 
 // VariableNeedsQuoting determines whether the given variable needs the :Q operator
@@ -878,7 +878,7 @@ func (p MkLineParser) parseDirective(line *Line, data mkLineSplitResult) *MkLine
 // This decision depends on many factors, such as whether the type of the context is
 // a list of things, whether the variable is a list, whether it can contain only
 // safe characters, and so on.
-func (mkline *MkLineImpl) VariableNeedsQuoting(mklines MkLines, varuse *MkVarUse, vartype *Vartype, vuc *VarUseContext) (needsQuoting YesNoUnknown) {
+func (mkline *MkLine) VariableNeedsQuoting(mklines MkLines, varuse *MkVarUse, vartype *Vartype, vuc *VarUseContext) (needsQuoting YesNoUnknown) {
 	if trace.Tracing {
 		defer trace.Call(varuse, vartype, vuc, trace.Result(&needsQuoting))()
 	}
@@ -984,7 +984,7 @@ func (mkline *MkLineImpl) VariableNeedsQuoting(mklines MkLines, varuse *MkVarUse
 }
 
 // ForEachUsed calls the action for each variable that is used in the line.
-func (mkline *MkLineImpl) ForEachUsed(action func(varUse *MkVarUse, time vucTime)) {
+func (mkline *MkLine) ForEachUsed(action func(varUse *MkVarUse, time vucTime)) {
 
 	var searchIn func(text string, time vucTime) // mutually recursive with searchInVarUse
 
@@ -1038,7 +1038,7 @@ func (mkline *MkLineImpl) ForEachUsed(action func(varUse *MkVarUse, time vucTime
 	}
 }
 
-func (*MkLineImpl) UnquoteShell(str string) string {
+func (*MkLine) UnquoteShell(str string) string {
 	var sb strings.Builder
 	n := len(str)
 
@@ -1223,10 +1223,10 @@ func (ind *Indentation) RememberUsedVariables(cond MkCond) {
 }
 
 type indentationLevel struct {
-	mkline          *MkLineImpl // The line in which the indentation started; the .if/.for
-	depth           int         // Number of space characters; always a multiple of 2
-	args            string      // The arguments from the .if or .for, or the latest .elif
-	conditionalVars []string    // Variables on which the current path depends
+	mkline          *MkLine  // The line in which the indentation started; the .if/.for
+	depth           int      // Number of space characters; always a multiple of 2
+	args            string   // The arguments from the .if or .for, or the latest .elif
+	conditionalVars []string // Variables on which the current path depends
 
 	// Files whose existence has been checked in an if branch that is
 	// related to the current indentation. After a .if exists(fname),
@@ -1261,7 +1261,7 @@ func (ind *Indentation) Pop() {
 	ind.levels = ind.levels[:ind.Len()-1]
 }
 
-func (ind *Indentation) Push(mkline *MkLineImpl, indent int, condition string) {
+func (ind *Indentation) Push(mkline *MkLine, indent int, condition string) {
 	assertf(mkline.IsDirective(), "Indentation line must be a directive.")
 	ind.levels = append(ind.levels, indentationLevel{mkline, indent, condition, nil, nil})
 }
@@ -1349,7 +1349,7 @@ func (ind *Indentation) HasExists(filename string) bool {
 	return false
 }
 
-func (ind *Indentation) TrackBefore(mkline *MkLineImpl) {
+func (ind *Indentation) TrackBefore(mkline *MkLine) {
 	if !mkline.IsDirective() {
 		return
 	}
@@ -1363,7 +1363,7 @@ func (ind *Indentation) TrackBefore(mkline *MkLineImpl) {
 	}
 }
 
-func (ind *Indentation) TrackAfter(mkline *MkLineImpl) {
+func (ind *Indentation) TrackAfter(mkline *MkLine) {
 	if !mkline.IsDirective() {
 		return
 	}

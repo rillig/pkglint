@@ -1238,7 +1238,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		}
 		sitesMk := LoadMk(src.File(filename), loadOptions)
 		if sitesMk != nil {
-			sitesMk.ForEach(func(mkline *MkLineImpl) {
+			sitesMk.ForEach(func(mkline *MkLine) {
 				if mkline.IsVarassign() && hasPrefix(mkline.Varname(), "MASTER_SITE_") {
 					reg.syslist(mkline.Varname(), BtFetchURL)
 				}

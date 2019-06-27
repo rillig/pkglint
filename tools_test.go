@@ -179,7 +179,7 @@ func (s *Suite) Test_Tools__load_from_infrastructure(c *check.C) {
 		"TOOLS_CREATE+= run",
 		"TOOLS_CREATE+= nowhere")
 
-	createMklines.ForEach(func(mkline *MkLineImpl) {
+	createMklines.ForEach(func(mkline *MkLine) {
 		tools.ParseToolLine(createMklines, mkline, true, false)
 	})
 
@@ -202,7 +202,7 @@ func (s *Suite) Test_Tools__load_from_infrastructure(c *check.C) {
 		"_TOOLS_VARNAME.run=     RUN_CMD",
 		"_TOOLS_VARNAME.nowhere= NOWHERE")
 
-	varnamesMklines.ForEach(func(mkline *MkLineImpl) {
+	varnamesMklines.ForEach(func(mkline *MkLine) {
 		tools.ParseToolLine(varnamesMklines, mkline, true, false)
 	})
 
@@ -570,7 +570,7 @@ func (s *Suite) Test_Tools__aliases(c *check.C) {
 		"TOOLS_ALIASES.gsed=\tsed ${tool}")
 
 	infraTools := NewTools()
-	mklines.ForEach(func(mkline *MkLineImpl) {
+	mklines.ForEach(func(mkline *MkLine) {
 		infraTools.ParseToolLine(mklines, mkline, false, false)
 	})
 

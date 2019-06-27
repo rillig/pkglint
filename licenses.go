@@ -4,7 +4,7 @@ import "netbsd.org/pkglint/licenses"
 
 type LicenseChecker struct {
 	MkLines MkLines
-	MkLine  *MkLineImpl
+	MkLine  *MkLine
 }
 
 func (lc *LicenseChecker) Check(value string, op MkOperator) {
