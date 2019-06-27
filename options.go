@@ -1,6 +1,6 @@
 package pkglint
 
-func CheckLinesOptionsMk(mklines MkLines) {
+func CheckLinesOptionsMk(mklines *MkLines) {
 	ck := OptionsLinesChecker{
 		mklines,
 		make(map[string]*MkLine),
@@ -14,7 +14,7 @@ func CheckLinesOptionsMk(mklines MkLines) {
 //
 // See mk/bsd.options.mk for a detailed description.
 type OptionsLinesChecker struct {
-	mklines MkLines
+	mklines *MkLines
 
 	declaredOptions           map[string]*MkLine
 	handledOptions            map[string]*MkLine

@@ -3,7 +3,7 @@ package pkglint
 import "netbsd.org/pkglint/licenses"
 
 type LicenseChecker struct {
-	MkLines MkLines
+	MkLines *MkLines
 	MkLine  *MkLine
 }
 

@@ -160,7 +160,7 @@ func (pkg *Package) checkPossibleDowngrade() {
 // checkLinesBuildlink3Inclusion checks whether the package Makefile and
 // the corresponding buildlink3.mk agree for all included buildlink3.mk
 // files whether they are included conditionally or unconditionally.
-func (pkg *Package) checkLinesBuildlink3Inclusion(mklines MkLines) {
+func (pkg *Package) checkLinesBuildlink3Inclusion(mklines *MkLines) {
 	if trace.Tracing {
 		defer trace.Call0()()
 	}
@@ -188,7 +188,7 @@ func (pkg *Package) checkLinesBuildlink3Inclusion(mklines MkLines) {
 	}
 }
 
-func (pkg *Package) load() ([]string, MkLines, MkLines) {
+func (pkg *Package) load() ([]string, *MkLines, *MkLines) {
 	// Load the package Makefile and all included files,
 	// to collect all used and defined variables and similar data.
 	mklines, allLines := pkg.loadPackageMakefile()
@@ -224,7 +224,7 @@ func (pkg *Package) load() ([]string, MkLines, MkLines) {
 	return files, mklines, allLines
 }
 
-func (pkg *Package) check(filenames []string, mklines, allLines MkLines) {
+func (pkg *Package) check(filenames []string, mklines, allLines *MkLines) {
 	haveDistinfo := false
 	havePatches := false
 
@@ -314,7 +314,7 @@ func (pkg *Package) checkDirent(dirent string, mode os.FileMode) {
 	}
 }
 
-func (pkg *Package) loadPackageMakefile() (MkLines, MkLines) {
+func (pkg *Package) loadPackageMakefile() (*MkLines, *MkLines) {
 	filename := pkg.File("Makefile")
 	if trace.Tracing {
 		defer trace.Call1(filename)()
@@ -380,7 +380,7 @@ func (pkg *Package) loadPackageMakefile() (MkLines, MkLines) {
 }
 
 // TODO: What is allLines used for, is it still necessary? Would it be better as a field in Package?
-func (pkg *Package) parse(mklines MkLines, allLines MkLines, includingFileForUsedCheck string) bool {
+func (pkg *Package) parse(mklines *MkLines, allLines *MkLines, includingFileForUsedCheck string) bool {
 	if trace.Tracing {
 		defer trace.Call1(mklines.lines.Filename)()
 	}
@@ -414,7 +414,7 @@ func (pkg *Package) parse(mklines MkLines, allLines MkLines, includingFileForUse
 	return result
 }
 
-func (pkg *Package) parseLine(mklines MkLines, mkline *MkLine, allLines MkLines) bool {
+func (pkg *Package) parseLine(mklines *MkLines, mkline *MkLine, allLines *MkLines) bool {
 	allLines.mklines = append(allLines.mklines, mkline)
 	allLines.lines.Lines = append(allLines.lines.Lines, mkline.Line)
 
@@ -461,7 +461,7 @@ func (pkg *Package) parseLine(mklines MkLines, mkline *MkLine, allLines MkLines)
 // the included file is not processed further for whatever reason. But if
 // skip is false, the file could not be read and an appropriate error message
 // has already been logged.
-func (pkg *Package) loadIncluded(mkline *MkLine, includingFile string) (includedMklines MkLines, skip bool) {
+func (pkg *Package) loadIncluded(mkline *MkLine, includingFile string) (includedMklines *MkLines, skip bool) {
 	includedFile := pkg.resolveIncludedFile(mkline, includingFile)
 
 	if includedFile == "" {
@@ -596,7 +596,7 @@ func (pkg *Package) resolveIncludedFile(mkline *MkLine, includingFilename string
 	return includedFile
 }
 
-func (pkg *Package) checkfilePackageMakefile(filename string, mklines MkLines, allLines MkLines) {
+func (pkg *Package) checkfilePackageMakefile(filename string, mklines *MkLines, allLines *MkLines) {
 	if trace.Tracing {
 		defer trace.Call1(filename)()
 	}
@@ -913,7 +913,7 @@ func (pkg *Package) checkUpdate() {
 // the most common variables appear in a fixed order.
 // The order itself is a little arbitrary but provides
 // at least a bit of consistency.
-func (pkg *Package) CheckVarorder(mklines MkLines) {
+func (pkg *Package) CheckVarorder(mklines *MkLines) {
 	if trace.Tracing {
 		defer trace.Call0()()
 	}
@@ -1287,7 +1287,7 @@ func (pkg *Package) AutofixDistinfo(oldSha1, newSha1 string) {
 // checkUseLanguagesCompilerMk checks that after including mk/compiler.mk
 // or mk/endian.mk for the first time, there are no more changes to
 // USE_LANGUAGES, as these would be ignored by the pkgsrc infrastructure.
-func (pkg *Package) checkUseLanguagesCompilerMk(mklines MkLines) {
+func (pkg *Package) checkUseLanguagesCompilerMk(mklines *MkLines) {
 
 	var seen Once
 

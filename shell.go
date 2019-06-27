@@ -16,7 +16,7 @@ import (
 // Or it is a variable assignment line from a Makefile with a left-hand
 // side variable that is of some shell-like type; see Vartype.IsShell.
 type ShellLineChecker struct {
-	MkLines MkLines
+	MkLines *MkLines
 	mkline  *MkLine
 
 	// checkVarUse is set to false when checking a single shell word
@@ -24,7 +24,7 @@ type ShellLineChecker struct {
 	checkVarUse bool
 }
 
-func NewShellLineChecker(mklines MkLines, mkline *MkLine) *ShellLineChecker {
+func NewShellLineChecker(mklines *MkLines, mkline *MkLine) *ShellLineChecker {
 	assertNotNil(mklines)
 	return &ShellLineChecker{mklines, mkline, true}
 }

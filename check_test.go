@@ -211,7 +211,7 @@ func (t *Tester) SetUpFileLines(relativeFileName string, lines ...string) *Lines
 // The file is then read in, handling line continuations for Makefiles.
 //
 // See SetUpFileLines for loading an ordinary file.
-func (t *Tester) SetUpFileMkLines(relativeFileName string, lines ...string) MkLines {
+func (t *Tester) SetUpFileMkLines(relativeFileName string, lines ...string) *MkLines {
 	filename := t.CreateFileLines(relativeFileName, lines...)
 	return LoadMk(filename, MustSucceed)
 }
@@ -220,7 +220,7 @@ func (t *Tester) SetUpFileMkLines(relativeFileName string, lines ...string) MkLi
 // merging all the lines into a single MkLines object.
 //
 // This is useful for testing code related to Package.readMakefile.
-func (t *Tester) LoadMkInclude(relativeFileName string) MkLines {
+func (t *Tester) LoadMkInclude(relativeFileName string) *MkLines {
 	var lines []*Line
 
 	// TODO: Include files with multiple-inclusion guard only once.
@@ -583,12 +583,12 @@ func (t *Tester) Remove(relativeFileName string) {
 // subdir/module.mk includes subdir/version.mk, the include line is just:
 //  .include "version.mk"
 func (t *Tester) SetUpHierarchy() (
-	include func(filename string, args ...interface{}) MkLines,
-	get func(string) MkLines) {
+	include func(filename string, args ...interface{}) *MkLines,
+	get func(string) *MkLines) {
 
-	files := map[string]MkLines{}
+	files := map[string]*MkLines{}
 
-	include = func(filename string, args ...interface{}) MkLines {
+	include = func(filename string, args ...interface{}) *MkLines {
 		var lines []*Line
 		lineno := 1
 
@@ -601,7 +601,7 @@ func (t *Tester) SetUpHierarchy() (
 			switch arg := arg.(type) {
 			case string:
 				addLine(arg)
-			case MkLines:
+			case *MkLines:
 				text := sprintf(".include %q", relpath(path.Dir(filename), arg.lines.Filename))
 				addLine(text)
 				lines = append(lines, arg.lines.Lines...)
@@ -616,7 +616,7 @@ func (t *Tester) SetUpHierarchy() (
 		return mklines
 	}
 
-	get = func(filename string) MkLines {
+	get = func(filename string) *MkLines {
 		assertf(files[filename] != nil, "MkLines with name %q doesn't exist.", filename)
 		return files[filename]
 	}
@@ -842,7 +842,7 @@ func (t *Tester) NewLinesAt(filename string, firstLine int, texts ...string) *Li
 //
 // No actual file is created for the lines;
 // see SetUpFileMkLines for loading Makefile fragments with line continuations.
-func (t *Tester) NewMkLines(filename string, lines ...string) MkLines {
+func (t *Tester) NewMkLines(filename string, lines ...string) *MkLines {
 	basename := path.Base(filename)
 	assertf(
 		hasSuffix(basename, ".mk") || basename == "Makefile" || hasPrefix(basename, "Makefile."),

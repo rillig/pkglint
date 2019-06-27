@@ -7,14 +7,14 @@ import (
 )
 
 type Buildlink3Checker struct {
-	mklines          MkLines
+	mklines          *MkLines
 	pkgbase          string
 	pkgbaseLine      *MkLine
 	abiLine, apiLine *MkLine
 	abi, api         *DependencyPattern
 }
 
-func CheckLinesBuildlink3Mk(mklines MkLines) {
+func CheckLinesBuildlink3Mk(mklines *MkLines) {
 	(&Buildlink3Checker{mklines: mklines}).Check()
 }
 

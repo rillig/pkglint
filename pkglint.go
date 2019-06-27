@@ -427,7 +427,7 @@ func findPkgsrcTopdir(dirname string) string {
 	return ""
 }
 
-func resolveVariableRefs(mklines MkLines, text string) (resolved string) {
+func resolveVariableRefs(mklines *MkLines, text string) (resolved string) {
 	// TODO: How does this fit into the Scope type, which is newer than this function?
 
 	if !contains(text, "${") {
@@ -743,7 +743,7 @@ func CheckLinesTrailingEmptyLines(lines *Lines) {
 // The command can be "sed" or "gsed" or "${SED}".
 // If a tool is returned, usable tells whether that tool has been added
 // to USE_TOOLS in the current scope (file or package).
-func (pkglint *Pkglint) Tool(mklines MkLines, command string, time ToolTime) (tool *Tool, usable bool) {
+func (pkglint *Pkglint) Tool(mklines *MkLines, command string, time ToolTime) (tool *Tool, usable bool) {
 	tools := pkglint.tools(mklines)
 
 	if varUse := ToVarUse(command); varUse != nil {
@@ -761,11 +761,11 @@ func (pkglint *Pkglint) Tool(mklines MkLines, command string, time ToolTime) (to
 // It is not guaranteed to be usable (added to USE_TOOLS), only defined;
 // that must be checked by the calling code,
 // see Tool.UsableAtLoadTime and Tool.UsableAtRunTime.
-func (pkglint *Pkglint) ToolByVarname(mklines MkLines, varname string) *Tool {
+func (pkglint *Pkglint) ToolByVarname(mklines *MkLines, varname string) *Tool {
 	return pkglint.tools(mklines).ByVarname(varname)
 }
 
-func (pkglint *Pkglint) tools(mklines MkLines) *Tools {
+func (pkglint *Pkglint) tools(mklines *MkLines) *Tools {
 	if mklines != nil {
 		return mklines.Tools
 	} else {

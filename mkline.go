@@ -878,7 +878,7 @@ func (p MkLineParser) parseDirective(line *Line, data mkLineSplitResult) *MkLine
 // This decision depends on many factors, such as whether the type of the context is
 // a list of things, whether the variable is a list, whether it can contain only
 // safe characters, and so on.
-func (mkline *MkLine) VariableNeedsQuoting(mklines MkLines, varuse *MkVarUse, vartype *Vartype, vuc *VarUseContext) (needsQuoting YesNoUnknown) {
+func (mkline *MkLine) VariableNeedsQuoting(mklines *MkLines, varuse *MkVarUse, vartype *Vartype, vuc *VarUseContext) (needsQuoting YesNoUnknown) {
 	if trace.Tracing {
 		defer trace.Call(varuse, vartype, vuc, trace.Result(&needsQuoting))()
 	}

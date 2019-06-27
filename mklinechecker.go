@@ -11,7 +11,7 @@ import (
 
 // MkLineChecker provides checks for a single line from a Makefile fragment.
 type MkLineChecker struct {
-	MkLines MkLines
+	MkLines *MkLines
 	MkLine  *MkLine
 }
 

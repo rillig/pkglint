@@ -27,13 +27,13 @@ func NewRedundantScope() *RedundantScope {
 	return &RedundantScope{vars: make(map[string]*redundantScopeVarinfo)}
 }
 
-func (s *RedundantScope) Check(mklines MkLines) {
+func (s *RedundantScope) Check(mklines *MkLines) {
 	mklines.ForEach(func(mkline *MkLine) {
 		s.checkLine(mklines, mkline)
 	})
 }
 
-func (s *RedundantScope) checkLine(mklines MkLines, mkline *MkLine) {
+func (s *RedundantScope) checkLine(mklines *MkLines, mkline *MkLine) {
 	s.updateIncludePath(mkline)
 
 	switch {

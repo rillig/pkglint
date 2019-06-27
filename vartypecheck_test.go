@@ -1591,7 +1591,7 @@ func (vt *VartypeCheckTester) Values(values ...string) {
 		return varname + space + opStr + value
 	}
 
-	test := func(mklines MkLines, mkline *MkLine, value string) {
+	test := func(mklines *MkLines, mkline *MkLine, value string) {
 		varname := vt.varname
 		comment := ""
 		if mkline.IsVarassign() {

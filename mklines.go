@@ -5,9 +5,7 @@ import (
 )
 
 // MkLines contains data for the Makefile (or *.mk) that is currently checked.
-type MkLines = *MkLinesImpl
-
-type MkLinesImpl struct {
+type MkLines struct {
 	mklines       []*MkLine
 	lines         *Lines
 	target        string             // Current make(1) target; only available during checkAll
@@ -25,7 +23,7 @@ type MkLinesImpl struct {
 	// TODO: Describe where each of the above fields is valid.
 }
 
-func NewMkLines(lines *Lines) MkLines {
+func NewMkLines(lines *Lines) *MkLines {
 	mklines := make([]*MkLine, lines.Len())
 	for i, line := range lines.Lines {
 		mklines[i] = MkLineParser{}.Parse(line)
@@ -34,7 +32,7 @@ func NewMkLines(lines *Lines) MkLines {
 	tools := NewTools()
 	tools.Fallback(G.Pkgsrc.Tools)
 
-	return &MkLinesImpl{
+	return &MkLines{
 		mklines,
 		lines,
 		"",
@@ -74,14 +72,14 @@ func NewMkLines(lines *Lines) MkLines {
 
 // UseVar remembers that the given variable is used in the given line.
 // This controls the "defined but not used" warning.
-func (mklines *MkLinesImpl) UseVar(mkline *MkLine, varname string, time vucTime) {
+func (mklines *MkLines) UseVar(mkline *MkLine, varname string, time vucTime) {
 	mklines.vars.Use(varname, mkline, time)
 	if G.Pkg != nil {
 		G.Pkg.vars.Use(varname, mkline, time)
 	}
 }
 
-func (mklines *MkLinesImpl) Check() {
+func (mklines *MkLines) Check() {
 	if trace.Tracing {
 		defer trace.Call1(mklines.lines.Filename)()
 	}
@@ -99,7 +97,7 @@ func (mklines *MkLinesImpl) Check() {
 	SaveAutofixChanges(mklines.lines)
 }
 
-func (mklines *MkLinesImpl) checkAll() {
+func (mklines *MkLines) checkAll() {
 	allowedTargets := map[string]bool{
 		"pre-fetch": true, "do-fetch": true, "post-fetch": true,
 		"pre-extract": true, "do-extract": true, "post-extract": true,
@@ -175,7 +173,7 @@ func (mklines *MkLinesImpl) checkAll() {
 	CheckLinesTrailingEmptyLines(mklines.lines)
 }
 
-func (mklines *MkLinesImpl) checkVarassignPlist(mkline *MkLine) {
+func (mklines *MkLines) checkVarassignPlist(mkline *MkLine) {
 	switch mkline.Varcanon() {
 	case "PLIST_VARS":
 		for _, id := range mkline.ValueFields(resolveVariableRefs(mklines, mkline.Value())) {
@@ -195,7 +193,7 @@ func (mklines *MkLinesImpl) checkVarassignPlist(mkline *MkLine) {
 // ForEach calls the action for each line, until the action returns false.
 // It keeps track of the indentation (see MkLines.indentation)
 // and all conditional variables (see Indentation.IsConditional).
-func (mklines *MkLinesImpl) ForEach(action func(mkline *MkLine)) {
+func (mklines *MkLines) ForEach(action func(mkline *MkLine)) {
 	mklines.ForEachEnd(
 		func(mkline *MkLine) bool { action(mkline); return true },
 		func(mkline *MkLine) {})
@@ -204,7 +202,7 @@ func (mklines *MkLinesImpl) ForEach(action func(mkline *MkLine)) {
 // ForEachEnd calls the action for each line, until the action returns false.
 // It keeps track of the indentation and all conditional variables.
 // At the end, atEnd is called with the last line as its argument.
-func (mklines *MkLinesImpl) ForEachEnd(action func(mkline *MkLine) bool, atEnd func(lastMkline *MkLine)) {
+func (mklines *MkLines) ForEachEnd(action func(mkline *MkLine) bool, atEnd func(lastMkline *MkLine)) {
 
 	// XXX: To avoid looping over the lines multiple times, it would
 	// be nice to have an interface LinesChecker that checks a single topic.
@@ -233,7 +231,7 @@ func (mklines *MkLinesImpl) ForEachEnd(action func(mkline *MkLine) bool, atEnd f
 // expanded.
 //
 // It can only be used during an active ForEach call.
-func (mklines *MkLinesImpl) ExpandLoopVar(varname string) []string {
+func (mklines *MkLines) ExpandLoopVar(varname string) []string {
 
 	// From the inner loop to the outer loop, just in case
 	// that two loops should ever use the same variable.
@@ -256,7 +254,7 @@ func (mklines *MkLinesImpl) ExpandLoopVar(varname string) []string {
 	return nil
 }
 
-func (mklines *MkLinesImpl) collectDefinedVariables() {
+func (mklines *MkLines) collectDefinedVariables() {
 	// FIXME: This method has a wrong name. It collects not only the defined
 	//  variables but also the used ones.
 
@@ -325,14 +323,14 @@ func (mklines *MkLinesImpl) collectDefinedVariables() {
 }
 
 // defineVar marks a variable as defined in both the current package and the current file.
-func (mklines *MkLinesImpl) defineVar(pkg *Package, mkline *MkLine, varname string) {
+func (mklines *MkLines) defineVar(pkg *Package, mkline *MkLine, varname string) {
 	mklines.vars.Define(varname, mkline)
 	if pkg != nil {
 		pkg.vars.Define(varname, mkline)
 	}
 }
 
-func (mklines *MkLinesImpl) collectPlistVars() {
+func (mklines *MkLines) collectPlistVars() {
 	// TODO: The PLIST_VARS code above looks very similar.
 	for _, mkline := range mklines.mklines {
 		if mkline.IsVarassign() {
@@ -357,13 +355,13 @@ func (mklines *MkLinesImpl) collectPlistVars() {
 	}
 }
 
-func (mklines *MkLinesImpl) collectElse() {
+func (mklines *MkLines) collectElse() {
 	// Make a dry-run over the lines, which sets data.elseLine (in mkline.go) as a side-effect.
 	mklines.ForEach(func(mkline *MkLine) {})
 	// TODO: Check whether this ForEach is redundant because it is already run somewhere else.
 }
 
-func (mklines *MkLinesImpl) collectUsedVariables() {
+func (mklines *MkLines) collectUsedVariables() {
 	for _, mkline := range mklines.mklines {
 		mkline.ForEachUsed(func(varUse *MkVarUse, time vucTime) {
 			mklines.UseVar(mkline, varUse.varname, time)
@@ -377,7 +375,7 @@ func (mklines *MkLinesImpl) collectUsedVariables() {
 // documentation of the Makefile fragments from the pkgsrc infrastructure.
 //
 // Loosely based on mk/help/help.awk, revision 1.28, but much simpler.
-func (mklines *MkLinesImpl) collectDocumentedVariables() {
+func (mklines *MkLines) collectDocumentedVariables() {
 	scope := NewScope()
 	commentLines := 0
 	relevant := true
@@ -445,7 +443,7 @@ func (mklines *MkLinesImpl) collectDocumentedVariables() {
 
 // CheckForUsedComment checks that this file (a Makefile.common) has the given
 // relativeName in one of the "# used by" comments at the beginning of the file.
-func (mklines *MkLinesImpl) CheckForUsedComment(relativeName string) {
+func (mklines *MkLines) CheckForUsedComment(relativeName string) {
 	lines := mklines.lines
 	if lines.Len() < 3 {
 		return
@@ -484,11 +482,11 @@ func (mklines *MkLinesImpl) CheckForUsedComment(relativeName string) {
 	SaveAutofixChanges(lines)
 }
 
-func (mklines *MkLinesImpl) SaveAutofixChanges() {
+func (mklines *MkLines) SaveAutofixChanges() {
 	mklines.lines.SaveAutofixChanges()
 }
 
-func (mklines *MkLinesImpl) EOFLine() *MkLine {
+func (mklines *MkLines) EOFLine() *MkLine {
 	return MkLineParser{}.Parse(mklines.lines.EOFLine())
 }
 

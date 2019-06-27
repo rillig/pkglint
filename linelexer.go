@@ -115,11 +115,11 @@ func (llex *LinesLexer) SkipContainsOrWarn(text string) bool {
 
 // MkLinesLexer records the state when checking a list of Makefile lines from top to bottom.
 type MkLinesLexer struct {
-	mklines MkLines
+	mklines *MkLines
 	LinesLexer
 }
 
-func NewMkLinesLexer(mklines MkLines) *MkLinesLexer {
+func NewMkLinesLexer(mklines *MkLines) *MkLinesLexer {
 	return &MkLinesLexer{mklines, *NewLinesLexer(mklines.lines)}
 }
 

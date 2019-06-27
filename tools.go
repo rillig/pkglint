@@ -225,7 +225,7 @@ func (tr *Tools) Trace() {
 //
 // If addToUseTools is true, a USE_TOOLS line makes a tool immediately
 // usable. This should only be done if the current line is unconditional.
-func (tr *Tools) ParseToolLine(mklines MkLines, mkline *MkLine, fromInfrastructure bool, addToUseTools bool) {
+func (tr *Tools) ParseToolLine(mklines *MkLines, mkline *MkLine, fromInfrastructure bool, addToUseTools bool) {
 	switch {
 
 	case mkline.IsVarassign():

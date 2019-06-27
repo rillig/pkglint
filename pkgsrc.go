@@ -785,7 +785,7 @@ func (src *Pkgsrc) Load(filename string, options LoadOptions) *Lines {
 }
 
 // LoadMk loads the Makefile relative to the pkgsrc top directory.
-func (src *Pkgsrc) LoadMk(filename string, options LoadOptions) MkLines {
+func (src *Pkgsrc) LoadMk(filename string, options LoadOptions) *MkLines {
 	return LoadMk(src.File(filename), options)
 }
 
@@ -900,7 +900,7 @@ func (src *Pkgsrc) loadPkgOptions() {
 // VariableType returns the type of the variable
 // (possibly guessed based on the variable name),
 // or nil if the type cannot even be guessed.
-func (src *Pkgsrc) VariableType(mklines MkLines, varname string) (vartype *Vartype) {
+func (src *Pkgsrc) VariableType(mklines *MkLines, varname string) (vartype *Vartype) {
 	if trace.Tracing {
 		defer trace.Call(varname, trace.Result(&vartype))()
 	}

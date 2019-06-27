@@ -9,7 +9,7 @@ import (
 
 // VartypeCheck groups together the various checks for variables of the different types.
 type VartypeCheck struct {
-	MkLines MkLines
+	MkLines *MkLines
 
 	// Note: if "go vet" or "go test" complains about a "variable with invalid type", update to go1.11.4.
 	// See https://github.com/golang/go/issues/28972.
