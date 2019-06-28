@@ -556,7 +556,7 @@ func (scc *SimpleCommandChecker) handleCommandVariable() bool {
 	}
 
 	shellword := scc.strcmd.Name
-	if varuse := ToVarUse(shellword); varuse != nil {
+	if varuse := NewMkParser(nil, shellword, false).VarUse(); varuse != nil {
 		varname := varuse.varname
 
 		if vartype := G.Pkgsrc.VariableType(scc.MkLines, varname); vartype != nil && vartype.basicType.name == "ShellCommand" {

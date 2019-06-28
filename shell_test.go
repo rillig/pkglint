@@ -1201,9 +1201,7 @@ func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable__followed_by_lit
 
 	mklines.Check()
 
-	t.CheckOutputLines(
-		// FIXME: This command is legitimate.
-		"WARN: Makefile:6: Unknown shell command \"${QTDIR}/bin/release\".")
+	t.CheckOutputEmpty()
 }
 
 // The package Makefile and other .mk files in a package directory
