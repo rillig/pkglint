@@ -532,6 +532,31 @@ func (s *Suite) Test_Package_CheckVarorder__commented_varassign(c *check.C) {
 			"CATEGORIES, MASTER_SITES, empty line, HOMEPAGE, COMMENT, LICENSE.")
 }
 
+func (s *Suite) Test_Package_CheckVarorder__DEPENDS(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	pkg := NewPackage(t.File("category/package"))
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"CATEGORIES=     net",
+		"",
+		"COMMENT=        Comment",
+		"LICENSE=        license",
+		"MAINTAINER=     maintainer@example.org", // In wrong order
+		"",
+		"DEPENDS+=       dependency>=1.0:../../category/dependency",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	pkg.CheckVarorder(mklines)
+
+	t.CheckOutputLines(
+		"WARN: Makefile:3: The canonical order of the variables is " +
+			"CATEGORIES, empty line, MAINTAINER, COMMENT, LICENSE, empty line, DEPENDS.")
+}
+
 func (s *Suite) Test_Package_nbPart(c *check.C) {
 	t := s.Init(c)
 
