@@ -197,13 +197,6 @@ func (pkglint *Pkglint) Main(argv ...string) (exitCode int) {
 		defer pkglint.setUpProfiling()()
 	}
 
-	for _, arg := range pkglint.Opts.args {
-		pkglint.Todo = append(pkglint.Todo, filepath.ToSlash(arg))
-	}
-	if len(pkglint.Todo) == 0 {
-		pkglint.Todo = []string{"."}
-	}
-
 	firstDir := pkglint.Todo[0]
 	if fileExists(firstDir) {
 		firstDir = path.Dir(firstDir)
@@ -340,6 +333,14 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) int {
 	if pkglint.Opts.ShowVersion {
 		_, _ = fmt.Fprintf(pkglint.Logger.out.out, "%s\n", confVersion)
 		return 0
+	}
+
+	pkglint.Todo = nil
+	for _, arg := range pkglint.Opts.args {
+		pkglint.Todo = append(pkglint.Todo, filepath.ToSlash(arg))
+	}
+	if len(pkglint.Todo) == 0 {
+		pkglint.Todo = []string{"."}
 	}
 
 	return -1
