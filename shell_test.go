@@ -1063,6 +1063,23 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommand__subshell(c *check.C) {
 		"WARN: Makefile:6: Invoking subshells via $(...) is not portable enough.")
 }
 
+func (s *Suite) Test_ShellLineChecker_CheckShellCommand__append(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"CC+=\t-ggdb")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:3: The variable CC should not be appended to by any package.",
+		// FIXME
+		"WARN: Makefile:3: Unknown shell command \"-ggdb\".")
+}
+
 func (s *Suite) Test_ShellLineChecker_CheckShellCommand__case_patterns_from_variable(c *check.C) {
 	t := s.Init(c)
 
