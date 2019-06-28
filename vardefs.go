@@ -809,7 +809,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.pkglist("BOOTSTRAP_DEPENDS", BtDependencyWithPath)
 	reg.pkg("BOOTSTRAP_PKG", BtYesNo)
 	// BROKEN should better be a list of messages instead of a simple string.
-	reg.pkgappendrat("BROKEN", BtMessage)
+	reg.pkgappend("BROKEN", BtMessage)
 	reg.pkg("BROKEN_GETTEXT_DETECTION", BtYesNo)
 	reg.pkglistrat("BROKEN_EXCEPT_ON_PLATFORM", BtMachinePlatformPattern)
 	reg.pkglistrat("BROKEN_ON_PLATFORM", BtMachinePlatformPattern)
