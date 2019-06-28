@@ -197,28 +197,7 @@ func (pkglint *Pkglint) Main(argv ...string) (exitCode int) {
 		defer pkglint.setUpProfiling()()
 	}
 
-	firstDir := pkglint.Todo[0]
-	if fileExists(firstDir) {
-		firstDir = path.Dir(firstDir)
-	}
-
-	relTopdir := findPkgsrcTopdir(firstDir)
-	if relTopdir == "" {
-		// If the first argument to pkglint is not inside a pkgsrc tree,
-		// pkglint doesn't know where to load the infrastructure files from,
-		// and these are needed for virtually every single check.
-		// Therefore, the only sensible thing to do is to quit immediately.
-		dummyLine.Fatalf("%q must be inside a pkgsrc tree.", firstDir)
-	}
-
-	pkglint.Pkgsrc = NewPkgsrc(firstDir + "/" + relTopdir)
-	pkglint.Wip = matches(pkglint.Pkgsrc.ToRel(firstDir), `^wip(/|$)`) // Same as in Pkglint.Check.
-	pkglint.Pkgsrc.LoadInfrastructure()
-
-	currentUser, err := user.Current()
-	assertNil(err, "user.Current")
-	// On Windows, this is `Computername\Username`.
-	pkglint.Username = replaceAll(currentUser.Username, `^.*\\`, "")
+	pkglint.prepareMainLoop()
 
 	for len(pkglint.Todo) > 0 {
 		item := pkglint.Todo[0]
@@ -282,6 +261,31 @@ func (pkglint *Pkglint) setUpProfiling() func() {
 			cleanups[len(cleanups)-1-i]()
 		}
 	}
+}
+
+func (pkglint *Pkglint) prepareMainLoop() {
+	firstDir := pkglint.Todo[0]
+	if fileExists(firstDir) {
+		firstDir = path.Dir(firstDir)
+	}
+
+	relTopdir := findPkgsrcTopdir(firstDir)
+	if relTopdir == "" {
+		// If the first argument to pkglint is not inside a pkgsrc tree,
+		// pkglint doesn't know where to load the infrastructure files from,
+		// and these are needed for virtually every single check.
+		// Therefore, the only sensible thing to do is to quit immediately.
+		dummyLine.Fatalf("%q must be inside a pkgsrc tree.", firstDir)
+	}
+
+	pkglint.Pkgsrc = NewPkgsrc(firstDir + "/" + relTopdir)
+	pkglint.Wip = matches(pkglint.Pkgsrc.ToRel(firstDir), `^wip(/|$)`) // Same as in Pkglint.Check.
+	pkglint.Pkgsrc.LoadInfrastructure()
+
+	currentUser, err := user.Current()
+	assertNil(err, "user.Current")
+	// On Windows, this is `Computername\Username`.
+	pkglint.Username = replaceAll(currentUser.Username, `^.*\\`, "")
 }
 
 func (pkglint *Pkglint) ParseCommandLine(args []string) int {
