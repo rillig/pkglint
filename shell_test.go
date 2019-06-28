@@ -1184,6 +1184,28 @@ func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable__parameterized(c
 		"WARN: Makefile:8: UNKNOWN_TOOL is used but not defined.")
 }
 
+func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable__followed_by_literal(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	G.Pkg = NewPackage(t.File("category/package"))
+	t.FinishSetUp()
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"QTDIR=\t${PREFIX}",
+		"",
+		"pre-configure:",
+		"\t${QTDIR}/bin/release")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		// FIXME: This command is legitimate.
+		"WARN: Makefile:6: Unknown shell command \"${QTDIR}/bin/release\".")
+}
+
 // The package Makefile and other .mk files in a package directory
 // may use any shell commands defined by any included files.
 // But only if the package is checked as a whole.
