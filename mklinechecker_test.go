@@ -2151,6 +2151,65 @@ func (s *Suite) Test_MkLineChecker_checkVarUseQuoting__q_not_needed(c *check.C) 
 		"NOTE: ~/category/package/Makefile:6: The :Q operator isn't necessary for ${HOMEPAGE} here.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkVarUseQuoting__list_variable_with_single_constant_value(c *check.C) {
+	t := s.Init(c)
+
+	pkg := t.SetUpPackage("category/package",
+		"BUILD_DIRS=\tonly-dir",
+		"",
+		"do-install:",
+		"\t${INSTALL_PROGRAM} ${WRKSRC}/${BUILD_DIRS}/program ${DESTDIR}${PREFIX}/bin/")
+	t.FinishSetUp()
+
+	G.Check(pkg)
+
+	// TODO: Don't warn here since BUILD_DIRS, although being a list
+	//  variable, contains only a single value.
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile:23: " +
+			"The list variable BUILD_DIRS should not be embedded in a word.")
+}
+
+func (s *Suite) Test_MkLineChecker_checkVarUseQuoting__list_variable_with_single_conditional_value(c *check.C) {
+	t := s.Init(c)
+
+	pkg := t.SetUpPackage("category/package",
+		"BUILD_DIRS=\tonly-dir",
+		".if 0",
+		"BUILD_DIRS=\tother-dir",
+		".endif",
+		"",
+		"do-install:",
+		"\t${INSTALL_PROGRAM} ${WRKSRC}/${BUILD_DIRS}/program ${DESTDIR}${PREFIX}/bin/")
+	t.FinishSetUp()
+
+	G.Check(pkg)
+
+	// TODO: Don't warn here since BUILD_DIRS, although being a list
+	//  variable, contains only a single value.
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile:26: " +
+			"The list variable BUILD_DIRS should not be embedded in a word.")
+}
+
+func (s *Suite) Test_MkLineChecker_checkVarUseQuoting__list_variable_with_two_constant_words(c *check.C) {
+	t := s.Init(c)
+
+	pkg := t.SetUpPackage("category/package",
+		"BUILD_DIRS=\tfirst-dir second-dir",
+		"",
+		"do-install:",
+		"\t${INSTALL_PROGRAM} ${WRKSRC}/${BUILD_DIRS}/program ${DESTDIR}${PREFIX}/bin/")
+	t.FinishSetUp()
+
+	G.Check(pkg)
+
+	// Since BUILD_DIRS consists of two words, it would destroy the installation command.
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile:23: " +
+			"The list variable BUILD_DIRS should not be embedded in a word.")
+}
+
 // The ${VARNAME:=suffix} expression should only be used with lists.
 // It typically appears in MASTER_SITE definitions.
 func (s *Suite) Test_MkLineChecker_CheckVaruse__eq_nonlist(c *check.C) {
