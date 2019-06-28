@@ -1087,7 +1087,7 @@ func (cv *VartypeCheck) SedCommands() {
 }
 
 func (cv *VartypeCheck) ShellCommand() {
-	if cv.Op == opUseMatch || cv.Op == opUseCompare {
+	if cv.Op == opUseMatch || cv.Op == opUseCompare || cv.Op == opAssignAppend {
 		return
 	}
 	setE := true

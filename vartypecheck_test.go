@@ -1207,6 +1207,12 @@ func (s *Suite) Test_VartypeCheck_ShellCommand(c *check.C) {
 	vt.Values("*")
 
 	vt.OutputEmpty()
+
+	vt.Varname("CC")
+	vt.Op(opAssignAppend)
+	vt.Values("-ggdb")
+
+	vt.OutputEmpty()
 }
 
 func (s *Suite) Test_VartypeCheck_ShellCommands(c *check.C) {
