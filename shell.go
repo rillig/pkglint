@@ -556,24 +556,25 @@ func (scc *SimpleCommandChecker) handleCommandVariable() bool {
 	}
 
 	shellword := scc.strcmd.Name
-	if varuse := NewMkParser(nil, shellword, false).VarUse(); varuse != nil {
-		varname := varuse.varname
-
-		if vartype := G.Pkgsrc.VariableType(scc.MkLines, varname); vartype != nil && vartype.basicType.name == "ShellCommand" {
-			scc.checkInstallCommand(shellword)
-			return true
-		}
-
-		// When the package author has explicitly defined a command
-		// variable, assume it to be valid.
-		if scc.MkLines.vars.DefinedSimilar(varname) {
-			return true
-		}
-		if G.Pkg != nil && G.Pkg.vars.DefinedSimilar(varname) {
-			return true
-		}
+	varuse := NewMkParser(nil, shellword, false).VarUse()
+	if varuse == nil {
+		return false
 	}
-	return false
+
+	varname := varuse.varname
+
+	if vartype := G.Pkgsrc.VariableType(scc.MkLines, varname); vartype != nil && vartype.basicType.name == "ShellCommand" {
+		scc.checkInstallCommand(shellword)
+		return true
+	}
+
+	// When the package author has explicitly defined a command
+	// variable, assume it to be valid.
+	if scc.MkLines.vars.DefinedSimilar(varname) {
+		return true
+	}
+
+	return G.Pkg != nil && G.Pkg.vars.DefinedSimilar(varname)
 }
 
 func (scc *SimpleCommandChecker) handleShellBuiltin() bool {
