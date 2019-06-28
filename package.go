@@ -1095,7 +1095,7 @@ func (pkg *Package) CheckVarorder(mklines *MkLines) {
 		var canonical []string
 		for _, variable := range variables {
 			if variable == emptyLine {
-				if len(canonical) > 0 && canonical[len(canonical)-1] != "empty line" {
+				if canonical[len(canonical)-1] != "empty line" {
 					canonical = append(canonical, "empty line")
 				}
 				continue
@@ -1117,7 +1117,7 @@ func (pkg *Package) CheckVarorder(mklines *MkLines) {
 			}
 		}
 
-		if len(canonical) > 0 && canonical[len(canonical)-1] == "empty line" {
+		if canonical[len(canonical)-1] == "empty line" {
 			canonical = canonical[:len(canonical)-1]
 		}
 		return strings.Join(canonical, ", ")
