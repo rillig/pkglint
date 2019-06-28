@@ -857,7 +857,26 @@ func (ck MkLineChecker) checkVarUseQuoting(varUse *MkVarUse, vartype *Vartype, v
 		modNoM := strings.TrimSuffix(modNoQ, ":M*")
 		correctMod := modNoM + ifelseStr(needMstar, ":M*:Q", ":Q")
 		if correctMod == mod+":Q" && vuc.IsWordPart && !vartype.IsShell() {
-			if vartype.List() {
+
+			isSingleWordConstant := func() bool {
+				if G.Pkg == nil {
+					return false
+				}
+
+				varinfo := G.Pkg.redundant.vars[varname]
+				if varinfo == nil || !varinfo.vari.Constant() {
+					return false
+				}
+
+				value := varinfo.vari.ConstantValue()
+				return len(mkline.ValueFields(value)) == 1
+			}
+
+			if vartype.List() && isSingleWordConstant() {
+				// Do not warn in this special case, which typically occurs
+				// for BUILD_DIRS or similar package-settable variables.
+
+			} else if vartype.List() {
 				mkline.Warnf("The list variable %s should not be embedded in a word.", varname)
 				mkline.Explain(
 					"When a list variable has multiple elements, this expression expands",

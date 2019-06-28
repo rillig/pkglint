@@ -29,8 +29,10 @@ type Package struct {
 	EffectivePkgnameLine *MkLine      // The origin of the three Effective* values
 	Plist                PlistContent // Files and directories mentioned in the PLIST files
 
-	vars Scope
-	bl3  map[string]*MkLine // buildlink3.mk name => line; contains only buildlink3.mk files that are directly included.
+	vars      Scope
+	redundant *RedundantScope
+
+	bl3 map[string]*MkLine // buildlink3.mk name => line; contains only buildlink3.mk files that are directly included.
 
 	// Remembers the Makefile fragments that have already been included.
 	// The key to the map is the filename relative to the package directory.
@@ -643,9 +645,9 @@ func (pkg *Package) checkfilePackageMakefile(filename string, mklines *MkLines, 
 			sprintf("run %q.", bmake("guess-license")))
 	}
 
-	scope := NewRedundantScope()
-	scope.Check(allLines) // Updates the variables in the scope
-	pkg.checkGnuConfigureUseLanguages(scope)
+	pkg.redundant = NewRedundantScope()
+	pkg.redundant.Check(allLines) // Updates the variables in the scope
+	pkg.checkGnuConfigureUseLanguages()
 	pkg.checkUseLanguagesCompilerMk(allLines)
 
 	pkg.determineEffectivePkgVars()
@@ -724,7 +726,8 @@ func (pkg *Package) needsPlist() (bool, *Line) {
 	return true, NewLineWhole(pkg.File("Makefile"))
 }
 
-func (pkg *Package) checkGnuConfigureUseLanguages(s *RedundantScope) {
+func (pkg *Package) checkGnuConfigureUseLanguages() {
+	s := pkg.redundant
 
 	gnuConfigure := s.vars["GNU_CONFIGURE"]
 	if gnuConfigure == nil || !gnuConfigure.vari.Constant() {

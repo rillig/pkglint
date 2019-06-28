@@ -2163,11 +2163,9 @@ func (s *Suite) Test_MkLineChecker_checkVarUseQuoting__list_variable_with_single
 
 	G.Check(pkg)
 
-	// TODO: Don't warn here since BUILD_DIRS, although being a list
-	//  variable, contains only a single value.
-	t.CheckOutputLines(
-		"WARN: ~/category/package/Makefile:23: " +
-			"The list variable BUILD_DIRS should not be embedded in a word.")
+	// Don't warn here since BUILD_DIRS, although being a list
+	// variable, contains only a single value.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarUseQuoting__list_variable_with_single_conditional_value(c *check.C) {
