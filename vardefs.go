@@ -313,7 +313,7 @@ func (reg *VarTypeRegistry) cmdline(varname string, basicType *BasicType) {
 func (reg *VarTypeRegistry) infralist(varname string, basicType *BasicType) {
 	reg.acllist(varname, basicType,
 		List,
-		"*: append")
+		"*: set, append")
 }
 
 // compilerLanguages reads the available languages that are typically
