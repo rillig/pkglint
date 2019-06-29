@@ -158,11 +158,11 @@ var (
 	trace tracePkg.Tracer
 )
 
-func Main() int {
-	G.Logger.out = NewSeparatorWriter(os.Stdout)
-	G.Logger.err = NewSeparatorWriter(os.Stderr)
-	trace.Out = os.Stdout
-	exitCode := G.Main(os.Args...)
+func Main(stdout *os.File, stderr *os.File, args []string) int {
+	G.Logger.out = NewSeparatorWriter(stdout)
+	G.Logger.err = NewSeparatorWriter(stderr)
+	trace.Out = stdout
+	exitCode := G.Main(args...)
 	if G.Opts.Profiling {
 		G = unusablePkglint() // Free all memory.
 		runtime.GC()          // For detecting possible memory leaks; see qa-pkglint.

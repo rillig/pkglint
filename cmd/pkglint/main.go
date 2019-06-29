@@ -8,5 +8,5 @@ import (
 var exit = os.Exit
 
 func main() {
-	exit(pkglint.Main())
+	exit(pkglint.Main(os.Stdout, os.Stderr, os.Args))
 }

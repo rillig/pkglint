@@ -1203,19 +1203,7 @@ func (s *Suite) Test_Main(c *check.C) {
 	t.FinishSetUp()
 
 	runMain := func(out *os.File, commandLine ...string) {
-		args := os.Args
-		stdout := os.Stdout
-		stderr := os.Stderr
-		defer func() {
-			os.Stderr = stderr
-			os.Stdout = stdout
-			os.Args = args
-		}()
-		os.Args = commandLine
-		os.Stdout = out
-		os.Stderr = out
-
-		exitCode := Main()
+		exitCode := Main(out, out, commandLine)
 		c.Check(exitCode, equals, 0)
 	}
 
