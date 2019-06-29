@@ -191,7 +191,7 @@ func (ck MkLineChecker) checkDirectiveEnd(ind *Indentation) {
 			mkline.Warnf("Comment %q does not match loop %q.", comment, args)
 		}
 	}
-	if ind.Len() <= 1 {
+	if ind.Empty() {
 		mkline.Errorf("Unmatched .%s.", directive)
 	}
 }

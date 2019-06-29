@@ -1257,12 +1257,12 @@ type indentationLevel struct {
 	checkedFiles []string
 }
 
-func (ind *Indentation) Len() int {
-	return len(ind.levels)
+func (ind *Indentation) Empty() bool {
+	return len(ind.levels) == 1
 }
 
 func (ind *Indentation) top() *indentationLevel {
-	return &ind.levels[ind.Len()-1]
+	return &ind.levels[len(ind.levels)-1]
 }
 
 // Depth returns the number of space characters by which the directive
@@ -1273,13 +1273,13 @@ func (ind *Indentation) top() *indentationLevel {
 func (ind *Indentation) Depth(directive string) int {
 	switch directive {
 	case "if", "elif", "else", "endfor", "endif":
-		return ind.levels[imax(0, ind.Len()-2)].depth
+		return ind.levels[imax(0, len(ind.levels)-2)].depth
 	}
 	return ind.top().depth
 }
 
 func (ind *Indentation) Pop() {
-	ind.levels = ind.levels[:ind.Len()-1]
+	ind.levels = ind.levels[:len(ind.levels)-1]
 }
 
 func (ind *Indentation) Push(mkline *MkLine, indent int, condition string) {
@@ -1416,7 +1416,7 @@ func (ind *Indentation) TrackAfter(mkline *MkLine) {
 		}
 
 	case "endfor", "endif":
-		if ind.Len() > 1 { // Can only be false in unbalanced files.
+		if !ind.Empty() { // Can only be false in unbalanced files.
 			ind.Pop()
 		}
 	}
@@ -1444,12 +1444,12 @@ func (ind *Indentation) TrackAfter(mkline *MkLine) {
 }
 
 func (ind *Indentation) CheckFinish(filename string) {
-	if ind.Len() <= 1 {
+	if ind.Empty() {
 		return
 	}
 	eofLine := NewLineEOF(filename)
-	for ind.Len() > 1 {
-		openingMkline := ind.levels[ind.Len()-1].mkline
+	for !ind.Empty() {
+		openingMkline := ind.top().mkline
 		eofLine.Errorf(".%s from %s must be closed.", openingMkline.Directive(), eofLine.RefTo(openingMkline.Line))
 		ind.Pop()
 	}
