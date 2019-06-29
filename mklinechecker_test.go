@@ -109,6 +109,20 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeft__infrastructure(c *check.C
 		"WARN: ~/mk/infra.mk:2: _VARNAME is defined but not used.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkVarassignLeft__documented_underscore(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.CreateFileLines("category/package/filename.mk",
+		MkCvsID,
+		"_SORTED_VARS.group=\tVARNAME")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package/filename.mk"))
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_MkLineChecker_checkVarassignLeftUserSettable(c *check.C) {
 	t := s.Init(c)
 
