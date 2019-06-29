@@ -181,18 +181,25 @@ func (ck MkLineChecker) checkDirectiveEnd(ind *Indentation) {
 	directive := mkline.Directive()
 	comment := mkline.DirectiveComment()
 
-	if directive == "endif" && comment != "" && !ind.Empty() {
+	if ind.Empty() {
+		mkline.Errorf("Unmatched .%s.", directive)
+		return
+	}
+
+	if comment == "" {
+		return
+	}
+
+	if directive == "endif" {
 		if args := ind.Args(); !contains(args, comment) {
 			mkline.Warnf("Comment %q does not match condition %q.", comment, args)
 		}
 	}
-	if directive == "endfor" && comment != "" && !ind.Empty() {
+
+	if directive == "endfor" {
 		if args := ind.Args(); !contains(args, comment) {
 			mkline.Warnf("Comment %q does not match loop %q.", comment, args)
 		}
-	}
-	if ind.Empty() {
-		mkline.Errorf("Unmatched .%s.", directive)
 	}
 }
 
