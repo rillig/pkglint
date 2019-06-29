@@ -1674,13 +1674,13 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.pkglist("_WRAP_EXTRA_ARGS.*", BtShellWord)
 
 	reg.infralist("_VARGROUPS", BtIdentifier)
-	reg.infralist("_USER_VARS.*", BtIdentifier)
-	reg.infralist("_PKG_VARS.*", BtIdentifier)
-	reg.infralist("_SYS_VARS.*", BtIdentifier)
-	reg.infralist("_DEF_VARS.*", BtIdentifier)
-	reg.infralist("_USE_VARS.*", BtIdentifier)
-	reg.infralist("_SORTED_VARS.*", BtIdentifier)
-	reg.infralist("_LISTED_VARS.*", BtIdentifier)
+	reg.infralist("_USER_VARS.*", BtVariableName)
+	reg.infralist("_PKG_VARS.*", BtVariableName)
+	reg.infralist("_SYS_VARS.*", BtVariableName)
+	reg.infralist("_DEF_VARS.*", BtVariableName)
+	reg.infralist("_USE_VARS.*", BtVariableName)
+	reg.infralist("_SORTED_VARS.*", BtVariableNamePattern)
+	reg.infralist("_LISTED_VARS.*", BtVariableNamePattern)
 }
 
 func enum(values string) *BasicType {

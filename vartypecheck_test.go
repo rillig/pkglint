@@ -1378,6 +1378,23 @@ func (s *Suite) Test_VartypeCheck_VariableName(c *check.C) {
 		"WARN: filename.mk:2: \"VarBase\" is not a valid variable name.")
 }
 
+func (s *Suite) Test_VartypeCheck_VariableNamePattern(c *check.C) {
+	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).VariableNamePattern)
+
+	vt.Varname("_SORTED_VARS.group")
+	vt.Values(
+		"VARBASE",
+		"VarBase",
+		"PKG_OPTIONS_VAR.pkgbase",
+		"${INDIRECT}",
+		"*_DIRS",
+		"VAR.*",
+		"***")
+
+	vt.Output(
+		"WARN: filename.mk:2: \"VarBase\" is not a valid variable name pattern.")
+}
+
 func (s *Suite) Test_VartypeCheck_Version(c *check.C) {
 	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).Version)
 

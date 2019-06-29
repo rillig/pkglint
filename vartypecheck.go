@@ -1192,6 +1192,7 @@ func (cv *VartypeCheck) UserGroupName() {
 
 // VariableName checks that the value is a valid variable name to be used in Makefiles.
 func (cv *VartypeCheck) VariableName() {
+	// TODO: sync with MkParser.Varname
 	if cv.Value == cv.ValueNoVar && !matches(cv.Value, `^[A-Z_][0-9A-Z_]*(?:[.].*)?$`) {
 		cv.Warnf("%q is not a valid variable name.", cv.Value)
 		cv.Explain(
@@ -1203,6 +1204,30 @@ func (cv *VartypeCheck) VariableName() {
 			"* PKGNAME",
 			"* PKG_OPTIONS.gtk+-2.0")
 	}
+}
+
+func (cv *VartypeCheck) VariableNamePattern() {
+	if cv.Value != cv.ValueNoVar {
+		return
+	}
+
+	// TODO: sync with MkParser.Varname
+	if matches(cv.Value, `^[*A-Z_][*0-9A-Z_]*(?:[.].*)?$`) {
+		return
+	}
+
+	cv.Warnf("%q is not a valid variable name pattern.", cv.Value)
+	cv.Explain(
+		"Variable names are restricted to only uppercase letters and the",
+		"underscore in the basename, and arbitrary characters in the",
+		"parameterized part, following the dot.",
+		"",
+		"In addition to these characters, variable name patterns may use",
+		"the * placeholder.",
+		"",
+		"Examples:",
+		"* PKGNAME",
+		"* PKG_OPTIONS.gtk+-2.0")
 }
 
 func (cv *VartypeCheck) Version() {

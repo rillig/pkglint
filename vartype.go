@@ -356,6 +356,7 @@ var (
 	BtURL                    = &BasicType{"URL", (*VartypeCheck).URL}
 	BtUserGroupName          = &BasicType{"UserGroupName", (*VartypeCheck).UserGroupName}
 	BtVariableName           = &BasicType{"VariableName", (*VartypeCheck).VariableName}
+	BtVariableNamePattern    = &BasicType{"VariableNamePattern", (*VartypeCheck).VariableNamePattern}
 	BtVersion                = &BasicType{"Version", (*VartypeCheck).Version}
 	BtWrapperReorder         = &BasicType{"WrapperReorder", (*VartypeCheck).WrapperReorder}
 	BtWrapperTransform       = &BasicType{"WrapperTransform", (*VartypeCheck).WrapperTransform}
