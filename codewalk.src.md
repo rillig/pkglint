@@ -6,56 +6,58 @@
 
 As is common in Go, each executable command is implemented in its own directory.
 This directory is commonly called `cmd`.
- 
+
 ```codewalk
 file     cmd/pkglint/main.go
 go:func  main
 ```
 
 From there on, everything interesting happens in the `netbsd.org/pkglint` package.
-The below `Main` function already uses some implementation details (like `G.out` and `G.err`),
+The below `Main` function already uses some implementation details (like `G.Logger.out` and `G.Logger.err`),
 therefore it is currently not possible to write that code outside of this package.
 
-Making all the pkglint code exportable is a good idea in general, but as of January 2019,
+Making all the pkglint code exportable is a good idea in general, but as of June 2019,
 no one has asked to use any of the pkglint code as a library,
 therefore the decision whether each element should be exported or not is not carved in stone yet.
 If you want to use some of the code in your own pkgsrc programs,
-[just ask](mailto:%72%69%6C%6C%69%67%40NetBSD.org).
+[just ask](mailto:%72%69%6C%6C%69%67%40NetBSD.org?subject=using%20pkglint%20as%20a%20library).
 
 ```codewalk
 file     pkglint.go
 go:func  Main
 ```
 
+When running pkglint, the `G` variable is set up first.
+It contains the whole global state of pkglint:
+
+```codewalk
+file pkglint.go
+start ^// G is
+end ^\)
+```
+
+All the interesting code is in the `Pkglint` type.
+Having only two global variables makes it easy to reset the global state during testing.
+
 ```codewalk
 file     pkglint.go
 go:func  Pkglint.Main
 ```
 
-When running pkglint, the `G` variable is set up first.
-It contains the whole global state of pkglint.
-(Except for some of the subpackages, which have to be initialized separately.)
-All the interesting code is in the `Pkglint` type.
-Having only a single global variable makes it easy to reset the global state during testing.
-
 ### Testing pkglint
 
-Very similar code is used to set up the test and tear it down again:
+The code for setting up the tests looks similar to the main code:
 
 ```codewalk
 file     check_test.go
 go:func  Suite.SetUpTest
 ```
 
-```codewalk
-file     check_test.go
-go:func  Suite.TearDownTest
-```
-
 ## First contact: checking a single DESCR file
 
 To learn how pkglint works internally, it is a good idea to start with
-a very simple example.
+a small example.
+
 Since the `DESCR` files have a very simple structure (they only contain
 text for human consumption), they are the ideal target.
 Let's trace an invocation of the command `pkglint DESCR` down to where
@@ -67,15 +69,25 @@ go:func  main
 ```
 
 ```codewalk
+file     pkglint.go
+go:func  Main
+```
+
+```codewalk
+file     pkglint.go
+go:func  -no-body Pkglint.Main
+```
+
+```codewalk
 file   pkglint.go
 start  ^[\t]if exitcode :=
 end    ^\t\}$
 ```
 
-Since there are no command line options starting with a hyphen, we can
-skip the command line parsing for this example.
-
-The argument `DESCR` is saved in the `TODO` list.
+In this example, there are no command line options starting with a hyphen.
+Therefore the main part of `ParseCommandLine` can be skipped.
+The one remaining command line argument is `DESCR`,
+and that is saved in `pkglint.Todo`, which contains all items that still need to be checked.
 The default use case for pkglint is to check the package from the
 current working directory, therefore this is done if no arguments are given.
 
@@ -92,7 +104,7 @@ known variable names (like PREFIX, TOOLS_CREATE.*, the MASTER_SITEs).
 The path to the pkgsrc root directory is determined from the first command line argument,
 therefore the arguments had to be processed in the code above.
 
-In this example run, the first (and only) argument is `DESCR`.
+In this example run, the first and only argument is `DESCR`.
 From there, the pkgsrc root is usually reachable via `../../`,
 and this is what pkglint tries.
 
@@ -102,7 +114,7 @@ start  ^[\t]firstDir :=
 end    LoadInfrastructure
 ```
 
-Now the information from pkgsrc is loaded, and the main work can start.
+Now the information from pkgsrc is loaded into `pkglint.Pkgsrc`, and the main work can start.
 The items from the TODO list are worked off and handed over to `Pkglint.Check`,
 one after another. When pkglint is called with the `-r` option,
 some entries may be added to the Todo list,
@@ -128,8 +140,10 @@ pkgsrc root directory.
 
 ```codewalk
 file     pkglint.go
-go:func  Pkglint.checkReg
+go:func  -no-body Pkglint.checkReg
 ```
+
+The relevant part of `Pkglint.checkReg` is:
 
 ```codewalk
 file   pkglint.go
@@ -223,7 +237,7 @@ go:type  Line
 
 ### MkLine
 
-Most of the pkgsrc infrastructure is written in Makefiles. 
+Most of the pkgsrc infrastructure is written in Makefiles.
 In these, there may be line continuations  (the ones ending in backslash).
 Plus, they may contain Make variables of the form `${VARNAME}` or `${VARNAME:Modifiers}`,
 and these are handled specially.
@@ -233,7 +247,23 @@ file     mkline.go
 go:type  MkLine
 ```
 
-### ShellLine
+There are several types of lines in a `Makefile`:
+
+* comments and empty lines (trivial)
+* variable assignments
+* directives like `.if` and `.for`
+* file inclusion, like `.include "../../mk/bsd.pkg.mk"`
+* make targets like `pre-configure:` or `do-install:`
+* shell commands for these targets, indented by a tab character
+
+For each of these types, there is a corresponding type test,
+such as `MkLine.IsVarassign()` or `MkLine.IsInclude()`.
+
+Depending on this type, the individual properties of the line
+can be accessed using `MkLine.Varname()` (for variable assignments only)
+or `MkLine.DirectiveComment()` (for directives only).
+
+### ShellLineChecker
 
 The instructions for building and installing packages are written in shell commands,
 which are embedded in Makefile fragments.
@@ -306,7 +336,7 @@ go:func  Suite.Test_Pkglint_Main__complete_package
 
 ### Typical warnings during a test
 
-When running a newly written pkglint test, it may output more warnings than 
+When running a newly written pkglint test, it may output more warnings than
 necessary or interesting for the current test. Here are the most frequent
 warnings and how to repair them properly:
 

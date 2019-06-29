@@ -191,7 +191,7 @@ func isEmptyDir(filename string) bool {
 
 	dirents, err := ioutil.ReadDir(filename)
 	if err != nil {
-		return true
+		return true // XXX: Why not false?
 	}
 
 	for _, dirent := range dirents {

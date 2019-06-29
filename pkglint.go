@@ -162,12 +162,8 @@ func Main(stdout *os.File, stderr *os.File, args []string) int {
 	G.Logger.out = NewSeparatorWriter(stdout)
 	G.Logger.err = NewSeparatorWriter(stderr)
 	trace.Out = stdout
-	exitCode := G.Main(args...)
-	if G.Opts.Profiling {
-		G = unusablePkglint() // Free all memory.
-		runtime.GC()          // For detecting possible memory leaks; see qa-pkglint.
-	}
-	return exitCode
+
+	return G.Main(args...)
 }
 
 // Main runs the main program with the given arguments.
@@ -233,6 +229,9 @@ func (pkglint *Pkglint) setUpProfiling() func() {
 
 		err = fd.Close()
 		assertNil(err, "heapDump.close")
+
+		G = unusablePkglint() // Free all memory.
+		runtime.GC()          // For detecting possible memory leaks; see qa-pkglint.
 	})
 
 	f, err := os.Create("pkglint.pprof")

@@ -72,26 +72,25 @@ func (s *Suite) SetUpTest(c *check.C) {
 
 	t.c = c
 	t.SetUpCommandLine("-Wall") // To catch duplicate warnings
-	t.c = nil
 
 	// To improve code coverage and ensure that trace.Result works
 	// in all cases. The latter cannot be ensured at compile time.
 	t.EnableSilentTracing()
 
 	prevdir, err := os.Getwd()
-	if err != nil {
-		c.Fatalf("Cannot get current working directory: %s", err)
-	}
+	assertNil(err, "Cannot get current working directory: %s", err)
 	t.prevdir = prevdir
+
+	// No longer usable; see https://github.com/go-check/check/issues/22
+	t.c = nil
 }
 
 func (s *Suite) TearDownTest(c *check.C) {
 	t := s.Tester
 	t.c = nil // No longer usable; see https://github.com/go-check/check/issues/22
 
-	if err := os.Chdir(t.prevdir); err != nil {
-		t.Errorf("Cannot chdir back to previous dir: %s", err)
-	}
+	err := os.Chdir(t.prevdir)
+	assertNil(err, "Cannot chdir back to previous dir: %s", err)
 
 	if t.seenSetupPkgsrc > 0 && !t.seenFinish && !t.seenMain {
 		t.Errorf("After t.SetupPkgsrc(), either t.FinishSetUp() or t.Main() must be called.")
@@ -541,10 +540,8 @@ func (t *Tester) Chdir(relativeDirName string) {
 	}
 
 	absDirName := t.File(relativeDirName)
-	_ = os.MkdirAll(absDirName, 0700)
-	if err := os.Chdir(absDirName); err != nil {
-		t.c.Fatalf("Cannot chdir: %s", err)
-	}
+	assertNil(os.MkdirAll(absDirName, 0700), "MkDirAll")
+	assertNil(os.Chdir(absDirName), "Chdir")
 	t.relCwd = relativeDirName
 	G.cwd = absDirName
 }
@@ -1007,11 +1004,7 @@ func (t *Tester) CheckOutputMatches(expectedLines ...regex.Pattern) {
 
 		pattern := `^(?:` + string(expectedLine) + `)$`
 		re, err := regexp.Compile(pattern)
-		if err != nil {
-			return false
-		}
-
-		return re.MatchString(actualLine)
+		return err == nil && re.MatchString(actualLine)
 	}
 
 	// If a line matches the corresponding pattern, make them equal in the

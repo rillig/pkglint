@@ -243,7 +243,7 @@ func (pkg *Package) check(filenames []string, mklines, allLines *MkLines) {
 		st, err := os.Lstat(filename)
 		switch {
 		case err != nil:
-			// For missing custom distinfo file, an error message is already generated
+			// For a missing custom distinfo file, an error message is already generated
 			// for the line where DISTINFO_FILE is defined.
 			//
 			// For all other cases it is next to impossible to reach this branch
