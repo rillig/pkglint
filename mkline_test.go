@@ -1743,13 +1743,13 @@ func (s *Suite) Test_MkLine_ForEachUsed(c *check.C) {
 
 	c.Check(varnames, deepEquals, []string{
 		"run VALUE",
-		"parse OPSYS",
-		"parse endianness",
+		"load OPSYS",
+		"load endianness",
 		// "Hello" is not a variable name, the :L modifier makes it an expression.
-		"parse two",
-		"parse TARGETS",
-		"parse SOURCES",
-		"parse OTHER_FILE",
+		"load two",
+		"load TARGETS",
+		"load SOURCES",
+		"load OTHER_FILE",
 
 		"run VAR.${param}",
 		"run param",
