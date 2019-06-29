@@ -488,6 +488,26 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveEnd__ending_comments(c *check.C
 		"WARN: opsys.mk:24: Comment \"ii\" does not match loop \"jj in 1 2\".")
 }
 
+// After removing the dummy indentation in commit d5a926af,
+// there was a panic: runtime error: index out of range,
+// in wip/jacorb-lib/buildlink3.mk.
+func (s *Suite) Test_MkLineChecker_checkDirectiveEnd__unbalanced(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"",
+		".endfor # comment",
+		".endif # comment")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"ERROR: filename.mk:3: Unmatched .endfor.",
+		"ERROR: filename.mk:4: Unmatched .endif.")
+}
+
 func (s *Suite) Test_MkLineChecker_checkDirectiveFor(c *check.C) {
 	t := s.Init(c)
 
