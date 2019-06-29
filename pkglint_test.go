@@ -236,6 +236,20 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		"(Run \"pkglint -F\" to automatically fix some issues.)")
 }
 
+func (s *Suite) Test_Pkglint_Main__autofix_exitcode(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.CreateFileLines("filename.mk",
+		"")
+
+	exitcode := t.Main("-Wall", "--autofix", t.File("filename.mk"))
+
+	t.CheckOutputLines(
+		"AUTOFIX: ~/filename.mk:1: Inserting a line \"# $NetBSD$\" before this line.")
+	t.Check(exitcode, equals, 0)
+}
+
 // Run pkglint in a realistic environment.
 //
 //  env \

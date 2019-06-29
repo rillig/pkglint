@@ -936,6 +936,29 @@ func (s *Suite) Test_Autofix_Apply__autofix_and_show_autofix_options(c *check.C)
 		"AUTOFIX: filename:5: Replacing \"text\" with \"replacement\".")
 }
 
+// In --autofix mode or --show-autofix mode, the fix.Anyway doesn't
+// have any effect, therefore the errors from such autofixes are
+// not counted, and the exitcode stays at 0.
+func (s *Suite) Test_Autofix_Apply__anyway_error(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--autofix")
+	mklines := t.SetUpFileMkLines("filename.mk",
+		MkCvsID,
+		"VAR=\tvalue")
+
+	fix := mklines.mklines[1].Autofix()
+	fix.Errorf("From must be To.")
+	fix.Replace("from", "to")
+	fix.Anyway()
+	fix.Apply()
+
+	mklines.SaveAutofixChanges()
+
+	t.Check(G.Logger.errors, equals, 0)
+	t.CheckOutputEmpty()
+}
+
 // Ensures that without explanations, the separator between the individual
 // diagnostics are generated.
 func (s *Suite) Test_Autofix_Apply__source_without_explain(c *check.C) {
