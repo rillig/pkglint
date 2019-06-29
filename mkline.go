@@ -1221,15 +1221,11 @@ type Indentation struct {
 	levels []indentationLevel
 }
 
-func NewIndentation() *Indentation {
-	ind := Indentation{}
-	ind.levels = []indentationLevel{{}} // one dummy level
-	return &ind
-}
+func NewIndentation() *Indentation { return &Indentation{} }
 
 func (ind *Indentation) String() string {
 	var s strings.Builder
-	for _, level := range ind.levels[1:] {
+	for _, level := range ind.levels {
 		_, _ = fmt.Fprintf(&s, " %d", level.depth)
 		if len(level.conditionalVars) > 0 {
 			_, _ = fmt.Fprintf(&s, " (%s)", strings.Join(level.conditionalVars, " "))
@@ -1258,7 +1254,7 @@ type indentationLevel struct {
 }
 
 func (ind *Indentation) Empty() bool {
-	return len(ind.levels) == 1
+	return len(ind.levels) == 0
 }
 
 func (ind *Indentation) top() *indentationLevel {
@@ -1271,11 +1267,15 @@ func (ind *Indentation) top() *indentationLevel {
 // This is typically two more than the surrounding level, except for
 // multiple-inclusion guards.
 func (ind *Indentation) Depth(directive string) int {
+	i := len(ind.levels) - 1
 	switch directive {
-	case "if", "elif", "else", "endfor", "endif":
-		return ind.levels[imax(0, len(ind.levels)-2)].depth
+	case "elif", "else", "endfor", "endif":
+		i--
 	}
-	return ind.top().depth
+	if i < 0 {
+		return 0
+	}
+	return ind.levels[i].depth
 }
 
 func (ind *Indentation) Pop() {
@@ -1292,7 +1292,7 @@ func (ind *Indentation) Push(mkline *MkLine, indent int, condition string) {
 //
 // Variables named *_MK are ignored since they are usually not interesting.
 func (ind *Indentation) AddVar(varname string) {
-	if hasSuffix(varname, "_MK") {
+	if hasSuffix(varname, "_MK") || ind.Empty() {
 		return
 	}
 
@@ -1380,7 +1380,7 @@ func (ind *Indentation) TrackBefore(mkline *MkLine) {
 
 	switch mkline.Directive() {
 	case "for", "if", "ifdef", "ifndef":
-		ind.Push(mkline, ind.top().depth, mkline.Args())
+		ind.Push(mkline, ind.Depth(mkline.Directive()), mkline.Args())
 	}
 }
 
@@ -1407,12 +1407,16 @@ func (ind *Indentation) TrackAfter(mkline *MkLine) {
 
 	case "elif":
 		// Handled here instead of TrackBefore to allow the action to access the previous condition.
-		ind.top().args = args
+		if !ind.Empty() {
+			ind.top().args = args
+		}
 
 	case "else":
-		top := ind.top()
-		if top.mkline != nil {
-			top.mkline.SetHasElseBranch(mkline)
+		if !ind.Empty() {
+			top := ind.top()
+			if top.mkline != nil {
+				top.mkline.SetHasElseBranch(mkline)
+			}
 		}
 
 	case "endfor", "endif":

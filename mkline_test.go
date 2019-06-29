@@ -1545,7 +1545,7 @@ func (s *Suite) Test_Indentation(c *check.C) {
 
 	ind.Push(mkline, 2, "")
 
-	c.Check(ind.Depth("if"), equals, 0) // Because "if" is handled in MkLines.TrackBefore.
+	c.Check(ind.Depth("if"), equals, 2)
 	c.Check(ind.Depth("endfor"), equals, 0)
 
 	ind.AddVar("LEVEL1.VAR1")
@@ -1645,6 +1645,7 @@ func (s *Suite) Test_Indentation_RememberUsedVariables(c *check.C) {
 	mkline := t.NewMkLine("Makefile", 123, ".if ${PKGREVISION} > 0")
 	ind := NewIndentation()
 
+	ind.TrackBefore(mkline)
 	ind.RememberUsedVariables(mkline.Cond())
 
 	t.CheckOutputEmpty()
