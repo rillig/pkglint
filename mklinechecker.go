@@ -871,7 +871,7 @@ func (ck MkLineChecker) checkVarUseQuoting(varUse *MkVarUse, vartype *Vartype, v
 				}
 
 				varinfo := G.Pkg.redundant.vars[varname]
-				if varinfo == nil || !varinfo.vari.Constant() {
+				if !varinfo.vari.Constant() {
 					return false
 				}
 

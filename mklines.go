@@ -239,7 +239,7 @@ func (mklines *MkLines) ExpandLoopVar(varname string) []string {
 		ind := mklines.indentation.levels[i]
 
 		mkline := ind.mkline
-		if mkline == nil || mkline.Directive() != "for" {
+		if mkline.Directive() != "for" {
 			continue
 		}
 

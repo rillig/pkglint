@@ -1413,10 +1413,7 @@ func (ind *Indentation) TrackAfter(mkline *MkLine) {
 
 	case "else":
 		if !ind.Empty() {
-			top := ind.top()
-			if top.mkline != nil {
-				top.mkline.SetHasElseBranch(mkline)
-			}
+			ind.top().mkline.SetHasElseBranch(mkline)
 		}
 
 	case "endfor", "endif":
