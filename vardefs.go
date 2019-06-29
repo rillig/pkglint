@@ -1679,6 +1679,8 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.infralist("_SYS_VARS.*", BtIdentifier)
 	reg.infralist("_DEF_VARS.*", BtIdentifier)
 	reg.infralist("_USE_VARS.*", BtIdentifier)
+	reg.infralist("_SORTED_VARS.*", BtIdentifier)
+	reg.infralist("_LISTED_VARS.*", BtIdentifier)
 }
 
 func enum(values string) *BasicType {
