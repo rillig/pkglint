@@ -1212,6 +1212,11 @@ func (vuc *VarUseContext) String() string {
 // indentation. By convention, each directive is indented by 2 spaces.
 // An excepting are multiple-inclusion guards, they don't increase the
 // indentation.
+//
+//  Indentation starts with 0 spaces.
+//  Each .if or .for indents all inner directives by 2.
+//  Except for .if with multiple-inclusion guard, which indents all inner directives by 0.
+//  Each .elif, .else, .endif, .endfor uses the outer indentation instead.
 type Indentation struct {
 	levels []indentationLevel
 }

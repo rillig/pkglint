@@ -1577,6 +1577,68 @@ func (s *Suite) Test_Indentation(c *check.C) {
 	c.Check(ind.String(), equals, "[]")
 }
 
+func (s *Suite) Test_Indentation__realistic(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"",
+		".if 1",
+		".  if !defined(GUARD_MK)",
+		".  for var in 1 2 3",
+		".    if !defined(GUARD_MK)",
+		".    if 3",
+		".    endif",
+		".    endif",
+		".  endfor",
+		".  endif",
+		".elif 1",
+		".  for var in 1 2 3",
+		".  endfor",
+		".else",
+		".  for var in 1 2 3",
+		".  endfor",
+		".endif")
+
+	t.EnableTracingToLog()
+
+	mklines.ForEach(func(mkline *MkLine) {})
+
+	t.CheckOutputLinesMatching(`Indentation`,
+		"TRACE:   Indentation before line 3: []",
+		"TRACE:   Indentation after line 3: [2]",
+		"TRACE:   Indentation before line 4: [2]",
+		"TRACE:   Indentation after line 4: [2 2]",
+		"TRACE:   Indentation before line 5: [2 2]",
+		"TRACE:   Indentation after line 5: [2 2 4]",
+		"TRACE:   Indentation before line 6: [2 2 4]",
+		"TRACE:   Indentation after line 6: [2 2 4 4]",
+		"TRACE:   Indentation before line 7: [2 2 4 4]",
+		"TRACE:   Indentation after line 7: [2 2 4 4 6]",
+		"TRACE:   Indentation before line 8: [2 2 4 4 6]",
+		"TRACE:   Indentation after line 8: [2 2 4 4]",
+		"TRACE:   Indentation before line 9: [2 2 4 4]",
+		"TRACE:   Indentation after line 9: [2 2 4]",
+		"TRACE:   Indentation before line 10: [2 2 4]",
+		"TRACE:   Indentation after line 10: [2 2]",
+		"TRACE:   Indentation before line 11: [2 2]",
+		"TRACE:   Indentation after line 11: [2]",
+		"TRACE:   Indentation before line 12: [2]",
+		"TRACE:   Indentation after line 12: [2]",
+		"TRACE:   Indentation before line 13: [2]",
+		"TRACE:   Indentation after line 13: [2 4]",
+		"TRACE:   Indentation before line 14: [2 4]",
+		"TRACE:   Indentation after line 14: [2]",
+		"TRACE:   Indentation before line 15: [2]",
+		"TRACE:   Indentation after line 15: [2]",
+		"TRACE:   Indentation before line 16: [2]",
+		"TRACE:   Indentation after line 16: [2 4]",
+		"TRACE:   Indentation before line 17: [2 4]",
+		"TRACE:   Indentation after line 17: [2]",
+		"TRACE:   Indentation before line 18: [2]",
+		"TRACE:   Indentation after line 18: []")
+}
+
 func (s *Suite) Test_Indentation_RememberUsedVariables(c *check.C) {
 	t := s.Init(c)
 
