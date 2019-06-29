@@ -995,11 +995,11 @@ func (mkline *MkLine) VariableNeedsQuoting(mklines *MkLines, varuse *MkVarUse, v
 }
 
 // ForEachUsed calls the action for each variable that is used in the line.
-func (mkline *MkLine) ForEachUsed(action func(varUse *MkVarUse, time vucTime)) {
+func (mkline *MkLine) ForEachUsed(action func(varUse *MkVarUse, time VucTime)) {
 
-	var searchIn func(text string, time vucTime) // mutually recursive with searchInVarUse
+	var searchIn func(text string, time VucTime) // mutually recursive with searchInVarUse
 
-	searchInVarUse := func(varuse *MkVarUse, time vucTime) {
+	searchInVarUse := func(varuse *MkVarUse, time VucTime) {
 		varname := varuse.varname
 		if !varuse.IsExpression() {
 			action(varuse, time)
@@ -1010,7 +1010,7 @@ func (mkline *MkLine) ForEachUsed(action func(varUse *MkVarUse, time vucTime)) {
 		}
 	}
 
-	searchIn = func(text string, time vucTime) {
+	searchIn = func(text string, time VucTime) {
 		if !contains(text, "$") {
 			return
 		}
@@ -1025,27 +1025,27 @@ func (mkline *MkLine) ForEachUsed(action func(varUse *MkVarUse, time vucTime)) {
 	switch {
 
 	case mkline.IsVarassign():
-		searchIn(mkline.Varname(), vucTimeLoad)
+		searchIn(mkline.Varname(), VucLoadTime)
 		searchIn(mkline.Value(), mkline.Op().Time())
 
 	case mkline.IsDirective() && mkline.Directive() == "for":
-		searchIn(mkline.Args(), vucTimeLoad)
+		searchIn(mkline.Args(), VucLoadTime)
 
 	case mkline.IsDirective() && mkline.Cond() != nil:
 		mkline.Cond().Walk(&MkCondCallback{
 			VarUse: func(varuse *MkVarUse) {
-				searchInVarUse(varuse, vucTimeLoad)
+				searchInVarUse(varuse, VucLoadTime)
 			}})
 
 	case mkline.IsShellCommand():
-		searchIn(mkline.ShellCommand(), vucTimeRun)
+		searchIn(mkline.ShellCommand(), VucRunTime)
 
 	case mkline.IsDependency():
-		searchIn(mkline.Targets(), vucTimeLoad)
-		searchIn(mkline.Sources(), vucTimeLoad)
+		searchIn(mkline.Targets(), VucLoadTime)
+		searchIn(mkline.Sources(), VucLoadTime)
 
 	case mkline.IsInclude():
-		searchIn(mkline.IncludedFile(), vucTimeLoad)
+		searchIn(mkline.IncludedFile(), VucLoadTime)
 	}
 }
 
@@ -1124,11 +1124,11 @@ func (op MkOperator) String() string {
 
 // Time returns the time at which the right-hand side of the assignment is
 // evaluated.
-func (op MkOperator) Time() vucTime {
+func (op MkOperator) Time() VucTime {
 	if op == opAssignShell || op == opAssignEval {
-		return vucTimeLoad
+		return VucLoadTime
 	}
-	return vucTimeRun
+	return VucRunTime
 }
 
 // VarUseContext defines the context in which a variable is defined
@@ -1147,34 +1147,39 @@ func (op MkOperator) Time() vucTime {
 // x86_64 doesn't make sense.
 type VarUseContext struct {
 	vartype    *Vartype
-	time       vucTime
+	time       VucTime
 	quoting    VucQuoting
 	IsWordPart bool // Example: LOCALBASE=${LOCALBASE}
 }
 
-// vucTime is the time at which a variable is used.
+// VucTime is the time at which a variable is used.
 //
 // See ToolTime, which is the same except that there is no unknown.
-type vucTime uint8
+type VucTime uint8
 
 const (
-	vucTimeUnknown vucTime = iota
+	VucUnknownTime VucTime = iota
 
+	// VucLoadTime marks a variable use that happens directly when
+	// the Makefile fragment is loaded.
+	//
 	// When Makefiles are loaded, the operators := and != evaluate their
 	// right-hand side, as well as the directives .if, .elif and .for.
 	// During loading, not all variables are available yet.
 	// Variable values are still subject to change, especially lists.
-	vucTimeLoad
+	VucLoadTime
 
-	// All files have been read, all variables can be referenced.
-	// Variable values don't change anymore.
+	// VucRunTime marks a variable use that happens after all files have been loaded.
 	//
+	// At this time, all variables can be referenced.
+	//
+	// At this time, variable values don't change anymore.
 	// Well, except for the ::= modifier.
 	// But that modifier is usually not used in pkgsrc.
-	vucTimeRun
+	VucRunTime
 )
 
-func (t vucTime) String() string { return [...]string{"unknown", "parse", "run"}[t] }
+func (t VucTime) String() string { return [...]string{"unknown", "load", "run"}[t] }
 
 // VucQuoting describes in what level of quoting the variable is used.
 // Depending on this context, the modifiers :Q or :M can be allowed or not.

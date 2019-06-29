@@ -179,7 +179,7 @@ func (v *Var) Write(mkline *MkLine, conditional bool, conditionVarnames ...strin
 	}
 	v.conditionalVars.AddAll(conditionVarnames)
 
-	mkline.ForEachUsed(func(varUse *MkVarUse, time vucTime) {
+	mkline.ForEachUsed(func(varUse *MkVarUse, time VucTime) {
 		v.refs.Add(varUse.varname)
 	})
 	v.refs.AddAll(conditionVarnames)

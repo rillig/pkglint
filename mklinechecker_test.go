@@ -12,7 +12,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeft(c *check.C) {
 		MkCvsID,
 		"_VARNAME=\tvalue")
 	// Only to prevent "defined but not used".
-	mklines.vars.Use("_VARNAME", mklines.mklines[1], vucTimeRun)
+	mklines.vars.Use("_VARNAME", mklines.mklines[1], VucRunTime)
 
 	mklines.Check()
 
@@ -2268,7 +2268,7 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__varcanon(c *check.C) {
 			options:    Guessed,
 			aclEntries: nil,
 		},
-		time:       vucTimeRun,
+		time:       VucRunTime,
 		quoting:    VucQuotPlain,
 		IsWordPart: false,
 	})

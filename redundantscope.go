@@ -157,7 +157,7 @@ func (s *RedundantScope) handleVarassign(mkline *MkLine, ind *Indentation) {
 func (s *RedundantScope) handleVarUse(mkline *MkLine) {
 	switch {
 	case mkline.IsVarassign():
-		mkline.ForEachUsed(func(varUse *MkVarUse, time vucTime) {
+		mkline.ForEachUsed(func(varUse *MkVarUse, time VucTime) {
 			varname := varUse.varname
 			info := s.get(varname)
 			info.vari.Read(mkline)

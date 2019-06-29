@@ -37,7 +37,7 @@ func (ck *ShellLineChecker) Explain(explanation ...string) {
 }
 
 var shellCommandsType = NewVartype(BtShellCommands, NoVartypeOptions, NewACLEntry("*", aclpAllRuntime))
-var shellWordVuc = &VarUseContext{shellCommandsType, vucTimeUnknown, VucQuotPlain, false}
+var shellWordVuc = &VarUseContext{shellCommandsType, VucUnknownTime, VucQuotPlain, false}
 
 func (ck *ShellLineChecker) CheckWord(token string, checkQuoting bool, time ToolTime) {
 	if trace.Tracing {
@@ -217,7 +217,7 @@ func (ck *ShellLineChecker) checkVaruseToken(atoms *[]*ShAtom, quoting ShQuoting
 	}
 
 	if ck.checkVarUse {
-		vuc := VarUseContext{shellCommandsType, vucTimeUnknown, quoting.ToVarUseContext(), true}
+		vuc := VarUseContext{shellCommandsType, VucUnknownTime, quoting.ToVarUseContext(), true}
 		MkLineChecker{ck.MkLines, ck.mkline}.CheckVaruse(varuse, &vuc)
 	}
 

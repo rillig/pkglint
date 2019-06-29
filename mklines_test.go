@@ -96,14 +96,14 @@ func (s *Suite) Test_MkLines__varuse_sh_modifier(c *check.C) {
 		"PLIST_SUBST+=\tQORE_VERSION=\"${qore-version:sh}\"")
 
 	var vars2 []string
-	mklines.mklines[1].ForEachUsed(func(varUse *MkVarUse, time vucTime) {
+	mklines.mklines[1].ForEachUsed(func(varUse *MkVarUse, time VucTime) {
 		vars2 = append(vars2, varUse.varname)
 	})
 
 	c.Check(vars2, deepEquals, []string{"SED"})
 
 	var vars3 []string
-	mklines.mklines[2].ForEachUsed(func(varUse *MkVarUse, time vucTime) {
+	mklines.mklines[2].ForEachUsed(func(varUse *MkVarUse, time VucTime) {
 		vars3 = append(vars3, varUse.varname)
 	})
 

@@ -72,7 +72,7 @@ func NewMkLines(lines *Lines) *MkLines {
 
 // UseVar remembers that the given variable is used in the given line.
 // This controls the "defined but not used" warning.
-func (mklines *MkLines) UseVar(mkline *MkLine, varname string, time vucTime) {
+func (mklines *MkLines) UseVar(mkline *MkLine, varname string, time VucTime) {
 	mklines.vars.Use(varname, mkline, time)
 	if G.Pkg != nil {
 		G.Pkg.vars.Use(varname, mkline, time)
@@ -363,7 +363,7 @@ func (mklines *MkLines) collectElse() {
 
 func (mklines *MkLines) collectUsedVariables() {
 	for _, mkline := range mklines.mklines {
-		mkline.ForEachUsed(func(varUse *MkVarUse, time vucTime) {
+		mkline.ForEachUsed(func(varUse *MkVarUse, time VucTime) {
 			mklines.UseVar(mkline, varUse.varname, time)
 		})
 	}
@@ -390,7 +390,7 @@ func (mklines *MkLines) collectDocumentedVariables() {
 		if commentLines >= 3 && relevant {
 			for varname, mkline := range scope.used {
 				mklines.vars.Define(varname, mkline)
-				mklines.vars.Use(varname, mkline, vucTimeRun)
+				mklines.vars.Use(varname, mkline, VucRunTime)
 			}
 		}
 
@@ -426,7 +426,7 @@ func (mklines *MkLines) collectDocumentedVariables() {
 			varcanon := varnameCanon(varname)
 			if varcanon == strings.ToUpper(varcanon) && matches(varcanon, `[A-Z]`) && parser.EOF() {
 				scope.Define(varcanon, mkline)
-				scope.Use(varcanon, mkline, vucTimeRun)
+				scope.Use(varcanon, mkline, VucRunTime)
 			}
 
 			if words[1] == "Copyright" {

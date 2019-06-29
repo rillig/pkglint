@@ -225,8 +225,8 @@ func (ck MkLineChecker) checkDirectiveFor(forVars map[string]bool, indentation *
 		// running pkglint over the whole pkgsrc tree did not produce any different result
 		// whether guessed was true or false.
 		forLoopType := NewVartype(btForLoop, List, NewACLEntry("*", aclpAllRead))
-		forLoopContext := VarUseContext{forLoopType, vucTimeLoad, VucQuotPlain, false}
-		mkline.ForEachUsed(func(varUse *MkVarUse, time vucTime) {
+		forLoopContext := VarUseContext{forLoopType, VucLoadTime, VucQuotPlain, false}
+		mkline.ForEachUsed(func(varUse *MkVarUse, time VucTime) {
 			ck.CheckVaruse(varUse, &forLoopContext)
 		})
 	}
@@ -671,7 +671,7 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 	// be used at load time somewhere in the future because it is
 	// assigned to another variable, and that variable is allowed
 	// to be used at load time.
-	directly := vuc.time == vucTimeLoad
+	directly := vuc.time == VucLoadTime
 	indirectly := !directly && vuc.vartype != nil &&
 		vuc.vartype.Union().Contains(aclpUseLoadtime)
 
@@ -1025,7 +1025,7 @@ func (ck MkLineChecker) checkVarassignLeft() {
 	ck.checkTextVarUse(
 		ck.MkLine.Varname(),
 		NewVartype(BtVariableName, NoVartypeOptions, NewACLEntry("*", aclpAll)),
-		vucTimeLoad)
+		VucLoadTime)
 }
 
 func (ck MkLineChecker) checkVarassignOp() {
@@ -1166,9 +1166,9 @@ func (ck MkLineChecker) checkVarassignRightVaruse() {
 	mkline := ck.MkLine
 	op := mkline.Op()
 
-	time := vucTimeRun
+	time := VucRunTime
 	if op == opAssignEval || op == opAssignShell {
-		time = vucTimeLoad
+		time = VucLoadTime
 	}
 
 	vartype := G.Pkgsrc.VariableType(ck.MkLines, mkline.Varname())
@@ -1183,7 +1183,7 @@ func (ck MkLineChecker) checkVarassignRightVaruse() {
 	}
 }
 
-func (ck MkLineChecker) checkTextVarUse(text string, vartype *Vartype, time vucTime) {
+func (ck MkLineChecker) checkTextVarUse(text string, vartype *Vartype, time VucTime) {
 	if !contains(text, "$") {
 		return
 	}
@@ -1206,7 +1206,7 @@ func (ck MkLineChecker) checkTextVarUse(text string, vartype *Vartype, time vucT
 
 // checkVarassignVaruseShell is very similar to checkVarassignRightVaruse, they just differ
 // in the way they determine isWordPart.
-func (ck MkLineChecker) checkVarassignVaruseShell(vartype *Vartype, time vucTime) {
+func (ck MkLineChecker) checkVarassignVaruseShell(vartype *Vartype, time VucTime) {
 	if trace.Tracing {
 		defer trace.Call(vartype, time)()
 	}
@@ -1485,7 +1485,7 @@ func (ck MkLineChecker) checkDirectiveCond() {
 
 	checkVarUse := func(varuse *MkVarUse) {
 		var vartype *Vartype // TODO: Insert a better type guess here.
-		vuc := VarUseContext{vartype, vucTimeLoad, VucQuotPlain, false}
+		vuc := VarUseContext{vartype, VucLoadTime, VucQuotPlain, false}
 		ck.CheckVaruse(varuse, &vuc)
 	}
 

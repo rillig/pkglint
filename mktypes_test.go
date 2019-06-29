@@ -64,7 +64,7 @@ func (s *Suite) Test_MkVarUseModifier_ChangesWords__empty(c *check.C) {
 	mkline := t.NewMkLine("filename.mk", 123, "\t${VAR:}")
 
 	n := 0
-	mkline.ForEachUsed(func(varUse *MkVarUse, time vucTime) {
+	mkline.ForEachUsed(func(varUse *MkVarUse, time VucTime) {
 		n += 100
 		for _, mod := range varUse.modifiers {
 			mod.ChangesWords()

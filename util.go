@@ -664,7 +664,7 @@ func (s *Scope) Fallback(varname string, value string) {
 }
 
 // Use marks the variable and its canonicalized form as used.
-func (s *Scope) Use(varname string, line *MkLine, time vucTime) {
+func (s *Scope) Use(varname string, line *MkLine, time VucTime) {
 	use := func(name string) {
 		if s.used[name] == nil {
 			s.used[name] = line
@@ -672,7 +672,7 @@ func (s *Scope) Use(varname string, line *MkLine, time vucTime) {
 				trace.Step2("Using %q in %s", name, line.String())
 			}
 		}
-		if time == vucTimeLoad {
+		if time == VucLoadTime {
 			s.usedAtLoadTime[name] = true
 		}
 	}

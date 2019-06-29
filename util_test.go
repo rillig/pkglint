@@ -534,7 +534,7 @@ func (s *Suite) Test_Scope_Used(c *check.C) {
 
 	scope := NewScope()
 	mkline := t.NewMkLine("file.mk", 1, "\techo ${VAR.param}")
-	scope.Use("VAR.param", mkline, vucTimeRun)
+	scope.Use("VAR.param", mkline, VucRunTime)
 
 	c.Check(scope.Used("VAR.param"), equals, true)
 	c.Check(scope.Used("VAR.other"), equals, false)

@@ -308,7 +308,7 @@ func (s *Suite) Test_VarUseContext_String(c *check.C) {
 
 	t.SetUpVartypes()
 	vartype := G.Pkgsrc.VariableType(nil, "PKGNAME")
-	vuc := VarUseContext{vartype, vucTimeUnknown, VucQuotBackt, false}
+	vuc := VarUseContext{vartype, VucUnknownTime, VucQuotBackt, false}
 
 	c.Check(vuc.String(), equals, "(Pkgname (package-settable) time:unknown quoting:backt wordpart:false)")
 }
@@ -399,7 +399,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__unknown_rhs(c *check.C) {
 	mkline := t.NewMkLine("filename.mk", 1, "PKGNAME:= ${UNKNOWN}")
 	t.SetUpVartypes()
 
-	vuc := VarUseContext{G.Pkgsrc.VariableType(nil, "PKGNAME"), vucTimeLoad, VucQuotUnknown, false}
+	vuc := VarUseContext{G.Pkgsrc.VariableType(nil, "PKGNAME"), VucLoadTime, VucQuotUnknown, false}
 	nq := mkline.VariableNeedsQuoting(nil, &MkVarUse{"UNKNOWN", nil}, nil, &vuc)
 
 	c.Check(nq, equals, unknown)
@@ -415,7 +415,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__append_URL_to_list_of_URLs(c *
 		"MASTER_SITES=\t${HOMEPAGE}")
 	mkline := mklines.mklines[1]
 
-	vuc := VarUseContext{G.Pkgsrc.vartypes.Canon("MASTER_SITES"), vucTimeRun, VucQuotPlain, false}
+	vuc := VarUseContext{G.Pkgsrc.vartypes.Canon("MASTER_SITES"), VucRunTime, VucQuotPlain, false}
 	nq := mkline.VariableNeedsQuoting(nil, &MkVarUse{"HOMEPAGE", nil}, G.Pkgsrc.vartypes.Canon("HOMEPAGE"), &vuc)
 
 	c.Check(nq, equals, no)
@@ -1674,7 +1674,7 @@ func (s *Suite) Test_MkLine_ForEachUsed(c *check.C) {
 
 	var varnames []string
 	for _, mkline := range mklines.mklines {
-		mkline.ForEachUsed(func(varUse *MkVarUse, time vucTime) {
+		mkline.ForEachUsed(func(varUse *MkVarUse, time VucTime) {
 			varnames = append(varnames, time.String()+" "+varUse.varname)
 		})
 	}
