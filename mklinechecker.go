@@ -1017,7 +1017,7 @@ func (ck MkLineChecker) checkVarassign() {
 // checkVarassignLeft checks everything to the left of the assignment operator.
 func (ck MkLineChecker) checkVarassignLeft() {
 	varname := ck.MkLine.Varname()
-	if hasPrefix(varname, "_") && !G.Infrastructure {
+	if hasPrefix(varname, "_") && !G.Infrastructure && G.Pkgsrc.vartypes.Canon(varname) == nil {
 		ck.MkLine.Warnf("Variable names starting with an underscore (%s) are reserved for internal pkgsrc use.", varname)
 	}
 

@@ -99,7 +99,8 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeft__infrastructure(c *check.C
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/infra.mk",
 		MkCvsID,
-		"_VARNAME=\tvalue")
+		"_VARNAME=\t\tvalue",
+		"_SORTED_VARS.group=\tVARNAME")
 	t.FinishSetUp()
 
 	G.Check(t.File("mk/infra.mk"))
