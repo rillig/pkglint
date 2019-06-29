@@ -796,9 +796,9 @@ func (s *Suite) Test_MkParser_Varname(c *check.C) {
 	test("SITES_${param}")
 	test("SITES_distfile-1.0.tar.gz")
 	test("SITES.gtk+-2.0")
+	test("PKGPATH.category/package")
 
 	testRest("VARNAME/rest", "VARNAME", "/rest")
-	testRest("VARNAME.param/rest", "VARNAME.param", "/rest")
 }
 
 // Pkglint can replace $(VAR) with ${VAR}. It doesn't look at all components

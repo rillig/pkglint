@@ -1460,7 +1460,7 @@ func (ind *Indentation) CheckFinish(filename string) {
 //  of the variable. The square bracket is only allowed in the parameter part.
 var (
 	VarbaseBytes  = textproc.NewByteSet("A-Za-z_0-9+---")
-	VarparamBytes = textproc.NewByteSet("A-Za-z_0-9#*+---.[")
+	VarparamBytes = textproc.NewByteSet("A-Za-z_0-9#*+---./[")
 )
 
 func (p MkLineParser) MatchVarassign(line *Line, text string, asdfData mkLineSplitResult) (m bool, assignment *mkLineAssign) {

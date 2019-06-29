@@ -1355,8 +1355,6 @@ func (s *Suite) Test_MkLine_ResolveVarsInRelativePath__without_tracing(c *check.
 	mklines.Check()
 
 	t.CheckOutputLines(
-		// FIXME: It's ok to have variable parameters including a slash.
-		"WARN: ~/buildlink3.mk:2: Invalid part \"/totem\" after variable name \"PKGPATH.multimedia\".",
 		"WARN: ~/buildlink3.mk:2: PKGPATH.multimedia/totem is used but not defined.")
 }
 
