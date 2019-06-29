@@ -24,7 +24,7 @@ If you want to use some of the code in your own pkgsrc programs,
 
 ```codewalk
 file     pkglint.go
-go:func  Main
+go:func  -no-body Pkglint.Main
 ```
 
 When running pkglint, the `G` variable is set up first.
@@ -66,11 +66,6 @@ the actual checks happen.
 ```codewalk
 file     cmd/pkglint/main.go
 go:func  main
-```
-
-```codewalk
-file     pkglint.go
-go:func  Main
 ```
 
 ```codewalk

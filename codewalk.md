@@ -11,7 +11,7 @@ This directory is commonly called `cmd`.
 
 ```go
 func main() {
-	exit(pkglint.Main(os.Stdout, os.Stderr, os.Args))
+	exit(pkglint.G.Main(os.Stdout, os.Stderr, os.Args))
 }
 ```
 
@@ -25,22 +25,16 @@ therefore the decision whether each element should be exported or not is not car
 If you want to use some of the code in your own pkgsrc programs,
 [just ask](mailto:%72%69%6C%6C%69%67%40NetBSD.org?subject=using%20pkglint%20as%20a%20library).
 
-> from [pkglint.go](pkglint.go#L161):
+> from [pkglint.go](pkglint.go#L170):
 
 ```go
-func Main(stdout *os.File, stderr *os.File, args []string) int {
-	G.Logger.out = NewSeparatorWriter(stdout)
-	G.Logger.err = NewSeparatorWriter(stderr)
-	trace.Out = stdout
-
-	return G.Main(args...)
-}
+func (pkglint *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) (exitCode int) {
 ```
 
 When running pkglint, the `G` variable is set up first.
 It contains the whole global state of pkglint:
 
-> from [pkglint.go](pkglint.go#L154):
+> from [pkglint.go](pkglint.go#L155):
 
 ```go
 // G is the abbreviation for "global state";
@@ -54,29 +48,30 @@ var (
 All the interesting code is in the `Pkglint` type.
 Having only two global variables makes it easy to reset the global state during testing.
 
-> from [pkglint.go](pkglint.go#L169):
+> from [pkglint.go](pkglint.go#L162):
 
 ```go
 // Main runs the main program with the given arguments.
-// argv[0] is the program name.
+// args[0] is the program name.
 //
 // Note: during tests, calling this method disables tracing
 // because the getopt parser resets all options before the actual parsing.
 // One of these options is trace.Tracing, which is connected to --debug.
 //
 // It also discards the -Wall option that is used by default in other tests.
-func (pkglint *Pkglint) Main(argv ...string) (exitCode int) {
+func (pkglint *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) (exitCode int) {
+	G.Logger.out = NewSeparatorWriter(stdout)
+	G.Logger.err = NewSeparatorWriter(stderr)
+	trace.Out = stdout
+
 	defer func() {
 		if r := recover(); r != nil {
-			if _, ok := r.(pkglintFatal); ok {
-				exitCode = 1
-			} else {
-				panic(r)
-			}
+			_ = r.(pkglintFatal)
+			exitCode = 1
 		}
 	}()
 
-	if exitcode := pkglint.ParseCommandLine(argv); exitcode != -1 {
+	if exitcode := pkglint.ParseCommandLine(args); exitcode != -1 {
 		return exitcode
 	}
 
@@ -153,32 +148,20 @@ the actual checks happen.
 
 ```go
 func main() {
-	exit(pkglint.Main(os.Stdout, os.Stderr, os.Args))
+	exit(pkglint.G.Main(os.Stdout, os.Stderr, os.Args))
 }
 ```
 
-> from [pkglint.go](pkglint.go#L161):
+> from [pkglint.go](pkglint.go#L170):
 
 ```go
-func Main(stdout *os.File, stderr *os.File, args []string) int {
-	G.Logger.out = NewSeparatorWriter(stdout)
-	G.Logger.err = NewSeparatorWriter(stderr)
-	trace.Out = stdout
-
-	return G.Main(args...)
-}
+func (pkglint *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) (exitCode int) {
 ```
 
-> from [pkglint.go](pkglint.go#L177):
+> from [pkglint.go](pkglint.go#L182):
 
 ```go
-func (pkglint *Pkglint) Main(argv ...string) (exitCode int) {
-```
-
-> from [pkglint.go](pkglint.go#L188):
-
-```go
-	if exitcode := pkglint.ParseCommandLine(argv); exitcode != -1 {
+	if exitcode := pkglint.ParseCommandLine(args); exitcode != -1 {
 		return exitcode
 	}
 ```
@@ -190,7 +173,7 @@ and that is saved in `pkglint.Todo`, which contains all items that still need to
 The default use case for pkglint is to check the package from the
 current working directory, therefore this is done if no arguments are given.
 
-> from [pkglint.go](pkglint.go#L342):
+> from [pkglint.go](pkglint.go#L336):
 
 ```go
 	for _, arg := range pkglint.Opts.args {
@@ -211,7 +194,7 @@ In this example run, the first and only argument is `DESCR`.
 From there, the pkgsrc root is usually reachable via `../../`,
 and this is what pkglint tries.
 
-> from [pkglint.go](pkglint.go#L266):
+> from [pkglint.go](pkglint.go#L260):
 
 ```go
 	firstDir := pkglint.Todo[0]
@@ -239,7 +222,7 @@ one after another. When pkglint is called with the `-r` option,
 some entries may be added to the Todo list,
 but that doesn't happen in this simple example run.
 
-> from [pkglint.go](pkglint.go#L198):
+> from [pkglint.go](pkglint.go#L192):
 
 ```go
 	for len(pkglint.Todo) > 0 {
@@ -251,7 +234,7 @@ but that doesn't happen in this simple example run.
 
 The main work is done in `Pkglint.Check`:
 
-> from [pkglint.go](pkglint.go#L401):
+> from [pkglint.go](pkglint.go#L395):
 
 ```go
 	if isReg {
@@ -266,7 +249,7 @@ Since `DESCR` is a regular file, the next function to call is `checkReg`.
 For directories, the next function would depend on the depth from the
 pkgsrc root directory.
 
-> from [pkglint.go](pkglint.go#L610):
+> from [pkglint.go](pkglint.go#L604):
 
 ```go
 func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
@@ -274,7 +257,7 @@ func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
 
 The relevant part of `Pkglint.checkReg` is:
 
-> from [pkglint.go](pkglint.go#L636):
+> from [pkglint.go](pkglint.go#L630):
 
 ```go
 	case basename == "buildlink3.mk":
@@ -305,7 +288,7 @@ The actual checks usually work on `Line` objects instead of files
 because the lines offer nice methods for logging the diagnostics
 and for automatically fixing the text (in pkglint's `--autofix` mode).
 
-> from [pkglint.go](pkglint.go#L500):
+> from [pkglint.go](pkglint.go#L494):
 
 ```go
 func CheckLinesDescr(lines *Lines) {
@@ -740,7 +723,7 @@ t.DisableTracing()
 To see how to setup complicated tests, have a look at the following test,
 which sets up a realistic environment to run the tests in.
 
-> from [pkglint_test.go](pkglint_test.go#L119):
+> from [pkglint_test.go](pkglint_test.go#L106):
 
 ```go
 // Demonstrates which infrastructure files are necessary to actually run

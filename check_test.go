@@ -693,7 +693,7 @@ func (t *Tester) Main(args ...string) int {
 		}
 	}
 
-	return G.Main(argv...)
+	return G.Main(&t.stdout, &t.stderr, argv)
 }
 
 // Check delegates a check to the check.Check function.

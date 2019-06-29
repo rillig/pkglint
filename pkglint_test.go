@@ -103,19 +103,6 @@ func (s *Suite) Test_Pkglint_Main__unknown_option(c *check.C) {
 	// See Test_Pkglint_Main__help for the complete output.
 }
 
-// This test covers the code path for unexpected panics.
-func (s *Suite) Test_Pkglint_Main__panic(c *check.C) {
-	t := s.Init(c)
-
-	pkg := t.SetUpPackage("category/package")
-
-	G.Logger.out = nil // Force an error that cannot happen in practice.
-
-	c.Check(
-		func() { t.Main(pkg) },
-		check.PanicMatches, `(?s).*\bnil pointer\b.*`)
-}
-
 // Demonstrates which infrastructure files are necessary to actually run
 // pkglint in a realistic scenario.
 //
@@ -278,10 +265,7 @@ func (s *Suite) Test_Pkglint__realistic(c *check.C) {
 
 	cmdline := os.Getenv("PKGLINT_TESTCMDLINE")
 	if cmdline != "" {
-		G.Logger.out = NewSeparatorWriter(os.Stdout)
-		G.Logger.err = NewSeparatorWriter(os.Stderr)
-		trace.Out = os.Stdout
-		G.Main(append([]string{"pkglint"}, strings.Fields(cmdline)...)...)
+		G.Main(os.Stdout, os.Stderr, append([]string{"pkglint"}, strings.Fields(cmdline)...))
 	}
 }
 
@@ -1190,7 +1174,7 @@ func (s *Suite) Test_Pkglint_checkExecutable__already_committed(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Main(c *check.C) {
+func (s *Suite) Test_Pkglint_Main(c *check.C) {
 	t := s.Init(c)
 
 	out, err := os.Create(t.CreateFileLines("out"))
@@ -1203,7 +1187,7 @@ func (s *Suite) Test_Main(c *check.C) {
 	t.FinishSetUp()
 
 	runMain := func(out *os.File, commandLine ...string) {
-		exitCode := Main(out, out, commandLine)
+		exitCode := G.Main(out, out, commandLine)
 		c.Check(exitCode, equals, 0)
 	}
 

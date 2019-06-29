@@ -2,6 +2,7 @@ package pkglint
 
 import (
 	"fmt"
+	"io"
 	"netbsd.org/pkglint/getopt"
 	"netbsd.org/pkglint/histogram"
 	"netbsd.org/pkglint/regex"
@@ -158,34 +159,27 @@ var (
 	trace tracePkg.Tracer
 )
 
-func Main(stdout *os.File, stderr *os.File, args []string) int {
-	G.Logger.out = NewSeparatorWriter(stdout)
-	G.Logger.err = NewSeparatorWriter(stderr)
-	trace.Out = stdout
-
-	return G.Main(args...)
-}
-
 // Main runs the main program with the given arguments.
-// argv[0] is the program name.
+// args[0] is the program name.
 //
 // Note: during tests, calling this method disables tracing
 // because the getopt parser resets all options before the actual parsing.
 // One of these options is trace.Tracing, which is connected to --debug.
 //
 // It also discards the -Wall option that is used by default in other tests.
-func (pkglint *Pkglint) Main(argv ...string) (exitCode int) {
+func (pkglint *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) (exitCode int) {
+	G.Logger.out = NewSeparatorWriter(stdout)
+	G.Logger.err = NewSeparatorWriter(stderr)
+	trace.Out = stdout
+
 	defer func() {
 		if r := recover(); r != nil {
-			if _, ok := r.(pkglintFatal); ok {
-				exitCode = 1
-			} else {
-				panic(r)
-			}
+			_ = r.(pkglintFatal)
+			exitCode = 1
 		}
 	}()
 
-	if exitcode := pkglint.ParseCommandLine(argv); exitcode != -1 {
+	if exitcode := pkglint.ParseCommandLine(args); exitcode != -1 {
 		return exitcode
 	}
 
