@@ -390,7 +390,7 @@ func (ck MkLineChecker) explainPermissions(varname string, vartype *Vartype, int
 	for _, rule := range vartype.aclEntries {
 		perms := rule.permissions.HumanString()
 
-		files := rule.glob
+		files := rule.matcher.originalPattern
 		if files == "*" {
 			files = "any file"
 		}

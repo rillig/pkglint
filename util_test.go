@@ -1025,6 +1025,55 @@ func (s *Suite) Test_joinSkipEmptyOxford(c *check.C) {
 		"one, two, and three")
 }
 
+func (s *Suite) Test_newPathMatcher(c *check.C) {
+	t := s.Init(c)
+
+	test := func(pattern string, matchType pathMatchType, matchPattern string) {
+		c.Check(*newPathMatcher(pattern), equals, pathMatcher{matchType, matchPattern, pattern})
+	}
+
+	testPanic := func(pattern string) {
+		t.ExpectPanic(
+			func() { _ = newPathMatcher(pattern) },
+			"Pkglint internal error")
+	}
+
+	testPanic("*.[0123456]")
+	testPanic("file.???")
+	testPanic("*.???")
+	test("", pmExact, "")
+	test("exact", pmExact, "exact")
+	test("*.mk", pmSuffix, ".mk")
+	test("Makefile.*", pmPrefix, "Makefile.")
+	testPanic("*.*")
+	testPanic("**")
+	testPanic("[")
+	testPanic("malformed[")
+}
+
+func (s *Suite) Test_pathMatcher_matches(c *check.C) {
+
+	test := func(pattern string, subject string, expected bool) {
+		matcher := newPathMatcher(pattern)
+		c.Check(matcher.matches(subject), equals, expected)
+	}
+
+	test("", "", true)
+	test("", "any", false)
+	test("exact", "exact", true)
+	test("exact", "different", false)
+
+	test("*.mk", "filename.mk", true)
+	test("*.mk", "filename.txt", false)
+	test("*.mk", "filename.mkx", false)
+	test("*.mk", ".mk", true)
+
+	test("Makefile.*", "Makefile", false)
+	test("Makefile.*", "Makefile.", true)
+	test("Makefile.*", "Makefile.txt", true)
+	test("Makefile.*", "makefile.txt", false)
+}
+
 func (s *Suite) Test_StringInterner(c *check.C) {
 	t := s.Init(c)
 

@@ -1218,6 +1218,48 @@ func joinSkipEmptyOxford(conn string, elements ...string) string {
 	return strings.Join(nonempty, ", ")
 }
 
+type pathMatcher struct {
+	matchType       pathMatchType
+	pattern         string
+	originalPattern string
+}
+
+func newPathMatcher(pattern string) *pathMatcher {
+	assert(strings.IndexByte(pattern, '[') == -1)
+	assert(strings.IndexByte(pattern, '?') == -1)
+
+	stars := strings.Count(pattern, "*")
+	assert(stars == 0 || stars == 1)
+	switch {
+	case stars == 0:
+		return &pathMatcher{pmExact, pattern, pattern}
+	case pattern[0] == '*':
+		return &pathMatcher{pmSuffix, pattern[1:], pattern}
+	default:
+		assertf(pattern[len(pattern)-1] == '*', "bad pattern: %s", pattern)
+		return &pathMatcher{pmPrefix, pattern[:len(pattern)-1], pattern}
+	}
+}
+
+func (m pathMatcher) matches(subject string) bool {
+	switch m.matchType {
+	case pmPrefix:
+		return hasPrefix(subject, m.pattern)
+	case pmSuffix:
+		return hasSuffix(subject, m.pattern)
+	default:
+		return subject == m.pattern
+	}
+}
+
+type pathMatchType uint8
+
+const (
+	pmExact pathMatchType = iota
+	pmPrefix
+	pmSuffix
+)
+
 // StringInterner collects commonly used strings to avoid wasting heap memory
 // by duplicated strings.
 type StringInterner struct {

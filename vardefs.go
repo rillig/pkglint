@@ -1733,8 +1733,7 @@ func (reg *VarTypeRegistry) parseACLEntries(varname string, aclEntries ...string
 				}
 			}
 			for _, prev := range result {
-				matched, err := path.Match(prev.glob, glob)
-				assertNil(err, "Invalid ACL pattern %q for %q", glob, varname)
+				matched := prev.matcher.matches(glob)
 				assertf(!matched, "Unreachable ACL pattern %q for %q.", glob, varname)
 			}
 			result = append(result, NewACLEntry(glob, permissions))
