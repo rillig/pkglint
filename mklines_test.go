@@ -998,25 +998,36 @@ func (s *Suite) Test_MkLines_Check__MASTER_SITE_in_HOMEPAGE(c *check.C) {
 		"WARN: devel/catch/Makefile:5: HOMEPAGE should not be defined in terms of MASTER_SITEs.")
 }
 
+// Up to June 2019, pkglint wrongly replaced the HOMEPAGE
+// with an empty string.
 func (s *Suite) Test_MkLines_Check__autofix_MASTER_SITE_in_HOMEPAGE(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Wall", "--autofix")
+	test := func(diagnostics ...string) {
+		mklines := t.NewMkLines("Makefile",
+			MkCvsID,
+			"",
+			"MASTER_SITES= \\",
+			"\thttps://cdn1.example.org/ \\",
+			"\thttps://cdn2.example.org/",
+			"",
+			"HOMEPAGE=\t${MASTER_SITES}")
+
+		mklines.Check()
+
+		t.CheckOutput(diagnostics)
+	}
+
 	t.SetUpVartypes()
-	mklines := t.SetUpFileMkLines("Makefile",
-		MkCvsID,
-		"",
-		"MASTER_SITES= \\",
-		"\thttps://cdn1.example.org/ \\",
-		"\thttps://cdn1.example.org/",
-		"",
-		"HOMEPAGE=\t${MASTER_SITES}")
 
-	mklines.Check()
+	t.SetUpCommandLine("-Wall")
+	test(
+		"WARN: Makefile:7: HOMEPAGE should not be defined in terms of MASTER_SITEs.")
 
-	// FIXME: Replacing the homepage with an empty string is clearly wrong.
-	t.CheckOutputLines(
-		"AUTOFIX: ~/Makefile:7: Replacing \"${MASTER_SITES}\" with \"\".")
+	t.SetUpCommandLine("-Wall", "--autofix")
+	test(
+		nil...)
+
 }
 
 func (s *Suite) Test_MkLines_Check__autofix_MASTER_SITE_in_HOMEPAGE_in_package(c *check.C) {

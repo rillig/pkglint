@@ -610,37 +610,45 @@ func (cv *VartypeCheck) GccReqd() {
 func (cv *VartypeCheck) Homepage() {
 	cv.URL()
 
-	if m, wrong, sitename, subdir := match3(cv.Value, `^(\$\{(MASTER_SITE\w+)(?::=([\w\-/]+))?\})`); m {
-		baseURL := G.Pkgsrc.MasterSiteVarToURL[sitename]
-		if sitename == "MASTER_SITES" && G.Pkg != nil {
-			if mkline := G.Pkg.vars.FirstDefinition("MASTER_SITES"); mkline != nil {
-				if !containsVarRef(mkline.Value()) {
-					masterSites := cv.MkLine.ValueFields(mkline.Value())
-					if len(masterSites) > 0 {
-						baseURL = masterSites[0]
-					}
+	m, wrong, sitename, subdir := match3(cv.Value, `^(\$\{(MASTER_SITE\w+)(?::=([\w\-/]+))?\})`)
+	if !m {
+		return
+	}
+
+	baseURL := G.Pkgsrc.MasterSiteVarToURL[sitename]
+	if sitename == "MASTER_SITES" && G.Pkg != nil {
+		mkline := G.Pkg.vars.FirstDefinition("MASTER_SITES")
+		if mkline != nil {
+			if !containsVarRef(mkline.Value()) {
+				masterSites := cv.MkLine.ValueFields(mkline.Value())
+				if len(masterSites) > 0 {
+					baseURL = masterSites[0]
 				}
 			}
 		}
-
-		fixedURL := baseURL + subdir
-
-		fix := cv.Autofix()
-		if baseURL != "" {
-			fix.Warnf("HOMEPAGE should not be defined in terms of MASTER_SITEs. Use %s directly.", fixedURL)
-		} else {
-			fix.Warnf("HOMEPAGE should not be defined in terms of MASTER_SITEs.")
-		}
-		fix.Explain(
-			"The HOMEPAGE is a single URL, while MASTER_SITES is a list of URLs.",
-			"As long as this list has exactly one element, this works, but as",
-			"soon as another site is added, the HOMEPAGE would not be a valid",
-			"URL anymore.",
-			"",
-			"Defining MASTER_SITES=${HOMEPAGE} is ok, though.")
-		fix.Replace(wrong, fixedURL)
-		fix.Apply()
 	}
+
+	fixedURL := baseURL + subdir
+
+	fix := cv.Autofix()
+	if baseURL != "" {
+		fix.Warnf("HOMEPAGE should not be defined in terms of MASTER_SITEs. Use %s directly.", fixedURL)
+	} else {
+		fix.Warnf("HOMEPAGE should not be defined in terms of MASTER_SITEs.")
+	}
+	fix.Explain(
+		"The HOMEPAGE is a single URL, while MASTER_SITES is a list of URLs.",
+		"As long as this list has exactly one element, this works, but as",
+		"soon as another site is added, the HOMEPAGE would not be a valid",
+		"URL anymore.",
+		"",
+		"Defining MASTER_SITES=${HOMEPAGE} is ok, though.")
+	if baseURL != "" {
+		fix.Replace(wrong, fixedURL)
+	} else {
+		fix.Anyway()
+	}
+	fix.Apply()
 }
 
 // Identifier checks for valid identifiers in various contexts, limiting the
