@@ -497,7 +497,7 @@ func (mklines *MkLines) CheckUsedBy(relativeName string) {
 			if found, _ := mkline.IsCvsID(`#[\t ]+`); found {
 				return
 			}
-			if hasPrefix(mkline.Text, "# used by ") {
+			if hasPrefix(mkline.Text, "# used by ") && len(strings.Fields(mkline.Text)) == 4 {
 				hasUsedBy = true
 				if hasOther && conflict == nil {
 					conflict = mkline

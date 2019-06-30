@@ -330,6 +330,16 @@ func (s *Suite) Test_MkLines_CheckUsedBy(c *check.C) {
 	lines := func(lines ...string) []string { return lines }
 	diagnostics := func(diagnostics ...string) []string { return diagnostics }
 
+	test("category/package2",
+		lines(
+			MkCvsID,
+			"# This Makefile fragment is",
+			"# used by category/package1, as well as", // looks similar to the formal "used by".
+			"# some others.",
+			"",
+			"# used by category/package2"),
+		diagnostics())
+
 	test("category/package",
 		lines(
 			MkCvsID,
