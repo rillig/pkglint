@@ -1236,7 +1236,7 @@ func newPathMatcher(pattern string) *pathMatcher {
 	case pattern[0] == '*':
 		return &pathMatcher{pmSuffix, pattern[1:], pattern}
 	default:
-		assertf(pattern[len(pattern)-1] == '*', "bad pattern: %s", pattern)
+		assert(pattern[len(pattern)-1] == '*')
 		return &pathMatcher{pmPrefix, pattern[:len(pattern)-1], pattern}
 	}
 }

@@ -1047,6 +1047,7 @@ func (s *Suite) Test_newPathMatcher(c *check.C) {
 	test("Makefile.*", pmPrefix, "Makefile.")
 	testPanic("*.*")
 	testPanic("**")
+	testPanic("a*b")
 	testPanic("[")
 	testPanic("malformed[")
 }
