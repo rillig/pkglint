@@ -614,8 +614,11 @@ func (cv *VartypeCheck) Homepage() {
 		baseURL := G.Pkgsrc.MasterSiteVarToURL[sitename]
 		if sitename == "MASTER_SITES" && G.Pkg != nil {
 			if mkline := G.Pkg.vars.FirstDefinition("MASTER_SITES"); mkline != nil {
-				if masterSites := mkline.Value(); !containsVarRef(masterSites) {
-					baseURL = masterSites
+				if !containsVarRef(mkline.Value()) {
+					masterSites := cv.MkLine.ValueFields(mkline.Value())
+					if len(masterSites) > 0 {
+						baseURL = masterSites[0]
+					}
 				}
 			}
 		}
