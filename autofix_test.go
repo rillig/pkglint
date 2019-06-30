@@ -103,6 +103,23 @@ func (s *Suite) Test_Autofix_ReplaceAfter__autofix(c *check.C) {
 		"\tcontinuation 2")
 }
 
+func (s *Suite) Test_Autofix_ReplaceAfter__autofix_one_time(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--autofix", "--source")
+	mklines := t.SetUpFileMkLines("Makefile",
+		MkCvsID,
+		"VAR=\t$$(var) $(var)")
+
+	mklines.Check()
+
+	// FIXME: The shell variable must not be autofixed.
+	t.CheckOutputLines(
+		"AUTOFIX: ~/Makefile:2: Replacing \"$(var)\" with \"${var}\".",
+		"-\tVAR=\t$$(var) $(var)",
+		"+\tVAR=\t$${var} $(var)")
+}
+
 func (s *Suite) Test_Autofix_ReplaceRegex__show_autofix(c *check.C) {
 	t := s.Init(c)
 
