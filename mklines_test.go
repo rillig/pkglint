@@ -998,6 +998,27 @@ func (s *Suite) Test_MkLines_Check__MASTER_SITE_in_HOMEPAGE(c *check.C) {
 		"WARN: devel/catch/Makefile:5: HOMEPAGE should not be defined in terms of MASTER_SITEs.")
 }
 
+func (s *Suite) Test_MkLines_Check__autofix_MASTER_SITE_in_HOMEPAGE(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--autofix")
+	t.SetUpVartypes()
+	mklines := t.SetUpFileMkLines("Makefile",
+		MkCvsID,
+		"",
+		"MASTER_SITES= \\",
+		"\thttps://cdn1.example.org/ \\",
+		"\thttps://cdn1.example.org/",
+		"",
+		"HOMEPAGE=\t${MASTER_SITES}")
+
+	mklines.Check()
+
+	// FIXME: Replacing the homepage with an empty string is clearly wrong.
+	t.CheckOutputLines(
+		"AUTOFIX: ~/Makefile:7: Replacing \"${MASTER_SITES}\" with \"\".")
+}
+
 func (s *Suite) Test_MkLines_Check__VERSION_as_word_part_in_MASTER_SITES(c *check.C) {
 	t := s.Init(c)
 
