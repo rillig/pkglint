@@ -92,8 +92,8 @@ func (w *MkShWalker) Path() string {
 func (w *MkShWalker) Walk(list *MkShList) {
 	w.walkList(-1, list)
 
-	// If this fails, the calls to w.push and w.pop are unbalanced.
-	assertf(len(w.Context) == 0, "MkShWalker.Walk %v", w.Context)
+	// The calls to w.push and w.pop must be balanced.
+	assert(len(w.Context) == 0)
 }
 
 func (w *MkShWalker) walkList(index int, list *MkShList) {

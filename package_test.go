@@ -1392,10 +1392,7 @@ func (s *Suite) Test_NewPackage(c *check.C) {
 		MkCvsID)
 	t.FinishSetUp()
 
-	c.Check(
-		func() { NewPackage("category") },
-		check.PanicMatches,
-		`Pkglint internal error: Package directory "category" must be two subdirectories below the pkgsrc root ".*".`)
+	t.ExpectAssert(func() { NewPackage("category") })
 }
 
 // Before 2018-09-09, the .CURDIR variable did not have a fallback value.

@@ -173,6 +173,17 @@ func assertNotNil(obj interface{}) {
 	}
 }
 
+// assert checks that the condition is true. Otherwise it terminates the
+// process with a fatal error message, prefixed with "Pkglint internal error".
+//
+// This method must only be used for programming errors.
+// For runtime errors, use dummyLine.Fatalf.
+func assert(cond bool) {
+	if !cond {
+		panic("Pkglint internal error")
+	}
+}
+
 // assertf checks that the condition is true. Otherwise it terminates the
 // process with a fatal error message, prefixed with "Pkglint internal error".
 //

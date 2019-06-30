@@ -146,9 +146,7 @@ func (s *Suite) Test_VarTypeRegistry_parseACLEntries__invalid_arguments(c *check
 		func() { parseACLEntries("VARNAME", "too: many: colons") },
 		"Pkglint internal error: ACL entry \"too: many: colons\" must have exactly 1 colon.")
 
-	t.ExpectPanic(
-		func() { parseACLEntries("VAR") },
-		"Pkglint internal error: At least one ACL entry must be given.")
+	t.ExpectAssert(func() { parseACLEntries("VAR") })
 }
 
 func (s *Suite) Test_VarTypeRegistry_Init__LP64PLATFORMS(c *check.C) {

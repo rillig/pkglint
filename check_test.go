@@ -317,7 +317,7 @@ func (t *Tester) SetUpPkgsrc() {
 // SetUpCategory makes the given category valid by creating a dummy Makefile.
 // After that, it can be mentioned in the CATEGORIES variable of a package.
 func (t *Tester) SetUpCategory(name string) {
-	assertf(!contains(name, "/"), "Category must not contain a slash.")
+	assert(!contains(name, "/")) // Category must not contain a slash.
 
 	if _, err := os.Stat(t.File(name + "/Makefile")); os.IsNotExist(err) {
 		t.CreateFileLines(name+"/Makefile",
@@ -754,7 +754,7 @@ func (t *Tester) ExpectFatalMatches(action func(), expected regex.Pattern) {
 }
 
 // ExpectPanic runs the given action and expects that this action calls
-// Pkglint.Assertf or uses some other way to panic.
+// assertf or uses some other way to panic.
 //
 // Usage:
 //  t.ExpectPanic(
@@ -762,6 +762,15 @@ func (t *Tester) ExpectFatalMatches(action func(), expected regex.Pattern) {
 //      "FATAL: ~/Makefile:1: Must not be empty")
 func (t *Tester) ExpectPanic(action func(), expectedMessage string) {
 	t.Check(action, check.Panics, expectedMessage)
+}
+
+// ExpectAssert runs the given action and expects that this action calls assert.
+//
+// Usage:
+//  t.ExpectAssert(
+//      func() { /* do something that panics */ })
+func (t *Tester) ExpectAssert(action func()) {
+	t.Check(action, check.Panics, "Pkglint internal error")
 }
 
 // NewRawLines creates lines from line numbers and raw text, including newlines.

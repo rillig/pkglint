@@ -552,9 +552,7 @@ func (s *Suite) Test_Tools_Fallback__called_twice(c *check.C) {
 
 	tools.Fallback(fallback)
 
-	t.ExpectPanic(
-		func() { tools.Fallback(fallback) },
-		"Pkglint internal error: Tools.Fallback must only be called once.")
+	t.ExpectAssert(func() { tools.Fallback(fallback) })
 }
 
 func (s *Suite) Test_Tools__aliases(c *check.C) {

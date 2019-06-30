@@ -106,7 +106,7 @@ func (v *Var) Constant() bool {
 // Variable assignments in the pkgsrc infrastructure are taken into account
 // for determining the constant value.
 func (v *Var) ConstantValue() string {
-	assertf(v.Constant(), "Variable must be constant.")
+	assert(v.Constant())
 	return v.constantValue
 }
 
@@ -170,7 +170,7 @@ func (v *Var) Read(mkline *MkLine) {
 // Side-effect assignments (${VAR::=value}) are not handled here since
 // they don't occur in practice.
 func (v *Var) Write(mkline *MkLine, conditional bool, conditionVarnames ...string) {
-	assertf(mkline.Varname() == v.Name, "wrong variable name")
+	assert(mkline.Varname() == v.Name)
 
 	v.writeLocations = append(v.writeLocations, mkline)
 

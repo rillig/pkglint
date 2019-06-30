@@ -337,8 +337,8 @@ func (mkline *MkLine) VarassignComment() string { return mkline.data.(*mkLineAss
 //  NO_VALUE_IN_FIRST_LINE= \
 //          value starts in second line
 func (mkline *MkLine) FirstLineContainsValue() bool {
-	assertf(mkline.IsVarassign() || mkline.IsCommentedVarassign(), "Line must be a variable assignment.")
-	assertf(mkline.IsMultiline(), "Line must be multiline.")
+	assert(mkline.IsVarassign() || mkline.IsCommentedVarassign())
+	assert(mkline.IsMultiline())
 
 	// Parsing the continuation marker as variable value is cheating but works well.
 	text := strings.TrimSuffix(mkline.raw[0].orignl, "\n")
@@ -459,7 +459,7 @@ func (mkline *MkLine) Tokenize(text string, warn bool) []*MkToken {
 //
 // When several separators are adjacent, this results in empty words in the output.
 func (mkline *MkLine) ValueSplit(value string, separator string) []string {
-	assertf(separator != "", "Separator must not be empty; use ValueFields to split on whitespace")
+	assert(separator != "") // Separator must not be empty; use ValueFields to split on whitespace.
 
 	tokens := mkline.Tokenize(value, false)
 	var split []string
@@ -762,7 +762,7 @@ again:
 			return main, lexer.Rest()
 		}
 
-		assertf(lexer.EOF(), "unescapeComment(%q): sb = %q, rest = %q", text, main, lexer.Rest())
+		assert(lexer.EOF())
 		return main, ""
 	}
 
@@ -822,7 +822,7 @@ func (p MkLineParser) split(line *Line, text string) mkLineSplitResult {
 			tokens = append(tokens, &MkToken{other, nil})
 
 		} else {
-			assertf(lexer.SkipByte('$'), "Parse error for %q.", text)
+			assert(lexer.SkipByte('$'))
 			tokens = append(tokens, &MkToken{"$", nil})
 		}
 	}
@@ -1283,7 +1283,7 @@ func (ind *Indentation) Pop() {
 }
 
 func (ind *Indentation) Push(mkline *MkLine, indent int, condition string) {
-	assertf(mkline.IsDirective(), "Indentation line must be a directive.")
+	assert(mkline.IsDirective())
 	ind.levels = append(ind.levels, indentationLevel{mkline, indent, condition, nil, nil})
 }
 
@@ -1338,9 +1338,9 @@ func (ind *Indentation) Varnames() []string {
 	var varnames []string
 	for _, level := range ind.levels {
 		for _, levelVarname := range level.conditionalVars {
-			assertf(
-				!hasSuffix(levelVarname, "_MK"),
-				"multiple-inclusion guard must be filtered out earlier.")
+			// multiple-inclusion guard must be filtered out earlier.
+			assert(!hasSuffix(levelVarname, "_MK"))
+
 			varnames = append(varnames, levelVarname)
 		}
 	}

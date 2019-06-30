@@ -266,6 +266,8 @@ func (s *Suite) Test_MkShWalker_Walk__empty_callback(c *check.C) {
 }
 
 func (s *Suite) Test_MkShWalker_Walk__assertion(c *check.C) {
+	t := s.Init(c)
+
 	list, err := parseShellProgram(dummyLine, "echo \"hello, world\"")
 	assertNil(err, "")
 
@@ -274,10 +276,7 @@ func (s *Suite) Test_MkShWalker_Walk__assertion(c *check.C) {
 	// This callback intentionally breaks the assertion.
 	walker.Callback.Word = func(word *ShToken) { walker.push(0, "extra word") }
 
-	c.Check(
-		func() { walker.Walk(list) },
-		check.PanicMatches,
-		`Pkglint internal error: MkShWalker\.Walk .+`)
+	t.ExpectAssert(func() { walker.Walk(list) })
 }
 
 // Just for code coverage, to keep the main code symmetrical.

@@ -58,7 +58,7 @@ func (reg *VarTypeRegistry) DefineType(varcanon string, vartype *Vartype) {
 
 func (reg *VarTypeRegistry) Define(varname string, basicType *BasicType, options vartypeOptions, aclEntries ...ACLEntry) {
 	m, varbase, varparam := match2(varname, `^([A-Z_.][A-Z0-9_]*|@)(|\*|\.\*)$`)
-	assertf(m, "invalid variable name")
+	assert(m) // invalid variable name
 
 	vartype := NewVartype(basicType, options, aclEntries...)
 
@@ -1698,7 +1698,7 @@ func enum(values string) *BasicType {
 
 func (reg *VarTypeRegistry) parseACLEntries(varname string, aclEntries ...string) []ACLEntry {
 
-	assertf(len(aclEntries) > 0, "At least one ACL entry must be given.")
+	assert(len(aclEntries) > 0)
 
 	// TODO: Use separate rules for infrastructure files.
 	//  These rules would have the "infra:" prefix

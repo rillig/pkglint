@@ -10,12 +10,8 @@ func (s *Suite) Test_NewMkParser__invalid_arguments(c *check.C) {
 
 	line := t.NewLine("filename.mk", 123, "")
 
-	t.ExpectPanic(
-		func() { NewMkParser(line, "", false) },
-		"Pkglint internal error: line must be given iff emitWarnings is set")
-	t.ExpectPanic(
-		func() { NewMkParser(nil, "", true) },
-		"Pkglint internal error: line must be given iff emitWarnings is set")
+	t.ExpectAssert(func() { NewMkParser(line, "", false) })
+	t.ExpectAssert(func() { NewMkParser(nil, "", true) })
 }
 
 func (s *Suite) Test_MkParser_MkTokens(c *check.C) {

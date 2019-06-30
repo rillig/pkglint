@@ -150,7 +150,7 @@ func (tr *Tools) Define(name, varname string, mkline *MkLine) *Tool {
 }
 
 func (tr *Tools) def(name, varname string, mustUseVarForm bool, validity Validity, aliases []string) *Tool {
-	assertf(tr.IsValidToolName(name), "Invalid tool name %q", name)
+	assert(tr.IsValidToolName(name))
 
 	fresh := Tool{name, varname, mustUseVarForm, validity, aliases}
 
@@ -391,7 +391,7 @@ func (tr *Tools) Usable(tool *Tool, time ToolTime) bool {
 }
 
 func (tr *Tools) Fallback(other *Tools) {
-	assertf(tr.fallback == nil, "Tools.Fallback must only be called once.")
+	assert(tr.fallback == nil) // Must only be called once.
 	tr.fallback = other
 }
 

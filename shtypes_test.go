@@ -32,13 +32,8 @@ func (s *Suite) Test_ShQuoting_String(c *check.C) {
 func (s *Suite) Test_NewShToken__no_atoms(c *check.C) {
 	t := s.Init(c)
 
-	t.ExpectPanic(
-		func() { NewShToken("", NewShAtom(shtText, "text", shqPlain)) },
-		"Pkglint internal error: ")
-
-	t.ExpectPanic(
-		func() { NewShToken(" ", nil...) },
-		"Pkglint internal error: ")
+	t.ExpectAssert(func() { NewShToken("", NewShAtom(shtText, "text", shqPlain)) })
+	t.ExpectAssert(func() { NewShToken(" ", nil...) })
 }
 
 func (s *Suite) Test_ShToken_String(c *check.C) {

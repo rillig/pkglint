@@ -744,12 +744,8 @@ func (s *Suite) Test_Pkgsrc_ListVersions__go(c *check.C) {
 func (s *Suite) Test_Pkgsrc_ListVersions__invalid_argument(c *check.C) {
 	t := s.Init(c)
 
-	t.ExpectPanic(
-		func() { G.Pkgsrc.ListVersions("databases", `postgresql[0-9]+`, "$0", true) },
-		"Pkglint internal error: Regular expression \"postgresql[0-9]+\" must be anchored at both ends.")
-	t.ExpectPanic(
-		func() { G.Pkgsrc.ListVersions("databases", `^postgresql[0-9]+`, "$0", true) },
-		"Pkglint internal error: Regular expression \"^postgresql[0-9]+\" must be anchored at both ends.")
+	t.ExpectAssert(func() { G.Pkgsrc.ListVersions("databases", `postgresql[0-9]+`, "$0", true) })
+	t.ExpectAssert(func() { G.Pkgsrc.ListVersions("databases", `^postgresql[0-9]+`, "$0", true) })
 
 	G.Testing = false
 	versions := G.Pkgsrc.ListVersions("databases", `^postgresql[0-9]+`, "$0", false)
@@ -968,9 +964,7 @@ func (s *Suite) Test_Change_Version(c *check.C) {
 	t.Check(added.Version(), equals, "1.0")
 	t.Check(updated.Version(), equals, "1.0")
 	t.Check(downgraded.Version(), equals, "1.0")
-	t.ExpectPanic(
-		func() { removed.Version() },
-		"Pkglint internal error: Change.Version")
+	t.ExpectAssert(func() { removed.Version() })
 }
 
 func (s *Suite) Test_Change_Target(c *check.C) {
@@ -983,9 +977,7 @@ func (s *Suite) Test_Change_Target(c *check.C) {
 
 	t.Check(renamed.Target(), equals, "category/other")
 	t.Check(moved.Target(), equals, "category/other")
-	t.ExpectPanic(
-		func() { downgraded.Target() },
-		"Pkglint internal error: Change.Target")
+	t.ExpectAssert(func() { downgraded.Target() })
 }
 
 func (s *Suite) Test_Change_Successor(c *check.C) {
@@ -998,9 +990,7 @@ func (s *Suite) Test_Change_Successor(c *check.C) {
 
 	t.Check(removed.Successor(), equals, "")
 	t.Check(removedSucc.Successor(), equals, "category/successor")
-	t.ExpectPanic(
-		func() { downgraded.Successor() },
-		"Pkglint internal error: Change.Successor")
+	t.ExpectAssert(func() { downgraded.Successor() })
 }
 
 func (s *Suite) Test_ChangeAction_String(c *check.C) {

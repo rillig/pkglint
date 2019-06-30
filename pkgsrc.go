@@ -188,9 +188,9 @@ func (src *Pkgsrc) Latest(category string, re regex.Pattern, repl string) string
 //      => {"php-53", "php-56", "php-73"}
 func (src *Pkgsrc) ListVersions(category string, re regex.Pattern, repl string, errorIfEmpty bool) []string {
 	if G.Testing {
-		assertf(
-			hasPrefix(string(re), "^") && hasSuffix(string(re), "$"),
-			"Regular expression %q must be anchored at both ends.", re)
+		// Regular expression must be anchored at both ends, to avoid typos.
+		assert(hasPrefix(string(re), "^"))
+		assert(hasSuffix(string(re), "$"))
 	}
 
 	// TODO: Maybe convert cache key to a struct, to save allocations.
@@ -1015,19 +1015,19 @@ type Change struct {
 
 // Version returns the version number for an Added, Updated or Downgraded package.
 func (ch *Change) Version() string {
-	assertf(ch.Action == Added || ch.Action == Updated || ch.Action == Downgraded, "Change.Version")
+	assert(ch.Action == Added || ch.Action == Updated || ch.Action == Downgraded)
 	return ch.target
 }
 
 // Target returns the target PKGPATH for a Renamed or Moved package.
 func (ch *Change) Target() string {
-	assertf(ch.Action == Renamed || ch.Action == Moved, "Change.Target")
+	assert(ch.Action == Renamed || ch.Action == Moved)
 	return ch.target
 }
 
 // Successor returns the successor for a Removed package.
 func (ch *Change) Successor() string {
-	assertf(ch.Action == Removed, "Change.Successor")
+	assert(ch.Action == Removed)
 	return ch.target
 }
 

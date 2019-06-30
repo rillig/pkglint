@@ -27,9 +27,7 @@ func (s *Suite) Test_Paragraph_Add__empty_line(c *check.C) {
 
 	t.Check(para.mklines, check.IsNil)
 
-	t.ExpectPanic(
-		func() { para.Add(t.NewMkLine("filename.mk", 123, "")) },
-		"Pkglint internal error: A paragraph must not contain empty lines.")
+	t.ExpectAssert(func() { para.Add(t.NewMkLine("filename.mk", 123, "")) })
 }
 
 func (s *Suite) Test_Paragraph_Align(c *check.C) {

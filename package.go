@@ -60,10 +60,9 @@ type Package struct {
 
 func NewPackage(dir string) *Package {
 	pkgpath := G.Pkgsrc.ToRel(dir)
-	if strings.Count(pkgpath, "/") != 1 {
-		assertf(false, "Package directory %q must be two subdirectories below the pkgsrc root %q.",
-			dir, G.Pkgsrc.File("."))
-	}
+
+	// Package directory must be two subdirectories below the pkgsrc root.
+	assert(strings.Count(pkgpath, "/") == 1)
 
 	pkg := Package{
 		dir:                   dir,

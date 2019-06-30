@@ -275,13 +275,9 @@ func (s *Suite) Test_MkLine_FirstLineContainsValue(c *check.C) {
 		"#VAR= \\",
 		"\tvalue starts in second line")
 
-	t.ExpectPanic(
-		func() { mklines.mklines[0].FirstLineContainsValue() },
-		"Pkglint internal error: Line must be a variable assignment.")
+	t.ExpectAssert(func() { mklines.mklines[0].FirstLineContainsValue() })
 
-	t.ExpectPanic(
-		func() { mklines.mklines[1].FirstLineContainsValue() },
-		"Pkglint internal error: Line must be multiline.")
+	t.ExpectAssert(func() { mklines.mklines[1].FirstLineContainsValue() })
 
 	t.Check(mklines.mklines[2].FirstLineContainsValue(), equals, true)
 	t.Check(mklines.mklines[3].FirstLineContainsValue(), equals, false)
@@ -1018,9 +1014,7 @@ func (s *Suite) Test_MkLine_ValueSplit__invalid_argument(c *check.C) {
 
 	mkline := t.NewMkLine("filename.mk", 123, "VAR=\tvalue")
 
-	t.ExpectPanic(
-		func() { mkline.ValueSplit("value", "") },
-		"Pkglint internal error: Separator must not be empty; use ValueFields to split on whitespace")
+	t.ExpectAssert(func() { mkline.ValueSplit("value", "") })
 }
 
 func (s *Suite) Test_MkLine_Fields__varassign(c *check.C) {
