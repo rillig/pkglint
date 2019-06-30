@@ -325,10 +325,10 @@ func (s *Suite) Test_MkLines_CheckUsedBy__separate_paragraph(c *check.C) {
 		"# used by category/package",
 		"# a comment")
 
-	mklines.Check()
+	mklines.CheckUsedBy("category/package")
 
-	// FIXME: The "used by" line must not be between the other lines.
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: Makefile.common:3: The \"used by\" lines should be in a separate paragraph.")
 }
 
 func (s *Suite) Test_MkLines_ExpandLoopVar(c *check.C) {
