@@ -1019,6 +1019,31 @@ func (s *Suite) Test_MkLines_Check__autofix_MASTER_SITE_in_HOMEPAGE(c *check.C) 
 		"AUTOFIX: ~/Makefile:7: Replacing \"${MASTER_SITES}\" with \"\".")
 }
 
+func (s *Suite) Test_MkLines_Check__autofix_MASTER_SITE_in_HOMEPAGE_in_package(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--autofix")
+	t.SetUpPackage("category/package",
+		"MASTER_SITES=\thttps://cdn1.example.org/ https://cdn1.example.org/",
+		"HOMEPAGE=\t${MASTER_SITES}")
+
+	t.Main("-Wall", "-q", "category/package")
+
+	// FIXME: The suggestion is wrong since HOMEPAGE must be a single URL.
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile:9: " +
+			"HOMEPAGE should not be defined in terms of MASTER_SITEs. " +
+			"Use https://cdn1.example.org/ https://cdn1.example.org/ directly.")
+
+	t.Main("-Wall", "-q", "--autofix", "category/package")
+
+	// FIXME: Replacing the HOMEPAGE with 2 URLs is clearly wrong.
+	t.CheckOutputLines(
+		"AUTOFIX: ~/category/package/Makefile:9: " +
+			"Replacing \"${MASTER_SITES}\" " +
+			"with \"https://cdn1.example.org/ https://cdn1.example.org/\".")
+}
+
 func (s *Suite) Test_MkLines_Check__VERSION_as_word_part_in_MASTER_SITES(c *check.C) {
 	t := s.Init(c)
 

@@ -394,6 +394,8 @@ func (t *Tester) SetUpPackage(pkgpath string, makefileLines ...string) string {
 
 line:
 	for _, line := range makefileLines {
+		assert(!hasSuffix(line, "\\")) // Continuation lines are not yet supported.
+
 		if m, prefix := match1(line, `^#?(\w+=)`); m {
 			for i, existingLine := range mlines[:19] {
 				if hasPrefix(strings.TrimPrefix(existingLine, "#"), prefix) {
