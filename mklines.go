@@ -486,70 +486,82 @@ func (mklines *MkLines) CheckUsedBy(relativeName string) {
 
 	paras := mklines.SplitToParagraphs()
 
+	expected := "# used by " + relativeName
+	found := false
 	var usedParas []*Paragraph
 
-	for _, para := range paras {
-		var hasUsedBy bool
-		var hasOther bool
-		var conflict *MkLine
+	determineUsedParas := func() {
+		for _, para := range paras {
+			var hasUsedBy bool
+			var hasOther bool
+			var conflict *MkLine
 
-		para.ForEach(func(mkline *MkLine) {
-			if found, _ := mkline.IsCvsID(`#[\t ]+`); found {
-				return
-			}
-			if hasPrefix(mkline.Text, "# used by ") && len(strings.Fields(mkline.Text)) == 4 {
-				hasUsedBy = true
-				if hasOther && conflict == nil {
-					conflict = mkline
+			para.ForEach(func(mkline *MkLine) {
+				if ok, _ := mkline.IsCvsID(`#[\t ]+`); ok {
+					return
 				}
-			} else {
-				hasOther = true
-				if hasUsedBy && conflict == nil {
-					conflict = mkline
+				if hasPrefix(mkline.Text, "# used by ") && len(strings.Fields(mkline.Text)) == 4 {
+					if mkline.Text == expected {
+						found = true
+					}
+					hasUsedBy = true
+					if hasOther && conflict == nil {
+						conflict = mkline
+					}
+				} else {
+					hasOther = true
+					if hasUsedBy && conflict == nil {
+						conflict = mkline
+					}
 				}
-			}
-		})
+			})
 
-		if conflict != nil {
-			conflict.Warnf("The \"used by\" lines should be in a separate paragraph.")
-		} else if hasUsedBy {
-			usedParas = append(usedParas, para)
+			if conflict != nil {
+				conflict.Warnf("The \"used by\" lines should be in a separate paragraph.")
+			} else if hasUsedBy {
+				usedParas = append(usedParas, para)
+			}
 		}
 	}
+	determineUsedParas()
 
 	if len(usedParas) > 1 {
 		usedParas[1].FirstLine().Warnf("There should only be a single \"used by\" paragraph per file.")
 	}
 
-	expected := "# used by " + relativeName
-	for _, line := range lines.Lines {
-		if line.Text == expected {
-			return
+	var prevLine *MkLine
+	if len(usedParas) > 0 {
+		prevLine = usedParas[0].LastLine()
+	} else {
+		prevLine = paras[0].LastLine()
+		if paras[0].to > 1 {
+			fix := prevLine.Autofix()
+			fix.Notef(SilentAutofixFormat)
+			fix.InsertAfter("")
+			fix.Apply()
 		}
-	}
-
-	i := 0
-	for i < 2 && hasPrefix(lines.Lines[i].Text, "#") {
-		i++
 	}
 
 	// TODO: Sort the comments.
 	// TODO: Discuss whether these comments are actually helpful.
+	// TODO: Remove lines that don't apply anymore.
 
-	fix := lines.Lines[i].Autofix()
-	fix.Warnf("Please add a line %q here.", expected)
-	fix.Explain(
-		"Since Makefile.common files usually don't have any comments and",
-		"therefore not a clearly defined purpose, they should at least",
-		"contain references to all files that include them, so that it is",
-		"easier to see what effects future changes may have.",
-		"",
-		"If there are more than five packages that use a Makefile.common,",
-		"that file should have a clearly defined and documented purpose,",
-		"and the filename should reflect that purpose.",
-		"Typical names are module.mk, plugin.mk or version.mk.")
-	fix.InsertBefore(expected)
-	fix.Apply()
+	if !found {
+		fix := prevLine.Autofix()
+		fix.Warnf("Please add a line %q here.", expected)
+		fix.Explain(
+			"Since Makefile.common files usually don't have any comments and",
+			"therefore not a clearly defined purpose, they should at least",
+			"contain references to all files that include them, so that it is",
+			"easier to see what effects future changes may have.",
+			"",
+			"If there are more than five packages that use a Makefile.common,",
+			"that file should have a clearly defined and documented purpose,",
+			"and the filename should reflect that purpose.",
+			"Typical names are module.mk, plugin.mk or version.mk.")
+		fix.InsertAfter(expected)
+		fix.Apply()
+	}
 
 	SaveAutofixChanges(lines)
 }

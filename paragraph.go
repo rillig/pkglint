@@ -22,9 +22,12 @@ func NewParagraph(mklines *MkLines, from, to int) *Paragraph {
 }
 
 func (p *Paragraph) FirstLine() *MkLine { return p.mklines.mklines[p.from] }
+func (p *Paragraph) LastLine() *MkLine  { return p.mklines.mklines[p.to-1] }
+
+func (p *Paragraph) MkLines() []*MkLine { return p.mklines.mklines[p.from:p.to] }
 
 func (p *Paragraph) ForEach(action func(mkline *MkLine)) {
-	for _, mkline := range p.mklines.mklines[p.from:p.to] {
+	for _, mkline := range p.MkLines() {
 		action(mkline)
 	}
 }
