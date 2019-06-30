@@ -12,8 +12,8 @@ type Paragraph struct {
 	mklines []*MkLine
 }
 
-func NewParagraph(mklines []*MkLine) *Paragraph {
-	return &Paragraph{mklines}
+func NewParagraph() *Paragraph {
+	return &Paragraph{}
 }
 
 func (p *Paragraph) Clear() {

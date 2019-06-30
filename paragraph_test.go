@@ -5,7 +5,7 @@ import "gopkg.in/check.v1"
 func (s *Suite) Test_Paragraph_Clear(c *check.C) {
 	t := s.Init(c)
 
-	para := NewParagraph(nil)
+	para := NewParagraph()
 
 	para.Clear()
 
@@ -21,7 +21,7 @@ func (s *Suite) Test_Paragraph_Clear(c *check.C) {
 func (s *Suite) Test_Paragraph_Add__empty_line(c *check.C) {
 	t := s.Init(c)
 
-	para := NewParagraph(nil)
+	para := NewParagraph()
 
 	para.Clear()
 
@@ -38,7 +38,7 @@ func (s *Suite) Test_Paragraph_Align(c *check.C) {
 		MkCvsID,
 		"VAR=value",
 		"VAR=\t\t\tvalue")
-	para := NewParagraph(nil)
+	para := NewParagraph()
 	for _, mkline := range mklines.mklines {
 		// Strictly speaking, lines 1 and 2 don't belong to the paragraph,
 		// but aligning the lines works nevertheless.
@@ -68,7 +68,7 @@ func (s *Suite) Test_Paragraph_AlignTo(c *check.C) {
 		"VAR=\t\tvalue",
 		"VAR=\t \tvalue",
 		"VAR=\t\t\tvalue")
-	para := NewParagraph(nil)
+	para := NewParagraph()
 	for _, mkline := range mklines.mklines {
 		// Strictly speaking, lines 1 and 2 don't belong to the paragraph,
 		// but aligning the lines works nevertheless.
@@ -102,7 +102,7 @@ func (s *Suite) Test_Paragraph_AlignTo__continued_lines(c *check.C) {
 		"VAR= value1 \\",
 		"value2 \\",
 		"\t\tvalue3")
-	para := NewParagraph(nil)
+	para := NewParagraph()
 	for _, mkline := range mklines.mklines {
 		para.Add(mkline)
 	}
@@ -132,7 +132,7 @@ func (s *Suite) Test_Paragraph_AlignTo__outlier(c *check.C) {
 		MkCvsID,
 		"VAR= value",
 		"VERY_LONG_VARIABLE_NAME= value1")
-	para := NewParagraph(nil)
+	para := NewParagraph()
 	for _, mkline := range mklines.mklines {
 		para.Add(mkline)
 	}
