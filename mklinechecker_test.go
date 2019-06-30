@@ -2591,8 +2591,9 @@ func (s *Suite) Test_MkLineChecker_checkVarassignMisc(c *check.C) {
 		"WARN: ~/module.mk:5: PKGNAME should not be used in DIST_SUBDIR as it includes the PKGREVISION. Please use PKGNAME_NOREV instead.",
 		"WARN: ~/module.mk:6: PKGNAME should not be used in WRKSRC as it includes the PKGREVISION. Please use PKGNAME_NOREV instead.",
 		"WARN: ~/module.mk:7: SITES_distfile.tar.gz is defined but not used.",
-		"WARN: ~/module.mk:7: SITES_* is deprecated. Please use SITES.* instead.")
-	// TODO: Warn about PKGNAME and PKGVERSION in MASTER_SITES.
+		"WARN: ~/module.mk:7: SITES_* is deprecated. Please use SITES.* instead.",
+		"WARN: ~/module.mk:8: PKGNAME should not be used in MASTER_SITES as it includes the PKGREVISION. Please use PKGNAME_NOREV instead.",
+		"WARN: ~/module.mk:9: PKGVERSION should not be used in MASTER_SITES as it includes the PKGREVISION. Please use PKGVERSION_NOREV instead.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarassignMisc__multiple_inclusion_guards(c *check.C) {

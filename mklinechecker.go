@@ -1264,7 +1264,8 @@ func (ck MkLineChecker) checkVarassignMisc() {
 			"It is this meaning that should be described.")
 	}
 
-	if varname == "DIST_SUBDIR" || varname == "WRKSRC" {
+	switch varname {
+	case "DIST_SUBDIR", "WRKSRC", "MASTER_SITES":
 		// TODO: Replace regex with proper VarUse.
 		if m, revVarname := match1(value, `\$\{(PKGNAME|PKGVERSION)[:\}]`); m {
 			mkline.Warnf("%s should not be used in %s as it includes the PKGREVISION. "+
