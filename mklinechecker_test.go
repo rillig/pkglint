@@ -2576,7 +2576,9 @@ func (s *Suite) Test_MkLineChecker_checkVarassignMisc(c *check.C) {
 		"_TOOLS_VARNAME.sed=     SED",
 		"DIST_SUBDIR=            ${PKGNAME}",
 		"WRKSRC=                 ${PKGNAME}",
-		"SITES_distfile.tar.gz=  ${MASTER_SITE_GITHUB:=user/}")
+		"SITES_distfile.tar.gz=  ${MASTER_SITE_GITHUB:=user/}",
+		"MASTER_SITES=           https://cdn.example.org/${PKGNAME}/",
+		"MASTER_SITES=           https://cdn.example.org/distname-${PKGVERSION}/")
 	t.FinishSetUp()
 
 	mklines.Check()
@@ -2590,6 +2592,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassignMisc(c *check.C) {
 		"WARN: ~/module.mk:6: PKGNAME should not be used in WRKSRC as it includes the PKGREVISION. Please use PKGNAME_NOREV instead.",
 		"WARN: ~/module.mk:7: SITES_distfile.tar.gz is defined but not used.",
 		"WARN: ~/module.mk:7: SITES_* is deprecated. Please use SITES.* instead.")
+	// TODO: Warn about PKGNAME and PKGVERSION in MASTER_SITES.
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarassignMisc__multiple_inclusion_guards(c *check.C) {
