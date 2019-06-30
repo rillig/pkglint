@@ -399,7 +399,7 @@ func (pkg *Package) parse(mklines *MkLines, allLines *MkLines, includingFileForU
 	mklines.ForEachEnd(lineAction, atEnd)
 
 	if includingFileForUsedCheck != "" {
-		mklines.CheckForUsedComment(G.Pkgsrc.ToRel(includingFileForUsedCheck))
+		mklines.CheckUsedBy(G.Pkgsrc.ToRel(includingFileForUsedCheck))
 	}
 
 	// For every included buildlink3.mk, include the corresponding builtin.mk

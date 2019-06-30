@@ -230,7 +230,7 @@ func (s *Suite) Test_MkLines_Check__absolute_pathname_depending_on_OPSYS(c *chec
 		"WARN: games/heretic2-demo/Makefile:5: Unknown shell command \"/usr/bin/bsdtar\".")
 }
 
-func (s *Suite) Test_MkLines_CheckForUsedComment(c *check.C) {
+func (s *Suite) Test_MkLines_CheckUsedBy(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("--show-autofix")
@@ -238,7 +238,7 @@ func (s *Suite) Test_MkLines_CheckForUsedComment(c *check.C) {
 	test := func(pkgpath string, lines []string, diagnostics []string) {
 		mklines := t.NewMkLines("Makefile.common", lines...)
 
-		mklines.CheckForUsedComment(pkgpath)
+		mklines.CheckUsedBy(pkgpath)
 
 		t.CheckOutput(diagnostics)
 	}
