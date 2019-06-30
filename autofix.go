@@ -93,8 +93,19 @@ func (fix *Autofix) ReplaceAfter(prefix, from string, to string) {
 		return
 	}
 
+	prefixFrom := prefix + from
+	prefixTo := prefix + to
+
+	n := 0
 	for _, rawLine := range fix.line.raw {
-		replaced := strings.Replace(rawLine.textnl, prefix+from, prefix+to, 1)
+		n += strings.Count(rawLine.textnl, prefixFrom)
+	}
+	if n != 1 {
+		return
+	}
+
+	for _, rawLine := range fix.line.raw {
+		replaced := strings.Replace(rawLine.textnl, prefixFrom, prefixTo, 1)
 		if replaced != rawLine.textnl {
 			if G.Logger.IsAutofix() {
 				rawLine.textnl = replaced
@@ -106,7 +117,7 @@ func (fix *Autofix) ReplaceAfter(prefix, from string, to string) {
 				// TODO: Do this properly by parsing the whole line again,
 				//  and ideally everything that depends on the parsed line.
 				//  This probably requires a generic notification mechanism.
-				fix.line.Text = strings.Replace(fix.line.Text, prefix+from, prefix+to, 1)
+				fix.line.Text = strings.Replace(fix.line.Text, prefixFrom, prefixTo, 1)
 			}
 			fix.Describef(rawLine.Lineno, "Replacing %q with %q.", from, to)
 			return
