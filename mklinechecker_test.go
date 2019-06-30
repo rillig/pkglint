@@ -2186,6 +2186,22 @@ func (s *Suite) Test_MkLineChecker_checkVarUseQuoting__q_not_needed(c *check.C) 
 		"NOTE: ~/category/package/Makefile:6: The :Q operator isn't necessary for ${HOMEPAGE} here.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkVarUseQuoting__undefined_list_in_word_in_shell_command(c *check.C) {
+	t := s.Init(c)
+
+	pkg := t.SetUpPackage("category/package",
+		"\t${ECHO} ./${DISTFILES}")
+	t.FinishSetUp()
+
+	G.Check(pkg)
+
+	// The variable DISTFILES is declared by the infrastructure.
+	// It is not defined by this package, therefore it doesn't
+	// appear in the RedundantScope.
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile:20: The list variable DISTFILES should not be embedded in a word.")
+}
+
 func (s *Suite) Test_MkLineChecker_checkVarUseQuoting__list_variable_with_single_constant_value(c *check.C) {
 	t := s.Init(c)
 
