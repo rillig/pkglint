@@ -40,9 +40,9 @@ func (ls *Lines) CheckCvsID(index int, prefixRe regex.Pattern, suggestedPrefix s
 	}
 
 	line := ls.Lines[index]
-	if m, expanded := match1(line.Text, `^`+prefixRe+`\$`+`NetBSD(:[^\$]+)?\$$`); m {
+	if m, expanded := line.IsCvsID(prefixRe); m {
 
-		if G.Testing && G.Wip && expanded != "" {
+		if G.Testing && G.Wip && expanded {
 			fix := line.Autofix()
 			fix.Notef("Expected exactly %q.", suggestedPrefix+"$"+"NetBSD$")
 			fix.Explain(

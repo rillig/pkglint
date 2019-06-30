@@ -316,6 +316,43 @@ func (s *Suite) Test_MkLines_CheckUsedBy__show_autofix(c *check.C) {
 	c.Check(G.Logger.autofixAvailable, equals, true)
 }
 
+func (s *Suite) Test_MkLines_CheckUsedBy(c *check.C) {
+	t := s.Init(c)
+
+	test := func(pkgpath string, lines []string, diagnostics []string) {
+		mklines := t.NewMkLines("Makefile.common", lines...)
+
+		mklines.CheckUsedBy(pkgpath)
+
+		t.CheckOutput(diagnostics)
+	}
+
+	lines := func(lines ...string) []string { return lines }
+	diagnostics := func(diagnostics ...string) []string { return diagnostics }
+
+	test("category/package",
+		lines(
+			MkCvsID,
+			"# used by category/package1",
+			"",
+			"# used by category/package2"),
+		diagnostics(
+			"WARN: Makefile.common:4: There should only be a single \"used by\" paragraph per file.",
+			"WARN: Makefile.common:3: Please add a line \"# used by category/package\" here."))
+
+	test("category/package",
+		lines(
+			MkCvsID,
+			"# used by category/package1",
+			"#",
+			"# used by category/package2"),
+		diagnostics(
+			"WARN: Makefile.common:4: There should only be a single \"used by\" paragraph per file.",
+			"WARN: Makefile.common:3: Please add a line \"# used by category/package\" here."))
+
+	c.Check(G.Logger.autofixAvailable, equals, true)
+}
+
 func (s *Suite) Test_MkLines_CheckUsedBy__separate_paragraph(c *check.C) {
 	t := s.Init(c)
 

@@ -14,6 +14,7 @@ package pkglint
 // used in the --autofix mode.
 
 import (
+	"netbsd.org/pkglint/regex"
 	"path"
 	"strconv"
 )
@@ -120,6 +121,11 @@ func (line *Line) PathToFile(filePath string) string {
 
 func (line *Line) IsMultiline() bool {
 	return line.firstLine > 0 && line.firstLine != line.lastLine
+}
+
+func (line *Line) IsCvsID(prefixRe regex.Pattern) (found bool, expanded bool) {
+	m, exp := match1(line.Text, `^`+prefixRe+`\$`+`NetBSD(:[^\$]+)?\$$`)
+	return m, exp != ""
 }
 
 func (line *Line) showSource(out *SeparatorWriter) {

@@ -486,12 +486,17 @@ func (mklines *MkLines) CheckUsedBy(relativeName string) {
 
 	paras := mklines.SplitToParagraphs()
 
+	var usedParas []*Paragraph
+
 	for _, para := range paras {
 		var hasUsedBy bool
 		var hasOther bool
 		var conflict *MkLine
 
 		para.ForEach(func(mkline *MkLine) {
+			if found, _ := mkline.IsCvsID(`#[\t ]+`); found {
+				return
+			}
 			if hasPrefix(mkline.Text, "# used by ") {
 				hasUsedBy = true
 				if hasOther && conflict == nil {
@@ -507,7 +512,13 @@ func (mklines *MkLines) CheckUsedBy(relativeName string) {
 
 		if conflict != nil {
 			conflict.Warnf("The \"used by\" lines should be in a separate paragraph.")
+		} else if hasUsedBy {
+			usedParas = append(usedParas, para)
 		}
+	}
+
+	if len(usedParas) > 1 {
+		usedParas[1].FirstLine().Warnf("There should only be a single \"used by\" paragraph per file.")
 	}
 
 	expected := "# used by " + relativeName
