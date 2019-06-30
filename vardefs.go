@@ -180,14 +180,6 @@ func (reg *VarTypeRegistry) pkgappendbl3(varname string, basicType *BasicType) {
 		"Makefile, Makefile.*, *.mk: default, set, append, use")
 }
 
-// Like pkgappend, but always needs a rationale.
-func (reg *VarTypeRegistry) pkgappendrat(varname string, basicType *BasicType) {
-	reg.acl(varname, basicType,
-		PackageSettable|NeedsRationale,
-		"buildlink3.mk, builtin.mk: none",
-		"Makefile, Makefile.*, *.mk: default, set, append, use")
-}
-
 // Some package-defined variables may be modified in buildlink3.mk files.
 // These variables are typically related to compiling and linking files
 // from C and related languages.
