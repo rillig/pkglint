@@ -230,7 +230,7 @@ func (s *Suite) Test_MkLines_Check__absolute_pathname_depending_on_OPSYS(c *chec
 		"WARN: games/heretic2-demo/Makefile:5: Unknown shell command \"/usr/bin/bsdtar\".")
 }
 
-func (s *Suite) Test_MkLines_CheckUsedBy(c *check.C) {
+func (s *Suite) Test_MkLines_CheckUsedBy__show_autofix(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("--show-autofix")
@@ -302,7 +302,33 @@ func (s *Suite) Test_MkLines_CheckUsedBy(c *check.C) {
 	// TODO: What if there is an introductory comment first? That should stay at the top of the file.
 	// TODO: What if the "used by" comments appear in the second paragraph, preceded by only comments and empty lines?
 
+	test("category/package",
+		lines(
+			MkCvsID,
+			"# A normal comment",
+			"# that spans",
+			"# several lines"),
+		diagnostics(
+			// FIXME: The "used by" comments must be in a separate paragraph.
+			"WARN: Makefile.common:3: Please add a line \"# used by category/package\" here.",
+			"AUTOFIX: Makefile.common:3: Inserting a line \"# used by category/package\" before this line."))
+
 	c.Check(G.Logger.autofixAvailable, equals, true)
+}
+
+func (s *Suite) Test_MkLines_CheckUsedBy__separate_paragraph(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile.common",
+		MkCvsID,
+		"# a comment",
+		"# used by category/package",
+		"# a comment")
+
+	mklines.Check()
+
+	// FIXME: The "used by" line must not be between the other lines.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLines_ExpandLoopVar(c *check.C) {
