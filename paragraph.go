@@ -9,24 +9,20 @@ import "strings"
 // If the paragraph adds an identifier to SUBST_CLASSES, the rest of the SUBST
 // block should be defined in the same paragraph.
 type Paragraph struct {
-	mklines []*MkLine
+	mklines *MkLines
+	from    int
+	to      int
 }
 
-func NewParagraph() *Paragraph {
-	return &Paragraph{}
-}
-
-func (p *Paragraph) Clear() {
-	p.mklines = nil
-}
-
-func (p *Paragraph) Add(mkline *MkLine) {
-	assert(!mkline.IsEmpty()) // A paragraph must not contain empty lines.
-	p.mklines = append(p.mklines, mkline)
+func NewParagraph(mklines *MkLines, from, to int) *Paragraph {
+	for i := from; i < to; i++ {
+		assert(!mklines.mklines[i].IsEmpty())
+	}
+	return &Paragraph{mklines, from, to}
 }
 
 func (p *Paragraph) ForEach(action func(mkline *MkLine)) {
-	for _, mkline := range p.mklines {
+	for _, mkline := range p.mklines.mklines[p.from:p.to] {
 		action(mkline)
 	}
 }
@@ -44,21 +40,21 @@ func (p *Paragraph) Align() {
 // No warning or note is logged. Therefore this method must only be used to
 // realign the whole paragraph after one of its lines has been modified.
 func (p *Paragraph) AlignTo(column int) {
-	for _, mkline := range p.mklines {
+	p.ForEach(func(mkline *MkLine) {
 		if !mkline.IsVarassign() {
-			continue
+			return
 		}
 
 		align := mkline.ValueAlign()
 		oldWidth := tabWidth(align)
 		if tabWidth(rtrimHspace(align)) > column {
-			continue
+			return
 		}
 		if oldWidth == column && !hasSuffix(strings.TrimRight(align, "\t"), " ") {
-			continue
+			return
 		}
 		if mkline.IsMultiline() && !mkline.FirstLineContainsValue() {
-			continue
+			return
 		}
 
 		trimmed := strings.TrimRightFunc(align, isHspaceRune)
@@ -68,5 +64,5 @@ func (p *Paragraph) AlignTo(column int) {
 		fix.Notef(SilentAutofixFormat)
 		fix.ReplaceAfter(trimmed, align[len(trimmed):], newSpace)
 		fix.Apply()
-	}
+	})
 }

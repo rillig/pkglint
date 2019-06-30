@@ -190,6 +190,41 @@ func (mklines *MkLines) checkVarassignPlist(mkline *MkLine) {
 	}
 }
 
+func (mklines *MkLines) SplitToParagraphs() []*Paragraph {
+	var paras []*Paragraph
+
+	lines := mklines.mklines
+	isEmpty := func(i int) bool {
+		if lines[i].IsEmpty() {
+			return true
+		}
+		return lines[i].IsComment() &&
+			lines[i].Text == "#" &&
+			(i == 0 || lines[i-1].IsComment()) &&
+			(i == len(lines)-1 || lines[i+1].IsComment())
+	}
+
+	i := 0
+	for i < len(lines) {
+		from := i
+		for from < len(lines) && isEmpty(from) {
+			from++
+		}
+
+		to := from
+		for to < len(lines) && !isEmpty(to) {
+			to++
+		}
+
+		if from != to {
+			paras = append(paras, NewParagraph(mklines, from, to))
+		}
+		i = to
+	}
+
+	return paras
+}
+
 // ForEach calls the action for each line, until the action returns false.
 // It keeps track of the indentation (see MkLines.indentation)
 // and all conditional variables (see Indentation.IsConditional).

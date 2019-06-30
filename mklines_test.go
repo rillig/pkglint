@@ -1114,6 +1114,48 @@ func (s *Suite) Test_MkLines_Check__extra_warnings(c *check.C) {
 		"NOTE: options.mk:11: You can use \"../build\" instead of \"${WRKSRC}/../build\".")
 }
 
+func (s *Suite) Test_MkLines_SplitToParagraphs(c *check.C) {
+	t := s.Init(c)
+
+	type lineRange struct {
+		from, to int
+	}
+
+	test := func(mklines *MkLines, ranges ...lineRange) {
+		paras := mklines.SplitToParagraphs()
+
+		var exp []*Paragraph
+		for _, r := range ranges {
+			exp = append(exp, NewParagraph(mklines, r.from, r.to))
+		}
+
+		t.Check(paras, deepEquals, exp)
+	}
+
+	para := func(from, to int) lineRange { return lineRange{from, to} }
+
+	test(
+		t.NewMkLines("filename.mk",
+			MkCvsID,
+			"",
+			"# paragraph 2",
+			"#",
+			"VAR=\tstill paragraph 2",
+			"",
+			"# paragraph 3",
+			"#",
+			"# paragraph 4"),
+		para(0, 1),
+		para(2, 5),
+		para(6, 7),
+		para(8, 9))
+
+	test(
+		t.NewMkLines("filename.mk",
+			""),
+		nil...)
+}
+
 // Ensures that during MkLines.ForEach, the conditional variables in
 // MkLines.Indentation are correctly updated for each line.
 func (s *Suite) Test_MkLines_ForEach__conditional_variables(c *check.C) {

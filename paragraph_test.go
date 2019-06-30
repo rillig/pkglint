@@ -2,32 +2,13 @@ package pkglint
 
 import "gopkg.in/check.v1"
 
-func (s *Suite) Test_Paragraph_Clear(c *check.C) {
+func (s *Suite) Test_Paragraph__empty_line(c *check.C) {
 	t := s.Init(c)
 
-	para := NewParagraph()
+	mklines := t.NewMkLines("filename.mk",
+		"")
 
-	para.Clear()
-
-	t.Check(para.mklines, check.IsNil)
-
-	para.Add(t.NewMkLine("filename.mk", 123, "#"))
-
-	para.Clear()
-
-	t.Check(para.mklines, check.IsNil)
-}
-
-func (s *Suite) Test_Paragraph_Add__empty_line(c *check.C) {
-	t := s.Init(c)
-
-	para := NewParagraph()
-
-	para.Clear()
-
-	t.Check(para.mklines, check.IsNil)
-
-	t.ExpectAssert(func() { para.Add(t.NewMkLine("filename.mk", 123, "")) })
+	t.ExpectAssert(func() { _ = NewParagraph(mklines, 0, 1) })
 }
 
 func (s *Suite) Test_Paragraph_Align(c *check.C) {
@@ -38,12 +19,7 @@ func (s *Suite) Test_Paragraph_Align(c *check.C) {
 		MkCvsID,
 		"VAR=value",
 		"VAR=\t\t\tvalue")
-	para := NewParagraph()
-	for _, mkline := range mklines.mklines {
-		// Strictly speaking, lines 1 and 2 don't belong to the paragraph,
-		// but aligning the lines works nevertheless.
-		para.Add(mkline)
-	}
+	para := NewParagraph(mklines, 1, 3)
 
 	para.Align()
 	mklines.SaveAutofixChanges()
@@ -66,27 +42,24 @@ func (s *Suite) Test_Paragraph_AlignTo(c *check.C) {
 		MkCvsID,
 		"VAR=value",
 		"VAR=\t\tvalue",
+		"# comment between the variable assignments",
 		"VAR=\t \tvalue",
 		"VAR=\t\t\tvalue")
-	para := NewParagraph()
-	for _, mkline := range mklines.mklines {
-		// Strictly speaking, lines 1 and 2 don't belong to the paragraph,
-		// but aligning the lines works nevertheless.
-		para.Add(mkline)
-	}
+	para := NewParagraph(mklines, 1, 6)
 
 	para.AlignTo(16)
 	mklines.SaveAutofixChanges()
 
 	t.CheckOutputLines(
 		"AUTOFIX: ~/filename.mk:2: Replacing \"\" with \"\\t\\t\".",
-		"AUTOFIX: ~/filename.mk:4: Replacing \"\\t \\t\" with \"\\t\\t\".",
-		"AUTOFIX: ~/filename.mk:5: Replacing \"\\t\\t\\t\" with \"\\t\\t\".")
+		"AUTOFIX: ~/filename.mk:5: Replacing \"\\t \\t\" with \"\\t\\t\".",
+		"AUTOFIX: ~/filename.mk:6: Replacing \"\\t\\t\\t\" with \"\\t\\t\".")
 
 	t.CheckFileLinesDetab("filename.mk",
 		MkCvsID,
 		"VAR=            value",
 		"VAR=            value",
+		"# comment between the variable assignments",
 		"VAR=            value",
 		"VAR=            value")
 }
@@ -102,10 +75,7 @@ func (s *Suite) Test_Paragraph_AlignTo__continued_lines(c *check.C) {
 		"VAR= value1 \\",
 		"value2 \\",
 		"\t\tvalue3")
-	para := NewParagraph()
-	for _, mkline := range mklines.mklines {
-		para.Add(mkline)
-	}
+	para := NewParagraph(mklines, 1, 3)
 
 	para.AlignTo(16)
 	mklines.SaveAutofixChanges()
@@ -132,10 +102,7 @@ func (s *Suite) Test_Paragraph_AlignTo__outlier(c *check.C) {
 		MkCvsID,
 		"VAR= value",
 		"VERY_LONG_VARIABLE_NAME= value1")
-	para := NewParagraph()
-	for _, mkline := range mklines.mklines {
-		para.Add(mkline)
-	}
+	para := NewParagraph(mklines, 1, 3)
 
 	para.AlignTo(8)
 	mklines.SaveAutofixChanges()
