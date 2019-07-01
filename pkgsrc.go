@@ -619,14 +619,6 @@ func (src *Pkgsrc) checkRemovedAfterLastFreeze() {
 
 	var wrong []*Change
 	for pkgpath, change := range src.LastChange {
-
-		// This check as been added after the 2019Q2 branch to ensure the
-		// number of removed packages is correct for all future release notes.
-		// There would not be any value in fixing this for past entries.
-		if change.Date <= "2019-07-01" {
-			continue
-		}
-
 		switch change.Action {
 		case Added, Updated, Downgraded:
 			if !dirExists(src.File(pkgpath)) {
