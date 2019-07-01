@@ -259,6 +259,34 @@ func (s *Suite) Test_Pkgsrc_loadDocChanges(c *check.C) {
 	t.Check(G.Pkgsrc.LastChange["pkgpath"].Action, equals, Moved)
 }
 
+func (s *Suite) Test_Pkgsrc_checkRemovedAfterLastFreeze(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--source")
+	t.SetUpPkgsrc()
+	t.CreateFileLines("doc/CHANGES-2018",
+		CvsID,
+		"",
+		"\tUpdated category/updated-before to 1.0 [updater 2018-04-01]",
+		"\tmk/bsd.pkg.mk: started freeze for pkgsrc-2018Q1 branch [freezer 2018-06-21]",
+		"\tmk/bsd.pkg.mk: freeze ended for pkgsrc-2018Q1 branch [freezer 2018-06-25]",
+		"\tUpdated category/updated-after to 1.0 [updater 2018-07-01]",
+		"\tAdded category/added-after version 1.0 [updater 2018-07-01]",
+		"\tMoved category/moved-from to category/moved-to [author 2018-07-02]",
+		"\tDowngraded category/downgraded to 1.0 [author 2018-07-03]")
+	t.FinishSetUp()
+
+	t.CheckOutputLines(
+		"ERROR: ~/doc/CHANGES-2018:6: Package category/updated-after "+
+			"must either exist or be marked as removed.",
+		"",
+		"ERROR: ~/doc/CHANGES-2018:7: Package category/added-after "+
+			"must either exist or be marked as removed.",
+		"",
+		"ERROR: ~/doc/CHANGES-2018:9: Package category/downgraded "+
+			"must either exist or be marked as removed.")
+}
+
 func (s *Suite) Test_Pkgsrc_loadDocChanges__not_found(c *check.C) {
 	t := s.Init(c)
 
@@ -925,7 +953,7 @@ func (s *Suite) Test_Pkgsrc__frozen(c *check.C) {
 		"\tmk/bsd.pkg.mk: started freeze for pkgsrc-2018Q2 branch [freezer 2018-03-25]")
 	t.FinishSetUp()
 
-	t.Check(G.Pkgsrc.FreezeStart, equals, "2018-03-25")
+	t.Check(G.Pkgsrc.LastFreezeStart, equals, "2018-03-25")
 }
 
 func (s *Suite) Test_Pkgsrc__not_frozen(c *check.C) {
@@ -937,7 +965,8 @@ func (s *Suite) Test_Pkgsrc__not_frozen(c *check.C) {
 		"\tmk/bsd.pkg.mk: freeze ended for pkgsrc-2018Q2 branch [freezer 2018-03-27]")
 	t.FinishSetUp()
 
-	t.Check(G.Pkgsrc.FreezeStart, equals, "")
+	t.Check(G.Pkgsrc.LastFreezeStart, equals, "2018-03-25")
+	t.Check(G.Pkgsrc.LastFreezeEnd, equals, "2018-03-27")
 }
 
 func (s *Suite) Test_Pkgsrc__frozen_with_typo(c *check.C) {
@@ -949,7 +978,7 @@ func (s *Suite) Test_Pkgsrc__frozen_with_typo(c *check.C) {
 		"\tmk/bsd.pkg.mk: started freeze for pkgsrc-2018Q2 branch [freezer 2018-03-25")
 	t.FinishSetUp()
 
-	t.Check(G.Pkgsrc.FreezeStart, equals, "")
+	t.Check(G.Pkgsrc.LastFreezeStart, equals, "")
 }
 
 func (s *Suite) Test_Change_Version(c *check.C) {
