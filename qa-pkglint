@@ -65,6 +65,9 @@ netbsd() {
   if (cd "$srcdir" && grep -n "@VERSION@" -- *_test.go); then
     exit 1
   fi
+  if (cd "$srcdir" && fgrep -n '$NetBSD$' -- *_test.go); then
+    exit 1
+  fi
 
   step_msg "Copying files to NetBSD VM"
   rsync -a --delete --rsync-path=/usr/pkg/bin/rsync \
