@@ -383,6 +383,32 @@ func (s *Suite) Test_MkLines_CheckUsedBy(c *check.C) {
 			"WARN: Makefile.common:4: There should only be a single \"used by\" paragraph per file.",
 			"WARN: Makefile.common:2: Please add a line \"# used by category/package\" here."))
 
+	// Code coverage for hasOther being true and conflict being non-nil.
+	// Ensures that the warning is printed in the first wrong line.
+	test("category/package",
+		lines(
+			MkCvsID,
+			"",
+			"# Unrelated comment.",
+			"# used by category/package1",
+			"# used by category/package2"),
+		diagnostics(
+			"WARN: Makefile.common:4: The \"used by\" lines should be in a separate paragraph.",
+			"WARN: Makefile.common:1: Please add a line \"# used by category/package\" here."))
+
+	// Code coverage for hasUsedBy being true and conflict being non-nil.
+	// Ensures that the warning is printed in the first wrong line.
+	test("category/package",
+		lines(
+			MkCvsID,
+			"",
+			"# used by category/package1",
+			"# Unrelated comment.",
+			"# Unrelated comment 2."),
+		diagnostics(
+			"WARN: Makefile.common:4: The \"used by\" lines should be in a separate paragraph.",
+			"WARN: Makefile.common:1: Please add a line \"# used by category/package\" here."))
+
 	c.Check(G.Logger.autofixAvailable, equals, true)
 }
 
