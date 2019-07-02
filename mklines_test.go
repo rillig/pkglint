@@ -1250,6 +1250,19 @@ func (s *Suite) Test_MkLines_SplitToParagraphs(c *check.C) {
 		t.NewMkLines("filename.mk",
 			""),
 		nil...)
+
+	// Test coverage for i == 0.
+	test(
+		t.NewMkLines("filename.mk",
+			"#"),
+		nil...)
+
+	// Test coverage for !lines[i-1].IsComment().
+	test(
+		t.NewMkLines("filename.mk",
+			"VAR=\tvalue",
+			"#"),
+		para(0, 1))
 }
 
 // Ensures that during MkLines.ForEach, the conditional variables in
