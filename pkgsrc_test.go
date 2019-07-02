@@ -327,7 +327,12 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile(c *check.C) {
 		"\ttoo few fields",
 		"\ttoo many many many many many fields",
 		"\tmissing brackets around author",
-		"\tAdded another [new package]")
+		"\tAdded another [new package]",
+		"",
+		"\tmk/bsd.pkg.mk: freeze ended for branch pkgsrc-2019Q2", // missing date
+		"\tmk/bsd.pkg.mk: freeze ended for branch pkgsrc-2019Q2 [thawer 2019-07-01]",
+		"",
+		"Normal paragraph.")
 
 	changes := G.Pkgsrc.loadDocChangesFromFile(t.File("doc/CHANGES-2018"))
 
