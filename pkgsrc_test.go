@@ -298,6 +298,31 @@ func (s *Suite) Test_Pkgsrc_checkRemovedAfterLastFreeze(c *check.C) {
 			"must either exist or be marked as removed.")
 }
 
+func (s *Suite) Test_Pkgsrc_checkRemovedAfterLastFreeze__wip(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("wip/package")
+	t.CreateFileLines("doc/CHANGES-2019",
+		CvsID,
+		"",
+		"\tUpdated category/updated-before to 1.0 [updater 2019-04-01]",
+		"\tmk/bsd.pkg.mk: started freeze for pkgsrc-2019Q1 branch [freezer 2019-06-21]",
+		"\tmk/bsd.pkg.mk: freeze ended for pkgsrc-2019Q1 branch [freezer 2019-06-25]",
+		"\tUpdated category/updated-after to 1.0 [updater 2019-07-01]",
+		"\tAdded category/added-after version 1.0 [updater 2019-07-01]",
+		"\tMoved category/moved-from to category/moved-to [author 2019-07-02]",
+		"\tDowngraded category/downgraded to 1.0 [author 2019-07-03]")
+
+	t.Main("-Wall", "--source", "wip/package")
+
+	// Since the first argument is in pkgsrc-wip, the check for doc/CHANGES
+	// is skipped. It may well be that a pkgsrc-wip developer doesn't have
+	// write access to main pkgsrc, and therefore cannot fix doc/CHANGES.
+
+	t.CheckOutputLines(
+		"Looks fine.")
+}
+
 func (s *Suite) Test_Pkgsrc_loadDocChanges__not_found(c *check.C) {
 	t := s.Init(c)
 
