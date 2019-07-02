@@ -87,7 +87,7 @@ func (mklines *MkLines) Check() {
 	// In the first pass, all additions to BUILD_DEFS and USE_TOOLS
 	// are collected to make the order of the definitions irrelevant.
 	mklines.collectUsedVariables()
-	mklines.collectDefinedVariables()
+	mklines.collectVariables()
 	mklines.collectPlistVars()
 	mklines.collectElse()
 
@@ -289,10 +289,7 @@ func (mklines *MkLines) ExpandLoopVar(varname string) []string {
 	return nil
 }
 
-func (mklines *MkLines) collectDefinedVariables() {
-	// FIXME: This method has a wrong name. It collects not only the defined
-	//  variables but also the used ones.
-
+func (mklines *MkLines) collectVariables() {
 	if trace.Tracing {
 		defer trace.Call0()()
 	}

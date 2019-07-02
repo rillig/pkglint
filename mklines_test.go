@@ -501,7 +501,7 @@ func (s *Suite) Test_MkLines_ExpandLoopVar__malformed_for(c *check.C) {
 	t.Check(values, check.HasLen, 0)
 }
 
-func (s *Suite) Test_MkLines_collectDefinedVariables(c *check.C) {
+func (s *Suite) Test_MkLines_collectVariables(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("-Wall,no-space")
@@ -538,7 +538,7 @@ func (s *Suite) Test_MkLines_collectDefinedVariables(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLines_collectDefinedVariables__BUILTIN_FIND_FILES_VAR(c *check.C) {
+func (s *Suite) Test_MkLines_collectVariables__BUILTIN_FIND_FILES_VAR(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("-Wall,no-space")
@@ -563,7 +563,7 @@ func (s *Suite) Test_MkLines_collectDefinedVariables__BUILTIN_FIND_FILES_VAR(c *
 		"WARN: ~/category/package/builtin.mk:8: H_UNDEF is used but not defined.")
 }
 
-func (s *Suite) Test_MkLines_collectDefinedVariables__no_tracing(c *check.C) {
+func (s *Suite) Test_MkLines_collectVariables__no_tracing(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.SetUpFileMkLines("filename.mk",
@@ -574,7 +574,7 @@ func (s *Suite) Test_MkLines_collectDefinedVariables__no_tracing(c *check.C) {
 		"SUBST_VARS.id+=\tVAR3")
 	t.DisableTracing()
 
-	mklines.collectDefinedVariables()
+	mklines.collectVariables()
 
 	t.CheckOutputEmpty()
 }

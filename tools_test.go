@@ -66,7 +66,7 @@ func (s *Suite) Test_Tools_ParseToolLine__invalid_tool_name(c *check.C) {
 		"_TOOLS.${t}=\t${t}",
 		".endfor")
 
-	mklines.collectDefinedVariables()
+	mklines.collectVariables()
 	t.Check(mklines.Tools.byName, check.HasLen, 1)
 	t.Check(mklines.Tools.ByName("tool").String(), equals, "tool:::Nowhere:abc")
 
@@ -600,7 +600,7 @@ func (s *Suite) Test_Tools__aliases_in_for_loop(c *check.C) {
 		"TOOLS_ALIASES.ggrep+=\t${t}",
 		".endfor")
 
-	mklines.collectDefinedVariables() // calls ParseToolLine internally
+	mklines.collectVariables() // calls ParseToolLine internally
 
 	c.Check(mklines.Tools.ByName("ggrep").Aliases,
 		deepEquals, []string{"grep", "egrep", "fgrep"})

@@ -666,8 +666,8 @@ func (pkg *Package) checkfilePackageMakefile(filename string, mklines *MkLines, 
 
 	pkg.checkUpdate()
 
-	allLines.collectDefinedVariables() // To get the tool definitions
-	mklines.Tools = allLines.Tools     // TODO: also copy the other collected data
+	allLines.collectVariables()    // To get the tool definitions
+	mklines.Tools = allLines.Tools // TODO: also copy the other collected data
 	mklines.Check()
 
 	pkg.CheckVarorder(mklines)

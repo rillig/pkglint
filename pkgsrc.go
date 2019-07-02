@@ -372,7 +372,7 @@ func (src *Pkgsrc) loadUntypedVars() {
 
 	handleMkFile := func(path string) {
 		mklines := LoadMk(path, MustSucceed)
-		mklines.collectDefinedVariables()
+		mklines.collectVariables()
 		mklines.collectUsedVariables()
 		for varname, mkline := range mklines.vars.firstDef {
 			define(varnameCanon(varname), mkline)

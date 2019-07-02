@@ -476,7 +476,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_in_command(c *check.C)
 		MkCvsID,
 		"GENERATE_PLIST= cd ${DESTDIR}${PREFIX}; ${FIND} * \\( -type f -or -type l \\) | ${SORT};")
 
-	mklines.collectDefinedVariables()
+	mklines.collectVariables()
 	MkLineChecker{mklines, mklines.mklines[1]}.Check()
 
 	t.CheckOutputLines(

@@ -803,7 +803,7 @@ func (s *Suite) Test_VartypeCheck_License(c *check.C) {
 		MkCvsID,
 		"PERL5_LICENSE= gnu-gpl-v2 OR artistic")
 	// Also registers the PERL5_LICENSE variable in the package.
-	mklines.collectDefinedVariables()
+	mklines.collectVariables()
 
 	vt := NewVartypeCheckTester(t, (*VartypeCheck).License)
 
