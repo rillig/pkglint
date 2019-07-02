@@ -263,7 +263,6 @@ func (s *Suite) Test_Pkgsrc_checkRemovedAfterLastFreeze(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("-Wall", "--source")
-	t.SetUpPkgsrc()
 	t.CreateFileLines("doc/CHANGES-2019",
 		CvsID,
 		"",
@@ -273,7 +272,9 @@ func (s *Suite) Test_Pkgsrc_checkRemovedAfterLastFreeze(c *check.C) {
 		"\tUpdated category/updated-after to 1.0 [updater 2019-07-01]",
 		"\tAdded category/added-after version 1.0 [updater 2019-07-01]",
 		"\tMoved category/moved-from to category/moved-to [author 2019-07-02]",
-		"\tDowngraded category/downgraded to 1.0 [author 2019-07-03]")
+		"\tDowngraded category/downgraded to 1.0 [author 2019-07-03]",
+		"\tUpdated category/still-there to 1.0 [updater 2019-07-04]")
+	t.SetUpPackage("category/still-there")
 	t.FinishSetUp()
 
 	// It doesn't matter whether the last visible package change was before
@@ -1061,6 +1062,30 @@ func (s *Suite) Test_Change_Successor(c *check.C) {
 	t.Check(removed.Successor(), equals, "")
 	t.Check(removedSucc.Successor(), equals, "category/successor")
 	t.ExpectAssert(func() { downgraded.Successor() })
+}
+
+func (s *Suite) Test_Change_Above(c *check.C) {
+	var changes = []*Change{
+		{Location{"", 1, 1}, 0, "", "", "", "2011-07-01"},
+		{Location{"", 2, 2}, 0, "", "", "", "2011-07-01"},
+		{Location{"", 1, 1}, 0, "", "", "", "2011-07-02"}}
+
+	test := func(i int, chi *Change, j int, chj *Change) {
+		actual := chi.Above(chj)
+		expected := i < j
+		if actual != expected {
+			c.Check(
+				[]interface{}{i, *chi, j, *chj, actual},
+				check.DeepEquals,
+				[]interface{}{i, *chi, j, *chj, expected})
+		}
+	}
+
+	for i, chi := range changes {
+		for j, chj := range changes {
+			test(i, chi, j, chj)
+		}
+	}
 }
 
 func (s *Suite) Test_ChangeAction_String(c *check.C) {

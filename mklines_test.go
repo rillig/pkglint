@@ -1283,12 +1283,24 @@ func (s *Suite) Test_MkLines_SplitToParagraphs(c *check.C) {
 			"#"),
 		nil...)
 
-	// Test coverage for !lines[i-1].IsComment().
+	// The empty comment line is not a paragraph separator. To be a
+	// separator, it would have to be enclosed by comment lines.
 	test(
 		t.NewMkLines("filename.mk",
 			"VAR=\tvalue",
 			"#"),
-		para(0, 1))
+		para(0, 2))
+
+	// The empty comment line is not a paragraph separator because
+	// below it there is no comment. This is a typical way of separating
+	// a multi-line comment from a variable definition.
+	test(
+		t.NewMkLines("filename.mk",
+			"# This comment spans",
+			"# multiple lines.",
+			"#",
+			"VAR=\tvalue"),
+		para(0, 4))
 }
 
 // Ensures that during MkLines.ForEach, the conditional variables in

@@ -627,13 +627,7 @@ func (src *Pkgsrc) checkRemovedAfterLastFreeze() {
 		}
 	}
 
-	sort.Slice(wrong, func(i, j int) bool {
-		ei, ej := wrong[i], wrong[j]
-		if ei.Date != ej.Date {
-			return ei.Date < ej.Date
-		}
-		return ei.Location.firstLine < ej.Location.firstLine
-	})
+	sort.Slice(wrong, func(i, j int) bool { return wrong[i].Above(wrong[j]) })
 
 	for _, change := range wrong {
 		// It's a bit cheated to construct a Line from only a Location,
@@ -1068,6 +1062,13 @@ func (ch *Change) Target() string {
 func (ch *Change) Successor() string {
 	assert(ch.Action == Removed)
 	return ch.target
+}
+
+func (ch *Change) Above(other *Change) bool {
+	if ch.Date != other.Date {
+		return ch.Date < other.Date
+	}
+	return ch.Location.firstLine < other.Location.firstLine
 }
 
 type ChangeAction uint8
