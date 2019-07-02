@@ -2457,6 +2457,23 @@ func (s *Suite) Test_Package_checkFreeze(c *check.C) {
 		"")
 }
 
+func (s *Suite) Test_Package_checkFreeze__freeze_ended(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--explain")
+	pkg := t.SetUpPackage("category/package")
+	t.CreateFileLines("category/package/CVS/Entries",
+		"/Makefile//modified//")
+	t.CreateFileLines("doc/CHANGES-2018",
+		"\tmk/bsd.pkg.mk: started freeze for 2018Q2 [freezer 2018-03-20]",
+		"\tmk/bsd.pkg.mk: freeze ended for 2018Q2 [freezer 2018-03-27]")
+	t.FinishSetUp()
+
+	G.Check(pkg)
+
+	t.CheckOutputEmpty()
+}
+
 // In practice the distinfo file can always be autofixed since it has
 // just been read successfully and the corresponding patch file could
 // also be autofixed right before.
