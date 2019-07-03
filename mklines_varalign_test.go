@@ -303,21 +303,23 @@ func (s *Suite) Test_Varalign__continuation_lines(c *check.C) {
 	vt.Run()
 }
 
-// FIXME: The continuation line must not be fixed. It should either stay
-//  as it is, or the whole paragraph should be aligned to column 9, putting
-//  all variable values from the continuation line into the actual
-//  continuation line.
+// Line 1 is currently aligned at column 16. It could be shortened to column 8.
 //
-// The MASTER_SITE_NEDIT line is a continuation line with a value in the
-// first line, and at the same time it is the outlier in that paragraph.
-// But since its value is indented with a tab of 6 spaces, this indentation
-// looks intentional, and in addition, each line fits well into the normal
-// 72 column text block. Furthermore, line 3 is indented to the same depth
-// as line 2, which also indicates that the indentation is intentional.
+// Line 2--3 consists of multiple raw lines. The first of the raw lines
+// contains a value, therefore it doesn't count as a pure continuation line
+// for the purpose of realigning the paragraph. Pure continuation lines would
+// be skipped completely; this line still takes place in realigning.
 //
-// Therefore, there is no need to realign that variable assignment. Instead,
-// the VAR assignment should be adjusted to the indentation of the
-// MASTER_SITE_NEDIT line.
+// Line 2 needs an indentation of at least 24. This is more than one tab away
+// from the minimum required indentation of line 1, which is at column 8.
+// By this reasoning, line 2--3 would be an outlier.
+//
+// In line 2--3, the first line and the continuation are aligned in the same
+// column. Their relative indentation is 0, and that should be kept as-is.
+// This one logical line looks like two separate lines, and because their
+// indentation is the same, this logical line doesn't count as an outlier.
+//
+// Because line 2--3 is not an outlier, line 1 is realigned to column 24.
 func (s *Suite) Test_Varalign__continuation_line_one_tab_ahead(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -325,13 +327,13 @@ func (s *Suite) Test_Varalign__continuation_line_one_tab_ahead(c *check.C) {
 		"MASTER_SITE_NEDIT=\thttps://example.org \\",
 		"\t\t\thttps://example.org")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:2--3: This line should be aligned with \"\\t\\t\".")
+		"NOTE: ~/Makefile:1: This variable value should be aligned to column 25.")
 	vt.Autofixes(
-		"AUTOFIX: ~/Makefile:3: Replacing indentation \"\\t\\t\\t\" with \"\\t\\t\".")
+		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\\t\" with \"\\t\\t\\t\".")
 	vt.Fixed(
-		"VAR=            value",
+		"VAR=                    value",
 		"MASTER_SITE_NEDIT=      https://example.org \\",
-		"                https://example.org")
+		"                        https://example.org")
 	vt.Run()
 }
 
@@ -457,16 +459,16 @@ func (s *Suite) Test_Varalign__continuation_value_starts_in_first_line(c *check.
 		"SITES.distfile-1.0.0.tar.gz=\t${MASTER_SITES_SOURCEFORGE} \\",
 		"\t\t\t\t${MASTER_SITES_GITHUB}")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:1: This variable value should be aligned to column 17.",
-		"NOTE: ~/Makefile:3--4: This line should be aligned with \"\\t\\t\".")
+		"NOTE: ~/Makefile:1: This variable value should be aligned to column 33.",
+		"NOTE: ~/Makefile:2: This variable value should be aligned to column 33.")
 	vt.Autofixes(
-		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\" with \"\\t\\t\".",
-		"AUTOFIX: ~/Makefile:4: Replacing indentation \"\\t\\t\\t\\t\" with \"\\t\\t\".")
+		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\" with \"\\t\\t\\t\\t\".",
+		"AUTOFIX: ~/Makefile:2: Replacing \"\\t\" with \"\\t\\t\\t\".")
 	vt.Fixed(
-		"WRKSRC=         ${WRKDIR}",
-		"DISTFILES=      distfile-1.0.0.tar.gz",
+		"WRKSRC=                         ${WRKDIR}",
+		"DISTFILES=                      distfile-1.0.0.tar.gz",
 		"SITES.distfile-1.0.0.tar.gz=    ${MASTER_SITES_SOURCEFORGE} \\",
-		"                ${MASTER_SITES_GITHUB}")
+		"                                ${MASTER_SITES_GITHUB}")
 	vt.Run()
 }
 

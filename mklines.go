@@ -683,7 +683,8 @@ func (va *VaralignBlock) Finish() {
 // variable from forcing the rest of the paragraph to be indented too
 // far to the right.
 func (va *VaralignBlock) optimalWidth(infos []*varalignBlockInfo) int {
-	longest := 0       // The longest seen varnameOpWidth
+	longest := 0 // The longest seen varnameOpWidth
+	var longestLine *MkLine
 	secondLongest := 0 // The second-longest seen varnameOpWidth
 	for _, info := range infos {
 		if info.continuation {
@@ -694,6 +695,7 @@ func (va *VaralignBlock) optimalWidth(infos []*varalignBlockInfo) int {
 		if width >= longest {
 			secondLongest = longest
 			longest = width
+			longestLine = info.mkline
 		} else if width > secondLongest {
 			secondLongest = width
 		}
@@ -702,7 +704,7 @@ func (va *VaralignBlock) optimalWidth(infos []*varalignBlockInfo) int {
 	// Minimum required width of varnameOp, without the trailing whitespace.
 	minVarnameOpWidth := longest
 	outlier := 0
-	if secondLongest != 0 && secondLongest/8+1 < longest/8 {
+	if secondLongest != 0 && secondLongest/8+1 < longest/8 && !longestLine.IsMultiline() {
 		minVarnameOpWidth = secondLongest
 		outlier = longest
 	}
