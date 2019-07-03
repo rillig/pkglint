@@ -812,6 +812,6 @@ func (va *VaralignBlock) realignContinuationLines(mkline *MkLine, newWidth int) 
 	indentation := strings.Repeat("\t", newWidth/8) + strings.Repeat(" ", newWidth%8)
 	fix := mkline.Autofix()
 	fix.Notef("This line should be aligned with %q.", indentation)
-	fix.Realign(mkline, newWidth)
+	fix.RealignContinuation(mkline, newWidth)
 	fix.Apply()
 }

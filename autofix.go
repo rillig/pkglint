@@ -347,7 +347,7 @@ func (fix *Autofix) Apply() {
 	reset()
 }
 
-func (fix *Autofix) Realign(mkline *MkLine, newWidth int) {
+func (fix *Autofix) RealignContinuation(mkline *MkLine, newWidth int) {
 
 	// XXX: Check whether this method can be implemented as Custom fix.
 	// This complicated code should not be in the Autofix type.

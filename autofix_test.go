@@ -803,7 +803,7 @@ func (s *Suite) Test_Autofix_skip(c *check.C) {
 	fix.InsertAfter("after")
 	fix.Delete()
 	fix.Custom(func(showAutofix, autofix bool) {})
-	fix.Realign(mklines.mklines[0], 32)
+	fix.RealignContinuation(mklines.mklines[0], 32)
 
 	fix.Apply()
 
@@ -1090,7 +1090,7 @@ func (s *Suite) Test_Autofix_Apply__text_after_replacing_regex(c *check.C) {
 	t.Check(mkline.Value(), equals, "value")
 }
 
-func (s *Suite) Test_Autofix_Realign__wrong_line_type(c *check.C) {
+func (s *Suite) Test_Autofix_RealignContinuation__wrong_line_type(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("file.mk",
@@ -1101,10 +1101,10 @@ func (s *Suite) Test_Autofix_Realign__wrong_line_type(c *check.C) {
 	mkline := mklines.mklines[1]
 	fix := mkline.Autofix()
 
-	t.ExpectAssert(func() { fix.Realign(mkline, 16) })
+	t.ExpectAssert(func() { fix.RealignContinuation(mkline, 16) })
 }
 
-func (s *Suite) Test_Autofix_Realign__short_continuation_line(c *check.C) {
+func (s *Suite) Test_Autofix_RealignContinuation__short_continuation_line(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("--autofix")
@@ -1119,7 +1119,7 @@ func (s *Suite) Test_Autofix_Realign__short_continuation_line(c *check.C) {
 
 	// In this case realigning has no effect since the oldWidth == 8,
 	// which counts as "sufficiently intentional not to be modified".
-	fix.Realign(mkline, 16)
+	fix.RealignContinuation(mkline, 16)
 
 	mklines.SaveAutofixChanges()
 
@@ -1131,7 +1131,7 @@ func (s *Suite) Test_Autofix_Realign__short_continuation_line(c *check.C) {
 		"")
 }
 
-func (s *Suite) Test_Autofix_Realign__multiline_indented_with_spaces(c *check.C) {
+func (s *Suite) Test_Autofix_RealignContinuation__multiline_indented_with_spaces(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("--autofix")
@@ -1140,13 +1140,13 @@ func (s *Suite) Test_Autofix_Realign__multiline_indented_with_spaces(c *check.C)
 		"BUILD_DIRS= \\",
 		"\t        dir1 \\",
 		"\t\tdir2 \\",
-		"  ") // Trailing whitespace is not fixed by Autofix.Realign.
+		"  ") // Trailing whitespace is not fixed by Autofix.RealignContinuation.
 
 	mkline := mklines.mklines[1]
 
 	fix := mkline.Autofix()
 	fix.Warnf("Warning.")
-	fix.Realign(mkline, 16)
+	fix.RealignContinuation(mkline, 16)
 	fix.Apply()
 
 	mklines.SaveAutofixChanges()
