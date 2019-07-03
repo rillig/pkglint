@@ -294,8 +294,8 @@ func (s *Suite) Test_MkLine_Cond(c *check.C) {
 
 	cond := mkline.Cond()
 
-	c.Check(cond.CompareVarStr.Var.varname, equals, "VAR")
-	c.Check(cond.CompareVarStr.Str, equals, "Value")
+	c.Check(cond.Compare.Left.Var.varname, equals, "VAR")
+	c.Check(cond.Compare.Right.Str, equals, "Value")
 	c.Check(mkline.Cond(), equals, cond)
 }
 

@@ -499,7 +499,7 @@ func (p *MkParser) mkCondAtom() *MkCond {
 			lexer.SkipHspace()
 
 			if m := lexer.NextRegexp(regcomp(`^(<|<=|==|!=|>=|>)[\t ]*(0x[0-9A-Fa-f]+|\d+(?:\.\d+)?)`)); m != nil {
-				return &MkCond{CompareVarNum: &MkCondCompareVarNum{lhs, m[1], m[2]}}
+				return &MkCond{Compare: &MkCondCompare{MkCondAtom{Var: lhs}, m[1], MkCondAtom{Num: m[2]}}}
 			}
 
 			m := lexer.NextRegexp(regcomp(`^(?:<|<=|==|!=|>=|>)`))
@@ -511,16 +511,16 @@ func (p *MkParser) mkCondAtom() *MkCond {
 			op := m[0]
 			if op == "==" || op == "!=" {
 				if mrhs := lexer.NextRegexp(regcomp(`^"([^"\$\\]*)"`)); mrhs != nil {
-					return &MkCond{CompareVarStr: &MkCondCompareVarStr{lhs, op, mrhs[1]}}
+					return &MkCond{Compare: &MkCondCompare{MkCondAtom{Var: lhs}, op, MkCondAtom{Str: mrhs[1]}}}
 				}
 			}
 
 			if str := lexer.NextBytesSet(textproc.AlnumU); str != "" {
-				return &MkCond{CompareVarStr: &MkCondCompareVarStr{lhs, op, str}}
+				return &MkCond{Compare: &MkCondCompare{MkCondAtom{Var: lhs}, op, MkCondAtom{Str: str}}}
 			}
 
 			if rhs := p.VarUse(); rhs != nil {
-				return &MkCond{CompareVarVar: &MkCondCompareVarVar{lhs, op, rhs}}
+				return &MkCond{Compare: &MkCondCompare{MkCondAtom{Var: lhs}, op, MkCondAtom{Var: rhs}}}
 			}
 
 			if lexer.PeekByte() == '"' {
@@ -528,7 +528,7 @@ func (p *MkParser) mkCondAtom() *MkCond {
 				lexer.Skip(1)
 				if quotedRHS := p.VarUse(); quotedRHS != nil {
 					if lexer.SkipByte('"') {
-						return &MkCond{CompareVarVar: &MkCondCompareVarVar{lhs, op, quotedRHS}}
+						return &MkCond{Compare: &MkCondCompare{MkCondAtom{Var: lhs}, op, MkCondAtom{Var: quotedRHS}}}
 					}
 				}
 				lexer.Reset(mark)
@@ -549,7 +549,7 @@ func (p *MkParser) mkCondAtom() *MkCond {
 						rhsText.WriteByte(lexer.Since(m)[1])
 
 					case lexer.SkipByte('"'):
-						return &MkCond{CompareVarStr: &MkCondCompareVarStr{lhs, op, rhsText.String()}}
+						return &MkCond{Compare: &MkCondCompare{MkCondAtom{Var: lhs}, op, MkCondAtom{Str: rhsText.String()}}}
 					default:
 						break loop
 					}
@@ -791,45 +791,49 @@ type MkCond struct {
 	And []*MkCond
 	Not *MkCond
 
-	Defined       string
-	Empty         *MkVarUse
-	Var           *MkVarUse
-	CompareVarNum *MkCondCompareVarNum
-	CompareVarStr *MkCondCompareVarStr
-	CompareVarVar *MkCondCompareVarVar
-	Call          *MkCondCall
-	Num           string
+	Defined string
+	Empty   *MkVarUse
+	Var     *MkVarUse
+	Compare *MkCondCompare
+	Call    *MkCondCall
+	Num     string
 }
-type MkCondCompareVarNum struct {
-	Var *MkVarUse
-	Op  string // One of <, <=, ==, !=, >=, >.
-	Num string
+type MkCondCompare struct {
+	Left MkCondAtom
+	// For numeric comparison: one of <, <=, ==, !=, >=, >.
+	//
+	// For string comparison: one of ==, !=.
+	//
+	// For not-empty test: "".
+	Op    string
+	Right MkCondAtom
 }
-type MkCondCompareVarStr struct {
-	Var *MkVarUse
-	Op  string // One of ==, !=.
+type MkCondAtom struct {
 	Str string
-}
-type MkCondCompareVarVar struct {
-	Left  *MkVarUse
-	Op    string // One of <, <=, ==, !=, >=, >.
-	Right *MkVarUse
+	Num string
+	Var *MkVarUse
 }
 type MkCondCall struct {
 	Name string
 	Arg  string
 }
 
+// MkCondCallback defines the actions for walking a Makefile condition
+// using MkCondWalker.Walk.
 type MkCondCallback struct {
-	Not           func(cond *MkCond)
-	Defined       func(varname string)
-	Empty         func(empty *MkVarUse)
-	CompareVarNum func(varuse *MkVarUse, op string, num string)
-	CompareVarStr func(varuse *MkVarUse, op string, str string)
-	CompareVarVar func(left *MkVarUse, op string, right *MkVarUse)
-	Call          func(name string, arg string)
-	Var           func(varuse *MkVarUse)
-	VarUse        func(varuse *MkVarUse)
+	Not     func(cond *MkCond)
+	Defined func(varname string)
+	Empty   func(empty *MkVarUse)
+	Compare func(left *MkCondAtom, op string, right *MkCondAtom)
+	Call    func(name string, arg string)
+
+	// Var is called for every atomic expression that consists solely
+	// of a variable use, possibly enclosed in double quotes, but without
+	// any surrounding string literal parts.
+	Var func(varuse *MkVarUse)
+
+	// VarUse is called for each variable that is used in some expression.
+	VarUse func(varuse *MkVarUse)
 }
 
 func (cond *MkCond) Walk(callback *MkCondCallback) {
@@ -882,35 +886,13 @@ func (w *MkCondWalker) Walk(cond *MkCond, callback *MkCondCallback) {
 			callback.VarUse(cond.Empty)
 		}
 
-	case cond.CompareVarVar != nil:
-		if callback.CompareVarVar != nil {
-			cvv := cond.CompareVarVar
-			callback.CompareVarVar(cvv.Left, cvv.Op, cvv.Right)
+	case cond.Compare != nil:
+		cmp := cond.Compare
+		if callback.Compare != nil {
+			callback.Compare(&cmp.Left, cmp.Op, &cmp.Right)
 		}
-		if callback.VarUse != nil {
-			cvv := cond.CompareVarVar
-			callback.VarUse(cvv.Left)
-			callback.VarUse(cvv.Right)
-		}
-
-	case cond.CompareVarStr != nil:
-		if callback.CompareVarStr != nil {
-			cvs := cond.CompareVarStr
-			callback.CompareVarStr(cvs.Var, cvs.Op, cvs.Str)
-		}
-		if callback.VarUse != nil {
-			callback.VarUse(cond.CompareVarStr.Var)
-		}
-		w.walkStr(cond.CompareVarStr.Str, callback)
-
-	case cond.CompareVarNum != nil:
-		if callback.CompareVarNum != nil {
-			cvn := cond.CompareVarNum
-			callback.CompareVarNum(cvn.Var, cvn.Op, cvn.Num)
-		}
-		if callback.VarUse != nil {
-			callback.VarUse(cond.CompareVarNum.Var)
-		}
+		w.walkAtom(&cmp.Left, callback)
+		w.walkAtom(&cmp.Right, callback)
 
 	case cond.Call != nil:
 		if callback.Call != nil {
@@ -918,6 +900,19 @@ func (w *MkCondWalker) Walk(cond *MkCond, callback *MkCondCallback) {
 			callback.Call(call.Name, call.Arg)
 		}
 		w.walkStr(cond.Call.Arg, callback)
+	}
+}
+
+func (w *MkCondWalker) walkAtom(atom *MkCondAtom, callback *MkCondCallback) {
+	switch {
+	case atom.Var != nil:
+		if callback.VarUse != nil {
+			callback.VarUse(atom.Var)
+		}
+	case atom.Num != "":
+		break
+	default:
+		w.walkStr(atom.Str, callback)
 	}
 }
 

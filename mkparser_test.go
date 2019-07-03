@@ -556,53 +556,57 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	test := func(input string, expectedTree *MkCond) {
 		testRest(input, expectedTree, "")
 	}
-	varuse := NewMkVarUse
+	varUse := func(name string, modifiers ...string) MkCondAtom {
+		return MkCondAtom{Var: NewMkVarUse(name, modifiers...)}
+	}
+	str := func(s string) MkCondAtom { return MkCondAtom{Str: s} }
+	num := func(s string) MkCondAtom { return MkCondAtom{Num: s} }
 
-	t.Use(testRest, test, varuse)
+	t.Use(testRest, test, varUse)
 
 	test("${OPSYS:MNetBSD}",
-		&MkCond{Var: varuse("OPSYS", "MNetBSD")})
+		&MkCond{Var: NewMkVarUse("OPSYS", "MNetBSD")})
 
 	test("defined(VARNAME)",
 		&MkCond{Defined: "VARNAME"})
 
 	test("empty(VARNAME)",
-		&MkCond{Empty: varuse("VARNAME")})
+		&MkCond{Empty: NewMkVarUse("VARNAME")})
 
 	test("!empty(VARNAME)",
-		&MkCond{Not: &MkCond{Empty: varuse("VARNAME")}})
+		&MkCond{Not: &MkCond{Empty: NewMkVarUse("VARNAME")}})
 
 	test("!empty(VARNAME:M[yY][eE][sS])",
-		&MkCond{Not: &MkCond{Empty: varuse("VARNAME", "M[yY][eE][sS]")}})
+		&MkCond{Not: &MkCond{Empty: NewMkVarUse("VARNAME", "M[yY][eE][sS]")}})
 
 	// Colons are unescaped at this point because they cannot be mistaken for separators anymore.
 	test("!empty(USE_TOOLS:Mautoconf\\:run)",
-		&MkCond{Not: &MkCond{Empty: varuse("USE_TOOLS", "Mautoconf:run")}})
+		&MkCond{Not: &MkCond{Empty: NewMkVarUse("USE_TOOLS", "Mautoconf:run")}})
 
 	test("${VARNAME} != \"Value\"",
-		&MkCond{CompareVarStr: &MkCondCompareVarStr{varuse("VARNAME"), "!=", "Value"}})
+		&MkCond{Compare: &MkCondCompare{varUse("VARNAME"), "!=", str("Value")}})
 
 	test("${VARNAME:Mi386} != \"Value\"",
-		&MkCond{CompareVarStr: &MkCondCompareVarStr{varuse("VARNAME", "Mi386"), "!=", "Value"}})
+		&MkCond{Compare: &MkCondCompare{varUse("VARNAME", "Mi386"), "!=", str("Value")}})
 
 	test("${VARNAME} != Value",
-		&MkCond{CompareVarStr: &MkCondCompareVarStr{varuse("VARNAME"), "!=", "Value"}})
+		&MkCond{Compare: &MkCondCompare{varUse("VARNAME"), "!=", str("Value")}})
 
 	test("\"${VARNAME}\" != Value",
-		&MkCond{CompareVarStr: &MkCondCompareVarStr{varuse("VARNAME"), "!=", "Value"}})
+		&MkCond{Compare: &MkCondCompare{varUse("VARNAME"), "!=", str("Value")}})
 
 	test("${pkg} == \"${name}\"",
-		&MkCond{CompareVarVar: &MkCondCompareVarVar{varuse("pkg"), "==", varuse("name")}})
+		&MkCond{Compare: &MkCondCompare{varUse("pkg"), "==", varUse("name")}})
 
 	test("\"${pkg}\" == \"${name}\"",
-		&MkCond{CompareVarVar: &MkCondCompareVarVar{varuse("pkg"), "==", varuse("name")}})
+		&MkCond{Compare: &MkCondCompare{varUse("pkg"), "==", varUse("name")}})
 
 	// The right-hand side is not analyzed further to keep the data types simple.
 	test("${ABC} == \"${A}B${C}\"",
-		&MkCond{CompareVarStr: &MkCondCompareVarStr{varuse("ABC"), "==", "${A}B${C}"}})
+		&MkCond{Compare: &MkCondCompare{varUse("ABC"), "==", str("${A}B${C}")}})
 
 	test("${ABC} == \"${A}\\\"${B}\\\\${C}$${shellvar}${D}\"",
-		&MkCond{CompareVarStr: &MkCondCompareVarStr{varuse("ABC"), "==", "${A}\"${B}\\${C}$${shellvar}${D}"}})
+		&MkCond{Compare: &MkCondCompare{varUse("ABC"), "==", str("${A}\"${B}\\${C}$${shellvar}${D}")}})
 
 	test("exists(/etc/hosts)",
 		&MkCond{Call: &MkCondCall{"exists", "/etc/hosts"}})
@@ -612,13 +616,13 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 
 	test("${OPSYS} == \"NetBSD\" || ${OPSYS} == \"OpenBSD\"",
 		&MkCond{Or: []*MkCond{
-			{CompareVarStr: &MkCondCompareVarStr{varuse("OPSYS"), "==", "NetBSD"}},
-			{CompareVarStr: &MkCondCompareVarStr{varuse("OPSYS"), "==", "OpenBSD"}}}})
+			{Compare: &MkCondCompare{varUse("OPSYS"), "==", str("NetBSD")}},
+			{Compare: &MkCondCompare{varUse("OPSYS"), "==", str("OpenBSD")}}}})
 
 	test("${OPSYS} == \"NetBSD\" && ${MACHINE_ARCH} == \"i386\"",
 		&MkCond{And: []*MkCond{
-			{CompareVarStr: &MkCondCompareVarStr{varuse("OPSYS"), "==", "NetBSD"}},
-			{CompareVarStr: &MkCondCompareVarStr{varuse("MACHINE_ARCH"), "==", "i386"}}}})
+			{Compare: &MkCondCompare{varUse("OPSYS"), "==", str("NetBSD")}},
+			{Compare: &MkCondCompare{varUse("MACHINE_ARCH"), "==", str("i386")}}}})
 
 	test("defined(A) && defined(B) || defined(C) && defined(D)",
 		&MkCond{Or: []*MkCond{
@@ -631,11 +635,11 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 
 	test("${MACHINE_ARCH:Mi386} || ${MACHINE_OPSYS:MNetBSD}",
 		&MkCond{Or: []*MkCond{
-			{Var: varuse("MACHINE_ARCH", "Mi386")},
-			{Var: varuse("MACHINE_OPSYS", "MNetBSD")}}})
+			{Var: NewMkVarUse("MACHINE_ARCH", "Mi386")},
+			{Var: NewMkVarUse("MACHINE_OPSYS", "MNetBSD")}}})
 
 	test("${VAR} == \"${VAR}suffix\"",
-		&MkCond{CompareVarStr: &MkCondCompareVarStr{varuse("VAR"), "==", "${VAR}suffix"}})
+		&MkCond{Compare: &MkCondCompare{varUse("VAR"), "==", str("${VAR}suffix")}})
 
 	// Exotic cases
 
@@ -648,35 +652,35 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 
 	test("${VAR} == 0xCAFEBABE",
 		&MkCond{
-			CompareVarNum: &MkCondCompareVarNum{
-				Var: varuse("VAR"),
-				Op:  "==",
-				Num: "0xCAFEBABE"}})
+			Compare: &MkCondCompare{
+				varUse("VAR"),
+				"==",
+				num("0xCAFEBABE")}})
 
 	test("! ( defined(A)  && empty(VARNAME) )",
 		&MkCond{Not: &MkCond{
 			And: []*MkCond{
 				{Defined: "A"},
-				{Empty: varuse("VARNAME")}}}})
+				{Empty: NewMkVarUse("VARNAME")}}}})
 
 	test("${REQD_MAJOR} > ${MAJOR}",
-		&MkCond{CompareVarVar: &MkCondCompareVarVar{varuse("REQD_MAJOR"), ">", varuse("MAJOR")}})
+		&MkCond{Compare: &MkCondCompare{varUse("REQD_MAJOR"), ">", varUse("MAJOR")}})
 
 	test("${OS_VERSION} >= 6.5",
-		&MkCond{CompareVarNum: &MkCondCompareVarNum{varuse("OS_VERSION"), ">=", "6.5"}})
+		&MkCond{Compare: &MkCondCompare{varUse("OS_VERSION"), ">=", num("6.5")}})
 
 	test("${OS_VERSION} == 5.3",
-		&MkCond{CompareVarNum: &MkCondCompareVarNum{varuse("OS_VERSION"), "==", "5.3"}})
+		&MkCond{Compare: &MkCondCompare{varUse("OS_VERSION"), "==", num("5.3")}})
 
 	test("!empty(${OS_VARIANT:MIllumos})", // Probably not intended
-		&MkCond{Not: &MkCond{Empty: varuse("${OS_VARIANT:MIllumos}")}})
+		&MkCond{Not: &MkCond{Empty: NewMkVarUse("${OS_VARIANT:MIllumos}")}})
 
 	// There may be whitespace before the parenthesis; see devel/bmake/files/cond.c:^compare_function.
 	test("defined (VARNAME)",
 		&MkCond{Defined: "VARNAME"})
 
 	test("${\"${PKG_OPTIONS:Moption}\":?--enable-option:--disable-option}",
-		&MkCond{Var: varuse("\"${PKG_OPTIONS:Moption}\"", "?--enable-option:--disable-option")})
+		&MkCond{Var: NewMkVarUse("\"${PKG_OPTIONS:Moption}\"", "?--enable-option:--disable-option")})
 
 	// Contrary to most other programming languages, the == operator binds
 	// more tightly that the ! operator.
@@ -684,7 +688,7 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	// TODO: Since this operator precedence is surprising there should be a warning,
 	//  suggesting to replace "!${VAR} == value" with "${VAR} != value".
 	test("!${VAR} == value",
-		&MkCond{Not: &MkCond{CompareVarStr: &MkCondCompareVarStr{varuse("VAR"), "==", "value"}}})
+		&MkCond{Not: &MkCond{Compare: &MkCondCompare{varUse("VAR"), "==", str("value")}}})
 
 	// Errors
 
@@ -713,11 +717,11 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 		"exists(/unfinished")
 
 	testRest("!empty(PKG_OPTIONS:Msndfile) || defined(PKG_OPTIONS:Msamplerate)",
-		&MkCond{Not: &MkCond{Empty: varuse("PKG_OPTIONS", "Msndfile")}},
+		&MkCond{Not: &MkCond{Empty: NewMkVarUse("PKG_OPTIONS", "Msndfile")}},
 		"|| defined(PKG_OPTIONS:Msamplerate)")
 
 	testRest("${LEFT} &&",
-		&MkCond{Var: varuse("LEFT")},
+		&MkCond{Var: NewMkVarUse("LEFT")},
 		"&&")
 
 	testRest("\"unfinished string literal",
@@ -1155,14 +1159,16 @@ func (s *Suite) Test_MkCondWalker_Walk(c *check.C) {
 		Empty: func(varuse *MkVarUse) {
 			addEvent("empty", varuseStr(varuse))
 		},
-		CompareVarNum: func(varuse *MkVarUse, op string, num string) {
-			addEvent("compareVarNum", varuseStr(varuse), num)
-		},
-		CompareVarStr: func(varuse *MkVarUse, op string, str string) {
-			addEvent("compareVarStr", varuseStr(varuse), str)
-		},
-		CompareVarVar: func(left *MkVarUse, op string, right *MkVarUse) {
-			addEvent("compareVarVar", varuseStr(left), varuseStr(right))
+		Compare: func(left *MkCondAtom, op string, right *MkCondAtom) {
+			assert(left.Var != nil)
+			switch {
+			case right.Var != nil:
+				addEvent("compareVarVar", varuseStr(left.Var), varuseStr(right.Var))
+			case right.Num != "":
+				addEvent("compareVarNum", varuseStr(left.Var), right.Num)
+			default:
+				addEvent("compareVarStr", varuseStr(left.Var), right.Str)
+			}
 		},
 		Call: func(name string, arg string) {
 			addEvent("call", name, arg)

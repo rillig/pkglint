@@ -1527,11 +1527,11 @@ func (ck MkLineChecker) checkDirectiveCond() {
 	}
 
 	cond.Walk(&MkCondCallback{
-		Not:           checkNotEmpty,
-		Empty:         checkEmpty,
-		Var:           checkVar,
-		CompareVarStr: ck.checkDirectiveCondCompareVarStr,
-		VarUse:        checkVarUse})
+		Not:     checkNotEmpty,
+		Empty:   checkEmpty,
+		Var:     checkVar,
+		Compare: ck.checkDirectiveCondCompare,
+		VarUse:  checkVarUse})
 }
 
 // checkDirectiveCondEmpty checks a condition of the form empty(VAR),
@@ -1631,6 +1631,13 @@ func (ck MkLineChecker) checkCompareVarStr(varname, op, value string) {
 		ck.MkLine.Explain(
 			"The PKGSRC_COMPILER can be a list of chained compilers, e.g. \"ccache distcc clang\".",
 			"Therefore, comparing it using == or != leads to wrong results in these cases.")
+	}
+}
+
+func (ck MkLineChecker) checkDirectiveCondCompare(left *MkCondAtom, op string, right *MkCondAtom) {
+	switch {
+	case left.Var != nil && right.Var == nil && right.Num == "":
+		ck.checkDirectiveCondCompareVarStr(left.Var, op, right.Str)
 	}
 }
 
