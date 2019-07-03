@@ -307,6 +307,17 @@ func (s *Suite) Test_Varalign__continuation_lines(c *check.C) {
 //  as it is, or the whole paragraph should be aligned to column 9, putting
 //  all variable values from the continuation line into the actual
 //  continuation line.
+//
+// The MASTER_SITE_NEDIT line is a continuation line with a value in the
+// first line, and at the same time it is the outlier in that paragraph.
+// But since its value is indented with a tab of 6 spaces, this indentation
+// looks intentional, and in addition, each line fits well into the normal
+// 72 column text block. Furthermore, line 3 is indented to the same depth
+// as line 2, which also indicates that the indentation is intentional.
+//
+// Therefore, there is no need to realign that variable assignment. Instead,
+// the VAR assignment should be adjusted to the indentation of the
+// MASTER_SITE_NEDIT line.
 func (s *Suite) Test_Varalign__continuation_line_one_tab_ahead(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
