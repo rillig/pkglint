@@ -391,7 +391,7 @@ func (p *MkParser) varUseModifierAt(lexer *textproc.Lexer, varname string) bool 
 		return false
 	}
 
-	re := regcomp(`^([^$@\\]|\\.)+`)
+	re := regcomp(`^([^$@\\}]|\\.)+`)
 	for p.VarUse() != nil || lexer.SkipString("$$") || lexer.SkipRegexp(re) {
 	}
 

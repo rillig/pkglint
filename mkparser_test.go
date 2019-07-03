@@ -366,9 +366,8 @@ func (s *Suite) Test_MkParser_VarUse(c *check.C) {
 
 	test("${PLIST_SUBST_VARS:@var@${var}=${${var}:Q}}",
 		varuseText("${PLIST_SUBST_VARS:@var@${var}=${${var}:Q}}",
-			"PLIST_SUBST_VARS", "@var@${var}=${${var}:Q}}"),
-		"WARN: Test_MkParser_VarUse.mk:1: Modifier ${PLIST_SUBST_VARS:@var@...@} is missing the final \"@\".",
-		"WARN: Test_MkParser_VarUse.mk:1: Missing closing \"}\" for \"PLIST_SUBST_VARS\".")
+			"PLIST_SUBST_VARS", "@var@${var}=${${var}:Q}"),
+		"WARN: Test_MkParser_VarUse.mk:1: Modifier ${PLIST_SUBST_VARS:@var@...@} is missing the final \"@\".")
 
 	// Unfinished variable use
 	test("${",
@@ -510,11 +509,8 @@ func (s *Suite) Test_MkParser_varUseModifierAt__incomplete_without_warning(c *ch
 
 	varUse := p.VarUse()
 
-	// TODO: It's inconsistent that this syntax error still produces a
-	//  variable modifier, while most other syntax errors don't.
-	// FIXME: The } must not be part of the variable modifier.
-	t.Check(varUse, deepEquals, NewMkVarUse("VAR", "@var@$$var}rest"))
-	t.Check(p.Rest(), equals, "")
+	t.Check(varUse, deepEquals, NewMkVarUse("VAR", "@var@$$var"))
+	t.Check(p.Rest(), equals, "rest")
 	t.CheckOutputEmpty()
 }
 
@@ -940,9 +936,8 @@ func (s *Suite) Test_MkParser_varUseModifierAt(c *check.C) {
 		"WARN: Makefile:20: Invalid variable modifier \"@\" for \"VAR\".",
 		"WARN: Makefile:20: Missing closing \"}\" for \"VAR\".")
 
-	test("${VAR:@i@${i}}", varUse("VAR", "@i@${i}}"), "",
-		"WARN: Makefile:20: Modifier ${VAR:@i@...@} is missing the final \"@\".",
-		"WARN: Makefile:20: Missing closing \"}\" for \"VAR\".")
+	test("${VAR:@i@${i}}", varUse("VAR", "@i@${i}"), "",
+		"WARN: Makefile:20: Modifier ${VAR:@i@...@} is missing the final \"@\".")
 
 	test("${VAR:@i@${i}@}", varUse("VAR", "@i@${i}@"), "")
 
