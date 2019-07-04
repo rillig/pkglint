@@ -690,6 +690,10 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	test("!${VAR} == value",
 		&MkCond{Not: &MkCond{Compare: &MkCondCompare{varUse("VAR"), "==", str("value")}}})
 
+	// The left-hand side of the comparison can be a quoted string.
+	test("\"${VAR}suffix\" == value",
+		&MkCond{Compare: &MkCondCompare{MkCondTerm{Str: "${VAR}suffix"}, "==", MkCondTerm{Str: "value"}}})
+
 	// Errors
 
 	testRest("defined()",
@@ -755,11 +759,6 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	testRest("(${VAR}",
 		nil,
 		"(${VAR}")
-
-	// The left-hand side of the comparison can be a quoted string.
-	testRest("\"${VAR}suffix\" == value",
-		&MkCond{Compare: &MkCondCompare{MkCondTerm{Str: "${VAR}suffix"}, "==", MkCondTerm{Str: "value"}}},
-		"")
 
 	// The left-hand side of the comparison cannot be an unquoted string literal.
 	// These would be rejected by bmake as well.
