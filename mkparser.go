@@ -503,8 +503,8 @@ func (p *MkParser) mkCondCompare() *MkCond {
 
 		m := lexer.NextRegexp(regcomp(`^(?:<|<=|==|!=|>=|>)`))
 		if len(m) == 0 {
-			assert(lhs.Var != nil)
-			return &MkCond{Var: lhs.Var} // See devel/bmake/files/cond.c:/\* For \.if \$/
+			// See devel/bmake/files/cond.c:/\* For \.if \$/
+			return &MkCond{Term: lhs}
 		}
 		lexer.SkipHspace()
 
@@ -527,7 +527,7 @@ func (p *MkParser) mkCondCompare() *MkCond {
 
 	// See devel/bmake/files/cond.c:/^CondCvtArg
 	if m := lexer.NextRegexp(regcomp(`^(?:0x[0-9A-Fa-f]+|\d+(?:\.\d+)?)`)); m != nil {
-		return &MkCond{Num: m[0]}
+		return &MkCond{Term: &MkCondTerm{Num: m[0]}}
 	}
 
 	lexer.Reset(mark)
@@ -813,10 +813,9 @@ type MkCond struct {
 
 	Defined string
 	Empty   *MkVarUse
-	Var     *MkVarUse
+	Term    *MkCondTerm
 	Compare *MkCondCompare
 	Call    *MkCondCall
-	Num     string
 }
 type MkCondCompare struct {
 	Left MkCondTerm
@@ -890,12 +889,12 @@ func (w *MkCondWalker) Walk(cond *MkCond, callback *MkCondCallback) {
 			callback.VarUse(&MkVarUse{cond.Defined, nil})
 		}
 
-	case cond.Var != nil:
+	case cond.Term != nil && cond.Term.Var != nil:
 		if callback.Var != nil {
-			callback.Var(cond.Var)
+			callback.Var(cond.Term.Var)
 		}
 		if callback.VarUse != nil {
-			callback.VarUse(cond.Var)
+			callback.VarUse(cond.Term.Var)
 		}
 
 	case cond.Empty != nil:

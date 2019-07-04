@@ -1507,8 +1507,8 @@ func (ck MkLineChecker) checkDirectiveCond() {
 			done[empty] = true
 		}
 
-		varUse := not.Var
-		if varUse != nil {
+		if not.Term != nil && not.Term.Var != nil {
+			varUse := not.Term.Var
 			ck.checkDirectiveCondEmpty(varUse, false, false, not == cond.Not)
 			done[varUse] = true
 		}
@@ -1522,7 +1522,7 @@ func (ck MkLineChecker) checkDirectiveCond() {
 
 	checkVar := func(varUse *MkVarUse) {
 		if !done[varUse] {
-			ck.checkDirectiveCondEmpty(varUse, false, true, varUse == cond.Var)
+			ck.checkDirectiveCondEmpty(varUse, false, true, cond.Term != nil && varUse == cond.Term.Var)
 		}
 	}
 

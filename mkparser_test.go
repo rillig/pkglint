@@ -565,7 +565,7 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	t.Use(testRest, test, varUse)
 
 	test("${OPSYS:MNetBSD}",
-		&MkCond{Var: NewMkVarUse("OPSYS", "MNetBSD")})
+		&MkCond{Term: &MkCondTerm{Var: NewMkVarUse("OPSYS", "MNetBSD")}})
 
 	test("defined(VARNAME)",
 		&MkCond{Defined: "VARNAME"})
@@ -635,8 +635,8 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 
 	test("${MACHINE_ARCH:Mi386} || ${MACHINE_OPSYS:MNetBSD}",
 		&MkCond{Or: []*MkCond{
-			{Var: NewMkVarUse("MACHINE_ARCH", "Mi386")},
-			{Var: NewMkVarUse("MACHINE_OPSYS", "MNetBSD")}}})
+			{Term: &MkCondTerm{Var: NewMkVarUse("MACHINE_ARCH", "Mi386")}},
+			{Term: &MkCondTerm{Var: NewMkVarUse("MACHINE_OPSYS", "MNetBSD")}}}})
 
 	test("${VAR} == \"${VAR}suffix\"",
 		&MkCond{Compare: &MkCondCompare{varUse("VAR"), "==", str("${VAR}suffix")}})
@@ -645,10 +645,10 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 
 	// ".if 0" can be used to skip over a block of code.
 	test("0",
-		&MkCond{Num: "0"})
+		&MkCond{Term: &MkCondTerm{Num: "0"}})
 
 	test("0xCAFEBABE",
-		&MkCond{Num: "0xCAFEBABE"})
+		&MkCond{Term: &MkCondTerm{Num: "0xCAFEBABE"}})
 
 	test("${VAR} == 0xCAFEBABE",
 		&MkCond{
@@ -680,7 +680,7 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 		&MkCond{Defined: "VARNAME"})
 
 	test("${\"${PKG_OPTIONS:Moption}\":?--enable-option:--disable-option}",
-		&MkCond{Var: NewMkVarUse("\"${PKG_OPTIONS:Moption}\"", "?--enable-option:--disable-option")})
+		&MkCond{Term: &MkCondTerm{Var: NewMkVarUse("\"${PKG_OPTIONS:Moption}\"", "?--enable-option:--disable-option")}})
 
 	// Contrary to most other programming languages, the == operator binds
 	// more tightly that the ! operator.
@@ -693,6 +693,9 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	// The left-hand side of the comparison can be a quoted string.
 	test("\"${VAR}suffix\" == value",
 		&MkCond{Compare: &MkCondCompare{MkCondTerm{Str: "${VAR}suffix"}, "==", MkCondTerm{Str: "value"}}})
+
+	test("\"${VAR}str\"",
+		&MkCond{Term: &MkCondTerm{Str: "${VAR}str"}})
 
 	// Errors
 
@@ -725,7 +728,7 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 		"|| defined(PKG_OPTIONS:Msamplerate)")
 
 	testRest("${LEFT} &&",
-		&MkCond{Var: NewMkVarUse("LEFT")},
+		&MkCond{Term: &MkCondTerm{Var: NewMkVarUse("LEFT")}},
 		"&&")
 
 	testRest("\"unfinished string literal",
