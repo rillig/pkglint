@@ -791,8 +791,8 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 	test(".if ${VAR:Mpattern1:Mpattern2} == comparison",
 		"TRACE:   Indentation before line 1: []",
 		"TRACE: + MkLineChecker.checkDirectiveCond(\"${VAR:Mpattern1:Mpattern2} == comparison\")",
-		"TRACE: 1 + (*MkParser).mkCondAtom(\"${VAR:Mpattern1:Mpattern2} == comparison\")",
-		"TRACE: 1 - (*MkParser).mkCondAtom(\"${VAR:Mpattern1:Mpattern2} == comparison\")",
+		"TRACE: 1 + (*MkParser).mkCondCompare(\"${VAR:Mpattern1:Mpattern2} == comparison\")",
+		"TRACE: 1 - (*MkParser).mkCondCompare(\"${VAR:Mpattern1:Mpattern2} == comparison\")",
 		"TRACE: 1   checkCompareVarStr ${VAR:Mpattern1:Mpattern2} == comparison",
 		"TRACE: 1 + MkLineChecker.CheckVaruse(filename.mk:1, ${VAR:Mpattern1:Mpattern2}, (no-type time:load quoting:plain wordpart:false))",
 		"TRACE: 1 2 + (*Pkgsrc).VariableType(\"VAR\")",
@@ -806,8 +806,8 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 		"TRACE: 1 2 - (*MkLine).VariableNeedsQuoting(${VAR:Mpattern1:Mpattern2}, (*pkglint.Vartype)(nil), (no-type time:load quoting:plain wordpart:false), \"=>\", unknown)",
 		"TRACE: 1 - MkLineChecker.CheckVaruse(filename.mk:1, ${VAR:Mpattern1:Mpattern2}, (no-type time:load quoting:plain wordpart:false))",
 		"TRACE: - MkLineChecker.checkDirectiveCond(\"${VAR:Mpattern1:Mpattern2} == comparison\")",
-		"TRACE: + (*MkParser).mkCondAtom(\"${VAR:Mpattern1:Mpattern2} == comparison\")",
-		"TRACE: - (*MkParser).mkCondAtom(\"${VAR:Mpattern1:Mpattern2} == comparison\")",
+		"TRACE: + (*MkParser).mkCondCompare(\"${VAR:Mpattern1:Mpattern2} == comparison\")",
+		"TRACE: - (*MkParser).mkCondCompare(\"${VAR:Mpattern1:Mpattern2} == comparison\")",
 		"TRACE:   Indentation after line 1: [2 (VAR)]")
 	t.EnableSilentTracing()
 }

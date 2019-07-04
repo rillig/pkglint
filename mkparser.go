@@ -432,7 +432,7 @@ func (p *MkParser) MkCond() *MkCond {
 }
 
 func (p *MkParser) mkCondAnd() *MkCond {
-	atom := p.mkCondAtom()
+	atom := p.mkCondCompare()
 	if atom == nil {
 		return nil
 	}
@@ -444,7 +444,7 @@ func (p *MkParser) mkCondAnd() *MkCond {
 		if p.lexer.NextString("&&") == "" {
 			break
 		}
-		next := p.mkCondAtom()
+		next := p.mkCondCompare()
 		if next == nil {
 			p.lexer.Reset(mark)
 			break
@@ -457,7 +457,7 @@ func (p *MkParser) mkCondAnd() *MkCond {
 	return &MkCond{And: atoms}
 }
 
-func (p *MkParser) mkCondAtom() *MkCond {
+func (p *MkParser) mkCondCompare() *MkCond {
 	if trace.Tracing {
 		defer trace.Call1(p.Rest())()
 	}
@@ -467,7 +467,7 @@ func (p *MkParser) mkCondAtom() *MkCond {
 	lexer.SkipHspace()
 	switch {
 	case lexer.SkipByte('!'):
-		cond := p.mkCondAtom()
+		cond := p.mkCondCompare()
 		if cond != nil {
 			return &MkCond{Not: cond}
 		}
