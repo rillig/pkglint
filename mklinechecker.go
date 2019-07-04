@@ -1634,7 +1634,7 @@ func (ck MkLineChecker) checkCompareVarStr(varname, op, value string) {
 	}
 }
 
-func (ck MkLineChecker) checkDirectiveCondCompare(left *MkCondAtom, op string, right *MkCondAtom) {
+func (ck MkLineChecker) checkDirectiveCondCompare(left *MkCondTerm, op string, right *MkCondTerm) {
 	switch {
 	case left.Var != nil && right.Var == nil && right.Num == "":
 		ck.checkDirectiveCondCompareVarStr(left.Var, op, right.Str)

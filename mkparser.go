@@ -499,7 +499,7 @@ func (p *MkParser) mkCondCompare() *MkCond {
 			lexer.SkipHspace()
 
 			if m := lexer.NextRegexp(regcomp(`^(<|<=|==|!=|>=|>)[\t ]*(0x[0-9A-Fa-f]+|\d+(?:\.\d+)?)`)); m != nil {
-				return &MkCond{Compare: &MkCondCompare{MkCondAtom{Var: lhs}, m[1], MkCondAtom{Num: m[2]}}}
+				return &MkCond{Compare: &MkCondCompare{MkCondTerm{Var: lhs}, m[1], MkCondTerm{Num: m[2]}}}
 			}
 
 			m := lexer.NextRegexp(regcomp(`^(?:<|<=|==|!=|>=|>)`))
@@ -511,16 +511,16 @@ func (p *MkParser) mkCondCompare() *MkCond {
 			op := m[0]
 			if op == "==" || op == "!=" {
 				if mrhs := lexer.NextRegexp(regcomp(`^"([^"\$\\]*)"`)); mrhs != nil {
-					return &MkCond{Compare: &MkCondCompare{MkCondAtom{Var: lhs}, op, MkCondAtom{Str: mrhs[1]}}}
+					return &MkCond{Compare: &MkCondCompare{MkCondTerm{Var: lhs}, op, MkCondTerm{Str: mrhs[1]}}}
 				}
 			}
 
 			if str := lexer.NextBytesSet(textproc.AlnumU); str != "" {
-				return &MkCond{Compare: &MkCondCompare{MkCondAtom{Var: lhs}, op, MkCondAtom{Str: str}}}
+				return &MkCond{Compare: &MkCondCompare{MkCondTerm{Var: lhs}, op, MkCondTerm{Str: str}}}
 			}
 
 			if rhs := p.VarUse(); rhs != nil {
-				return &MkCond{Compare: &MkCondCompare{MkCondAtom{Var: lhs}, op, MkCondAtom{Var: rhs}}}
+				return &MkCond{Compare: &MkCondCompare{MkCondTerm{Var: lhs}, op, MkCondTerm{Var: rhs}}}
 			}
 
 			if lexer.PeekByte() == '"' {
@@ -528,7 +528,7 @@ func (p *MkParser) mkCondCompare() *MkCond {
 				lexer.Skip(1)
 				if quotedRHS := p.VarUse(); quotedRHS != nil {
 					if lexer.SkipByte('"') {
-						return &MkCond{Compare: &MkCondCompare{MkCondAtom{Var: lhs}, op, MkCondAtom{Var: quotedRHS}}}
+						return &MkCond{Compare: &MkCondCompare{MkCondTerm{Var: lhs}, op, MkCondTerm{Var: quotedRHS}}}
 					}
 				}
 				lexer.Reset(mark)
@@ -549,7 +549,7 @@ func (p *MkParser) mkCondCompare() *MkCond {
 						rhsText.WriteByte(lexer.Since(m)[1])
 
 					case lexer.SkipByte('"'):
-						return &MkCond{Compare: &MkCondCompare{MkCondAtom{Var: lhs}, op, MkCondAtom{Str: rhsText.String()}}}
+						return &MkCond{Compare: &MkCondCompare{MkCondTerm{Var: lhs}, op, MkCondTerm{Str: rhsText.String()}}}
 					default:
 						break loop
 					}
@@ -799,16 +799,16 @@ type MkCond struct {
 	Num     string
 }
 type MkCondCompare struct {
-	Left MkCondAtom
+	Left MkCondTerm
 	// For numeric comparison: one of <, <=, ==, !=, >=, >.
 	//
 	// For string comparison: one of ==, !=.
 	//
 	// For not-empty test: "".
 	Op    string
-	Right MkCondAtom
+	Right MkCondTerm
 }
-type MkCondAtom struct {
+type MkCondTerm struct {
 	Str string
 	Num string
 	Var *MkVarUse
@@ -824,7 +824,7 @@ type MkCondCallback struct {
 	Not     func(cond *MkCond)
 	Defined func(varname string)
 	Empty   func(empty *MkVarUse)
-	Compare func(left *MkCondAtom, op string, right *MkCondAtom)
+	Compare func(left *MkCondTerm, op string, right *MkCondTerm)
 	Call    func(name string, arg string)
 
 	// Var is called for every atomic expression that consists solely
@@ -903,7 +903,7 @@ func (w *MkCondWalker) Walk(cond *MkCond, callback *MkCondCallback) {
 	}
 }
 
-func (w *MkCondWalker) walkAtom(atom *MkCondAtom, callback *MkCondCallback) {
+func (w *MkCondWalker) walkAtom(atom *MkCondTerm, callback *MkCondCallback) {
 	switch {
 	case atom.Var != nil:
 		if callback.VarUse != nil {

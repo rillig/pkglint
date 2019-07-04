@@ -556,11 +556,11 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	test := func(input string, expectedTree *MkCond) {
 		testRest(input, expectedTree, "")
 	}
-	varUse := func(name string, modifiers ...string) MkCondAtom {
-		return MkCondAtom{Var: NewMkVarUse(name, modifiers...)}
+	varUse := func(name string, modifiers ...string) MkCondTerm {
+		return MkCondTerm{Var: NewMkVarUse(name, modifiers...)}
 	}
-	str := func(s string) MkCondAtom { return MkCondAtom{Str: s} }
-	num := func(s string) MkCondAtom { return MkCondAtom{Num: s} }
+	str := func(s string) MkCondTerm { return MkCondTerm{Str: s} }
+	num := func(s string) MkCondTerm { return MkCondTerm{Num: s} }
 
 	t.Use(testRest, test, varUse)
 
@@ -1159,7 +1159,7 @@ func (s *Suite) Test_MkCondWalker_Walk(c *check.C) {
 		Empty: func(varuse *MkVarUse) {
 			addEvent("empty", varuseStr(varuse))
 		},
-		Compare: func(left *MkCondAtom, op string, right *MkCondAtom) {
+		Compare: func(left *MkCondTerm, op string, right *MkCondTerm) {
 			assert(left.Var != nil)
 			switch {
 			case right.Var != nil:
