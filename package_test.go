@@ -2383,11 +2383,8 @@ func (s *Suite) Test_Package_checkOwnerMaintainer__both(c *check.C) {
 	G.Check(t.File("category/package"))
 
 	t.CheckOutputLines(
-		"WARN: ~/category/package/Makefile: "+
-			"Don't commit changes to this file without asking the OWNER, owner@example.org.",
-		// FIXME: OWNER is stronger than MAINTAINER, therefore this note should disappear.
-		"NOTE: ~/category/package/Makefile: "+
-			"Please only commit changes that maintainer@example.org would approve.")
+		"WARN: ~/category/package/Makefile: " +
+			"Don't commit changes to this file without asking the OWNER, owner@example.org.")
 }
 
 // Just for code coverage.

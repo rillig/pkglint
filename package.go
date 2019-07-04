@@ -1202,6 +1202,7 @@ func (pkg *Package) checkOwnerMaintainer(filename string) {
 		line.Warnf("Don't commit changes to this file without asking the OWNER, %s.", owner)
 		line.Explain(
 			seeGuide("Package components, Makefile", "components.Makefile"))
+		return
 	}
 
 	if maintainer != "" {
