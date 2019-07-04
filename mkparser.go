@@ -471,6 +471,8 @@ func (p *MkParser) mkCondCompare() *MkCond {
 		if cond != nil {
 			return &MkCond{Not: cond}
 		}
+		lexer.Reset(mark)
+		return nil
 
 	case lexer.SkipByte('('):
 		cond := p.MkCond()
@@ -480,90 +482,108 @@ func (p *MkParser) mkCondCompare() *MkCond {
 				return cond
 			}
 		}
+		lexer.Reset(mark)
+		return nil
 
-	case lexer.TestByteSet(textproc.Lower):
+	case lexer.TestByteSet(textproc.Alpha):
+		// This can only be a function name, not a string literal like in
+		// amd64 == ${MACHINE_ARCH}, since bmake interprets it in the same
+		// way, reporting a malformed conditional.
 		return p.mkCondFunc()
+	}
 
-	default:
-		lhs := p.VarUse()
-		mark := lexer.Mark()
-		if lhs == nil && lexer.SkipByte('"') {
-			if quotedLHS := p.VarUse(); quotedLHS != nil && lexer.SkipByte('"') {
-				lhs = quotedLHS
-			} else {
-				lexer.Reset(mark)
+	lhs := p.mkCondTerm()
+
+	if lhs != nil {
+		lexer.SkipHspace()
+
+		if m := lexer.NextRegexp(regcomp(`^(<|<=|==|!=|>=|>)[\t ]*(0x[0-9A-Fa-f]+|\d+(?:\.\d+)?)`)); m != nil {
+			return &MkCond{Compare: &MkCondCompare{*lhs, m[1], MkCondTerm{Num: m[2]}}}
+		}
+
+		m := lexer.NextRegexp(regcomp(`^(?:<|<=|==|!=|>=|>)`))
+		if len(m) == 0 {
+			assert(lhs.Var != nil)
+			return &MkCond{Var: lhs.Var} // See devel/bmake/files/cond.c:/\* For \.if \$/
+		}
+		lexer.SkipHspace()
+
+		op := m[0]
+		if op == "==" || op == "!=" {
+			if mrhs := lexer.NextRegexp(regcomp(`^"([^"\$\\]*)"`)); mrhs != nil {
+				return &MkCond{Compare: &MkCondCompare{*lhs, op, MkCondTerm{Str: mrhs[1]}}}
 			}
 		}
 
-		if lhs != nil {
-			lexer.SkipHspace()
-
-			if m := lexer.NextRegexp(regcomp(`^(<|<=|==|!=|>=|>)[\t ]*(0x[0-9A-Fa-f]+|\d+(?:\.\d+)?)`)); m != nil {
-				return &MkCond{Compare: &MkCondCompare{MkCondTerm{Var: lhs}, m[1], MkCondTerm{Num: m[2]}}}
-			}
-
-			m := lexer.NextRegexp(regcomp(`^(?:<|<=|==|!=|>=|>)`))
-			if m == nil {
-				return &MkCond{Var: lhs} // See devel/bmake/files/cond.c:/\* For \.if \$/
-			}
-			lexer.SkipHspace()
-
-			op := m[0]
-			if op == "==" || op == "!=" {
-				if mrhs := lexer.NextRegexp(regcomp(`^"([^"\$\\]*)"`)); mrhs != nil {
-					return &MkCond{Compare: &MkCondCompare{MkCondTerm{Var: lhs}, op, MkCondTerm{Str: mrhs[1]}}}
-				}
-			}
-
-			if str := lexer.NextBytesSet(textproc.AlnumU); str != "" {
-				return &MkCond{Compare: &MkCondCompare{MkCondTerm{Var: lhs}, op, MkCondTerm{Str: str}}}
-			}
-
-			if rhs := p.VarUse(); rhs != nil {
-				return &MkCond{Compare: &MkCondCompare{MkCondTerm{Var: lhs}, op, MkCondTerm{Var: rhs}}}
-			}
-
-			if lexer.PeekByte() == '"' {
-				mark := lexer.Mark()
-				lexer.Skip(1)
-				if quotedRHS := p.VarUse(); quotedRHS != nil {
-					if lexer.SkipByte('"') {
-						return &MkCond{Compare: &MkCondCompare{MkCondTerm{Var: lhs}, op, MkCondTerm{Var: quotedRHS}}}
-					}
-				}
-				lexer.Reset(mark)
-
-				lexer.Skip(1)
-				var rhsText strings.Builder
-			loop:
-				for {
-					m := lexer.Mark()
-					switch {
-					case p.VarUse() != nil,
-						lexer.NextBytesSet(textproc.Alnum) != "",
-						lexer.NextBytesFunc(func(b byte) bool { return b != '"' && b != '\\' }) != "":
-						rhsText.WriteString(lexer.Since(m))
-
-					case lexer.SkipString("\\\""),
-						lexer.SkipString("\\\\"):
-						rhsText.WriteByte(lexer.Since(m)[1])
-
-					case lexer.SkipByte('"'):
-						return &MkCond{Compare: &MkCondCompare{MkCondTerm{Var: lhs}, op, MkCondTerm{Str: rhsText.String()}}}
-					default:
-						break loop
-					}
-				}
-				lexer.Reset(mark)
-			}
+		rhs := p.mkCondTerm()
+		if rhs != nil {
+			return &MkCond{Compare: &MkCondCompare{*lhs, op, *rhs}}
 		}
 
-		// See devel/bmake/files/cond.c:/^CondCvtArg
-		if m := lexer.NextRegexp(regcomp(`^(?:0x[0-9A-Fa-f]+|\d+(?:\.\d+)?)`)); m != nil {
-			return &MkCond{Num: m[0]}
+		if str := lexer.NextBytesSet(textproc.AlnumU); str != "" {
+			return &MkCond{Compare: &MkCondCompare{*lhs, op, MkCondTerm{Str: str}}}
+		}
+	}
+
+	// See devel/bmake/files/cond.c:/^CondCvtArg
+	if m := lexer.NextRegexp(regcomp(`^(?:0x[0-9A-Fa-f]+|\d+(?:\.\d+)?)`)); m != nil {
+		return &MkCond{Num: m[0]}
+	}
+
+	lexer.Reset(mark)
+	return nil
+}
+
+// mkCondTerm parses the following:
+//  ${VAR}
+//  "${VAR}"
+//  "text${VAR}text"
+//  "text"
+// It does not parse unquoted string literals since these are only allowed
+// at the right-hand side of a comparison expression.
+func (p *MkParser) mkCondTerm() *MkCondTerm {
+	lexer := p.lexer
+
+	if rhs := p.VarUse(); rhs != nil {
+		return &MkCondTerm{Var: rhs}
+	}
+
+	if lexer.PeekByte() != '"' {
+		return nil
+	}
+
+	mark := lexer.Mark()
+	lexer.Skip(1)
+	if quotedRHS := p.VarUse(); quotedRHS != nil {
+		if lexer.SkipByte('"') {
+			return &MkCondTerm{Var: quotedRHS}
 		}
 	}
 	lexer.Reset(mark)
+
+	lexer.Skip(1)
+	var rhsText strings.Builder
+loop:
+	for {
+		m := lexer.Mark()
+		switch {
+		case p.VarUse() != nil,
+			lexer.NextBytesSet(textproc.Alnum) != "",
+			lexer.NextBytesFunc(func(b byte) bool { return b != '"' && b != '\\' }) != "":
+			rhsText.WriteString(lexer.Since(m))
+
+		case lexer.SkipString("\\\""),
+			lexer.SkipString("\\\\"):
+			rhsText.WriteByte(lexer.Since(m)[1])
+
+		case lexer.SkipByte('"'):
+			return &MkCondTerm{Str: rhsText.String()}
+		default:
+			break loop
+		}
+	}
+	lexer.Reset(mark)
+
 	return nil
 }
 

@@ -756,11 +756,17 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 		nil,
 		"(${VAR}")
 
-	// The left-hand side of the comparison can only be a variable.
-	// FIXME: bmake accepts this, and so should pkglint.
+	// The left-hand side of the comparison can be a quoted string.
 	testRest("\"${VAR}suffix\" == value",
+		&MkCond{Compare: &MkCondCompare{MkCondTerm{Str: "${VAR}suffix"}, "==", MkCondTerm{Str: "value"}}},
+		"")
+
+	// The left-hand side of the comparison cannot be an unquoted string literal.
+	// These would be rejected by bmake as well.
+	testRest("value == \"${VAR}suffix\"",
 		nil,
-		"\"${VAR}suffix\" == value")
+		// FIXME: the "value " must be preserved.
+		"== \"${VAR}suffix\"")
 }
 
 func (s *Suite) Test_MkParser_Varname(c *check.C) {

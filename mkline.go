@@ -1031,7 +1031,7 @@ func (mkline *MkLine) ForEachUsed(action func(varUse *MkVarUse, time VucTime)) {
 	case mkline.IsDirective() && mkline.Directive() == "for":
 		searchIn(mkline.Args(), VucLoadTime)
 
-	case mkline.IsDirective() && mkline.Cond() != nil:
+	case mkline.IsDirective() && (mkline.Directive() == "if" || mkline.Directive() == "elif") && mkline.Cond() != nil:
 		mkline.Cond().Walk(&MkCondCallback{
 			VarUse: func(varuse *MkVarUse) {
 				searchInVarUse(varuse, VucLoadTime)
