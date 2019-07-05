@@ -179,7 +179,7 @@ func (s *Suite) Test_Varalign__several_vars__spaces(c *check.C) {
 	vt.Run()
 }
 
-// Lines that are continued my be indented with a single space
+// Lines that are continued may be indented with a single space
 // if the first line of the variable definition has no value.
 func (s *Suite) Test_Varalign__continuation(c *check.C) {
 	vt := NewVaralignTester(s, c)
@@ -267,9 +267,22 @@ func (s *Suite) Test_Varalign__no_space_at_all(c *check.C) {
 	vt.Run()
 }
 
-// Continuation lines without any content on the first line may use
-// a space for variable value alignment.
-// They are ignored when calculating the preferred alignment depth.
+// Continuation lines without any content on the first line are treated
+// specially. Their first line is treated normally, which means that it
+// has to be aligned with the other lines.
+//
+// Their second to last lines must be indented by at least 1 tab, since
+// otherwise they might be mistaken for regular variable assignments,
+// which is especially true for CONFIGURE_ENV, since the environment
+// variables are typically uppercase as well.
+//
+// The indentation of these continued lines must be either in column 8,
+// which is the minimum indentation reachable by using only tabs. Or
+// their minimum indentation must match the indentation of the remaining
+// paragraph. In all but the latter case the indentation of the continued
+// lines is ignored for determining the optimal indentation.
+//
+// FIXME: Implement all the above rules.
 func (s *Suite) Test_Varalign__continuation_lines(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -342,10 +355,9 @@ func (s *Suite) Test_Varalign__continuation_line_one_tab_ahead(c *check.C) {
 // This contradicts the visual impression, in which the variable names
 // differ largely in their length.
 //
-// TODO: The long variable name should count as an outlier since it is
-//  more than 8 characters longer, no matter how many tabs are needed.
-//
-// See cad/ghdl/Makefile revision 1.6.
+// As soon as the V2 value would be properly indented with a tab, the
+// visual difference would not be as much, therefore the current
+// behavior is appropriate.
 func (s *Suite) Test_Varalign__outlier_more_than_8_spaces(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -362,6 +374,8 @@ func (s *Suite) Test_Varalign__outlier_more_than_8_spaces(c *check.C) {
 }
 
 // Ensures that a wrong warning introduced in ccb56a5 is not logged.
+// The warning was about continuation lines that should be reindented.
+// In this case though, everything is already perfectly aligned.
 func (s *Suite) Test_Varalign__aligned_continuation(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -535,7 +549,8 @@ func (s *Suite) Test_Varalign__continuation_mixed_indentation_in_first_line(c *c
 
 // When there is an outlier, no matter whether indented using space or tab,
 // fix the whole block to use the indentation of the second-longest line.
-// In this case, all of the remaining lines have the same indentation (there is only 1 line at all).
+// In this case, all of the remaining lines have the same indentation
+// (as there is only 1 line at all).
 // Therefore this existing indentation is used instead of the minimum necessary, which would only be a single tab.
 func (s *Suite) Test_Varalign__tab_outlier(c *check.C) {
 	vt := NewVaralignTester(s, c)
@@ -705,8 +720,8 @@ func (s *Suite) Test_Varalign__outlier_2(c *check.C) {
 	vt.Run()
 }
 
-// A short line that is indented with spaces is aligned to a longer line
-// that is indented with tabs. This is because space-indented lines are
+// A short line that is indented with a tab is aligned to a longer line
+// that is indented with a space. This is because space-indented lines are
 // only allowed when their indentation is much deeper than the tab-indented
 // ones (so-called outliers), or as the first line of a continuation line.
 func (s *Suite) Test_Varalign__outlier_3(c *check.C) {
@@ -848,7 +863,7 @@ func (s *Suite) Test_Varalign__outlier_14(c *check.C) {
 
 // The INSTALLATION_DIRS line is so long that it is considered an outlier,
 // since compared to the DIST line, it is at least two tabs away.
-// Pkglint before 2018-26-01 suggested that it "should be aligned to column 9",
+// Pkglint before 2018-01-26 suggested that it "should be aligned to column 9",
 // which is not possible since the variable name is already longer.
 func (s *Suite) Test_Varalign__long_short(c *check.C) {
 	vt := NewVaralignTester(s, c)
@@ -868,6 +883,10 @@ func (s *Suite) Test_Varalign__long_short(c *check.C) {
 // outlier anymore because the other values are aligned very close to the
 // outlier value. To fix this case, the indentation of the other lines needs
 // to be adjusted to the minimum required.
+//
+// FIXME: The definition of an outlier should be based on the actual indentation,
+//  not on the minimum indentation. Or maybe even better on the corrected indentation.
+//  In the below paragraph, the outlier is not indented enough to qualify as a visual outlier.
 func (s *Suite) Test_Varalign__tabbed_outlier(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -889,6 +908,9 @@ func (s *Suite) Test_Varalign__tabbed_outlier(c *check.C) {
 
 // When all continuation lines are indented exactly one tab more than the
 // initial line, this is intentional.
+//
+// TODO: Make this rule more general: if the indentation of the continuation
+//  lines is more than the initial line, it is intentional.
 func (s *Suite) Test_Varalign__indented_continuation_line(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -1012,6 +1034,9 @@ func (s *Suite) Test_Varalign__realign_commented_single_lines(c *check.C) {
 // Commented variable assignments are realigned, too.
 // In this case, the BEFORE and COMMENTED variables are already aligned properly.
 // The line starting with "AFTER" is actually part of the comment, therefore it is not changed.
+//
+// FIXME: When mklines.Check is called, there should be a warning about
+//  the misleading AFTER= at the beginning of the line.
 func (s *Suite) Test_Varalign__realign_commented_continuation_line(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -1074,6 +1099,9 @@ func (s *Suite) Test_Varalign__realign_commented_multiline(c *check.C) {
 // Its continuation line is indented using effectively tab-tab-space, and
 // this relative indentation compared to the VAR2 line is preserved since
 // it is often used for indenting AWK or shell programs.
+//
+// FIXME: the space-tab-space-tab-space must be replaced with tab-tab-space.
+//  There must be no space-tab anywhere.
 func (s *Suite) Test_Varalign__mixed_indentation(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -1089,6 +1117,13 @@ func (s *Suite) Test_Varalign__mixed_indentation(c *check.C) {
 	vt.Run()
 }
 
+// Ensure that the end-of-line comment is properly aligned
+// to the variable values.
+//
+// This case may seem obvious, but in all other contexts, the whitespace
+// before the comment is ignored. Therefore the end of the line would be
+// after the "=" in these cases, and the alignment must take care to
+// include the whitespace.
 func (s *Suite) Test_Varalign__eol_comment(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(

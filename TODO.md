@@ -47,3 +47,6 @@ do-install:
 * Ensure even better test coverage than 100%.
   For each of the testees, there should be 100% code coverage by
   only those tests whose name corresponds to the testee.
+
+* Implement the alignment rule for continuation backslashes in column 72,
+  especially when autofixing the indentation.

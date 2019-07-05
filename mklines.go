@@ -576,9 +576,12 @@ func (mklines *MkLines) EOFLine() *MkLine {
 // It also checks that the indentation uses tabs instead of spaces.
 //
 // In general, all values should be aligned using tabs.
-// As an exception, very long lines may be aligned with a single space.
+// As an exception, a single very long line (called an outlier) may be
+// aligned with a single space.
 // A typical example is a SITES.very-long-file-name.tar.gz variable
 // between HOMEPAGE and DISTFILES.
+//
+// TODO: Document how exactly the continuation lines are handled.
 type VaralignBlock struct {
 	infos []*varalignBlockInfo
 	skip  bool
@@ -589,8 +592,10 @@ type varalignBlockInfo struct {
 	varnameOp      string // Variable name + assignment operator
 	varnameOpWidth int    // Screen width of varnameOp
 	space          string // Whitespace between varnameOp and the variable value
-	totalWidth     int    // Screen width of varnameOp + space
+	totalWidth     int    // Screen width of varnameOp + current space
 	continuation   bool   // A continuation line with no value in the first line.
+
+	// TODO: multiEarly, multiLate, multiAligned
 }
 
 func (va *VaralignBlock) Process(mkline *MkLine) {
@@ -622,6 +627,7 @@ func (va *VaralignBlock) processVarassign(mkline *MkLine) {
 		//
 		// Example:
 		// pkgpath := ${PKGPATH}
+		// .include "../../mk/pkg-build-options.mk"
 		return
 
 	case mkline.Value() == "" && mkline.VarassignComment() == "":
@@ -648,10 +654,14 @@ func (va *VaralignBlock) processVarassign(mkline *MkLine) {
 
 	valueAlign := mkline.ValueAlign()
 	varnameOp := strings.TrimRight(valueAlign, " \t")
-	space := valueAlign[len(varnameOp):]
-
-	width := tabWidth(valueAlign)
-	va.infos = append(va.infos, &varalignBlockInfo{mkline, varnameOp, tabWidth(varnameOp), space, width, continuation})
+	info := varalignBlockInfo{
+		mkline,
+		varnameOp,
+		tabWidth(varnameOp),
+		valueAlign[len(varnameOp):],
+		tabWidth(valueAlign),
+		continuation}
+	va.infos = append(va.infos, &info)
 }
 
 func (va *VaralignBlock) Finish() {
@@ -677,17 +687,19 @@ func (va *VaralignBlock) Finish() {
 	}
 }
 
-// optimalWidth computes the minimum necessary screen width for the
-// variable assignment lines. There may be a single line sticking out
-// from the others (called outlier). This is to prevent a single SITES.*
-// variable from forcing the rest of the paragraph to be indented too
-// far to the right.
+// optimalWidth computes the desired screen width for the variable assignment
+// lines. If the paragraph is already indented consistently, it is kept as-is.
+//
+// There may be a single line sticking out from the others (called outlier).
+// This is to prevent a single SITES.* variable from forcing the rest of the
+// paragraph to be indented too far to the right.
 func (va *VaralignBlock) optimalWidth(infos []*varalignBlockInfo) int {
 	longest := 0 // The longest seen varnameOpWidth
 	var longestLine *MkLine
 	secondLongest := 0 // The second-longest seen varnameOpWidth
 	for _, info := range infos {
 		if info.continuation {
+			// TODO: what if this info is never added to infos?
 			continue
 		}
 
