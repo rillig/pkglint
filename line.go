@@ -43,6 +43,10 @@ type Location struct {
 	lastLine  int32  // usually the same as firstLine, may differ in Makefiles
 }
 
+func (loc *Location) String() string {
+	return loc.Filename + ":" + loc.Linenos()
+}
+
 func NewLocation(filename string, firstLine, lastLine int) Location {
 	return Location{filename, int32(firstLine), int32(lastLine)}
 }

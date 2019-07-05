@@ -609,7 +609,7 @@ func (va *VaralignBlock) Process(mkline *MkLine) {
 		return
 
 	default:
-		trace.Stepf("Skipping")
+		trace.Stepf("Skipping varalign block because of line %s", &mkline.Location)
 		va.skip = true
 		return
 	}
