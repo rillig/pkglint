@@ -405,7 +405,7 @@ func (fix *Autofix) RealignContinuation(mkline *MkLine, newWidth int) {
 			if G.Logger.IsAutofix() {
 				rawLine.textnl = replaced
 			}
-			fix.Describef(rawLine.Lineno, "Replacing indentation %q with %q.", oldSpace, newSpace)
+			fix.Describef(rawLine.Lineno, "Replacing continuation indentation %q with %q.", oldSpace, newSpace)
 		}
 	}
 }

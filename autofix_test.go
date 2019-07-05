@@ -1152,7 +1152,7 @@ func (s *Suite) Test_Autofix_RealignContinuation__multiline_indented_with_spaces
 	mklines.SaveAutofixChanges()
 
 	t.CheckOutputLines(
-		"AUTOFIX: ~/file.mk:3: Replacing indentation \"\\t        \" with \"\\t\\t\".")
+		"AUTOFIX: ~/file.mk:3: Replacing continuation indentation \"\\t        \" with \"\\t\\t\".")
 	t.CheckFileLines("file.mk",
 		MkCvsID,
 		"BUILD_DIRS= \\",

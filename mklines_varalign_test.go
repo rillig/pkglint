@@ -288,7 +288,7 @@ func (s *Suite) Test_Varalign__continuation_lines(c *check.C) {
 		"NOTE: ~/Makefile:5: This variable value should be aligned with tabs, not spaces, to column 17.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:2: Replacing \" \" with \"\\t\".",
-		"AUTOFIX: ~/Makefile:3: Replacing indentation \"\\t\\t\\t\" with \"\\t\\t\".",
+		"AUTOFIX: ~/Makefile:3: Replacing continuation indentation \"\\t\\t\\t\" with \"\\t\\t\".",
 		"AUTOFIX: ~/Makefile:4: Replacing \"\\t\\t\\t\" with \"\\t\".",
 		"AUTOFIX: ~/Makefile:5: Replacing \" \" with \"\\t\".")
 	vt.Fixed(
@@ -412,8 +412,8 @@ func (s *Suite) Test_Varalign__continuation_value_starts_in_second_line(c *check
 		"NOTE: ~/Makefile:3--5: This line should be aligned with \"\\t\\t\".")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\" with \"\\t\\t\".",
-		"AUTOFIX: ~/Makefile:4: Replacing indentation \"\\t\\t\\t\" with \"\\t\\t\".",
-		"AUTOFIX: ~/Makefile:5: Replacing indentation \"\\t\\t\\t\" with \"\\t\\t\".")
+		"AUTOFIX: ~/Makefile:4: Replacing continuation indentation \"\\t\\t\\t\" with \"\\t\\t\".",
+		"AUTOFIX: ~/Makefile:5: Replacing continuation indentation \"\\t\\t\\t\" with \"\\t\\t\".")
 	vt.Fixed(
 		"WRKSRC=         ${WRKDIR}",
 		"DISTFILES=      distfile-1.0.0.tar.gz",
@@ -493,9 +493,9 @@ func (s *Suite) Test_Varalign__continuation_mixed_indentation_in_second_line(c *
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\" with \"\\t\\t\".",
 		"AUTOFIX: ~/Makefile:3: Replacing \" \" with \"\\t\".",
-		"AUTOFIX: ~/Makefile:4: Replacing indentation \"\\t\\t\\t\\t  \" with \"\\t\\t\".",
-		"AUTOFIX: ~/Makefile:5: Replacing indentation \"\\t\\t\\t\\t    \" with \"\\t\\t  \".",
-		"AUTOFIX: ~/Makefile:6: Replacing indentation \"\\t\\t\\t\\t  \" with \"\\t\\t\".")
+		"AUTOFIX: ~/Makefile:4: Replacing continuation indentation \"\\t\\t\\t\\t  \" with \"\\t\\t\".",
+		"AUTOFIX: ~/Makefile:5: Replacing continuation indentation \"\\t\\t\\t\\t    \" with \"\\t\\t  \".",
+		"AUTOFIX: ~/Makefile:6: Replacing continuation indentation \"\\t\\t\\t\\t  \" with \"\\t\\t\".")
 	vt.Fixed(
 		"WRKSRC=         ${WRKDIR}",
 		"DISTFILES=      distfile-1.0.0.tar.gz",
@@ -522,8 +522,8 @@ func (s *Suite) Test_Varalign__continuation_mixed_indentation_in_first_line(c *c
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\" with \"\\t\\t\".",
 		"AUTOFIX: ~/Makefile:3: Replacing \"\\t\\t\\t  \" with \"\\t\".",
-		"AUTOFIX: ~/Makefile:4: Replacing indentation \"\\t\\t\\t\\t    \" with \"\\t\\t  \".",
-		"AUTOFIX: ~/Makefile:5: Replacing indentation \"\\t\\t\\t\\t  \" with \"\\t\\t\".")
+		"AUTOFIX: ~/Makefile:4: Replacing continuation indentation \"\\t\\t\\t\\t    \" with \"\\t\\t  \".",
+		"AUTOFIX: ~/Makefile:5: Replacing continuation indentation \"\\t\\t\\t\\t  \" with \"\\t\\t\".")
 	vt.Fixed(
 		"WRKSRC=         ${WRKDIR}",
 		"DISTFILES=      distfile-1.0.0.tar.gz",
@@ -571,7 +571,7 @@ func (s *Suite) Test_Varalign__multiline(c *check.C) {
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \"            \" with \"\\t\".",
 		"AUTOFIX: ~/Makefile:2: Replacing \"              \" with \"\\t\".",
-		"AUTOFIX: ~/Makefile:3: Replacing indentation \"                        \" with \"\\t\\t\".",
+		"AUTOFIX: ~/Makefile:3: Replacing continuation indentation \"                        \" with \"\\t\\t\".",
 		"AUTOFIX: ~/Makefile:5: Replacing \"  \" with \"\\t\".",
 		"AUTOFIX: ~/Makefile:7: Replacing \"                 \" with \"\\t\\t\".")
 	vt.Fixed(
@@ -996,7 +996,7 @@ func (s *Suite) Test_Varalign__realign_commented_single_lines(c *check.C) {
 		"NOTE: ~/Makefile:7: This variable value should be aligned to column 17.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\" with \"\\t\\t\".",
-		"AUTOFIX: ~/Makefile:6: Replacing indentation \"\" with \"\\t\\t\".",
+		"AUTOFIX: ~/Makefile:6: Replacing continuation indentation \"\" with \"\\t\\t\".",
 		"AUTOFIX: ~/Makefile:7: Replacing \"\\t\" with \"\\t\\t\".")
 	vt.Fixed(
 		"SHORT=          value",
