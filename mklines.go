@@ -657,7 +657,7 @@ func (va *VaralignBlock) processVarassign(mkline *MkLine) {
 func (va *VaralignBlock) Finish() {
 	infos := va.infos
 	skip := va.skip
-	*va = VaralignBlock{}
+	*va = VaralignBlock{} // overwrites infos and skip
 
 	if len(infos) == 0 || skip {
 		return
