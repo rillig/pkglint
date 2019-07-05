@@ -137,6 +137,13 @@ func ifelseStr(cond bool, a, b string) string {
 	return b
 }
 
+func condInt(cond bool, trueValue, falseValue int) int {
+	if cond {
+		return trueValue
+	}
+	return falseValue
+}
+
 func keysJoined(m map[string]bool) string {
 	var keys []string
 	for key := range m {

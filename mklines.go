@@ -701,13 +701,12 @@ func (va *VaralignBlock) optimalWidth(infos []*varalignBlockInfo) int {
 		}
 	}
 
+	haveOutlier := secondLongest != 0 &&
+		longest/8 >= secondLongest/8+2 &&
+		!longestLine.IsMultiline()
 	// Minimum required width of varnameOp, without the trailing whitespace.
-	minVarnameOpWidth := longest
-	outlier := 0
-	if secondLongest != 0 && secondLongest/8+1 < longest/8 && !longestLine.IsMultiline() {
-		minVarnameOpWidth = secondLongest
-		outlier = longest
-	}
+	minVarnameOpWidth := condInt(haveOutlier, secondLongest, longest)
+	outlier := condInt(haveOutlier, longest, 0)
 
 	// Widths of the current indentation (including whitespace)
 	minTotalWidth := 0
