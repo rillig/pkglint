@@ -775,8 +775,7 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	// These would be rejected by bmake as well.
 	testRest("value == \"${VAR}suffix\"",
 		nil,
-		// FIXME: the "value " must be preserved.
-		"== \"${VAR}suffix\"")
+		"value == \"${VAR}suffix\"")
 }
 
 func (s *Suite) Test_MkParser_Varname(c *check.C) {

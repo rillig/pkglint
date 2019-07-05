@@ -594,6 +594,7 @@ func (p *MkParser) mkCondFunc() *MkCond {
 	funcName := lexer.NextBytesSet(textproc.Lower)
 	lexer.SkipHspace()
 	if !lexer.SkipByte('(') {
+		lexer.Reset(mark)
 		return nil
 	}
 
