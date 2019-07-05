@@ -77,7 +77,7 @@ func (vt *VaralignTester) run(autofix bool) {
 
 // Generally, the value in variable assignments is aligned
 // at the next tab.
-func (s *Suite) Test_Varalign__one_var_tab(c *check.C) {
+func (s *Suite) Test_VaralignBlock__one_var_tab(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"VAR=\tone tab")
@@ -90,7 +90,7 @@ func (s *Suite) Test_Varalign__one_var_tab(c *check.C) {
 
 // Having more tabs than necessary is allowed. This can be for aesthetic
 // reasons to align this paragraph with the others in the same file.
-func (s *Suite) Test_Varalign__one_var_tabs(c *check.C) {
+func (s *Suite) Test_VaralignBlock__one_var_tabs(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"VAR=\t\t\tseveral tabs")
@@ -105,7 +105,7 @@ func (s *Suite) Test_Varalign__one_var_tabs(c *check.C) {
 // places, such as continuation lines or very long variable names.
 // In a single paragraph of its own, indentation with a single space
 // doesn't make sense, therefore it is replaced with a tab.
-func (s *Suite) Test_Varalign__one_var_space(c *check.C) {
+func (s *Suite) Test_VaralignBlock__one_var_space(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"VAR= indented with one space")
@@ -121,7 +121,7 @@ func (s *Suite) Test_Varalign__one_var_space(c *check.C) {
 // While indentation with a single space is allowed in a few cases,
 // indentation with several spaces is never allowed and is replaced
 // with tabs.
-func (s *Suite) Test_Varalign__one_var_spaces(c *check.C) {
+func (s *Suite) Test_VaralignBlock__one_var_spaces(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"VAR=   several spaces")
@@ -136,7 +136,7 @@ func (s *Suite) Test_Varalign__one_var_spaces(c *check.C) {
 
 // Inconsistently aligned lines for variables of the same length are
 // replaced with tabs, so that they align nicely.
-func (s *Suite) Test_Varalign__two_vars__spaces(c *check.C) {
+func (s *Suite) Test_VaralignBlock__two_vars__spaces(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"VAR= indented with one space",
@@ -154,7 +154,7 @@ func (s *Suite) Test_Varalign__two_vars__spaces(c *check.C) {
 }
 
 // All variables in a block are aligned to the same depth.
-func (s *Suite) Test_Varalign__several_vars__spaces(c *check.C) {
+func (s *Suite) Test_VaralignBlock__several_vars__spaces(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"GRP_A= value",
@@ -181,7 +181,7 @@ func (s *Suite) Test_Varalign__several_vars__spaces(c *check.C) {
 
 // Lines that are continued may be indented with a single space
 // if the first line of the variable definition has no value.
-func (s *Suite) Test_Varalign__continuation(c *check.C) {
+func (s *Suite) Test_VaralignBlock__continuation(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"VAR= \\",
@@ -198,7 +198,7 @@ func (s *Suite) Test_Varalign__continuation(c *check.C) {
 // The second line is further to the right but doesn't count as
 // an outlier since it is not far enough.
 // Adding one more tab to the indentation is generally considered ok.
-func (s *Suite) Test_Varalign__short_tab__long_space(c *check.C) {
+func (s *Suite) Test_VaralignBlock__short_tab__long_space(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"BLOCK=\tindented with tab",
@@ -217,7 +217,7 @@ func (s *Suite) Test_Varalign__short_tab__long_space(c *check.C) {
 
 // When the indentation differs, the indentation is adjusted to the
 // minimum necessary.
-func (s *Suite) Test_Varalign__short_long__tab(c *check.C) {
+func (s *Suite) Test_VaralignBlock__short_long__tab(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"BLOCK=\tshort",
@@ -237,7 +237,7 @@ func (s *Suite) Test_Varalign__short_long__tab(c *check.C) {
 // For differing indentation, it doesn't matter whether the indentation
 // is done with tabs or with spaces. It is aligned to the minimum
 // necessary depth.
-func (s *Suite) Test_Varalign__space_and_tab(c *check.C) {
+func (s *Suite) Test_VaralignBlock__space_and_tab(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"VAR=    space",
@@ -254,7 +254,7 @@ func (s *Suite) Test_Varalign__space_and_tab(c *check.C) {
 
 // There must always be a visible space between the assignment operator
 // and the value.
-func (s *Suite) Test_Varalign__no_space_at_all(c *check.C) {
+func (s *Suite) Test_VaralignBlock__no_space_at_all(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"PKG_FAIL_REASON+=\"Message\"")
@@ -283,7 +283,7 @@ func (s *Suite) Test_Varalign__no_space_at_all(c *check.C) {
 // lines is ignored for determining the optimal indentation.
 //
 // FIXME: Implement all the above rules.
-func (s *Suite) Test_Varalign__continuation_lines(c *check.C) {
+func (s *Suite) Test_VaralignBlock__continuation_lines(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"DISTFILES+=\tvalue",
@@ -333,7 +333,7 @@ func (s *Suite) Test_Varalign__continuation_lines(c *check.C) {
 // indentation is the same, this logical line doesn't count as an outlier.
 //
 // Because line 2--3 is not an outlier, line 1 is realigned to column 24.
-func (s *Suite) Test_Varalign__continuation_line_one_tab_ahead(c *check.C) {
+func (s *Suite) Test_VaralignBlock__continuation_line_one_tab_ahead(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"VAR=\t\tvalue",
@@ -358,7 +358,7 @@ func (s *Suite) Test_Varalign__continuation_line_one_tab_ahead(c *check.C) {
 // As soon as the V2 value would be properly indented with a tab, the
 // visual difference would not be as much, therefore the current
 // behavior is appropriate.
-func (s *Suite) Test_Varalign__outlier_more_than_8_spaces(c *check.C) {
+func (s *Suite) Test_VaralignBlock__outlier_more_than_8_spaces(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"V2=\tvalue",
@@ -376,7 +376,7 @@ func (s *Suite) Test_Varalign__outlier_more_than_8_spaces(c *check.C) {
 // Ensures that a wrong warning introduced in ccb56a5 is not logged.
 // The warning was about continuation lines that should be reindented.
 // In this case though, everything is already perfectly aligned.
-func (s *Suite) Test_Varalign__aligned_continuation(c *check.C) {
+func (s *Suite) Test_VaralignBlock__aligned_continuation(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"USE_TOOLS+=\t[ awk \\",
@@ -392,7 +392,7 @@ func (s *Suite) Test_Varalign__aligned_continuation(c *check.C) {
 // Shell commands in continuation lines are assumed to be already nicely indented.
 // This particular example is not, but pkglint cannot decide this as of
 // version 5.5.2 (January 2018).
-func (s *Suite) Test_Varalign__shell_command(c *check.C) {
+func (s *Suite) Test_VaralignBlock__shell_command(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"USE_BUILTIN.Xfixes=\tyes",
@@ -413,7 +413,7 @@ func (s *Suite) Test_Varalign__shell_command(c *check.C) {
 // values in the continuation lines, one value per line, all indented to the same depth.
 // The depth is either a single tab (see the test below) or aligns with the other
 // variables in the paragraph (this test).
-func (s *Suite) Test_Varalign__continuation_value_starts_in_second_line(c *check.C) {
+func (s *Suite) Test_VaralignBlock__continuation_value_starts_in_second_line(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"WRKSRC=\t${WRKDIR}",
@@ -441,7 +441,7 @@ func (s *Suite) Test_Varalign__continuation_value_starts_in_second_line(c *check
 // values in the continuation lines, one value per line, all indented to the same depth.
 // The depth is either a single tab (this test) or aligns with the other
 // variables in the paragraph (see the test above).
-func (s *Suite) Test_Varalign__continuation_value_starts_in_second_line_with_single_tab(c *check.C) {
+func (s *Suite) Test_VaralignBlock__continuation_value_starts_in_second_line_with_single_tab(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"WRKSRC=\t${WRKDIR}",
@@ -465,7 +465,7 @@ func (s *Suite) Test_Varalign__continuation_value_starts_in_second_line_with_sin
 // Another common pattern is to write the first value in the first line and
 // subsequent values indented to the same depth as the value in the first
 // line.
-func (s *Suite) Test_Varalign__continuation_value_starts_in_first_line(c *check.C) {
+func (s *Suite) Test_VaralignBlock__continuation_value_starts_in_first_line(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"WRKSRC=\t${WRKDIR}",
@@ -491,7 +491,7 @@ func (s *Suite) Test_Varalign__continuation_value_starts_in_first_line(c *check.
 // other lines. The lines that are indented further should keep their
 // relative indentation depth, no matter if that is done with spaces or
 // with tabs.
-func (s *Suite) Test_Varalign__continuation_mixed_indentation_in_second_line(c *check.C) {
+func (s *Suite) Test_VaralignBlock__continuation_mixed_indentation_in_second_line(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"WRKSRC=\t${WRKDIR}",
@@ -521,7 +521,7 @@ func (s *Suite) Test_Varalign__continuation_mixed_indentation_in_second_line(c *
 }
 
 // Continuation lines may also start their values in the first line.
-func (s *Suite) Test_Varalign__continuation_mixed_indentation_in_first_line(c *check.C) {
+func (s *Suite) Test_VaralignBlock__continuation_mixed_indentation_in_first_line(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"WRKSRC=\t${WRKDIR}",
@@ -552,7 +552,7 @@ func (s *Suite) Test_Varalign__continuation_mixed_indentation_in_first_line(c *c
 // In this case, all of the remaining lines have the same indentation
 // (as there is only 1 line at all).
 // Therefore this existing indentation is used instead of the minimum necessary, which would only be a single tab.
-func (s *Suite) Test_Varalign__tab_outlier(c *check.C) {
+func (s *Suite) Test_VaralignBlock__tab_outlier(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"DISTFILES=\t\tvery-very-very-very-long-distfile-name",
@@ -567,7 +567,7 @@ func (s *Suite) Test_Varalign__tab_outlier(c *check.C) {
 
 // The SITES.* definition is indented less than the other lines,
 // therefore the whole paragraph will be realigned to that depth.
-func (s *Suite) Test_Varalign__multiline(c *check.C) {
+func (s *Suite) Test_VaralignBlock__multiline(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"DIST_SUBDIR=            asc",
@@ -603,7 +603,7 @@ func (s *Suite) Test_Varalign__multiline(c *check.C) {
 // The CDROM variables align exactly at a tab position, therefore they must
 // be indented by at least one more space. Since that one space is not
 // enough to count as an outlier, everything is indented by one more tab.
-func (s *Suite) Test_Varalign__single_space(c *check.C) {
+func (s *Suite) Test_VaralignBlock__single_space(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"RESTRICTED=\tDo not sell, do not rent",
@@ -636,7 +636,7 @@ func (s *Suite) Test_Varalign__single_space(c *check.C) {
 // The spaces are replaced with tabs, which makes the indentation 4 spaces deeper in the first paragraph.
 // In the second paragraph it's even 7 additional spaces.
 // This is ok though since it is the prevailing indentation style in pkgsrc.
-func (s *Suite) Test_Varalign__only_space(c *check.C) {
+func (s *Suite) Test_VaralignBlock__only_space(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"DISTFILES+= space",
@@ -673,7 +673,7 @@ func (s *Suite) Test_Varalign__only_space(c *check.C) {
 //
 // As of December 2018, pkglint only looks at a single paragraph at a time,
 // therefore it cannot reliably decide whether this deep indentation is necessary.
-func (s *Suite) Test_Varalign__mixed_tabs_and_spaces_same_column(c *check.C) {
+func (s *Suite) Test_VaralignBlock__mixed_tabs_and_spaces_same_column(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"DISTFILES+=             space",
@@ -689,7 +689,7 @@ func (s *Suite) Test_Varalign__mixed_tabs_and_spaces_same_column(c *check.C) {
 }
 
 // Both lines are indented to the same column. Therefore none of them is considered an outlier.
-func (s *Suite) Test_Varalign__outlier_1(c *check.C) {
+func (s *Suite) Test_VaralignBlock__outlier_1(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"V= value",
@@ -705,7 +705,7 @@ func (s *Suite) Test_Varalign__outlier_1(c *check.C) {
 }
 
 // A single space that ends at the same depth as a tab is replaced with a tab, for consistency.
-func (s *Suite) Test_Varalign__outlier_2(c *check.C) {
+func (s *Suite) Test_VaralignBlock__outlier_2(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"V.0008= value",
@@ -724,7 +724,7 @@ func (s *Suite) Test_Varalign__outlier_2(c *check.C) {
 // that is indented with a space. This is because space-indented lines are
 // only allowed when their indentation is much deeper than the tab-indented
 // ones (so-called outliers), or as the first line of a continuation line.
-func (s *Suite) Test_Varalign__outlier_3(c *check.C) {
+func (s *Suite) Test_VaralignBlock__outlier_3(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"V.00009= value",
@@ -744,7 +744,7 @@ func (s *Suite) Test_Varalign__outlier_3(c *check.C) {
 // This space-indented line doesn't count as an outlier yet because it
 // is only a single tab away. The limit is two tabs.
 // Therefore both lines are indented with tabs.
-func (s *Suite) Test_Varalign__outlier_4(c *check.C) {
+func (s *Suite) Test_VaralignBlock__outlier_4(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"V.000000000016= value",
@@ -765,7 +765,7 @@ func (s *Suite) Test_Varalign__outlier_4(c *check.C) {
 // tab-indented line. The latter would require 2 tabs to align to the former.
 // Therefore the short line is not indented to the long line, in order to
 // keep the indentation reasonably short for a large amount of the lines.
-func (s *Suite) Test_Varalign__outlier_5(c *check.C) {
+func (s *Suite) Test_VaralignBlock__outlier_5(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"V.0000000000017= value",
@@ -779,7 +779,7 @@ func (s *Suite) Test_Varalign__outlier_5(c *check.C) {
 }
 
 // Short space-indented lines do not count as outliers. They are are aligned to the longer tab-indented line.
-func (s *Suite) Test_Varalign__outlier_6(c *check.C) {
+func (s *Suite) Test_VaralignBlock__outlier_6(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"V= value",
@@ -795,7 +795,7 @@ func (s *Suite) Test_Varalign__outlier_6(c *check.C) {
 }
 
 // The long line is not an outlier but very close. One more space, and it would count.
-func (s *Suite) Test_Varalign__outlier_10(c *check.C) {
+func (s *Suite) Test_VaralignBlock__outlier_10(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"V.0000000000000000023= value", // Adjust from 23 to 24 (+ 1 tab)
@@ -812,7 +812,7 @@ func (s *Suite) Test_Varalign__outlier_10(c *check.C) {
 	vt.Run()
 }
 
-func (s *Suite) Test_Varalign__outlier_11(c *check.C) {
+func (s *Suite) Test_VaralignBlock__outlier_11(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"V.00000000000000000024= value", // Keep at 24 (space to tab)
@@ -829,7 +829,7 @@ func (s *Suite) Test_Varalign__outlier_11(c *check.C) {
 	vt.Run()
 }
 
-func (s *Suite) Test_Varalign__outlier_12(c *check.C) {
+func (s *Suite) Test_VaralignBlock__outlier_12(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"V.000000000000000000025= value", // Keep at 25 (outlier)
@@ -844,7 +844,7 @@ func (s *Suite) Test_Varalign__outlier_12(c *check.C) {
 
 // When the lines are indented inconsistently, the indentation is reduced
 // to the required minimum.
-func (s *Suite) Test_Varalign__outlier_14(c *check.C) {
+func (s *Suite) Test_VaralignBlock__outlier_14(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"V.00008=\t\tvalue",     // Adjust from 24 to 16 (removes 1 tab)
@@ -865,7 +865,7 @@ func (s *Suite) Test_Varalign__outlier_14(c *check.C) {
 // since compared to the DIST line, it is at least two tabs away.
 // Pkglint before 2018-01-26 suggested that it "should be aligned to column 9",
 // which is not possible since the variable name is already longer.
-func (s *Suite) Test_Varalign__long_short(c *check.C) {
+func (s *Suite) Test_VaralignBlock__long_short(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"INSTALLATION_DIRS=\tbin",
@@ -887,7 +887,7 @@ func (s *Suite) Test_Varalign__long_short(c *check.C) {
 // FIXME: The definition of an outlier should be based on the actual indentation,
 //  not on the minimum indentation. Or maybe even better on the corrected indentation.
 //  In the below paragraph, the outlier is not indented enough to qualify as a visual outlier.
-func (s *Suite) Test_Varalign__tabbed_outlier(c *check.C) {
+func (s *Suite) Test_VaralignBlock__tabbed_outlier(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		".if !empty(PKG_OPTIONS:Minspircd-sqloper)",
@@ -911,7 +911,7 @@ func (s *Suite) Test_Varalign__tabbed_outlier(c *check.C) {
 //
 // TODO: Make this rule more general: if the indentation of the continuation
 //  lines is more than the initial line, it is intentional.
-func (s *Suite) Test_Varalign__indented_continuation_line(c *check.C) {
+func (s *Suite) Test_VaralignBlock__indented_continuation_line(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"CONF_FILES_PERMS=\tsource \\",
@@ -926,7 +926,7 @@ func (s *Suite) Test_Varalign__indented_continuation_line(c *check.C) {
 	vt.Run()
 }
 
-func (s *Suite) Test_Varalign__indented_continuation_line_in_paragraph(c *check.C) {
+func (s *Suite) Test_VaralignBlock__indented_continuation_line_in_paragraph(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"SUBST_CLASSES+=\t\tfix",
@@ -951,7 +951,7 @@ func (s *Suite) Test_Varalign__indented_continuation_line_in_paragraph(c *check.
 
 // Up to 2018-01-27, it could happen that some source code was logged
 // without a corresponding diagnostic. This was unintended and confusing.
-func (s *Suite) Test_Varalign__fix_without_diagnostic(c *check.C) {
+func (s *Suite) Test_VaralignBlock__fix_without_diagnostic(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"MESSAGE_SUBST+=\t\tRUBY_DISTNAME=${RUBY_DISTNAME}",
@@ -974,7 +974,7 @@ func (s *Suite) Test_Varalign__fix_without_diagnostic(c *check.C) {
 // The two variables look like they were in two separate paragraphs, but
 // they aren't. This is because the continuation line from the DISTFILES
 // eats up the empty line that would otherwise separate the paragraphs.
-func (s *Suite) Test_Varalign__continuation_line_last_empty(c *check.C) {
+func (s *Suite) Test_VaralignBlock__continuation_line_last_empty(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"DISTFILES= \\",
@@ -1002,7 +1002,7 @@ func (s *Suite) Test_Varalign__continuation_line_last_empty(c *check.C) {
 //
 // This is one of the few cases where commented variable assignments are treated specially.
 // See MkLine.IsCommentedVarassign.
-func (s *Suite) Test_Varalign__realign_commented_single_lines(c *check.C) {
+func (s *Suite) Test_VaralignBlock__realign_commented_single_lines(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"SHORT=\tvalue",
@@ -1037,7 +1037,7 @@ func (s *Suite) Test_Varalign__realign_commented_single_lines(c *check.C) {
 //
 // FIXME: When mklines.Check is called, there should be a warning about
 //  the misleading AFTER= at the beginning of the line.
-func (s *Suite) Test_Varalign__realign_commented_continuation_line(c *check.C) {
+func (s *Suite) Test_VaralignBlock__realign_commented_continuation_line(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"BEFORE=\tvalue",
@@ -1063,7 +1063,7 @@ func (s *Suite) Test_Varalign__realign_commented_continuation_line(c *check.C) {
 //
 // If the HOMEPAGE were taken into account, the alignment would differ and
 // the COMMENT line would be realigned to column 17, reducing the indentation by one tab.
-func (s *Suite) Test_Varalign__realign_variable_without_value(c *check.C) {
+func (s *Suite) Test_VaralignBlock__realign_variable_without_value(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"COMMENT=\t\tShort description of the package",
@@ -1080,7 +1080,7 @@ func (s *Suite) Test_Varalign__realign_variable_without_value(c *check.C) {
 // Nothing needs to be fixed.
 // This is a simple case since a paragraph containing only one line
 // is always aligned properly, except when the indentation uses spaces instead of tabs.
-func (s *Suite) Test_Varalign__realign_commented_multiline(c *check.C) {
+func (s *Suite) Test_VaralignBlock__realign_commented_multiline(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"#CONF_FILES+=\t\tfile1 \\",
@@ -1102,7 +1102,7 @@ func (s *Suite) Test_Varalign__realign_commented_multiline(c *check.C) {
 //
 // FIXME: the space-tab-space-tab-space must be replaced with tab-tab-space.
 //  There must be no space-tab anywhere.
-func (s *Suite) Test_Varalign__mixed_indentation(c *check.C) {
+func (s *Suite) Test_VaralignBlock__mixed_indentation(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"VAR1=\tvalue1",
@@ -1124,7 +1124,7 @@ func (s *Suite) Test_Varalign__mixed_indentation(c *check.C) {
 // before the comment is ignored. Therefore the end of the line would be
 // after the "=" in these cases, and the alignment must take care to
 // include the whitespace.
-func (s *Suite) Test_Varalign__eol_comment(c *check.C) {
+func (s *Suite) Test_VaralignBlock__eol_comment(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"VAR1=\tdefined",
@@ -1137,4 +1137,120 @@ func (s *Suite) Test_Varalign__eol_comment(c *check.C) {
 		"VAR2=   # defined",
 		"VAR3=   #empty")
 	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock_Process__autofix(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wspace", "--show-autofix")
+
+	mklines := t.NewMkLines("file.mk",
+		"VAR=   value",    // Indentation 7, fixed to 8.
+		"",                //
+		"VAR=    value",   // Indentation 8, fixed to 8.
+		"",                //
+		"VAR=     value",  // Indentation 9, fixed to 8.
+		"",                //
+		"VAR= \tvalue",    // Mixed indentation 8, fixed to 8.
+		"",                //
+		"VAR=   \tvalue",  // Mixed indentation 8, fixed to 8.
+		"",                //
+		"VAR=    \tvalue", // Mixed indentation 16, fixed to 16.
+		"",                //
+		"VAR=\tvalue")     // Already aligned with tabs only, left unchanged.
+
+	var varalign VaralignBlock
+	for _, line := range mklines.mklines {
+		varalign.Process(line)
+	}
+	varalign.Finish()
+
+	t.CheckOutputLines(
+		"NOTE: file.mk:1: This variable value should be aligned with tabs, not spaces, to column 9.",
+		"AUTOFIX: file.mk:1: Replacing \"   \" with \"\\t\".",
+		"NOTE: file.mk:3: Variable values should be aligned with tabs, not spaces.",
+		"AUTOFIX: file.mk:3: Replacing \"    \" with \"\\t\".",
+		"NOTE: file.mk:5: This variable value should be aligned with tabs, not spaces, to column 9.",
+		"AUTOFIX: file.mk:5: Replacing \"     \" with \"\\t\".",
+		"NOTE: file.mk:7: Variable values should be aligned with tabs, not spaces.",
+		"AUTOFIX: file.mk:7: Replacing \" \\t\" with \"\\t\".",
+		"NOTE: file.mk:9: Variable values should be aligned with tabs, not spaces.",
+		"AUTOFIX: file.mk:9: Replacing \"   \\t\" with \"\\t\".",
+		"NOTE: file.mk:11: Variable values should be aligned with tabs, not spaces.",
+		"AUTOFIX: file.mk:11: Replacing \"    \\t\" with \"\\t\\t\".")
+}
+
+// When the lines of a paragraph are inconsistently aligned,
+// they are realigned to the minimum required width.
+func (s *Suite) Test_VaralignBlock_Process__reduce_indentation(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("file.mk",
+		"VAR= \tvalue",
+		"VAR=    \tvalue",
+		"VAR=\t\t\t\tvalue",
+		"",
+		"VAR=\t\t\tneedlessly", // Nothing to be fixed here, since it looks good.
+		"VAR=\t\t\tdeep",
+		"VAR=\t\t\tindentation")
+
+	var varalign VaralignBlock
+	for _, mkline := range mklines.mklines {
+		varalign.Process(mkline)
+	}
+	varalign.Finish()
+
+	t.CheckOutputLines(
+		"NOTE: file.mk:1: Variable values should be aligned with tabs, not spaces.",
+		"NOTE: file.mk:2: This variable value should be aligned with tabs, not spaces, to column 9.",
+		"NOTE: file.mk:3: This variable value should be aligned to column 9.")
+}
+
+// For every variable assignment, there is at least one space or tab between the variable
+// name and the value. Even if it is the longest line, and even if the value would start
+// exactly at a tab stop.
+func (s *Suite) Test_VaralignBlock_Process__longest_line_no_space(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wspace")
+	mklines := t.NewMkLines("file.mk",
+		"SUBST_CLASSES+= aaaaaaaa",
+		"SUBST_STAGE.aaaaaaaa= pre-configure",
+		"SUBST_FILES.aaaaaaaa= *.pl",
+		"SUBST_FILTER_CMD.aaaaaa=cat")
+
+	var varalign VaralignBlock
+	for _, mkline := range mklines.mklines {
+		varalign.Process(mkline)
+	}
+	varalign.Finish()
+
+	t.CheckOutputLines(
+		"NOTE: file.mk:1: This variable value should be aligned with tabs, not spaces, to column 33.",
+		"NOTE: file.mk:2: This variable value should be aligned with tabs, not spaces, to column 33.",
+		"NOTE: file.mk:3: This variable value should be aligned with tabs, not spaces, to column 33.",
+		"NOTE: file.mk:4: This variable value should be aligned to column 33.")
+}
+
+func (s *Suite) Test_VaralignBlock_Process__only_spaces(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wspace")
+	mklines := t.NewMkLines("file.mk",
+		"SUBST_CLASSES+= aaaaaaaa",
+		"SUBST_STAGE.aaaaaaaa= pre-configure",
+		"SUBST_FILES.aaaaaaaa= *.pl",
+		"SUBST_FILTER_CMD.aaaaaaaa= cat")
+
+	var varalign VaralignBlock
+	for _, mkline := range mklines.mklines {
+		varalign.Process(mkline)
+	}
+	varalign.Finish()
+
+	t.CheckOutputLines(
+		"NOTE: file.mk:1: This variable value should be aligned with tabs, not spaces, to column 33.",
+		"NOTE: file.mk:2: This variable value should be aligned with tabs, not spaces, to column 33.",
+		"NOTE: file.mk:3: This variable value should be aligned with tabs, not spaces, to column 33.",
+		"NOTE: file.mk:4: This variable value should be aligned with tabs, not spaces, to column 33.")
 }
