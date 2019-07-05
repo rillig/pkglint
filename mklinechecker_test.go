@@ -793,6 +793,15 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 		"WARN: filename.mk:1: VAR is used but not defined.",
 		"WARN: filename.mk:1: VAR2 is used but not defined.")
 
+	test(".if ${VAR}",
+		"WARN: filename.mk:1: VAR is used but not defined.")
+
+	test(".if ${VAR} == 3",
+		"WARN: filename.mk:1: VAR is used but not defined.")
+
+	test(".if \"value\" == ${VAR}",
+		"WARN: filename.mk:1: VAR is used but not defined.")
+
 	test(".if ${MASTER_SITES:Mftp://*} == \"ftp://netbsd.org/\"",
 		"WARN: filename.mk:1: Invalid variable modifier \"//*\" for \"MASTER_SITES\".",
 		"WARN: filename.mk:1: \"ftp\" is not a valid URL.",

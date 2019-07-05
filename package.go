@@ -1205,13 +1205,11 @@ func (pkg *Package) checkOwnerMaintainer(filename string) {
 		return
 	}
 
-	if maintainer != "" {
-		line := NewLineWhole(filename)
-		line.Notef("Please only commit changes that %s would approve.", maintainer)
-		line.Explain(
-			"See the pkgsrc guide, section \"Package components\",",
-			"keyword \"maintainer\", for more information.")
-	}
+	line := NewLineWhole(filename)
+	line.Notef("Please only commit changes that %s would approve.", maintainer)
+	line.Explain(
+		"See the pkgsrc guide, section \"Package components\",",
+		"keyword \"maintainer\", for more information.")
 }
 
 func (pkg *Package) checkFreeze(filename string) {
