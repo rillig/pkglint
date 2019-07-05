@@ -897,6 +897,9 @@ func (w *MkCondWalker) Walk(cond *MkCond, callback *MkCondCallback) {
 			callback.VarUse(cond.Term.Var)
 		}
 
+	case cond.Term != nil && cond.Term.Str != "":
+		w.walkStr(cond.Term.Str, callback)
+
 	case cond.Empty != nil:
 		if callback.Empty != nil {
 			callback.Empty(cond.Empty)

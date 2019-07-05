@@ -779,6 +779,20 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 			"} for MACHINE_ARCH.",
 		"NOTE: filename.mk:1: MACHINE_ARCH should be compared using == instead of matching against \":Mx86\".")
 
+	// Doesn't occur in practice since it is surprising that the ! applies
+	// to the comparison operator, and not to one of its arguments.
+	test(".if !${VAR} == value",
+		"WARN: filename.mk:1: VAR is used but not defined.")
+
+	// Doesn't occur in practice since this string can never be empty.
+	test(".if !\"${VAR}str\"",
+		"WARN: filename.mk:1: VAR is used but not defined.")
+
+	// Doesn't occur in practice since !${VAR} && !${VAR2} is more idiomatic.
+	test(".if !\"${VAR}${VAR2}\"",
+		"WARN: filename.mk:1: VAR is used but not defined.",
+		"WARN: filename.mk:1: VAR2 is used but not defined.")
+
 	test(".if ${MASTER_SITES:Mftp://*} == \"ftp://netbsd.org/\"",
 		"WARN: filename.mk:1: Invalid variable modifier \"//*\" for \"MASTER_SITES\".",
 		"WARN: filename.mk:1: \"ftp\" is not a valid URL.",
