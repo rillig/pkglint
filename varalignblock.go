@@ -24,9 +24,28 @@ type varalignBlockInfo struct {
 	varnameOpWidth int    // Screen width of varnameOp
 	space          string // Whitespace between varnameOp and the variable value
 	totalWidth     int    // Screen width of varnameOp + current space
-	continuation   bool   // A continuation line with no value in the first line.
 
-	// TODO: multiEarly, multiLate, multiAligned
+	// The line is a multiline and the first actual value is in the initial line.
+	//
+	// Example:
+	//  VAR=    value1 \
+	//          value2
+	multiInitial bool
+
+	// The line is a multiline and the initial line is essentially empty.
+	//
+	// Example:
+	//  VAR= \
+	//          value1 \
+	//          value2
+	multiEmpty bool
+
+	// A multiline that is properly aligned, when seen on its own. This means:
+	//
+	// For a multiEmpty line, the first actual value may be indented in column 8.
+	// Otherwise the first actual value determines the indentation.
+	// Each later continuation line must be at least as indented as the first actual value.
+	multiAligned bool
 }
 
 func (va *VaralignBlock) Process(mkline *MkLine) {
@@ -73,15 +92,9 @@ func (va *VaralignBlock) processVarassign(mkline *MkLine) {
 		return
 	}
 
-	continuation := false
-	if mkline.IsMultiline() {
-		// Parsing the continuation marker as variable value is cheating but works well.
-		text := strings.TrimSuffix(mkline.raw[0].orignl, "\n")
-		data := MkLineParser{}.split(nil, text)
-		m, a := MkLineParser{}.MatchVarassign(mkline.Line, text, data)
-		assert(m)
-		continuation = a.value == "\\"
-	}
+	multiEarly := mkline.IsMultiline() && mkline.FirstLineContainsValue()
+	multiLate := mkline.IsMultiline() && !multiEarly && mkline.Value() != ""
+	multiAligned := mkline.IsMultiline() && mkline.IsMultiAligned()
 
 	valueAlign := mkline.ValueAlign()
 	varnameOp := strings.TrimRight(valueAlign, " \t")
@@ -91,7 +104,9 @@ func (va *VaralignBlock) processVarassign(mkline *MkLine) {
 		tabWidth(varnameOp),
 		valueAlign[len(varnameOp):],
 		tabWidth(valueAlign),
-		continuation}
+		multiEarly,
+		multiLate,
+		multiAligned}
 	va.infos = append(va.infos, &info)
 }
 
@@ -114,7 +129,7 @@ func (va *VaralignBlock) Finish() {
 	}
 
 	for _, info := range infos {
-		va.realign(info.mkline, info.varnameOp, info.space, info.continuation, newWidth)
+		va.realign(info.mkline, info.varnameOp, info.space, info.multiEmpty, newWidth)
 	}
 }
 
@@ -129,7 +144,7 @@ func (va *VaralignBlock) optimalWidth(infos []*varalignBlockInfo) int {
 	var longestLine *MkLine
 	secondLongest := 0 // The second-longest seen varnameOpWidth
 	for _, info := range infos {
-		if info.continuation {
+		if info.multiEmpty {
 			// TODO: what if this info is never added to infos?
 			continue
 		}
@@ -155,7 +170,7 @@ func (va *VaralignBlock) optimalWidth(infos []*varalignBlockInfo) int {
 	minTotalWidth := 0
 	maxTotalWidth := 0
 	for _, info := range infos {
-		if info.continuation {
+		if info.multiEmpty {
 			continue
 		}
 

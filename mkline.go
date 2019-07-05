@@ -347,6 +347,26 @@ func (mkline *MkLine) FirstLineContainsValue() bool {
 	return a.value != "\\"
 }
 
+// IsMultiAligned returns whether the multiline is properly aligned.
+// Each continuation line must be at least as indented as the first line.
+// If the first line does not contain an actual value, the second line may
+// start in column 8, to save screen space.
+func (mkline *MkLine) IsMultiAligned() bool {
+	assert(mkline.IsMultiline())
+	if mkline.FirstLineContainsValue() {
+		return true
+	}
+
+	firstIndent := tabWidth(mkline.ValueAlign())
+	for _, continuation := range mkline.Line.raw {
+		indent := tabWidth(textproc.NewLexer(continuation.textnl).NextHspace())
+		if indent < firstIndent {
+			return false
+		}
+	}
+	return true
+}
+
 func (mkline *MkLine) ShellCommand() string { return mkline.data.(mkLineShell).command }
 
 func (mkline *MkLine) Indent() string {
