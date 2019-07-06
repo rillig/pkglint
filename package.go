@@ -1007,7 +1007,7 @@ func (pkg *Package) CheckVarorder(mklines *MkLines) {
 		firstIrrelevant := -1
 		for i, mkline := range mklines.mklines {
 			switch {
-			case mkline.IsVarassign(), mkline.IsCommentedVarassign():
+			case mkline.IsVarassignMaybeCommented():
 				varcanon := mkline.Varcanon()
 				if relevantVars[varcanon] {
 					if firstRelevant == -1 {
@@ -1105,7 +1105,7 @@ func (pkg *Package) CheckVarorder(mklines *MkLines) {
 
 			found := false
 			for _, mkline := range relevantLines {
-				if (mkline.IsVarassign() || mkline.IsCommentedVarassign()) &&
+				if mkline.IsVarassignMaybeCommented() &&
 					mkline.Varcanon() == variable.Name {
 
 					canonical = append(canonical, mkline.Varname())

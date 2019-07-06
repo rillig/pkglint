@@ -57,7 +57,7 @@ func (va *VaralignBlock) Process(mkline *MkLine) {
 		va.Finish()
 		return
 
-	case mkline.IsVarassign(), mkline.IsCommentedVarassign():
+	case mkline.IsVarassignMaybeCommented():
 		va.processVarassign(mkline)
 
 	case mkline.IsComment(), mkline.IsDirective():

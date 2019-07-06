@@ -354,7 +354,7 @@ func (fix *Autofix) RealignContinuation(mkline *MkLine, newWidth int) {
 
 	fix.assertRealLine()
 	assert(mkline.IsMultiline())
-	assert(mkline.IsVarassign() || mkline.IsCommentedVarassign())
+	assert(mkline.IsVarassignMaybeCommented())
 
 	if fix.skip() {
 		return

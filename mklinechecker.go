@@ -421,7 +421,7 @@ func (ck MkLineChecker) checkVarassignLeftRationale() {
 	}
 
 	needsRationale := func(mkline *MkLine) bool {
-		if !mkline.IsVarassign() && !mkline.IsCommentedVarassign() {
+		if !mkline.IsVarassignMaybeCommented() {
 			return false
 		}
 		vartype := G.Pkgsrc.VariableType(ck.MkLines, mkline.Varname())

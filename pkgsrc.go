@@ -642,7 +642,7 @@ func (src *Pkgsrc) loadUserDefinedVars() {
 	mklines := src.LoadMk("mk/defaults/mk.conf", MustSucceed|NotEmpty)
 
 	for _, mkline := range mklines.mklines {
-		if mkline.IsVarassign() || mkline.IsCommentedVarassign() {
+		if mkline.IsVarassignMaybeCommented() {
 			src.UserDefinedVars.Define(mkline.Varname(), mkline)
 		}
 	}

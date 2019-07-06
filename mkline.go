@@ -233,9 +233,31 @@ func (mkline *MkLine) IsVarassign() bool {
 // IsCommentedVarassign returns true for commented-out variable assignments.
 // In most cases these are treated as ordinary comments, but in some others
 // they are treated like variable assignments, just inactive ones.
+//
+// To qualify as a commented variable assignment, there must be no
+// space between the # and the variable name.
+//
+// Example:
+//  #VAR=   value
+// Counterexample:
+//  # VAR=  value
 func (mkline *MkLine) IsCommentedVarassign() bool {
 	data, ok := mkline.data.(*mkLineAssign)
 	return ok && data.commented
+}
+
+// IsVarassignMaybeCommented returns true for variable assignments of the
+// form VAR=value, no matter if they are commented out like #VAR=value or
+// not. To qualify as a commented variable assignment, there must be no
+// space between the # and the variable name.
+//
+// Example:
+//  #VAR=   value
+// Counterexample:
+//  # VAR=  value
+func (mkline *MkLine) IsVarassignMaybeCommented() bool {
+	_, ok := mkline.data.(*mkLineAssign)
+	return ok
 }
 
 // IsShellCommand returns true for tab-indented lines that are assigned to a Make
@@ -337,7 +359,7 @@ func (mkline *MkLine) VarassignComment() string { return mkline.data.(*mkLineAss
 //  NO_VALUE_IN_FIRST_LINE= \
 //          value starts in second line
 func (mkline *MkLine) FirstLineContainsValue() bool {
-	assert(mkline.IsVarassign() || mkline.IsCommentedVarassign())
+	assert(mkline.IsVarassignMaybeCommented())
 	assert(mkline.IsMultiline())
 
 	// Parsing the continuation marker as variable value is cheating but works well.
@@ -452,7 +474,7 @@ func (mkline *MkLine) Tokenize(text string, warn bool) []*MkToken {
 
 	var tokens []*MkToken
 	var rest string
-	if (mkline.IsVarassign() || mkline.IsCommentedVarassign()) && text == mkline.Value() {
+	if mkline.IsVarassignMaybeCommented() && text == mkline.Value() {
 		tokens, rest = mkline.ValueTokens()
 	} else {
 		p := NewMkParser(mkline.Line, text, true)
@@ -596,7 +618,7 @@ func (mkline *MkLine) ValueTokens() ([]*MkToken, string) {
 // For variable assignments, it returns the right-hand side, properly split into words.
 // For .for loops, it returns all arguments (including variable names), properly split into words.
 func (mkline *MkLine) Fields() []string {
-	if mkline.IsVarassign() || mkline.IsCommentedVarassign() {
+	if mkline.IsVarassignMaybeCommented() {
 		value := mkline.Value()
 		if value == "" {
 			return nil
