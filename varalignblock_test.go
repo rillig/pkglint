@@ -11,6 +11,7 @@ type VaralignTester struct {
 	suite       *Suite
 	tester      *Tester
 	input       []string // The actual input lines
+	internals   []string // The expected internal state, the varalignBlockInfos
 	diagnostics []string // The expected diagnostics in default mode
 	autofixes   []string // The expected diagnostics in --autofix mode
 	fixed       []string // The expected fixed lines, with spaces instead of tabs
@@ -25,6 +26,13 @@ func NewVaralignTester(s *Suite, c *check.C) *VaralignTester {
 
 // Input remembers the input lines that are checked and possibly realigned.
 func (vt *VaralignTester) Input(lines ...string) { vt.input = lines }
+
+// Internals remembers the expected internal state of the varalignBlockInfos,
+// to better trace down at which points the decisions are made.
+//
+// Line format:
+//  <minimum> <current> [initial] [empty] [aligned]
+func (vt *VaralignTester) Internals(lines ...string) { vt.internals = lines }
 
 // Diagnostics remembers the expected diagnostics.
 func (vt *VaralignTester) Diagnostics(diagnostics ...string) { vt.diagnostics = diagnostics }
@@ -68,7 +76,21 @@ func (vt *VaralignTester) run(autofix bool) {
 
 		varalign.Process(mkline)
 	}
+	infos := varalign.infos // since they are overwritten by Finish
 	varalign.Finish()
+
+	var actual []string
+	for _, info := range infos {
+		infoStr := sprintf(
+			"%02d %02d%s%s%s",
+			info.varnameOpWidth,
+			info.totalWidth,
+			ifelseStr(info.multiInitial, " initial", ""),
+			ifelseStr(info.multiEmpty, " empty", ""),
+			ifelseStr(info.multiAligned, " aligned", ""))
+		actual = append(actual, infoStr)
+	}
+	t.Check(actual, deepEquals, vt.internals)
 
 	if autofix {
 		t.CheckOutput(vt.autofixes)
@@ -86,6 +108,8 @@ func (s *Suite) Test_VaralignBlock__one_var_tab(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"VAR=\tone tab")
+	vt.Internals(
+		"04 08")
 	vt.Diagnostics()
 	vt.Autofixes()
 	vt.Fixed(
@@ -99,6 +123,8 @@ func (s *Suite) Test_VaralignBlock__one_var_tabs(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"VAR=\t\t\tseveral tabs")
+	vt.Internals(
+		"04 24")
 	vt.Diagnostics()
 	vt.Autofixes()
 	vt.Fixed(
@@ -114,6 +140,8 @@ func (s *Suite) Test_VaralignBlock__one_var_space(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"VAR= indented with one space")
+	vt.Internals(
+		"04 05")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 9.")
 	vt.Autofixes(
@@ -130,6 +158,8 @@ func (s *Suite) Test_VaralignBlock__one_var_spaces(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"VAR=   several spaces")
+	vt.Internals(
+		"04 07")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 9.")
 	vt.Autofixes(
@@ -146,6 +176,9 @@ func (s *Suite) Test_VaralignBlock__two_vars__spaces(c *check.C) {
 	vt.Input(
 		"VAR= indented with one space",
 		"VAR=  indented with two spaces")
+	vt.Internals(
+		"04 05",
+		"04 06")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 9.",
 		"NOTE: ~/Makefile:2: This variable value should be aligned with tabs, not spaces, to column 9.")
@@ -166,6 +199,11 @@ func (s *Suite) Test_VaralignBlock__several_vars__spaces(c *check.C) {
 		"GRP_AA= value",
 		"GRP_AAA= value",
 		"GRP_AAAA= value")
+	vt.Internals(
+		"06 07",
+		"07 08",
+		"08 09",
+		"09 10")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 17.",
 		"NOTE: ~/Makefile:2: This variable value should be aligned with tabs, not spaces, to column 17.",
@@ -191,6 +229,8 @@ func (s *Suite) Test_VaralignBlock__continuation(c *check.C) {
 	vt.Input(
 		"VAR= \\",
 		"\tvalue")
+	vt.Internals(
+		"04 05 empty aligned")
 	vt.Diagnostics()
 	vt.Autofixes()
 	vt.Fixed(
@@ -208,6 +248,9 @@ func (s *Suite) Test_VaralignBlock__short_tab__long_space(c *check.C) {
 	vt.Input(
 		"BLOCK=\tindented with tab",
 		"BLOCK_LONGVAR= indented with space")
+	vt.Internals(
+		"06 08",
+		"14 15")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 17.",
 		"NOTE: ~/Makefile:2: This variable value should be aligned with tabs, not spaces, to column 17.")
@@ -227,6 +270,9 @@ func (s *Suite) Test_VaralignBlock__short_long__tab(c *check.C) {
 	vt.Input(
 		"BLOCK=\tshort",
 		"BLOCK_LONGVAR=\t\t\t\tlong")
+	vt.Internals(
+		"06 08",
+		"14 40")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 17.",
 		"NOTE: ~/Makefile:2: This variable value should be aligned to column 17.")
@@ -247,6 +293,9 @@ func (s *Suite) Test_VaralignBlock__space_and_tab(c *check.C) {
 	vt.Input(
 		"VAR=    space",
 		"VAR=\ttab ${VAR}")
+	vt.Internals(
+		"04 08",
+		"04 08")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: Variable values should be aligned with tabs, not spaces.")
 	vt.Autofixes(
@@ -263,6 +312,8 @@ func (s *Suite) Test_VaralignBlock__no_space_at_all(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"PKG_FAIL_REASON+=\"Message\"")
+	vt.Internals(
+		"17 17")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 25.")
 	vt.Autofixes(
@@ -272,13 +323,15 @@ func (s *Suite) Test_VaralignBlock__no_space_at_all(c *check.C) {
 	vt.Run()
 }
 
-func (s *Suite) Test_VaralignBlock__empty_continuation_in_column_0(c *check.C) {
+func (s *Suite) Test_VaralignBlock__empty_continuation_in_column_1(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"VAR= \\",
 		"no indentation")
+	vt.Internals(
+		"04 05 empty")
 	vt.Diagnostics(
-		// FIXME: suggest indentation to column 8.
+		// TODO: suggest indentation to column 9.
 		nil...)
 	vt.Autofixes(
 		nil...)
@@ -288,11 +341,13 @@ func (s *Suite) Test_VaralignBlock__empty_continuation_in_column_0(c *check.C) {
 	vt.Run()
 }
 
-func (s *Suite) Test_VaralignBlock__empty_continuation_in_column_8(c *check.C) {
+func (s *Suite) Test_VaralignBlock__empty_continuation_in_column_9(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"VAR= \\",
 		"\tminimum indentation")
+	vt.Internals(
+		"04 05 empty aligned")
 	vt.Diagnostics(
 		nil...)
 	vt.Autofixes(
@@ -309,6 +364,9 @@ func (s *Suite) Test_VaralignBlock__empty_continuation_space(c *check.C) {
 		"REF=\tvalue",
 		"VAR= \\",
 		"\tminimum indentation")
+	vt.Internals(
+		"04 08",
+		"04 05 empty aligned")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:2--3: This variable value should be aligned with tabs, not spaces, to column 9.")
 	vt.Autofixes(
@@ -326,6 +384,9 @@ func (s *Suite) Test_VaralignBlock__empty_continuation_properly_indented(c *chec
 		"REF=\tvalue",
 		"VAR=\t\\",
 		"\tminimum indentation")
+	vt.Internals(
+		"04 08",
+		"04 05 empty aligned")
 	vt.Diagnostics()
 	vt.Autofixes()
 	vt.Fixed(
@@ -341,8 +402,11 @@ func (s *Suite) Test_VaralignBlock__empty_continuation_too_narrow(c *check.C) {
 		"LONG_VARIABLE=\tvalue",
 		"VAR=\t\\",
 		"\tminimum indentation")
+	vt.Internals(
+		"14 16",
+		"04 05 empty aligned")
 	vt.Diagnostics(
-		// FIXME: VAR should be indented at column 16 as well.
+		// TODO: VAR should be indented at column 17 as well.
 		nil...)
 	vt.Autofixes()
 	vt.Fixed(
@@ -358,8 +422,11 @@ func (s *Suite) Test_VaralignBlock__empty_continuation_too_wide(c *check.C) {
 		"LONG_VARIABLE=\tvalue",
 		"REALLY_LONG_VARIABLE=\t\\",
 		"\tminimum indentation")
+	vt.Internals(
+		"14 16",
+		"21 22 empty aligned")
 	vt.Diagnostics(
-		// FIXME: The value of LONG_VARIABLE should be indented at column 24.
+		// TODO: The value of LONG_VARIABLE should be indented at column 25.
 		nil...)
 	vt.Autofixes()
 	vt.Fixed(
@@ -378,7 +445,7 @@ func (s *Suite) Test_VaralignBlock__empty_continuation_too_wide(c *check.C) {
 // which is especially true for CONFIGURE_ENV, since the environment
 // variables are typically uppercase as well.
 //
-// The indentation of these continued lines must be either in column 8,
+// The indentation of these continued lines must be either in column 9,
 // which is the minimum indentation reachable by using only tabs. Or
 // their minimum indentation must match the indentation of the remaining
 // paragraph. In all but the latter case the indentation of the continued
@@ -390,9 +457,16 @@ func (s *Suite) Test_VaralignBlock__continuation_lines(c *check.C) {
 	vt.Input(
 		"DISTFILES+=\tvalue",
 		"DISTFILES+= \\", // The continuation backslash must be aligned.
-		"\t\t\tvalue",    // The value is already aligned.
+		"\t\t\tvalue",    // The value is aligned deeper than necessary.
 		"DISTFILES+=\t\t\tvalue",
 		"DISTFILES+= value")
+	vt.Internals(
+		"11 16",
+		// Granted, the line on its own is properly aligned, but that
+		// alignment doesn't match the surrounding lines.
+		"11 12 empty aligned",
+		"11 32",
+		"11 12")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:2--3: This variable value should be aligned with tabs, not spaces, to column 17.",
 		"NOTE: ~/Makefile:2--3: This line should be aligned with \"\\t\\t\".",
@@ -412,7 +486,7 @@ func (s *Suite) Test_VaralignBlock__continuation_lines(c *check.C) {
 	vt.Run()
 }
 
-// Line 1 is currently aligned at column 16. It could be shortened to column 8.
+// Line 1 is currently aligned at column 17. It could be shortened to column 9.
 //
 // Line 2--3 consists of multiple raw lines. The first of the raw lines
 // contains a value, therefore it doesn't count as a pure continuation line
@@ -420,7 +494,7 @@ func (s *Suite) Test_VaralignBlock__continuation_lines(c *check.C) {
 // be skipped completely; this line still takes place in realigning.
 //
 // Line 2 needs an indentation of at least 24. This is more than one tab away
-// from the minimum required indentation of line 1, which is at column 8.
+// from the minimum required indentation of line 1, which is at column 9.
 // By this reasoning, line 2--3 would be an outlier.
 //
 // In line 2--3, the first line and the continuation are aligned in the same
@@ -428,13 +502,16 @@ func (s *Suite) Test_VaralignBlock__continuation_lines(c *check.C) {
 // This one logical line looks like two separate lines, and because their
 // indentation is the same, this logical line doesn't count as an outlier.
 //
-// Because line 2--3 is not an outlier, line 1 is realigned to column 24.
+// Because line 2--3 is not an outlier, line 1 is realigned to column 25.
 func (s *Suite) Test_VaralignBlock__continuation_line_one_tab_ahead(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"VAR=\t\tvalue",
 		"MASTER_SITE_NEDIT=\thttps://example.org \\",
 		"\t\t\thttps://example.org")
+	vt.Internals(
+		"04 16",
+		"18 24 initial aligned")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 25.")
 	vt.Autofixes(
@@ -459,6 +536,9 @@ func (s *Suite) Test_VaralignBlock__outlier_more_than_8_spaces(c *check.C) {
 	vt.Input(
 		"V2=\tvalue",
 		"V0000000000014=\tvalue")
+	vt.Internals(
+		"03 08",
+		"15 16")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 17.")
 	vt.Autofixes(
@@ -477,6 +557,8 @@ func (s *Suite) Test_VaralignBlock__aligned_continuation(c *check.C) {
 	vt.Input(
 		"USE_TOOLS+=\t[ awk \\",
 		"\t\tsed")
+	vt.Internals(
+		"11 16 initial aligned")
 	vt.Diagnostics()
 	vt.Autofixes()
 	vt.Fixed(
@@ -495,6 +577,9 @@ func (s *Suite) Test_VaralignBlock__shell_command(c *check.C) {
 		"USE_BUILTIN.Xfixes!=\t\t\t\t\t\t\t\\",
 		"\tif ${PKG_ADMIN} pmatch ...; then\t\t\t\t\t\\",
 		"\t\t:; else :; fi")
+	vt.Internals(
+		"19 24",
+		"20 21 empty aligned") // FIXME: The 21 is wrong, should be 72 instead.
 	vt.Diagnostics()
 	vt.Autofixes()
 	vt.Fixed(
@@ -517,6 +602,10 @@ func (s *Suite) Test_VaralignBlock__continuation_value_starts_in_second_line(c *
 		"SITES.distfile-1.0.0.tar.gz= \\",
 		"\t\t\t${MASTER_SITES_SOURCEFORGE} \\",
 		"\t\t\t${MASTER_SITES_GITHUB}")
+	vt.Internals(
+		"07 08",
+		"10 16",
+		"28 29 empty aligned")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 17.",
 		"NOTE: ~/Makefile:3--5: This line should be aligned with \"\\t\\t\".")
@@ -545,6 +634,10 @@ func (s *Suite) Test_VaralignBlock__continuation_value_starts_in_second_line_wit
 		"SITES.distfile-1.0.0.tar.gz= \\",
 		"\t${MASTER_SITES_SOURCEFORGE} \\",
 		"\t${MASTER_SITES_GITHUB}")
+	vt.Internals(
+		"07 08",
+		"10 16",
+		"28 29 empty aligned")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 17.")
 	vt.Autofixes(
@@ -561,6 +654,14 @@ func (s *Suite) Test_VaralignBlock__continuation_value_starts_in_second_line_wit
 // Another common pattern is to write the first value in the first line and
 // subsequent values indented to the same depth as the value in the first
 // line.
+//
+// If the SITES line had only a single line containing a value, it would count
+// as an outlier. But like this, the two variable expressions look massive
+// enough so that the other variables should be aligned to them.
+//
+// The whole paragraph could be indented less by making the SITES line a
+// pure continuation line, having only a backslash in its first line. Then
+// everything could be aligned to column 17.
 func (s *Suite) Test_VaralignBlock__continuation_value_starts_in_first_line(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -568,6 +669,10 @@ func (s *Suite) Test_VaralignBlock__continuation_value_starts_in_first_line(c *c
 		"DISTFILES=\tdistfile-1.0.0.tar.gz",
 		"SITES.distfile-1.0.0.tar.gz=\t${MASTER_SITES_SOURCEFORGE} \\",
 		"\t\t\t\t${MASTER_SITES_GITHUB}")
+	vt.Internals(
+		"07 08",
+		"10 16",
+		"28 32 initial aligned")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 33.",
 		"NOTE: ~/Makefile:2: This variable value should be aligned to column 33.")
@@ -596,6 +701,10 @@ func (s *Suite) Test_VaralignBlock__continuation_mixed_indentation_in_second_lin
 		"\t\t\t\t  /search/ { \\",
 		"\t\t\t\t    action(); \\",
 		"\t\t\t\t  }")
+	vt.Internals(
+		"07 08",
+		"10 16",
+		"13 14 empty aligned")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 17.",
 		"NOTE: ~/Makefile:3--6: This variable value should be aligned with tabs, not spaces, to column 17.",
@@ -617,6 +726,9 @@ func (s *Suite) Test_VaralignBlock__continuation_mixed_indentation_in_second_lin
 }
 
 // Continuation lines may also start their values in the first line.
+//
+// The indentation of the continuation line is adjusted, preserving
+// the relative indentation among its raw lines.
 func (s *Suite) Test_VaralignBlock__continuation_mixed_indentation_in_first_line(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -625,6 +737,10 @@ func (s *Suite) Test_VaralignBlock__continuation_mixed_indentation_in_first_line
 		"AWK_PROGRAM+=\t\t\t  /search/ { \\",
 		"\t\t\t\t    action(); \\",
 		"\t\t\t\t  }")
+	vt.Internals(
+		"07 08",
+		"10 16",
+		"13 34 initial aligned")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 17.",
 		"NOTE: ~/Makefile:3--5: This variable value should be aligned with tabs, not spaces, to column 17.",
@@ -653,6 +769,9 @@ func (s *Suite) Test_VaralignBlock__tab_outlier(c *check.C) {
 	vt.Input(
 		"DISTFILES=\t\tvery-very-very-very-long-distfile-name",
 		"SITES.very-very-very-very-long-distfile-name=\t${MASTER_SITE_LOCAL}")
+	vt.Internals(
+		"10 24",
+		"45 48")
 	vt.Diagnostics()
 	vt.Autofixes()
 	vt.Fixed(
@@ -673,6 +792,11 @@ func (s *Suite) Test_VaralignBlock__multiline(c *check.C) {
 		"SITES.${file}=  http://asc-hq.org/",
 		".endfor",
 		"WRKSRC=                 ${WRKDIR}/${PKGNAME_NOREV}")
+	vt.Internals(
+		"12 24",
+		"10 24 initial aligned",
+		"14 16",
+		"07 24")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 17.",
 		"NOTE: ~/Makefile:2--3: This variable value should be aligned with tabs, not spaces, to column 17.",
@@ -707,6 +831,12 @@ func (s *Suite) Test_VaralignBlock__single_space(c *check.C) {
 		"NO_BIN_ON_FTP=\t${RESTRICTED}",
 		"NO_SRC_ON_CDROM= ${RESTRICTED}",
 		"NO_SRC_ON_FTP=\t${RESTRICTED}")
+	vt.Internals(
+		"11 16",
+		"16 17",
+		"14 16",
+		"16 17",
+		"14 16")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 25.",
 		"NOTE: ~/Makefile:2: This variable value should be aligned with tabs, not spaces, to column 25.",
@@ -738,6 +868,10 @@ func (s *Suite) Test_VaralignBlock__only_space(c *check.C) {
 		"REPLACE_PYTHON+= *.py",
 		"REPLACE_PYTHON+= lib/*.py",
 		"REPLACE_PYTHON+= src/*.py")
+	vt.Internals(
+		"16 17",
+		"16 17",
+		"16 17")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 25.",
 		"NOTE: ~/Makefile:2: This variable value should be aligned with tabs, not spaces, to column 25.",
@@ -764,6 +898,9 @@ func (s *Suite) Test_VaralignBlock__mixed_tabs_and_spaces_same_column(c *check.C
 	vt.Input(
 		"DISTFILES+=             space",
 		"DISTFILES+=\t\ttab")
+	vt.Internals(
+		"11 24",
+		"11 24")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: Variable values should be aligned with tabs, not spaces.")
 	vt.Autofixes(
@@ -780,6 +917,9 @@ func (s *Suite) Test_VaralignBlock__outlier_1(c *check.C) {
 	vt.Input(
 		"V= value",
 		"V=\tvalue")
+	vt.Internals(
+		"02 03",
+		"02 08")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 9.")
 	vt.Autofixes(
@@ -796,6 +936,9 @@ func (s *Suite) Test_VaralignBlock__outlier_2(c *check.C) {
 	vt.Input(
 		"V.0008= value",
 		"V=\tvalue")
+	vt.Internals(
+		"07 08",
+		"02 08")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: Variable values should be aligned with tabs, not spaces.")
 	vt.Autofixes(
@@ -815,6 +958,9 @@ func (s *Suite) Test_VaralignBlock__outlier_3(c *check.C) {
 	vt.Input(
 		"V.00009= value",
 		"V=\tvalue")
+	vt.Internals(
+		"08 09",
+		"02 08")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 17.",
 		"NOTE: ~/Makefile:2: This variable value should be aligned to column 17.")
@@ -835,6 +981,9 @@ func (s *Suite) Test_VaralignBlock__outlier_4(c *check.C) {
 	vt.Input(
 		"V.000000000016= value",
 		"V=\tvalue")
+	vt.Internals(
+		"15 16",
+		"02 08")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: Variable values should be aligned with tabs, not spaces.",
 		"NOTE: ~/Makefile:2: This variable value should be aligned to column 17.")
@@ -856,6 +1005,9 @@ func (s *Suite) Test_VaralignBlock__outlier_5(c *check.C) {
 	vt.Input(
 		"V.0000000000017= value",
 		"V=\tvalue")
+	vt.Internals(
+		"16 17",
+		"02 08")
 	vt.Diagnostics()
 	vt.Autofixes()
 	vt.Fixed(
@@ -870,6 +1022,9 @@ func (s *Suite) Test_VaralignBlock__outlier_6(c *check.C) {
 	vt.Input(
 		"V= value",
 		"V.000010=\tvalue")
+	vt.Internals(
+		"02 03",
+		"09 16")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 17.")
 	vt.Autofixes(
@@ -886,6 +1041,9 @@ func (s *Suite) Test_VaralignBlock__outlier_10(c *check.C) {
 	vt.Input(
 		"V.0000000000000000023= value", // Adjust from 23 to 24 (+ 1 tab)
 		"V.000010=\tvalue")             // Adjust from 16 to 24 (+ 1 tab)
+	vt.Internals(
+		"22 23",
+		"09 16")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 25.",
 		"NOTE: ~/Makefile:2: This variable value should be aligned to column 25.")
@@ -903,6 +1061,9 @@ func (s *Suite) Test_VaralignBlock__outlier_11(c *check.C) {
 	vt.Input(
 		"V.00000000000000000024= value", // Keep at 24 (space to tab)
 		"V.000010=\tvalue")              // Adjust from 16 to 24 (+ 1 tab)
+	vt.Internals(
+		"23 24",
+		"09 16")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: Variable values should be aligned with tabs, not spaces.",
 		"NOTE: ~/Makefile:2: This variable value should be aligned to column 25.")
@@ -920,6 +1081,9 @@ func (s *Suite) Test_VaralignBlock__outlier_12(c *check.C) {
 	vt.Input(
 		"V.000000000000000000025= value", // Keep at 25 (outlier)
 		"V.000010=\tvalue")               // Keep at 16 (would require + 2 tabs)
+	vt.Internals(
+		"24 25",
+		"09 16")
 	vt.Diagnostics()
 	vt.Autofixes()
 	vt.Fixed(
@@ -935,6 +1099,9 @@ func (s *Suite) Test_VaralignBlock__outlier_14(c *check.C) {
 	vt.Input(
 		"V.00008=\t\tvalue",     // Adjust from 24 to 16 (removes 1 tab)
 		"V.00008=\t\t\t\tvalue") // Adjust from 40 to 16 (removes 3 tabs)
+	vt.Internals(
+		"08 24",
+		"08 40")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 17.",
 		"NOTE: ~/Makefile:2: This variable value should be aligned to column 17.")
@@ -956,6 +1123,9 @@ func (s *Suite) Test_VaralignBlock__long_short(c *check.C) {
 	vt.Input(
 		"INSTALLATION_DIRS=\tbin",
 		"DIST=\t${WRKSRC}/dist")
+	vt.Internals(
+		"18 24",
+		"05 08")
 	vt.Diagnostics()
 	vt.Autofixes()
 	vt.Fixed(
@@ -981,6 +1151,10 @@ func (s *Suite) Test_VaralignBlock__tabbed_outlier(c *check.C) {
 		"MODULES+=\t\tm_sqloper.cpp m_sqlutils.cpp",
 		"HEADERS+=\t\tm_sqlutils.h",
 		".endif")
+	vt.Internals(
+		"25 32",
+		"09 24",
+		"09 24")
 	vt.Diagnostics()
 	vt.Autofixes()
 	vt.Fixed(
@@ -1003,6 +1177,8 @@ func (s *Suite) Test_VaralignBlock__indented_continuation_line(c *check.C) {
 		"CONF_FILES_PERMS=\tsource \\",
 		"\t\t\t\tdestination \\",
 		"\t\t\t\tuser group 0644")
+	vt.Internals(
+		"17 24 initial aligned")
 	vt.Diagnostics()
 	vt.Autofixes()
 	vt.Fixed(
@@ -1021,6 +1197,10 @@ func (s *Suite) Test_VaralignBlock__indented_continuation_line_in_paragraph(c *c
 		"\t-e 's,1,one,g' \\",
 		"\t-e 's,2,two,g' \\",
 		"\t-e 's,3,three,g'")
+	vt.Internals(
+		"15 24",
+		"16 24",
+		"14 15 empty aligned")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:3--6: This variable value should be aligned with tabs, not spaces, to column 25.")
 	vt.Autofixes(
@@ -1045,6 +1225,9 @@ func (s *Suite) Test_VaralignBlock__fix_without_diagnostic(c *check.C) {
 		"\t\t\tRUBY_SHLIBMAJOR=${RUBY_SHLIBMAJOR:Q} \\",
 		"\t\t\tRUBY_NOSHLIBMAJOR=${RUBY_NOSHLIBMAJOR} \\",
 		"\t\t\tRUBY_NAME=${RUBY_NAME:Q}")
+	vt.Internals(
+		"15 24",
+		"13 24 initial aligned")
 	vt.Diagnostics()
 	vt.Autofixes()
 	vt.Fixed(
@@ -1063,12 +1246,16 @@ func (s *Suite) Test_VaralignBlock__fix_without_diagnostic(c *check.C) {
 func (s *Suite) Test_VaralignBlock__continuation_line_last_empty(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
+		// FIXME: Add a test for MkParser to warn about this apparently empty line.
 		"DISTFILES= \\",
 		"\ta \\",
 		"\tb \\",
 		"\tc \\",
-		"",
+		"", // This is the final line of the variable assignment.
 		"NEXT_VAR=\tsecond line")
+	vt.Internals(
+		"10 11 empty",
+		"09 16")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1--5: This variable value should be aligned with tabs, not spaces, to column 17.")
 	vt.Autofixes(
@@ -1098,6 +1285,12 @@ func (s *Suite) Test_VaralignBlock__realign_commented_single_lines(c *check.C) {
 		"#CONFIGURE_ENV+= \\",
 		"#TZ=UTC",
 		"SHORT=\tvalue")
+	vt.Internals(
+		"06 08",
+		"11 16",
+		"14 24 empty", // FIXME: "aligned" is missing
+		"16 17 empty", // This line is not "aligned" since it starts in column 1.
+		"06 08")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 17.",
 		"NOTE: ~/Makefile:5--6: This line should be aligned with \"\\t\\t\".",
@@ -1132,6 +1325,9 @@ func (s *Suite) Test_VaralignBlock__realign_commented_continuation_line(c *check
 		"#\tvalue2 \\",
 		"#\tvalue3 \\",
 		"AFTER=\tafter")
+	vt.Internals(
+		"07 08",
+		"11 16 empty")
 	vt.Diagnostics()
 	vt.Autofixes()
 	vt.Fixed(
@@ -1154,6 +1350,11 @@ func (s *Suite) Test_VaralignBlock__realign_variable_without_value(c *check.C) {
 	vt.Input(
 		"COMMENT=\t\tShort description of the package",
 		"#HOMEPAGE=")
+	vt.Internals(
+		// FIXME: The HOMEPAGE line is ignored completely since it doesn't
+		//  need to be indented at all. It may influence the required
+		//  indentation for the other lines. Add a test for that scenario.
+		"08 24")
 	vt.Diagnostics()
 	vt.Autofixes()
 	vt.Fixed(
@@ -1171,6 +1372,8 @@ func (s *Suite) Test_VaralignBlock__realign_commented_multiline(c *check.C) {
 	vt.Input(
 		"#CONF_FILES+=\t\tfile1 \\",
 		"#\t\t\tfile2")
+	vt.Internals(
+		"13 24 initial") // FIXME: should count as "aligned"
 	vt.Diagnostics()
 	vt.Autofixes()
 	vt.Fixed(
@@ -1194,6 +1397,9 @@ func (s *Suite) Test_VaralignBlock__mixed_indentation(c *check.C) {
 		"VAR1=\tvalue1",
 		"VAR2=\tvalue2 \\",
 		" \t \t value2 continued")
+	vt.Internals(
+		"05 08",
+		"05 08 initial aligned")
 	vt.Diagnostics()
 	vt.Autofixes()
 	vt.Fixed(
@@ -1216,6 +1422,10 @@ func (s *Suite) Test_VaralignBlock__eol_comment(c *check.C) {
 		"VAR1=\tdefined",
 		"VAR2=\t# defined",
 		"VAR3=\t#empty")
+	vt.Internals(
+		"05 08",
+		"05 08",
+		"05 08")
 	vt.Diagnostics()
 	vt.Autofixes()
 	vt.Fixed(
