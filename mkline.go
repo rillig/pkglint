@@ -122,7 +122,7 @@ func (p MkLineParser) Parse(line *Line) *MkLine {
 }
 
 func (p MkLineParser) parseVarassign(line *Line, data mkLineSplitResult) *MkLine {
-	m, a := p.MatchVarassign(line, line.Text, data)
+	m, a := p.MatchVarassign(line, line.Text)
 	if !m {
 		return nil
 	}
@@ -364,8 +364,7 @@ func (mkline *MkLine) FirstLineContainsValue() bool {
 
 	// Parsing the continuation marker as variable value is cheating but works well.
 	text := strings.TrimSuffix(mkline.raw[0].orignl, "\n")
-	data := MkLineParser{}.split(nil, text)
-	_, a := MkLineParser{}.MatchVarassign(mkline.Line, text, data)
+	_, a := MkLineParser{}.MatchVarassign(mkline.Line, text)
 	return a.value != "\\"
 }
 
@@ -1523,7 +1522,7 @@ var (
 	VarparamBytes = textproc.NewByteSet("A-Za-z_0-9#*+---./[")
 )
 
-func (p MkLineParser) MatchVarassign(line *Line, text string, asdfData mkLineSplitResult) (bool, *mkLineAssign) {
+func (p MkLineParser) MatchVarassign(line *Line, text string) (bool, *mkLineAssign) {
 
 	// A commented variable assignment does not have leading whitespace.
 	// Otherwise line 1 of almost every Makefile fragment would need to
