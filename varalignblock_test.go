@@ -590,6 +590,29 @@ func (s *Suite) Test_VaralignBlock__shell_command(c *check.C) {
 	vt.Run()
 }
 
+func (s *Suite) Test_VaralignBlock__escaped_varname(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"V.${v:S,\\#,,g}=\tvalue",
+		"V2345678123456781234=\tvalue")
+	vt.Internals(
+		"14 16", // FIXME: must be 15 since the number sign is not escaped when computing the indentation
+		"21 24")
+	// FIXME: needs a diagnostic since the two lines are misaligned.
+	//  Most probably the diagnostic is suppressed because Autofix.ReplaceAfter
+	//  doesn't find the string to be replaced.
+	vt.Diagnostics(
+		nil...)
+	// FIXME: the autofix must work, too.
+	vt.Autofixes(
+		nil...)
+	vt.Fixed(
+		// FIXME: align in column 25.
+		"V.${v:S,\\#,,g}= value", // looks misaligned because of the backslash
+		"V2345678123456781234=   value")
+	vt.Run()
+}
+
 // The most common pattern for laying out continuation lines is to have all
 // values in the continuation lines, one value per line, all indented to the same depth.
 // The depth is either a single tab (see the test below) or aligns with the other
