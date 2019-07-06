@@ -267,6 +267,103 @@ func (s *Suite) Test_VaralignBlock__no_space_at_all(c *check.C) {
 	vt.Run()
 }
 
+func (s *Suite) Test_VaralignBlock__empty_continuation_in_column_0(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR= \\",
+		"no indentation")
+	vt.Diagnostics(
+		// FIXME: suggest indentation to column 8.
+		nil...)
+	vt.Autofixes(
+		nil...)
+	vt.Fixed(
+		"VAR= \\",
+		"no indentation")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__empty_continuation_in_column_8(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR= \\",
+		"\tminimum indentation")
+	vt.Diagnostics(
+		nil...)
+	vt.Autofixes(
+		nil...)
+	vt.Fixed(
+		"VAR= \\",
+		"        minimum indentation")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__empty_continuation_space(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"REF=\tvalue",
+		"VAR= \\",
+		"\tminimum indentation")
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:2--3: This variable value should be aligned with tabs, not spaces, to column 9.")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:2: Replacing \" \" with \"\\t\".")
+	vt.Fixed(
+		"REF=    value",
+		"VAR=    \\",
+		"        minimum indentation")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__empty_continuation_properly_indented(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"REF=\tvalue",
+		"VAR=\t\\",
+		"\tminimum indentation")
+	vt.Diagnostics()
+	vt.Autofixes()
+	vt.Fixed(
+		"REF=    value",
+		"VAR=    \\",
+		"        minimum indentation")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__empty_continuation_too_narrow(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"LONG_VARIABLE=\tvalue",
+		"VAR=\t\\",
+		"\tminimum indentation")
+	vt.Diagnostics(
+		// FIXME: VAR should be indented at column 16 as well.
+		nil...)
+	vt.Autofixes()
+	vt.Fixed(
+		"LONG_VARIABLE=  value",
+		"VAR=    \\",
+		"        minimum indentation")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__empty_continuation_too_wide(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"LONG_VARIABLE=\tvalue",
+		"REALLY_LONG_VARIABLE=\t\\",
+		"\tminimum indentation")
+	vt.Diagnostics(
+		// FIXME: The value of LONG_VARIABLE should be indented at column 24.
+		nil...)
+	vt.Autofixes()
+	vt.Fixed(
+		"LONG_VARIABLE=  value",
+		"REALLY_LONG_VARIABLE=   \\",
+		"        minimum indentation")
+	vt.Run()
+}
+
 // Continuation lines without any content on the first line are treated
 // specially. Their first line is treated normally, which means that it
 // has to be aligned with the other lines.
