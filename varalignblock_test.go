@@ -61,6 +61,11 @@ func (vt *VaralignTester) run(autofix bool) {
 
 	var varalign VaralignBlock
 	for _, mkline := range mklines.mklines {
+		// This standard test only covers a single paragraph.
+		// Testing multiple paragraphs is done as a side-effect
+		// by the various other pkglint tests.
+		assert(!mkline.IsEmpty())
+
 		varalign.Process(mkline)
 	}
 	varalign.Finish()
@@ -387,10 +392,7 @@ func (s *Suite) Test_VaralignBlock__continuation_lines(c *check.C) {
 		"DISTFILES+= \\", // The continuation backslash must be aligned.
 		"\t\t\tvalue",    // The value is already aligned.
 		"DISTFILES+=\t\t\tvalue",
-		"DISTFILES+= value",
-		"",
-		"DISTFILES= \\",
-		"value")
+		"DISTFILES+= value")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:2--3: This variable value should be aligned with tabs, not spaces, to column 17.",
 		"NOTE: ~/Makefile:2--3: This line should be aligned with \"\\t\\t\".",
@@ -406,10 +408,7 @@ func (s *Suite) Test_VaralignBlock__continuation_lines(c *check.C) {
 		"DISTFILES+=     \\",
 		"                value",
 		"DISTFILES+=     value",
-		"DISTFILES+=     value",
-		"",
-		"DISTFILES= \\",
-		"value")
+		"DISTFILES+=     value")
 	vt.Run()
 }
 
@@ -736,28 +735,18 @@ func (s *Suite) Test_VaralignBlock__single_space(c *check.C) {
 func (s *Suite) Test_VaralignBlock__only_space(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
-		"DISTFILES+= space",
-		"DISTFILES+= space",
-		"",
 		"REPLACE_PYTHON+= *.py",
 		"REPLACE_PYTHON+= lib/*.py",
 		"REPLACE_PYTHON+= src/*.py")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 17.",
-		"NOTE: ~/Makefile:2: This variable value should be aligned with tabs, not spaces, to column 17.",
-		"NOTE: ~/Makefile:4: This variable value should be aligned with tabs, not spaces, to column 25.",
-		"NOTE: ~/Makefile:5: This variable value should be aligned with tabs, not spaces, to column 25.",
-		"NOTE: ~/Makefile:6: This variable value should be aligned with tabs, not spaces, to column 25.")
+		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 25.",
+		"NOTE: ~/Makefile:2: This variable value should be aligned with tabs, not spaces, to column 25.",
+		"NOTE: ~/Makefile:3: This variable value should be aligned with tabs, not spaces, to column 25.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \" \" with \"\\t\".",
 		"AUTOFIX: ~/Makefile:2: Replacing \" \" with \"\\t\".",
-		"AUTOFIX: ~/Makefile:4: Replacing \" \" with \"\\t\".",
-		"AUTOFIX: ~/Makefile:5: Replacing \" \" with \"\\t\".",
-		"AUTOFIX: ~/Makefile:6: Replacing \" \" with \"\\t\".")
+		"AUTOFIX: ~/Makefile:3: Replacing \" \" with \"\\t\".")
 	vt.Fixed(
-		"DISTFILES+=     space",
-		"DISTFILES+=     space",
-		"",
 		"REPLACE_PYTHON+=        *.py",
 		"REPLACE_PYTHON+=        lib/*.py",
 		"REPLACE_PYTHON+=        src/*.py")
