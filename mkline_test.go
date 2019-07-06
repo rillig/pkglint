@@ -1546,15 +1546,13 @@ func (s *Suite) Test_MkLine_ResolveVarsInRelativePath__without_tracing(c *check.
 func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 	t := s.Init(c)
 
-	test := func(text string, commented bool, varname, spaceAfterVarname, op, align, value, spaceAfterValue, comment string, diagnostics ...string) {
-		line := t.NewLine("filename.mk", 123, text)
+	testLine := func(line *Line, commented bool, varname, spaceAfterVarname, op, align, value, spaceAfterValue, comment string, diagnostics ...string) {
+		text := line.Text
 		data := MkLineParser{}.split(line, text)
-		m, actual := MkLineParser{}.MatchVarassign(line, text, data)
-		if !m {
-			c.Errorf("Text %q doesn't match variable assignment", text)
-			return
-		}
 
+		m, actual := MkLineParser{}.MatchVarassign(line, text, data)
+
+		assert(m)
 		expected := mkLineAssign{
 			commented:         commented,
 			varname:           varname,
@@ -1574,6 +1572,11 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 		t.CheckOutput(diagnostics)
 	}
 
+	test := func(text string, commented bool, varname, spaceAfterVarname, op, align, value, spaceAfterValue, comment string, diagnostics ...string) {
+		line := t.NewLine("filename.mk", 123, text)
+		testLine(line, commented, varname, spaceAfterVarname, op, align, value, spaceAfterValue, comment, diagnostics...)
+	}
+
 	testInvalid := func(text string, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, text)
 		data := MkLineParser{}.split(nil, text)
@@ -1582,6 +1585,12 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 			c.Errorf("Text %q matches variable assignment but shouldn't.", text)
 		}
 		t.CheckOutput(diagnostics)
+	}
+
+	lines := func(text ...string) *Line {
+		mklines := t.NewMkLines("filename.mk",
+			text...)
+		return mklines.mklines[0].Line
 	}
 
 	test("C++=c11", false, "C+", "", "+=", "C++=", "c11", "", "")
@@ -1709,6 +1718,32 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 	testInvalid("# VAR=value")
 	testInvalid("#\tVAR=value")
 	testInvalid(MkCvsID)
+
+	testLine(
+		lines(
+			"VAR=\t\t\t\\",
+			"\tvalue"),
+		false,
+		"VAR",
+		"",
+		"=",
+		"VAR= ", // FIXME: must be "VAR=\t\t\t"
+		"value",
+		"",
+		"")
+
+	testLine(
+		lines(
+			"#VAR=\t\t\t\\",
+			"#\tvalue"),
+		true,
+		"VAR",
+		"",
+		"=",
+		"#VAR= \t", // FIXME: must be "#VAR=\t\t\t"
+		"value",
+		"",
+		"")
 }
 
 func (s *Suite) Test_NewMkOperator(c *check.C) {
