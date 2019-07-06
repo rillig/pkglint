@@ -1288,7 +1288,7 @@ func (s *Suite) Test_VaralignBlock__realign_commented_single_lines(c *check.C) {
 	vt.Internals(
 		"06 08",
 		"11 16",
-		"14 24 empty", // FIXME: "aligned" is missing
+		"14 24 empty aligned",
 		"16 17 empty", // This line is not "aligned" since it starts in column 1.
 		"06 08")
 	vt.Diagnostics(
@@ -1373,7 +1373,7 @@ func (s *Suite) Test_VaralignBlock__realign_commented_multiline(c *check.C) {
 		"#CONF_FILES+=\t\tfile1 \\",
 		"#\t\t\tfile2")
 	vt.Internals(
-		"13 24 initial") // FIXME: should count as "aligned"
+		"13 24 initial aligned")
 	vt.Diagnostics()
 	vt.Autofixes()
 	vt.Fixed(

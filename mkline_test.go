@@ -466,8 +466,7 @@ func (s *Suite) Test_MkLine_IsMultiAligned(c *check.C) {
 	test(
 		"#CONFIGURE_ENV+= \\",
 		"#\tvalue",
-		// FIXME: must be true
-		false)
+		true)
 
 	// The indentation of the continuation line is neither 8 nor the
 	// indentation of the first line. Therefore the line is not aligned.

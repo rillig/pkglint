@@ -383,7 +383,12 @@ func (mkline *MkLine) IsMultiAligned() bool {
 	}
 
 	for _, continuation := range mkline.Line.raw[1:] {
-		indent := tabWidth(textproc.NewLexer(continuation.textnl).NextHspace())
+		text := continuation.textnl
+		if mkline.IsCommentedVarassign() && hasPrefix(text, "#\t") {
+			text = text[1:]
+		}
+
+		indent := tabWidth(textproc.NewLexer(text).NextHspace())
 		if indent < minIndent {
 			return false
 		}
