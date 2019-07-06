@@ -331,11 +331,17 @@ func (s *Suite) Test_MkLine_IsMultiAligned(c *check.C) {
 		t.Check(mklines.mklines[0].IsMultiAligned(), equals, expected)
 	}
 
-	// This code must only be called for known multilines.
-	// This is in spirit with the other MkLine methods,
+	// This code must only be called for known variable assignments that
+	// span multiple lines. This is in spirit with the other MkLine methods,
 	// which are also fail-fast.
 	t.ExpectAssert(
 		func() { test("VAR=\tvalue", false) })
+	t.ExpectAssert(
+		func() { test("", false) })
+	t.ExpectAssert(
+		func() { test(".include \"filename.mk\"", false) })
+	t.ExpectAssert(
+		func() { test(".if 0", false) })
 
 	// The first line uses a space for indentation, which is typical of
 	// the outlier line in VaralignBlock.
@@ -444,6 +450,31 @@ func (s *Suite) Test_MkLine_IsMultiAligned(c *check.C) {
 		"\t\\",
 		"\t# nothing",
 		true)
+
+	// Commented variable assignments can also be tested for alignment.
+	test(
+		"#CONFIGURE_ENV+= \\",
+		"\tvalue",
+		true)
+
+	// In commented multilines, the continuation lines may or may not start
+	// with a comment character. Bmake doesn't care, but for human readers
+	// it is confusing to omit the leading comment character.
+	//
+	// For determining whether a multiline is aligned, the initial comment
+	// character is ignored.
+	test(
+		"#CONFIGURE_ENV+= \\",
+		"#\tvalue",
+		// FIXME: must be true
+		false)
+
+	// The indentation of the continuation line is neither 8 nor the
+	// indentation of the first line. Therefore the line is not aligned.
+	test(
+		"#CONFIGURE_ENV+= value1 \\",
+		"#\t\tvalue2",
+		false)
 }
 
 // Demonstrates how a simple condition is structured internally.

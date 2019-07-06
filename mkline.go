@@ -375,6 +375,7 @@ func (mkline *MkLine) FirstLineContainsValue() bool {
 // may start in column 8, to save screen space.
 func (mkline *MkLine) IsMultiAligned() bool {
 	assert(mkline.IsMultiline())
+	assert(mkline.IsVarassignMaybeCommented())
 
 	minIndent := 8
 	if mkline.FirstLineContainsValue() {
