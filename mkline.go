@@ -1523,7 +1523,7 @@ var (
 	VarparamBytes = textproc.NewByteSet("A-Za-z_0-9#*+---./[")
 )
 
-func (p MkLineParser) MatchVarassign(line *Line, text string, asdfData mkLineSplitResult) (m bool, assignment *mkLineAssign) {
+func (p MkLineParser) MatchVarassign(line *Line, text string, asdfData mkLineSplitResult) (bool, *mkLineAssign) {
 
 	// A commented variable assignment does not have leading whitespace.
 	// Otherwise line 1 of almost every Makefile fragment would need to
@@ -1560,7 +1560,7 @@ func (p MkLineParser) MatchVarassign(line *Line, text string, asdfData mkLineSpl
 	varname := lexer.Since(varnameStart)
 
 	if varname == "" {
-		return
+		return false, nil
 	}
 
 	spaceAfterVarname := lexer.NextHspace()
@@ -1571,7 +1571,7 @@ func (p MkLineParser) MatchVarassign(line *Line, text string, asdfData mkLineSpl
 		lexer.Skip(1)
 	}
 	if !lexer.SkipByte('=') {
-		return
+		return false, nil
 	}
 	op := NewMkOperator(lexer.Since(opStart))
 
