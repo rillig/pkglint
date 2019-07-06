@@ -94,7 +94,7 @@ func (p MkLineParser) Parse(line *Line) *MkLine {
 		return p.parseShellcmd(line)
 	}
 
-	if mkline := p.parseVarassign(line, data); mkline != nil {
+	if mkline := p.parseVarassign(line); mkline != nil {
 		return mkline
 	}
 	if mkline := p.parseCommentOrEmpty(line); mkline != nil {
@@ -121,7 +121,7 @@ func (p MkLineParser) Parse(line *Line) *MkLine {
 	return &MkLine{line, nil}
 }
 
-func (p MkLineParser) parseVarassign(line *Line, data mkLineSplitResult) *MkLine {
+func (p MkLineParser) parseVarassign(line *Line) *MkLine {
 	m, a := p.MatchVarassign(line, line.Text)
 	if !m {
 		return nil
