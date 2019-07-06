@@ -386,7 +386,7 @@ func (s *Suite) Test_VaralignBlock__empty_continuation_properly_indented(c *chec
 		"\tminimum indentation")
 	vt.Internals(
 		"04 08",
-		"04 05 empty aligned")
+		"04 08 empty aligned")
 	vt.Diagnostics()
 	vt.Autofixes()
 	vt.Fixed(
@@ -404,14 +404,16 @@ func (s *Suite) Test_VaralignBlock__empty_continuation_too_narrow(c *check.C) {
 		"\tminimum indentation")
 	vt.Internals(
 		"14 16",
-		"04 05 empty aligned")
+		"04 08 empty aligned")
 	vt.Diagnostics(
-		// TODO: VAR should be indented at column 17 as well.
-		nil...)
-	vt.Autofixes()
+		"NOTE: ~/Makefile:2--3: This variable value should be aligned to column 17.")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:2: Replacing \"\\t\" with \"\\t\\t\".")
 	vt.Fixed(
 		"LONG_VARIABLE=  value",
-		"VAR=    \\",
+		"VAR=            \\",
+		// TODO: This continuation line looks misplaced since there
+		//  is plenty of space to the right.
 		"        minimum indentation")
 	vt.Run()
 }
@@ -424,7 +426,7 @@ func (s *Suite) Test_VaralignBlock__empty_continuation_too_wide(c *check.C) {
 		"\tminimum indentation")
 	vt.Internals(
 		"14 16",
-		"21 22 empty aligned")
+		"21 24 empty aligned")
 	vt.Diagnostics(
 		// TODO: The value of LONG_VARIABLE should be indented at column 25.
 		nil...)
@@ -579,12 +581,14 @@ func (s *Suite) Test_VaralignBlock__shell_command(c *check.C) {
 		"\t\t:; else :; fi")
 	vt.Internals(
 		"19 24",
-		"20 21 empty aligned") // FIXME: The 21 is wrong, should be 72 instead.
-	vt.Diagnostics()
-	vt.Autofixes()
+		"20 72 empty aligned")
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:2--4: This variable value should be aligned to column 25.")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:2: Replacing \"\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\".")
 	vt.Fixed(
 		"USE_BUILTIN.Xfixes=     yes",
-		"USE_BUILTIN.Xfixes!=                                                    \\",
+		"USE_BUILTIN.Xfixes!=    \\",
 		"        if ${PKG_ADMIN} pmatch ...; then                                        \\",
 		"                :; else :; fi")
 	vt.Run()
@@ -596,19 +600,14 @@ func (s *Suite) Test_VaralignBlock__escaped_varname(c *check.C) {
 		"V.${v:S,\\#,,g}=\tvalue",
 		"V2345678123456781234=\tvalue")
 	vt.Internals(
-		"14 16", // FIXME: must be 15 since the number sign is not escaped when computing the indentation
+		"15 16", // 15, since the number sign is not escaped when computing the indentation
 		"21 24")
-	// FIXME: needs a diagnostic since the two lines are misaligned.
-	//  Most probably the diagnostic is suppressed because Autofix.ReplaceAfter
-	//  doesn't find the string to be replaced.
 	vt.Diagnostics(
-		nil...)
-	// FIXME: the autofix must work, too.
+		"NOTE: ~/Makefile:1: This variable value should be aligned to column 25.")
 	vt.Autofixes(
-		nil...)
+		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\" with \"\\t\\t\".")
 	vt.Fixed(
-		// FIXME: align in column 25.
-		"V.${v:S,\\#,,g}= value", // looks misaligned because of the backslash
+		"V.${v:S,\\#,,g}=         value", // looks misaligned because of the backslash
 		"V2345678123456781234=   value")
 	vt.Run()
 }
@@ -1311,21 +1310,23 @@ func (s *Suite) Test_VaralignBlock__realign_commented_single_lines(c *check.C) {
 	vt.Internals(
 		"06 08",
 		"11 16",
-		"14 24 empty aligned",
+		"14 15 empty aligned",
 		"16 17 empty", // This line is not "aligned" since it starts in column 1.
 		"06 08")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 17.",
+		"NOTE: ~/Makefile:3--4: This variable value should be aligned with tabs, not spaces, to column 17.",
 		"NOTE: ~/Makefile:5--6: This line should be aligned with \"\\t\\t\".",
 		"NOTE: ~/Makefile:7: This variable value should be aligned to column 17.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\" with \"\\t\\t\".",
+		"AUTOFIX: ~/Makefile:3: Replacing \" \" with \"\\t\".",
 		"AUTOFIX: ~/Makefile:6: Replacing continuation indentation \"\" with \"\\t\\t\".",
 		"AUTOFIX: ~/Makefile:7: Replacing \"\\t\" with \"\\t\\t\".")
 	vt.Fixed(
 		"SHORT=          value",
 		"#DISTFILES=     distfile-1.0.0.tar.gz",
-		"#CONTINUATION= \\",
+		"#CONTINUATION=  \\",
 		"#               continued",
 		"#CONFIGURE_ENV+= \\",
 		"#               TZ=UTC",
@@ -1350,7 +1351,7 @@ func (s *Suite) Test_VaralignBlock__realign_commented_continuation_line(c *check
 		"AFTER=\tafter")
 	vt.Internals(
 		"07 08",
-		"11 16 empty")
+		"11 12 empty")
 	vt.Diagnostics()
 	vt.Autofixes()
 	vt.Fixed(

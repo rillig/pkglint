@@ -1718,7 +1718,7 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 		"VAR",
 		"",
 		"=",
-		"VAR= ", // FIXME: must be "VAR=\t\t\t"
+		"VAR=\t\t\t",
 		"value",
 		"",
 		"")
@@ -1731,7 +1731,7 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 		"VAR",
 		"",
 		"=",
-		"#VAR= \t", // FIXME: must be "#VAR=\t\t\t"
+		"#VAR=\t\t\t",
 		"value",
 		"",
 		"")

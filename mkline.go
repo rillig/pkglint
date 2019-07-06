@@ -818,6 +818,8 @@ again:
 }
 
 type mkLineSplitResult struct {
+	// The text of the line, without the comment at the end of the line,
+	// and with # signs unescaped.
 	main               string
 	tokens             []*MkToken
 	spaceBeforeComment string
@@ -1582,7 +1584,8 @@ func (p MkLineParser) MatchVarassign(line *Line, text string) (bool, *mkLineAssi
 	lexer.SkipHspace()
 
 	value := trimHspace(lexer.Rest())
-	valueAlign := ifelseStr(commented, "#", "") + lexer.Since(mainStart)
+	parsedValueAlign := ifelseStr(commented, "#", "") + lexer.Since(mainStart)
+	valueAlign := p.getRawValueAlign(line.raw[0].orignl, parsedValueAlign)
 	spaceBeforeComment := data.spaceBeforeComment
 	if value == "" {
 		valueAlign += spaceBeforeComment
@@ -1604,6 +1607,38 @@ func (p MkLineParser) MatchVarassign(line *Line, text string) (bool, *mkLineAssi
 		spaceAfterValue:   spaceBeforeComment,
 		comment:           ifelseStr(data.hasComment, "#", "") + data.comment,
 	}
+}
+
+func (*MkLineParser) getRawValueAlign(raw, parsed string) string {
+	r := textproc.NewLexer(raw)
+	p := textproc.NewLexer(parsed)
+	mark := r.Mark()
+
+	for !p.EOF() {
+		pch := p.PeekByte()
+		rch := r.PeekByte()
+
+		switch {
+		case pch == rch:
+			p.Skip(1)
+			r.Skip(1)
+
+		case pch == ' ', pch == '\t':
+			p.SkipHspace()
+			r.SkipHspace()
+
+		case pch == '#' && r.SkipString("\\#"):
+			p.Skip(1)
+
+		case r.Rest() == "\\\n":
+			return r.Since(mark)
+
+		default:
+			assert(false)
+		}
+	}
+
+	return r.Since(mark)
 }
 
 func MatchMkInclude(text string) (m bool, indentation, directive, filename string) {
