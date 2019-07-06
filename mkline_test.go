@@ -1548,7 +1548,6 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 
 	testLine := func(line *Line, commented bool, varname, spaceAfterVarname, op, align, value, spaceAfterValue, comment string, diagnostics ...string) {
 		text := line.Text
-		_ = MkLineParser{}.split(line, text) // FIXME: move into Test_MkLineParser_split
 
 		m, actual := MkLineParser{}.MatchVarassign(line, text)
 
@@ -1692,14 +1691,7 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 		"EGDIRS=\t",
 		"${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d",
 		"",
-		"",
-
-		"WARN: filename.mk:123: Missing closing \"}\" for \"EGDIR/pam.d\".",
-		"WARN: filename.mk:123: Invalid part \"/pam.d\" after variable name \"EGDIR\".",
-		"WARN: filename.mk:123: Missing closing \"}\" for \"EGDIR/dbus-1/system.d ${EGDIR/pam.d\".",
-		"WARN: filename.mk:123: Invalid part \"/dbus-1/system.d ${EGDIR/pam.d\" after variable name \"EGDIR\".",
-		"WARN: filename.mk:123: Missing closing \"}\" for \"EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\".",
-		"WARN: filename.mk:123: Invalid part \"/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\" after variable name \"EGDIR\".")
+		"")
 
 	test("VAR:=\t${VAR:M-*:[\\#]}",
 		false,
@@ -2445,6 +2437,40 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 			hasComment:         true,
 			comment:            " comment after spaces",
 		})
+}
+
+func (s *Suite) Test_MkLineParser_split__unclosed_varuse(c *check.C) {
+	t := s.Init(c)
+
+	test := func(text string, expected mkLineSplitResult, diagnostics ...string) {
+		line := t.NewLine("filename.mk", 123, text)
+
+		data := MkLineParser{}.split(line, text)
+
+		c.Check(data, deepEquals, expected)
+		t.CheckOutput(diagnostics)
+	}
+
+	test(
+		"EGDIRS=\t${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d",
+
+		mkLineSplitResult{
+			"EGDIRS=\t${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d",
+			[]*MkToken{
+				{"EGDIRS=\t", nil},
+				{"${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d",
+					NewMkVarUse("EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d")}},
+			"",
+			false,
+			"",
+		},
+
+		"WARN: filename.mk:123: Missing closing \"}\" for \"EGDIR/pam.d\".",
+		"WARN: filename.mk:123: Invalid part \"/pam.d\" after variable name \"EGDIR\".",
+		"WARN: filename.mk:123: Missing closing \"}\" for \"EGDIR/dbus-1/system.d ${EGDIR/pam.d\".",
+		"WARN: filename.mk:123: Invalid part \"/dbus-1/system.d ${EGDIR/pam.d\" after variable name \"EGDIR\".",
+		"WARN: filename.mk:123: Missing closing \"}\" for \"EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\".",
+		"WARN: filename.mk:123: Invalid part \"/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\" after variable name \"EGDIR\".")
 }
 
 func (s *Suite) Test_MkLineParser_parseDirective(c *check.C) {
