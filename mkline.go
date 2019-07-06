@@ -349,18 +349,19 @@ func (mkline *MkLine) FirstLineContainsValue() bool {
 
 // IsMultiAligned returns whether the multiline is properly aligned.
 // Each continuation line must be at least as indented as the first line.
-// If the first line does not contain an actual value, the second line may
-// start in column 8, to save screen space.
+// If the first line does not contain an actual value, the second line
+// may start in column 8, to save screen space.
 func (mkline *MkLine) IsMultiAligned() bool {
 	assert(mkline.IsMultiline())
+
+	minIndent := 8
 	if mkline.FirstLineContainsValue() {
-		return true
+		minIndent = tabWidth(mkline.ValueAlign())
 	}
 
-	firstIndent := tabWidth(mkline.ValueAlign())
-	for _, continuation := range mkline.Line.raw {
+	for _, continuation := range mkline.Line.raw[1:] {
 		indent := tabWidth(textproc.NewLexer(continuation.textnl).NextHspace())
-		if indent < firstIndent {
+		if indent < minIndent {
 			return false
 		}
 	}
