@@ -577,19 +577,19 @@ func (s *Suite) Test_VaralignBlock__shell_command(c *check.C) {
 	vt.Input(
 		"USE_BUILTIN.Xfixes=\tyes",
 		"USE_BUILTIN.Xfixes!=\t\t\t\t\t\t\t\\",
-		"\tif ${PKG_ADMIN} pmatch ...; then\t\t\t\t\t\\",
+		"\tif ${PKG_ADMIN} pmatch ...; then\t\t\t\t\\",
 		"\t\t:; else :; fi")
 	vt.Internals(
 		"19 24",
 		"20 72 empty aligned")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:2--4: This variable value should be aligned to column 25.")
+		nil...)
 	vt.Autofixes(
-		"AUTOFIX: ~/Makefile:2: Replacing \"\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\".")
+		nil...)
 	vt.Fixed(
 		"USE_BUILTIN.Xfixes=     yes",
-		"USE_BUILTIN.Xfixes!=    \\",
-		"        if ${PKG_ADMIN} pmatch ...; then                                        \\",
+		"USE_BUILTIN.Xfixes!=                                                    \\",
+		"        if ${PKG_ADMIN} pmatch ...; then                                \\",
 		"                :; else :; fi")
 	vt.Run()
 }

@@ -230,7 +230,12 @@ func (va *VaralignBlock) realign(mkline *MkLine, varnameOp, oldSpace string, con
 }
 
 func (va *VaralignBlock) realignInitialLine(mkline *MkLine, varnameOp string, oldSpace string, newSpace string, hasSpace bool, newWidth int) {
-	wrongColumn := tabWidth(varnameOp+oldSpace) != tabWidth(varnameOp+newSpace)
+	oldWidth := tabWidth(varnameOp + oldSpace)
+	if oldWidth == 72 {
+		return
+	}
+
+	wrongColumn := oldWidth != tabWidth(varnameOp+newSpace)
 
 	fix := mkline.Autofix()
 
