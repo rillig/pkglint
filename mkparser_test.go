@@ -547,7 +547,10 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	t := s.Init(c)
 
 	testRest := func(input string, expectedTree *MkCond, expectedRest string) {
-		p := NewMkParser(nil, input)
+		// As of July 2019 p.MkCond does not emit warnings;
+		// this is left to MkLineChecker) checkDirectiveCond.
+		line := t.NewLine("filename.mk", 1, ".if "+input)
+		p := NewMkParser(line, input)
 		actualTree := p.MkCond()
 		c.Check(actualTree, deepEquals, expectedTree)
 		c.Check(p.Rest(), equals, expectedRest)
