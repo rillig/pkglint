@@ -862,7 +862,6 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondCompare(c *check.C) {
 	//
 	// See https://mail-index.netbsd.org/tech-pkg/2019/07/07/msg021539.html
 	test(".if !empty{VAR}",
-		// TODO: The ! should not be in the unrecognized part.
 		"WARN: filename.mk:1: Invalid condition, unrecognized part: \"empty{VAR}\".")
 }
 
