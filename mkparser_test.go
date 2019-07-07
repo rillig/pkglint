@@ -772,7 +772,10 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 		"value == \"${VAR}suffix\"")
 
 	// Function calls need round parentheses instead of curly braces.
-	// As of July 2019, bmake silently accepts this wrong expression.
+	// As of July 2019, bmake silently accepts this wrong expression
+	// and interprets it as !defined(empty{USE_CROSS_COMPILE:M[yY][eE][sS]}),
+	// which is always true, except if a variable of this strange name
+	// were actually defined.
 	testRest("!empty{USE_CROSS_COMPILE:M[yY][eE][sS]}",
 		nil,
 		"empty{USE_CROSS_COMPILE:M[yY][eE][sS]}")
