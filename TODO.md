@@ -50,3 +50,51 @@ do-install:
 
 * Implement the alignment rule for continuation backslashes in column 72,
   especially when autofixing the indentation.
+
+### Test_VaralignBlock__tabbed_outlier
+ 
+~~~
+.if !empty(PKG_OPTIONS:Minspircd-sqloper)
+INSPIRCD_STORAGE_DRIVER?=	mysql
+MODULES+=		m_sqloper.cpp m_sqlutils.cpp
+HEADERS+=		m_sqlutils.h
+.endif
+
+2: Breite 26, eingerückt mit Tab auf 33
+3: Breite 9, eingerückt mit Tabs auf 25
+4: Breite 9, eingerückt mit Tabs auf 25
+
+unschön?
+Ja, die Einrückung ist nicht einheitlich: 2x25, 1x33.
+
+Möglichkeit 1: die 2x25 auf 33 erhöhen.
+
+* Die Einrückung ist dann einheitlich.
+* Die maximale Zeilenlänge wäre dann 53 + 8 = 61.
+* Das liegt unterhalb von 72, daher ist es akzeptabel.
+
+.if !empty(PKG_OPTIONS:Minspircd-sqloper)
+INSPIRCD_STORAGE_DRIVER?=	mysql
+MODULES+=			m_sqloper.cpp m_sqlutils.cpp
+HEADERS+=			m_sqlutils.h
+.endif
+
+Möglichkeit 2: ist Zeile 2 ein Ausreißer?
+
+* Es gibt keine Fortsetzungszeilen, das macht die Sache einfach.
+* Zeile 2 hat die Einrückung 33, das ist 8 mehr als die zweitmeiste.
+* Das reicht nicht für einen Ausreißer.
+* Die übrigen Zeilen im Absatz sind konsistent eingerückt.
+* Die übrigen Zeilen im Absatz sind weiter eingerückt als eigentlich nötig.
+* Nach dem Entfernen der unnötigen Einrückung ist die zweittiefste Einrückung noch 17.
+* Der Unterschied zwischen der 17 (korrigiert) und der 26 (mindest) reicht für einen Ausreißer.
+* Zeile 2 ist nach der Umformung ein Ausreißer.
+* Zeile 2 wird mit Leerzeichen statt Tab eingerückt.
+* Zeilen 3 und 4 werden minimal eingerückt, also auf die 17.
+
+.if !empty(PKG_OPTIONS:Minspircd-sqloper)
+INSPIRCD_STORAGE_DRIVER?= mysql
+MODULES+=	m_sqloper.cpp m_sqlutils.cpp
+HEADERS+=	m_sqlutils.h
+.endif
+~~~
