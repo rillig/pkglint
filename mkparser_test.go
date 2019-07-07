@@ -750,7 +750,7 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	// A logical not must always be followed by an expression.
 	testRest("!<",
 		nil,
-		"!<")
+		"<")
 
 	// Empty parentheses are a syntax error.
 	testRest("()",
@@ -772,7 +772,7 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	// As of July 2019, bmake silently accepts this wrong expression.
 	testRest("!empty{USE_CROSS_COMPILE:M[yY][eE][sS]}",
 		nil,
-		"!empty{USE_CROSS_COMPILE:M[yY][eE][sS]}")
+		"empty{USE_CROSS_COMPILE:M[yY][eE][sS]}")
 }
 
 func (s *Suite) Test_MkParser_Varname(c *check.C) {

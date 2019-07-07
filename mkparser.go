@@ -468,11 +468,12 @@ func (p *MkParser) mkCondCompare() *MkCond {
 	lexer.SkipHspace()
 	switch {
 	case lexer.SkipByte('!'):
+		notMark := lexer.Mark()
 		cond := p.mkCondCompare()
 		if cond != nil {
 			return &MkCond{Not: cond}
 		}
-		lexer.Reset(mark)
+		lexer.Reset(notMark)
 		return nil
 
 	case lexer.SkipByte('('):
