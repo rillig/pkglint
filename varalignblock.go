@@ -206,7 +206,8 @@ func (*VaralignBlock) optimalWidth(infos []*varalignBlockInfo) int {
 			continue
 		}
 
-		if width := info.totalWidth; info.varnameOpWidth != outlier {
+		if info.varnameOpWidth != outlier {
+			width := info.totalWidth
 			if minTotalWidth == 0 || width < minTotalWidth {
 				minTotalWidth = width
 			}
