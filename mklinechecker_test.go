@@ -847,6 +847,23 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondCompare(c *check.C) {
 	test(".if \"${BUILD_DIRS}str\" == \"str\"",
 		// TODO: why should it not be used? In a .for loop it sounds pretty normal.
 		"WARN: filename.mk:1: BUILD_DIRS should not be used at load time in any file.")
+
+	// This is a shorthand for defined(VAR), but it is not used in practice.
+	test(".if VAR",
+		"WARN: filename.mk:1: Invalid condition, unrecognized part: \"VAR\".")
+
+	// Calling a function with braces instead of parentheses is syntactically
+	// invalid. Pkglint is stricter than bmake in this situation.
+	//
+	// Bmake reads the "empty{VAR}" as a variable name. It then checks whether
+	// this variable is defined. It is not, of course, therefore the expression
+	// is false. The ! in front of it negates this false, which makes the whole
+	// condition true.
+	//
+	// See https://mail-index.netbsd.org/tech-pkg/2019/07/07/msg021539.html
+	test(".if !empty{VAR}",
+		// TODO: The ! should not be in the unrecognized part.
+		"WARN: filename.mk:1: Invalid condition, unrecognized part: \"!empty{VAR}\".")
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirectiveCond__tracing(c *check.C) {
