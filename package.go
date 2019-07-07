@@ -1262,15 +1262,20 @@ func (pkg *Package) checkIncludeConditionally(mkline *MkLine, indentation *Inden
 
 func (pkg *Package) loadPlistDirs(plistFilename string) {
 	lines := Load(plistFilename, MustSucceed)
-	for _, line := range lines.Lines {
-		text := line.Text
-		pkg.Plist.Files[text] = true // XXX: ignores PLIST conditions for now
-		// Keep in sync with PlistChecker.collectFilesAndDirs
-		if !contains(text, "$") && !contains(text, "@") {
-			for dir := path.Dir(text); dir != "."; dir = path.Dir(dir) {
-				pkg.Plist.Dirs[dir] = true
-			}
-		}
+	ck := PlistChecker{
+		pkg,
+		make(map[string]*PlistLine),
+		make(map[string]*PlistLine),
+		"",
+		Once{},
+		false}
+	ck.Load(lines)
+
+	for filename := range ck.allFiles {
+		pkg.Plist.Files[filename] = true
+	}
+	for dirname := range ck.allDirs {
+		pkg.Plist.Dirs[dirname] = true
 	}
 }
 

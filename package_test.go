@@ -1739,9 +1739,10 @@ func (s *Suite) Test_Package_loadPlistDirs(c *check.C) {
 	pkg := NewPackage(t.File("category/package"))
 	pkg.load()
 
-	// FIXME: dir/subdir should also be included in pkg.Plist.Dirs.
 	t.Check(pkg.Plist.Dirs, deepEquals, map[string]bool{
-		"bin": true})
+		"bin":        true,
+		"dir":        true,
+		"dir/subdir": true})
 }
 
 func (s *Suite) Test_Package_checkUseLanguagesCompilerMk__too_late(c *check.C) {
