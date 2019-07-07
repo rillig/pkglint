@@ -1442,18 +1442,23 @@ func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs(c *check.C) {
 }
 
 // The AUTO_MKDIRS code in mk/install/install.mk (install-dirs-from-PLIST)
-// only creates directories that contain at least one unconditional file.
+// skips conditional directories, as well as directories with placeholders.
 func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs__conditional_PLIST(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package",
+		"LIB_SUBDIR=\tsubdir",
+		"",
 		"do-install:",
 		"\t${RUN} ${INSTALL_DATA_DIR} ${PREFIX}/libexec/always",
-		"\t${RUN} ${INSTALL_DATA_DIR} ${PREFIX}/libexec/conditional")
+		"\t${RUN} ${INSTALL_DATA_DIR} ${PREFIX}/libexec/conditional",
+		"\t${RUN} ${INSTALL_DATA_DIR} ${PREFIX}/${LIB_SUBDIR}",
+	)
 	t.Chdir("category/package")
 	t.CreateFileLines("PLIST",
 		PlistCvsID,
 		"libexec/always/always",
+		"${LIB_SUBDIR}/file",
 		"${PLIST.cond}libexec/conditional/conditional")
 	t.FinishSetUp()
 
@@ -1462,11 +1467,15 @@ func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs__conditional_PLIST(c *
 	// As libexec/conditional will not be created automatically,
 	// AUTO_MKDIRS must not be suggested in that line.
 	t.CheckOutputLines(
-		"NOTE: Makefile:21: You can use AUTO_MKDIRS=yes "+
+		"NOTE: Makefile:23: You can use AUTO_MKDIRS=yes "+
 			"or \"INSTALLATION_DIRS+= libexec/always\" "+
 			"instead of \"${INSTALL_DATA_DIR}\".",
-		"NOTE: Makefile:22: You can use "+
+		"NOTE: Makefile:24: You can use "+
 			"\"INSTALLATION_DIRS+= libexec/conditional\" "+
+			"instead of \"${INSTALL_DATA_DIR}\".",
+		// FIXME: AUTO_MKDIRS=yes is wrong here
+		"NOTE: Makefile:25: You can use AUTO_MKDIRS=yes "+
+			"or \"INSTALLATION_DIRS+= ${LIB_SUBDIR}\" "+
 			"instead of \"${INSTALL_DATA_DIR}\".")
 }
 

@@ -1749,6 +1749,7 @@ func (s *Suite) Test_Package_loadPlistDirs(c *check.C) {
 	t.Check(dirs, deepEquals, []string{"bin", "dir", "dir/subdir"})
 }
 
+// Just ensure that pkglint doesn't crash.
 func (s *Suite) Test_Package_loadPlistDirs__empty(c *check.C) {
 	t := s.Init(c)
 
