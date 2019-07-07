@@ -1062,7 +1062,7 @@ func (s *Suite) Test_Autofix_Apply__text_after_replacing_string(c *check.C) {
 	t.Check(mkline.raw[0].textnl, equals, "VAR=\tnew value\n")
 	t.Check(mkline.raw[0].orignl, equals, "VAR=\tvalue\n")
 	t.Check(mkline.Text, equals, "VAR=\tnew value")
-	// FIXME: should be updated as well.
+	// TODO: should be updated as well.
 	t.Check(mkline.Value(), equals, "value")
 }
 
@@ -1086,7 +1086,7 @@ func (s *Suite) Test_Autofix_Apply__text_after_replacing_regex(c *check.C) {
 	t.Check(mkline.raw[0].textnl, equals, "VAR=\tnew value\n")
 	t.Check(mkline.raw[0].orignl, equals, "VAR=\tvalue\n")
 	t.Check(mkline.Text, equals, "VAR=\tnew value")
-	// FIXME: should be updated as well.
+	// TODO: should be updated as well.
 	t.Check(mkline.Value(), equals, "value")
 }
 
