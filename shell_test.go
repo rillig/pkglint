@@ -232,7 +232,10 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine(c *check.C) {
 		"WARN: filename.mk:1: Using a leading \"-\" to suppress errors is deprecated.")
 
 	G.Pkg = NewPackage(t.File("category/pkgbase"))
-	G.Pkg.Plist.Dirs["share/pkgbase"] = true
+	G.Pkg.Plist.Dirs["share/pkgbase"] = &PlistLine{
+		t.NewLine("PLIST", 123, "share/pkgbase/file"),
+		nil,
+		"share/pkgbase/file"}
 
 	// A directory that is found in the PLIST.
 	// TODO: Add a test for using this command inside a conditional;
@@ -1414,7 +1417,10 @@ func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs(c *check.C) {
 		"NOTE: filename.mk:1: You can use \"INSTALLATION_DIRS+= second\" instead of \"${INSTALL} -d\".")
 
 	G.Pkg = NewPackage(t.File("category/pkgbase"))
-	G.Pkg.Plist.Dirs["share/pkgbase"] = true
+	G.Pkg.Plist.Dirs["share/pkgbase"] = &PlistLine{
+		t.NewLine("PLIST", 123, "share/pkgbase/file"),
+		nil,
+		"share/pkgbase/file"}
 
 	// A directory that is found in the PLIST.
 	// TODO: Add a test for using this command inside a conditional;
@@ -1453,14 +1459,14 @@ func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs__conditional_PLIST(c *
 
 	G.checkdirPackage(".")
 
-	// FIXME: libexec/conditional will not be created automatically, therefore
-	//  AUTO_MKDIRS must not be suggested in that line.
+	// As libexec/conditional will not be created automatically,
+	// AUTO_MKDIRS must not be suggested in that line.
 	t.CheckOutputLines(
 		"NOTE: Makefile:21: You can use AUTO_MKDIRS=yes "+
 			"or \"INSTALLATION_DIRS+= libexec/always\" "+
 			"instead of \"${INSTALL_DATA_DIR}\".",
-		"NOTE: Makefile:22: You can use AUTO_MKDIRS=yes "+
-			"or \"INSTALLATION_DIRS+= libexec/conditional\" "+
+		"NOTE: Makefile:22: You can use "+
+			"\"INSTALLATION_DIRS+= libexec/conditional\" "+
 			"instead of \"${INSTALL_DATA_DIR}\".")
 }
 

@@ -3,6 +3,7 @@ package pkglint
 import (
 	"gopkg.in/check.v1"
 	"os"
+	"sort"
 	"strings"
 )
 
@@ -1739,10 +1740,13 @@ func (s *Suite) Test_Package_loadPlistDirs(c *check.C) {
 	pkg := NewPackage(t.File("category/package"))
 	pkg.load()
 
-	t.Check(pkg.Plist.Dirs, deepEquals, map[string]bool{
-		"bin":        true,
-		"dir":        true,
-		"dir/subdir": true})
+	var dirs []string
+	for dir := range pkg.Plist.Dirs {
+		dirs = append(dirs, dir)
+	}
+	sort.Strings(dirs)
+
+	t.Check(dirs, deepEquals, []string{"bin", "dir", "dir/subdir"})
 }
 
 func (s *Suite) Test_Package_loadPlistDirs__empty(c *check.C) {
@@ -1756,8 +1760,13 @@ func (s *Suite) Test_Package_loadPlistDirs__empty(c *check.C) {
 	pkg := NewPackage(t.File("category/package"))
 	pkg.load()
 
-	t.Check(pkg.Plist.Dirs, deepEquals, map[string]bool{
-		"bin": true})
+	var dirs []string
+	for dir := range pkg.Plist.Dirs {
+		dirs = append(dirs, dir)
+	}
+	sort.Strings(dirs)
+
+	t.Check(dirs, deepEquals, []string{"bin"})
 }
 
 func (s *Suite) Test_Package_checkUseLanguagesCompilerMk__too_late(c *check.C) {

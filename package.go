@@ -1271,11 +1271,11 @@ func (pkg *Package) loadPlistDirs(plistFilename string) {
 		false}
 	ck.Load(lines)
 
-	for filename := range ck.allFiles {
-		pkg.Plist.Files[filename] = true
+	for filename, pline := range ck.allFiles {
+		pkg.Plist.Files[filename] = pline
 	}
-	for dirname := range ck.allDirs {
-		pkg.Plist.Dirs[dirname] = true
+	for dirname, pline := range ck.allDirs {
+		pkg.Plist.Dirs[dirname] = pline
 	}
 }
 
@@ -1348,12 +1348,12 @@ func (pkg *Package) checkUseLanguagesCompilerMk(mklines *MkLines) {
 // 2. Ensure that the entries mentioned in the ALTERNATIVES file
 // also appear in the PLIST files.
 type PlistContent struct {
-	Dirs  map[string]bool
-	Files map[string]bool
+	Dirs  map[string]*PlistLine
+	Files map[string]*PlistLine
 }
 
 func NewPlistContent() PlistContent {
 	return PlistContent{
-		make(map[string]bool),
-		make(map[string]bool)}
+		make(map[string]*PlistLine),
+		make(map[string]*PlistLine)}
 }

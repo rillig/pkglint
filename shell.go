@@ -701,7 +701,15 @@ func (scc *SimpleCommandChecker) checkAutoMkdirs() {
 		// TODO: Replace regex with proper VarUse.
 		if !contains(arg, "$$") && !matches(arg, `\$\{[_.]*[a-z]`) {
 			if m, dirname := match1(arg, `^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/(.*)`); m {
-				if G.Pkg != nil && G.Pkg.Plist.Dirs[dirname] {
+				autoMkdirs := false
+				if G.Pkg != nil {
+					plistLine := G.Pkg.Plist.Dirs[dirname]
+					if plistLine != nil && len(plistLine.conditions) == 0 {
+						autoMkdirs = true
+					}
+				}
+
+				if autoMkdirs {
 					scc.Notef("You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= %s\" instead of %q.", dirname, cmdname)
 					scc.Explain(
 						"Many packages include a list of all needed directories in their",
