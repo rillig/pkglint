@@ -1385,6 +1385,7 @@ func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
+	// TODO: Check whether these tools are actually necessary for this test.
 	t.SetUpTool("awk", "AWK", AtRunTime)
 	t.SetUpTool("cp", "CP", AtRunTime)
 	t.SetUpTool("echo", "", AtRunTime)
@@ -1432,6 +1433,35 @@ func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs(c *check.C) {
 	// therefore only INSTALLATION_DIRS is suggested.
 	test("${RUN} ${INSTALL_DATA_DIR} ${PREFIX}/share/other",
 		"NOTE: filename.mk:1: You can use \"INSTALLATION_DIRS+= share/other\" instead of \"${INSTALL_DATA_DIR}\".")
+}
+
+// The AUTO_MKDIRS code in mk/install/install.mk (install-dirs-from-PLIST)
+// only creates directories that contain at least one unconditional file.
+func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs__conditional_PLIST(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"do-install:",
+		"\t${RUN} ${INSTALL_DATA_DIR} ${PREFIX}/libexec/always",
+		"\t${RUN} ${INSTALL_DATA_DIR} ${PREFIX}/libexec/conditional")
+	t.Chdir("category/package")
+	t.CreateFileLines("PLIST",
+		PlistCvsID,
+		"libexec/always/always",
+		"${PLIST.cond}libexec/conditional/conditional")
+	t.FinishSetUp()
+
+	G.checkdirPackage(".")
+
+	// FIXME: libexec/conditional will not be created automatically, therefore
+	//  AUTO_MKDIRS must not be suggested in that line.
+	t.CheckOutputLines(
+		"NOTE: Makefile:21: You can use AUTO_MKDIRS=yes "+
+			"or \"INSTALLATION_DIRS+= libexec/always\" "+
+			"instead of \"${INSTALL_DATA_DIR}\".",
+		"NOTE: Makefile:22: You can use AUTO_MKDIRS=yes "+
+			"or \"INSTALLATION_DIRS+= libexec/conditional\" "+
+			"instead of \"${INSTALL_DATA_DIR}\".")
 }
 
 func (s *Suite) Test_ShellProgramChecker_checkSetE__simple_commands(c *check.C) {
