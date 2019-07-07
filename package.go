@@ -1339,6 +1339,14 @@ func (pkg *Package) checkUseLanguagesCompilerMk(mklines *MkLines) {
 	})
 }
 
+// PlistContent lists the directories and files that appear in the
+// package's PLIST files. It serves two purposes:
+//
+// 1. Decide whether AUTO_MKDIRS can be used instead of listing
+// the INSTALLATION_DIRS redundantly.
+//
+// 2. Ensure that the entries mentioned in the ALTERNATIVES file
+// also appear in the PLIST files.
 type PlistContent struct {
 	Dirs  map[string]bool
 	Files map[string]bool
