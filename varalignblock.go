@@ -91,22 +91,18 @@ type varalignBlockInfo struct {
 func (va *VaralignBlock) Process(mkline *MkLine) {
 	switch {
 	case !G.Opts.WarnSpace:
-		return
 
 	case mkline.IsEmpty():
 		va.Finish()
-		return
 
 	case mkline.IsVarassignMaybeCommented():
 		va.processVarassign(mkline)
 
 	case mkline.IsComment(), mkline.IsDirective():
-		return
 
 	default:
 		trace.Stepf("Skipping varalign block because of line %s", &mkline.Location)
 		va.skip = true
-		return
 	}
 }
 
