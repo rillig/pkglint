@@ -1745,6 +1745,21 @@ func (s *Suite) Test_Package_loadPlistDirs(c *check.C) {
 		"dir/subdir": true})
 }
 
+func (s *Suite) Test_Package_loadPlistDirs__empty(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.CreateFileLines("category/package/PLIST.common",
+		nil...)
+	t.FinishSetUp()
+
+	pkg := NewPackage(t.File("category/package"))
+	pkg.load()
+
+	t.Check(pkg.Plist.Dirs, deepEquals, map[string]bool{
+		"bin": true})
+}
+
 func (s *Suite) Test_Package_checkUseLanguagesCompilerMk__too_late(c *check.C) {
 	t := s.Init(c)
 
