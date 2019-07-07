@@ -438,7 +438,15 @@ func (s *Suite) Test_VaralignBlock__empty_continuation_too_wide(c *check.C) {
 	vt.Run()
 }
 
-func (s *Suite) Test_VaralignBlock__continuation_no_space(c *check.C) {
+// Line 1 is currently indented to column 25.
+// Line 2 is a continuation line with a very long variable name.
+// Line 2 is indented to column 38, which is much larger than 25.
+// Therefore line 2 is the outlier in this paragraph.
+// The initial line of the continuation line is empty.
+// It only contains a backslash, without the usual space to the left.
+// This space should be inserted to the left of the backslash.
+// Everything else is fine.
+func (s *Suite) Test_VaralignBlock__outlier_in_follow_continuation(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"PATCHFILES+=\t\temacs20-jumbo-patch-20170723.gz",
@@ -449,7 +457,6 @@ func (s *Suite) Test_VaralignBlock__continuation_no_space(c *check.C) {
 		"38 38 follow aligned")
 	vt.Diagnostics(
 		// FIXME: Line 2 cannot be aligned to column 25.
-		// FIXME: Line 3 is already aligned to column 25.
 		"NOTE: ~/Makefile:2--3: This variable value should be aligned to column 25.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:2: Replacing \"\" with \" \".")

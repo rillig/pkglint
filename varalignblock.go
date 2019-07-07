@@ -171,7 +171,7 @@ func (va *VaralignBlock) Finish() {
 // There may be a single line sticking out from the others (called outlier).
 // This is to prevent a single SITES.* variable from forcing the rest of the
 // paragraph to be indented too far to the right.
-func (va *VaralignBlock) optimalWidth(infos []*varalignBlockInfo) int {
+func (*VaralignBlock) optimalWidth(infos []*varalignBlockInfo) int {
 	longest := 0 // The longest seen varnameOpWidth
 	var longestLine *MkLine
 	secondLongest := 0 // The second-longest seen varnameOpWidth
