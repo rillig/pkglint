@@ -438,6 +438,28 @@ func (s *Suite) Test_VaralignBlock__empty_continuation_too_wide(c *check.C) {
 	vt.Run()
 }
 
+func (s *Suite) Test_VaralignBlock__continuation_no_space(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"PATCHFILES+=\t\temacs20-jumbo-patch-20170723.gz",
+		"SITES.emacs20-jumbo-patch-20170723.gz=\\",
+		"\t\t\thttp://www.NetBSD.org/~dholland/patchkits/emacs20/")
+	vt.Internals(
+		"12 24",
+		"38 38 follow aligned")
+	vt.Diagnostics(
+		// FIXME: Line 2 cannot be aligned to column 25.
+		// FIXME: Line 3 is already aligned to column 25.
+		"NOTE: ~/Makefile:2--3: This variable value should be aligned to column 25.")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:2: Replacing \"\" with \" \".")
+	vt.Fixed(
+		"PATCHFILES+=            emacs20-jumbo-patch-20170723.gz",
+		"SITES.emacs20-jumbo-patch-20170723.gz= \\",
+		"                        http://www.NetBSD.org/~dholland/patchkits/emacs20/")
+	vt.Run()
+}
+
 func (s *Suite) Test_VaralignBlock__continuation_lines(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
