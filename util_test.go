@@ -200,7 +200,7 @@ func (s *Suite) Test_pathContains(c *check.C) {
 		t.c.Check(
 			func() { _ = pathContains(haystack, needle) },
 			check.PanicMatches,
-			`runtime error: index out of range`)
+			`runtime error: index out of range.*`)
 	}
 
 	testPanic("", "")
@@ -237,7 +237,7 @@ func (s *Suite) Test_pathContainsDir(c *check.C) {
 		t.c.Check(
 			func() { _ = pathContainsDir(haystack, needle) },
 			check.PanicMatches,
-			`runtime error: index out of range`)
+			`^runtime error: index out of range.*`)
 	}
 
 	testPanic("", "")
