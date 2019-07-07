@@ -12,7 +12,46 @@ import "strings"
 // A typical example is a SITES.very-long-file-name.tar.gz variable
 // between HOMEPAGE and DISTFILES.
 //
-// TODO: Document how exactly the continuation lines are handled.
+// Continuation lines are also aligned to the single-line assignments.
+// There are two types of continuation lines: follow-lines and initial-lines.
+//
+//  FOLLOW_LINE= \
+//          The value starts in the second line.
+//
+// The backslash in the first line is usually aligned to the other variables
+// in the same paragraph. If the variable name is so long that it is an
+// outlier, it may be indented using a single space, just like a single-line
+// variable. In multi-line shell commands or AWK programs, the backslash is
+// often indented to column 73, as are the backslashes from the follow-up
+// lines, to act as a visual guideline.
+//
+// Since this type is often used for URLs or other long values, the first
+// follow-up line may be indented using a single tab, even if the other
+// variables in the paragraph are aligned further to the right. If the
+// indentation is not a single tab, it must match the indentation of the
+// other lines in the paragraph.
+//
+//  INITIAL_LINE=   The value starts in the first line \
+//                  and continues in the second line.
+//
+// In lists or plain text, like in the INITIAL_LINE above, all values are
+// aligned in the same column. Some variables also contain code, and in
+// these variables, the line containing the first word defines how deep
+// the follow-up lines must be indented at least.
+//
+//  SHELL_CMD=                                                              \
+//          if ${PKG_ADMIN} pmatch ${PKGNAME} ${dependency}; then           \
+//                  ${ECHO} yes;                                            \
+//          else                                                            \
+//                  ${ECHO} no;                                             \
+//          fi
+//
+// In the continuation lines, each follow-up line is indented using at least
+// one tab, to avoid confusing them with regular single-lines. This is
+// especially true for CONFIGURE_ENV, since the environment variables are
+// typically uppercase as well.
+//
+// FIXME: Implement each requirement from the above documentation.
 type VaralignBlock struct {
 	infos []*varalignBlockInfo
 	skip  bool

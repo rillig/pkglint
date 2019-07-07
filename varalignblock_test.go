@@ -438,22 +438,6 @@ func (s *Suite) Test_VaralignBlock__empty_continuation_too_wide(c *check.C) {
 	vt.Run()
 }
 
-// Continuation lines without any content on the first line are treated
-// specially. Their first line is treated normally, which means that it
-// has to be aligned with the other lines.
-//
-// Their second to last lines must be indented by at least 1 tab, since
-// otherwise they might be mistaken for regular variable assignments,
-// which is especially true for CONFIGURE_ENV, since the environment
-// variables are typically uppercase as well.
-//
-// The indentation of these continued lines must be either in column 9,
-// which is the minimum indentation reachable by using only tabs. Or
-// their minimum indentation must match the indentation of the remaining
-// paragraph. In all but the latter case the indentation of the continued
-// lines is ignored for determining the optimal indentation.
-//
-// FIXME: Implement all the above rules.
 func (s *Suite) Test_VaralignBlock__continuation_lines(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
