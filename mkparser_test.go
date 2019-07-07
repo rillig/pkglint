@@ -5,21 +5,12 @@ import (
 	"strings"
 )
 
-func (s *Suite) Test_NewMkParser__invalid_arguments(c *check.C) {
-	t := s.Init(c)
-
-	line := t.NewLine("filename.mk", 123, "")
-
-	t.ExpectAssert(func() { NewMkParser(line, "", false) })
-	t.ExpectAssert(func() { NewMkParser(nil, "", true) })
-}
-
 func (s *Suite) Test_MkParser_MkTokens(c *check.C) {
 	t := s.Init(c)
 
 	testRest := func(input string, expectedTokens []*MkToken, expectedRest string) {
 		line := t.NewLines("Test_MkParser_MkTokens.mk", input).Lines[0]
-		p := NewMkParser(line, input, true)
+		p := NewMkParser(line, input)
 		actualTokens := p.MkTokens()
 		c.Check(actualTokens, deepEquals, expectedTokens)
 		for i, expectedToken := range expectedTokens {
@@ -97,7 +88,7 @@ func (s *Suite) Test_MkParser_VarUse(c *check.C) {
 
 	testRest := func(input string, expectedTokens []*MkToken, expectedRest string, diagnostics ...string) {
 		line := t.NewLines("Test_MkParser_VarUse.mk", input).Lines[0]
-		p := NewMkParser(line, input, true)
+		p := NewMkParser(line, input)
 
 		actualTokens := p.MkTokens()
 
@@ -394,7 +385,7 @@ func (s *Suite) Test_MkParser_varUseModifier__invalid_ts_modifier_with_warning(c
 
 	t.SetUpCommandLine("-Wall", "--explain")
 	line := t.NewLine("filename.mk", 123, "${VAR:tsabc}")
-	p := NewMkParser(line, "tsabc}", true)
+	p := NewMkParser(line, "tsabc}")
 
 	modifier := p.varUseModifier("VAR", '}')
 
@@ -412,7 +403,7 @@ func (s *Suite) Test_MkParser_varUseModifier__invalid_ts_modifier_with_warning(c
 func (s *Suite) Test_MkParser_varUseModifier__invalid_ts_modifier_without_warning(c *check.C) {
 	t := s.Init(c)
 
-	p := NewMkParser(nil, "tsabc}", false)
+	p := NewMkParser(nil, "tsabc}")
 
 	modifier := p.varUseModifier("VAR", '}')
 
@@ -424,7 +415,7 @@ func (s *Suite) Test_MkParser_varUseModifier__square_bracket(c *check.C) {
 	t := s.Init(c)
 
 	line := t.NewLine("filename.mk", 123, "\t${VAR:[asdf]}")
-	p := NewMkParser(line, "[asdf]", true)
+	p := NewMkParser(line, "[asdf]")
 
 	modifier := p.varUseModifier("VAR", '}')
 
@@ -439,7 +430,7 @@ func (s *Suite) Test_MkParser_varUseModifier__condition_without_colon(c *check.C
 	t := s.Init(c)
 
 	line := t.NewLine("filename.mk", 123, "${${VAR}:?yes:no}${${VAR}:?yes}")
-	p := NewMkParser(line, line.Text, true)
+	p := NewMkParser(line, line.Text)
 
 	varUse1 := p.VarUse()
 	varUse2 := p.VarUse()
@@ -456,7 +447,7 @@ func (s *Suite) Test_MkParser_varUseModifier__malformed_in_parentheses(c *check.
 	t := s.Init(c)
 
 	line := t.NewLine("filename.mk", 123, "$(${VAR}:?yes)")
-	p := NewMkParser(line, line.Text, true)
+	p := NewMkParser(line, line.Text)
 
 	varUse := p.VarUse()
 
@@ -472,7 +463,7 @@ func (s *Suite) Test_MkParser_varUseModifier__varuse_in_malformed_modifier(c *ch
 	t := s.Init(c)
 
 	line := t.NewLine("filename.mk", 123, "${${VAR}:?yes${INNER}}")
-	p := NewMkParser(line, line.Text, true)
+	p := NewMkParser(line, line.Text)
 
 	varUse := p.VarUse()
 
@@ -487,7 +478,7 @@ func (s *Suite) Test_MkParser_varUseModifierAt__missing_at_after_variable_name(c
 	t := s.Init(c)
 
 	line := t.NewLine("filename.mk", 123, "${VAR:@varname}")
-	p := NewMkParser(line, line.Text, true)
+	p := NewMkParser(line, line.Text)
 
 	varUse := p.VarUse()
 
@@ -501,7 +492,7 @@ func (s *Suite) Test_MkParser_varUseModifierAt__dollar(c *check.C) {
 	t := s.Init(c)
 
 	line := t.NewLine("filename.mk", 123, "${VAR:@var@$$var@}")
-	p := NewMkParser(line, line.Text, true)
+	p := NewMkParser(line, line.Text)
 
 	varUse := p.VarUse()
 
@@ -513,7 +504,7 @@ func (s *Suite) Test_MkParser_varUseModifierAt__dollar(c *check.C) {
 func (s *Suite) Test_MkParser_varUseModifierAt__incomplete_without_warning(c *check.C) {
 	t := s.Init(c)
 
-	p := NewMkParser(nil, "${VAR:@var@$$var}rest", false)
+	p := NewMkParser(nil, "${VAR:@var@$$var}rest")
 
 	varUse := p.VarUse()
 
@@ -528,7 +519,7 @@ func (s *Suite) Test_MkParser_VarUse__ambiguous(c *check.C) {
 	t.SetUpCommandLine("--explain")
 
 	line := t.NewLine("module.mk", 123, "\t$Varname $X")
-	p := NewMkParser(line, line.Text[1:], true)
+	p := NewMkParser(line, line.Text[1:])
 
 	tokens := p.MkTokens()
 	c.Check(tokens, deepEquals, []*MkToken{
@@ -556,7 +547,7 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	t := s.Init(c)
 
 	testRest := func(input string, expectedTree *MkCond, expectedRest string) {
-		p := NewMkParser(nil, input, false)
+		p := NewMkParser(nil, input)
 		actualTree := p.MkCond()
 		c.Check(actualTree, deepEquals, expectedTree)
 		c.Check(p.Rest(), equals, expectedRest)
@@ -789,7 +780,7 @@ func (s *Suite) Test_MkParser_Varname(c *check.C) {
 
 	test := func(text string) {
 		line := t.NewLine("filename.mk", 1, text)
-		p := NewMkParser(line, text, true)
+		p := NewMkParser(line, text)
 
 		varname := p.Varname()
 
@@ -799,7 +790,7 @@ func (s *Suite) Test_MkParser_Varname(c *check.C) {
 
 	testRest := func(text string, expectedVarname string, expectedRest string) {
 		line := t.NewLine("filename.mk", 1, text)
-		p := NewMkParser(line, text, true)
+		p := NewMkParser(line, text)
 
 		varname := p.Varname()
 
@@ -850,7 +841,7 @@ func (s *Suite) Test_MkParser_VarUseModifiers(c *check.C) {
 	varUse := NewMkVarUse
 	test := func(text string, varUse *MkVarUse, diagnostics ...string) {
 		line := t.NewLine("Makefile", 20, "\t"+text)
-		p := NewMkParser(line, text, true)
+		p := NewMkParser(line, text)
 
 		actual := p.VarUse()
 
@@ -888,7 +879,7 @@ func (s *Suite) Test_MkParser_varUseModifierSubst(c *check.C) {
 	varUse := NewMkVarUse
 	test := func(text string, varUse *MkVarUse, rest string, diagnostics ...string) {
 		line := t.NewLine("Makefile", 20, "\t"+text)
-		p := NewMkParser(line, text, true)
+		p := NewMkParser(line, text)
 
 		actual := p.VarUse()
 
@@ -946,7 +937,7 @@ func (s *Suite) Test_MkParser_varUseModifierAt(c *check.C) {
 	varUse := NewMkVarUse
 	test := func(text string, varUse *MkVarUse, rest string, diagnostics ...string) {
 		line := t.NewLine("Makefile", 20, "\t"+text)
-		p := NewMkParser(line, text, true)
+		p := NewMkParser(line, text)
 
 		actual := p.VarUse()
 
@@ -998,7 +989,7 @@ func (s *Suite) Test_MkParser_isPkgbasePart(c *check.C) {
 func (s *Suite) Test_MkParser_PkgbasePattern(c *check.C) {
 
 	test := func(pattern, expected, rest string) {
-		parser := NewMkParser(nil, pattern, false)
+		parser := NewMkParser(nil, pattern)
 
 		actual := parser.PkgbasePattern()
 
@@ -1043,7 +1034,7 @@ func (s *Suite) Test_MkParser_PkgbasePattern(c *check.C) {
 func (s *Suite) Test_MkParser_Dependency(c *check.C) {
 
 	testRest := func(pattern string, expected DependencyPattern, rest string) {
-		parser := NewMkParser(nil, pattern, false)
+		parser := NewMkParser(nil, pattern)
 		dp := parser.Dependency()
 		if c.Check(dp, check.NotNil) {
 			c.Check(*dp, equals, expected)
@@ -1052,7 +1043,7 @@ func (s *Suite) Test_MkParser_Dependency(c *check.C) {
 	}
 
 	testNil := func(pattern string) {
-		parser := NewMkParser(nil, pattern, false)
+		parser := NewMkParser(nil, pattern)
 		dp := parser.Dependency()
 		if c.Check(dp, check.IsNil) {
 			c.Check(parser.Rest(), equals, pattern)

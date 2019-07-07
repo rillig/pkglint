@@ -297,7 +297,7 @@ func (cv *VartypeCheck) ConfFiles() {
 func (cv *VartypeCheck) Dependency() {
 	value := cv.Value
 
-	parser := NewMkParser(nil, value, false)
+	parser := NewMkParser(nil, value)
 	deppat := parser.Dependency()
 	rest := parser.Rest()
 

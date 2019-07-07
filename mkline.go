@@ -422,7 +422,7 @@ func (mkline *MkLine) Args() string { return mkline.data.(*mkLineDirective).args
 func (mkline *MkLine) Cond() *MkCond {
 	cond := mkline.data.(*mkLineDirective).cond
 	if cond == nil {
-		cond = NewMkParser(mkline.Line, mkline.Args(), true).MkCond()
+		cond = NewMkParser(mkline.Line, mkline.Args()).MkCond()
 		mkline.data.(*mkLineDirective).cond = cond
 	}
 	return cond
@@ -484,7 +484,7 @@ func (mkline *MkLine) Tokenize(text string, warn bool) []*MkToken {
 	if mkline.IsVarassignMaybeCommented() && text == mkline.Value() {
 		tokens, rest = mkline.ValueTokens()
 	} else {
-		p := NewMkParser(mkline.Line, text, true)
+		p := NewMkParser(mkline.Line, text)
 		tokens = p.MkTokens()
 		rest = p.Rest()
 	}
@@ -615,7 +615,7 @@ func (mkline *MkLine) ValueTokens() ([]*MkToken, string) {
 
 	// No error checking here since all this has already been done when the
 	// whole line was parsed in MkLineParser.Parse.
-	p := NewMkParser(nil, value, false)
+	p := NewMkParser(nil, value)
 	assign.valueMk = p.MkTokens()
 	assign.valueMkRest = p.Rest()
 	return assign.valueMk, assign.valueMkRest
@@ -658,7 +658,7 @@ func (mkline *MkLine) Fields() []string {
 
 func (*MkLine) WithoutMakeVariables(value string) string {
 	var valueNovar strings.Builder
-	for _, token := range NewMkParser(nil, value, false).MkTokens() {
+	for _, token := range NewMkParser(nil, value).MkTokens() {
 		if token.Varuse == nil {
 			valueNovar.WriteString(token.Text)
 		}
@@ -836,11 +836,13 @@ type mkLineSplitResult struct {
 // This applies to all line types except those starting with a tab, which
 // contain the shell commands to be associated with make targets. These cannot
 // have comments.
+//
+// If line is given, it is used for logging parse errors and warnings.
 func (p MkLineParser) split(line *Line, text string) mkLineSplitResult {
 
 	mainWithSpaces, comment := p.unescapeComment(text)
 
-	parser := NewMkParser(line, mainWithSpaces, line != nil)
+	parser := NewMkParser(line, mainWithSpaces)
 	lexer := parser.lexer
 
 	parseOther := func() string {
@@ -1067,7 +1069,7 @@ func (mkline *MkLine) ForEachUsed(action func(varUse *MkVarUse, time VucTime)) {
 			return
 		}
 
-		for _, token := range NewMkParser(nil, text, false).MkTokens() {
+		for _, token := range NewMkParser(nil, text).MkTokens() {
 			if token.Varuse != nil {
 				searchInVarUse(token.Varuse, time)
 			}

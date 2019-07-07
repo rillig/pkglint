@@ -556,7 +556,7 @@ func (scc *SimpleCommandChecker) handleCommandVariable() bool {
 	}
 
 	shellword := scc.strcmd.Name
-	varuse := NewMkParser(nil, shellword, false).VarUse()
+	varuse := NewMkParser(nil, shellword).VarUse()
 	if varuse == nil {
 		return false
 	}

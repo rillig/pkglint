@@ -847,7 +847,7 @@ func (pkg *Package) determineEffectivePkgVars() {
 }
 
 func (pkg *Package) pkgnameFromDistname(pkgname, distname string) (string, bool) {
-	tokens := NewMkParser(nil, pkgname, false).MkTokens()
+	tokens := NewMkParser(nil, pkgname).MkTokens()
 
 	// TODO: Make this resolving of variable references available to all other variables as well.
 

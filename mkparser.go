@@ -23,14 +23,15 @@ func (p *MkParser) Rest() string {
 }
 
 // NewMkParser creates a new parser for the given text.
-// If emitWarnings is false, line may be nil.
+//
+// If line is given, it is used for reporting parse errors and warnings.
+// Otherwise parsing is silent.
 //
 // The text argument is assumed to be after unescaping the # character,
 // which means the # is a normal character and does not introduce a Makefile comment.
 // For VarUse, this distinction is irrelevant.
-func NewMkParser(line *Line, text string, emitWarnings bool) *MkParser {
-	assert((line != nil) == emitWarnings) // line must be given iff emitWarnings is set
-	return &MkParser{line, textproc.NewLexer(text), emitWarnings}
+func NewMkParser(line *Line, text string) *MkParser {
+	return &MkParser{line, textproc.NewLexer(text), line != nil}
 }
 
 // MkTokens splits a text like in the following example:
@@ -658,7 +659,7 @@ func (*MkParser) isPkgbasePart(str string) bool {
 		return true
 	}
 
-	varUse := NewMkParser(nil, lexer.Rest(), false).VarUse()
+	varUse := NewMkParser(nil, lexer.Rest()).VarUse()
 	if varUse != nil {
 		return !contains(varUse.varname, "VER") && len(varUse.modifiers) == 0
 	}
@@ -793,7 +794,7 @@ func (p *MkParser) Dependency() *DependencyPattern {
 // if there is a parse error or some trailing text.
 // Parse errors are silently ignored.
 func ToVarUse(str string) *MkVarUse {
-	p := NewMkParser(nil, str, false)
+	p := NewMkParser(nil, str)
 	varUse := p.VarUse()
 	if varUse == nil || !p.EOF() {
 		return nil
@@ -941,7 +942,7 @@ func (w *MkCondWalker) walkAtom(atom *MkCondTerm, callback *MkCondCallback) {
 
 func (w *MkCondWalker) walkStr(str string, callback *MkCondCallback) {
 	if callback.VarUse != nil {
-		tokens := NewMkParser(nil, str, false).MkTokens()
+		tokens := NewMkParser(nil, str).MkTokens()
 		for _, token := range tokens {
 			if token.Varuse != nil {
 				callback.VarUse(token.Varuse)

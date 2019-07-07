@@ -442,7 +442,7 @@ func (mklines *MkLines) collectDocumentedVariables() {
 
 			commentLines++
 
-			parser := NewMkParser(nil, words[1], false)
+			parser := NewMkParser(nil, words[1])
 			varname := parser.Varname()
 			if len(varname) < 3 {
 				break
