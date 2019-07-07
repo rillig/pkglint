@@ -765,6 +765,11 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 		nil,
 		"(${VAR}")
 
+	// Too many closing parentheses are a syntax error.
+	testRest("(${VAR}))",
+		&MkCond{Term: &MkCondTerm{Var: NewMkVarUse("VAR")}},
+		")")
+
 	// The left-hand side of the comparison cannot be an unquoted string literal.
 	// These would be rejected by bmake as well.
 	testRest("value == \"${VAR}suffix\"",
