@@ -369,9 +369,11 @@ func (mkline *MkLine) FirstLineContainsValue() bool {
 }
 
 // IsMultiAligned returns whether the multiline is properly aligned.
-// Each continuation line must be at least as indented as the first line.
-// If the first line does not contain an actual value, the second line
-// may start in column 8, to save screen space.
+// The first value in the line determines the minimum indentation.
+// Each followup line must be indented at least as wide as the first value.
+//
+// If the first line is essentially empty, the second line may start in
+// column 8, which is often used to save screen space.
 func (mkline *MkLine) IsMultiAligned() bool {
 	assert(mkline.IsMultiline())
 	assert(mkline.IsVarassignMaybeCommented())
