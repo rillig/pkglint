@@ -1473,9 +1473,8 @@ func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs__conditional_PLIST(c *
 		"NOTE: Makefile:24: You can use "+
 			"\"INSTALLATION_DIRS+= libexec/conditional\" "+
 			"instead of \"${INSTALL_DATA_DIR}\".",
-		// FIXME: AUTO_MKDIRS=yes is wrong here
-		"NOTE: Makefile:25: You can use AUTO_MKDIRS=yes "+
-			"or \"INSTALLATION_DIRS+= ${LIB_SUBDIR}\" "+
+		"NOTE: Makefile:25: You can use "+
+			"\"INSTALLATION_DIRS+= ${LIB_SUBDIR}\" "+
 			"instead of \"${INSTALL_DATA_DIR}\".")
 }
 
