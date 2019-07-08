@@ -102,6 +102,602 @@ func (vt *VaralignTester) run(autofix bool) {
 	}
 }
 
+func (s *Suite) Test_VaralignBlock__one_line_simple_none(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV=value")
+	vt.Internals(
+		"20 20")
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:1: This variable value should be aligned to column 25.")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:1: Replacing \"\" with \"\\t\".")
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV=    value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_simple_space(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV= value")
+	vt.Internals(
+		"20 21")
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 25.")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:1: Replacing \" \" with \"\\t\".")
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV=    value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_simple_tab(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV=\tvalue")
+	vt.Internals(
+		"20 24")
+	vt.Diagnostics()
+	vt.Autofixes()
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV=    value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_simple_sss(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV=   value")
+	vt.Internals(
+		"20 23")
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 25.")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:1: Replacing \"   \" with \"\\t\".")
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV=    value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_simple_ttt(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV=\t\t\tvalue")
+	vt.Internals(
+		"20 40")
+	vt.Diagnostics()
+	vt.Autofixes()
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV=                    value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_simple_tsts(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV=\t \t value")
+	vt.Internals(
+		"20 33")
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 25.")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:1: Replacing \"\\t \\t \" with \"\\t\".")
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV=    value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_follow_none(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV=\\",
+		"\tvalue")
+	vt.Internals(
+		"20 20 follow aligned")
+	vt.Diagnostics(
+		// TODO: There should be a space to the left of the backslash.
+		nil...)
+	vt.Autofixes(
+		nil...)
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV=\\",
+		"        value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_follow_space(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV= \\",
+		"\tvalue")
+	vt.Internals(
+		"20 21 follow aligned")
+	vt.Diagnostics()
+	vt.Autofixes()
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV= \\",
+		"        value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_follow_tab(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV=\t\\",
+		"\tvalue")
+	vt.Internals(
+		"20 24 follow aligned")
+	vt.Diagnostics()
+	vt.Autofixes()
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV=    \\",
+		"        value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_follow_sss(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV=   \\",
+		"\tvalue")
+	vt.Internals(
+		// FIXME: Must be "20 23 follow aligned"
+		"20 21 follow aligned")
+	vt.Diagnostics()
+	vt.Autofixes()
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV=   \\",
+		"        value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_follow_ttt(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV=\t\t\t\\",
+		"\tvalue")
+	vt.Internals(
+		"20 40 follow aligned")
+	vt.Diagnostics()
+	vt.Autofixes()
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV=                    \\",
+		"        value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_follow_tab72(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV=\t\t\t\t\t\t\t\\",
+		"\tvalue")
+	vt.Internals(
+		"20 72 follow aligned")
+	vt.Diagnostics()
+	vt.Autofixes()
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV=                                                    \\",
+		"        value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_follow_indent_none(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV= \\",
+		"value")
+	vt.Internals(
+		"20 21 follow")
+	vt.Diagnostics(
+		// FIXME: "NOTE: ~/Makefile:2: indent to 9"
+		nil...)
+	vt.Autofixes(
+		// FIXME: "AUTOFIX: ~/Makefile:1--2: Replacing \"\" with \"\\t\".")
+		nil...)
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV= \\",
+		// FIXME: "        value")
+		"value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_follow_indent_space(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV= \\",
+		" value")
+	vt.Internals(
+		"20 21 follow")
+	vt.Diagnostics(
+		// FIXME: "indent to column 9")
+		nil...)
+	vt.Autofixes(
+		// FIXME: "AUTOFIX: ~/Makefile:2: Replacing \" \" with \"\\t\".")
+		nil...)
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV= \\",
+		// FIXME: "        value")
+		" value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_follow_indent_tab(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV= \\",
+		"\tvalue")
+	vt.Internals(
+		"20 21 follow aligned")
+	vt.Diagnostics()
+	vt.Autofixes()
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV= \\",
+		"        value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_follow_indent_sss(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV= \\",
+		"   value")
+	vt.Internals(
+		"20 21 follow")
+	vt.Diagnostics(
+		// FIXME: "indent to column 9")
+		nil...)
+	vt.Autofixes(
+		// FIXME: "AUTOFIX: ~/Makefile:2: Replacing \"   \" with \"\\t\".")
+		nil...)
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV= \\",
+		// FIXME: "        value")
+		"   value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_follow_indent_tt(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV= \\",
+		"\t\tvalue")
+	vt.Internals(
+		"20 21 follow aligned")
+	vt.Diagnostics()
+	vt.Autofixes()
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV= \\",
+		"                value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_follow_indent_ttt(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV= \\",
+		"\t\t\tvalue")
+	vt.Internals(
+		"20 21 follow aligned")
+	vt.Diagnostics()
+	vt.Autofixes()
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV= \\",
+		"                        value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_follow_indent_tsts(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV= \\",
+		"\t \t value")
+	vt.Internals(
+		"20 21 follow aligned")
+	vt.Diagnostics(
+		// FIXME: indent with only tabs)
+		nil...)
+	vt.Autofixes(
+		// FIXME: "AUTOFIX: ~/Makefile:2: Replacing \"\\t \\t \" with \"\\t\\t\".")
+		nil...)
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV= \\",
+		// FIXME: "                value")
+		"                 value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_initial_none(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV=value \\",
+		"\t\t    value")
+	vt.Internals(
+		"20 20 initial aligned")
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:1--2: This variable value should be aligned to column 25.",
+		"NOTE: ~/Makefile:1--2: This line should be aligned with \"\\t\\t\\t\".")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:1: Replacing \"\" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:2: Replacing continuation indentation \"\\t\\t    \" with \"\\t\\t\\t\".")
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV=    value \\",
+		"                        value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_initial_space(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV= value \\",
+		"                     value")
+	vt.Internals(
+		"20 21 initial aligned")
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:1--2: This variable value should be aligned with tabs, not spaces, to column 25.",
+		"NOTE: ~/Makefile:1--2: This line should be aligned with \"\\t\\t\\t\".")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:1: Replacing \" \" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:2: Replacing continuation indentation \"                     \" with \"\\t\\t\\t\".")
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV=    value \\",
+		"                        value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_initial_tab(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV=\tvalue \\",
+		"\t\t\tvalue")
+	vt.Internals(
+		"20 24 initial aligned")
+	vt.Diagnostics()
+	vt.Autofixes()
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV=    value \\",
+		"                        value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_initial_sss(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV=   value \\",
+		"                       value")
+	vt.Internals(
+		"20 23 initial aligned")
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:1--2: This variable value should be aligned with tabs, not spaces, to column 25.",
+		"NOTE: ~/Makefile:1--2: This line should be aligned with \"\\t\\t\\t\".")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:1: Replacing \"   \" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:2: Replacing continuation indentation \"                       \" with \"\\t\\t\\t\".")
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV=    value \\",
+		"                        value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_initial_ttt(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV=\t\t\tvalue \\",
+		"\t\t\t\t\tvalue")
+	vt.Internals(
+		"20 40 initial aligned")
+	vt.Diagnostics()
+	vt.Autofixes()
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV=                    value \\",
+		"                                        value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_initial_tab64(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV=\tvalue\t\t\t\t\t\\",
+		"\t\t\tvalue")
+	vt.Internals(
+		"20 24 initial aligned")
+	vt.Diagnostics(
+		// FIXME: backslash indentation must be space, tab or at column 73.
+		nil...)
+	vt.Autofixes(
+		// FIXME: replace many tabs with a single space, since there are
+		//  no more backslashes in this logical line.
+		nil...)
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV=    value                                   \\",
+		"                        value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_initial_tab72(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV=\tvalue\t\t\t\t\t\t\\",
+		"\t\t\tvalue")
+	vt.Internals(
+		"20 24 initial aligned")
+	vt.Diagnostics()
+	vt.Autofixes()
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV=    value                                           \\",
+		"                        value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_initial_indent_none(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV=\tvalue \\",
+		"value")
+	vt.Internals(
+		"20 24 initial")
+	vt.Diagnostics(
+		// FIXME: "NOTE: ~/Makefile:2: indent to 9"
+		nil...)
+	vt.Autofixes(
+		// FIXME: "AUTOFIX: ~/Makefile:1--2: Replacing \"\" with \"\\t\".")
+		nil...)
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV=    value \\",
+		// FIXME: "        value")
+		"value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_initial_indent_space(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV=\tvalue \\",
+		" value")
+	vt.Internals(
+		"20 24 initial")
+	vt.Diagnostics(
+		// FIXME: "indent to column 9")
+		nil...)
+	vt.Autofixes(
+		// FIXME: "AUTOFIX: ~/Makefile:2: Replacing \" \" with \"\\t\".")
+		nil...)
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV=    value \\",
+		// FIXME: "        value")
+		" value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_initial_indent_tab(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV=\tvalue \\",
+		"\tvalue")
+	vt.Internals(
+		"20 24 initial")
+	vt.Diagnostics(
+		// FIXME: indent to 25
+		nil...)
+	vt.Autofixes(
+		// FIXME: indent to 25
+		nil...)
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV=    value \\",
+		"        value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_initial_indent_sss(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV=\tvalue \\",
+		"   value")
+	vt.Internals(
+		"20 24 initial")
+	vt.Diagnostics(
+		// FIXME: "indent to column 25")
+		nil...)
+	vt.Autofixes(
+		// FIXME: "AUTOFIX: ~/Makefile:2: Replacing \"   \" with \"\\t\\t\\t\".")
+		nil...)
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV=    value \\",
+		// FIXME: "                        value")
+		"   value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_initial_indent_tt(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV=\tvalue \\",
+		"\t\tvalue")
+	vt.Internals(
+		"20 24 initial")
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:1--2: This line should be aligned with \"\\t\\t\\t\".")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:2: Replacing continuation indentation \"\\t\\t\" with \"\\t\\t\\t\".")
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV=    value \\",
+		"                        value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_initial_indent_ttt(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV=\tvalue \\",
+		"\t\t\tvalue")
+	vt.Internals(
+		"20 24 initial aligned")
+	vt.Diagnostics()
+	vt.Autofixes()
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV=    value \\",
+		"                        value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_initial_indent_tsts(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV=\tvalue \\",
+		"\t \t value")
+	vt.Internals(
+		"20 24 initial")
+	vt.Diagnostics(
+		// FIXME: Be more specific by saying Makefile:2
+		"NOTE: ~/Makefile:1--2: This line should be aligned with \"\\t\\t\\t\".")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:2: Replacing continuation indentation \"\\t \\t \" with \"\\t\\t\\t\".")
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV=    value \\",
+		// FIXME: "                value")
+		"                        value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_initial_indent_plus_sss(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV=\tvalue \\",
+		"\t\t\t   value")
+	vt.Internals(
+		"20 24 initial aligned")
+	vt.Diagnostics()
+	vt.Autofixes()
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV=    value \\",
+		"                           value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__one_line_initial_indent_plus_tab(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV=\tvalue \\",
+		"\t\t\t\tvalue")
+	vt.Internals(
+		"20 24 initial aligned")
+	vt.Diagnostics()
+	vt.Autofixes()
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV=    value \\",
+		"                                value")
+	vt.Run()
+}
+
+// Commented lines are visually equivalent to uncommented lines.
+// The alignment algorithm must treat them the same. The only difference
+// is when follow-up lines start with a comment. This comment character
+// precedes the indentation, but at the same time it is part of its width.
+// Since the follow-up lines in their canonical form are always indented
+// using tabs, the single comment character doesn't change the width.
+
+// TODO: add systematic tests for commented lines
+
 // Generally, the value in variable assignments is aligned
 // at the next tab.
 func (s *Suite) Test_VaralignBlock__one_var_tab(c *check.C) {
