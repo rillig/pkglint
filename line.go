@@ -132,52 +132,6 @@ func (line *Line) IsCvsID(prefixRe regex.Pattern) (found bool, expanded bool) {
 	return m, exp != ""
 }
 
-func (line *Line) showSource(out *SeparatorWriter) {
-	if !G.Logger.Opts.ShowSource {
-		return
-	}
-
-	writeLine := func(prefix, line string) {
-		out.Write(prefix)
-		out.Write(escapePrintable(line))
-		if !hasSuffix(line, "\n") {
-			out.Write("\n")
-		}
-	}
-
-	printDiff := func(rawLines []*RawLine) {
-		prefix := ">\t"
-		for _, rawLine := range rawLines {
-			if rawLine.textnl != rawLine.orignl {
-				prefix = "\t" // Make it look like an actual diff
-			}
-		}
-
-		for _, rawLine := range rawLines {
-			if rawLine.textnl != rawLine.orignl {
-				writeLine("-\t", rawLine.orignl)
-				if rawLine.textnl != "" {
-					writeLine("+\t", rawLine.textnl)
-				}
-			} else {
-				writeLine(prefix, rawLine.orignl)
-			}
-		}
-	}
-
-	if line.autofix != nil {
-		for _, before := range line.autofix.linesBefore {
-			writeLine("+\t", before)
-		}
-		printDiff(line.raw)
-		for _, after := range line.autofix.linesAfter {
-			writeLine("+\t", after)
-		}
-	} else {
-		printDiff(line.raw)
-	}
-}
-
 func (line *Line) Fatalf(format string, args ...interface{}) {
 	if trace.Tracing {
 		trace.Stepf("Fatalf: %q, %v", format, args)
