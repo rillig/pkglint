@@ -986,7 +986,7 @@ func (spc *ShellProgramChecker) checkSetE(list *MkShList, index int, andor *MkSh
 	}
 
 	line := spc.mkline.Line
-	if !line.FirstTime("switch to set -e") {
+	if !line.once.FirstTime("switch to set -e") {
 		return
 	}
 

@@ -78,7 +78,7 @@ type Line struct {
 
 	raw     []*RawLine // contains the original text including trailing newline
 	autofix *Autofix   // any changes that pkglint would like to apply to the line
-	Once
+	once    Once
 
 	// XXX: Filename and Basename could be replaced with a pointer to a Lines object.
 }
