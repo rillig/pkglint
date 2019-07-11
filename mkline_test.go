@@ -1625,7 +1625,7 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 		"",
 		"")
 
-	testInvalid("\tVAR=value")
+	t.ExpectAssert(func() { testInvalid("\tVAR=value") })
 	testInvalid("?=value")
 	testInvalid("<=value")
 	testInvalid("#")

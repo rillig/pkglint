@@ -86,13 +86,20 @@ func (p MkLineParser) Parse(line *Line) *MkLine {
 			"Otherwise remove the leading whitespace.")
 	}
 
-	data := p.split(line, text)
-
 	// Check for shell commands first because these cannot have comments
 	// at the end of the line.
 	if hasPrefix(text, "\t") {
+		lex := textproc.NewLexer(text)
+		for lex.SkipByte('\t') {
+		}
+
+		// Just for the side effects of the warnings.
+		_ = p.split(line, lex.Rest())
+
 		return p.parseShellcmd(line)
 	}
+
+	data := p.split(line, text)
 
 	if mkline := p.parseVarassign(line); mkline != nil {
 		return mkline
@@ -826,7 +833,7 @@ type mkLineSplitResult struct {
 	comment            string
 }
 
-// splitMkLine parses a logical line from a Makefile (that is, after joining
+// split parses a logical line from a Makefile (that is, after joining
 // the lines that end in a backslash) into two parts: the main part and the
 // comment.
 //
@@ -834,8 +841,11 @@ type mkLineSplitResult struct {
 // contain the shell commands to be associated with make targets. These cannot
 // have comments.
 //
-// If line is given, it is used for logging parse errors and warnings.
+// If line is given, it is used for logging parse errors and warnings
+// about round parentheses instead of curly braces, as well as ambiguous
+// variables of the form $v instead of ${v}.
 func (MkLineParser) split(line *Line, text string) mkLineSplitResult {
+	assert(!hasPrefix(text, "\t"))
 
 	mainWithSpaces, comment := MkLineParser{}.unescapeComment(text)
 
