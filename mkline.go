@@ -760,7 +760,7 @@ func (mkline *MkLine) RefTo(other *MkLine) string {
 var (
 	LowerDash                  = textproc.NewByteSet("a-z---")
 	AlnumDot                   = textproc.NewByteSet("A-Za-z0-9_.")
-	unescapeMkCommentSafeChars = textproc.NewByteSet("\\#[$").Inverse()
+	unescapeMkCommentSafeChars = textproc.NewByteSet("\\#[").Inverse()
 )
 
 // unescapeComment takes a Makefile line, as written in a file, and splits
@@ -786,9 +786,6 @@ again:
 	}
 
 	switch {
-	case lexer.SkipByte('$'):
-		sb.WriteByte('$')
-
 	case lexer.SkipString("\\#"):
 		sb.WriteByte('#')
 
