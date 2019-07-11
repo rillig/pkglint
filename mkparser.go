@@ -648,6 +648,23 @@ func (p *MkParser) Varname() string {
 	return lexer.Since(mark)
 }
 
+func (p *MkParser) Op() (bool, MkOperator) {
+	lexer := p.lexer
+	switch {
+	case lexer.SkipString("!="):
+		return true, opAssignShell
+	case lexer.SkipString(":="):
+		return true, opAssignEval
+	case lexer.SkipString("+="):
+		return true, opAssignAppend
+	case lexer.SkipString("?="):
+		return true, opAssignDefault
+	case lexer.SkipString("="):
+		return true, opAssign
+	}
+	return false, 0
+}
+
 // isPkgbasePart returns whether str, when following a hyphen,
 // continues the package base (as in "mysql-client"), or whether it
 // starts the version (as in "mysql-1.0").

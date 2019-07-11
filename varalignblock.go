@@ -98,6 +98,19 @@ type varalignBlockInfo struct {
 	multiAligned bool
 }
 
+type varalignSplitResult struct {
+	// All of the following strings can be empty.
+
+	leadingComment    string
+	varnameOp         string
+	spaceBeforeValue  string
+	value             string
+	spaceAfterValue   string
+	trailingComment   string
+	spaceAfterComment string
+	continuation      string
+}
+
 func (va *VaralignBlock) Process(mkline *MkLine) {
 	switch {
 	case !G.Opts.WarnSpace:
@@ -150,6 +163,93 @@ func (va *VaralignBlock) processVarassign(mkline *MkLine) {
 	va.infos = append(va.infos, &varalignBlockInfo{
 		mkline, varnameOp, varnameOpWidth, space, totalWidth,
 		multiInitial, multiFollow, multiAligned})
+}
+
+func (*VaralignBlock) split(textnl string, initial bool) varalignSplitResult {
+
+	// See MkLineParser.unescapeComment for very similar code.
+
+	p := NewMkParser(nil, textnl)
+	lexer := p.lexer
+
+	parseVarnameOp := func() string {
+		if !initial {
+			return ""
+		}
+
+		mark := lexer.Mark()
+		_ = p.Varname()
+		lexer.SkipHspace()
+		ok, _ := p.Op()
+		assert(ok)
+		return lexer.Since(mark)
+	}
+
+	parseValue := func() (string, string) {
+		mark := lexer.Mark()
+
+		for !lexer.EOF() && lexer.PeekByte() != '#' {
+			switch {
+			case lexer.NextBytesSet(unescapeMkCommentSafeChars) != "",
+				lexer.SkipString("[#"),
+				lexer.SkipByte('['):
+				break
+
+			default:
+				assert(lexer.SkipByte('\\'))
+				if !lexer.EOF() {
+					lexer.Skip(1)
+				}
+			}
+		}
+
+		assert(lexer.EOF() || lexer.PeekByte() == '#')
+		valueSpace := lexer.Since(mark)
+		value := rtrimHspace(valueSpace)
+		space := valueSpace[len(value):]
+		return value, space
+	}
+
+	parseComment := func() (string, string, string) {
+		if lexer.EOF() {
+			return "", "", ""
+		}
+
+		rest := lexer.Rest()
+		assert(lexer.SkipByte('#'))
+
+		end := len(rest)
+		for end > 0 && rest[end-1] == '\\' {
+			end--
+		}
+
+		if (len(rest)-end)%2 == 1 {
+			continuation := rest[end:]
+			commentSpace := rest[:end]
+			comment := rtrimHspace(commentSpace)
+			space := commentSpace[len(comment):]
+			return comment, space, continuation
+		}
+
+		return rest, "", ""
+	}
+
+	leadingComment := lexer.NextString("#")
+	varnameOp := parseVarnameOp()
+	spaceBeforeValue := lexer.NextHspace()
+	value, spaceAfterValue := parseValue()
+	trailingComment, spaceAfterComment, continuation := parseComment()
+
+	return varalignSplitResult{
+		leadingComment,
+		varnameOp,
+		spaceBeforeValue,
+		value,
+		spaceAfterValue,
+		trailingComment,
+		spaceAfterComment,
+		continuation,
+	}
 }
 
 func (va *VaralignBlock) Finish() {
