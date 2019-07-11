@@ -774,7 +774,7 @@ var (
 //
 // The comment is returned including the leading "#", if any. If the line has
 // no comment, it is an empty string.
-func (p MkLineParser) unescapeComment(text string) (main, comment string) {
+func (MkLineParser) unescapeComment(text string) (main, comment string) {
 	var sb strings.Builder
 
 	lexer := textproc.NewLexer(text)
@@ -835,9 +835,9 @@ type mkLineSplitResult struct {
 // have comments.
 //
 // If line is given, it is used for logging parse errors and warnings.
-func (p MkLineParser) split(line *Line, text string) mkLineSplitResult {
+func (MkLineParser) split(line *Line, text string) mkLineSplitResult {
 
-	mainWithSpaces, comment := p.unescapeComment(text)
+	mainWithSpaces, comment := MkLineParser{}.unescapeComment(text)
 
 	parser := NewMkParser(line, mainWithSpaces)
 	lexer := parser.lexer
