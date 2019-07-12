@@ -188,7 +188,7 @@ func (*VaralignBlock) split(textnl string, initial bool) varalignSplitResult {
 	parseValue := func() (string, string) {
 		mark := lexer.Mark()
 
-		for !lexer.EOF() && lexer.PeekByte() != '#' {
+		for !lexer.EOF() && lexer.PeekByte() != '#' && lexer.PeekByte() != '\n' {
 			switch {
 			case lexer.NextBytesSet(unescapeMkCommentSafeChars) != "",
 				lexer.SkipString("[#"),
@@ -203,7 +203,6 @@ func (*VaralignBlock) split(textnl string, initial bool) varalignSplitResult {
 			}
 		}
 
-		assert(lexer.EOF() || lexer.PeekByte() == '#')
 		valueSpace := lexer.Since(mark)
 		value := rtrimHspace(valueSpace)
 		space := valueSpace[len(value):]
@@ -211,27 +210,27 @@ func (*VaralignBlock) split(textnl string, initial bool) varalignSplitResult {
 	}
 
 	parseComment := func() (string, string, string) {
-		if lexer.EOF() {
-			return "", "", ""
-		}
-
 		rest := lexer.Rest()
-		assert(lexer.SkipByte('#'))
 
-		end := len(rest)
-		for end > 0 && rest[end-1] == '\\' {
-			end--
+		newline := len(rest)
+		for newline > 0 && rest[newline-1] == '\n' {
+			newline--
 		}
 
-		if (len(rest)-end)%2 == 1 {
-			continuation := rest[end:]
-			commentSpace := rest[:end]
+		backslash := newline
+		for backslash > 0 && rest[backslash-1] == '\\' {
+			backslash--
+		}
+
+		if (newline-backslash)%2 == 1 {
+			continuation := rest[backslash:]
+			commentSpace := rest[:backslash]
 			comment := rtrimHspace(commentSpace)
 			space := commentSpace[len(comment):]
 			return comment, space, continuation
 		}
 
-		return rest, "", ""
+		return rest[:newline], "", rest[newline:]
 	}
 
 	leadingComment := lexer.NextString("#")

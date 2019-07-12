@@ -2189,8 +2189,99 @@ func (s *Suite) Test_VaralignBlock_split(c *check.C) {
 
 	test := func(textnl string, initial bool, expected varalignSplitResult) {
 		actual := (&VaralignBlock{}).split(textnl, initial)
+
 		t.Check(actual, equals, expected)
+		t.Check(
+			actual.leadingComment+actual.varnameOp+
+				actual.spaceBeforeValue+actual.value+actual.spaceAfterValue+
+				actual.trailingComment+actual.spaceAfterComment+actual.continuation,
+			equals,
+			textnl)
 	}
+
+	test("VAR=value\n", true,
+		varalignSplitResult{
+			leadingComment:    "",
+			varnameOp:         "VAR=",
+			spaceBeforeValue:  "",
+			value:             "value",
+			spaceAfterValue:   "",
+			trailingComment:   "",
+			spaceAfterComment: "",
+			continuation:      "\n",
+		})
+
+	test("#VAR=value\n", true,
+		varalignSplitResult{
+			leadingComment:    "#",
+			varnameOp:         "VAR=",
+			spaceBeforeValue:  "",
+			value:             "value",
+			spaceAfterValue:   "",
+			trailingComment:   "",
+			spaceAfterComment: "",
+			continuation:      "\n",
+		})
+
+	test("#VAR = value # comment \\\n", true,
+		varalignSplitResult{
+			leadingComment:    "#",
+			varnameOp:         "VAR =",
+			spaceBeforeValue:  " ",
+			value:             "value",
+			spaceAfterValue:   " ",
+			trailingComment:   "# comment",
+			spaceAfterComment: " ",
+			continuation:      "\\\n",
+		})
+
+	test("VAR=value # comment \\\n", true,
+		varalignSplitResult{
+			leadingComment:    "",
+			varnameOp:         "VAR=",
+			spaceBeforeValue:  "",
+			value:             "value",
+			spaceAfterValue:   " ",
+			trailingComment:   "# comment",
+			spaceAfterComment: " ",
+			continuation:      "\\\n",
+		})
+
+	test("VAR=value # comment \\\\\n", true,
+		varalignSplitResult{
+			leadingComment:    "",
+			varnameOp:         "VAR=",
+			spaceBeforeValue:  "",
+			value:             "value",
+			spaceAfterValue:   " ",
+			trailingComment:   "# comment \\\\",
+			spaceAfterComment: "",
+			continuation:      "\n",
+		})
+
+	test("VAR=\\# a [#] b # comment \\\\\n", true,
+		varalignSplitResult{
+			leadingComment:    "",
+			varnameOp:         "VAR=",
+			spaceBeforeValue:  "",
+			value:             "\\# a [#] b",
+			spaceAfterValue:   " ",
+			trailingComment:   "# comment \\\\",
+			spaceAfterComment: "",
+			continuation:      "\n",
+		})
+
+	test("VAR.${param:[#]}=\tvalue\n", true,
+		varalignSplitResult{
+			leadingComment:    "",
+			varnameOp:         "VAR.${param:[#]}=",
+			spaceBeforeValue:  "\t",
+			value:             "value",
+			spaceAfterValue:   "",
+			trailingComment:   "",
+			spaceAfterComment: "",
+			continuation:      "\n",
+		})
 
 	test("VAR=value", true,
 		varalignSplitResult{
@@ -2204,72 +2295,14 @@ func (s *Suite) Test_VaralignBlock_split(c *check.C) {
 			continuation:      "",
 		})
 
-	test("#VAR=value", true,
-		varalignSplitResult{
-			leadingComment:    "#",
-			varnameOp:         "VAR=",
-			spaceBeforeValue:  "",
-			value:             "value",
-			spaceAfterValue:   "",
-			trailingComment:   "",
-			spaceAfterComment: "",
-			continuation:      "",
-		})
-
-	test("#VAR = value # comment \\", true,
-		varalignSplitResult{
-			leadingComment:    "#",
-			varnameOp:         "VAR =",
-			spaceBeforeValue:  " ",
-			value:             "value",
-			spaceAfterValue:   " ",
-			trailingComment:   "# comment",
-			spaceAfterComment: " ",
-			continuation:      "\\",
-		})
-
-	test("VAR=value # comment \\", true,
+	// Since this is a follow-up line, the text ends up in the variable
+	// value, and varnameOp is necessarily empty.
+	test("VAR=value", false,
 		varalignSplitResult{
 			leadingComment:    "",
-			varnameOp:         "VAR=",
+			varnameOp:         "",
 			spaceBeforeValue:  "",
-			value:             "value",
-			spaceAfterValue:   " ",
-			trailingComment:   "# comment",
-			spaceAfterComment: " ",
-			continuation:      "\\",
-		})
-
-	test("VAR=value # comment \\\\", true,
-		varalignSplitResult{
-			leadingComment:    "",
-			varnameOp:         "VAR=",
-			spaceBeforeValue:  "",
-			value:             "value",
-			spaceAfterValue:   " ",
-			trailingComment:   "# comment \\\\",
-			spaceAfterComment: "",
-			continuation:      "",
-		})
-
-	test("VAR=\\# a [#] b # comment \\\\", true,
-		varalignSplitResult{
-			leadingComment:    "",
-			varnameOp:         "VAR=",
-			spaceBeforeValue:  "",
-			value:             "\\# a [#] b",
-			spaceAfterValue:   " ",
-			trailingComment:   "# comment \\\\",
-			spaceAfterComment: "",
-			continuation:      "",
-		})
-
-	test("VAR.${param:[#]}=\tvalue", true,
-		varalignSplitResult{
-			leadingComment:    "",
-			varnameOp:         "VAR.${param:[#]}=",
-			spaceBeforeValue:  "\t",
-			value:             "value",
+			value:             "VAR=value",
 			spaceAfterValue:   "",
 			trailingComment:   "",
 			spaceAfterComment: "",
