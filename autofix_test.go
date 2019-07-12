@@ -271,6 +271,88 @@ func (s *Suite) Test_Autofix_ReplaceAfter__after_inserting_a_line(c *check.C) {
 		"AUTOFIX: filename:5: Replacing \"i\" with \"I\".")
 }
 
+func (s *Suite) Test_Autofix_ReplaceAt(c *check.C) {
+	t := s.Init(c)
+
+	lines := func(lines ...string) []string { return lines }
+	diagnostics := lines
+	autofixes := lines
+	test := func(texts []string, rawIndex int, column int, from, to string, diagnostics []string, autofixes []string) {
+
+		mainPart := func() {
+			mklines := t.NewMkLines("filename.mk", texts...)
+			assert(len(mklines.mklines) == 1)
+			mkline := mklines.mklines[0]
+
+			fix := mkline.Autofix()
+			fix.Notef("Should be appended instead of assigned.")
+			fix.ReplaceAt(rawIndex, column, from, to)
+			fix.Anyway()
+			fix.Apply()
+		}
+
+		t.SetUpCommandLine("-Wall")
+		mainPart()
+		t.CheckOutput(diagnostics)
+
+		t.SetUpCommandLine("-Wall", "--autofix")
+		mainPart()
+		t.CheckOutput(autofixes)
+	}
+
+	test(
+		lines(
+			"VAR=value1 \\",
+			"\tvalue2"),
+		0, 3, "=", "+=",
+		diagnostics(
+			// TODO: Only mention line 1, since line 2 is unaffected.
+			"NOTE: filename.mk:1--2: Should be appended instead of assigned."),
+		autofixes(
+			"AUTOFIX: filename.mk:1: Replacing \"=\" with \"+=\"."))
+
+	// If the text at the precisely given position does not match,
+	// the note is still printed because of the fix.Anyway(), but
+	// nothing is replaced automatically.
+	test(
+		lines(
+			"VAR=value1 \\",
+			"\tvalue2"),
+		0, 3, "?", "+=",
+		diagnostics(
+			"NOTE: filename.mk:1--2: Should be appended instead of assigned."),
+		autofixes(
+			nil...))
+
+	// Getting the line number wrong is a strange programming error, and
+	// there does not need to be any code checking for this in the main code.
+	t.ExpectPanicMatches(
+		func() {
+			test(
+				lines(
+					"VAR=value1 \\",
+					"\tvalue2"),
+				10, 3, "?", "+=",
+				diagnostics(
+					nil...),
+				autofixes(
+					nil...))
+		},
+		`runtime error: index out of range.*`)
+
+	// Getting the column number wrong may happen when a previous replacement
+	// has made the string shorter than before, therefore no panic in this case.
+	test(
+		lines(
+			"VAR=value1 \\",
+			"\tvalue2"),
+		0, 20, "?", "+=",
+		diagnostics(
+			"NOTE: filename.mk:1--2: Should be appended instead of assigned."),
+		autofixes(
+			nil...))
+}
+
 func (s *Suite) Test_SaveAutofixChanges(c *check.C) {
 	t := s.Init(c)
 

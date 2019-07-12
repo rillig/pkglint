@@ -756,14 +756,20 @@ func (t *Tester) ExpectFatalMatches(action func(), expected regex.Pattern) {
 }
 
 // ExpectPanic runs the given action and expects that this action calls
-// assertf or uses some other way to panic.
+// assert or assertf, or uses some other way to panic.
 //
 // Usage:
 //  t.ExpectPanic(
 //      func() { /* do something that panics */ },
-//      "FATAL: ~/Makefile:1: Must not be empty")
+//      "runtime error: path not found")
 func (t *Tester) ExpectPanic(action func(), expectedMessage string) {
 	t.Check(action, check.Panics, expectedMessage)
+}
+
+// ExpectPanicMatches runs the given action and expects that this action
+// calls assert or assertf, or uses some other way to panic.
+func (t *Tester) ExpectPanicMatches(action func(), expectedMessage string) {
+	t.Check(action, check.PanicMatches, expectedMessage)
 }
 
 // ExpectAssert runs the given action and expects that this action calls assert.
