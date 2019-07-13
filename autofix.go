@@ -382,68 +382,6 @@ func (fix *Autofix) Apply() {
 	reset()
 }
 
-func (fix *Autofix) RealignContinuation(mkline *MkLine, newWidth int) {
-
-	// XXX: Check whether this method can be implemented as Custom fix.
-	// This complicated code should not be in the Autofix type.
-
-	fix.assertRealLine()
-	assert(mkline.IsMultiline())
-	assert(mkline.IsVarassignMaybeCommented())
-
-	if fix.skip() {
-		return
-	}
-
-	normalized := true // Whether all indentation is tabs, followed by spaces.
-	oldWidth := 0      // The minimum required indentation in the original lines.
-
-	{
-		// Parsing the continuation marker as variable value is cheating but works well.
-		text := strings.TrimSuffix(mkline.raw[0].orignl, "\n")
-		_, a := MkLineParser{}.MatchVarassign(mkline.Line, text)
-		if a.value != "\\" {
-			oldWidth = tabWidth(a.valueAlign)
-		}
-	}
-
-	for _, rawLine := range fix.line.raw[1:] {
-		_, comment, space := match2(rawLine.textnl, `^(#?)([ \t]*)`)
-		width := tabWidth(comment + space)
-		if (oldWidth == 0 || width < oldWidth) && width >= 8 {
-			oldWidth = width
-		}
-		if !matches(space, `^\t* {0,7}$`) {
-			normalized = false
-		}
-	}
-
-	if normalized && newWidth == oldWidth {
-		return
-	}
-
-	// 8 spaces is the minimum possible indentation that can be
-	// distinguished from an initial line, by looking only at the
-	// beginning of the line. Therefore, this indentation is always
-	// regarded as intentional and is not realigned.
-	if oldWidth == 8 {
-		return
-	}
-
-	for _, rawLine := range fix.line.raw[1:] {
-		_, comment, oldSpace := match2(rawLine.textnl, `^(#?)([ \t]*)`)
-		newLineWidth := tabWidth(oldSpace) - oldWidth + newWidth
-		newSpace := indent(newLineWidth)
-		replaced := strings.Replace(rawLine.textnl, comment+oldSpace, comment+newSpace, 1)
-		if replaced != rawLine.textnl {
-			if G.Logger.IsAutofix() {
-				rawLine.textnl = replaced
-			}
-			fix.Describef(rawLine.Lineno, "Replacing continuation indentation %q with %q.", oldSpace, newSpace)
-		}
-	}
-}
-
 func (fix *Autofix) setDiag(level *LogLevel, format string, args []interface{}) {
 	if G.Testing && format != SilentAutofixFormat {
 		assertf(

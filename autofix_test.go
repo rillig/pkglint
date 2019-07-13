@@ -875,7 +875,6 @@ func (s *Suite) Test_Autofix_skip(c *check.C) {
 	fix.InsertAfter("after")
 	fix.Delete()
 	fix.Custom(func(showAutofix, autofix bool) {})
-	fix.RealignContinuation(mklines.mklines[0], 32)
 
 	fix.Apply()
 
@@ -1160,77 +1159,6 @@ func (s *Suite) Test_Autofix_Apply__text_after_replacing_regex(c *check.C) {
 	t.Check(mkline.Text, equals, "VAR=\tnew value")
 	// TODO: should be updated as well.
 	t.Check(mkline.Value(), equals, "value")
-}
-
-func (s *Suite) Test_Autofix_RealignContinuation__wrong_line_type(c *check.C) {
-	t := s.Init(c)
-
-	mklines := t.NewMkLines("file.mk",
-		MkCvsID,
-		".if \\",
-		"${PKGSRC_RUN_TESTS}")
-
-	mkline := mklines.mklines[1]
-	fix := mkline.Autofix()
-
-	t.ExpectAssert(func() { fix.RealignContinuation(mkline, 16) })
-}
-
-func (s *Suite) Test_Autofix_RealignContinuation__short_continuation_line(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpCommandLine("--autofix")
-	mklines := t.SetUpFileMkLines("file.mk",
-		MkCvsID,
-		"BUILD_DIRS= \\",
-		"\tdir \\",
-		"")
-	mkline := mklines.mklines[1]
-	fix := mkline.Autofix()
-	fix.Warnf("Line should be realigned.")
-
-	// In this case realigning has no effect since the oldWidth == 8,
-	// which counts as "sufficiently intentional not to be modified".
-	fix.RealignContinuation(mkline, 16)
-
-	mklines.SaveAutofixChanges()
-
-	t.CheckOutputEmpty()
-	t.CheckFileLines("file.mk",
-		MkCvsID,
-		"BUILD_DIRS= \\",
-		"\tdir \\",
-		"")
-}
-
-func (s *Suite) Test_Autofix_RealignContinuation__multiline_indented_with_spaces(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpCommandLine("--autofix")
-	mklines := t.SetUpFileMkLines("file.mk",
-		MkCvsID,
-		"BUILD_DIRS= \\",
-		"\t        dir1 \\",
-		"\t\tdir2 \\",
-		"  ") // Trailing whitespace is not fixed by Autofix.RealignContinuation.
-
-	mkline := mklines.mklines[1]
-
-	fix := mkline.Autofix()
-	fix.Warnf("Warning.")
-	fix.RealignContinuation(mkline, 16)
-	fix.Apply()
-
-	mklines.SaveAutofixChanges()
-
-	t.CheckOutputLines(
-		"AUTOFIX: ~/file.mk:3: Replacing continuation indentation \"\\t        \" with \"\\t\\t\".")
-	t.CheckFileLines("file.mk",
-		MkCvsID,
-		"BUILD_DIRS= \\",
-		"\t\tdir1 \\",
-		"\t\tdir2 \\",
-		"  ")
 }
 
 // Just for branch coverage.
