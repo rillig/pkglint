@@ -303,7 +303,7 @@ func (*VaralignBlock) optimalWidth(infos []*varalignLine) int {
 	var longestLine *MkLine
 	secondLongest := 0 // The second-longest seen varnameOpWidth
 	for _, info := range infos {
-		if info.multiEmpty {
+		if info.multiEmpty || info.rawIndex > 0 {
 			continue
 		}
 
@@ -329,7 +329,7 @@ func (*VaralignBlock) optimalWidth(infos []*varalignLine) int {
 	minTotalWidth := 0
 	maxTotalWidth := 0
 	for _, info := range infos {
-		if info.multiEmpty || (outlier > 0 && info.varnameOpWidth() == outlier) {
+		if info.multiEmpty || info.rawIndex > 0 || (outlier > 0 && info.varnameOpWidth() == outlier) {
 			continue
 		}
 
