@@ -2171,6 +2171,38 @@ func (s *Suite) Test_VaralignBlock__follow_up_indentation(c *check.C) {
 	vt.Run()
 }
 
+func (s *Suite) Test_VaralignBlock__staircase(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"JAM_COMMAND=\t\\",
+		"\tcd ${WRKSRC} &&\t\t\t\t\t\t\t\\",
+		"\t\t${SETENV} ${MY_ENV}\t\t\t\t\t\\",
+		"\t\t\t${PREFIX}/bin/my-cmd\t\t\t\t\\",
+		"\t\t\t\t-options arg...")
+	vt.Internals(
+		"12 16",
+		"   08",
+		"   16",
+		"   24",
+		"   32")
+	vt.Diagnostics(
+		// FIXME: there's no need to reduce the indentation.
+		"NOTE: ~/Makefile:1--5: This continuation line should be indented with \"\\t\".",
+		"NOTE: ~/Makefile:1--5: This continuation line should be indented with \"\\t\\t\".",
+		"NOTE: ~/Makefile:1--5: This continuation line should be indented with \"\\t\\t\\t\".")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:3: Replacing \"\\t\\t\" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:4: Replacing \"\\t\\t\\t\" with \"\\t\\t\".",
+		"AUTOFIX: ~/Makefile:5: Replacing \"\\t\\t\\t\\t\" with \"\\t\\t\\t\".")
+	vt.Fixed(
+		"JAM_COMMAND=    \\",
+		"        cd ${WRKSRC} &&                                                 \\",
+		"        ${SETENV} ${MY_ENV}                                     \\",
+		"                ${PREFIX}/bin/my-cmd                            \\",
+		"                        -options arg...")
+	vt.Run()
+}
+
 func (s *Suite) Test_VaralignBlock_Process__autofix(c *check.C) {
 	t := s.Init(c)
 
