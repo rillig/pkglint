@@ -2147,6 +2147,37 @@ func (s *Suite) Test_VaralignBlock__eol_comment(c *check.C) {
 	vt.Run()
 }
 
+func (s *Suite) Test_VaralignBlock__follow_up_indentation(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"EGDIR=\t\t\t${PREFIX}/share/examples/rtunes",
+		"CONF_FILES=\t\t${EGDIR}/wrksrc.conf \\",
+		"\t\t\t\t${PKG_SYSCONFDIR}/installed.conf",
+		"EGDIR=\t\t\t${PREFIX}/share/examples/rtunes")
+	vt.Internals(
+		"06 24",
+		"11 24",
+		"   32",
+		"06 24")
+	vt.Diagnostics(
+		// FIXME: No fix needed since everything is nicely aligned.
+		"NOTE: ~/Makefile:1: This variable value should be aligned to column 17.",
+		"NOTE: ~/Makefile:2--3: This variable value should be aligned to column 17.",
+		"NOTE: ~/Makefile:2--3: This continuation line should be indented with \"\\t\\t\".",
+		"NOTE: ~/Makefile:4: This variable value should be aligned to column 17.")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\\t\\t\" with \"\\t\\t\".",
+		"AUTOFIX: ~/Makefile:2: Replacing \"\\t\\t\" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:3: Replacing \"\\t\\t\\t\\t\" with \"\\t\\t\\t\".",
+		"AUTOFIX: ~/Makefile:4: Replacing \"\\t\\t\\t\" with \"\\t\\t\".")
+	vt.Fixed(
+		"EGDIR=          ${PREFIX}/share/examples/rtunes",
+		"CONF_FILES=     ${EGDIR}/wrksrc.conf \\",
+		"                        ${PKG_SYSCONFDIR}/installed.conf",
+		"EGDIR=          ${PREFIX}/share/examples/rtunes")
+	vt.Run()
+}
+
 func (s *Suite) Test_VaralignBlock_Process__autofix(c *check.C) {
 	t := s.Init(c)
 
