@@ -277,17 +277,18 @@ func (va *VaralignBlock) Finish() {
 	}
 
 	newWidth := va.optimalWidth(infos)
-	if newWidth == 0 {
-		return
-	}
 
+	multiEmpty := false
 	for _, info := range infos {
 		if info.rawIndex == 0 {
 			va.indentDiffSet = false
 			va.indentDiff = 0
+			multiEmpty = info.multiEmpty
 		}
 
-		va.realign(info, newWidth)
+		if newWidth > 0 || multiEmpty && info.rawIndex > 0 {
+			va.realign(info, newWidth)
+		}
 	}
 }
 
@@ -429,7 +430,15 @@ func (va *VaralignBlock) realignMultiEmptyFollow(info *varalignLine, newWidth in
 		}
 	}
 
-	newSpace := indent(oldWidth + va.indentDiff)
+	newWidth = oldWidth + va.indentDiff
+	if newWidth < 8 {
+		newWidth = oldWidth & -8
+		if newWidth < 8 {
+			newWidth = 8
+		}
+	}
+
+	newSpace := indent(newWidth)
 	if newSpace == oldSpace {
 		return
 	}

@@ -288,15 +288,12 @@ func (s *Suite) Test_VaralignBlock__one_line_follow_indent_none(c *check.C) {
 		"20 21",
 		"   00")
 	vt.Diagnostics(
-		// FIXME: "NOTE: ~/Makefile:2: indent to 9"
-		nil...)
+		"NOTE: ~/Makefile:1--2: This continuation line should be indented with \"\\t\".")
 	vt.Autofixes(
-		// FIXME: "AUTOFIX: ~/Makefile:1--2: Replacing \"\" with \"\\t\".")
-		nil...)
+		"AUTOFIX: ~/Makefile:2: Replacing \"\" with \"\\t\".")
 	vt.Fixed(
 		"VVVVVVVVVVVVVVVVVVV= \\",
-		// FIXME: "        value")
-		"value")
+		"        value")
 	vt.Run()
 }
 
@@ -309,15 +306,12 @@ func (s *Suite) Test_VaralignBlock__one_line_follow_indent_space(c *check.C) {
 		"20 21",
 		"   01")
 	vt.Diagnostics(
-		// FIXME: "indent to column 9")
-		nil...)
+		"NOTE: ~/Makefile:1--2: This continuation line should be indented with \"\\t\".")
 	vt.Autofixes(
-		// FIXME: "AUTOFIX: ~/Makefile:2: Replacing \" \" with \"\\t\".")
-		nil...)
+		"AUTOFIX: ~/Makefile:2: Replacing \" \" with \"\\t\".")
 	vt.Fixed(
 		"VVVVVVVVVVVVVVVVVVV= \\",
-		// FIXME: "        value")
-		" value")
+		"        value")
 	vt.Run()
 }
 
@@ -346,15 +340,12 @@ func (s *Suite) Test_VaralignBlock__one_line_follow_indent_sss(c *check.C) {
 		"20 21",
 		"   03")
 	vt.Diagnostics(
-		// FIXME: "indent to column 9")
-		nil...)
+		"NOTE: ~/Makefile:1--2: This continuation line should be indented with \"\\t\".")
 	vt.Autofixes(
-		// FIXME: "AUTOFIX: ~/Makefile:2: Replacing \"   \" with \"\\t\".")
-		nil...)
+		"AUTOFIX: ~/Makefile:2: Replacing \"   \" with \"\\t\".")
 	vt.Fixed(
 		"VVVVVVVVVVVVVVVVVVV= \\",
-		// FIXME: "        value")
-		"   value")
+		"        value")
 	vt.Run()
 }
 
@@ -399,15 +390,12 @@ func (s *Suite) Test_VaralignBlock__one_line_follow_indent_tsts(c *check.C) {
 		"20 21",
 		"   17")
 	vt.Diagnostics(
-		// FIXME: indent with only tabs
-		nil...)
+		"NOTE: ~/Makefile:1--2: This continuation line should be indented with \"\\t\\t\".")
 	vt.Autofixes(
-		// FIXME: "AUTOFIX: ~/Makefile:2: Replacing \"\\t \\t \" with \"\\t\\t\".")
-		nil...)
+		"AUTOFIX: ~/Makefile:2: Replacing \"\\t \\t \" with \"\\t\\t\".")
 	vt.Fixed(
 		"VVVVVVVVVVVVVVVVVVV= \\",
-		// FIXME: "                value")
-		"                 value")
+		"                value")
 	vt.Run()
 }
 
@@ -937,13 +925,12 @@ func (s *Suite) Test_VaralignBlock__empty_continuation_in_column_1(c *check.C) {
 		"04 05",
 		"   00")
 	vt.Diagnostics(
-		// FIXME: suggest indentation to column 9.
-		nil...)
+		"NOTE: ~/Makefile:1--2: This continuation line should be indented with \"\\t\".")
 	vt.Autofixes(
-		nil...)
+		"AUTOFIX: ~/Makefile:2: Replacing \"\" with \"\\t\".")
 	vt.Fixed(
 		"VAR= \\",
-		"no indentation")
+		"        no indentation")
 	vt.Run()
 }
 
@@ -1422,6 +1409,9 @@ func (s *Suite) Test_VaralignBlock__continuation_mixed_indentation_in_first_line
 }
 
 func (s *Suite) Test_VaralignBlock__follow_up_indented_with_spaces(c *check.C) {
+	// FIXME: warn about the misleading empty line 6,
+	//  but not in this test
+
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"DISTFILES= \\",
@@ -1438,17 +1428,17 @@ func (s *Suite) Test_VaralignBlock__follow_up_indented_with_spaces(c *check.C) {
 		"   08",
 		"   03")
 	vt.Diagnostics(
-		// FIXME: line 2: at least 1 tab
-		// FIXME: line 3: at least 1 tab
-		// FIXME: line 4: tab instead of spaces
-		// FIXME: line 6: misleading empty line
-		nil...)
+		"NOTE: ~/Makefile:1--6: This continuation line should be indented with \"\\t\".",
+		"NOTE: ~/Makefile:1--6: This continuation line should be indented with \"\\t\".",
+		"NOTE: ~/Makefile:1--6: This continuation line should be indented with \"\\t\".")
 	vt.Autofixes(
-		nil...)
+		"AUTOFIX: ~/Makefile:2: Replacing \" \" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:3: Replacing \"   \" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:4: Replacing \"        \" with \"\\t\".")
 	vt.Fixed(
 		"DISTFILES= \\",
-		" one space \\",
-		"   three spaces \\",
+		"        one space \\",
+		"        three spaces \\",
 		"        eight spaces \\",
 		"        and a tab \\",
 		"   ")
@@ -2025,10 +2015,8 @@ func (s *Suite) Test_VaralignBlock__realign_commented_single_lines(c *check.C) {
 
 // Commented variable assignments are realigned, too.
 // In this case, the BEFORE and COMMENTED variables are already aligned properly.
-// The line starting with "AFTER" is actually part of the comment, therefore it is not changed.
-//
-// FIXME: When mklines.Check is called, there should be a warning about
-//  the misleading AFTER= at the beginning of the line.
+// The line starting with "AFTER" is part of the commented variable assignment,
+// and since these are checked as well, it is realigned.
 func (s *Suite) Test_VaralignBlock__realign_commented_continuation_line(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -2045,15 +2033,17 @@ func (s *Suite) Test_VaralignBlock__realign_commented_continuation_line(c *check
 		"   08",
 		"   08",
 		"   00")
-	vt.Diagnostics()
-	vt.Autofixes()
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:2--6: This continuation line should be indented with \"\\t\".")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:6: Replacing \"\" with \"\\t\".")
 	vt.Fixed(
 		"BEFORE= value",
 		"#COMMENTED= \\",
 		"#       value1 \\",
 		"#       value2 \\",
 		"#       value3 \\",
-		"AFTER=  after")
+		"        AFTER=  after")
 	vt.Run()
 }
 
