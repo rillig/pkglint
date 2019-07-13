@@ -2322,4 +2322,18 @@ func (s *Suite) Test_VaralignBlock_split(c *check.C) {
 			spaceAfterComment: "",
 			continuation:      "",
 		})
+
+	// And in really edgy cases, the leading space may even be followed by tabs.
+	// This should not happen in practice since it is really confusing.
+	test(" \t VAR=value", true,
+		varalignSplitResult{
+			leadingComment:    " \t ",
+			varnameOp:         "VAR=",
+			spaceBeforeValue:  "",
+			value:             "value",
+			spaceAfterValue:   "",
+			trailingComment:   "",
+			spaceAfterComment: "",
+			continuation:      "",
+		})
 }

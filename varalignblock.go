@@ -177,7 +177,8 @@ func (*VaralignBlock) split(textnl string, initial bool) varalignSplitResult {
 
 		lexer.SkipByte('#')
 
-		for lexer.SkipByte(' ') {
+		if lexer.SkipByte(' ') {
+			lexer.SkipHspace()
 		}
 
 		return lexer.Since(mark)
