@@ -464,7 +464,7 @@ func (s *Suite) Test_Logger_ShowSummary__explanations_with_only(c *check.C) {
 	c.Check(G.Logger.explanationsAvailable, equals, true)
 	t.CheckOutputLines(
 		"WARN: Makefile:27: This warning is interesting.",
-		"0 errors and 1 warning found.",
+		"1 warning found.",
 		"(Run \"pkglint -e\" to show explanations.)")
 }
 
@@ -553,7 +553,7 @@ func (s *Suite) Test_Logger_ShowSummary__explanations_available(c *check.C) {
 
 	t.CheckOutputLines(
 		"ERROR: .",
-		"1 error and 0 warnings found.",
+		"1 error found.",
 		"(Run \"pkglint -e\" to show explanations.)")
 }
 
@@ -572,7 +572,7 @@ func (s *Suite) Test_Logger_ShowSummary__explanations_available_in_explain_mode(
 
 	t.CheckOutputLines(
 		"ERROR: .",
-		"1 error and 0 warnings found.")
+		"1 error found.")
 }
 
 func (s *Suite) Test_Logger_ShowSummary__autofix_available(c *check.C) {
@@ -802,7 +802,7 @@ func (s *Suite) Test_Logger_Diag__source_duplicates(c *check.C) {
 			"Patch \"../../category/dependency/patches/patch-aa\" is not recorded. "+
 			"Run \""+confMake+" makepatchsum\".",
 		"",
-		"3 errors and 0 warnings found.",
+		"3 errors found.",
 		"(Run \"pkglint -e\" to show explanations.)")
 }
 

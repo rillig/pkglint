@@ -230,7 +230,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 			"(distinfo has asdfasdf, patch file has e775969de639ec703866c0336c4c8e0fdd96309c).",
 		"WARN: ~/sysutils/checkperms/patches/patch-checkperms.c:12: Premature end of patch hunk "+
 			"(expected 1 lines to be deleted and 0 lines to be added).",
-		"4 errors and 2 warnings found.",
+		"4 errors, 2 warnings and 1 note found.",
 		"(Run \"pkglint -e\" to show explanations.)",
 		"(Run \"pkglint -fs\" to show what can be fixed automatically.)",
 		"(Run \"pkglint -F\" to automatically fix some issues.)")
@@ -610,7 +610,7 @@ func (s *Suite) Test_Pkglint_checkReg__alternatives(c *check.C) {
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/ALTERNATIVES:1: Alternative implementation \"bin/gnu-tar\" must be an absolute path.",
-		"1 error and 0 warnings found.",
+		"1 error found.",
 		"(Run \"pkglint -e\" to show explanations.)")
 }
 
@@ -694,7 +694,7 @@ func (s *Suite) Test_Pkglint_checkReg__in_current_working_directory(c *check.C) 
 
 	t.CheckOutputLines(
 		"WARN: log: Unexpected file found.",
-		"0 errors and 1 warning found.")
+		"1 warning found.")
 }
 
 func (s *Suite) Test_Pkglint_Tool__prefer_mk_over_pkgsrc(c *check.C) {
@@ -899,7 +899,7 @@ func (s *Suite) Test_Pkglint_checkReg__readme_and_todo(c *check.C) {
 	t.CheckOutputLines(
 		"ERROR: category/package/README: Packages in main pkgsrc must not have a README file.",
 		"ERROR: category/package/TODO: Packages in main pkgsrc must not have a TODO file.",
-		"2 errors and 0 warnings found.")
+		"2 errors found.")
 
 	t.Main("--import", "category/package", "wip/package")
 
@@ -908,7 +908,7 @@ func (s *Suite) Test_Pkglint_checkReg__readme_and_todo(c *check.C) {
 		"ERROR: category/package/TODO: Packages in main pkgsrc must not have a TODO file.",
 		"ERROR: wip/package/README: Must be cleaned up before committing the package.",
 		"ERROR: wip/package/TODO: Must be cleaned up before committing the package.",
-		"4 errors and 0 warnings found.")
+		"4 errors found.")
 }
 
 func (s *Suite) Test_Pkglint_checkReg__unknown_file_in_patches(c *check.C) {

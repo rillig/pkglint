@@ -1102,7 +1102,7 @@ func (s *Suite) Test_Package_check__patches_Makefile(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: ~/category/package/patches/Makefile: Patch files should be "+
 			"named \"patch-\", followed by letters, '-', '_', '.', and digits only.",
-		"0 errors and 1 warning found.")
+		"1 warning found.")
 }
 
 func (s *Suite) Test_Package_checkDirent__errors(c *check.C) {
@@ -1381,7 +1381,7 @@ func (s *Suite) Test_Package_checkUpdate(c *check.C) {
 		"NOTE: category/pkg1/Makefile:4: The update request to 1.0 from doc/TODO has been done.",
 		"WARN: category/pkg2/Makefile:4: This package should be updated to 2.0 ([nice new features]).",
 		"NOTE: category/pkg3/Makefile:4: This package is newer than the update request to 3.0 ([security update]).",
-		"0 errors and 4 warnings found.",
+		"4 warnings and 2 notes found.",
 		"(Run \"pkglint -e\" to show explanations.)")
 }
 

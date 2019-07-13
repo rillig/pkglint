@@ -23,6 +23,7 @@ type Logger struct {
 
 	errors                int
 	warnings              int
+	notes                 int
 	explanationsAvailable bool
 	autofixAvailable      bool
 }
@@ -114,9 +115,21 @@ func (l *Logger) ShowSummary() {
 	}
 
 	if l.errors != 0 || l.warnings != 0 {
-		l.out.Write(sprintf("%d %s and %d %s found.\n",
-			l.errors, ifelseStr(l.errors == 1, "error", "errors"),
-			l.warnings, ifelseStr(l.warnings == 1, "warning", "warnings")))
+		num := func(n int, singular, plural string) string {
+			if n == 0 {
+				return ""
+			} else if n == 1 {
+				return sprintf("%d %s", n, singular)
+			} else {
+				return sprintf("%d %s", n, plural)
+			}
+		}
+
+		l.out.Write(sprintf("%s found.\n",
+			joinSkipEmptyCambridge("and",
+				num(l.errors, "error", "errors"),
+				num(l.warnings, "warning", "warnings"),
+				num(l.notes, "note", "notes"))))
 	} else {
 		l.out.WriteLine("Looks fine.")
 	}
@@ -278,6 +291,8 @@ func (l *Logger) Logf(level *LogLevel, filename, lineno, format, msg string) {
 		l.errors++
 	case Warn:
 		l.warnings++
+	case Note:
+		l.notes++
 	}
 }
 

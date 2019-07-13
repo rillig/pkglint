@@ -90,7 +90,7 @@ func (s *Suite) Test_Pkgsrc_checkToplevelUnusedLicenses(c *check.C) {
 		"WARN: ~/category/package2/Makefile:11: License file ~/licenses/missing does not exist.",
 		"WARN: ~/licenses/gnu-gpl-v2: This license seems to be unused.", // Added by Tester.SetUpPkgsrc
 		"WARN: ~/licenses/gnu-gpl-v3: This license seems to be unused.",
-		"0 errors and 3 warnings found.")
+		"3 warnings found.")
 }
 
 func (s *Suite) Test_Pkgsrc_loadUntypedVars(c *check.C) {
@@ -433,7 +433,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__wrong_indentation(c *check.C
 	t.CheckOutputLines(
 		"WARN: ~/doc/CHANGES-2018:5: Package changes should be indented using a single tab, not \"        \".",
 		"WARN: ~/doc/CHANGES-2018:6: Package changes should be indented using a single tab, not \"    \\t\".",
-		"0 errors and 2 warnings found.",
+		"2 warnings found.",
 		"(Run \"pkglint -e\" to show explanations.)")
 }
 
@@ -954,7 +954,7 @@ func (s *Suite) Test_Pkgsrc_VariableType__from_mk(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: ~/category/package/Makefile:21: PKGSRC_UNKNOWN_ENV is defined but not used.",
 		"WARN: ~/category/package/Makefile:21: ABCPATH is used but not defined.",
-		"0 errors and 2 warnings found.",
+		"2 warnings found.",
 		"(Run \"pkglint -e\" to show explanations.)")
 }
 
