@@ -424,7 +424,7 @@ func (va *VaralignBlock) realignMultiEmptyFollow(info *varalignLine, newWidth in
 
 	if !va.indentDiffSet {
 		va.indentDiffSet = true
-		va.indentDiff = newWidth - oldWidth
+		va.indentDiff = condInt(newWidth != 0, newWidth-oldWidth, 0)
 		if va.indentDiff > 0 && !info.commentedOut() {
 			va.indentDiff = 0
 		}

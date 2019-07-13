@@ -390,12 +390,12 @@ func (s *Suite) Test_VaralignBlock__one_line_follow_indent_tsts(c *check.C) {
 		"20 21",
 		"   17")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:1--2: This continuation line should be indented with \"\\t\\t\".")
+		"NOTE: ~/Makefile:1--2: This continuation line should be indented with \"\\t\\t \".")
 	vt.Autofixes(
-		"AUTOFIX: ~/Makefile:2: Replacing \"\\t \\t \" with \"\\t\\t\".")
+		"AUTOFIX: ~/Makefile:2: Replacing \"\\t \\t \" with \"\\t\\t \".")
 	vt.Fixed(
 		"VVVVVVVVVVVVVVVVVVV= \\",
-		"                value")
+		"                 value")
 	vt.Run()
 }
 
@@ -2186,20 +2186,15 @@ func (s *Suite) Test_VaralignBlock__staircase(c *check.C) {
 		"   24",
 		"   32")
 	vt.Diagnostics(
-		// FIXME: there's no need to reduce the indentation.
-		"NOTE: ~/Makefile:1--5: This continuation line should be indented with \"\\t\".",
-		"NOTE: ~/Makefile:1--5: This continuation line should be indented with \"\\t\\t\".",
-		"NOTE: ~/Makefile:1--5: This continuation line should be indented with \"\\t\\t\\t\".")
+		nil...)
 	vt.Autofixes(
-		"AUTOFIX: ~/Makefile:3: Replacing \"\\t\\t\" with \"\\t\".",
-		"AUTOFIX: ~/Makefile:4: Replacing \"\\t\\t\\t\" with \"\\t\\t\".",
-		"AUTOFIX: ~/Makefile:5: Replacing \"\\t\\t\\t\\t\" with \"\\t\\t\\t\".")
+		nil...)
 	vt.Fixed(
 		"JAM_COMMAND=    \\",
 		"        cd ${WRKSRC} &&                                                 \\",
-		"        ${SETENV} ${MY_ENV}                                     \\",
-		"                ${PREFIX}/bin/my-cmd                            \\",
-		"                        -options arg...")
+		"                ${SETENV} ${MY_ENV}                                     \\",
+		"                        ${PREFIX}/bin/my-cmd                            \\",
+		"                                -options arg...")
 	vt.Run()
 }
 
