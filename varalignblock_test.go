@@ -2348,4 +2348,16 @@ func (s *Suite) Test_VaralignBlock_split(c *check.C) {
 			spaceAfterComment: "",
 			continuation:      "",
 		})
+
+	test("    value", false,
+		varalignSplitResult{
+			leadingComment:    "",
+			varnameOp:         "",
+			spaceBeforeValue:  "    ",
+			value:             "value",
+			spaceAfterValue:   "",
+			trailingComment:   "",
+			spaceAfterComment: "",
+			continuation:      "",
+		})
 }
