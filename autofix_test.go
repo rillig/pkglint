@@ -327,17 +327,7 @@ func (s *Suite) Test_Autofix_ReplaceAt(c *check.C) {
 	// Getting the line number wrong is a strange programming error, and
 	// there does not need to be any code checking for this in the main code.
 	t.ExpectPanicMatches(
-		func() {
-			test(
-				lines(
-					"VAR=value1 \\",
-					"\tvalue2"),
-				10, 3, "?", "+=",
-				diagnostics(
-					nil...),
-				autofixes(
-					nil...))
-		},
+		func() { test(lines("VAR=value"), 10, 3, "from", "to", nil, nil) },
 		`runtime error: index out of range.*`)
 
 	// Getting the column number wrong may happen when a previous replacement
