@@ -2308,4 +2308,18 @@ func (s *Suite) Test_VaralignBlock_split(c *check.C) {
 			spaceAfterComment: "",
 			continuation:      "",
 		})
+
+	// In some edge cases the variable name is indented using ordinary spaces.
+	// This must not lead to a panic.
+	test("   VAR=value", true,
+		varalignSplitResult{
+			leadingComment:    "   ",
+			varnameOp:         "VAR=",
+			spaceBeforeValue:  "",
+			value:             "value",
+			spaceAfterValue:   "",
+			trailingComment:   "",
+			spaceAfterComment: "",
+			continuation:      "",
+		})
 }

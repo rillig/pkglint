@@ -172,6 +172,17 @@ func (*VaralignBlock) split(textnl string, initial bool) varalignSplitResult {
 	p := NewMkParser(nil, textnl)
 	lexer := p.lexer
 
+	parseLeadingComment := func() string {
+		mark := lexer.Mark()
+
+		lexer.SkipByte('#')
+
+		for lexer.SkipByte(' ') {
+		}
+
+		return lexer.Since(mark)
+	}
+
 	parseVarnameOp := func() string {
 		if !initial {
 			return ""
@@ -233,7 +244,7 @@ func (*VaralignBlock) split(textnl string, initial bool) varalignSplitResult {
 		return rest[:newline], "", rest[newline:]
 	}
 
-	leadingComment := lexer.NextString("#")
+	leadingComment := parseLeadingComment()
 	varnameOp := parseVarnameOp()
 	spaceBeforeValue := lexer.NextHspace()
 	value, spaceAfterValue := parseValue()
