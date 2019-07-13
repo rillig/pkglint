@@ -2235,6 +2235,18 @@ func (s *Suite) Test_VaralignBlock_split(c *check.C) {
 			continuation:      "\\\n",
 		})
 
+	test("VAR=value \\\n", true,
+		varalignSplitResult{
+			leadingComment:    "",
+			varnameOp:         "VAR=",
+			spaceBeforeValue:  "",
+			value:             "value",
+			spaceAfterValue:   " ",
+			trailingComment:   "",
+			spaceAfterComment: "",
+			continuation:      "\\\n",
+		})
+
 	test("VAR=value # comment \\\n", true,
 		varalignSplitResult{
 			leadingComment:    "",

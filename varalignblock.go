@@ -200,18 +200,20 @@ func (*VaralignBlock) split(textnl string, initial bool) varalignSplitResult {
 	parseValue := func() (string, string) {
 		mark := lexer.Mark()
 
-		for !lexer.EOF() && lexer.PeekByte() != '#' && lexer.PeekByte() != '\n' {
-			switch {
-			case lexer.NextBytesSet(unescapeMkCommentSafeChars) != "",
-				lexer.SkipString("[#"),
-				lexer.SkipByte('['):
-				break
+		for !lexer.EOF() &&
+			lexer.PeekByte() != '#' &&
+			lexer.PeekByte() != '\n' &&
+			!hasPrefix(lexer.Rest(), "\\\n") {
 
-			default:
-				assert(lexer.SkipByte('\\'))
-				if !lexer.EOF() {
-					lexer.Skip(1)
-				}
+			if lexer.NextBytesSet(unescapeMkCommentSafeChars) != "" ||
+				lexer.SkipString("[#") ||
+				lexer.SkipByte('[') {
+				continue
+			}
+
+			assert(lexer.SkipByte('\\'))
+			if !lexer.EOF() {
+				lexer.Skip(1)
 			}
 		}
 
