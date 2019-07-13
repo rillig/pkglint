@@ -441,7 +441,7 @@ func (va *VaralignBlock) realignMultiEmptyFollow(info *varalignLine, newWidth in
 	}
 
 	fix := info.mkline.Autofix()
-	fix.Notef("This continuation line should be indented with %q.", indent(newWidth))
+	fix.Notef("This continuation line should be indented with %q.", newSpace)
 	fix.ReplaceAt(info.rawIndex, info.spaceBeforeValueIndex(), oldSpace, newSpace)
 	fix.Apply()
 }

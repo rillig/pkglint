@@ -1366,7 +1366,7 @@ func (s *Suite) Test_VaralignBlock__continuation_mixed_indentation_in_second_lin
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 17.",
 		"NOTE: ~/Makefile:3--6: This variable value should be aligned with tabs, not spaces, to column 17.",
 		"NOTE: ~/Makefile:3--6: This continuation line should be indented with \"\\t\\t\".",
-		"NOTE: ~/Makefile:3--6: This continuation line should be indented with \"\\t\\t\".",
+		"NOTE: ~/Makefile:3--6: This continuation line should be indented with \"\\t\\t  \".",
 		"NOTE: ~/Makefile:3--6: This continuation line should be indented with \"\\t\\t\".")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\" with \"\\t\\t\".",
