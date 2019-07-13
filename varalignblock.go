@@ -461,7 +461,8 @@ func (va *VaralignBlock) realignMultiInitial(info *varalignLine, newWidth int) {
 	oldSpace := info.parts.spaceBeforeValue
 
 	va.indentDiffSet = true
-	va.indentDiff = newWidth - tabWidth(leadingComment+varnameOp+oldSpace)
+	oldWidth := info.varnameOpSpaceWidth()
+	va.indentDiff = newWidth - oldWidth
 
 	newSpace := alignmentAfter(leadingComment+varnameOp, newWidth)
 	if newSpace == oldSpace {
@@ -469,14 +470,13 @@ func (va *VaralignBlock) realignMultiInitial(info *varalignLine, newWidth int) {
 	}
 
 	hasSpace := strings.IndexByte(oldSpace, ' ') != -1
-	column := tabWidth(leadingComment + varnameOp + newSpace)
-	oldColumn := tabWidth(leadingComment + varnameOp + oldSpace)
+	width := tabWidth(leadingComment + varnameOp + newSpace)
 
 	fix := info.mkline.Autofix()
-	if hasSpace && column != oldColumn {
-		fix.Notef("This variable value should be aligned with tabs, not spaces, to column %d.", column+1)
-	} else if column != oldColumn {
-		fix.Notef("This variable value should be aligned to column %d.", column+1)
+	if hasSpace && width != oldWidth {
+		fix.Notef("This variable value should be aligned with tabs, not spaces, to column %d.", width+1)
+	} else if width != oldWidth {
+		fix.Notef("This variable value should be aligned to column %d.", width+1)
 	} else {
 		fix.Notef("Variable values should be aligned with tabs, not spaces.")
 	}
