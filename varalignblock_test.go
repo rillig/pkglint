@@ -2058,9 +2058,9 @@ func (s *Suite) Test_VaralignBlock__realign_variable_without_value(c *check.C) {
 		"COMMENT=\t\tShort description of the package",
 		"#HOMEPAGE=")
 	vt.Internals(
-		// FIXME: The HOMEPAGE line is ignored completely since it doesn't
-		//  need to be indented at all. It may influence the required
-		//  indentation for the other lines. Add a test for that scenario.
+		// The HOMEPAGE line is ignored completely since it has neither
+		// variable value nor comment and therefore there's nothing
+		// that could be aligned to other variables.
 		"08 24")
 	vt.Diagnostics()
 	vt.Autofixes()
