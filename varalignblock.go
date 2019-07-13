@@ -1,6 +1,9 @@
 package pkglint
 
-import "strings"
+import (
+	"netbsd.org/pkglint/textproc"
+	"strings"
+)
 
 // VaralignBlock checks that all variable assignments from a paragraph
 // use the same indentation depth for their values.
@@ -98,12 +101,30 @@ type varalignBlockInfo struct {
 	multiAligned bool
 }
 
+// @beta
+type varalignLine struct {
+	mkline   *MkLine
+	rawIndex int
+
+	// If the initial line doesn't contain a value, the continuation lines
+	// may be indented with as few as a single tab. Example:
+	//  VAR= \
+	//          value1 \
+	//          value2
+	// In all other lines, the indentation must be at least the indentation
+	// of the first value found.
+	follow    bool
+	minIndent int
+
+	parts varalignSplitResult
+}
+
 type varalignSplitResult struct {
 	// All of the following strings can be empty.
 
 	leadingComment    string
 	varnameOp         string
-	spaceBeforeValue  string
+	spaceBeforeValue  string // for follow-up lines, this is the indentation
 	value             string
 	spaceAfterValue   string
 	trailingComment   string
@@ -431,4 +452,45 @@ func (va *VaralignBlock) realignContinuationLines(mkline *MkLine, newWidth int) 
 	fix.Notef("This line should be aligned with %q.", indent(newWidth))
 	fix.RealignContinuation(mkline, newWidth)
 	fix.Apply()
+}
+
+func (l *varalignLine) varnameOpWidth() int {
+	return tabWidth(l.parts.leadingComment + l.parts.varnameOp)
+}
+
+func (l *varalignLine) varnameOpSpaceWidth() int {
+	return tabWidth(l.parts.leadingComment + l.parts.varnameOp + l.parts.spaceBeforeValue)
+}
+
+// spaceBeforeValueIndex returns the string index at which the space before the value starts.
+// It's the same as the end of the assignment operator. Example:
+//  #VAR=   value
+// The index is 5.
+func (l *varalignLine) spaceBeforeValueIndex() int {
+	return len(l.parts.leadingComment) + len(l.parts.varnameOp)
+}
+
+func (l *varalignLine) continuation() bool {
+	return hasPrefix(l.parts.continuation, "\\")
+}
+
+// canonicalFollow returns whether the space before the value has its
+// canonical form, which is tabs, followed by up to 7 spaces.
+func (l *varalignLine) canonicalFollow() bool {
+	comment := l.parts.leadingComment
+	if comment != "" && comment != "#" {
+		return false
+	}
+
+	ind := l.parts.spaceBeforeValue
+	if ind == "" || ind[0] == ' ' {
+		return false
+	}
+
+	lexer := textproc.NewLexer(ind)
+	for lexer.SkipByte('\t') {
+	}
+	for i := 0; i < 7 && lexer.SkipByte(' '); i++ {
+	}
+	return lexer.EOF()
 }

@@ -2369,3 +2369,43 @@ func (s *Suite) Test_VaralignBlock_split(c *check.C) {
 	t.ExpectAssert(
 		func() { test("#  VAR=    value", true, varalignSplitResult{}) })
 }
+
+func (s *Suite) Test_varalignLine_canonicalFollow(c *check.C) {
+	t := s.Init(c)
+
+	test := func(comment, space string, expected bool) {
+		l := varalignLine{
+			parts: varalignSplitResult{
+				leadingComment:   comment,
+				spaceBeforeValue: space}}
+
+		actual := l.canonicalFollow()
+
+		t.Check(actual, equals, expected)
+	}
+
+	// Follow-up lines should always be indented.
+	test("", "", false)
+
+	// Follow-up lines should be indented by tabs, not by spaces.
+	test("", " ", false)
+
+	// A tab is always canonical.
+	test("", "\t", true)
+
+	// A tab followed by up to 7 spaces is canonical.
+	test("", "\t       ", true)
+
+	// A tab followed by 8 spaces is not canonical, the spaces should be
+	// replaced with a tab.
+	test("", "\t        ", false)
+
+	// There may be arbitrary many tabs.
+	test("", "\t\t\t\t\t\t\t\t", true)
+
+	// In commented follow-up lines, the value should be indented in the
+	// same way as in uncommented lines.
+	test("#", "", false)
+	test("#", " ", false)
+	test("#", "\t", true)
+}
