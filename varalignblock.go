@@ -175,9 +175,7 @@ func (*VaralignBlock) split(textnl string, initial bool) varalignSplitResult {
 	parseLeadingComment := func() string {
 		mark := lexer.Mark()
 
-		lexer.SkipByte('#')
-
-		if initial && lexer.SkipByte(' ') {
+		if !lexer.SkipByte('#') && initial && lexer.SkipByte(' ') {
 			lexer.SkipHspace()
 		}
 

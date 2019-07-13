@@ -2361,17 +2361,11 @@ func (s *Suite) Test_VaralignBlock_split(c *check.C) {
 			continuation:      "",
 		})
 
-	// FIXME: Commented variable assignments are only valid if they
-	//  directly follow the comment sign.
-	test("#  VAR=    value", true,
-		varalignSplitResult{
-			leadingComment:    "#  ",
-			varnameOp:         "VAR=",
-			spaceBeforeValue:  "    ",
-			value:             "value",
-			spaceAfterValue:   "",
-			trailingComment:   "",
-			spaceAfterComment: "",
-			continuation:      "",
-		})
+	// Commented variable assignments are only valid if they
+	// directly follow the comment sign.
+	//
+	// It is a programming error if such a line is ever added to
+	// the VaralignBlock.
+	t.ExpectAssert(
+		func() { test("#  VAR=    value", true, varalignSplitResult{}) })
 }
