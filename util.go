@@ -320,7 +320,7 @@ func tabWidth(s string) int {
 	length := 0
 	for _, r := range s {
 		if r == '\t' {
-			length = length - length%8 + 8
+			length = length&-8 + 8
 		} else {
 			length++
 		}
@@ -332,7 +332,7 @@ func detab(s string) string {
 	var detabbed strings.Builder
 	for _, r := range s {
 		if r == '\t' {
-			detabbed.WriteString("        "[:8-detabbed.Len()%8])
+			detabbed.WriteString("        "[:8-detabbed.Len()&7])
 		} else {
 			detabbed.WriteRune(r)
 		}
@@ -347,6 +347,18 @@ func alignWith(str, other string) string {
 	alignAfter := tabWidth(str) & -8
 	tabsNeeded := imax((alignBefore-alignAfter)/8, 1)
 	return str + strings.Repeat("\t", tabsNeeded)
+}
+
+func indent(width int) string {
+	return strings.Repeat("\t", width>>3) + "       "[:width&7]
+}
+
+// alignmentAfter returns the indentation that is necessary to get
+// from the given prefix to the desired width.
+func alignmentAfter(prefix string, width int) string {
+	pw := tabWidth(prefix)
+	assert(width >= pw)
+	return indent(width - condInt(pw&-8 != width&-8, pw&-8, pw))
 }
 
 func shorten(s string, maxChars int) string {

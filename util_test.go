@@ -463,6 +463,48 @@ func (s *Suite) Test_trimCommon(c *check.C) {
 		"a", "")
 }
 
+func (s *Suite) Test_indent(c *check.C) {
+	test := func(width int, ind string) {
+		actual := indent(width)
+
+		c.Check(actual, equals, ind)
+	}
+
+	test(0, "")
+	test(1, " ")
+	test(7, "       ")
+	test(8, "\t")
+	test(15, "\t       ")
+	test(16, "\t\t")
+	test(72, "\t\t\t\t\t\t\t\t\t")
+}
+
+func (s *Suite) Test_alignmentAfter(c *check.C) {
+	t := s.Init(c)
+
+	test := func(prefix string, width int, ind string) {
+		actual := alignmentAfter(prefix, width)
+
+		c.Check(actual, equals, ind)
+	}
+
+	test("", 0, "")
+	test("", 15, "\t       ")
+
+	test("  ", 5, "   ")
+	test("      ", 10, "\t  ")
+
+	test("\t", 15, "       ")
+	test(" \t", 15, "       ")
+	test("       \t", 15, "       ")
+	test("\t    ", 15, "   ")
+
+	test("    ", 16, "\t\t")
+
+	// The desired width must be at least the width of the prefix.
+	t.ExpectAssert(func() { test("\t", 7, "") })
+}
+
 func (s *Suite) Test_isLocallyModified(c *check.C) {
 	t := s.Init(c)
 

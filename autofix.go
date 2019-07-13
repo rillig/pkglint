@@ -433,7 +433,7 @@ func (fix *Autofix) RealignContinuation(mkline *MkLine, newWidth int) {
 	for _, rawLine := range fix.line.raw[1:] {
 		_, comment, oldSpace := match2(rawLine.textnl, `^(#?)([ \t]*)`)
 		newLineWidth := tabWidth(oldSpace) - oldWidth + newWidth
-		newSpace := strings.Repeat("\t", newLineWidth/8) + strings.Repeat(" ", newLineWidth%8)
+		newSpace := indent(newLineWidth)
 		replaced := strings.Replace(rawLine.textnl, comment+oldSpace, comment+newSpace, 1)
 		if replaced != rawLine.textnl {
 			if G.Logger.IsAutofix() {
