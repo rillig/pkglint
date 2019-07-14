@@ -738,34 +738,27 @@ func (s *Suite) Test_Scope_Mentioned(c *check.C) {
 func (s *Suite) Test_naturalLess(c *check.C) {
 	t := s.Init(c)
 
-	// TODO: change into a looped test
+	var elements = []string{
+		"",
+		// Numbers are always considered smaller than other characters.
+		"0", "000", "0000", "5", "7", "00011", "12", "00012", "000111",
+		"!", "a", "a0", "a ", "aa", "ab", "b"}
 
-	t.CheckEquals(naturalLess("", "a"), true)
-	t.CheckEquals(naturalLess("a", ""), false)
+	test := func(i int, ie string, j int, je string) {
+		actual := naturalLess(ie, je)
+		expected := i < j
+		if actual != expected {
+			t.CheckDeepEquals(
+				[]interface{}{i, ie, j, je, actual},
+				[]interface{}{i, ie, j, je, expected})
+		}
+	}
 
-	t.CheckEquals(naturalLess("a", "b"), true)
-	t.CheckEquals(naturalLess("b", "a"), false)
-
-	// Numbers are always considered smaller than other characters.
-	t.CheckEquals(naturalLess("0", "!"), true)
-	t.CheckEquals(naturalLess("!", "0"), false)
-
-	t.CheckEquals(naturalLess("0", "a"), true)
-	t.CheckEquals(naturalLess("a", "0"), false)
-
-	t.CheckEquals(naturalLess("5", "12"), true)
-	t.CheckEquals(naturalLess("12", "5"), false)
-
-	t.CheckEquals(naturalLess("5", "7"), true)
-	t.CheckEquals(naturalLess("7", "5"), false)
-
-	t.CheckEquals(naturalLess("000", "0000"), true)
-	t.CheckEquals(naturalLess("0000", "000"), false)
-
-	t.CheckEquals(naturalLess("000", "000"), false)
-
-	t.CheckEquals(naturalLess("00011", "000111"), true)
-	t.CheckEquals(naturalLess("00011", "00012"), true)
+	for i, ie := range elements {
+		for j, je := range elements {
+			test(i, ie, j, je)
+		}
+	}
 }
 
 func (s *Suite) Test_varnameBase(c *check.C) {
