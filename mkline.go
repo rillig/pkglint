@@ -375,35 +375,6 @@ func (mkline *MkLine) FirstLineContainsValue() bool {
 	return a.value != "\\"
 }
 
-// IsMultiAligned returns whether the multiline is properly aligned.
-// The first value in the line determines the minimum indentation.
-// Each followup line must be indented at least as wide as the first value.
-//
-// If the first line is essentially empty, the second line may start in
-// column 8, which is often used to save screen space.
-func (mkline *MkLine) IsMultiAligned() bool {
-	assert(mkline.IsMultiline())
-	assert(mkline.IsVarassignMaybeCommented())
-
-	minIndent := 8
-	if mkline.FirstLineContainsValue() {
-		minIndent = tabWidth(mkline.ValueAlign())
-	}
-
-	for _, continuation := range mkline.Line.raw[1:] {
-		text := continuation.textnl
-		if mkline.IsCommentedVarassign() && hasPrefix(text, "#\t") {
-			text = text[1:]
-		}
-
-		indent := tabWidth(textproc.NewLexer(text).NextHspace())
-		if indent < minIndent {
-			return false
-		}
-	}
-	return true
-}
-
 func (mkline *MkLine) ShellCommand() string { return mkline.data.(mkLineShell).command }
 
 func (mkline *MkLine) Indent() string {

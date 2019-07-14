@@ -315,7 +315,10 @@ func (s *Suite) Test_MkLine_FirstLineContainsValue(c *check.C) {
 	t.CheckEquals(mklines.mklines[5].FirstLineContainsValue(), false)
 }
 
-func (s *Suite) Test_MkLine_IsMultiAligned(c *check.C) {
+// Up to July 2019, there was a method MkLine.IsMultiAligned, which has
+// been replaced by VaralignBlock. The test cases were still useful,
+// therefore they were kept.
+func (s *Suite) Test_MkLine__aligned(c *check.C) {
 	t := s.Init(c)
 
 	test := func(data ...interface{}) {
@@ -328,20 +331,14 @@ func (s *Suite) Test_MkLine_IsMultiAligned(c *check.C) {
 		mklines := t.NewMkLines("filename.mk",
 			lineTexts...)
 		assert(len(mklines.mklines) == 1)
-		t.CheckEquals(mklines.mklines[0].IsMultiAligned(), expected)
-	}
 
-	// This code must only be called for known variable assignments that
-	// span multiple lines. This is in spirit with the other MkLine methods,
-	// which are also fail-fast.
-	t.ExpectAssert(
-		func() { test("VAR=\tvalue", false) })
-	t.ExpectAssert(
-		func() { test("", false) })
-	t.ExpectAssert(
-		func() { test(".include \"filename.mk\"", false) })
-	t.ExpectAssert(
-		func() { test(".if 0", false) })
+		var varalign VaralignBlock
+		varalign.Process(mklines.mklines[0])
+		varalign.Finish()
+
+		output := t.Output()
+		t.CheckEquals(output == "", expected)
+	}
 
 	// The first line uses a space for indentation, which is typical of
 	// the outlier line in VaralignBlock.
@@ -383,10 +380,13 @@ func (s *Suite) Test_MkLine_IsMultiAligned(c *check.C) {
 	// The second line is indented less than the first line. This looks
 	// confusing to the human reader because the actual values do not
 	// appear in a rectangular shape in the source code.
+	//
+	// There are several cases though where the follow-up lines are quite
+	// long, therefore it is allowed to indent them with a single tab.
 	test(
 		"CONFIGURE_ENV+=\tAWK=${AWK:Q} \\",
 		"\tSED=${SED:Q}",
-		false)
+		true)
 
 	// Having the continuation line in column 0 looks even more confusing.
 	test(
