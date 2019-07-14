@@ -603,9 +603,9 @@ func (s *Suite) Test_MkLineChecker_checkVartype__simple_type(c *check.C) {
 	vartype := G.Pkgsrc.VariableType(nil, "COMMENT")
 
 	c.Assert(vartype, check.NotNil)
-	c.Check(vartype.basicType.name, equals, "Comment")
-	c.Check(vartype.Guessed(), equals, false)
-	c.Check(vartype.List(), equals, false)
+	t.CheckEquals(vartype.basicType.name, "Comment")
+	t.CheckEquals(vartype.Guessed(), false)
+	t.CheckEquals(vartype.List(), false)
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -1582,15 +1582,15 @@ func (s *Suite) Test_MkLineChecker_warnVarusePermissions__not_directly_and_no_al
 	mklines.Check()
 
 	toolDependsType := G.Pkgsrc.VariableType(nil, "TOOL_DEPENDS")
-	t.Check(toolDependsType.String(), equals, "DependencyWithPath (list, package-settable)")
-	t.Check(toolDependsType.AlternativeFiles(aclpAppend), equals, "Makefile, Makefile.* or *.mk")
-	t.Check(toolDependsType.AlternativeFiles(aclpUse), equals, "Makefile, Makefile.* or *.mk")
-	t.Check(toolDependsType.AlternativeFiles(aclpUseLoadtime), equals, "")
+	t.CheckEquals(toolDependsType.String(), "DependencyWithPath (list, package-settable)")
+	t.CheckEquals(toolDependsType.AlternativeFiles(aclpAppend), "Makefile, Makefile.* or *.mk")
+	t.CheckEquals(toolDependsType.AlternativeFiles(aclpUse), "Makefile, Makefile.* or *.mk")
+	t.CheckEquals(toolDependsType.AlternativeFiles(aclpUseLoadtime), "")
 
 	apiDependsType := G.Pkgsrc.VariableType(nil, "BUILDLINK_API_DEPENDS.*")
-	t.Check(apiDependsType.String(), equals, "Dependency (list, package-settable)")
-	t.Check(apiDependsType.AlternativeFiles(aclpUse), equals, "")
-	t.Check(apiDependsType.AlternativeFiles(aclpUseLoadtime), equals, "buildlink3.mk or builtin.mk only")
+	t.CheckEquals(apiDependsType.String(), "Dependency (list, package-settable)")
+	t.CheckEquals(apiDependsType.AlternativeFiles(aclpUse), "")
+	t.CheckEquals(apiDependsType.AlternativeFiles(aclpUseLoadtime), "buildlink3.mk or builtin.mk only")
 
 	t.CheckOutputLines(
 		"WARN: mk-c.mk:7: BUILDLINK_API_DEPENDS.mk-c should not be used in any file.",
@@ -1854,7 +1854,7 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 			after := diagnosticsAndAfter[diagLen-1]
 
 			t.CheckOutput(diagnostics)
-			t.Check(afterMklines.mklines[1].Text, equals, after)
+			t.CheckEquals(afterMklines.mklines[1].Text, after)
 		} else {
 			t.CheckOutputEmpty()
 		}
@@ -2089,7 +2089,7 @@ func (s *Suite) Test_MkLineChecker_checkVartype__CFLAGS_with_backticks(c *check.
 
 	words := mkline.Fields()
 
-	c.Check(words, deepEquals, []string{"`pkg-config pidgin --cflags`"})
+	t.CheckDeepEquals(words, []string{"`pkg-config pidgin --cflags`"})
 
 	ck := MkLineChecker{mklines, mklines.mklines[1]}
 	ck.checkVartype("CFLAGS", opAssignAppend, "`pkg-config pidgin --cflags`", "")

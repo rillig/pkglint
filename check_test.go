@@ -16,9 +16,6 @@ import (
 	"gopkg.in/check.v1"
 )
 
-var equals = check.Equals
-var deepEquals = check.DeepEquals
-
 const CvsID = "$" + "NetBSD$"
 const MkCvsID = "# $" + "NetBSD$"
 const PlistCvsID = "@comment $" + "NetBSD$"
@@ -705,6 +702,14 @@ func (t *Tester) Check(obj interface{}, checker check.Checker, args ...interface
 	return t.c.Check(obj, checker, args...)
 }
 
+func (t *Tester) CheckEquals(actual interface{}, expected interface{}) bool {
+	return t.c.Check(actual, check.Equals, expected)
+}
+
+func (t *Tester) CheckDeepEquals(actual interface{}, expected interface{}) bool {
+	return t.c.Check(actual, check.DeepEquals, expected)
+}
+
 func (t *Tester) Errorf(format string, args ...interface{}) {
 	_, _ = fmt.Fprintf(os.Stderr, "In %s: %s\n", t.testName, sprintf(format, args...))
 }
@@ -924,7 +929,7 @@ func (t *Tester) CheckOutputLinesMatching(pattern regex.Pattern, expectedLines .
 			actualLines = append(actualLines, line)
 		}
 	}
-	t.Check(emptyToNil(actualLines), deepEquals, emptyToNil(expectedLines))
+	t.CheckDeepEquals(emptyToNil(actualLines), emptyToNil(expectedLines))
 }
 
 // CheckOutputLinesIgnoreSpace checks that the output up to now equals the given lines.
@@ -943,7 +948,7 @@ func (t *Tester) CheckOutputLinesIgnoreSpace(expectedLines ...string) {
 	_ = t.Output() // Just to consume the output
 
 	actual, expected := t.compareOutputIgnoreSpace(rawOutput, expectedLines, t.tmpdir)
-	t.Check(actual, deepEquals, expected)
+	t.CheckDeepEquals(actual, expected)
 }
 
 func (t *Tester) compareOutputIgnoreSpace(rawOutput string, expectedLines []string, tmpdir string) ([]string, []string) {
@@ -982,7 +987,7 @@ func (s *Suite) Test_Tester_compareOutputIgnoreSpace(c *check.C) {
 	lines := func(lines ...string) []string { return lines }
 	test := func(rawOutput string, expectedLines []string, tmpdir string, eq bool) {
 		actual, expected := t.compareOutputIgnoreSpace(rawOutput, expectedLines, tmpdir)
-		t.Check(actual == nil && expected == nil, equals, eq)
+		t.CheckEquals(actual == nil && expected == nil, eq)
 	}
 
 	test("", lines(), "/tmp", true)
@@ -1035,7 +1040,7 @@ func (t *Tester) CheckOutputMatches(expectedLines ...regex.Pattern) {
 		}
 	}
 
-	t.Check(emptyToNil(actualLines), deepEquals, emptyToNil(patterns))
+	t.CheckDeepEquals(emptyToNil(actualLines), emptyToNil(patterns))
 }
 
 // CheckOutput checks that the output up to now equals the given lines.
@@ -1051,7 +1056,7 @@ func (t *Tester) CheckOutput(expectedLines []string) {
 	output := t.Output()
 	actualLines := strings.Split(output, "\n")
 	actualLines = actualLines[:len(actualLines)-1]
-	t.Check(emptyToNil(actualLines), deepEquals, emptyToNil(expectedLines))
+	t.CheckDeepEquals(emptyToNil(actualLines), emptyToNil(expectedLines))
 }
 
 // EnableTracing logs the tracing output to os.Stdout instead of silently discarding it.
@@ -1105,7 +1110,7 @@ func (t *Tester) CheckFileLines(relativeFileName string, lines ...string) {
 	t.c.Assert(err, check.IsNil)
 	actualLines := strings.Split(string(content), "\n")
 	actualLines = actualLines[:len(actualLines)-1]
-	t.Check(emptyToNil(actualLines), deepEquals, emptyToNil(lines))
+	t.CheckDeepEquals(emptyToNil(actualLines), emptyToNil(lines))
 }
 
 // CheckFileLinesDetab loads the lines from the temporary file and checks
@@ -1120,7 +1125,7 @@ func (t *Tester) CheckFileLinesDetab(relativeFileName string, lines ...string) {
 		detabbedLines = append(detabbedLines, detab(line.Text))
 	}
 
-	t.Check(detabbedLines, deepEquals, lines)
+	t.CheckDeepEquals(detabbedLines, lines)
 }
 
 // Use marks all passed functions as used for the Go compiler.

@@ -24,17 +24,17 @@ func (s *Suite) Test_Pkgsrc_loadMasterSites(c *check.C) {
 
 	G.Pkgsrc.loadMasterSites()
 
-	c.Check(G.Pkgsrc.MasterSiteURLToVar["https://example.org/distfiles/"], equals, "MASTER_SITE_A")
-	c.Check(G.Pkgsrc.MasterSiteURLToVar["https://b.example.org/distfiles/"], equals, "MASTER_SITE_B")
-	c.Check(G.Pkgsrc.MasterSiteURLToVar["https://b2.example.org/distfiles/"], equals, "MASTER_SITE_B")
-	c.Check(G.Pkgsrc.MasterSiteURLToVar["https://a.example.org/distfiles/"], equals, "MASTER_SITE_A")
-	c.Check(G.Pkgsrc.MasterSiteVarToURL["MASTER_SITE_A"], equals, "https://example.org/distfiles/")
-	c.Check(G.Pkgsrc.MasterSiteVarToURL["MASTER_SITE_B"], equals, "https://b.example.org/distfiles/")
+	t.CheckEquals(G.Pkgsrc.MasterSiteURLToVar["https://example.org/distfiles/"], "MASTER_SITE_A")
+	t.CheckEquals(G.Pkgsrc.MasterSiteURLToVar["https://b.example.org/distfiles/"], "MASTER_SITE_B")
+	t.CheckEquals(G.Pkgsrc.MasterSiteURLToVar["https://b2.example.org/distfiles/"], "MASTER_SITE_B")
+	t.CheckEquals(G.Pkgsrc.MasterSiteURLToVar["https://a.example.org/distfiles/"], "MASTER_SITE_A")
+	t.CheckEquals(G.Pkgsrc.MasterSiteVarToURL["MASTER_SITE_A"], "https://example.org/distfiles/")
+	t.CheckEquals(G.Pkgsrc.MasterSiteVarToURL["MASTER_SITE_B"], "https://b.example.org/distfiles/")
 
 	// Ignored entries:
-	c.Check(G.Pkgsrc.MasterSiteURLToVar["${other}"], equals, "")
-	c.Check(G.Pkgsrc.MasterSiteURLToVar["https://backup.example.org/"], equals, "")
-	c.Check(G.Pkgsrc.MasterSiteVarToURL["MASTER_SITE_BACKUP"], equals, "")
+	t.CheckEquals(G.Pkgsrc.MasterSiteURLToVar["${other}"], "")
+	t.CheckEquals(G.Pkgsrc.MasterSiteURLToVar["https://backup.example.org/"], "")
+	t.CheckEquals(G.Pkgsrc.MasterSiteVarToURL["MASTER_SITE_BACKUP"], "")
 }
 
 func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates(c *check.C) {
@@ -236,8 +236,8 @@ func (s *Suite) Test_Pkgsrc_loadTools__BUILD_DEFS(c *check.C) {
 
 	G.Check(pkg)
 
-	c.Check(G.Pkgsrc.IsBuildDef("PKG_SYSCONFDIR"), equals, true)
-	c.Check(G.Pkgsrc.IsBuildDef("VARBASE"), equals, false)
+	t.CheckEquals(G.Pkgsrc.IsBuildDef("PKG_SYSCONFDIR"), true)
+	t.CheckEquals(G.Pkgsrc.IsBuildDef("VARBASE"), false)
 
 	t.CheckOutputLines(
 		"WARN: ~/category/package/Makefile:21: " +
@@ -256,7 +256,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChanges(c *check.C) {
 		"\tMoved pkgpath to category/new-pkg [author 2018-03-01]")
 	t.FinishSetUp()
 
-	t.Check(G.Pkgsrc.LastChange["pkgpath"].Action, equals, Moved)
+	t.CheckEquals(G.Pkgsrc.LastChange["pkgpath"].Action, Moved)
 }
 
 func (s *Suite) Test_Pkgsrc_checkRemovedAfterLastFreeze(c *check.C) {
@@ -362,20 +362,20 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile(c *check.C) {
 
 	changes := G.Pkgsrc.loadDocChangesFromFile(t.File("doc/CHANGES-2018"))
 
-	c.Assert(len(changes), equals, 7)
-	c.Check(*changes[0], equals, Change{changes[0].Location,
+	c.Assert(changes, check.HasLen, 7) // TODO: refactor to CheckDeepEquals
+	t.CheckEquals(*changes[0], Change{changes[0].Location,
 		Added, "category/package", "1.0", "author1", "2015-01-01"})
-	c.Check(*changes[1], equals, Change{changes[1].Location,
+	t.CheckEquals(*changes[1], Change{changes[1].Location,
 		Updated, "category/package", "1.5", "author2", "2018-01-02"})
-	c.Check(*changes[2], equals, Change{changes[2].Location,
+	t.CheckEquals(*changes[2], Change{changes[2].Location,
 		Renamed, "category/package", "category/pkg", "author3", "2018-01-03"})
-	c.Check(*changes[3], equals, Change{changes[3].Location,
+	t.CheckEquals(*changes[3], Change{changes[3].Location,
 		Moved, "category/package", "other/package", "author4", "2018-01-04"})
-	c.Check(*changes[4], equals, Change{changes[4].Location,
+	t.CheckEquals(*changes[4], Change{changes[4].Location,
 		Removed, "category/package", "", "author5", "2018-01-09"})
-	c.Check(*changes[5], equals, Change{changes[5].Location,
+	t.CheckEquals(*changes[5], Change{changes[5].Location,
 		Removed, "category/package", "category/package2", "author6", "2018-01-06"})
-	c.Check(*changes[6], equals, Change{changes[6].Location,
+	t.CheckEquals(*changes[6], Change{changes[6].Location,
 		Downgraded, "category/package", "1.2", "author7", "2018-01-07"})
 
 	t.CheckOutputLines(
@@ -673,11 +673,11 @@ func (s *Suite) Test_Pkgsrc__caching(c *check.C) {
 
 	latest := G.Pkgsrc.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
 
-	c.Check(latest, equals, "../../lang/python27")
+	t.CheckEquals(latest, "../../lang/python27")
 
 	cached := G.Pkgsrc.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
 
-	c.Check(cached, equals, "../../lang/python27")
+	t.CheckEquals(cached, "../../lang/python27")
 }
 
 func (s *Suite) Test_Pkgsrc_Latest__multiple_candidates(c *check.C) {
@@ -689,7 +689,7 @@ func (s *Suite) Test_Pkgsrc_Latest__multiple_candidates(c *check.C) {
 
 	latest := G.Pkgsrc.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
 
-	c.Check(latest, equals, "../../lang/python35")
+	t.CheckEquals(latest, "../../lang/python35")
 }
 
 func (s *Suite) Test_Pkgsrc_Latest__not_found(c *check.C) {
@@ -699,7 +699,7 @@ func (s *Suite) Test_Pkgsrc_Latest__not_found(c *check.C) {
 
 	latest := G.Pkgsrc.Latest("lang", `^python[0-9]+$`, "../../lang/$0")
 
-	c.Check(latest, equals, "")
+	t.CheckEquals(latest, "")
 
 	t.CheckOutputLines(
 		"ERROR: Cannot find package versions of \"^python[0-9]+$\" in \"~/lang\".")
@@ -780,7 +780,7 @@ func (s *Suite) Test_Pkgsrc_ListVersions__numeric_multiple_numbers(c *check.C) {
 
 	versions := G.Pkgsrc.ListVersions("emulators", `^suse_(\d+).*$`, "$1", true)
 
-	c.Check(versions, deepEquals, []string{
+	t.CheckDeepEquals(versions, []string{
 		"131",
 		"131",
 		"131",
@@ -797,7 +797,7 @@ func (s *Suite) Test_Pkgsrc_ListVersions__go(c *check.C) {
 
 	versionsUpTo2 := G.Pkgsrc.ListVersions("lang", `^go[0-9]+$`, "$0", true)
 
-	c.Check(versionsUpTo2, deepEquals, []string{"go14", "go19", "go111", "go2"})
+	t.CheckDeepEquals(versionsUpTo2, []string{"go14", "go19", "go111", "go2"})
 
 	t.CreateFileLines("lang/go37/Makefile")
 
@@ -808,7 +808,7 @@ func (s *Suite) Test_Pkgsrc_ListVersions__go(c *check.C) {
 
 	versionsUpTo37 := G.Pkgsrc.ListVersions("lang", `^go[0-9]+$`, "$0", true)
 
-	c.Check(versionsUpTo37, deepEquals, []string{"go14", "go19", "go111", "go2", "go37"})
+	t.CheckDeepEquals(versionsUpTo37, []string{"go14", "go19", "go111", "go2", "go37"})
 }
 
 func (s *Suite) Test_Pkgsrc_ListVersions__invalid_argument(c *check.C) {
@@ -874,7 +874,7 @@ func (s *Suite) Test_Pkgsrc_VariableType(c *check.C) {
 			c.Check(actualType, check.IsNil)
 		} else {
 			if c.Check(actualType, check.NotNil) {
-				c.Check(actualType.String(), equals, vartype)
+				t.CheckEquals(actualType.String(), vartype)
 			}
 		}
 	}
@@ -903,12 +903,12 @@ func (s *Suite) Test_Pkgsrc_VariableType__varparam(c *check.C) {
 	t1 := G.Pkgsrc.VariableType(nil, "FONT_DIRS")
 
 	c.Assert(t1, check.NotNil)
-	c.Check(t1.String(), equals, "PathMask (list, guessed)")
+	t.CheckEquals(t1.String(), "PathMask (list, guessed)")
 
 	t2 := G.Pkgsrc.VariableType(nil, "FONT_DIRS.ttf")
 
 	c.Assert(t2, check.NotNil)
-	c.Check(t2.String(), equals, "PathMask (list, guessed)")
+	t.CheckEquals(t2.String(), "PathMask (list, guessed)")
 }
 
 // Guessing the variable type also works for variables that are
@@ -936,15 +936,15 @@ func (s *Suite) Test_Pkgsrc_VariableType__from_mk(c *check.C) {
 	t.Main("-Wall", pkg)
 
 	if typ := G.Pkgsrc.VariableType(nil, "PKGSRC_MAKE_ENV"); c.Check(typ, check.NotNil) {
-		c.Check(typ.String(), equals, "ShellWord (list, guessed)")
+		t.CheckEquals(typ.String(), "ShellWord (list, guessed)")
 	}
 
 	if typ := G.Pkgsrc.VariableType(nil, "CPPPATH"); c.Check(typ, check.NotNil) {
-		c.Check(typ.String(), equals, "Pathlist (guessed)")
+		t.CheckEquals(typ.String(), "Pathlist (guessed)")
 	}
 
 	if typ := G.Pkgsrc.VariableType(nil, "OSNAME.Other"); c.Check(typ, check.NotNil) {
-		c.Check(typ.String(), equals, "Unknown")
+		t.CheckEquals(typ.String(), "Unknown")
 	}
 
 	// No warnings about "defined but not used" or "used but not defined"
@@ -971,8 +971,8 @@ func (s *Suite) Test_Pkgsrc_guessVariableType__SKIP(c *check.C) {
 	mklines.Check()
 
 	vartype := G.Pkgsrc.VariableType(mklines, "MY_CHECK_SKIP")
-	t.Check(vartype.Guessed(), equals, true)
-	t.Check(vartype.EffectivePermissions("filename.mk"), equals, aclpAllRuntime)
+	t.CheckEquals(vartype.Guessed(), true)
+	t.CheckEquals(vartype.EffectivePermissions("filename.mk"), aclpAllRuntime)
 
 	// The permissions for MY_CHECK_SKIP say aclpAllRuntime, which excludes
 	// aclpUseLoadtime. Therefore there should be a warning about the VarUse in
@@ -995,7 +995,7 @@ func (s *Suite) Test_Pkgsrc__frozen(c *check.C) {
 		"\tmk/bsd.pkg.mk: started freeze for pkgsrc-2018Q2 branch [freezer 2018-03-25]")
 	t.FinishSetUp()
 
-	t.Check(G.Pkgsrc.LastFreezeStart, equals, "2018-03-25")
+	t.CheckEquals(G.Pkgsrc.LastFreezeStart, "2018-03-25")
 }
 
 func (s *Suite) Test_Pkgsrc__not_frozen(c *check.C) {
@@ -1007,8 +1007,8 @@ func (s *Suite) Test_Pkgsrc__not_frozen(c *check.C) {
 		"\tmk/bsd.pkg.mk: freeze ended for pkgsrc-2018Q2 branch [freezer 2018-03-27]")
 	t.FinishSetUp()
 
-	t.Check(G.Pkgsrc.LastFreezeStart, equals, "2018-03-25")
-	t.Check(G.Pkgsrc.LastFreezeEnd, equals, "2018-03-27")
+	t.CheckEquals(G.Pkgsrc.LastFreezeStart, "2018-03-25")
+	t.CheckEquals(G.Pkgsrc.LastFreezeEnd, "2018-03-27")
 }
 
 func (s *Suite) Test_Pkgsrc__frozen_with_typo(c *check.C) {
@@ -1020,7 +1020,7 @@ func (s *Suite) Test_Pkgsrc__frozen_with_typo(c *check.C) {
 		"\tmk/bsd.pkg.mk: started freeze for pkgsrc-2018Q2 branch [freezer 2018-03-25")
 	t.FinishSetUp()
 
-	t.Check(G.Pkgsrc.LastFreezeStart, equals, "")
+	t.CheckEquals(G.Pkgsrc.LastFreezeStart, "")
 }
 
 func (s *Suite) Test_Change_Version(c *check.C) {
@@ -1032,9 +1032,9 @@ func (s *Suite) Test_Change_Version(c *check.C) {
 	downgraded := Change{loc, Downgraded, "category/path", "1.0", "author", "2019-01-01"}
 	removed := Change{loc, Removed, "category/path", "1.0", "author", "2019-01-01"}
 
-	t.Check(added.Version(), equals, "1.0")
-	t.Check(updated.Version(), equals, "1.0")
-	t.Check(downgraded.Version(), equals, "1.0")
+	t.CheckEquals(added.Version(), "1.0")
+	t.CheckEquals(updated.Version(), "1.0")
+	t.CheckEquals(downgraded.Version(), "1.0")
 	t.ExpectAssert(func() { removed.Version() })
 }
 
@@ -1046,8 +1046,8 @@ func (s *Suite) Test_Change_Target(c *check.C) {
 	moved := Change{loc, Moved, "category/path", "category/other", "author", "2019-01-01"}
 	downgraded := Change{loc, Downgraded, "category/path", "1.0", "author", "2019-01-01"}
 
-	t.Check(renamed.Target(), equals, "category/other")
-	t.Check(moved.Target(), equals, "category/other")
+	t.CheckEquals(renamed.Target(), "category/other")
+	t.CheckEquals(moved.Target(), "category/other")
 	t.ExpectAssert(func() { downgraded.Target() })
 }
 
@@ -1059,8 +1059,8 @@ func (s *Suite) Test_Change_Successor(c *check.C) {
 	removedSucc := Change{loc, Removed, "category/path", "category/successor", "author", "2019-01-01"}
 	downgraded := Change{loc, Downgraded, "category/path", "1.0", "author", "2019-01-01"}
 
-	t.Check(removed.Successor(), equals, "")
-	t.Check(removedSucc.Successor(), equals, "category/successor")
+	t.CheckEquals(removed.Successor(), "")
+	t.CheckEquals(removedSucc.Successor(), "category/successor")
 	t.ExpectAssert(func() { downgraded.Successor() })
 }
 
@@ -1091,8 +1091,8 @@ func (s *Suite) Test_Change_Above(c *check.C) {
 func (s *Suite) Test_ChangeAction_String(c *check.C) {
 	t := s.Init(c)
 
-	t.Check(Added.String(), equals, "Added")
-	t.Check(Removed.String(), equals, "Removed")
+	t.CheckEquals(Added.String(), "Added")
+	t.CheckEquals(Removed.String(), "Removed")
 }
 
 func (s *Suite) Test_Pkgsrc_ReadDir(c *check.C) {
@@ -1112,5 +1112,5 @@ func (s *Suite) Test_Pkgsrc_ReadDir(c *check.C) {
 		names = append(names, info.Name())
 	}
 
-	t.Check(names, deepEquals, []string{"aaa-subdir", "file", "subdir"})
+	t.CheckDeepEquals(names, []string{"aaa-subdir", "file", "subdir"})
 }

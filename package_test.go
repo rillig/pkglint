@@ -79,7 +79,7 @@ func (s *Suite) Test_Package_pkgnameFromDistname(c *check.C) {
 		pkg := NewPackage(t.File("category/package"))
 		pkg.loadPackageMakefile()
 		pkg.determineEffectivePkgVars()
-		t.Check(pkg.EffectivePkgname, equals, expectedPkgname)
+		t.CheckEquals(pkg.EffectivePkgname, expectedPkgname)
 		t.CheckOutput(diagnostics)
 	}
 
@@ -564,12 +564,12 @@ func (s *Suite) Test_Package_nbPart(c *check.C) {
 	pkg := NewPackage(t.File("category/pkgbase"))
 	pkg.vars.Define("PKGREVISION", t.NewMkLine("Makefile", 1, "PKGREVISION=14"))
 
-	c.Check(pkg.nbPart(), equals, "nb14")
+	t.CheckEquals(pkg.nbPart(), "nb14")
 
 	pkg.vars = NewScope()
 	pkg.vars.Define("PKGREVISION", t.NewMkLine("Makefile", 1, "PKGREVISION=asdf"))
 
-	c.Check(pkg.nbPart(), equals, "")
+	t.CheckEquals(pkg.nbPart(), "")
 }
 
 // PKGNAME is stronger than DISTNAME.
@@ -587,9 +587,9 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__precedence(c *check.C) {
 
 	pkg.determineEffectivePkgVars()
 
-	c.Check(pkg.EffectivePkgbase, equals, "pkgname")
-	c.Check(pkg.EffectivePkgname, equals, "pkgname-1.0nb13")
-	c.Check(pkg.EffectivePkgversion, equals, "1.0")
+	t.CheckEquals(pkg.EffectivePkgbase, "pkgname")
+	t.CheckEquals(pkg.EffectivePkgname, "pkgname-1.0nb13")
+	t.CheckEquals(pkg.EffectivePkgversion, "1.0")
 }
 
 func (s *Suite) Test_Package_determineEffectivePkgVars__same(c *check.C) {
@@ -675,7 +675,7 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__C_modifier(c *check.C) {
 
 	pkg.check(files, mklines, allLines)
 
-	t.Check(pkg.EffectivePkgname, equals, "p5-gtk2-1.0")
+	t.CheckEquals(pkg.EffectivePkgname, "p5-gtk2-1.0")
 }
 
 // In some cases the PKGNAME is derived from DISTNAME, and it seems as
@@ -694,7 +694,7 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__ineffective_C_modifier(c
 
 	pkg.check(files, mklines, allLines)
 
-	t.Check(pkg.EffectivePkgname, equals, "distname-1.0")
+	t.CheckEquals(pkg.EffectivePkgname, "distname-1.0")
 	t.CheckOutputEmpty()
 }
 
@@ -737,7 +737,7 @@ func (s *Suite) Test_Package_checkPossibleDowngrade__moved(c *check.C) {
 	pkg.determineEffectivePkgVars()
 	pkg.checkPossibleDowngrade()
 
-	t.Check(G.Pkgsrc.LastChange["category/pkgbase"].Action, equals, Moved)
+	t.CheckEquals(G.Pkgsrc.LastChange["category/pkgbase"].Action, Moved)
 	// No warning because the latest action is not Updated.
 	t.CheckOutputEmpty()
 }
@@ -1746,7 +1746,7 @@ func (s *Suite) Test_Package_loadPlistDirs(c *check.C) {
 	}
 	sort.Strings(dirs)
 
-	t.Check(dirs, deepEquals, []string{"bin", "dir", "dir/subdir"})
+	t.CheckDeepEquals(dirs, []string{"bin", "dir", "dir/subdir"})
 }
 
 // Just ensure that pkglint doesn't crash.
@@ -1767,7 +1767,7 @@ func (s *Suite) Test_Package_loadPlistDirs__empty(c *check.C) {
 	}
 	sort.Strings(dirs)
 
-	t.Check(dirs, deepEquals, []string{"bin"})
+	t.CheckDeepEquals(dirs, []string{"bin"})
 }
 
 func (s *Suite) Test_Package_checkUseLanguagesCompilerMk__too_late(c *check.C) {
@@ -2019,7 +2019,7 @@ func (s *Suite) Test_Package_parse__skipping(c *check.C) {
 		}
 	}
 
-	c.Check(relevant, deepEquals, []string{
+	t.CheckDeepEquals(relevant, []string{
 		"TRACE: 1 2 3 4   ~/category/package/Makefile:20: " +
 			"Skipping unresolvable include file \"${MYSQL_PKGSRCDIR:S/-client$/-server/}/buildlink3.mk\"."})
 }
@@ -2192,7 +2192,7 @@ func (s *Suite) Test_Package_collectSeenInclude__builtin_mk(c *check.C) {
 	pkg := NewPackage(t.File("category/package"))
 	pkg.load()
 
-	t.Check(pkg.seenInclude, equals, true)
+	t.CheckEquals(pkg.seenInclude, true)
 }
 
 func (s *Suite) Test_Package_diveInto(c *check.C) {
@@ -2200,7 +2200,7 @@ func (s *Suite) Test_Package_diveInto(c *check.C) {
 
 	test := func(including, included string, expected bool) {
 		actual := (*Package)(nil).diveInto(including, included)
-		t.Check(actual, equals, expected)
+		t.CheckEquals(actual, expected)
 	}
 
 	// The variables that appear in these files are largely modeled by

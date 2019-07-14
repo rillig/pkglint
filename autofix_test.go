@@ -35,14 +35,14 @@ func (s *Suite) Test_Autofix__default_leaves_line_unchanged(c *check.C) {
 	fix.Delete()
 	fix.Apply()
 
-	c.Check(fix.RawText(), equals, ""+
+	t.CheckEquals(fix.RawText(), ""+
 		"# row 1 \\\n"+
 		"continuation of row 1\n")
 	t.CheckOutputLines(
 		">\t# row 1 \\",
 		">\tcontinuation of row 1",
 		"WARN: ~/Makefile:1--2: Row should be replaced with line.")
-	c.Check(fix.modified, equals, true)
+	t.CheckEquals(fix.modified, true)
 }
 
 func (s *Suite) Test_Autofix__show_autofix_modifies_line(c *check.C) {
@@ -63,7 +63,7 @@ func (s *Suite) Test_Autofix__show_autofix_modifies_line(c *check.C) {
 	fix.Delete()
 	fix.Apply()
 
-	c.Check(fix.RawText(), equals, ""+
+	t.CheckEquals(fix.RawText(), ""+
 		"above\n"+
 		"below\n")
 	t.CheckOutputLines(
@@ -78,7 +78,7 @@ func (s *Suite) Test_Autofix__show_autofix_modifies_line(c *check.C) {
 		"-\t# row 1 \\",
 		"-\tcontinuation of row 1",
 		"+\tbelow")
-	c.Check(fix.modified, equals, true)
+	t.CheckEquals(fix.modified, true)
 }
 
 func (s *Suite) Test_Autofix_ReplaceAfter__autofix_in_continuation_line(c *check.C) {
@@ -153,7 +153,7 @@ func (s *Suite) Test_Autofix_ReplaceRegex__show_autofix(c *check.C) {
 	fix.Apply()
 	SaveAutofixChanges(lines)
 
-	c.Check(lines.Lines[1].raw[0].textnl, equals, "XXXXX\n")
+	t.CheckEquals(lines.Lines[1].raw[0].textnl, "XXXXX\n")
 	t.CheckFileLines("Makefile",
 		"line1",
 		"line2",
@@ -420,7 +420,7 @@ func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
 
 	c.Check(line.autofix, check.NotNil)
 	c.Check(line.raw, check.DeepEquals, t.NewRawLines(1, "original\n", "lruginao\n"))
-	c.Check(line.raw[0].textnl, equals, "lruginao\n")
+	t.CheckEquals(line.raw[0].textnl, "lruginao\n")
 	t.CheckOutputLines(
 		"AUTOFIX: filename:1: Replacing \"ig\" with \"ug\".")
 
@@ -433,11 +433,11 @@ func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
 
 	c.Check(line.autofix, check.NotNil)
 	c.Check(line.raw, check.DeepEquals, t.NewRawLines(1, "original\n", "middle\n"))
-	c.Check(line.raw[0].textnl, equals, "middle\n")
+	t.CheckEquals(line.raw[0].textnl, "middle\n")
 	t.CheckOutputLines(
 		"AUTOFIX: filename:1: Replacing \"lruginao\" with \"middle\".")
 
-	c.Check(line.raw[0].textnl, equals, "middle\n")
+	t.CheckEquals(line.raw[0].textnl, "middle\n")
 	t.CheckOutputEmpty()
 
 	{
@@ -447,7 +447,7 @@ func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
 		fix.Apply()
 	}
 
-	c.Check(line.Autofix().RawText(), equals, "")
+	t.CheckEquals(line.Autofix().RawText(), "")
 	t.CheckOutputLines(
 		"AUTOFIX: filename:1: Deleting this line.")
 }
@@ -465,7 +465,7 @@ func (s *Suite) Test_Autofix_Explain__without_explain_option(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: Makefile:74: Please write row instead of line.")
-	c.Check(G.Logger.explanationsAvailable, equals, true)
+	t.CheckEquals(G.Logger.explanationsAvailable, true)
 }
 
 func (s *Suite) Test_Autofix_Explain__default(c *check.C) {
@@ -485,7 +485,7 @@ func (s *Suite) Test_Autofix_Explain__default(c *check.C) {
 		"",
 		"\tExplanation",
 		"")
-	c.Check(G.Logger.explanationsAvailable, equals, true)
+	t.CheckEquals(G.Logger.explanationsAvailable, true)
 }
 
 func (s *Suite) Test_Autofix_Explain__show_autofix(c *check.C) {
@@ -506,7 +506,7 @@ func (s *Suite) Test_Autofix_Explain__show_autofix(c *check.C) {
 		"",
 		"\tExplanation",
 		"")
-	c.Check(G.Logger.explanationsAvailable, equals, true)
+	t.CheckEquals(G.Logger.explanationsAvailable, true)
 }
 
 func (s *Suite) Test_Autofix_Explain__autofix(c *check.C) {
@@ -523,7 +523,7 @@ func (s *Suite) Test_Autofix_Explain__autofix(c *check.C) {
 
 	t.CheckOutputLines(
 		"AUTOFIX: Makefile:74: Replacing \"line\" with \"row\".")
-	c.Check(G.Logger.explanationsAvailable, equals, false) // Not necessary.
+	t.CheckEquals(G.Logger.explanationsAvailable, false) // Not necessary.
 }
 
 func (s *Suite) Test_Autofix_Explain__SilentAutofixFormat(c *check.C) {
@@ -563,7 +563,7 @@ func (s *Suite) Test_Autofix_Explain__silent_with_diagnostic(c *check.C) {
 		"\tWhen inserting multiple lines, Apply must be called in-between.",
 		"\tOtherwise the changes are not described to the human reader.",
 		"")
-	c.Check(fix.RawText(), equals, "Text\n")
+	t.CheckEquals(fix.RawText(), "Text\n")
 }
 
 func (s *Suite) Test_Autofix__show_autofix_and_source_continuation_line(c *check.C) {
@@ -840,7 +840,7 @@ func (s *Suite) Test_Autofix_Custom__in_memory(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: Makefile:2: Please write in ALL-UPPERCASE.",
 		"AUTOFIX: Makefile:2: Converting to uppercase")
-	c.Check(lines.Lines[1].Text, equals, "LINE2")
+	t.CheckEquals(lines.Lines[1].Text, "LINE2")
 
 	t.SetUpCommandLine("--autofix")
 
@@ -848,7 +848,7 @@ func (s *Suite) Test_Autofix_Custom__in_memory(c *check.C) {
 
 	t.CheckOutputLines(
 		"AUTOFIX: Makefile:3: Converting to uppercase")
-	c.Check(lines.Lines[2].Text, equals, "LINE3")
+	t.CheckEquals(lines.Lines[2].Text, "LINE3")
 }
 
 // Since the diagnostic doesn't contain the string "few", nothing happens.
@@ -884,7 +884,7 @@ func (s *Suite) Test_Autofix_skip(c *check.C) {
 	t.CheckFileLines("filename",
 		"VAR=\t111 222 333 444 555 \\",
 		"666")
-	c.Check(fix.RawText(), equals, ""+
+	t.CheckEquals(fix.RawText(), ""+
 		"VAR=\t111 222 333 444 555 \\\n"+
 		"666\n")
 }
@@ -1055,7 +1055,7 @@ func (s *Suite) Test_Autofix_Apply__anyway_error(c *check.C) {
 
 	mklines.SaveAutofixChanges()
 
-	t.Check(G.Logger.errors, equals, 0)
+	t.CheckEquals(G.Logger.errors, 0)
 	t.CheckOutputEmpty()
 }
 
@@ -1130,11 +1130,11 @@ func (s *Suite) Test_Autofix_Apply__text_after_replacing_string(c *check.C) {
 	t.CheckOutputLines(
 		"AUTOFIX: filename.mk:123: Replacing \"value\" with \"new value\".")
 
-	t.Check(mkline.raw[0].textnl, equals, "VAR=\tnew value\n")
-	t.Check(mkline.raw[0].orignl, equals, "VAR=\tvalue\n")
-	t.Check(mkline.Text, equals, "VAR=\tnew value")
+	t.CheckEquals(mkline.raw[0].textnl, "VAR=\tnew value\n")
+	t.CheckEquals(mkline.raw[0].orignl, "VAR=\tvalue\n")
+	t.CheckEquals(mkline.Text, "VAR=\tnew value")
 	// TODO: should be updated as well.
-	t.Check(mkline.Value(), equals, "value")
+	t.CheckEquals(mkline.Value(), "value")
 }
 
 // After fixing part of a line, the whole line needs to be parsed again.
@@ -1154,11 +1154,11 @@ func (s *Suite) Test_Autofix_Apply__text_after_replacing_regex(c *check.C) {
 	t.CheckOutputLines(
 		"AUTOFIX: filename.mk:123: Replacing \"value\" with \"new value\".")
 
-	t.Check(mkline.raw[0].textnl, equals, "VAR=\tnew value\n")
-	t.Check(mkline.raw[0].orignl, equals, "VAR=\tvalue\n")
-	t.Check(mkline.Text, equals, "VAR=\tnew value")
+	t.CheckEquals(mkline.raw[0].textnl, "VAR=\tnew value\n")
+	t.CheckEquals(mkline.raw[0].orignl, "VAR=\tvalue\n")
+	t.CheckEquals(mkline.Text, "VAR=\tnew value")
 	// TODO: should be updated as well.
-	t.Check(mkline.Value(), equals, "value")
+	t.CheckEquals(mkline.Value(), "value")
 }
 
 // Just for branch coverage.

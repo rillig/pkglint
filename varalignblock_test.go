@@ -82,7 +82,7 @@ func (vt *VaralignTester) run(autofix bool) {
 		infoStr := sprintf("%s %02d", minWidth, info.varnameOpSpaceWidth())
 		actual = append(actual, infoStr)
 	}
-	t.Check(actual, deepEquals, vt.internals)
+	t.CheckDeepEquals(actual, vt.internals)
 
 	if autofix {
 		t.CheckOutput(vt.autofixes)
@@ -2320,12 +2320,11 @@ func (s *Suite) Test_VaralignBlock_split(c *check.C) {
 	test := func(textnl string, initial bool, expected varalignSplitResult) {
 		actual := (&VaralignBlock{}).split(textnl, initial)
 
-		t.Check(actual, equals, expected)
-		t.Check(
+		t.CheckEquals(actual, expected)
+		t.CheckEquals(
 			actual.leadingComment+actual.varnameOp+
 				actual.spaceBeforeValue+actual.value+actual.spaceAfterValue+
 				actual.trailingComment+actual.spaceAfterComment+actual.continuation,
-			equals,
 			textnl)
 	}
 
@@ -2511,7 +2510,7 @@ func (s *Suite) Test_varalignLine_canonicalFollow(c *check.C) {
 
 		actual := l.canonicalFollow()
 
-		t.Check(actual, equals, expected)
+		t.CheckEquals(actual, expected)
 	}
 
 	// Follow-up lines should always be indented.

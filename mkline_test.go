@@ -11,13 +11,13 @@ func (s *Suite) Test_MkLineParser_Parse__varassign(c *check.C) {
 	mkline := t.NewMkLine("test.mk", 101,
 		"VARNAME.param?=value # varassign comment")
 
-	c.Check(mkline.IsVarassign(), equals, true)
-	c.Check(mkline.Varname(), equals, "VARNAME.param")
-	c.Check(mkline.Varcanon(), equals, "VARNAME.*")
-	c.Check(mkline.Varparam(), equals, "param")
-	c.Check(mkline.Op(), equals, opAssignDefault)
-	c.Check(mkline.Value(), equals, "value")
-	c.Check(mkline.VarassignComment(), equals, "# varassign comment")
+	t.CheckEquals(mkline.IsVarassign(), true)
+	t.CheckEquals(mkline.Varname(), "VARNAME.param")
+	t.CheckEquals(mkline.Varcanon(), "VARNAME.*")
+	t.CheckEquals(mkline.Varparam(), "param")
+	t.CheckEquals(mkline.Op(), opAssignDefault)
+	t.CheckEquals(mkline.Value(), "value")
+	t.CheckEquals(mkline.VarassignComment(), "# varassign comment")
 }
 
 func (s *Suite) Test_MkLineParser_Parse__varassign_empty_multiline(c *check.C) {
@@ -39,15 +39,15 @@ func (s *Suite) Test_MkLineParser_Parse__varassign_empty_multiline(c *check.C) {
 	// but this doesn't matter in practice. To see the difference, run:
 	//  bmake -dA 2>&1 | grep 'ParseReadLine.*VAR'
 	// See devel/bmake/files/parse.c:/non-comment, non-blank line/
-	c.Check(mklines.mklines[0].Text, equals, "VAR=   # nothing")
-	c.Check(mklines.mklines[2].Text, equals, "VAR=\t1   # a single letter")
+	t.CheckEquals(mklines.mklines[0].Text, "VAR=   # nothing")
+	t.CheckEquals(mklines.mklines[2].Text, "VAR=\t1   # a single letter")
 
 	mkline := mklines.mklines[0]
-	c.Check(mkline.IsVarassign(), equals, true)
-	c.Check(mkline.Varname(), equals, "VAR")
-	c.Check(mkline.Op(), equals, opAssign)
-	c.Check(mkline.Value(), equals, "")
-	c.Check(mkline.VarassignComment(), equals, "# nothing")
+	t.CheckEquals(mkline.IsVarassign(), true)
+	t.CheckEquals(mkline.Varname(), "VAR")
+	t.CheckEquals(mkline.Op(), opAssign)
+	t.CheckEquals(mkline.Value(), "")
+	t.CheckEquals(mkline.VarassignComment(), "# nothing")
 }
 
 func (s *Suite) Test_MkLineParser_Parse__varassign_space_around_operator(c *check.C) {
@@ -70,8 +70,8 @@ func (s *Suite) Test_MkLineParser_Parse__shellcmd(c *check.C) {
 	mkline := t.NewMkLine("test.mk", 101,
 		"\tshell command # shell comment")
 
-	c.Check(mkline.IsShellCommand(), equals, true)
-	c.Check(mkline.ShellCommand(), equals, "shell command # shell comment")
+	t.CheckEquals(mkline.IsShellCommand(), true)
+	t.CheckEquals(mkline.ShellCommand(), "shell command # shell comment")
 }
 
 func (s *Suite) Test_MkLineParser_Parse__comment(c *check.C) {
@@ -80,7 +80,7 @@ func (s *Suite) Test_MkLineParser_Parse__comment(c *check.C) {
 	mkline := t.NewMkLine("test.mk", 101,
 		"# whole line comment")
 
-	c.Check(mkline.IsComment(), equals, true)
+	t.CheckEquals(mkline.IsComment(), true)
 }
 
 func (s *Suite) Test_MkLineParser_Parse__empty(c *check.C) {
@@ -88,7 +88,7 @@ func (s *Suite) Test_MkLineParser_Parse__empty(c *check.C) {
 
 	mkline := t.NewMkLine("test.mk", 101, "")
 
-	c.Check(mkline.IsEmpty(), equals, true)
+	t.CheckEquals(mkline.IsEmpty(), true)
 }
 
 func (s *Suite) Test_MkLineParser_Parse__directive(c *check.C) {
@@ -97,11 +97,11 @@ func (s *Suite) Test_MkLineParser_Parse__directive(c *check.C) {
 	mkline := t.NewMkLine("test.mk", 101,
 		".  if !empty(PKGNAME:M*-*) && ${RUBY_RAILS_SUPPORTED:[\\#]} == 1 # directive comment")
 
-	c.Check(mkline.IsDirective(), equals, true)
-	c.Check(mkline.Indent(), equals, "  ")
-	c.Check(mkline.Directive(), equals, "if")
-	c.Check(mkline.Args(), equals, "!empty(PKGNAME:M*-*) && ${RUBY_RAILS_SUPPORTED:[#]} == 1")
-	c.Check(mkline.DirectiveComment(), equals, "directive comment")
+	t.CheckEquals(mkline.IsDirective(), true)
+	t.CheckEquals(mkline.Indent(), "  ")
+	t.CheckEquals(mkline.Directive(), "if")
+	t.CheckEquals(mkline.Args(), "!empty(PKGNAME:M*-*) && ${RUBY_RAILS_SUPPORTED:[#]} == 1")
+	t.CheckEquals(mkline.DirectiveComment(), "directive comment")
 }
 
 func (s *Suite) Test_MkLineParser_Parse__include(c *check.C) {
@@ -110,12 +110,12 @@ func (s *Suite) Test_MkLineParser_Parse__include(c *check.C) {
 	mkline := t.NewMkLine("test.mk", 101,
 		".    include \"../../mk/bsd.prefs.mk\" # include comment")
 
-	c.Check(mkline.IsInclude(), equals, true)
-	c.Check(mkline.Indent(), equals, "    ")
-	c.Check(mkline.MustExist(), equals, true)
-	c.Check(mkline.IncludedFile(), equals, "../../mk/bsd.prefs.mk")
+	t.CheckEquals(mkline.IsInclude(), true)
+	t.CheckEquals(mkline.Indent(), "    ")
+	t.CheckEquals(mkline.MustExist(), true)
+	t.CheckEquals(mkline.IncludedFile(), "../../mk/bsd.prefs.mk")
 
-	c.Check(mkline.IsSysinclude(), equals, false)
+	t.CheckEquals(mkline.IsSysinclude(), false)
 }
 
 func (s *Suite) Test_MkLineParser_Parse__sysinclude(c *check.C) {
@@ -124,12 +124,12 @@ func (s *Suite) Test_MkLineParser_Parse__sysinclude(c *check.C) {
 	mkline := t.NewMkLine("test.mk", 101,
 		".    include <subdir.mk> # sysinclude comment")
 
-	c.Check(mkline.IsSysinclude(), equals, true)
-	c.Check(mkline.Indent(), equals, "    ")
-	c.Check(mkline.MustExist(), equals, true)
-	c.Check(mkline.IncludedFile(), equals, "subdir.mk")
+	t.CheckEquals(mkline.IsSysinclude(), true)
+	t.CheckEquals(mkline.Indent(), "    ")
+	t.CheckEquals(mkline.MustExist(), true)
+	t.CheckEquals(mkline.IncludedFile(), "subdir.mk")
 
-	c.Check(mkline.IsInclude(), equals, false)
+	t.CheckEquals(mkline.IsInclude(), false)
 }
 
 func (s *Suite) Test_MkLineParser_Parse__dependency(c *check.C) {
@@ -138,9 +138,9 @@ func (s *Suite) Test_MkLineParser_Parse__dependency(c *check.C) {
 	mkline := t.NewMkLine("test.mk", 101,
 		"target1 target2: source1 source2")
 
-	c.Check(mkline.IsDependency(), equals, true)
-	c.Check(mkline.Targets(), equals, "target1 target2")
-	c.Check(mkline.Sources(), equals, "source1 source2")
+	t.CheckEquals(mkline.IsDependency(), true)
+	t.CheckEquals(mkline.Targets(), "target1 target2")
+	t.CheckEquals(mkline.Sources(), "source1 source2")
 }
 
 func (s *Suite) Test_MkLineParser_Parse__dependency_space(c *check.C) {
@@ -149,8 +149,8 @@ func (s *Suite) Test_MkLineParser_Parse__dependency_space(c *check.C) {
 	mkline := t.NewMkLine("test.mk", 101,
 		"target : source")
 
-	c.Check(mkline.Targets(), equals, "target")
-	c.Check(mkline.Sources(), equals, "source")
+	t.CheckEquals(mkline.Targets(), "target")
+	t.CheckEquals(mkline.Sources(), "source")
 	t.CheckOutputLines(
 		"NOTE: test.mk:101: Space before colon in dependency line.")
 }
@@ -161,10 +161,10 @@ func (s *Suite) Test_MkLineParser_Parse__varassign_append(c *check.C) {
 	mkline := t.NewMkLine("test.mk", 101,
 		"VARNAME+=value")
 
-	c.Check(mkline.IsVarassign(), equals, true)
-	c.Check(mkline.Varname(), equals, "VARNAME")
-	c.Check(mkline.Varcanon(), equals, "VARNAME")
-	c.Check(mkline.Varparam(), equals, "")
+	t.CheckEquals(mkline.IsVarassign(), true)
+	t.CheckEquals(mkline.Varname(), "VARNAME")
+	t.CheckEquals(mkline.Varcanon(), "VARNAME")
+	t.CheckEquals(mkline.Varparam(), "")
 }
 
 func (s *Suite) Test_MkLineParser_Parse__merge_conflict(c *check.C) {
@@ -174,14 +174,14 @@ func (s *Suite) Test_MkLineParser_Parse__merge_conflict(c *check.C) {
 		"<<<<<<<<<<<<<<<<<")
 
 	// Merge conflicts are of neither type.
-	c.Check(mkline.IsVarassign(), equals, false)
-	c.Check(mkline.IsDirective(), equals, false)
-	c.Check(mkline.IsInclude(), equals, false)
-	c.Check(mkline.IsEmpty(), equals, false)
-	c.Check(mkline.IsComment(), equals, false)
-	c.Check(mkline.IsDependency(), equals, false)
-	c.Check(mkline.IsShellCommand(), equals, false)
-	c.Check(mkline.IsSysinclude(), equals, false)
+	t.CheckEquals(mkline.IsVarassign(), false)
+	t.CheckEquals(mkline.IsDirective(), false)
+	t.CheckEquals(mkline.IsInclude(), false)
+	t.CheckEquals(mkline.IsEmpty(), false)
+	t.CheckEquals(mkline.IsComment(), false)
+	t.CheckEquals(mkline.IsDependency(), false)
+	t.CheckEquals(mkline.IsShellCommand(), false)
+	t.CheckEquals(mkline.IsSysinclude(), false)
 }
 
 func (s *Suite) Test_MkLineParser_Parse__autofix_space_after_varname(c *check.C) {
@@ -226,12 +226,12 @@ func (s *Suite) Test_MkLineParser_Parse__varname_with_hash(c *check.C) {
 	mkline := t.NewMkLine("Makefile", 123, "VARNAME.#=\tvalue")
 
 	// Parse error because the # starts a comment.
-	c.Check(mkline.IsVarassign(), equals, false)
+	t.CheckEquals(mkline.IsVarassign(), false)
 
 	mkline2 := t.NewMkLine("Makefile", 124, "VARNAME.\\#=\tvalue")
 
-	c.Check(mkline2.IsVarassign(), equals, true)
-	c.Check(mkline2.Varname(), equals, "VARNAME.#")
+	t.CheckEquals(mkline2.IsVarassign(), true)
+	t.CheckEquals(mkline2.Varname(), "VARNAME.#")
 
 	t.CheckOutputLines(
 		"ERROR: Makefile:123: Unknown Makefile line format: \"VARNAME.#=\\tvalue\".")
@@ -257,11 +257,11 @@ func (s *Suite) Test_MkLineParser_Parse__escaped_hash_in_value(c *check.C) {
 		".endfor")
 	parsed := mklines.mklines
 
-	c.Check(parsed[0].Value(), equals, "value")
-	c.Check(parsed[1].Value(), equals, "value#")
-	c.Check(parsed[2].Value(), equals, "value\\\\")
-	c.Check(parsed[3].Value(), equals, "value\\\\#")
-	c.Check(parsed[4].Value(), equals, "value\\\\\\\\")
+	t.CheckEquals(parsed[0].Value(), "value")
+	t.CheckEquals(parsed[1].Value(), "value#")
+	t.CheckEquals(parsed[2].Value(), "value\\\\")
+	t.CheckEquals(parsed[3].Value(), "value\\\\#")
+	t.CheckEquals(parsed[4].Value(), "value\\\\\\\\")
 
 	t.CheckOutputLines(
 		"WARN: ~/Makefile:1: The # character starts a Makefile comment.",
@@ -276,7 +276,7 @@ func (s *Suite) Test_MkLine_Varparam(c *check.C) {
 
 	varparam := mkline.Varparam()
 
-	c.Check(varparam, equals, "${param}")
+	t.CheckEquals(varparam, "${param}")
 }
 
 func (s *Suite) Test_MkLine_ValueAlign__commented(c *check.C) {
@@ -286,8 +286,8 @@ func (s *Suite) Test_MkLine_ValueAlign__commented(c *check.C) {
 
 	valueAlign := mkline.ValueAlign()
 
-	c.Check(mkline.IsCommentedVarassign(), equals, true)
-	c.Check(valueAlign, equals, "#SUBST_SED.${param}=\t")
+	t.CheckEquals(mkline.IsCommentedVarassign(), true)
+	t.CheckEquals(valueAlign, "#SUBST_SED.${param}=\t")
 }
 
 func (s *Suite) Test_MkLine_FirstLineContainsValue(c *check.C) {
@@ -309,10 +309,10 @@ func (s *Suite) Test_MkLine_FirstLineContainsValue(c *check.C) {
 
 	t.ExpectAssert(func() { mklines.mklines[1].FirstLineContainsValue() })
 
-	t.Check(mklines.mklines[2].FirstLineContainsValue(), equals, true)
-	t.Check(mklines.mklines[3].FirstLineContainsValue(), equals, false)
-	t.Check(mklines.mklines[4].FirstLineContainsValue(), equals, true)
-	t.Check(mklines.mklines[5].FirstLineContainsValue(), equals, false)
+	t.CheckEquals(mklines.mklines[2].FirstLineContainsValue(), true)
+	t.CheckEquals(mklines.mklines[3].FirstLineContainsValue(), false)
+	t.CheckEquals(mklines.mklines[4].FirstLineContainsValue(), true)
+	t.CheckEquals(mklines.mklines[5].FirstLineContainsValue(), false)
 }
 
 func (s *Suite) Test_MkLine_IsMultiAligned(c *check.C) {
@@ -328,7 +328,7 @@ func (s *Suite) Test_MkLine_IsMultiAligned(c *check.C) {
 		mklines := t.NewMkLines("filename.mk",
 			lineTexts...)
 		assert(len(mklines.mklines) == 1)
-		t.Check(mklines.mklines[0].IsMultiAligned(), equals, expected)
+		t.CheckEquals(mklines.mklines[0].IsMultiAligned(), expected)
 	}
 
 	// This code must only be called for known variable assignments that
@@ -485,9 +485,9 @@ func (s *Suite) Test_MkLine_Cond(c *check.C) {
 
 	cond := mkline.Cond()
 
-	c.Check(cond.Compare.Left.Var.varname, equals, "VAR")
-	c.Check(cond.Compare.Right.Str, equals, "Value")
-	c.Check(mkline.Cond(), equals, cond)
+	t.CheckEquals(cond.Compare.Left.Var.varname, "VAR")
+	t.CheckEquals(cond.Compare.Right.Str, "Value")
+	t.CheckEquals(mkline.Cond(), cond)
 }
 
 func (s *Suite) Test_VarUseContext_String(c *check.C) {
@@ -497,7 +497,7 @@ func (s *Suite) Test_VarUseContext_String(c *check.C) {
 	vartype := G.Pkgsrc.VariableType(nil, "PKGNAME")
 	vuc := VarUseContext{vartype, VucUnknownTime, VucQuotBackt, false}
 
-	c.Check(vuc.String(), equals, "(Pkgname (package-settable) time:unknown quoting:backt wordpart:false)")
+	t.CheckEquals(vuc.String(), "(Pkgname (package-settable) time:unknown quoting:backt wordpart:false)")
 }
 
 // In variable assignments, a plain '#' introduces a line comment, unless
@@ -508,22 +508,22 @@ func (s *Suite) Test_MkLineParser_Parse__number_sign(c *check.C) {
 
 	mklineVarassignEscaped := t.NewMkLine("filename.mk", 1, "SED_CMD=\t's,\\#,hash,g'")
 
-	c.Check(mklineVarassignEscaped.Varname(), equals, "SED_CMD")
-	c.Check(mklineVarassignEscaped.Value(), equals, "'s,#,hash,g'")
+	t.CheckEquals(mklineVarassignEscaped.Varname(), "SED_CMD")
+	t.CheckEquals(mklineVarassignEscaped.Value(), "'s,#,hash,g'")
 
 	mklineCommandEscaped := t.NewMkLine("filename.mk", 1, "\tsed -e 's,\\#,hash,g'")
 
-	c.Check(mklineCommandEscaped.ShellCommand(), equals, "sed -e 's,\\#,hash,g'")
+	t.CheckEquals(mklineCommandEscaped.ShellCommand(), "sed -e 's,\\#,hash,g'")
 
 	// From shells/zsh/Makefile.common, rev. 1.78
 	mklineCommandUnescaped := t.NewMkLine("filename.mk", 1, "\t# $ sha1 patches/patch-ac")
 
-	c.Check(mklineCommandUnescaped.ShellCommand(), equals, "# $ sha1 patches/patch-ac")
+	t.CheckEquals(mklineCommandUnescaped.ShellCommand(), "# $ sha1 patches/patch-ac")
 	t.CheckOutputEmpty() // No warning about parsing the lonely dollar sign.
 
 	mklineVarassignUnescaped := t.NewMkLine("filename.mk", 1, "SED_CMD=\t's,#,hash,'")
 
-	c.Check(mklineVarassignUnescaped.Value(), equals, "'s,")
+	t.CheckEquals(mklineVarassignUnescaped.Value(), "'s,")
 	t.CheckOutputLines(
 		"WARN: filename.mk:1: The # character starts a Makefile comment.")
 }
@@ -561,9 +561,9 @@ func (s *Suite) Test_MkLineParser_Parse__infrastructure(c *check.C) {
 		".elifnmake target2", // Neither is this.
 		".endif")
 
-	c.Check(mklines.mklines[1].Varcanon(), equals, "USE_BUILTIN.*")
-	c.Check(mklines.mklines[2].Directive(), equals, "error")
-	c.Check(mklines.mklines[3].Directive(), equals, "export")
+	t.CheckEquals(mklines.mklines[1].Varcanon(), "USE_BUILTIN.*")
+	t.CheckEquals(mklines.mklines[2].Directive(), "error")
+	t.CheckEquals(mklines.mklines[3].Directive(), "export")
 
 	t.CheckOutputLines(
 		"WARN: infra.mk:2: Makefile lines should not start with space characters.",
@@ -589,7 +589,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__unknown_rhs(c *check.C) {
 	vuc := VarUseContext{G.Pkgsrc.VariableType(nil, "PKGNAME"), VucLoadTime, VucQuotUnknown, false}
 	nq := mkline.VariableNeedsQuoting(nil, &MkVarUse{"UNKNOWN", nil}, nil, &vuc)
 
-	c.Check(nq, equals, unknown)
+	t.CheckEquals(nq, unknown)
 }
 
 func (s *Suite) Test_MkLine_VariableNeedsQuoting__append_URL_to_list_of_URLs(c *check.C) {
@@ -605,7 +605,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__append_URL_to_list_of_URLs(c *
 	vuc := VarUseContext{G.Pkgsrc.vartypes.Canon("MASTER_SITES"), VucRunTime, VucQuotPlain, false}
 	nq := mkline.VariableNeedsQuoting(nil, &MkVarUse{"HOMEPAGE", nil}, G.Pkgsrc.vartypes.Canon("HOMEPAGE"), &vuc)
 
-	c.Check(nq, equals, no)
+	t.CheckEquals(nq, no)
 
 	MkLineChecker{mklines, mkline}.checkVarassign()
 
@@ -1157,7 +1157,7 @@ func (s *Suite) Test_MkLine_ConditionalVars(c *check.C) {
 
 	mkline.SetConditionalVars([]string{"OPSYS"})
 
-	c.Check(mkline.ConditionalVars(), deepEquals, []string{"OPSYS"})
+	t.CheckDeepEquals(mkline.ConditionalVars(), []string{"OPSYS"})
 }
 
 func (s *Suite) Test_MkLine_ValueSplit(c *check.C) {
@@ -1166,7 +1166,7 @@ func (s *Suite) Test_MkLine_ValueSplit(c *check.C) {
 	test := func(value string, expected ...string) {
 		mkline := t.NewMkLine("Makefile", 1, "PATH=\t"+value)
 		split := mkline.ValueSplit(value, ":")
-		c.Check(split, deepEquals, expected)
+		t.CheckDeepEquals(split, expected)
 	}
 
 	test("Platform-independent C# compiler #5",
@@ -1214,12 +1214,12 @@ func (s *Suite) Test_MkLine_Fields__varassign(c *check.C) {
 	test := func(value string, expected ...string) {
 		mkline := t.NewMkLine("Makefile", 1, "PATH=\t"+value)
 		fields := mkline.Fields()
-		c.Check(fields, deepEquals, expected)
+		t.CheckDeepEquals(fields, expected)
 
 		// Repeated calls get the cached value.
 		if len(fields) > 0 {
 			cached := mkline.Fields()
-			c.Check(&cached[0], equals, &fields[0])
+			t.CheckEquals(&cached[0], &fields[0])
 		}
 	}
 
@@ -1241,12 +1241,12 @@ func (s *Suite) Test_MkLine_Fields__for(c *check.C) {
 	test := func(value string, expected ...string) {
 		mkline := t.NewMkLine("Makefile", 1, ".for "+value)
 		fields := mkline.Fields()
-		c.Check(fields, deepEquals, expected)
+		t.CheckDeepEquals(fields, expected)
 
 		// Repeated calls get the cached value.
 		if len(fields) > 0 {
 			cached := mkline.Fields()
-			c.Check(&cached[0], equals, &fields[0])
+			t.CheckEquals(&cached[0], &fields[0])
 		}
 	}
 
@@ -1273,7 +1273,7 @@ func (s *Suite) Test_MkLine_Fields__semicolons(c *check.C) {
 	mkline := t.NewMkLine("filename.mk", 123, "VAR=\tword1 word2;;;")
 	words := mkline.Fields()
 
-	c.Check(words, deepEquals, []string{"word1", "word2;;;"})
+	t.CheckDeepEquals(words, []string{"word1", "word2;;;"})
 }
 
 func (s *Suite) Test_MkLine_Fields__varuse_with_embedded_space(c *check.C) {
@@ -1283,7 +1283,7 @@ func (s *Suite) Test_MkLine_Fields__varuse_with_embedded_space(c *check.C) {
 
 	words := mkline.Fields()
 
-	c.Check(words, deepEquals, []string{"${VAR:S/ /_/g}"})
+	t.CheckDeepEquals(words, []string{"${VAR:S/ /_/g}"})
 }
 
 func (s *Suite) Test_MkLine_ValueFields(c *check.C) {
@@ -1292,7 +1292,7 @@ func (s *Suite) Test_MkLine_ValueFields(c *check.C) {
 	test := func(value string, expected ...string) {
 		mkline := t.NewMkLine("Makefile", 1, "VAR=\t"+value)
 		split := mkline.ValueFields(value)
-		c.Check(split, deepEquals, expected)
+		t.CheckDeepEquals(split, expected)
 	}
 
 	test("one   two\t\t${THREE:Uthree:Nsome \tspaces}",
@@ -1315,7 +1315,7 @@ func (s *Suite) Test_MkLine_ValueFields__adjacent_vars(c *check.C) {
 	test := func(value string, expected ...string) {
 		mkline := t.NewMkLine("Makefile", 1, "")
 		split := mkline.ValueFields(value)
-		c.Check(split, deepEquals, expected)
+		t.CheckDeepEquals(split, expected)
 	}
 
 	test("\t; ${RM} ${WRKSRC}",
@@ -1337,7 +1337,7 @@ func (s *Suite) Test_MkLine_ValueFields__compared_to_splitIntoShellTokens(c *che
 		"id=9884",
 		"&",
 		"file="})
-	c.Check(rest, equals, "")
+	t.CheckEquals(rest, "")
 
 	words = mkline.ValueFields(url)
 
@@ -1360,7 +1360,7 @@ func (s *Suite) Test_MkLine_ValueTokens(c *check.C) {
 	test := func(value string, expected []*MkToken, diagnostics ...string) {
 		mkline := t.NewMkLine("Makefile", 1, "PATH=\t"+value)
 		actualTokens, _ := mkline.ValueTokens()
-		c.Check(actualTokens, deepEquals, expected)
+		t.CheckDeepEquals(actualTokens, expected)
 		t.CheckOutput(diagnostics)
 	}
 
@@ -1398,13 +1398,13 @@ func (s *Suite) Test_MkLine_ValueTokens__parse_error(c *check.C) {
 	tokens, rest := mkline.ValueTokens()
 
 	t.Check(tokens, check.IsNil)
-	t.Check(rest, equals, "$")
+	t.CheckEquals(rest, "$")
 
 	// Returns the same values, this time from the cache.
 	tokens, rest = mkline.ValueTokens()
 
 	t.Check(tokens, check.IsNil)
-	t.Check(rest, equals, "$")
+	t.CheckEquals(rest, "$")
 }
 
 func (s *Suite) Test_MkLine_ValueTokens__caching(c *check.C) {
@@ -1415,19 +1415,19 @@ func (s *Suite) Test_MkLine_ValueTokens__caching(c *check.C) {
 	mkline := t.NewMkLine("Makefile", 1, "PATH=\tvalue ${UNFINISHED")
 	valueTokens, rest := mkline.ValueTokens()
 
-	c.Check(valueTokens, deepEquals,
+	t.CheckDeepEquals(valueTokens,
 		tokens(
 			&MkToken{"value ", nil},
 			&MkToken{"${UNFINISHED", NewMkVarUse("UNFINISHED")}))
-	c.Check(rest, equals, "")
+	t.CheckEquals(rest, "")
 	t.CheckOutputLines(
 		"WARN: Makefile:1: Missing closing \"}\" for \"UNFINISHED\".")
 
 	// This time the slice is taken from the cache.
 	tokens2, rest2 := mkline.ValueTokens()
 
-	c.Check(&tokens2[0], equals, &valueTokens[0])
-	c.Check(rest2, equals, rest)
+	t.CheckEquals(&tokens2[0], &valueTokens[0])
+	t.CheckEquals(rest2, rest)
 }
 
 func (s *Suite) Test_MkLine_ValueTokens__caching_parse_error(c *check.C) {
@@ -1441,16 +1441,16 @@ func (s *Suite) Test_MkLine_ValueTokens__caching_parse_error(c *check.C) {
 	mkline := t.NewMkLine("Makefile", 1, "PATH=\t${UNFINISHED")
 	valueTokens, rest := mkline.ValueTokens()
 
-	c.Check(valueTokens, deepEquals, tokens(varuseText("${UNFINISHED", "UNFINISHED")))
-	c.Check(rest, equals, "")
+	t.CheckDeepEquals(valueTokens, tokens(varuseText("${UNFINISHED", "UNFINISHED")))
+	t.CheckEquals(rest, "")
 	t.CheckOutputLines(
 		"WARN: Makefile:1: Missing closing \"}\" for \"UNFINISHED\".")
 
 	// This time the slice is taken from the cache.
 	tokens2, rest2 := mkline.ValueTokens()
 
-	c.Check(&tokens2[0], equals, &valueTokens[0])
-	c.Check(rest2, equals, rest)
+	t.CheckEquals(&tokens2[0], &valueTokens[0])
+	t.CheckEquals(rest2, rest)
 }
 
 func (s *Suite) Test_MkLine_ValueTokens__warnings(c *check.C) {
@@ -1487,7 +1487,7 @@ func (s *Suite) Test_MkLine_ResolveVarsInRelativePath(c *check.C) {
 	mkline := mklines.mklines[0]
 
 	test := func(before string, after string) {
-		c.Check(mkline.ResolveVarsInRelativePath(before), equals, after)
+		t.CheckEquals(mkline.ResolveVarsInRelativePath(before), after)
 	}
 
 	test("", ".")
@@ -1567,7 +1567,7 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 			spaceAfterValue:   spaceAfterValue,
 			comment:           comment,
 		}
-		c.Check(*actual, deepEquals, expected)
+		t.CheckDeepEquals(*actual, expected)
 		t.CheckOutput(diagnostics)
 	}
 
@@ -1738,8 +1738,10 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 }
 
 func (s *Suite) Test_NewMkOperator(c *check.C) {
-	c.Check(NewMkOperator(":="), equals, opAssignEval)
-	c.Check(NewMkOperator("="), equals, opAssign)
+	t := s.Init(c)
+
+	t.CheckEquals(NewMkOperator(":="), opAssignEval)
+	t.CheckEquals(NewMkOperator("="), opAssign)
 
 	c.Check(func() { NewMkOperator("???") }, check.Panics, "Invalid operator: ???")
 }
@@ -1751,41 +1753,41 @@ func (s *Suite) Test_Indentation(c *check.C) {
 
 	mkline := t.NewMkLine("dummy.mk", 5, ".if 0")
 
-	c.Check(ind.Depth("if"), equals, 0)
-	c.Check(ind.DependsOn("VARNAME"), equals, false)
+	t.CheckEquals(ind.Depth("if"), 0)
+	t.CheckEquals(ind.DependsOn("VARNAME"), false)
 
 	ind.Push(mkline, 2, "")
 
-	c.Check(ind.Depth("if"), equals, 2)
-	c.Check(ind.Depth("endfor"), equals, 0)
+	t.CheckEquals(ind.Depth("if"), 2)
+	t.CheckEquals(ind.Depth("endfor"), 0)
 
 	ind.AddVar("LEVEL1.VAR1")
 
-	c.Check(ind.Varnames(), deepEquals, []string{"LEVEL1.VAR1"})
+	t.CheckDeepEquals(ind.Varnames(), []string{"LEVEL1.VAR1"})
 
 	ind.AddVar("LEVEL1.VAR2")
 
-	c.Check(ind.Varnames(), deepEquals, []string{"LEVEL1.VAR1", "LEVEL1.VAR2"})
-	c.Check(ind.DependsOn("LEVEL1.VAR1"), equals, true)
-	c.Check(ind.DependsOn("OTHER_VAR"), equals, false)
+	t.CheckDeepEquals(ind.Varnames(), []string{"LEVEL1.VAR1", "LEVEL1.VAR2"})
+	t.CheckEquals(ind.DependsOn("LEVEL1.VAR1"), true)
+	t.CheckEquals(ind.DependsOn("OTHER_VAR"), false)
 
 	ind.Push(mkline, 2, "")
 
 	ind.AddVar("LEVEL2.VAR")
 
-	c.Check(ind.Varnames(), deepEquals, []string{"LEVEL1.VAR1", "LEVEL1.VAR2", "LEVEL2.VAR"})
-	c.Check(ind.String(), equals, "[2 (LEVEL1.VAR1 LEVEL1.VAR2) 2 (LEVEL2.VAR)]")
+	t.CheckDeepEquals(ind.Varnames(), []string{"LEVEL1.VAR1", "LEVEL1.VAR2", "LEVEL2.VAR"})
+	t.CheckEquals(ind.String(), "[2 (LEVEL1.VAR1 LEVEL1.VAR2) 2 (LEVEL2.VAR)]")
 
 	ind.Pop()
 
-	c.Check(ind.Varnames(), deepEquals, []string{"LEVEL1.VAR1", "LEVEL1.VAR2"})
-	c.Check(ind.IsConditional(), equals, true)
+	t.CheckDeepEquals(ind.Varnames(), []string{"LEVEL1.VAR1", "LEVEL1.VAR2"})
+	t.CheckEquals(ind.IsConditional(), true)
 
 	ind.Pop()
 
 	c.Check(ind.Varnames(), check.HasLen, 0)
-	c.Check(ind.IsConditional(), equals, false)
-	c.Check(ind.String(), equals, "[]")
+	t.CheckEquals(ind.IsConditional(), false)
+	t.CheckEquals(ind.String(), "[]")
 }
 
 func (s *Suite) Test_Indentation__realistic(c *check.C) {
@@ -1860,7 +1862,7 @@ func (s *Suite) Test_Indentation_RememberUsedVariables(c *check.C) {
 	ind.RememberUsedVariables(mkline.Cond())
 
 	t.CheckOutputEmpty()
-	c.Check(ind.Varnames(), deepEquals, []string{"PKGREVISION"})
+	t.CheckDeepEquals(ind.Varnames(), []string{"PKGREVISION"})
 }
 
 func (s *Suite) Test_Indentation_TrackAfter__checked_files(c *check.C) {
@@ -1953,7 +1955,7 @@ func (s *Suite) Test_MkLine_ForEachUsed(c *check.C) {
 		})
 	}
 
-	c.Check(varnames, deepEquals, []string{
+	t.CheckDeepEquals(varnames, []string{
 		"run VALUE",
 		"load OPSYS",
 		"load endianness",
@@ -1984,7 +1986,7 @@ func (s *Suite) Test_MkLine_UnquoteShell(c *check.C) {
 
 	test := func(input, output string) {
 		unquoted := (*MkLine).UnquoteShell(nil, input)
-		t.Check(unquoted, equals, output)
+		t.CheckEquals(unquoted, output)
 	}
 
 	test("", "")
@@ -2013,9 +2015,8 @@ func (s *Suite) Test_MkLineParser_unescapeComment(c *check.C) {
 
 	test := func(text string, main, comment string) {
 		aMain, aComment := MkLineParser{}.unescapeComment(text)
-		t.Check(
+		t.CheckDeepEquals(
 			[]interface{}{text, aMain, aComment},
-			deepEquals,
 			[]interface{}{text, main, comment})
 	}
 
@@ -2157,7 +2158,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 		actualData := MkLineParser{}.split(line, text)
 
 		t.CheckOutput(diagnostics)
-		t.Check([]interface{}{text, actualData}, deepEquals, []interface{}{text, data})
+		t.CheckDeepEquals([]interface{}{text, actualData}, []interface{}{text, data})
 	}
 
 	t.Use(text, varuse, varuseText, tokens)
@@ -2463,7 +2464,7 @@ func (s *Suite) Test_MkLineParser_split__unclosed_varuse(c *check.C) {
 
 		data := MkLineParser{}.split(line, text)
 
-		c.Check(data, deepEquals, expected)
+		t.CheckDeepEquals(data, expected)
 		t.CheckOutput(diagnostics)
 	}
 
@@ -2500,9 +2501,8 @@ func (s *Suite) Test_MkLineParser_parseDirective(c *check.C) {
 			return
 		}
 
-		c.Check(
+		t.CheckDeepEquals(
 			[]interface{}{mkline.Indent(), mkline.Directive(), mkline.Args(), mkline.DirectiveComment()},
-			deepEquals,
 			[]interface{}{expectedIndent, expectedDirective, expectedArgs, expectedComment})
 		t.CheckOutput(diagnostics)
 	}
@@ -2532,9 +2532,8 @@ func (s *Suite) Test_MatchMkInclude(c *check.C) {
 
 	test := func(input, expectedIndent, expectedDirective, expectedFilename string) {
 		m, indent, directive, args := MatchMkInclude(input)
-		c.Check(
+		t.CheckDeepEquals(
 			[]interface{}{m, indent, directive, args},
-			deepEquals,
 			[]interface{}{true, expectedIndent, expectedDirective, expectedFilename})
 	}
 

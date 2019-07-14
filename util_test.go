@@ -32,64 +32,84 @@ func (s *Suite) Test_assertNotNil(c *check.C) {
 }
 
 func (s *Suite) Test_YesNoUnknown_String(c *check.C) {
-	c.Check(yes.String(), equals, "yes")
-	c.Check(no.String(), equals, "no")
-	c.Check(unknown.String(), equals, "unknown")
+	t := s.Init(c)
+
+	t.CheckEquals(yes.String(), "yes")
+	t.CheckEquals(no.String(), "no")
+	t.CheckEquals(unknown.String(), "unknown")
 }
 
 func (s *Suite) Test_mkopSubst__middle(c *check.C) {
-	c.Check(mkopSubst("pkgname", false, "kgna", false, "ri", ""), equals, "prime")
-	c.Check(mkopSubst("pkgname", false, "pkgname", false, "replacement", ""), equals, "replacement")
-	c.Check(mkopSubst("aaaaaaa", false, "a", false, "b", ""), equals, "baaaaaa")
+	t := s.Init(c)
+
+	t.CheckEquals(mkopSubst("pkgname", false, "kgna", false, "ri", ""), "prime")
+	t.CheckEquals(mkopSubst("pkgname", false, "pkgname", false, "replacement", ""), "replacement")
+	t.CheckEquals(mkopSubst("aaaaaaa", false, "a", false, "b", ""), "baaaaaa")
 }
 
 func (s *Suite) Test_mkopSubst__left(c *check.C) {
-	c.Check(mkopSubst("pkgname", true, "kgna", false, "ri", ""), equals, "pkgname")
-	c.Check(mkopSubst("pkgname", true, "pkgname", false, "replacement", ""), equals, "replacement")
+	t := s.Init(c)
+
+	t.CheckEquals(mkopSubst("pkgname", true, "kgna", false, "ri", ""), "pkgname")
+	t.CheckEquals(mkopSubst("pkgname", true, "pkgname", false, "replacement", ""), "replacement")
 }
 
 func (s *Suite) Test_mkopSubst__right(c *check.C) {
-	c.Check(mkopSubst("pkgname", false, "kgna", true, "ri", ""), equals, "pkgname")
-	c.Check(mkopSubst("pkgname", false, "pkgname", true, "replacement", ""), equals, "replacement")
+	t := s.Init(c)
+
+	t.CheckEquals(mkopSubst("pkgname", false, "kgna", true, "ri", ""), "pkgname")
+	t.CheckEquals(mkopSubst("pkgname", false, "pkgname", true, "replacement", ""), "replacement")
 }
 
 func (s *Suite) Test_mkopSubst__left_and_right(c *check.C) {
-	c.Check(mkopSubst("pkgname", true, "kgna", true, "ri", ""), equals, "pkgname")
-	c.Check(mkopSubst("pkgname", false, "pkgname", false, "replacement", ""), equals, "replacement")
+	t := s.Init(c)
+
+	t.CheckEquals(mkopSubst("pkgname", true, "kgna", true, "ri", ""), "pkgname")
+	t.CheckEquals(mkopSubst("pkgname", false, "pkgname", false, "replacement", ""), "replacement")
 }
 
 func (s *Suite) Test_mkopSubst__gflag(c *check.C) {
-	c.Check(mkopSubst("aaaaa", false, "a", false, "b", "g"), equals, "bbbbb")
-	c.Check(mkopSubst("aaaaa", true, "a", false, "b", "g"), equals, "baaaa")
-	c.Check(mkopSubst("aaaaa", false, "a", true, "b", "g"), equals, "aaaab")
-	c.Check(mkopSubst("aaaaa", true, "a", true, "b", "g"), equals, "aaaaa")
+	t := s.Init(c)
+
+	t.CheckEquals(mkopSubst("aaaaa", false, "a", false, "b", "g"), "bbbbb")
+	t.CheckEquals(mkopSubst("aaaaa", true, "a", false, "b", "g"), "baaaa")
+	t.CheckEquals(mkopSubst("aaaaa", false, "a", true, "b", "g"), "aaaab")
+	t.CheckEquals(mkopSubst("aaaaa", true, "a", true, "b", "g"), "aaaaa")
 }
 
 func (s *Suite) Test__regex_ReplaceFirst(c *check.C) {
+	t := s.Init(c)
+
 	m, rest := G.res.ReplaceFirst("a+b+c+d", `(\w)(.)(\w)`, "X")
 
 	c.Assert(m, check.NotNil)
 	c.Check(m, check.DeepEquals, []string{"a+b", "a", "+", "b"})
-	c.Check(rest, equals, "X+c+d")
+	t.CheckEquals(rest, "X+c+d")
 }
 
 func (s *Suite) Test_shorten(c *check.C) {
-	c.Check(shorten("aaaaa", 3), equals, "aaa...")
-	c.Check(shorten("aaaaa", 5), equals, "aaaaa")
-	c.Check(shorten("aaa", 5), equals, "aaa")
+	t := s.Init(c)
+
+	t.CheckEquals(shorten("aaaaa", 3), "aaa...")
+	t.CheckEquals(shorten("aaaaa", 5), "aaaaa")
+	t.CheckEquals(shorten("aaa", 5), "aaa")
 }
 
 func (s *Suite) Test_tabWidth(c *check.C) {
-	c.Check(tabWidth("12345"), equals, 5)
-	c.Check(tabWidth("\t"), equals, 8)
-	c.Check(tabWidth("123\t"), equals, 8)
-	c.Check(tabWidth("1234567\t"), equals, 8)
-	c.Check(tabWidth("12345678\t"), equals, 16)
+	t := s.Init(c)
+
+	t.CheckEquals(tabWidth("12345"), 5)
+	t.CheckEquals(tabWidth("\t"), 8)
+	t.CheckEquals(tabWidth("123\t"), 8)
+	t.CheckEquals(tabWidth("1234567\t"), 8)
+	t.CheckEquals(tabWidth("12345678\t"), 16)
 }
 
 func (s *Suite) Test_cleanpath(c *check.C) {
+	t := s.Init(c)
+
 	test := func(from, to string) {
-		c.Check(cleanpath(from), equals, to)
+		t.CheckEquals(cleanpath(from), to)
 	}
 
 	test("simple/path", "simple/path")
@@ -139,10 +159,10 @@ func (s *Suite) Test_relpath(c *check.C) {
 	t := s.Init(c)
 
 	t.Chdir(".")
-	t.Check(G.Pkgsrc.topdir, equals, t.tmpdir)
+	t.CheckEquals(G.Pkgsrc.topdir, t.tmpdir)
 
 	test := func(from, to, result string) {
-		c.Check(relpath(from, to), equals, result)
+		t.CheckEquals(relpath(from, to), result)
 	}
 
 	test("some/dir", "some/directory", "../../some/directory")
@@ -175,9 +195,10 @@ func (s *Suite) Test_relpath(c *check.C) {
 // Relpath is called so often that handling the most common calls
 // without file system IO makes sense.
 func (s *Suite) Test_relpath__quick(c *check.C) {
+	t := s.Init(c)
 
 	test := func(from, to, result string) {
-		c.Check(relpath(from, to), equals, result)
+		t.CheckEquals(relpath(from, to), result)
 	}
 
 	test("some/dir", "some/dir/../..", "../..")
@@ -193,7 +214,7 @@ func (s *Suite) Test_pathContains(c *check.C) {
 
 	test := func(haystack, needle string, expected bool) {
 		actual := pathContains(haystack, needle)
-		t.Check(actual, equals, expected)
+		t.CheckEquals(actual, expected)
 	}
 
 	testPanic := func(haystack, needle string) {
@@ -230,7 +251,7 @@ func (s *Suite) Test_pathContainsDir(c *check.C) {
 
 	test := func(haystack, needle string, expected bool) {
 		actual := pathContainsDir(haystack, needle)
-		t.Check(actual, equals, expected)
+		t.CheckEquals(actual, expected)
 	}
 
 	testPanic := func(haystack, needle string) {
@@ -267,10 +288,10 @@ func (s *Suite) Test_fileExists(c *check.C) {
 
 	t.CreateFileLines("dir/file")
 
-	t.Check(fileExists(t.File("nonexistent")), equals, false)
-	t.Check(fileExists(t.File("dir")), equals, false)
-	t.Check(fileExists(t.File("dir/nonexistent")), equals, false)
-	t.Check(fileExists(t.File("dir/file")), equals, true)
+	t.CheckEquals(fileExists(t.File("nonexistent")), false)
+	t.CheckEquals(fileExists(t.File("dir")), false)
+	t.CheckEquals(fileExists(t.File("dir/nonexistent")), false)
+	t.CheckEquals(fileExists(t.File("dir/file")), true)
 }
 
 func (s *Suite) Test_dirExists(c *check.C) {
@@ -278,10 +299,10 @@ func (s *Suite) Test_dirExists(c *check.C) {
 
 	t.CreateFileLines("dir/file")
 
-	t.Check(dirExists(t.File("nonexistent")), equals, false)
-	t.Check(dirExists(t.File("dir")), equals, true)
-	t.Check(dirExists(t.File("dir/nonexistent")), equals, false)
-	t.Check(dirExists(t.File("dir/file")), equals, false)
+	t.CheckEquals(dirExists(t.File("nonexistent")), false)
+	t.CheckEquals(dirExists(t.File("dir")), true)
+	t.CheckEquals(dirExists(t.File("dir/nonexistent")), false)
+	t.CheckEquals(dirExists(t.File("dir/file")), false)
 }
 
 func (s *Suite) Test_isEmptyDir__and_getSubdirs(c *check.C) {
@@ -291,17 +312,17 @@ func (s *Suite) Test_isEmptyDir__and_getSubdirs(c *check.C) {
 		"dummy")
 
 	if dir := t.File("."); true {
-		c.Check(isEmptyDir(dir), equals, true)
+		t.CheckEquals(isEmptyDir(dir), true)
 		c.Check(getSubdirs(dir), check.DeepEquals, []string(nil))
 
 		t.CreateFileLines("somedir/file")
 
-		c.Check(isEmptyDir(dir), equals, false)
+		t.CheckEquals(isEmptyDir(dir), false)
 		c.Check(getSubdirs(dir), check.DeepEquals, []string{"somedir"})
 	}
 
 	if absent := t.File("nonexistent"); true {
-		c.Check(isEmptyDir(absent), equals, true) // Counts as empty.
+		t.CheckEquals(isEmptyDir(absent), true) // Counts as empty.
 
 		// The last group from the error message is localized, therefore the matching.
 		t.ExpectFatalMatches(
@@ -318,8 +339,8 @@ func (s *Suite) Test_isEmptyDir(c *check.C) {
 	t.CreateFileLines("subdir/CVS/Entries",
 		"dummy")
 
-	c.Check(isEmptyDir(t.File(".")), equals, true)
-	c.Check(isEmptyDir(t.File("CVS")), equals, true)
+	t.CheckEquals(isEmptyDir(t.File(".")), true)
+	t.CheckEquals(isEmptyDir(t.File("CVS")), true)
 }
 
 func (s *Suite) Test_getSubdirs(c *check.C) {
@@ -329,22 +350,24 @@ func (s *Suite) Test_getSubdirs(c *check.C) {
 	t.CreateFileLines("empty/file")
 	c.Check(os.Remove(t.File("empty/file")), check.IsNil)
 
-	c.Check(getSubdirs(t.File(".")), deepEquals, []string{"subdir"})
+	t.CheckDeepEquals(getSubdirs(t.File(".")), []string{"subdir"})
 }
 
 func (s *Suite) Test_detab(c *check.C) {
-	c.Check(detab(""), equals, "")
-	c.Check(detab("\t"), equals, "        ")
-	c.Check(detab("1234\t9"), equals, "1234    9")
-	c.Check(detab("1234567\t"), equals, "1234567 ")
-	c.Check(detab("12345678\t"), equals, "12345678        ")
+	t := s.Init(c)
+
+	t.CheckEquals(detab(""), "")
+	t.CheckEquals(detab("\t"), "        ")
+	t.CheckEquals(detab("1234\t9"), "1234    9")
+	t.CheckEquals(detab("1234567\t"), "1234567 ")
+	t.CheckEquals(detab("12345678\t"), "12345678        ")
 }
 
 func (s *Suite) Test_alignWith(c *check.C) {
 	t := s.Init(c)
 
 	test := func(str, other, expected string) {
-		t.Check(alignWith(str, other), equals, expected)
+		t.CheckEquals(alignWith(str, other), expected)
 	}
 
 	// At least one tab is _always_ added.
@@ -426,10 +449,10 @@ func emptyToNil(slice []string) []string {
 func (s *Suite) Test_trimHspace(c *check.C) {
 	t := s.Init(c)
 
-	t.Check(trimHspace("a b"), equals, "a b")
-	t.Check(trimHspace(" a b "), equals, "a b")
-	t.Check(trimHspace("\ta b\t"), equals, "a b")
-	t.Check(trimHspace(" \t a b\t \t"), equals, "a b")
+	t.CheckEquals(trimHspace("a b"), "a b")
+	t.CheckEquals(trimHspace(" a b "), "a b")
+	t.CheckEquals(trimHspace("\ta b\t"), "a b")
+	t.CheckEquals(trimHspace(" \t a b\t \t"), "a b")
 }
 
 func (s *Suite) Test_trimCommon(c *check.C) {
@@ -437,8 +460,8 @@ func (s *Suite) Test_trimCommon(c *check.C) {
 
 	test := func(a, b, trimmedA, trimmedB string) {
 		ta, tb := trimCommon(a, b)
-		t.Check(ta, equals, trimmedA)
-		t.Check(tb, equals, trimmedB)
+		t.CheckEquals(ta, trimmedA)
+		t.CheckEquals(tb, trimmedB)
 	}
 
 	test("", "",
@@ -464,10 +487,12 @@ func (s *Suite) Test_trimCommon(c *check.C) {
 }
 
 func (s *Suite) Test_indent(c *check.C) {
+	t := s.Init(c)
+
 	test := func(width int, ind string) {
 		actual := indent(width)
 
-		c.Check(actual, equals, ind)
+		t.CheckEquals(actual, ind)
 	}
 
 	test(0, "")
@@ -485,7 +510,7 @@ func (s *Suite) Test_alignmentAfter(c *check.C) {
 	test := func(prefix string, width int, ind string) {
 		actual := alignmentAfter(prefix, width)
 
-		c.Check(actual, equals, ind)
+		t.CheckEquals(actual, ind)
 	}
 
 	test("", 0, "")
@@ -527,15 +552,15 @@ func (s *Suite) Test_isLocallyModified(c *check.C) {
 		"/modified//"+modTime.Format(time.ANSIC)+"//",
 		"/enoent//"+modTime.Format(time.ANSIC)+"//")
 
-	c.Check(isLocallyModified(unmodified), equals, false)
-	c.Check(isLocallyModified(modified), equals, true)
-	c.Check(isLocallyModified(t.File("enoent")), equals, true)
-	c.Check(isLocallyModified(t.File("not_mentioned")), equals, false)
-	c.Check(isLocallyModified(t.File("subdir/file")), equals, false)
+	t.CheckEquals(isLocallyModified(unmodified), false)
+	t.CheckEquals(isLocallyModified(modified), true)
+	t.CheckEquals(isLocallyModified(t.File("enoent")), true)
+	t.CheckEquals(isLocallyModified(t.File("not_mentioned")), false)
+	t.CheckEquals(isLocallyModified(t.File("subdir/file")), false)
 
 	t.DisableTracing()
 
-	c.Check(isLocallyModified(t.File("unmodified")), equals, false)
+	t.CheckEquals(isLocallyModified(t.File("unmodified")), false)
 }
 
 func (s *Suite) Test_Scope_Define(c *check.C) {
@@ -544,16 +569,16 @@ func (s *Suite) Test_Scope_Define(c *check.C) {
 	scope := NewScope()
 	scope.Define("BUILD_DIRS", t.NewMkLine("file.mk", 121, "BUILD_DIRS=\tone two three"))
 
-	c.Check(scope.LastValue("BUILD_DIRS"), equals, "one two three")
+	t.CheckEquals(scope.LastValue("BUILD_DIRS"), "one two three")
 
 	scope.Define("BUILD_DIRS", t.NewMkLine("file.mk", 123, "BUILD_DIRS+=\tfour"))
 
-	c.Check(scope.LastValue("BUILD_DIRS"), equals, "one two three four")
+	t.CheckEquals(scope.LastValue("BUILD_DIRS"), "one two three four")
 
 	// Later default assignments do not have an effect.
 	scope.Define("BUILD_DIRS", t.NewMkLine("file.mk", 123, "BUILD_DIRS?=\tdefault"))
 
-	c.Check(scope.LastValue("BUILD_DIRS"), equals, "one two three four")
+	t.CheckEquals(scope.LastValue("BUILD_DIRS"), "one two three four")
 }
 
 func (s *Suite) Test_Scope_Defined(c *check.C) {
@@ -562,13 +587,13 @@ func (s *Suite) Test_Scope_Defined(c *check.C) {
 	scope := NewScope()
 	scope.Define("VAR.param", t.NewMkLine("file.mk", 1, "VAR.param=value"))
 
-	c.Check(scope.Defined("VAR.param"), equals, true)
-	c.Check(scope.Defined("VAR.other"), equals, false)
-	c.Check(scope.Defined("VARIABLE.*"), equals, false)
+	t.CheckEquals(scope.Defined("VAR.param"), true)
+	t.CheckEquals(scope.Defined("VAR.other"), false)
+	t.CheckEquals(scope.Defined("VARIABLE.*"), false)
 
-	c.Check(scope.DefinedSimilar("VAR.param"), equals, true)
-	c.Check(scope.DefinedSimilar("VAR.other"), equals, true)
-	c.Check(scope.DefinedSimilar("VARIABLE.*"), equals, false)
+	t.CheckEquals(scope.DefinedSimilar("VAR.param"), true)
+	t.CheckEquals(scope.DefinedSimilar("VAR.other"), true)
+	t.CheckEquals(scope.DefinedSimilar("VARIABLE.*"), false)
 }
 
 func (s *Suite) Test_Scope_Used(c *check.C) {
@@ -578,13 +603,13 @@ func (s *Suite) Test_Scope_Used(c *check.C) {
 	mkline := t.NewMkLine("file.mk", 1, "\techo ${VAR.param}")
 	scope.Use("VAR.param", mkline, VucRunTime)
 
-	c.Check(scope.Used("VAR.param"), equals, true)
-	c.Check(scope.Used("VAR.other"), equals, false)
-	c.Check(scope.Used("VARIABLE.*"), equals, false)
+	t.CheckEquals(scope.Used("VAR.param"), true)
+	t.CheckEquals(scope.Used("VAR.other"), false)
+	t.CheckEquals(scope.Used("VARIABLE.*"), false)
 
-	c.Check(scope.UsedSimilar("VAR.param"), equals, true)
-	c.Check(scope.UsedSimilar("VAR.other"), equals, true)
-	c.Check(scope.UsedSimilar("VARIABLE.*"), equals, false)
+	t.CheckEquals(scope.UsedSimilar("VAR.param"), true)
+	t.CheckEquals(scope.UsedSimilar("VAR.other"), true)
+	t.CheckEquals(scope.UsedSimilar("VARIABLE.*"), false)
 }
 
 func (s *Suite) Test_Scope_DefineAll(c *check.C) {
@@ -602,7 +627,7 @@ func (s *Suite) Test_Scope_DefineAll(c *check.C) {
 	src.Define("VAR", t.NewMkLine("file.mk", 1, "VAR=value"))
 	dst.DefineAll(src)
 
-	c.Check(dst.Defined("VAR"), equals, true)
+	t.CheckEquals(dst.Defined("VAR"), true)
 }
 
 func (s *Suite) Test_Scope_FirstDefinition(c *check.C) {
@@ -615,7 +640,7 @@ func (s *Suite) Test_Scope_FirstDefinition(c *check.C) {
 	scope.Define("VAR", mkline1)
 	scope.Define("SNEAKY", mkline2)
 
-	t.Check(scope.FirstDefinition("VAR"), equals, mkline1)
+	t.CheckEquals(scope.FirstDefinition("VAR"), mkline1)
 
 	// This call returns nil because it's not a variable assignment
 	// and the calling code typically assumes a variable definition.
@@ -637,7 +662,7 @@ func (s *Suite) Test_Scope_LastValue(c *check.C) {
 
 	mklines.Check()
 
-	t.Check(mklines.vars.LastValue("VAR"), equals, "third (conditional)")
+	t.CheckEquals(mklines.vars.LastValue("VAR"), "third (conditional)")
 
 	t.CheckOutputLines(
 		"WARN: file.mk:2: VAR is defined but not used.")
@@ -650,9 +675,9 @@ func (s *Suite) Test_Scope__no_tracing(c *check.C) {
 	scope.Define("VAR.param", t.NewMkLine("fname.mk", 3, "VAR.param=\tvalue"))
 	t.DisableTracing()
 
-	t.Check(scope.DefinedSimilar("VAR.param"), equals, true)
-	t.Check(scope.DefinedSimilar("VAR.other"), equals, true)
-	t.Check(scope.DefinedSimilar("OTHER"), equals, false)
+	t.CheckEquals(scope.DefinedSimilar("VAR.param"), true)
+	t.CheckEquals(scope.DefinedSimilar("VAR.other"), true)
+	t.CheckEquals(scope.DefinedSimilar("OTHER"), false)
 }
 
 func (s *Suite) Test_Scope__commented_varassign(c *check.C) {
@@ -662,16 +687,16 @@ func (s *Suite) Test_Scope__commented_varassign(c *check.C) {
 	scope := NewScope()
 	scope.Define("VAR", mkline)
 
-	t.Check(scope.Defined("VAR"), equals, false)
+	t.CheckEquals(scope.Defined("VAR"), false)
 	t.Check(scope.FirstDefinition("VAR"), check.IsNil)
 	t.Check(scope.LastDefinition("VAR"), check.IsNil)
 
-	t.Check(scope.Mentioned("VAR"), equals, mkline)
-	t.Check(scope.Commented("VAR"), equals, mkline)
+	t.CheckEquals(scope.Mentioned("VAR"), mkline)
+	t.CheckEquals(scope.Commented("VAR"), mkline)
 
 	value, found := scope.LastValueFound("VAR")
-	t.Check(value, equals, "")
-	t.Check(found, equals, false)
+	t.CheckEquals(value, "")
+	t.CheckEquals(found, false)
 }
 
 func (s *Suite) Test_Scope_Commented(c *check.C) {
@@ -687,7 +712,7 @@ func (s *Suite) Test_Scope_Commented(c *check.C) {
 	scope.Define("DOCUMENTED", documented)
 
 	t.Check(scope.Commented("VAR"), check.IsNil)
-	t.Check(scope.Commented("COMMENTED"), equals, commented)
+	t.CheckEquals(scope.Commented("COMMENTED"), commented)
 	t.Check(scope.Commented("DOCUMENTED"), check.IsNil)
 	t.Check(scope.Commented("UNKNOWN"), check.IsNil)
 }
@@ -704,57 +729,67 @@ func (s *Suite) Test_Scope_Mentioned(c *check.C) {
 	scope.Define("COMMENTED", commented)
 	scope.Define("DOCUMENTED", documented)
 
-	t.Check(scope.Mentioned("VAR"), equals, assigned)
-	t.Check(scope.Mentioned("COMMENTED"), equals, commented)
-	t.Check(scope.Mentioned("DOCUMENTED"), equals, documented)
+	t.CheckEquals(scope.Mentioned("VAR"), assigned)
+	t.CheckEquals(scope.Mentioned("COMMENTED"), commented)
+	t.CheckEquals(scope.Mentioned("DOCUMENTED"), documented)
 	t.Check(scope.Mentioned("UNKNOWN"), check.IsNil)
 }
 
 func (s *Suite) Test_naturalLess(c *check.C) {
-	c.Check(naturalLess("", "a"), equals, true)
-	c.Check(naturalLess("a", ""), equals, false)
+	t := s.Init(c)
 
-	c.Check(naturalLess("a", "b"), equals, true)
-	c.Check(naturalLess("b", "a"), equals, false)
+	// TODO: change into a looped test
+
+	t.CheckEquals(naturalLess("", "a"), true)
+	t.CheckEquals(naturalLess("a", ""), false)
+
+	t.CheckEquals(naturalLess("a", "b"), true)
+	t.CheckEquals(naturalLess("b", "a"), false)
 
 	// Numbers are always considered smaller than other characters.
-	c.Check(naturalLess("0", "!"), equals, true)
-	c.Check(naturalLess("!", "0"), equals, false)
+	t.CheckEquals(naturalLess("0", "!"), true)
+	t.CheckEquals(naturalLess("!", "0"), false)
 
-	c.Check(naturalLess("0", "a"), equals, true)
-	c.Check(naturalLess("a", "0"), equals, false)
+	t.CheckEquals(naturalLess("0", "a"), true)
+	t.CheckEquals(naturalLess("a", "0"), false)
 
-	c.Check(naturalLess("5", "12"), equals, true)
-	c.Check(naturalLess("12", "5"), equals, false)
+	t.CheckEquals(naturalLess("5", "12"), true)
+	t.CheckEquals(naturalLess("12", "5"), false)
 
-	c.Check(naturalLess("5", "7"), equals, true)
-	c.Check(naturalLess("7", "5"), equals, false)
+	t.CheckEquals(naturalLess("5", "7"), true)
+	t.CheckEquals(naturalLess("7", "5"), false)
 
-	c.Check(naturalLess("000", "0000"), equals, true)
-	c.Check(naturalLess("0000", "000"), equals, false)
+	t.CheckEquals(naturalLess("000", "0000"), true)
+	t.CheckEquals(naturalLess("0000", "000"), false)
 
-	c.Check(naturalLess("000", "000"), equals, false)
+	t.CheckEquals(naturalLess("000", "000"), false)
 
-	c.Check(naturalLess("00011", "000111"), equals, true)
-	c.Check(naturalLess("00011", "00012"), equals, true)
+	t.CheckEquals(naturalLess("00011", "000111"), true)
+	t.CheckEquals(naturalLess("00011", "00012"), true)
 }
 
 func (s *Suite) Test_varnameBase(c *check.C) {
-	c.Check(varnameBase("VAR"), equals, "VAR")
-	c.Check(varnameBase("VAR.param"), equals, "VAR")
-	c.Check(varnameBase(".CURDIR"), equals, ".CURDIR")
+	t := s.Init(c)
+
+	t.CheckEquals(varnameBase("VAR"), "VAR")
+	t.CheckEquals(varnameBase("VAR.param"), "VAR")
+	t.CheckEquals(varnameBase(".CURDIR"), ".CURDIR")
 }
 
 func (s *Suite) Test_varnameParam(c *check.C) {
-	c.Check(varnameParam("VAR"), equals, "")
-	c.Check(varnameParam("VAR.param"), equals, "param")
-	c.Check(varnameParam(".CURDIR"), equals, "")
+	t := s.Init(c)
+
+	t.CheckEquals(varnameParam("VAR"), "")
+	t.CheckEquals(varnameParam("VAR.param"), "param")
+	t.CheckEquals(varnameParam(".CURDIR"), "")
 }
 
 func (s *Suite) Test_varnameCanon(c *check.C) {
-	c.Check(varnameCanon("VAR"), equals, "VAR")
-	c.Check(varnameCanon("VAR.param"), equals, "VAR.*")
-	c.Check(varnameCanon(".CURDIR"), equals, ".CURDIR")
+	t := s.Init(c)
+
+	t.CheckEquals(varnameCanon("VAR"), "VAR")
+	t.CheckEquals(varnameCanon("VAR.param"), "VAR.*")
+	t.CheckEquals(varnameCanon(".CURDIR"), ".CURDIR")
 }
 
 func (s *Suite) Test_FileCache(c *check.C) {
@@ -769,22 +804,22 @@ func (s *Suite) Test_FileCache(c *check.C) {
 		"# line 2")
 
 	c.Check(cache.Get("Makefile", 0), check.IsNil)
-	c.Check(cache.hits, equals, 0)
-	c.Check(cache.misses, equals, 1)
+	t.CheckEquals(cache.hits, 0)
+	t.CheckEquals(cache.misses, 1)
 
 	cache.Put("Makefile", 0, lines)
 	c.Check(cache.Get("Makefile", MustSucceed|LogErrors), check.IsNil) // Wrong LoadOptions.
 
 	linesFromCache := cache.Get("Makefile", 0)
-	c.Check(linesFromCache.Filename, equals, "Makefile")
+	t.CheckEquals(linesFromCache.Filename, "Makefile")
 	c.Check(linesFromCache.Lines, check.HasLen, 2)
-	c.Check(linesFromCache.Lines[0].Filename, equals, "Makefile")
+	t.CheckEquals(linesFromCache.Lines[0].Filename, "Makefile")
 
 	// Cache keys are normalized using path.Clean.
 	linesFromCache2 := cache.Get("./Makefile", 0)
-	c.Check(linesFromCache2.Filename, equals, "./Makefile")
+	t.CheckEquals(linesFromCache2.Filename, "./Makefile")
 	c.Check(linesFromCache2.Lines, check.HasLen, 2)
-	c.Check(linesFromCache2.Lines[0].Filename, equals, "./Makefile")
+	t.CheckEquals(linesFromCache2.Lines[0].Filename, "./Makefile")
 
 	cache.Put("file1.mk", 0, lines)
 	cache.Put("file2.mk", 0, lines)
@@ -809,8 +844,8 @@ func (s *Suite) Test_FileCache(c *check.C) {
 	c.Check(cache.Get("Makefile", 0), check.IsNil)
 	c.Check(cache.table, check.HasLen, 1)
 	c.Check(cache.mapping, check.HasLen, 1)
-	c.Check(cache.hits, equals, 7)
-	c.Check(cache.misses, equals, 5)
+	t.CheckEquals(cache.hits, 7)
+	t.CheckEquals(cache.misses, 5)
 
 	t.CheckOutputLines(
 		"TRACE:   FileCache \"Makefile\" with count 4.",
@@ -900,25 +935,29 @@ func (s *Suite) Test_FileCache_Evict__sort(c *check.C) {
 }
 
 func (s *Suite) Test_makeHelp(c *check.C) {
-	c.Check(makeHelp("subst"), equals, confMake+" help topic=subst")
+	t := s.Init(c)
+
+	t.CheckEquals(makeHelp("subst"), confMake+" help topic=subst")
 }
 
 func (s *Suite) Test_hasAlnumPrefix(c *check.C) {
 	t := s.Init(c)
 
-	t.Check(hasAlnumPrefix(""), equals, false)
-	t.Check(hasAlnumPrefix("A"), equals, true)
-	t.Check(hasAlnumPrefix(","), equals, false)
+	t.CheckEquals(hasAlnumPrefix(""), false)
+	t.CheckEquals(hasAlnumPrefix("A"), true)
+	t.CheckEquals(hasAlnumPrefix(","), false)
 }
 
 func (s *Suite) Test_Once(c *check.C) {
+	t := s.Init(c)
+
 	var once Once
 
-	c.Check(once.FirstTime("str"), equals, true)
-	c.Check(once.FirstTime("str"), equals, false)
-	c.Check(once.FirstTimeSlice("str"), equals, false)
-	c.Check(once.FirstTimeSlice("str", "str2"), equals, true)
-	c.Check(once.FirstTimeSlice("str", "str2"), equals, false)
+	t.CheckEquals(once.FirstTime("str"), true)
+	t.CheckEquals(once.FirstTime("str"), false)
+	t.CheckEquals(once.FirstTimeSlice("str"), false)
+	t.CheckEquals(once.FirstTimeSlice("str", "str2"), true)
+	t.CheckEquals(once.FirstTimeSlice("str", "str2"), false)
 }
 
 func (s *Suite) Test_Once__trace(c *check.C) {
@@ -927,11 +966,11 @@ func (s *Suite) Test_Once__trace(c *check.C) {
 	var once Once
 	once.Trace = true
 
-	c.Check(once.FirstTime("str"), equals, true)
-	c.Check(once.FirstTime("str"), equals, false)
-	c.Check(once.FirstTimeSlice("str"), equals, false)
-	c.Check(once.FirstTimeSlice("str", "str2"), equals, true)
-	c.Check(once.FirstTimeSlice("str", "str2"), equals, false)
+	t.CheckEquals(once.FirstTime("str"), true)
+	t.CheckEquals(once.FirstTime("str"), false)
+	t.CheckEquals(once.FirstTimeSlice("str"), false)
+	t.CheckEquals(once.FirstTimeSlice("str", "str2"), true)
+	t.CheckEquals(once.FirstTimeSlice("str", "str2"), false)
 
 	t.CheckOutputLines(
 		"FirstTime: str",
@@ -939,6 +978,7 @@ func (s *Suite) Test_Once__trace(c *check.C) {
 }
 
 func (s *Suite) Test_wrap(c *check.C) {
+	t := s.Init(c)
 
 	wrapped := wrap(20,
 		"See the pkgsrc guide, section \"Package components, Makefile\":",
@@ -993,15 +1033,17 @@ func (s *Suite) Test_wrap(c *check.C) {
 		"A\tB\tC\tD E",
 		"veryVeryVeryVeryVeryVeryVeryVeryLong"}
 
-	c.Check(wrapped, deepEquals, expected)
+	t.CheckDeepEquals(wrapped, expected)
 }
 
 func (s *Suite) Test_escapePrintable(c *check.C) {
-	c.Check(escapePrintable(""), equals, "")
-	c.Check(escapePrintable("ASCII only~\n\t"), equals, "ASCII only~\n\t")
-	c.Check(escapePrintable("Beep \u0007 control \u001F"), equals, "Beep <U+0007> control <U+001F>")
-	c.Check(escapePrintable("Bad \xFF character"), equals, "Bad <0xFF> character")
-	c.Check(escapePrintable("Unicode \uFFFD replacement"), equals, "Unicode <U+FFFD> replacement")
+	t := s.Init(c)
+
+	t.CheckEquals(escapePrintable(""), "")
+	t.CheckEquals(escapePrintable("ASCII only~\n\t"), "ASCII only~\n\t")
+	t.CheckEquals(escapePrintable("Beep \u0007 control \u001F"), "Beep <U+0007> control <U+001F>")
+	t.CheckEquals(escapePrintable("Bad \xFF character"), "Bad <0xFF> character")
+	t.CheckEquals(escapePrintable("Unicode \uFFFD replacement"), "Unicode <U+FFFD> replacement")
 }
 
 func (s *Suite) Test_stringSliceLess(c *check.C) {
@@ -1038,32 +1080,28 @@ func (s *Suite) Test_stringSliceLess(c *check.C) {
 func (s *Suite) Test_joinSkipEmpty(c *check.C) {
 	t := s.Init(c)
 
-	t.Check(
+	t.CheckDeepEquals(
 		joinSkipEmpty(", ", "", "one", "", "", "two", "", "three"),
-		deepEquals,
 		"one, two, three")
 }
 
 func (s *Suite) Test_joinSkipEmptyCambridge(c *check.C) {
 	t := s.Init(c)
 
-	t.Check(
+	t.CheckDeepEquals(
 		joinSkipEmptyCambridge("and", "", "one", "", "", "two", "", "three"),
-		deepEquals,
 		"one, two and three")
 
-	t.Check(
+	t.CheckDeepEquals(
 		joinSkipEmptyCambridge("and", "", "one", "", ""),
-		deepEquals,
 		"one")
 }
 
 func (s *Suite) Test_joinSkipEmptyOxford(c *check.C) {
 	t := s.Init(c)
 
-	t.Check(
+	t.CheckDeepEquals(
 		joinSkipEmptyOxford("and", "", "one", "", "", "two", "", "three"),
-		deepEquals,
 		"one, two, and three")
 }
 
@@ -1071,7 +1109,7 @@ func (s *Suite) Test_newPathMatcher(c *check.C) {
 	t := s.Init(c)
 
 	test := func(pattern string, matchType pathMatchType, matchPattern string) {
-		c.Check(*newPathMatcher(pattern), equals, pathMatcher{matchType, matchPattern, pattern})
+		t.CheckEquals(*newPathMatcher(pattern), pathMatcher{matchType, matchPattern, pattern})
 	}
 
 	testPanic := func(pattern string) {
@@ -1095,10 +1133,11 @@ func (s *Suite) Test_newPathMatcher(c *check.C) {
 }
 
 func (s *Suite) Test_pathMatcher_matches(c *check.C) {
+	t := s.Init(c)
 
 	test := func(pattern string, subject string, expected bool) {
 		matcher := newPathMatcher(pattern)
-		c.Check(matcher.matches(subject), equals, expected)
+		t.CheckEquals(matcher.matches(subject), expected)
 	}
 
 	test("", "", true)
@@ -1122,8 +1161,8 @@ func (s *Suite) Test_StringInterner(c *check.C) {
 
 	si := NewStringInterner()
 
-	t.Check(si.Intern(""), equals, "")
-	t.Check(si.Intern("Hello"), equals, "Hello")
-	t.Check(si.Intern("Hello, world"), equals, "Hello, world")
-	t.Check(si.Intern("Hello, world"[0:5]), equals, "Hello")
+	t.CheckEquals(si.Intern(""), "")
+	t.CheckEquals(si.Intern("Hello"), "Hello")
+	t.CheckEquals(si.Intern("Hello, world"), "Hello, world")
+	t.CheckEquals(si.Intern("Hello, world"[0:5]), "Hello")
 }
