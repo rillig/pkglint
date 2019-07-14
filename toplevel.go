@@ -45,7 +45,7 @@ func (ctx *Toplevel) checkSubdir(mkline *MkLine) {
 		}
 	}
 
-	if contains(subdir, "$") || !fileExists(ctx.dir+"/"+subdir+"/Makefile") {
+	if containsVarRef(subdir) || !fileExists(ctx.dir+"/"+subdir+"/Makefile") {
 		return
 	}
 
