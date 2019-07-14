@@ -2198,6 +2198,40 @@ func (s *Suite) Test_VaralignBlock__staircase(c *check.C) {
 	vt.Run()
 }
 
+func (s *Suite) Test_VaralignBlock__command_with_arguments(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"SED_REPLACEMENT_CMD= ${SED} -n \\",
+		"\t-e s,a,b, \\",
+		"\t-e s,a,b, \\",
+		"\t-e s,a,b,")
+	vt.Internals(
+		"20 21",
+		"   08",
+		"   08",
+		"   08")
+	vt.Diagnostics(
+		// FIXME: The follow-up lines are indented at column 9 because
+		//  they might be too long. This is a valid reason.
+		"NOTE: ~/Makefile:1--4: This variable value should be aligned with tabs, not spaces, to column 25.",
+		"NOTE: ~/Makefile:1--4: This continuation line should be indented with \"\\t\\t\\t\".",
+		"NOTE: ~/Makefile:1--4: This continuation line should be indented with \"\\t\\t\\t\".",
+		"NOTE: ~/Makefile:1--4: This continuation line should be indented with \"\\t\\t\\t\".")
+	vt.Autofixes(
+		// FIXME
+		"AUTOFIX: ~/Makefile:1: Replacing \" \" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:2: Replacing \"\\t\" with \"\\t\\t\\t\".",
+		"AUTOFIX: ~/Makefile:3: Replacing \"\\t\" with \"\\t\\t\\t\".",
+		"AUTOFIX: ~/Makefile:4: Replacing \"\\t\" with \"\\t\\t\\t\".")
+	vt.Fixed(
+		// FIXME
+		"SED_REPLACEMENT_CMD=    ${SED} -n \\",
+		"                        -e s,a,b, \\",
+		"                        -e s,a,b, \\",
+		"                        -e s,a,b,")
+	vt.Run()
+}
+
 func (s *Suite) Test_VaralignBlock_Process__autofix(c *check.C) {
 	t := s.Init(c)
 
