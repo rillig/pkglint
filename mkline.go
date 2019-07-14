@@ -1609,14 +1609,10 @@ func (*MkLineParser) getRawValueAlign(raw, parsed string) string {
 			p.SkipHspace()
 			r.SkipHspace()
 
-		case pch == '#' && r.SkipString("\\#"):
-			p.Skip(1)
-
-		case r.Rest() == "\\\n":
-			return r.Since(mark)
-
 		default:
-			assert(false)
+			assert(pch == '#')
+			assert(r.SkipString("\\#"))
+			p.Skip(1)
 		}
 	}
 
