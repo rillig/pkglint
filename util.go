@@ -126,10 +126,6 @@ func isHspace(ch byte) bool {
 	return ch == ' ' || ch == '\t'
 }
 
-func isHspaceRune(r rune) bool {
-	return r == ' ' || r == '\t'
-}
-
 func ifelseStr(cond bool, a, b string) string {
 	if cond {
 		return a
