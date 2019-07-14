@@ -45,10 +45,6 @@ func (ctx *Toplevel) checkSubdir(mkline *MkLine) {
 		}
 	}
 
-	if !hasSuffix(mkline.ValueAlign(), "=\t") {
-		mkline.Warnf("Indentation should be a single tab character.")
-	}
-
 	if contains(subdir, "$") || !fileExists(ctx.dir+"/"+subdir+"/Makefile") {
 		return
 	}

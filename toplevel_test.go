@@ -25,7 +25,6 @@ func (s *Suite) Test_CheckdirToplevel(c *check.C) {
 	CheckdirToplevel(t.File("."))
 
 	t.CheckOutputLines(
-		"WARN: ~/Makefile:3: Indentation should be a single tab character.",
 		"ERROR: ~/Makefile:6: Each subdir must only appear once.",
 		"WARN: ~/Makefile:7: \"ignoreme\" commented out without giving a reason.",
 		"WARN: ~/Makefile:9: bbb should come before ccc.",
@@ -149,9 +148,8 @@ func (s *Suite) Test_CheckdirToplevel__indentation(c *check.C) {
 	t.Main("-Wall", ".")
 
 	t.CheckOutputLines(
-		"WARN: ~/Makefile:4: Indentation should be a single tab character.",
 		"NOTE: ~/Makefile:4: This variable value should be aligned to column 17.",
-		"1 warning and 1 note found.",
+		"Looks fine.",
 		"(Run \"pkglint -e\" to show explanations.)",
 		"(Run \"pkglint -fs\" to show what can be fixed automatically.)",
 		"(Run \"pkglint -F\" to automatically fix some issues.)")
