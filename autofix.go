@@ -348,11 +348,12 @@ func (fix *Autofix) Apply() {
 	logFix := G.Logger.IsAutofix()
 
 	if logDiagnostic {
+		linenos := fix.affectedLinenos()
 		msg := sprintf(fix.diagFormat, fix.diagArgs...)
-		if !logFix && G.Logger.FirstTime(line.Filename, line.Linenos(), msg) {
+		if !logFix && G.Logger.FirstTime(line.Filename, linenos, msg) {
 			G.Logger.showSource(line)
 		}
-		G.Logger.Logf(fix.level, line.Filename, line.Linenos(), fix.diagFormat, msg)
+		G.Logger.Logf(fix.level, line.Filename, linenos, fix.diagFormat, msg)
 	}
 
 	if logFix {
@@ -380,6 +381,36 @@ func (fix *Autofix) Apply() {
 	}
 
 	reset()
+}
+
+func (fix *Autofix) affectedLinenos() string {
+	if len(fix.actions) == 0 {
+		return fix.line.Linenos()
+	}
+
+	var first, last int
+	set := false
+	for _, action := range fix.actions {
+		if action.lineno == 0 {
+			continue
+		}
+
+		if !set || action.lineno < first {
+			first = action.lineno
+		}
+		if !set || action.lineno > last {
+			last = action.lineno
+		}
+		set = true
+	}
+
+	if !set {
+		return fix.line.Linenos()
+	} else if first < last {
+		return sprintf("%d--%d", first, last)
+	} else {
+		return strconv.Itoa(first)
+	}
 }
 
 func (fix *Autofix) setDiag(level *LogLevel, format string, args []interface{}) {

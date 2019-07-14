@@ -306,8 +306,7 @@ func (s *Suite) Test_Autofix_ReplaceAt(c *check.C) {
 			"\tvalue2"),
 		0, 3, "=", "+=",
 		diagnostics(
-			// TODO: Only mention line 1, since line 2 is unaffected.
-			"NOTE: filename.mk:1--2: Should be appended instead of assigned."),
+			"NOTE: filename.mk:1: Should be appended instead of assigned."),
 		autofixes(
 			"AUTOFIX: filename.mk:1: Replacing \"=\" with \"+=\"."))
 
@@ -593,7 +592,7 @@ func (s *Suite) Test_Autofix__show_autofix_and_source_continuation_line(c *check
 	// make some of the lines appear misaligned in the pkglint output although
 	// they are correct in the Makefiles.
 	t.CheckOutputLines(
-		"WARN: ~/Makefile:2--4: Using \"old\" is deprecated.",
+		"WARN: ~/Makefile:3: Using \"old\" is deprecated.",
 		"AUTOFIX: ~/Makefile:3: Replacing \"old\" with \"new\".",
 		"\t# before \\",
 		"-\tThe old song \\",

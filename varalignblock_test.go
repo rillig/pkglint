@@ -288,7 +288,7 @@ func (s *Suite) Test_VaralignBlock__one_line_follow_indent_none(c *check.C) {
 		"20 21",
 		"   00")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:1--2: This continuation line should be indented with \"\\t\".")
+		"NOTE: ~/Makefile:2: This continuation line should be indented with \"\\t\".")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:2: Replacing \"\" with \"\\t\".")
 	vt.Fixed(
@@ -306,7 +306,7 @@ func (s *Suite) Test_VaralignBlock__one_line_follow_indent_space(c *check.C) {
 		"20 21",
 		"   01")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:1--2: This continuation line should be indented with \"\\t\".")
+		"NOTE: ~/Makefile:2: This continuation line should be indented with \"\\t\".")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:2: Replacing \" \" with \"\\t\".")
 	vt.Fixed(
@@ -340,7 +340,7 @@ func (s *Suite) Test_VaralignBlock__one_line_follow_indent_sss(c *check.C) {
 		"20 21",
 		"   03")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:1--2: This continuation line should be indented with \"\\t\".")
+		"NOTE: ~/Makefile:2: This continuation line should be indented with \"\\t\".")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:2: Replacing \"   \" with \"\\t\".")
 	vt.Fixed(
@@ -390,7 +390,7 @@ func (s *Suite) Test_VaralignBlock__one_line_follow_indent_tsts(c *check.C) {
 		"20 21",
 		"   17")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:1--2: This continuation line should be indented with \"\\t\\t \".")
+		"NOTE: ~/Makefile:2: This continuation line should be indented with \"\\t\\t \".")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:2: Replacing \"\\t \\t \" with \"\\t\\t \".")
 	vt.Fixed(
@@ -408,8 +408,8 @@ func (s *Suite) Test_VaralignBlock__one_line_initial_none(c *check.C) {
 		"20 20",
 		"   20")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:1--2: This variable value should be aligned to column 25.",
-		"NOTE: ~/Makefile:1--2: This continuation line should be indented with \"\\t\\t\\t\".")
+		"NOTE: ~/Makefile:1: This variable value should be aligned to column 25.",
+		"NOTE: ~/Makefile:2: This continuation line should be indented with \"\\t\\t\\t\".")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \"\" with \"\\t\".",
 		"AUTOFIX: ~/Makefile:2: Replacing \"\\t\\t    \" with \"\\t\\t\\t\".")
@@ -428,8 +428,8 @@ func (s *Suite) Test_VaralignBlock__one_line_initial_space(c *check.C) {
 		"20 21",
 		"   21")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:1--2: This variable value should be aligned with tabs, not spaces, to column 25.",
-		"NOTE: ~/Makefile:1--2: This continuation line should be indented with \"\\t\\t\\t\".")
+		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 25.",
+		"NOTE: ~/Makefile:2: This continuation line should be indented with \"\\t\\t\\t\".")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \" \" with \"\\t\".",
 		"AUTOFIX: ~/Makefile:2: Replacing \"                     \" with \"\\t\\t\\t\".")
@@ -464,8 +464,8 @@ func (s *Suite) Test_VaralignBlock__one_line_initial_sss(c *check.C) {
 		"20 23",
 		"   23")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:1--2: This variable value should be aligned with tabs, not spaces, to column 25.",
-		"NOTE: ~/Makefile:1--2: This continuation line should be indented with \"\\t\\t\\t\".")
+		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 25.",
+		"NOTE: ~/Makefile:2: This continuation line should be indented with \"\\t\\t\\t\".")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \"   \" with \"\\t\".",
 		"AUTOFIX: ~/Makefile:2: Replacing \"                       \" with \"\\t\\t\\t\".")
@@ -537,7 +537,7 @@ func (s *Suite) Test_VaralignBlock__one_line_initial_indent_none(c *check.C) {
 		"20 24",
 		"   00")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:1--2: This continuation line should be indented with \"\\t\\t\\t\".")
+		"NOTE: ~/Makefile:2: This continuation line should be indented with \"\\t\\t\\t\".")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:2: Replacing \"\" with \"\\t\\t\\t\".")
 	vt.Fixed(
@@ -555,7 +555,7 @@ func (s *Suite) Test_VaralignBlock__one_line_initial_indent_space(c *check.C) {
 		"20 24",
 		"   01")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:1--2: This continuation line should be indented with \"\\t\\t\\t\".")
+		"NOTE: ~/Makefile:2: This continuation line should be indented with \"\\t\\t\\t\".")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:2: Replacing \" \" with \"\\t\\t\\t\".")
 	vt.Fixed(
@@ -591,7 +591,7 @@ func (s *Suite) Test_VaralignBlock__one_line_initial_indent_sss(c *check.C) {
 		"20 24",
 		"   03")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:1--2: This continuation line should be indented with \"\\t\\t\\t\".")
+		"NOTE: ~/Makefile:2: This continuation line should be indented with \"\\t\\t\\t\".")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:2: Replacing \"   \" with \"\\t\\t\\t\".")
 	vt.Fixed(
@@ -609,7 +609,7 @@ func (s *Suite) Test_VaralignBlock__one_line_initial_indent_tt(c *check.C) {
 		"20 24",
 		"   16")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:1--2: This continuation line should be indented with \"\\t\\t\\t\".")
+		"NOTE: ~/Makefile:2: This continuation line should be indented with \"\\t\\t\\t\".")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:2: Replacing \"\\t\\t\" with \"\\t\\t\\t\".")
 	vt.Fixed(
@@ -643,8 +643,7 @@ func (s *Suite) Test_VaralignBlock__one_line_initial_indent_tsts(c *check.C) {
 		"20 24",
 		"   17")
 	vt.Diagnostics(
-		// FIXME: Be more specific by saying Makefile:2
-		"NOTE: ~/Makefile:1--2: This continuation line should be indented with \"\\t\\t\\t\".")
+		"NOTE: ~/Makefile:2: This continuation line should be indented with \"\\t\\t\\t\".")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:2: Replacing \"\\t \\t \" with \"\\t\\t\\t\".")
 	vt.Fixed(
@@ -925,7 +924,7 @@ func (s *Suite) Test_VaralignBlock__empty_continuation_in_column_1(c *check.C) {
 		"04 05",
 		"   00")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:1--2: This continuation line should be indented with \"\\t\".")
+		"NOTE: ~/Makefile:2: This continuation line should be indented with \"\\t\".")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:2: Replacing \"\" with \"\\t\".")
 	vt.Fixed(
@@ -963,7 +962,7 @@ func (s *Suite) Test_VaralignBlock__empty_continuation_space(c *check.C) {
 		"04 05",
 		"   08")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:2--3: This variable value should be aligned with tabs, not spaces, to column 9.")
+		"NOTE: ~/Makefile:2: This variable value should be aligned with tabs, not spaces, to column 9.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:2: Replacing \" \" with \"\\t\".")
 	vt.Fixed(
@@ -1003,7 +1002,7 @@ func (s *Suite) Test_VaralignBlock__empty_continuation_too_narrow(c *check.C) {
 		"04 08",
 		"   08")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:2--3: This variable value should be aligned to column 17.")
+		"NOTE: ~/Makefile:2: This variable value should be aligned to column 17.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:2: Replacing \"\\t\" with \"\\t\\t\".")
 	vt.Fixed(
@@ -1054,7 +1053,7 @@ func (s *Suite) Test_VaralignBlock__outlier_in_follow_continuation(c *check.C) {
 		"38 38",
 		"   24")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:2--3: This variable value should be aligned to column 40.")
+		"NOTE: ~/Makefile:2: This variable value should be aligned to column 40.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:2: Replacing \"\" with \" \".")
 	vt.Fixed(
@@ -1079,8 +1078,8 @@ func (s *Suite) Test_VaralignBlock__continuation_lines(c *check.C) {
 		"11 32",
 		"11 12")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:2--3: This variable value should be aligned with tabs, not spaces, to column 17.",
-		"NOTE: ~/Makefile:2--3: This continuation line should be indented with \"\\t\\t\".",
+		"NOTE: ~/Makefile:2: This variable value should be aligned with tabs, not spaces, to column 17.",
+		"NOTE: ~/Makefile:3: This continuation line should be indented with \"\\t\\t\".",
 		"NOTE: ~/Makefile:4: This variable value should be aligned to column 17.",
 		"NOTE: ~/Makefile:5: This variable value should be aligned with tabs, not spaces, to column 17.")
 	vt.Autofixes(
@@ -1245,8 +1244,8 @@ func (s *Suite) Test_VaralignBlock__continuation_value_starts_in_second_line(c *
 		"   24")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 17.",
-		"NOTE: ~/Makefile:3--5: This continuation line should be indented with \"\\t\\t\".",
-		"NOTE: ~/Makefile:3--5: This continuation line should be indented with \"\\t\\t\".")
+		"NOTE: ~/Makefile:4: This continuation line should be indented with \"\\t\\t\".",
+		"NOTE: ~/Makefile:5: This continuation line should be indented with \"\\t\\t\".")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\" with \"\\t\\t\".",
 		"AUTOFIX: ~/Makefile:4: Replacing \"\\t\\t\\t\" with \"\\t\\t\".",
@@ -1351,10 +1350,10 @@ func (s *Suite) Test_VaralignBlock__continuation_mixed_indentation_in_second_lin
 		"   34")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 17.",
-		"NOTE: ~/Makefile:3--6: This variable value should be aligned with tabs, not spaces, to column 17.",
-		"NOTE: ~/Makefile:3--6: This continuation line should be indented with \"\\t\\t\".",
-		"NOTE: ~/Makefile:3--6: This continuation line should be indented with \"\\t\\t  \".",
-		"NOTE: ~/Makefile:3--6: This continuation line should be indented with \"\\t\\t\".")
+		"NOTE: ~/Makefile:3: This variable value should be aligned with tabs, not spaces, to column 17.",
+		"NOTE: ~/Makefile:4: This continuation line should be indented with \"\\t\\t\".",
+		"NOTE: ~/Makefile:5: This continuation line should be indented with \"\\t\\t  \".",
+		"NOTE: ~/Makefile:6: This continuation line should be indented with \"\\t\\t\".")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\" with \"\\t\\t\".",
 		"AUTOFIX: ~/Makefile:3: Replacing \" \" with \"\\t\".",
@@ -1391,9 +1390,9 @@ func (s *Suite) Test_VaralignBlock__continuation_mixed_indentation_in_first_line
 		"   34")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 17.",
-		"NOTE: ~/Makefile:3--5: This variable value should be aligned with tabs, not spaces, to column 17.",
-		"NOTE: ~/Makefile:3--5: This continuation line should be indented with \"\\t\\t\".",
-		"NOTE: ~/Makefile:3--5: This continuation line should be indented with \"\\t\\t\".")
+		"NOTE: ~/Makefile:3: This variable value should be aligned with tabs, not spaces, to column 17.",
+		"NOTE: ~/Makefile:4: This continuation line should be indented with \"\\t\\t\".",
+		"NOTE: ~/Makefile:5: This continuation line should be indented with \"\\t\\t\".")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\" with \"\\t\\t\".",
 		"AUTOFIX: ~/Makefile:3: Replacing \"\\t\\t\\t  \" with \"\\t\".",
@@ -1428,9 +1427,9 @@ func (s *Suite) Test_VaralignBlock__follow_up_indented_with_spaces(c *check.C) {
 		"   08",
 		"   03")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:1--6: This continuation line should be indented with \"\\t\".",
-		"NOTE: ~/Makefile:1--6: This continuation line should be indented with \"\\t\".",
-		"NOTE: ~/Makefile:1--6: This continuation line should be indented with \"\\t\".")
+		"NOTE: ~/Makefile:2: This continuation line should be indented with \"\\t\".",
+		"NOTE: ~/Makefile:3: This continuation line should be indented with \"\\t\".",
+		"NOTE: ~/Makefile:4: This continuation line should be indented with \"\\t\".")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:2: Replacing \" \" with \"\\t\".",
 		"AUTOFIX: ~/Makefile:3: Replacing \"   \" with \"\\t\".",
@@ -1486,8 +1485,8 @@ func (s *Suite) Test_VaralignBlock__multiline(c *check.C) {
 		"07 24")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 17.",
-		"NOTE: ~/Makefile:2--3: This variable value should be aligned with tabs, not spaces, to column 17.",
-		"NOTE: ~/Makefile:2--3: This continuation line should be indented with \"\\t\\t\".",
+		"NOTE: ~/Makefile:2: This variable value should be aligned with tabs, not spaces, to column 17.",
+		"NOTE: ~/Makefile:3: This continuation line should be indented with \"\\t\\t\".",
 		"NOTE: ~/Makefile:5: Variable values should be aligned with tabs, not spaces.",
 		"NOTE: ~/Makefile:7: This variable value should be aligned with tabs, not spaces, to column 17.")
 	vt.Autofixes(
@@ -1894,7 +1893,7 @@ func (s *Suite) Test_VaralignBlock__indented_continuation_line_in_paragraph(c *c
 		"   08",
 		"   08")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:3--6: This variable value should be aligned with tabs, not spaces, to column 25.")
+		"NOTE: ~/Makefile:3: This variable value should be aligned with tabs, not spaces, to column 25.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:3: Replacing \" \" with \"\\t\\t\".")
 	vt.Fixed(
@@ -1956,7 +1955,7 @@ func (s *Suite) Test_VaralignBlock__continuation_line_last_empty(c *check.C) {
 		"   00",
 		"09 16")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:1--5: This variable value should be aligned with tabs, not spaces, to column 17.")
+		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 17.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \" \" with \"\\t\".")
 	vt.Fixed(
@@ -1994,8 +1993,8 @@ func (s *Suite) Test_VaralignBlock__realign_commented_single_lines(c *check.C) {
 		"06 08")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 17.",
-		"NOTE: ~/Makefile:3--4: This variable value should be aligned with tabs, not spaces, to column 17.",
-		"NOTE: ~/Makefile:5--6: This continuation line should be indented with \"\\t\\t\".",
+		"NOTE: ~/Makefile:3: This variable value should be aligned with tabs, not spaces, to column 17.",
+		"NOTE: ~/Makefile:6: This continuation line should be indented with \"\\t\\t\".",
 		"NOTE: ~/Makefile:7: This variable value should be aligned to column 17.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\" with \"\\t\\t\".",
@@ -2034,7 +2033,7 @@ func (s *Suite) Test_VaralignBlock__realign_commented_continuation_line(c *check
 		"   08",
 		"   00")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:2--6: This continuation line should be indented with \"\\t\".")
+		"NOTE: ~/Makefile:6: This continuation line should be indented with \"\\t\".")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:6: Replacing \"\" with \"\\t\".")
 	vt.Fixed(
@@ -2111,7 +2110,7 @@ func (s *Suite) Test_VaralignBlock__mixed_indentation(c *check.C) {
 		"05 08",
 		"   17")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:2--3: This continuation line should be indented with \"\\t\".")
+		"NOTE: ~/Makefile:3: This continuation line should be indented with \"\\t\".")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:3: Replacing \" \\t \\t \" with \"\\t\\t \".")
 	vt.Fixed(
@@ -2214,7 +2213,7 @@ func (s *Suite) Test_VaralignBlock__command_with_arguments(c *check.C) {
 		"   08",
 		"   08")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:1--4: This variable value should be aligned with tabs, not spaces, to column 25.")
+		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 25.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \" \" with \"\\t\".")
 	vt.Fixed(
