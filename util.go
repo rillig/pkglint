@@ -126,7 +126,7 @@ func isHspace(ch byte) bool {
 	return ch == ' ' || ch == '\t'
 }
 
-func ifelseStr(cond bool, a, b string) string {
+func condStr(cond bool, a, b string) string {
 	if cond {
 		return a
 	}
@@ -411,7 +411,7 @@ func toInt(s string, def int) int {
 
 // mkopSubst evaluates make(1)'s :S substitution operator.
 func mkopSubst(s string, left bool, from string, right bool, to string, flags string) string {
-	re := regex.Pattern(ifelseStr(left, "^", "") + regexp.QuoteMeta(from) + ifelseStr(right, "$", ""))
+	re := regex.Pattern(condStr(left, "^", "") + regexp.QuoteMeta(from) + condStr(right, "$", ""))
 	done := false
 	gflag := contains(flags, "g")
 	return replaceAllFunc(s, re, func(match string) string {

@@ -162,7 +162,7 @@ func (ck MkLineChecker) checkDirective(forVars map[string]bool, ind *Indentation
 
 	case directive == "ifdef" || directive == "ifndef":
 		mkline.Warnf("The \".%s\" directive is deprecated. Please use \".if %sdefined(%s)\" instead.",
-			directive, ifelseStr(directive == "ifdef", "", "!"), args)
+			directive, condStr(directive == "ifdef", "", "!"), args)
 
 	case directive == "for":
 		ck.checkDirectiveFor(forVars, ind)
@@ -862,7 +862,7 @@ func (ck MkLineChecker) checkVarUseQuoting(varUse *MkVarUse, vartype *Vartype, v
 	} else if needsQuoting == yes {
 		modNoQ := strings.TrimSuffix(mod, ":Q")
 		modNoM := strings.TrimSuffix(modNoQ, ":M*")
-		correctMod := modNoM + ifelseStr(needMstar, ":M*:Q", ":Q")
+		correctMod := modNoM + condStr(needMstar, ":M*:Q", ":Q")
 		if correctMod == mod+":Q" && vuc.IsWordPart && !vartype.IsShell() {
 
 			isSingleWordConstant := func() bool {
@@ -1573,15 +1573,15 @@ func (ck MkLineChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, notE
 	// Before putting any cases involving special characters into
 	// production, there need to be more tests for the edge cases.
 	replace := func(varname string, m bool, pattern string) (string, string) {
-		op := ifelseStr(notEmpty == m, "==", "!=")
+		op := condStr(notEmpty == m, "==", "!=")
 
 		from := "" +
-			ifelseStr(notEmpty != fromEmpty, "", "!") +
-			ifelseStr(fromEmpty, "empty(", "${") +
+			condStr(notEmpty != fromEmpty, "", "!") +
+			condStr(fromEmpty, "empty(", "${") +
 			varname +
-			ifelseStr(m, ":M", ":N") +
+			condStr(m, ":M", ":N") +
 			pattern +
-			ifelseStr(fromEmpty, ")", "}")
+			condStr(fromEmpty, ")", "}")
 
 		to := "${" + varname + "} " + op + " " + pattern
 
@@ -1607,7 +1607,7 @@ func (ck MkLineChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, notE
 
 				fix := ck.MkLine.Autofix()
 				fix.Notef("%s should be compared using %s instead of matching against %q.",
-					varname, ifelseStr(positive == notEmpty, "==", "!="), ":"+modifier.Text)
+					varname, condStr(positive == notEmpty, "==", "!="), ":"+modifier.Text)
 				fix.Explain(
 					"This variable has a single value, not a list of values.",
 					"Therefore it feels strange to apply list operators like :M and :N onto it.",
@@ -1627,7 +1627,7 @@ func (ck MkLineChecker) checkCompareVarStr(varname, op, value string) {
 	ck.checkVartype(varname, opUseCompare, value, "")
 
 	if varname == "PKGSRC_COMPILER" {
-		ck.MkLine.Warnf("Use ${PKGSRC_COMPILER:%s%s} instead of the %s operator.", ifelseStr(op == "==", "M", "N"), value, op)
+		ck.MkLine.Warnf("Use ${PKGSRC_COMPILER:%s%s} instead of the %s operator.", condStr(op == "==", "M", "N"), value, op)
 		ck.MkLine.Explain(
 			"The PKGSRC_COMPILER can be a list of chained compilers, e.g. \"ccache distcc clang\".",
 			"Therefore, comparing it using == or != leads to wrong results in these cases.")

@@ -273,9 +273,9 @@ func (l *Logger) Logf(level *LogLevel, filename, lineno, format, msg string) {
 		out = l.err
 	}
 
-	filenameSep := ifelseStr(filename != "", ": ", "")
-	effLineno := ifelseStr(filename != "", lineno, "")
-	linenoSep := ifelseStr(effLineno != "", ":", "")
+	filenameSep := condStr(filename != "", ": ", "")
+	effLineno := condStr(filename != "", lineno, "")
+	linenoSep := condStr(effLineno != "", ":", "")
 	var diag string
 	if l.Opts.GccOutput {
 		diag = sprintf("%s%s%s%s%s: %s\n", filename, linenoSep, effLineno, filenameSep, level.GccName, msg)

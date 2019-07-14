@@ -2783,7 +2783,7 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePath(c *check.C) {
 func (s *Suite) Test_MkLineChecker_CheckRelativePath__absolute_path(c *check.C) {
 	t := s.Init(c)
 
-	absDir := ifelseStr(runtime.GOOS == "windows", "C:/", "/")
+	absDir := condStr(runtime.GOOS == "windows", "C:/", "/")
 	// Just a random UUID, to really guarantee that the file does not exist.
 	absPath := absDir + "0f5c2d56-8a7a-4c9d-9caa-859b52bbc8c7"
 

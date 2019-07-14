@@ -101,7 +101,7 @@ func (s *Suite) TearDownTest(c *check.C) {
 		msg.WriteString("t.CheckOutputLines(\n")
 		lines := strings.Split(strings.TrimSpace(out), "\n")
 		for i, line := range lines {
-			_, _ = fmt.Fprintf(&msg, "\t%q%s\n", line, ifelseStr(i == len(lines)-1, ")", ","))
+			_, _ = fmt.Fprintf(&msg, "\t%q%s\n", line, condStr(i == len(lines)-1, ")", ","))
 		}
 		_, _ = fmt.Fprintf(&msg, "\n")
 		_, _ = os.Stderr.WriteString(msg.String())

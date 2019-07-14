@@ -252,7 +252,7 @@ func (p *MkParser) varUseModifier(varname string, closing byte) string {
 
 	case '=', 'D', 'M', 'N', 'U':
 		lexer.Skip(1)
-		re := regcomp(regex.Pattern(ifelseStr(closing == '}', `^([^$:\\}]|\$\$|\\.)+`, `^([^$:\\)]|\$\$|\\.)+`)))
+		re := regcomp(regex.Pattern(condStr(closing == '}', `^([^$:\\}]|\$\$|\\.)+`, `^([^$:\\)]|\$\$|\\.)+`)))
 		for p.VarUse() != nil || lexer.SkipRegexp(re) {
 		}
 		arg := lexer.Since(mark)
@@ -284,7 +284,7 @@ func (p *MkParser) varUseModifier(varname string, closing byte) string {
 
 	lexer.Reset(mark)
 
-	re := regcomp(regex.Pattern(ifelseStr(closing == '}', `^([^:$}]|\$\$)+`, `^([^:$)]|\$\$)+`)))
+	re := regcomp(regex.Pattern(condStr(closing == '}', `^([^:$}]|\$\$)+`, `^([^:$)]|\$\$)+`)))
 	for p.VarUse() != nil || lexer.SkipRegexp(re) {
 	}
 	modifier := lexer.Since(mark)
@@ -310,7 +310,7 @@ func (p *MkParser) varUseModifier(varname string, closing byte) string {
 func (p *MkParser) varUseText(closing byte) string {
 	lexer := p.lexer
 	start := lexer.Mark()
-	re := regcomp(regex.Pattern(ifelseStr(closing == '}', `^([^$:}]|\$\$)+`, `^([^$:)]|\$\$)+`)))
+	re := regcomp(regex.Pattern(condStr(closing == '}', `^([^$:}]|\$\$)+`, `^([^$:)]|\$\$)+`)))
 	for p.VarUse() != nil || lexer.SkipRegexp(re) {
 	}
 	return lexer.Since(start)

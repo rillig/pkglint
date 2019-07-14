@@ -1566,7 +1566,7 @@ func (p MkLineParser) MatchVarassign(line *Line, text string) (bool, *mkLineAssi
 	lexer.SkipHspace()
 
 	value := trimHspace(lexer.Rest())
-	parsedValueAlign := ifelseStr(commented, "#", "") + lexer.Since(mainStart)
+	parsedValueAlign := condStr(commented, "#", "") + lexer.Since(mainStart)
 	valueAlign := p.getRawValueAlign(line.raw[0].orignl, parsedValueAlign)
 	spaceBeforeComment := data.spaceBeforeComment
 	if value == "" {
@@ -1587,7 +1587,7 @@ func (p MkLineParser) MatchVarassign(line *Line, text string) (bool, *mkLineAssi
 		valueMkRest:       "",  // filled in lazily
 		fields:            nil, // filled in lazily
 		spaceAfterValue:   spaceBeforeComment,
-		comment:           ifelseStr(data.hasComment, "#", "") + data.comment,
+		comment:           condStr(data.hasComment, "#", "") + data.comment,
 	}
 }
 

@@ -484,7 +484,7 @@ func (*Pkgsrc) parseDocChange(line *Line, warn bool) *Change {
 			Location: line.Location,
 			Action:   action,
 			Pkgpath:  intern(pkgpath),
-			target:   intern(ifelseStr(n == 6, f[3], "")),
+			target:   intern(condStr(n == 6, f[3], "")),
 			Author:   intern(author),
 			Date:     intern(date),
 		}

@@ -757,9 +757,9 @@ func (s *Suite) Test_Pkgsrc_ListVersions__ensure_transitive(c *check.C) {
 		expected := i < j
 		if actual != expected {
 			c.Check(
-				[]interface{}{names[i], ifelseStr(actual, "<", "!<"), names[j]},
+				[]interface{}{names[i], condStr(actual, "<", "!<"), names[j]},
 				check.DeepEquals,
-				[]interface{}{names[i], ifelseStr(expected, "<", "!<"), names[j]})
+				[]interface{}{names[i], condStr(expected, "<", "!<"), names[j]})
 		}
 	}
 

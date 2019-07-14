@@ -1622,7 +1622,7 @@ func (vt *VartypeCheckTester) Values(values ...string) {
 			panic("Invalid operator: " + opStr)
 		}
 
-		space := ifelseStr(hasSuffix(varname, "+") && opStr == "=", " ", "")
+		space := condStr(hasSuffix(varname, "+") && opStr == "=", " ", "")
 		return varname + space + opStr + value
 	}
 

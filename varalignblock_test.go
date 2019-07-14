@@ -78,7 +78,7 @@ func (vt *VaralignTester) run(autofix bool) {
 
 	var actual []string
 	for _, info := range infos {
-		minWidth := ifelseStr(info.rawIndex == 0, sprintf("%02d", info.varnameOpWidth()), "  ")
+		minWidth := condStr(info.rawIndex == 0, sprintf("%02d", info.varnameOpWidth()), "  ")
 		infoStr := sprintf("%s %02d", minWidth, info.varnameOpSpaceWidth())
 		actual = append(actual, infoStr)
 	}
