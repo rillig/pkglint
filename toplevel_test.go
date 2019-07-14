@@ -133,3 +133,26 @@ func (s *Suite) Test_CheckdirToplevel__recursive_inter_package(c *check.C) {
 		"2 warnings found.",
 		"(Run \"pkglint -e\" to show explanations.)")
 }
+
+func (s *Suite) Test_CheckdirToplevel__indentation(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.CreateFileLines("category1/Makefile")
+	t.CreateFileLines("category2/Makefile")
+	t.CreateFileLines("Makefile",
+		MkCvsID,
+		"",
+		"SUBDIR+=\tcategory1",
+		"SUBDIR+=\t\tcategory2")
+
+	t.Main("-Wall", ".")
+
+	t.CheckOutputLines(
+		"WARN: ~/Makefile:4: Indentation should be a single tab character.",
+		"NOTE: ~/Makefile:4: This variable value should be aligned to column 17.",
+		"1 warning and 1 note found.",
+		"(Run \"pkglint -e\" to show explanations.)",
+		"(Run \"pkglint -fs\" to show what can be fixed automatically.)",
+		"(Run \"pkglint -F\" to automatically fix some issues.)")
+}
