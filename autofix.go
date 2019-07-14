@@ -397,6 +397,8 @@ func (fix *Autofix) setDiag(level *LogLevel, format string, args []interface{}) 
 	fix.diagArgs = args
 }
 
+// skip returns whether this autofix should be skipped because
+// its message is matched by one of the --only command line options.
 func (fix *Autofix) skip() bool {
 	assert(fix.diagFormat != "") // The diagnostic must be given before the action.
 
