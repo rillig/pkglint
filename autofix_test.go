@@ -875,6 +875,7 @@ func (s *Suite) Test_Autofix_skip(c *check.C) {
 	// None of the following actions has any effect because of the --only option above.
 	fix.Replace("111", "___")
 	fix.ReplaceAfter(" ", "222", "___")
+	fix.ReplaceAt(0, 0, "VAR", "NEW")
 	fix.ReplaceRegex(`\d+`, "___", 1)
 	fix.InsertBefore("before")
 	fix.InsertAfter("after")
