@@ -330,6 +330,11 @@ func (s *Suite) Test_Autofix_ReplaceAt(c *check.C) {
 		func() { test(lines("VAR=value"), 10, 3, "from", "to", nil, nil) },
 		`runtime error: index out of range.*`)
 
+	// It is a programming error to replace a string with itself, since that
+	// would produce confusing diagnostics.
+	t.ExpectAssert(
+		func() { test(lines("VAR=value"), 0, 4, "value", "value", nil, nil) })
+
 	// Getting the column number wrong may happen when a previous replacement
 	// has made the string shorter than before, therefore no panic in this case.
 	test(
