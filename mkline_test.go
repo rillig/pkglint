@@ -1331,7 +1331,7 @@ func (s *Suite) Test_MkLine_ValueFields__compared_to_splitIntoShellTokens(c *che
 
 	words, rest := splitIntoShellTokens(dummyLine, url) // Doesn't really make sense
 
-	c.Check(words, check.DeepEquals, []string{
+	t.CheckDeepEquals(words, []string{
 		"http://registry.gimp.org/file/fix-ca.c?action=download",
 		"&",
 		"id=9884",
@@ -1341,11 +1341,11 @@ func (s *Suite) Test_MkLine_ValueFields__compared_to_splitIntoShellTokens(c *che
 
 	words = mkline.ValueFields(url)
 
-	c.Check(words, check.DeepEquals, []string{url})
+	t.CheckDeepEquals(words, []string{url})
 
 	words = mkline.ValueFields("a b \"c  c  c\" d;;d;; \"e\"''`` 'rest")
 
-	c.Check(words, check.DeepEquals, []string{"a", "b", "\"c  c  c\"", "d;;d;;", "\"e\"''``"})
+	t.CheckDeepEquals(words, []string{"a", "b", "\"c  c  c\"", "d;;d;;", "\"e\"''``"})
 	// TODO: c.Check(rest, equals, "'rest")
 }
 

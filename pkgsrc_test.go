@@ -53,7 +53,7 @@ func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates(c *check.C) {
 
 	todo := G.Pkgsrc.parseSuggestedUpdates(lines)
 
-	c.Check(todo, check.DeepEquals, []SuggestedUpdate{
+	t.CheckDeepEquals(todo, []SuggestedUpdate{
 		{lines.Lines[5].Location, "CSP", "0.34", ""},
 		{lines.Lines[6].Location, "freeciv-client", "2.5.0", "(urgent)"}})
 }
@@ -719,7 +719,7 @@ func (s *Suite) Test_Pkgsrc_ListVersions__postgresql(c *check.C) {
 
 	versions := G.Pkgsrc.ListVersions("databases", `^postgresql[0-9]+$`, "$0", true)
 
-	c.Check(versions, check.DeepEquals, []string{
+	t.CheckDeepEquals(versions, []string{
 		"postgresql95",
 		"postgresql97",
 		"postgresql10",
@@ -727,6 +727,8 @@ func (s *Suite) Test_Pkgsrc_ListVersions__postgresql(c *check.C) {
 }
 
 func (s *Suite) Test_Pkgsrc_ListVersions__ensure_transitive(c *check.C) {
+	t := s.Init(c)
+
 	names := []string{
 		"base",
 		"base0",
@@ -756,9 +758,8 @@ func (s *Suite) Test_Pkgsrc_ListVersions__ensure_transitive(c *check.C) {
 		actual := less(names[i], names[j])
 		expected := i < j
 		if actual != expected {
-			c.Check(
+			t.CheckDeepEquals(
 				[]interface{}{names[i], condStr(actual, "<", "!<"), names[j]},
-				check.DeepEquals,
 				[]interface{}{names[i], condStr(expected, "<", "!<"), names[j]})
 		}
 	}
@@ -1065,6 +1066,8 @@ func (s *Suite) Test_Change_Successor(c *check.C) {
 }
 
 func (s *Suite) Test_Change_Above(c *check.C) {
+	t := s.Init(c)
+
 	var changes = []*Change{
 		{Location{"", 1, 1}, 0, "", "", "", "2011-07-01"},
 		{Location{"", 2, 2}, 0, "", "", "", "2011-07-01"},
@@ -1074,9 +1077,8 @@ func (s *Suite) Test_Change_Above(c *check.C) {
 		actual := chi.Above(chj)
 		expected := i < j
 		if actual != expected {
-			c.Check(
+			t.CheckDeepEquals(
 				[]interface{}{i, *chi, j, *chj, actual},
-				check.DeepEquals,
 				[]interface{}{i, *chi, j, *chj, expected})
 		}
 	}

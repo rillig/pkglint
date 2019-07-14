@@ -10,7 +10,7 @@ func (s *Suite) Test_splitIntoShellTokens__line_continuation(c *check.C) {
 
 	words, rest := splitIntoShellTokens(dummyLine, "if true; then \\")
 
-	c.Check(words, check.DeepEquals, []string{"if", "true", ";", "then"})
+	t.CheckDeepEquals(words, []string{"if", "true", ";", "then"})
 	t.CheckEquals(rest, "\\")
 
 	t.CheckOutputLines(
@@ -22,7 +22,7 @@ func (s *Suite) Test_splitIntoShellTokens__dollar_slash(c *check.C) {
 
 	words, rest := splitIntoShellTokens(dummyLine, "pax -s /.*~$$//g")
 
-	c.Check(words, check.DeepEquals, []string{"pax", "-s", "/.*~$$//g"})
+	t.CheckDeepEquals(words, []string{"pax", "-s", "/.*~$$//g"})
 	t.CheckEquals(rest, "")
 }
 

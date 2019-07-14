@@ -83,7 +83,7 @@ func (s *Suite) Test__regex_ReplaceFirst(c *check.C) {
 	m, rest := G.res.ReplaceFirst("a+b+c+d", `(\w)(.)(\w)`, "X")
 
 	c.Assert(m, check.NotNil)
-	c.Check(m, check.DeepEquals, []string{"a+b", "a", "+", "b"})
+	t.CheckDeepEquals(m, []string{"a+b", "a", "+", "b"})
 	t.CheckEquals(rest, "X+c+d")
 }
 
@@ -313,12 +313,12 @@ func (s *Suite) Test_isEmptyDir__and_getSubdirs(c *check.C) {
 
 	if dir := t.File("."); true {
 		t.CheckEquals(isEmptyDir(dir), true)
-		c.Check(getSubdirs(dir), check.DeepEquals, []string(nil))
+		t.CheckDeepEquals(getSubdirs(dir), []string(nil))
 
 		t.CreateFileLines("somedir/file")
 
 		t.CheckEquals(isEmptyDir(dir), false)
-		c.Check(getSubdirs(dir), check.DeepEquals, []string{"somedir"})
+		t.CheckDeepEquals(getSubdirs(dir), []string{"somedir"})
 	}
 
 	if absent := t.File("nonexistent"); true {
@@ -543,7 +543,7 @@ func (s *Suite) Test_isLocallyModified(c *check.C) {
 	c.Check(err, check.IsNil)
 
 	// Make sure that the file system has second precision and accuracy.
-	c.Check(st.ModTime().UTC(), check.DeepEquals, modTime)
+	t.CheckDeepEquals(st.ModTime().UTC(), modTime)
 
 	modified := t.CreateFileLines("modified")
 
@@ -1047,6 +1047,8 @@ func (s *Suite) Test_escapePrintable(c *check.C) {
 }
 
 func (s *Suite) Test_stringSliceLess(c *check.C) {
+	t := s.Init(c)
+
 	var elements = [][][]string{
 		{nil, {}},
 		{{"a"}},
@@ -1059,9 +1061,8 @@ func (s *Suite) Test_stringSliceLess(c *check.C) {
 		actual := stringSliceLess(iElement, jElement)
 		expected := i < j
 		if actual != expected {
-			c.Check(
+			t.CheckDeepEquals(
 				[]interface{}{i, iElement, j, jElement, actual},
-				check.DeepEquals,
 				[]interface{}{i, iElement, j, jElement, expected})
 		}
 	}
