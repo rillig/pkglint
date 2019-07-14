@@ -492,7 +492,7 @@ func (va *VaralignBlock) realignMultiFollow(info *varalignLine, newWidth int) {
 	if tabWidth(newSpace) < newWidth {
 		newSpace = indent(newWidth)
 	}
-	if newSpace == oldSpace {
+	if newSpace == oldSpace || oldSpace == "\t" {
 		return
 	}
 
