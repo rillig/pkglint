@@ -389,22 +389,20 @@ func (fix *Autofix) affectedLinenos() string {
 	}
 
 	var first, last int
-	set := false
 	for _, action := range fix.actions {
 		if action.lineno == 0 {
 			continue
 		}
 
-		if !set || action.lineno < first {
+		if last == 0 || action.lineno < first {
 			first = action.lineno
 		}
-		if !set || action.lineno > last {
+		if last == 0 || action.lineno > last {
 			last = action.lineno
 		}
-		set = true
 	}
 
-	if !set {
+	if last == 0 {
 		return fix.line.Linenos()
 	} else if first < last {
 		return sprintf("%d--%d", first, last)
