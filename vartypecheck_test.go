@@ -525,6 +525,14 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 	vt.Values(
 		"${MASTER_SITE_GNU:S,$,subdir/,}")
 	vt.OutputEmpty()
+
+	vt.Values(
+		"https://github.com/transmission/transmission-releases/raw/master/")
+	vt.Output(
+		// FIXME: the text after "instead of" is too long.
+		"WARN: filename.mk:51: Please use ${MASTER_SITE_GITHUB:=transmission/} " +
+			"instead of \"https://github.com/transmission/transmission-releases/raw/master/\" " +
+			"and run \"" + confMake + " help topic=github\" for further tips.")
 }
 
 func (s *Suite) Test_VartypeCheck_FetchURL__without_package(c *check.C) {
