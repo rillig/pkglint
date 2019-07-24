@@ -459,7 +459,6 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__default(c *check.C) {
 func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__wrong_indentation(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Cglobal", "-Wall")
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("doc/CHANGES-2018",
 		CvsID,
@@ -469,7 +468,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__wrong_indentation(c *check.C
 		"        Updated sysutils/checkperms to 1.10 [rillig 2018-01-05]",
 		"    \tUpdated sysutils/checkperms to 1.11 [rillig 2018-01-01]")
 
-	t.Main(t.File("category/package"))
+	t.Main("-Cglobal", "-Wall", "category/package")
 
 	t.CheckOutputLines(
 		"WARN: ~/doc/CHANGES-2018:5: Package changes should be indented using a single tab, not \"        \".",
