@@ -209,10 +209,12 @@ func (*VaralignBlock) split(textnl string, initial bool) varalignSplitResult {
 				continue
 			}
 
-			assert(lexer.SkipByte('\\'))
-			if !lexer.EOF() {
-				lexer.Skip(1)
+			if len(lexer.Rest()) < 2 {
+				break
 			}
+
+			assert(lexer.SkipByte('\\'))
+			lexer.Skip(1)
 		}
 
 		valueSpace := lexer.Since(mark)

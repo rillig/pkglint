@@ -2516,6 +2516,21 @@ func (s *Suite) Test_VaralignBlock_split(c *check.C) {
 			continuation:      "",
 		})
 
+	// In practice it doesn't really happen that the last line of a file
+	// ends in a backslash and at the same time it doesn't have the usual
+	// newline ending.
+	test("    value \\", false,
+		varalignSplitResult{
+			leadingComment:    "",
+			varnameOp:         "",
+			spaceBeforeValue:  "    ",
+			value:             "value",
+			spaceAfterValue:   " ",
+			trailingComment:   "",
+			spaceAfterComment: "",
+			continuation:      "\\",
+		})
+
 	// Commented variable assignments are only valid if they
 	// directly follow the comment sign.
 	//
