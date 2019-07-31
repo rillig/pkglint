@@ -280,15 +280,13 @@ func (va *VaralignBlock) Finish() {
 
 	newWidth := va.optimalWidth(infos)
 
-	multiEmpty := false
 	for _, info := range infos {
 		if info.rawIndex == 0 {
 			va.indentDiffSet = false
 			va.indentDiff = 0
-			multiEmpty = info.multiEmpty
 		}
 
-		if newWidth > 0 || multiEmpty && info.rawIndex > 0 {
+		if newWidth > 0 || info.rawIndex > 0 {
 			va.realign(info, newWidth)
 		}
 	}
@@ -304,6 +302,7 @@ func (*VaralignBlock) optimalWidth(infos []*varalignLine) int {
 	longest := 0 // The longest seen varnameOpWidth
 	var longestLine *MkLine
 	secondLongest := 0 // The second-longest seen varnameOpWidth
+
 	for _, info := range infos {
 		if info.multiEmpty || info.rawIndex > 0 {
 			continue
