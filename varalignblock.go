@@ -592,11 +592,6 @@ func (l *varalignLine) commentedOut() bool {
 	return hasPrefix(l.parts.leadingComment, "#")
 }
 
-func (l *varalignLine) outlier(width int) bool {
-	assert(width == width&-8)
-	return l.varnameOpSpaceWidth() > width+8
-}
-
 // canonicalInitial returns whether the space between the assignment
 // operator and the value has its canonical form, which is either
 // at least one tab, or a single space, but only for lines that stick out.
