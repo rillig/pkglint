@@ -395,6 +395,12 @@ func (s *ShSuite) Test_ShellParser__case_clause(c *check.C) {
 			b.CaseItem(
 				b.Words("*"),
 				b.List(), sepNone))))
+
+	// The default case may be omitted if PATTERNS can never be empty.
+	s.test("case $$expr in ${PATTERNS:@p@ (${p}) action ;; @} esac",
+		b.List().AddCommand(b.Case(
+			b.Token("$$expr"),
+			b.CaseItemVar("${PATTERNS:@p@ (${p}) action ;; @}"))))
 }
 
 func (s *ShSuite) Test_ShellParser__if_clause(c *check.C) {
@@ -701,8 +707,7 @@ func (s *Suite) Test_ShellLexer_Lex__case_patterns(c *check.C) {
 		tkWORD,
 		tkIN,
 		tkWORD,
-		// FIXME: must be tkESAC
-		tkWORD)
+		tkESAC)
 }
 
 type MkShBuilder struct {
