@@ -384,6 +384,17 @@ func (s *ShSuite) Test_ShellParser__case_clause(c *check.C) {
 			b.CaseItem(
 				b.Words("if", "then", "else"),
 				b.List(), sepNone))))
+
+	// This could be regarded an evil preprocessor hack, but it's used
+	// in practice and is somewhat established, even though it is
+	// difficult to parse and understand, even for humans.
+	s.test("case $$expr in ${PATTERNS:@p@ (${p}) action ;; @} (*) ;; esac",
+		b.List().AddCommand(b.Case(
+			b.Token("$$expr"),
+			b.CaseItemVar("${PATTERNS:@p@ (${p}) action ;; @}"),
+			b.CaseItem(
+				b.Words("*"),
+				b.List(), sepNone))))
 }
 
 func (s *ShSuite) Test_ShellParser__if_clause(c *check.C) {
@@ -555,11 +566,11 @@ func (s *ShSuite) test(program string, expected *MkShList) {
 		error:          ""}
 	parser := shyyParserImpl{}
 
-	succeeded := parser.Parse(&lexer)
+	zeroMeansSuccess := parser.Parse(&lexer)
 
 	c := s.c
 
-	if t.CheckEquals(succeeded, 0) && t.CheckEquals(lexer.error, "") {
+	if t.CheckEquals(zeroMeansSuccess, 0) && t.CheckEquals(lexer.error, "") {
 		if !t.CheckDeepEquals(lexer.result, expected) {
 			actualJSON, actualErr := json.MarshalIndent(lexer.result, "", "  ")
 			expectedJSON, expectedErr := json.MarshalIndent(expected, "", "  ")
@@ -728,7 +739,11 @@ func (b *MkShBuilder) Case(selector *ShToken, items ...*MkShCaseItem) *MkShComma
 }
 
 func (b *MkShBuilder) CaseItem(patterns []*ShToken, action *MkShList, separator MkShSeparator) *MkShCaseItem {
-	return &MkShCaseItem{patterns, action, separator}
+	return &MkShCaseItem{patterns, action, separator, nil}
+}
+
+func (b *MkShBuilder) CaseItemVar(varUseText string) *MkShCaseItem {
+	return &MkShCaseItem{nil, nil, sepNone, b.Token(varUseText)}
 }
 
 func (b *MkShBuilder) While(cond, action *MkShList, redirects ...*MkShRedirection) *MkShCommand {
