@@ -675,6 +675,36 @@ func (s *ShSuite) Test_ShellLexer_Lex__keywords(c *check.C) {
 		"if cond ; then : ; fi")
 }
 
+func (s *Suite) Test_ShellLexer_Lex__case_patterns(c *check.C) {
+	t := s.Init(c)
+
+	test := func(shellProgram string, expectedTokens ...int) {
+		tokens, rest := splitIntoShellTokens(nil, shellProgram)
+		lexer := NewShellLexer(tokens, rest)
+
+		var actualTokens []int
+		for {
+			var token shyySymType
+			tokenType := lexer.Lex(&token)
+			if tokenType <= 0 {
+				break
+			}
+			actualTokens = append(actualTokens, tokenType)
+		}
+		t.CheckDeepEquals(actualTokens, expectedTokens)
+	}
+
+	test(
+		"case $$expr in ${PATTERNS:@p@(${p}) action ;; @} esac",
+
+		tkCASE,
+		tkWORD,
+		tkIN,
+		tkWORD,
+		// FIXME: must be tkESAC
+		tkWORD)
+}
+
 type MkShBuilder struct {
 }
 
