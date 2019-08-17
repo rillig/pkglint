@@ -38,7 +38,10 @@ func (s *Suite) Test_VarTypeRegistry_enumFrom(c *check.C) {
 		".  if !empty(USE_LANGUAGES:M${_version_})",
 		"USE_LANGUAGES+=         c++",
 		".  endif",
-		".endfor")
+		".endfor",
+		"",
+		".if ${USE_LANGUAGES:Mexpr-lang} || !empty(USE_LANGUAGES:Mempty-lang)",
+		".endif")
 
 	t.SetUpVartypes()
 
@@ -49,8 +52,8 @@ func (s *Suite) Test_VarTypeRegistry_enumFrom(c *check.C) {
 
 	test("EMACS_VERSIONS_ACCEPTED", "enum: emacs29 emacs31  (list, package-settable)")
 	test("PKG_JVM", "enum: jdk16 openjdk7 openjdk8 oracle-jdk8 sun-jdk7  (system-provided)")
-	test("USE_LANGUAGES", "enum: ada c c++ c++03 c++0x c++11 c++14 c99 "+
-		"fortran fortran77 gnu++03 gnu++0x gnu++11 gnu++14 java obj-c++ objc  (list, package-settable)")
+	test("USE_LANGUAGES", "enum: c++03 c++0x c++11 c++14 empty-lang expr-lang "+
+		"gnu++03 gnu++0x gnu++11 gnu++14  (list, package-settable)")
 	test("PKGSRC_COMPILER", "enum: ccache distcc f2c g95 gcc ido mipspro-ucode sunpro  (list, user-settable)")
 }
 

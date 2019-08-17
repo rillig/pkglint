@@ -126,9 +126,9 @@ func (ck *OptionsLinesChecker) handleLowerCondition(mkline *MkLine, cond *MkCond
 
 	recordUsedOption := func(varuse *MkVarUse) {
 		if varuse.varname == "PKG_OPTIONS" && len(varuse.modifiers) == 1 {
-			if m, positive, pattern := varuse.modifiers[0].MatchMatch(); m && positive {
+			if m, positive, pattern, exact := varuse.modifiers[0].MatchMatch(); m && positive {
 				option := pattern
-				if !containsVarRef(option) {
+				if exact && !containsVarRef(option) {
 					ck.handledOptions[option] = mkline
 					ck.optionsInDeclarationOrder = append(ck.optionsInDeclarationOrder, option)
 				}
