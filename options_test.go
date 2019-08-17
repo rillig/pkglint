@@ -324,3 +324,37 @@ func (s *Suite) Test_CheckLinesOptionsMk__autofix(c *check.C) {
 		".  endif",
 		".endif")
 }
+
+// A few packages (such as www/w3m) define several options that are
+// handled by a single .if block in the lower part.
+func (s *Suite) Test_CheckLinesOptionsMk__combined_option_handling(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpOption("opt-variant1", "")
+	t.SetUpOption("opt-variant2", "")
+	t.CreateFileLines("mk/bsd.options.mk")
+	t.SetUpPackage("category/package",
+		".include \"options.mk\"")
+	t.CreateFileLines("category/package/options.mk",
+		MkCvsID,
+		"",
+		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
+		"PKG_SUPPORTED_OPTIONS=\topt-variant1 opt-variant2",
+		"",
+		".include \"../../mk/bsd.options.mk\"",
+		"",
+		".if ${PKG_OPTIONS:Mopt-variant*}",
+		".endif")
+	t.FinishSetUp()
+	t.Chdir("category/package")
+
+	G.Check(".")
+
+	t.CheckOutputLines(
+		// FIXME
+		"ERROR: options.mk:8: Invalid option name \"opt-variant*\". Option names must start with a lowercase letter and be all-lowercase.",
+		// FIXME
+		"WARN: options.mk:4: Option \"opt-variant1\" should be handled below in an .if block.",
+		// FIXME
+		"WARN: options.mk:4: Option \"opt-variant2\" should be handled below in an .if block.")
+}
