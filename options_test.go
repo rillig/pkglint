@@ -352,8 +352,6 @@ func (s *Suite) Test_CheckLinesOptionsMk__combined_option_handling(c *check.C) {
 
 	t.CheckOutputLines(
 		// FIXME
-		"ERROR: options.mk:8: Invalid option name \"opt-variant*\". Option names must start with a lowercase letter and be all-lowercase.",
-		// FIXME
 		"WARN: options.mk:4: Option \"opt-variant1\" should be handled below in an .if block.",
 		// FIXME
 		"WARN: options.mk:4: Option \"opt-variant2\" should be handled below in an .if block.")

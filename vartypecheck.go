@@ -793,12 +793,30 @@ func (cv *VartypeCheck) Option() {
 		return
 	}
 
-	if m, optname := match1(value, `^-?([a-z][-0-9a-z+]*)$`); m {
-		if !cv.MkLines.once.FirstTimeSlice("option:", optname) {
-			return
-		}
+	validName := regex.Pattern(`^-?([a-z][-0-9a-z_+]*)$`)
+	if cv.Op == opUseMatch {
+		validName = `^-?([a-z][*+\-0-9?\[\]_a-z]*)$`
+	}
 
-		// There's a difference between empty and absent here.
+	// TODO: Distinguish between:
+	//  - a bare option name (must start with a letter),
+	//  - an option selection (may have a leading hyphen).
+	m, optname := match1(value, validName)
+	if !m {
+		cv.Errorf("Invalid option name %q. Option names must start with a lowercase letter and be all-lowercase.", value)
+		return
+	}
+
+	if !cv.MkLines.once.FirstTimeSlice("option:", optname) {
+		return
+	}
+
+	if contains(optname, "_") {
+		cv.Warnf("Use of the underscore character in option names is deprecated.")
+		return
+	}
+
+	if !strings.ContainsAny(optname, "*?[") {
 		if _, found := G.Pkgsrc.PkgOptions[optname]; !found {
 			cv.Warnf("Unknown option %q.", optname)
 			cv.Explain(
@@ -807,15 +825,7 @@ func (cv *VartypeCheck) Option() {
 				"update that file yourself or suggest a description for this option",
 				"on the tech-pkg@NetBSD.org mailing list.")
 		}
-		return
 	}
-
-	if matches(value, `^-?([a-z][-0-9a-z_\+]*)$`) {
-		cv.Warnf("Use of the underscore character in option names is deprecated.")
-		return
-	}
-
-	cv.Errorf("Invalid option name %q. Option names must start with a lowercase letter and be all-lowercase.", value)
 }
 
 // Pathlist checks variables like the PATH environment variable.
