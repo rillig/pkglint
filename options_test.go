@@ -350,9 +350,8 @@ func (s *Suite) Test_CheckLinesOptionsMk__combined_option_handling(c *check.C) {
 
 	G.Check(".")
 
-	t.CheckOutputLines(
-		// FIXME
-		"WARN: options.mk:4: Option \"opt-variant1\" should be handled below in an .if block.",
-		// FIXME
-		"WARN: options.mk:4: Option \"opt-variant2\" should be handled below in an .if block.")
+	// Before 5.7.21 on 2019-08-17, pkglint issued an error about the
+	// "invalid option name opt-variant*" and warnings about the
+	// unhandled options "opt-variant1" and "opt-variant2".
+	t.CheckOutputEmpty()
 }
