@@ -396,11 +396,17 @@ func (s *ShSuite) Test_ShellParser__case_clause(c *check.C) {
 				b.Words("*"),
 				b.List(), sepNone))))
 
-	// The default case may be omitted if PATTERNS can never be empty.
+	// The default case may even be omitted.
 	s.test("case $$expr in ${PATTERNS:@p@ (${p}) action ;; @} esac",
 		b.List().AddCommand(b.Case(
 			b.Token("$$expr"),
 			b.CaseItemVar("${PATTERNS:@p@ (${p}) action ;; @}"))))
+
+	// Only variables that end with a :@ modifier may be used in this
+	// construct. All others are tokenized as normal words and lead
+	// to a syntax error in the shell parser.
+	s.testFail("case $$expr in ${PATTERNS} esac",
+		[]string{}...)
 }
 
 func (s *ShSuite) Test_ShellParser__if_clause(c *check.C) {
@@ -586,6 +592,21 @@ func (s *ShSuite) test(program string, expected *MkShList) {
 		}
 	} else {
 		t.CheckDeepEquals(lexer.remaining, []string{})
+	}
+}
+
+func (s *ShSuite) testFail(program string, expectedRemaining ...string) {
+	t := s.t
+
+	tokens, rest := splitIntoShellTokens(dummyLine, program)
+	t.CheckEquals(rest, "")
+	lexer := ShellLexer{remaining: tokens, atCommandStart: true}
+	parser := shyyParserImpl{}
+
+	zeroMeansSuccess := parser.Parse(&lexer)
+
+	if t.CheckEquals(zeroMeansSuccess, 1) && t.Check(lexer.error, check.Not(check.Equals), "") {
+		t.CheckDeepEquals(lexer.remaining, expectedRemaining)
 	}
 }
 
