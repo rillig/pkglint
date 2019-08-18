@@ -1034,6 +1034,10 @@ func (cv *VartypeCheck) PythonDependency() {
 }
 
 func (cv *VartypeCheck) RPkgName() {
+	if cv.Op == opUseMatch {
+		return
+	}
+
 	if cv.Value != cv.ValueNoVar {
 		cv.Warnf("The R package name should not contain variables.")
 		return

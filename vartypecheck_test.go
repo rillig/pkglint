@@ -1171,6 +1171,12 @@ func (s *Suite) Test_VartypeCheck_RPkgName(c *check.C) {
 		"WARN: filename.mk:2: The R package name should not contain variables.",
 		"WARN: filename.mk:3: The R package name contains the invalid characters \",,\".",
 		"WARN: filename.mk:5: The R_PKGNAME does not need the \"R-\" prefix.")
+
+	vt.Op(opUseMatch)
+	vt.Values(
+		"R-package")
+
+	vt.OutputEmpty()
 }
 
 func (s *Suite) Test_VartypeCheck_RPkgVer(c *check.C) {
@@ -1180,10 +1186,17 @@ func (s *Suite) Test_VartypeCheck_RPkgVer(c *check.C) {
 	vt.Values(
 		"1.0",
 		"1-2-3",
+		"${VERSION}",
 		"1-:")
 
 	vt.Output(
-		"WARN: filename.mk:3: Invalid R version number \"1-:\".")
+		"WARN: filename.mk:4: Invalid R version number \"1-:\".")
+
+	vt.Op(opUseMatch)
+	vt.Values(
+		"1-:")
+
+	vt.OutputEmpty()
 }
 
 func (s *Suite) Test_VartypeCheck_RelativePkgPath(c *check.C) {
