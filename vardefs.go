@@ -1538,6 +1538,8 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		"*: use, use-loadtime")
 	reg.sys("RUN", BtShellCommand)
 	reg.sys("RUN_LDCONFIG", BtYesNo)
+	reg.pkg("R_PKGNAME", BtRPkgName)
+	reg.pkg("R_PKGVER", BtRPkgVer)
 	reg.pkglist("SCRIPTS_ENV", BtShellWord)
 	reg.usrlist("SETGID_GAMES_PERMS", BtPerms)
 	reg.usrlist("SETUID_ROOT_PERMS", BtPerms)

@@ -1156,6 +1156,36 @@ func (s *Suite) Test_VartypeCheck_PythonDependency(c *check.C) {
 		"WARN: filename.mk:3: Invalid Python dependency \"cairo,X\".")
 }
 
+func (s *Suite) Test_VartypeCheck_RPkgName(c *check.C) {
+	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).RPkgName)
+
+	vt.Varname("R_PKGNAME")
+	vt.Values(
+		"package",
+		"${VAR}",
+		"a,b,c",
+		"under_score",
+		"R-package")
+
+	vt.Output(
+		"WARN: filename.mk:2: The R package name should not contain variables.",
+		"WARN: filename.mk:3: The R package name contains the invalid characters \",,\".",
+		"WARN: filename.mk:5: The R_PKGNAME does not need the \"R-\" prefix.")
+}
+
+func (s *Suite) Test_VartypeCheck_RPkgVer(c *check.C) {
+	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).RPkgVer)
+
+	vt.Varname("R_PKGVER")
+	vt.Values(
+		"1.0",
+		"1-2-3",
+		"1-:")
+
+	vt.Output(
+		"WARN: filename.mk:3: Invalid R version number \"1-:\".")
+}
+
 func (s *Suite) Test_VartypeCheck_RelativePkgPath(c *check.C) {
 	t := s.Init(c)
 	vt := NewVartypeCheckTester(t, (*VartypeCheck).RelativePkgPath)
