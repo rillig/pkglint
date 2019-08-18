@@ -264,6 +264,8 @@ func (bt *BasicType) NeedsQ() bool {
 		BtPkgRevision,
 		BtPrefixPathname,
 		BtPythonDependency,
+		BtRPkgName,
+		BtRPkgVer,
 		BtRelativePkgDir,
 		BtRelativePkgPath,
 		BtStage,
