@@ -1130,6 +1130,18 @@ func (s *Suite) Test_VartypeCheck_PkgRevision(c *check.C) {
 	vt.OutputEmpty()
 }
 
+func (s *Suite) Test_VartypeCheck_PrefixPathname(c *check.C) {
+	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).PrefixPathname)
+
+	vt.Varname("PKGMANDIR")
+	vt.Values(
+		"man/man1",
+		"share/locale")
+
+	vt.Output(
+		"WARN: filename.mk:1: Please use \"${PKGMANDIR}/man1\" instead of \"man/man1\".")
+}
+
 func (s *Suite) Test_VartypeCheck_PythonDependency(c *check.C) {
 	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).PythonDependency)
 
@@ -1142,18 +1154,6 @@ func (s *Suite) Test_VartypeCheck_PythonDependency(c *check.C) {
 	vt.Output(
 		"WARN: filename.mk:2: Python dependencies should not contain variables.",
 		"WARN: filename.mk:3: Invalid Python dependency \"cairo,X\".")
-}
-
-func (s *Suite) Test_VartypeCheck_PrefixPathname(c *check.C) {
-	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).PrefixPathname)
-
-	vt.Varname("PKGMANDIR")
-	vt.Values(
-		"man/man1",
-		"share/locale")
-
-	vt.Output(
-		"WARN: filename.mk:1: Please use \"${PKGMANDIR}/man1\" instead of \"man/man1\".")
 }
 
 func (s *Suite) Test_VartypeCheck_RelativePkgPath(c *check.C) {
