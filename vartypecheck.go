@@ -921,6 +921,10 @@ func (cv *VartypeCheck) Pkgname() {
 			"A valid package name has the form packagename-version, where version",
 			"consists only of digits, letters and dots.")
 	}
+
+	if matches(value, `nb\d+$`) {
+		cv.Errorf("The \"nb\" part of the version number belongs in PKGREVISION.")
+	}
 }
 
 func (cv *VartypeCheck) PkgOptionsVar() {

@@ -1063,6 +1063,12 @@ func (s *Suite) Test_VartypeCheck_Pkgname(c *check.C) {
 	vt.Output(
 		"WARN: filename.mk:8: \"pkgbase-z1\" is not a valid package name.")
 
+	vt.Values(
+		"pkgbase-1.0nb17")
+
+	vt.Output(
+		"ERROR: filename.mk:11: The \"nb\" part of the version number belongs in PKGREVISION.")
+
 	vt.Op(opUseMatch)
 	vt.Values(
 		"pkgbase-[0-9]*")
@@ -1688,6 +1694,6 @@ func (vt *VartypeCheckTester) OutputEmpty() {
 
 func (vt *VartypeCheckTester) nextSection() {
 	if vt.lineno%10 != 1 {
-		vt.lineno = vt.lineno - vt.lineno%10 + 11
+		vt.lineno += 9 - (vt.lineno+8)%10
 	}
 }
