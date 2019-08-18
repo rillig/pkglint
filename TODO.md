@@ -98,3 +98,8 @@ MODULES+=	m_sqloper.cpp m_sqlutils.cpp
 HEADERS+=	m_sqlutils.h
 .endif
 ~~~
+
+### Categories
+
+* directory should be first if > 1
+* redundancies should be detected
