@@ -729,6 +729,15 @@ func (s *Suite) Test_ShellLexer_Lex__case_patterns(c *check.C) {
 		tkIN,
 		tkWORD,
 		tkESAC)
+
+	test(
+		"case $$expr in ${PATTERNS:Mpattern} esac",
+
+		tkCASE,
+		tkWORD,
+		tkIN,
+		tkWORD,
+		tkWORD) // No tkESAC since there is no :@ modifier.
 }
 
 type MkShBuilder struct {
