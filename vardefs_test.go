@@ -12,6 +12,35 @@ func (s *Suite) Test_VarTypeRegistry_Init(c *check.C) {
 	t.CheckEquals(src.vartypes.Canon("USE_BUILTIN.*").basicType.name, "YesNoIndirectly")
 }
 
+func (s *Suite) Test_VarTypeRegistry_compilerLanguages(c *check.C) {
+	t := s.Init(c)
+
+	G.Testing = false // Just for code coverage
+	t.CreateFileLines("mk/compiler.mk",
+		MkCvsID,
+		"",
+		"_CXX_STD_VERSIONS=      gnu++14",
+		".for _version_ in ${_CXX_STD_VERSIONS}",
+		".  if !empty(USE_LANGUAGES:M${_version_})",
+		"USE_LANGUAGES+=         c++",
+		".  endif",
+		".endfor",
+		"",
+		".if ${USE_LANGUAGES:Mexpr-lang} || !empty(USE_LANGUAGES:Mempty-lang)",
+		".endif",
+		"",
+		// Just for code coverage
+		".if ${OTHER} || ${USE_LANGUAGES} \\",
+		" || ${USE_LANGUAGES:O} || ${USE_LANGUAGES:Mc++-*}",
+		".endif")
+	reg := NewVarTypeRegistry()
+
+	compilerLanguages := reg.compilerLanguages(&G.Pkgsrc)
+
+	enumValues := compilerLanguages.AllowedEnums()
+	t.CheckEquals(enumValues, "empty-lang expr-lang gnu++14")
+}
+
 func (s *Suite) Test_VarTypeRegistry_enumFrom(c *check.C) {
 	t := s.Init(c)
 
