@@ -1638,6 +1638,16 @@ func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__realistic_compiler_m
 		"GNU_CONFIGURE=\tyes",
 		"",
 		".include \"../../mk/compiler.mk\"")
+	t.CreateFileLines("mk/compiler.mk",
+		"_CXX_STD_VERSIONS=\tc++ c++14",
+		".if ${USE_LANGUAGES:Mada} \\",
+		" || ${USE_LANGUAGES:Mc} \\",
+		" || ${USE_LANGUAGES:Mfortran77}",
+		".endif",
+		"",
+		// This line is ignored since it comes from the pkgsrc infrastructure.
+		"USE_LANGUAGES?=\t\tc")
+
 	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))
