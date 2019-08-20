@@ -2410,6 +2410,30 @@ func (s *Suite) Test_VaralignBlock_realignMultiEmptyInitial(c *check.C) {
 		"NOTE: filename.mk:3: This outlier variable should be aligned with a single space.")
 }
 
+func (s *Suite) Test_VaralignBlock_realignMultiEmptyInitial__spaces(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR=    \\",
+		"\tvalue",
+		// This line is necessary to trigger the realignment; see VaralignBlock.Finish.
+		"VAR= value")
+	vt.Internals(
+		"04 08",
+		"   08",
+		"04 05")
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:1: Variable values should be aligned with tabs, not spaces.",
+		"NOTE: ~/Makefile:3: This variable value should be aligned with tabs, not spaces, to column 9.")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:1: Replacing \"    \" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:3: Replacing \" \" with \"\\t\".")
+	vt.Fixed(
+		"VAR=    \\",
+		"        value",
+		"VAR=    value")
+	vt.Run()
+}
+
 func (s *Suite) Test_VaralignBlock_split(c *check.C) {
 	t := s.Init(c)
 
