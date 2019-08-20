@@ -1820,6 +1820,42 @@ func (s *Suite) Test_VaralignBlock__outlier_with_several_spaces(c *check.C) {
 	vt.Run()
 }
 
+func (s *Suite) Test_VaralignBlock__single_space_in_short_line(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"SHORT= value",
+		"LONG_NAME=\tvalue")
+	vt.Internals(
+		"06 07",
+		"10 16")
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 17.")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:1: Replacing \" \" with \"\\t\\t\".")
+	vt.Fixed(
+		"SHORT=          value",
+		"LONG_NAME=      value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__outlier_without_space(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"SHORT=\tvalue",
+		"LONG.678901234567890=value")
+	vt.Internals(
+		"06 08",
+		"21 21")
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:2: This outlier variable value should be aligned with a single space.")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:2: Replacing \"\" with \" \".")
+	vt.Fixed(
+		"SHORT=  value",
+		"LONG.678901234567890= value")
+	vt.Run()
+}
+
 // The INSTALLATION_DIRS line is so long that it is considered an outlier,
 // since compared to the DIST line, it is at least two tabs away.
 // Pkglint before 2018-01-26 suggested that it "should be aligned to column 9",
