@@ -2466,29 +2466,39 @@ func (s *Suite) Test_VaralignBlock_realignMultiEmptyFollow(c *check.C) {
 		"        value1 \\",
 		"          value2 \\",
 		"      value3 \\",
-		"value4")
+		"value4 \\",
+		"\\",
+		"# comment")
 	vt.Internals(
 		"04 05",
 		"   08",
 		"   10",
 		"   06",
-		"   00")
+		"   00",
+		"   00",
+		"   02") // FIXME: Expected 00, 00 instead of 02.
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:2: This continuation line should be indented with \"\\t\".",
 		"NOTE: ~/Makefile:3: This continuation line should be indented with \"\\t  \".",
 		"NOTE: ~/Makefile:4: This continuation line should be indented with \"\\t\".",
-		"NOTE: ~/Makefile:5: This continuation line should be indented with \"\\t\".")
+		"NOTE: ~/Makefile:5: This continuation line should be indented with \"\\t\".",
+		"NOTE: ~/Makefile:6: This continuation line should be indented with \"\\t\".",
+		"NOTE: ~/Makefile:7: This continuation line should be indented with \"\\t\".")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:2: Replacing \"        \" with \"\\t\".",
 		"AUTOFIX: ~/Makefile:3: Replacing \"          \" with \"\\t  \".",
 		"AUTOFIX: ~/Makefile:4: Replacing \"      \" with \"\\t\".",
-		"AUTOFIX: ~/Makefile:5: Replacing \"\" with \"\\t\".")
+		"AUTOFIX: ~/Makefile:5: Replacing \"\" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:6: Replacing \"\" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:7: Replacing \" \" with \"\\t\".")
 	vt.Fixed(
 		"VAR= \\",
 		"        value1 \\",
 		"          value2 \\",
 		"        value3 \\",
-		"        value4")
+		"        value4 \\",
+		"        \\",
+		"#       comment") // FIXME: This replacement is completely unexpected.
 	vt.Run()
 }
 
