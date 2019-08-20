@@ -2454,6 +2454,44 @@ func (s *Suite) Test_VaralignBlock_realignMultiInitial__spaces(c *check.C) {
 	vt.Run()
 }
 
+// This example is quite unrealistic since typically the first line is
+// the least indented.
+//
+// All follow-up lines are indented with at least one tab, to make clear
+// they are continuation lines.
+func (s *Suite) Test_VaralignBlock_realignMultiEmptyFollow(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR= \\",
+		"        value1 \\",
+		"          value2 \\",
+		"      value3 \\",
+		"value4")
+	vt.Internals(
+		"04 05",
+		"   08",
+		"   10",
+		"   06",
+		"   00")
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:2: This continuation line should be indented with \"\\t\".",
+		"NOTE: ~/Makefile:3: This continuation line should be indented with \"\\t  \".",
+		"NOTE: ~/Makefile:4: This continuation line should be indented with \"\\t\".",
+		"NOTE: ~/Makefile:5: This continuation line should be indented with \"\\t\".")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:2: Replacing \"        \" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:3: Replacing \"          \" with \"\\t  \".",
+		"AUTOFIX: ~/Makefile:4: Replacing \"      \" with \"\\t\".",
+		"AUTOFIX: ~/Makefile:5: Replacing \"\" with \"\\t\".")
+	vt.Fixed(
+		"VAR= \\",
+		"        value1 \\",
+		"          value2 \\",
+		"        value3 \\",
+		"        value4")
+	vt.Run()
+}
+
 func (s *Suite) Test_VaralignBlock_split(c *check.C) {
 	t := s.Init(c)
 
