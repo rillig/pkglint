@@ -379,7 +379,7 @@ func (va *VaralignBlock) realign(info *varalignLine, newWidth int) {
 	}
 }
 
-func (va *VaralignBlock) realignMultiEmptyInitial(info *varalignLine, newWidth int) {
+func (*VaralignBlock) realignMultiEmptyInitial(info *varalignLine, newWidth int) {
 	leadingComment := info.parts.leadingComment
 	varnameOp := info.parts.varnameOp
 	oldSpace := info.parts.spaceBeforeValue
@@ -400,10 +400,8 @@ func (va *VaralignBlock) realignMultiEmptyInitial(info *varalignLine, newWidth i
 	}
 
 	hasSpace := strings.IndexByte(oldSpace, ' ') != -1
-	oldColumn := tabWidth(leadingComment + varnameOp + oldSpace)
+	oldColumn := info.varnameOpSpaceWidth()
 	column := tabWidth(leadingComment + varnameOp + newSpace)
-
-	assert(column >= oldColumn || column > info.varnameOpWidth())
 
 	// TODO: explicitly mention "single space", "tabs to the newWidth", "tabs to column 72"
 
