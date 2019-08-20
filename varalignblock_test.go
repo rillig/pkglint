@@ -1055,7 +1055,7 @@ func (s *Suite) Test_VaralignBlock__outlier_in_follow_continuation(c *check.C) {
 		"38 38",
 		"   24")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:2: This variable value should be aligned to column 40.")
+		"NOTE: ~/Makefile:2: This outlier variable should be aligned with a single space.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:2: Replacing \"\" with \" \".")
 	vt.Fixed(
@@ -2401,14 +2401,13 @@ func (s *Suite) Test_VaralignBlock_realignMultiEmptyInitial(c *check.C) {
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
 		"VAR=\t${VAR}",
-		// FIXME: It's not possible to align with tabs to column 21.
 		"LONG_VARIABLE_NAME=    \t        \\",
 		"\t${LONG_VARIABLE_NAME}")
 
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"NOTE: filename.mk:3: This variable value should be aligned with tabs, not spaces, to column 21.")
+		"NOTE: filename.mk:3: This outlier variable should be aligned with a single space.")
 }
 
 func (s *Suite) Test_VaralignBlock_split(c *check.C) {
