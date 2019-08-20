@@ -2476,7 +2476,7 @@ func (s *Suite) Test_VaralignBlock_realignMultiEmptyFollow(c *check.C) {
 		"   06",
 		"   00",
 		"   00",
-		"   02") // FIXME: Expected 00, 00 instead of 02.
+		"   00")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:2: This continuation line should be indented with \"\\t\".",
 		"NOTE: ~/Makefile:3: This continuation line should be indented with \"\\t  \".",
@@ -2490,7 +2490,7 @@ func (s *Suite) Test_VaralignBlock_realignMultiEmptyFollow(c *check.C) {
 		"AUTOFIX: ~/Makefile:4: Replacing \"      \" with \"\\t\".",
 		"AUTOFIX: ~/Makefile:5: Replacing \"\" with \"\\t\".",
 		"AUTOFIX: ~/Makefile:6: Replacing \"\" with \"\\t\".",
-		"AUTOFIX: ~/Makefile:7: Replacing \" \" with \"\\t\".")
+		"AUTOFIX: ~/Makefile:7: Replacing \"\" with \"\\t\".")
 	vt.Fixed(
 		"VAR= \\",
 		"        value1 \\",
@@ -2498,7 +2498,7 @@ func (s *Suite) Test_VaralignBlock_realignMultiEmptyFollow(c *check.C) {
 		"        value3 \\",
 		"        value4 \\",
 		"        \\",
-		"#       comment") // FIXME: This replacement is completely unexpected.
+		"        # comment")
 	vt.Run()
 }
 
@@ -2693,27 +2693,65 @@ func (s *Suite) Test_VaralignBlock_split(c *check.C) {
 			continuation:      "\\",
 		})
 
+	// A follow-up line may start with a comment character. There are
+	// two possible interpretations:
+	//
+	// 1. It is a leading comment, and the rest of the line is parsed
+	// as usual.
+	//
+	// 2. It is a continuation of the value, and therefore the value ends
+	// here; everything after this line is part of the trailing comment.
+	//
+	// The character that follows the comment character decides which
+	// interpretation is used. A space makes the comment a trailing
+	// comment since that's the way these trailing comments typically look.
+	// Any other character makes it a leading comment.
+
+	test("#\tcomment", false,
+		varalignSplitResult{
+			leadingComment:    "#",
+			varnameOp:         "",
+			spaceBeforeValue:  "\t",
+			value:             "comment",
+			spaceAfterValue:   "",
+			trailingComment:   "",
+			spaceAfterComment: "",
+			continuation:      "",
+		})
+
+	test("#\tcomment \\", false,
+		varalignSplitResult{
+			leadingComment:    "#",
+			varnameOp:         "",
+			spaceBeforeValue:  "\t",
+			value:             "comment",
+			spaceAfterValue:   " ",
+			trailingComment:   "",
+			spaceAfterComment: "",
+			continuation:      "\\",
+		})
+
 	test("# comment", false,
 		varalignSplitResult{
-			leadingComment:    "#",       // FIXME: "",
-			varnameOp:         "",        //
-			spaceBeforeValue:  " ",       // FIXME: "",
-			value:             "comment", // FIXME: "",
-			spaceAfterValue:   "",        //
-			trailingComment:   "",        // FIXME: "# comment",
+			leadingComment:    "",
+			varnameOp:         "",
+			spaceBeforeValue:  "",
+			value:             "",
+			spaceAfterValue:   "",
+			trailingComment:   "# comment",
 			spaceAfterComment: "",
 			continuation:      "",
 		})
 
 	test("# comment \\", false,
 		varalignSplitResult{
-			leadingComment:    "#",       // FIXME: "",
-			varnameOp:         "",        //
-			spaceBeforeValue:  " ",       // FIXME: "",
-			value:             "comment", // FIXME: "",
-			spaceAfterValue:   " ",       // FIXME: "",
-			trailingComment:   "",        // FIXME: "# comment",
-			spaceAfterComment: "",        // FIXME: " ",
+			leadingComment:    "",
+			varnameOp:         "",
+			spaceBeforeValue:  "",
+			value:             "",
+			spaceAfterValue:   "",
+			trailingComment:   "# comment",
+			spaceAfterComment: " ",
 			continuation:      "\\",
 		})
 

@@ -173,6 +173,10 @@ func (*VaralignBlock) split(textnl string, initial bool) varalignSplitResult {
 	lexer := p.lexer
 
 	parseLeadingComment := func() string {
+		if hasPrefix(lexer.Rest(), "# ") {
+			return ""
+		}
+
 		mark := lexer.Mark()
 
 		if !lexer.SkipByte('#') && initial && lexer.SkipByte(' ') {
