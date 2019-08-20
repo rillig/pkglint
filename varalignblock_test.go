@@ -2280,6 +2280,25 @@ func (s *Suite) Test_VaralignBlock__command_with_arguments(c *check.C) {
 	vt.Run()
 }
 
+// Variables with empty values and no comments are completely ignored,
+// since they have nothing to be aligned with the other lines.
+func (s *Suite) Test_VaralignBlock__empty_value(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"EMPTY_VALUE=",
+		"VAR=\t\tvalue")
+	vt.Internals(
+		"04 16")
+	vt.Diagnostics(
+		nil...)
+	vt.Autofixes(
+		nil...)
+	vt.Fixed(
+		"EMPTY_VALUE=",
+		"VAR=            value")
+	vt.Run()
+}
+
 func (s *Suite) Test_VaralignBlock_Process__autofix(c *check.C) {
 	t := s.Init(c)
 

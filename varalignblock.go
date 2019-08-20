@@ -527,10 +527,6 @@ func (va *VaralignBlock) realignSingle(info *varalignLine, newWidth int) {
 	oldColumn := tabWidth(leadingComment + varnameOp + oldSpace)
 	column := tabWidth(leadingComment + varnameOp + newSpace)
 
-	if info.parts.value == "" && info.parts.trailingComment == "" && !info.continuation() {
-		return
-	}
-
 	fix := info.mkline.Autofix()
 	if newSpace == " " {
 		fix.Notef("This outlier variable value should be aligned with a single space.")
