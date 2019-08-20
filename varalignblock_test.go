@@ -1811,8 +1811,7 @@ func (s *Suite) Test_VaralignBlock__outlier_with_several_spaces(c *check.C) {
 		"06 08",
 		"29 32")
 	vt.Diagnostics(
-		// FIXME: That's not possible since tabs are a multiple of 8 (+ 1).
-		"NOTE: ~/Makefile:2: This variable value should be aligned with tabs, not spaces, to column 31.")
+		"NOTE: ~/Makefile:2: This outlier variable value should be aligned with a single space.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:2: Replacing \"   \" with \" \".")
 	vt.Fixed(

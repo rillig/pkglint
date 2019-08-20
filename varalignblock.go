@@ -536,7 +536,10 @@ func (va *VaralignBlock) realignSingle(info *varalignLine, newWidth int) {
 	}
 
 	fix := info.mkline.Autofix()
-	if hasSpace && column != oldColumn {
+	if newSpace == " " {
+		fix.Notef("This outlier variable value should be aligned with a single space.")
+		va.explainWrongColumn(fix)
+	} else if hasSpace && column != oldColumn {
 		fix.Notef("This variable value should be aligned with tabs, not spaces, to column %d.", column+1)
 		va.explainWrongColumn(fix)
 	} else if column != oldColumn {
