@@ -19,6 +19,7 @@ func (s *Suite) Test_parseShellProgram__parse_error_for_dollar(c *check.C) {
 				t.CheckEquals(err, expError)
 			} else {
 				t.CheckDeepEquals(err, expError)
+				t.CheckDeepEquals(err.Error(), expError.Error()) // Just for code coverage
 				t.CheckDeepEquals(program, expProgram)
 			}
 
@@ -47,6 +48,12 @@ func (s *Suite) Test_parseShellProgram__parse_error_for_dollar(c *check.C) {
 		"shell$$;",
 		nil,
 		nil,
+		nil...)
+
+	test(
+		"case ;;",
+		nil,
+		&ParseError{[]string{";;"}},
 		nil...)
 }
 
