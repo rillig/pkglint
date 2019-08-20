@@ -29,6 +29,8 @@ func (vt *VaralignTester) Input(lines ...string) { vt.input = lines }
 
 // Internals remembers the expected internal state of the varalignBlockInfos,
 // to better trace down at which points the decisions are made.
+//
+// Each line has the format "<min-width> <actual-width>".
 func (vt *VaralignTester) Internals(lines ...string) { vt.internals = lines }
 
 // Diagnostics remembers the expected diagnostics.
@@ -1797,6 +1799,25 @@ func (s *Suite) Test_VaralignBlock__outlier_14(c *check.C) {
 	vt.Fixed(
 		"V.00008=        value",
 		"V.00008=        value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__outlier_with_several_spaces(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"SHORT=\tvalue",
+		"VERY_VERY_LONG_VARIABLE_NAME=   value")
+	vt.Internals(
+		"06 08",
+		"29 32")
+	vt.Diagnostics(
+		// FIXME: That's not possible since tabs are a multiple of 8 (+ 1).
+		"NOTE: ~/Makefile:2: This variable value should be aligned with tabs, not spaces, to column 31.")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:2: Replacing \"   \" with \" \".")
+	vt.Fixed(
+		"SHORT=  value",
+		"VERY_VERY_LONG_VARIABLE_NAME= value")
 	vt.Run()
 }
 
