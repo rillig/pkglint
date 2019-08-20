@@ -2611,6 +2611,26 @@ func (s *Suite) Test_VaralignBlock_split(c *check.C) {
 		func() { test("#  VAR=    value", true, varalignSplitResult{}) })
 }
 
+// This test runs canonicalInitial directly since as of August 2019
+// that function is only used in a single place, and from this place
+// varnameOpSpaceWidth is always bigger than width.
+func (s *Suite) Test_varalignLine_canonicalInitial(c *check.C) {
+	t := s.Init(c)
+
+	var v varalignLine
+	v.parts.varnameOp = "LONG.123456789="
+	v.parts.spaceBeforeValue = " "
+	t.CheckEquals(v.canonicalInitial(16), false)
+
+	v.parts.varnameOp = "LONG.1234567890="
+
+	t.CheckEquals(v.canonicalInitial(16), true)
+
+	v.parts.spaceBeforeValue = ""
+
+	t.CheckEquals(v.canonicalInitial(16), false)
+}
+
 func (s *Suite) Test_varalignLine_canonicalFollow(c *check.C) {
 	t := s.Init(c)
 
