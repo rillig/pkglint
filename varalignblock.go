@@ -431,15 +431,7 @@ func (va *VaralignBlock) realignMultiEmptyFollow(info *varalignLine, newWidth in
 		}
 	}
 
-	newWidth = oldWidth + va.indentDiff
-	if newWidth < 8 {
-		newWidth = oldWidth & -8
-		if newWidth < 8 {
-			newWidth = 8
-		}
-	}
-
-	newSpace := indent(newWidth)
+	newSpace := indent(imax(oldWidth+va.indentDiff, 8))
 	if newSpace == oldSpace {
 		return
 	}
