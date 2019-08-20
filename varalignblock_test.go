@@ -2693,6 +2693,30 @@ func (s *Suite) Test_VaralignBlock_split(c *check.C) {
 			continuation:      "\\",
 		})
 
+	test("# comment", false,
+		varalignSplitResult{
+			leadingComment:    "#",       // FIXME: "",
+			varnameOp:         "",        //
+			spaceBeforeValue:  " ",       // FIXME: "",
+			value:             "comment", // FIXME: "",
+			spaceAfterValue:   "",        //
+			trailingComment:   "",        // FIXME: "# comment",
+			spaceAfterComment: "",
+			continuation:      "",
+		})
+
+	test("# comment \\", false,
+		varalignSplitResult{
+			leadingComment:    "#",       // FIXME: "",
+			varnameOp:         "",        //
+			spaceBeforeValue:  " ",       // FIXME: "",
+			value:             "comment", // FIXME: "",
+			spaceAfterValue:   " ",       // FIXME: "",
+			trailingComment:   "",        // FIXME: "# comment",
+			spaceAfterComment: "",        // FIXME: " ",
+			continuation:      "\\",
+		})
+
 	// Commented variable assignments are only valid if they
 	// directly follow the comment sign.
 	//
