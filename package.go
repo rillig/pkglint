@@ -173,7 +173,7 @@ func (pkg *Package) checkLinesBuildlink3Inclusion(mklines *MkLines) {
 	for _, mkline := range mklines.mklines {
 		if mkline.IsInclude() {
 			includedFile := mkline.IncludedFile()
-			if matches(includedFile, `^\.\./\.\./.*/buildlink3\.mk`) {
+			if hasPrefix(includedFile, "../../") && hasSuffix(includedFile, "buildlink3.mk") {
 				includedFiles[includedFile] = mkline
 				if pkg.bl3[includedFile] == nil {
 					mkline.Warnf("%s is included by this file but not by the package.", includedFile)
