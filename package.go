@@ -112,6 +112,13 @@ func (pkg *Package) Rel(filename string) string {
 	return relpath(pkg.dir, filename)
 }
 
+// Returns whether the given file (relative to the package directory)
+// is included somewhere in the package, either directly or indirectly.
+func (pkg *Package) Includes(filename string) bool {
+	return pkg.unconditionalIncludes[filename] != nil ||
+		pkg.conditionalIncludes[filename] != nil
+}
+
 func (pkg *Package) checkPossibleDowngrade() {
 	if trace.Tracing {
 		defer trace.Call0()()
@@ -684,6 +691,12 @@ func (pkg *Package) checkfilePackageMakefile(filename string, mklines *MkLines, 
 	allLines.collectVariables()    // To get the tool definitions
 	mklines.Tools = allLines.Tools // TODO: also copy the other collected data
 	mklines.Check()
+
+	if pkg.EffectivePkgname != "" && pkg.Includes("../../lang/python/extension.mk") {
+		if !hasPrefix(pkg.EffectivePkgname, "$") {
+			pkg.EffectivePkgnameLine.Warnf("The PKGNAME of Python extensions should start with ${PYPKGPREFIX}.")
+		}
+	}
 
 	pkg.CheckVarorder(mklines)
 

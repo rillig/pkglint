@@ -698,6 +698,53 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__ineffective_C_modifier(c
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_Package_determineEffectivePkgVars__Python_prefix(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"PKGNAME=\tpackage-2.0",
+		".include \"../../lang/python/extension.mk\"")
+	t.CreateFileLines("lang/python/extension.mk",
+		MkCvsID)
+
+	t.Main("-Wall", "category/package")
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile:4: The PKGNAME of Python extensions should start with ${PYPKGPREFIX}.",
+		"1 warning found.")
+}
+
+// As of August 2019, pkglint loads the package files in alphabetical order.
+// This means that the package Makefile is loaded early, and includes by
+// other files may be invisible yet. This applies to both Makefile.* and to
+// *.mk since both of these appear later.
+//
+// The effects of these files are nevertheless visible at the right time
+// because the package Makefile is loaded including all its included files.
+//
+// FIXME: The above is not true. Make it true.
+func (s *Suite) Test_Package_determineEffectivePkgVars__Python_prefix_late(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"PKGNAME=\tpackage-2.0",
+		".include \"common.mk\"")
+	t.CreateFileLines("category/package/common.mk",
+		MkCvsID,
+		".include \"../../lang/python/extension.mk\"")
+	t.CreateFileLines("lang/python/extension.mk",
+		MkCvsID)
+
+	t.Main("-Wall", "category/package")
+
+	t.CheckOutputLines(
+		"Looks fine.")
+	// FIXME:
+	//t.CheckOutputLines(
+	//	"WARN: ~/category/package/Makefile:4: The PKGNAME of Python extensions should start with ${PYPKGPREFIX}.",
+	//	"1 warning found.")
+}
+
 func (s *Suite) Test_Package_checkPossibleDowngrade(c *check.C) {
 	t := s.Init(c)
 

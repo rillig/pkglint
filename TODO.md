@@ -26,9 +26,6 @@
 
 # Python
 
-* Packages including lang/python/extension.mk must follow the Python version
-  scheme. Enforcing PYPKGPREFIX for those is most likely a good idea.
-
 * Warn about using REPLACE_PYTHON without including application.mk.
 
 # Misc
