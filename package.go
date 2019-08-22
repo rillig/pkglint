@@ -23,7 +23,7 @@ type Package struct {
 	Filesdir             string       // FILESDIR from the package Makefile
 	Patchdir             string       // PATCHDIR from the package Makefile
 	DistinfoFile         string       // DISTINFO_FILE from the package Makefile
-	EffectivePkgname     string       // PKGNAME or DISTNAME from the package Makefile, including nb13
+	EffectivePkgname     string       // PKGNAME or DISTNAME from the package Makefile, including nb13, can be empty
 	EffectivePkgbase     string       // EffectivePkgname without the version
 	EffectivePkgversion  string       // The version part of the effective PKGNAME, excluding nb13
 	EffectivePkgnameLine *MkLine      // The origin of the three Effective* values
@@ -704,9 +704,7 @@ func (pkg *Package) checkfilePackageMakefile(filename string, mklines *MkLines, 
 	mklines.Check()
 
 	if pkg.EffectivePkgname != "" && pkg.Includes("../../lang/python/extension.mk") {
-		if !hasPrefix(pkg.EffectivePkgname, "$") {
-			pkg.EffectivePkgnameLine.Warnf("The PKGNAME of Python extensions should start with ${PYPKGPREFIX}.")
-		}
+		pkg.EffectivePkgnameLine.Warnf("The PKGNAME of Python extensions should start with ${PYPKGPREFIX}.")
 	}
 
 	pkg.CheckVarorder(mklines)
