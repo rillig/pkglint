@@ -1204,7 +1204,59 @@ func (s *Suite) Test_Package_checkIncludeConditionally__conditional_and_uncondit
 		"WARN: options.mk:3: Expected definition of PKG_OPTIONS_VAR.")
 }
 
-func (s *Suite) Test_Package_checkIncludeConditionally__mixed(c *check.C) {
+func (s *Suite) Test_Package_checkIncludeConditionally__unconditionally_first(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.Chdir("category/package")
+	t.CreateFileLines("including.mk",
+		MkCvsID,
+		"",
+		".include \"included.mk\"",
+		".if ${OPSYS} == \"Linux\"",
+		".include \"included.mk\"",
+		".endif")
+	t.CreateFileLines("included.mk",
+		MkCvsID)
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	t.CheckOutputLines(
+		// FIXME:
+		//"WARN: including.mk:3: \"included.mk\" is included "+
+		//	"unconditionally here and conditionally in line 5 (depending on OPSYS).",
+		"WARN: including.mk:5: \"included.mk\" is included " +
+			"conditionally here (depending on OPSYS) and unconditionally in line 3.")
+}
+
+func (s *Suite) Test_Package_checkIncludeConditionally__conditionally_first(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.Chdir("category/package")
+	t.CreateFileLines("including.mk",
+		MkCvsID,
+		"",
+		".if ${OPSYS} == \"Linux\"",
+		".include \"included.mk\"",
+		".endif",
+		".include \"included.mk\"")
+	t.CreateFileLines("included.mk",
+		MkCvsID)
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	t.CheckOutputLines(
+		// FIXME:
+		//"WARN: including.mk:4: \"included.mk\" is included "+
+		//	"conditionally here (depending on OPSYS) and unconditionally in line 6.",
+		"WARN: including.mk:6: \"included.mk\" is included " +
+			"unconditionally here and conditionally in line 4 (depending on OPSYS).")
+}
+
+func (s *Suite) Test_Package_checkIncludeConditionally__included_multiple_times(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
