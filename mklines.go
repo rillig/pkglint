@@ -91,7 +91,7 @@ func (mklines *MkLines) Check() {
 	mklines.collectPlistVars()
 	mklines.collectElse()
 	if G.Pkg != nil {
-		G.Pkg.collectIncludes(mklines)
+		G.Pkg.collectConditionalIncludes(mklines)
 	}
 
 	// In the second pass, the actual checks are done.

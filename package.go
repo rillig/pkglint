@@ -217,6 +217,7 @@ func (pkg *Package) load() ([]string, *MkLines, *MkLines) {
 
 	// Determine the used variables and PLIST directories before checking any of the Makefile fragments.
 	// TODO: Why is this code necessary? What effect does it have?
+	pkg.collectConditionalIncludes(mklines)
 	for _, filename := range files {
 		basename := path.Base(filename)
 		if (hasPrefix(basename, "Makefile.") || hasSuffix(filename, ".mk")) &&
@@ -225,6 +226,7 @@ func (pkg *Package) load() ([]string, *MkLines, *MkLines) {
 			!contains(filename, pkg.Filesdir+"/") {
 			fragmentMklines := LoadMk(filename, MustSucceed)
 			fragmentMklines.collectUsedVariables()
+			pkg.collectConditionalIncludes(fragmentMklines)
 		}
 		if hasPrefix(basename, "PLIST") {
 			pkg.loadPlistDirs(filename)
@@ -389,7 +391,7 @@ func (pkg *Package) loadPackageMakefile() (*MkLines, *MkLines) {
 	return mainLines, allLines
 }
 
-func (pkg *Package) collectIncludes(mklines *MkLines) {
+func (pkg *Package) collectConditionalIncludes(mklines *MkLines) {
 	mklines.ForEach(func(mkline *MkLine) {
 		if mkline.IsInclude() {
 			mkline.SetConditionalVars(mklines.indentation.Varnames())
@@ -688,7 +690,11 @@ func (pkg *Package) checkfilePackageMakefile(filename string, mklines *MkLines, 
 
 	pkg.checkUpdate()
 
-	pkg.collectIncludes(allLines)
+	// TODO: Maybe later collect the conditional includes from allLines
+	//  instead of mklines. This will lead to about 6000 new warnings
+	//  though.
+	//  pkg.collectConditionalIncludes(allLines)
+
 	allLines.collectVariables()    // To get the tool definitions
 	mklines.Tools = allLines.Tools // TODO: also copy the other collected data
 	mklines.Check()

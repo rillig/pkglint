@@ -736,7 +736,8 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__Python_prefix_late(c *ch
 	t.Main("-Wall", "category/package")
 
 	t.CheckOutputLines(
-		"WARN: ~/category/package/Makefile:4: The PKGNAME of Python extensions should start with ${PYPKGPREFIX}.",
+		"WARN: ~/category/package/Makefile:4: "+
+			"The PKGNAME of Python extensions should start with ${PYPKGPREFIX}.",
 		"1 warning found.")
 }
 
@@ -1237,12 +1238,18 @@ func (s *Suite) Test_Package_checkIncludeConditionally__conditional_and_uncondit
 	G.checkdirPackage(".")
 
 	t.CheckOutputLines(
-		"WARN: options.mk:4: \"../../devel/zlib/buildlink3.mk\" is "+
-			"included conditionally here (depending on PKG_OPTIONS) "+
-			"and unconditionally in Makefile:20.",
-		"WARN: options.mk:6: \"../../sysutils/coreutils/buildlink3.mk\" is "+
-			"included unconditionally here "+
-			"and conditionally in Makefile:22 (depending on OPSYS).",
+		"WARN: Makefile:20: \"../../devel/zlib/buildlink3.mk\" is included "+
+			"unconditionally here "+
+			"and conditionally in options.mk:4 (depending on PKG_OPTIONS).",
+		"WARN: Makefile:22: \"../../sysutils/coreutils/buildlink3.mk\" is included "+
+			"conditionally here (depending on OPSYS) and "+
+			"unconditionally in options.mk:6.",
+		"WARN: options.mk:4: \"../../devel/zlib/buildlink3.mk\" is included "+
+			"conditionally here (depending on PKG_OPTIONS) and "+
+			"unconditionally in Makefile:20.",
+		"WARN: options.mk:6: \"../../sysutils/coreutils/buildlink3.mk\" is included "+
+			"unconditionally here and "+
+			"conditionally in Makefile:22 (depending on OPSYS).",
 		"WARN: options.mk:3: Expected definition of PKG_OPTIONS_VAR.")
 }
 
