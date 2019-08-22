@@ -27,6 +27,24 @@ func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__file_but_not_package
 			"but not by the package.")
 }
 
+// Several files from the pkgsrc infrastructure are named *.buildlink3.mk,
+// even though they don't follow the typical file format for buildlink3.mk
+// files. Therefore they are ignored by this check.
+func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__infra_buildlink_file(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".include \"../../mk/motif.buildlink3.mk\"")
+	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
+		".include \"../../mk/motif.buildlink3.mk\"")
+	t.CreateFileLines("mk/motif.buildlink3.mk",
+		MkCvsID)
+
+	t.Main("--quiet", "-Wall", "category/package")
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__package_but_not_file(c *check.C) {
 	t := s.Init(c)
 

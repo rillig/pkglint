@@ -167,9 +167,13 @@ func (pkg *Package) checkPossibleDowngrade() {
 	}
 }
 
-// checkLinesBuildlink3Inclusion checks whether the package Makefile and
-// the corresponding buildlink3.mk agree for all included buildlink3.mk
-// files whether they are included conditionally or unconditionally.
+// checkLinesBuildlink3Inclusion checks whether the package Makefile includes
+// at least those buildlink3.mk files that are included by the buildlink3.mk
+// file of the package.
+//
+// The other direction is not checked since it is perfectly fine for a package
+// to have more dependencies than are needed for buildlink the package.
+// (This might be worth re-checking though.)
 func (pkg *Package) checkLinesBuildlink3Inclusion(mklines *MkLines) {
 	if trace.Tracing {
 		defer trace.Call0()()
@@ -180,7 +184,7 @@ func (pkg *Package) checkLinesBuildlink3Inclusion(mklines *MkLines) {
 	for _, mkline := range mklines.mklines {
 		if mkline.IsInclude() {
 			includedFile := mkline.IncludedFile()
-			if hasPrefix(includedFile, "../../") && hasSuffix(includedFile, "buildlink3.mk") {
+			if hasSuffix(includedFile, "/buildlink3.mk") {
 				includedFiles[includedFile] = mkline
 				if pkg.bl3[includedFile] == nil {
 					mkline.Warnf("%s is included by this file but not by the package.", includedFile)
@@ -612,7 +616,7 @@ func (pkg *Package) resolveIncludedFile(mkline *MkLine, includingFilename string
 	}
 
 	if mkline.Basename != "buildlink3.mk" {
-		if matches(includedFile, `^\.\./\.\./(.*)/buildlink3\.mk$`) {
+		if hasSuffix(includedFile, "/buildlink3.mk") {
 			pkg.bl3[includedFile] = mkline
 			if trace.Tracing {
 				trace.Step1("Buildlink3 file in package: %q", includedFile)
