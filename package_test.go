@@ -1330,6 +1330,30 @@ func (s *Suite) Test_Package_checkIncludeConditionally__included_multiple_times(
 			"conditionally here (depending on OPSYS) and unconditionally in line 8.")
 }
 
+func (s *Suite) Test_Package_checkIncludeConditionally__prefs(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.Chdir("category/package")
+	t.CreateFileLines("including.mk",
+		MkCvsID,
+		"",
+		".include \"../../mk/bsd.prefs.mk\"",
+		".if ${OPSYS} == \"Linux\"",
+		".include \"../../mk/bsd.prefs.mk\"",
+		".endif")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	// FIXME: preferences may always be included.
+	t.CheckOutputLines(
+		"WARN: including.mk:3: \"../../mk/bsd.prefs.mk\" is included "+
+			"unconditionally here and conditionally in line 5 (depending on OPSYS).",
+		"WARN: including.mk:5: \"../../mk/bsd.prefs.mk\" is included "+
+			"conditionally here (depending on OPSYS) and unconditionally in line 3.")
+}
+
 func (s *Suite) Test_Package_checkIncludeConditionally__other_directory(c *check.C) {
 	t := s.Init(c)
 
