@@ -733,6 +733,26 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__Python_prefix(c *check.C
 		"1 warning found.")
 }
 
+func (s *Suite) Test_Package_determineEffectivePkgVars__Python_prefix_PKGNAME_variable(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"PKGNAME=\t${VAR}-package-2.0",
+		".include \"../../lang/python/extension.mk\"")
+	t.CreateFileLines("lang/python/extension.mk",
+		MkCvsID,
+		"VAR=\tvalue")
+
+	t.Main("-Wall", "category/package")
+
+	// Since PKGNAME starts with a variable, pkglint doesn't investigate
+	// further what the possible value of this variable could be. If it
+	// did, it would see that the prefix is not PYPKGPREFIX and would
+	// complain.
+	t.CheckOutputLines(
+		"Looks fine.")
+}
+
 // As of August 2019, pkglint loads the package files in alphabetical order.
 // This means that the package Makefile is loaded early, and includes by
 // other files may be invisible yet. This applies to both Makefile.* and to
