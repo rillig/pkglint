@@ -2896,3 +2896,26 @@ func (s *Suite) Test_Package_checkPlist__PERL5_USE_PACKLIST_yes(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: ~/category/p5-Packlist/Makefile:20: This package should not have a PLIST file.")
 }
+
+func (s *Suite) Test_Package_Includes(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".include \"unconditionally.mk\"",
+		".if 0",
+		".include \"conditionally.mk\"",
+		".endif")
+	t.CreateFileLines("category/package/unconditionally.mk",
+		MkCvsID)
+	t.CreateFileLines("category/package/conditionally.mk",
+		MkCvsID)
+	t.FinishSetUp()
+
+	pkg := NewPackage(t.File("category/package"))
+
+	pkg.load()
+
+	t.CheckEquals(pkg.Includes("unconditionally.mk"), true)
+	t.CheckEquals(pkg.Includes("conditionally.mk"), true)
+	t.CheckEquals(pkg.Includes("other.mk"), false)
+}
