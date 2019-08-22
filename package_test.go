@@ -1330,6 +1330,9 @@ func (s *Suite) Test_Package_checkIncludeConditionally__included_multiple_times(
 			"conditionally here (depending on OPSYS) and unconditionally in line 8.")
 }
 
+// For preferences files, it doesn't matter whether they are included
+// conditionally or unconditionally since at the end they are included
+// anyway by the infrastructure.
 func (s *Suite) Test_Package_checkIncludeConditionally__prefs(c *check.C) {
 	t := s.Init(c)
 
@@ -1346,12 +1349,7 @@ func (s *Suite) Test_Package_checkIncludeConditionally__prefs(c *check.C) {
 
 	G.Check(".")
 
-	// FIXME: preferences may always be included.
-	t.CheckOutputLines(
-		"WARN: including.mk:3: \"../../mk/bsd.prefs.mk\" is included "+
-			"unconditionally here and conditionally in line 5 (depending on OPSYS).",
-		"WARN: including.mk:5: \"../../mk/bsd.prefs.mk\" is included "+
-			"conditionally here (depending on OPSYS) and unconditionally in line 3.")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_Package_checkIncludeConditionally__other_directory(c *check.C) {

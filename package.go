@@ -1261,6 +1261,10 @@ func (pkg *Package) checkFreeze(filename string) {
 }
 
 func (pkg *Package) checkIncludeConditionally(mkline *MkLine, indentation *Indentation) {
+	if IsPrefs(mkline.IncludedFile()) {
+		return
+	}
+
 	key := pkg.Rel(mkline.IncludedFileFull())
 
 	if indentation.IsConditional() {
