@@ -70,7 +70,8 @@ netbsd() {
   if (cd "$srcdir" && grep -n "@VERSION@" -- *_test.go); then
     exit 1
   fi
-  if (cd "$srcdir" && fgrep -n '$NetBSD$' -- *_test.go); then
+  # shellcheck disable=SC2016
+  if (cd "$srcdir" && grep -F -n '$NetBSD$' -- *_test.go); then
     exit 1
   fi
 
@@ -106,6 +107,7 @@ netbsd() {
   cmd="$cmd && env - PATH=/bin:/usr/bin PKGSRC_RUN_TEST=no \"\$HOME/minipkg/bin/bmake\" clean update"
   cmd="$cmd && env - PATH=/bin:/usr/bin PKGSRC_RUN_TEST=yes \"\$HOME/minipkg/bin/bmake\" clean update"
   cmd="$cmd && \"\$HOME/minipkg/bin/pkglint\" -Wall"
+  # shellcheck disable=SC2029
   ssh netbsd "$cmd"
 }
 
