@@ -1283,12 +1283,6 @@ func (s *Suite) Test_Package_checkIncludeConditionally__conditional_and_uncondit
 		"WARN: Makefile:22: \"../../sysutils/coreutils/buildlink3.mk\" is included "+
 			"conditionally here (depending on OPSYS) and "+
 			"unconditionally in options.mk:6.",
-		"WARN: options.mk:4: \"../../devel/zlib/buildlink3.mk\" is included "+
-			"conditionally here (depending on PKG_OPTIONS) and "+
-			"unconditionally in Makefile:20.",
-		"WARN: options.mk:6: \"../../sysutils/coreutils/buildlink3.mk\" is included "+
-			"unconditionally here and "+
-			"conditionally in Makefile:22 (depending on OPSYS).",
 		"WARN: options.mk:3: Expected definition of PKG_OPTIONS_VAR.")
 }
 
@@ -1311,10 +1305,8 @@ func (s *Suite) Test_Package_checkIncludeConditionally__unconditionally_first(c 
 	G.Check(".")
 
 	t.CheckOutputLines(
-		"WARN: including.mk:3: \"included.mk\" is included "+
-			"unconditionally here and conditionally in line 5 (depending on OPSYS).",
-		"WARN: including.mk:5: \"included.mk\" is included "+
-			"conditionally here (depending on OPSYS) and unconditionally in line 3.")
+		"WARN: including.mk:3: \"included.mk\" is included " +
+			"unconditionally here and conditionally in line 5 (depending on OPSYS).")
 }
 
 func (s *Suite) Test_Package_checkIncludeConditionally__only_conditionally(c *check.C) {
@@ -1353,10 +1345,8 @@ func (s *Suite) Test_Package_checkIncludeConditionally__conditionally_first(c *c
 	G.Check(".")
 
 	t.CheckOutputLines(
-		"WARN: including.mk:4: \"included.mk\" is included "+
-			"conditionally here (depending on OPSYS) and unconditionally in line 6.",
-		"WARN: including.mk:6: \"included.mk\" is included "+
-			"unconditionally here and conditionally in line 4 (depending on OPSYS).")
+		"WARN: including.mk:4: \"included.mk\" is included " +
+			"conditionally here (depending on OPSYS) and unconditionally in line 6.")
 }
 
 func (s *Suite) Test_Package_checkIncludeConditionally__included_multiple_times(c *check.C) {
@@ -1388,9 +1378,7 @@ func (s *Suite) Test_Package_checkIncludeConditionally__included_multiple_times(
 		"WARN: including.mk:5: \"included.mk\" is included "+
 			"conditionally here (depending on OPSYS) and unconditionally in line 8.",
 		"WARN: including.mk:8: \"included.mk\" is included "+
-			"unconditionally here and conditionally in line 10 (depending on OPSYS).",
-		"WARN: including.mk:10: \"included.mk\" is included "+
-			"conditionally here (depending on OPSYS) and unconditionally in line 8.")
+			"unconditionally here and conditionally in line 10 (depending on OPSYS).")
 }
 
 // For preferences files, it doesn't matter whether they are included

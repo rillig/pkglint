@@ -56,6 +56,8 @@ type Package struct {
 	unconditionalIncludes map[string]*MkLine
 
 	IgnoreMissingPatches bool // In distinfo, don't warn about patches that cannot be found.
+
+	Once Once
 }
 
 func NewPackage(dir string) *Package {
@@ -1277,6 +1279,10 @@ func (pkg *Package) checkIncludeConditionally(mkline *MkLine, indentation *Inden
 
 	if indentation.IsConditional() {
 		if other := pkg.unconditionalIncludes[key]; other != nil {
+			if !pkg.Once.FirstTimeSlice("checkIncludeConditionally", mkline.Location.String(), other.Location.String()) {
+				return
+			}
+
 			mkline.Warnf(
 				"%q is included conditionally here (depending on %s) "+
 					"and unconditionally in %s.",
@@ -1285,6 +1291,10 @@ func (pkg *Package) checkIncludeConditionally(mkline *MkLine, indentation *Inden
 
 	} else {
 		if other := pkg.conditionalIncludes[key]; other != nil {
+			if !pkg.Once.FirstTimeSlice("checkIncludeConditionally", other.Location.String(), mkline.Location.String()) {
+				return
+			}
+
 			mkline.Warnf(
 				"%q is included unconditionally here "+
 					"and conditionally in %s (depending on %s).",
