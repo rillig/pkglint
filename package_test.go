@@ -1223,10 +1223,9 @@ func (s *Suite) Test_Package_checkIncludeConditionally__unconditionally_first(c 
 	G.Check(".")
 
 	t.CheckOutputLines(
-		// FIXME:
-		//"WARN: including.mk:3: \"included.mk\" is included "+
-		//	"unconditionally here and conditionally in line 5 (depending on OPSYS).",
-		"WARN: including.mk:5: \"included.mk\" is included " +
+		"WARN: including.mk:3: \"included.mk\" is included "+
+			"unconditionally here and conditionally in line 5 (depending on OPSYS).",
+		"WARN: including.mk:5: \"included.mk\" is included "+
 			"conditionally here (depending on OPSYS) and unconditionally in line 3.")
 }
 
@@ -1249,10 +1248,9 @@ func (s *Suite) Test_Package_checkIncludeConditionally__conditionally_first(c *c
 	G.Check(".")
 
 	t.CheckOutputLines(
-		// FIXME:
-		//"WARN: including.mk:4: \"included.mk\" is included "+
-		//	"conditionally here (depending on OPSYS) and unconditionally in line 6.",
-		"WARN: including.mk:6: \"included.mk\" is included " +
+		"WARN: including.mk:4: \"included.mk\" is included "+
+			"conditionally here (depending on OPSYS) and unconditionally in line 6.",
+		"WARN: including.mk:6: \"included.mk\" is included "+
 			"unconditionally here and conditionally in line 4 (depending on OPSYS).")
 }
 
@@ -1280,10 +1278,12 @@ func (s *Suite) Test_Package_checkIncludeConditionally__included_multiple_times(
 	G.Check(".")
 
 	t.CheckOutputLines(
+		"WARN: including.mk:3: \"included.mk\" is included "+
+			"unconditionally here and conditionally in line 10 (depending on OPSYS).",
 		"WARN: including.mk:5: \"included.mk\" is included "+
-			"conditionally here (depending on OPSYS) and unconditionally in line 3.",
+			"conditionally here (depending on OPSYS) and unconditionally in line 8.",
 		"WARN: including.mk:8: \"included.mk\" is included "+
-			"unconditionally here and conditionally in line 5 (depending on OPSYS).",
+			"unconditionally here and conditionally in line 10 (depending on OPSYS).",
 		"WARN: including.mk:10: \"included.mk\" is included "+
 			"conditionally here (depending on OPSYS) and unconditionally in line 8.")
 }

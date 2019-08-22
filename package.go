@@ -382,6 +382,21 @@ func (pkg *Package) loadPackageMakefile() (*MkLines, *MkLines) {
 	return mainLines, allLines
 }
 
+func (pkg *Package) collectIncludes(mklines *MkLines) {
+	mklines.ForEach(func(mkline *MkLine) {
+		if mkline.IsInclude() {
+			mkline.SetConditionalVars(mklines.indentation.Varnames())
+
+			key := pkg.Rel(mkline.IncludedFileFull())
+			if mklines.indentation.IsConditional() {
+				pkg.conditionalIncludes[key] = mkline
+			} else {
+				pkg.unconditionalIncludes[key] = mkline
+			}
+		}
+	})
+}
+
 // TODO: What is allLines used for, is it still necessary? Would it be better as a field in Package?
 func (pkg *Package) parse(mklines *MkLines, allLines *MkLines, includingFileForUsedCheck string) bool {
 	if trace.Tracing {
@@ -1232,12 +1247,9 @@ func (pkg *Package) checkFreeze(filename string) {
 }
 
 func (pkg *Package) checkIncludeConditionally(mkline *MkLine, indentation *Indentation) {
-	mkline.SetConditionalVars(indentation.Varnames())
-
 	key := pkg.Rel(mkline.IncludedFileFull())
 
 	if indentation.IsConditional() {
-		pkg.conditionalIncludes[key] = mkline
 		if other := pkg.unconditionalIncludes[key]; other != nil {
 			mkline.Warnf(
 				"%q is included conditionally here (depending on %s) "+
@@ -1246,7 +1258,6 @@ func (pkg *Package) checkIncludeConditionally(mkline *MkLine, indentation *Inden
 		}
 
 	} else {
-		pkg.unconditionalIncludes[key] = mkline
 		if other := pkg.conditionalIncludes[key]; other != nil {
 			mkline.Warnf(
 				"%q is included unconditionally here "+
