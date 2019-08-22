@@ -721,8 +721,6 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__Python_prefix(c *check.C
 //
 // The effects of these files are nevertheless visible at the right time
 // because the package Makefile is loaded including all its included files.
-//
-// FIXME: The above is not true. Make it true.
 func (s *Suite) Test_Package_determineEffectivePkgVars__Python_prefix_late(c *check.C) {
 	t := s.Init(c)
 
@@ -738,11 +736,8 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__Python_prefix_late(c *ch
 	t.Main("-Wall", "category/package")
 
 	t.CheckOutputLines(
-		"Looks fine.")
-	// FIXME:
-	//t.CheckOutputLines(
-	//	"WARN: ~/category/package/Makefile:4: The PKGNAME of Python extensions should start with ${PYPKGPREFIX}.",
-	//	"1 warning found.")
+		"WARN: ~/category/package/Makefile:4: The PKGNAME of Python extensions should start with ${PYPKGPREFIX}.",
+		"1 warning found.")
 }
 
 func (s *Suite) Test_Package_checkPossibleDowngrade(c *check.C) {
