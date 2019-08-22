@@ -1234,8 +1234,7 @@ func (pkg *Package) checkFreeze(filename string) {
 func (pkg *Package) checkIncludeConditionally(mkline *MkLine, indentation *Indentation) {
 	mkline.SetConditionalVars(indentation.Varnames())
 
-	includedFile := mkline.IncludedFile()
-	key := pkg.Rel(mkline.IncludedFile())
+	key := pkg.Rel(mkline.IncludedFileFull())
 
 	if indentation.IsConditional() {
 		pkg.conditionalIncludes[key] = mkline
@@ -1243,7 +1242,7 @@ func (pkg *Package) checkIncludeConditionally(mkline *MkLine, indentation *Inden
 			mkline.Warnf(
 				"%q is included conditionally here (depending on %s) "+
 					"and unconditionally in %s.",
-				cleanpath(includedFile), strings.Join(mkline.ConditionalVars(), ", "), mkline.RefTo(other))
+				cleanpath(mkline.IncludedFile()), strings.Join(mkline.ConditionalVars(), ", "), mkline.RefTo(other))
 		}
 
 	} else {
@@ -1252,7 +1251,7 @@ func (pkg *Package) checkIncludeConditionally(mkline *MkLine, indentation *Inden
 			mkline.Warnf(
 				"%q is included unconditionally here "+
 					"and conditionally in %s (depending on %s).",
-				cleanpath(includedFile), mkline.RefTo(other), strings.Join(other.ConditionalVars(), ", "))
+				cleanpath(mkline.IncludedFile()), mkline.RefTo(other), strings.Join(other.ConditionalVars(), ", "))
 		}
 	}
 
@@ -1322,12 +1321,7 @@ func (pkg *Package) checkUseLanguagesCompilerMk(mklines *MkLines) {
 	}
 
 	handleInclude := func(mkline *MkLine) {
-		dirname, _ := path.Split(mkline.Filename)
-		dirname = cleanpath(dirname)
-		fullIncluded := dirname + "/" + mkline.IncludedFile()
-		relIncludedFile := relpath(pkg.dir, fullIncluded)
-
-		seen.FirstTime(relIncludedFile)
+		_ = seen.FirstTime(pkg.Rel(mkline.IncludedFileFull()))
 	}
 
 	mklines.ForEach(func(mkline *MkLine) {

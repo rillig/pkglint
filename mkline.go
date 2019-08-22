@@ -421,6 +421,10 @@ func (mkline *MkLine) MustExist() bool { return mkline.data.(*mkLineInclude).mus
 
 func (mkline *MkLine) IncludedFile() string { return mkline.data.(*mkLineInclude).includedFile }
 
+func (mkline *MkLine) IncludedFileFull() string {
+	return cleanpath(path.Join(path.Dir(mkline.Filename), mkline.IncludedFile()))
+}
+
 func (mkline *MkLine) Targets() string { return mkline.data.(mkLineDependency).targets }
 
 func (mkline *MkLine) Sources() string { return mkline.data.(mkLineDependency).sources }

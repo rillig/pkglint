@@ -233,8 +233,7 @@ func (t *Tester) LoadMkInclude(relativeFileName string) *MkLines {
 			lines = append(lines, mkline.Line)
 
 			if mkline.IsInclude() {
-				included := cleanpath(path.Dir(filename) + "/" + mkline.IncludedFile())
-				load(included)
+				load(mkline.IncludedFileFull())
 			}
 		}
 	}
