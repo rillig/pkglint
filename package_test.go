@@ -1317,6 +1317,23 @@ func (s *Suite) Test_Package_checkIncludeConditionally__unconditionally_first(c 
 			"conditionally here (depending on OPSYS) and unconditionally in line 3.")
 }
 
+func (s *Suite) Test_Package_checkIncludeConditionally__only_conditionally(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".if ${OPSYS} == \"Linux\"",
+		".include \"included.mk\"",
+		".endif")
+	t.Chdir("category/package")
+	t.CreateFileLines("included.mk",
+		MkCvsID)
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Package_checkIncludeConditionally__conditionally_first(c *check.C) {
 	t := s.Init(c)
 
