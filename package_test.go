@@ -2920,11 +2920,16 @@ func (s *Suite) Test_Package_Includes(c *check.C) {
 	t.SetUpPackage("category/package",
 		".include \"unconditionally.mk\"",
 		".if 0",
+		".include \"never.mk\"",
+		".endif",
+		".if ${OPSYS} == Linux",
 		".include \"conditionally.mk\"",
 		".endif")
 	t.CreateFileLines("category/package/unconditionally.mk",
 		MkCvsID)
 	t.CreateFileLines("category/package/conditionally.mk",
+		MkCvsID)
+	t.CreateFileLines("category/package/never.mk",
 		MkCvsID)
 	t.FinishSetUp()
 
@@ -2935,4 +2940,9 @@ func (s *Suite) Test_Package_Includes(c *check.C) {
 	t.CheckEquals(pkg.Includes("unconditionally.mk"), true)
 	t.CheckEquals(pkg.Includes("conditionally.mk"), true)
 	t.CheckEquals(pkg.Includes("other.mk"), false)
+
+	// TODO: Strictly speaking, never.mk should be in conditionalIncludes.
+	//  This is an edge case though. See collectConditionalIncludes and
+	//  Indentation.IsConditional for the current implementation.
+	t.CheckEquals(pkg.conditionalIncludes["never.mk"], (*MkLine)(nil))
 }
