@@ -54,6 +54,11 @@ analyze() {
   (cd ~/pkglint && golangci-lint run)
 }
 
+gobco() {
+  # see https://github.com/rillig/gobco
+  (cd ~/pkglint && exec gobco > archive/gobco.txt.tmp && mv -f archive/gobco.txt.tmp archive/gobco.txt)
+}
+
 netbsd() {
   step_msg "Checking for @beta"
   if (cd "$srcdir" && grep -n "@beta" -- *.go); then
