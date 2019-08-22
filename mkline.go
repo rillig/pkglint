@@ -429,8 +429,9 @@ func (mkline *MkLine) Targets() string { return mkline.data.(mkLineDependency).t
 
 func (mkline *MkLine) Sources() string { return mkline.data.(mkLineDependency).sources }
 
-// ConditionalVars applies to .include lines and is a space-separated
-// list of those variable names on which the inclusion depends.
+// ConditionalVars applies to .include lines and contains the
+// variable names on which the inclusion depends.
+//
 // It is initialized later, step by step, when parsing other lines.
 func (mkline *MkLine) ConditionalVars() []string {
 	return mkline.data.(*mkLineInclude).conditionalVars

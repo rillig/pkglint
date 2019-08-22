@@ -680,6 +680,7 @@ func (t *Tester) FinishSetUp() {
 }
 
 // Main runs the pkglint main program with the given command line arguments.
+// Other than in the other tests, the -Wall option is not added implicitly.
 //
 // Arguments that name existing files or directories in the temporary test
 // directory are transformed to their actual paths.
