@@ -727,6 +727,7 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__Python_prefix(c *check.C
 
 	t.Main("-Wall", "category/package")
 
+	// @beta
 	t.CheckOutputLines(
 		"WARN: ~/category/package/Makefile:4: The PKGNAME of Python extensions should start with ${PYPKGPREFIX}.",
 		"1 warning found.")
