@@ -418,15 +418,9 @@ func (pkg *Package) parse(mklines *MkLines, allLines *MkLines, includingFileForU
 		defer trace.Call1(mklines.lines.Filename)()
 	}
 
-	result := true
-
-	lineAction := func(mkline *MkLine) bool {
-		result = pkg.parseLine(mklines, mkline, allLines)
-		return result
-	}
-
-	atEnd := func(mkline *MkLine) {}
-	mklines.ForEachEnd(lineAction, atEnd)
+	result := mklines.ForEachEnd(
+		func(mkline *MkLine) bool { return pkg.parseLine(mklines, mkline, allLines) },
+		func(mkline *MkLine) {})
 
 	if includingFileForUsedCheck != "" {
 		mklines.CheckUsedBy(G.Pkgsrc.ToRel(includingFileForUsedCheck))
