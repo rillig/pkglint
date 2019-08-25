@@ -727,10 +727,12 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__Python_prefix(c *check.C
 
 	t.Main("-Wall", "category/package")
 
-	// @beta
 	t.CheckOutputLines(
-		"WARN: ~/category/package/Makefile:4: The PKGNAME of Python extensions should start with ${PYPKGPREFIX}.",
-		"1 warning found.")
+		"Looks fine.")
+	// TODO: Wait for joerg's answer before enabling this check.
+	//t.CheckOutputLines(
+	//	"WARN: ~/category/package/Makefile:4: The PKGNAME of Python extensions should start with ${PYPKGPREFIX}.",
+	//	"1 warning found.")
 }
 
 func (s *Suite) Test_Package_determineEffectivePkgVars__Python_prefix_PKGNAME_variable(c *check.C) {
@@ -774,10 +776,13 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__Python_prefix_late(c *ch
 
 	t.Main("-Wall", "category/package")
 
+	// TODO: Wait for joerg's answer before enabling this check.
 	t.CheckOutputLines(
-		"WARN: ~/category/package/Makefile:4: "+
-			"The PKGNAME of Python extensions should start with ${PYPKGPREFIX}.",
-		"1 warning found.")
+		"Looks fine.")
+	//t.CheckOutputLines(
+	//	"WARN: ~/category/package/Makefile:4: "+
+	//		"The PKGNAME of Python extensions should start with ${PYPKGPREFIX}.",
+	//	"1 warning found.")
 }
 
 func (s *Suite) Test_Package_checkPossibleDowngrade(c *check.C) {

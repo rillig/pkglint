@@ -695,7 +695,7 @@ func (pkg *Package) checkfilePackageMakefile(filename string, mklines *MkLines, 
 	mklines.Tools = allLines.Tools // TODO: also copy the other collected data
 	mklines.Check()
 
-	if pkg.EffectivePkgname != "" && pkg.Includes("../../lang/python/extension.mk") {
+	if false && pkg.EffectivePkgname != "" && pkg.Includes("../../lang/python/extension.mk") {
 		pkg.EffectivePkgnameLine.Warnf("The PKGNAME of Python extensions should start with ${PYPKGPREFIX}.")
 	}
 
