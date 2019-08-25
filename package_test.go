@@ -2363,6 +2363,7 @@ func (s *Suite) Test_Package_collectSeenInclude__builtin_mk(c *check.C) {
 
 func (s *Suite) Test_Package_diveInto(c *check.C) {
 	t := s.Init(c)
+	t.Chdir(".")
 
 	test := func(including, included string, expected bool) {
 		actual := (*Package)(nil).diveInto(including, included)
@@ -2405,8 +2406,7 @@ func (s *Suite) Test_Package_diveInto(c *check.C) {
 
 	// wip/mk doesn't count as infrastructure since it is often used as a
 	// second layer, using the API of the main mk/ infrastructure.
-	// FIXME: must be true
-	test("wip/mk/cargo-binary.mk", "../../lang/rust/cargo.mk", false)
+	test("wip/mk/cargo-binary.mk", "../../lang/rust/cargo.mk", true)
 }
 
 func (s *Suite) Test_Package_collectSeenInclude__multiple(c *check.C) {

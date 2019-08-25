@@ -564,15 +564,11 @@ func (*Package) diveInto(includingFile string, includedFile string) bool {
 		return false
 	}
 
-	if !contains(includingFile, "/mk/") {
-		return true
+	if contains(includingFile, "/mk/") && !hasPrefix(G.Pkgsrc.ToRel(includingFile), "wip/mk") {
+		return hasSuffix(includingFile, "buildlink3.mk") && hasSuffix(includedFile, "builtin.mk")
 	}
 
-	if hasSuffix(includingFile, "buildlink3.mk") && hasSuffix(includedFile, "builtin.mk") {
-		return true
-	}
-
-	return false
+	return true
 }
 
 func (pkg *Package) collectSeenInclude(mkline *MkLine, includedFile string) {
