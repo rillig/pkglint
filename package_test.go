@@ -2402,6 +2402,11 @@ func (s *Suite) Test_Package_diveInto(c *check.C) {
 	test("../../mk/one.mk", "two.mk", false)
 	test("../../mk/one.mk", "../../mk/two.mk", false)
 	test("../../mk/one.mk", "../lang/go/version.mk", false)
+
+	// wip/mk doesn't count as infrastructure since it is often used as a
+	// second layer, using the API of the main mk/ infrastructure.
+	// FIXME: must be true
+	test("wip/mk/cargo-binary.mk", "../../lang/rust/cargo.mk", false)
 }
 
 func (s *Suite) Test_Package_collectSeenInclude__multiple(c *check.C) {
