@@ -20,6 +20,7 @@ func (ck MkLineChecker) Check() {
 
 	LineChecker{mkline.Line}.CheckTrailingWhitespace()
 	LineChecker{mkline.Line}.CheckValidCharacters()
+	ck.checkEmptyContinuation()
 
 	switch {
 	case mkline.IsVarassign():
@@ -33,6 +34,21 @@ func (ck MkLineChecker) Check() {
 
 	case mkline.IsInclude():
 		ck.checkInclude()
+	}
+}
+
+func (ck MkLineChecker) checkEmptyContinuation() {
+	if !ck.MkLine.IsMultiline() {
+		return
+	}
+
+	line := ck.MkLine.Line
+	if line.raw[len(line.raw)-1].orignl == "\n" {
+		lastLine := NewLine(line.Filename, int(line.lastLine), "", line.raw[len(line.raw)-1])
+		lastLine.Warnf("This line looks empty but continues the previous line.")
+		lastLine.Explain(
+			"This line should be indented like other continuation lines,",
+			"and to make things clear, should be a comment line.")
 	}
 }
 

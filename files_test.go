@@ -116,26 +116,6 @@ func (s *Suite) Test_nextLogicalLine__commented_multi(c *check.C) {
 	t.CheckEquals(mkline.VarassignComment(), "")
 }
 
-func (s *Suite) Test_nextLogicalLine__empty_line_after_continuation(c *check.C) {
-	t := s.Init(c)
-
-	mklines := t.SetUpFileMkLines("filename.mk",
-		MkCvsID,
-		"# line 1 \\",
-		"",
-		"# line 2")
-
-	// Don't check this when loading a file, since otherwise the infrastructure
-	// files could possibly get this warning. Sure, they should be fixed, but
-	// it's not in the focus of the package maintainer.
-	t.CheckOutputEmpty()
-
-	mklines.Check()
-
-	// FIXME: Warn about the misleading empty line.
-	t.CheckOutputEmpty()
-}
-
 func (s *Suite) Test_convertToLogicalLines__missing_newline_at_eof(c *check.C) {
 	t := s.Init(c)
 

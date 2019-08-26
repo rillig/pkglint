@@ -1410,9 +1410,6 @@ func (s *Suite) Test_VaralignBlock__continuation_mixed_indentation_in_first_line
 }
 
 func (s *Suite) Test_VaralignBlock__follow_up_indented_with_spaces(c *check.C) {
-	// FIXME: warn about the misleading empty line 6,
-	//  but not in this test
-
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"DISTFILES= \\",
@@ -1996,7 +1993,6 @@ func (s *Suite) Test_VaralignBlock__fix_without_diagnostic(c *check.C) {
 func (s *Suite) Test_VaralignBlock__continuation_line_last_empty(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
-		// FIXME: Add a test for MkParser to warn about this apparently empty line.
 		"DISTFILES= \\",
 		"\ta \\",
 		"\tb \\",
