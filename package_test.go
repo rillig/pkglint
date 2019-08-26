@@ -2941,3 +2941,23 @@ func (s *Suite) Test_Package_Includes(c *check.C) {
 	//  Indentation.IsConditional for the current implementation.
 	t.CheckEquals(pkg.conditionalIncludes["never.mk"], (*MkLine)(nil))
 }
+
+func (s *Suite) Test_Package__case_insensitive(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.SetUpPackage("net/p5-Net-DNS")
+	t.SetUpPackage("category/package",
+		"DEPENDS+=\tp5-Net-DNS>=0:../../net/p5-net-dns")
+	t.FinishSetUp()
+
+	// this test is only interesting on a case-insensitive filesystem
+	if !fileExists(t.File("mk/BSD.PKG.MK")) {
+		return
+	}
+
+	G.Check(t.File("category/package"))
+
+	// FIXME: On a case-sensitive filesystem, p5-net-dns would not be found.
+	t.CheckOutputEmpty()
+}
