@@ -2,6 +2,7 @@ package pkglint
 
 import (
 	"netbsd.org/pkglint/textproc"
+	"sort"
 	"strings"
 )
 
@@ -289,7 +290,8 @@ func (va *VaralignBlock) Finish() {
 		if info.rawIndex == 0 {
 			va.indentDiffSet = false
 			va.indentDiff = 0
-			rightMargin = va.rightMargin(infos[i+1:])
+			restIndex := i + condInt(info.parts.value != "", 0, 1)
+			rightMargin = va.rightMargin(infos[restIndex:])
 		}
 
 		va.checkContinuationIndentation(info, newWidth, rightMargin)
@@ -301,19 +303,34 @@ func (va *VaralignBlock) Finish() {
 }
 
 func (*VaralignBlock) rightMargin(infos []*varalignLine) int {
-	rightMargin := 0
-	for _, sameLineInfo := range infos {
-		if sameLineInfo.rawIndex == 0 {
-			break
-		}
+	var min int
+	var columns []int
+	for _, info := range infos {
+		if info.continuation() {
+			mainWidth := tabWidth(info.beforeContinuation())
+			if mainWidth > min {
+				min = mainWidth
+			}
 
-		space := sameLineInfo.spaceBeforeContinuation()
-		if space != "" && space != " " {
-			column := sameLineInfo.continuationColumn()
-			rightMargin = imax(rightMargin, column)
+			space := info.spaceBeforeContinuation()
+			if space != "" && space != " " {
+				columns = append(columns, info.continuationColumn())
+			}
 		}
 	}
-	return rightMargin
+
+	sort.Ints(columns)
+
+	for i := len(columns) - 2; i >= 0; i-- {
+		if columns[i] == columns[i+1] {
+			return columns[i]
+		}
+	}
+
+	if len(columns) > 1 {
+		return (min & -8) + 8
+	}
+	return 0
 }
 
 // optimalWidth computes the desired screen width for the variable assignment

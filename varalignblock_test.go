@@ -2629,6 +2629,31 @@ func (s *Suite) Test_VaralignBlock__initial_value_tab80(c *check.C) {
 	vt.Run()
 }
 
+func (s *Suite) Test_VaralignBlock__long_lines(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR=\t\t\t\t\t\tvalue\t\t \\",
+		"\tvalue \t \\",
+		"\tvalue")
+	vt.Internals(
+		"04 48 65",
+		"   08 17",
+		"   08")
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:1: The continuation backslash should be preceded " +
+			"by a single space or tab, or be in column 57, not 66.")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\\t \" with \"\\t\".")
+	vt.Fixed(
+		// @beta
+		// FIXME: There should be a warning about the unaligned values.
+		"VAR=                                            value   \\",
+		// FIXME: The backslash should be aligned properly.
+		"        value    \\",
+		"        value")
+	vt.Run()
+}
+
 func (s *Suite) Test_VaralignBlock_split(c *check.C) {
 	t := s.Init(c)
 
