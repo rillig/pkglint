@@ -2521,6 +2521,35 @@ func (s *Suite) Test_VaralignBlock_realignMultiEmptyFollow(c *check.C) {
 	vt.Run()
 }
 
+func (s *Suite) Test_VaralignBlock_continuation_backslashes_aligned(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR=\tvalue value value\t\\",
+		"\tvalue\t\t\t\t\\",
+		"\tvalue\t\t\t\t\\",
+		"\tvalue")
+	vt.Internals(
+		"04 08",
+		"   08",
+		"   08",
+		"   08")
+	vt.Diagnostics(
+		// FIXME: it's ok to have all backslashes in the same column.
+		"NOTE: ~/Makefile:2: The continuation backslash should be preceded "+
+			"by a single space or tab, or be in column 73, not 41.",
+		"NOTE: ~/Makefile:3: The continuation backslash should be preceded "+
+			"by a single space or tab, or be in column 73, not 41.")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:2: Replacing \"\\t\\t\\t\\t\" with \" \".",
+		"AUTOFIX: ~/Makefile:3: Replacing \"\\t\\t\\t\\t\" with \" \".")
+	vt.Fixed(
+		"VAR=    value value value       \\",
+		"        value \\",
+		"        value \\",
+		"        value")
+	vt.Run()
+}
+
 func (s *Suite) Test_VaralignBlock_split(c *check.C) {
 	t := s.Init(c)
 
