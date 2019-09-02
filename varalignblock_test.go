@@ -80,9 +80,13 @@ func (vt *VaralignTester) run(autofix bool) {
 
 	var actual []string
 	for _, info := range infos {
-		minWidth := condStr(info.rawIndex == 0, sprintf("%02d", info.varnameOpWidth()), "  ")
-		infoStr := sprintf("%s %02d", minWidth, info.varnameOpSpaceWidth())
-		actual = append(actual, infoStr)
+		var minWidth, curWidth, continuation string
+		minWidth = condStr(info.rawIndex == 0, sprintf("%02d", info.varnameOpWidth()), "  ")
+		curWidth = sprintf(" %02d", info.varnameOpSpaceWidth())
+		if info.continuation() {
+			continuation = sprintf(" %02d", info.continuationColumn())
+		}
+		actual = append(actual, minWidth+curWidth+continuation)
 	}
 	t.CheckDeepEquals(actual, vt.internals)
 
@@ -188,7 +192,7 @@ func (s *Suite) Test_VaralignBlock__one_line_follow_none(c *check.C) {
 		"VVVVVVVVVVVVVVVVVVV=\\",
 		"\tvalue")
 	vt.Internals(
-		"20 20",
+		"20 20 20",
 		"   08")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: The continuation backslash should be preceded by a single space or tab.")
@@ -206,7 +210,7 @@ func (s *Suite) Test_VaralignBlock__one_line_follow_space(c *check.C) {
 		"VVVVVVVVVVVVVVVVVVV= \\",
 		"\tvalue")
 	vt.Internals(
-		"20 21",
+		"20 21 21",
 		"   08")
 	vt.Diagnostics()
 	vt.Autofixes()
@@ -222,7 +226,7 @@ func (s *Suite) Test_VaralignBlock__one_line_follow_tab(c *check.C) {
 		"VVVVVVVVVVVVVVVVVVV=\t\\",
 		"\tvalue")
 	vt.Internals(
-		"20 24",
+		"20 24 24",
 		"   08")
 	vt.Diagnostics()
 	vt.Autofixes()
@@ -238,7 +242,7 @@ func (s *Suite) Test_VaralignBlock__one_line_follow_sss(c *check.C) {
 		"VVVVVVVVVVVVVVVVVVV=   \\",
 		"\tvalue")
 	vt.Internals(
-		"20 23",
+		"20 23 23",
 		"   08")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: The continuation backslash should be preceded by a single space or tab.")
@@ -256,7 +260,7 @@ func (s *Suite) Test_VaralignBlock__one_line_follow_ttt(c *check.C) {
 		"VVVVVVVVVVVVVVVVVVV=\t\t\t\\",
 		"\tvalue")
 	vt.Internals(
-		"20 40",
+		"20 40 40",
 		"   08")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: The continuation backslash should be preceded by a single space or tab.")
@@ -274,7 +278,7 @@ func (s *Suite) Test_VaralignBlock__one_line_follow_tab72(c *check.C) {
 		"VVVVVVVVVVVVVVVVVVV=\t\t\t\t\t\t\t\\",
 		"\tvalue")
 	vt.Internals(
-		"20 72",
+		"20 72 72",
 		"   08")
 	vt.Diagnostics()
 	vt.Autofixes()
@@ -290,7 +294,7 @@ func (s *Suite) Test_VaralignBlock__one_line_follow_indent_none(c *check.C) {
 		"VVVVVVVVVVVVVVVVVVV= \\",
 		"value")
 	vt.Internals(
-		"20 21",
+		"20 21 21",
 		"   00")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:2: This continuation line should be indented with \"\\t\".")
@@ -308,7 +312,7 @@ func (s *Suite) Test_VaralignBlock__one_line_follow_indent_space(c *check.C) {
 		"VVVVVVVVVVVVVVVVVVV= \\",
 		" value")
 	vt.Internals(
-		"20 21",
+		"20 21 21",
 		"   01")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:2: This continuation line should be indented with \"\\t\".")
@@ -326,7 +330,7 @@ func (s *Suite) Test_VaralignBlock__one_line_follow_indent_tab(c *check.C) {
 		"VVVVVVVVVVVVVVVVVVV= \\",
 		"\tvalue")
 	vt.Internals(
-		"20 21",
+		"20 21 21",
 		"   08")
 	vt.Diagnostics()
 	vt.Autofixes()
@@ -342,7 +346,7 @@ func (s *Suite) Test_VaralignBlock__one_line_follow_indent_sss(c *check.C) {
 		"VVVVVVVVVVVVVVVVVVV= \\",
 		"   value")
 	vt.Internals(
-		"20 21",
+		"20 21 21",
 		"   03")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:2: This continuation line should be indented with \"\\t\".")
@@ -360,7 +364,7 @@ func (s *Suite) Test_VaralignBlock__one_line_follow_indent_tt(c *check.C) {
 		"VVVVVVVVVVVVVVVVVVV= \\",
 		"\t\tvalue")
 	vt.Internals(
-		"20 21",
+		"20 21 21",
 		"   16")
 	vt.Diagnostics()
 	vt.Autofixes()
@@ -376,7 +380,7 @@ func (s *Suite) Test_VaralignBlock__one_line_follow_indent_ttt(c *check.C) {
 		"VVVVVVVVVVVVVVVVVVV= \\",
 		"\t\t\tvalue")
 	vt.Internals(
-		"20 21",
+		"20 21 21",
 		"   24")
 	vt.Diagnostics()
 	vt.Autofixes()
@@ -392,7 +396,7 @@ func (s *Suite) Test_VaralignBlock__one_line_follow_indent_tsts(c *check.C) {
 		"VVVVVVVVVVVVVVVVVVV= \\",
 		"\t \t value")
 	vt.Internals(
-		"20 21",
+		"20 21 21",
 		"   17")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:2: This continuation line should be indented with \"\\t\\t \".")
@@ -410,7 +414,7 @@ func (s *Suite) Test_VaralignBlock__one_line_initial_none(c *check.C) {
 		"VVVVVVVVVVVVVVVVVVV=value \\",
 		"\t\t    value")
 	vt.Internals(
-		"20 20",
+		"20 20 26",
 		"   20")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 25.",
@@ -430,7 +434,7 @@ func (s *Suite) Test_VaralignBlock__one_line_initial_space(c *check.C) {
 		"VVVVVVVVVVVVVVVVVVV= value \\",
 		"                     value")
 	vt.Internals(
-		"20 21",
+		"20 21 27",
 		"   21")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 25.",
@@ -450,7 +454,7 @@ func (s *Suite) Test_VaralignBlock__one_line_initial_tab(c *check.C) {
 		"VVVVVVVVVVVVVVVVVVV=\tvalue \\",
 		"\t\t\tvalue")
 	vt.Internals(
-		"20 24",
+		"20 24 30",
 		"   24")
 	vt.Diagnostics()
 	vt.Autofixes()
@@ -466,7 +470,7 @@ func (s *Suite) Test_VaralignBlock__one_line_initial_sss(c *check.C) {
 		"VVVVVVVVVVVVVVVVVVV=   value \\",
 		"                       value")
 	vt.Internals(
-		"20 23",
+		"20 23 29",
 		"   23")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 25.",
@@ -486,7 +490,7 @@ func (s *Suite) Test_VaralignBlock__one_line_initial_ttt(c *check.C) {
 		"VVVVVVVVVVVVVVVVVVV=\t\t\tvalue \\",
 		"\t\t\t\t\tvalue")
 	vt.Internals(
-		"20 40",
+		"20 40 46",
 		"   40")
 	vt.Diagnostics()
 	vt.Autofixes()
@@ -502,7 +506,7 @@ func (s *Suite) Test_VaralignBlock__one_line_initial_tab64(c *check.C) {
 		"VVVVVVVVVVVVVVVVVVV=\tvalue\t\t\t\t\t\\",
 		"\t\t\tvalue")
 	vt.Internals(
-		"20 24",
+		"20 24 64",
 		"   24")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: The continuation backslash should be preceded by a single space or tab.")
@@ -520,7 +524,7 @@ func (s *Suite) Test_VaralignBlock__one_line_initial_tab72(c *check.C) {
 		"VVVVVVVVVVVVVVVVVVV=\tvalue\t\t\t\t\t\t\\",
 		"\t\t\tvalue")
 	vt.Internals(
-		"20 24",
+		"20 24 72",
 		"   24")
 	vt.Diagnostics()
 	vt.Autofixes()
@@ -536,7 +540,7 @@ func (s *Suite) Test_VaralignBlock__one_line_initial_indent_none(c *check.C) {
 		"VVVVVVVVVVVVVVVVVVV=\tvalue \\",
 		"value")
 	vt.Internals(
-		"20 24",
+		"20 24 30",
 		"   00")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:2: This continuation line should be indented with \"\\t\\t\\t\".")
@@ -554,7 +558,7 @@ func (s *Suite) Test_VaralignBlock__one_line_initial_indent_space(c *check.C) {
 		"VVVVVVVVVVVVVVVVVVV=\tvalue \\",
 		" value")
 	vt.Internals(
-		"20 24",
+		"20 24 30",
 		"   01")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:2: This continuation line should be indented with \"\\t\\t\\t\".")
@@ -572,7 +576,7 @@ func (s *Suite) Test_VaralignBlock__one_line_initial_indent_tab(c *check.C) {
 		"VVVVVVVVVVVVVVVVVVV=\tvalue \\",
 		"\tvalue")
 	vt.Internals(
-		"20 24",
+		"20 24 30",
 		"   08")
 	vt.Diagnostics(
 		nil...)
@@ -590,7 +594,7 @@ func (s *Suite) Test_VaralignBlock__one_line_initial_indent_sss(c *check.C) {
 		"VVVVVVVVVVVVVVVVVVV=\tvalue \\",
 		"   value")
 	vt.Internals(
-		"20 24",
+		"20 24 30",
 		"   03")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:2: This continuation line should be indented with \"\\t\\t\\t\".")
@@ -608,7 +612,7 @@ func (s *Suite) Test_VaralignBlock__one_line_initial_indent_tt(c *check.C) {
 		"VVVVVVVVVVVVVVVVVVV=\tvalue \\",
 		"\t\tvalue")
 	vt.Internals(
-		"20 24",
+		"20 24 30",
 		"   16")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:2: This continuation line should be indented with \"\\t\\t\\t\".")
@@ -626,7 +630,7 @@ func (s *Suite) Test_VaralignBlock__one_line_initial_indent_ttt(c *check.C) {
 		"VVVVVVVVVVVVVVVVVVV=\tvalue \\",
 		"\t\t\tvalue")
 	vt.Internals(
-		"20 24",
+		"20 24 30",
 		"   24")
 	vt.Diagnostics()
 	vt.Autofixes()
@@ -642,7 +646,7 @@ func (s *Suite) Test_VaralignBlock__one_line_initial_indent_tsts(c *check.C) {
 		"VVVVVVVVVVVVVVVVVVV=\tvalue \\",
 		"\t \t value")
 	vt.Internals(
-		"20 24",
+		"20 24 30",
 		"   17")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:2: This continuation line should be indented with \"\\t\\t\\t\".")
@@ -660,7 +664,7 @@ func (s *Suite) Test_VaralignBlock__one_line_initial_indent_plus_sss(c *check.C)
 		"VVVVVVVVVVVVVVVVVVV=\tvalue \\",
 		"\t\t\t   value")
 	vt.Internals(
-		"20 24",
+		"20 24 30",
 		"   27")
 	vt.Diagnostics()
 	vt.Autofixes()
@@ -676,7 +680,7 @@ func (s *Suite) Test_VaralignBlock__one_line_initial_indent_plus_tab(c *check.C)
 		"VVVVVVVVVVVVVVVVVVV=\tvalue \\",
 		"\t\t\t\tvalue")
 	vt.Internals(
-		"20 24",
+		"20 24 30",
 		"   32")
 	vt.Diagnostics()
 	vt.Autofixes()
@@ -823,7 +827,7 @@ func (s *Suite) Test_VaralignBlock__continuation(c *check.C) {
 		"VAR= \\",
 		"\tvalue")
 	vt.Internals(
-		"04 05",
+		"04 05 05",
 		"   08")
 	vt.Diagnostics()
 	vt.Autofixes()
@@ -923,7 +927,7 @@ func (s *Suite) Test_VaralignBlock__empty_continuation_in_column_1(c *check.C) {
 		"VAR= \\",
 		"no indentation")
 	vt.Internals(
-		"04 05",
+		"04 05 05",
 		"   00")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:2: This continuation line should be indented with \"\\t\".")
@@ -941,7 +945,7 @@ func (s *Suite) Test_VaralignBlock__empty_continuation_in_column_9(c *check.C) {
 		"VAR= \\",
 		"\tminimum indentation")
 	vt.Internals(
-		"04 05",
+		"04 05 05",
 		"   08")
 	vt.Diagnostics(
 		nil...)
@@ -961,7 +965,7 @@ func (s *Suite) Test_VaralignBlock__empty_continuation_space(c *check.C) {
 		"\tminimum indentation")
 	vt.Internals(
 		"04 08",
-		"04 05",
+		"04 05 05",
 		"   08")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:2: This variable value should be aligned with tabs, not spaces, to column 9.")
@@ -982,7 +986,7 @@ func (s *Suite) Test_VaralignBlock__empty_continuation_properly_indented(c *chec
 		"\tminimum indentation")
 	vt.Internals(
 		"04 08",
-		"04 08",
+		"04 08 08",
 		"   08")
 	vt.Diagnostics()
 	vt.Autofixes()
@@ -1001,7 +1005,7 @@ func (s *Suite) Test_VaralignBlock__empty_continuation_too_narrow(c *check.C) {
 		"\tminimum indentation")
 	vt.Internals(
 		"14 16",
-		"04 08",
+		"04 08 08",
 		"   08")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:2: This variable value should be aligned to column 17.")
@@ -1024,7 +1028,7 @@ func (s *Suite) Test_VaralignBlock__empty_continuation_too_wide(c *check.C) {
 		"\tminimum indentation")
 	vt.Internals(
 		"14 16",
-		"21 24",
+		"21 24 24",
 		"   08")
 	vt.Diagnostics(
 		nil...)
@@ -1052,7 +1056,7 @@ func (s *Suite) Test_VaralignBlock__outlier_in_follow_continuation(c *check.C) {
 		"\t\t\thttp://www.NetBSD.org/~dholland/patchkits/emacs20/")
 	vt.Internals(
 		"12 24",
-		"38 38",
+		"38 38 38",
 		"   24")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:2: The continuation backslash should be preceded by a single space or tab.")
@@ -1075,7 +1079,7 @@ func (s *Suite) Test_VaralignBlock__continuation_lines(c *check.C) {
 		"DISTFILES+= value")
 	vt.Internals(
 		"11 16",
-		"11 12",
+		"11 12 12",
 		"   24",
 		"11 32",
 		"11 12")
@@ -1123,7 +1127,7 @@ func (s *Suite) Test_VaralignBlock__continuation_line_one_tab_ahead(c *check.C) 
 		"\t\t\thttps://example.org")
 	vt.Internals(
 		"04 16",
-		"18 24",
+		"18 24 44",
 		"   24")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 25.")
@@ -1171,7 +1175,7 @@ func (s *Suite) Test_VaralignBlock__aligned_continuation(c *check.C) {
 		"USE_TOOLS+=\t[ awk \\",
 		"\t\tsed")
 	vt.Internals(
-		"11 16",
+		"11 16 22",
 		"   16")
 	vt.Diagnostics()
 	vt.Autofixes()
@@ -1193,8 +1197,8 @@ func (s *Suite) Test_VaralignBlock__shell_command(c *check.C) {
 		"\t\t:; else :; fi")
 	vt.Internals(
 		"19 24",
-		"20 72",
-		"   08",
+		"20 72 72",
+		"   08 72",
 		"   16")
 	vt.Diagnostics(
 		nil...)
@@ -1241,8 +1245,8 @@ func (s *Suite) Test_VaralignBlock__continuation_value_starts_in_second_line(c *
 	vt.Internals(
 		"07 08",
 		"10 16",
-		"28 29",
-		"   24",
+		"28 29 29",
+		"   24 52",
 		"   24")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 17.",
@@ -1276,8 +1280,8 @@ func (s *Suite) Test_VaralignBlock__continuation_value_starts_in_second_line_wit
 	vt.Internals(
 		"07 08",
 		"10 16",
-		"28 29",
-		"   08",
+		"28 29 29",
+		"   08 36",
 		"   08")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 17.")
@@ -1313,7 +1317,7 @@ func (s *Suite) Test_VaralignBlock__continuation_value_starts_in_first_line(c *c
 	vt.Internals(
 		"07 08",
 		"10 16",
-		"28 32",
+		"28 32 60",
 		"   32")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 33.",
@@ -1346,9 +1350,9 @@ func (s *Suite) Test_VaralignBlock__continuation_mixed_indentation_in_second_lin
 	vt.Internals(
 		"07 08",
 		"10 16",
-		"13 14",
-		"   34",
-		"   36",
+		"13 14 14",
+		"   34 45",
+		"   36 46",
 		"   34")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 17.",
@@ -1387,8 +1391,8 @@ func (s *Suite) Test_VaralignBlock__continuation_mixed_indentation_in_first_line
 	vt.Internals(
 		"07 08",
 		"10 16",
-		"13 34",
-		"   36",
+		"13 34 45",
+		"   36 46",
 		"   34")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 17.",
@@ -1419,11 +1423,11 @@ func (s *Suite) Test_VaralignBlock__follow_up_indented_with_spaces(c *check.C) {
 		"\tand a tab \\",
 		"   ") // trailing whitespace
 	vt.Internals(
-		"10 11",
-		"   01",
-		"   03",
-		"   08",
-		"   08",
+		"10 11 11",
+		"   01 11",
+		"   03 16",
+		"   08 21",
+		"   08 18",
 		"   03")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:2: This continuation line should be indented with \"\\t\".",
@@ -1478,7 +1482,7 @@ func (s *Suite) Test_VaralignBlock__multiline(c *check.C) {
 		"WRKSRC=                 ${WRKDIR}/${PKGNAME_NOREV}")
 	vt.Internals(
 		"12 24",
-		"10 24",
+		"10 24 65",
 		"   24",
 		"14 16",
 		"07 24")
@@ -1917,8 +1921,8 @@ func (s *Suite) Test_VaralignBlock__indented_continuation_line(c *check.C) {
 		"\t\t\t\tdestination \\",
 		"\t\t\t\tuser group 0644")
 	vt.Internals(
-		"17 24",
-		"   32",
+		"17 24 31",
+		"   32 44",
 		"   32")
 	vt.Diagnostics()
 	vt.Autofixes()
@@ -1941,9 +1945,9 @@ func (s *Suite) Test_VaralignBlock__indented_continuation_line_in_paragraph(c *c
 	vt.Internals(
 		"15 24",
 		"16 24",
-		"14 15",
-		"   08",
-		"   08",
+		"14 15 15",
+		"   08 23",
+		"   08 23",
 		"   08")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:3: This variable value should be aligned with tabs, not spaces, to column 25.")
@@ -1971,9 +1975,9 @@ func (s *Suite) Test_VaralignBlock__fix_without_diagnostic(c *check.C) {
 		"\t\t\tRUBY_NAME=${RUBY_NAME:Q}")
 	vt.Internals(
 		"15 24",
-		"13 24",
-		"   24",
-		"   24",
+		"13 24 57",
+		"   24 61",
+		"   24 63",
 		"   24")
 	vt.Diagnostics()
 	vt.Autofixes()
@@ -2000,10 +2004,10 @@ func (s *Suite) Test_VaralignBlock__continuation_line_last_empty(c *check.C) {
 		"", // This is the final line of the variable assignment.
 		"NEXT_VAR=\tsecond line")
 	vt.Internals(
-		"10 11",
-		"   08",
-		"   08",
-		"   08",
+		"10 11 11",
+		"   08 10",
+		"   08 10",
+		"   08 10",
 		"   00",
 		"09 16")
 	vt.Diagnostics(
@@ -2038,9 +2042,9 @@ func (s *Suite) Test_VaralignBlock__realign_commented_single_lines(c *check.C) {
 	vt.Internals(
 		"06 08",
 		"11 16",
-		"14 15",
+		"14 15 15",
 		"   16",
-		"16 17",
+		"16 17 17",
 		"   01",
 		"06 08")
 	vt.Diagnostics(
@@ -2079,10 +2083,10 @@ func (s *Suite) Test_VaralignBlock__realign_commented_continuation_line(c *check
 		"AFTER=\tafter")
 	vt.Internals(
 		"07 08",
-		"11 12",
-		"   08",
-		"   08",
-		"   08",
+		"11 12 12",
+		"   08 15",
+		"   08 15",
+		"   08 15",
 		"   00")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:6: This continuation line should be indented with \"\\t\".")
@@ -2131,7 +2135,7 @@ func (s *Suite) Test_VaralignBlock__realign_commented_multiline(c *check.C) {
 		"#CONF_FILES+=\t\tfile1 \\",
 		"#\t\t\tfile2")
 	vt.Internals(
-		"13 24",
+		"13 24 30",
 		"   24")
 	vt.Diagnostics()
 	vt.Autofixes()
@@ -2159,7 +2163,7 @@ func (s *Suite) Test_VaralignBlock__mixed_indentation(c *check.C) {
 		" \t \t value2 continued")
 	vt.Internals(
 		"05 08",
-		"05 08",
+		"05 08 15",
 		"   17")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:3: This continuation line should be indented with \"\\t\".")
@@ -2207,7 +2211,7 @@ func (s *Suite) Test_VaralignBlock__follow_up_indentation(c *check.C) {
 		"EGDIR=\t\t\t${PREFIX}/share/examples/rtunes")
 	vt.Internals(
 		"06 24",
-		"11 24",
+		"11 24 45",
 		"   32",
 		"06 24")
 	vt.Diagnostics(
@@ -2231,10 +2235,10 @@ func (s *Suite) Test_VaralignBlock__staircase(c *check.C) {
 		"\t\t\t${PREFIX}/bin/my-cmd\t\t\t\t\\",
 		"\t\t\t\t-options arg...")
 	vt.Internals(
-		"12 16",
-		"   08",
-		"   16",
-		"   24",
+		"12 16 16",
+		"   08 72",
+		"   16 72",
+		"   24 72",
 		"   32")
 	vt.Diagnostics(
 		nil...)
@@ -2260,14 +2264,15 @@ func (s *Suite) Test_VaralignBlock__command_with_arguments(c *check.C) {
 		"\t-e s,a,b, \\",
 		"\t-e s,a,b,")
 	vt.Internals(
-		"20 21",
-		"   08",
-		"   08",
+		"20 21 31",
+		"   08 18",
+		"   08 18",
 		"   08")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 25.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \" \" with \"\\t\".")
+	// TODO: The backslashes should be aligned.
 	vt.Fixed(
 		"SED_REPLACEMENT_CMD=    ${SED} -n \\",
 		"        -e s,a,b, \\",
@@ -2433,7 +2438,7 @@ func (s *Suite) Test_VaralignBlock_realignMultiEmptyInitial__spaces(c *check.C) 
 		// This line is necessary to trigger the realignment; see VaralignBlock.Finish.
 		"VAR= value")
 	vt.Internals(
-		"04 08",
+		"04 08 08",
 		"   08",
 		"04 05")
 	vt.Diagnostics(
@@ -2455,7 +2460,7 @@ func (s *Suite) Test_VaralignBlock_realignMultiInitial__spaces(c *check.C) {
 		"VAR=    value1 \\",
 		"        value2")
 	vt.Internals(
-		"04 08",
+		"04 08 15",
 		"   08")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: Variable values should be aligned with tabs, not spaces.",
@@ -2485,12 +2490,12 @@ func (s *Suite) Test_VaralignBlock_realignMultiEmptyFollow(c *check.C) {
 		"\\",
 		"# comment")
 	vt.Internals(
-		"04 05",
-		"   08",
-		"   10",
-		"   06",
-		"   00",
-		"   00",
+		"04 05 05",
+		"   08 15",
+		"   10 17",
+		"   06 13",
+		"   00 07",
+		"   00 00",
 		"   00")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:2: This continuation line should be indented with \"\\t\".",
@@ -2527,9 +2532,9 @@ func (s *Suite) Test_VaralignBlock__continuation_backslashes_aligned(c *check.C)
 		"\tvalue\t\t\t\\",
 		"\tvalue")
 	vt.Internals(
-		"04 08",
-		"   08",
-		"   08",
+		"04 08 32",
+		"   08 32",
+		"   08 32",
 		"   08")
 	vt.Diagnostics(
 		nil...)
@@ -2555,14 +2560,15 @@ func (s *Suite) Test_VaralignBlock__continuation_backslashes_aligned_except_init
 		"\tvalue\t\t\t\t\\",
 		"\tvalue")
 	vt.Internals(
-		"04 08",
-		"   08",
-		"   08",
+		"04 08 32",
+		"   08 40",
+		"   08 40",
 		"   08")
 	vt.Diagnostics(
 		nil...)
 	vt.Autofixes(
 		nil...)
+	// TODO: The backslashes should be aligned by a _simple_ rule.
 	vt.Fixed(
 		"VAR=    value value value       \\",
 		"        value                           \\",
@@ -2582,9 +2588,9 @@ func (s *Suite) Test_VaralignBlock__continuation_backslashes_one_sticks_out(c *c
 		"\tvalue\t\\",
 		"\tvalue")
 	vt.Internals(
-		"04 08",
-		"   08",
-		"   08",
+		"04 08 16",
+		"   08 26",
+		"   08 16",
 		"   08")
 	vt.Diagnostics(
 		nil...)
@@ -2606,9 +2612,9 @@ func (s *Suite) Test_VaralignBlock__initial_value_tab80(c *check.C) {
 		"\t\t\tvalue\t\t\t\t\t\t\\",
 		"\t\t\tvalue")
 	vt.Internals(
-		"20 24",
-		"   24",
-		"   24",
+		"20 24 80",
+		"   24 72",
+		"   24 72",
 		"   24")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: The continuation backslash should be preceded " +
