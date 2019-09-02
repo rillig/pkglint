@@ -392,31 +392,28 @@ func (va *VaralignBlock) checkContinuationIndentation(info *varalignLine, newWid
 		return
 	}
 
-	space := info.spaceBeforeContinuation()
-	if space == " " || space == "\t" {
+	oldSpace := info.spaceBeforeContinuation()
+	if oldSpace == " " || oldSpace == "\t" {
 		return
 	}
 
 	column := info.continuationColumn()
-	if column == 72 || column <= newWidth {
-		return
-	}
-	if column == rightMargin {
+	if column == 72 || column == rightMargin || column <= newWidth {
 		return
 	}
 
-	continuationIndex := info.continuationIndex()
-	if continuationIndex == 0 {
-		return
-	}
-
+	newSpace := " "
 	fix := info.mkline.Autofix()
-	if space == "" {
-		fix.Notef("The continuation backslash should be preceded by a single space.")
+	if oldSpace == "" || rightMargin == 0 {
+		fix.Notef("The continuation backslash should be preceded by a single space or tab.")
 	} else {
-		fix.Notef("The continuation backslash should be preceded by a single space or tab, or be in column 73, not %d.", column+1)
+		newSpace = oldSpace + strings.Repeat("\t", (7+rightMargin-column)>>3)
+		fix.Notef(
+			"The continuation backslash should be preceded by a single space or tab, "+
+				"or be in column %d, not %d.",
+			rightMargin+1, column+1)
 	}
-	fix.ReplaceAt(info.rawIndex, continuationIndex-len(space), space, " ")
+	fix.ReplaceAt(info.rawIndex, info.continuationIndex()-len(oldSpace), oldSpace, newSpace)
 	fix.Apply()
 }
 

@@ -191,7 +191,7 @@ func (s *Suite) Test_VaralignBlock__one_line_follow_none(c *check.C) {
 		"20 20",
 		"   08")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:1: The continuation backslash should be preceded by a single space.")
+		"NOTE: ~/Makefile:1: The continuation backslash should be preceded by a single space or tab.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \"\" with \" \".")
 	vt.Fixed(
@@ -241,8 +241,7 @@ func (s *Suite) Test_VaralignBlock__one_line_follow_sss(c *check.C) {
 		"20 23",
 		"   08")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:1: The continuation backslash should be preceded " +
-			"by a single space or tab, or be in column 73, not 24.")
+		"NOTE: ~/Makefile:1: The continuation backslash should be preceded by a single space or tab.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \"   \" with \" \".")
 	vt.Fixed(
@@ -260,8 +259,7 @@ func (s *Suite) Test_VaralignBlock__one_line_follow_ttt(c *check.C) {
 		"20 40",
 		"   08")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:1: The continuation backslash should be preceded " +
-			"by a single space or tab, or be in column 73, not 41.")
+		"NOTE: ~/Makefile:1: The continuation backslash should be preceded by a single space or tab.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\\t\\t\" with \" \".")
 	vt.Fixed(
@@ -507,8 +505,7 @@ func (s *Suite) Test_VaralignBlock__one_line_initial_tab64(c *check.C) {
 		"20 24",
 		"   24")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:1: The continuation backslash should be preceded " +
-			"by a single space or tab, or be in column 73, not 65.")
+		"NOTE: ~/Makefile:1: The continuation backslash should be preceded by a single space or tab.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\\t\\t\\t\\t\" with \" \".")
 	vt.Fixed(
@@ -1058,7 +1055,7 @@ func (s *Suite) Test_VaralignBlock__outlier_in_follow_continuation(c *check.C) {
 		"38 38",
 		"   24")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:2: The continuation backslash should be preceded by a single space.")
+		"NOTE: ~/Makefile:2: The continuation backslash should be preceded by a single space or tab.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:2: Replacing \"\" with \" \".")
 	vt.Fixed(
@@ -2425,8 +2422,7 @@ func (s *Suite) Test_VaralignBlock_realignMultiEmptyInitial(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"NOTE: filename.mk:3: The continuation backslash should be preceded " +
-			"by a single space or tab, or be in column 73, not 33.")
+		"NOTE: filename.mk:3: The continuation backslash should be preceded by a single space or tab.")
 }
 
 func (s *Suite) Test_VaralignBlock_realignMultiEmptyInitial__spaces(c *check.C) {
@@ -2547,6 +2543,10 @@ func (s *Suite) Test_VaralignBlock__continuation_backslashes_aligned(c *check.C)
 	vt.Run()
 }
 
+// The first line is indented with a single tab. This looks strange but
+// pkglint considers it acceptable since there is a simple rule saying
+// "a single tab is always ok". Any rule that would replace this simple
+// rule would have to be similarly simple and intuitive.
 func (s *Suite) Test_VaralignBlock__continuation_backslashes_aligned_except_initial(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -2564,7 +2564,6 @@ func (s *Suite) Test_VaralignBlock__continuation_backslashes_aligned_except_init
 	vt.Autofixes(
 		nil...)
 	vt.Fixed(
-		// FIXME: Align line 1 with the others.
 		"VAR=    value value value       \\",
 		"        value                           \\",
 		"        value                           \\",
