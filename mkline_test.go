@@ -337,7 +337,11 @@ func (s *Suite) Test_MkLine__aligned(c *check.C) {
 		varalign.Finish()
 
 		output := t.Output()
-		t.CheckEquals(output == "", expected)
+		if expected {
+			t.CheckEquals(output, "")
+		} else if output == "" {
+			t.Check(output, check.Not(check.Equals), "")
+		}
 	}
 
 	// The first line uses a space for indentation, which is typical of
@@ -397,7 +401,7 @@ func (s *Suite) Test_MkLine__aligned(c *check.C) {
 	// Longer continuation lines may use internal indentation to represent
 	// AWK or shell code.
 	test(
-		"GENERATE_PLIST+=\t/pattern/ {\\",
+		"GENERATE_PLIST+=\t/pattern/ { \\",
 		"\t\t\t  action(); \\",
 		"\t\t\t}",
 		true)
@@ -405,7 +409,7 @@ func (s *Suite) Test_MkLine__aligned(c *check.C) {
 	// If any of the continuation lines is indented less than the first
 	// line, it looks confusing.
 	test(
-		"GENERATE_PLIST+=\t/pattern/ {\\",
+		"GENERATE_PLIST+=\t/pattern/ { \\",
 		"\t  action(); \\",
 		"\t}",
 		false)
@@ -415,7 +419,7 @@ func (s *Suite) Test_MkLine__aligned(c *check.C) {
 	// the right as the second line.
 	test(
 		"GENERATE_PLIST+= \\",
-		"\t/pattern/ {\\",
+		"\t/pattern/ { \\",
 		"\t  action(); \\",
 		"\t}",
 		true)
@@ -424,7 +428,7 @@ func (s *Suite) Test_MkLine__aligned(c *check.C) {
 	// line is not indented properly.
 	test(
 		"GENERATE_PLIST+= \\",
-		"\t/pattern/ {\\",
+		"\t/pattern/ { \\",
 		"\t  action(); \\",
 		"}",
 		false)

@@ -191,12 +191,11 @@ func (s *Suite) Test_VaralignBlock__one_line_follow_none(c *check.C) {
 		"20 20",
 		"   08")
 	vt.Diagnostics(
-		// TODO: There should be a space to the left of the backslash.
-		nil...)
+		"NOTE: ~/Makefile:1: The continuation backslash should be preceded by a single space.")
 	vt.Autofixes(
-		nil...)
+		"AUTOFIX: ~/Makefile:1: Replacing \"\" with \" \".")
 	vt.Fixed(
-		"VVVVVVVVVVVVVVVVVVV=\\",
+		"VVVVVVVVVVVVVVVVVVV= \\",
 		"        value")
 	vt.Run()
 }
@@ -241,10 +240,13 @@ func (s *Suite) Test_VaralignBlock__one_line_follow_sss(c *check.C) {
 	vt.Internals(
 		"20 23",
 		"   08")
-	vt.Diagnostics()
-	vt.Autofixes()
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:1: The continuation backslash should be preceded " +
+			"by a single space or tab, or be in column 73, not 24.")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:1: Replacing \"   \" with \" \".")
 	vt.Fixed(
-		"VVVVVVVVVVVVVVVVVVV=   \\",
+		"VVVVVVVVVVVVVVVVVVV= \\",
 		"        value")
 	vt.Run()
 }
@@ -257,10 +259,13 @@ func (s *Suite) Test_VaralignBlock__one_line_follow_ttt(c *check.C) {
 	vt.Internals(
 		"20 40",
 		"   08")
-	vt.Diagnostics()
-	vt.Autofixes()
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:1: The continuation backslash should be preceded " +
+			"by a single space or tab, or be in column 73, not 41.")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\\t\\t\" with \" \".")
 	vt.Fixed(
-		"VVVVVVVVVVVVVVVVVVV=                    \\",
+		"VVVVVVVVVVVVVVVVVVV= \\",
 		"        value")
 	vt.Run()
 }
@@ -502,14 +507,12 @@ func (s *Suite) Test_VaralignBlock__one_line_initial_tab64(c *check.C) {
 		"20 24",
 		"   24")
 	vt.Diagnostics(
-		// FIXME: backslash indentation must be space, tab or at column 73.
-		nil...)
+		"NOTE: ~/Makefile:1: The continuation backslash should be preceded " +
+			"by a single space or tab, or be in column 73, not 65.")
 	vt.Autofixes(
-		// FIXME: replace many tabs with a single space, since there are
-		//  no more backslashes in this logical line.
-		nil...)
+		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\\t\\t\\t\\t\" with \" \".")
 	vt.Fixed(
-		"VVVVVVVVVVVVVVVVVVV=    value                                   \\",
+		"VVVVVVVVVVVVVVVVVVV=    value \\",
 		"                        value")
 	vt.Run()
 }
@@ -1055,7 +1058,7 @@ func (s *Suite) Test_VaralignBlock__outlier_in_follow_continuation(c *check.C) {
 		"38 38",
 		"   24")
 	vt.Diagnostics(
-		"NOTE: ~/Makefile:2: This outlier variable value should be aligned with a single space.")
+		"NOTE: ~/Makefile:2: The continuation backslash should be preceded by a single space.")
 	vt.Autofixes(
 		"AUTOFIX: ~/Makefile:2: Replacing \"\" with \" \".")
 	vt.Fixed(
@@ -2422,7 +2425,8 @@ func (s *Suite) Test_VaralignBlock_realignMultiEmptyInitial(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"NOTE: filename.mk:3: This outlier variable value should be aligned with a single space.")
+		"NOTE: filename.mk:3: The continuation backslash should be preceded " +
+			"by a single space or tab, or be in column 73, not 33.")
 }
 
 func (s *Suite) Test_VaralignBlock_realignMultiEmptyInitial__spaces(c *check.C) {

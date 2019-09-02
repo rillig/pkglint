@@ -290,6 +290,8 @@ func (va *VaralignBlock) Finish() {
 			va.indentDiff = 0
 		}
 
+		va.checkContinuationIndentation(info, newWidth)
+
 		if newWidth > 0 || info.rawIndex > 0 {
 			va.realign(info, newWidth)
 		}
@@ -367,6 +369,44 @@ func (*VaralignBlock) optimalWidth(infos []*varalignLine) int {
 	return (minVarnameOpWidth & -8) + 8
 }
 
+func (va *VaralignBlock) checkContinuationIndentation(info *varalignLine, newWidth int) {
+	if !info.continuation() || strings.TrimRight(info.mkline.Line.raw[info.rawIndex].textnl, "\n") == "" {
+		return
+	}
+
+	parts := &info.parts
+	space := parts.spaceAfterComment
+	if parts.trailingComment == "" {
+		space = parts.spaceAfterValue
+		if parts.value == "" {
+			space = parts.spaceBeforeValue
+		}
+	}
+
+	if space == " " || space == "\t" {
+		return
+	}
+
+	column := info.continuationColumn()
+	if column == 72 || column <= newWidth {
+		return
+	}
+
+	continuationIndex := info.continuationIndex()
+	if continuationIndex == 0 {
+		return
+	}
+
+	fix := info.mkline.Autofix()
+	if space == "" {
+		fix.Notef("The continuation backslash should be preceded by a single space.")
+	} else {
+		fix.Notef("The continuation backslash should be preceded by a single space or tab, or be in column 73, not %d.", column+1)
+	}
+	fix.ReplaceAt(info.rawIndex, continuationIndex-len(space), space, " ")
+	fix.Apply()
+}
+
 func (va *VaralignBlock) realign(info *varalignLine, newWidth int) {
 	if info.multiEmpty {
 		if info.rawIndex == 0 {
@@ -403,11 +443,13 @@ func (*VaralignBlock) realignMultiEmptyInitial(info *varalignLine, newWidth int)
 		return
 	}
 
+	if newSpace == " " && info.parts.value == "" && info.parts.trailingComment == "" {
+		return // This case is handled by checkContinuationIndentation.
+	}
+
 	hasSpace := strings.IndexByte(oldSpace, ' ') != -1
 	oldColumn := info.varnameOpSpaceWidth()
 	column := tabWidth(leadingComment + varnameOp + newSpace)
-
-	// TODO: explicitly mention "single space", "tabs to the newWidth", "tabs to column 72"
 
 	fix := info.mkline.Autofix()
 	if newSpace == " " {
@@ -581,6 +623,22 @@ func (l *varalignLine) spaceBeforeValueIndex() int {
 // continuation returns whether this line ends with a backslash.
 func (l *varalignLine) continuation() bool {
 	return hasPrefix(l.parts.continuation, "\\")
+}
+
+func (l *varalignLine) continuationColumn() int {
+	parts := &l.parts
+	return tabWidth(parts.leadingComment +
+		parts.varnameOp + parts.spaceBeforeValue +
+		parts.value + parts.spaceAfterValue +
+		parts.trailingComment + parts.spaceAfterComment)
+}
+
+func (l *varalignLine) continuationIndex() int {
+	parts := &l.parts
+	return len(parts.leadingComment) +
+		len(parts.varnameOp) + len(parts.spaceBeforeValue) +
+		len(parts.value) + len(parts.spaceAfterValue) +
+		len(parts.trailingComment) + len(parts.spaceAfterComment)
 }
 
 func (l *varalignLine) commentedOut() bool {
