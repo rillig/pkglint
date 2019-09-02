@@ -421,7 +421,7 @@ func (va *VaralignBlock) checkContinuationIndentation(info *varalignLine, newWid
 
 	newSpace := " "
 	fix := info.mkline.Autofix()
-	if oldSpace == "" || rightMargin == 0 {
+	if oldSpace == "" || rightMargin == 0 || tabWidth(info.beforeContinuation()) >= rightMargin {
 		fix.Notef("The continuation backslash should be preceded by a single space or tab.")
 	} else {
 		newSpace = alignmentAfter(info.beforeContinuation(), rightMargin)

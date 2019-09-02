@@ -2654,6 +2654,33 @@ func (s *Suite) Test_VaralignBlock__long_lines(c *check.C) {
 	vt.Run()
 }
 
+// A practical chaotic test case, derived from wip/compat32_mit-krb5/Makefile.
+func (s *Suite) Test_VaralignBlock__long_lines_2(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"INSTALLATION_DIRS=\t_____________________________________________________________________   \\"+
+			"\t\t\t\t __________________________________________________________\t\t \\",
+		"\t\t\t__________________________________________________________\t\t       \t\\",
+		"\t\t\t__________________________________________________________\t\t       \t\\",
+		"\t\t\t_________________________")
+	vt.Internals(
+		"18 24 201",
+		"   24 104",
+		"   24 104",
+		"   24")
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:1: The continuation backslash should be preceded by a single space or tab.")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\\t \" with \" \".")
+	vt.Fixed(
+		"INSTALLATION_DIRS=      _____________________________________________________________________   \\"+
+			"                                __________________________________________________________ \\",
+		"                        __________________________________________________________                      \\",
+		"                        __________________________________________________________                      \\",
+		"                        _________________________")
+	vt.Run()
+}
+
 func (s *Suite) Test_VaralignBlock_split(c *check.C) {
 	t := s.Init(c)
 
