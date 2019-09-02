@@ -283,19 +283,37 @@ func (va *VaralignBlock) Finish() {
 	}
 
 	newWidth := va.optimalWidth(infos)
+	rightMargin := 0
 
-	for _, info := range infos {
+	for i, info := range infos {
 		if info.rawIndex == 0 {
 			va.indentDiffSet = false
 			va.indentDiff = 0
+			rightMargin = va.rightMargin(infos[i+1:])
 		}
 
-		va.checkContinuationIndentation(info, newWidth)
+		va.checkContinuationIndentation(info, newWidth, rightMargin)
 
 		if newWidth > 0 || info.rawIndex > 0 {
 			va.realign(info, newWidth)
 		}
 	}
+}
+
+func (*VaralignBlock) rightMargin(infos []*varalignLine) int {
+	rightMargin := 0
+	for _, sameLineInfo := range infos {
+		if sameLineInfo.rawIndex == 0 {
+			break
+		}
+
+		space := sameLineInfo.spaceBeforeContinuation()
+		if space != "" && space != " " {
+			column := sameLineInfo.continuationColumn()
+			rightMargin = imax(rightMargin, column)
+		}
+	}
+	return rightMargin
 }
 
 // optimalWidth computes the desired screen width for the variable assignment
@@ -369,26 +387,21 @@ func (*VaralignBlock) optimalWidth(infos []*varalignLine) int {
 	return (minVarnameOpWidth & -8) + 8
 }
 
-func (va *VaralignBlock) checkContinuationIndentation(info *varalignLine, newWidth int) {
+func (va *VaralignBlock) checkContinuationIndentation(info *varalignLine, newWidth int, rightMargin int) {
 	if !info.continuation() || strings.TrimRight(info.mkline.Line.raw[info.rawIndex].textnl, "\n") == "" {
 		return
 	}
 
-	parts := &info.parts
-	space := parts.spaceAfterComment
-	if parts.trailingComment == "" {
-		space = parts.spaceAfterValue
-		if parts.value == "" {
-			space = parts.spaceBeforeValue
-		}
-	}
-
+	space := info.spaceBeforeContinuation()
 	if space == " " || space == "\t" {
 		return
 	}
 
 	column := info.continuationColumn()
 	if column == 72 || column <= newWidth {
+		return
+	}
+	if column == rightMargin {
 		return
 	}
 
@@ -618,6 +631,17 @@ func (l *varalignLine) varnameOpSpaceWidth() int {
 // The index is 5.
 func (l *varalignLine) spaceBeforeValueIndex() int {
 	return len(l.parts.leadingComment) + len(l.parts.varnameOp)
+}
+
+func (l *varalignLine) spaceBeforeContinuation() string {
+	parts := &l.parts
+	if parts.trailingComment == "" {
+		if parts.value == "" {
+			return parts.spaceBeforeValue
+		}
+		return parts.spaceAfterValue
+	}
+	return parts.spaceAfterComment
 }
 
 // continuation returns whether this line ends with a backslash.

@@ -2521,7 +2521,33 @@ func (s *Suite) Test_VaralignBlock_realignMultiEmptyFollow(c *check.C) {
 	vt.Run()
 }
 
-func (s *Suite) Test_VaralignBlock_continuation_backslashes_aligned(c *check.C) {
+// It's ok to have all backslashes in the same column, even if that column
+// is not 73.
+func (s *Suite) Test_VaralignBlock__continuation_backslashes_aligned(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR=\tvalue value value\t\\",
+		"\tvalue\t\t\t\\",
+		"\tvalue\t\t\t\\",
+		"\tvalue")
+	vt.Internals(
+		"04 08",
+		"   08",
+		"   08",
+		"   08")
+	vt.Diagnostics(
+		nil...)
+	vt.Autofixes(
+		nil...)
+	vt.Fixed(
+		"VAR=    value value value       \\",
+		"        value                   \\",
+		"        value                   \\",
+		"        value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__continuation_backslashes_aligned_except_initial(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"VAR=\tvalue value value\t\\",
@@ -2534,18 +2560,41 @@ func (s *Suite) Test_VaralignBlock_continuation_backslashes_aligned(c *check.C) 
 		"   08",
 		"   08")
 	vt.Diagnostics(
-		// FIXME: it's ok to have all backslashes in the same column.
-		"NOTE: ~/Makefile:2: The continuation backslash should be preceded "+
-			"by a single space or tab, or be in column 73, not 41.",
-		"NOTE: ~/Makefile:3: The continuation backslash should be preceded "+
-			"by a single space or tab, or be in column 73, not 41.")
+		nil...)
 	vt.Autofixes(
-		"AUTOFIX: ~/Makefile:2: Replacing \"\\t\\t\\t\\t\" with \" \".",
-		"AUTOFIX: ~/Makefile:3: Replacing \"\\t\\t\\t\\t\" with \" \".")
+		nil...)
 	vt.Fixed(
+		// FIXME: Align line 1 with the others.
 		"VAR=    value value value       \\",
-		"        value \\",
-		"        value \\",
+		"        value                           \\",
+		"        value                           \\",
+		"        value")
+	vt.Run()
+}
+
+// Lines whose continuation backslash is indented by a single space are
+// usually those that stick out further than column 73. These are not
+// touched by the realignment.
+func (s *Suite) Test_VaralignBlock__continuation_backslashes_one_sticks_out(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR=\tvalue\t\\",
+		"\tvalue value value \\",
+		"\tvalue\t\\",
+		"\tvalue")
+	vt.Internals(
+		"04 08",
+		"   08",
+		"   08",
+		"   08")
+	vt.Diagnostics(
+		nil...)
+	vt.Autofixes(
+		nil...)
+	vt.Fixed(
+		"VAR=    value   \\",
+		"        value value value \\",
+		"        value   \\",
 		"        value")
 	vt.Run()
 }
