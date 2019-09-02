@@ -388,7 +388,7 @@ func (*VaralignBlock) optimalWidth(infos []*varalignLine) int {
 }
 
 func (va *VaralignBlock) checkContinuationIndentation(info *varalignLine, newWidth int, rightMargin int) {
-	if !info.continuation() || strings.TrimRight(info.mkline.Line.raw[info.rawIndex].textnl, "\n") == "" {
+	if !info.continuation() {
 		return
 	}
 
@@ -407,7 +407,7 @@ func (va *VaralignBlock) checkContinuationIndentation(info *varalignLine, newWid
 	if oldSpace == "" || rightMargin == 0 {
 		fix.Notef("The continuation backslash should be preceded by a single space or tab.")
 	} else {
-		newSpace = oldSpace + strings.Repeat("\t", (7+rightMargin-column)>>3)
+		newSpace = alignmentAfter(info.beforeContinuation(), rightMargin)
 		fix.Notef(
 			"The continuation backslash should be preceded by a single space or tab, "+
 				"or be in column %d, not %d.",
@@ -639,6 +639,14 @@ func (l *varalignLine) spaceBeforeContinuation() string {
 		return parts.spaceAfterValue
 	}
 	return parts.spaceAfterComment
+}
+
+func (l *varalignLine) beforeContinuation() string {
+	parts := &l.parts
+	return rtrimHspace(parts.leadingComment +
+		parts.varnameOp + parts.spaceBeforeValue +
+		parts.value + parts.spaceAfterValue +
+		parts.trailingComment + parts.spaceAfterComment)
 }
 
 // continuation returns whether this line ends with a backslash.

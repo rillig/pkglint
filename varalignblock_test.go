@@ -2598,6 +2598,31 @@ func (s *Suite) Test_VaralignBlock__continuation_backslashes_one_sticks_out(c *c
 	vt.Run()
 }
 
+func (s *Suite) Test_VaralignBlock__initial_value_tab80(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV=\tvalue\t\t\t\t\t\t\t\\",
+		"\t\t\tvalue\t\t\t\t\t\t\\",
+		"\t\t\tvalue\t\t\t\t\t\t\\",
+		"\t\t\tvalue")
+	vt.Internals(
+		"20 24",
+		"   24",
+		"   24",
+		"   24")
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:1: The continuation backslash should be preceded " +
+			"by a single space or tab, or be in column 73, not 81.")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\\t\".")
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV=    value                                           \\",
+		"                        value                                           \\",
+		"                        value                                           \\",
+		"                        value")
+	vt.Run()
+}
+
 func (s *Suite) Test_VaralignBlock_split(c *check.C) {
 	t := s.Init(c)
 
