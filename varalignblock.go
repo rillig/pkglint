@@ -61,9 +61,9 @@ import (
 // TODO: A follow-up line has the form:
 //  comment? space? value? space? comment? space? backslash?
 //
-// TODO: The alignment checks are performed on the raw lines instead of
-//  the logical lines, since this check is about the visual appearance
-//  as opposed to the meaning of the variable assignment.
+// The alignment checks are performed on the raw lines instead of
+// the logical lines, since this check is about the visual appearance
+// as opposed to the meaning of the variable assignment.
 //
 // FIXME: Implement each requirement from the above documentation.
 type VaralignBlock struct {
