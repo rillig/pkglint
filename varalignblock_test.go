@@ -139,7 +139,7 @@ func (vt *VaralignTester) checkTestName() {
 		case matches(hspace, `^\t+ {0,7}$`):
 			descr = "indent"
 		default:
-			descr = strings.ReplaceAll(strings.ReplaceAll(hspace, " ", "s"), "\t", "t")
+			descr = strings.Replace(strings.Replace(hspace, " ", "s", -1), "\t", "t", -1)
 		}
 		actual = append(actual, descriptor{descr, width})
 	}
