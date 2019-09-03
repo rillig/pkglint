@@ -312,16 +312,17 @@ type CvsEntry struct {
 
 // Returns the number of columns that a string occupies when printed with
 // a tabulator size of 8.
-func tabWidth(s string) int {
-	length := 0
+func tabWidth(s string) int { return tabWidthAppend(0, s) }
+
+func tabWidthAppend(width int, s string) int {
 	for _, r := range s {
 		if r == '\t' {
-			length = length&-8 + 8
+			width = width&-8 + 8
 		} else {
-			length++
+			width++
 		}
 	}
-	return length
+	return width
 }
 
 func detab(s string) string {
