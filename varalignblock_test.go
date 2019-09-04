@@ -311,6 +311,8 @@ func (s *Suite) Test_VaralignBlock__var_spaces_value(c *check.C) {
 	vt.Run()
 }
 
+// Having more tabs than necessary is allowed. This can be for aesthetic
+// reasons to align this paragraph with the others in the same file.
 func (s *Suite) Test_VaralignBlock__var_tabs_value(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -826,21 +828,6 @@ func (s *Suite) Test_VaralignBlock__var_tab24_value_space_cont_tabs32_value(c *c
 // using tabs, the single comment character doesn't change the width.
 
 // TODO: add systematic tests for commented lines
-
-// Having more tabs than necessary is allowed. This can be for aesthetic
-// reasons to align this paragraph with the others in the same file.
-func (s *Suite) Test_VaralignBlock__var_tabs24_value(c *check.C) {
-	vt := NewVaralignTester(s, c)
-	vt.Input(
-		"VAR=\t\t\tseveral tabs")
-	vt.Internals(
-		"04 24")
-	vt.Diagnostics()
-	vt.Autofixes()
-	vt.Fixed(
-		"VAR=                    several tabs")
-	vt.Run()
-}
 
 // All variables in a block are aligned to the same depth.
 func (s *Suite) Test_VaralignBlock__var6_space_value_var7_space_value_var8_space_value_var9_space_value(c *check.C) {
