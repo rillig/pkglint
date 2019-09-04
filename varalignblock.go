@@ -17,29 +17,31 @@ import (
 // between HOMEPAGE and DISTFILES.
 //
 // Continuation lines are also aligned to the single-line assignments.
-// There are two types of continuation lines. The first type is an
-// empty multiline:
+// There are two types of continuation lines. The first type has just
+// the continuation backslash in the first line:
 //
-//  MULTI_EMPTY_LINE= \
+//  MULTI_LINE= \
 //          The value starts in the second line.
 //
 // The backslash in the first line is usually aligned to the other variables
-// in the same paragraph. If the variable name is so long that it is an
-// outlier, it may be indented with a single space, just like a single-line
-// variable. In multi-line shell commands or AWK programs, the backslash is
+// in the same paragraph. If the variable name is longer than the indentation
+// of the paragraph, it may be indented with a single space.
+// In multi-line shell commands or AWK programs, the backslash is
 // often indented to column 73, as are the backslashes from the follow-up
 // lines, to act as a visual guideline.
 //
-// Since this type is often used for URLs or other long values, the first
-// follow-up line may be indented with a single tab, even if the other
+// The indentation of the first value of the variable determines the minimum
+// indentation for the remaining continuation lines. To allow long variable
+// values to be indented as little as possible, the follow-up lines only need
+// to be indented by a single tab, even if the other
 // variables in the paragraph are aligned further to the right. If the
 // indentation is not a single tab, it must match the indentation of the
 // other lines in the paragraph.
 //
-//  INITIAL_LINE=   The value starts in the first line \
+//  MULTI_LINE=     The value starts in the first line \
 //                  and continues in the second line.
 //
-// In lists or plain text, like in the INITIAL_LINE above, all values are
+// In lists or plain text, like in the example above, all values are
 // aligned in the same column. Some variables also contain code, and in
 // these variables, the line containing the first word defines how deep
 // the follow-up lines must be indented at least.
@@ -56,11 +58,8 @@ import (
 // especially true for CONFIGURE_ENV, since the environment variables are
 // typically uppercase as well.
 //
-// TODO: An initial line has this form:
-//  comment? varname+op space? value? space? comment? space? backslash?
-//
-// TODO: A follow-up line has the form:
-//  comment? space? value? space? comment? space? backslash?
+// For the purpose of aligning the variable assignments, each raw line is
+// split into several parts, as described by the varalignSplitResult type.
 //
 // The alignment checks are performed on the raw lines instead of
 // the logical lines, since this check is about the visual appearance
