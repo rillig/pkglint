@@ -2732,6 +2732,7 @@ func (s *Suite) Test_VaralignBlock__long_lines(c *check.C) {
 }
 
 // A practical chaotic test case, derived from wip/compat32_mit-krb5/Makefile.
+// It made pkglint before 2019-09-03 panic.
 func (s *Suite) Test_VaralignBlock__long_lines_2(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
