@@ -1254,7 +1254,7 @@ func (s *Suite) Test_VaralignBlock__escaped_varname(c *check.C) {
 		"V.${v:S,\\#,,g}=\tvalue",
 		"V2345678123456781234=\tvalue")
 	vt.Internals(
-		"15 16", // 15, since the number sign is not escaped when computing the indentation
+		"15 16", // 15, since the number sign is still escaped when computing the indentation
 		"21 24")
 	vt.Diagnostics(
 		"NOTE: ~/Makefile:1: This variable value should be aligned to column 25.")
