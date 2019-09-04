@@ -107,7 +107,7 @@ func (vt *VaralignTester) run(autofix bool) {
 
 func (vt *VaralignTester) checkTestName() {
 	testName := vt.tester.c.TestName()
-	if !matches(testName, `__var\d*_`) {
+	if !matches(testName, `__(lead|var)\d*_`) {
 		return
 	}
 
@@ -1991,6 +1991,24 @@ func (s *Suite) Test_VaralignBlock__var_tabs24_value_var_tab24_value_var_space_c
 		"        -e 's,1,one,g' \\",
 		"        -e 's,2,two,g' \\",
 		"        -e 's,3,three,g'")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__lead_var_tab8_value_lead_var_tab16_value(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"#VAR=\tvalue",
+		"#VAR.param=\tvalue")
+	vt.Internals(
+		"05 08",
+		"11 16")
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:1: This variable value should be aligned to column 17.")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:1: Replacing \"\\t\" with \"\\t\\t\".")
+	vt.Fixed(
+		"#VAR=           value",
+		"#VAR.param=     value")
 	vt.Run()
 }
 
