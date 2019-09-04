@@ -83,17 +83,19 @@ func (vt *VaralignTester) run(autofix bool) {
 	infos := varalign.infos // since they are overwritten by Finish
 	varalign.Finish()
 
-	var actual []string
-	for _, info := range infos {
-		var minWidth, curWidth, continuation string
-		minWidth = condStr(info.rawIndex == 0, sprintf("%02d", info.varnameOpWidth()), "  ")
-		curWidth = sprintf(" %02d", info.varnameOpSpaceWidth())
-		if info.continuation() {
-			continuation = sprintf(" %02d", info.continuationColumn())
+	if len(vt.internals) > 0 {
+		var actual []string
+		for _, info := range infos {
+			var minWidth, curWidth, continuation string
+			minWidth = condStr(info.rawIndex == 0, sprintf("%02d", info.varnameOpWidth()), "  ")
+			curWidth = sprintf(" %02d", info.varnameOpSpaceWidth())
+			if info.continuation() {
+				continuation = sprintf(" %02d", info.continuationColumn())
+			}
+			actual = append(actual, minWidth+curWidth+continuation)
 		}
-		actual = append(actual, minWidth+curWidth+continuation)
+		t.CheckDeepEquals(actual, vt.internals)
 	}
-	t.CheckDeepEquals(actual, vt.internals)
 
 	if autofix {
 		t.CheckOutput(vt.autofixes)
@@ -2336,45 +2338,84 @@ func (s *Suite) Test_VaralignBlock__empty_value(c *check.C) {
 	vt.Run()
 }
 
-func (s *Suite) Test_VaralignBlock_Process__autofix(c *check.C) {
-	t := s.Init(c)
+func (s *Suite) Test_VaralignBlock_Process__var_spaces7_value(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR=   value")
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 9.")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:1: Replacing \"   \" with \"\\t\".")
+	vt.Fixed(
+		"VAR=    value")
+	vt.Run()
+}
 
-	t.SetUpCommandLine("-Wspace", "--show-autofix")
+func (s *Suite) Test_VaralignBlock_Process__var_spaces8_value(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR=    value")
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:1: Variable values should be aligned with tabs, not spaces.")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:1: Replacing \"    \" with \"\\t\".")
+	vt.Fixed(
+		"VAR=    value")
+	vt.Run()
+}
 
-	mklines := t.NewMkLines("file.mk",
-		"VAR=   value",    // Indentation 7, fixed to 8.
-		"",                //
-		"VAR=    value",   // Indentation 8, fixed to 8.
-		"",                //
-		"VAR=     value",  // Indentation 9, fixed to 8.
-		"",                //
-		"VAR= \tvalue",    // Mixed indentation 8, fixed to 8.
-		"",                //
-		"VAR=   \tvalue",  // Mixed indentation 8, fixed to 8.
-		"",                //
-		"VAR=    \tvalue", // Mixed indentation 16, fixed to 16.
-		"",                //
-		"VAR=\tvalue")     // Already aligned with tabs only, left unchanged.
+func (s *Suite) Test_VaralignBlock_Process__var_spaces9_value(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR=     value")
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 9.")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:1: Replacing \"     \" with \"\\t\".")
+	vt.Fixed(
+		"VAR=    value")
+	vt.Run()
+}
 
-	var varalign VaralignBlock
-	for _, line := range mklines.mklines {
-		varalign.Process(line)
-	}
-	varalign.Finish()
+func (s *Suite) Test_VaralignBlock_Process__var_st8_value(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR= \tvalue")
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:1: Variable values should be aligned with tabs, not spaces.")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:1: Replacing \" \\t\" with \"\\t\".")
+	vt.Fixed(
+		"VAR=    value")
+	vt.Run()
+}
 
-	t.CheckOutputLines(
-		"NOTE: file.mk:1: This variable value should be aligned with tabs, not spaces, to column 9.",
-		"AUTOFIX: file.mk:1: Replacing \"   \" with \"\\t\".",
-		"NOTE: file.mk:3: Variable values should be aligned with tabs, not spaces.",
-		"AUTOFIX: file.mk:3: Replacing \"    \" with \"\\t\".",
-		"NOTE: file.mk:5: This variable value should be aligned with tabs, not spaces, to column 9.",
-		"AUTOFIX: file.mk:5: Replacing \"     \" with \"\\t\".",
-		"NOTE: file.mk:7: Variable values should be aligned with tabs, not spaces.",
-		"AUTOFIX: file.mk:7: Replacing \" \\t\" with \"\\t\".",
-		"NOTE: file.mk:9: Variable values should be aligned with tabs, not spaces.",
-		"AUTOFIX: file.mk:9: Replacing \"   \\t\" with \"\\t\".",
-		"NOTE: file.mk:11: Variable values should be aligned with tabs, not spaces.",
-		"AUTOFIX: file.mk:11: Replacing \"    \\t\" with \"\\t\\t\".")
+func (s *Suite) Test_VaralignBlock_Process__var_ssst8_value(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR=   \tvalue")
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:1: Variable values should be aligned with tabs, not spaces.")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:1: Replacing \"   \\t\" with \"\\t\".")
+	vt.Fixed(
+		"VAR=    value")
+	vt.Run()
+}
+
+// Since the variable is visually aligned at column 17, the alignment
+// is kept at that depth, although a smaller indentation were possible.
+func (s *Suite) Test_VaralignBlock_Process__var_sssst16_value(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR=    \tvalue")
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:1: Variable values should be aligned with tabs, not spaces.")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:1: Replacing \"    \\t\" with \"\\t\\t\".")
+	vt.Fixed(
+		"VAR=            value")
+	vt.Run()
 }
 
 // When the lines of a paragraph are inconsistently aligned,
