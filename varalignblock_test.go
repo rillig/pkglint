@@ -2449,26 +2449,28 @@ func (s *Suite) Test_VaralignBlock_Process__reduce_indentation(c *check.C) {
 // name and the value. Even if it is the longest line, and even if the value would start
 // exactly at a tab stop.
 func (s *Suite) Test_VaralignBlock_Process__longest_line_no_space(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpCommandLine("-Wspace")
-	mklines := t.NewMkLines("file.mk",
-		"SUBST_CLASSES+= aaaaaaaa",
-		"SUBST_STAGE.aaaaaaaa= pre-configure",
-		"SUBST_FILES.aaaaaaaa= *.pl",
-		"SUBST_FILTER_CMD.aaaaaa=cat")
-
-	var varalign VaralignBlock
-	for _, mkline := range mklines.mklines {
-		varalign.Process(mkline)
-	}
-	varalign.Finish()
-
-	t.CheckOutputLines(
-		"NOTE: file.mk:1: This variable value should be aligned with tabs, not spaces, to column 33.",
-		"NOTE: file.mk:2: This variable value should be aligned with tabs, not spaces, to column 33.",
-		"NOTE: file.mk:3: This variable value should be aligned with tabs, not spaces, to column 33.",
-		"NOTE: file.mk:4: This variable value should be aligned to column 33.")
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"SUBST_CLASSES+= 123456",
+		"SUBST_STAGE.123456= pre-configure",
+		"SUBST_FILES.123456= *.pl",
+		"SUBST_FILTER_CMD.123456=cat")
+	vt.Diagnostics(
+		"NOTE: ~/Makefile:1: This variable value should be aligned with tabs, not spaces, to column 33.",
+		"NOTE: ~/Makefile:2: This variable value should be aligned with tabs, not spaces, to column 33.",
+		"NOTE: ~/Makefile:3: This variable value should be aligned with tabs, not spaces, to column 33.",
+		"NOTE: ~/Makefile:4: This variable value should be aligned to column 33.")
+	vt.Autofixes(
+		"AUTOFIX: ~/Makefile:1: Replacing \" \" with \"\\t\\t\\t\".",
+		"AUTOFIX: ~/Makefile:2: Replacing \" \" with \"\\t\\t\".",
+		"AUTOFIX: ~/Makefile:3: Replacing \" \" with \"\\t\\t\".",
+		"AUTOFIX: ~/Makefile:4: Replacing \"\" with \"\\t\".")
+	vt.Fixed(
+		"SUBST_CLASSES+=                 123456",
+		"SUBST_STAGE.123456=             pre-configure",
+		"SUBST_FILES.123456=             *.pl",
+		"SUBST_FILTER_CMD.123456=        cat")
+	vt.Run()
 }
 
 func (s *Suite) Test_VaralignBlock_Process__only_spaces(c *check.C) {
