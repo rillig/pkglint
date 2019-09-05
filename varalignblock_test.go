@@ -2760,6 +2760,29 @@ func (s *Suite) Test_VaralignBlock__long_lines_2(c *check.C) {
 	vt.Run()
 }
 
+// I've never seen an intentionally continued comment in practice,
+// but pkglint needs to be able to handle this situation anyway.
+func (s *Suite) Test_varalignLine_spaceBeforeContinuation__continued_comment(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR=\tvalue # comment \\",
+		"\tstill comment \\",
+		"\tand still")
+	vt.Internals(
+		"04 08 24",
+		"   08 22",
+		"   08")
+	vt.Diagnostics(
+		nil...)
+	vt.Autofixes(
+		nil...)
+	vt.Fixed(
+		"VAR=    value # comment \\",
+		"        still comment \\",
+		"        and still")
+	vt.Run()
+}
+
 func (s *Suite) Test_VaralignBlock_split(c *check.C) {
 	t := s.Init(c)
 
