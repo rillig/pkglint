@@ -465,11 +465,7 @@ func (*VaralignBlock) realignMultiEmptyInitial(info *varalignLine, newWidth int)
 		return
 	}
 
-	if newSpace == " " && oldSpace != "" && oldSpace == strings.Repeat("\t", len(oldSpace)) {
-		return
-	}
-
-	if newSpace == " " && info.parts.value == "" && info.parts.trailingComment == "" {
+	if newSpace == " " {
 		return // This case is handled by checkContinuationIndentation.
 	}
 
@@ -478,9 +474,7 @@ func (*VaralignBlock) realignMultiEmptyInitial(info *varalignLine, newWidth int)
 	column := tabWidth(leadingComment + varnameOp + newSpace)
 
 	fix := info.mkline.Autofix()
-	if newSpace == " " {
-		fix.Notef("This outlier variable value should be aligned with a single space.")
-	} else if hasSpace && column != oldColumn {
+	if hasSpace && column != oldColumn {
 		fix.Notef("This variable value should be aligned with tabs, not spaces, to column %d.", column+1)
 	} else if column != oldColumn {
 		fix.Notef("This variable value should be aligned to column %d.", column+1)
