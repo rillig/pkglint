@@ -1489,7 +1489,8 @@ func (s *Suite) Test_VaralignBlock__follow_up_indented_with_spaces(c *check.C) {
 // fix the whole block to use the indentation of the second-longest line.
 // In this case, all of the remaining lines have the same indentation
 // (as there is only 1 line at all).
-// Therefore this existing indentation is used instead of the minimum necessary, which would only be a single tab.
+// Therefore this existing indentation is used instead of the minimum
+// necessary, which would only be a single tab.
 func (s *Suite) Test_VaralignBlock__var_tabs24_value_var45_tab_value(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -1542,9 +1543,9 @@ func (s *Suite) Test_VaralignBlock__var_spaces24_value_space_cont_spaces24_value
 	vt.Run()
 }
 
-// The CDROM variables align exactly at a tab position, therefore they must
+// The CDROM variable aligns exactly at a tab position, therefore it must
 // be indented by at least one more space. Since that one space is not
-// enough to count as an outlier, everything is indented by one more tab.
+// enough to count as an outlier, each line is indented by one more tab.
 func (s *Suite) Test_VaralignBlock__var_tab16_value_var16_space_value_var14_tab_value(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
