@@ -197,16 +197,12 @@ func (va *VaralignBlock) Finish() {
 	}
 }
 
+// rightMargin calculates the column in which the continuation backslashes
+// should be placed.
 func (*VaralignBlock) rightMargin(infos []*varalignLine) int {
-	var min int
 	var columns []int
 	for _, info := range infos {
 		if info.continuation() {
-			mainWidth := tabWidth(info.beforeContinuation())
-			if mainWidth > min {
-				min = mainWidth
-			}
-
 			space := info.spaceBeforeContinuation()
 			if space != "" && space != " " {
 				columns = append(columns, info.continuationColumn())
@@ -222,10 +218,20 @@ func (*VaralignBlock) rightMargin(infos []*varalignLine) int {
 		}
 	}
 
-	if len(columns) > 1 {
-		return (min & -8) + 8
+	if len(columns) <= 1 {
+		return 0
 	}
-	return 0
+
+	var min int
+	for _, info := range infos {
+		if info.continuation() {
+			mainWidth := tabWidth(info.beforeContinuation())
+			if mainWidth > min {
+				min = mainWidth
+			}
+		}
+	}
+	return (min & -8) + 8
 }
 
 // optimalWidth computes the desired screen width for the variable assignment
