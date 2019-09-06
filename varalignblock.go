@@ -69,17 +69,6 @@ import (
 type VaralignBlock struct {
 	infos []*varalignLine
 	skip  bool
-
-	// When the indentation of the initial line of a multiline is
-	// changed, all its follow-up lines are shifted by the same
-	// amount and in the same direction. Typical examples are
-	// SUBST_SED, shell programs and AWK programs like in
-	// GENERATE_PLIST.
-	indentDiffSet bool
-	// The amount by which the follow-up lines are shifted.
-	// Positive values mean shifting to the right, negative values
-	// mean shifting to the left.
-	indentDiff int
 }
 
 type varalignLine struct {
@@ -181,10 +170,21 @@ func (va *VaralignBlock) Finish() {
 	newWidth := va.optimalWidth(infos)
 	rightMargin := 0
 
+	// When the indentation of the initial line of a multiline is
+	// changed, all its follow-up lines are shifted by the same
+	// amount and in the same direction. Typical examples are
+	// SUBST_SED, shell programs and AWK programs like in
+	// GENERATE_PLIST.
+	indentDiffSet := false
+	// The amount by which the follow-up lines are shifted.
+	// Positive values mean shifting to the right, negative values
+	// mean shifting to the left.
+	indentDiff := 0
+
 	for i, info := range infos {
 		if info.rawIndex == 0 {
-			va.indentDiffSet = false
-			va.indentDiff = 0
+			indentDiffSet = false
+			indentDiff = 0
 			restIndex := i + condInt(info.parts.value != "", 0, 1)
 			rightMargin = va.rightMargin(infos[restIndex:])
 		}
@@ -192,7 +192,7 @@ func (va *VaralignBlock) Finish() {
 		va.checkContinuationIndentation(info, newWidth, rightMargin)
 
 		if newWidth > 0 || info.rawIndex > 0 {
-			va.realign(info, newWidth)
+			va.realign(info, newWidth, &indentDiffSet, &indentDiff)
 		}
 	}
 }
@@ -329,18 +329,20 @@ func (va *VaralignBlock) checkContinuationIndentation(info *varalignLine, newWid
 	fix.Apply()
 }
 
-func (va *VaralignBlock) realign(info *varalignLine, newWidth int) {
+func (va *VaralignBlock) realign(info *varalignLine, newWidth int, indentDiffSet *bool, indentDiff *int) {
 	if info.multiEmpty {
 		if info.rawIndex == 0 {
 			va.realignMultiEmptyInitial(info, newWidth)
 		} else {
-			va.realignMultiEmptyFollow(info, newWidth)
+			va.realignMultiEmptyFollow(info, newWidth, indentDiffSet, indentDiff)
 		}
 	} else if info.rawIndex == 0 && info.continuation() {
-		va.realignMultiInitial(info, newWidth)
+		va.realignMultiInitial(info, newWidth, indentDiffSet, indentDiff)
 	} else if info.rawIndex > 0 {
-		va.realignMultiFollow(info, newWidth)
+		assert(*indentDiffSet)
+		va.realignMultiFollow(info, newWidth, *indentDiff)
 	} else {
+		assert(!*indentDiffSet)
 		va.realignSingle(info, newWidth)
 	}
 }
@@ -381,19 +383,19 @@ func (*VaralignBlock) realignMultiEmptyInitial(info *varalignLine, newWidth int)
 	fix.Apply()
 }
 
-func (va *VaralignBlock) realignMultiEmptyFollow(info *varalignLine, newWidth int) {
+func (va *VaralignBlock) realignMultiEmptyFollow(info *varalignLine, newWidth int, indentDiffSet *bool, indentDiff *int) {
 	oldSpace := info.parts.spaceBeforeValue
 	oldWidth := tabWidth(oldSpace)
 
-	if !va.indentDiffSet {
-		va.indentDiffSet = true
-		va.indentDiff = condInt(newWidth != 0, newWidth-oldWidth, 0)
-		if va.indentDiff > 0 && !info.commentedOut() {
-			va.indentDiff = 0
+	if !*indentDiffSet {
+		*indentDiffSet = true
+		*indentDiff = condInt(newWidth != 0, newWidth-oldWidth, 0)
+		if *indentDiff > 0 && !info.commentedOut() {
+			*indentDiff = 0
 		}
 	}
 
-	newSpace := indent(imax(oldWidth+va.indentDiff, 8))
+	newSpace := indent(imax(oldWidth+*indentDiff, 8))
 	if newSpace == oldSpace {
 		return
 	}
@@ -410,14 +412,14 @@ func (va *VaralignBlock) realignMultiEmptyFollow(info *varalignLine, newWidth in
 	fix.Apply()
 }
 
-func (va *VaralignBlock) realignMultiInitial(info *varalignLine, newWidth int) {
+func (va *VaralignBlock) realignMultiInitial(info *varalignLine, newWidth int, indentDiffSet *bool, indentDiff *int) {
 	leadingComment := info.parts.leadingComment
 	varnameOp := info.parts.varnameOp
 	oldSpace := info.parts.spaceBeforeValue
 
-	va.indentDiffSet = true
+	*indentDiffSet = true
 	oldWidth := info.varnameOpSpaceWidth()
-	va.indentDiff = newWidth - oldWidth
+	*indentDiff = newWidth - oldWidth
 
 	newSpace := alignmentAfter(leadingComment+varnameOp, newWidth)
 	if newSpace == oldSpace {
@@ -439,11 +441,9 @@ func (va *VaralignBlock) realignMultiInitial(info *varalignLine, newWidth int) {
 	fix.Apply()
 }
 
-func (va *VaralignBlock) realignMultiFollow(info *varalignLine, newWidth int) {
-	assert(va.indentDiffSet)
-
+func (va *VaralignBlock) realignMultiFollow(info *varalignLine, newWidth int, indentDiff int) {
 	oldSpace := info.parts.spaceBeforeValue
-	newSpace := indent(tabWidth(oldSpace) + va.indentDiff)
+	newSpace := indent(tabWidth(oldSpace) + indentDiff)
 	if tabWidth(newSpace) < newWidth {
 		newSpace = indent(newWidth)
 	}
@@ -458,8 +458,6 @@ func (va *VaralignBlock) realignMultiFollow(info *varalignLine, newWidth int) {
 }
 
 func (va *VaralignBlock) realignSingle(info *varalignLine, newWidth int) {
-	assert(!va.indentDiffSet)
-
 	leadingComment := info.parts.leadingComment
 	varnameOp := info.parts.varnameOp
 	oldSpace := info.parts.spaceBeforeValue
