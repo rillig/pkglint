@@ -154,7 +154,7 @@ func (va *VaralignBlock) processVarassign(mkline *MkLine) {
 
 	follow := false
 	for i, raw := range mkline.raw {
-		info := varalignLine{mkline, i, follow, va.split(raw.textnl, i == 0)}
+		info := varalignLine{mkline, i, follow, NewVaralignSplitter().split(raw.textnl, i == 0)}
 
 		if i == 0 && info.parts.value == "" && info.continuation() {
 			follow = true
@@ -162,110 +162,6 @@ func (va *VaralignBlock) processVarassign(mkline *MkLine) {
 		}
 
 		va.infos = append(va.infos, &info)
-	}
-}
-
-func (*VaralignBlock) split(textnl string, initial bool) varalignSplitResult {
-
-	// See MkLineParser.unescapeComment for very similar code.
-
-	p := NewMkParser(nil, textnl)
-	lexer := p.lexer
-
-	parseLeadingComment := func() string {
-		if hasPrefix(lexer.Rest(), "# ") {
-			return ""
-		}
-
-		mark := lexer.Mark()
-
-		if !lexer.SkipByte('#') && initial && lexer.SkipByte(' ') {
-			lexer.SkipHspace()
-		}
-
-		return lexer.Since(mark)
-	}
-
-	parseVarnameOp := func() string {
-		if !initial {
-			return ""
-		}
-
-		mark := lexer.Mark()
-		_ = p.Varname()
-		lexer.SkipHspace()
-		ok, _ := p.Op()
-		assert(ok)
-		return lexer.Since(mark)
-	}
-
-	parseValue := func() (string, string) {
-		mark := lexer.Mark()
-
-		for !lexer.EOF() &&
-			lexer.PeekByte() != '#' &&
-			lexer.PeekByte() != '\n' &&
-			!hasPrefix(lexer.Rest(), "\\\n") {
-
-			if lexer.NextBytesSet(unescapeMkCommentSafeChars) != "" ||
-				lexer.SkipString("[#") ||
-				lexer.SkipByte('[') {
-				continue
-			}
-
-			if len(lexer.Rest()) < 2 {
-				break
-			}
-
-			assert(lexer.SkipByte('\\'))
-			lexer.Skip(1)
-		}
-
-		valueSpace := lexer.Since(mark)
-		value := rtrimHspace(valueSpace)
-		space := valueSpace[len(value):]
-		return value, space
-	}
-
-	parseComment := func() (string, string, string) {
-		rest := lexer.Rest()
-
-		newline := len(rest)
-		for newline > 0 && rest[newline-1] == '\n' {
-			newline--
-		}
-
-		backslash := newline
-		for backslash > 0 && rest[backslash-1] == '\\' {
-			backslash--
-		}
-
-		if (newline-backslash)%2 == 1 {
-			continuation := rest[backslash:]
-			commentSpace := rest[:backslash]
-			comment := rtrimHspace(commentSpace)
-			space := commentSpace[len(comment):]
-			return comment, space, continuation
-		}
-
-		return rest[:newline], "", rest[newline:]
-	}
-
-	leadingComment := parseLeadingComment()
-	varnameOp := parseVarnameOp()
-	spaceBeforeValue := lexer.NextHspace()
-	value, spaceAfterValue := parseValue()
-	trailingComment, spaceAfterComment, continuation := parseComment()
-
-	return varalignSplitResult{
-		leadingComment,
-		varnameOp,
-		spaceBeforeValue,
-		value,
-		spaceAfterValue,
-		trailingComment,
-		spaceAfterComment,
-		continuation,
 	}
 }
 
@@ -716,4 +612,118 @@ func (l *varalignLine) canonicalFollow() bool {
 	}
 
 	return tabs >= 1 && spaces <= 7
+}
+
+// VaralignSplitter parses the text of a raw line into those parts that
+// are relevant for aligning the variable values, and the backslash
+// continuation markers.
+//
+// See MkLineParser.unescapeComment for very similar code.
+type VaralignSplitter struct {
+}
+
+func NewVaralignSplitter() VaralignSplitter {
+	return VaralignSplitter{}
+}
+
+func (s VaralignSplitter) split(textnl string, initial bool) varalignSplitResult {
+	parser := NewMkParser(nil, textnl)
+	lexer := parser.lexer
+
+	leadingComment := s.parseLeadingComment(lexer, initial)
+	varnameOp, spaceBeforeValue := s.parseVarnameOp(parser, initial)
+	value, spaceAfterValue := s.parseValue(lexer)
+	trailingComment, spaceAfterComment, continuation := s.parseComment(lexer)
+
+	return varalignSplitResult{
+		leadingComment,
+		varnameOp,
+		spaceBeforeValue,
+		value,
+		spaceAfterValue,
+		trailingComment,
+		spaceAfterComment,
+		continuation,
+	}
+}
+
+func (VaralignSplitter) parseLeadingComment(lexer *textproc.Lexer, initial bool) string {
+
+	if hasPrefix(lexer.Rest(), "# ") {
+		return ""
+	}
+
+	mark := lexer.Mark()
+
+	if !lexer.SkipByte('#') && initial && lexer.SkipByte(' ') {
+		lexer.SkipHspace()
+	}
+
+	return lexer.Since(mark)
+}
+
+func (VaralignSplitter) parseVarnameOp(parser *MkParser, initial bool) (string, string) {
+	lexer := parser.lexer
+	if !initial {
+		return "", lexer.NextHspace()
+	}
+
+	mark := lexer.Mark()
+	_ = parser.Varname()
+	lexer.SkipHspace()
+	ok, _ := parser.Op()
+	assert(ok)
+	return lexer.Since(mark), lexer.NextHspace()
+}
+
+func (VaralignSplitter) parseValue(lexer *textproc.Lexer) (string, string) {
+	mark := lexer.Mark()
+
+	for !lexer.EOF() &&
+		lexer.PeekByte() != '#' &&
+		lexer.PeekByte() != '\n' &&
+		!hasPrefix(lexer.Rest(), "\\\n") {
+
+		if lexer.NextBytesSet(unescapeMkCommentSafeChars) != "" ||
+			lexer.SkipString("[#") ||
+			lexer.SkipByte('[') {
+			continue
+		}
+
+		if len(lexer.Rest()) < 2 {
+			break
+		}
+
+		assert(lexer.SkipByte('\\'))
+		lexer.Skip(1)
+	}
+
+	valueSpace := lexer.Since(mark)
+	value := rtrimHspace(valueSpace)
+	space := valueSpace[len(value):]
+	return value, space
+}
+
+func (VaralignSplitter) parseComment(lexer *textproc.Lexer) (string, string, string) {
+	rest := lexer.Rest()
+
+	newline := len(rest)
+	for newline > 0 && rest[newline-1] == '\n' {
+		newline--
+	}
+
+	backslash := newline
+	for backslash > 0 && rest[backslash-1] == '\\' {
+		backslash--
+	}
+
+	if (newline-backslash)%2 == 1 {
+		continuation := rest[backslash:]
+		commentSpace := rest[:backslash]
+		comment := rtrimHspace(commentSpace)
+		space := commentSpace[len(comment):]
+		return comment, space, continuation
+	}
+
+	return rest[:newline], "", rest[newline:]
 }

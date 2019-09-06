@@ -153,7 +153,7 @@ func (vt *VaralignTester) checkTestName() {
 		}
 
 		for i, input := range mkline.Line.raw {
-			parts := (*VaralignBlock).split(nil, strings.TrimSuffix(input.orignl, "\n"), i == 0)
+			parts := NewVaralignSplitter().split(strings.TrimSuffix(input.orignl, "\n"), i == 0)
 			width = 0
 			if parts.leadingComment != "" {
 				describe(parts.leadingComment, "lead")
@@ -2786,11 +2786,11 @@ func (s *Suite) Test_varalignLine_spaceBeforeContinuation__continued_comment(c *
 	vt.Run()
 }
 
-func (s *Suite) Test_VaralignBlock_split(c *check.C) {
+func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 	t := s.Init(c)
 
 	test := func(textnl string, initial bool, expected varalignSplitResult) {
-		actual := (&VaralignBlock{}).split(textnl, initial)
+		actual := NewVaralignSplitter().split(textnl, initial)
 
 		t.CheckEquals(actual, expected)
 		t.CheckEquals(
