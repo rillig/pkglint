@@ -2496,6 +2496,21 @@ func (s *Suite) Test_VaralignBlock_Process__only_spaces(c *check.C) {
 		"NOTE: file.mk:4: This variable value should be aligned with tabs, not spaces, to column 33.")
 }
 
+func (s *Suite) Test_VaralignBlock_processVarassign__comment_with_continuation(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR.longParameter= # comment \\",
+		"#\tthe comment continues")
+	vt.Diagnostics(
+		// FIXME: align with tab, indent follow-up line to column 17
+		nil...)
+	vt.Autofixes(nil...)
+	vt.Fixed(
+		"VAR.longParameter= # comment \\",
+		"#       the comment continues")
+	vt.Run()
+}
+
 func (s *Suite) Test_VaralignBlock_realignMultiEmptyInitial(c *check.C) {
 	t := s.Init(c)
 
