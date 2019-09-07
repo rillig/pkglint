@@ -152,7 +152,7 @@ func (vt *VaralignTester) checkTestName() {
 			return
 		}
 
-		for i, input := range mkline.Line.raw {
+		for i, input := range mkline.raw {
 			parts := NewVaralignSplitter().split(strings.TrimSuffix(input.orignl, "\n"), i == 0)
 			width = 0
 			if parts.leadingComment != "" {
