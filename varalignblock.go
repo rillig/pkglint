@@ -637,7 +637,7 @@ func (s VaralignSplitter) split(textnl string, initial bool) varalignSplitResult
 	leadingComment := s.parseLeadingComment(lexer, initial)
 	varnameOp, spaceBeforeValue := s.parseVarnameOp(parser, initial)
 	value, spaceAfterValue := s.parseValue(lexer)
-	trailingComment, spaceAfterComment, continuation := s.parseComment(lexer)
+	trailingComment, spaceAfterComment, continuation := s.parseComment(lexer.Rest())
 
 	return varalignSplitResult{
 		leadingComment,
@@ -708,9 +708,7 @@ func (VaralignSplitter) parseValue(lexer *textproc.Lexer) (string, string) {
 	return value, space
 }
 
-func (VaralignSplitter) parseComment(lexer *textproc.Lexer) (string, string, string) {
-	rest := lexer.Rest()
-
+func (VaralignSplitter) parseComment(rest string) (string, string, string) {
 	newline := len(rest)
 	for newline > 0 && rest[newline-1] == '\n' {
 		newline--
@@ -721,7 +719,7 @@ func (VaralignSplitter) parseComment(lexer *textproc.Lexer) (string, string, str
 		backslash--
 	}
 
-	if (newline-backslash)%2 == 1 {
+	if (newline-backslash)&1 != 0 { // see https://github.com/golang/go/issues/34166
 		continuation := rest[backslash:]
 		commentSpace := rest[:backslash]
 		comment := rtrimHspace(commentSpace)
