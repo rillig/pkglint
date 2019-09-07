@@ -1333,3 +1333,8 @@ func (s *StringSet) AddAll(elements []string) {
 		s.Add(element)
 	}
 }
+
+func (s *StringSet) Contains(needle string) bool {
+	_, found := s.seen[needle]
+	return found
+}

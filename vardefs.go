@@ -1674,6 +1674,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.infralist("_SYS_VARS.*", BtVariableName)
 	reg.infralist("_DEF_VARS.*", BtVariableName)
 	reg.infralist("_USE_VARS.*", BtVariableName)
+	reg.infralist("_IGN_VARS.*", BtVariableName)
 	reg.infralist("_SORTED_VARS.*", BtVariableNamePattern)
 	reg.infralist("_LISTED_VARS.*", BtVariableNamePattern)
 }
