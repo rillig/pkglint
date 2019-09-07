@@ -549,17 +549,19 @@ func (s VaralignSplitter) split(rawText string, initial bool) varalignParts {
 }
 
 func (VaralignSplitter) parseLeadingComment(lexer *textproc.Lexer, initial bool) string {
-
 	if hasPrefix(lexer.Rest(), "# ") {
 		return ""
 	}
 
-	mark := lexer.Mark()
-
-	if !lexer.SkipByte('#') && initial && lexer.SkipByte(' ') {
-		lexer.SkipHspace()
+	comment := lexer.NextString("#")
+	if comment != "" {
+		return comment
 	}
 
+	mark := lexer.Mark()
+	if initial && lexer.SkipByte(' ') {
+		lexer.SkipHspace()
+	}
 	return lexer.Since(mark)
 }
 
