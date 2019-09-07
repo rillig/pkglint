@@ -2,6 +2,7 @@ package pkglint
 
 import (
 	"netbsd.org/pkglint/regex"
+	"netbsd.org/pkglint/textproc"
 	"os"
 	"path"
 	"path/filepath"
@@ -1616,27 +1617,35 @@ func (ck MkLineChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, notE
 	modifiers := varuse.modifiers
 
 	for _, modifier := range modifiers {
-		if m, positive, pattern, exact := modifier.MatchMatch(); m && (positive || len(modifiers) == 1) {
-			ck.checkVartype(varname, opUseMatch, pattern, "")
-
-			vartype := G.Pkgsrc.VariableType(ck.MkLines, varname)
-			if exact && matches(pattern, `^[\w-/]+$`) && vartype != nil && !vartype.List() {
-
-				fix := ck.MkLine.Autofix()
-				fix.Notef("%s should be compared using %s instead of matching against %q.",
-					varname, condStr(positive == notEmpty, "==", "!="), ":"+modifier.Text)
-				fix.Explain(
-					"This variable has a single value, not a list of values.",
-					"Therefore it feels strange to apply list operators like :M and :N onto it.",
-					"A more direct approach is to use the == and != operators.",
-					"",
-					"An entirely different case is when the pattern contains wildcards like ^, *, $.",
-					"In such a case, using the :M or :N modifiers is useful and preferred.")
-				fix.Replace(replace(varname, positive, pattern))
-				fix.Anyway()
-				fix.Apply()
-			}
+		m, positive, pattern, exact := modifier.MatchMatch()
+		if !m || !positive && len(modifiers) != 1 {
+			continue
 		}
+
+		ck.checkVartype(varname, opUseMatch, pattern, "")
+
+		vartype := G.Pkgsrc.VariableType(ck.MkLines, varname)
+		switch {
+		case !exact,
+			vartype == nil,
+			vartype.List(),
+			textproc.NewLexer(pattern).NextBytesSet(mkCondLiteralChars) != pattern:
+			continue
+		}
+
+		fix := ck.MkLine.Autofix()
+		fix.Notef("%s should be compared using %s instead of matching against %q.",
+			varname, condStr(positive == notEmpty, "==", "!="), ":"+modifier.Text)
+		fix.Explain(
+			"This variable has a single value, not a list of values.",
+			"Therefore it feels strange to apply list operators like :M and :N onto it.",
+			"A more direct approach is to use the == and != operators.",
+			"",
+			"An entirely different case is when the pattern contains wildcards like ^, *, $.",
+			"In such a case, using the :M or :N modifiers is useful and preferred.")
+		fix.Replace(replace(varname, positive, pattern))
+		fix.Anyway()
+		fix.Apply()
 	}
 }
 
