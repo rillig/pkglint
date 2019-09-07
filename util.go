@@ -245,7 +245,7 @@ func getSubdirs(filename string) []string {
 
 func isIgnoredFilename(filename string) bool {
 	switch filename {
-	case ".", "..", "CVS", ".svn", ".git", ".hg":
+	case ".", "..", "CVS", ".svn", ".git", ".hg", ".idea":
 		return true
 	}
 	return false
