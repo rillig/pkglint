@@ -132,7 +132,8 @@ func (va *VaralignBlock) processVarassign(mkline *MkLine) {
 
 	follow := false
 	for i, raw := range mkline.raw {
-		info := varalignLine{mkline, i, follow, NewVaralignSplitter().split(raw.textnl, i == 0)}
+		parts := NewVaralignSplitter().split(strings.TrimSuffix(raw.textnl, "\n"), i == 0)
+		info := varalignLine{mkline, i, follow, parts}
 
 		if i == 0 && info.isEmptyContinuation() {
 			follow = true
@@ -525,8 +526,9 @@ func NewVaralignSplitter() VaralignSplitter {
 	return VaralignSplitter{}
 }
 
-func (s VaralignSplitter) split(textnl string, initial bool) varalignParts {
-	parser := NewMkParser(nil, textnl)
+func (s VaralignSplitter) split(rawText string, initial bool) varalignParts {
+	assert(!hasSuffix(rawText, "\n"))
+	parser := NewMkParser(nil, rawText)
 	lexer := parser.lexer
 
 	leadingComment := s.parseLeadingComment(lexer, initial)
@@ -633,12 +635,12 @@ type varalignParts struct {
 	spaceAfterValue   string // only set if there is a value
 	trailingComment   string
 	spaceAfterComment string // only set if there is a trailing comment
-	continuation      string // optional backslash, plus newline
+	continuation      string // either a single backslash or empty
 }
 
 // continuation returns whether this line ends with a backslash.
 func (p *varalignParts) isContinuation() bool {
-	return hasPrefix(p.continuation, "\\")
+	return p.continuation != ""
 }
 
 func (p *varalignParts) isEmptyContinuation() bool {

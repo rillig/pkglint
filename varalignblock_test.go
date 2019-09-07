@@ -2817,7 +2817,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			textnl)
 	}
 
-	test("VAR=value\n", true,
+	test("VAR=value", true,
 		varalignParts{
 			leadingComment:    "",
 			varnameOp:         "VAR=",
@@ -2826,10 +2826,9 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			spaceAfterValue:   "",
 			trailingComment:   "",
 			spaceAfterComment: "",
-			continuation:      "\n",
-		})
+			continuation:      ""})
 
-	test("#VAR=value\n", true,
+	test("#VAR=value", true,
 		varalignParts{
 			leadingComment:    "#",
 			varnameOp:         "VAR=",
@@ -2838,10 +2837,9 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			spaceAfterValue:   "",
 			trailingComment:   "",
 			spaceAfterComment: "",
-			continuation:      "\n",
-		})
+			continuation:      ""})
 
-	test("#VAR = value # comment \\\n", true,
+	test("#VAR = value # comment \\", true,
 		varalignParts{
 			leadingComment:    "#",
 			varnameOp:         "VAR =",
@@ -2850,10 +2848,9 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			spaceAfterValue:   " ",
 			trailingComment:   "# comment",
 			spaceAfterComment: " ",
-			continuation:      "\\\n",
-		})
+			continuation:      "\\"})
 
-	test("VAR=value \\\n", true,
+	test("VAR=value \\", true,
 		varalignParts{
 			leadingComment:    "",
 			varnameOp:         "VAR=",
@@ -2862,10 +2859,9 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			spaceAfterValue:   " ",
 			trailingComment:   "",
 			spaceAfterComment: "",
-			continuation:      "\\\n",
-		})
+			continuation:      "\\"})
 
-	test("VAR=value # comment \\\n", true,
+	test("VAR=value # comment \\", true,
 		varalignParts{
 			leadingComment:    "",
 			varnameOp:         "VAR=",
@@ -2874,10 +2870,9 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			spaceAfterValue:   " ",
 			trailingComment:   "# comment",
 			spaceAfterComment: " ",
-			continuation:      "\\\n",
-		})
+			continuation:      "\\"})
 
-	test("VAR=value # comment \\\\\n", true,
+	test("VAR=value # comment \\\\", true,
 		varalignParts{
 			leadingComment:    "",
 			varnameOp:         "VAR=",
@@ -2886,10 +2881,9 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			spaceAfterValue:   " ",
 			trailingComment:   "# comment \\\\",
 			spaceAfterComment: "",
-			continuation:      "\n",
-		})
+			continuation:      ""})
 
-	test("VAR=\\# a [#] b # comment \\\\\n", true,
+	test("VAR=\\# a [#] b # comment \\\\", true,
 		varalignParts{
 			leadingComment:    "",
 			varnameOp:         "VAR=",
@@ -2898,10 +2892,9 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			spaceAfterValue:   " ",
 			trailingComment:   "# comment \\\\",
 			spaceAfterComment: "",
-			continuation:      "\n",
-		})
+			continuation:      ""})
 
-	test("VAR.${param:[#]}=\tvalue\n", true,
+	test("VAR.${param:[#]}=\tvalue", true,
 		varalignParts{
 			leadingComment:    "",
 			varnameOp:         "VAR.${param:[#]}=",
@@ -2910,8 +2903,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			spaceAfterValue:   "",
 			trailingComment:   "",
 			spaceAfterComment: "",
-			continuation:      "\n",
-		})
+			continuation:      ""})
 
 	test("VAR=value", true,
 		varalignParts{
@@ -2922,8 +2914,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			spaceAfterValue:   "",
 			trailingComment:   "",
 			spaceAfterComment: "",
-			continuation:      "",
-		})
+			continuation:      ""})
 
 	// Since this is a follow-up line, the text ends up in the variable
 	// value, and varnameOp is necessarily empty.
@@ -2936,8 +2927,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			spaceAfterValue:   "",
 			trailingComment:   "",
 			spaceAfterComment: "",
-			continuation:      "",
-		})
+			continuation:      ""})
 
 	// In some edge cases the variable name is indented with ordinary spaces.
 	// This must not lead to a panic.
@@ -2950,8 +2940,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			spaceAfterValue:   "",
 			trailingComment:   "",
 			spaceAfterComment: "",
-			continuation:      "",
-		})
+			continuation:      ""})
 
 	// And in really edgy cases, the leading space may even be followed by tabs.
 	// This should not happen in practice since it is really confusing.
@@ -2964,8 +2953,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			spaceAfterValue:   "",
 			trailingComment:   "",
 			spaceAfterComment: "",
-			continuation:      "",
-		})
+			continuation:      ""})
 
 	test("    value", false,
 		varalignParts{
@@ -2976,8 +2964,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			spaceAfterValue:   "",
 			trailingComment:   "",
 			spaceAfterComment: "",
-			continuation:      "",
-		})
+			continuation:      ""})
 
 	// In practice it doesn't really happen that the last line of a file
 	// ends in a backslash and at the same time it doesn't have the usual
@@ -2991,8 +2978,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			spaceAfterValue:   " ",
 			trailingComment:   "",
 			spaceAfterComment: "",
-			continuation:      "\\",
-		})
+			continuation:      "\\"})
 
 	// A follow-up line may start with a comment character. There are
 	// two possible interpretations:
@@ -3017,8 +3003,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			spaceAfterValue:   "",
 			trailingComment:   "",
 			spaceAfterComment: "",
-			continuation:      "",
-		})
+			continuation:      ""})
 
 	test("#\tcomment \\", false,
 		varalignParts{
@@ -3029,8 +3014,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			spaceAfterValue:   " ",
 			trailingComment:   "",
 			spaceAfterComment: "",
-			continuation:      "\\",
-		})
+			continuation:      "\\"})
 
 	test("# comment", false,
 		varalignParts{
@@ -3041,8 +3025,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			spaceAfterValue:   "",
 			trailingComment:   "# comment",
 			spaceAfterComment: "",
-			continuation:      "",
-		})
+			continuation:      ""})
 
 	test("# comment \\", false,
 		varalignParts{
@@ -3053,8 +3036,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			spaceAfterValue:   "",
 			trailingComment:   "# comment",
 			spaceAfterComment: " ",
-			continuation:      "\\",
-		})
+			continuation:      "\\"})
 
 	// Commented variable assignments are only valid if they
 	// directly follow the comment sign.
@@ -3063,6 +3045,9 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 	// the VaralignBlock.
 	t.ExpectAssert(
 		func() { test("#  VAR=    value", true, varalignParts{}) })
+
+	t.ExpectAssert(
+		func() { test("VAR=\tvalue\n", true, varalignParts{}) })
 }
 
 // This test runs canonicalInitial directly since as of August 2019
