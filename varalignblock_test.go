@@ -2812,16 +2812,29 @@ func (s *Suite) Test_varalignParts_spaceBeforeContinuation__continued_comment(c 
 func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 	t := s.Init(c)
 
-	test := func(textnl string, initial bool, expected varalignParts) {
-		actual := NewVaralignSplitter().split(textnl, initial)
+	test := func(rawText string, initial bool, expected varalignParts) {
+		actual := NewVaralignSplitter().split(rawText, initial)
 
 		t.CheckEquals(actual, expected)
 		t.CheckEquals(
 			actual.leadingComment+actual.varnameOp+
 				actual.spaceBeforeValue+actual.value+actual.spaceAfterValue+
 				actual.trailingComment+actual.spaceAfterComment+actual.continuation,
-			textnl)
+			rawText)
 	}
+
+	// This case is prevented from occurring in practice by the guard
+	// code in VaralignBlock.processVarassign, see INCLUSION_GUARD_MK.
+	test("VAR=", true,
+		varalignParts{
+			leadingComment:    "",
+			varnameOp:         "VAR=",
+			spaceBeforeValue:  "",
+			value:             "",
+			spaceAfterValue:   "",
+			trailingComment:   "",
+			spaceAfterComment: "",
+			continuation:      ""})
 
 	test("VAR=value", true,
 		varalignParts{
@@ -3114,4 +3127,14 @@ func (s *Suite) Test_varalignParts_canonicalFollow(c *check.C) {
 	test("#", "", false)
 	test("#", " ", false)
 	test("#", "\t", true)
+}
+
+// This constellation doesn't occur in practice because the code in
+// VaralignBlock.processVarassign skips it, see INCLUSION_GUARD_MK.
+func (s *Suite) Test_varalignParts_isEmptyContinuation__edge_case(c *check.C) {
+	t := s.Init(c)
+
+	parts := NewVaralignSplitter().split("VAR=", true)
+
+	t.CheckEquals(parts.isEmptyContinuation(), false)
 }

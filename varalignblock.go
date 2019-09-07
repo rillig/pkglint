@@ -582,19 +582,12 @@ func (VaralignSplitter) parseVarnameOp(parser *MkParser, initial bool) (string, 
 func (VaralignSplitter) parseValue(lexer *textproc.Lexer) (string, string) {
 	mark := lexer.Mark()
 
-	for !lexer.EOF() &&
-		lexer.PeekByte() != '#' &&
-		lexer.PeekByte() != '\n' &&
-		!hasPrefix(lexer.Rest(), "\\\n") {
+	for !lexer.EOF() && lexer.PeekByte() != '#' && lexer.Rest() != "\\" {
 
 		if lexer.NextBytesSet(unescapeMkCommentSafeChars) != "" ||
 			lexer.SkipString("[#") ||
 			lexer.SkipByte('[') {
 			continue
-		}
-
-		if len(lexer.Rest()) < 2 {
-			break
 		}
 
 		assert(lexer.SkipByte('\\'))
@@ -608,25 +601,22 @@ func (VaralignSplitter) parseValue(lexer *textproc.Lexer) (string, string) {
 }
 
 func (VaralignSplitter) parseComment(rest string) (string, string, string) {
-	newline := len(rest)
-	for newline > 0 && rest[newline-1] == '\n' {
-		newline--
-	}
+	end := len(rest)
 
-	backslash := newline
+	backslash := end
 	for backslash > 0 && rest[backslash-1] == '\\' {
 		backslash--
 	}
 
-	if (newline-backslash)&1 != 0 { // see https://github.com/golang/go/issues/34166
-		continuation := rest[backslash:]
-		commentSpace := rest[:backslash]
-		comment := rtrimHspace(commentSpace)
-		space := commentSpace[len(comment):]
-		return comment, space, continuation
+	if (end-backslash)&1 == 0 { // see https://github.com/golang/go/issues/34166
+		return rest[:end], "", ""
 	}
 
-	return rest[:newline], "", rest[newline:]
+	continuation := rest[backslash:]
+	commentSpace := rest[:backslash]
+	comment := rtrimHspace(commentSpace)
+	space := commentSpace[len(comment):]
+	return comment, space, continuation
 }
 
 type varalignParts struct {
