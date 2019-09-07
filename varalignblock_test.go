@@ -717,8 +717,7 @@ func (s *Suite) Test_VaralignBlock__var_tab_value_space_cont_space_value(c *chec
 	vt.Run()
 }
 
-// TODO: This case should be avoided. The follow-up values should have
-//  at least the same indentation as the initial value.
+// The follow-up values should have at least the same indentation as the initial value.
 func (s *Suite) Test_VaralignBlock__var_tab24_value_space_cont_tab_value(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -728,12 +727,12 @@ func (s *Suite) Test_VaralignBlock__var_tab24_value_space_cont_tab_value(c *chec
 		"20 24 30",
 		"   08")
 	vt.Diagnostics(
-		nil...)
+		"NOTE: Makefile:2: This continuation line should be indented with \"\\t\\t\\t\".")
 	vt.Autofixes(
-		nil...)
+		"AUTOFIX: Makefile:2: Replacing \"\\t\" with \"\\t\\t\\t\".")
 	vt.Fixed(
 		"VVVVVVVVVVVVVVVVVVV=    value \\",
-		"        value")
+		"                        value")
 	vt.Run()
 }
 
@@ -2293,9 +2292,9 @@ func (s *Suite) Test_VaralignBlock__staircase(c *check.C) {
 	vt.Run()
 }
 
-// The follow-up lines may always start in column 9.
-// This is used for long variable values, to prevent wrapping them
-// into multiple lines.
+// The follow-up lines may only start in column 9 if they are longer than
+// 72 characters. Since this is not the case in this test, they are realigned
+// to match the initial line.
 func (s *Suite) Test_VaralignBlock__command_with_arguments(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -2309,15 +2308,20 @@ func (s *Suite) Test_VaralignBlock__command_with_arguments(c *check.C) {
 		"   08 18",
 		"   08")
 	vt.Diagnostics(
-		"NOTE: Makefile:1: This variable value should be aligned with tabs, not spaces, to column 25.")
+		"NOTE: Makefile:1: This variable value should be aligned with tabs, not spaces, to column 25.",
+		"NOTE: Makefile:2: This continuation line should be indented with \"\\t\\t\\t\".",
+		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\\t\\t\".",
+		"NOTE: Makefile:4: This continuation line should be indented with \"\\t\\t\\t\".")
 	vt.Autofixes(
-		"AUTOFIX: Makefile:1: Replacing \" \" with \"\\t\".")
-	// TODO: The backslashes should be aligned.
+		"AUTOFIX: Makefile:1: Replacing \" \" with \"\\t\".",
+		"AUTOFIX: Makefile:2: Replacing \"\\t\" with \"\\t\\t\\t\".",
+		"AUTOFIX: Makefile:3: Replacing \"\\t\" with \"\\t\\t\\t\".",
+		"AUTOFIX: Makefile:4: Replacing \"\\t\" with \"\\t\\t\\t\".")
 	vt.Fixed(
 		"SED_REPLACEMENT_CMD=    ${SED} -n \\",
-		"        -e s,a,b, \\",
-		"        -e s,a,b, \\",
-		"        -e s,a,b,")
+		"                        -e s,a,b, \\",
+		"                        -e s,a,b, \\",
+		"                        -e s,a,b,")
 	vt.Run()
 }
 
@@ -2503,13 +2507,13 @@ func (s *Suite) Test_VaralignBlock_processVarassign__comment_with_continuation(c
 		"#\tthe comment continues")
 	vt.Diagnostics(
 		"NOTE: Makefile:1: This variable value should be aligned with tabs, not spaces, to column 17.",
-	// FIXME: indent follow-up line to column 17
-	)
+		"NOTE: Makefile:2: This continuation line should be indented with \"\\t\\t\".")
 	vt.Autofixes(
-		"AUTOFIX: Makefile:1: Replacing \" \" with \"\\t\".")
+		"AUTOFIX: Makefile:1: Replacing \" \" with \"\\t\".",
+		"AUTOFIX: Makefile:2: Replacing \"\\t\" with \"\\t\\t\".")
 	vt.Fixed(
 		"VAR.param=      # comment \\",
-		"#       the comment continues")
+		"#               the comment continues")
 	vt.Run()
 }
 
@@ -2738,17 +2742,19 @@ func (s *Suite) Test_VaralignBlock__long_lines(c *check.C) {
 		"   08 17",
 		"   08")
 	vt.Diagnostics(
-		"NOTE: Makefile:1: The continuation backslash should be preceded " +
-			"by a single space or tab, or be in column 57, not 66.")
+		"NOTE: Makefile:1: The continuation backslash should be preceded "+
+			"by a single space or tab, or be in column 57, not 66.",
+		"NOTE: Makefile:2: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".",
+		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".")
 	vt.Autofixes(
-		"AUTOFIX: Makefile:1: Replacing \"\\t\\t \" with \"\\t\".")
+		"AUTOFIX: Makefile:1: Replacing \"\\t\\t \" with \"\\t\".",
+		"AUTOFIX: Makefile:2: Replacing \"\\t\" with \"\\t\\t\\t\\t\\t\\t\".",
+		"AUTOFIX: Makefile:3: Replacing \"\\t\" with \"\\t\\t\\t\\t\\t\\t\".")
 	vt.Fixed(
-		// @beta
-		// FIXME: There should be a warning about the unaligned values.
 		"VAR=                                            value   \\",
 		// FIXME: The backslash should be aligned properly.
-		"        value    \\",
-		"        value")
+		"                                                value    \\",
+		"                                                value")
 	vt.Run()
 }
 

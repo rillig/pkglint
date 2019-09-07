@@ -384,12 +384,17 @@ func (s *Suite) Test_MkLine__aligned(c *check.C) {
 	// The second line is indented less than the first line. This looks
 	// confusing to the human reader because the actual values do not
 	// appear in a rectangular shape in the source code.
-	//
-	// There are several cases though where the follow-up lines are quite
-	// long, therefore it is allowed to indent them with a single tab.
 	test(
-		"CONFIGURE_ENV+=\tAWK=${AWK:Q} \\",
-		"\tSED=${SED:Q}",
+		"VAR.param=\tvalue \\",
+		"\t10........20........30........40........50........60...4",
+		false)
+
+	// The second line is indented with a single tab because otherwise
+	// it would be longer than 72 characters. In this case it is ok to
+	// use the smaller indentation.
+	test(
+		"VAR.param=\tvalue \\",
+		"\t10........20........30........40........50........60....5",
 		true)
 
 	// Having the continuation line in column 0 looks even more confusing.

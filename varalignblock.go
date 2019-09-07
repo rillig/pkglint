@@ -443,7 +443,7 @@ func (va *VaralignBlock) realignMultiFollow(info *varalignLine, newWidth int, in
 	if tabWidth(newSpace) < newWidth {
 		newSpace = indent(newWidth)
 	}
-	if newSpace == oldSpace || oldSpace == "\t" {
+	if newSpace == oldSpace || (oldSpace == "\t" && info.widthAlignedAt(newWidth) > 72) {
 		return
 	}
 
@@ -734,4 +734,10 @@ func (p *varalignParts) canonicalFollow() bool {
 	}
 
 	return tabs >= 1 && spaces <= 7
+}
+
+func (p *varalignParts) widthAlignedAt(valueAlign int) int {
+	return tabWidthAppend(
+		valueAlign,
+		p.value+p.spaceAfterValue+p.trailingComment+p.spaceAfterComment+p.continuation)
 }
