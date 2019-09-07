@@ -231,47 +231,39 @@ func (*VaralignBlock) rightMargin(infos []*varalignLine) int {
 // This is to prevent a single SITES.* variable from forcing the rest of the
 // paragraph to be indented too far to the right.
 func (*VaralignBlock) optimalWidth(infos []*varalignLine) int {
-	longest := 0 // The longest seen varnameOpWidth
-	var longestLine *MkLine
-	secondLongest := 0 // The second-longest seen varnameOpWidth
 
+	var widths mklineInts
 	for _, info := range infos {
-		if info.multiEmpty || info.rawIndex > 0 {
-			continue
-		}
-
-		width := info.varnameOpWidth()
-		if width >= longest {
-			secondLongest = longest
-			longest = width
-			longestLine = info.mkline
-		} else if width > secondLongest {
-			secondLongest = width
+		if !info.multiEmpty && info.rawIndex == 0 {
+			widths.append(info.mkline, info.varnameOpWidth())
 		}
 	}
+	widths.sortDesc()
+
+	longest := widths.opt(0)
+	longestLine := widths.optLine(0)
+	secondLongest := widths.opt(1)
 
 	haveOutlier := secondLongest != 0 &&
 		secondLongest/8+1 < longest/8 &&
-		!longestLine.IsMultiline()
+		!longestLine.IsMultiline() // TODO: may be too imprecise
 
 	// Minimum required width of varnameOp, without the trailing whitespace.
 	minVarnameOpWidth := condInt(haveOutlier, secondLongest, longest)
 	outlier := condInt(haveOutlier, longest, 0)
 
 	// Widths of the current indentation (including whitespace)
-	minTotalWidth := 0
-	maxTotalWidth := 0
+	var spaceWidths mklineInts
 	for _, info := range infos {
 		if info.multiEmpty || info.rawIndex > 0 || (outlier > 0 && info.varnameOpWidth() == outlier) {
 			continue
 		}
-
-		width := info.varnameOpSpaceWidth()
-		if minTotalWidth == 0 || width < minTotalWidth {
-			minTotalWidth = width
-		}
-		maxTotalWidth = imax(maxTotalWidth, width)
+		spaceWidths.append(info.mkline, info.varnameOpSpaceWidth())
 	}
+	spaceWidths.sortDesc()
+
+	minTotalWidth := spaceWidths.min()
+	maxTotalWidth := spaceWidths.max()
 
 	if trace.Tracing {
 		trace.Stepf("Indentation including whitespace is between %d and %d.",
@@ -733,3 +725,40 @@ func (p *varalignParts) widthAlignedAt(valueAlign int) int {
 		valueAlign,
 		p.value+p.spaceAfterValue+p.trailingComment+p.spaceAfterComment+p.continuation)
 }
+
+type mklineInts struct {
+	slice []struct {
+		mkline *MkLine
+		value  int
+	}
+}
+
+func (mi mklineInts) sortDesc() {
+	less := func(i, j int) bool { return mi.slice[j].value < mi.slice[i].value }
+	sort.SliceStable(mi.slice, less)
+}
+
+func (mi mklineInts) opt(index int) int {
+	if uint(index) < uint(len(mi.slice)) {
+		return mi.slice[index].value
+	}
+	return 0
+}
+
+func (mi mklineInts) optLine(index int) *MkLine {
+	if uint(index) < uint(len(mi.slice)) {
+		return mi.slice[index].mkline
+	}
+	return nil
+}
+
+func (mi *mklineInts) append(mkline *MkLine, value int) {
+	mi.slice = append(mi.slice, struct {
+		mkline *MkLine
+		value  int
+	}{mkline, value})
+}
+
+func (mi mklineInts) min() int { return mi.opt(0) }
+
+func (mi mklineInts) max() int { return mi.opt(len(mi.slice) - 1) }
