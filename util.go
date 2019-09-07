@@ -316,6 +316,7 @@ func tabWidth(s string) int { return tabWidthAppend(0, s) }
 
 func tabWidthAppend(width int, s string) int {
 	for _, r := range s {
+		assert(r != '\n')
 		if r == '\t' {
 			width = width&-8 + 8
 		} else {
