@@ -90,7 +90,7 @@ func (vt *VaralignTester) run(autofix bool) {
 			var minWidth, curWidth, continuation string
 			minWidth = condStr(info.rawIndex == 0, sprintf("%02d", info.varnameOpWidth()), "  ")
 			curWidth = sprintf(" %02d", info.varnameOpSpaceWidth())
-			if info.continuation() {
+			if info.isContinuation() {
 				continuation = sprintf(" %02d", info.continuationColumn())
 			}
 			actual = append(actual, minWidth+curWidth+continuation)
@@ -2499,14 +2499,16 @@ func (s *Suite) Test_VaralignBlock_Process__only_spaces(c *check.C) {
 func (s *Suite) Test_VaralignBlock_processVarassign__comment_with_continuation(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
-		"VAR.longParameter= # comment \\",
+		"VAR.param= # comment \\",
 		"#\tthe comment continues")
 	vt.Diagnostics(
-		// FIXME: align with tab, indent follow-up line to column 17
-		nil...)
-	vt.Autofixes(nil...)
+		"NOTE: Makefile:1: This variable value should be aligned with tabs, not spaces, to column 17.",
+	// FIXME: indent follow-up line to column 17
+	)
+	vt.Autofixes(
+		"AUTOFIX: Makefile:1: Replacing \" \" with \"\\t\".")
 	vt.Fixed(
-		"VAR.longParameter= # comment \\",
+		"VAR.param=      # comment \\",
 		"#       the comment continues")
 	vt.Run()
 }
@@ -2780,7 +2782,7 @@ func (s *Suite) Test_VaralignBlock__long_lines_2(c *check.C) {
 
 // I've never seen an intentionally continued comment in practice,
 // but pkglint needs to be able to handle this situation anyway.
-func (s *Suite) Test_varalignLine_spaceBeforeContinuation__continued_comment(c *check.C) {
+func (s *Suite) Test_varalignParts_spaceBeforeContinuation__continued_comment(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"VAR=\tvalue # comment \\",
@@ -2804,7 +2806,7 @@ func (s *Suite) Test_varalignLine_spaceBeforeContinuation__continued_comment(c *
 func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 	t := s.Init(c)
 
-	test := func(textnl string, initial bool, expected varalignSplitResult) {
+	test := func(textnl string, initial bool, expected varalignParts) {
 		actual := NewVaralignSplitter().split(textnl, initial)
 
 		t.CheckEquals(actual, expected)
@@ -2816,7 +2818,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 	}
 
 	test("VAR=value\n", true,
-		varalignSplitResult{
+		varalignParts{
 			leadingComment:    "",
 			varnameOp:         "VAR=",
 			spaceBeforeValue:  "",
@@ -2828,7 +2830,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 		})
 
 	test("#VAR=value\n", true,
-		varalignSplitResult{
+		varalignParts{
 			leadingComment:    "#",
 			varnameOp:         "VAR=",
 			spaceBeforeValue:  "",
@@ -2840,7 +2842,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 		})
 
 	test("#VAR = value # comment \\\n", true,
-		varalignSplitResult{
+		varalignParts{
 			leadingComment:    "#",
 			varnameOp:         "VAR =",
 			spaceBeforeValue:  " ",
@@ -2852,7 +2854,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 		})
 
 	test("VAR=value \\\n", true,
-		varalignSplitResult{
+		varalignParts{
 			leadingComment:    "",
 			varnameOp:         "VAR=",
 			spaceBeforeValue:  "",
@@ -2864,7 +2866,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 		})
 
 	test("VAR=value # comment \\\n", true,
-		varalignSplitResult{
+		varalignParts{
 			leadingComment:    "",
 			varnameOp:         "VAR=",
 			spaceBeforeValue:  "",
@@ -2876,7 +2878,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 		})
 
 	test("VAR=value # comment \\\\\n", true,
-		varalignSplitResult{
+		varalignParts{
 			leadingComment:    "",
 			varnameOp:         "VAR=",
 			spaceBeforeValue:  "",
@@ -2888,7 +2890,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 		})
 
 	test("VAR=\\# a [#] b # comment \\\\\n", true,
-		varalignSplitResult{
+		varalignParts{
 			leadingComment:    "",
 			varnameOp:         "VAR=",
 			spaceBeforeValue:  "",
@@ -2900,7 +2902,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 		})
 
 	test("VAR.${param:[#]}=\tvalue\n", true,
-		varalignSplitResult{
+		varalignParts{
 			leadingComment:    "",
 			varnameOp:         "VAR.${param:[#]}=",
 			spaceBeforeValue:  "\t",
@@ -2912,7 +2914,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 		})
 
 	test("VAR=value", true,
-		varalignSplitResult{
+		varalignParts{
 			leadingComment:    "",
 			varnameOp:         "VAR=",
 			spaceBeforeValue:  "",
@@ -2926,7 +2928,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 	// Since this is a follow-up line, the text ends up in the variable
 	// value, and varnameOp is necessarily empty.
 	test("VAR=value", false,
-		varalignSplitResult{
+		varalignParts{
 			leadingComment:    "",
 			varnameOp:         "",
 			spaceBeforeValue:  "",
@@ -2940,7 +2942,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 	// In some edge cases the variable name is indented with ordinary spaces.
 	// This must not lead to a panic.
 	test("   VAR=value", true,
-		varalignSplitResult{
+		varalignParts{
 			leadingComment:    "   ",
 			varnameOp:         "VAR=",
 			spaceBeforeValue:  "",
@@ -2954,7 +2956,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 	// And in really edgy cases, the leading space may even be followed by tabs.
 	// This should not happen in practice since it is really confusing.
 	test(" \t VAR=value", true,
-		varalignSplitResult{
+		varalignParts{
 			leadingComment:    " \t ",
 			varnameOp:         "VAR=",
 			spaceBeforeValue:  "",
@@ -2966,7 +2968,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 		})
 
 	test("    value", false,
-		varalignSplitResult{
+		varalignParts{
 			leadingComment:    "",
 			varnameOp:         "",
 			spaceBeforeValue:  "    ",
@@ -2981,7 +2983,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 	// ends in a backslash and at the same time it doesn't have the usual
 	// newline ending.
 	test("    value \\", false,
-		varalignSplitResult{
+		varalignParts{
 			leadingComment:    "",
 			varnameOp:         "",
 			spaceBeforeValue:  "    ",
@@ -3007,7 +3009,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 	// Any other character makes it a leading comment.
 
 	test("#\tcomment", false,
-		varalignSplitResult{
+		varalignParts{
 			leadingComment:    "#",
 			varnameOp:         "",
 			spaceBeforeValue:  "\t",
@@ -3019,7 +3021,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 		})
 
 	test("#\tcomment \\", false,
-		varalignSplitResult{
+		varalignParts{
 			leadingComment:    "#",
 			varnameOp:         "",
 			spaceBeforeValue:  "\t",
@@ -3031,7 +3033,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 		})
 
 	test("# comment", false,
-		varalignSplitResult{
+		varalignParts{
 			leadingComment:    "",
 			varnameOp:         "",
 			spaceBeforeValue:  "",
@@ -3043,7 +3045,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 		})
 
 	test("# comment \\", false,
-		varalignSplitResult{
+		varalignParts{
 			leadingComment:    "",
 			varnameOp:         "",
 			spaceBeforeValue:  "",
@@ -3060,35 +3062,35 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 	// It is a programming error if such a line is ever added to
 	// the VaralignBlock.
 	t.ExpectAssert(
-		func() { test("#  VAR=    value", true, varalignSplitResult{}) })
+		func() { test("#  VAR=    value", true, varalignParts{}) })
 }
 
 // This test runs canonicalInitial directly since as of August 2019
 // that function is only used in a single place, and from this place
 // varnameOpSpaceWidth is always bigger than width.
-func (s *Suite) Test_varalignLine_canonicalInitial(c *check.C) {
+func (s *Suite) Test_varalignParts_canonicalInitial(c *check.C) {
 	t := s.Init(c)
 
 	var v varalignLine
-	v.parts.varnameOp = "LONG.123456789="
-	v.parts.spaceBeforeValue = " "
+	v.varnameOp = "LONG.123456789="
+	v.spaceBeforeValue = " "
 	t.CheckEquals(v.canonicalInitial(16), false)
 
-	v.parts.varnameOp = "LONG.1234567890="
+	v.varnameOp = "LONG.1234567890="
 
 	t.CheckEquals(v.canonicalInitial(16), true)
 
-	v.parts.spaceBeforeValue = ""
+	v.spaceBeforeValue = ""
 
 	t.CheckEquals(v.canonicalInitial(16), false)
 }
 
-func (s *Suite) Test_varalignLine_canonicalFollow(c *check.C) {
+func (s *Suite) Test_varalignParts_canonicalFollow(c *check.C) {
 	t := s.Init(c)
 
 	test := func(comment, space string, expected bool) {
 		l := varalignLine{
-			parts: varalignSplitResult{
+			varalignParts: varalignParts{
 				leadingComment:   comment,
 				spaceBeforeValue: space}}
 
