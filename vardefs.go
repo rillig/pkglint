@@ -1137,6 +1137,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.pkglistbl3rat("INCOMPAT_CURSES", BtMachinePlatformPattern)
 	reg.sys("INFO_DIR", BtPathname) // relative to PREFIX
 	reg.pkg("INFO_FILES", BtYes)
+	reg.sys("INFO_MSG", BtShellCommand)
 	reg.sys("INSTALL", BtShellCommand)
 	reg.pkglist("INSTALLATION_DIRS", BtPrefixPathname)
 	reg.pkg("INSTALLATION_DIRS_FROM_PLIST", BtYes)
