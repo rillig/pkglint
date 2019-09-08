@@ -105,6 +105,7 @@ func (s *Suite) Test_VargroupsChecker__declared_but_undefined(c *check.C) {
 		"_VARGROUPS+=\t\tgroup",
 		"_DEF_VARS.group=\tUNDEFINED",
 		"",
+		"UNDECLARED=\tvalue",
 		"UNDECLARED=\tvalue")
 
 	mklines.Check()
@@ -130,6 +131,7 @@ func (s *Suite) Test_VargroupsChecker__declared_but_unused(c *check.C) {
 		"_USE_VARS.group=\tUNUSED",
 		"",
 		"target: .PHONY",
+		"\t: ${UNDECLARED}",
 		"\t: ${UNDECLARED}")
 
 	mklines.Check()

@@ -169,7 +169,9 @@ func (ck *VargroupsChecker) checkVarDef(mkline *MkLine) {
 		return
 	}
 
-	mkline.Warnf("Variable %s is defined but not mentioned in the _VARGROUPS section.", varname)
+	if ck.mklines.once.FirstTimeSlice("_VARGROUPS", "def", varname) {
+		mkline.Warnf("Variable %s is defined but not mentioned in the _VARGROUPS section.", varname)
+	}
 }
 
 func (ck *VargroupsChecker) checkVarUse(mkline *MkLine) {
@@ -185,12 +187,13 @@ func (ck *VargroupsChecker) checkVarUse(mkline *MkLine) {
 			varname == strings.ToLower(varname),
 			G.Pkgsrc.Tools.ExistsVar(varname),
 			ck.isShellCommand(varname),
-			ck.registered[varname] != nil,
-			!ck.mklines.once.FirstTimeSlice("_VARGROUPS", "use", varname):
+			ck.registered[varname] != nil:
 			return
 		}
 
-		mkline.Warnf("Variable %s is used but not mentioned in the _VARGROUPS section.", varname)
+		if ck.mklines.once.FirstTimeSlice("_VARGROUPS", "use", varname) {
+			mkline.Warnf("Variable %s is used but not mentioned in the _VARGROUPS section.", varname)
+		}
 	})
 }
 
