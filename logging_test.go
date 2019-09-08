@@ -1030,7 +1030,7 @@ func (s *Suite) Test_SeparatorWriter_Flush(c *check.C) {
 
 	t.CheckEquals(sb.String(), "ab")
 
-	t.ExpectAssert(wr.Separate) // May not be called in the middle of a line.
+	t.ExpectAssert(wr.Separate) // Must not be called in the middle of a line.
 
 	wr.WriteLine("")
 
