@@ -363,20 +363,15 @@ func (fix *Autofix) Apply() {
 			}
 			G.Logger.Logf(AutofixLogLevel, line.Filename, lineno, AutofixFormat, action.description)
 		}
+		G.Logger.showSource(line)
 	}
 
-	if logDiagnostic || logFix {
-		if logFix {
-			G.Logger.showSource(line)
-		}
-		if logDiagnostic && len(fix.explanation) > 0 {
-			line.Explain(fix.explanation...)
-		}
-		if G.Logger.Opts.ShowSource {
-			if !(G.Logger.Opts.Explain && logDiagnostic && len(fix.explanation) > 0) {
-				G.Logger.out.Separate()
-			}
-		}
+	if logDiagnostic && len(fix.explanation) > 0 {
+		line.Explain(fix.explanation...)
+	}
+
+	if (logDiagnostic || logFix) && G.Logger.Opts.ShowSource {
+		G.Logger.out.Separate()
 	}
 
 	reset()
