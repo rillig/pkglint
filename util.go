@@ -149,6 +149,25 @@ func keysJoined(m map[string]bool) string {
 	return strings.Join(keys, " ")
 }
 
+func copyStringMkLine(m map[string]*MkLine) map[string]*MkLine {
+	c := make(map[string]*MkLine, len(m))
+	for k, v := range m {
+		c[k] = v
+	}
+	return c
+}
+
+func forEachStringMkLine(m map[string]*MkLine, action func(s string, mkline *MkLine)) {
+	var keys []string
+	for key := range m {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		action(key, m[key])
+	}
+}
+
 func imax(a, b int) int {
 	if a > b {
 		return a

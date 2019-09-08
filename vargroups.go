@@ -14,17 +14,18 @@ type VargroupsChecker struct {
 	mklines *MkLines
 	skip    bool
 
-	registered StringSet
-	userVars   StringSet
-	pkgVars    StringSet
-	sysVars    StringSet
-	defVars    StringSet
-	useVars    StringSet
-	ignVars    StringSet
-	sortedVars StringSet
-	listedVars StringSet
+	registered map[string]*MkLine
+	userVars   map[string]*MkLine
+	pkgVars    map[string]*MkLine
+	sysVars    map[string]*MkLine
+	defVars    map[string]*MkLine
+	useVars    map[string]*MkLine
+	ignVars    map[string]*MkLine
+	sortedVars map[string]*MkLine
+	listedVars map[string]*MkLine
 
-	unusedVars map[string]bool
+	undefinedVars map[string]*MkLine
+	unusedVars    map[string]*MkLine
 }
 
 func NewVargroupsChecker(mklines *MkLines) *VargroupsChecker {
@@ -41,47 +42,51 @@ func (ck *VargroupsChecker) init() {
 		return
 	}
 
-	ck.registered = NewStringSet()
-	ck.userVars = NewStringSet()
-	ck.pkgVars = NewStringSet()
-	ck.sysVars = NewStringSet()
-	ck.defVars = NewStringSet()
-	ck.useVars = NewStringSet()
-	ck.ignVars = NewStringSet()
-	ck.sortedVars = NewStringSet()
-	ck.listedVars = NewStringSet()
+	ck.registered = make(map[string]*MkLine)
+	ck.userVars = make(map[string]*MkLine)
+	ck.pkgVars = make(map[string]*MkLine)
+	ck.sysVars = make(map[string]*MkLine)
+	ck.defVars = make(map[string]*MkLine)
+	ck.useVars = make(map[string]*MkLine)
+	ck.ignVars = make(map[string]*MkLine)
+	ck.sortedVars = make(map[string]*MkLine)
+	ck.listedVars = make(map[string]*MkLine)
 
 	group := ""
 
-	appendTo := func(ss *StringSet, mkline *MkLine) {
+	checkGroupName := func(mkline *MkLine) {
 		varname := mkline.Varname()
 		if varnameParam(varname) != group {
-			mkline.Warnf("Expected %s.%s, but found %s.",
+			mkline.Warnf("Expected %s.%s, but found %q.",
 				varnameBase(varname), group, varnameParam(varname))
-		}
-
-		for _, varname := range mkline.ValueFields(mkline.Value()) {
-			if !containsVarRef(varname) {
-				if ck.registered.Contains(varname) {
-					mkline.Warnf("Duplicate variable name %s in _VARGROUPS.", varname)
-				}
-
-				ss.Add(varname)
-				ck.registered.Add(varname)
-			}
 		}
 	}
 
-	appendToStyle := func(ss *StringSet, mkline *MkLine) {
-		varname := mkline.Varname()
-		if varnameParam(varname) != group {
-			mkline.Warnf("Expected %s.%s, but found %s.",
-				varnameBase(varname), group, varnameParam(varname))
+	appendTo := func(vars map[string]*MkLine, mkline *MkLine) {
+		checkGroupName(mkline)
+
+		for _, varname := range mkline.ValueFields(mkline.Value()) {
+			if containsVarRef(varname) {
+				continue
+			}
+
+			if ck.registered[varname] != nil {
+				mkline.Warnf("Duplicate variable name %s, already appeared in %s.",
+					varname, mkline.RefTo(ck.registered[varname]))
+			} else {
+				ck.registered[varname] = mkline
+			}
+
+			vars[varname] = mkline
 		}
+	}
+
+	appendToStyle := func(vars map[string]*MkLine, mkline *MkLine) {
+		checkGroupName(mkline)
 
 		for _, varname := range mkline.ValueFields(mkline.Value()) {
 			if !containsVarRef(varname) {
-				ss.Add(varname)
+				vars[varname] = mkline
 			}
 		}
 	}
@@ -92,29 +97,27 @@ func (ck *VargroupsChecker) init() {
 			case "_VARGROUPS":
 				group = mkline.Value()
 			case "_USER_VARS.*":
-				appendTo(&ck.userVars, mkline)
+				appendTo(ck.userVars, mkline)
 			case "_PKG_VARS.*":
-				appendTo(&ck.pkgVars, mkline)
+				appendTo(ck.pkgVars, mkline)
 			case "_SYS_VARS.*":
-				appendTo(&ck.sysVars, mkline)
+				appendTo(ck.sysVars, mkline)
 			case "_DEF_VARS.*":
-				appendTo(&ck.defVars, mkline)
+				appendTo(ck.defVars, mkline)
 			case "_USE_VARS.*":
-				appendTo(&ck.useVars, mkline)
+				appendTo(ck.useVars, mkline)
 			case "_IGN_VARS.*":
-				appendTo(&ck.ignVars, mkline)
+				appendTo(ck.ignVars, mkline)
 			case "_SORTED_VARS.*":
-				appendToStyle(&ck.sortedVars, mkline)
+				appendToStyle(ck.sortedVars, mkline)
 			case "_LISTED_VARS.*":
-				appendToStyle(&ck.listedVars, mkline)
+				appendToStyle(ck.listedVars, mkline)
 			}
 		}
 	})
 
-	ck.unusedVars = make(map[string]bool)
-	for _, varname := range ck.useVars.Elements {
-		ck.unusedVars[varname] = true
-	}
+	ck.undefinedVars = copyStringMkLine(ck.defVars)
+	ck.unusedVars = copyStringMkLine(ck.useVars)
 }
 
 // CheckVargroups checks that each variable that is used or defined
@@ -128,6 +131,41 @@ func (ck *VargroupsChecker) Check(mkline *MkLine) {
 		return
 	}
 
+	ck.checkVarDef(mkline)
+	ck.checkVarUse(mkline)
+}
+
+func (ck *VargroupsChecker) checkVarDef(mkline *MkLine) {
+	if !mkline.IsVarassignMaybeCommented() {
+		return
+	}
+
+	varname := mkline.Varname()
+	if containsVarRef(varname) {
+		return
+	}
+	varcanon := varnameCanon(varname)
+
+	delete(ck.undefinedVars, varname)
+
+	switch {
+	case ck.registered[varname] != nil,
+		varname == "_VARGROUPS",
+		varcanon == "_USER_VARS.*",
+		varcanon == "_PKG_VARS.*",
+		varcanon == "_SYS_VARS.*",
+		varcanon == "_DEF_VARS.*",
+		varcanon == "_USE_VARS.*",
+		varcanon == "_IGN_VARS.*",
+		varcanon == "_LISTED_VARS.*",
+		varcanon == "_SORTED_VARS.*":
+		return
+	}
+
+	mkline.Warnf("Variable %s is defined but not mentioned in the _VARGROUPS section.", varname)
+}
+
+func (ck *VargroupsChecker) checkVarUse(mkline *MkLine) {
 	mkline.ForEachUsed(func(varUse *MkVarUse, time VucTime) {
 		varname := varUse.varname
 		delete(ck.unusedVars, varname)
@@ -141,7 +179,7 @@ func (ck *VargroupsChecker) Check(mkline *MkLine) {
 			varname == strings.ToLower(varname),
 			G.Pkgsrc.Tools.ExistsVar(varname),
 			ck.isShellCommand(varname),
-			ck.registered.Contains(varname),
+			ck.registered[varname] != nil,
 			!ck.mklines.once.FirstTimeSlice("_VARGROUPS", "use", varname):
 			return
 		}
@@ -164,9 +202,14 @@ func (ck *VargroupsChecker) isShellCommand(varname string) bool {
 }
 
 func (ck *VargroupsChecker) Finish(mkline *MkLine) {
-	unusedVarnames := keysJoined(ck.unusedVars)
-	if unusedVarnames != "" {
-		mkline.Warnf("The variables %s are declared in _VARGROUPS but not actually used.",
-			unusedVarnames)
+	if ck.skip {
+		return
 	}
+
+	forEachStringMkLine(ck.undefinedVars, func(varname string, mkline *MkLine) {
+		mkline.Warnf("The variable %s is not actually defined in this file.", varname)
+	})
+	forEachStringMkLine(ck.unusedVars, func(varname string, mkline *MkLine) {
+		mkline.Warnf("The variable %s is not actually used in this file.", varname)
+	})
 }
