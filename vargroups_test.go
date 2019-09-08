@@ -72,6 +72,24 @@ func (s *Suite) Test_VargroupsChecker__variable_reference(c *check.C) {
 		"WARN: Makefile:6: Variable VAR.param is defined but not mentioned in the _VARGROUPS section.")
 }
 
+func (s *Suite) Test_VargroupsChecker__public_underscore(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"_VARGROUPS+=\t\tgroup",
+		"_USER_VARS.group=\t_VARGROUPS")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:4: _USER_VARS.group should list only variables that " +
+			"start with a letter, not \"_VARGROUPS\".")
+}
+
 func (s *Suite) Test_VargroupsChecker__declared_but_undefined(c *check.C) {
 	t := s.Init(c)
 

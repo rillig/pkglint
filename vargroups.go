@@ -62,12 +62,17 @@ func (ck *VargroupsChecker) init() {
 		}
 	}
 
-	appendTo := func(vars map[string]*MkLine, mkline *MkLine) {
+	appendTo := func(vars map[string]*MkLine, mkline *MkLine, public bool) {
 		checkGroupName(mkline)
 
 		for _, varname := range mkline.ValueFields(mkline.Value()) {
 			if containsVarRef(varname) {
 				continue
+			}
+
+			if public && hasPrefix(varname, "_") {
+				mkline.Warnf("%s should list only variables that start with a letter, not %q.",
+					mkline.Varname(), varname)
 			}
 
 			if ck.registered[varname] != nil {
@@ -97,17 +102,17 @@ func (ck *VargroupsChecker) init() {
 			case "_VARGROUPS":
 				group = mkline.Value()
 			case "_USER_VARS.*":
-				appendTo(ck.userVars, mkline)
+				appendTo(ck.userVars, mkline, true)
 			case "_PKG_VARS.*":
-				appendTo(ck.pkgVars, mkline)
+				appendTo(ck.pkgVars, mkline, true)
 			case "_SYS_VARS.*":
-				appendTo(ck.sysVars, mkline)
+				appendTo(ck.sysVars, mkline, true)
 			case "_DEF_VARS.*":
-				appendTo(ck.defVars, mkline)
+				appendTo(ck.defVars, mkline, false)
 			case "_USE_VARS.*":
-				appendTo(ck.useVars, mkline)
+				appendTo(ck.useVars, mkline, false)
 			case "_IGN_VARS.*":
-				appendTo(ck.ignVars, mkline)
+				appendTo(ck.ignVars, mkline, false)
 			case "_SORTED_VARS.*":
 				appendToStyle(ck.sortedVars, mkline)
 			case "_LISTED_VARS.*":
@@ -176,7 +181,6 @@ func (ck *VargroupsChecker) checkVarUse(mkline *MkLine) {
 		case containsVarRef(varname),
 			hasSuffix(varname, "_MK"),
 			varname == ".TARGET",
-			varname == "RUN",
 			varname == "TOUCH_FLAGS",
 			varname == strings.ToLower(varname),
 			G.Pkgsrc.Tools.ExistsVar(varname),
