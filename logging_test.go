@@ -250,6 +250,71 @@ func (s *Suite) Test_Logger__show_source_with_explanation(c *check.C) {
 		"")
 }
 
+// In general, it is not necessary to repeat the source code for a line
+// if there are several diagnostics for the same line. In this case though,
+// there is an explanation between the diagnostics, and because it may get
+// quite long, it's better to repeat the source code once again.
+func (s *Suite) Test_Logger__show_source_with_explanation_in_same_line(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--source", "--explain")
+	lines := t.SetUpFileLines("DESCR",
+		"The first line")
+
+	fix := lines.Lines[0].Autofix()
+	fix.Warnf("Using \"The\" is deprecated.")
+	fix.Explain("Explanation 1.")
+	fix.Replace("The", "A")
+	fix.Apply()
+
+	fix.Warnf("Using \"first\" is deprecated.")
+	fix.Explain("Explanation 2.")
+	fix.Replace("first", "1st")
+	fix.Apply()
+
+	t.CheckOutputLines(
+		">\tThe first line",
+		"WARN: ~/DESCR:1: Using \"The\" is deprecated.",
+		"",
+		"\tExplanation 1.",
+		"",
+		">\tThe first line",
+		"WARN: ~/DESCR:1: Using \"first\" is deprecated.",
+		"",
+		"\tExplanation 2.",
+		"")
+}
+
+// When there is no explanation after the first diagnostic, it is not
+// necessary to repeat the source code again for the second diagnostic.
+func (s *Suite) Test_Logger__show_source_without_explanation_in_same_line(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--source", "--explain")
+	lines := t.SetUpFileLines("DESCR",
+		"The first line")
+
+	fix := lines.Lines[0].Autofix()
+	fix.Warnf("Using \"The\" is deprecated.")
+	fix.Replace("The", "A")
+	fix.Apply()
+
+	fix.Warnf("Using \"first\" is deprecated.")
+	fix.Explain("Explanation 2.")
+	fix.Replace("first", "1st")
+	fix.Apply()
+
+	t.CheckOutputLines(
+		">\tThe first line",
+		"WARN: ~/DESCR:1: Using \"The\" is deprecated.",
+		"",                  // TODO: Can be omitted.
+		">\tThe first line", // TODO: Can be omitted.
+		"WARN: ~/DESCR:1: Using \"first\" is deprecated.",
+		"",
+		"\tExplanation 2.",
+		"")
+}
+
 // When the --show-autofix option is given, the warning is shown first,
 // without the affected source, even if the --source option is also given.
 // This is because the original and the modified source are shown after
