@@ -370,10 +370,6 @@ func (fix *Autofix) Apply() {
 		line.Explain(fix.explanation...)
 	}
 
-	if (logDiagnostic || logFix) && G.Logger.Opts.ShowSource {
-		G.Logger.out.Separate()
-	}
-
 	reset()
 }
 

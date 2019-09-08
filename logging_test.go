@@ -206,8 +206,6 @@ func (s *Suite) Test_Logger__show_source_separator(c *check.C) {
 		"",
 		">\tThe third line",
 		"WARN: ~/DESCR:3: Dummy warning.",
-		"",
-		">\tThe third line",
 		"WARN: ~/DESCR:3: Using \"third\" is deprecated.")
 }
 
@@ -242,8 +240,6 @@ func (s *Suite) Test_Logger__show_source_with_explanation(c *check.C) {
 		"",
 		">\tThe third line",
 		"WARN: ~/DESCR:3: Dummy warning.",
-		"",
-		">\tThe third line",
 		"WARN: ~/DESCR:3: Using \"third\" is deprecated.",
 		"",
 		"\tExplanation 2.",
@@ -307,8 +303,6 @@ func (s *Suite) Test_Logger__show_source_without_explanation_in_same_line(c *che
 	t.CheckOutputLines(
 		">\tThe first line",
 		"WARN: ~/DESCR:1: Using \"The\" is deprecated.",
-		"",                  // TODO: Can be omitted.
-		">\tThe first line", // TODO: Can be omitted.
 		"WARN: ~/DESCR:1: Using \"first\" is deprecated.",
 		"",
 		"\tExplanation 2.",
