@@ -150,6 +150,7 @@ func (ck *VargroupsChecker) checkVarDef(mkline *MkLine) {
 
 	switch {
 	case ck.registered[varname] != nil,
+		hasSuffix(varname, "_MK"),
 		varname == "_VARGROUPS",
 		varcanon == "_USER_VARS.*",
 		varcanon == "_PKG_VARS.*",
@@ -158,7 +159,8 @@ func (ck *VargroupsChecker) checkVarDef(mkline *MkLine) {
 		varcanon == "_USE_VARS.*",
 		varcanon == "_IGN_VARS.*",
 		varcanon == "_LISTED_VARS.*",
-		varcanon == "_SORTED_VARS.*":
+		varcanon == "_SORTED_VARS.*",
+		varcanon == "PKG_FAIL_REASON":
 		return
 	}
 
