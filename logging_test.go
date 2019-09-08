@@ -211,6 +211,45 @@ func (s *Suite) Test_Logger__show_source_separator(c *check.C) {
 		"WARN: ~/DESCR:3: Using \"third\" is deprecated.")
 }
 
+func (s *Suite) Test_Logger__show_source_with_explanation(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--source", "--explain")
+	lines := t.SetUpFileLines("DESCR",
+		"The first line",
+		"The second line",
+		"The third line")
+
+	fix := lines.Lines[1].Autofix()
+	fix.Warnf("Using \"second\" is deprecated.")
+	fix.Explain("Explanation 1.")
+	fix.Replace("second", "silver medal")
+	fix.Apply()
+
+	lines.Lines[2].Warnf("Dummy warning.")
+
+	fix = lines.Lines[2].Autofix()
+	fix.Warnf("Using \"third\" is deprecated.")
+	fix.Explain("Explanation 2.")
+	fix.Replace("third", "bronze medal")
+	fix.Apply()
+
+	t.CheckOutputLines(
+		">\tThe second line",
+		"WARN: ~/DESCR:2: Using \"second\" is deprecated.",
+		"",
+		"\tExplanation 1.",
+		"",
+		">\tThe third line",
+		"WARN: ~/DESCR:3: Dummy warning.",
+		"",
+		">\tThe third line",
+		"WARN: ~/DESCR:3: Using \"third\" is deprecated.",
+		"",
+		"\tExplanation 2.",
+		"")
+}
+
 // When the --show-autofix option is given, the warning is shown first,
 // without the affected source, even if the --source option is also given.
 // This is because the original and the modified source are shown after
@@ -248,6 +287,46 @@ func (s *Suite) Test__show_source_separator_show_autofix(c *check.C) {
 		"AUTOFIX: ~/DESCR:3: Replacing \"third\" with \"bronze medal\".",
 		"-\tThe third line",
 		"+\tThe bronze medal line")
+}
+
+func (s *Suite) Test__show_source_separator_show_autofix_with_explanation(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--source", "--show-autofix", "--explain")
+	lines := t.SetUpFileLines("DESCR",
+		"The first line",
+		"The second line",
+		"The third line")
+
+	fix := lines.Lines[1].Autofix()
+	fix.Warnf("Using \"second\" is deprecated.")
+	fix.Explain("Explanation 1.")
+	fix.Replace("second", "silver medal")
+	fix.Apply()
+
+	lines.Lines[2].Warnf("Dummy warning.")
+
+	fix = lines.Lines[2].Autofix()
+	fix.Warnf("Using \"third\" is deprecated.")
+	fix.Explain("Explanation 2.")
+	fix.Replace("third", "bronze medal")
+	fix.Apply()
+
+	t.CheckOutputLines(
+		"WARN: ~/DESCR:2: Using \"second\" is deprecated.",
+		"AUTOFIX: ~/DESCR:2: Replacing \"second\" with \"silver medal\".",
+		"-\tThe second line",
+		"+\tThe silver medal line",
+		"",
+		"\tExplanation 1.",
+		"",
+		"WARN: ~/DESCR:3: Using \"third\" is deprecated.",
+		"AUTOFIX: ~/DESCR:3: Replacing \"third\" with \"bronze medal\".",
+		"-\tThe third line",
+		"+\tThe bronze medal line",
+		"",
+		"\tExplanation 2.",
+		"")
 }
 
 // See Test__show_source_separator_show_autofix for the ordering of the
