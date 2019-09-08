@@ -366,11 +366,10 @@ func (wr *SeparatorWriter) Write(text string) {
 }
 
 // Separate remembers to output an empty line before the next character.
-// If the writer is currently in the middle of a line, that line is terminated immediately.
+//
+// The writer must not be in the middle of a line.
 func (wr *SeparatorWriter) Separate() {
-	if wr.state == 1 {
-		wr.write('\n')
-	}
+	assert(wr.state != 1)
 	if wr.state < 2 {
 		wr.state = 2
 	}
