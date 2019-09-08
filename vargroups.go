@@ -136,36 +136,18 @@ func (ck *VargroupsChecker) Check(mkline *MkLine) {
 		return
 	}
 
-	ck.checkVarDef(mkline)
-	ck.checkVarUse(mkline)
+	ck.checkDef(mkline)
+	ck.checkUse(mkline)
 }
 
-func (ck *VargroupsChecker) checkVarDef(mkline *MkLine) {
+func (ck *VargroupsChecker) checkDef(mkline *MkLine) {
 	if !mkline.IsVarassignMaybeCommented() {
 		return
 	}
 
 	varname := mkline.Varname()
-	if containsVarRef(varname) {
-		return
-	}
-	varcanon := varnameCanon(varname)
-
 	delete(ck.undefinedVars, varname)
-
-	switch {
-	case ck.registered[varname] != nil,
-		hasSuffix(varname, "_MK"),
-		varname == "_VARGROUPS",
-		varcanon == "_USER_VARS.*",
-		varcanon == "_PKG_VARS.*",
-		varcanon == "_SYS_VARS.*",
-		varcanon == "_DEF_VARS.*",
-		varcanon == "_USE_VARS.*",
-		varcanon == "_IGN_VARS.*",
-		varcanon == "_LISTED_VARS.*",
-		varcanon == "_SORTED_VARS.*",
-		varcanon == "PKG_FAIL_REASON":
+	if ck.ignoreDef(varname) {
 		return
 	}
 
@@ -174,27 +156,52 @@ func (ck *VargroupsChecker) checkVarDef(mkline *MkLine) {
 	}
 }
 
-func (ck *VargroupsChecker) checkVarUse(mkline *MkLine) {
-	mkline.ForEachUsed(func(varUse *MkVarUse, time VucTime) {
-		varname := varUse.varname
-		delete(ck.unusedVars, varname)
+func (ck *VargroupsChecker) ignoreDef(varname string) bool {
+	switch {
+	case containsVarRef(varname),
+		ck.registered[varname] != nil,
+		hasSuffix(varname, "_MK"),
+		ck.isVargroups(varname),
+		varname == "PKG_FAIL_REASON":
+		return true
+	}
 
-		switch {
-		case containsVarRef(varname),
-			hasSuffix(varname, "_MK"),
-			varname == ".TARGET",
-			varname == "TOUCH_FLAGS",
-			varname == strings.ToLower(varname),
-			G.Pkgsrc.Tools.ExistsVar(varname),
-			ck.isShellCommand(varname),
-			ck.registered[varname] != nil:
-			return
-		}
+	return false
+}
 
-		if ck.mklines.once.FirstTimeSlice("_VARGROUPS", "use", varname) {
-			mkline.Warnf("Variable %s is used but not mentioned in the _VARGROUPS section.", varname)
-		}
-	})
+func (ck *VargroupsChecker) checkUse(mkline *MkLine) {
+	mkline.ForEachUsed(func(varUse *MkVarUse, _ VucTime) { ck.checkUseVar(mkline, varUse) })
+}
+
+func (ck *VargroupsChecker) checkUseVar(mkline *MkLine, varUse *MkVarUse) {
+	varname := varUse.varname
+	delete(ck.unusedVars, varname)
+
+	if ck.ignoreUse(varname) {
+		return
+	}
+
+	if ck.mklines.once.FirstTimeSlice("_VARGROUPS", "use", varname) {
+		mkline.Warnf("Variable %s is used but not mentioned in the _VARGROUPS section.", varname)
+	}
+}
+
+func (ck *VargroupsChecker) ignoreUse(varname string) bool {
+	switch {
+	case containsVarRef(varname),
+		hasSuffix(varname, "_MK"),
+		varname == ".TARGET",
+		varname == "TOOLS_SHELL",
+		varname == "TOUCH_FLAGS",
+		varname == strings.ToLower(varname),
+		G.Pkgsrc.Tools.ExistsVar(varname),
+		ck.isShellCommand(varname),
+		ck.registered[varname] != nil,
+		ck.isVargroups(varname):
+		return true
+	}
+
+	return false
 }
 
 func (ck *VargroupsChecker) isShellCommand(varname string) bool {
@@ -202,11 +209,26 @@ func (ck *VargroupsChecker) isShellCommand(varname string) bool {
 	if vartype != nil && vartype.basicType == BtShellCommand {
 		return true
 	}
+	return false
+}
 
-	if varname == "TOOLS_SHELL" {
-		return true
+func (ck *VargroupsChecker) isVargroups(varname string) bool {
+	if !hasPrefix(varname, "_") {
+		return false
 	}
 
+	switch varnameCanon(varname) {
+	case "_VARGROUPS",
+		"_USER_VARS.*",
+		"_PKG_VARS.*",
+		"_SYS_VARS.*",
+		"_DEF_VARS.*",
+		"_USE_VARS.*",
+		"_IGN_VARS.*",
+		"_LISTED_VARS.*",
+		"_SORTED_VARS.*":
+		return true
+	}
 	return false
 }
 
