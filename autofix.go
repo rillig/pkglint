@@ -328,7 +328,6 @@ func (fix *Autofix) Apply() {
 			fix.modified = true
 		}
 
-		// Reduce number of calls to runtime.writeBarrier.
 		fix.autofixShortTerm = autofixShortTerm{}
 	}
 
