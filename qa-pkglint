@@ -70,8 +70,7 @@ netbsd() {
   if (cd "$srcdir" && grep -n "@VERSION@" -- *_test.go); then
     exit 1
   fi
-  # shellcheck disable=SC2016
-  if (cd "$srcdir" && grep -F -n '$NetBSD$' -- *_test.go); then
+  if (cd "$srcdir" && grep -F -n "\$NetBSD\$" -- *_test.go); then
     exit 1
   fi
 
