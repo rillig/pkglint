@@ -546,37 +546,22 @@ func (ck MkLineChecker) checkVarUseBuildDefs(varname string) {
 
 func (ck MkLineChecker) checkVaruseUndefined(vartype *Vartype, varname string) {
 	switch {
-
-	case !G.Opts.WarnExtra:
-		return
-
-	case vartype != nil && !vartype.Guessed():
+	case !G.Opts.WarnExtra,
 		// Well-known variables are probably defined by the infrastructure.
-		return
-
-	case ck.MkLines.vars.DefinedSimilar(varname):
-		return
-
-	case ck.MkLines.forVars[varname]:
-		return
-
-	case ck.MkLines.vars.Mentioned(varname) != nil:
-		return
-
-	case G.Pkg != nil && G.Pkg.vars.DefinedSimilar(varname):
-		return
-
-	case containsVarRef(varname):
-		return
-
-	case G.Pkgsrc.vartypes.DefinedCanon(varname):
-		return
-
-	case !ck.MkLines.once.FirstTimeSlice("used but not defined: ", varname):
+		vartype != nil && !vartype.Guessed(),
+		ck.MkLines.vars.DefinedSimilar(varname),
+		ck.MkLines.forVars[varname],
+		ck.MkLines.vars.Mentioned(varname) != nil,
+		G.Pkg != nil && G.Pkg.vars.DefinedSimilar(varname),
+		containsVarRef(varname),
+		G.Pkgsrc.vartypes.DefinedCanon(varname),
+		varname == "":
 		return
 	}
 
-	ck.MkLine.Warnf("%s is used but not defined.", varname)
+	if ck.MkLines.once.FirstTimeSlice("used but not defined", varname) {
+		ck.MkLine.Warnf("%s is used but not defined.", varname)
+	}
 }
 
 func (ck MkLineChecker) checkVaruseModifiers(varuse *MkVarUse, vartype *Vartype) {

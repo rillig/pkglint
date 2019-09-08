@@ -67,10 +67,8 @@ func (s *Suite) Test_VargroupsChecker__variable_reference(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		// FIXME: The empty variable may be used everywhere.
-		"WARN: Makefile:4:  is used but not defined.",
 		"WARN: Makefile:6: VAR.param is defined but not used.",
-		// FIXME: Hmmm, that's going to be complicated.
+		// FIXME: Hmmm, that's going to be complicated to get right.
 		"WARN: Makefile:6: Variable VAR.param is defined but not mentioned in the _VARGROUPS section.")
 }
 
