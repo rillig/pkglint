@@ -98,8 +98,15 @@ func (l *Logger) Explain(explanation ...string) {
 		return
 	}
 
+	// The explanation should fit nicely on a screen that is 80
+	// characters wide. The explanation is indented using a tab, and
+	// there should be a little margin at the right. The resulting
+	// number comes remarkably close to the line width recommended
+	// by typographers, which is 66.
+	const explanationWidth = 80 - 8 - 4
+
 	l.out.Separate()
-	wrapped := wrap(68, explanation...)
+	wrapped := wrap(explanationWidth, explanation...)
 	for _, explanationLine := range wrapped {
 		if explanationLine != "" {
 			l.out.Write("\t")
