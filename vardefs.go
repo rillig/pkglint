@@ -1588,6 +1588,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.syslist("TOOLS_NOOP", BtTool)
 	reg.sys("TOOLS_PATH.*", BtPathname)
 	reg.sysload("TOOLS_PLATFORM.*", BtShellCommand)
+	reg.sysload("TOOLS_SHELL", BtShellCommand)
 	reg.syslist("TOUCH_FLAGS", BtShellWord)
 	reg.pkglist("UAC_REQD_EXECS", BtPrefixPathname)
 	reg.pkglistbl3("UNLIMIT_RESOURCES",

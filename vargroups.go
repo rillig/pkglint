@@ -191,7 +191,6 @@ func (ck *VargroupsChecker) ignoreUse(varname string) bool {
 	case containsVarRef(varname),
 		hasSuffix(varname, "_MK"),
 		varname == ".TARGET",
-		varname == "TOOLS_SHELL",
 		varname == "TOUCH_FLAGS",
 		varname == strings.ToLower(varname),
 		G.Pkgsrc.Tools.ExistsVar(varname),

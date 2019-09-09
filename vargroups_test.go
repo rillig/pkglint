@@ -61,15 +61,16 @@ func (s *Suite) Test_VargroupsChecker__variable_reference(c *check.C) {
 		"",
 		"_VARGROUPS+=\t\tgroup",
 		"_USER_VARS.group=\t${:Uparam:@param@VAR.${param}@}",
+		"_LISTED_VARS.group=\t${:Uparam:@param@VAR.${param}@}",
 		"",
 		"VAR.param=\tvalue")
 
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:6: VAR.param is defined but not used.",
+		"WARN: Makefile:7: VAR.param is defined but not used.",
 		// FIXME: Hmmm, that's going to be complicated to get right.
-		"WARN: Makefile:6: Variable VAR.param is defined but not mentioned in the _VARGROUPS section.")
+		"WARN: Makefile:7: Variable VAR.param is defined but not mentioned in the _VARGROUPS section.")
 }
 
 func (s *Suite) Test_VargroupsChecker__public_underscore(c *check.C) {
@@ -113,6 +114,49 @@ func (s *Suite) Test_VargroupsChecker__declared_but_undefined(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: Makefile:10: Variable UNDECLARED is defined but not mentioned in the _VARGROUPS section.",
 		"WARN: Makefile:8: The variable UNDEFINED is not actually defined in this file.")
+}
+
+func (s *Suite) Test_VargroupsChecker__defined_but_undeclared(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		".if !defined(MAKEFILE_MK)",
+		"MAKEFILE_MK=",
+		"",
+		"_VARGROUPS+=\t\tgroup",
+		"",
+		"PKG_FAIL_REASON+=\tReason",
+		"",
+		".endif")
+
+	mklines.Check()
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_VargroupsChecker__used_but_undeclared(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	t.SetUpTool("touch", "TOUCH", AtRunTime)
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"_VARGROUPS+=\tgroup",
+		"",
+		"pre-configure:",
+		"\t${TOOLS_SHELL} -c ':'",
+		"\t${TOUCH} ${TOUCH_FLAGS} ${.TARGET}",
+		"\t: ${PKGNAME}")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:8: Variable PKGNAME is used " +
+			"but not mentioned in the _VARGROUPS section.")
 }
 
 func (s *Suite) Test_VargroupsChecker__declared_but_unused(c *check.C) {
