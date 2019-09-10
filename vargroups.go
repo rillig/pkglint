@@ -1,6 +1,9 @@
 package pkglint
 
-import "strings"
+import (
+	"path"
+	"strings"
+)
 
 // VargroupsChecker checks that the _VARGROUPS section of an infrastructure
 // file matches the rest of the file content:
@@ -188,6 +191,13 @@ func (ck *VargroupsChecker) ignore(varname string) bool {
 		varname == "PKG_FAIL_REASON",
 		varname == "TOUCH_FLAGS":
 		return true
+	}
+
+	for pattern := range ck.ignVars {
+		matched, err := path.Match(pattern, varname)
+		if err == nil && matched {
+			return true
+		}
 	}
 
 	return false

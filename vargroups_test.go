@@ -218,19 +218,14 @@ func (s *Suite) Test_VargroupsChecker__ignore(c *check.C) {
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
 		"",
-		"# USER_VAR",
-		"#\tDocumentation.",
-		"#\tDocumentation.",
-		"",
 		"_VARGROUPS+=\t\tgroup",
-		"_IGN_VARS.group=\tU*",
+		"_IGN_VARS.group=\tPREFER_*",
 		"",
-		".if ${USER_VAR:U}",
+		".if ${PREFER_PKGSRC:U} || ${WRKOBJDIR:U}",
 		".endif")
 
 	mklines.Check()
 
-	// FIXME: It's in _IGN_VARS.
 	t.CheckOutputLines(
-		"WARN: Makefile:10: Variable USER_VAR is used but not mentioned in the _VARGROUPS section.")
+		"WARN: Makefile:6: Variable WRKOBJDIR is used but not mentioned in the _VARGROUPS section.")
 }
