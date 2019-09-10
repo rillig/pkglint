@@ -184,3 +184,29 @@ func (s *Suite) Test_VargroupsChecker__declared_but_unused(c *check.C) {
 		"WARN: Makefile:11: Variable UNDECLARED is used but not mentioned in the _VARGROUPS section.",
 		"WARN: Makefile:8: The variable UNUSED is not actually used in this file.")
 }
+
+func (s *Suite) Test_VargroupsChecker__used_in_BUILD_DEFS(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"# USER_VAR",
+		"#\tDocumentation.",
+		"#\tDocumentation.",
+		"",
+		"_VARGROUPS+=\t\tgroup",
+		"_USER_VARS.group=\tUSER_VAR",
+		"",
+		".if ${USER_VAR:U}",
+		".endif",
+		"BUILD_DEFS+=\t${_USER_VARS.group}")
+
+	mklines.Check()
+
+	// FIXME: That's ok.
+	t.CheckOutputLines(
+		"WARN: Makefile:12: _USER_VARS.group should not be used in any file; it is a write-only variable.")
+}
