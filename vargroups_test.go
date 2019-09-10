@@ -209,3 +209,28 @@ func (s *Suite) Test_VargroupsChecker__used_in_BUILD_DEFS(c *check.C) {
 	// No warning about _USER_VARS.group being a write-only variable.
 	t.CheckOutputEmpty()
 }
+
+func (s *Suite) Test_VargroupsChecker__ignore(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"# USER_VAR",
+		"#\tDocumentation.",
+		"#\tDocumentation.",
+		"",
+		"_VARGROUPS+=\t\tgroup",
+		"_IGN_VARS.group=\tU*",
+		"",
+		".if ${USER_VAR:U}",
+		".endif")
+
+	mklines.Check()
+
+	// FIXME: It's in _IGN_VARS.
+	t.CheckOutputLines(
+		"WARN: Makefile:10: Variable USER_VAR is used but not mentioned in the _VARGROUPS section.")
+}
