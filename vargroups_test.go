@@ -206,7 +206,6 @@ func (s *Suite) Test_VargroupsChecker__used_in_BUILD_DEFS(c *check.C) {
 
 	mklines.Check()
 
-	// FIXME: That's ok.
-	t.CheckOutputLines(
-		"WARN: Makefile:12: _USER_VARS.group should not be used in any file; it is a write-only variable.")
+	// No warning about _USER_VARS.group being a write-only variable.
+	t.CheckOutputEmpty()
 }

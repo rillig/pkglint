@@ -305,7 +305,7 @@ func (reg *VarTypeRegistry) cmdline(varname string, basicType *BasicType) {
 func (reg *VarTypeRegistry) infralist(varname string, basicType *BasicType) {
 	reg.acllist(varname, basicType,
 		List,
-		"*: set, append")
+		"*: set, append, use")
 }
 
 // compilerLanguages reads the available languages that are typically
@@ -1676,7 +1676,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.infralist("_SYS_VARS.*", BtVariableName)
 	reg.infralist("_DEF_VARS.*", BtVariableName)
 	reg.infralist("_USE_VARS.*", BtVariableName)
-	reg.infralist("_IGN_VARS.*", BtVariableName)
+	reg.infralist("_IGN_VARS.*", BtVariableNamePattern)
 	reg.infralist("_SORTED_VARS.*", BtVariableNamePattern)
 	reg.infralist("_LISTED_VARS.*", BtVariableNamePattern)
 }
