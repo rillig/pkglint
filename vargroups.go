@@ -183,6 +183,8 @@ func (ck *VargroupsChecker) ignore(varname string) bool {
 		varname == strings.ToLower(varname),
 		ck.isShellCommand(varname),
 		varname == ".TARGET",
+		varname == "BUILD_DEFS",
+		varname == "BUILD_DEFS_EFFECTS",
 		varname == "PKG_FAIL_REASON",
 		varname == "TOUCH_FLAGS":
 		return true
