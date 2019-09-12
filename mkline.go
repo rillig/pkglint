@@ -920,12 +920,12 @@ func (p MkLineParser) parseDirective(line *Line, data mkLineSplitResult) *MkLine
 	return &MkLine{line, &mkLineDirective{indent, directive, args, trimmedComment, nil, nil, nil}}
 }
 
-// VariableNeedsQuoting determines whether the given variable needs the :Q operator
-// in the given context.
+// VariableNeedsQuoting determines whether the given variable needs the :Q
+// modifier in the given context.
 //
-// This decision depends on many factors, such as whether the type of the context is
-// a list of things, whether the variable is a list, whether it can contain only
-// safe characters, and so on.
+// This decision depends on many factors, such as whether the type of the
+// context is a list of things, whether the variable is a list, whether it
+// can contain only safe characters, and so on.
 func (mkline *MkLine) VariableNeedsQuoting(mklines *MkLines, varuse *MkVarUse, vartype *Vartype, vuc *VarUseContext) (needsQuoting YesNoUnknown) {
 	if trace.Tracing {
 		defer trace.Call(varuse, vartype, vuc, trace.Result(&needsQuoting))()

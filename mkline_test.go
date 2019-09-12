@@ -648,7 +648,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__eval_shell(c *check.C) {
 	MkLineChecker{mklines, mklines.mklines[1]}.checkVarassign()
 
 	t.CheckOutputLines(
-		"NOTE: builtin.mk:2: The :Q operator isn't necessary for ${BUILTIN_PKG.Xfixes} here.")
+		"NOTE: builtin.mk:2: The :Q modifier isn't necessary for ${BUILTIN_PKG.Xfixes} here.")
 }
 
 func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_in_single_quotes(c *check.C) {
@@ -930,7 +930,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__tool_in_CONFIGURE_ENV(c *check
 	// for invoking the tool properly (e.g. touch -t).
 	// Therefore, no quoting is necessary.
 	t.CheckOutputLines(
-		"NOTE: Makefile:3: The :Q operator isn't necessary for ${TOOLS_TAR} here.")
+		"NOTE: Makefile:3: The :Q modifier isn't necessary for ${TOOLS_TAR} here.")
 }
 
 func (s *Suite) Test_MkLine_VariableNeedsQuoting__backticks(c *check.C) {
