@@ -1041,9 +1041,11 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__D_and_U_modifiers(c *check.C) 
 
 	mklines.Check()
 
-	// FIXME: The value of the BATCH variable does not appear in the output.
-	t.CheckOutputLines(
-		"WARN: ~/Makefile:6: The variable BATCH should be quoted as part of a shell word.")
+	// Since the value of the BATCH variable does not appear in the output,
+	// there should be no warning saying that "BATCH should be quoted".
+	// If any, the variable PKGSRCDIR should be quoted, but that is a safe
+	// variable since it is a pkgsrc-specific directory.
+	t.CheckOutputEmpty()
 }
 
 // As of October 2018, these examples from real pkgsrc end up in the

@@ -934,6 +934,13 @@ func (mkline *MkLine) VariableNeedsQuoting(mklines *MkLines, varuse *MkVarUse, v
 	// TODO: Systematically test this function, each and every case, from top to bottom.
 	// TODO: Re-check the order of all these if clauses whether it really makes sense.
 
+	if varuse.HasModifier("D") && varuse.HasModifier("U") {
+		// Take the simple way for now. Handling this kind of
+		// conditional expressions correctly and completely would
+		// require a larger rewrite.
+		return unknown
+	}
+
 	vucVartype := vuc.vartype
 	if vartype == nil || vucVartype == nil || vartype.basicType == BtUnknown {
 		return unknown
