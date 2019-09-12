@@ -1043,6 +1043,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.pkg("DYNAMIC_SITES_CMD", BtShellCommand)
 	reg.pkg("DYNAMIC_SITES_SCRIPT", BtPathname)
 	reg.sysbl3("ECHO", BtShellCommand)
+	reg.sysbl3("ECHO_BUILDLINK_MSG", BtShellCommand)
 	reg.sysbl3("ECHO_MSG", BtShellCommand)
 	reg.sysbl3("ECHO_N", BtShellCommand)
 	reg.pkg("EGDIR", BtPathname) // Not defined anywhere but used in many places like this.
