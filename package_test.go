@@ -2625,10 +2625,31 @@ func (s *Suite) Test_Package_checkOwnerMaintainer__directory(c *check.C) {
 
 	G.Check(pkg)
 
+	// No warning for the patches directory, only for regular files.
 	t.CheckOutputLines(
 		"NOTE: ~/category/package/Makefile: " +
 			"Please only commit changes that " +
 			"maintainer@example.org would approve.")
+}
+
+func (s *Suite) Test_Package_checkOwnerMaintainer__url2pkg(c *check.C) {
+	t := s.Init(c)
+
+	G.Username = "example-user"
+	pkg := t.SetUpPackage("category/package",
+		"MAINTAINER=\tINSERT_YOUR_MAIL_ADDRESS_HERE")
+	t.CreateFileLines("category/package/CVS/Entries",
+		"/Makefile//modified//")
+	t.FinishSetUp()
+
+	G.Check(pkg)
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile:8: "+
+			"\"INSERT_YOUR_MAIL_ADDRESS_HERE\" is not a valid mail address.",
+		// FIXME
+		"NOTE: ~/category/package/Makefile: Please only commit changes "+
+			"that INSERT_YOUR_MAIL_ADDRESS_HERE would approve.")
 }
 
 func (s *Suite) Test_Package_checkFreeze(c *check.C) {
