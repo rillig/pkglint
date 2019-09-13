@@ -2645,11 +2645,8 @@ func (s *Suite) Test_Package_checkOwnerMaintainer__url2pkg(c *check.C) {
 	G.Check(pkg)
 
 	t.CheckOutputLines(
-		"WARN: ~/category/package/Makefile:8: "+
-			"\"INSERT_YOUR_MAIL_ADDRESS_HERE\" is not a valid mail address.",
-		// FIXME
-		"NOTE: ~/category/package/Makefile: Please only commit changes "+
-			"that INSERT_YOUR_MAIL_ADDRESS_HERE would approve.")
+		"WARN: ~/category/package/Makefile:8: " +
+			"\"INSERT_YOUR_MAIL_ADDRESS_HERE\" is not a valid mail address.")
 }
 
 func (s *Suite) Test_Package_checkFreeze(c *check.C) {

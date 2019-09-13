@@ -1211,7 +1211,7 @@ func (pkg *Package) checkOwnerMaintainer(filename string) {
 
 	owner := pkg.vars.LastValue("OWNER")
 	maintainer := pkg.vars.LastValue("MAINTAINER")
-	if maintainer == "pkgsrc-users@NetBSD.org" {
+	if maintainer == "pkgsrc-users@NetBSD.org" || maintainer == "INSERT_YOUR_MAIL_ADDRESS_HERE" {
 		maintainer = ""
 	}
 	if owner == "" && maintainer == "" {
