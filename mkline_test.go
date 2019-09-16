@@ -1048,6 +1048,31 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__D_and_U_modifiers(c *check.C) 
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_MkLine_VariableNeedsQuoting__only_D_modifier(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+
+	mklines := t.SetUpFileMkLines("Makefile",
+		MkCvsID,
+		"",
+		"SUBST_CLASSES+=\t\turl2pkg",
+		"SUBST_STAGE.url2pkg=\tpost-configure",
+		"SUBST_FILES.url2pkg=\t*.in",
+		"SUBST_SED.url2pkg=\t-e 's,@PKGSRCDIR@,${BATCH:D${PKGSRCDIR}},'")
+
+	mklines.Check()
+
+	// Since the value of the BATCH variable does not appear in the output,
+	// there should be no warning saying that "BATCH should be quoted".
+	// If any, the variable PKGSRCDIR should be quoted, but that is a safe
+	// variable since it is a pkgsrc-specific directory and it appears as
+	// part of a word, therefore it cannot result in an empty string.
+	// FIXME: Don't warn in this situation.
+	t.CheckOutputLines(
+		"WARN: ~/Makefile:6: The variable BATCH should be quoted as part of a shell word.")
+}
+
 // As of October 2018, these examples from real pkgsrc end up in the
 // final "unknown" case.
 func (s *Suite) Test_MkLine_VariableNeedsQuoting__uncovered_cases(c *check.C) {
