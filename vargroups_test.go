@@ -220,6 +220,7 @@ func (s *Suite) Test_VargroupsChecker__ignore(c *check.C) {
 		"",
 		"_VARGROUPS+=\t\tgroup",
 		"_IGN_VARS.group=\tPREFER_*",
+		"_UNDERSCORE=\t\t_", // This is not an isVargroups name.
 		"",
 		".if ${PREFER_PKGSRC:U} || ${WRKOBJDIR:U}",
 		".endif")
@@ -227,5 +228,9 @@ func (s *Suite) Test_VargroupsChecker__ignore(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:6: Variable WRKOBJDIR is used but not mentioned in the _VARGROUPS section.")
+		"WARN: Makefile:5: Variable names starting with an underscore (_UNDERSCORE) "+
+			"are reserved for internal pkgsrc use.",
+		"WARN: Makefile:5: _UNDERSCORE is defined but not used.",
+		"WARN: Makefile:5: Variable _UNDERSCORE is defined but not mentioned in the _VARGROUPS section.",
+		"WARN: Makefile:7: Variable WRKOBJDIR is used but not mentioned in the _VARGROUPS section.")
 }
