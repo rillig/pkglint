@@ -1618,6 +1618,8 @@ func (ck MkLineChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, notE
 			continue
 		}
 
+		// FIXME: This transformation is only valid if the variable is guaranteed to
+		//  be defined. If that's not the case, the :U modifier must be added.
 		fix := ck.MkLine.Autofix()
 		fix.Notef("%s should be compared using %s instead of matching against %q.",
 			varname, condStr(positive == notEmpty, "==", "!="), ":"+modifier.Text)
