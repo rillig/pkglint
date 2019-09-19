@@ -1587,14 +1587,6 @@ func (ck MkLineChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, notE
 
 		quote := condStr(matches(pattern, `[^\-/0-9@A-Za-z]`), "\"", "")
 		to := "${" + varname + "} " + op + " " + quote + pattern + quote
-
-		// TODO: Check in more cases whether the parentheses are really necessary.
-		//  In a !!${VAR} expression, parentheses are necessary.
-		needParen := !toplevel
-		if needParen {
-			to = "(" + to + ")"
-		}
-
 		return from, to
 	}
 
