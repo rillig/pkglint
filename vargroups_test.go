@@ -237,3 +237,26 @@ func (s *Suite) Test_VargroupsChecker__ignore(c *check.C) {
 		"WARN: Makefile:6: Variable _UNDERSCORE is defined but not mentioned in the _VARGROUPS section.",
 		"WARN: Makefile:8: Variable WRKOBJDIR is used but not mentioned in the _VARGROUPS section.")
 }
+
+func (s *Suite) Test_VargroupsChecker__private_before_public(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"_VARGROUPS+=\t\tgroup",
+		"_DEF_VARS.group=\t_PRIVATE PUBLIC",
+		"_PRIVATE=\t\tprivate",
+		"PUBLIC=\t\t\tpublic")
+
+	mklines.Check()
+
+	// TODO: Warn that public variables should be listed before private variables.
+	t.CheckOutputLines(
+		"WARN: Makefile:5: Variable names starting with an underscore (_PRIVATE) "+
+			"are reserved for internal pkgsrc use.",
+		"WARN: Makefile:5: _PRIVATE is defined but not used.",
+		"WARN: Makefile:6: PUBLIC is defined but not used.")
+}
