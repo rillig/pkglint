@@ -423,12 +423,12 @@ If that was too easy, have a look at the complex cases here:
 > from [mkline.go](mkline.go#L923):
 
 ```go
-// VariableNeedsQuoting determines whether the given variable needs the :Q operator
-// in the given context.
+// VariableNeedsQuoting determines whether the given variable needs the :Q
+// modifier in the given context.
 //
-// This decision depends on many factors, such as whether the type of the context is
-// a list of things, whether the variable is a list, whether it can contain only
-// safe characters, and so on.
+// This decision depends on many factors, such as whether the type of the
+// context is a list of things, whether the variable is a list, whether it
+// can contain only safe characters, and so on.
 func (mkline *MkLine) VariableNeedsQuoting(mklines *MkLines, varuse *MkVarUse, vartype *Vartype, vuc *VarUseContext) (needsQuoting YesNoUnknown) {
 	if trace.Tracing {
 		defer trace.Call(varuse, vartype, vuc, trace.Result(&needsQuoting))()
@@ -436,6 +436,13 @@ func (mkline *MkLine) VariableNeedsQuoting(mklines *MkLines, varuse *MkVarUse, v
 
 	// TODO: Systematically test this function, each and every case, from top to bottom.
 	// TODO: Re-check the order of all these if clauses whether it really makes sense.
+
+	if varuse.HasModifier("D") && varuse.HasModifier("U") {
+		// Take the simple way for now. Handling this kind of
+		// conditional expressions correctly and completely would
+		// require a larger rewrite.
+		return unknown
+	}
 
 	vucVartype := vuc.vartype
 	if vartype == nil || vucVartype == nil || vartype.basicType == BtUnknown {
