@@ -34,16 +34,38 @@ func (s *Suite) Test_VartypeCheck_BasicRegularExpression(c *check.C) {
 
 	vt.Varname("REPLACE_FILES.pl")
 	vt.Values(
-		".*\\.pl$",
-		".*\\.pl$$")
-	t.DisableTracing()
+		"?")
+
+	vt.OutputEmpty()
+}
+
+func (s *Suite) Test_VartypeCheck_BasicRegularExpression__experimental(c *check.C) {
+	t := s.Init(c)
+	vt := NewVartypeCheckTester(t, (*VartypeCheck).BasicRegularExpression)
+	G.Experimental = true
+
+	vt.Varname("REPLACE_FILES.pl")
 	vt.Values(
 		".*\\.pl$",
-		".*\\.pl$$")
+		".*\\.pl$$",
+		"\u1E9E",
+		" !\"\"\\#$$%&''()*+",
+		",-./09:;<=>?",
+		"@AZ[\\\\]^_``az{",
+		"|",
+		"}",
+		"~")
 
 	vt.Output(
 		"WARN: filename.mk:1: Internal pkglint error in MkLine.Tokenize at \"$\".",
-		"WARN: filename.mk:3: Internal pkglint error in MkLine.Tokenize at \"$\".")
+		// FIXME: There's no reason to parse shell tokens here.
+		"WARN: filename.mk:3: Internal pkglint error in ShTokenizer.ShAtom at \"<U+1E9E>\" (quoting=plain).",
+		"WARN: filename.mk:4: Special character \"+\" in basic regular expression.",
+		"WARN: filename.mk:5: Special character \"?\" in basic regular expression.",
+		"WARN: filename.mk:6: Special character \"{\" in basic regular expression.",
+		"WARN: filename.mk:7: Special character \"|\" in basic regular expression.",
+		"WARN: filename.mk:8: Special character \"}\" in basic regular expression.",
+	)
 
 }
 

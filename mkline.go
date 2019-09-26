@@ -555,6 +555,8 @@ func (mkline *MkLine) ValueFields(value string) []string {
 		defer trace.Call(mkline, value)()
 	}
 
+	// FIXME: Don't use a shell parser here since backticks are treated
+	//  as ordinary characters by bmake.
 	p := NewShTokenizer(mkline.Line, value, false)
 	atoms := p.ShAtoms()
 

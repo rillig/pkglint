@@ -2,6 +2,7 @@ package pkglint
 
 import (
 	"netbsd.org/pkglint/regex"
+	"netbsd.org/pkglint/textproc"
 	"path"
 	"sort"
 	"strings"
@@ -159,9 +160,51 @@ func (cv *VartypeCheck) AwkCommand() {
 	}
 }
 
+// TODO: Add check for EREs as well.
+//
+// See https://pubs.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap09.html#tag_09_03.
 func (cv *VartypeCheck) BasicRegularExpression() {
-	if trace.Tracing {
-		trace.Step1("Unchecked basic regular expression: %q", cv.Value)
+	// This check is considered experimental because as of September 2019
+	// it is new and ad-hoc.
+	if !G.Experimental {
+		return
+	}
+
+	special := textproc.NewByteSet(".[\\*^$")
+	ordinary := textproc.NewByteSet(" !\"#%&'(),---/0-9:;<=>@A-Z]_`a-z~")
+
+	_ = special
+	lexer := textproc.NewLexer(cv.ValueNoVar)
+	for !lexer.EOF() {
+		if lexer.SkipByte('[') {
+			for !lexer.EOF() {
+				if lexer.SkipByte('\\') && !lexer.EOF() {
+					lexer.Skip(1)
+				} else if lexer.SkipByte(']') {
+					break
+				} else {
+					lexer.Skip(1)
+				}
+			}
+			continue
+		}
+
+		if lexer.SkipByte('\\') {
+			if !lexer.EOF() && lexer.NextByteSet(special) == -1 {
+				cv.Warnf("In a basic regular expression, a backslash followed by %q is undefined.", lexer.Rest()[:1])
+				cv.Explain(
+					"Only the characters . [ \\ * ^ $ may be escaped using a backslash.",
+					"Except when the escaped character appears in a character class like [\\.a-z].")
+			}
+		}
+
+		if lexer.NextBytesSet(ordinary) == "" && lexer.NextBytesSet(special) == "" {
+			break
+		}
+	}
+
+	if !lexer.EOF() {
+		cv.Warnf("Special character %q in basic regular expression.", lexer.Rest()[:1])
 	}
 }
 
