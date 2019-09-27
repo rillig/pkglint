@@ -1169,3 +1169,16 @@ func (s *Suite) Test_StringInterner(c *check.C) {
 	t.CheckEquals(si.Intern("Hello, world"), "Hello, world")
 	t.CheckEquals(si.Intern("Hello, world"[0:5]), "Hello")
 }
+
+func (s *Suite) Test_shquote(c *check.C) {
+	t := s.Init(c)
+
+	test := func(in, out string) {
+		t.CheckEquals(shquote(in), out)
+	}
+
+	test("", "''")
+	test("'", "''\\'''")
+	test("simple", "simple")
+	test("~", "'~'")
+}

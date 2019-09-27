@@ -1352,3 +1352,11 @@ func (s *StringSet) AddAll(elements []string) {
 		s.Add(element)
 	}
 }
+
+// See mk/tools/shquote.sh.
+func shquote(s string) string {
+	if matches(s, `^[!%+,\-./0-9:=@A-Z_a-z]+$`) {
+		return s
+	}
+	return "'" + strings.Replace(s, "'", "'\\''", -1) + "'"
+}

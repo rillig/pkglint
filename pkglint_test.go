@@ -215,7 +215,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		"Size (checkperms-1.12.tar.gz) = 6621 bytes",
 		"SHA1 (patch-checkperms.c) = asdfasdf") // Invalid SHA-1 checksum
 
-	t.Main("-Wall", "-Call", t.File("sysutils/checkperms"))
+	t.Main("-Wall", "-Call", "sysutils/checkperms")
 
 	t.CheckOutputLines(
 		"NOTE: ~/sysutils/checkperms/Makefile:3: "+
@@ -231,9 +231,9 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		"WARN: ~/sysutils/checkperms/patches/patch-checkperms.c:12: Premature end of patch hunk "+
 			"(expected 1 lines to be deleted and 0 lines to be added).",
 		"4 errors, 2 warnings and 1 note found.",
-		"(Run \"pkglint -e\" to show explanations.)",
-		"(Run \"pkglint -fs\" to show what can be fixed automatically.)",
-		"(Run \"pkglint -F\" to automatically fix some issues.)")
+		"(Run \"pkglint -e -Wall -Call ~/sysutils/checkperms\" to show explanations.)",
+		"(Run \"pkglint -fs -Wall -Call ~/sysutils/checkperms\" to show what can be fixed automatically.)",
+		"(Run \"pkglint -F -Wall -Call ~/sysutils/checkperms\" to automatically fix some issues.)")
 }
 
 func (s *Suite) Test_Pkglint_Main__autofix_exitcode(c *check.C) {
@@ -611,7 +611,7 @@ func (s *Suite) Test_Pkglint_checkReg__alternatives(c *check.C) {
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/ALTERNATIVES:1: Alternative implementation \"bin/gnu-tar\" must be an absolute path.",
 		"1 error found.",
-		"(Run \"pkglint -e\" to show explanations.)")
+		"(Run \"pkglint -e ~/category/package/ALTERNATIVES\" to show explanations.)")
 }
 
 // Just for branch coverage.

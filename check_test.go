@@ -125,6 +125,7 @@ func Test(t *testing.T) { check.TestingT(t) }
 type Tester struct {
 	c        *check.C // Only usable during the test method itself
 	testName string
+	argv     []string // from the last invocation of Tester.SetUpCommandLine
 
 	stdout  bytes.Buffer
 	stderr  bytes.Buffer
@@ -149,7 +150,9 @@ func (t *Tester) SetUpCommandLine(args ...string) {
 	prevTracing := trace.Tracing
 	defer func() { trace.Tracing = prevTracing }()
 
-	exitcode := G.ParseCommandLine(append([]string{"pkglint"}, args...))
+	argv := append([]string{"pkglint"}, args...)
+	t.argv = argv
+	exitcode := G.ParseCommandLine(argv)
 	if exitcode != -1 && exitcode != 0 {
 		t.CheckOutputEmpty()
 		t.c.Fatalf("Cannot parse command line: %#v", args)

@@ -1551,7 +1551,7 @@ func (s *Suite) Test_Package_checkUpdate(c *check.C) {
 		"WARN: category/pkg2/Makefile:4: This package should be updated to 2.0 ([nice new features]).",
 		"NOTE: category/pkg3/Makefile:4: This package is newer than the update request to 3.0 ([security update]).",
 		"4 warnings and 2 notes found.",
-		"(Run \"pkglint -e\" to show explanations.)")
+		"(Run \"pkglint -e -Wall,no-space category/pkg1 category/pkg2 category/pkg3\" to show explanations.)")
 }
 
 func (s *Suite) Test_NewPackage(c *check.C) {

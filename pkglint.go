@@ -198,7 +198,7 @@ func (pkglint *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) 
 
 	pkglint.Pkgsrc.checkToplevelUnusedLicenses()
 
-	pkglint.Logger.ShowSummary()
+	pkglint.Logger.ShowSummary(args)
 	if pkglint.Logger.errors != 0 {
 		return 1
 	}
