@@ -915,7 +915,8 @@ func (t *Tester) Output() string {
 	}
 
 	assertf(t.tmpdir != "", "Tester must be initialized before checking the output.")
-	return strings.Replace(stdout+stderr, t.tmpdir, "~", -1)
+	t1 := strings.Replace(stdout+stderr, "'"+t.tmpdir+"'", "~", -1) // for shquote in ShowSummary
+	return strings.Replace(t1, t.tmpdir, "~", -1)
 }
 
 // CheckOutputEmpty ensures that the output up to now is empty.
