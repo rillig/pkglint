@@ -48,7 +48,15 @@ func (s *Suite) Test_VartypeCheck_BasicRegularExpression__experimental(c *check.
 	vt.Values(
 		".*\\.pl$",
 		".*\\.pl$$",
-		"\u1E9E",
+		"\u1E9E")
+
+	vt.Output(
+		"WARN: filename.mk:1: Internal pkglint error in MkLine.Tokenize at \"$\".",
+		// FIXME: There's no reason to parse shell tokens here, only split words.
+		"WARN: filename.mk:3: Internal pkglint error in ShTokenizer.ShAtom at \"<U+1E9E>\" (quoting=plain).")
+
+	// Check for special characters that appear outside of character classes.
+	vt.Values(
 		" !\"\"\\#$$%&''()*+",
 		",-./09:;<=>?",
 		"@AZ[\\\\]^_``az{",
@@ -57,16 +65,24 @@ func (s *Suite) Test_VartypeCheck_BasicRegularExpression__experimental(c *check.
 		"~")
 
 	vt.Output(
-		"WARN: filename.mk:1: Internal pkglint error in MkLine.Tokenize at \"$\".",
-		// FIXME: There's no reason to parse shell tokens here.
-		"WARN: filename.mk:3: Internal pkglint error in ShTokenizer.ShAtom at \"<U+1E9E>\" (quoting=plain).",
-		"WARN: filename.mk:4: Special character \"+\" in basic regular expression.",
-		"WARN: filename.mk:5: Special character \"?\" in basic regular expression.",
-		"WARN: filename.mk:6: Special character \"{\" in basic regular expression.",
-		"WARN: filename.mk:7: Special character \"|\" in basic regular expression.",
-		"WARN: filename.mk:8: Special character \"}\" in basic regular expression.",
-	)
+		"WARN: filename.mk:11: Special character \"+\" in basic regular expression.",
+		"WARN: filename.mk:12: Special character \"?\" in basic regular expression.",
+		"WARN: filename.mk:13: Special character \"{\" in basic regular expression.",
+		"WARN: filename.mk:14: Special character \"|\" in basic regular expression.",
+		"WARN: filename.mk:15: Special character \"}\" in basic regular expression.")
 
+	vt.Values(
+		"?",
+		"\\?",     // FIXME: The backslash is eaten by the shell.
+		"\\\\?",   // FIXME: Possible unintended file globbing.
+		"\\\\\\?") // FIXME: backslash-question in a basic regular expression.
+
+	vt.Output(
+		"WARN: filename.mk:21: Special character \"?\" in basic regular expression.",
+		"WARN: filename.mk:22: In a basic regular expression, a backslash followed by \"?\" is undefined.",
+		"WARN: filename.mk:22: Special character \"?\" in basic regular expression.",
+		"WARN: filename.mk:23: Special character \"?\" in basic regular expression.",
+		"WARN: filename.mk:24: Special character \"?\" in basic regular expression.")
 }
 
 func (s *Suite) Test_VartypeCheck_BuildlinkDepmethod(c *check.C) {
@@ -1282,6 +1298,22 @@ func (s *Suite) Test_VartypeCheck_SedCommands(c *check.C) {
 		// TODO: duplicate warning
 		"WARN: filename.mk:11: Unclosed shell variable starting at \"$${unclosedShellVar\".",
 		"WARN: filename.mk:11: Unclosed shell variable starting at \"$${unclosedShellVar\".")
+}
+
+func (s *Suite) Test_VartypeCheck_SedCommands__experimental(c *check.C) {
+	vt := NewVartypeCheckTester(s.Init(c), (*VartypeCheck).SedCommands)
+	G.Experimental = true
+
+	vt.Varname("SUBST_SED.dummy")
+
+	vt.Values(
+		"-e s,???,questions,",
+		"-e 's?from?to?g'")
+
+	vt.Output(
+		"WARN: filename.mk:1: Special character \"?\" in basic regular expression.",
+		// FIXME: The ? is a delimiter here.
+		"WARN: filename.mk:2: Special character \"?\" in basic regular expression.")
 }
 
 func (s *Suite) Test_VartypeCheck_ShellCommand(c *check.C) {

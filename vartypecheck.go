@@ -1142,38 +1142,55 @@ func (cv *VartypeCheck) SedCommands() {
 
 	ntokens := len(tokens)
 	ncommands := 0
+	extended := false
+
+	checkSedCommand := func(command string) {
+		// TODO: Remember the extended flag for the whole file, especially
+		//  for SUBST_SED.* variables.
+		if !extended {
+			// FIXME: First extract the regular expression, check only that, not the separator.
+			cv.WithValue(command).BasicRegularExpression()
+		}
+	}
 
 	for i := 0; i < ntokens; i++ {
 		token := tokens[i]
 
 		switch {
 		case token == "-e":
-			if i+1 < ntokens {
-				// Check the real sed command here.
-				i++
-				ncommands++
-				if ncommands > 1 {
-					cv.Notef("Each sed command should appear in an assignment of its own.")
-					cv.Explain(
-						"For example, instead of",
-						"    SUBST_SED.foo+=        -e s,command1,, -e s,command2,,",
-						"use",
-						"    SUBST_SED.foo+=        -e s,command1,,",
-						"    SUBST_SED.foo+=        -e s,command2,,",
-						"",
-						"This way, short sed commands cannot be hidden at the end of a line.")
-				}
-			} else {
+			if i+1 >= ntokens {
 				cv.Errorf("The -e option to sed requires an argument.")
+				break
 			}
+
+			// Check the real sed command here.
+			i++
+			ncommands++
+			if ncommands > 1 {
+				cv.Notef("Each sed command should appear in an assignment of its own.")
+				cv.Explain(
+					"For example, instead of",
+					"    SUBST_SED.foo+=        -e s,command1,, -e s,command2,,",
+					"use",
+					"    SUBST_SED.foo+=        -e s,command1,,",
+					"    SUBST_SED.foo+=        -e s,command2,,",
+					"",
+					"This way, short sed commands cannot be hidden at the end of a line.")
+			}
+
+			checkSedCommand(tokens[i])
+
 		case token == "-E":
 			// Switch to extended regular expressions mode.
+			extended = true
 
 		case token == "-n":
 			// Don't print lines per default.
 
 		case matches(token, `^["']?(\d+|/.*/)?s`):
+			// TODO: "prefix with" instead of "use".
 			cv.Notef("Please always use \"-e\" in sed commands, even if there is only one substitution.")
+			checkSedCommand(token)
 
 		default:
 			cv.Warnf("Unknown sed command %q.", token)
