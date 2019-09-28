@@ -961,7 +961,8 @@ func (s *Suite) Test_Logger_Diag__source_duplicates(c *check.C) {
 			"Run \""+confMake+" makepatchsum\".",
 		"",
 		"3 errors found.",
-		"(Run \"pkglint -e --source -Wall ~/category/package1 ~/category/package2\" to show explanations.)")
+		t.Shquote("(Run \"pkglint -e --source -Wall %s %s\" to show explanations.)",
+			"category/package1", "category/package2"))
 }
 
 func (s *Suite) Test_Logger_shallBeLogged(c *check.C) {

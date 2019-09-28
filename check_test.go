@@ -915,8 +915,7 @@ func (t *Tester) Output() string {
 	}
 
 	assertf(t.tmpdir != "", "Tester must be initialized before checking the output.")
-	t1 := strings.Replace(stdout+stderr, "'"+t.tmpdir+"'", "~", -1) // for shquote in ShowSummary
-	return strings.Replace(t1, t.tmpdir, "~", -1)
+	return strings.Replace(stdout+stderr, t.tmpdir, "~", -1)
 }
 
 // CheckOutputEmpty ensures that the output up to now is empty.
@@ -1158,4 +1157,13 @@ func (t *Tester) CheckFileLinesDetab(relativeFileName string, lines ...string) {
 // and this in turn allows uninteresting test cases to be deleted during
 // development.
 func (t *Tester) Use(functions ...interface{}) {
+}
+
+func (t *Tester) Shquote(format string, rels ...string) string {
+	var subs []interface{}
+	for _, rel := range rels {
+		quoted := shquote(path.Join(t.tmpdir, rel))
+		subs = append(subs, strings.Replace(quoted, t.tmpdir, "~", -1))
+	}
+	return sprintf(format, subs...)
 }

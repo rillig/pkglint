@@ -231,9 +231,9 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		"WARN: ~/sysutils/checkperms/patches/patch-checkperms.c:12: Premature end of patch hunk "+
 			"(expected 1 lines to be deleted and 0 lines to be added).",
 		"4 errors, 2 warnings and 1 note found.",
-		"(Run \"pkglint -e -Wall -Call ~/sysutils/checkperms\" to show explanations.)",
-		"(Run \"pkglint -fs -Wall -Call ~/sysutils/checkperms\" to show what can be fixed automatically.)",
-		"(Run \"pkglint -F -Wall -Call ~/sysutils/checkperms\" to automatically fix some issues.)")
+		t.Shquote("(Run \"pkglint -e -Wall -Call %s\" to show explanations.)", "sysutils/checkperms"),
+		t.Shquote("(Run \"pkglint -fs -Wall -Call %s\" to show what can be fixed automatically.)", "sysutils/checkperms"),
+		t.Shquote("(Run \"pkglint -F -Wall -Call %s\" to automatically fix some issues.)", "sysutils/checkperms"))
 }
 
 func (s *Suite) Test_Pkglint_Main__autofix_exitcode(c *check.C) {
@@ -611,7 +611,7 @@ func (s *Suite) Test_Pkglint_checkReg__alternatives(c *check.C) {
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/ALTERNATIVES:1: Alternative implementation \"bin/gnu-tar\" must be an absolute path.",
 		"1 error found.",
-		"(Run \"pkglint -e ~/category/package/ALTERNATIVES\" to show explanations.)")
+		t.Shquote("(Run \"pkglint -e %s\" to show explanations.)", "category/package/ALTERNATIVES"))
 }
 
 // Just for branch coverage.
