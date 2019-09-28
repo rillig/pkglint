@@ -1754,6 +1754,9 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePkgdir(c *check.C) {
 
 	test("../../other/does-not-exist",
 		"ERROR: ~/category/package/Makefile:1: Relative path \"../../other/does-not-exist/Makefile\" does not exist.")
+
+	test("${OTHER_PACKAGE}",
+		nil...)
 }
 
 // PR pkg/46570, item 2
