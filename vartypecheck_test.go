@@ -8,7 +8,7 @@ func (s *Suite) Test_VartypeCheck_AwkCommand(c *check.C) {
 	t := s.Init(c)
 	vt := NewVartypeCheckTester(t, BtAwkCommand)
 
-	vt.Varname("PLIST_AWK")
+	vt.Varname("PRINT_PLIST_AWK")
 	vt.Op(opAssignAppend)
 	vt.Values(
 		"{print $0}",
@@ -32,7 +32,7 @@ func (s *Suite) Test_VartypeCheck_BasicRegularExpression(c *check.C) {
 	t := s.Init(c)
 	vt := NewVartypeCheckTester(t, BtBasicRegularExpression)
 
-	vt.Varname("REPLACE_FILES.pl")
+	vt.Varname("CHECK_FILES_SKIP")
 	vt.Values(
 		"?")
 
@@ -44,7 +44,7 @@ func (s *Suite) Test_VartypeCheck_BasicRegularExpression__experimental(c *check.
 	vt := NewVartypeCheckTester(t, BtBasicRegularExpression)
 	G.Experimental = true
 
-	vt.Varname("REPLACE_FILES.pl")
+	vt.Varname("CHECK_FILES_SKIP")
 	vt.Values(
 		".*\\.pl$",
 		".*\\.pl$$",
@@ -449,7 +449,9 @@ func (s *Suite) Test_VartypeCheck_EmulPlatform(c *check.C) {
 }
 
 func (s *Suite) Test_VartypeCheck_Enum(c *check.C) {
-	vt := NewVartypeCheckTester(s.Init(c), enum("jdk1 jdk2 jdk4"))
+	basicType := enum("jdk1 jdk2 jdk4")
+	G.Pkgsrc.vartypes.Define("JDK", basicType, UserSettable)
+	vt := NewVartypeCheckTester(s.Init(c), basicType)
 
 	vt.Varname("JDK")
 	vt.Op(opUseMatch)
@@ -589,7 +591,7 @@ func (s *Suite) Test_VartypeCheck_FetchURL__without_package(c *check.C) {
 func (s *Suite) Test_VartypeCheck_Filename(c *check.C) {
 	vt := NewVartypeCheckTester(s.Init(c), BtFilename)
 
-	vt.Varname("FNAME")
+	vt.Varname("JAVA_NAME")
 	vt.Values(
 		"Filename with spaces.docx",
 		"OS/2-manual.txt")
@@ -612,7 +614,7 @@ func (s *Suite) Test_VartypeCheck_Filename(c *check.C) {
 func (s *Suite) Test_VartypeCheck_FilePattern(c *check.C) {
 	vt := NewVartypeCheckTester(s.Init(c), BtFilePattern)
 
-	vt.Varname("FNAME")
+	vt.Varname("PKGWILDCARD")
 	vt.Values(
 		"filename.txt",
 		"*.txt",
@@ -643,7 +645,7 @@ func (s *Suite) Test_VartypeCheck_FilePattern(c *check.C) {
 func (s *Suite) Test_VartypeCheck_FileMode(c *check.C) {
 	vt := NewVartypeCheckTester(s.Init(c), BtFileMode)
 
-	vt.Varname("HIGHSCORE_PERMS")
+	vt.Varname("GAMEMODE")
 	vt.Values(
 		"u+rwx",
 		"0600",
@@ -780,7 +782,7 @@ func (s *Suite) Test_VartypeCheck_Integer(c *check.C) {
 	t := s.Init(c)
 	vt := NewVartypeCheckTester(t, BtInteger)
 
-	vt.Varname("NUMBER")
+	vt.Varname("MAKE_JOBS")
 	vt.Values(
 		"${OTHER_VAR}",
 		"123",
@@ -1117,7 +1119,7 @@ func (s *Suite) Test_VartypeCheck_Pkgname(c *check.C) {
 func (s *Suite) Test_VartypeCheck_PkgOptionsVar(c *check.C) {
 	vt := NewVartypeCheckTester(s.Init(c), BtPkgOptionsVar)
 
-	vt.Varname("PKG_OPTIONS_VAR.screen")
+	vt.Varname("PKG_OPTIONS_VAR")
 	vt.Values(
 		"PKG_OPTIONS.${PKGBASE}",
 		"PKG_OPTIONS.anypkgbase",
@@ -1434,7 +1436,7 @@ func (s *Suite) Test_VartypeCheck_URL(c *check.C) {
 	t := s.Init(c)
 	vt := NewVartypeCheckTester(t, BtURL)
 
-	vt.Varname("HOMEPAGE")
+	vt.Varname("LATEX2HTML_ICONPATH")
 	vt.Values(
 		"# none",
 		"${OTHER_VAR}",
@@ -1558,7 +1560,7 @@ func (s *Suite) Test_VartypeCheck_Version(c *check.C) {
 func (s *Suite) Test_VartypeCheck_WrapperReorder(c *check.C) {
 	vt := NewVartypeCheckTester(s.Init(c), BtWrapperReorder)
 
-	vt.Varname("WRAPPER_REORDER")
+	vt.Varname("WRAPPER_REORDER_CMDS")
 	vt.Op(opAssignAppend)
 	vt.Values(
 		"reorder:l:first:second",
@@ -1629,7 +1631,7 @@ func (s *Suite) Test_VartypeCheck_Yes(c *check.C) {
 		"WARN: filename.mk:2: APACHE_MODULE should be set to YES or yes.",
 		"WARN: filename.mk:3: APACHE_MODULE should be set to YES or yes.")
 
-	vt.Varname("PKG_DEVELOPER")
+	vt.Varname("BUILD_USES_MSGFMT")
 	vt.Op(opUseMatch)
 	vt.Values(
 		"yes",
@@ -1637,15 +1639,15 @@ func (s *Suite) Test_VartypeCheck_Yes(c *check.C) {
 		"${YESVAR}")
 
 	vt.Output(
-		"WARN: filename.mk:11: PKG_DEVELOPER should only be used in a \".if defined(...)\" condition.",
-		"WARN: filename.mk:12: PKG_DEVELOPER should only be used in a \".if defined(...)\" condition.",
-		"WARN: filename.mk:13: PKG_DEVELOPER should only be used in a \".if defined(...)\" condition.")
+		"WARN: filename.mk:11: BUILD_USES_MSGFMT should only be used in a \".if defined(...)\" condition.",
+		"WARN: filename.mk:12: BUILD_USES_MSGFMT should only be used in a \".if defined(...)\" condition.",
+		"WARN: filename.mk:13: BUILD_USES_MSGFMT should only be used in a \".if defined(...)\" condition.")
 }
 
 func (s *Suite) Test_VartypeCheck_YesNo(c *check.C) {
 	vt := NewVartypeCheckTester(s.Init(c), BtYesNo)
 
-	vt.Varname("GNU_CONFIGURE")
+	vt.Varname("PKG_DEVELOPER")
 	vt.Values(
 		"yes",
 		"no",
@@ -1653,14 +1655,14 @@ func (s *Suite) Test_VartypeCheck_YesNo(c *check.C) {
 		"${YESVAR}")
 
 	vt.Output(
-		"WARN: filename.mk:3: GNU_CONFIGURE should be set to YES, yes, NO, or no.",
-		"WARN: filename.mk:4: GNU_CONFIGURE should be set to YES, yes, NO, or no.")
+		"WARN: filename.mk:3: PKG_DEVELOPER should be set to YES, yes, NO, or no.",
+		"WARN: filename.mk:4: PKG_DEVELOPER should be set to YES, yes, NO, or no.")
 }
 
 func (s *Suite) Test_VartypeCheck_YesNoIndirectly(c *check.C) {
 	vt := NewVartypeCheckTester(s.Init(c), BtYesNoIndirectly)
 
-	vt.Varname("GNU_CONFIGURE")
+	vt.Varname("IS_BUILTIN.pkgbase")
 	vt.Values(
 		"yes",
 		"no",
@@ -1668,7 +1670,7 @@ func (s *Suite) Test_VartypeCheck_YesNoIndirectly(c *check.C) {
 		"${YESVAR}")
 
 	vt.Output(
-		"WARN: filename.mk:3: GNU_CONFIGURE should be set to YES, yes, NO, or no.")
+		"WARN: filename.mk:3: IS_BUILTIN.pkgbase should be set to YES, yes, NO, or no.")
 }
 
 // VartypeCheckTester helps to test the many different checks in VartypeCheck.
@@ -1697,6 +1699,10 @@ func NewVartypeCheckTester(t *Tester, basicType *BasicType) *VartypeCheckTester 
 }
 
 func (vt *VartypeCheckTester) Varname(varname string) {
+	vartype := G.Pkgsrc.VariableType(nil, varname)
+	assertNotNil(vartype)
+	assert(vartype.basicType == vt.basicType)
+
 	vt.varname = varname
 	vt.nextSection()
 }
