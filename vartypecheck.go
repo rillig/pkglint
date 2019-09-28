@@ -994,10 +994,6 @@ func (cv *VartypeCheck) PkgOptionsVar() {
 func (cv *VartypeCheck) Pkgpath() {
 	cv.Pathname()
 
-	if cv.Op == opUseMatch {
-		return
-	}
-
 	pkgpath := cv.Value
 	if pkgpath != cv.ValueNoVar || cv.Op == opUseMatch {
 		return
