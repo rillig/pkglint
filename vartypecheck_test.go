@@ -1333,7 +1333,8 @@ func (s *Suite) Test_VartypeCheck_SedCommands__experimental(c *check.C) {
 
 	vt.Values(
 		"-e s,???,questions,",
-		"-e 's?from?to?g'")
+		"-e 's?from?to?g'",
+		"-E -e 's,from,to,g'")
 
 	vt.Output(
 		"WARN: filename.mk:1: Special character \"?\" in basic regular expression.",
