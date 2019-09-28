@@ -1323,9 +1323,9 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time(c *check.C)
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time_in_condition(c *check.C) {
 	t := s.Init(c)
 
-	G.Pkgsrc.vartypes.DefineParse("LOAD_TIME", BtPathmask, List,
+	G.Pkgsrc.vartypes.DefineParse("LOAD_TIME", BtPathPattern, List,
 		"special:filename.mk: use-loadtime")
-	G.Pkgsrc.vartypes.DefineParse("RUN_TIME", BtPathmask, List,
+	G.Pkgsrc.vartypes.DefineParse("RUN_TIME", BtPathPattern, List,
 		"special:filename.mk: use")
 
 	mklines := t.NewMkLines("filename.mk",
@@ -1342,9 +1342,9 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time_in_conditio
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__load_time_in_for_loop(c *check.C) {
 	t := s.Init(c)
 
-	G.Pkgsrc.vartypes.DefineParse("LOAD_TIME", BtPathmask, List,
+	G.Pkgsrc.vartypes.DefineParse("LOAD_TIME", BtPathPattern, List,
 		"special:filename.mk: use-loadtime")
-	G.Pkgsrc.vartypes.DefineParse("RUN_TIME", BtPathmask, List,
+	G.Pkgsrc.vartypes.DefineParse("RUN_TIME", BtPathPattern, List,
 		"special:filename.mk: use")
 
 	mklines := t.NewMkLines("filename.mk",
@@ -1491,7 +1491,7 @@ func (s *Suite) Test_MkLineChecker_checkVarusePermissions__write_only_usable_in_
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions__usable_only_at_loadtime_in_other_file(c *check.C) {
 	t := s.Init(c)
 
-	G.Pkgsrc.vartypes.DefineParse("VAR", BtFileName, NoVartypeOptions,
+	G.Pkgsrc.vartypes.DefineParse("VAR", BtFilename, NoVartypeOptions,
 		"*: set, use-loadtime")
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,

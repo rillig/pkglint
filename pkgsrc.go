@@ -988,12 +988,12 @@ func (src *Pkgsrc) guessVariableType(varname string) (vartype *Vartype) {
 	varbase := varnameBase(varname)
 	switch {
 	case hasSuffix(varbase, "DIRS"):
-		return listType(BtPathmask, aclpAllRuntime)
+		return listType(BtPathPattern, aclpAllRuntime)
 	case hasSuffix(varbase, "DIR") && !hasSuffix(varbase, "DESTDIR"), hasSuffix(varname, "_HOME"):
 		// TODO: hasSuffix(varbase, "BASE")
 		return plainType(BtPathname, aclpAllRuntime)
 	case hasSuffix(varbase, "FILES"):
-		return listType(BtPathmask, aclpAllRuntime)
+		return listType(BtPathPattern, aclpAllRuntime)
 	case hasSuffix(varbase, "FILE"):
 		return plainType(BtPathname, aclpAllRuntime)
 	case hasSuffix(varbase, "PATH"):
@@ -1020,7 +1020,7 @@ func (src *Pkgsrc) guessVariableType(varname string) (vartype *Vartype) {
 		// TODO: Add BtGuard for inclusion guards, since these variables may only be checked using defined().
 		return plainType(BtUnknown, aclpAll)
 	case hasSuffix(varbase, "_SKIP"):
-		return listType(BtPathmask, aclpAllRuntime)
+		return listType(BtPathPattern, aclpAllRuntime)
 	}
 
 	// Variables whose name doesn't match the above patterns may be

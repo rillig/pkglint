@@ -587,7 +587,7 @@ func (s *Suite) Test_VartypeCheck_FetchURL__without_package(c *check.C) {
 }
 
 func (s *Suite) Test_VartypeCheck_Filename(c *check.C) {
-	vt := NewVartypeCheckTester(s.Init(c), BtFileName) // FIXME: rename to BtFilename
+	vt := NewVartypeCheckTester(s.Init(c), BtFilename)
 
 	vt.Varname("FNAME")
 	vt.Values(
@@ -609,8 +609,8 @@ func (s *Suite) Test_VartypeCheck_Filename(c *check.C) {
 			"contains the invalid characters \"  \".")
 }
 
-func (s *Suite) Test_VartypeCheck_FileMask(c *check.C) {
-	vt := NewVartypeCheckTester(s.Init(c), BtFileMask)
+func (s *Suite) Test_VartypeCheck_FilePattern(c *check.C) {
+	vt := NewVartypeCheckTester(s.Init(c), BtFilePattern)
 
 	vt.Varname("FNAME")
 	vt.Values(
@@ -619,24 +619,24 @@ func (s *Suite) Test_VartypeCheck_FileMask(c *check.C) {
 		"[12345].txt",
 		"[0-9].txt",
 		"???.txt",
-		"FileMask with spaces.docx",
+		"FilePattern with spaces.docx",
 		"OS/2-manual.txt")
 
 	vt.Output(
-		"WARN: filename.mk:6: The filename pattern \"FileMask with spaces.docx\" "+
+		"WARN: filename.mk:6: The filename pattern \"FilePattern with spaces.docx\" "+
 			"contains the invalid characters \"  \".",
 		"WARN: filename.mk:7: The filename pattern \"OS/2-manual.txt\" "+
 			"contains the invalid character \"/\".")
 
 	vt.Op(opUseMatch)
 	vt.Values(
-		"FileMask with spaces.docx")
+		"FilePattern with spaces.docx")
 
 	// There's no guarantee that a filename only contains [A-Za-z0-9.].
 	// Therefore it might be necessary to allow all characters here.
 	// TODO: Investigate whether this restriction is useful in practice.
 	vt.Output(
-		"WARN: filename.mk:11: The filename pattern \"FileMask with spaces.docx\" " +
+		"WARN: filename.mk:11: The filename pattern \"FilePattern with spaces.docx\" " +
 			"contains the invalid characters \"  \".")
 }
 
@@ -1018,8 +1018,8 @@ func (s *Suite) Test_VartypeCheck_Pathlist(c *check.C) {
 		"WARN: filename.mk:2: \"/directory with spaces\" is not a valid pathname.")
 }
 
-func (s *Suite) Test_VartypeCheck_PathMask(c *check.C) {
-	vt := NewVartypeCheckTester(s.Init(c), BtPathmask) // FIXME: rename to BtPathPattern
+func (s *Suite) Test_VartypeCheck_PathPattern(c *check.C) {
+	vt := NewVartypeCheckTester(s.Init(c), BtPathPattern)
 
 	vt.Varname("DISTDIRS")
 	vt.Values(
@@ -1084,7 +1084,7 @@ func (s *Suite) Test_VartypeCheck_Perms(c *check.C) {
 }
 
 func (s *Suite) Test_VartypeCheck_Pkgname(c *check.C) {
-	vt := NewVartypeCheckTester(s.Init(c), BtPkgName) // FIXME: rename to BtPkgname
+	vt := NewVartypeCheckTester(s.Init(c), BtPkgname)
 
 	vt.Varname("PKGNAME")
 	vt.Values(
@@ -1129,9 +1129,9 @@ func (s *Suite) Test_VartypeCheck_PkgOptionsVar(c *check.C) {
 			"of the form \"PKG_OPTIONS.*\", not \"PKG_OPTS.mc\".")
 }
 
-func (s *Suite) Test_VartypeCheck_PkgPath(c *check.C) {
+func (s *Suite) Test_VartypeCheck_Pkgpath(c *check.C) {
 	t := s.Init(c)
-	vt := NewVartypeCheckTester(t, BtPkgPath)
+	vt := NewVartypeCheckTester(t, BtPkgpath)
 
 	t.CreateFileLines("category/other-package/Makefile")
 	t.Chdir("category/package")
@@ -1150,8 +1150,8 @@ func (s *Suite) Test_VartypeCheck_PkgPath(c *check.C) {
 		"WARN: filename.mk:4: \"../../../../invalid/relative\" is not a valid relative package directory.")
 }
 
-func (s *Suite) Test_VartypeCheck_PkgRevision(c *check.C) {
-	vt := NewVartypeCheckTester(s.Init(c), BtPkgRevision)
+func (s *Suite) Test_VartypeCheck_Pkgrevision(c *check.C) {
+	vt := NewVartypeCheckTester(s.Init(c), BtPkgrevision)
 
 	vt.Varname("PKGREVISION")
 	vt.Values(

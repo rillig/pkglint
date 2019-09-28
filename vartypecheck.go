@@ -606,7 +606,7 @@ func (cv *VartypeCheck) Filename() {
 		invalid)
 }
 
-func (cv *VartypeCheck) FileMask() {
+func (cv *VartypeCheck) FilePattern() {
 
 	// TODO: Decide whether to call this a "mask" or a "pattern", and use only that word everywhere.
 
@@ -900,10 +900,10 @@ func (cv *VartypeCheck) Pathlist() {
 	}
 }
 
-// PathMask is a shell pattern for pathnames, possibly including slashes.
+// PathPattern is a shell pattern for pathnames, possibly including slashes.
 //
-// See FileMask.
-func (cv *VartypeCheck) PathMask() {
+// See FilePattern.
+func (cv *VartypeCheck) PathPattern() {
 	invalid := replaceAll(cv.ValueNoVar, `[%*+,\-./0-9?@A-Z\[\]_a-z~]`, "")
 	if invalid == "" {
 		return
@@ -988,15 +988,15 @@ func (cv *VartypeCheck) PkgOptionsVar() {
 	}
 }
 
-// PkgPath checks a directory name relative to the top-level pkgsrc directory.
+// Pkgpath checks a directory name relative to the top-level pkgsrc directory.
 //
 // Despite its name, it is more similar to RelativePkgDir than to RelativePkgPath.
-func (cv *VartypeCheck) PkgPath() {
+func (cv *VartypeCheck) Pkgpath() {
 	pkgsrcdir := cv.MkLine.PathToFile(G.Pkgsrc.File("."))
 	MkLineChecker{cv.MkLines, cv.MkLine}.CheckRelativePkgdir(joinPath(pkgsrcdir, cv.Value))
 }
 
-func (cv *VartypeCheck) PkgRevision() {
+func (cv *VartypeCheck) Pkgrevision() {
 	if !matches(cv.Value, `^[1-9]\d*$`) {
 		cv.Warnf("%s must be a positive integer number.", cv.Varname)
 	}

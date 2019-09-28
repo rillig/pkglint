@@ -967,12 +967,12 @@ func (s *Suite) Test_Pkgsrc_VariableType__varparam(c *check.C) {
 	t1 := G.Pkgsrc.VariableType(nil, "FONT_DIRS")
 
 	c.Assert(t1, check.NotNil)
-	t.CheckEquals(t1.String(), "PathMask (list, guessed)")
+	t.CheckEquals(t1.String(), "PathPattern (list, guessed)")
 
 	t2 := G.Pkgsrc.VariableType(nil, "FONT_DIRS.ttf")
 
 	c.Assert(t2, check.NotNil)
-	t.CheckEquals(t2.String(), "PathMask (list, guessed)")
+	t.CheckEquals(t2.String(), "PathPattern (list, guessed)")
 }
 
 // Guessing the variable type also works for variables that are
