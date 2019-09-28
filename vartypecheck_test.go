@@ -83,6 +83,14 @@ func (s *Suite) Test_VartypeCheck_BasicRegularExpression__experimental(c *check.
 		"WARN: filename.mk:22: Special character \"?\" in basic regular expression.",
 		"WARN: filename.mk:23: Special character \"?\" in basic regular expression.",
 		"WARN: filename.mk:24: Special character \"?\" in basic regular expression.")
+
+	vt.Values(
+		"package-[0-9][0-9.]*",
+		"unclosed-[",
+		"backslash-[\\")
+
+	vt.Output(
+		"WARN: filename.mk:33: Internal pkglint error in ShTokenizer.ShAtom at \"\\\\\" (quoting=plain).")
 }
 
 func (s *Suite) Test_VartypeCheck_BuildlinkDepmethod(c *check.C) {
