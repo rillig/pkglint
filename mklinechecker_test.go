@@ -2006,17 +2006,26 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 	test(
 		".if ${PKGPATH:Mpattern with spaces}",
 
+		"WARN: module.mk:2: The pathname pattern \"pattern with spaces\" "+
+			"contains the invalid characters \"  \".",
+
 		".if ${PKGPATH:Mpattern with spaces}")
 	// TODO: ".if ${PKGPATH} == \"pattern with spaces\"")
 
 	test(
 		".if ${PKGPATH:M'pattern with spaces'}",
 
+		"WARN: module.mk:2: The pathname pattern \"'pattern with spaces'\" "+
+			"contains the invalid characters \"'  '\".",
+
 		".if ${PKGPATH:M'pattern with spaces'}")
 	// TODO: ".if ${PKGPATH} == 'pattern with spaces'")
 
 	test(
 		".if ${PKGPATH:M&&}",
+
+		"WARN: module.mk:2: The pathname pattern \"&&\" "+
+			"contains the invalid characters \"&&\".",
 
 		".if ${PKGPATH:M&&}")
 	// TODO: ".if ${PKGPATH} == '&&'")

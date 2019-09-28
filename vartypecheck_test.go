@@ -1157,6 +1157,22 @@ func (s *Suite) Test_VartypeCheck_Pkgpath(c *check.C) {
 		"ERROR: filename.mk:6: \"category\" is not a valid path to a package.",
 		"WARN: filename.mk:7: The pathname \"&&\" contains the invalid characters \"&&\".",
 		"ERROR: filename.mk:7: There is no package in \"../../&&\".")
+
+	G.Wip = true
+
+	vt.Values(
+		"wip/package")
+
+	vt.OutputEmpty()
+
+	vt.Op(opUseMatch)
+
+	vt.Values(
+		"pattern",
+		"&special&")
+
+	vt.Output(
+		"WARN: filename.mk:22: The pathname pattern \"&special&\" contains the invalid characters \"&&\".")
 }
 
 func (s *Suite) Test_VartypeCheck_Pkgrevision(c *check.C) {

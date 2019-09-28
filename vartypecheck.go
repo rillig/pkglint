@@ -992,6 +992,8 @@ func (cv *VartypeCheck) PkgOptionsVar() {
 //
 // Despite its name, it is more similar to RelativePkgDir than to RelativePkgPath.
 func (cv *VartypeCheck) Pkgpath() {
+	cv.Pathname()
+
 	if cv.Op == opUseMatch {
 		return
 	}
@@ -1001,18 +1003,13 @@ func (cv *VartypeCheck) Pkgpath() {
 		return
 	}
 
-	cv.Pathname()
-
-	mkline := cv.MkLine
-	otherMakefile := joinPath(pkgpath, "Makefile")
-
 	if !G.Wip && hasPrefix(pkgpath, "wip/") {
-		mkline.Errorf("A main pkgsrc package must not depend on a pkgsrc-wip package.")
+		cv.MkLine.Errorf("A main pkgsrc package must not depend on a pkgsrc-wip package.")
 	}
 
-	if !fileExists(G.Pkgsrc.File(otherMakefile)) {
-		mkline.Errorf("There is no package in %q.",
-			relpath(path.Dir(mkline.Filename), G.Pkgsrc.File(pkgpath)))
+	if !fileExists(G.Pkgsrc.File(joinPath(pkgpath, "Makefile"))) {
+		cv.MkLine.Errorf("There is no package in %q.",
+			relpath(path.Dir(cv.MkLine.Filename), G.Pkgsrc.File(pkgpath)))
 		return
 	}
 
