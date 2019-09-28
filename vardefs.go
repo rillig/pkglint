@@ -1346,7 +1346,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.sys("PKGLOCALEDIR", BtPathname)
 	reg.pkg("PKGNAME", BtPkgname)
 	reg.sys("PKGNAME_NOREV", BtPkgname)
-	reg.sysload("PKGPATH", BtPathname)
+	reg.sysload("PKGPATH", BtPkgpath)
 	reg.sys("PKGREPOSITORY", BtUnknown)
 	// This variable is special in that it really only makes sense to
 	// be set in a package Makefile.

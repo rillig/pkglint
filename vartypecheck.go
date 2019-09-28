@@ -992,6 +992,11 @@ func (cv *VartypeCheck) PkgOptionsVar() {
 //
 // Despite its name, it is more similar to RelativePkgDir than to RelativePkgPath.
 func (cv *VartypeCheck) Pkgpath() {
+	if cv.Op == opUseMatch {
+		return
+	}
+
+	// FIXME: Completely rewrite this check.
 	pkgsrcdir := cv.MkLine.PathToFile(G.Pkgsrc.File("."))
 	MkLineChecker{cv.MkLines, cv.MkLine}.CheckRelativePkgdir(joinPath(pkgsrcdir, cv.Value))
 }

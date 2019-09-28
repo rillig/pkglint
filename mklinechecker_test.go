@@ -1860,10 +1860,18 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 		ck := MkLineChecker{mklines, mklines.mklines[1]}
 
 		t.SetUpCommandLine("-Wall")
-		ck.checkDirectiveCond()
+		mklines.ForEach(func(mkline *MkLine) {
+			if mkline == mklines.mklines[1] {
+				ck.checkDirectiveCond()
+			}
+		})
 
 		t.SetUpCommandLine("-Wall", "--autofix")
-		ck.checkDirectiveCond()
+		mklines.ForEach(func(mkline *MkLine) {
+			if mkline == mklines.mklines[1] {
+				ck.checkDirectiveCond()
+			}
+		})
 
 		mklines.SaveAutofixChanges()
 		afterMklines := t.LoadMkInclude("module.mk")
@@ -1995,23 +2003,17 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 	test(
 		".if ${PKGPATH:Mpattern with spaces}",
 
-		"WARN: module.mk:2: The pathname pattern \"pattern with spaces\" contains the invalid characters \"  \".",
-
 		".if ${PKGPATH:Mpattern with spaces}")
 	// TODO: ".if ${PKGPATH} == \"pattern with spaces\"")
 
 	test(
 		".if ${PKGPATH:M'pattern with spaces'}",
 
-		"WARN: module.mk:2: The pathname pattern \"'pattern with spaces'\" contains the invalid characters \"'  '\".",
-
 		".if ${PKGPATH:M'pattern with spaces'}")
 	// TODO: ".if ${PKGPATH} == 'pattern with spaces'")
 
 	test(
 		".if ${PKGPATH:M&&}",
-
-		"WARN: module.mk:2: The pathname pattern \"&&\" contains the invalid characters \"&&\".",
 
 		".if ${PKGPATH:M&&}")
 	// TODO: ".if ${PKGPATH} == '&&'")
