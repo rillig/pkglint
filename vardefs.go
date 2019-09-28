@@ -510,7 +510,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 
 	reg.usr("MOTIFBASE", BtPathname)
 	reg.usr("PKGINFODIR", BtPathname)
-	reg.usr("PKGMANDIR", BtPathname)
+	reg.usr("PKGMANDIR", BtPrefixPathname)
 	reg.usr("PKGGNUDIR", BtPathname)
 	reg.usr("BSDSRCDIR", BtPathname)
 	reg.usr("BSDXSRCDIR", BtPathname)
