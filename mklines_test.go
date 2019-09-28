@@ -716,10 +716,7 @@ func (s *Suite) Test_MkLines_Check__indentation_include(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		// FIXME: It's a package path, not a relative path.
-		"ERROR: ~/module.mk:3: Relative path \"category/package/Makefile\" does not exist.",
-		// FIXME
-		"WARN: ~/module.mk:3: \"category/package\" is not a valid relative package directory.",
+		"ERROR: ~/module.mk:3: There is no package in \"category/package\".",
 		"NOTE: ~/module.mk:5: This directive should be indented by 2 spaces.",
 		"NOTE: ~/module.mk:7: This directive should be indented by 2 spaces.")
 }

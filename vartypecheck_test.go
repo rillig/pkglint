@@ -1133,7 +1133,9 @@ func (s *Suite) Test_VartypeCheck_Pkgpath(c *check.C) {
 	t := s.Init(c)
 	vt := NewVartypeCheckTester(t, BtPkgpath)
 
+	t.CreateFileLines("category/Makefile")
 	t.CreateFileLines("category/other-package/Makefile")
+	t.CreateFileLines("wip/package/Makefile")
 	t.Chdir("category/package")
 
 	vt.Varname("PKGPATH")
@@ -1141,13 +1143,18 @@ func (s *Suite) Test_VartypeCheck_Pkgpath(c *check.C) {
 		"category/other-package",
 		"${OTHER_VAR}",
 		"invalid",
-		"../../invalid/relative")
+		"../../invalid/relative",
+		"wip/package",
+		"category",
+		"&&")
 
 	vt.Output(
-		"ERROR: filename.mk:3: Relative path \"../../invalid/Makefile\" does not exist.",
-		"WARN: filename.mk:3: \"../../invalid\" is not a valid relative package directory.",
-		"ERROR: filename.mk:4: Relative path \"../../../../invalid/relative/Makefile\" does not exist.",
-		"WARN: filename.mk:4: \"../../../../invalid/relative\" is not a valid relative package directory.")
+		"ERROR: filename.mk:3: There is no package in \"../../invalid\".",
+		"ERROR: filename.mk:4: There is no package in \"../../../../invalid/relative\".",
+		"ERROR: filename.mk:5: A main pkgsrc package must not depend on a pkgsrc-wip package.",
+		"ERROR: filename.mk:6: \"category\" is not a valid path to a package.",
+		"WARN: filename.mk:7: The pathname \"&&\" contains the invalid characters \"&&\".",
+		"ERROR: filename.mk:7: There is no package in \"../../&&\".")
 }
 
 func (s *Suite) Test_VartypeCheck_Pkgrevision(c *check.C) {

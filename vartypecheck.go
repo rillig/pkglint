@@ -996,9 +996,32 @@ func (cv *VartypeCheck) Pkgpath() {
 		return
 	}
 
-	// FIXME: Completely rewrite this check.
-	pkgsrcdir := cv.MkLine.PathToFile(G.Pkgsrc.File("."))
-	MkLineChecker{cv.MkLines, cv.MkLine}.CheckRelativePkgdir(joinPath(pkgsrcdir, cv.Value))
+	pkgpath := cv.Value
+	if pkgpath != cv.ValueNoVar || cv.Op == opUseMatch {
+		return
+	}
+
+	cv.Pathname()
+
+	mkline := cv.MkLine
+	otherMakefile := joinPath(pkgpath, "Makefile")
+
+	if !G.Wip && hasPrefix(pkgpath, "wip/") {
+		mkline.Errorf("A main pkgsrc package must not depend on a pkgsrc-wip package.")
+	}
+
+	if !fileExists(G.Pkgsrc.File(otherMakefile)) {
+		mkline.Errorf("There is no package in %q.",
+			relpath(path.Dir(mkline.Filename), G.Pkgsrc.File(pkgpath)))
+		return
+	}
+
+	if !matches(pkgpath, `^([^./][^/]*/[^./][^/]*)$`) {
+		cv.MkLine.Errorf("%q is not a valid path to a package.", pkgpath)
+		cv.MkLine.Explain(
+			"A path to a package has the form \"category/pkgbase\".",
+			"It is relative to the pkgsrc root.")
+	}
 }
 
 func (cv *VartypeCheck) Pkgrevision() {
