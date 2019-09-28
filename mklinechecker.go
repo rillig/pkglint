@@ -1729,7 +1729,7 @@ func (ck MkLineChecker) CheckRelativePath(relativePath string, mustExist bool) {
 		return
 	}
 
-	abs := path.Dir(mkline.Filename) + "/" + resolvedPath
+	abs := joinPath(path.Dir(mkline.Filename), resolvedPath)
 	if _, err := os.Stat(abs); err != nil {
 		if mustExist && !ck.MkLines.indentation.HasExists(resolvedPath) {
 			mkline.Errorf("Relative path %q does not exist.", resolvedPath)

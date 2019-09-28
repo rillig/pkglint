@@ -101,7 +101,7 @@ func NewPackage(dir string) *Package {
 // as resolved from the package's directory.
 // Variables that are known in the package are resolved, e.g. ${PKGDIR}.
 func (pkg *Package) File(relativeFileName string) string {
-	return cleanpath(resolveVariableRefs(nil, pkg.dir+"/"+relativeFileName))
+	return cleanpath(resolveVariableRefs(nil, joinPath(pkg.dir, relativeFileName)))
 }
 
 // Rel returns the path by which the given filename (as seen from the
@@ -497,7 +497,7 @@ func (pkg *Package) loadIncluded(mkline *MkLine, includingFile string) (included
 
 	dirname, _ := path.Split(includingFile)
 	dirname = cleanpath(dirname)
-	fullIncluded := dirname + "/" + includedFile
+	fullIncluded := joinPath(dirname, includedFile)
 	relIncludedFile := relpath(pkg.dir, fullIncluded)
 
 	if !pkg.diveInto(includingFile, includedFile) {
@@ -535,7 +535,7 @@ func (pkg *Package) loadIncluded(mkline *MkLine, includingFile string) (included
 
 	dirname = pkgBasedir
 
-	fullIncludedFallback := dirname + "/" + includedFile
+	fullIncludedFallback := joinPath(dirname, includedFile)
 	includedMklines = LoadMk(fullIncludedFallback, 0)
 	if includedMklines == nil {
 		return nil, false

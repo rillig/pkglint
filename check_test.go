@@ -519,7 +519,7 @@ func (t *Tester) File(relativeFileName string) string {
 	if t.relCwd != "" {
 		return path.Clean(relativeFileName)
 	}
-	return path.Clean(t.tmpdir + "/" + relativeFileName)
+	return path.Clean(joinPath(t.tmpdir, relativeFileName))
 }
 
 // Copy copies a file inside the temporary directory.
