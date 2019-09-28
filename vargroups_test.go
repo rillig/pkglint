@@ -256,8 +256,7 @@ func (s *Suite) Test_VargroupsChecker__private_before_public(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: Makefile:4: The public variable PUBLIC should be listed "+
-			// TODO: "before _PRIVATE1" would be more accurate.
-			"before the private variable _PRIVATE2.",
+			"before the private variable _PRIVATE1.",
 		"WARN: Makefile:5: Variable names starting with an underscore (_PRIVATE1) "+
 			"are reserved for internal pkgsrc use.",
 		"WARN: Makefile:5: _PRIVATE1 is defined but not used.",

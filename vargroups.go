@@ -70,7 +70,7 @@ func (ck *VargroupsChecker) init() {
 		}
 	}
 
-	appendTo := func(vars map[string]*MkLine, mkline *MkLine, publicGroup bool, latestPrivateVarname *string) {
+	appendTo := func(vars map[string]*MkLine, mkline *MkLine, publicGroup bool, firstPrivate *string) {
 		checkGroupName(mkline)
 
 		for _, varname := range mkline.ValueFields(mkline.Value()) {
@@ -84,13 +84,13 @@ func (ck *VargroupsChecker) init() {
 					mkline.Varname(), varname)
 			}
 
-			if latestPrivateVarname != nil {
-				if *latestPrivateVarname != "" && !private {
+			if firstPrivate != nil {
+				if *firstPrivate != "" && !private {
 					mkline.Warnf("The public variable %s should be listed before the private variable %s.",
-						varname, *latestPrivateVarname)
+						varname, *firstPrivate)
 				}
-				if private {
-					*latestPrivateVarname = varname
+				if private && *firstPrivate == "" {
+					*firstPrivate = varname
 				}
 			}
 
