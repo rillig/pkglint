@@ -2095,9 +2095,11 @@ func (s *Suite) Test_MkLine_ForEachUsed(c *check.C) {
 func (s *Suite) Test_MkLine_UnquoteShell(c *check.C) {
 	t := s.Init(c)
 
-	test := func(input, output string) {
-		unquoted := (*MkLine).UnquoteShell(nil, input)
+	test := func(input, output string, diagnostics ...string) {
+		mkline := t.NewMkLine("filename.mk", 1, "")
+		unquoted := mkline.UnquoteShell(input)
 		t.CheckEquals(unquoted, output)
+		t.CheckOutput(diagnostics)
 	}
 
 	test("", "")
@@ -2117,12 +2119,16 @@ func (s *Suite) Test_MkLine_UnquoteShell(c *check.C) {
 	test("\\", "")
 	test("\"\\", "")
 	test("'", "")
-	test("\"$(\"", "$(")
+
+	test("\"$(\"", "${\"}",
+		"WARN: filename.mk:1: Missing closing \")\" for \"\\\"\".",
+		"WARN: filename.mk:1: Invalid part \"\\\"\" after variable name \"\".")
+
 	test("`", "`")
 
+	// Quotes inside a varuse are not unquoted.
 	test("${VAR}", "${VAR}")
-	// FIXME: Don't unquote inside varuse.
-	test("${VAR:S,',',g}", "${VAR:S,,,g}")
+	test("${VAR:S,',',g}", "${VAR:S,',',g}")
 }
 
 func (s *Suite) Test_MkLineParser_unescapeComment(c *check.C) {

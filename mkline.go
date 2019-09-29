@@ -548,6 +548,8 @@ var notSpace = textproc.Space.Inverse()
 // and single quotes are interpreted.
 //
 // Compare devel/bmake/files/str.c, function brk_string.
+//
+// See UnquoteShell.
 func (mkline *MkLine) ValueFields(value string) []string {
 	var fields []string
 	var field strings.Builder
@@ -1138,7 +1140,16 @@ func (mkline *MkLine) ForEachUsed(action func(varUse *MkVarUse, time VucTime)) {
 // See ValueFields.
 func (mkline *MkLine) UnquoteShell(str string) string {
 	var sb strings.Builder
-	lexer := textproc.NewLexer(str)
+	lexer := NewMkTokensLexer(mkline.Tokenize(str, false))
+
+	plain := func() {
+		varUse := lexer.NextVarUse()
+		if varUse != nil {
+			sb.WriteString(varUse.String())
+		} else {
+			sb.WriteByte(lexer.NextByte())
+		}
+	}
 
 outer:
 	for !lexer.EOF() {
@@ -1149,25 +1160,25 @@ outer:
 					continue outer
 				} else if lexer.SkipByte('\\') {
 					if !lexer.EOF() {
-						sb.WriteByte(lexer.NextByte())
+						plain()
 					}
 				} else {
-					sb.WriteByte(lexer.NextByte())
+					plain()
 				}
 			}
 
 		case lexer.SkipByte('\''):
 			for !lexer.EOF() && !lexer.SkipByte('\'') {
-				sb.WriteByte(lexer.NextByte())
+				plain()
 			}
 
 		case lexer.SkipByte('\\'):
 			if !lexer.EOF() {
-				sb.WriteByte(lexer.NextByte())
+				plain()
 			}
 
 		default:
-			sb.WriteByte(lexer.NextByte())
+			plain()
 		}
 	}
 
