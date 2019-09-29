@@ -160,6 +160,14 @@ func (cv *VartypeCheck) AwkCommand() {
 	}
 }
 
+// BasicRegularExpression checks for a basic regular expression, as
+// defined by POSIX.
+//
+// When they are used in a list variable (as for CHECK_FILES_SKIP), they
+// cannot include spaces. Instead, a dot or [[:space:]] must be used.
+// The regular expressions do not need any quotation for the shell; all
+// quoting issues are handled by the pkgsrc infrastructure.
+//
 // TODO: Add check for EREs as well.
 //
 // See https://pubs.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap09.html#tag_09_03.
@@ -170,37 +178,52 @@ func (cv *VartypeCheck) BasicRegularExpression() {
 		return
 	}
 
-	special := textproc.NewByteSet(".[\\*^$")
-	ordinary := textproc.NewByteSet(" !\"#%&'(),---/0-9:;<=>@A-Z]_`a-z~")
+	allowedAfterBackslash := textproc.NewByteSet(".[\\*^$") // same order as in the OpenGroup spec
+	ordinary := textproc.NewByteSet(" !\"#$%&'()*,---./0-9:;<=>@A-Z]^_`a-z~")
 
 	lexer := textproc.NewLexer(cv.ValueNoVar)
-	for !lexer.EOF() {
-		if lexer.SkipByte('[') {
-			for !lexer.EOF() {
-				if lexer.SkipByte('\\') {
-					if !lexer.EOF() {
-						lexer.Skip(1)
-					}
-				} else if lexer.SkipByte(']') {
-					break
-				} else {
+
+	parseCharacterClass := func() {
+		for !lexer.EOF() {
+			if lexer.SkipByte('\\') {
+				if !lexer.EOF() {
 					lexer.Skip(1)
 				}
-			}
-			continue
-		}
-
-		if lexer.SkipByte('\\') {
-			if !lexer.EOF() && lexer.NextByteSet(special) == -1 {
-				cv.Warnf("In a basic regular expression, a backslash followed by %q is undefined.", lexer.Rest()[:1])
-				cv.Explain(
-					"Only the characters . [ \\ * ^ $ may be escaped using a backslash.",
-					"Except when the escaped character appears in a character class like [\\.a-z].")
+			} else if lexer.SkipByte(']') {
+				return
+			} else {
+				lexer.Skip(1)
 			}
 		}
+	}
 
-		if lexer.NextBytesSet(ordinary) == "" && lexer.NextBytesSet(special) == "" {
-			break
+	parseBackslash := func() {
+		if lexer.EOF() {
+			return
+		}
+
+		if !lexer.TestByteSet(allowedAfterBackslash) {
+			cv.Warnf("In a basic regular expression, a backslash followed by %q is undefined.", lexer.Rest()[:1])
+			cv.Explain(
+				"Only the characters . [ \\ * ^ $ may be escaped using a backslash.",
+				"Except when the escaped character appears in a character class like [\\.a-z].")
+		}
+		lexer.Skip(1)
+	}
+
+loop:
+	for !lexer.EOF() {
+		switch {
+		case lexer.SkipByte('['):
+			parseCharacterClass()
+
+		case lexer.SkipByte('\\'):
+			parseBackslash()
+
+		case lexer.NextBytesSet(ordinary) != "":
+
+		default:
+			break loop
 		}
 	}
 
