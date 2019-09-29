@@ -1354,9 +1354,7 @@ func (s *Suite) Test_VartypeCheck_SedCommands__experimental(c *check.C) {
 		"-E -e 's,from,to,g'")
 
 	vt.Output(
-		"WARN: filename.mk:1: Special character \"?\" in basic regular expression.",
-		// FIXME: The ? is a delimiter here.
-		"WARN: filename.mk:2: Special character \"?\" in basic regular expression.")
+		"WARN: filename.mk:1: Special character \"?\" in basic regular expression.")
 }
 
 func (s *Suite) Test_VartypeCheck_ShellCommand(c *check.C) {

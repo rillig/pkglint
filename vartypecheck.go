@@ -1172,12 +1172,22 @@ func (cv *VartypeCheck) SedCommands() {
 	ncommands := 0
 	extended := false
 
-	checkSedCommand := func(command string) {
+	checkSedCommand := func(quotedCommand string) {
 		// TODO: Remember the extended flag for the whole file, especially
 		//  for SUBST_SED.* variables.
 		if !extended {
-			// FIXME: First extract the regular expression, check only that, not the separator.
-			cv.WithValue(command).BasicRegularExpression()
+			command := cv.MkLine.UnquoteShell(quotedCommand)
+			if !hasPrefix(command, "s") {
+				return
+			}
+
+			// The :C modifier is similar enough for parsing.
+			ok, _, from, _, _ := MkVarUseModifier{"C" + command[1:]}.MatchSubst()
+			if !ok {
+				return
+			}
+
+			cv.WithValue(from).BasicRegularExpression()
 		}
 	}
 
