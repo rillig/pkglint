@@ -1368,6 +1368,13 @@ func (s *Suite) Test_VartypeCheck_SedCommands__experimental(c *check.C) {
 		"WARN: filename.mk:13: The \"?\" in the word \"s,\\\\\\\\?,replacement,\" may lead to unintended file globbing.",
 		"WARN: filename.mk:13: In a basic regular expression, a backslash followed by \"?\" is undefined.",
 		"WARN: filename.mk:14: In a basic regular expression, a backslash followed by \"?\" is undefined.")
+
+	vt.Values(
+		"-e s/dir\\\\/file/other-file/")
+
+	// FIXME: Unescape the separator before passing on the regular expression.
+	vt.Output(
+		"WARN: filename.mk:21: In a basic regular expression, a backslash followed by \"/\" is undefined.")
 }
 
 func (s *Suite) Test_VartypeCheck_ShellCommand(c *check.C) {
