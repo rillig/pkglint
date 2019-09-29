@@ -189,8 +189,8 @@ func (ck *ShellLineChecker) checkVaruseToken(atoms *[]*ShAtom, quoting ShQuoting
 	case (quoting == shqSquot || quoting == shqDquot) && matches(varname, `^(?:.*DIR|.*FILE|.*PATH|.*_VAR|PREFIX|.*BASE|PKGNAME)$`):
 		// This is ok as long as these variables don't have embedded [$\\"'`].
 
-	case quoting == shqDquot && varuse.IsQ():
-		ck.Warnf("The :Q modifier should not be used inside double quotes.")
+	case quoting != shqPlain && varuse.IsQ():
+		ck.Warnf("The :Q modifier should not be used inside quotes.")
 		ck.Explain(
 			"The :Q modifier is intended for embedding a string into a shell program.",
 			"It escapes all characters that have a special meaning in shell programs.",

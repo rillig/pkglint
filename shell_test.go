@@ -183,11 +183,18 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine(c *check.C) {
 		"NOTE: filename.mk:1: The :Q modifier isn't necessary for ${PKGNAME} here.")
 
 	test("echo \"${CFLAGS:Q}\"", // VucQuotDquot
-		"WARN: filename.mk:1: The :Q modifier should not be used inside double quotes.",
+
+		// ShellLineChecker.checkVaruseToken
+		"WARN: filename.mk:1: The :Q modifier should not be used inside quotes.",
+
+		// ShellLineChecker.checkVaruseToken
+		//     MkLineChecker.CheckVaruse
+		//         MkLineChecker.checkVarUseQuoting
 		"WARN: filename.mk:1: Please use ${CFLAGS:M*:Q} instead of ${CFLAGS:Q} "+
 			"and make sure the variable appears outside of any quoting characters.")
 
 	test("echo '${COMMENT:Q}'", // VucQuotSquot
+		"WARN: filename.mk:1: The :Q modifier should not be used inside quotes.",
 		"WARN: filename.mk:1: Please move ${COMMENT:Q} outside of any quoting characters.")
 
 	test("echo target=$@ exitcode=$$? '$$' \"\\$$\"",
