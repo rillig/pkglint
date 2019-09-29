@@ -2666,7 +2666,7 @@ func (s *Suite) Test_Package_checkFreeze(c *check.C) {
 		"NOTE: ~/category/package/Makefile: Pkgsrc is frozen since 2018-03-20.",
 		"",
 		"\tDuring a pkgsrc freeze, changes to pkgsrc should only be made very",
-		"\tcarefully. See https://www.netbsd.org/developers/pkgsrc/ for the",
+		"\tcarefully. See https://www.NetBSD.org/developers/pkgsrc/ for the",
 		"\texact rules.",
 		"")
 }

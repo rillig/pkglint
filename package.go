@@ -1260,7 +1260,7 @@ func (pkg *Package) checkFreeze(filename string) {
 	line.Notef("Pkgsrc is frozen since %s.", freezeStart)
 	line.Explain(
 		"During a pkgsrc freeze, changes to pkgsrc should only be made very carefully.",
-		"See https://www.netbsd.org/developers/pkgsrc/ for the exact rules.")
+		"See https://www.NetBSD.org/developers/pkgsrc/ for the exact rules.")
 }
 
 func (pkg *Package) checkIncludeConditionally(mkline *MkLine, indentation *Indentation) {
