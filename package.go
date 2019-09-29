@@ -101,7 +101,7 @@ func NewPackage(dir string) *Package {
 // as resolved from the package's directory.
 // Variables that are known in the package are resolved, e.g. ${PKGDIR}.
 func (pkg *Package) File(relativeFileName string) string {
-	return cleanpath(resolveVariableRefs(nil, joinPath(pkg.dir, relativeFileName)))
+	return cleanpath(resolveVariableRefs(nil /* XXX: or maybe some mklines? */, joinPath(pkg.dir, relativeFileName)))
 }
 
 // Rel returns the path by which the given filename (as seen from the
@@ -598,7 +598,7 @@ func (pkg *Package) resolveIncludedFile(mkline *MkLine, includingFilename string
 
 	// TODO: resolveVariableRefs uses G.Pkg implicitly. It should be made explicit.
 	// TODO: Try to combine resolveVariableRefs and ResolveVarsInRelativePath.
-	includedFile := resolveVariableRefs(nil, mkline.ResolveVarsInRelativePath(mkline.IncludedFile()))
+	includedFile := resolveVariableRefs(nil /* XXX: or maybe some mklines? */, mkline.ResolveVarsInRelativePath(mkline.IncludedFile()))
 	if containsVarRef(includedFile) {
 		if trace.Tracing && !contains(includingFilename, "/mk/") {
 			trace.Stepf("%s:%s: Skipping unresolvable include file %q.",
