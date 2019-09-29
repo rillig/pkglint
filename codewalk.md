@@ -89,7 +89,7 @@ func (pkglint *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) 
 
 	pkglint.Pkgsrc.checkToplevelUnusedLicenses()
 
-	pkglint.Logger.ShowSummary()
+	pkglint.Logger.ShowSummary(args)
 	if pkglint.Logger.errors != 0 {
 		return 1
 	}
@@ -212,7 +212,7 @@ and this is what pkglint tries.
 		dummyLine.Fatalf("%q must be inside a pkgsrc tree.", firstDir)
 	}
 
-	pkglint.Pkgsrc = NewPkgsrc(firstDir + "/" + relTopdir)
+	pkglint.Pkgsrc = NewPkgsrc(joinPath(firstDir, relTopdir))
 	pkglint.Wip = matches(pkglint.Pkgsrc.ToRel(firstDir), `^wip(/|$)`) // Same as in Pkglint.Check.
 	pkglint.Pkgsrc.LoadInfrastructure()
 ```
@@ -420,7 +420,7 @@ func (line *Line) Autofix() *Autofix {
 The journey ends here, and it hasn't been that difficult.
 If that was too easy, have a look at the complex cases here:
 
-> from [mkline.go](mkline.go#L923):
+> from [mkline.go](mkline.go#L962):
 
 ```go
 // VariableNeedsQuoting determines whether the given variable needs the :Q
@@ -683,6 +683,7 @@ for setting up tests and checking the results.
 type Tester struct {
 	c        *check.C // Only usable during the test method itself
 	testName string
+	argv     []string // from the last invocation of Tester.SetUpCommandLine
 
 	stdout  bytes.Buffer
 	stderr  bytes.Buffer
@@ -849,7 +850,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		"Size (checkperms-1.12.tar.gz) = 6621 bytes",
 		"SHA1 (patch-checkperms.c) = asdfasdf") // Invalid SHA-1 checksum
 
-	t.Main("-Wall", "-Call", t.File("sysutils/checkperms"))
+	t.Main("-Wall", "-Call", "sysutils/checkperms")
 
 	t.CheckOutputLines(
 		"NOTE: ~/sysutils/checkperms/Makefile:3: "+
@@ -865,8 +866,8 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		"WARN: ~/sysutils/checkperms/patches/patch-checkperms.c:12: Premature end of patch hunk "+
 			"(expected 1 lines to be deleted and 0 lines to be added).",
 		"4 errors, 2 warnings and 1 note found.",
-		"(Run \"pkglint -e\" to show explanations.)",
-		"(Run \"pkglint -fs\" to show what can be fixed automatically.)",
-		"(Run \"pkglint -F\" to automatically fix some issues.)")
+		t.Shquote("(Run \"pkglint -e -Wall -Call %s\" to show explanations.)", "sysutils/checkperms"),
+		t.Shquote("(Run \"pkglint -fs -Wall -Call %s\" to show what can be fixed automatically.)", "sysutils/checkperms"),
+		t.Shquote("(Run \"pkglint -F -Wall -Call %s\" to automatically fix some issues.)", "sysutils/checkperms"))
 }
 ```
