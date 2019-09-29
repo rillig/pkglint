@@ -62,7 +62,8 @@ func (s *Suite) Test_VartypeCheck_BasicRegularExpression__experimental(c *check.
 		"@AZ[\\\\]^_``az{",
 		"|",
 		"}",
-		"~")
+		"~",
+		"\t")
 
 	vt.Output(
 		"WARN: filename.mk:11: Special character U+0007 in basic regular expression.",
