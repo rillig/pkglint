@@ -34,18 +34,6 @@ func (s *Suite) Test_VartypeCheck_BasicRegularExpression(c *check.C) {
 
 	vt.Varname("CHECK_FILES_SKIP")
 	vt.Values(
-		"?")
-
-	vt.OutputEmpty()
-}
-
-func (s *Suite) Test_VartypeCheck_BasicRegularExpression__experimental(c *check.C) {
-	t := s.Init(c)
-	vt := NewVartypeCheckTester(t, BtBasicRegularExpression)
-	G.Experimental = true
-
-	vt.Varname("CHECK_FILES_SKIP")
-	vt.Values(
 		".*\\.pl$",
 		".*\\.pl$$",
 		"\u1E9E",

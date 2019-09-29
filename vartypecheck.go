@@ -177,11 +177,6 @@ func (cv *VartypeCheck) AwkCommand() {
 // See https://pubs.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap09.html#tag_09_03.
 // See https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap09.html#tag_09_03.
 func (cv *VartypeCheck) BasicRegularExpression() {
-	// This check is considered experimental because as of September 2019
-	// it is new and ad-hoc.
-	if !G.Experimental {
-		return
-	}
 
 	// same order as in the OpenGroup spec
 	allowedAfterBackslash := textproc.NewByteSet(")({}1-9.[\\*^$")
@@ -241,7 +236,7 @@ loop:
 			cv.Explain(
 				"This character has a special meaning in other dialects",
 				"of regular expressions. Some of the tools that use",
-				"regular expressions handle this character in a special way.",
+				"regular expressions may handle this character in a special way.",
 				"",
 				"For maximum portability, this character should be enclosed",
 				"in brackets, e.g. [?] instead of a plain ?.")
