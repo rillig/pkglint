@@ -330,6 +330,10 @@ func (p *MkParser) varUseModifierSubst(closing byte) (ok bool, regex bool, from 
 	lexer.Skip(1)
 	separator := byte(sep)
 
+	unescape := func(s string) string {
+		return strings.Replace(s, "\\"+string(separator), string(separator), -1)
+	}
+
 	isOther := func(b byte) bool {
 		return b != separator && b != '$' && b != '\\'
 	}
@@ -360,7 +364,7 @@ func (p *MkParser) varUseModifierSubst(closing byte) (ok bool, regex bool, from 
 	lexer.SkipByte('^')
 	skipOther()
 	lexer.SkipByte('$')
-	from = lexer.Since(fromStart)
+	from = unescape(lexer.Since(fromStart))
 
 	if !lexer.SkipByte(separator) {
 		return
@@ -368,7 +372,7 @@ func (p *MkParser) varUseModifierSubst(closing byte) (ok bool, regex bool, from 
 
 	toStart := lexer.Mark()
 	skipOther()
-	to = lexer.Since(toStart)
+	to = unescape(lexer.Since(toStart))
 
 	if !lexer.SkipByte(separator) {
 		return

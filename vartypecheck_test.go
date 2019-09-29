@@ -1373,9 +1373,8 @@ func (s *Suite) Test_VartypeCheck_SedCommands__experimental(c *check.C) {
 	vt.Values(
 		"-e s/dir\\\\/file/other-file/")
 
-	// FIXME: Unescape the separator before passing on the regular expression.
-	vt.Output(
-		"WARN: filename.mk:21: In a basic regular expression, a backslash followed by \"/\" is undefined.")
+	// No warning about backslash followed by "/" being undefined.
+	vt.OutputEmpty()
 }
 
 func (s *Suite) Test_VartypeCheck_ShellCommand(c *check.C) {
