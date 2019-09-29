@@ -48,30 +48,29 @@ func (s *Suite) Test_VartypeCheck_BasicRegularExpression__experimental(c *check.
 	vt.Values(
 		".*\\.pl$",
 		".*\\.pl$$",
-		"\u1E9E")
+		"\u1E9E",
+		"\\(capture\\)\\1",
+		"\\+")
 
 	vt.Output(
 		"WARN: filename.mk:1: Internal pkglint error in MkLine.Tokenize at \"$\".",
-		"WARN: filename.mk:3: Invalid character U+1E9E in basic regular expression.")
+		"WARN: filename.mk:3: Invalid character U+1E9E in basic regular expression.",
+		"WARN: filename.mk:5: In a basic regular expression, a backslash followed by \"+\" is undefined.")
 
 	// Check for special characters that appear outside of character classes.
 	vt.Values(
 		"\u0007",
 		" !\"\"\\#$$%&''()*+",
 		",-./09:;<=>?",
-		"@AZ[\\\\]^_``az{",
-		"|",
-		"}",
-		"~",
+		"@AZ[\\\\]^_``az{|",
+		"}~",
 		"\t")
 
 	vt.Output(
 		"WARN: filename.mk:11: Invalid character U+0007 in basic regular expression.",
 		"WARN: filename.mk:12: Invalid character \"+\" in basic regular expression.",
 		"WARN: filename.mk:13: Invalid character \"?\" in basic regular expression.",
-		"WARN: filename.mk:14: Invalid character \"{\" in basic regular expression.",
-		"WARN: filename.mk:15: Invalid character \"|\" in basic regular expression.",
-		"WARN: filename.mk:16: Invalid character \"}\" in basic regular expression.")
+		"WARN: filename.mk:14: Invalid character \"|\" in basic regular expression.")
 
 	vt.Values(
 		"?",
@@ -88,13 +87,13 @@ func (s *Suite) Test_VartypeCheck_BasicRegularExpression__experimental(c *check.
 	vt.Values(
 		"package-[0-9][0-9.]*",
 		"unclosed-[",
+		// TODO: Warn about the unclosed character class.
 		"backslash-[\\")
 
-	// TODO: Warn about the unclosed character class.
 	vt.OutputEmpty()
 
 	vt.Values(
-		// TODO: Warn about invalid regular expression escape
+		// TODO: Warn about incomplete regular expression escape
 		"\\",
 		"\\\\")
 

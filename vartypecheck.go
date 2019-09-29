@@ -175,6 +175,7 @@ func (cv *VartypeCheck) AwkCommand() {
 // TODO: Add check for EREs as well.
 //
 // See https://pubs.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap09.html#tag_09_03.
+// See https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap09.html#tag_09_03.
 func (cv *VartypeCheck) BasicRegularExpression() {
 	// This check is considered experimental because as of September 2019
 	// it is new and ad-hoc.
@@ -182,8 +183,11 @@ func (cv *VartypeCheck) BasicRegularExpression() {
 		return
 	}
 
-	allowedAfterBackslash := textproc.NewByteSet(".[\\*^$") // same order as in the OpenGroup spec
-	ordinary := textproc.NewByteSet("\t !\"#$%&'()*,---./0-9:;<=>@A-Z]^_`a-z~")
+	// same order as in the OpenGroup spec
+	allowedAfterBackslash := textproc.NewByteSet(")({}1-9.[\\*^$")
+
+	// ordinary characters plus some more
+	ordinary := textproc.NewByteSet("\t !\"#$%&'()*,---./0-9:;<=>@A-Z]^_`a-z{~}")
 
 	lexer := textproc.NewLexer(cv.ValueNoVar)
 
