@@ -2097,7 +2097,7 @@ func (s *Suite) Test_MkLine_UnquoteShell(c *check.C) {
 
 	test := func(input, output string, diagnostics ...string) {
 		mkline := t.NewMkLine("filename.mk", 1, "")
-		unquoted := mkline.UnquoteShell(input)
+		unquoted := mkline.UnquoteShell(input, true)
 		t.CheckEquals(unquoted, output)
 		t.CheckOutput(diagnostics)
 	}
@@ -2129,6 +2129,18 @@ func (s *Suite) Test_MkLine_UnquoteShell(c *check.C) {
 	// Quotes inside a varuse are not unquoted.
 	test("${VAR}", "${VAR}")
 	test("${VAR:S,',',g}", "${VAR:S,',',g}")
+
+	test("\"*?[\"", "*?[")
+	test("'*?['", "*?[")
+
+	test("*?[", "*?[",
+		"WARN: filename.mk:1: The \"*\" in the word \"*?[\" may lead to unintended file globbing.",
+		"WARN: filename.mk:1: The \"?\" in the word \"*?[\" may lead to unintended file globbing.",
+		"WARN: filename.mk:1: The \"[\" in the word \"*?[\" may lead to unintended file globbing.")
+
+	test("'single'*\"double\"", "single*double",
+		"WARN: filename.mk:1: The \"*\" in the word \"'single'*\\\"double\\\"\" "+
+			"may lead to unintended file globbing.")
 }
 
 func (s *Suite) Test_MkLineParser_unescapeComment(c *check.C) {

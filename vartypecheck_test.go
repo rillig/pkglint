@@ -1354,6 +1354,7 @@ func (s *Suite) Test_VartypeCheck_SedCommands__experimental(c *check.C) {
 		"-E -e 's,from,to,g'")
 
 	vt.Output(
+		"WARN: filename.mk:1: The \"?\" in the word \"s,???,questions,\" may lead to unintended file globbing.",
 		"WARN: filename.mk:1: Special character \"?\" in basic regular expression.")
 }
 

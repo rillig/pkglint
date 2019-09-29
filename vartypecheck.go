@@ -1176,7 +1176,7 @@ func (cv *VartypeCheck) SedCommands() {
 		// TODO: Remember the extended flag for the whole file, especially
 		//  for SUBST_SED.* variables.
 		if !extended {
-			command := cv.MkLine.UnquoteShell(quotedCommand)
+			command := cv.MkLine.UnquoteShell(quotedCommand, true)
 			if !hasPrefix(command, "s") {
 				return
 			}

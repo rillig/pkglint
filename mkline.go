@@ -1138,7 +1138,7 @@ func (mkline *MkLine) ForEachUsed(action func(varUse *MkVarUse, time VucTime)) {
 // like in the shell.
 //
 // See ValueFields.
-func (mkline *MkLine) UnquoteShell(str string) string {
+func (mkline *MkLine) UnquoteShell(str string, warn bool) string {
 	var sb strings.Builder
 	lexer := NewMkTokensLexer(mkline.Tokenize(str, false))
 
@@ -1178,11 +1178,27 @@ outer:
 			}
 
 		default:
+			if warn {
+				mkline.checkFileGlobbing(lexer.PeekByte(), str)
+			}
 			plain()
 		}
 	}
 
 	return sb.String()
+}
+
+func (mkline *MkLine) checkFileGlobbing(ch int, str string) {
+	if !(ch == '*' || ch == '?' || ch == '[') {
+		return
+	}
+
+	if !mkline.once.FirstTimeSlice("unintended file globbing", string(ch)) {
+		return
+	}
+
+	mkline.Warnf("The %q in the word %q may lead to unintended file globbing.",
+		string(ch), str)
 }
 
 type MkOperator uint8
