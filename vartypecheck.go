@@ -187,7 +187,7 @@ func (cv *VartypeCheck) BasicRegularExpression() {
 	allowedAfterBackslash := textproc.NewByteSet(")({}1-9.[\\*^$")
 
 	// ordinary characters plus some more
-	ordinary := textproc.NewByteSet("\t !\"#$%&'()*,---./0-9:;<=>@A-Z]^_`a-z{~}")
+	ordinary := textproc.NewByteSet("\t !\"#$%&'()*+,---./0-9:;<=>@A-Z|]^_`a-z{~}")
 
 	lexer := textproc.NewLexer(cv.ValueNoVar)
 

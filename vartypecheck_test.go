@@ -60,17 +60,13 @@ func (s *Suite) Test_VartypeCheck_BasicRegularExpression__experimental(c *check.
 	// Check for special characters that appear outside of character classes.
 	vt.Values(
 		"\u0007",
-		" !\"\"\\#$$%&''()*+",
-		",-./09:;<=>?",
-		"@AZ[\\\\]^_``az{|",
-		"}~",
+		" !\"\"\\#$$%&''()*+,-./09:;<=>?",
+		"@AZ[\\\\]^_``az{|}~",
 		"\t")
 
 	vt.Output(
 		"WARN: filename.mk:11: Invalid character U+0007 in basic regular expression.",
-		"WARN: filename.mk:12: Invalid character \"+\" in basic regular expression.",
-		"WARN: filename.mk:13: Invalid character \"?\" in basic regular expression.",
-		"WARN: filename.mk:14: Invalid character \"|\" in basic regular expression.")
+		"WARN: filename.mk:12: Invalid character \"?\" in basic regular expression.")
 
 	vt.Values(
 		"?",
