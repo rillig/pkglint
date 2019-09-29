@@ -950,6 +950,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		"Makefile, options.mk, buildlink3.mk: set",
 		"builtin.mk: default, use-loadtime",
 		"*: use-loadtime")
+	// FIXME: Research whether these regular expressions need to be quoted for sh.
 	reg.pkglist("CHECK_FILES_SKIP", BtBasicRegularExpression)
 	reg.pkg("CHECK_FILES_SUPPORTED", BtYesNo)
 	reg.usr("CHECK_HEADERS", BtYesNo)

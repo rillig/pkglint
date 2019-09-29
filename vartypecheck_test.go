@@ -1351,11 +1351,17 @@ func (s *Suite) Test_VartypeCheck_SedCommands__experimental(c *check.C) {
 	vt.Values(
 		"-e s,???,questions,",
 		"-e 's?from?to?g'",
-		"-E -e 's,from,to,g'")
+		"-E -e 's,from,to,g'",
+		"-e ?",
+		"-e \\?",
+		"-e \\\\?",
+		"-e \\\\\\?") // FIXME: backslash-question in a basic regular expression.
 
 	vt.Output(
 		"WARN: filename.mk:1: The \"?\" in the word \"s,???,questions,\" may lead to unintended file globbing.",
-		"WARN: filename.mk:1: Special character \"?\" in basic regular expression.")
+		"WARN: filename.mk:1: Special character \"?\" in basic regular expression.",
+		"WARN: filename.mk:4: The \"?\" in the word \"?\" may lead to unintended file globbing.",
+		"WARN: filename.mk:6: The \"?\" in the word \"\\\\\\\\?\" may lead to unintended file globbing.")
 }
 
 func (s *Suite) Test_VartypeCheck_ShellCommand(c *check.C) {
