@@ -1785,24 +1785,24 @@ func (s *Suite) Test_MkLineChecker_Check__varuse_modifier_L(c *check.C) {
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("x11/xkeyboard-config/Makefile",
-		"FILES_SUBST+=XKBCOMP_SYMLINK=${${XKBBASE}/xkbcomp:L:Q}",
-		"FILES_SUBST+=XKBCOMP_SYMLINK=${${XKBBASE}/xkbcomp:Q}")
+		MkCvsID,
+		"FILES_SUBST+=\tXKBCOMP_SYMLINK=${${XKBBASE}/xkbcomp:L:Q}",
+		"FILES_SUBST+=\tXKBCOMP_SYMLINK=${${XKBBASE}/xkbcomp:Q}")
 
-	MkLineChecker{mklines, mklines.mklines[0]}.Check()
-	MkLineChecker{mklines, mklines.mklines[1]}.Check()
+	mklines.Check()
 
-	// In line 1, don't warn that ${XKBBASE}/xkbcomp is used but not defined.
+	// In line 2, don't warn that ${XKBBASE}/xkbcomp is used but not defined.
 	// This is because the :L modifier interprets everything before as an expression
 	// instead of a variable name.
 	//
-	// In line 2 the :L modifier is missing, therefore ${XKBBASE}/xkbcomp is the
+	// In line 3 the :L modifier is missing, therefore ${XKBBASE}/xkbcomp is the
 	// name of another variable, and that variable is not known. Only XKBBASE is known.
 	//
-	// In line 2, warn about the invalid "/" as part of the variable name.
+	// In line 3, warn about the invalid "/" as part of the variable name.
 	t.CheckOutputLines(
-		"WARN: x11/xkeyboard-config/Makefile:2: "+
+		"WARN: x11/xkeyboard-config/Makefile:3: "+
 			"Invalid part \"/xkbcomp\" after variable name \"${XKBBASE}\".",
-		"WARN: x11/xkeyboard-config/Makefile:2: XKBBASE is used but not defined.")
+		"WARN: x11/xkeyboard-config/Makefile:3: XKBBASE is used but not defined.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirectiveCond__comparison_with_shell_command(c *check.C) {
