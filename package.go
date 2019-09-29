@@ -1195,7 +1195,7 @@ func (pkg *Package) checkFileMakefileExt(filename string) {
 		"are extension.mk, module.mk, version.mk.",
 		"",
 		"These topic files should be documented properly so that their",
-		sprintf("content can be queried using %q.", makeHelp("help")))
+		sprintf("content can be queried using %q.", bmakeHelp("help")))
 }
 
 // checkOwnerMaintainer checks files that are about to be committed.

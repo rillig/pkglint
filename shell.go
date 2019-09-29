@@ -312,7 +312,7 @@ func (ck *ShellLineChecker) CheckShellCommandLine(shelltext string) {
 			"hidden behind the scenes.",
 			"",
 			// TODO: Provide a copy-and-paste example.
-			sprintf("Run %q for more information.", makeHelp("subst")))
+			sprintf("Run %q for more information.", bmakeHelp("subst")))
 		if contains(shelltext, "#") {
 			line.Explain(
 				"When migrating to the SUBST framework, pay attention to \"#\" characters.",

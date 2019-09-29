@@ -936,10 +936,10 @@ func (s *Suite) Test_FileCache_Evict__sort(c *check.C) {
 	t.Check(cache.Get("filename6.mk", 0), check.NotNil)
 }
 
-func (s *Suite) Test_makeHelp(c *check.C) {
+func (s *Suite) Test_bmakeHelp(c *check.C) {
 	t := s.Init(c)
 
-	t.CheckEquals(makeHelp("subst"), confMake+" help topic=subst")
+	t.CheckEquals(bmakeHelp("subst"), confMake+" help topic=subst")
 }
 
 func (s *Suite) Test_hasAlnumPrefix(c *check.C) {
