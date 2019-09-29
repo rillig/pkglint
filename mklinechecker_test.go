@@ -2122,12 +2122,14 @@ func (s *Suite) Test_MkLineChecker_checkVartype__CFLAGS_with_backticks(c *check.
 
 	words := mkline.Fields()
 
-	t.CheckDeepEquals(words, []string{"`pkg-config pidgin --cflags`"})
+	// bmake handles backticks in the same way, treating them as ordinary characters
+	t.CheckDeepEquals(words, []string{"`pkg-config", "pidgin", "--cflags`"})
 
 	ck := MkLineChecker{mklines, mklines.mklines[1]}
 	ck.checkVartype("CFLAGS", opAssignAppend, "`pkg-config pidgin --cflags`", "")
 
 	// No warning about "`pkg-config" being an unknown CFlag.
+	// As of September 2019, there is no such check anymore in pkglint.
 	t.CheckOutputEmpty()
 }
 

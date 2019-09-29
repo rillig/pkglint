@@ -548,43 +548,80 @@ var notSpace = textproc.Space.Inverse()
 // and single quotes are interpreted.
 //
 // Compare devel/bmake/files/str.c, function brk_string.
-//
-// TODO: Compare with brk_string from devel/bmake, especially for backticks.
 func (mkline *MkLine) ValueFields(value string) []string {
-	if trace.Tracing {
-		defer trace.Call(mkline, value)()
-	}
+	var fields []string
+	var field strings.Builder
 
-	// FIXME: Don't use a shell parser here since backticks are treated
-	//  as ordinary characters by bmake.
-	p := NewShTokenizer(mkline.Line, value, false)
-	atoms := p.ShAtoms()
+	lexer := NewMkTokensLexer(mkline.Tokenize(value, false))
+	lexer.SkipHspace()
 
-	if len(atoms) > 0 && atoms[0].Type == shtSpace {
-		atoms = atoms[1:]
-	}
-
-	var word strings.Builder
-	var words []string
-	for _, atom := range atoms {
-		if atom.Type == shtSpace && atom.Quoting == shqPlain {
-			words = append(words, word.String())
-			word.Reset()
-		} else {
-			word.WriteString(atom.MkText)
+	emit := func() {
+		if field.Len() > 0 {
+			fields = append(fields, field.String())
+			field.Reset()
 		}
 	}
-	if word.Len() > 0 && atoms[len(atoms)-1].Quoting == shqPlain {
-		words = append(words, word.String())
-		word.Reset()
+
+	plain := func() {
+		varUse := lexer.NextVarUse()
+		if varUse != nil {
+			field.WriteString(varUse.String())
+		} else {
+			field.WriteByte(lexer.NextByte())
+		}
 	}
 
-	// TODO: Handle parse errors
-	word.WriteString(p.parser.Rest())
-	rest := word.String()
-	_ = rest
+	for !lexer.EOF() {
+		switch {
+		case lexer.SkipByte('\''):
+			// Note: bmake's brk_string treats single quotes and double
+			// quotes in the same way regarding backslash escape sequences.
+			// It seems this is a mistake, and until this is confirmed to
+			// not be a bug, pkglint parses single quotes like in the shell.
+			field.WriteByte('\'')
+			for {
+				if lexer.EOF() {
+					return fields // without the incomplete last field
+				} else if lexer.SkipByte('\'') {
+					field.WriteByte('\'')
+					break
+				} else {
+					plain()
+				}
+			}
 
-	return words
+		case lexer.SkipByte('"'):
+			field.WriteByte('"')
+			for {
+				if lexer.EOF() {
+					return fields // without the incomplete last field
+				} else if lexer.SkipByte('"') {
+					field.WriteByte('"')
+					break
+				} else if lexer.SkipByte('\\') {
+					field.WriteByte('\\')
+					plain()
+				} else {
+					plain()
+				}
+			}
+
+		case lexer.SkipByte(' '), lexer.SkipByte('\t'), lexer.SkipByte('\n'):
+			emit()
+
+		case lexer.SkipByte('\\'):
+			field.WriteByte('\\')
+			if !lexer.EOF() {
+				plain()
+			}
+
+		default:
+			plain()
+		}
+	}
+	emit()
+
+	return fields
 }
 
 func (mkline *MkLine) ValueTokens() ([]*MkToken, string) {

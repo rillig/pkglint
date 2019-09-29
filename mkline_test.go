@@ -1363,6 +1363,46 @@ func (s *Suite) Test_MkLine_ValueFields(c *check.C) {
 		"${VAR2}two",
 		"words;;;",
 		"'word three'")
+
+	test("\"double quotes\" group words",
+		"\"double quotes\"",
+		"group",
+		"words")
+
+	test("'single quotes' group words",
+		"'single quotes'",
+		"group",
+		"words")
+
+	// This is how it works in bmake.
+	test("'\\' ' end",
+		"'\\'") // the "' end" is silently discarded
+
+	// This is how it works in pkglint.
+	test("'\\' end",
+		"'\\'",
+		"end")
+
+	test("`backticks do not group words`",
+		"`backticks",
+		"do",
+		"not",
+		"group",
+		"words`")
+
+	test("plain${VAR}plain",
+		"plain${VAR}plain")
+
+	test("\"${DOUBLE}\" \"\\${DOUBLE}\"",
+		"\"${DOUBLE}\"",
+		"\"\\${DOUBLE}\"")
+
+	test("'${SINGLE}' '\\${SINGLE}'",
+		"'${SINGLE}'",
+		"'\\${SINGLE}'")
+
+	test("\"\"''\"\"",
+		"\"\"''\"\"")
 }
 
 // Before 2018-11-26, this test panicked.

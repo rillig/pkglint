@@ -52,8 +52,7 @@ func (s *Suite) Test_VartypeCheck_BasicRegularExpression__experimental(c *check.
 
 	vt.Output(
 		"WARN: filename.mk:1: Internal pkglint error in MkLine.Tokenize at \"$\".",
-		// FIXME: There's no reason to parse shell tokens here, only split words.
-		"WARN: filename.mk:3: Internal pkglint error in ShTokenizer.ShAtom at \"<U+1E9E>\" (quoting=plain).")
+		"WARN: filename.mk:3: Special character U+1E9E in basic regular expression.")
 
 	// Check for special characters that appear outside of character classes.
 	vt.Values(
@@ -89,8 +88,8 @@ func (s *Suite) Test_VartypeCheck_BasicRegularExpression__experimental(c *check.
 		"unclosed-[",
 		"backslash-[\\")
 
-	vt.Output(
-		"WARN: filename.mk:33: Internal pkglint error in ShTokenizer.ShAtom at \"\\\\\" (quoting=plain).")
+	// TODO: Warn about the unclosed character class.
+	vt.OutputEmpty()
 }
 
 func (s *Suite) Test_VartypeCheck_BuildlinkDepmethod(c *check.C) {

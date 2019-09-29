@@ -178,8 +178,10 @@ func (cv *VartypeCheck) BasicRegularExpression() {
 	for !lexer.EOF() {
 		if lexer.SkipByte('[') {
 			for !lexer.EOF() {
-				if lexer.SkipByte('\\') && !lexer.EOF() {
-					lexer.Skip(1)
+				if lexer.SkipByte('\\') {
+					if !lexer.EOF() {
+						lexer.Skip(1)
+					}
 				} else if lexer.SkipByte(']') {
 					break
 				} else {
@@ -203,8 +205,13 @@ func (cv *VartypeCheck) BasicRegularExpression() {
 		}
 	}
 
-	if !lexer.EOF() {
-		cv.Warnf("Special character %q in basic regular expression.", lexer.Rest()[:1])
+	for _, special := range lexer.Rest() {
+		if ' ' <= special && special <= '~' {
+			cv.Warnf("Special character %q in basic regular expression.", string(special))
+		} else {
+			cv.Warnf("Special character %U in basic regular expression.", special)
+		}
+		break
 	}
 }
 
