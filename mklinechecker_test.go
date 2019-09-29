@@ -2077,6 +2077,15 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 		"AUTOFIX: module.mk:2: Replacing \"${PKGPATH:Mpath}\" with \"${PKGPATH} == path\".",
 
 		".if (((((${PKGPATH} == path)))))")
+
+	// Note: this combination doesn't make sense since the patterns "one" and "two" don't overlap.
+	test(
+		".if ${PKGPATH:Mone:Mtwo}",
+
+		"NOTE: module.mk:2: PKGPATH should be compared using == instead of matching against \":Mone\".",
+		"NOTE: module.mk:2: PKGPATH should be compared using == instead of matching against \":Mtwo\".",
+
+		".if ${PKGPATH:Mone:Mtwo}")
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirectiveCond__comparing_PKGSRC_COMPILER_with_eqeq(c *check.C) {
