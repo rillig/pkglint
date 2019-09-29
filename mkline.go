@@ -1132,41 +1132,42 @@ func (mkline *MkLine) ForEachUsed(action func(varUse *MkVarUse, time VucTime)) {
 	}
 }
 
-func (*MkLine) UnquoteShell(str string) string {
+// UnquoteShell removes one level of double and single quotes,
+// like in the shell.
+//
+// See ValueFields.
+func (mkline *MkLine) UnquoteShell(str string) string {
 	var sb strings.Builder
-	n := len(str)
+	lexer := textproc.NewLexer(str)
 
 outer:
-	for i := 0; i < n; i++ {
-		switch str[i] {
-		case '"':
-			for i++; i < n; i++ {
-				switch str[i] {
-				case '"':
+	for !lexer.EOF() {
+		switch {
+		case lexer.SkipByte('"'):
+			for !lexer.EOF() {
+				if lexer.SkipByte('"') {
 					continue outer
-				case '\\':
-					i++
-					if i < n {
-						sb.WriteByte(str[i])
+				} else if lexer.SkipByte('\\') {
+					if !lexer.EOF() {
+						sb.WriteByte(lexer.NextByte())
 					}
-				default:
-					sb.WriteByte(str[i])
+				} else {
+					sb.WriteByte(lexer.NextByte())
 				}
 			}
 
-		case '\'':
-			for i++; i < n && str[i] != '\''; i++ {
-				sb.WriteByte(str[i])
+		case lexer.SkipByte('\''):
+			for !lexer.EOF() && !lexer.SkipByte('\'') {
+				sb.WriteByte(lexer.NextByte())
 			}
 
-		case '\\':
-			i++
-			if i < n {
-				sb.WriteByte(str[i])
+		case lexer.SkipByte('\\'):
+			if !lexer.EOF() {
+				sb.WriteByte(lexer.NextByte())
 			}
 
 		default:
-			sb.WriteByte(str[i])
+			sb.WriteByte(lexer.NextByte())
 		}
 	}
 
