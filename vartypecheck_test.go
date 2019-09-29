@@ -1380,9 +1380,7 @@ func (s *Suite) Test_VartypeCheck_SedCommands__experimental(c *check.C) {
 		"-e 's, ,space,g'",
 		"-e 's,\t,tab,g'")
 
-	vt.Output(
-		// FIXME: literal tab is allowed
-		"WARN: filename.mk:32: Invalid character U+0009 in basic regular expression.")
+	vt.OutputEmpty()
 }
 
 func (s *Suite) Test_VartypeCheck_ShellCommand(c *check.C) {

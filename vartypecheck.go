@@ -183,7 +183,7 @@ func (cv *VartypeCheck) BasicRegularExpression() {
 	}
 
 	allowedAfterBackslash := textproc.NewByteSet(".[\\*^$") // same order as in the OpenGroup spec
-	ordinary := textproc.NewByteSet(" !\"#$%&'()*,---./0-9:;<=>@A-Z]^_`a-z~")
+	ordinary := textproc.NewByteSet("\t !\"#$%&'()*,---./0-9:;<=>@A-Z]^_`a-z~")
 
 	lexer := textproc.NewLexer(cv.ValueNoVar)
 
