@@ -56,6 +56,7 @@ func (s *Suite) Test_VartypeCheck_BasicRegularExpression__experimental(c *check.
 
 	// Check for special characters that appear outside of character classes.
 	vt.Values(
+		"\u0007",
 		" !\"\"\\#$$%&''()*+",
 		",-./09:;<=>?",
 		"@AZ[\\\\]^_``az{",
@@ -64,11 +65,12 @@ func (s *Suite) Test_VartypeCheck_BasicRegularExpression__experimental(c *check.
 		"~")
 
 	vt.Output(
-		"WARN: filename.mk:11: Special character \"+\" in basic regular expression.",
-		"WARN: filename.mk:12: Special character \"?\" in basic regular expression.",
-		"WARN: filename.mk:13: Special character \"{\" in basic regular expression.",
-		"WARN: filename.mk:14: Special character \"|\" in basic regular expression.",
-		"WARN: filename.mk:15: Special character \"}\" in basic regular expression.")
+		"WARN: filename.mk:11: Special character U+0007 in basic regular expression.",
+		"WARN: filename.mk:12: Special character \"+\" in basic regular expression.",
+		"WARN: filename.mk:13: Special character \"?\" in basic regular expression.",
+		"WARN: filename.mk:14: Special character \"{\" in basic regular expression.",
+		"WARN: filename.mk:15: Special character \"|\" in basic regular expression.",
+		"WARN: filename.mk:16: Special character \"}\" in basic regular expression.")
 
 	vt.Values(
 		"?",
@@ -89,6 +91,14 @@ func (s *Suite) Test_VartypeCheck_BasicRegularExpression__experimental(c *check.
 		"backslash-[\\")
 
 	// TODO: Warn about the unclosed character class.
+	vt.OutputEmpty()
+
+	vt.Values(
+		// TODO: Warn about invalid shell escape
+		"\\",
+		// TODO: Warn about invalid regular expression escape
+		"\\\\")
+
 	vt.OutputEmpty()
 }
 

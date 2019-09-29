@@ -1369,10 +1369,16 @@ func (s *Suite) Test_MkLine_ValueFields(c *check.C) {
 		"group",
 		"words")
 
+	test("\"unfinished",
+		nil...) // the rest is silently discarded
+
 	test("'single quotes' group words",
 		"'single quotes'",
 		"group",
 		"words")
+
+	test("'unfinished",
+		nil...) // the rest is silently discarded
 
 	// This is how it works in bmake.
 	test("'\\' ' end",
