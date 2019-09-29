@@ -1375,6 +1375,14 @@ func (s *Suite) Test_VartypeCheck_SedCommands__experimental(c *check.C) {
 
 	// No warning about backslash followed by "/" being undefined.
 	vt.OutputEmpty()
+
+	vt.Values(
+		"-e 's, ,space,g'",
+		"-e 's,\t,tab,g'")
+
+	vt.Output(
+		// FIXME: literal tab is allowed
+		"WARN: filename.mk:32: Invalid character U+0009 in basic regular expression.")
 }
 
 func (s *Suite) Test_VartypeCheck_ShellCommand(c *check.C) {
