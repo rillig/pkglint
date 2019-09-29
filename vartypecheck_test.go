@@ -1352,16 +1352,22 @@ func (s *Suite) Test_VartypeCheck_SedCommands__experimental(c *check.C) {
 		"-e s,???,questions,",
 		"-e 's?from?to?g'",
 		"-E -e 's,from,to,g'",
-		"-e ?",
-		"-e \\?",
-		"-e \\\\?",
-		"-e \\\\\\?") // FIXME: backslash-question in a basic regular expression.
+		"-e s,?,replacement,",
+		"-e s,\\?,replacement,",
+		"-e s,\\\\?,replacement,",
+		"-e s,\\\\\\?,replacement,")
 
 	vt.Output(
 		"WARN: filename.mk:1: The \"?\" in the word \"s,???,questions,\" may lead to unintended file globbing.",
 		"WARN: filename.mk:1: Special character \"?\" in basic regular expression.",
-		"WARN: filename.mk:4: The \"?\" in the word \"?\" may lead to unintended file globbing.",
-		"WARN: filename.mk:6: The \"?\" in the word \"\\\\\\\\?\" may lead to unintended file globbing.")
+		"WARN: filename.mk:4: The \"?\" in the word \"s,?,replacement,\" may lead to unintended file globbing.",
+		"WARN: filename.mk:4: Special character \"?\" in basic regular expression.",
+		"WARN: filename.mk:5: Special character \"?\" in basic regular expression.",
+		"WARN: filename.mk:6: The \"?\" in the word \"s,\\\\\\\\?,replacement,\" may lead to unintended file globbing.",
+		"WARN: filename.mk:6: In a basic regular expression, a backslash followed by \"?\" is undefined.",
+		"WARN: filename.mk:6: Special character \"?\" in basic regular expression.",
+		"WARN: filename.mk:7: In a basic regular expression, a backslash followed by \"?\" is undefined.",
+		"WARN: filename.mk:7: Special character \"?\" in basic regular expression.")
 }
 
 func (s *Suite) Test_VartypeCheck_ShellCommand(c *check.C) {

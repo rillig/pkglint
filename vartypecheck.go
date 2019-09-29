@@ -173,7 +173,6 @@ func (cv *VartypeCheck) BasicRegularExpression() {
 	special := textproc.NewByteSet(".[\\*^$")
 	ordinary := textproc.NewByteSet(" !\"#%&'(),---/0-9:;<=>@A-Z]_`a-z~")
 
-	_ = special
 	lexer := textproc.NewLexer(cv.ValueNoVar)
 	for !lexer.EOF() {
 		if lexer.SkipByte('[') {
@@ -208,6 +207,13 @@ func (cv *VartypeCheck) BasicRegularExpression() {
 	for _, special := range lexer.Rest() {
 		if ' ' <= special && special <= '~' {
 			cv.Warnf("Special character %q in basic regular expression.", string(special))
+			cv.Explain(
+				"This character has a special meaning in other dialects",
+				"of regular expressions. Some implementation of the tools",
+				"also handle this character in a special way.",
+				"",
+				"For maximum portability, this character should be enclosed",
+				"in brackets, such as [?] instead of a plain ?.")
 		} else {
 			cv.Warnf("Special character %U in basic regular expression.", special)
 		}
