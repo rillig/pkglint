@@ -2119,6 +2119,10 @@ func (s *Suite) Test_MkLine_UnquoteShell(c *check.C) {
 	test("'", "")
 	test("\"$(\"", "$(")
 	test("`", "`")
+
+	test("${VAR}", "${VAR}")
+	// FIXME: Don't unquote inside varuse.
+	test("${VAR:S,',',g}", "${VAR:S,,,g}")
 }
 
 func (s *Suite) Test_MkLineParser_unescapeComment(c *check.C) {
