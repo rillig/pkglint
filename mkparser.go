@@ -289,7 +289,7 @@ func (p *MkParser) varUseModifier(varname string, closing byte) string {
 	}
 	modifier := lexer.Since(mark)
 
-	// ${SOURCES:%.c=%.o} or ${:!uname -a:[2]}
+	// ${SOURCES:%.c=%.o} or ${:!uname -a!:[2]}
 	if contains(modifier, "=") || (hasPrefix(modifier, "!") && hasSuffix(modifier, "!")) {
 		return modifier
 	}
