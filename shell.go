@@ -375,7 +375,7 @@ func (ck *ShellLineChecker) CheckShellCommand(shellcmd string, pSetE *bool, time
 	}
 	walker.Callback.AndOr = func(andor *MkShAndOr) {
 		if G.Opts.WarnExtra && !*pSetE && walker.Current().Index != 0 {
-			spc.checkSetE(walker.Parent(1).(*MkShList), walker.Current().Index, andor)
+			spc.checkSetE(walker.Parent(1).(*MkShList), walker.Current().Index)
 		}
 	}
 	walker.Callback.Pipeline = func(pipeline *MkShPipeline) {
@@ -976,7 +976,7 @@ func (spc *ShellProgramChecker) canFail(cmd *MkShCommand) bool {
 	return true
 }
 
-func (spc *ShellProgramChecker) checkSetE(list *MkShList, index int, andor *MkShAndOr) {
+func (spc *ShellProgramChecker) checkSetE(list *MkShList, index int) {
 	if trace.Tracing {
 		defer trace.Call0()()
 	}
