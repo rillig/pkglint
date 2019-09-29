@@ -1199,6 +1199,8 @@ func (mkline *MkLine) checkFileGlobbing(ch int, str string) {
 
 	mkline.Warnf("The %q in the word %q may lead to unintended file globbing.",
 		string(ch), str)
+	mkline.Explain(
+		"To fix this, enclose the word in \"double\" or 'single' quotes.")
 }
 
 type MkOperator uint8
