@@ -168,6 +168,10 @@ func (cv *VartypeCheck) AwkCommand() {
 // The regular expressions do not need any quotation for the shell; all
 // quoting issues are handled by the pkgsrc infrastructure.
 //
+// The opposite situation is when the regular expression is part of a sed
+// command. In such a case the shell quoting is undone before checking the
+// regular expression, and this is where spaces and tabs can appear.
+//
 // TODO: Add check for EREs as well.
 //
 // See https://pubs.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap09.html#tag_09_03.
@@ -227,18 +231,18 @@ loop:
 		}
 	}
 
-	for _, special := range lexer.Rest() {
-		if ' ' <= special && special <= '~' {
-			cv.Warnf("Special character %q in basic regular expression.", string(special))
+	for _, invalid := range lexer.Rest() {
+		if ' ' <= invalid && invalid <= '~' {
+			cv.Warnf("Invalid character %q in basic regular expression.", string(invalid))
 			cv.Explain(
 				"This character has a special meaning in other dialects",
-				"of regular expressions. Some implementation of the tools",
-				"also handle this character in a special way.",
+				"of regular expressions. Some of the tools that use",
+				"regular expressions handle this character in a special way.",
 				"",
 				"For maximum portability, this character should be enclosed",
-				"in brackets, such as [?] instead of a plain ?.")
+				"in brackets, e.g. [?] instead of a plain ?.")
 		} else {
-			cv.Warnf("Special character %U in basic regular expression.", special)
+			cv.Warnf("Invalid character %U in basic regular expression.", invalid)
 		}
 		break
 	}
