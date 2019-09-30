@@ -206,7 +206,9 @@ func (cv *VartypeCheck) BasicRegularExpression() {
 			cv.Warnf("In a basic regular expression, a backslash followed by %q is undefined.", lexer.Rest()[:1])
 			cv.Explain(
 				"Only the characters . [ \\ * ^ $ may be escaped using a backslash.",
-				"Except when the escaped character appears in a character class like [\\.a-z].")
+				"Except when the escaped character appears in a character class like [\\.a-z].",
+				"",
+				"To fix this, remove the backslash before the character.")
 		}
 		lexer.Skip(1)
 	}
