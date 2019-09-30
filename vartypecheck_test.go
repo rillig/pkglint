@@ -42,7 +42,6 @@ func (s *Suite) Test_VartypeCheck_BasicRegularExpression(c *check.C) {
 
 	vt.Output(
 		"WARN: filename.mk:1: Internal pkglint error in MkLine.Tokenize at \"$\".",
-		"WARN: filename.mk:3: Invalid character U+1E9E in basic regular expression.",
 		"WARN: filename.mk:5: In a basic regular expression, a backslash followed by \"+\" is undefined.")
 
 	// Check for special characters that appear outside of character classes.
@@ -52,9 +51,7 @@ func (s *Suite) Test_VartypeCheck_BasicRegularExpression(c *check.C) {
 		"@AZ[\\\\]^_``az{|}~",
 		"\t")
 
-	vt.Output(
-		"WARN: filename.mk:11: Invalid character U+0007 in basic regular expression.",
-		"WARN: filename.mk:12: Invalid character \"?\" in basic regular expression.")
+	vt.OutputEmpty()
 
 	vt.Values(
 		"?",
@@ -63,9 +60,7 @@ func (s *Suite) Test_VartypeCheck_BasicRegularExpression(c *check.C) {
 		"\\\\\\?")
 
 	vt.Output(
-		"WARN: filename.mk:21: Invalid character \"?\" in basic regular expression.",
 		"WARN: filename.mk:22: In a basic regular expression, a backslash followed by \"?\" is undefined.",
-		"WARN: filename.mk:23: Invalid character \"?\" in basic regular expression.",
 		"WARN: filename.mk:24: In a basic regular expression, a backslash followed by \"?\" is undefined.")
 
 	vt.Values(
@@ -1336,8 +1331,7 @@ func (s *Suite) Test_VartypeCheck_SedCommands__experimental(c *check.C) {
 		"-E -e 's,from,to,g'")
 
 	vt.Output(
-		"WARN: filename.mk:1: The \"?\" in the word \"s,???,questions,\" may lead to unintended file globbing.",
-		"WARN: filename.mk:1: Invalid character \"?\" in basic regular expression.")
+		"WARN: filename.mk:1: The \"?\" in the word \"s,???,questions,\" may lead to unintended file globbing.")
 
 	vt.Values(
 		"-e s,?,replacement,",
@@ -1347,8 +1341,6 @@ func (s *Suite) Test_VartypeCheck_SedCommands__experimental(c *check.C) {
 
 	vt.Output(
 		"WARN: filename.mk:11: The \"?\" in the word \"s,?,replacement,\" may lead to unintended file globbing.",
-		"WARN: filename.mk:11: Invalid character \"?\" in basic regular expression.",
-		"WARN: filename.mk:12: Invalid character \"?\" in basic regular expression.",
 		"WARN: filename.mk:13: The \"?\" in the word \"s,\\\\\\\\?,replacement,\" may lead to unintended file globbing.",
 		"WARN: filename.mk:13: In a basic regular expression, a backslash followed by \"?\" is undefined.",
 		"WARN: filename.mk:14: In a basic regular expression, a backslash followed by \"?\" is undefined.")

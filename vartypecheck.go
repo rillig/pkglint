@@ -181,9 +181,6 @@ func (cv *VartypeCheck) BasicRegularExpression() {
 	// same order as in the OpenGroup spec
 	allowedAfterBackslash := textproc.NewByteSet(")({}1-9.[\\*^$")
 
-	// ordinary characters plus some more
-	ordinary := textproc.NewByteSet("\t !\"#$%&'()*+,---./0-9:;<=>@A-Z|]^_`a-z{~}")
-
 	lexer := textproc.NewLexer(cv.ValueNoVar)
 
 	parseCharacterClass := func() {
@@ -214,7 +211,6 @@ func (cv *VartypeCheck) BasicRegularExpression() {
 		lexer.Skip(1)
 	}
 
-loop:
 	for !lexer.EOF() {
 		switch {
 		case lexer.SkipByte('['):
@@ -223,27 +219,8 @@ loop:
 		case lexer.SkipByte('\\'):
 			parseBackslash()
 
-		case lexer.NextBytesSet(ordinary) != "":
-
-		default:
-			break loop
+		case lexer.Skip(1):
 		}
-	}
-
-	for _, invalid := range lexer.Rest() {
-		if ' ' <= invalid && invalid <= '~' {
-			cv.Warnf("Invalid character %q in basic regular expression.", string(invalid))
-			cv.Explain(
-				"This character has a special meaning in other dialects",
-				"of regular expressions. Some of the tools that use",
-				"regular expressions may handle this character in a special way.",
-				"",
-				"For maximum portability, this character should be enclosed",
-				"in brackets, e.g. [?] instead of a plain ?.")
-		} else {
-			cv.Warnf("Invalid character %U in basic regular expression.", invalid)
-		}
-		break
 	}
 }
 
