@@ -77,6 +77,14 @@ func (s *Suite) Test_VartypeCheck_BasicRegularExpression(c *check.C) {
 		"\\\\")
 
 	vt.OutputEmpty()
+
+	vt.Values(
+		"${VAR}*",
+		"\\?${VAR}\\/")
+
+	vt.Output(
+		"WARN: filename.mk:52: In a basic regular expression, a backslash followed by \"?\" is undefined.",
+		"WARN: filename.mk:52: In a basic regular expression, a backslash followed by \"/\" is undefined.")
 }
 
 func (s *Suite) Test_VartypeCheck_BuildlinkDepmethod(c *check.C) {
