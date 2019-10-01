@@ -603,8 +603,7 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 
 	vt.Output(
 		"WARN: filename.mk:71: The fetch URL \"https://example.org/pub\" should end with a slash.",
-		// FIXME: The @ is part of the variable name.
-		"WARN: filename.mk:72: Invalid part \"@\" after variable name \"\".",
+		"WARN: filename.mk:72: \"https://example.org/$@\" is not a valid URL.",
 		"WARN: filename.mk:75: The fetch URL \"https://example.org/download?\" should end with a slash.")
 }
 

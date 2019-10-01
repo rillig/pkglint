@@ -1410,9 +1410,9 @@ func (s *Suite) Test_MkLine_ValueFields(c *check.C) {
 	test("\"\"''\"\"",
 		"\"\"''\"\"")
 
-	// FIXME: Don't invent curly braces where there are none.
 	test("$@ $<",
-		"${@} ${<}")
+		"$@",
+		"$<")
 }
 
 // Before 2018-11-26, this test panicked.
@@ -2124,7 +2124,7 @@ func (s *Suite) Test_MkLine_UnquoteShell(c *check.C) {
 	test("\"\\", "")
 	test("'", "")
 
-	test("\"$(\"", "${\"}",
+	test("\"$(\"", "$(\"",
 		"WARN: filename.mk:1: Missing closing \")\" for \"\\\"\".",
 		"WARN: filename.mk:1: Invalid part \"\\\"\" after variable name \"\".")
 

@@ -567,7 +567,7 @@ func (mkline *MkLine) ValueFields(value string) []string {
 	plain := func() {
 		varUse := lexer.NextVarUse()
 		if varUse != nil {
-			field.WriteString(varUse.String())
+			field.WriteString(varUse.Text)
 		} else {
 			field.WriteByte(lexer.NextByte())
 		}
@@ -1145,7 +1145,7 @@ func (mkline *MkLine) UnquoteShell(str string, warn bool) string {
 	plain := func() {
 		varUse := lexer.NextVarUse()
 		if varUse != nil {
-			sb.WriteString(varUse.String())
+			sb.WriteString(varUse.Text)
 		} else {
 			sb.WriteByte(lexer.NextByte())
 		}
