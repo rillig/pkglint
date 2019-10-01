@@ -553,26 +553,27 @@ func (cv *VartypeCheck) Enum(allowedValues map[string]bool, basicType *BasicType
 }
 
 func (cv *VartypeCheck) FetchURL() {
+	fetchURL := cv.Value
+	url := strings.TrimPrefix(fetchURL, "-")
+	hyphenSubst := condStr(len(fetchURL) > len(url), ":S,^,-,", "")
 
-	// TODO: Handle leading "-".
-
-	cv.URL()
+	cv.WithValue(url).URL()
 
 	for siteURL, siteName := range G.Pkgsrc.MasterSiteURLToVar {
-		if hasPrefix(cv.Value, siteURL) {
-			subdir := cv.Value[len(siteURL):]
-			if hasPrefix(cv.Value, "https://github.com/") {
+		if hasPrefix(url, siteURL) {
+			subdir := url[len(siteURL):]
+			if hasPrefix(url, "https://github.com/") {
 				subdir = strings.SplitAfter(subdir, "/")[0]
-				cv.Warnf("Please use ${%s:=%s} instead of %q and run %q for further instructions.",
-					siteName, subdir, cv.Value[:len(siteURL)+len(subdir)], bmakeHelp("github"))
+				cv.Warnf("Please use ${%s%s:=%s} instead of %q and run %q for further instructions.",
+					siteName, hyphenSubst, subdir, url[:len(siteURL)+len(subdir)], bmakeHelp("github"))
 			} else {
-				cv.Warnf("Please use ${%s:=%s} instead of %q.", siteName, subdir, cv.Value)
+				cv.Warnf("Please use ${%s%s:=%s} instead of %q.", siteName, hyphenSubst, subdir, url)
 			}
 			return
 		}
 	}
 
-	tokens := cv.MkLine.Tokenize(cv.Value, false)
+	tokens := cv.MkLine.Tokenize(url, false)
 	for _, token := range tokens {
 		varUse := token.Varuse
 		if varUse == nil {
@@ -598,6 +599,26 @@ func (cv *VartypeCheck) FetchURL() {
 		if !hasSuffix(subdir, "/") {
 			cv.Errorf("The subdirectory in %s must end with a slash.", name)
 		}
+	}
+
+	switch {
+	case cv.Op == opUseMatch,
+		hasSuffix(fetchURL, "/"),
+		hasSuffix(fetchURL, "="),
+		hasSuffix(fetchURL, ":"),
+		hasPrefix(fetchURL, "-"),
+		len(tokens) == 0 || tokens[len(tokens)-1].Varuse != nil:
+		break
+
+	default:
+		cv.Warnf("The fetch URL %q should end with a slash.", fetchURL)
+		cv.Explain(
+			"The filename from DISTFILES is appended directly to this base URL.",
+			"Therefore it should typically end with a slash, or sometimes with",
+			"an equals sign or a colon.",
+			"",
+			"To specify a full URL directly, prefix it with a hyphen, such as in",
+			"-https://example.org/distfile-1.0.tar.gz.")
 	}
 }
 

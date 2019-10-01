@@ -543,7 +543,9 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 	vt.Values(
 		"https://example.org/download.cgi?filename=filename&sha1=12341234")
 
-	vt.OutputEmpty()
+	vt.Output(
+		"WARN: filename.mk:11: The fetch URL \"https://example.org/download.cgi" +
+			"?filename=filename&sha1=12341234\" should end with a slash.")
 
 	vt.Values(
 		"http://example.org/distfiles/",
@@ -551,7 +553,12 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 		"http://example.org/download?filename=<distfile>;version=<version>")
 
 	vt.Output(
-		"WARN: filename.mk:23: \"http://example.org/download?filename=<distfile>;version=<version>\" is not a valid URL.")
+		"WARN: filename.mk:22: The fetch URL \"http://example.org/download"+
+			"?filename=distfile;version=1.0\" should end with a slash.",
+		"WARN: filename.mk:23: \"http://example.org/download"+
+			"?filename=<distfile>;version=<version>\" is not a valid URL.",
+		"WARN: filename.mk:23: The fetch URL \"http://example.org/download"+
+			"?filename=<distfile>;version=<version>\" should end with a slash.")
 
 	vt.Values(
 		"${MASTER_SITE_GITHUB:S,^,-,:=project/archive/${DISTFILE}}")
@@ -565,6 +572,7 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 
 	// As of June 2019, the :S modifier is not analyzed since it is unusual.
 	vt.Values(
+		"${MASTER_SITE_GNU:S,$,subdir,}",
 		"${MASTER_SITE_GNU:S,$,subdir/,}")
 	vt.OutputEmpty()
 
@@ -574,6 +582,30 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 		"WARN: filename.mk:51: Please use ${MASTER_SITE_GITHUB:=transmission/} " +
 			"instead of \"https://github.com/transmission/\" " +
 			"and run \"" + confMake + " help topic=github\" for further instructions.")
+
+	vt.Values(
+		"-https://example.org/distfile.tar.gz",
+		"-http://ftp.gnu.org/pub/gnu/bash-5.0.tar.gz",
+		"-http://ftp.gnu.org/pub/gnu/bash/bash-5.0.tar.gz")
+
+	vt.Output(
+		"WARN: filename.mk:62: Please use ${MASTER_SITE_GNU:S,^,-,:=bash-5.0.tar.gz} "+
+			"instead of \"http://ftp.gnu.org/pub/gnu/bash-5.0.tar.gz\".",
+		"WARN: filename.mk:63: Please use ${MASTER_SITE_GNU:S,^,-,:=bash/bash-5.0.tar.gz} "+
+			"instead of \"http://ftp.gnu.org/pub/gnu/bash/bash-5.0.tar.gz\".")
+
+	vt.Values(
+		"https://example.org/pub",
+		"https://example.org/$@", // Doesn't make sense at all.
+		"https://example.org/?f=",
+		"https://example.org/download:",
+		"https://example.org/download?")
+
+	vt.Output(
+		"WARN: filename.mk:71: The fetch URL \"https://example.org/pub\" should end with a slash.",
+		// FIXME: The @ is part of the variable name.
+		"WARN: filename.mk:72: Invalid part \"@\" after variable name \"\".",
+		"WARN: filename.mk:75: The fetch URL \"https://example.org/download?\" should end with a slash.")
 }
 
 func (s *Suite) Test_VartypeCheck_FetchURL__without_package(c *check.C) {
