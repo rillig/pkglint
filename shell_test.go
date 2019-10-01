@@ -1476,15 +1476,24 @@ func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs__redundant(c *check.C)
 	t.SetUpPackage("category/package",
 		"AUTO_MKDIRS=\tyes",
 		"INSTALLATION_DIRS+=\tshare/redundant",
-		"INSTALLATION_DIRS+=\tnot/redundant")
+		"INSTALLATION_DIRS+=\tnot/redundant ${EGDIR}")
 	t.CreateFileLines("category/package/PLIST",
 		PlistCvsID,
-		"share/redundant/file")
+		"share/redundant/file",
+		"${EGDIR}/file")
 
 	t.Main("-Wall", "-q", "category/package")
 
 	t.CheckOutputLines(
-		"NOTE: ~/category/package/Makefile:21: The directory \"share/redundant\" " +
+		"NOTE: ~/category/package/Makefile:21: The directory \"share/redundant\" "+
+			"is redundant in INSTALLATION_DIRS.",
+		// The below is not proven to be always correct. It assumes that a
+		// variable in the Makefile has the same value as the corresponding
+		// variable from PLIST_SUBST. Violating this assumption would be
+		// confusing to the pkgsrc developers, therefore it's a safe bet.
+		// A notable counterexample is PKGNAME in PLIST, which corresponds
+		// to PKGNAME_NOREV in the package Makefile.
+		"NOTE: ~/category/package/Makefile:22: The directory \"${EGDIR}\" "+
 			"is redundant in INSTALLATION_DIRS.")
 }
 

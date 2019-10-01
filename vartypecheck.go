@@ -555,7 +555,8 @@ func (cv *VartypeCheck) Enum(allowedValues map[string]bool, basicType *BasicType
 func (cv *VartypeCheck) FetchURL() {
 	fetchURL := cv.Value
 	url := strings.TrimPrefix(fetchURL, "-")
-	hyphenSubst := condStr(len(fetchURL) > len(url), ":S,^,-,", "")
+	hyphen := condStr(len(fetchURL) > len(url), "-", "")
+	hyphenSubst := condStr(hyphen != "", ":S,^,-,", "")
 
 	cv.WithValue(url).URL()
 
@@ -565,9 +566,9 @@ func (cv *VartypeCheck) FetchURL() {
 			if hasPrefix(url, "https://github.com/") {
 				subdir = strings.SplitAfter(subdir, "/")[0]
 				cv.Warnf("Please use ${%s%s:=%s} instead of %q and run %q for further instructions.",
-					siteName, hyphenSubst, subdir, url[:len(siteURL)+len(subdir)], bmakeHelp("github"))
+					siteName, hyphenSubst, subdir, hyphen+url[:len(siteURL)+len(subdir)], bmakeHelp("github"))
 			} else {
-				cv.Warnf("Please use ${%s%s:=%s} instead of %q.", siteName, hyphenSubst, subdir, url)
+				cv.Warnf("Please use ${%s%s:=%s} instead of %q.", siteName, hyphenSubst, subdir, hyphen+url)
 			}
 			return
 		}
