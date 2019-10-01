@@ -1470,6 +1470,24 @@ func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs(c *check.C) {
 		"NOTE: filename.mk:1: You can use \"INSTALLATION_DIRS+= share/other\" instead of \"${INSTALL_DATA_DIR}\".")
 }
 
+func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs__redundant(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"AUTO_MKDIRS=\tyes",
+		"INSTALLATION_DIRS+=\tshare/redundant",
+		"INSTALLATION_DIRS+=\tnot/redundant")
+	t.CreateFileLines("category/package/PLIST",
+		PlistCvsID,
+		"share/redundant/file")
+
+	t.Main("-Wall", "-q", "category/package")
+
+	t.CheckOutputLines(
+		"NOTE: ~/category/package/Makefile:21: The directory \"share/redundant\" " +
+			"is redundant in INSTALLATION_DIRS.")
+}
+
 // The AUTO_MKDIRS code in mk/install/install.mk (install-dirs-from-PLIST)
 // skips conditional directories, as well as directories with placeholders.
 func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs__conditional_PLIST(c *check.C) {

@@ -1285,6 +1285,29 @@ func (ck MkLineChecker) checkVarassignMisc() {
 		mkline.Notef("Consider setting NOT_FOR_PLATFORM instead of " +
 			"PKG_SKIP_REASON depending on ${OPSYS}.")
 	}
+
+	ck.checkVarassignMiscRedundantInstallationDirs()
+}
+
+func (ck MkLineChecker) checkVarassignMiscRedundantInstallationDirs() {
+	mkline := ck.MkLine
+	varname := mkline.Varname()
+
+	switch {
+	case G.Pkg == nil,
+		varname != "INSTALLATION_DIRS",
+		!matches(G.Pkg.vars.LastValue("AUTO_MKDIRS"), `^[Yy][Ee][Ss]$`):
+		return
+	}
+
+	for _, dir := range mkline.ValueFields(mkline.Value()) {
+		if G.Pkg.Plist.Dirs[dir] != nil {
+			mkline.Notef("The directory %q is redundant in %s.", dir, varname)
+			mkline.Explain(
+				"This package defines AUTO_MKDIR, and the directory is contained in the PLIST.",
+				"Therefore it will be created anyways.")
+		}
+	}
 }
 
 func (ck MkLineChecker) checkVarassignLeftBsdPrefs() {
