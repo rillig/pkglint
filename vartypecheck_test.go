@@ -590,9 +590,9 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 
 	vt.Output(
 		"WARN: filename.mk:62: Please use ${MASTER_SITE_GNU:S,^,-,:=bash-5.0.tar.gz} "+
-			"instead of \"http://ftp.gnu.org/pub/gnu/bash-5.0.tar.gz\".",
+			"instead of \"-http://ftp.gnu.org/pub/gnu/bash-5.0.tar.gz\".",
 		"WARN: filename.mk:63: Please use ${MASTER_SITE_GNU:S,^,-,:=bash/bash-5.0.tar.gz} "+
-			"instead of \"http://ftp.gnu.org/pub/gnu/bash/bash-5.0.tar.gz\".")
+			"instead of \"-http://ftp.gnu.org/pub/gnu/bash/bash-5.0.tar.gz\".")
 
 	vt.Values(
 		"https://example.org/pub",
