@@ -1409,6 +1409,10 @@ func (s *Suite) Test_MkLine_ValueFields(c *check.C) {
 
 	test("\"\"''\"\"",
 		"\"\"''\"\"")
+
+	// FIXME: Don't invent curly braces where there are none.
+	test("$@ $<",
+		"${@} ${<}")
 }
 
 // Before 2018-11-26, this test panicked.
