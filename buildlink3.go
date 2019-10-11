@@ -119,8 +119,6 @@ func (ck *Buildlink3Checker) checkUniquePkgbase(pkgbase string, mkline *MkLine) 
 // introduces the uppercase package identifier.
 func (ck *Buildlink3Checker) checkSecondParagraph(mlex *MkLinesLexer) bool {
 	pkgbase := ck.pkgbase
-	pkgbaseLine := ck.pkgbaseLine
-
 	m := mlex.NextRegexp(`^\.if !defined\(([^\t ]+)_BUILDLINK3_MK\)$`)
 	if m == nil {
 		return false
@@ -136,25 +134,29 @@ func (ck *Buildlink3Checker) checkSecondParagraph(mlex *MkLinesLexer) bool {
 	ucPkgbase := strings.ToUpper(strings.Replace(pkgbase, "-", "_", -1))
 	if ucPkgbase != pkgupper && !containsVarRef(pkgbase) {
 		pkgupperLine.Errorf("Package name mismatch between multiple-inclusion guard %q (expected %q) and package name %q (from %s).",
-			pkgupper, ucPkgbase, pkgbase, pkgupperLine.RefTo(pkgbaseLine))
+			pkgupper, ucPkgbase, pkgbase, pkgupperLine.RefTo(ck.pkgbaseLine))
 	}
-	ck.checkPkgbaseMismatch(pkgbase, pkgbaseLine)
+	ck.checkPkgbaseMismatch(pkgbase)
 
 	return true
 }
 
-func (ck *Buildlink3Checker) checkPkgbaseMismatch(pkgbase string, pkgbaseLine *MkLine) {
+func (ck *Buildlink3Checker) checkPkgbaseMismatch(bl3base string) {
 	if G.Pkg == nil {
 		return
 	}
 
 	mkbase := G.Pkg.EffectivePkgbase
-	if mkbase == "" || mkbase == pkgbase {
+	if mkbase == "" || mkbase == bl3base || strings.TrimPrefix(mkbase, "lib") == bl3base {
 		return
 	}
 
-	pkgbaseLine.Errorf("Package name mismatch between %q in this file and %q from %s.",
-		pkgbase, mkbase, pkgbaseLine.RefTo(G.Pkg.EffectivePkgnameLine))
+	if hasPrefix(mkbase, bl3base) && matches(mkbase[len(bl3base):], `^\d+$`) {
+		return
+	}
+
+	ck.pkgbaseLine.Errorf("Package name mismatch between %q in this file and %q from %s.",
+		bl3base, mkbase, ck.pkgbaseLine.RefTo(G.Pkg.EffectivePkgnameLine))
 }
 
 // Third paragraph: Package information.

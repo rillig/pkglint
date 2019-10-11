@@ -193,11 +193,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch__lib(c *check.C) {
 	// This mismatch is not important enough to warrant a global
 	// renaming of the buildlink3 identifier, therefore the warning
 	// is suppressed in cases like this.
-	// FIXME
-	t.CheckOutputLines(
-		"ERROR: ~/converters/libiconv/buildlink3.mk:3: " +
-			"Package name mismatch between \"iconv\" in this file " +
-			"and \"libiconv\" from Makefile:3.")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch__version(c *check.C) {
@@ -230,11 +226,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch__version(c *check.C) 
 	// This mismatch is not important enough to warrant a global
 	// renaming of the buildlink3 identifier, therefore the warning
 	// is suppressed in cases like this.
-	// FIXME
-	t.CheckOutputLines(
-		"ERROR: ~/editors/emacs22/buildlink3.mk:3: " +
-			"Package name mismatch between \"emacs\" in this file " +
-			"and \"emacs22\" from Makefile:4.")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch_multiple_inclusion(c *check.C) {
