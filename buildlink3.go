@@ -138,14 +138,23 @@ func (ck *Buildlink3Checker) checkSecondParagraph(mlex *MkLinesLexer) bool {
 		pkgupperLine.Errorf("Package name mismatch between multiple-inclusion guard %q (expected %q) and package name %q (from %s).",
 			pkgupper, ucPkgbase, pkgbase, pkgupperLine.RefTo(pkgbaseLine))
 	}
-	if G.Pkg != nil {
-		if mkbase := G.Pkg.EffectivePkgbase; mkbase != "" && mkbase != pkgbase {
-			pkgbaseLine.Errorf("Package name mismatch between %q in this file and %q from %s.",
-				pkgbase, mkbase, pkgbaseLine.RefTo(G.Pkg.EffectivePkgnameLine))
-		}
-	}
+	ck.checkPkgbaseMismatch(pkgbase, pkgbaseLine)
 
 	return true
+}
+
+func (ck *Buildlink3Checker) checkPkgbaseMismatch(pkgbase string, pkgbaseLine *MkLine) {
+	if G.Pkg == nil {
+		return
+	}
+
+	mkbase := G.Pkg.EffectivePkgbase
+	if mkbase == "" || mkbase == pkgbase {
+		return
+	}
+
+	pkgbaseLine.Errorf("Package name mismatch between %q in this file and %q from %s.",
+		pkgbase, mkbase, pkgbaseLine.RefTo(G.Pkg.EffectivePkgnameLine))
 }
 
 // Third paragraph: Package information.
