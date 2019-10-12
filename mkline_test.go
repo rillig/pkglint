@@ -1068,9 +1068,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__only_D_modifier(c *check.C) {
 	// If any, the variable PKGSRCDIR should be quoted, but that is a safe
 	// variable since it is a pkgsrc-specific directory and it appears as
 	// part of a word, therefore it cannot result in an empty string.
-	// FIXME: Don't warn in this situation.
-	t.CheckOutputLines(
-		"WARN: ~/Makefile:6: The variable BATCH should be quoted as part of a shell word.")
+	t.CheckOutputEmpty()
 }
 
 // As of October 2018, these examples from real pkgsrc end up in the
