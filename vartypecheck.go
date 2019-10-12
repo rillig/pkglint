@@ -614,7 +614,7 @@ func (cv *VartypeCheck) FetchURL() {
 		hasSuffix(fetchURL, "="),
 		hasSuffix(fetchURL, ":"),
 		hasPrefix(fetchURL, "-"),
-		len(tokens) == 0 || tokens[len(tokens)-1].Varuse != nil:
+		tokens[len(tokens)-1].Varuse != nil:
 		break
 
 	default:
