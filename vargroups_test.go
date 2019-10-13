@@ -232,8 +232,6 @@ func (s *Suite) Test_VargroupsChecker__ignore(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: Makefile:5: \"[\" is not a valid variable name pattern.",
-		// FIXME
-		"WARN: Makefile:6: \".CURDIR\" is not a valid variable name pattern.",
 		"WARN: Makefile:7: Variable names starting with an underscore (_UNDERSCORE) "+
 			"are reserved for internal pkgsrc use.",
 		"WARN: Makefile:7: _UNDERSCORE is defined but not used.",
