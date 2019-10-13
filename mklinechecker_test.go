@@ -606,12 +606,15 @@ func (s *Suite) Test_MkLineChecker_checkDependencyRule(c *check.C) {
 		".ORDER: target-1 target-2",
 		"target-1:",
 		"target-2:",
-		"target-3:")
+		"target-3:",
+		"${_COOKIE.test}:")
 
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: category/package/filename.mk:8: Undeclared target \"target-3\".")
+		"WARN: category/package/filename.mk:8: Undeclared target \"target-3\".",
+		// FIXME: that's ok.
+		"WARN: category/package/filename.mk:9: Undeclared target \"${_COOKIE.test}\".")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVartype__simple_type(c *check.C) {
