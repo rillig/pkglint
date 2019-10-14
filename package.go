@@ -1294,6 +1294,16 @@ func (pkg *Package) checkIncludeConditionally(mkline *MkLine, indentation *Inden
 				"%q is included unconditionally here "+
 					"and conditionally in %s (depending on %s).",
 				cleanpath(mkline.IncludedFile()), mkline.RefTo(other), strings.Join(other.ConditionalVars(), ", "))
+
+			if mkline.Basename == "buildlink3.mk" && containsStr(other.ConditionalVars(), "PKG_OPTIONS") {
+				mkline.Explain(
+					"When including a dependent file, the conditions in the",
+					"buildlink3.mk file should be the same as in options.mk",
+					"or the Makefile.",
+					"",
+					"To find out the PKG_OPTIONS of this package at build time,",
+					"have a look at mk/pkg-build-options.mk.")
+			}
 		}
 	}
 
