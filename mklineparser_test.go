@@ -247,7 +247,7 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 	testLine := func(line *Line, commented bool, varname, spaceAfterVarname, op, align, value, spaceAfterValue, comment string, diagnostics ...string) {
 		text := line.Text
 
-		m, actual := MkLineParser{}.MatchVarassign(line, text)
+		m, actual := NewMkLineParser().MatchVarassign(line, text)
 
 		assert(m)
 		expected := mkLineAssign{
@@ -276,7 +276,7 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 
 	testInvalid := func(text string, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, text)
-		m, _ := MkLineParser{}.MatchVarassign(line, text)
+		m, _ := NewMkLineParser().MatchVarassign(line, text)
 		if m {
 			c.Errorf("Text %q matches variable assignment but shouldn't.", text)
 		}
@@ -467,8 +467,9 @@ func (s *Suite) Test_MkLineParser_parseDirective(c *check.C) {
 
 	test := func(input, expectedIndent, expectedDirective, expectedArgs, expectedComment string, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, input)
-		data := MkLineParser{}.split(line, input)
-		mkline := MkLineParser{}.parseDirective(line, data)
+		parser := NewMkLineParser()
+		data := parser.split(line, input)
+		mkline := parser.parseDirective(line, data)
 		if !c.Check(mkline, check.NotNil) {
 			return
 		}
@@ -606,7 +607,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 
 	test := func(text string, data mkLineSplitResult, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, text)
-		actualData := MkLineParser{}.split(line, text)
+		actualData := NewMkLineParser().split(line, text)
 
 		t.CheckOutput(diagnostics)
 		t.CheckDeepEquals([]interface{}{text, actualData}, []interface{}{text, data})
@@ -913,7 +914,7 @@ func (s *Suite) Test_MkLineParser_split__unclosed_varuse(c *check.C) {
 	test := func(text string, expected mkLineSplitResult, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, text)
 
-		data := MkLineParser{}.split(line, text)
+		data := NewMkLineParser().split(line, text)
 
 		t.CheckDeepEquals(data, expected)
 		t.CheckOutput(diagnostics)
@@ -945,7 +946,7 @@ func (s *Suite) Test_MkLineParser_unescapeComment(c *check.C) {
 	t := s.Init(c)
 
 	test := func(text string, main, comment string) {
-		aMain, aComment := MkLineParser{}.unescapeComment(text)
+		aMain, aComment := NewMkLineParser().unescapeComment(text)
 		t.CheckDeepEquals(
 			[]interface{}{text, aMain, aComment},
 			[]interface{}{text, main, comment})

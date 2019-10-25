@@ -7,6 +7,8 @@ import (
 
 type MkLineParser struct{}
 
+func NewMkLineParser() MkLineParser { return MkLineParser{} }
+
 // Parse parses the text of a Makefile line to see what kind of line
 // it is: variable assignment, include, comment, etc.
 //
@@ -291,7 +293,7 @@ func (p MkLineParser) parseMergeConflict(line *Line) *MkLine {
 func (MkLineParser) split(line *Line, text string) mkLineSplitResult {
 	assert(!hasPrefix(text, "\t"))
 
-	mainWithSpaces, comment := MkLineParser{}.unescapeComment(text)
+	mainWithSpaces, comment := NewMkLineParser().unescapeComment(text)
 
 	parser := NewMkParser(line, mainWithSpaces)
 	lexer := parser.lexer
