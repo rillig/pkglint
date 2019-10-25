@@ -408,11 +408,8 @@ func (s *Suite) Test_MkLineChecker_checkInclude__builtin_mk(c *check.C) {
 	G.checkdirPackage(t.File("category/package"))
 
 	t.CheckOutputLines(
-		"ERROR: ~/category/package/Makefile:20: "+
-			"../../category/package/builtin.mk must not be included directly. "+
-			"Include \"../../category/package/buildlink3.mk\" instead.",
-		"ERROR: ~/category/package/Makefile:21: "+ // FIXME: it's ok
-			"../../category/package/builtin.mk must not be included directly. "+
+		"ERROR: ~/category/package/Makefile:20: " +
+			"../../category/package/builtin.mk must not be included directly. " +
 			"Include \"../../category/package/buildlink3.mk\" instead.")
 }
 

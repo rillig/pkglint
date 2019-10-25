@@ -1600,15 +1600,15 @@ func (s *Suite) Test_MkLine_UnquoteShell(c *check.C) {
 func (s *Suite) Test_MatchMkInclude(c *check.C) {
 	t := s.Init(c)
 
-	test := func(input, expectedIndent, expectedDirective, expectedFilename string) {
-		m, indent, directive, args := MatchMkInclude(input)
+	test := func(input, expectedIndent, expectedDirective, expectedFilename, expectedComment string) {
+		m, indent, directive, args, comment := MatchMkInclude(input)
 		t.CheckDeepEquals(
-			[]interface{}{m, indent, directive, args},
-			[]interface{}{true, expectedIndent, expectedDirective, expectedFilename})
+			[]interface{}{m, indent, directive, args, comment},
+			[]interface{}{true, expectedIndent, expectedDirective, expectedFilename, expectedComment})
 	}
 
 	testFail := func(input string) {
-		m, _, _, _ := MatchMkInclude(input)
+		m, _, _, _, _ := MatchMkInclude(input)
 		if m {
 			c.Errorf("Text %q unexpectedly matched.", input)
 		}
@@ -1622,16 +1622,18 @@ func (s *Suite) Test_MatchMkInclude(c *check.C) {
 	testFail(".include \"other.mk\" \"")
 
 	test(".include \"other.mk\"",
-		"", "include", "other.mk")
+		"", "include", "other.mk", "")
 
 	test(".include \"other.mk\"\t",
-		"", "include", "other.mk")
+		"", "include", "other.mk", "")
 
+	// This case is indistinguishable from a line that has no comment at all.
+	// In practice, this difference is not significant.
 	test(".include \"other.mk\"\t#",
-		"", "include", "other.mk")
+		"", "include", "other.mk", "")
 
 	test(".include \"other.mk\"\t# comment",
-		"", "include", "other.mk")
+		"", "include", "other.mk", " comment")
 
 	t.CheckOutputEmpty()
 }
