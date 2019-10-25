@@ -395,6 +395,27 @@ func (s *Suite) Test_MkLineChecker_checkInclude__hacks(c *check.C) {
 			"Relative path \"../../category/package/nonexistent.mk\" does not exist.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkInclude__builtin_mk(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".include \"../../category/package/builtin.mk\"",
+		".include \"../../category/package/builtin.mk\" # ok")
+	t.CreateFileLines("category/package/builtin.mk",
+		MkCvsID)
+	t.FinishSetUp()
+
+	G.checkdirPackage(t.File("category/package"))
+
+	t.CheckOutputLines(
+		"ERROR: ~/category/package/Makefile:20: "+
+			"../../category/package/builtin.mk must not be included directly. "+
+			"Include \"../../category/package/buildlink3.mk\" instead.",
+		"ERROR: ~/category/package/Makefile:21: "+ // FIXME: it's ok
+			"../../category/package/builtin.mk must not be included directly. "+
+			"Include \"../../category/package/buildlink3.mk\" instead.")
+}
+
 func (s *Suite) Test_MkLineChecker__permissions_in_hacks_mk(c *check.C) {
 	t := s.Init(c)
 
