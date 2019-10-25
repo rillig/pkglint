@@ -1,9 +1,6 @@
 package pkglint
 
-import (
-	"gopkg.in/check.v1"
-	"strings"
-)
+import "gopkg.in/check.v1"
 
 // Exotic code examples from the pkgsrc infrastructure.
 // Hopefully, pkgsrc packages don't need such complicated code.
@@ -583,27 +580,12 @@ func (s *Suite) Test_MkLineParser_parseMergeConflict(c *check.C) {
 
 func (s *Suite) Test_MkLineParser_split(c *check.C) {
 	t := s.Init(c)
+	b := NewMkTokenBuilder()
 
-	varuse := func(varname string, modifiers ...string) *MkToken {
-		var text strings.Builder
-		text.WriteString("${")
-		text.WriteString(varname)
-		for _, modifier := range modifiers {
-			text.WriteString(":")
-			text.WriteString(modifier)
-		}
-		text.WriteString("}")
-		return &MkToken{Text: text.String(), Varuse: NewMkVarUse(varname, modifiers...)}
-	}
-	varuseText := func(text, varname string, modifiers ...string) *MkToken {
-		return &MkToken{Text: text, Varuse: NewMkVarUse(varname, modifiers...)}
-	}
-	text := func(text string) *MkToken {
-		return &MkToken{text, nil}
-	}
-	tokens := func(tokens ...*MkToken) []*MkToken {
-		return tokens
-	}
+	varuse := b.VaruseToken
+	varuseText := b.VaruseTextToken
+	text := b.TextToken
+	tokens := b.Tokens
 
 	test := func(text string, data mkLineSplitResult, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, text)
@@ -924,6 +906,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 
 func (s *Suite) Test_MkLineParser_split__unclosed_varuse(c *check.C) {
 	t := s.Init(c)
+	b := NewMkTokenBuilder()
 
 	test := func(text string, expected mkLineSplitResult, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, text)
@@ -939,10 +922,11 @@ func (s *Suite) Test_MkLineParser_split__unclosed_varuse(c *check.C) {
 
 		mkLineSplitResult{
 			"EGDIRS=\t${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d",
-			[]*MkToken{
-				{"EGDIRS=\t", nil},
-				{"${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d",
-					NewMkVarUse("EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d")}},
+			b.Tokens(
+				b.TextToken("EGDIRS=\t"),
+				b.VaruseTextToken(
+					"${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d",
+					"EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d")),
 			"",
 			false,
 			"",

@@ -1111,12 +1111,11 @@ func (s *Suite) Test_MkLine_ValueFields__compared_to_splitIntoShellTokens(c *che
 
 func (s *Suite) Test_MkLine_ValueTokens(c *check.C) {
 	t := s.Init(c)
+	b := NewMkTokenBuilder()
+	text := b.TextToken
+	varUseText := b.VaruseTextToken
+	tokens := b.Tokens
 
-	text := func(text string) *MkToken { return &MkToken{text, nil} }
-	varUseText := func(text string, varname string, modifiers ...string) *MkToken {
-		return &MkToken{text, NewMkVarUse(varname, modifiers...)}
-	}
-	tokens := func(tokens ...*MkToken) []*MkToken { return tokens }
 	test := func(value string, expected []*MkToken, diagnostics ...string) {
 		mkline := t.NewMkLine("Makefile", 1, "PATH=\t"+value)
 		actualTokens, _ := mkline.ValueTokens()
@@ -1169,16 +1168,15 @@ func (s *Suite) Test_MkLine_ValueTokens__parse_error(c *check.C) {
 
 func (s *Suite) Test_MkLine_ValueTokens__caching(c *check.C) {
 	t := s.Init(c)
-
-	tokens := func(tokens ...*MkToken) []*MkToken { return tokens }
+	b := NewMkTokenBuilder()
 
 	mkline := t.NewMkLine("Makefile", 1, "PATH=\tvalue ${UNFINISHED")
 	valueTokens, rest := mkline.ValueTokens()
 
 	t.CheckDeepEquals(valueTokens,
-		tokens(
-			&MkToken{"value ", nil},
-			&MkToken{"${UNFINISHED", NewMkVarUse("UNFINISHED")}))
+		b.Tokens(
+			b.TextToken("value "),
+			b.VaruseTextToken("${UNFINISHED", "UNFINISHED")))
 	t.CheckEquals(rest, "")
 	t.CheckOutputLines(
 		"WARN: Makefile:1: Missing closing \"}\" for \"UNFINISHED\".")
@@ -1192,16 +1190,12 @@ func (s *Suite) Test_MkLine_ValueTokens__caching(c *check.C) {
 
 func (s *Suite) Test_MkLine_ValueTokens__caching_parse_error(c *check.C) {
 	t := s.Init(c)
-
-	tokens := func(tokens ...*MkToken) []*MkToken { return tokens }
-	varuseText := func(text, varname string, modifiers ...string) *MkToken {
-		return &MkToken{Text: text, Varuse: NewMkVarUse(varname, modifiers...)}
-	}
+	b := NewMkTokenBuilder()
 
 	mkline := t.NewMkLine("Makefile", 1, "PATH=\t${UNFINISHED")
 	valueTokens, rest := mkline.ValueTokens()
 
-	t.CheckDeepEquals(valueTokens, tokens(varuseText("${UNFINISHED", "UNFINISHED")))
+	t.CheckDeepEquals(valueTokens, b.Tokens(b.VaruseTextToken("${UNFINISHED", "UNFINISHED")))
 	t.CheckEquals(rest, "")
 	t.CheckOutputLines(
 		"WARN: Makefile:1: Missing closing \"}\" for \"UNFINISHED\".")
