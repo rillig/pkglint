@@ -689,6 +689,20 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 			comment:    "   comment",
 		})
 
+	test(
+		"#VAR=#value",
+		mkLineSplitResult{
+			hasComment: true,
+			comment:    "VAR=#value"})
+
+	// When parsing a commented variable assignment, the code assumes that
+	// the whole comment is left uninterpreted.
+	test(
+		"#VAR=\\#value",
+		mkLineSplitResult{
+			hasComment: true,
+			comment:    "VAR=\\#value"})
+
 	// Other than in the shell, # also starts a comment in the middle of a word.
 	test("COMMENT=\tThe C# compiler",
 		mkLineSplitResult{
