@@ -32,12 +32,12 @@ func (p MkLineParser) Parse(line *Line) *MkLine {
 		}
 
 		// Just for the side effects of the warnings.
-		_ = p.split(line, lex.Rest())
+		_ = p.split(line, lex.Rest(), false)
 
 		return p.parseShellcmd(line)
 	}
 
-	data := p.split(line, text)
+	data := p.split(line, text, true)
 
 	if mkline := p.parseVarassign(line); mkline != nil {
 		return mkline
@@ -119,7 +119,7 @@ func (p MkLineParser) MatchVarassign(line *Line, text string) (bool, *mkLineAssi
 		withoutLeadingComment = withoutLeadingComment[1:]
 	}
 
-	data := p.split(nil, withoutLeadingComment)
+	data := p.split(nil, withoutLeadingComment, true)
 
 	lexer := NewMkTokensLexer(data.tokens)
 	mainStart := lexer.Mark()
@@ -290,10 +290,21 @@ func (p MkLineParser) parseMergeConflict(line *Line) *MkLine {
 // If line is given, it is used for logging parse errors and warnings
 // about round parentheses instead of curly braces, as well as ambiguous
 // variables of the form $v instead of ${v}.
-func (MkLineParser) split(line *Line, text string) mkLineSplitResult {
+//
+// If trimComment is true, the main task of this method is to split the
+// text into tokens. The remaining space is placed into spaceBeforeComment,
+// but hasComment will always be false, and comment will always be empty.
+// This behavior is useful for shell commands (which are indented with a
+// single tab).
+func (MkLineParser) split(line *Line, text string, trimComment bool) mkLineSplitResult {
 	assert(!hasPrefix(text, "\t"))
 
-	mainWithSpaces, comment := NewMkLineParser().unescapeComment(text)
+	var mainWithSpaces, comment string
+	if trimComment {
+		mainWithSpaces, comment = NewMkLineParser().unescapeComment(text)
+	} else {
+		mainWithSpaces = text
+	}
 
 	parser := NewMkParser(line, mainWithSpaces)
 	lexer := parser.lexer

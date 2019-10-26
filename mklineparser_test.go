@@ -465,7 +465,7 @@ func (s *Suite) Test_MkLineParser_parseDirective(c *check.C) {
 	test := func(input, expectedIndent, expectedDirective, expectedArgs, expectedComment string, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, input)
 		parser := NewMkLineParser()
-		data := parser.split(line, input)
+		data := parser.split(line, input, true)
 		mkline := parser.parseDirective(line, data)
 		if !c.Check(mkline, check.NotNil) {
 			return
@@ -589,7 +589,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 
 	test := func(text string, data mkLineSplitResult, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, text)
-		actualData := NewMkLineParser().split(line, text)
+		actualData := NewMkLineParser().split(line, text, true)
 
 		t.CheckOutput(diagnostics)
 		t.CheckDeepEquals([]interface{}{text, actualData}, []interface{}{text, data})
@@ -904,6 +904,62 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 		})
 }
 
+func (s *Suite) Test_MkLineParser_split__preserve_comment(c *check.C) {
+	t := s.Init(c)
+	b := NewMkTokenBuilder()
+
+	tokens := b.Tokens
+	text := b.TextToken
+	varUse := b.VaruseToken
+
+	test := func(text string, expected mkLineSplitResult, diagnostics ...string) {
+		line := t.NewLine("filename.mk", 123, text)
+		actual := NewMkLineParser().split(line, text, false)
+
+		t.CheckDeepEquals(actual, expected)
+		t.CheckOutput(diagnostics)
+	}
+
+	test(
+		"text\t# no comment",
+		mkLineSplitResult{
+			main:   "text\t# no comment",
+			tokens: tokens(text("text\t# no comment"))})
+
+	test(
+		"url#fragment",
+		mkLineSplitResult{
+			main:   "url#fragment",
+			tokens: tokens(text("url#fragment"))})
+
+	test("# no comment",
+		mkLineSplitResult{
+			main:   "# no comment",
+			tokens: tokens(text("# no comment"))})
+
+	// Other than in the shell, # also starts a comment in the middle of a word.
+	test("The C# compiler",
+		mkLineSplitResult{
+			main:   "The C# compiler",
+			tokens: tokens(text("The C# compiler"))})
+
+	test("The C\\# compiler",
+		mkLineSplitResult{
+			main:   "The C\\# compiler",
+			tokens: tokens(text("The C\\# compiler"))})
+
+	test("# ${VAR}",
+		mkLineSplitResult{
+			main:   "# ${VAR}",
+			tokens: tokens(text("# "), varUse("VAR"))})
+
+	test("# ",
+		mkLineSplitResult{
+			main:               "#",
+			tokens:             tokens(text("#")),
+			spaceBeforeComment: " "})
+}
+
 func (s *Suite) Test_MkLineParser_split__unclosed_varuse(c *check.C) {
 	t := s.Init(c)
 	b := NewMkTokenBuilder()
@@ -911,7 +967,7 @@ func (s *Suite) Test_MkLineParser_split__unclosed_varuse(c *check.C) {
 	test := func(text string, expected mkLineSplitResult, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, text)
 
-		data := NewMkLineParser().split(line, text)
+		data := NewMkLineParser().split(line, text, true)
 
 		t.CheckDeepEquals(data, expected)
 		t.CheckOutput(diagnostics)
