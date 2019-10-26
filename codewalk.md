@@ -420,7 +420,7 @@ func (line *Line) Autofix() *Autofix {
 The journey ends here, and it hasn't been that difficult.
 If that was too easy, have a look at the complex cases here:
 
-> from [mkline.go](mkline.go#L962):
+> from [mkline.go](mkline.go#L648):
 
 ```go
 // VariableNeedsQuoting determines whether the given variable needs the :Q
@@ -437,10 +437,10 @@ func (mkline *MkLine) VariableNeedsQuoting(mklines *MkLines, varuse *MkVarUse, v
 	// TODO: Systematically test this function, each and every case, from top to bottom.
 	// TODO: Re-check the order of all these if clauses whether it really makes sense.
 
-	if varuse.HasModifier("D") && varuse.HasModifier("U") {
-		// Take the simple way for now. Handling this kind of
-		// conditional expressions correctly and completely would
-		// require a larger rewrite.
+	if varuse.HasModifier("D") {
+		// The :D modifier discards the value of the original variable and
+		// replaces it with the expression from the :D modifier.
+		// Therefore the original variable does not need to be quoted.
 		return unknown
 	}
 
@@ -602,6 +602,8 @@ and these are handled specially.
 // shell commands and directives like .if and .for.
 type MkLine struct {
 	*Line
+
+	splitResult mkLineSplitResult
 
 	// One of the following mkLine* types.
 	//
