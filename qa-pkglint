@@ -1,7 +1,7 @@
 #! /bin/bash
 set -eu
 
-srcdir="$HOME/pkglint"
+srcdir="$HOME/go/src/netbsd.org/pkglint"
 archivedir="$srcdir/archive"
 pkgsrcdir="$HOME/git/pkgsrc"
 : "${GOPATH:="$HOME/go"}"
@@ -51,12 +51,12 @@ install_notest() {
 
 analyze() {
   step_msg "Analyzing code style"
-  (cd ~/pkglint && golangci-lint run)
+  (cd "$srcdir" && golangci-lint run)
 }
 
 gobco() {
   # see https://github.com/rillig/gobco
-  (cd ~/pkglint && exec gobco > archive/gobco.txt.tmp && mv -f archive/gobco.txt.tmp archive/gobco.txt)
+  (cd "$srcdir" && command gobco > "$archivedir/gobco.txt.tmp" && mv -f "$archivedir/gobco.txt.tmp" "$archivedir/gobco.txt")
 }
 
 netbsd() {
