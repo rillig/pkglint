@@ -419,7 +419,7 @@ func (mklines *MkLines) collectRationale() {
 	for _, mkline := range mklines.mklines {
 		rationale = rationale || realComment(mkline) && useful(mkline)
 		mkline.splitResult.hasRationale = rationale || useful(mkline)
-		rationale = rationale && !(mkline.IsEmpty() || realComment(mkline) && !useful(mkline))
+		rationale = rationale && !mkline.IsEmpty()
 	}
 }
 

@@ -552,14 +552,13 @@ func (s *Suite) Test_MkLines_collectRationale(c *check.C) {
 		"R   NOT_FOR_PLATFORM+=\tNetBSD-*-*",
 		"R   NOT_FOR_PLATFORM+=\tCygwin-*-*")
 
-	// An empty comment also ends the rationale because it looks more like
-	// a general description than like a rationale.
+	// Large comment blocks often end with an empty comment line.
 	test(
 		"R   # rationale",
 		"R   #",
-		"-   NOT_FOR_PLATFORM+=\tLinux-*-*",
-		"-   NOT_FOR_PLATFORM+=\tNetBSD-*-*",
-		"-   NOT_FOR_PLATFORM+=\tCygwin-*-*")
+		"R   NOT_FOR_PLATFORM+=\tLinux-*-*",
+		"R   NOT_FOR_PLATFORM+=\tNetBSD-*-*",
+		"R   NOT_FOR_PLATFORM+=\tCygwin-*-*")
 
 	// The CVS Id is not a rationale.
 	test(
