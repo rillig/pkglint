@@ -1327,6 +1327,29 @@ func (s *Suite) Test_Package_checkIncludeConditionally__explain_PKG_OPTIONS_in_M
 		"")
 }
 
+func (s *Suite) Test_Package_checkIncludeConditionally__no_explanation(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--explain")
+	t.CreateFileLines("devel/zlib/buildlink3.mk",
+		MkCvsID)
+	t.SetUpPackage("category/package",
+		".if ${OPSYS} == Linux",
+		".include \"../../devel/zlib/buildlink3.mk\"",
+		".endif")
+	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
+		".include \"../../devel/zlib/buildlink3.mk\"")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.checkdirPackage(".")
+
+	t.CheckOutputLines(
+		"WARN: Makefile:21: " +
+			"\"../../devel/zlib/buildlink3.mk\" is included conditionally here " +
+			"(depending on OPSYS) and unconditionally in buildlink3.mk:12.")
+}
+
 func (s *Suite) Test_Package_checkIncludeConditionally__explain_PKG_OPTIONS_in_options_mk(c *check.C) {
 	t := s.Init(c)
 
