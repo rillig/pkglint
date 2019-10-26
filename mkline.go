@@ -15,6 +15,8 @@ import (
 type MkLine struct {
 	*Line
 
+	splitResult mkLineSplitResult
+
 	// One of the following mkLine* types.
 	//
 	// For the larger of these types, a pointer is used instead of a direct
@@ -35,7 +37,6 @@ type mkLineAssign struct {
 	valueMkRest       string     // nonempty in case of parse errors
 	fields            []string   // The value, space-separated according to shell quoting rules
 	spaceAfterValue   string
-	comment           string
 }
 
 type mkLineShell struct {
@@ -74,6 +75,19 @@ type mkLineDependency struct {
 func (mkline *MkLine) String() string {
 	return sprintf("%s:%s", mkline.Filename, mkline.Linenos())
 }
+
+func (mkline *MkLine) HasComment() bool { return mkline.splitResult.hasComment }
+
+// Comment returns the comment after the first unescaped #.
+//
+// Except that for variable assignments that are commented out entirely,
+// that leading comment is ignored.
+//
+// Example:
+//  VAR=value # comment
+//
+// In the above line, the comment is " comment", including the leading space.
+func (mkline *MkLine) Comment() string { return mkline.splitResult.comment }
 
 // IsVarassign returns true for variable assignments of the form VAR=value.
 //
@@ -196,16 +210,6 @@ func (mkline *MkLine) ValueAlign() string { return mkline.data.(*mkLineAssign).v
 
 func (mkline *MkLine) Value() string { return mkline.data.(*mkLineAssign).value }
 
-// VarassignComment applies to variable assignments and returns the comment.
-//
-// Example:
-//  VAR=value # comment
-//
-// In the above line, the comment is "# comment".
-//
-// The leading "#" is included so that pkglint can distinguish between no comment at all and an empty comment.
-func (mkline *MkLine) VarassignComment() string { return mkline.data.(*mkLineAssign).comment }
-
 // FirstLineContainsValue returns whether the variable assignment of a
 // multiline contains a textual value in the first line.
 //
@@ -221,7 +225,7 @@ func (mkline *MkLine) FirstLineContainsValue() bool {
 	text := strings.TrimSuffix(mkline.raw[0].orignl, "\n")
 	parser := NewMkLineParser()
 	splitResult := parser.split(nil, text, true)
-	_, a := parser.MatchVarassign(mkline.Line, text, splitResult)
+	_, a := parser.MatchVarassign(mkline.Line, text, &splitResult)
 	return a.value != "\\"
 }
 

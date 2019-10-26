@@ -777,7 +777,7 @@ func (pkg *Package) checkGnuConfigureUseLanguages() {
 			continue
 		}
 
-		if matches(mkline.VarassignComment(), `(?-i)\b(?:c|empty|none)\b`) {
+		if matches(mkline.Comment(), `(?-i)\b(?:c|empty|none)\b`) {
 			// Don't emit a warning since the comment probably contains a
 			// statement that C is really not needed.
 			return
@@ -836,7 +836,7 @@ func (pkg *Package) determineEffectivePkgVars() {
 	}
 
 	if pkgnameLine != nil && (pkgname == distname || pkgname == "${DISTNAME}") {
-		if pkgnameLine.VarassignComment() == "" {
+		if !pkgnameLine.HasComment() {
 			pkgnameLine.Notef("This assignment is probably redundant " +
 				"since PKGNAME is ${DISTNAME} by default.")
 			pkgnameLine.Explain(

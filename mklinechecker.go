@@ -456,7 +456,7 @@ func (ck MkLineChecker) checkVarassignLeftRationale() {
 		return
 	}
 
-	if mkline.VarassignComment() != "" {
+	if mkline.HasComment() {
 		return
 	}
 
@@ -1054,7 +1054,7 @@ func (ck MkLineChecker) checkVarassignOpShell() {
 	case mkline.Op() != opAssignShell:
 		return
 
-	case mkline.VarassignComment() != "":
+	case mkline.HasComment():
 		return
 
 	case mkline.Basename == "builtin.mk":
@@ -1100,7 +1100,7 @@ func (ck MkLineChecker) checkVarassignRight() {
 	varname := mkline.Varname()
 	op := mkline.Op()
 	value := mkline.Value()
-	comment := mkline.VarassignComment()
+	comment := condStr(mkline.HasComment(), "#", "") + mkline.Comment()
 
 	if trace.Tracing {
 		defer trace.Call(varname, op, value)()
@@ -1260,7 +1260,7 @@ func (ck MkLineChecker) checkVarassignMisc() {
 		ck.checkVarassignDecreasingVersions()
 	}
 
-	if mkline.VarassignComment() == "# defined" && !hasSuffix(varname, "_MK") && !hasSuffix(varname, "_COMMON") {
+	if mkline.Comment() == " defined" && !hasSuffix(varname, "_MK") && !hasSuffix(varname, "_COMMON") {
 		mkline.Notef("Please use \"# empty\", \"# none\" or \"# yes\" instead of \"# defined\".")
 		mkline.Explain(
 			"The value #defined says something about the state of the variable,",
@@ -1384,7 +1384,7 @@ func (ck MkLineChecker) checkVarassignLeftUserSettable() bool {
 	}
 
 	switch {
-	case mkline.VarassignComment() != "":
+	case mkline.HasComment():
 		// Assume that the comment contains a rationale for disabling
 		// this particular check.
 
@@ -1413,6 +1413,7 @@ func (ck MkLineChecker) checkVarassignLeftUserSettable() bool {
 	return true
 }
 
+// comment is an empty string for no comment, or "#" + the actual comment otherwise.
 func (ck MkLineChecker) checkVartype(varname string, op MkOperator, value, comment string) {
 	if trace.Tracing {
 		defer trace.Call(varname, op, value, comment)()

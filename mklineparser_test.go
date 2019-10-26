@@ -45,7 +45,7 @@ func (s *Suite) Test_MkLineParser_Parse__infrastructure(c *check.C) {
 // In variable assignments, a plain '#' introduces a line comment, unless
 // it is escaped by a backslash. In shell commands, on the other hand, it
 // is interpreted literally.
-func (s *Suite) Test_MkLineParser_Parse__number_sign(c *check.C) {
+func (s *Suite) Test_MkLineParser_Parse__comment_or_not(c *check.C) {
 	t := s.Init(c)
 
 	mklineVarassignEscaped := t.NewMkLine("filename.mk", 1, "SED_CMD=\t's,\\#,hash,g'")
@@ -70,6 +70,23 @@ func (s *Suite) Test_MkLineParser_Parse__number_sign(c *check.C) {
 		"WARN: filename.mk:1: The # character starts a Makefile comment.")
 }
 
+func (s *Suite) Test_MkLineParser_Parse__commented_lines(c *check.C) {
+	t := s.Init(c)
+
+	test := func(text string) {
+		mkline := t.NewMkLines("filename.mk", text).mklines[0]
+		t.CheckEquals(mkline.HasComment(), true)
+		t.CheckEquals(mkline.Comment(), " the comment")
+	}
+
+	test("VAR=value # the comment")
+	test("# the comment")
+	test(".if 0 # the comment")
+	test(".include \"other.mk\" # the comment")
+	test(".include <other.mk> # the comment")
+	test("target: source # the comment")
+}
+
 func (s *Suite) Test_MkLineParser_parseVarassign(c *check.C) {
 	t := s.Init(c)
 
@@ -82,7 +99,7 @@ func (s *Suite) Test_MkLineParser_parseVarassign(c *check.C) {
 	t.CheckEquals(mkline.Varparam(), "param")
 	t.CheckEquals(mkline.Op(), opAssignDefault)
 	t.CheckEquals(mkline.Value(), "value")
-	t.CheckEquals(mkline.VarassignComment(), "# varassign comment")
+	t.CheckEquals(mkline.Comment(), " varassign comment")
 }
 
 func (s *Suite) Test_MkLineParser_parseVarassign__empty_multiline(c *check.C) {
@@ -112,7 +129,7 @@ func (s *Suite) Test_MkLineParser_parseVarassign__empty_multiline(c *check.C) {
 	t.CheckEquals(mkline.Varname(), "VAR")
 	t.CheckEquals(mkline.Op(), opAssign)
 	t.CheckEquals(mkline.Value(), "")
-	t.CheckEquals(mkline.VarassignComment(), "# nothing")
+	t.CheckEquals(mkline.Comment(), " nothing")
 }
 
 func (s *Suite) Test_MkLineParser_parseVarassign__leading_space(c *check.C) {
@@ -246,7 +263,7 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 
 		parser := NewMkLineParser()
 		splitResult := parser.split(nil, text, true)
-		m, actual := parser.MatchVarassign(line, text, splitResult)
+		m, actual := parser.MatchVarassign(line, text, &splitResult)
 
 		assert(m)
 		expected := mkLineAssign{
@@ -262,9 +279,10 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 			valueMkRest:       "",
 			fields:            nil,
 			spaceAfterValue:   spaceAfterValue,
-			comment:           comment,
 		}
 		t.CheckDeepEquals(*actual, expected)
+		t.CheckEquals(splitResult.hasComment, comment != "")
+		t.CheckEquals(condStr(splitResult.hasComment, "#", "")+splitResult.comment, comment)
 		t.CheckOutput(diagnostics)
 	}
 
@@ -277,7 +295,7 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 		line := t.NewLine("filename.mk", 123, text)
 		parser := NewMkLineParser()
 		splitResult := parser.split(nil, text, true)
-		m, _ := parser.MatchVarassign(line, text, splitResult)
+		m, _ := parser.MatchVarassign(line, text, &splitResult)
 		if m {
 			c.Errorf("Text %q matches variable assignment but shouldn't.", text)
 		}
@@ -469,8 +487,8 @@ func (s *Suite) Test_MkLineParser_parseDirective(c *check.C) {
 	test := func(input, expectedIndent, expectedDirective, expectedArgs, expectedComment string, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, input)
 		parser := NewMkLineParser()
-		data := parser.split(line, input, true)
-		mkline := parser.parseDirective(line, data)
+		splitResult := parser.split(line, input, true)
+		mkline := parser.parseDirective(line, splitResult)
 		if !c.Check(mkline, check.NotNil) {
 			return
 		}
@@ -591,12 +609,12 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 	text := b.TextToken
 	tokens := b.Tokens
 
-	test := func(text string, data mkLineSplitResult, diagnostics ...string) {
+	test := func(text string, expected mkLineSplitResult, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, text)
-		actualData := NewMkLineParser().split(line, text, true)
+		actual := NewMkLineParser().split(line, text, true)
 
 		t.CheckOutput(diagnostics)
-		t.CheckDeepEquals([]interface{}{text, actualData}, []interface{}{text, data})
+		t.CheckDeepEquals([]interface{}{text, actual}, []interface{}{text, expected})
 	}
 
 	t.Use(text, varuse, varuseText, tokens)
@@ -971,9 +989,9 @@ func (s *Suite) Test_MkLineParser_split__unclosed_varuse(c *check.C) {
 	test := func(text string, expected mkLineSplitResult, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, text)
 
-		data := NewMkLineParser().split(line, text, true)
+		splitResult := NewMkLineParser().split(line, text, true)
 
-		t.CheckDeepEquals(data, expected)
+		t.CheckDeepEquals(splitResult, expected)
 		t.CheckOutput(diagnostics)
 	}
 

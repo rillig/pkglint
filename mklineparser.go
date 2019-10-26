@@ -31,43 +31,41 @@ func (p MkLineParser) Parse(line *Line) *MkLine {
 		for lex.SkipByte('\t') {
 		}
 
-		// Just for the side effects of the warnings.
-		_ = p.split(line, lex.Rest(), false)
-
-		return p.parseShellcmd(line)
+		splitResult := p.split(line, lex.Rest(), false)
+		return p.parseShellcmd(line, splitResult)
 	}
 
-	data := p.split(line, text, true)
+	splitResult := p.split(line, text, true)
 
-	if mkline := p.parseVarassign(line, text, data); mkline != nil {
+	if mkline := p.parseVarassign(line, text, splitResult); mkline != nil {
 		return mkline
 	}
-	if mkline := p.parseCommentOrEmpty(line); mkline != nil {
+	if mkline := p.parseCommentOrEmpty(line, splitResult); mkline != nil {
 		return mkline
 	}
-	if mkline := p.parseDirective(line, data); mkline != nil {
+	if mkline := p.parseDirective(line, splitResult); mkline != nil {
 		return mkline
 	}
-	if mkline := p.parseInclude(line); mkline != nil {
+	if mkline := p.parseInclude(line, splitResult); mkline != nil {
 		return mkline
 	}
-	if mkline := p.parseSysinclude(line); mkline != nil {
+	if mkline := p.parseSysinclude(line, splitResult); mkline != nil {
 		return mkline
 	}
-	if mkline := p.parseDependency(line); mkline != nil {
+	if mkline := p.parseDependency(line, splitResult); mkline != nil {
 		return mkline
 	}
-	if mkline := p.parseMergeConflict(line); mkline != nil {
+	if mkline := p.parseMergeConflict(line, splitResult); mkline != nil {
 		return mkline
 	}
 
 	// The %q is deliberate here since it shows possible strange characters.
 	line.Errorf("Unknown Makefile line format: %q.", text)
-	return &MkLine{line, nil}
+	return &MkLine{line, splitResult, nil}
 }
 
 func (p MkLineParser) parseVarassign(line *Line, text string, splitResult mkLineSplitResult) *MkLine {
-	m, a := p.MatchVarassign(line, text, splitResult)
+	m, a := p.MatchVarassign(line, text, &splitResult)
 	if !m {
 		return nil
 	}
@@ -88,7 +86,7 @@ func (p MkLineParser) parseVarassign(line *Line, text string, splitResult mkLine
 		}
 	}
 
-	if a.comment != "" && a.value != "" && a.spaceAfterValue == "" {
+	if splitResult.hasComment && a.value != "" && a.spaceAfterValue == "" {
 		line.Warnf("The # character starts a Makefile comment.")
 		line.Explain(
 			"In a variable assignment, an unescaped # starts a comment that",
@@ -99,10 +97,10 @@ func (p MkLineParser) parseVarassign(line *Line, text string, splitResult mkLine
 			"it should be preceded by a space in order to make it more visible.")
 	}
 
-	return &MkLine{line, a}
+	return &MkLine{line, splitResult, a}
 }
 
-func (p MkLineParser) MatchVarassign(line *Line, text string, splitResult mkLineSplitResult) (bool, *mkLineAssign) {
+func (p MkLineParser) MatchVarassign(line *Line, text string, splitResult *mkLineSplitResult) (bool, *mkLineAssign) {
 
 	// A commented variable assignment does not have leading whitespace.
 	// Otherwise line 1 of almost every Makefile fragment would need to
@@ -114,7 +112,7 @@ func (p MkLineParser) MatchVarassign(line *Line, text string, splitResult mkLine
 		if clex.SkipHspace() || clex.EOF() {
 			return false, nil
 		}
-		splitResult = p.split(nil, text[1:], true)
+		*splitResult = p.split(nil, text[1:], true)
 	}
 
 	lexer := NewMkTokensLexer(splitResult.tokens)
@@ -179,35 +177,34 @@ func (p MkLineParser) MatchVarassign(line *Line, text string, splitResult mkLine
 		valueMkRest:       "",  // filled in lazily
 		fields:            nil, // filled in lazily
 		spaceAfterValue:   spaceBeforeComment,
-		comment:           condStr(splitResult.hasComment, "#", "") + splitResult.comment,
 	}
 }
 
-func (p MkLineParser) parseShellcmd(line *Line) *MkLine {
-	return &MkLine{line, mkLineShell{line.Text[1:]}}
+func (p MkLineParser) parseShellcmd(line *Line, splitResult mkLineSplitResult) *MkLine {
+	return &MkLine{line, splitResult, mkLineShell{line.Text[1:]}}
 }
 
-func (p MkLineParser) parseCommentOrEmpty(line *Line) *MkLine {
+func (p MkLineParser) parseCommentOrEmpty(line *Line, splitResult mkLineSplitResult) *MkLine {
 	trimmedText := trimHspace(line.Text)
 
 	if strings.HasPrefix(trimmedText, "#") {
-		return &MkLine{line, mkLineComment{}}
+		return &MkLine{line, splitResult, mkLineComment{}}
 	}
 
 	if trimmedText == "" {
-		return &MkLine{line, mkLineEmpty{}}
+		return &MkLine{line, splitResult, mkLineEmpty{}}
 	}
 
 	return nil
 }
 
-func (p MkLineParser) parseDirective(line *Line, data mkLineSplitResult) *MkLine {
+func (p MkLineParser) parseDirective(line *Line, splitResult mkLineSplitResult) *MkLine {
 	text := line.Text
-	if !hasPrefix(text, ".") {
+	if !hasPrefix(text, ".") { // TODO: use lexer instead
 		return nil
 	}
 
-	lexer := textproc.NewLexer(data.main[1:])
+	lexer := textproc.NewLexer(splitResult.main[1:])
 
 	indent := lexer.NextHspace()
 	directive := lexer.NextBytesSet(LowerDash)
@@ -230,30 +227,30 @@ func (p MkLineParser) parseDirective(line *Line, data mkLineSplitResult) *MkLine
 	// In .if and .endif lines the space surrounding the comment is irrelevant.
 	// Especially for checking that the .endif comment matches the .if condition,
 	// it must be trimmed.
-	trimmedComment := trimHspace(data.comment)
+	trimmedComment := trimHspace(splitResult.comment)
 
-	return &MkLine{line, &mkLineDirective{indent, directive, args, trimmedComment, nil, nil, nil}}
+	return &MkLine{line, splitResult, &mkLineDirective{indent, directive, args, trimmedComment, nil, nil, nil}}
 }
 
-func (p MkLineParser) parseInclude(line *Line) *MkLine {
+func (p MkLineParser) parseInclude(line *Line, splitResult mkLineSplitResult) *MkLine {
 	m, indent, directive, includedFile, comment := MatchMkInclude(line.Text)
 	if !m {
 		return nil
 	}
 
-	return &MkLine{line, &mkLineInclude{directive == "include", false, indent, includedFile, nil, comment}}
+	return &MkLine{line, splitResult, &mkLineInclude{directive == "include", false, indent, includedFile, nil, comment}}
 }
 
-func (p MkLineParser) parseSysinclude(line *Line) *MkLine {
+func (p MkLineParser) parseSysinclude(line *Line, splitResult mkLineSplitResult) *MkLine {
 	m, indent, directive, includedFile, comment := match4(line.Text, `^\.([\t ]*)(s?include)[\t ]+<([^>]+)>[\t ]*(#.*)?$`)
 	if !m {
 		return nil
 	}
 
-	return &MkLine{line, &mkLineInclude{directive == "include", true, indent, includedFile, nil, strings.TrimPrefix(comment, "#")}}
+	return &MkLine{line, splitResult, &mkLineInclude{directive == "include", true, indent, includedFile, nil, strings.TrimPrefix(comment, "#")}}
 }
 
-func (p MkLineParser) parseDependency(line *Line) *MkLine {
+func (p MkLineParser) parseDependency(line *Line, splitResult mkLineSplitResult) *MkLine {
 	// XXX: Replace this regular expression with proper parsing.
 	// There might be a ${VAR:M*.c} in these variables, which the below regular expression cannot handle.
 	m, targets, whitespace, sources := match3(line.Text, `^([^\t :]+(?:[\t ]*[^\t :]+)*)([\t ]*):[\t ]*([^#]*?)(?:[\t ]*#.*)?$`)
@@ -264,15 +261,15 @@ func (p MkLineParser) parseDependency(line *Line) *MkLine {
 	if whitespace != "" {
 		line.Notef("Space before colon in dependency line.")
 	}
-	return &MkLine{line, mkLineDependency{targets, sources}}
+	return &MkLine{line, splitResult, mkLineDependency{targets, sources}}
 }
 
-func (p MkLineParser) parseMergeConflict(line *Line) *MkLine {
+func (p MkLineParser) parseMergeConflict(line *Line, splitResult mkLineSplitResult) *MkLine {
 	if !matches(line.Text, `^(<<<<<<<|=======|>>>>>>>)`) {
 		return nil
 	}
 
-	return &MkLine{line, nil}
+	return &MkLine{line, splitResult, nil}
 }
 
 // split parses a logical line from a Makefile (that is, after joining
@@ -369,11 +366,11 @@ func (MkLineParser) split(line *Line, text string, trimComment bool) mkLineSplit
 // The comment starts at the first #. Except if it is preceded by an odd number
 // of backslashes. Or by an opening bracket.
 //
-// The main text is returned including leading and trailing whitespace. Any
-// escaped # is returned in its unescaped form, that is, \# becomes #.
+// The main text is returned including leading and trailing whitespace.
+// Any escaped # is unescaped, that is, \# becomes #.
 //
-// The comment is returned including the leading "#", if any. If the line has
-// no comment, it is an empty string.
+// The comment is returned including the leading "#", if any.
+// If the line has no comment, it is an empty string.
 func (MkLineParser) unescapeComment(text string) (main, comment string) {
 	var sb strings.Builder
 
