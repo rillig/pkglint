@@ -231,21 +231,21 @@ func (p MkLineParser) parseDirective(line *Line, splitResult mkLineSplitResult) 
 }
 
 func (p MkLineParser) parseInclude(line *Line, splitResult mkLineSplitResult) *MkLine {
-	m, indent, directive, includedFile, comment := MatchMkInclude(line.Text)
+	m, indent, directive, includedFile := MatchMkInclude(splitResult.main)
 	if !m {
 		return nil
 	}
 
-	return &MkLine{line, splitResult, &mkLineInclude{directive == "include", false, indent, includedFile, nil, comment}}
+	return &MkLine{line, splitResult, &mkLineInclude{directive == "include", false, indent, includedFile, nil}}
 }
 
 func (p MkLineParser) parseSysinclude(line *Line, splitResult mkLineSplitResult) *MkLine {
-	m, indent, directive, includedFile, comment := match4(line.Text, `^\.([\t ]*)(s?include)[\t ]+<([^>]+)>[\t ]*(#.*)?$`)
+	m, indent, directive, includedFile := match3(splitResult.main, `^\.([\t ]*)(s?include)[\t ]+<([^>]+)>$`)
 	if !m {
 		return nil
 	}
 
-	return &MkLine{line, splitResult, &mkLineInclude{directive == "include", true, indent, includedFile, nil, strings.TrimPrefix(comment, "#")}}
+	return &MkLine{line, splitResult, &mkLineInclude{directive == "include", true, indent, includedFile, nil}}
 }
 
 func (p MkLineParser) parseDependency(line *Line, splitResult mkLineSplitResult) *MkLine {

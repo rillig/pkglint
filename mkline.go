@@ -62,7 +62,6 @@ type mkLineInclude struct {
 	indent          string   // the space between the leading "." and the directive
 	includedFile    string   // the text between the <brackets> or "quotes"
 	conditionalVars []string // variables on which this inclusion depends (filled in later, as needed)
-	comment         string
 }
 
 type mkLineDependency struct {
@@ -281,8 +280,6 @@ func (mkline *MkLine) IncludedFile() string { return mkline.data.(*mkLineInclude
 func (mkline *MkLine) IncludedFileFull() string {
 	return cleanpath(path.Join(path.Dir(mkline.Filename), mkline.IncludedFile()))
 }
-
-func (mkline *MkLine) IncludeComment() string { return mkline.data.(*mkLineInclude).comment }
 
 func (mkline *MkLine) Targets() string { return mkline.data.(mkLineDependency).targets }
 
@@ -1272,7 +1269,7 @@ var (
 	VarparamBytes = textproc.NewByteSet("A-Za-z_0-9#*+---./[")
 )
 
-func MatchMkInclude(text string) (m bool, indentation, directive, filename, comment string) {
+func MatchMkInclude(text string) (m bool, indentation, directive, filename string) {
 	lexer := textproc.NewLexer(text)
 	if lexer.SkipByte('.') {
 		indentation = lexer.NextHspace()
@@ -1289,10 +1286,6 @@ func MatchMkInclude(text string) (m bool, indentation, directive, filename, comm
 				filename = lexer.NextBytesFunc(func(c byte) bool { return c != '"' })
 				if filename != "" && lexer.SkipByte('"') {
 					lexer.NextHspace()
-					if lexer.SkipByte('#') {
-						comment = lexer.Rest()
-						lexer.Skip(len(comment))
-					}
 					if lexer.EOF() {
 						m = true
 						return
@@ -1301,5 +1294,5 @@ func MatchMkInclude(text string) (m bool, indentation, directive, filename, comm
 			}
 		}
 	}
-	return false, "", "", "", ""
+	return false, "", "", ""
 }
