@@ -693,6 +693,8 @@ func (t *Tester) FinishSetUp() {
 //
 // Arguments that name existing files or directories in the temporary test
 // directory are transformed to their actual paths.
+//
+// Does not work in combination with SetUpOption.
 func (t *Tester) Main(args ...string) int {
 	if t.seenFinish && !t.seenMain {
 		t.Errorf("Calling t.FinishSetup() before t.Main() is redundant " +
