@@ -36,7 +36,6 @@ type mkLineAssign struct {
 	valueMk           []*MkToken // The value, sent through splitIntoMkWords
 	valueMkRest       string     // nonempty in case of parse errors
 	fields            []string   // The value, space-separated according to shell quoting rules
-	spaceAfterValue   string     // FIXME: remove
 }
 
 type mkLineShell struct {

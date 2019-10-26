@@ -86,7 +86,7 @@ func (p MkLineParser) parseVarassign(line *Line, text string, splitResult mkLine
 		}
 	}
 
-	if splitResult.hasComment && a.value != "" && a.spaceAfterValue == "" {
+	if splitResult.hasComment && a.value != "" && splitResult.spaceBeforeComment == "" {
 		line.Warnf("The # character starts a Makefile comment.")
 		line.Explain(
 			"In a variable assignment, an unescaped # starts a comment that",
@@ -158,10 +158,9 @@ func (p MkLineParser) MatchVarassign(line *Line, text string, splitResult *mkLin
 	value := trimHspace(lexer.Rest())
 	parsedValueAlign := condStr(commented, "#", "") + lexer.Since(mainStart)
 	valueAlign := p.getRawValueAlign(line.raw[0].orignl, parsedValueAlign)
-	spaceBeforeComment := splitResult.spaceBeforeComment
 	if value == "" {
-		valueAlign += spaceBeforeComment
-		spaceBeforeComment = ""
+		valueAlign += splitResult.spaceBeforeComment
+		splitResult.spaceBeforeComment = ""
 	}
 
 	return true, &mkLineAssign{
@@ -176,7 +175,6 @@ func (p MkLineParser) MatchVarassign(line *Line, text string, splitResult *mkLin
 		valueMk:           nil, // filled in lazily
 		valueMkRest:       "",  // filled in lazily
 		fields:            nil, // filled in lazily
-		spaceAfterValue:   spaceBeforeComment,
 	}
 }
 

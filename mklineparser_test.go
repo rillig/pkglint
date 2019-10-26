@@ -278,9 +278,9 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 			valueMk:           nil,
 			valueMkRest:       "",
 			fields:            nil,
-			spaceAfterValue:   spaceAfterValue,
 		}
 		t.CheckDeepEquals(*actual, expected)
+		t.CheckEquals(splitResult.spaceBeforeComment, spaceAfterValue)
 		t.CheckEquals(splitResult.hasComment, comment != "")
 		t.CheckEquals(condStr(splitResult.hasComment, "#", "")+splitResult.comment, comment)
 		t.CheckOutput(diagnostics)
