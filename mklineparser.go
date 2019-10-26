@@ -39,7 +39,7 @@ func (p MkLineParser) Parse(line *Line) *MkLine {
 
 	data := p.split(line, text, true)
 
-	if mkline := p.parseVarassign(line); mkline != nil {
+	if mkline := p.parseVarassign(line, text, data); mkline != nil {
 		return mkline
 	}
 	if mkline := p.parseCommentOrEmpty(line); mkline != nil {
@@ -66,8 +66,8 @@ func (p MkLineParser) Parse(line *Line) *MkLine {
 	return &MkLine{line, nil}
 }
 
-func (p MkLineParser) parseVarassign(line *Line) *MkLine {
-	m, a := p.MatchVarassign(line, line.Text)
+func (p MkLineParser) parseVarassign(line *Line, text string, splitResult mkLineSplitResult) *MkLine {
+	m, a := p.MatchVarassign(line, text, splitResult)
 	if !m {
 		return nil
 	}
@@ -102,26 +102,22 @@ func (p MkLineParser) parseVarassign(line *Line) *MkLine {
 	return &MkLine{line, a}
 }
 
-func (p MkLineParser) MatchVarassign(line *Line, text string) (bool, *mkLineAssign) {
+func (p MkLineParser) MatchVarassign(line *Line, text string, splitResult mkLineSplitResult) (bool, *mkLineAssign) {
 
 	// A commented variable assignment does not have leading whitespace.
 	// Otherwise line 1 of almost every Makefile fragment would need to
 	// be scanned for a variable assignment even though it only contains
 	// the $NetBSD CVS Id.
-	clex := textproc.NewLexer(text)
-	commented := clex.SkipByte('#')
-	if commented && clex.SkipHspace() || clex.EOF() {
-		return false, nil
-	}
-
-	withoutLeadingComment := text
+	commented := splitResult.main == "" && splitResult.hasComment
 	if commented {
-		withoutLeadingComment = withoutLeadingComment[1:]
+		clex := textproc.NewLexer(splitResult.comment)
+		if clex.SkipHspace() || clex.EOF() {
+			return false, nil
+		}
+		splitResult = p.split(nil, text[1:], true)
 	}
 
-	data := p.split(nil, withoutLeadingComment, true)
-
-	lexer := NewMkTokensLexer(data.tokens)
+	lexer := NewMkTokensLexer(splitResult.tokens)
 	mainStart := lexer.Mark()
 
 	for !commented && lexer.SkipByte(' ') {
@@ -131,7 +127,7 @@ func (p MkLineParser) MatchVarassign(line *Line, text string) (bool, *mkLineAssi
 	// TODO: duplicated code in MkParser.Varname
 	for lexer.NextBytesSet(VarbaseBytes) != "" || lexer.NextVarUse() != nil {
 	}
-	if lexer.SkipByte('.') || hasPrefix(data.main, "SITES_") {
+	if lexer.SkipByte('.') || hasPrefix(splitResult.main, "SITES_") {
 		for lexer.NextBytesSet(VarparamBytes) != "" || lexer.NextVarUse() != nil {
 		}
 	}
@@ -164,7 +160,7 @@ func (p MkLineParser) MatchVarassign(line *Line, text string) (bool, *mkLineAssi
 	value := trimHspace(lexer.Rest())
 	parsedValueAlign := condStr(commented, "#", "") + lexer.Since(mainStart)
 	valueAlign := p.getRawValueAlign(line.raw[0].orignl, parsedValueAlign)
-	spaceBeforeComment := data.spaceBeforeComment
+	spaceBeforeComment := splitResult.spaceBeforeComment
 	if value == "" {
 		valueAlign += spaceBeforeComment
 		spaceBeforeComment = ""
@@ -183,7 +179,7 @@ func (p MkLineParser) MatchVarassign(line *Line, text string) (bool, *mkLineAssi
 		valueMkRest:       "",  // filled in lazily
 		fields:            nil, // filled in lazily
 		spaceAfterValue:   spaceBeforeComment,
-		comment:           condStr(data.hasComment, "#", "") + data.comment,
+		comment:           condStr(splitResult.hasComment, "#", "") + splitResult.comment,
 	}
 }
 

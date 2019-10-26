@@ -244,7 +244,9 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 	testLine := func(line *Line, commented bool, varname, spaceAfterVarname, op, align, value, spaceAfterValue, comment string, diagnostics ...string) {
 		text := line.Text
 
-		m, actual := NewMkLineParser().MatchVarassign(line, text)
+		parser := NewMkLineParser()
+		splitResult := parser.split(nil, text, true)
+		m, actual := parser.MatchVarassign(line, text, splitResult)
 
 		assert(m)
 		expected := mkLineAssign{
@@ -273,7 +275,9 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 
 	testInvalid := func(text string, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, text)
-		m, _ := NewMkLineParser().MatchVarassign(line, text)
+		parser := NewMkLineParser()
+		splitResult := parser.split(nil, text, true)
+		m, _ := parser.MatchVarassign(line, text, splitResult)
 		if m {
 			c.Errorf("Text %q matches variable assignment but shouldn't.", text)
 		}

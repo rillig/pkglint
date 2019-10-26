@@ -219,7 +219,9 @@ func (mkline *MkLine) FirstLineContainsValue() bool {
 
 	// Parsing the continuation marker as variable value is cheating but works well.
 	text := strings.TrimSuffix(mkline.raw[0].orignl, "\n")
-	_, a := NewMkLineParser().MatchVarassign(mkline.Line, text)
+	parser := NewMkLineParser()
+	splitResult := parser.split(nil, text, true)
+	_, a := parser.MatchVarassign(mkline.Line, text, splitResult)
 	return a.value != "\\"
 }
 
