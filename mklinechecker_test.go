@@ -413,6 +413,26 @@ func (s *Suite) Test_MkLineChecker_checkInclude__builtin_mk(c *check.C) {
 			"Include \"../../category/package/buildlink3.mk\" instead.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkInclude__builtin_mk_rationale(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"# I have good reasons for including this file directly.",
+		".include \"../../category/package/builtin.mk\"",
+		"",
+		".include \"../../category/package/builtin.mk\"")
+	t.CreateFileLines("category/package/builtin.mk",
+		MkCvsID)
+	t.FinishSetUp()
+
+	G.checkdirPackage(t.File("category/package"))
+
+	t.CheckOutputLines(
+		"ERROR: ~/category/package/Makefile:23: " +
+			"../../category/package/builtin.mk must not be included directly. " +
+			"Include \"../../category/package/buildlink3.mk\" instead.")
+}
+
 func (s *Suite) Test_MkLineChecker__permissions_in_hacks_mk(c *check.C) {
 	t := s.Init(c)
 
