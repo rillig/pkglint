@@ -28,26 +28,45 @@ func (s *Suite) Test_MkLine_ValueAlign__commented(c *check.C) {
 func (s *Suite) Test_MkLine_FirstLineContainsValue(c *check.C) {
 	t := s.Init(c)
 
-	mklines := t.NewMkLines("filename.mk",
-		MkCvsID,
-		"VAR=\tvalue",
-		"VAR= value \\",
-		"\tstarts in first line",
-		"VAR= \\",
-		"\tvalue starts in second line",
-		"#VAR= value \\",
-		"\tstarts in first line",
+	lines := func(texts ...string) []string { return texts }
+	test := func(lines []string, expected bool) {
+		mklines := t.NewMkLines("filename.mk", lines...)
+		actual := mklines.mklines[0].FirstLineContainsValue()
+		t.CheckEquals(actual, expected)
+	}
+	testAssert := func(lines ...string) {
+		mklines := t.NewMkLines("filename.mk", lines...)
+		t.ExpectAssert(func() { mklines.mklines[0].FirstLineContainsValue() })
+	}
+
+	// Not a variable assignment.
+	testAssert(MkCvsID)
+
+	// Not a multiline variable assignment.
+	testAssert("VAR=\tvalue")
+
+	test(
+		lines(
+			"VAR= value \\",
+			"\tstarts in first line"),
+		true)
+
+	test(
+		lines(
+			"VAR= \\",
+			"\tvalue starts in second line"),
+		false)
+
+	test(
+		lines(
+			"#VAR= value \\",
+			"\tstarts in first line"),
+		true)
+
+	test(lines(
 		"#VAR= \\",
-		"\tvalue starts in second line")
-
-	t.ExpectAssert(func() { mklines.mklines[0].FirstLineContainsValue() })
-
-	t.ExpectAssert(func() { mklines.mklines[1].FirstLineContainsValue() })
-
-	t.CheckEquals(mklines.mklines[2].FirstLineContainsValue(), true)
-	t.CheckEquals(mklines.mklines[3].FirstLineContainsValue(), false)
-	t.CheckEquals(mklines.mklines[4].FirstLineContainsValue(), true)
-	t.CheckEquals(mklines.mklines[5].FirstLineContainsValue(), false)
+		"\tvalue starts in second line"),
+		false)
 }
 
 // Up to July 2019, there was a method MkLine.IsMultiAligned, which has
