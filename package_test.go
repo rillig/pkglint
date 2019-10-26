@@ -1314,11 +1314,17 @@ func (s *Suite) Test_Package_checkIncludeConditionally__explain_PKG_OPTIONS_in_M
 
 	G.checkdirPackage(".")
 
-	// FIXME: Add the same explanation as in options.mk.
 	t.CheckOutputLines(
-		"WARN: Makefile:26: " +
-			"\"../../devel/zlib/buildlink3.mk\" is included conditionally here " +
-			"(depending on PKG_OPTIONS) and unconditionally in buildlink3.mk:12.")
+		"WARN: Makefile:26: "+
+			"\"../../devel/zlib/buildlink3.mk\" is included conditionally here "+
+			"(depending on PKG_OPTIONS) and unconditionally in buildlink3.mk:12.",
+		"",
+		"\tWhen including a dependent file, the conditions in the buildlink3.mk",
+		"\tfile should be the same as in options.mk or the Makefile.",
+		"",
+		"\tTo find out the PKG_OPTIONS of this package at build time, have a",
+		"\tlook at mk/pkg-build-options.mk.",
+		"")
 }
 
 func (s *Suite) Test_Package_checkIncludeConditionally__explain_PKG_OPTIONS_in_options_mk(c *check.C) {
