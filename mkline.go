@@ -36,7 +36,7 @@ type mkLineAssign struct {
 	valueMk           []*MkToken // The value, sent through splitIntoMkWords
 	valueMkRest       string     // nonempty in case of parse errors
 	fields            []string   // The value, space-separated according to shell quoting rules
-	spaceAfterValue   string
+	spaceAfterValue   string     // FIXME: remove
 }
 
 type mkLineShell struct {
@@ -80,8 +80,12 @@ func (mkline *MkLine) HasComment() bool { return mkline.splitResult.hasComment }
 
 // Comment returns the comment after the first unescaped #.
 //
-// Except that for variable assignments that are commented out entirely,
-// that leading comment is ignored.
+// A special case are variable assignments. If these are commented out
+// entirely, they still count as variable assignments, which means that
+// their comment is the one after the value, if any.
+//
+// Shell commands (lines that start with a tab) cannot have comments, as
+// the # characters are passed uninterpreted to the shell.
 //
 // Example:
 //  VAR=value # comment
