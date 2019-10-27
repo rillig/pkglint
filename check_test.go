@@ -69,6 +69,7 @@ func (s *Suite) SetUpTest(c *check.C) {
 
 	t.c = c
 	t.SetUpCommandLine("-Wall")    // To catch duplicate warnings
+	G.Todo.Pop()                   // The "." was inserted by default.
 	t.seenSetUpCommandLine = false // This default call doesn't count.
 
 	// To improve code coverage and ensure that trace.Result works
