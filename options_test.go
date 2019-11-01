@@ -470,9 +470,14 @@ func (s *Suite) Test_CheckLinesOptionsMk__partly_indirect(c *check.C) {
 		MkCvsID,
 		"",
 		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
-		"PKG_SUPPORTED_OPTIONS=\tgeneric-${PKG_OPTIONS_VAR}",
+		"PKG_SUPPORTED_OPTIONS=\tgeneric-${OPSYS}",
 		"",
-		".include \"../../mk/bsd.options.mk\"")
+		".include \"../../mk/bsd.options.mk\"",
+		"",
+		".for option in generic-${OPSYS}",
+		".  if ${PKG_OPTIONS:M${option}}",
+		".  endif",
+		".endfor")
 	t.FinishSetUp()
 	t.Chdir("category/package")
 
