@@ -485,3 +485,35 @@ func (s *Suite) Test_CheckLinesOptionsMk__partly_indirect(c *check.C) {
 
 	t.CheckOutputEmpty()
 }
+
+func (s *Suite) Test_CheckLinesOptionsMk__indirect_supported_options(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpOption("indirect", "")
+	t.SetUpOption("direct", "")
+	t.SetUpVartypes()
+	t.CreateFileLines("mk/bsd.options.mk",
+		MkCvsID)
+	mklines := t.SetUpFileMkLines("category/package/options.mk",
+		MkCvsID,
+		"",
+		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
+		"OPTIONS=\t\tindirect",
+		"PKG_SUPPORTED_OPTIONS=\t${OPTIONS} direct",
+		"",
+		".include \"../../mk/bsd.options.mk\"",
+		"",
+		".for option in ${OPTIONS}",
+		".  if ${PKG_OPTIONS:M${option}}",
+		".  endif",
+		".endfor")
+
+	CheckLinesOptionsMk(mklines)
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/options.mk:5: "+
+			"Option \"direct\" should be handled below in an .if block.",
+		// FIXME: It _is_ added, just indirectly.
+		"WARN: ~/category/package/options.mk:10: "+
+			"Option \"indirect\" is handled but not added to PKG_SUPPORTED_OPTIONS.")
+}
