@@ -42,10 +42,13 @@ func (ck *OptionsLinesChecker) Check() {
 		mlex.Skip()
 	}
 
-	for !mlex.EOF() {
-		ck.handleLowerLine(mlex.CurrentMkLine())
-		mlex.Skip()
-	}
+	i := 0
+	mklines.ForEach(func(mkline *MkLine) {
+		if i >= mlex.index {
+			ck.handleLowerLine(mkline)
+		}
+		i++
+	})
 
 	ck.checkOptionsMismatch()
 
