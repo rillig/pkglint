@@ -39,6 +39,16 @@ func (MkTokenBuilder) VarUse(varname string, modifiers ...string) *MkVarUse {
 	return &MkVarUse{varname, mods}
 }
 
+// AddCommand adds a command directly to a list of commands,
+// creating all the intermediate nodes for the syntactic representation.
+// As soon as that representation is replaced with a semantic representation,
+// this method should no longer be necessary.
+func (list *MkShList) AddCommand(command *MkShCommand) *MkShList {
+	pipeline := NewMkShPipeline(false, []*MkShCommand{command})
+	andOr := NewMkShAndOr(pipeline)
+	return list.AddAndOr(andOr)
+}
+
 func (s *Suite) Test_MkVarUse_Mod(c *check.C) {
 	t := s.Init(c)
 
@@ -51,16 +61,6 @@ func (s *Suite) Test_MkVarUse_Mod(c *check.C) {
 
 	test("${varname:Q}", ":Q")
 	test("${PATH:ts::Q}", ":ts::Q")
-}
-
-// AddCommand adds a command directly to a list of commands,
-// creating all the intermediate nodes for the syntactic representation.
-// As soon as that representation is replaced with a semantic representation,
-// this method should no longer be necessary.
-func (list *MkShList) AddCommand(command *MkShCommand) *MkShList {
-	pipeline := NewMkShPipeline(false, []*MkShCommand{command})
-	andOr := NewMkShAndOr(pipeline)
-	return list.AddAndOr(andOr)
 }
 
 func (s *Suite) Test_MkVarUseModifier_ChangesWords(c *check.C) {
