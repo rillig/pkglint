@@ -63,9 +63,10 @@ func (s *Suite) Test_CheckLinesOptionsMk(c *check.C) {
 			"The positive branch of the .if/.else should be the one where the option is set.",
 		// TODO: The diagnostics should appear in the correct order.
 		"WARN: ~/category/package/options.mk:6: "+
-			"Option \"mc-charset\" should be handled below in an .if block.",
-		"WARN: ~/category/package/options.mk:18: "+
-			"Option \"undeclared\" is handled but not added to PKG_SUPPORTED_OPTIONS.")
+			"Option \"mc-charset\" should be handled below in an .if block.")
+	// TODO: There is no warning for the option "undeclared" since
+	//  the option lang-${l} sets declaredArbitrary. This in turn
+	//  disables possible wrong warnings, but a few too many.
 }
 
 // This test is provided for code coverage. Similarities to existing files are purely coincidental.
@@ -486,7 +487,10 @@ func (s *Suite) Test_CheckLinesOptionsMk__partly_indirect(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_CheckLinesOptionsMk__indirect_supported_options(c *check.C) {
+// Pkglint handles the two forms ${VAR} and $(VAR) for variable uses
+// differently since the form using braces is preferred. Therefore it's
+// ok that pkglint produces more warnings than strictly necessary.
+func (s *Suite) Test_CheckLinesOptionsMk__indirect_supported_options_parentheses(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpOption("indirect", "")
@@ -499,7 +503,7 @@ func (s *Suite) Test_CheckLinesOptionsMk__indirect_supported_options(c *check.C)
 		"",
 		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
 		"OPTIONS=\t\tindirect",
-		"PKG_SUPPORTED_OPTIONS=\t${OPTIONS} direct",
+		"PKG_SUPPORTED_OPTIONS=\t$(OPTIONS) direct",
 		"",
 		".include \"../../mk/bsd.options.mk\"",
 		"",
@@ -512,8 +516,11 @@ func (s *Suite) Test_CheckLinesOptionsMk__indirect_supported_options(c *check.C)
 
 	t.CheckOutputLines(
 		"WARN: ~/category/package/options.mk:5: "+
+			"Please use curly braces {} instead of round parentheses () for OPTIONS.",
+		"WARN: ~/category/package/options.mk:5: "+
+			"Option \"$(OPTIONS)\" should be handled below in an .if block.",
+		"WARN: ~/category/package/options.mk:5: "+
 			"Option \"direct\" should be handled below in an .if block.",
-		// FIXME: It _is_ added, just indirectly.
 		"WARN: ~/category/package/options.mk:10: "+
 			"Option \"indirect\" is handled but not added to PKG_SUPPORTED_OPTIONS.")
 }

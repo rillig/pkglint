@@ -3,7 +3,9 @@ package pkglint
 func CheckLinesOptionsMk(mklines *MkLines) {
 	ck := OptionsLinesChecker{
 		mklines,
+		false,
 		make(map[string]*MkLine),
+		false,
 		make(map[string]*MkLine),
 		nil}
 
@@ -16,7 +18,9 @@ func CheckLinesOptionsMk(mklines *MkLines) {
 type OptionsLinesChecker struct {
 	mklines *MkLines
 
+	declaredArbitrary         bool
 	declaredOptions           map[string]*MkLine
+	handledArbitrary          bool
 	handledOptions            map[string]*MkLine
 	optionsInDeclarationOrder []string
 }
@@ -87,7 +91,9 @@ func (ck *OptionsLinesChecker) handleUpperLine(mkline *MkLine) bool {
 			"PKG_OPTIONS_GROUP.*",
 			"PKG_OPTIONS_SET.*":
 			for _, option := range mkline.ValueFields(mkline.Value()) {
-				if !containsVarRef(option) {
+				if containsVarRef(option) {
+					ck.declaredArbitrary = true
+				} else {
 					ck.declaredOptions[option] = mkline
 					ck.optionsInDeclarationOrder = append(ck.optionsInDeclarationOrder, option)
 				}
@@ -138,6 +144,7 @@ func (ck *OptionsLinesChecker) handleLowerCondition(mkline *MkLine, cond *MkCond
 
 	recordOption := func(option string) {
 		if containsVarRef(option) {
+			ck.handledArbitrary = true
 			return
 		}
 
@@ -199,13 +206,13 @@ func (ck *OptionsLinesChecker) checkOptionsMismatch() {
 		handled := ck.handledOptions[option]
 
 		switch {
-		case handled == nil:
+		case handled == nil && !ck.handledArbitrary:
 			declared.Warnf("Option %q should be handled below in an .if block.", option)
 			declared.Explain(
 				"If an option is not processed in this file, it may either be a",
 				"typo, or the option does not have any effect.")
 
-		case declared == nil:
+		case declared == nil && !ck.declaredArbitrary:
 			handled.Warnf("Option %q is handled but not added to PKG_SUPPORTED_OPTIONS.", option)
 			handled.Explain(
 				"This block of code will never be run since PKG_OPTIONS cannot",
