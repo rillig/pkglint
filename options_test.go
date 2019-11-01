@@ -487,9 +487,6 @@ func (s *Suite) Test_CheckLinesOptionsMk__partly_indirect(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-// Pkglint handles the two forms ${VAR} and $(VAR) for variable uses
-// differently since the form using braces is preferred. Therefore it's
-// ok that pkglint produces more warnings than strictly necessary.
 func (s *Suite) Test_CheckLinesOptionsMk__indirect_supported_options_parentheses(c *check.C) {
 	t := s.Init(c)
 
@@ -518,9 +515,5 @@ func (s *Suite) Test_CheckLinesOptionsMk__indirect_supported_options_parentheses
 		"WARN: ~/category/package/options.mk:5: "+
 			"Please use curly braces {} instead of round parentheses () for OPTIONS.",
 		"WARN: ~/category/package/options.mk:5: "+
-			"Option \"$(OPTIONS)\" should be handled below in an .if block.",
-		"WARN: ~/category/package/options.mk:5: "+
-			"Option \"direct\" should be handled below in an .if block.",
-		"WARN: ~/category/package/options.mk:10: "+
-			"Option \"indirect\" is handled but not added to PKG_SUPPORTED_OPTIONS.")
+			"Option \"direct\" should be handled below in an .if block.")
 }
