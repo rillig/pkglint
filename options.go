@@ -1,7 +1,5 @@
 package pkglint
 
-import "path"
-
 func CheckLinesOptionsMk(mklines *MkLines) {
 	ck := OptionsLinesChecker{
 		mklines,
@@ -144,7 +142,7 @@ func (ck *OptionsLinesChecker) handleLowerCondition(mkline *MkLine, cond *MkCond
 		ck.optionsInDeclarationOrder = append(ck.optionsInDeclarationOrder, option)
 	}
 
-	recordUsedOption := func(varuse *MkVarUse) {
+	recordVarUse := func(varuse *MkVarUse) {
 		if varuse.varname != "PKG_OPTIONS" || len(varuse.modifiers) != 1 {
 			return
 		}
@@ -164,8 +162,7 @@ func (ck *OptionsLinesChecker) handleLowerCondition(mkline *MkLine, cond *MkCond
 
 		} else {
 			for declaredOption := range ck.declaredOptions {
-				matched, err := path.Match(pattern, declaredOption)
-				if err == nil && matched {
+				if pathMatches(pattern, declaredOption) {
 					recordOption(declaredOption)
 				}
 			}
@@ -173,8 +170,8 @@ func (ck *OptionsLinesChecker) handleLowerCondition(mkline *MkLine, cond *MkCond
 	}
 
 	cond.Walk(&MkCondCallback{
-		Empty: recordUsedOption,
-		Var:   recordUsedOption})
+		Empty: recordVarUse,
+		Var:   recordVarUse})
 
 	if cond.Empty != nil && cond.Empty.varname == "PKG_OPTIONS" && mkline.HasElseBranch() {
 		mkline.Notef("The positive branch of the .if/.else should be the one where the option is set.")

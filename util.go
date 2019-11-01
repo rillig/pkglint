@@ -1385,6 +1385,11 @@ func shquote(s string) string {
 	return "'" + strings.Replace(s, "'", "'\\''", -1) + "'"
 }
 
+func pathMatches(pattern, s string) bool {
+	matched, err := path.Match(pattern, s)
+	return err == nil && matched
+}
+
 type StringQueue struct {
 	entries []string
 }
