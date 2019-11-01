@@ -113,15 +113,21 @@ func (ck *OptionsLinesChecker) handleUpperLine(mkline *MkLine) bool {
 }
 
 func (ck *OptionsLinesChecker) handleLowerLine(mkline *MkLine) {
-	if mkline.IsDirective() {
-		directive := mkline.Directive()
-		if directive == "if" || directive == "elif" {
-			cond := mkline.Cond()
-			if cond != nil {
-				ck.handleLowerCondition(mkline, cond)
-			}
-		}
+	if !mkline.IsDirective() {
+		return
 	}
+
+	directive := mkline.Directive()
+	if directive != "if" && directive != "elif" {
+		return
+	}
+
+	cond := mkline.Cond()
+	if cond == nil {
+		return
+	}
+
+	ck.handleLowerCondition(mkline, cond)
 }
 
 func (ck *OptionsLinesChecker) handleLowerCondition(mkline *MkLine, cond *MkCond) {
