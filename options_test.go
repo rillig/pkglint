@@ -461,12 +461,5 @@ func (s *Suite) Test_CheckLinesOptionsMk__indirect(c *check.C) {
 		"WARN: options.mk:7: PKG_SUPPORTED_OPTIONS.FreeBSD is defined but not used.",
 		"WARN: options.mk:10: PKG_SUPPORTED_OPTIONS.NetBSD is defined but not used.",
 		// FIXME: That's ok, maybe even everywhere?
-		"WARN: options.mk:17: PLIST_VARS should not be used at load time in any file.",
-		// FIXME: Too many repeated warnings.
-		"WARN: options.mk:18: Option \"netbsd\" is handled but not added to PKG_SUPPORTED_OPTIONS.",
-		"WARN: options.mk:18: Option \"os\" is handled but not added to PKG_SUPPORTED_OPTIONS.",
-		"WARN: options.mk:18: Option \"netbsd\" is handled but not added to PKG_SUPPORTED_OPTIONS.",
-		"WARN: options.mk:18: Option \"os\" is handled but not added to PKG_SUPPORTED_OPTIONS.",
-		"WARN: options.mk:18: Option \"netbsd\" is handled but not added to PKG_SUPPORTED_OPTIONS.",
-		"WARN: options.mk:18: Option \"os\" is handled but not added to PKG_SUPPORTED_OPTIONS.")
+		"WARN: options.mk:17: PLIST_VARS should not be used at load time in any file.")
 }

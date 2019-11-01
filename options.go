@@ -82,7 +82,10 @@ func (ck *OptionsLinesChecker) handleUpperLine(mkline *MkLine) bool {
 
 	case mkline.IsVarassign():
 		switch mkline.Varcanon() {
-		case "PKG_SUPPORTED_OPTIONS", "PKG_OPTIONS_GROUP.*", "PKG_OPTIONS_SET.*":
+		case "PKG_SUPPORTED_OPTIONS",
+			"PKG_SUPPORTED_OPTIONS.*",
+			"PKG_OPTIONS_GROUP.*",
+			"PKG_OPTIONS_SET.*":
 			for _, option := range mkline.ValueFields(mkline.Value()) {
 				if !containsVarRef(option) {
 					ck.declaredOptions[option] = mkline
