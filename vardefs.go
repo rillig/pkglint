@@ -1429,7 +1429,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.pkgloadlist("PKG_OPTIONS_OPTIONAL_GROUPS", BtIdentifier)
 	reg.pkgloadlist("PKG_OPTIONS_REQUIRED_GROUPS", BtIdentifier)
 	reg.pkgloadlist("PKG_OPTIONS_SET.*", BtOption)
-	reg.pkg("PKG_OPTIONS_VAR", BtPkgOptionsVar)
+	reg.pkgload("PKG_OPTIONS_VAR", BtPkgOptionsVar)
 	reg.pkgloadlist("PKG_SUGGESTED_OPTIONS", BtOption)
 	reg.pkgloadlist("PKG_SUGGESTED_OPTIONS.*", BtOption)
 	reg.pkgloadlist("PKG_SUPPORTED_OPTIONS", BtOption)
