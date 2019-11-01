@@ -394,6 +394,7 @@ func (s *Suite) Test_CheckLinesOptionsMk__options_in_for_loop(c *check.C) {
 	t.SetUpOption("idea", "")
 	t.SetUpOption("md2", "")
 	t.SetUpOption("md5", "")
+	t.SetUpOption("other", "")
 	t.CreateFileLines("mk/bsd.options.mk")
 	t.SetUpPackage("category/package",
 		".include \"options.mk\"")
@@ -401,12 +402,12 @@ func (s *Suite) Test_CheckLinesOptionsMk__options_in_for_loop(c *check.C) {
 		MkCvsID,
 		"",
 		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
-		"PKG_SUPPORTED_OPTIONS=\tidea md2 md5",
+		"PKG_SUPPORTED_OPTIONS=\tidea md2 md5 other",
 		"",
 		".include \"../../mk/bsd.options.mk\"",
 		"",
 		".for alg in idea md2 md5",
-		".  if ${PKG_OPTIONS:M${arg}}",
+		".  if ${PKG_OPTIONS:M${alg}}",
 		".  endif",
 		".endfor")
 	t.FinishSetUp()
@@ -414,9 +415,6 @@ func (s *Suite) Test_CheckLinesOptionsMk__options_in_for_loop(c *check.C) {
 
 	G.Check(".")
 
-	// FIXME: Don't warn about these options since they are handled in the .for loop.
 	t.CheckOutputLines(
-		"WARN: options.mk:4: Option \"idea\" should be handled below in an .if block.",
-		"WARN: options.mk:4: Option \"md2\" should be handled below in an .if block.",
-		"WARN: options.mk:4: Option \"md5\" should be handled below in an .if block.")
+		"WARN: options.mk:4: Option \"other\" should be handled below in an .if block.")
 }
