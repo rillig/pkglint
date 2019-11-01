@@ -84,7 +84,7 @@ func (s *Suite) Test_MkVarUseModifier_MatchMatch(c *check.C) {
 
 	test("Mpattern", true, "pattern", true)
 	test("M*", true, "*", false)
-	test("M${VAR}", true, "${VAR}", true) // FIXME: Cannot be guaranteed
+	test("M${VAR}", true, "${VAR}", false)
 	test("Npattern", false, "pattern", true)
 }
 
