@@ -387,3 +387,36 @@ func (s *Suite) Test_CheckLinesOptionsMk__combined_option_handling_coverage(c *c
 	t.CheckOutputLines(
 		"WARN: options.mk:4: Option \"opt-variant\" should be handled below in an .if block.")
 }
+
+func (s *Suite) Test_CheckLinesOptionsMk__options_in_for_loop(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpOption("idea", "")
+	t.SetUpOption("md2", "")
+	t.SetUpOption("md5", "")
+	t.CreateFileLines("mk/bsd.options.mk")
+	t.SetUpPackage("category/package",
+		".include \"options.mk\"")
+	t.CreateFileLines("category/package/options.mk",
+		MkCvsID,
+		"",
+		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
+		"PKG_SUPPORTED_OPTIONS=\tidea md2 md5",
+		"",
+		".include \"../../mk/bsd.options.mk\"",
+		"",
+		".for alg in idea md2 md5",
+		".  if ${PKG_OPTIONS:M${arg}}",
+		".  endif",
+		".endfor")
+	t.FinishSetUp()
+	t.Chdir("category/package")
+
+	G.Check(".")
+
+	// FIXME: Don't warn about these options since they are handled in the .for loop.
+	t.CheckOutputLines(
+		"WARN: options.mk:4: Option \"idea\" should be handled below in an .if block.",
+		"WARN: options.mk:4: Option \"md2\" should be handled below in an .if block.",
+		"WARN: options.mk:4: Option \"md5\" should be handled below in an .if block.")
+}
