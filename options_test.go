@@ -418,3 +418,55 @@ func (s *Suite) Test_CheckLinesOptionsMk__options_in_for_loop(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: options.mk:4: Option \"other\" should be handled below in an .if block.")
 }
+
+func (s *Suite) Test_CheckLinesOptionsMk__indirect(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpOption("generic", "")
+	t.SetUpOption("netbsd", "")
+	t.SetUpOption("os", "")
+	t.CreateFileLines("mk/bsd.options.mk")
+	t.SetUpPackage("category/package",
+		".include \"options.mk\"")
+	t.CreateFileLines("category/package/options.mk",
+		MkCvsID,
+		"",
+		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
+		"PKG_SUPPORTED_OPTIONS=\tgeneric",
+		"PKG_SUGGESTED_OPTIONS=\tgeneric",
+		"",
+		"PKG_SUPPORTED_OPTIONS.FreeBSD=\tos",
+		"PKG_SUGGESTED_OPTIONS.FreeBSD=\tos",
+		"",
+		"PKG_SUPPORTED_OPTIONS.NetBSD+=\tnetbsd os",
+		"PKG_SUGGESTED_OPTIONS.NetBSD+=\tnetbsd os",
+		"",
+		".include \"../../mk/bsd.options.mk\"",
+		"",
+		"PLIST_VARS+=\tgeneric netbsd os",
+		"",
+		".for option in ${PLIST_VARS}",
+		".  if ${PKG_OPTIONS:M${option}}",
+		"CONFIGURE_ARGS+=\t--enable-${option:S/-/_/}",
+		"PLIST.${option}=\tyes",
+		".  endif",
+		".endfor")
+	t.FinishSetUp()
+	t.Chdir("category/package")
+
+	G.Check(".")
+
+	t.CheckOutputLines(
+		// FIXME: bsd.options.mk has its own OPSYSVARS handling.
+		"WARN: options.mk:7: PKG_SUPPORTED_OPTIONS.FreeBSD is defined but not used.",
+		"WARN: options.mk:10: PKG_SUPPORTED_OPTIONS.NetBSD is defined but not used.",
+		// FIXME: That's ok, maybe even everywhere?
+		"WARN: options.mk:17: PLIST_VARS should not be used at load time in any file.",
+		// FIXME: Too many repeated warnings.
+		"WARN: options.mk:18: Option \"netbsd\" is handled but not added to PKG_SUPPORTED_OPTIONS.",
+		"WARN: options.mk:18: Option \"os\" is handled but not added to PKG_SUPPORTED_OPTIONS.",
+		"WARN: options.mk:18: Option \"netbsd\" is handled but not added to PKG_SUPPORTED_OPTIONS.",
+		"WARN: options.mk:18: Option \"os\" is handled but not added to PKG_SUPPORTED_OPTIONS.",
+		"WARN: options.mk:18: Option \"netbsd\" is handled but not added to PKG_SUPPORTED_OPTIONS.",
+		"WARN: options.mk:18: Option \"os\" is handled but not added to PKG_SUPPORTED_OPTIONS.")
+}
