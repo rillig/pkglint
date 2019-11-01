@@ -458,3 +458,25 @@ func (s *Suite) Test_CheckLinesOptionsMk__indirect(c *check.C) {
 
 	t.CheckOutputEmpty()
 }
+
+// An unrealistic scenario, but necessary for code coverage.
+func (s *Suite) Test_CheckLinesOptionsMk__partly_indirect(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("mk/bsd.options.mk")
+	t.SetUpPackage("category/package",
+		".include \"options.mk\"")
+	t.CreateFileLines("category/package/options.mk",
+		MkCvsID,
+		"",
+		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
+		"PKG_SUPPORTED_OPTIONS=\tgeneric-${PKG_OPTIONS_VAR}",
+		"",
+		".include \"../../mk/bsd.options.mk\"")
+	t.FinishSetUp()
+	t.Chdir("category/package")
+
+	G.Check(".")
+
+	t.CheckOutputEmpty()
+}

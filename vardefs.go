@@ -339,7 +339,7 @@ func (reg *VarTypeRegistry) compilerLanguages(src *Pkgsrc) *BasicType {
 					VarUse: func(varuse *MkVarUse) {
 						if varuse.varname == "USE_LANGUAGES" && len(varuse.modifiers) == 1 {
 							ok, _, pattern, exact := varuse.modifiers[0].MatchMatch()
-							if ok && exact && !containsVarRef(pattern) {
+							if ok && exact {
 								languages[intern(pattern)] = true
 							}
 						}
