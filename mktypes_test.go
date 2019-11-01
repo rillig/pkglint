@@ -63,6 +63,31 @@ func (s *Suite) Test_MkVarUse_Mod(c *check.C) {
 	test("${PATH:ts::Q}", ":ts::Q")
 }
 
+func (s *Suite) Test_MkVarUseModifier_MatchMatch(c *check.C) {
+	t := s.Init(c)
+
+	testFail := func(modifier string) {
+		mod := MkVarUseModifier{modifier}
+		ok, _, _, _ := mod.MatchMatch()
+		t.CheckEquals(ok, false)
+	}
+	test := func(modifier string, positive bool, pattern string, exact bool) {
+		mod := MkVarUseModifier{modifier}
+		actualOk, actualPositive, actualPattern, actualExact := mod.MatchMatch()
+		t.CheckDeepEquals(
+			[]interface{}{actualOk, actualPositive, actualPattern, actualExact},
+			[]interface{}{true, positive, pattern, exact})
+	}
+
+	testFail("")
+	testFail("X")
+
+	test("Mpattern", true, "pattern", true)
+	test("M*", true, "*", false)
+	test("M${VAR}", true, "${VAR}", true) // FIXME: Cannot be guaranteed
+	test("Npattern", false, "pattern", true)
+}
+
 func (s *Suite) Test_MkVarUseModifier_ChangesWords(c *check.C) {
 	t := s.Init(c)
 

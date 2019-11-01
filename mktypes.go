@@ -89,8 +89,10 @@ func (m MkVarUseModifier) Subst(str string) (string, bool) {
 
 // MatchMatch tries to match the modifier to a :M or a :N pattern matching.
 // Examples:
-//  :Mpattern   => true, true, "pattern"
-//  :Npattern   => true, false, "pattern"
+//  :Mpattern   => true,  true,  "pattern", true
+//  :M*         => true,  true,  "*",       false
+//  :M${VAR}    => true,  true,  "${VAR}",  true // FIXME
+//  :Npattern   => true,  false, "pattern", true
 //  :X          => false
 func (m MkVarUseModifier) MatchMatch() (ok bool, positive bool, pattern string, exact bool) {
 	if hasPrefix(m.Text, "M") || hasPrefix(m.Text, "N") {
