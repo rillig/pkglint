@@ -456,7 +456,5 @@ func (s *Suite) Test_CheckLinesOptionsMk__indirect(c *check.C) {
 
 	G.Check(".")
 
-	t.CheckOutputLines(
-		// FIXME: That's ok, maybe even everywhere?
-		"WARN: options.mk:17: PLIST_VARS should not be used at load time in any file.")
+	t.CheckOutputEmpty()
 }
