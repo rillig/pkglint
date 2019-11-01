@@ -517,3 +517,28 @@ func (s *Suite) Test_CheckLinesOptionsMk__indirect_supported_options_parentheses
 		"WARN: ~/category/package/options.mk:5: "+
 			"Option \"direct\" should be handled below in an .if block.")
 }
+
+func (s *Suite) Test_CheckLinesOptionsMk__handled_but_not_supported(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpOption("option", "")
+	t.SetUpVartypes()
+	t.CreateFileLines("mk/bsd.options.mk",
+		MkCvsID)
+	mklines := t.SetUpFileMkLines("category/package/options.mk",
+		MkCvsID,
+		"",
+		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
+		"PKG_SUPPORTED_OPTIONS=\t# none",
+		"",
+		".include \"../../mk/bsd.options.mk\"",
+		"",
+		".if ${PKG_OPTIONS:Moption}",
+		".endif")
+
+	CheckLinesOptionsMk(mklines)
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/options.mk:8: " +
+			"Option \"option\" is handled but not added to PKG_SUPPORTED_OPTIONS.")
+}
