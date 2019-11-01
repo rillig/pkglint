@@ -1425,6 +1425,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	optlist("PKG_SUGGESTED_OPTIONS", BtOption)
 	optlist("PKG_SUGGESTED_OPTIONS.*", BtOption)
 	optlist("PKG_SUPPORTED_OPTIONS", BtOption)
+	optlist("PKG_SUPPORTED_OPTIONS.*", BtOption)
 	// end PKG_OPTIONS section
 
 	reg.pkg("PKG_PRESERVE", BtYes)

@@ -457,9 +457,6 @@ func (s *Suite) Test_CheckLinesOptionsMk__indirect(c *check.C) {
 	G.Check(".")
 
 	t.CheckOutputLines(
-		// FIXME: bsd.options.mk has its own OPSYSVARS handling.
-		"WARN: options.mk:7: PKG_SUPPORTED_OPTIONS.FreeBSD is defined but not used.",
-		"WARN: options.mk:10: PKG_SUPPORTED_OPTIONS.NetBSD is defined but not used.",
 		// FIXME: That's ok, maybe even everywhere?
 		"WARN: options.mk:17: PLIST_VARS should not be used at load time in any file.")
 }
