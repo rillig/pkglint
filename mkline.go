@@ -279,6 +279,8 @@ func (mkline *MkLine) MustExist() bool { return mkline.data.(*mkLineInclude).mus
 
 func (mkline *MkLine) IncludedFile() string { return mkline.data.(*mkLineInclude).includedFile }
 
+// IncludedFileFull returns the path to the included file, relative to the
+// current working directory.
 func (mkline *MkLine) IncludedFileFull() string {
 	return cleanpath(path.Join(path.Dir(mkline.Filename), mkline.IncludedFile()))
 }

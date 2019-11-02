@@ -30,49 +30,67 @@ func (ck *OptionsLinesChecker) Check() {
 
 	mklines.Check()
 
-	mlex := NewMkLinesLexer(mklines)
-	mlex.SkipWhile(func(mkline *MkLine) bool { return mkline.IsComment() || mkline.IsEmpty() })
-
-	if !ck.lookingAtPkgOptionsVar(mlex) {
-		return
-	}
-	mlex.Skip()
-
-	upper := true
-	for !mlex.EOF() && upper {
-		upper = ck.handleUpperLine(mlex.CurrentMkLine())
-		mlex.Skip()
-	}
-
-	i := 0
-	mklines.ForEach(func(mkline *MkLine) {
-		if i >= mlex.index {
-			ck.handleLowerLine(mkline)
-		}
-		i++
-	})
+	ck.collect()
 
 	ck.checkOptionsMismatch()
 
 	mklines.SaveAutofixChanges()
 }
 
-func (ck *OptionsLinesChecker) lookingAtPkgOptionsVar(mlex *MkLinesLexer) bool {
-	if !mlex.EOF() {
-		mkline := mlex.CurrentMkLine()
-		if mkline.IsVarassign() && mkline.Varname() == "PKG_OPTIONS_VAR" {
-			return true
-		}
-	}
+func (ck *OptionsLinesChecker) collect() {
+	type states uint8
+	const (
+		top states = iota
+		errorVar
+		upper
+		errorInclude
+		lower
+	)
 
-	line := mlex.CurrentLine()
-	line.Warnf("Expected definition of PKG_OPTIONS_VAR.")
-	line.Explain(
-		"The input variables in an options.mk file should always be",
-		"mentioned in the same order: PKG_OPTIONS_VAR,",
-		"PKG_SUPPORTED_OPTIONS, PKG_SUGGESTED_OPTIONS.",
-		"This way, the options.mk files have the same structure and are easy to understand.")
-	return false
+	state := top
+	var errorVarLine *Line
+
+	ck.mklines.ForEach(func(mkline *MkLine) {
+		if mkline.IsEmpty() || mkline.IsComment() {
+			return
+		}
+
+		switch state {
+		case top:
+			if mkline.IsVarassign() && mkline.Varname() == "PKG_OPTIONS_VAR" {
+				state = upper
+			} else {
+				state = errorVar
+				errorVarLine = mkline.Line
+			}
+		case upper:
+			if mkline.IsInclude() && mkline.IncludedFile() == "../../mk/bsd.options.mk" {
+				state = lower
+			}
+		}
+
+		switch state {
+		case upper:
+			if !ck.handleUpperLine(mkline) {
+				state = errorInclude
+			}
+		case lower:
+			ck.handleLowerLine(mkline)
+		}
+	})
+
+	if state == top || state == errorVar {
+		line := errorVarLine
+		if line == nil {
+			line = NewLineEOF(ck.mklines.lines.Filename)
+		}
+		line.Warnf("Expected definition of PKG_OPTIONS_VAR.")
+		line.Explain(
+			"The input variables in an options.mk file should always be",
+			"mentioned in the same order: PKG_OPTIONS_VAR,",
+			"PKG_SUPPORTED_OPTIONS, PKG_SUGGESTED_OPTIONS.",
+			"This way, the options.mk files have the same structure and are easy to understand.")
+	}
 }
 
 // handleUpperLine checks a line from the upper part of an options.mk file,
