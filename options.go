@@ -74,7 +74,7 @@ func (ck *OptionsLinesChecker) collect() {
 	})
 
 	if !seenPkgOptionsVar {
-		ck.mklines.lines.Errorf("Each options.mk file must define PKG_OPTIONS_VAR.")
+		ck.mklines.Whole().Errorf("Each options.mk file must define PKG_OPTIONS_VAR.")
 	}
 }
 
