@@ -277,9 +277,7 @@ func (s *Suite) Test_CheckLinesPatch__two_patched_files_for_CVE(c *check.C) {
 
 	CheckLinesPatch(lines)
 
-	// FIXME
-	t.CheckOutputLines(
-		"WARN: patch-CVE-2019-0001: Contains patches for 2 files, should be only one.")
+	t.CheckOutputEmpty()
 }
 
 // The patch headers are only recognized as such if they appear directly below each other.

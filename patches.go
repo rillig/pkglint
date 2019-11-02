@@ -79,7 +79,7 @@ func (ck *PatchChecker) Check() {
 		}
 	}
 
-	if patchedFiles > 1 {
+	if patchedFiles > 1 && !matches(ck.lines.Filename, `\bCVE\b`) {
 		ck.lines.Whole().Warnf("Contains patches for %d files, should be only one.", patchedFiles)
 	} else if patchedFiles == 0 {
 		ck.lines.Whole().Errorf("Contains no patch.")
