@@ -1866,6 +1866,21 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__files_Makefile(c *check.C
 		"ERROR: ~/category/package/Makefile: Each package must define its LICENSE.")
 }
 
+func (s *Suite) Test_Package_checkfilePackageMakefile__no_distfiles(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"DISTFILES=\t# none")
+	t.Remove("category/package/distinfo")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package"))
+
+	// FIXME
+	t.CheckOutputLines(
+		"WARN: ~/category/package/distinfo: A package that downloads files should have a distinfo file.")
+}
+
 func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__no_C(c *check.C) {
 	t := s.Init(c)
 
