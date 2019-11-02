@@ -40,15 +40,13 @@ func (ck *OptionsLinesChecker) Check() {
 func (ck *OptionsLinesChecker) collect() {
 	type states uint8
 	const (
-		top states = iota
-		errorVar
-		upper
+		upper states = iota
 		errorInclude
 		lower
 	)
 
-	state := top
-	var errorVarLine *Line
+	state := upper
+	seenPkgOptionsVar := false
 
 	ck.mklines.ForEach(func(mkline *MkLine) {
 		if mkline.IsEmpty() || mkline.IsComment() {
@@ -56,14 +54,10 @@ func (ck *OptionsLinesChecker) collect() {
 		}
 
 		switch state {
-		case top:
-			if mkline.IsVarassign() && mkline.Varname() == "PKG_OPTIONS_VAR" {
-				state = upper
-			} else {
-				state = errorVar
-				errorVarLine = mkline.Line
-			}
 		case upper:
+			if !seenPkgOptionsVar && mkline.IsVarassign() && mkline.Varname() == "PKG_OPTIONS_VAR" {
+				seenPkgOptionsVar = true
+			}
 			if mkline.IsInclude() && mkline.IncludedFile() == "../../mk/bsd.options.mk" {
 				state = lower
 			}
@@ -71,7 +65,7 @@ func (ck *OptionsLinesChecker) collect() {
 
 		switch state {
 		case upper:
-			if !ck.handleUpperLine(mkline) {
+			if !ck.handleUpperLine(mkline, seenPkgOptionsVar) {
 				state = errorInclude
 			}
 		case lower:
@@ -79,23 +73,14 @@ func (ck *OptionsLinesChecker) collect() {
 		}
 	})
 
-	if state == top || state == errorVar {
-		line := errorVarLine
-		if line == nil {
-			line = NewLineEOF(ck.mklines.lines.Filename)
-		}
-		line.Warnf("Expected definition of PKG_OPTIONS_VAR.")
-		line.Explain(
-			"The input variables in an options.mk file should always be",
-			"mentioned in the same order: PKG_OPTIONS_VAR,",
-			"PKG_SUPPORTED_OPTIONS, PKG_SUGGESTED_OPTIONS.",
-			"This way, the options.mk files have the same structure and are easy to understand.")
+	if !seenPkgOptionsVar {
+		ck.mklines.lines.Errorf("Each options.mk file must define PKG_OPTIONS_VAR.")
 	}
 }
 
 // handleUpperLine checks a line from the upper part of an options.mk file,
 // before bsd.options.mk is included.
-func (ck *OptionsLinesChecker) handleUpperLine(mkline *MkLine) bool {
+func (ck *OptionsLinesChecker) handleUpperLine(mkline *MkLine, seenPkgOptionsVar bool) bool {
 
 	declare := func(option string) {
 		if containsVarRef(option) {
@@ -118,6 +103,10 @@ func (ck *OptionsLinesChecker) handleUpperLine(mkline *MkLine) bool {
 			"PKG_SUPPORTED_OPTIONS.*",
 			"PKG_OPTIONS_GROUP.*",
 			"PKG_OPTIONS_SET.*":
+			if !seenPkgOptionsVar {
+				ck.warnVarorder(mkline)
+			}
+
 			for _, option := range mkline.ValueFields(mkline.Value()) {
 				if optionVarUse := ToVarUse(option); optionVarUse != nil {
 					forVars := ck.mklines.ExpandLoopVar(optionVarUse.varname)
@@ -260,4 +249,14 @@ func (ck *OptionsLinesChecker) checkOptionsMismatch() {
 				"This is most probably a typo.")
 		}
 	}
+}
+
+func (ck *OptionsLinesChecker) warnVarorder(mkline *MkLine) {
+	mkline.Warnf("Expected definition of PKG_OPTIONS_VAR.")
+	mkline.Explain(
+		"The input variables in an options.mk file should always be",
+		"mentioned in the same order: PKG_OPTIONS_VAR,",
+		"PKG_SUPPORTED_OPTIONS, PKG_SUGGESTED_OPTIONS.",
+		"",
+		"This way, the options.mk files have the same structure and are easy to understand.")
 }

@@ -73,6 +73,8 @@ func (s *Suite) Test_CheckLinesOptionsMk__literal_in_for_loop(c *check.C) {
 			"Option \"handled\" is handled but not added to PKG_SUPPORTED_OPTIONS.")
 }
 
+// Before version 19.3.5, pkglint warned when bsd.prefs.mk was
+// included in the top half of the file.
 func (s *Suite) Test_CheckLinesOptionsMk__prefs(c *check.C) {
 	t := s.Init(c)
 
@@ -98,10 +100,7 @@ func (s *Suite) Test_CheckLinesOptionsMk__prefs(c *check.C) {
 
 	CheckLinesOptionsMk(mklines)
 
-	t.CheckOutputLines(
-		// FIXME: Including bsd.prefs.mk is ok at any point of the file.
-		"WARN: ~/category/package/options.mk:3: " +
-			"Expected definition of PKG_OPTIONS_VAR.")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_CheckLinesOptionsMk(c *check.C) {
@@ -190,7 +189,7 @@ func (s *Suite) Test_CheckLinesOptionsMk__edge_cases(c *check.C) {
 	CheckLinesOptionsMk(mklines)
 
 	t.CheckOutputLines(
-		"WARN: ~/category/package/options.mk:EOF: Expected definition of PKG_OPTIONS_VAR.")
+		"ERROR: ~/category/package/options.mk: Each options.mk file must define PKG_OPTIONS_VAR.")
 
 	mklines = t.SetUpFileMkLines("category/package/options.mk",
 		MkCvsID,
@@ -199,7 +198,12 @@ func (s *Suite) Test_CheckLinesOptionsMk__edge_cases(c *check.C) {
 	CheckLinesOptionsMk(mklines)
 
 	t.CheckOutputLines(
-		"WARN: ~/category/package/options.mk:2: Expected definition of PKG_OPTIONS_VAR.")
+		"WARN: ~/category/package/options.mk:2: "+
+			"Expected definition of PKG_OPTIONS_VAR.",
+		"ERROR: ~/category/package/options.mk: "+
+			"Each options.mk file must define PKG_OPTIONS_VAR.",
+		"WARN: ~/category/package/options.mk:2: "+
+			"Option \"option1\" should be handled below in an .if block.")
 
 	mklines = t.SetUpFileMkLines("category/package/options.mk",
 		MkCvsID,

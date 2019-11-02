@@ -1285,7 +1285,7 @@ func (s *Suite) Test_Package_checkIncludeConditionally__conditional_and_uncondit
 		"WARN: Makefile:22: \"../../sysutils/coreutils/buildlink3.mk\" is included "+
 			"conditionally here (depending on OPSYS) and "+
 			"unconditionally in options.mk:6.",
-		"WARN: options.mk:3: Expected definition of PKG_OPTIONS_VAR.")
+		"ERROR: options.mk: Each options.mk file must define PKG_OPTIONS_VAR.")
 }
 
 func (s *Suite) Test_Package_checkIncludeConditionally__explain_PKG_OPTIONS_in_Makefile(c *check.C) {
