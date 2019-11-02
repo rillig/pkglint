@@ -87,6 +87,9 @@ type varalignLine struct {
 	// of the first value found.
 	multiEmpty bool
 
+	// Whether the line is so long that it may use a single tab as indentation.
+	long bool
+
 	varalignParts
 }
 
@@ -133,7 +136,7 @@ func (va *VaralignBlock) processVarassign(mkline *MkLine) {
 	follow := false
 	for i, raw := range mkline.raw {
 		parts := NewVaralignSplitter().split(strings.TrimSuffix(raw.textnl, "\n"), i == 0)
-		info := varalignLine{mkline, i, follow, parts}
+		info := varalignLine{mkline, i, follow, false, parts}
 
 		if i == 0 && info.isEmptyContinuation() {
 			follow = true
@@ -158,6 +161,7 @@ func (va *VaralignBlock) Finish() {
 	}
 
 	newWidth := va.optimalWidth(infos)
+	va.adjustLong(newWidth, infos)
 	rightMargin := 0
 
 	// When the indentation of the initial line of a multiline is
@@ -285,6 +289,19 @@ func (*VaralignBlock) optimalWidth(infos []*varalignLine) int {
 	}
 
 	return (minVarnameOpWidth & -8) + 8
+}
+
+func (va *VaralignBlock) adjustLong(newWidth int, infos []*varalignLine) {
+	long := false
+	for _, info := range infos {
+		if info.rawIndex == 0 {
+			long = false
+		}
+		if !info.multiEmpty && info.spaceBeforeValue == "\t" && info.widthAlignedAt(newWidth) > 72 {
+			long = true
+		}
+		info.long = long
+	}
 }
 
 func (va *VaralignBlock) checkRightMargin(info *varalignLine, newWidth int, rightMargin int) {
@@ -435,8 +452,8 @@ func (va *VaralignBlock) realignMultiFollow(info *varalignLine, newWidth int, in
 	if tabWidth(newSpace) < newWidth {
 		newSpace = indent(newWidth)
 	}
-	if newSpace == oldSpace || (oldSpace == "\t" && info.widthAlignedAt(newWidth) > 72) {
-		return // FIXME 2024: and allow the same indentation for all following lines as well
+	if newSpace == oldSpace || info.long {
+		return
 	}
 
 	fix := info.mkline.Autofix()

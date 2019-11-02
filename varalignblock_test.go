@@ -2010,6 +2010,17 @@ func (s *Suite) Test_VaralignBlock__lead_var_tab8_value_lead_var_tab16_value(c *
 	vt.Run()
 }
 
+// Before 19.3.6, pkglint would indent the last line in column 16.
+//
+// The value in the first line starts in column 16, which means that all
+// follow-up lines should also start in column 16 or further to the right.
+// Line 2 though is already quite long, and since its right margin is in
+// column 72, it may keep its lower-than-usual indentation of 8.
+// Line 3 is not that long, therefore the rule from line 2 doesn't apply
+// here, and it needs to be indented to column 16.
+//
+// Since the above result would look inconsistent, all follow-up lines
+// after a long line may be indented in column 8 as well.
 func (s *Suite) Test_VaralignBlock__var_tab_value63_space_cont_tab8_value71_space_cont_tab8_value(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -2021,15 +2032,13 @@ func (s *Suite) Test_VaralignBlock__var_tab_value63_space_cont_tab8_value71_spac
 		"   08 72",
 		"   08")
 	vt.Diagnostics(
-		// FIXME 2024: the indentation of the continuation lines is already good.
-		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\\t\".")
+		nil...)
 	vt.Autofixes(
-		"AUTOFIX: Makefile:3: Replacing \"\\t\" with \"\\t\\t\".")
+		nil...)
 	vt.Fixed(
-		// FIXME 2024
 		"PROGFILES=      67890 234567890 234567890 234567890 234567890 2 \\",
 		"        890 234567890 234567890 234567890 234567890 234567890 234567890 \\",
-		"                value")
+		"        value")
 	vt.Run()
 }
 
