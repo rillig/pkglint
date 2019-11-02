@@ -1873,12 +1873,28 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__no_distfiles(c *check.C) 
 
 	t.SetUpPackage("category/package",
 		"DISTFILES=\t# none")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/distinfo: " +
+			"This file should not exist since NO_CHECKSUM or META_PACKAGE is set.")
+}
+
+func (s *Suite) Test_Package_checkfilePackageMakefile__distfiles(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"DISTFILES=\tpackage-1.0.tar.gz")
 	t.Remove("category/package/distinfo")
 	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))
 
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: ~/category/package/distinfo: " +
+			"A package that downloads files should have a distinfo file.")
 }
 
 func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__no_C(c *check.C) {
