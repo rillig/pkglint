@@ -436,7 +436,7 @@ func (va *VaralignBlock) realignMultiFollow(info *varalignLine, newWidth int, in
 		newSpace = indent(newWidth)
 	}
 	if newSpace == oldSpace || (oldSpace == "\t" && info.widthAlignedAt(newWidth) > 72) {
-		return
+		return // FIXME 2024: and allow the same indentation for all following lines as well
 	}
 
 	fix := info.mkline.Autofix()

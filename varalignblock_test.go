@@ -2021,12 +2021,12 @@ func (s *Suite) Test_VaralignBlock__var_tab_value63_space_cont_tab8_value71_spac
 		"   08 72",
 		"   08")
 	vt.Diagnostics(
-		// FIXME: the indentation of the continuation lines is already good.
+		// FIXME 2024: the indentation of the continuation lines is already good.
 		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\\t\".")
 	vt.Autofixes(
 		"AUTOFIX: Makefile:3: Replacing \"\\t\" with \"\\t\\t\".")
 	vt.Fixed(
-		// FIXME
+		// FIXME 2024
 		"PROGFILES=      67890 234567890 234567890 234567890 234567890 2 \\",
 		"        890 234567890 234567890 234567890 234567890 234567890 234567890 \\",
 		"                value")
