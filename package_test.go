@@ -1866,6 +1866,8 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__files_Makefile(c *check.C
 		"ERROR: ~/category/package/Makefile: Each package must define its LICENSE.")
 }
 
+// Until version 19.3.5, pkglint warned that this package would need a
+// distinfo file.
 func (s *Suite) Test_Package_checkfilePackageMakefile__no_distfiles(c *check.C) {
 	t := s.Init(c)
 
@@ -1876,9 +1878,7 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__no_distfiles(c *check.C) 
 
 	G.Check(t.File("category/package"))
 
-	// FIXME
-	t.CheckOutputLines(
-		"WARN: ~/category/package/distinfo: A package that downloads files should have a distinfo file.")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__no_C(c *check.C) {
