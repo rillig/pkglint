@@ -179,7 +179,7 @@ func (va *VaralignBlock) Finish() {
 			rightMargin = va.rightMargin(infos[restIndex:])
 		}
 
-		va.checkContinuationIndentation(info, newWidth, rightMargin)
+		va.checkRightMargin(info, newWidth, rightMargin)
 
 		if newWidth > 0 || info.rawIndex > 0 {
 			va.realign(info, newWidth, &indentDiffSet, &indentDiff)
@@ -287,7 +287,7 @@ func (*VaralignBlock) optimalWidth(infos []*varalignLine) int {
 	return (minVarnameOpWidth & -8) + 8
 }
 
-func (va *VaralignBlock) checkContinuationIndentation(info *varalignLine, newWidth int, rightMargin int) {
+func (va *VaralignBlock) checkRightMargin(info *varalignLine, newWidth int, rightMargin int) {
 	if !info.isContinuation() {
 		return
 	}
@@ -352,7 +352,7 @@ func (*VaralignBlock) realignMultiEmptyInitial(info *varalignLine, newWidth int)
 	}
 
 	if newSpace == " " {
-		return // This case is handled by checkContinuationIndentation.
+		return // This case is handled by checkRightMargin.
 	}
 
 	hasSpace := strings.IndexByte(oldSpace, ' ') != -1
