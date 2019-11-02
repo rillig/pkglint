@@ -1263,11 +1263,17 @@ func (s *Suite) Test_Package_checkIncludeConditionally__conditional_and_uncondit
 		".if ${OPSYS} == \"Linux\"",
 		".include \"../../sysutils/coreutils/buildlink3.mk\"",
 		".endif")
+	t.CreateFileLines("mk/bsd.options.mk", "")
 	t.CreateFileLines("devel/zlib/buildlink3.mk", "")
 	t.CreateFileLines("sysutils/coreutils/buildlink3.mk", "")
 
 	t.CreateFileLines("category/package/options.mk",
 		MkCvsID,
+		"",
+		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
+		"PKG_SUPPORTED_OPTIONS=\tzlib",
+		"",
+		".include \"../../mk/bsd.options.mk\"",
 		"",
 		".if !empty(PKG_OPTIONS:Mzlib)",
 		".  include \"../../devel/zlib/buildlink3.mk\"",
@@ -1281,11 +1287,10 @@ func (s *Suite) Test_Package_checkIncludeConditionally__conditional_and_uncondit
 	t.CheckOutputLines(
 		"WARN: Makefile:20: \"../../devel/zlib/buildlink3.mk\" is included "+
 			"unconditionally here "+
-			"and conditionally in options.mk:4 (depending on PKG_OPTIONS).",
+			"and conditionally in options.mk:9 (depending on PKG_OPTIONS).",
 		"WARN: Makefile:22: \"../../sysutils/coreutils/buildlink3.mk\" is included "+
 			"conditionally here (depending on OPSYS) and "+
-			"unconditionally in options.mk:6.",
-		"ERROR: options.mk: Each options.mk file must define PKG_OPTIONS_VAR.")
+			"unconditionally in options.mk:11.")
 }
 
 func (s *Suite) Test_Package_checkIncludeConditionally__explain_PKG_OPTIONS_in_Makefile(c *check.C) {

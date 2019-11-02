@@ -189,7 +189,8 @@ func (s *Suite) Test_CheckLinesOptionsMk__edge_cases(c *check.C) {
 	CheckLinesOptionsMk(mklines)
 
 	t.CheckOutputLines(
-		"ERROR: ~/category/package/options.mk: Each options.mk file must define PKG_OPTIONS_VAR.")
+		"ERROR: ~/category/package/options.mk: Each options.mk file must define PKG_OPTIONS_VAR.",
+		"ERROR: ~/category/package/options.mk: Each options.mk file must .include \"../../mk/bsd.options.mk\".")
 
 	mklines = t.SetUpFileMkLines("category/package/options.mk",
 		MkCvsID,
@@ -202,6 +203,8 @@ func (s *Suite) Test_CheckLinesOptionsMk__edge_cases(c *check.C) {
 			"Expected definition of PKG_OPTIONS_VAR.",
 		"ERROR: ~/category/package/options.mk: "+
 			"Each options.mk file must define PKG_OPTIONS_VAR.",
+		"ERROR: ~/category/package/options.mk: "+
+			"Each options.mk file must .include \"../../mk/bsd.options.mk\".",
 		"WARN: ~/category/package/options.mk:2: "+
 			"Option \"option1\" should be handled below in an .if block.")
 
@@ -214,7 +217,9 @@ func (s *Suite) Test_CheckLinesOptionsMk__edge_cases(c *check.C) {
 	CheckLinesOptionsMk(mklines)
 
 	t.CheckOutputLines(
-		"WARN: ~/category/package/options.mk:3: " +
+		"ERROR: ~/category/package/options.mk: "+
+			"Each options.mk file must .include \"../../mk/bsd.options.mk\".",
+		"WARN: ~/category/package/options.mk:3: "+
 			"Option \"option1\" should be handled below in an .if block.")
 
 	mklines = t.SetUpFileMkLines("category/package/options.mk",
@@ -262,7 +267,8 @@ func (s *Suite) Test_CheckLinesOptionsMk__unexpected_line(c *check.C) {
 	CheckLinesOptionsMk(mklines)
 
 	t.CheckOutputLines(
-		"WARN: ~/category/package/options.mk:5: Expected inclusion of \"../../mk/bsd.options.mk\".")
+		"ERROR: ~/category/package/options.mk: " +
+			"Each options.mk file must .include \"../../mk/bsd.options.mk\".")
 }
 
 func (s *Suite) Test_CheckLinesOptionsMk__malformed_condition(c *check.C) {

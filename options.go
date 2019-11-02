@@ -38,37 +38,24 @@ func (ck *OptionsLinesChecker) Check() {
 }
 
 func (ck *OptionsLinesChecker) collect() {
-	type states uint8
-	const (
-		upper states = iota
-		errorInclude
-		lower
-	)
-
-	state := upper
 	seenPkgOptionsVar := false
+	seenInclude := false
 
 	ck.mklines.ForEach(func(mkline *MkLine) {
 		if mkline.IsEmpty() || mkline.IsComment() {
 			return
 		}
 
-		switch state {
-		case upper:
+		if !seenInclude {
 			if !seenPkgOptionsVar && mkline.IsVarassign() && mkline.Varname() == "PKG_OPTIONS_VAR" {
 				seenPkgOptionsVar = true
 			}
-			if mkline.IsInclude() && mkline.IncludedFile() == "../../mk/bsd.options.mk" {
-				state = lower
-			}
+			seenInclude = mkline.IsInclude() && mkline.IncludedFile() == "../../mk/bsd.options.mk"
 		}
 
-		switch state {
-		case upper:
-			if !ck.handleUpperLine(mkline, seenPkgOptionsVar) {
-				state = errorInclude
-			}
-		case lower:
+		if !seenInclude {
+			ck.handleUpperLine(mkline, seenPkgOptionsVar)
+		} else {
 			ck.handleLowerLine(mkline)
 		}
 	})
@@ -76,11 +63,19 @@ func (ck *OptionsLinesChecker) collect() {
 	if !seenPkgOptionsVar {
 		ck.mklines.Whole().Errorf("Each options.mk file must define PKG_OPTIONS_VAR.")
 	}
+
+	if !seenInclude {
+		file := ck.mklines.Whole()
+		file.Errorf("Each options.mk file must .include \"../../mk/bsd.options.mk\".")
+		file.Explain(
+			"After defining the input variables (PKG_OPTIONS_VAR, etc.),",
+			"bsd.options.mk must be included to do the actual processing.")
+	}
 }
 
 // handleUpperLine checks a line from the upper part of an options.mk file,
 // before bsd.options.mk is included.
-func (ck *OptionsLinesChecker) handleUpperLine(mkline *MkLine, seenPkgOptionsVar bool) bool {
+func (ck *OptionsLinesChecker) handleUpperLine(mkline *MkLine, seenPkgOptionsVar bool) {
 
 	declare := func(option string) {
 		if containsVarRef(option) {
@@ -91,59 +86,35 @@ func (ck *OptionsLinesChecker) handleUpperLine(mkline *MkLine, seenPkgOptionsVar
 		}
 	}
 
-	switch {
-	case mkline.IsComment():
-		break
-	case mkline.IsEmpty():
-		break
-
-	case mkline.IsVarassign():
-		switch mkline.Varcanon() {
-		case "PKG_SUPPORTED_OPTIONS",
-			"PKG_SUPPORTED_OPTIONS.*",
-			"PKG_OPTIONS_GROUP.*",
-			"PKG_OPTIONS_SET.*":
-			if !seenPkgOptionsVar {
-				ck.warnVarorder(mkline)
-			}
-
-			for _, option := range mkline.ValueFields(mkline.Value()) {
-				if optionVarUse := ToVarUse(option); optionVarUse != nil {
-					forVars := ck.mklines.ExpandLoopVar(optionVarUse.varname)
-					for _, option := range forVars {
-						declare(option)
-					}
-					if len(forVars) == 0 {
-						for _, option := range mkline.ValueFields(resolveVariableRefs(ck.mklines, option)) {
-							declare(option)
-						}
-					}
-				} else {
-					declare(option)
-				}
-			}
-		}
-
-	case mkline.IsDirective():
-		// The conditionals are typically for OPSYS and MACHINE_ARCH.
-
-	case mkline.IsInclude():
-		if mkline.IncludedFile() == "../../mk/bsd.options.mk" {
-			return false
-		}
-
-	default:
-		line := mkline
-		line.Warnf("Expected inclusion of \"../../mk/bsd.options.mk\".")
-		line.Explain(
-			"After defining the input variables (PKG_OPTIONS_VAR, etc.),",
-			"bsd.options.mk should be included to do the actual processing.",
-			"No other actions should take place in this part of the file",
-			"in order to have the same structure in all options.mk files.")
-		return false
+	if !mkline.IsVarassign() {
+		return
 	}
 
-	return true
+	switch mkline.Varcanon() {
+	case "PKG_SUPPORTED_OPTIONS",
+		"PKG_SUPPORTED_OPTIONS.*",
+		"PKG_OPTIONS_GROUP.*",
+		"PKG_OPTIONS_SET.*":
+		if !seenPkgOptionsVar {
+			ck.warnVarorder(mkline)
+		}
+
+		for _, option := range mkline.ValueFields(mkline.Value()) {
+			if optionVarUse := ToVarUse(option); optionVarUse != nil {
+				forVars := ck.mklines.ExpandLoopVar(optionVarUse.varname)
+				for _, option := range forVars {
+					declare(option)
+				}
+				if len(forVars) == 0 {
+					for _, option := range mkline.ValueFields(resolveVariableRefs(ck.mklines, option)) {
+						declare(option)
+					}
+				}
+			} else {
+				declare(option)
+			}
+		}
+	}
 }
 
 func (ck *OptionsLinesChecker) handleLowerLine(mkline *MkLine) {
