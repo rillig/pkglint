@@ -2,6 +2,75 @@ package pkglint
 
 import "gopkg.in/check.v1"
 
+func (s *Suite) Test_CheckLinesOptionsMk__literal(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpOption("declared", "")
+	t.SetUpOption("both", "")
+	t.SetUpOption("handled", "")
+	t.SetUpPackage("category/package",
+		".include \"../../mk/bsd.options.mk\"")
+	t.CreateFileLines("mk/bsd.options.mk",
+		MkCvsID)
+	mklines := t.SetUpFileMkLines("category/package/options.mk",
+		MkCvsID,
+		"",
+		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
+		"PKG_SUPPORTED_OPTIONS=\tdeclared both",
+		"",
+		".include \"../../mk/bsd.options.mk\"",
+		"",
+		".if ${PKG_OPTIONS:Mboth}",
+		".endif",
+		"",
+		".if ${PKG_OPTIONS:Mhandled}",
+		".endif")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	CheckLinesOptionsMk(mklines)
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/options.mk:4: "+
+			"Option \"declared\" should be handled below in an .if block.",
+		"WARN: ~/category/package/options.mk:11: "+
+			"Option \"handled\" is handled but not added to PKG_SUPPORTED_OPTIONS.")
+}
+
+func (s *Suite) Test_CheckLinesOptionsMk__literal_in_for_loop(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpOption("declared", "")
+	t.SetUpOption("both", "")
+	t.SetUpOption("handled", "")
+	t.SetUpPackage("category/package",
+		".include \"../../mk/bsd.options.mk\"")
+	t.CreateFileLines("mk/bsd.options.mk",
+		MkCvsID)
+	mklines := t.SetUpFileMkLines("category/package/options.mk",
+		MkCvsID,
+		"",
+		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
+		".for declared_option in declared both",
+		"PKG_SUPPORTED_OPTIONS=\t${declared_option}",
+		".endfor",
+		"",
+		".include \"../../mk/bsd.options.mk\"",
+		"",
+		".for handled_option in both handled",
+		".  if ${PKG_OPTIONS:M${handled_option}}",
+		".  endif",
+		".endfor")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	CheckLinesOptionsMk(mklines)
+
+	// TODO: Warn that "declared" is declared but not handled.
+	// TODO: Warn that "handled" is handled but not declared.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_CheckLinesOptionsMk(c *check.C) {
 	t := s.Init(c)
 
