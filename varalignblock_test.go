@@ -118,6 +118,13 @@ func (vt *VaralignTester) checkTestName() {
 		name  string
 		width int
 	}
+	descriptorsString := func(ds []descriptor) string {
+		var strs []string
+		for _, d := range ds {
+			strs = append(strs, sprintf("%s%d", d.name, d.width))
+		}
+		return strings.Join(strs, "_")
+	}
 
 	var actual []descriptor
 	width := 0
@@ -195,6 +202,7 @@ func (vt *VaralignTester) checkTestName() {
 		expected = append(expected, descriptor{name, width})
 	}
 
+	vt.tester.CheckDeepEquals(descriptorsString(actual), descriptorsString(expected))
 	vt.tester.CheckDeepEquals(actual, expected)
 }
 
@@ -1999,6 +2007,29 @@ func (s *Suite) Test_VaralignBlock__lead_var_tab8_value_lead_var_tab16_value(c *
 	vt.Fixed(
 		"#VAR=           value",
 		"#VAR.param=     value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__var_tab_value63_space_cont_tab8_value71_space_cont_tab8_value(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"PROGFILES=\t67890 234567890 234567890 234567890 234567890 2 \\",
+		"\t890 234567890 234567890 234567890 234567890 234567890 234567890 \\",
+		"\tvalue")
+	vt.Internals(
+		"10 16 64",
+		"   08 72",
+		"   08")
+	vt.Diagnostics(
+		// FIXME: the indentation of the continuation lines is already good.
+		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\\t\".")
+	vt.Autofixes(
+		"AUTOFIX: Makefile:3: Replacing \"\\t\" with \"\\t\\t\".")
+	vt.Fixed(
+		// FIXME
+		"PROGFILES=      67890 234567890 234567890 234567890 234567890 2 \\",
+		"        890 234567890 234567890 234567890 234567890 234567890 234567890 \\",
+		"                value")
 	vt.Run()
 }
 
