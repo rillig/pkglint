@@ -66,9 +66,11 @@ func (s *Suite) Test_CheckLinesOptionsMk__literal_in_for_loop(c *check.C) {
 
 	CheckLinesOptionsMk(mklines)
 
-	// TODO: Warn that "declared" is declared but not handled.
-	// TODO: Warn that "handled" is handled but not declared.
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: ~/category/package/options.mk:5: "+
+			"Option \"declared\" should be handled below in an .if block.",
+		"WARN: ~/category/package/options.mk:11: "+
+			"Option \"handled\" is handled but not added to PKG_SUPPORTED_OPTIONS.")
 }
 
 func (s *Suite) Test_CheckLinesOptionsMk(c *check.C) {
@@ -452,10 +454,17 @@ func (s *Suite) Test_CheckLinesOptionsMk__combined_option_handling_coverage(c *c
 
 	G.Check(".")
 
-	// The warning appears because the pattern "opt-[" is malformed
-	// and therefore doesn't match the option.
-	t.CheckOutputLines(
-		"WARN: options.mk:4: Option \"opt-variant\" should be handled below in an .if block.")
+	// The pattern "opt-[" does not match any of the declared options
+	// since the pattern is malformed and pkglint does not distinguish
+	// between invalid and non-matching patterns.
+	//
+	// The pattern "other-*" also doesn't match.
+	//
+	// Since the patterns don't match any of the variables from
+	// PKG_SUPPORTED_OPTIONS, pkglint cannot analyze all possible cases
+	// and therefore suppresses all warnings about options that are
+	// declared but not handled.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_CheckLinesOptionsMk__options_in_for_loop(c *check.C) {
@@ -610,4 +619,30 @@ func (s *Suite) Test_CheckLinesOptionsMk__handled_but_not_supported(c *check.C) 
 	t.CheckOutputLines(
 		"WARN: ~/category/package/options.mk:8: " +
 			"Option \"option\" is handled but not added to PKG_SUPPORTED_OPTIONS.")
+}
+
+func (s *Suite) Test_CheckLinesOptionsMk__supported_but_not_checked(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpOption("option", "")
+	t.SetUpVartypes()
+	t.CreateFileLines("mk/bsd.options.mk",
+		MkCvsID)
+	mklines := t.SetUpFileMkLines("category/package/options.mk",
+		MkCvsID,
+		"",
+		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
+		"PKG_SUPPORTED_OPTIONS=\toption",
+		"",
+		".include \"../../mk/bsd.options.mk\"",
+		"",
+		".if ${PKG_OPTIONS:Mopt${:Uion}}",
+		".endif")
+
+	CheckLinesOptionsMk(mklines)
+
+	// Pkglint does not expand the ${:Uion}, therefore it doesn't know that
+	// the option is indeed handled. Because of this uncertainty, pkglint
+	// does not issue any warnings about possibly unhandled options at all.
+	t.CheckOutputEmpty()
 }

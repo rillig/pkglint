@@ -96,6 +96,16 @@ func (ck *OptionsLinesChecker) collect() {
 // handleUpperLine checks a line from the upper part of an options.mk file,
 // before bsd.options.mk is included.
 func (ck *OptionsLinesChecker) handleUpperLine(mkline *MkLine) bool {
+
+	declare := func(option string) {
+		if containsVarRef(option) {
+			ck.declaredArbitrary = true
+		} else {
+			ck.declaredOptions[option] = mkline
+			ck.optionsInDeclarationOrder = append(ck.optionsInDeclarationOrder, option)
+		}
+	}
+
 	switch {
 	case mkline.IsComment():
 		break
@@ -109,11 +119,18 @@ func (ck *OptionsLinesChecker) handleUpperLine(mkline *MkLine) bool {
 			"PKG_OPTIONS_GROUP.*",
 			"PKG_OPTIONS_SET.*":
 			for _, option := range mkline.ValueFields(mkline.Value()) {
-				if containsVarRef(option) {
-					ck.declaredArbitrary = true
+				if optionVarUse := ToVarUse(option); optionVarUse != nil {
+					forVars := ck.mklines.ExpandLoopVar(optionVarUse.varname)
+					for _, option := range forVars {
+						declare(option)
+					}
+					if len(forVars) == 0 {
+						for _, option := range mkline.ValueFields(resolveVariableRefs(ck.mklines, option)) {
+							declare(option)
+						}
+					}
 				} else {
-					ck.declaredOptions[option] = mkline
-					ck.optionsInDeclarationOrder = append(ck.optionsInDeclarationOrder, option)
+					declare(option)
 				}
 			}
 		}
@@ -189,10 +206,15 @@ func (ck *OptionsLinesChecker) handleLowerCondition(mkline *MkLine, cond *MkCond
 			recordOption(pattern)
 
 		} else {
+			matched := false
 			for declaredOption := range ck.declaredOptions {
 				if pathMatches(pattern, declaredOption) {
+					matched = true
 					recordOption(declaredOption)
 				}
+			}
+			if !matched {
+				ck.handledArbitrary = true
 			}
 		}
 	}
