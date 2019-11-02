@@ -73,6 +73,37 @@ func (s *Suite) Test_CheckLinesOptionsMk__literal_in_for_loop(c *check.C) {
 			"Option \"handled\" is handled but not added to PKG_SUPPORTED_OPTIONS.")
 }
 
+func (s *Suite) Test_CheckLinesOptionsMk__prefs(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpOption("option", "")
+	t.SetUpPackage("category/package",
+		".include \"../../mk/bsd.options.mk\"")
+	t.CreateFileLines("mk/bsd.options.mk",
+		MkCvsID)
+	mklines := t.SetUpFileMkLines("category/package/options.mk",
+		MkCvsID,
+		"",
+		".include \"../../mk/bsd.prefs.mk\"",
+		"",
+		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
+		"PKG_SUPPORTED_OPTIONS=\toption",
+		"",
+		".include \"../../mk/bsd.options.mk\"",
+		"",
+		".if ${PKG_OPTIONS:Moption}",
+		".endif")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	CheckLinesOptionsMk(mklines)
+
+	t.CheckOutputLines(
+		// FIXME: Including bsd.prefs.mk is ok at any point of the file.
+		"WARN: ~/category/package/options.mk:3: " +
+			"Expected definition of PKG_OPTIONS_VAR.")
+}
+
 func (s *Suite) Test_CheckLinesOptionsMk(c *check.C) {
 	t := s.Init(c)
 
