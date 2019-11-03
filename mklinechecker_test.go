@@ -36,23 +36,25 @@ func (s *Suite) Test_MkLineChecker_checkShellCommand__indentation(c *check.C) {
 		"\t\techo 'unnecessarily indented'",
 		"\t\tfor var in 1 2 3; do \\",
 		"\t\t\techo \"$$var\"; \\",
+		"\t                echo \"spaces\"; \\",
 		"\t\tdone")
 
 	mklines.Check()
 
 	t.CheckOutputLines(
 		"AUTOFIX: ~/filename.mk:4: Replacing \"\\t\\t\" with \"\\t\".",
-		"AUTOFIX: ~/filename.mk:5: Replacing \"\\t\\t\" with \"\\t\".")
+		"AUTOFIX: ~/filename.mk:5: Replacing \"\\t\\t\" with \"\\t\".",
+		"AUTOFIX: ~/filename.mk:6: Replacing \"\\t\\t\" with \"\\t\".",
+		"AUTOFIX: ~/filename.mk:8: Replacing \"\\t\\t\" with \"\\t\".")
 	t.CheckFileLinesDetab("filename.mk",
 		MkCvsID,
 		"",
 		"do-install:",
 		"        echo 'unnecessarily indented'",
 		"        for var in 1 2 3; do \\",
-		// FIXME: unindent the followup lines as well.
-		"                        echo \"$$var\"; \\",
-		// FIXME: unindent the followup lines as well.
-		"                done")
+		"                echo \"$$var\"; \\",
+		"                        echo \"spaces\"; \\", // not changed
+		"        done")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarassignLeft(c *check.C) {
