@@ -1457,6 +1457,20 @@ func (s *Suite) Test_VartypeCheck_ShellCommands(c *check.C) {
 		"WARN: filename.mk:1: This shell command list should end with a semicolon.")
 }
 
+func (s *Suite) Test_VartypeCheck_ShellWord(c *check.C) {
+	t := s.Init(c)
+	t.SetUpVartypes()
+	vt := NewVartypeCheckTester(t, BtShellWord)
+
+	vt.Varname("PKG_FAIL_REASON")
+	vt.Values(
+		"The package does not work here.",
+		"\"Properly quoted reason.\"")
+
+	// FIXME: Warn about the unquoted words in line 1.
+	vt.Output()
+}
+
 func (s *Suite) Test_VartypeCheck_Stage(c *check.C) {
 	vt := NewVartypeCheckTester(s.Init(c), BtStage)
 
