@@ -156,6 +156,15 @@ func (reg *VarTypeRegistry) pkglistrat(varname string, basicType *BasicType) {
 		"Makefile, Makefile.*, *.mk: default, set, append, use")
 }
 
+// Like pkglist, but only one value per line should be given.
+// Typical example: PKG_FAIL_REASON.
+func (reg *VarTypeRegistry) pkglistone(varname string, basicType *BasicType) {
+	reg.acllist(varname, basicType,
+		List|PackageSettable|OnePerLine,
+		"buildlink3.mk, builtin.mk: none",
+		"Makefile, Makefile.*, *.mk: default, set, append, use")
+}
+
 // A package-defined load-time list may be used or defined or appended to in
 // all Makefiles except buildlink3.mk and builtin.mk. Simple assignment
 // (instead of appending) is also allowed. If this leads to an unconditional
@@ -1391,7 +1400,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.usrlist("PKG_DEFAULT_OPTIONS", BtOption)
 	reg.sys("PKG_DELETE", BtShellCommand)
 	reg.pkglist("PKG_DESTDIR_SUPPORT", enum("destdir user-destdir"))
-	reg.pkglist("PKG_FAIL_REASON", BtShellWord)
+	reg.pkglistone("PKG_FAIL_REASON", BtShellWord)
 	reg.sysload("PKG_FORMAT", BtIdentifier)
 	reg.pkg("PKG_GECOS.*", BtMessage)
 	reg.pkg("PKG_GID.*", BtInteger)
@@ -1440,7 +1449,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.pkg("PKG_SHELL", BtPathname)
 	reg.pkg("PKG_SHELL.*", BtPathname)
 	reg.sys("PKG_SHLIBTOOL", BtPathname)
-	reg.pkglist("PKG_SKIP_REASON", BtShellWord)
+	reg.pkglistone("PKG_SKIP_REASON", BtShellWord)
 	// The special exception for buildlink3.mk is only here because
 	// of textproc/xmlcatmgr.
 	reg.acl("PKG_SYSCONFDIR*", BtPathname,

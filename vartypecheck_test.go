@@ -1467,8 +1467,11 @@ func (s *Suite) Test_VartypeCheck_ShellWord(c *check.C) {
 		"The package does not work here.",
 		"\"Properly quoted reason.\"")
 
-	// FIXME: Warn about the unquoted words in line 1.
-	vt.Output()
+	// At this level, there can be no warning for line 1 since each word
+	// is analyzed on its own.
+	//
+	// See Test_MkLineChecker_checkVartype__one_per_line.
+	vt.OutputEmpty()
 }
 
 func (s *Suite) Test_VartypeCheck_Stage(c *check.C) {

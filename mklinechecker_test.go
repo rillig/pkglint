@@ -756,6 +756,23 @@ func (s *Suite) Test_MkLineChecker_checkVartype__no_tracing(c *check.C) {
 		"WARN: filename.mk:3: CUR_DIR is defined but not used.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkVartype__one_per_line(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"PKG_FAIL_REASON+=\tSeveral words are wrong.",
+		"PKG_FAIL_REASON+=\t\"Properly quoted\"",
+		"PKG_FAIL_REASON+=\t# none")
+	t.DisableTracing()
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:2: PKG_FAIL_REASON should only get one item per line.")
+}
+
 // Pkglint once interpreted all lists as consisting of shell tokens,
 // splitting this URL at the ampersand.
 func (s *Suite) Test_MkLineChecker_checkVarassign__URL_with_shell_special_characters(c *check.C) {
@@ -2567,7 +2584,8 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__build_defs(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: ~/options.mk:2: The user-defined variable VARBASE is used but not added to BUILD_DEFS.")
+		"WARN: ~/options.mk:2: The user-defined variable VARBASE is used but not added to BUILD_DEFS.",
+		"WARN: ~/options.mk:3: PKG_FAIL_REASON should only get one item per line.")
 }
 
 // The LOCALBASE variable may be defined and used in the infrastructure.

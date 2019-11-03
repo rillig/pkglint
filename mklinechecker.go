@@ -1430,6 +1430,13 @@ func (ck MkLineChecker) checkVartype(varname string, op MkOperator, value, comme
 
 	default:
 		words := mkline.ValueFields(value)
+		if len(words) > 1 && vartype.OnePerLine() {
+			mkline.Warnf("%s should only get one item per line.", varname)
+			mkline.Explain(
+				"Use the += operator to append each of the items.",
+				"",
+				"Or, enclose the words in quotes to group them.")
+		}
 		for _, word := range words {
 			ck.CheckVartypeBasic(varname, vartype.basicType, op, word, comment, vartype.Guessed())
 		}
