@@ -25,6 +25,36 @@ func (s *Suite) Test_MkLineChecker_checkEmptyContinuation(c *check.C) {
 		"WARN: ~/filename.mk:3: This line looks empty but continues the previous line.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkShellCommand__indentation(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--autofix")
+	mklines := t.SetUpFileMkLines("filename.mk",
+		MkCvsID,
+		"",
+		"do-install:",
+		"\t\techo 'unnecessarily indented'",
+		"\t\tfor var in 1 2 3; do \\",
+		"\t\t\techo \"$$var\"; \\",
+		"\t\tdone")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"AUTOFIX: ~/filename.mk:4: Replacing \"\\t\\t\" with \"\\t\".",
+		"AUTOFIX: ~/filename.mk:5: Replacing \"\\t\\t\" with \"\\t\".")
+	t.CheckFileLinesDetab("filename.mk",
+		MkCvsID,
+		"",
+		"do-install:",
+		"        echo 'unnecessarily indented'",
+		"        for var in 1 2 3; do \\",
+		// FIXME: unindent the followup lines as well.
+		"                        echo \"$$var\"; \\",
+		// FIXME: unindent the followup lines as well.
+		"                done")
+}
+
 func (s *Suite) Test_MkLineChecker_checkVarassignLeft(c *check.C) {
 	t := s.Init(c)
 
