@@ -2273,6 +2273,30 @@ func (s *Suite) Test_VaralignBlock__long_line_followed_by_short_line_with_small_
 	vt.Run()
 }
 
+// Continuation lines that are indented 2 tabs are obviously not
+// space-constrained, otherwise they would use only a single tab.
+// Therefore they have to be aligned with the other values.
+func (s *Suite) Test_VaralignBlock__commented_cont_tab16(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"#SITES.long-distfile.tar.gz= \\",
+		"#\t\t-https://example.org/",
+		"#PATCH_DIST_STRIP=\t-p1")
+	vt.Internals(
+		"28 29 29",
+		"   16",
+		"18 24")
+	vt.Diagnostics(
+		"NOTE: Makefile:2: This continuation line should be indented with \"\\t\\t\\t\".")
+	vt.Autofixes(
+		"AUTOFIX: Makefile:2: Replacing \"\\t\\t\" with \"\\t\\t\\t\".")
+	vt.Fixed(
+		"#SITES.long-distfile.tar.gz= \\",
+		"#                       -https://example.org/",
+		"#PATCH_DIST_STRIP=      -p1")
+	vt.Run()
+}
+
 // Ensure that the end-of-line comment is properly aligned
 // to the variable values.
 //
