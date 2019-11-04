@@ -2297,6 +2297,28 @@ func (s *Suite) Test_VaralignBlock__commented_cont_tab16(c *check.C) {
 	vt.Run()
 }
 
+func (s *Suite) Test_VaralignBlock__(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"INSTALLATION_DIRS+=\tvalue",
+		"CONF_FILES=\t--20 -------30 -------40 -------50 -------60 -------70 \\",
+		"\t\t--20")
+	vt.Internals(
+		"19 24",
+		"11 16 71",
+		"   16")
+	vt.Diagnostics(
+		"NOTE: Makefile:2: This variable value should be aligned to column 25.")
+	vt.Autofixes(
+		"AUTOFIX: Makefile:2: Replacing \"\\t\" with \"\\t\\t\".")
+	vt.Fixed(
+		"INSTALLATION_DIRS+=     value",
+		"CONF_FILES=             --20 -------30 -------40 -------50 -------60 -------70 \\",
+		// FIXME: should be aligned in column 24 as well.
+		"                --20")
+	vt.Run()
+}
+
 // Ensure that the end-of-line comment is properly aligned
 // to the variable values.
 //
