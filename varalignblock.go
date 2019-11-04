@@ -297,7 +297,7 @@ func (va *VaralignBlock) adjustLong(newWidth int, infos []*varalignLine) {
 		if info.rawIndex == 0 {
 			long = false
 		}
-		if !info.multiEmpty && info.spaceBeforeValue == "\t" && info.widthAlignedAt(newWidth) > 72 {
+		if !info.multiEmpty && info.spaceBeforeValue == "\t" && info.varnameOpSpaceWidth() != newWidth && info.widthAlignedAt(newWidth) > 72 {
 			long = true
 		}
 		info.long = long

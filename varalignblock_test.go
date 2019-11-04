@@ -2264,14 +2264,12 @@ func (s *Suite) Test_VaralignBlock__long_line_followed_by_short_line_with_small_
 		"18 24 78",
 		"   16")
 	vt.Diagnostics(
-		// FIXME: There's enough space in the follow-up line to indent it properly.
-		nil...)
+		"NOTE: Makefile:2: This continuation line should be indented with \"\\t\\t\\t\".")
 	vt.Autofixes(
-		// FIXME: There's enough space in the follow-up line to indent it properly.
-		nil...)
+		"AUTOFIX: Makefile:2: Replacing \"\\t\\t\" with \"\\t\\t\\t\".")
 	vt.Fixed(
 		"VAR.567890123456+=      ----30 -------40 -------50 -------60 -------70 234567 \\",
-		"                --20 -------30")
+		"                        --20 -------30")
 	vt.Run()
 }
 
