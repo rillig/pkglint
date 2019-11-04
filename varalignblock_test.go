@@ -2255,6 +2255,26 @@ func (s *Suite) Test_VaralignBlock__mixed_indentation(c *check.C) {
 	vt.Run()
 }
 
+func (s *Suite) Test_VaralignBlock__long_line_followed_by_short_line_with_small_indentation(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR.567890123456+=\t----30 -------40 -------50 -------60 -------70 234567 \\",
+		"\t\t--20 -------30")
+	vt.Internals(
+		"18 24 78",
+		"   16")
+	vt.Diagnostics(
+		// FIXME: There's enough space in the follow-up line to indent it properly.
+		nil...)
+	vt.Autofixes(
+		// FIXME: There's enough space in the follow-up line to indent it properly.
+		nil...)
+	vt.Fixed(
+		"VAR.567890123456+=      ----30 -------40 -------50 -------60 -------70 234567 \\",
+		"                --20 -------30")
+	vt.Run()
+}
+
 // Ensure that the end-of-line comment is properly aligned
 // to the variable values.
 //
