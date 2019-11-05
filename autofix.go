@@ -127,20 +127,20 @@ func (fix *Autofix) ReplaceAfter(prefix, from string, to string) {
 
 // ReplaceAt replaces the text "from" with "to", a single time.
 // But only if the text at the given position is indeed "from".
-func (fix *Autofix) ReplaceAt(rawIndex int, textIndex int, from string, to string) {
+func (fix *Autofix) ReplaceAt(rawIndex int, textIndex int, from string, to string) (modified bool, replaced string) {
 	assert(from != to)
 	fix.assertRealLine()
 
 	if fix.skip() {
-		return
+		return false, ""
 	}
 
 	rawLine := fix.line.raw[rawIndex]
 	if textIndex >= len(rawLine.textnl) || !hasPrefix(rawLine.textnl[textIndex:], from) {
-		return
+		return false, ""
 	}
 
-	replaced := rawLine.textnl[:textIndex] + to + rawLine.textnl[textIndex+len(from):]
+	replaced = rawLine.textnl[:textIndex] + to + rawLine.textnl[textIndex+len(from):]
 
 	if G.Logger.IsAutofix() {
 		rawLine.textnl = replaced
@@ -157,7 +157,7 @@ func (fix *Autofix) ReplaceAt(rawIndex int, textIndex int, from string, to strin
 		}
 	}
 	fix.Describef(rawLine.Lineno, "Replacing %q with %q.", from, to)
-	return
+	return true, replaced
 }
 
 // ReplaceRegex replaces the first howOften or all occurrences (if negative)
