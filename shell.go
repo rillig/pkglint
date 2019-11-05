@@ -44,7 +44,7 @@ func (ck *ShellLineChecker) CheckWord(token string, checkQuoting bool, time Tool
 		defer trace.Call(token, checkQuoting)()
 	}
 
-	if token == "" || hasPrefix(token, "#") {
+	if token == "" {
 		return
 	}
 
