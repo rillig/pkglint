@@ -825,16 +825,50 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__install_option_d(c 
 func (s *Suite) Test_ShellLineChecker__shell_comment_with_line_continuation(c *check.C) {
 	t := s.Init(c)
 
-	mklines := t.SetUpFileMkLines("Makefile",
-		MkCvsID,
-		"pre-install:",
-		"\t"+"# comment\\",
-		"\t"+"echo \"hello\"")
+	t.SetUpTool("echo", "", AtRunTime)
 
-	mklines.Check()
+	test := func(lines ...string) {
+		i := 0
+		for ; i < len(lines) && hasPrefix(lines[i], "\t"); i++ {
+		}
 
-	// TODO: "WARN: ~/Makefile:3--4: A shell comment does not stop at the end of line."
-	t.CheckOutputEmpty()
+		mklines := t.SetUpFileMkLines("Makefile",
+			append([]string{MkCvsID, "pre-install:"},
+				lines[:i]...)...)
+
+		mklines.Check()
+
+		t.CheckOutput(lines[i:])
+	}
+
+	// The comment can start at the beginning of a follow-up line.
+	test(
+		"\techo first; \\",
+		"\t# comment at the beginning of a command \\",
+		"\techo \"hello\"",
+
+	// TODO: Warn that the "echo hello" is commented out.
+	)
+
+	// The comment can start at the beginning of a simple command.
+	test(
+		"\techo first; # comment at the beginning of a command \\",
+		"\techo \"hello\"",
+
+	// TODO: Warn that the "echo hello" is commented out.
+	)
+
+	// The comment can start at a word in the middle of a command.
+	test(
+		// TODO: Warn that the "echo hello" is commented out.
+		"\techo # comment starts inside a command \\",
+		"\techo \"hello\"")
+
+	// If the comment starts in the last line, there's no further
+	// line that might be commented out accidentally.
+	test(
+		"\techo 'first line'; \\",
+		"\t# comment in last line")
 }
 
 func (s *Suite) Test_ShellLineChecker_checkWordQuoting(c *check.C) {

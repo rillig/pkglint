@@ -52,15 +52,11 @@ func (s *Suite) Test_MkLineChecker_checkShellCommand__indentation(c *check.C) {
 		"WARN: ~/filename.mk:5--8: Please switch to \"set -e\" mode before using a semicolon "+
 			"(after \"echo \\\"$$var\\\"\") to separate commands.",
 		"WARN: ~/filename.mk:5--8: Unknown shell command \"echo\".",
-		// FIXME: This is not a shell program.
-		"NOTE: ~/filename.mk:10: Shell programs should be indented with a single tab.",
 
 		"AUTOFIX: ~/filename.mk:4: Replacing \"\\t\\t\" with \"\\t\".",
 		"AUTOFIX: ~/filename.mk:5: Replacing \"\\t\\t\" with \"\\t\".",
 		"AUTOFIX: ~/filename.mk:6: Replacing \"\\t\\t\" with \"\\t\".",
-		"AUTOFIX: ~/filename.mk:8: Replacing \"\\t\\t\" with \"\\t\".",
-		// FIXME: This is not a shell program.
-		"AUTOFIX: ~/filename.mk:10: Replacing \"\\t\\t\\t\\t\\t\" with \"\\t\".")
+		"AUTOFIX: ~/filename.mk:8: Replacing \"\\t\\t\" with \"\\t\".")
 	t.CheckFileLinesDetab("filename.mk",
 		MkCvsID,
 		"",
@@ -71,8 +67,7 @@ func (s *Suite) Test_MkLineChecker_checkShellCommand__indentation(c *check.C) {
 		"                        echo \"spaces\"; \\", // not changed
 		"        done",
 		"",
-		// FIXME: This is not a shell program.
-		"        # comment, not a shell command")
+		"                                        # comment, not a shell command")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarassignLeft(c *check.C) {
