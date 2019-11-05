@@ -28,7 +28,6 @@ func (s *Suite) Test_MkLineChecker_checkEmptyContinuation(c *check.C) {
 func (s *Suite) Test_MkLineChecker_checkShellCommand__indentation(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Wall", "--autofix")
 	mklines := t.SetUpFileMkLines("filename.mk",
 		MkCvsID,
 		"",
@@ -37,15 +36,31 @@ func (s *Suite) Test_MkLineChecker_checkShellCommand__indentation(c *check.C) {
 		"\t\tfor var in 1 2 3; do \\",
 		"\t\t\techo \"$$var\"; \\",
 		"\t                echo \"spaces\"; \\",
-		"\t\tdone")
+		"\t\tdone",
+		"",
+		"\t\t\t\t\t# comment, not a shell command")
 
+	mklines.Check()
+	t.SetUpCommandLine("-Wall", "--autofix")
 	mklines.Check()
 
 	t.CheckOutputLines(
+		"NOTE: ~/filename.mk:4: Shell programs should be indented with a single tab.",
+		"WARN: ~/filename.mk:4: Unknown shell command \"echo\".",
+		"NOTE: ~/filename.mk:5--8: Shell programs should be indented with a single tab.",
+		"WARN: ~/filename.mk:5--8: Unknown shell command \"echo\".",
+		"WARN: ~/filename.mk:5--8: Please switch to \"set -e\" mode before using a semicolon "+
+			"(after \"echo \\\"$$var\\\"\") to separate commands.",
+		"WARN: ~/filename.mk:5--8: Unknown shell command \"echo\".",
+		// FIXME: This is not a shell program.
+		"NOTE: ~/filename.mk:10: Shell programs should be indented with a single tab.",
+
 		"AUTOFIX: ~/filename.mk:4: Replacing \"\\t\\t\" with \"\\t\".",
 		"AUTOFIX: ~/filename.mk:5: Replacing \"\\t\\t\" with \"\\t\".",
 		"AUTOFIX: ~/filename.mk:6: Replacing \"\\t\\t\" with \"\\t\".",
-		"AUTOFIX: ~/filename.mk:8: Replacing \"\\t\\t\" with \"\\t\".")
+		"AUTOFIX: ~/filename.mk:8: Replacing \"\\t\\t\" with \"\\t\".",
+		// FIXME: This is not a shell program.
+		"AUTOFIX: ~/filename.mk:10: Replacing \"\\t\\t\\t\\t\\t\" with \"\\t\".")
 	t.CheckFileLinesDetab("filename.mk",
 		MkCvsID,
 		"",
@@ -54,7 +69,10 @@ func (s *Suite) Test_MkLineChecker_checkShellCommand__indentation(c *check.C) {
 		"        for var in 1 2 3; do \\",
 		"                echo \"$$var\"; \\",
 		"                        echo \"spaces\"; \\", // not changed
-		"        done")
+		"        done",
+		"",
+		// FIXME: This is not a shell program.
+		"        # comment, not a shell command")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarassignLeft(c *check.C) {
