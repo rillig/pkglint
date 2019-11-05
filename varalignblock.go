@@ -478,7 +478,9 @@ func (va *VaralignBlock) realignMultiFollow(info *varalignLine, newWidth int, in
 		if tabWidth(base) < 72 {
 			newSuffix = alignmentAfter(base, 72) + "\\"
 		}
-		fix.ReplaceAt(info.rawIndex, spaceIndex, oldSuffix, newSuffix)
+		if newSuffix != oldSuffix {
+			fix.ReplaceAt(info.rawIndex, spaceIndex, oldSuffix, newSuffix)
+		}
 	}
 	fix.Apply()
 }
