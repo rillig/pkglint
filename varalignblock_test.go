@@ -2308,14 +2308,15 @@ func (s *Suite) Test_VaralignBlock__(c *check.C) {
 		"11 16 71",
 		"   16")
 	vt.Diagnostics(
-		"NOTE: Makefile:2: This variable value should be aligned to column 25.")
+		"NOTE: Makefile:2: This variable value should be aligned to column 25.",
+		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\\t\\t\".")
 	vt.Autofixes(
-		"AUTOFIX: Makefile:2: Replacing \"\\t\" with \"\\t\\t\".")
+		"AUTOFIX: Makefile:2: Replacing \"\\t\" with \"\\t\\t\".",
+		"AUTOFIX: Makefile:3: Replacing \"\\t\\t\" with \"\\t\\t\\t\".")
 	vt.Fixed(
 		"INSTALLATION_DIRS+=     value",
 		"CONF_FILES=             --20 -------30 -------40 -------50 -------60 -------70 \\",
-		// FIXME: should be aligned in column 24 as well.
-		"                --20")
+		"                        --20")
 	vt.Run()
 }
 

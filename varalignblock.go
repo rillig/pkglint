@@ -291,16 +291,26 @@ func (*VaralignBlock) optimalWidth(infos []*varalignLine) int {
 	return (minVarnameOpWidth & -8) + 8
 }
 
+// adjustLong allows any follow-up line to start either in column 8 or at
+// least in column newWidth. But only if there is at least one continuation
+// line that starts in column 8 and needs the full width up to column 72.
 func (va *VaralignBlock) adjustLong(newWidth int, infos []*varalignLine) {
-	long := false
-	for _, info := range infos {
+	anyLong := false
+	for i, info := range infos {
 		if info.rawIndex == 0 {
-			long = false
+			anyLong = false
+			for _, follow := range infos[i+1:] {
+				if follow.rawIndex == 0 {
+					break
+				}
+				if !follow.multiEmpty && follow.spaceBeforeValue == "\t" && follow.varnameOpSpaceWidth() < newWidth && follow.widthAlignedAt(newWidth) > 72 {
+					anyLong = true
+					break
+				}
+			}
 		}
-		if !info.multiEmpty && info.spaceBeforeValue == "\t" && info.varnameOpSpaceWidth() != newWidth && info.widthAlignedAt(newWidth) > 72 {
-			long = true
-		}
-		info.long = long
+
+		info.long = anyLong && info.varnameOpSpaceWidth() == 8
 	}
 }
 
