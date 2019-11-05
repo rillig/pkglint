@@ -2835,6 +2835,62 @@ func (s *Suite) Test_VaralignBlock__realign_continuation_backslashes(c *check.C)
 	vt.Run()
 }
 
+func (s *Suite) Test_VaralignBlock__unindent_long_lines(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"SHORT=\tvalue",
+		"PROGRAM_AWK=\t\t\t\t--------50--------60--------70 \\",
+		"\t\t\t\t\t\t\t\t\t3                \\",
+		"\t\t\t\t\t\t\t\t\t74               \\",
+		"\t\t\t\t\t\t\t\t\t-75  \t\t\t  \\",
+		"\t\t\t\t\t\t\t\t\t--76 \\",
+		"\t\t\t\t\t\t\t\t66 \\",
+		"\t\t\t\t\t\t\t\t1")
+	vt.Internals(
+		"06 08",
+		"12 40 71",
+		"   72 89",
+		"   72 89",
+		"   72 98",
+		"   72 77",
+		"   64 67",
+		"   64")
+	vt.Diagnostics(
+		"NOTE: Makefile:1: This variable value should be aligned to column 17.",
+		"NOTE: Makefile:2: This variable value should be aligned to column 17.",
+		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\\t\".",
+		"NOTE: Makefile:4: This continuation line should be indented with \"\\t\\t\".",
+		"NOTE: Makefile:5: The continuation backslash should be preceded by a single space or tab, or be in column 90, not 99.",
+		"NOTE: Makefile:5: This continuation line should be indented with \"\\t\\t\".",
+		"NOTE: Makefile:6: This continuation line should be indented with \"\\t\\t\".",
+		"NOTE: Makefile:7: This continuation line should be indented with \"\\t\\t\".",
+		"NOTE: Makefile:8: This continuation line should be indented with \"\\t\\t\".")
+	vt.Autofixes(
+		"AUTOFIX: Makefile:1: Replacing \"\\t\" with \"\\t\\t\".",
+		"AUTOFIX: Makefile:2: Replacing \"\\t\\t\\t\\t\" with \"\\t\".",
+		"AUTOFIX: Makefile:3: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\\t\".",
+		"AUTOFIX: Makefile:4: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\\t\".",
+		"AUTOFIX: Makefile:5: Replacing \"  \\t\\t\\t  \" with \"\\t\\t \".",
+		"AUTOFIX: Makefile:5: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\\t\".",
+		"AUTOFIX: Makefile:6: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\\t\".",
+		"AUTOFIX: Makefile:7: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\".",
+		"AUTOFIX: Makefile:8: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\".")
+	vt.Fixed(
+		// Since none of the lines is considered "long" anymore, the backslashes
+		"SHORT=          value",
+		"PROGRAM_AWK=    --------50--------60--------70 \\",
+		// FIXME: only use a single space before the backslash.
+		"                                                3                \\",
+		// FIXME: only use a single space before the backslash.
+		"                                                74               \\",
+		// FIXME: only use a single space before the backslash.
+		"                                                -75              \\",
+		"                                                --76 \\",
+		"                                        66 \\",
+		"                                        1")
+	vt.Run()
+}
+
 func (s *Suite) Test_VaralignBlock__initial_value_tab80(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
