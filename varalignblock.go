@@ -219,7 +219,7 @@ func (*VaralignBlock) rightMargin(infos []*varalignLine) int {
 	var min int
 	for _, info := range infos {
 		if info.isContinuation() {
-			mainWidth := tabWidth(info.beforeContinuation())
+			mainWidth := info.uptoCommentWidth()
 			if mainWidth > min {
 				min = mainWidth
 			}
@@ -331,10 +331,10 @@ func (va *VaralignBlock) checkRightMargin(info *varalignLine, newWidth int, righ
 
 	newSpace := " "
 	fix := info.mkline.Autofix()
-	if oldSpace == "" || rightMargin == 0 || tabWidth(info.beforeContinuation()) >= rightMargin {
+	if oldSpace == "" || rightMargin == 0 || info.uptoCommentWidth() >= rightMargin {
 		fix.Notef("The continuation backslash should be preceded by a single space or tab.")
 	} else {
-		newSpace = alignmentAfter(info.beforeContinuation(), rightMargin)
+		newSpace = alignmentAfter(info.uptoComment(), rightMargin)
 		fix.Notef(
 			"The continuation backslash should be preceded by a single space or tab, "+
 				"or be in column %d, not %d.",
@@ -384,7 +384,7 @@ func (*VaralignBlock) realignMultiEmptyInitial(info *varalignLine, newWidth int)
 
 	hasSpace := strings.IndexByte(oldSpace, ' ') != -1
 	oldColumn := info.varnameOpSpaceWidth()
-	column := tabWidth(leadingComment + varnameOp + newSpace)
+	column := tabWidthSlice(leadingComment, varnameOp, newSpace)
 
 	fix := info.mkline.Autofix()
 	if hasSpace && column != oldColumn {
@@ -442,7 +442,7 @@ func (va *VaralignBlock) realignMultiInitial(info *varalignLine, newWidth int, i
 	}
 
 	hasSpace := strings.IndexByte(oldSpace, ' ') != -1
-	width := tabWidth(leadingComment + varnameOp + newSpace)
+	width := tabWidthSlice(leadingComment, varnameOp, newSpace)
 
 	fix := info.mkline.Autofix()
 	if hasSpace && width != oldWidth {
@@ -489,7 +489,7 @@ func (va *VaralignBlock) realignSingle(info *varalignLine, newWidth int) {
 	oldSpace := info.spaceBeforeValue
 
 	newSpace := ""
-	for tabWidth(leadingComment+varnameOp+newSpace) < newWidth {
+	for tabWidthSlice(leadingComment, varnameOp, newSpace) < newWidth {
 		newSpace += "\t"
 	}
 
@@ -506,8 +506,8 @@ func (va *VaralignBlock) realignSingle(info *varalignLine, newWidth int) {
 	}
 
 	hasSpace := strings.IndexByte(oldSpace, ' ') != -1
-	oldColumn := tabWidth(leadingComment + varnameOp + oldSpace)
-	column := tabWidth(leadingComment + varnameOp + newSpace)
+	oldColumn := tabWidthSlice(leadingComment, varnameOp, oldSpace)
+	column := tabWidthSlice(leadingComment, varnameOp, newSpace)
 
 	fix := info.mkline.Autofix()
 	if newSpace == " " {
@@ -674,11 +674,11 @@ func (p *varalignParts) isEmpty() bool {
 }
 
 func (p *varalignParts) varnameOpWidth() int {
-	return tabWidth(p.leadingComment + p.varnameOp)
+	return tabWidthSlice(p.leadingComment, p.varnameOp)
 }
 
 func (p *varalignParts) varnameOpSpaceWidth() int {
-	return tabWidth(p.leadingComment + p.varnameOp + p.spaceBeforeValue)
+	return tabWidthSlice(p.leadingComment, p.varnameOp, p.spaceBeforeValue)
 }
 
 // spaceBeforeValueIndex returns the string index at which the space before the value starts.
@@ -699,18 +699,25 @@ func (p *varalignParts) spaceBeforeContinuation() string {
 	return p.spaceAfterComment
 }
 
-func (p *varalignParts) beforeContinuation() string {
+func (p *varalignParts) uptoCommentWidth() int {
+	return tabWidth(rtrimHspace(p.leadingComment +
+		p.varnameOp + p.spaceBeforeValue +
+		p.value + p.spaceAfterValue +
+		p.trailingComment))
+}
+
+func (p *varalignParts) uptoComment() string {
 	return rtrimHspace(p.leadingComment +
 		p.varnameOp + p.spaceBeforeValue +
 		p.value + p.spaceAfterValue +
-		p.trailingComment + p.spaceAfterComment)
+		p.trailingComment)
 }
 
 func (p *varalignParts) continuationColumn() int {
-	return tabWidth(p.leadingComment +
-		p.varnameOp + p.spaceBeforeValue +
-		p.value + p.spaceAfterValue +
-		p.trailingComment + p.spaceAfterComment)
+	return tabWidthSlice(p.leadingComment,
+		p.varnameOp, p.spaceBeforeValue,
+		p.value, p.spaceAfterValue,
+		p.trailingComment, p.spaceAfterComment)
 }
 
 func (p *varalignParts) continuationIndex() int {

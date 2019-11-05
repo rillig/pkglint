@@ -350,6 +350,14 @@ type CvsEntry struct {
 // a tabulator size of 8.
 func tabWidth(s string) int { return tabWidthAppend(0, s) }
 
+func tabWidthSlice(strs ...string) int {
+	w := 0
+	for _, str := range strs {
+		w = tabWidthAppend(w, str)
+	}
+	return w
+}
+
 func tabWidthAppend(width int, s string) int {
 	for _, r := range s {
 		assert(r != '\n')

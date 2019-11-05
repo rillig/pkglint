@@ -485,7 +485,7 @@ func (t *Tester) CreateFileDummyBuildlink3(relativeFileName string, customLines 
 	// see pkgtools/createbuildlink/files/createbuildlink, "package specific variables"
 	upper := strings.Replace(strings.ToUpper(lower), "-", "_", -1)
 
-	width := tabWidth(sprintf("BUILDLINK_API_DEPENDS.%s+=\t", lower))
+	width := tabWidthSlice("BUILDLINK_API_DEPENDS.", lower, "+=\t")
 
 	aligned := func(format string, args ...interface{}) string {
 		msg := sprintf(format, args...)
