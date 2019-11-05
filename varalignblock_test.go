@@ -2811,6 +2811,31 @@ func (s *Suite) Test_VaralignBlock__continuation_backslashes_one_sticks_out(c *c
 	vt.Run()
 }
 
+func (s *Suite) Test_VaralignBlock__realign_continuation_backslashes(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR4567890.234567890=\t----30--------40--------50\t\t\t\\",
+		"\t\t--20--------30--------40--------50\t\t\t\\",
+		"\t\t--20--------30--------40--------50")
+	vt.Internals(
+		"21 24 72",
+		"   16 72",
+		"   16")
+	vt.Diagnostics(
+		// FIXME: The right margin must not change.
+		"NOTE: Makefile:2: This continuation line should be indented with \"\\t\\t\\t\".",
+		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\\t\\t\".")
+	vt.Autofixes(
+		"AUTOFIX: Makefile:2: Replacing \"\\t\\t\" with \"\\t\\t\\t\".",
+		"AUTOFIX: Makefile:3: Replacing \"\\t\\t\" with \"\\t\\t\\t\".")
+	vt.Fixed(
+		"VAR4567890.234567890=   ----30--------40--------50                      \\",
+		// FIXME: The right margin must still be aligned, in column 72.
+		"                        --20--------30--------40--------50                      \\",
+		"                        --20--------30--------40--------50")
+	vt.Run()
+}
+
 func (s *Suite) Test_VaralignBlock__initial_value_tab80(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
