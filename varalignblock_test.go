@@ -2835,7 +2835,7 @@ func (s *Suite) Test_VaralignBlock__realign_continuation_backslashes(c *check.C)
 	vt.Run()
 }
 
-func (s *Suite) Test_VaralignBlock__unindent_long_lines(c *check.C) {
+func (s *Suite) Test_VaralignBlock_realignMultiFollow__unindent_long_lines(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"SHORT=\tvalue",
@@ -2876,7 +2876,9 @@ func (s *Suite) Test_VaralignBlock__unindent_long_lines(c *check.C) {
 		"AUTOFIX: Makefile:7: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\".",
 		"AUTOFIX: Makefile:8: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\".")
 	vt.Fixed(
-		// Since none of the lines is considered "long" anymore, the backslashes
+		// After shifting the lines to the left, none of the lines is
+		// considered "long" anymore, therefore the backslashes are not
+		// kept in column 72. Nevertheless they look unorganized right now.
 		"SHORT=          value",
 		"PROGRAM_AWK=    --------50--------60--------70 \\",
 		// FIXME: only use a single space before the backslash.
@@ -2888,6 +2890,46 @@ func (s *Suite) Test_VaralignBlock__unindent_long_lines(c *check.C) {
 		"                                                --76 \\",
 		"                                        66 \\",
 		"                                        1")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock_realignMultiFollow__unindent_long_initial_line(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR-----10!=\t\t----30--------40--------50-----6\t\t\t\\",
+		"\t\t    --------30--------40-\t\t\t\t\\",
+		"\t\t    --------30--------40--------50--------60-------8\t\\",
+		"\t\t    ----5\t\t\t\t\t\t\\",
+		"\t\t-7")
+	vt.Internals(
+		"12 24 80",
+		"   20 72",
+		"   20 72",
+		"   20 72",
+		"   16")
+	vt.Diagnostics(
+		"NOTE: Makefile:1: The continuation backslash should be preceded by a single space or tab, or be in column 73, not 81.",
+		"NOTE: Makefile:2: This continuation line should be indented with \"\\t\\t\\t\".",
+		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\\t\\t\".",
+		"NOTE: Makefile:4: This continuation line should be indented with \"\\t\\t\\t\".",
+		"NOTE: Makefile:5: This continuation line should be indented with \"\\t\\t\\t\".")
+	vt.Autofixes(
+		// FIXME: Mention the continuation backslash in the replacement.
+		"AUTOFIX: Makefile:1: Replacing \"\\t\\t\\t\" with \"\\t\\t\".",
+		"AUTOFIX: Makefile:2: Replacing \"\\t\\t    \" with \"\\t\\t\\t\".",
+		"AUTOFIX: Makefile:3: Replacing \"\\t\\t    \" with \"\\t\\t\\t\".",
+		"AUTOFIX: Makefile:3: Replacing \"\\t\\\\\" with \" \\\\\".",
+		"AUTOFIX: Makefile:4: Replacing \"\\t\\t    \" with \"\\t\\t\\t\".",
+		"AUTOFIX: Makefile:5: Replacing \"\\t\\t\" with \"\\t\\t\\t\".")
+	vt.Fixed(
+		"VAR-----10!=            ----30--------40--------50-----6                \\",
+		// FIXME: Preserve the original relative indentation.
+		"                        --------30--------40-                           \\",
+		// FIXME: Preserve the original relative indentation.
+		"                        --------30--------40--------50--------60-------8 \\",
+		// FIXME: Preserve the original relative indentation.
+		"                        ----5                                           \\",
+		"                        -7")
 	vt.Run()
 }
 
