@@ -66,6 +66,25 @@ func (s *Suite) Test_MkLines__for_loop_multiple_variables(c *check.C) {
 		"WARN: Makefile:6: The exitcode of \"${FIND}\" at the left of the | operator is ignored.")
 }
 
+func (s *Suite) Test_MkLines_Check__loop_variable_used_outside_loop(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpTool("echo", "", AtRunTime)
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"",
+		"do-install:",
+		"\techo ${msg}",
+		".for msg in message",
+		"\techo ${msg}",
+		".endfor")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:4: msg is used but not defined.")
+}
+
 func (s *Suite) Test_MkLines__comparing_YesNo_variable_to_string(c *check.C) {
 	t := s.Init(c)
 

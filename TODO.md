@@ -30,14 +30,6 @@
 
 # Misc
 
-```
-do-install:
-	${ECHO} ${msg}   # Should produce: Undefined variable ${msg}.
-.for msg in message1
-	${ECHO} ${msg}
-.endfor
-```
-
 * Check all warnings and errors whether their explanation has instructions
   on how to fix the diagnostic properly.
 
