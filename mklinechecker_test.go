@@ -1302,7 +1302,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassignRightCategory__none(c *check.C)
 		"CATEGORIES=\t# none")
 	t.FinishSetUp()
 
-	G.Check(t.File("obscure/package/Makefile"))
+	G.Check(t.File("obscure/package"))
 
 	t.CheckOutputEmpty()
 }
@@ -1314,7 +1314,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassignRightCategory__wrong(c *check.C
 		"CATEGORIES=\tperl5")
 	t.FinishSetUp()
 
-	G.Check(t.File("obscure/package/Makefile"))
+	G.Check(t.File("obscure/package"))
 
 	t.CheckOutputLines(
 		"WARN: ~/obscure/package/Makefile:5: The primary category should be \"obscure\", not \"perl5\".")
@@ -1332,6 +1332,72 @@ func (s *Suite) Test_MkLineChecker_checkVarassignRightCategory__wrong_in_package
 
 	t.CheckOutputLines(
 		"WARN: Makefile:5: The primary category should be \"obscure\", not \"perl5\".")
+}
+
+func (s *Suite) Test_MkLineChecker_checkVarassignRightCategory__append(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("obscure/package",
+		"CATEGORIES+=\tperl5")
+	t.FinishSetUp()
+
+	G.Check(t.File("obscure/package"))
+
+	// Appending is ok.
+	// In this particular case, appending has the same effect as assigning,
+	// but that can be checked somewhere else.
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_MkLineChecker_checkVarassignRightCategory__default(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("obscure/package",
+		"CATEGORIES?=\tperl5")
+	t.FinishSetUp()
+
+	G.Check(t.File("obscure/package"))
+
+	// Default assignments set the primary category, just like simple assignments.
+	t.CheckOutputLines(
+		// FIXME: I had expected that ?= assignments would also overwrite line 5.
+		"NOTE: ~/obscure/package/Makefile:20: Default assignment of CATEGORIES has no effect because of line 5.",
+		"WARN: ~/obscure/package/Makefile:20: The primary category should be \"obscure\", not \"perl5\".")
+}
+
+func (s *Suite) Test_MkLineChecker_checkVarassignRightCategory__autofix(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--autofix")
+	t.SetUpPackage("obscure/package",
+		"CATEGORIES=\tperl5 obscure python")
+	t.FinishSetUp()
+
+	G.Check(t.File("obscure/package"))
+
+	t.CheckOutputLines(
+		"AUTOFIX: ~/obscure/package/Makefile:5: " +
+			"Replacing \"perl5 obscure\" with \"obscure perl5\".")
+}
+
+func (s *Suite) Test_MkLineChecker_checkVarassignRightCategory__other_file(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("obscure/package",
+		"CATEGORIES=\tperl5 obscure python")
+	mklines := t.SetUpFileMkLines("obscure/package/module.mk",
+		MkCvsID,
+		"",
+		"CATEGORIES=\tperl5")
+	t.FinishSetUp()
+
+	mklines.Check()
+
+	// It doesn't matter in which file the CATEGORIES= line appears.
+	// If it's a plain assignment, it will end up as the primary category.
+	t.CheckOutputLines(
+		"WARN: ~/obscure/package/module.mk:3: " +
+			"The primary category should be \"obscure\", not \"perl5\".")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions(c *check.C) {

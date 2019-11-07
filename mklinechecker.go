@@ -1463,7 +1463,7 @@ func (ck MkLineChecker) CheckVartypeBasic(varname string, checker *BasicType, op
 
 func (ck MkLineChecker) checkVarassignRightCategory() {
 	mkline := ck.MkLine
-	if mkline.Basename != "Makefile" || mkline.Op() != opAssign {
+	if mkline.Op() != opAssign && mkline.Op() != opAssignDefault {
 		return
 	}
 
@@ -1481,7 +1481,17 @@ func (ck MkLineChecker) checkVarassignRightCategory() {
 		return
 	}
 
-	mkline.Warnf("The primary category should be %q, not %q.", expected, actual)
+	fix := mkline.Autofix()
+	fix.Warnf("The primary category should be %q, not %q.", expected, actual)
+	fix.Explain(
+		"The primary category of a package should be its location in the",
+		"pkgsrc directory tree, to make it easy to find the package.",
+		"All other categories may be added after this primary category.")
+	if len(categories) > 1 && categories[1] == expected {
+		fix.Replace(categories[0]+" "+categories[1], categories[1]+" "+categories[0])
+	}
+	fix.Anyway()
+	fix.Apply()
 }
 
 // checkText checks the given text (which is typically the right-hand side of a variable
