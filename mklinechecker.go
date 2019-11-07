@@ -1437,6 +1437,9 @@ func (ck MkLineChecker) checkVartype(varname string, op MkOperator, value, comme
 				"",
 				"Or, enclose the words in quotes to group them.")
 		}
+		if vartype.basicType == BtCategory {
+			ck.checkVarassignRightCategory()
+		}
 		for _, word := range words {
 			ck.CheckVartypeBasic(varname, vartype.basicType, op, word, comment, vartype.Guessed())
 		}
@@ -1456,6 +1459,29 @@ func (ck MkLineChecker) CheckVartypeBasic(varname string, checker *BasicType, op
 	valueNoVar := mkline.WithoutMakeVariables(value)
 	ctx := VartypeCheck{ck.MkLines, mkline, varname, op, value, valueNoVar, comment, guessed}
 	checker.checker(&ctx)
+}
+
+func (ck MkLineChecker) checkVarassignRightCategory() {
+	mkline := ck.MkLine
+	if mkline.Basename != "Makefile" || mkline.Op() != opAssign {
+		return
+	}
+
+	categories := mkline.ValueFields(mkline.Value())
+	if len(categories) == 0 {
+		return
+	}
+
+	actual := categories[0]
+	expected := path.Base(path.Dir(path.Dir(mkline.Filename)))
+	if expected == "." {
+		expected = path.Base(path.Dir(path.Dir(G.Pkgsrc.ToRel(mkline.Filename))))
+	}
+	if expected == "wip" || actual == expected || fileExists(G.Pkgsrc.File(actual)) {
+		return
+	}
+
+	mkline.Warnf("The primary category should be %q, not %q.", expected, actual)
 }
 
 // checkText checks the given text (which is typically the right-hand side of a variable

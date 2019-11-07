@@ -1295,6 +1295,45 @@ func (s *Suite) Test_MkLineChecker_checkVarassignRightVaruse(c *check.C) {
 		"NOTE: module.mk:2: The :Q modifier isn't necessary for ${LOCALBASE} here.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkVarassignRightCategory__none(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("obscure/package",
+		"CATEGORIES=\t# none")
+	t.FinishSetUp()
+
+	G.Check(t.File("obscure/package/Makefile"))
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_MkLineChecker_checkVarassignRightCategory__wrong(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("obscure/package",
+		"CATEGORIES=\tperl5")
+	t.FinishSetUp()
+
+	G.Check(t.File("obscure/package/Makefile"))
+
+	t.CheckOutputLines(
+		"WARN: ~/obscure/package/Makefile:5: The primary category should be \"obscure\", not \"perl5\".")
+}
+
+func (s *Suite) Test_MkLineChecker_checkVarassignRightCategory__wrong_in_package_directory(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("obscure/package",
+		"CATEGORIES=\tperl5")
+	t.FinishSetUp()
+	t.Chdir("obscure/package")
+
+	G.Check(".")
+
+	t.CheckOutputLines(
+		"WARN: Makefile:5: The primary category should be \"obscure\", not \"perl5\".")
+}
+
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions(c *check.C) {
 	t := s.Init(c)
 

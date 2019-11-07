@@ -901,7 +901,7 @@ func (s *Suite) Test_Package__varuse_at_load_time(c *check.C) {
 	t.SetUpTool("printf", "", AtRunTime)
 	t.CreateFileLines("licenses/2-clause-bsd",
 		"# dummy")
-	t.CreateFileLines("misc/Makefile")
+	t.CreateFileLines("category/Makefile")
 	t.CreateFileLines("mk/tools/defaults.mk",
 		"TOOLS_CREATE+=false",
 		"TOOLS_CREATE+=nice",
@@ -912,7 +912,7 @@ func (s *Suite) Test_Package__varuse_at_load_time(c *check.C) {
 		MkCvsID,
 		"",
 		"PKGNAME=        loadtime-vartest-1.0",
-		"CATEGORIES=     misc",
+		"CATEGORIES=     category",
 		"",
 		"COMMENT=        Demonstrate variable values during parsing",
 		"LICENSE=        2-clause-bsd",
