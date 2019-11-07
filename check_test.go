@@ -456,7 +456,7 @@ func (t *Tester) CreateFileLines(relativeFileName string, lines ...string) (file
 	err := os.MkdirAll(path.Dir(filename), 0777)
 	t.c.Assert(err, check.IsNil)
 
-	err = ioutil.WriteFile(filename, []byte(content.Bytes()), 0666)
+	err = ioutil.WriteFile(filename, content.Bytes(), 0666)
 	t.c.Assert(err, check.IsNil)
 
 	G.fileCache.Evict(filename)
@@ -1167,8 +1167,7 @@ func (t *Tester) CheckFileLinesDetab(relativeFileName string, lines ...string) {
 // This means that the test cases that follow do not have to use each of them,
 // and this in turn allows uninteresting test cases to be deleted during
 // development.
-func (t *Tester) Use(functions ...interface{}) {
-}
+func (t *Tester) Use(...interface{}) {}
 
 func (t *Tester) Shquote(format string, rels ...string) string {
 	var subs []interface{}
