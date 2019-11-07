@@ -2039,6 +2039,25 @@ func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__not_constant_2(c *ch
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_Package_checkCategories__redundant(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"CATEGORIES=\tcategory perl5",
+		".include \"included.mk\"")
+	t.CreateFileLines("category/package/included.mk",
+		MkCvsID,
+		"CATEGORIES+=\tperl5 python",
+		"CATEGORIES+=\tpython")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package"))
+
+	// TODO: Warn about the redundant category perl5 in Makefile:10.
+	// TODO: Warn about the redundant category python in included.mk:3.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Package_loadPlistDirs(c *check.C) {
 	t := s.Init(c)
 
