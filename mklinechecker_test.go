@@ -1360,9 +1360,7 @@ func (s *Suite) Test_MkLineChecker_checkVarassignRightCategory__default(c *check
 
 	// Default assignments set the primary category, just like simple assignments.
 	t.CheckOutputLines(
-		// FIXME: I had expected that ?= assignments would also overwrite line 5.
-		"NOTE: ~/obscure/package/Makefile:20: Default assignment of CATEGORIES has no effect because of line 5.",
-		"WARN: ~/obscure/package/Makefile:20: The primary category should be \"obscure\", not \"perl5\".")
+		"WARN: ~/obscure/package/Makefile:5: The primary category should be \"obscure\", not \"perl5\".")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarassignRightCategory__autofix(c *check.C) {

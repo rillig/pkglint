@@ -420,9 +420,9 @@ line:
 	for _, line := range makefileLines {
 		assert(!hasSuffix(line, "\\")) // Continuation lines are not yet supported.
 
-		if m, prefix := match1(line, `^#?(\w+=)`); m {
+		if m, varname := match1(line, `^#?(\w+)[!+:?]?=`); m {
 			for i, existingLine := range mlines[:19] {
-				if hasPrefix(strings.TrimPrefix(existingLine, "#"), prefix) {
+				if hasPrefix(strings.TrimPrefix(existingLine, "#"), varname+"=") {
 					mlines[i] = line
 					continue line
 				}
