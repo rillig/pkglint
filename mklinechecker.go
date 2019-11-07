@@ -1468,16 +1468,12 @@ func (ck MkLineChecker) checkVarassignRightCategory() {
 	}
 
 	categories := mkline.ValueFields(mkline.Value())
-	if len(categories) == 0 {
-		return
-	}
-
 	actual := categories[0]
 	expected := path.Base(path.Dir(path.Dir(mkline.Filename)))
 	if expected == "." {
 		expected = path.Base(path.Dir(path.Dir(G.Pkgsrc.ToRel(mkline.Filename))))
 	}
-	if expected == "wip" || actual == expected || fileExists(G.Pkgsrc.File(actual)) {
+	if expected == "wip" || actual == expected {
 		return
 	}
 

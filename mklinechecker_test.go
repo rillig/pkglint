@@ -1307,6 +1307,24 @@ func (s *Suite) Test_MkLineChecker_checkVarassignRightCategory__none(c *check.C)
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_MkLineChecker_checkVarassignRightCategory__indirect(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("obscure/package",
+		"CATEGORIES=\t${PKGPATH:C,/.*,,}")
+	t.FinishSetUp()
+
+	G.Check(t.File("obscure/package"))
+
+	// This case does not occur in practice,
+	// therefore it's ok to have these warnings.
+	t.CheckOutputLines(
+		"WARN: ~/obscure/package/Makefile:5: "+
+			"The primary category should be \"obscure\", not \"${PKGPATH:C,/.*,,}\".",
+		"ERROR: ~/obscure/package/Makefile:5: "+
+			"Invalid category \"${PKGPATH:C,/.*,,}\".")
+}
+
 func (s *Suite) Test_MkLineChecker_checkVarassignRightCategory__wrong(c *check.C) {
 	t := s.Init(c)
 
@@ -1376,6 +1394,25 @@ func (s *Suite) Test_MkLineChecker_checkVarassignRightCategory__autofix(c *check
 	t.CheckOutputLines(
 		"AUTOFIX: ~/obscure/package/Makefile:5: " +
 			"Replacing \"perl5 obscure\" with \"obscure perl5\".")
+}
+
+func (s *Suite) Test_MkLineChecker_checkVarassignRightCategory__third(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("obscure/package",
+		"CATEGORIES=\tperl5 python obscure")
+	t.FinishSetUp()
+
+	G.Check(t.File("obscure/package"))
+
+	t.CheckOutputLines(
+		"WARN: ~/obscure/package/Makefile:5: " +
+			"The primary category should be \"obscure\", not \"perl5\".")
+
+	t.SetUpCommandLine("-Wall", "--show-autofix")
+
+	G.Check(t.File("obscure/package"))
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarassignRightCategory__other_file(c *check.C) {
