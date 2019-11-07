@@ -2048,14 +2048,17 @@ func (s *Suite) Test_Package_checkCategories__redundant(c *check.C) {
 	t.CreateFileLines("category/package/included.mk",
 		MkCvsID,
 		"CATEGORIES+=\tperl5 python",
-		"CATEGORIES+=\tpython")
+		"CATEGORIES+=\tpython",
+		"CATEGORIES?=\tcategory japanese")
+	t.Chdir("category/package")
 	t.FinishSetUp()
 
-	G.Check(t.File("category/package"))
+	G.Check(".")
 
-	// TODO: Warn about the redundant category perl5 in Makefile:10.
-	// TODO: Warn about the redundant category python in included.mk:3.
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		// TODO: Warn in the including file, not in the included file, just as in RedundantScope.
+		"NOTE: included.mk:2: Category \"perl5\" is already added in Makefile:5.",
+		"NOTE: included.mk:3: Category \"python\" is already added in line 2.")
 }
 
 func (s *Suite) Test_Package_loadPlistDirs(c *check.C) {

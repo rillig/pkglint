@@ -669,6 +669,7 @@ func (pkg *Package) checkfilePackageMakefile(filename string, mklines *MkLines, 
 
 	pkg.redundant = NewRedundantScope()
 	pkg.redundant.Check(allLines) // Updates the variables in the scope
+	pkg.checkCategories()
 	pkg.checkGnuConfigureUseLanguages()
 	pkg.checkUseLanguagesCompilerMk(allLines)
 
@@ -800,6 +801,37 @@ func (pkg *Package) checkGnuConfigureUseLanguages() {
 			"GNU_CONFIGURE almost always needs a C compiler, "+
 				"but \"c\" is not added to USE_LANGUAGES in %s.",
 			gnuLine.RefTo(useLine))
+	}
+}
+
+func (pkg *Package) checkCategories() {
+	s := pkg.redundant
+
+	categories := s.vars["CATEGORIES"]
+	if categories == nil || !categories.vari.Constant() {
+		return
+	}
+
+	seen := map[string]*MkLine{}
+	for _, mkline := range categories.vari.WriteLocations() {
+		switch mkline.Op() {
+		case opAssignDefault:
+			for _, category := range mkline.ValueFields(mkline.Value()) {
+				if seen[category] == nil {
+					seen[category] = mkline
+				}
+			}
+		case opAssign, opAssignAppend:
+			for _, category := range mkline.ValueFields(mkline.Value()) {
+				if seen[category] != nil {
+					mkline.Notef("Category %q is already added in %s.",
+						category, mkline.RefTo(seen[category]))
+				}
+				if seen[category] == nil {
+					seen[category] = mkline
+				}
+			}
+		}
 	}
 }
 
