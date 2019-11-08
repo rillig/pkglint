@@ -805,9 +805,7 @@ func (pkg *Package) checkGnuConfigureUseLanguages() {
 }
 
 func (pkg *Package) checkCategories() {
-	s := pkg.redundant
-
-	categories := s.vars["CATEGORIES"]
+	categories := pkg.redundant.vars["CATEGORIES"]
 	if categories == nil || !categories.vari.Constant() {
 		return
 	}

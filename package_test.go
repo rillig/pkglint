@@ -2061,6 +2061,31 @@ func (s *Suite) Test_Package_checkCategories__redundant(c *check.C) {
 		"NOTE: included.mk:3: Category \"python\" is already added in line 2.")
 }
 
+func (s *Suite) Test_Package_checkCategories__redundant_but_not_constant(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"CATEGORIES=\tcategory",
+		".include \"included.mk\"")
+	t.CreateFileLines("category/package/included.mk",
+		MkCvsID,
+		"CATEGORIES+=\tperl5 python",
+		"CATEGORIES+=\tpython",
+		"CATEGORIES?=\tcategory japanese",
+		"",
+		".if 1",
+		"CATEGORIES+=\tchinese",
+		".endif")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	// No diagnostics at all, because CATEGORIES is not constant,
+	// as "chinese" may or may not be added.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Package_loadPlistDirs(c *check.C) {
 	t := s.Init(c)
 
