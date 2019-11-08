@@ -15,6 +15,7 @@ type VaralignTester struct {
 	suite       *Suite
 	tester      *Tester
 	input       []string // The actual input lines
+	inputDetab  []string // The expected input lines with spaces
 	internals   []string // The expected internal state, the varalignBlockInfos
 	diagnostics []string // The expected diagnostics in default mode
 	autofixes   []string // The expected diagnostics in --autofix mode
@@ -31,10 +32,17 @@ func NewVaralignTester(s *Suite, c *check.C) *VaralignTester {
 // Input remembers the input lines that are checked and possibly realigned.
 func (vt *VaralignTester) Input(lines ...string) { vt.input = lines }
 
+// InputDetab validates the input lines after replacing tabs with spaces.
+//
+// Calling it is optional.
+func (vt *VaralignTester) InputDetab(lines ...string) { vt.inputDetab = lines }
+
 // Internals remembers the expected internal state of the varalignBlockInfos,
 // to better trace down at which points the decisions are made.
 //
-// Each line has the format "<min-width> <actual-width>".
+// Each line has the format "<min-width> <actual-width> <right-margin>".
+//
+// Calling it is optional.
 func (vt *VaralignTester) Internals(lines ...string) { vt.internals = lines }
 
 // Diagnostics remembers the expected diagnostics.
@@ -71,6 +79,9 @@ func (vt *VaralignTester) run(autofix bool) {
 	t.SetUpCommandLine(cmdline...)
 
 	mklines := t.SetUpFileMkLines("Makefile", vt.input...)
+	if len(vt.inputDetab) > 0 {
+		t.CheckFileLinesDetab("Makefile", vt.inputDetab...)
+	}
 
 	var varalign VaralignBlock
 	for _, mkline := range mklines.mklines {
@@ -1257,7 +1268,7 @@ func (s *Suite) Test_VaralignBlock__var_tab24_value_var20_tabs72_cont_tab_value_
 
 // For escaped variable names, the number of actual characters in the
 // Makefile is relevant for indenting the source code. Therefore, the
-// parsed an unescaped mkline.Varname cannot be used here.
+// parsed and unescaped mkline.Varname cannot be used here.
 func (s *Suite) Test_VaralignBlock__escaped_varname(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -1271,7 +1282,7 @@ func (s *Suite) Test_VaralignBlock__escaped_varname(c *check.C) {
 	vt.Autofixes(
 		"AUTOFIX: Makefile:1: Replacing \"\\t\" with \"\\t\\t\".")
 	vt.Fixed(
-		"V.${v:S,\\#,,g}=         value", // looks misaligned because of the backslash
+		"V.${v:S,\\#,,g}=         value", // looks misaligned because of the Go string literal
 		"V2345678123456781234=   value")
 	vt.Run()
 }
@@ -2245,6 +2256,7 @@ func (s *Suite) Test_VaralignBlock__mixed_indentation(c *check.C) {
 		"05 08 15",
 		"   17")
 	vt.Diagnostics(
+		// FIXME: This diagnostic doesn't match the autofix.
 		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\".")
 	vt.Autofixes(
 		"AUTOFIX: Makefile:3: Replacing \" \\t \\t \" with \"\\t\\t \".")
@@ -2255,6 +2267,9 @@ func (s *Suite) Test_VaralignBlock__mixed_indentation(c *check.C) {
 	vt.Run()
 }
 
+// The follow-up line is quite short in this case, therefore it is not
+// necessary to indent it with a single tab. There's enough space to
+// the right so that it can be aligned at the common alignment.
 func (s *Suite) Test_VaralignBlock__long_line_followed_by_short_line_with_small_indentation(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -2308,6 +2323,7 @@ func (s *Suite) Test_VaralignBlock__shift_already_long_line_to_the__right(c *che
 		"11 16 71",
 		"   16")
 	vt.Diagnostics(
+		// FIXME: No, it shouldn't, as that would make the continuation marker invisible on 80x25.
 		"NOTE: Makefile:2: This variable value should be aligned to column 25.",
 		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\\t\\t\".")
 	vt.Autofixes(
@@ -2346,6 +2362,8 @@ func (s *Suite) Test_VaralignBlock__eol_comment(c *check.C) {
 	vt.Run()
 }
 
+// Since CONF_FILES is a list of tuples, it makes sense to have different
+// indentation for the two tuple elements.
 func (s *Suite) Test_VaralignBlock__follow_up_indentation(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -2370,6 +2388,8 @@ func (s *Suite) Test_VaralignBlock__follow_up_indentation(c *check.C) {
 	vt.Run()
 }
 
+// For shell commands, it makes sense to have the full flexibility of
+// arbitrary indentation.
 func (s *Suite) Test_VaralignBlock__staircase(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -2400,6 +2420,10 @@ func (s *Suite) Test_VaralignBlock__staircase(c *check.C) {
 // The follow-up lines may only start in column 9 if they are longer than
 // 72 characters. Since this is not the case in this test, they are realigned
 // to match the initial line.
+//
+// Since the variable value is a shell command and the follow-up lines contain
+// its arguments only, it would only be possible to indent them by one more
+// tab. But that is probably getting too special-cased.
 func (s *Suite) Test_VaralignBlock__command_with_arguments(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -2755,10 +2779,11 @@ func (s *Suite) Test_VaralignBlock__continuation_backslashes_aligned(c *check.C)
 	vt.Run()
 }
 
-// The first line is indented with a single tab. This looks strange but
-// pkglint considers it acceptable since there is a simple rule saying
-// "a single tab is always ok". Any rule that would replace this simple
-// rule would have to be similarly simple and intuitive.
+// The backslash in the first line is separated by a single tab.
+// This looks strange but pkglint considers it acceptable
+// since there is a simple rule saying "a single tab is always ok".
+// Any rule that would replace this simple rule
+// would have to be similarly simple and intuitive.
 func (s *Suite) Test_VaralignBlock__continuation_backslashes_aligned_except_initial(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -2817,6 +2842,10 @@ func (s *Suite) Test_VaralignBlock__realign_continuation_backslashes(c *check.C)
 		"VAR4567890.234567890=\t----30--------40--------50\t\t\t\\",
 		"\t\t--20--------30--------40--------50\t\t\t\\",
 		"\t\t--20--------30--------40--------50")
+	vt.InputDetab(
+		"VAR4567890.234567890=   ----30--------40--------50                      \\",
+		"                --20--------30--------40--------50                      \\",
+		"                --20--------30--------40--------50")
 	vt.Internals(
 		"21 24 72",
 		"   16 72",
@@ -2846,6 +2875,15 @@ func (s *Suite) Test_VaralignBlock_realignMultiFollow__unindent_long_lines(c *ch
 		"\t\t\t\t\t\t\t\t\t--76 \\",
 		"\t\t\t\t\t\t\t\t66 \\",
 		"\t\t\t\t\t\t\t\t1")
+	vt.InputDetab(
+		"SHORT=  value",
+		"PROGRAM_AWK=                            --------50--------60--------70 \\",
+		"                                                                        3                \\",
+		"                                                                        74               \\",
+		"                                                                        -75                       \\",
+		"                                                                        --76 \\",
+		"                                                                66 \\",
+		"                                                                1")
 	vt.Internals(
 		"06 08",
 		"12 40 71",
@@ -2901,6 +2939,12 @@ func (s *Suite) Test_VaralignBlock_realignMultiFollow__unindent_long_initial_lin
 		"\t\t    --------30--------40--------50--------60-------8\t\\",
 		"\t\t    ----5\t\t\t\t\t\t\\",
 		"\t\t-7")
+	vt.InputDetab(
+		"VAR-----10!=            ----30--------40--------50-----6                        \\",
+		"                    --------30--------40-                               \\",
+		"                    --------30--------40--------50--------60-------8    \\",
+		"                    ----5                                               \\",
+		"                -7")
 	vt.Internals(
 		"12 24 80",
 		"   20 72",
@@ -2995,6 +3039,11 @@ func (s *Suite) Test_VaralignBlock__long_lines_2(c *check.C) {
 		"\t\t\t__________________________________________________________\t\t       \t\\",
 		"\t\t\t__________________________________________________________\t\t       \t\\",
 		"\t\t\t_________________________")
+	vt.InputDetab(
+		"INSTALLATION_DIRS=      _____________________________________________________________________   \\                                __________________________________________________________              \\",
+		"                        __________________________________________________________                      \\",
+		"                        __________________________________________________________                      \\",
+		"                        _________________________")
 	vt.Internals(
 		"18 24 201",
 		"   24 104",
