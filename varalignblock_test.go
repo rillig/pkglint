@@ -2297,7 +2297,7 @@ func (s *Suite) Test_VaralignBlock__commented_cont_tab16(c *check.C) {
 	vt.Run()
 }
 
-func (s *Suite) Test_VaralignBlock__(c *check.C) {
+func (s *Suite) Test_VaralignBlock__shift_already_long_line_to_the__right(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"INSTALLATION_DIRS+=\tvalue",

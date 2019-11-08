@@ -102,7 +102,7 @@ func (ck *TestNameChecker) addElement(elements *[]*testeeElement, decl ast.Decl,
 			switch spec := spec.(type) {
 			case *ast.TypeSpec:
 				typeName := spec.Name.Name
-				*elements = append(*elements, newElement(typeName, "", filename))
+				*elements = append(*elements, ck.newElement(typeName, "", filename))
 			}
 		}
 
@@ -116,7 +116,7 @@ func (ck *TestNameChecker) addElement(elements *[]*testeeElement, decl ast.Decl,
 				typeName = typeExpr.(*ast.Ident).Name
 			}
 		}
-		*elements = append(*elements, newElement(typeName, decl.Name.Name, filename))
+		*elements = append(*elements, ck.newElement(typeName, decl.Name.Name, filename))
 	}
 }
 
@@ -159,7 +159,7 @@ func (ck *TestNameChecker) collectTesteeByName(elements []*testeeElement) map[st
 	}
 
 	for _, p := range ck.prefixes {
-		prefixes[p.prefix] = newElement(p.prefix, "", p.filename)
+		prefixes[p.prefix] = ck.newElement(p.prefix, "", p.filename)
 	}
 
 	return prefixes
@@ -253,7 +253,7 @@ func (ck *TestNameChecker) isIgnored(filename string) bool {
 	return false
 }
 
-func newElement(typeName, funcName, filename string) *testeeElement {
+func (ck *TestNameChecker) newElement(typeName, funcName, filename string) *testeeElement {
 	typeName = strings.TrimSuffix(typeName, "Impl")
 
 	e := testeeElement{File: filename, Type: typeName, Func: funcName}
@@ -263,7 +263,13 @@ func newElement(typeName, funcName, filename string) *testeeElement {
 	e.Test = strings.HasSuffix(e.File, "_test.go") && e.Type != "" && strings.HasPrefix(e.Func, "Test")
 
 	if e.Test {
-		e.Prefix = strings.Split(strings.TrimPrefix(e.Func, "Test"), "__")[0]
+		testeeAndDescr := strings.TrimPrefix(e.Func, "Test")
+		parts := strings.SplitN(testeeAndDescr, "__", 2)
+		if len(parts) > 1 && parts[1] == "" {
+			ck.addError("Test %q must not have an empty description.", e.FullName)
+		}
+		e.Prefix = parts[0]
+
 	} else {
 		e.Prefix = e.Type + ifelseStr(e.Type != "" && e.Func != "", "_", "") + e.Func
 	}
