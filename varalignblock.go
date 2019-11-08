@@ -66,6 +66,87 @@ import (
 // as opposed to the meaning of the variable assignment.
 //
 // FIXME: Implement each requirement from the above documentation.
+//
+// Next try for the spec, from November 2019.
+// Completely built from the existing examples, striving to be short and clear.
+// Needs some more time to mature.
+// After implementing it, it will be translated into English.
+//
+//  Ebenen: Datei > Absatz > MkZeile > Zeile
+//
+//  ### Datei
+//
+//  #.  Ein einzelner Absatz, der einen Tab weniger eingerückt ist als die übrigen,
+//      darf auf die Einrückung der anderen Absätze angeglichen werden,
+//      sofern der Absatz dadurch nicht zu breit wird.
+//
+//  ### Einzelner Absatz
+//
+//  #.  Alle Werte der Zeilen sind an einer gemeinsamen vertikalen Linie
+//      (Ausrichtung) ausgerichtet.
+//
+//  #.  Die minimale Ausrichtung ergibt sich aus der maximalen Breite von # und VarOp
+//      aller Zeilen, gerundet zum nächsten Tabstopp.
+//      Dabei zählen auch Variablen mit, die rechts vom Operator komplett leer sind.
+//
+//  #.  Die maximale Ausrichtung ergibt sich aus der maximalen Breite von Wert
+//      und Kommentar, abgezogen vom maximalen rechten Rand (in Spalte 73).
+//
+//  #.  Beim Umformatieren darf die Zeilenbreite die 73 Zeichen nicht überschreiten,
+//      damit am rechten Rand eindeutig ist, wo jede Zeile aufhört.
+//      Zeilen, die bereits vorher breiter waren, dürfen ruhig noch breiter werden.
+//
+//  #.  Jede Zeile besteht aus #, VarOp, Leerraum, Wert, Leerraum und Fortsetzung.
+//
+//  #.  Alle Werte in einem Absatz sind mit Tabs an derselben Spalte ausgerichtet.
+//
+//  #.  Wenn VarOp über die Ausrichtung hinausragt (Ausreißer),
+//      darf zwischen VarOp und Wert statt der Ausrichtung 1 Leerzeichen sein.
+//
+//  #.  Das Verhältnis zwischen Tab-Zeilen und hinausragenden Zeilen muss ausgewogen sein.
+//      Nicht zu viele hinausragende Zeilen. (Noch zu definieren.)
+//      Möglicher Ansatz: Anteil der Leerfläche?
+//
+//  #.  Das Ausrichten mit mehr als 1 Tab ist erlaubt, wenn die Ausrichtung einheitlich ist.
+//
+//  ### Mehrzeilig
+//
+//  #.  Jede MkZeile hat für alle ihre Zeilen einen gemeinsamen rechten Rand.
+//
+//  #.  Um den gemeinsamen rechten Rand zu bestimmen, werden alle Zeilen ignoriert,
+//      in denen die Fortsetzung durch 1 Leerzeichen abgetrennt ist.
+//
+//  #.  Die Fortsetzungen jeder MkZeile sind entweder alle durch je 1 Leerzeichen abgetrennt,
+//      oder alle Fortsetzung sind am rechten Rand.
+//
+//  #.  Einzelne Fortsetzungszeilen dürfen über den rechten Rand hinausragen.
+//      Die Fortsetzung wird dann durch 1 Leerzeichen abgetrennt.
+//
+//  ### Mehrzeilig, Erstzeile
+//
+//  #.  Die Fortsetzung der Erstzeile ist durch 1 Leerzeichen abgetrennt,
+//      wenn sie rechts von der Ausrichtung steht,
+//      andernfalls durch Tabs an der Ausrichtung.
+//
+//  #.  Eine leere Erstzeile mit 1 fortgesetzer Zeile ist nur zulässig,
+//      wenn die kombinierte Zeile breiter als 73 Zeichen wäre.
+//
+//  ### Mehrzeilig, fortgesetzte Zeilen
+//
+//  #.  Nach einer leeren Erstzeile
+//      ist die erste fortgesetzte Zeile an der Ausrichtung eingerückt,
+//      wenn die Erstzeile über die Ausrichtung ragt und der Platz es zulässt,
+//      andernfalls mit 1 Tab.
+//      Die Einrückung der fortgesetzten Zeile ist geringer als die der Erstzeile,
+//      da es sonst Platzverschwendung ist.
+//
+//  #.  Bei mehrzeiligen einrückbaren Werten (AWK, Shell, Listen aus Tupeln)
+//      dürfen die weiteren Fortsetzungszeilen weiter eingerückt sein als die erste.
+//      Ihre Einrückung besteht aus Tabs, gefolgt von 0 bis 7 Leerzeichen.
+//
+//  #.  Wenn Zeilen beim Umformatieren tiefer eingerückt werden,
+//      sollte das nach Möglichkeit nicht dazu führen,
+//      dass die Zeilen länger als 80 Zeichen werden.
 type VaralignBlock struct {
 	infos []*varalignLine
 	skip  bool
