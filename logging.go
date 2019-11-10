@@ -360,7 +360,7 @@ type SeparatorWriter struct {
 }
 
 func NewSeparatorWriter(out io.Writer) *SeparatorWriter {
-	return &SeparatorWriter{out: out, state: 3}
+	return &SeparatorWriter{out, 3, bytes.Buffer{}}
 }
 
 func (wr *SeparatorWriter) WriteLine(text string) {
