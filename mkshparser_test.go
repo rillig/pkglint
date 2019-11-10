@@ -64,11 +64,11 @@ type ShSuite struct {
 
 var _ = check.Suite(&ShSuite{})
 
-func (s *ShSuite) SetUpTest(c *check.C) {
-	G = NewPkglint()
+func (s *ShSuite) SetUpTest(*check.C) {
+	G = NewPkglint(nil, nil)
 }
 
-func (s *ShSuite) TearDownTest(c *check.C) {
+func (s *ShSuite) TearDownTest(*check.C) {
 	G = unusablePkglint()
 }
 
