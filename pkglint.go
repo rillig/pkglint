@@ -51,15 +51,18 @@ type Pkglint struct {
 	InterPackage InterPackage
 }
 
-func NewPkglint() Pkglint {
+func NewPkglint(stdout io.Writer, stderr io.Writer) Pkglint {
 	cwd, err := os.Getwd()
 	assertNil(err, "os.Getwd")
 
-	return Pkglint{
+	p := Pkglint{
 		res:       regex.NewRegistry(),
 		fileCache: NewFileCache(200),
 		cwd:       filepath.ToSlash(cwd),
 		interner:  NewStringInterner()}
+	p.Logger.out = NewSeparatorWriter(stdout)
+	p.Logger.err = NewSeparatorWriter(stderr)
+	return p
 }
 
 // unusablePkglint returns a pkglint object that crashes as early as possible.
@@ -156,7 +159,7 @@ type pkglintFatal struct{}
 // G is the abbreviation for "global state";
 // this and the tracer are the only global variables in this Go package.
 var (
-	G     = NewPkglint()
+	G     = NewPkglint(nil, nil)
 	trace tracePkg.Tracer
 )
 

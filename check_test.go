@@ -57,10 +57,8 @@ func (s *Suite) SetUpTest(c *check.C) {
 	t := Tester{c: c, testName: c.TestName()}
 	s.Tester = &t
 
-	G = NewPkglint()
+	G = NewPkglint(&t.stdout, &t.stderr)
 	G.Testing = true
-	G.Logger.out = NewSeparatorWriter(&t.stdout)
-	G.Logger.err = NewSeparatorWriter(&t.stderr)
 	trace.Out = &t.stdout
 
 	// XXX: Maybe the tests can run a bit faster when they don't
