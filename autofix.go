@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"netbsd.org/pkglint/regex"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -450,6 +451,12 @@ func SaveAutofixChanges(lines *Lines) (autofixed bool) {
 			}
 		}
 		return
+	}
+
+	if G.Testing {
+		abs := abspath(lines.Filename)
+		absTmp := abspath(filepath.ToSlash(os.TempDir()))
+		assertf(hasPrefix(abs, absTmp), "%q must be inside %q", abs, absTmp)
 	}
 
 	changes := make(map[string][]string)

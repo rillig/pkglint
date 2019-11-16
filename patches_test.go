@@ -447,7 +447,7 @@ func (s *Suite) Test_CheckLinesPatch__autofix_long_empty_patch(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("-Wall", "--autofix")
-	lines := t.NewLines("patch-aa",
+	lines := t.SetUpFileLines("patch-aa",
 		CvsID,
 		"")
 

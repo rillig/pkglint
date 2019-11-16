@@ -1217,7 +1217,7 @@ func (s *Suite) Test_MkLines_Check__autofix_MASTER_SITE_in_HOMEPAGE(c *check.C) 
 	t := s.Init(c)
 
 	test := func(diagnostics ...string) {
-		mklines := t.NewMkLines("Makefile",
+		mklines := t.SetUpFileMkLines("Makefile",
 			MkCvsID,
 			"",
 			"MASTER_SITES= \\",
@@ -1232,6 +1232,7 @@ func (s *Suite) Test_MkLines_Check__autofix_MASTER_SITE_in_HOMEPAGE(c *check.C) 
 	}
 
 	t.SetUpVartypes()
+	t.Chdir(".")
 
 	t.SetUpCommandLine("-Wall")
 	test(
