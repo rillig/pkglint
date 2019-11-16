@@ -40,8 +40,8 @@ func (ck *TestNameChecker) ShowWarnings(warn bool) { ck.warn = warn }
 
 func (ck *TestNameChecker) Check() {
 	elements := ck.loadAllElements()
-	testeeByName := ck.collectTesteeByName(elements)
-	ck.checkAll(elements, testeeByName)
+	testeeByPrefix := ck.testeeByPrefix(elements)
+	ck.checkAll(elements, testeeByPrefix)
 
 	for _, err := range ck.errors {
 		fmt.Println(err)
@@ -112,23 +112,28 @@ func (ck *TestNameChecker) addElement(elements *testees, decl ast.Decl, filename
 	}
 }
 
-// collectTesteeByName generates a map containing the names of all
-// testable elements, as used in the test names. Examples:
+// testeeByPrefix generates a map containing the names of all
+// test subjects, according to the test names. Example keys:
 //
 //  Autofix
 //  Line_Warnf
 //  match5
-func (ck *TestNameChecker) collectTesteeByName(elements testees) map[string]*testeeElement {
-	prefixes := make(map[string]*testeeElement)
+func (ck *TestNameChecker) testeeByPrefix(elements testees) map[string]*testee {
+	prefixes := make(map[string]*testee)
 	for _, element := range elements.elements {
-		if element.prefix != "" { // Ignore tests named Test__description.
-			prefixes[element.prefix] = element
+		prefix := element.prefix
+		if prefix == "" {
+			continue // Ignore tests named Test__description.
 		}
+		if prefixes[prefix] != nil && element.test {
+			continue // Prefer the main testee over a testee from *_test.go.
+		}
+		prefixes[prefix] = element
 	}
 	return prefixes
 }
 
-func (ck *TestNameChecker) checkAll(elements testees, testeeByName map[string]*testeeElement) {
+func (ck *TestNameChecker) checkAll(elements testees, testeeByPrefix map[string]*testee) {
 	testNames := make(map[string]bool)
 
 	for _, element := range elements.elements {
@@ -144,8 +149,9 @@ func (ck *TestNameChecker) checkAll(elements testees, testeeByName map[string]*t
 				if len(refAndDescr) > 1 {
 					descr = refAndDescr[1]
 				}
-				testNames[refAndDescr[0]] = true
-				ck.checkTestName(element, refAndDescr[0], descr, testeeByName)
+				prefix := refAndDescr[0]
+				testNames[prefix] = true
+				ck.checkTestName(element, prefix, descr, testeeByPrefix[prefix])
 
 			default:
 				ck.addError("Test name %q must contain an underscore.", element.fullName)
@@ -163,10 +169,9 @@ func (ck *TestNameChecker) checkAll(elements testees, testeeByName map[string]*t
 	}
 }
 
-func (ck *TestNameChecker) checkTestName(test *testeeElement, prefix string, descr string, testeeByName map[string]*testeeElement) {
-	testee := testeeByName[prefix]
-	if testee == nil {
-		ck.addError("Test %q for missing testee %q.", test.fullName, prefix)
+func (ck *TestNameChecker) checkTestName(test *testee, prefix string, descr string, testee *testee) {
+	if testee == nil || testee.test {
+		ck.addError("Test %q for missing testee %q.", test.fullName, strings.Replace(prefix, "_", ".", -1))
 
 	} else if !strings.HasSuffix(testee.file, "_test.go") {
 		correctTestFile := strings.TrimSuffix(testee.file, ".go") + "_test.go"
@@ -182,7 +187,7 @@ func (ck *TestNameChecker) checkTestName(test *testeeElement, prefix string, des
 // checkTestNameCamelCase ensures that the method name does not accidentally
 // end up in the description of the test. This could happen if there is a
 // double underscore instead of a single underscore.
-func (ck *TestNameChecker) checkTestNameCamelCase(descr string, test *testeeElement) {
+func (ck *TestNameChecker) checkTestNameCamelCase(descr string, test *testee) {
 	if test.Type != "" && test.Func != "" {
 		return // There's no way to accidentally write __ instead of _.
 	}
@@ -206,7 +211,7 @@ func (ck *TestNameChecker) isIgnored(filename string) bool {
 	return false
 }
 
-func (ck *TestNameChecker) newElement(typeName, funcName, filename string) *testeeElement {
+func (ck *TestNameChecker) newElement(typeName, funcName, filename string) *testee {
 	typeName = strings.TrimSuffix(typeName, "Impl")
 
 	fullName := join(typeName, ".", funcName)
@@ -228,7 +233,7 @@ func (ck *TestNameChecker) newElement(typeName, funcName, filename string) *test
 		prefix = join(typeName, "_", funcName)
 	}
 
-	return &testeeElement{filename, typeName, funcName, fullName, isTest, prefix}
+	return &testee{filename, typeName, funcName, fullName, isTest, prefix}
 }
 
 func (ck *TestNameChecker) addError(format string, args ...interface{}) {
@@ -245,10 +250,10 @@ type testeePrefix struct {
 }
 
 type testees struct {
-	elements []*testeeElement
+	elements []*testee
 }
 
-func (t *testees) add(element *testeeElement) {
+func (t *testees) add(element *testee) {
 	t.elements = append(t.elements, element)
 }
 
@@ -269,19 +274,19 @@ func (t *testees) sort() {
 	sort.Slice(t.elements, less)
 }
 
-// testeeElement is an element of the source code that can be tested.
+// testee is an element of the source code that can be tested.
 // It is either a type, a function or a method.
-// The test methods are also testeeElements.
-type testeeElement struct {
-	file string // The file containing the testeeElement
+// The test methods are also testees.
+type testee struct {
+	file string // The file containing the testee
 	Type string // The type, e.g. MkLine
 	Func string // The function or method name, e.g. Warnf
 
 	fullName string // Type + "." + Func
 
-	test bool // Whether the testeeElement is a test or a testee
+	test bool // Whether the testee is a test or a testee
 
-	// For a test, its name without the description,
+	// For a test, the method name without the "Test_" prefix and description,
 	// otherwise the prefix (Type + "_" + Func) for the corresponding tests
 	prefix string
 }
