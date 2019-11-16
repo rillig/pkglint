@@ -31,7 +31,7 @@ func (s *Suite) Test_Var_ConstantValue__assign_reference(c *check.C) {
 
 	v.Write(t.NewMkLine("write.mk", 124, "VARNAME=\t${OTHER}"), false)
 
-	t.CheckEquals(v.Constant(), true)
+	t.CheckEquals(v.IsConstant(), true)
 }
 
 func (s *Suite) Test_Var_ConstantValue__assign_eval_reference(c *check.C) {
@@ -51,7 +51,7 @@ func (s *Suite) Test_Var_ConstantValue__assign_eval_reference(c *check.C) {
 	//
 	// As of March 2019 this is not implemented, therefore pkglint
 	// doesn't treat the variable as constant, to prevent wrong warnings.
-	t.CheckEquals(v.Constant(), false)
+	t.CheckEquals(v.IsConstant(), false)
 }
 
 func (s *Suite) Test_Var_ConstantValue__assign_conditional(c *check.C) {
@@ -63,7 +63,7 @@ func (s *Suite) Test_Var_ConstantValue__assign_conditional(c *check.C) {
 
 	v.Write(t.NewMkLine("write.mk", 123, "VARNAME=\tconditional"), true, "OPSYS")
 
-	t.CheckEquals(v.Constant(), false)
+	t.CheckEquals(v.IsConstant(), false)
 }
 
 func (s *Suite) Test_Var_ConstantValue__default(c *check.C) {
@@ -134,7 +134,7 @@ func (s *Suite) Test_Var_ConstantValue__shell(c *check.C) {
 
 	v.Write(t.NewMkLine("write.mk", 124, "VARNAME!=\techo hello"), false)
 
-	t.CheckEquals(v.Constant(), false)
+	t.CheckEquals(v.IsConstant(), false)
 }
 
 func (s *Suite) Test_Var_ConstantValue__referenced_before(c *check.C) {
@@ -148,11 +148,11 @@ func (s *Suite) Test_Var_ConstantValue__referenced_before(c *check.C) {
 	// condition.
 	v.Read(t.NewMkLine("readwrite.mk", 123, "OTHER=\t${VARNAME}"))
 
-	t.CheckEquals(v.Constant(), false)
+	t.CheckEquals(v.IsConstant(), false)
 
 	v.Write(t.NewMkLine("readwrite.mk", 124, "VARNAME=\tvalue"), false)
 
-	t.CheckEquals(v.Constant(), false)
+	t.CheckEquals(v.IsConstant(), false)
 }
 
 func (s *Suite) Test_Var_ConstantValue__referenced_in_between(c *check.C) {
@@ -174,7 +174,7 @@ func (s *Suite) Test_Var_ConstantValue__referenced_in_between(c *check.C) {
 
 	v.Write(t.NewMkLine("write.mk", 125, "VARNAME=\toverwritten"), false)
 
-	t.CheckEquals(v.Constant(), false)
+	t.CheckEquals(v.IsConstant(), false)
 }
 
 func (s *Suite) Test_Var_ConditionalVars(c *check.C) {
@@ -182,18 +182,18 @@ func (s *Suite) Test_Var_ConditionalVars(c *check.C) {
 
 	v := NewVar("VARNAME")
 
-	t.CheckEquals(v.Conditional(), false)
+	t.CheckEquals(v.IsConditional(), false)
 	t.Check(v.ConditionalVars(), check.IsNil)
 
 	v.Write(t.NewMkLine("write.mk", 123, "VARNAME=\tconditional"), true, "OPSYS")
 
-	t.CheckEquals(v.Constant(), false)
-	t.CheckEquals(v.Conditional(), true)
+	t.CheckEquals(v.IsConstant(), false)
+	t.CheckEquals(v.IsConditional(), true)
 	t.CheckDeepEquals(v.ConditionalVars(), []string{"OPSYS"})
 
 	v.Write(t.NewMkLine("write.mk", 124, "VARNAME=\tconditional"), true, "OPSYS")
 
-	t.CheckEquals(v.Conditional(), true)
+	t.CheckEquals(v.IsConditional(), true)
 	t.CheckDeepEquals(v.ConditionalVars(), []string{"OPSYS"})
 }
 
@@ -207,8 +207,8 @@ func (s *Suite) Test_Var_Value__initial_conditional_write(c *check.C) {
 	// Since there is no previous value, the simplest choice is to just
 	// take the first seen value, no matter if that value is conditional
 	// or not.
-	t.CheckEquals(v.Conditional(), true)
-	t.CheckEquals(v.Constant(), false)
+	t.CheckEquals(v.IsConditional(), true)
+	t.CheckEquals(v.IsConstant(), false)
 	t.CheckEquals(v.Value(), "overwritten conditionally")
 }
 
@@ -224,13 +224,13 @@ func (s *Suite) Test_Var_Write__conditional_without_variables(c *check.C) {
 	scope := NewRedundantScope()
 	mklines.ForEach(func(mkline *MkLine) {
 		if mkline.IsVarassign() {
-			t.CheckEquals(scope.get("VAR").vari.Conditional(), false)
+			t.CheckEquals(scope.get("VAR").vari.IsConditional(), false)
 		}
 
 		scope.checkLine(mklines, mkline)
 
 		if mkline.IsVarassign() {
-			t.CheckEquals(scope.get("VAR").vari.Conditional(), true)
+			t.CheckEquals(scope.get("VAR").vari.IsConditional(), true)
 		}
 	})
 }
@@ -267,8 +267,8 @@ func (s *Suite) Test_Var_Value__conditional_write_after_unconditional(c *check.C
 	//  .endif
 	// The value stays the same, still it is marked as conditional and therefore
 	// not constant anymore.
-	t.CheckEquals(v.Conditional(), true)
-	t.CheckEquals(v.Constant(), false)
+	t.CheckEquals(v.IsConditional(), true)
+	t.CheckEquals(v.IsConstant(), false)
 	t.CheckEquals(v.Value(), "value appended")
 }
 

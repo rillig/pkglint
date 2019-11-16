@@ -1427,7 +1427,7 @@ func (s *Suite) Test_RedundantScope__procedure_parameters(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-// Branch coverage for info.vari.Constant(). The other tests typically
+// Branch coverage for info.vari.IsConstant(). The other tests typically
 // make a variable non-constant by adding conditional assignments between
 // .if/.endif. But there are other ways. The output of shell commands is
 // unpredictable for pkglint (as of March 2019), therefore it treats these

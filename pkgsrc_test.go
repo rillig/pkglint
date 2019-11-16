@@ -1035,7 +1035,7 @@ func (s *Suite) Test_Pkgsrc_guessVariableType__SKIP(c *check.C) {
 	mklines.Check()
 
 	vartype := G.Pkgsrc.VariableType(mklines, "MY_CHECK_SKIP")
-	t.CheckEquals(vartype.Guessed(), true)
+	t.CheckEquals(vartype.IsGuessed(), true)
 	t.CheckEquals(vartype.EffectivePermissions("filename.mk"), aclpAllRuntime)
 
 	// The permissions for MY_CHECK_SKIP say aclpAllRuntime, which excludes
@@ -1128,7 +1128,7 @@ func (s *Suite) Test_Change_Successor(c *check.C) {
 	t.ExpectAssert(func() { downgraded.Successor() })
 }
 
-func (s *Suite) Test_Change_Above(c *check.C) {
+func (s *Suite) Test_Change_IsAbove(c *check.C) {
 	t := s.Init(c)
 
 	var changes = []*Change{
@@ -1137,7 +1137,7 @@ func (s *Suite) Test_Change_Above(c *check.C) {
 		{Location{"", 1, 1}, 0, "", "", "", "2011-07-02"}}
 
 	test := func(i int, chi *Change, j int, chj *Change) {
-		actual := chi.Above(chj)
+		actual := chi.IsAbove(chj)
 		expected := i < j
 		if actual != expected {
 			t.CheckDeepEquals(

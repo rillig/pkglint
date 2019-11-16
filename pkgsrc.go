@@ -263,7 +263,7 @@ func (src *Pkgsrc) checkToplevelUnusedLicenses() {
 	licensesDir := src.File("licenses")
 	for _, licenseFile := range src.ReadDir("licenses") {
 		licenseName := licenseFile.Name()
-		if !G.InterPackage.LicenseUsed(licenseName) {
+		if !G.InterPackage.IsLicenseUsed(licenseName) {
 			licensePath := joinPath(licensesDir, licenseName)
 			NewLineWhole(licensePath).Warnf("This license seems to be unused.")
 		}
@@ -343,7 +343,7 @@ func (src *Pkgsrc) loadUntypedVars() {
 
 	define := func(varcanon string, mkline *MkLine) {
 		switch {
-		case src.vartypes.DefinedCanon(varcanon):
+		case src.vartypes.IsDefinedCanon(varcanon):
 			// Already defined, can also be a tool.
 
 		case hasPrefix(varcanon, "_"):
@@ -624,7 +624,7 @@ func (src *Pkgsrc) checkRemovedAfterLastFreeze() {
 		}
 	}
 
-	sort.Slice(wrong, func(i, j int) bool { return wrong[i].Above(wrong[j]) })
+	sort.Slice(wrong, func(i, j int) bool { return wrong[i].IsAbove(wrong[j]) })
 
 	for _, change := range wrong {
 		// It's a bit cheated to construct a Line from only a Location,
@@ -1070,7 +1070,7 @@ func (ch *Change) Successor() string {
 	return ch.target
 }
 
-func (ch *Change) Above(other *Change) bool {
+func (ch *Change) IsAbove(other *Change) bool {
 	if ch.Date != other.Date {
 		return ch.Date < other.Date
 	}

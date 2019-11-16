@@ -100,7 +100,7 @@ func (ip *InterPackage) UseLicense(name string) {
 	}
 }
 
-func (ip *InterPackage) LicenseUsed(name string) bool {
+func (ip *InterPackage) IsLicenseUsed(name string) bool {
 	_, used := ip.usedLicenses[name]
 	return used
 }
@@ -193,7 +193,7 @@ func (pkglint *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) 
 
 	pkglint.prepareMainLoop()
 
-	for !pkglint.Todo.Empty() {
+	for !pkglint.Todo.IsEmpty() {
 		pkglint.Check(pkglint.Todo.Pop())
 	}
 
@@ -337,7 +337,7 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) int {
 	for _, arg := range pkglint.Opts.args {
 		pkglint.Todo.Push(filepath.ToSlash(arg))
 	}
-	if pkglint.Todo.Empty() {
+	if pkglint.Todo.IsEmpty() {
 		pkglint.Todo.Push(".")
 	}
 
@@ -533,7 +533,7 @@ func CheckLinesMessage(lines *Lines) {
 	//
 	// If the need arises, some of the checks may be activated again, but
 	// that requires more sophisticated code.
-	if G.Pkg != nil && G.Pkg.vars.Defined("MESSAGE_SRC") {
+	if G.Pkg != nil && G.Pkg.vars.IsDefined("MESSAGE_SRC") {
 		return
 	}
 

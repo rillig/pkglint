@@ -774,19 +774,19 @@ func (s *Scope) Mentioned(varname string) *MkLine {
 	return s.firstDef[varname]
 }
 
-// Defined tests whether the variable is defined.
+// IsDefined tests whether the variable is defined.
 // It does NOT test the canonicalized variable name.
 //
-// Even if Defined returns true, FirstDefinition doesn't necessarily return true
+// Even if IsDefined returns true, FirstDefinition doesn't necessarily return true
 // since the latter ignores the default definitions from vardefs.go, keyword dummyVardefMkline.
-func (s *Scope) Defined(varname string) bool {
+func (s *Scope) IsDefined(varname string) bool {
 	mkline := s.firstDef[varname]
 	return mkline != nil && mkline.IsVarassign()
 }
 
-// DefinedSimilar tests whether the variable or its canonicalized form is defined.
-func (s *Scope) DefinedSimilar(varname string) bool {
-	if s.Defined(varname) {
+// IsDefinedSimilar tests whether the variable or its canonicalized form is defined.
+func (s *Scope) IsDefinedSimilar(varname string) bool {
+	if s.IsDefined(varname) {
 		if trace.Tracing {
 			trace.Step1("Variable %q is defined", varname)
 		}
@@ -794,7 +794,7 @@ func (s *Scope) DefinedSimilar(varname string) bool {
 	}
 
 	varcanon := varnameCanon(varname)
-	if s.Defined(varcanon) {
+	if s.IsDefined(varcanon) {
 		if trace.Tracing {
 			trace.Step2("Variable %q (similar to %q) is defined", varcanon, varname)
 		}
@@ -803,23 +803,23 @@ func (s *Scope) DefinedSimilar(varname string) bool {
 	return false
 }
 
-// Used tests whether the variable is used.
+// IsUsed tests whether the variable is used.
 // It does NOT test the canonicalized variable name.
-func (s *Scope) Used(varname string) bool {
+func (s *Scope) IsUsed(varname string) bool {
 	return s.used[varname] != nil
 }
 
-// UsedSimilar tests whether the variable or its canonicalized form is used.
-func (s *Scope) UsedSimilar(varname string) bool {
+// IsUsedSimilar tests whether the variable or its canonicalized form is used.
+func (s *Scope) IsUsedSimilar(varname string) bool {
 	if s.used[varname] != nil {
 		return true
 	}
 	return s.used[varnameCanon(varname)] != nil
 }
 
-// UsedAtLoadTime returns true if the variable is used at load time
+// IsUsedAtLoadTime returns true if the variable is used at load time
 // somewhere.
-func (s *Scope) UsedAtLoadTime(varname string) bool {
+func (s *Scope) IsUsedAtLoadTime(varname string) bool {
 	return s.usedAtLoadTime[varname]
 }
 
@@ -1410,7 +1410,7 @@ func (q *StringQueue) Push(entries ...string) {
 	q.entries = append(q.entries, entries...)
 }
 
-func (q *StringQueue) Empty() bool {
+func (q *StringQueue) IsEmpty() bool {
 	return len(q.entries) == 0
 }
 

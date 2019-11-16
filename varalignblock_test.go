@@ -3301,27 +3301,27 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 		func() { test("VAR=\tvalue\n", true, varalignParts{}) })
 }
 
-// This test runs canonicalInitial directly since as of August 2019
+// This test runs isCanonicalInitial directly since as of August 2019
 // that function is only used in a single place, and from this place
 // varnameOpSpaceWidth is always bigger than width.
-func (s *Suite) Test_varalignParts_canonicalInitial(c *check.C) {
+func (s *Suite) Test_varalignParts_isCanonicalInitial(c *check.C) {
 	t := s.Init(c)
 
 	var v varalignLine
 	v.varnameOp = "LONG.123456789="
 	v.spaceBeforeValue = " "
-	t.CheckEquals(v.canonicalInitial(16), false)
+	t.CheckEquals(v.isCanonicalInitial(16), false)
 
 	v.varnameOp = "LONG.1234567890="
 
-	t.CheckEquals(v.canonicalInitial(16), true)
+	t.CheckEquals(v.isCanonicalInitial(16), true)
 
 	v.spaceBeforeValue = ""
 
-	t.CheckEquals(v.canonicalInitial(16), false)
+	t.CheckEquals(v.isCanonicalInitial(16), false)
 }
 
-func (s *Suite) Test_varalignParts_canonicalFollow(c *check.C) {
+func (s *Suite) Test_varalignParts_isCanonicalFollow(c *check.C) {
 	t := s.Init(c)
 
 	test := func(comment, space string, expected bool) {
@@ -3330,7 +3330,7 @@ func (s *Suite) Test_varalignParts_canonicalFollow(c *check.C) {
 				leadingComment:   comment,
 				spaceBeforeValue: space}}
 
-		actual := l.canonicalFollow()
+		actual := l.isCanonicalFollow()
 
 		t.CheckEquals(actual, expected)
 	}

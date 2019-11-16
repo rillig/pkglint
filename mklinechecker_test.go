@@ -708,8 +708,8 @@ func (s *Suite) Test_MkLineChecker_checkVartype__simple_type(c *check.C) {
 
 	c.Assert(vartype, check.NotNil)
 	t.CheckEquals(vartype.basicType.name, "Comment")
-	t.CheckEquals(vartype.Guessed(), false)
-	t.CheckEquals(vartype.List(), false)
+	t.CheckEquals(vartype.IsGuessed(), false)
+	t.CheckEquals(vartype.IsList(), false)
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,

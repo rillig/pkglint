@@ -179,7 +179,7 @@ func (t *Tester) SetUpVartypes() {
 }
 
 func (t *Tester) SetUpMasterSite(varname string, urls ...string) {
-	if !G.Pkgsrc.vartypes.DefinedExact(varname) {
+	if !G.Pkgsrc.vartypes.IsDefinedExact(varname) {
 		G.Pkgsrc.vartypes.DefineParse(varname, BtFetchURL,
 			List|SystemProvided,
 			"buildlink3.mk: none",
@@ -915,7 +915,7 @@ func (t *Tester) Output() string {
 
 	t.stdout.Reset()
 	t.stderr.Reset()
-	if G.usable() {
+	if G.isUsable() {
 		G.Logger.logged = Once{}
 		if G.Logger.out != nil { // Necessary because Main resets the G variable.
 			G.Logger.out.state = 0 // Prevent an empty line at the beginning of the next output.
@@ -1128,7 +1128,7 @@ func (t *Tester) EnableSilentTracing() {
 // The diagnostics go to the in-memory buffer again,
 // ready to be checked with CheckOutputLines.
 func (t *Tester) DisableTracing() {
-	if G.usable() {
+	if G.isUsable() {
 		G.Logger.out = NewSeparatorWriter(&t.stdout)
 	}
 	trace.Tracing = false

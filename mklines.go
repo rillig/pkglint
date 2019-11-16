@@ -410,19 +410,19 @@ func (mklines *MkLines) collectElse() {
 
 func (mklines *MkLines) collectRationale() {
 
-	useful := func(mkline *MkLine) bool {
+	isUseful := func(mkline *MkLine) bool {
 		comment := trimHspace(mkline.Comment())
-		return comment != "" && !hasPrefix(comment, "$")
+		return comment != "" && !hasPrefix(comment, "$NetBSD")
 	}
 
-	realComment := func(mkline *MkLine) bool {
+	isRealComment := func(mkline *MkLine) bool {
 		return mkline.IsComment() && !mkline.IsCommentedVarassign()
 	}
 
 	rationale := false
 	for _, mkline := range mklines.mklines {
-		rationale = rationale || realComment(mkline) && useful(mkline)
-		mkline.splitResult.hasRationale = rationale || useful(mkline)
+		rationale = rationale || isRealComment(mkline) && isUseful(mkline)
+		mkline.splitResult.hasRationale = rationale || isUseful(mkline)
 		rationale = rationale && !mkline.IsEmpty()
 	}
 }

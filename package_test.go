@@ -2551,12 +2551,12 @@ func (s *Suite) Test_Package_collectSeenInclude__builtin_mk(c *check.C) {
 	t.CheckEquals(pkg.seenInclude, true)
 }
 
-func (s *Suite) Test_Package_diveInto(c *check.C) {
+func (s *Suite) Test_Package_shouldDiveInto(c *check.C) {
 	t := s.Init(c)
 	t.Chdir(".")
 
 	test := func(including, included string, expected bool) {
-		actual := (*Package)(nil).diveInto(including, included)
+		actual := (*Package)(nil).shouldDiveInto(including, included)
 		t.CheckEquals(actual, expected)
 	}
 

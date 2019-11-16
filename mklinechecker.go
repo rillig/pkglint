@@ -206,7 +206,7 @@ func (ck MkLineChecker) checkDirectiveEnd(ind *Indentation) {
 	directive := mkline.Directive()
 	comment := mkline.DirectiveComment()
 
-	if ind.Empty() {
+	if ind.IsEmpty() {
 		mkline.Errorf("Unmatched .%s.", directive)
 		return
 	}
@@ -513,7 +513,7 @@ func (ck MkLineChecker) checkVarUseVarname(varuse *MkVarUse) {
 }
 
 func (ck MkLineChecker) checkVarUseBuildDefs(varname string) {
-	if !(G.Pkgsrc.UserDefinedVars.Defined(varname) && !G.Pkgsrc.IsBuildDef(varname)) {
+	if !(G.Pkgsrc.UserDefinedVars.IsDefined(varname) && !G.Pkgsrc.IsBuildDef(varname)) {
 		return
 	}
 
@@ -535,13 +535,13 @@ func (ck MkLineChecker) checkVaruseUndefined(vartype *Vartype, varname string) {
 	switch {
 	case !G.Opts.WarnExtra,
 		// Well-known variables are probably defined by the infrastructure.
-		vartype != nil && !vartype.Guessed(),
-		ck.MkLines.vars.DefinedSimilar(varname),
+		vartype != nil && !vartype.IsGuessed(),
+		ck.MkLines.vars.IsDefinedSimilar(varname),
 		ck.MkLines.forVars[varname],
 		ck.MkLines.vars.Mentioned(varname) != nil,
-		G.Pkg != nil && G.Pkg.vars.DefinedSimilar(varname),
+		G.Pkg != nil && G.Pkg.vars.IsDefinedSimilar(varname),
 		containsVarRef(varname),
-		G.Pkgsrc.vartypes.DefinedCanon(varname),
+		G.Pkgsrc.vartypes.IsDefinedCanon(varname),
 		varname == "":
 		return
 	}
@@ -567,7 +567,7 @@ func (ck MkLineChecker) checkVaruseModifiers(varuse *MkVarUse, vartype *Vartype)
 }
 
 func (ck MkLineChecker) checkVaruseModifiersSuffix(varuse *MkVarUse, vartype *Vartype) {
-	if varuse.modifiers[0].IsSuffixSubst() && vartype != nil && !vartype.List() {
+	if varuse.modifiers[0].IsSuffixSubst() && vartype != nil && !vartype.IsList() {
 		ck.MkLine.Warnf("The :from=to modifier should only be used with lists, not with %s.", varuse.varname)
 		ck.MkLine.Explain(
 			"Instead of (for example):",
@@ -635,7 +635,7 @@ func (ck MkLineChecker) checkVarusePermissions(varname string, vartype *Vartype,
 		return
 	}
 
-	if vartype.Guessed() {
+	if vartype.IsGuessed() {
 		return
 	}
 
@@ -717,7 +717,7 @@ func (ck MkLineChecker) warnVarusePermissions(
 		// Some of the guessed variables may be used at load time. But since the
 		// variable type and these permissions are guessed, pkglint should not
 		// issue the following warning, since it is often wrong.
-		if vucVartype.Guessed() {
+		if vucVartype.IsGuessed() {
 			return
 		}
 
@@ -839,12 +839,12 @@ func (ck MkLineChecker) checkVarUseQuoting(varUse *MkVarUse, vartype *Vartype, v
 	// since the GNU configure scripts cannot handle these space characters.
 	//
 	// When doing checks outside a package, the :M* modifier is needed for safety.
-	needMstar := (G.Pkg == nil || G.Pkg.vars.Defined("GNU_CONFIGURE")) &&
+	needMstar := (G.Pkg == nil || G.Pkg.vars.IsDefined("GNU_CONFIGURE")) &&
 		matches(varname, `^(?:.*_)?(?:CFLAGS|CPPFLAGS|CXXFLAGS|FFLAGS|LDFLAGS|LIBS)$`)
 
 	mkline := ck.MkLine
 	if mod == ":M*:Q" && !needMstar {
-		if !vartype.Guessed() {
+		if !vartype.IsGuessed() {
 			mkline.Notef("The :M* modifier is not needed here.")
 		}
 
@@ -860,7 +860,7 @@ func (ck MkLineChecker) checkVarUseQuoting(varUse *MkVarUse, vartype *Vartype, v
 				}
 
 				varinfo := G.Pkg.redundant.vars[varname]
-				if varinfo == nil || !varinfo.vari.Constant() {
+				if varinfo == nil || !varinfo.vari.IsConstant() {
 					return false
 				}
 
@@ -868,11 +868,11 @@ func (ck MkLineChecker) checkVarUseQuoting(varUse *MkVarUse, vartype *Vartype, v
 				return len(mkline.ValueFields(value)) == 1
 			}
 
-			if vartype.List() && isSingleWordConstant() {
+			if vartype.IsList() && isSingleWordConstant() {
 				// Do not warn in this special case, which typically occurs
 				// for BUILD_DIRS or similar package-settable variables.
 
-			} else if vartype.List() {
+			} else if vartype.IsList() {
 				mkline.Warnf("The list variable %s should not be embedded in a word.", varname)
 				mkline.Explain(
 					"When a list variable has multiple elements, this expression expands",
@@ -1043,7 +1043,7 @@ func (ck MkLineChecker) checkVarassignOpShell() {
 		// Authors of builtin.mk files usually know what they're doing.
 		return
 
-	case G.Pkg == nil || G.Pkg.vars.UsedAtLoadTime(mkline.Varname()):
+	case G.Pkg == nil || G.Pkg.vars.IsUsedAtLoadTime(mkline.Varname()):
 		return
 	}
 
@@ -1118,16 +1118,16 @@ func (ck MkLineChecker) checkVarassignLeftNotUsed() {
 		return
 	}
 
-	if ck.MkLines.vars.UsedSimilar(varname) {
+	if ck.MkLines.vars.IsUsedSimilar(varname) {
 		return
 	}
 
-	if G.Pkg != nil && G.Pkg.vars.UsedSimilar(varname) {
+	if G.Pkg != nil && G.Pkg.vars.IsUsedSimilar(varname) {
 		return
 	}
 
 	vartypes := G.Pkgsrc.vartypes
-	if vartypes.DefinedExact(varname) || vartypes.DefinedExact(varcanon) {
+	if vartypes.IsDefinedExact(varname) || vartypes.IsDefinedExact(varcanon) {
 		return
 	}
 
@@ -1325,7 +1325,7 @@ func (ck MkLineChecker) checkVarassignLeftBsdPrefs() {
 	//  module.mk: LICENSE?=      default-license
 	//
 	vartype := G.Pkgsrc.VariableType(nil, mkline.Varname())
-	if vartype != nil && vartype.PackageSettable() {
+	if vartype != nil && vartype.IsPackageSettable() {
 		return
 	}
 
@@ -1360,7 +1360,7 @@ func (ck MkLineChecker) checkVarassignLeftUserSettable() bool {
 	// That's an unfortunate situation since there is no definite source
 	// of truth, but luckily only a few variables make use of it.
 	vartype := G.Pkgsrc.VariableType(ck.MkLines, varname)
-	if vartype.PackageSettable() {
+	if vartype.IsPackageSettable() {
 		return true
 	}
 
@@ -1422,15 +1422,15 @@ func (ck MkLineChecker) checkVartype(varname string, op MkOperator, value, comme
 			trace.Step1("Unchecked use of !=: %q", value)
 		}
 
-	case !vartype.List():
-		ck.CheckVartypeBasic(varname, vartype.basicType, op, value, comment, vartype.Guessed())
+	case !vartype.IsList():
+		ck.CheckVartypeBasic(varname, vartype.basicType, op, value, comment, vartype.IsGuessed())
 
 	case value == "":
 		break
 
 	default:
 		words := mkline.ValueFields(value)
-		if len(words) > 1 && vartype.OnePerLine() {
+		if len(words) > 1 && vartype.IsOnePerLine() {
 			mkline.Warnf("%s should only get one item per line.", varname)
 			mkline.Explain(
 				"Use the += operator to append each of the items.",
@@ -1441,7 +1441,7 @@ func (ck MkLineChecker) checkVartype(varname string, op MkOperator, value, comme
 			ck.checkVarassignRightCategory()
 		}
 		for _, word := range words {
-			ck.CheckVartypeBasic(varname, vartype.basicType, op, word, comment, vartype.Guessed())
+			ck.CheckVartypeBasic(varname, vartype.basicType, op, word, comment, vartype.IsGuessed())
 		}
 	}
 }
@@ -1655,7 +1655,7 @@ func (ck MkLineChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, notE
 		switch {
 		case !exact,
 			vartype == nil,
-			vartype.List(),
+			vartype.IsList(),
 			textproc.NewLexer(pattern).NextBytesSet(mkCondLiteralChars) != pattern:
 			continue
 		}

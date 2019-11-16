@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func (pkglint *Pkglint) usable() bool { return pkglint.fileCache != nil }
+func (pkglint *Pkglint) isUsable() bool { return pkglint.fileCache != nil }
 
 func (s *Suite) Test_Pkglint_Main__help(c *check.C) {
 	t := s.Init(c)

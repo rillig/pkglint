@@ -571,11 +571,11 @@ func (scc *SimpleCommandChecker) handleCommandVariable() bool {
 
 	// When the package author has explicitly defined a command
 	// variable, assume it to be valid.
-	if scc.MkLines.vars.DefinedSimilar(varname) {
+	if scc.MkLines.vars.IsDefinedSimilar(varname) {
 		return true
 	}
 
-	return G.Pkg != nil && G.Pkg.vars.DefinedSimilar(varname)
+	return G.Pkg != nil && G.Pkg.vars.IsDefinedSimilar(varname)
 }
 
 func (scc *SimpleCommandChecker) handleShellBuiltin() bool {

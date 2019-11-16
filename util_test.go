@@ -590,35 +590,35 @@ func (s *Suite) Test_Scope_Define(c *check.C) {
 	t.CheckEquals(scope.LastValue("BUILD_DIRS"), "one two three four")
 }
 
-func (s *Suite) Test_Scope_Defined(c *check.C) {
+func (s *Suite) Test_Scope_IsDefined(c *check.C) {
 	t := s.Init(c)
 
 	scope := NewScope()
 	scope.Define("VAR.param", t.NewMkLine("file.mk", 1, "VAR.param=value"))
 
-	t.CheckEquals(scope.Defined("VAR.param"), true)
-	t.CheckEquals(scope.Defined("VAR.other"), false)
-	t.CheckEquals(scope.Defined("VARIABLE.*"), false)
+	t.CheckEquals(scope.IsDefined("VAR.param"), true)
+	t.CheckEquals(scope.IsDefined("VAR.other"), false)
+	t.CheckEquals(scope.IsDefined("VARIABLE.*"), false)
 
-	t.CheckEquals(scope.DefinedSimilar("VAR.param"), true)
-	t.CheckEquals(scope.DefinedSimilar("VAR.other"), true)
-	t.CheckEquals(scope.DefinedSimilar("VARIABLE.*"), false)
+	t.CheckEquals(scope.IsDefinedSimilar("VAR.param"), true)
+	t.CheckEquals(scope.IsDefinedSimilar("VAR.other"), true)
+	t.CheckEquals(scope.IsDefinedSimilar("VARIABLE.*"), false)
 }
 
-func (s *Suite) Test_Scope_Used(c *check.C) {
+func (s *Suite) Test_Scope_IsUsed(c *check.C) {
 	t := s.Init(c)
 
 	scope := NewScope()
 	mkline := t.NewMkLine("file.mk", 1, "\techo ${VAR.param}")
 	scope.Use("VAR.param", mkline, VucRunTime)
 
-	t.CheckEquals(scope.Used("VAR.param"), true)
-	t.CheckEquals(scope.Used("VAR.other"), false)
-	t.CheckEquals(scope.Used("VARIABLE.*"), false)
+	t.CheckEquals(scope.IsUsed("VAR.param"), true)
+	t.CheckEquals(scope.IsUsed("VAR.other"), false)
+	t.CheckEquals(scope.IsUsed("VARIABLE.*"), false)
 
-	t.CheckEquals(scope.UsedSimilar("VAR.param"), true)
-	t.CheckEquals(scope.UsedSimilar("VAR.other"), true)
-	t.CheckEquals(scope.UsedSimilar("VARIABLE.*"), false)
+	t.CheckEquals(scope.IsUsedSimilar("VAR.param"), true)
+	t.CheckEquals(scope.IsUsedSimilar("VAR.other"), true)
+	t.CheckEquals(scope.IsUsedSimilar("VARIABLE.*"), false)
 }
 
 func (s *Suite) Test_Scope_DefineAll(c *check.C) {
@@ -636,7 +636,7 @@ func (s *Suite) Test_Scope_DefineAll(c *check.C) {
 	src.Define("VAR", t.NewMkLine("file.mk", 1, "VAR=value"))
 	dst.DefineAll(src)
 
-	t.CheckEquals(dst.Defined("VAR"), true)
+	t.CheckEquals(dst.IsDefined("VAR"), true)
 }
 
 func (s *Suite) Test_Scope_FirstDefinition(c *check.C) {
@@ -684,9 +684,9 @@ func (s *Suite) Test_Scope__no_tracing(c *check.C) {
 	scope.Define("VAR.param", t.NewMkLine("fname.mk", 3, "VAR.param=\tvalue"))
 	t.DisableTracing()
 
-	t.CheckEquals(scope.DefinedSimilar("VAR.param"), true)
-	t.CheckEquals(scope.DefinedSimilar("VAR.other"), true)
-	t.CheckEquals(scope.DefinedSimilar("OTHER"), false)
+	t.CheckEquals(scope.IsDefinedSimilar("VAR.param"), true)
+	t.CheckEquals(scope.IsDefinedSimilar("VAR.other"), true)
+	t.CheckEquals(scope.IsDefinedSimilar("OTHER"), false)
 }
 
 func (s *Suite) Test_Scope__commented_varassign(c *check.C) {
@@ -696,7 +696,7 @@ func (s *Suite) Test_Scope__commented_varassign(c *check.C) {
 	scope := NewScope()
 	scope.Define("VAR", mkline)
 
-	t.CheckEquals(scope.Defined("VAR"), false)
+	t.CheckEquals(scope.IsDefined("VAR"), false)
 	t.Check(scope.FirstDefinition("VAR"), check.IsNil)
 	t.Check(scope.LastDefinition("VAR"), check.IsNil)
 

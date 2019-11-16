@@ -479,7 +479,7 @@ func (va *VaralignBlock) realignMultiEmptyFollow(info *varalignLine, newWidth in
 	if !*indentDiffSet {
 		*indentDiffSet = true
 		*indentDiff = condInt(newWidth != 0, newWidth-oldWidth, 0)
-		if *indentDiff > 0 && !info.commentedOut() {
+		if *indentDiff > 0 && !info.isCommentedOut() {
 			*indentDiff = 0
 		}
 	}
@@ -570,7 +570,7 @@ func (va *VaralignBlock) realignSingle(info *varalignLine, newWidth int) {
 	}
 
 	// Indent the outlier with a space instead of a tab to keep the line short.
-	if newSpace == "" && info.canonicalInitial(newWidth) {
+	if newSpace == "" && info.isCanonicalInitial(newWidth) {
 		return
 	}
 	if newSpace == "" {
@@ -784,14 +784,14 @@ func (p *varalignParts) continuationIndex() int {
 		len(p.value) + len(p.spaceAfterComment)
 }
 
-func (p *varalignParts) commentedOut() bool {
+func (p *varalignParts) isCommentedOut() bool {
 	return hasPrefix(p.leadingComment, "#")
 }
 
-// canonicalInitial returns whether the space between the assignment
+// isCanonicalInitial returns whether the space between the assignment
 // operator and the value has its canonical form, which is either
 // at least one tab, or a single space, but only for lines that stick out.
-func (p *varalignParts) canonicalInitial(width int) bool {
+func (p *varalignParts) isCanonicalInitial(width int) bool {
 	space := p.spaceBeforeValue
 	if space == "" {
 		return false
@@ -804,9 +804,9 @@ func (p *varalignParts) canonicalInitial(width int) bool {
 	return strings.TrimLeft(space, "\t") == ""
 }
 
-// canonicalFollow returns whether the space before the value has its
+// isCanonicalFollow returns whether the space before the value has its
 // canonical form, which is at least one tab, followed by up to 7 spaces.
-func (p *varalignParts) canonicalFollow() bool {
+func (p *varalignParts) isCanonicalFollow() bool {
 	lexer := textproc.NewLexer(p.spaceBeforeValue)
 
 	tabs := 0
