@@ -121,8 +121,8 @@ func (ck *TestNameChecker) addElement(elements *testees, decl ast.Decl, filename
 func (ck *TestNameChecker) collectTesteeByName(elements testees) map[string]*testeeElement {
 	prefixes := make(map[string]*testeeElement)
 	for _, element := range elements.elements {
-		if element.Prefix != "" { // Ignore tests named Test__description.
-			prefixes[element.Prefix] = element
+		if element.prefix != "" { // Ignore tests named Test__description.
+			prefixes[element.prefix] = element
 		}
 	}
 	return prefixes
@@ -132,7 +132,7 @@ func (ck *TestNameChecker) checkAll(elements testees, testeeByName map[string]*t
 	testNames := make(map[string]bool)
 
 	for _, element := range elements.elements {
-		if element.Test {
+		if element.test {
 			method := element.Func
 			switch {
 			case strings.HasPrefix(method, "Test__"):
@@ -148,16 +148,16 @@ func (ck *TestNameChecker) checkAll(elements testees, testeeByName map[string]*t
 				ck.checkTestName(element, refAndDescr[0], descr, testeeByName)
 
 			default:
-				ck.addError("Test name %q must contain an underscore.", element.FullName)
+				ck.addError("Test name %q must contain an underscore.", element.fullName)
 			}
 		}
 	}
 
 	for _, element := range elements.elements {
-		if !strings.HasSuffix(element.File, "_test.go") && !ck.isIgnored(element.File) {
-			if !testNames[element.Prefix] {
+		if !strings.HasSuffix(element.file, "_test.go") && !ck.isIgnored(element.file) {
+			if !testNames[element.prefix] {
 				ck.addWarning("Missing unit test %q for %q.",
-					"Test_"+element.Prefix, element.FullName)
+					"Test_"+element.prefix, element.fullName)
 			}
 		}
 	}
@@ -166,13 +166,13 @@ func (ck *TestNameChecker) checkAll(elements testees, testeeByName map[string]*t
 func (ck *TestNameChecker) checkTestName(test *testeeElement, prefix string, descr string, testeeByName map[string]*testeeElement) {
 	testee := testeeByName[prefix]
 	if testee == nil {
-		ck.addError("Test %q for missing testee %q.", test.FullName, prefix)
+		ck.addError("Test %q for missing testee %q.", test.fullName, prefix)
 
-	} else if !strings.HasSuffix(testee.File, "_test.go") {
-		correctTestFile := strings.TrimSuffix(testee.File, ".go") + "_test.go"
-		if correctTestFile != test.File {
+	} else if !strings.HasSuffix(testee.file, "_test.go") {
+		correctTestFile := strings.TrimSuffix(testee.file, ".go") + "_test.go"
+		if correctTestFile != test.file {
 			ck.addError("Test %q for %q must be in %s instead of %s.",
-				test.FullName, testee.FullName, correctTestFile, test.File)
+				test.fullName, testee.fullName, correctTestFile, test.file)
 		}
 	}
 
@@ -190,7 +190,7 @@ func (ck *TestNameChecker) checkTestNameCamelCase(descr string, test *testeeElem
 		return
 	}
 
-	ck.addError("%s: Test description %q must not use CamelCase.", test.FullName, descr)
+	ck.addError("%s: Test description %q must not use CamelCase.", test.fullName, descr)
 }
 
 func (ck *TestNameChecker) isIgnored(filename string) bool {
@@ -259,7 +259,7 @@ func (t *testees) sort() {
 		case ei.Func != ej.Func:
 			return ei.Func < ej.Func
 		default:
-			return ei.File < ej.File
+			return ei.file < ej.file
 		}
 	}
 
@@ -270,18 +270,17 @@ func (t *testees) sort() {
 // It is either a type, a function or a method.
 // The test methods are also testeeElements.
 type testeeElement struct {
-	File string // The file containing the testeeElement
+	file string // The file containing the testeeElement
 	Type string // The type, e.g. MkLine
 	Func string // The function or method name, e.g. Warnf
 
-	FullName string // Type + "." + Func
+	fullName string // Type + "." + Func
 
-	// Whether the testeeElement is a test or a testee
-	Test bool
+	test bool // Whether the testeeElement is a test or a testee
 
 	// For a test, its name without the description,
 	// otherwise the prefix (Type + "_" + Func) for the corresponding tests
-	Prefix string
+	prefix string
 }
 
 func plural(n int, sg, pl string) string {
