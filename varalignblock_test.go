@@ -2467,6 +2467,174 @@ func (s *Suite) Test_VaralignBlock__empty_value(c *check.C) {
 	vt.Run()
 }
 
+func (s *Suite) Test_VaralignBlock__aligned(c *check.C) {
+	t := s.Init(c)
+
+	test := func(data ...interface{}) {
+		var lineTexts []string
+		for _, text := range data[:len(data)-1] {
+			lineTexts = append(lineTexts, text.(string))
+		}
+		expected := data[len(data)-1].(bool)
+
+		mklines := t.NewMkLines("filename.mk",
+			lineTexts...)
+		assert(len(mklines.mklines) == 1)
+
+		var varalign VaralignBlock
+		varalign.Process(mklines.mklines[0])
+		varalign.Finish()
+
+		output := t.Output()
+		if expected {
+			t.CheckEquals(output, "")
+		} else if output == "" {
+			t.Check(output, check.Not(check.Equals), "")
+		}
+	}
+
+	// The first line uses a space for indentation, which is typical of
+	// the outlier line in VaralignBlock.
+	//
+	// The second line starts in column 0, which is too far to the left.
+	// For a human reader the second line looks like a variable assignment
+	// of its own.
+	test(
+		"CONFIGURE_ENV+= \\",
+		"AWK=${AWK:Q}",
+		false)
+
+	// The second line is indented and therefore visually distinct from
+	// a Makefile assignment line. Everything's fine.
+	test(
+		"CONFIGURE_ENV+= \\",
+		"\tAWK=${AWK:Q}",
+		true)
+
+	// The first line may also use a tab instead of a space for indentation.
+	// This is typical of variable assignments whose name is short enough
+	// to be aligned with the other lines.
+	test(
+		"CONFIGURE_ENV+=\t\\",
+		"AWK=${AWK:Q}",
+		false)
+	test(
+		"CONFIGURE_ENV+=\t\\",
+		"\tAWK=${AWK:Q}",
+		true)
+
+	// The first line contains a value, and the second line has the same
+	// indentation as the first line. This looks nicely aligned.
+	test(
+		"CONFIGURE_ENV+=\tAWK=${AWK:Q} \\",
+		"\t\tSED=${SED:Q}",
+		true)
+
+	// The second line is indented less than the first line. This looks
+	// confusing to the human reader because the actual values do not
+	// appear in a rectangular shape in the source code.
+	test(
+		"VAR.param=\tvalue \\",
+		"\t10........20........30........40........50........60...4",
+		false)
+
+	// The second line is indented with a single tab because otherwise
+	// it would be longer than 72 characters. In this case it is ok to
+	// use the smaller indentation.
+	test(
+		"VAR.param=\tvalue \\",
+		"\t10........20........30........40........50........60....5",
+		true)
+
+	// Having the continuation line in column 0 looks even more confusing.
+	test(
+		"CONFIGURE_ENV+=\tAWK=${AWK:Q} \\",
+		"SED=${SED:Q}",
+		false)
+
+	// Longer continuation lines may use internal indentation to represent
+	// AWK or shell code.
+	test(
+		"GENERATE_PLIST+=\t/pattern/ { \\",
+		"\t\t\t  action(); \\",
+		"\t\t\t}",
+		true)
+
+	// If any of the continuation lines is indented less than the first
+	// line, it looks confusing.
+	test(
+		"GENERATE_PLIST+=\t/pattern/ { \\",
+		"\t  action(); \\",
+		"\t}",
+		false)
+
+	// If the first line is empty, the indentation may start in column 8,
+	// and the continuation lines have to be indented as least as far to
+	// the right as the second line.
+	test(
+		"GENERATE_PLIST+= \\",
+		"\t/pattern/ { \\",
+		"\t  action(); \\",
+		"\t}",
+		true)
+
+	// The very last line is indented at column 0, therefore the whole
+	// line is not indented properly.
+	test(
+		"GENERATE_PLIST+= \\",
+		"\t/pattern/ { \\",
+		"\t  action(); \\",
+		"}",
+		false)
+
+	// If there is no visible variable value at all, pkglint must not crash.
+	// This case doesn't occur in practice since the code is usually
+	// succinct enough to avoid these useless lines.
+	//
+	// The first line is empty, the second line is indented to column 8 and
+	// the remaining lines are all indented by at least 8, therefore the
+	// alignment is correct.
+	//
+	// A theoretical use case might be to have a long explaining comment
+	// in the continuation lines, but that is not possible syntactically.
+	// In the line "VAR= value \# comment", the \# is interpreted as
+	// an escaped number sign, and not as a continuation marker followed
+	// by a comment. In the line "VAR= value \ # comment", the backslash
+	// is not a continuation marker as well, since it is not the very
+	// last character of the line.
+	test(
+		"CONFIGURE_ENV+= \\",
+		"\t\\",
+		"\t\\",
+		"\t# nothing",
+		true)
+
+	// Commented variable assignments can also be tested for alignment.
+	test(
+		"#CONFIGURE_ENV+= \\",
+		"\tvalue",
+		true)
+
+	// In commented multilines, bmake doesn't care whether the
+	// continuation lines does or doesn't start with a comment character.
+	// For human readers though, it is confusing to omit the leading
+	// comment character.
+	//
+	// For determining whether a multiline is aligned, the initial comment
+	// character is ignored.
+	test(
+		"#CONFIGURE_ENV+= \\",
+		"#\tvalue",
+		true)
+
+	// The indentation of the continuation line is neither 8 nor the
+	// indentation of the first line. Therefore the line is not aligned.
+	test(
+		"#CONFIGURE_ENV+= value1 \\",
+		"#\t\tvalue2",
+		false)
+}
+
 func (s *Suite) Test_VaralignBlock_Process__var_spaces7_value(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
