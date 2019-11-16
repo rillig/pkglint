@@ -66,7 +66,6 @@ func (s *Suite) Test_TestNameChecker_Check(c *check.C) {
 		"W: Missing unit test \"Test_TestNameChecker_loadDecl\" for \"TestNameChecker.loadDecl\".",
 		"W: Missing unit test \"Test_TestNameChecker_addCode\" for \"TestNameChecker.addCode\".",
 		"W: Missing unit test \"Test_TestNameChecker_addTestee\" for \"TestNameChecker.addTestee\".",
-		"W: Missing unit test \"Test_TestNameChecker_addTest\" for \"TestNameChecker.addTest\".",
 		"W: Missing unit test \"Test_TestNameChecker_nextOrder\" for \"TestNameChecker.nextOrder\".",
 		"W: Missing unit test \"Test_TestNameChecker_relate\" for \"TestNameChecker.relate\".",
 		"W: Missing unit test \"Test_TestNameChecker_checkTests\" for \"TestNameChecker.checkTests\".",
@@ -77,8 +76,6 @@ func (s *Suite) Test_TestNameChecker_Check(c *check.C) {
 		"W: Missing unit test \"Test_TestNameChecker_checkOrder\" for \"TestNameChecker.checkOrder\".",
 		"W: Missing unit test \"Test_TestNameChecker_addError\" for \"TestNameChecker.addError\".",
 		"W: Missing unit test \"Test_TestNameChecker_addWarning\" for \"TestNameChecker.addWarning\".",
-		"W: Missing unit test \"Test_code_fullName\" for \"code.fullName\".",
-		"W: Missing unit test \"Test_plural\" for \"plural\".",
 		"W: Missing unit test \"Test_Test\" for \"Test\".",
 		"W: Missing unit test \"Test_Suite_Init\" for \"Suite.Init\".",
 		"W: Missing unit test \"Test_Suite_TearDownTest\" for \"Suite.TearDownTest\".",
@@ -86,7 +83,16 @@ func (s *Suite) Test_TestNameChecker_Check(c *check.C) {
 		"W: Missing unit test \"Test_Suite_CheckErrors\" for \"Suite.CheckErrors\".",
 		"W: Missing unit test \"Test_Suite_CheckSummary\" for \"Suite.CheckSummary\".",
 		"W: Missing unit test \"Test_Value_Method\" for \"Value.Method\".")
-	s.CheckSummary("27 warnings.")
+	s.CheckSummary("24 warnings.")
+}
+
+func (s *Suite) Test_TestNameChecker_addTest(c *check.C) {
+	ck := s.Init(c)
+
+	ck.addTest(code{"filename.go", "Type", "Method", 0})
+
+	s.CheckErrors(
+		"E: Test \"Type.Method\" must start with \"Test_\".")
 }
 
 func (s *Suite) Test_TestNameChecker_checkTestTestee__global(c *check.C) {
@@ -151,6 +157,28 @@ func (s *Suite) Test_TestNameChecker_print__errors_and_warnings(c *check.C) {
 	s.CheckErrors("E: 1")
 	s.CheckWarnings("W: 2")
 	s.CheckSummary("1 error and 1 warning.")
+}
+
+func (s *Suite) Test_code_fullName(c *check.C) {
+	_ = s.Init(c)
+
+	test := func(typeName, funcName, fullName string) {
+		code := code{"filename", typeName, funcName, 0}
+		c.Check(code.fullName(), check.Equals, fullName)
+	}
+
+	test("Type", "", "Type")
+	test("", "Func", "Func")
+	test("Type", "Method", "Type.Method")
+}
+
+func (s *Suite) Test_plural(c *check.C) {
+	_ = s.Init(c)
+
+	c.Check(plural(0, "singular", "plural"), check.Equals, "")
+	c.Check(plural(1, "singular", "plural"), check.Equals, "1 singular")
+	c.Check(plural(2, "singular", "plural"), check.Equals, "2 plural")
+	c.Check(plural(1000, "singular", "plural"), check.Equals, "1000 plural")
 }
 
 func (s *Suite) Test_isCamelCase(c *check.C) {
