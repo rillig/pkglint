@@ -15,16 +15,17 @@ import (
 )
 
 // TestNameChecker ensures that all test names follow a common naming scheme:
-//
-// Test_${Type}_${Method}__${description_using_underscores}
+//  Test_${Type}_${Method}__${description_using_underscores}
+// Each of the variable parts may be omitted.
 type TestNameChecker struct {
-	camelCase map[string]bool
-	ignore    []string
-	warn      bool
-	prefixes  []testeePrefix
-	c         *check.C
-	errors    []string
-	warnings  []string
+	c *check.C
+
+	ignoredFiles []string
+	prefixes     []testeePrefix
+
+	warn     bool
+	errors   []string
+	warnings []string
 }
 
 type testeePrefix struct {
@@ -51,11 +52,11 @@ type testeeElement struct {
 }
 
 func NewTestNameChecker(c *check.C) *TestNameChecker {
-	return &TestNameChecker{c: c, camelCase: make(map[string]bool)}
+	return &TestNameChecker{c: c}
 }
 
 func (ck *TestNameChecker) IgnoreFiles(fileGlob string) {
-	ck.ignore = append(ck.ignore, fileGlob)
+	ck.ignoredFiles = append(ck.ignoredFiles, fileGlob)
 }
 
 // AllowPrefix allows tests with the given prefix to appear in the test
@@ -66,20 +67,6 @@ func (ck *TestNameChecker) IgnoreFiles(fileGlob string) {
 // main code that can actually be tested.
 func (ck *TestNameChecker) AllowPrefix(prefix, sourceFileName string) {
 	ck.prefixes = append(ck.prefixes, testeePrefix{prefix, sourceFileName})
-}
-
-// AllowCamelCaseDescriptions allows the given strings to appear
-// in the description part of a test name (Test_$Type_$Method__$description).
-// In most cases the description should use snake case to allow for
-// easier reading.
-//
-// When writing tests for combinations of several functions, it is most
-// natural to mention one of these functions in the test name and the
-// other in the test description. This is a typical use case.
-func (ck *TestNameChecker) AllowCamelCaseDescriptions(descriptions ...string) {
-	for _, description := range descriptions {
-		ck.camelCase[description] = true
-	}
 }
 
 func (ck *TestNameChecker) ShowWarnings(warn bool) { ck.warn = warn }
@@ -178,9 +165,21 @@ func (ck *TestNameChecker) checkTestName(test *testeeElement, prefix string, des
 		}
 	}
 
-	if isCamelCase(descr) && !ck.camelCase[descr] {
-		ck.addError("%s: Test description %q must not use CamelCase.", test.FullName, descr)
+	ck.checkTestNameCamelCase(descr, test)
+}
+
+// checkTestNameCamelCase ensures that the method name does not accidentally
+// end up in the description of the test. This could happen if there is a
+// double underscore instead of a single underscore.
+func (ck *TestNameChecker) checkTestNameCamelCase(descr string, test *testeeElement) {
+	if test.Type != "" && test.Func != "" {
+		return // There's no way to accidentally write __ instead of _.
 	}
+	if !isCamelCase(descr) {
+		return
+	}
+
+	ck.addError("%s: Test description %q must not use CamelCase.", test.FullName, descr)
 }
 
 func (ck *TestNameChecker) checkAll(elements []*testeeElement, testeeByName map[string]*testeeElement) {
@@ -241,7 +240,7 @@ func (ck *TestNameChecker) Check() {
 }
 
 func (ck *TestNameChecker) isIgnored(filename string) bool {
-	for _, mask := range ck.ignore {
+	for _, mask := range ck.ignoredFiles {
 		ok, err := filepath.Match(mask, filename)
 		if err != nil {
 			panic(err)
@@ -297,6 +296,9 @@ func ifelseStr(cond bool, a, b string) string {
 
 func isCamelCase(str string) bool {
 	for i := 0; i+1 < len(str); i++ {
+		if str[i] == '_' {
+			return false
+		}
 		if unicode.IsLower(rune(str[i])) && unicode.IsUpper(rune(str[i+1])) {
 			return true
 		}

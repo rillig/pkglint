@@ -145,7 +145,6 @@ func (str) String() string {
 
 func (s *Suite) Test__test_names(c *check.C) {
 	ck := intqa.NewTestNameChecker(c)
-	ck.AllowCamelCaseDescriptions()
 	ck.ShowWarnings(false)
 	ck.Check()
 }

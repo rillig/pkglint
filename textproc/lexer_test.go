@@ -415,8 +415,6 @@ func (s *Suite) Test__Alpha(c *check.C) {
 
 func (s *Suite) Test__test_names(c *check.C) {
 	ck := intqa.NewTestNameChecker(c)
-	ck.AllowCamelCaseDescriptions(
-		"NextString_then_EOF")
 	ck.ShowWarnings(false)
 	ck.Check()
 }
