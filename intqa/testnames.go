@@ -233,9 +233,9 @@ func (ck *TestNameChecker) Check() {
 	if len(ck.errors) > 0 || (ck.warn && len(ck.warnings) > 0) {
 		ck.c.Errorf("%d %s and %d %s.",
 			len(ck.errors),
-			ifelseStr(len(ck.errors) == 1, "error", "errors"),
+			condStr(len(ck.errors) == 1, "error", "errors"),
 			len(ck.warnings),
-			ifelseStr(len(ck.warnings) == 1, "warning", "warnings"))
+			condStr(len(ck.warnings) == 1, "warning", "warnings"))
 	}
 }
 
@@ -257,7 +257,7 @@ func (ck *TestNameChecker) newElement(typeName, funcName, filename string) *test
 
 	e := testeeElement{File: filename, Type: typeName, Func: funcName}
 
-	e.FullName = e.Type + ifelseStr(e.Type != "" && e.Func != "", ".", "") + e.Func
+	e.FullName = e.Type + condStr(e.Type != "" && e.Func != "", ".", "") + e.Func
 
 	e.Test = strings.HasSuffix(e.File, "_test.go") && e.Type != "" && strings.HasPrefix(e.Func, "Test")
 
@@ -270,7 +270,7 @@ func (ck *TestNameChecker) newElement(typeName, funcName, filename string) *test
 		e.Prefix = parts[0]
 
 	} else {
-		e.Prefix = e.Type + ifelseStr(e.Type != "" && e.Func != "", "_", "") + e.Func
+		e.Prefix = e.Type + condStr(e.Type != "" && e.Func != "", "_", "") + e.Func
 	}
 
 	return &e
@@ -287,7 +287,7 @@ func (el *testeeElement) Less(other *testeeElement) bool {
 	}
 }
 
-func ifelseStr(cond bool, a, b string) string {
+func condStr(cond bool, a, b string) string {
 	if cond {
 		return a
 	}
