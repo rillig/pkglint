@@ -716,12 +716,12 @@ func (VaralignSplitter) parseValue(lexer *textproc.Lexer) (string, string, strin
 }
 
 type varalignParts struct {
-	leadingComment    string // either the # or some rarely used U+0020 spaces
-	varnameOp         string // empty iff it is a follow-up line
-	spaceBeforeValue  string // for follow-up lines, this is the indentation
-	value             string // including any trailing comment
-	spaceAfterComment string // FIXME: rename to spaceAfterValue
-	continuation      string // either a single backslash or empty
+	leadingComment   string // either the # or some rarely used U+0020 spaces
+	varnameOp        string // empty iff it is a follow-up line
+	spaceBeforeValue string // for follow-up lines, this is the indentation
+	value            string // including any trailing comment
+	spaceAfterValue  string
+	continuation     string // either a single backslash or empty
 }
 
 // continuation returns whether this line ends with a backslash.
@@ -757,7 +757,7 @@ func (p *varalignParts) spaceBeforeContinuation() string {
 	if p.value == "" {
 		return p.spaceBeforeValue
 	}
-	return p.spaceAfterComment
+	return p.spaceAfterValue
 }
 
 func (p *varalignParts) uptoCommentWidth() int {
@@ -775,13 +775,13 @@ func (p *varalignParts) uptoComment() string {
 func (p *varalignParts) continuationColumn() int {
 	return tabWidthSlice(p.leadingComment,
 		p.varnameOp, p.spaceBeforeValue,
-		p.value, p.spaceAfterComment)
+		p.value, p.spaceAfterValue)
 }
 
 func (p *varalignParts) continuationIndex() int {
 	return len(p.leadingComment) +
 		len(p.varnameOp) + len(p.spaceBeforeValue) +
-		len(p.value) + len(p.spaceAfterComment)
+		len(p.value) + len(p.spaceAfterValue)
 }
 
 func (p *varalignParts) isCommentedOut() bool {
@@ -825,7 +825,7 @@ func (p *varalignParts) isCanonicalFollow() bool {
 func (p *varalignParts) widthAlignedAt(valueAlign int) int {
 	return tabWidthAppend(
 		valueAlign,
-		p.value+p.spaceAfterComment+p.continuation)
+		p.value+p.spaceAfterValue+p.continuation)
 }
 
 type mklineInts struct {

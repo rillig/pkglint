@@ -184,7 +184,7 @@ func (vt *VaralignTester) checkTestName() {
 				describe(parts.value, "value")
 			}
 			if parts.value != "" && parts.continuation != "" {
-				describeHspace(parts.spaceAfterComment)
+				describeHspace(parts.spaceAfterValue)
 			}
 			if parts.continuation != "" {
 				describe(parts.continuation, "cont")
@@ -3089,7 +3089,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 		t.CheckEquals(
 			actual.leadingComment+actual.varnameOp+
 				actual.spaceBeforeValue+actual.value+
-				actual.spaceAfterComment+actual.continuation,
+				actual.spaceAfterValue+actual.continuation,
 			rawText)
 	}
 
@@ -3097,147 +3097,147 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 	// code in VaralignBlock.processVarassign, see INCLUSION_GUARD_MK.
 	test("VAR=", true,
 		varalignParts{
-			leadingComment:    "",
-			varnameOp:         "VAR=",
-			spaceBeforeValue:  "",
-			value:             "",
-			spaceAfterComment: "",
-			continuation:      ""})
+			leadingComment:   "",
+			varnameOp:        "VAR=",
+			spaceBeforeValue: "",
+			value:            "",
+			spaceAfterValue:  "",
+			continuation:     ""})
 
 	test("VAR=value", true,
 		varalignParts{
-			leadingComment:    "",
-			varnameOp:         "VAR=",
-			spaceBeforeValue:  "",
-			value:             "value",
-			spaceAfterComment: "",
-			continuation:      ""})
+			leadingComment:   "",
+			varnameOp:        "VAR=",
+			spaceBeforeValue: "",
+			value:            "value",
+			spaceAfterValue:  "",
+			continuation:     ""})
 
 	test("#VAR=value", true,
 		varalignParts{
-			leadingComment:    "#",
-			varnameOp:         "VAR=",
-			spaceBeforeValue:  "",
-			value:             "value",
-			spaceAfterComment: "",
-			continuation:      ""})
+			leadingComment:   "#",
+			varnameOp:        "VAR=",
+			spaceBeforeValue: "",
+			value:            "value",
+			spaceAfterValue:  "",
+			continuation:     ""})
 
 	test("#VAR = value # comment \\", true,
 		varalignParts{
-			leadingComment:    "#",
-			varnameOp:         "VAR =",
-			spaceBeforeValue:  " ",
-			value:             "value # comment",
-			spaceAfterComment: " ",
-			continuation:      "\\"})
+			leadingComment:   "#",
+			varnameOp:        "VAR =",
+			spaceBeforeValue: " ",
+			value:            "value # comment",
+			spaceAfterValue:  " ",
+			continuation:     "\\"})
 
 	test("VAR=value \\", true,
 		varalignParts{
-			leadingComment:    "",
-			varnameOp:         "VAR=",
-			spaceBeforeValue:  "",
-			value:             "value",
-			spaceAfterComment: " ",
-			continuation:      "\\"})
+			leadingComment:   "",
+			varnameOp:        "VAR=",
+			spaceBeforeValue: "",
+			value:            "value",
+			spaceAfterValue:  " ",
+			continuation:     "\\"})
 
 	test("VAR=value # comment \\", true,
 		varalignParts{
-			leadingComment:    "",
-			varnameOp:         "VAR=",
-			spaceBeforeValue:  "",
-			value:             "value # comment",
-			spaceAfterComment: " ",
-			continuation:      "\\"})
+			leadingComment:   "",
+			varnameOp:        "VAR=",
+			spaceBeforeValue: "",
+			value:            "value # comment",
+			spaceAfterValue:  " ",
+			continuation:     "\\"})
 
 	test("VAR=value # comment \\\\", true,
 		varalignParts{
-			leadingComment:    "",
-			varnameOp:         "VAR=",
-			spaceBeforeValue:  "",
-			value:             "value # comment \\\\",
-			spaceAfterComment: "",
-			continuation:      ""})
+			leadingComment:   "",
+			varnameOp:        "VAR=",
+			spaceBeforeValue: "",
+			value:            "value # comment \\\\",
+			spaceAfterValue:  "",
+			continuation:     ""})
 
 	test("VAR=\\# a [#] b # comment \\\\", true,
 		varalignParts{
-			leadingComment:    "",
-			varnameOp:         "VAR=",
-			spaceBeforeValue:  "",
-			value:             "\\# a [#] b # comment \\\\",
-			spaceAfterComment: "",
-			continuation:      ""})
+			leadingComment:   "",
+			varnameOp:        "VAR=",
+			spaceBeforeValue: "",
+			value:            "\\# a [#] b # comment \\\\",
+			spaceAfterValue:  "",
+			continuation:     ""})
 
 	test("VAR.${param:[#]}=\tvalue", true,
 		varalignParts{
-			leadingComment:    "",
-			varnameOp:         "VAR.${param:[#]}=",
-			spaceBeforeValue:  "\t",
-			value:             "value",
-			spaceAfterComment: "",
-			continuation:      ""})
+			leadingComment:   "",
+			varnameOp:        "VAR.${param:[#]}=",
+			spaceBeforeValue: "\t",
+			value:            "value",
+			spaceAfterValue:  "",
+			continuation:     ""})
 
 	test("VAR=value", true,
 		varalignParts{
-			leadingComment:    "",
-			varnameOp:         "VAR=",
-			spaceBeforeValue:  "",
-			value:             "value",
-			spaceAfterComment: "",
-			continuation:      ""})
+			leadingComment:   "",
+			varnameOp:        "VAR=",
+			spaceBeforeValue: "",
+			value:            "value",
+			spaceAfterValue:  "",
+			continuation:     ""})
 
 	// Since this is a follow-up line, the text ends up in the variable
 	// value, and varnameOp is necessarily empty.
 	test("VAR=value", false,
 		varalignParts{
-			leadingComment:    "",
-			varnameOp:         "",
-			spaceBeforeValue:  "",
-			value:             "VAR=value",
-			spaceAfterComment: "",
-			continuation:      ""})
+			leadingComment:   "",
+			varnameOp:        "",
+			spaceBeforeValue: "",
+			value:            "VAR=value",
+			spaceAfterValue:  "",
+			continuation:     ""})
 
 	// In some edge cases the variable name is indented with ordinary spaces.
 	// This must not lead to a panic.
 	test("   VAR=value", true,
 		varalignParts{
-			leadingComment:    "   ",
-			varnameOp:         "VAR=",
-			spaceBeforeValue:  "",
-			value:             "value",
-			spaceAfterComment: "",
-			continuation:      ""})
+			leadingComment:   "   ",
+			varnameOp:        "VAR=",
+			spaceBeforeValue: "",
+			value:            "value",
+			spaceAfterValue:  "",
+			continuation:     ""})
 
 	// And in really edgy cases, the leading space may even be followed by tabs.
 	// This should not happen in practice since it is really confusing.
 	test(" \t VAR=value", true,
 		varalignParts{
-			leadingComment:    " \t ",
-			varnameOp:         "VAR=",
-			spaceBeforeValue:  "",
-			value:             "value",
-			spaceAfterComment: "",
-			continuation:      ""})
+			leadingComment:   " \t ",
+			varnameOp:        "VAR=",
+			spaceBeforeValue: "",
+			value:            "value",
+			spaceAfterValue:  "",
+			continuation:     ""})
 
 	test("    value", false,
 		varalignParts{
-			leadingComment:    "",
-			varnameOp:         "",
-			spaceBeforeValue:  "    ",
-			value:             "value",
-			spaceAfterComment: "",
-			continuation:      ""})
+			leadingComment:   "",
+			varnameOp:        "",
+			spaceBeforeValue: "    ",
+			value:            "value",
+			spaceAfterValue:  "",
+			continuation:     ""})
 
 	// In practice it doesn't really happen that the last line of a file
 	// ends in a backslash and at the same time it doesn't have the usual
 	// newline ending.
 	test("    value \\", false,
 		varalignParts{
-			leadingComment:    "",
-			varnameOp:         "",
-			spaceBeforeValue:  "    ",
-			value:             "value",
-			spaceAfterComment: " ",
-			continuation:      "\\"})
+			leadingComment:   "",
+			varnameOp:        "",
+			spaceBeforeValue: "    ",
+			value:            "value",
+			spaceAfterValue:  " ",
+			continuation:     "\\"})
 
 	// A follow-up line may start with a comment character. There are
 	// two possible interpretations:
@@ -3255,39 +3255,39 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 
 	test("#\tcomment", false,
 		varalignParts{
-			leadingComment:    "#",
-			varnameOp:         "",
-			spaceBeforeValue:  "\t",
-			value:             "comment",
-			spaceAfterComment: "",
-			continuation:      ""})
+			leadingComment:   "#",
+			varnameOp:        "",
+			spaceBeforeValue: "\t",
+			value:            "comment",
+			spaceAfterValue:  "",
+			continuation:     ""})
 
 	test("#\tcomment \\", false,
 		varalignParts{
-			leadingComment:    "#",
-			varnameOp:         "",
-			spaceBeforeValue:  "\t",
-			value:             "comment",
-			spaceAfterComment: " ",
-			continuation:      "\\"})
+			leadingComment:   "#",
+			varnameOp:        "",
+			spaceBeforeValue: "\t",
+			value:            "comment",
+			spaceAfterValue:  " ",
+			continuation:     "\\"})
 
 	test("# comment", false,
 		varalignParts{
-			leadingComment:    "",
-			varnameOp:         "",
-			spaceBeforeValue:  "",
-			value:             "# comment",
-			spaceAfterComment: "",
-			continuation:      ""})
+			leadingComment:   "",
+			varnameOp:        "",
+			spaceBeforeValue: "",
+			value:            "# comment",
+			spaceAfterValue:  "",
+			continuation:     ""})
 
 	test("# comment \\", false,
 		varalignParts{
-			leadingComment:    "",
-			varnameOp:         "",
-			spaceBeforeValue:  "",
-			value:             "# comment",
-			spaceAfterComment: " ",
-			continuation:      "\\"})
+			leadingComment:   "",
+			varnameOp:        "",
+			spaceBeforeValue: "",
+			value:            "# comment",
+			spaceAfterValue:  " ",
+			continuation:     "\\"})
 
 	// Commented variable assignments are only valid if they
 	// directly follow the comment sign.
