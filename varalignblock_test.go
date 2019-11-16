@@ -182,15 +182,9 @@ func (vt *VaralignTester) checkTestName() {
 			describeHspace(parts.spaceBeforeValue)
 			if parts.value != "" {
 				describe(parts.value, "value")
-				if parts.trailingComment != "" || parts.continuation != "" {
-					describeHspace(parts.spaceAfterValue)
-				}
 			}
-			if parts.trailingComment != "" {
-				describe(parts.trailingComment, "comment")
-				if parts.continuation != "" {
-					describeHspace(parts.spaceAfterComment)
-				}
+			if parts.value != "" && parts.continuation != "" {
+				describeHspace(parts.spaceAfterComment)
 			}
 			if parts.continuation != "" {
 				describe(parts.continuation, "cont")
@@ -3094,8 +3088,8 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 		t.CheckEquals(actual, expected)
 		t.CheckEquals(
 			actual.leadingComment+actual.varnameOp+
-				actual.spaceBeforeValue+actual.value+actual.spaceAfterValue+
-				actual.trailingComment+actual.spaceAfterComment+actual.continuation,
+				actual.spaceBeforeValue+actual.value+
+				actual.spaceAfterComment+actual.continuation,
 			rawText)
 	}
 
@@ -3107,8 +3101,6 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			varnameOp:         "VAR=",
 			spaceBeforeValue:  "",
 			value:             "",
-			spaceAfterValue:   "",
-			trailingComment:   "",
 			spaceAfterComment: "",
 			continuation:      ""})
 
@@ -3118,8 +3110,6 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			varnameOp:         "VAR=",
 			spaceBeforeValue:  "",
 			value:             "value",
-			spaceAfterValue:   "",
-			trailingComment:   "",
 			spaceAfterComment: "",
 			continuation:      ""})
 
@@ -3129,8 +3119,6 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			varnameOp:         "VAR=",
 			spaceBeforeValue:  "",
 			value:             "value",
-			spaceAfterValue:   "",
-			trailingComment:   "",
 			spaceAfterComment: "",
 			continuation:      ""})
 
@@ -3139,9 +3127,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			leadingComment:    "#",
 			varnameOp:         "VAR =",
 			spaceBeforeValue:  " ",
-			value:             "value",
-			spaceAfterValue:   " ",
-			trailingComment:   "# comment",
+			value:             "value # comment",
 			spaceAfterComment: " ",
 			continuation:      "\\"})
 
@@ -3151,9 +3137,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			varnameOp:         "VAR=",
 			spaceBeforeValue:  "",
 			value:             "value",
-			spaceAfterValue:   " ",
-			trailingComment:   "",
-			spaceAfterComment: "",
+			spaceAfterComment: " ",
 			continuation:      "\\"})
 
 	test("VAR=value # comment \\", true,
@@ -3161,9 +3145,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			leadingComment:    "",
 			varnameOp:         "VAR=",
 			spaceBeforeValue:  "",
-			value:             "value",
-			spaceAfterValue:   " ",
-			trailingComment:   "# comment",
+			value:             "value # comment",
 			spaceAfterComment: " ",
 			continuation:      "\\"})
 
@@ -3172,9 +3154,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			leadingComment:    "",
 			varnameOp:         "VAR=",
 			spaceBeforeValue:  "",
-			value:             "value",
-			spaceAfterValue:   " ",
-			trailingComment:   "# comment \\\\",
+			value:             "value # comment \\\\",
 			spaceAfterComment: "",
 			continuation:      ""})
 
@@ -3183,9 +3163,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			leadingComment:    "",
 			varnameOp:         "VAR=",
 			spaceBeforeValue:  "",
-			value:             "\\# a [#] b",
-			spaceAfterValue:   " ",
-			trailingComment:   "# comment \\\\",
+			value:             "\\# a [#] b # comment \\\\",
 			spaceAfterComment: "",
 			continuation:      ""})
 
@@ -3195,8 +3173,6 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			varnameOp:         "VAR.${param:[#]}=",
 			spaceBeforeValue:  "\t",
 			value:             "value",
-			spaceAfterValue:   "",
-			trailingComment:   "",
 			spaceAfterComment: "",
 			continuation:      ""})
 
@@ -3206,8 +3182,6 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			varnameOp:         "VAR=",
 			spaceBeforeValue:  "",
 			value:             "value",
-			spaceAfterValue:   "",
-			trailingComment:   "",
 			spaceAfterComment: "",
 			continuation:      ""})
 
@@ -3219,8 +3193,6 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			varnameOp:         "",
 			spaceBeforeValue:  "",
 			value:             "VAR=value",
-			spaceAfterValue:   "",
-			trailingComment:   "",
 			spaceAfterComment: "",
 			continuation:      ""})
 
@@ -3232,8 +3204,6 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			varnameOp:         "VAR=",
 			spaceBeforeValue:  "",
 			value:             "value",
-			spaceAfterValue:   "",
-			trailingComment:   "",
 			spaceAfterComment: "",
 			continuation:      ""})
 
@@ -3245,8 +3215,6 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			varnameOp:         "VAR=",
 			spaceBeforeValue:  "",
 			value:             "value",
-			spaceAfterValue:   "",
-			trailingComment:   "",
 			spaceAfterComment: "",
 			continuation:      ""})
 
@@ -3256,8 +3224,6 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			varnameOp:         "",
 			spaceBeforeValue:  "    ",
 			value:             "value",
-			spaceAfterValue:   "",
-			trailingComment:   "",
 			spaceAfterComment: "",
 			continuation:      ""})
 
@@ -3270,9 +3236,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			varnameOp:         "",
 			spaceBeforeValue:  "    ",
 			value:             "value",
-			spaceAfterValue:   " ",
-			trailingComment:   "",
-			spaceAfterComment: "",
+			spaceAfterComment: " ",
 			continuation:      "\\"})
 
 	// A follow-up line may start with a comment character. There are
@@ -3295,8 +3259,6 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			varnameOp:         "",
 			spaceBeforeValue:  "\t",
 			value:             "comment",
-			spaceAfterValue:   "",
-			trailingComment:   "",
 			spaceAfterComment: "",
 			continuation:      ""})
 
@@ -3306,9 +3268,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			varnameOp:         "",
 			spaceBeforeValue:  "\t",
 			value:             "comment",
-			spaceAfterValue:   " ",
-			trailingComment:   "",
-			spaceAfterComment: "",
+			spaceAfterComment: " ",
 			continuation:      "\\"})
 
 	test("# comment", false,
@@ -3316,9 +3276,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			leadingComment:    "",
 			varnameOp:         "",
 			spaceBeforeValue:  "",
-			value:             "",
-			spaceAfterValue:   "",
-			trailingComment:   "# comment",
+			value:             "# comment",
 			spaceAfterComment: "",
 			continuation:      ""})
 
@@ -3327,9 +3285,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 			leadingComment:    "",
 			varnameOp:         "",
 			spaceBeforeValue:  "",
-			value:             "",
-			spaceAfterValue:   "",
-			trailingComment:   "# comment",
+			value:             "# comment",
 			spaceAfterComment: " ",
 			continuation:      "\\"})
 

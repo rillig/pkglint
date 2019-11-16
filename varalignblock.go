@@ -639,8 +639,7 @@ func (s VaralignSplitter) split(rawText string, initial bool) varalignParts {
 
 	leadingComment := s.parseLeadingComment(lexer, initial)
 	varnameOp, spaceBeforeValue := s.parseVarnameOp(parser, initial)
-	value, spaceAfterValue := s.parseValue(lexer)
-	trailingComment, spaceAfterComment, continuation := s.parseComment(lexer.Rest())
+	value, spaceAfterValue, continuation := s.parseValue(lexer)
 
 	return varalignParts{
 		leadingComment,
@@ -648,8 +647,6 @@ func (s VaralignSplitter) split(rawText string, initial bool) varalignParts {
 		spaceBeforeValue,
 		value,
 		spaceAfterValue,
-		trailingComment,
-		spaceAfterComment,
 		continuation,
 	}
 }
@@ -685,8 +682,8 @@ func (VaralignSplitter) parseVarnameOp(parser *MkParser, initial bool) (string, 
 	return lexer.Since(mark), lexer.NextHspace()
 }
 
-func (VaralignSplitter) parseValue(lexer *textproc.Lexer) (string, string) {
-	mark := lexer.Mark()
+func (VaralignSplitter) parseValue(lexer *textproc.Lexer) (string, string, string) {
+	rest := lexer.Rest()
 
 	for !lexer.EOF() && lexer.PeekByte() != '#' && lexer.Rest() != "\\" {
 
@@ -700,13 +697,6 @@ func (VaralignSplitter) parseValue(lexer *textproc.Lexer) (string, string) {
 		lexer.Skip(1)
 	}
 
-	valueSpace := lexer.Since(mark)
-	value := rtrimHspace(valueSpace)
-	space := valueSpace[len(value):]
-	return value, space
-}
-
-func (VaralignSplitter) parseComment(rest string) (string, string, string) {
 	end := len(rest)
 
 	backslash := end
@@ -719,20 +709,18 @@ func (VaralignSplitter) parseComment(rest string) (string, string, string) {
 	}
 
 	continuation := rest[backslash:]
-	commentSpace := rest[:backslash]
-	comment := rtrimHspace(commentSpace)
-	space := commentSpace[len(comment):]
-	return comment, space, continuation
+	valueAndSpace := rest[:backslash]
+	value := rtrimHspace(valueAndSpace)
+	space := valueAndSpace[len(value):]
+	return value, space, continuation
 }
 
 type varalignParts struct {
 	leadingComment    string // either the # or some rarely used U+0020 spaces
 	varnameOp         string // empty iff it is a follow-up line
 	spaceBeforeValue  string // for follow-up lines, this is the indentation
-	value             string
-	spaceAfterValue   string // only set if there is a value
-	trailingComment   string
-	spaceAfterComment string // only set if there is a trailing comment
+	value             string // including any trailing comment
+	spaceAfterComment string // FIXME: rename to spaceAfterValue
 	continuation      string // either a single backslash or empty
 }
 
@@ -742,11 +730,11 @@ func (p *varalignParts) isContinuation() bool {
 }
 
 func (p *varalignParts) isEmptyContinuation() bool {
-	return p.value == "" && p.trailingComment == "" && p.isContinuation()
+	return p.value == "" && p.isContinuation()
 }
 
 func (p *varalignParts) isEmpty() bool {
-	return p.value == "" && p.trailingComment == "" && !p.isContinuation()
+	return p.value == "" && !p.isContinuation()
 }
 
 func (p *varalignParts) varnameOpWidth() int {
@@ -766,11 +754,8 @@ func (p *varalignParts) spaceBeforeValueIndex() int {
 }
 
 func (p *varalignParts) spaceBeforeContinuation() string {
-	if p.trailingComment == "" {
-		if p.value == "" {
-			return p.spaceBeforeValue
-		}
-		return p.spaceAfterValue
+	if p.value == "" {
+		return p.spaceBeforeValue
 	}
 	return p.spaceAfterComment
 }
@@ -778,29 +763,25 @@ func (p *varalignParts) spaceBeforeContinuation() string {
 func (p *varalignParts) uptoCommentWidth() int {
 	return tabWidth(rtrimHspace(p.leadingComment +
 		p.varnameOp + p.spaceBeforeValue +
-		p.value + p.spaceAfterValue +
-		p.trailingComment))
+		p.value))
 }
 
 func (p *varalignParts) uptoComment() string {
 	return rtrimHspace(p.leadingComment +
 		p.varnameOp + p.spaceBeforeValue +
-		p.value + p.spaceAfterValue +
-		p.trailingComment)
+		p.value)
 }
 
 func (p *varalignParts) continuationColumn() int {
 	return tabWidthSlice(p.leadingComment,
 		p.varnameOp, p.spaceBeforeValue,
-		p.value, p.spaceAfterValue,
-		p.trailingComment, p.spaceAfterComment)
+		p.value, p.spaceAfterComment)
 }
 
 func (p *varalignParts) continuationIndex() int {
 	return len(p.leadingComment) +
 		len(p.varnameOp) + len(p.spaceBeforeValue) +
-		len(p.value) + len(p.spaceAfterValue) +
-		len(p.trailingComment) + len(p.spaceAfterComment)
+		len(p.value) + len(p.spaceAfterComment)
 }
 
 func (p *varalignParts) commentedOut() bool {
@@ -844,7 +825,7 @@ func (p *varalignParts) canonicalFollow() bool {
 func (p *varalignParts) widthAlignedAt(valueAlign int) int {
 	return tabWidthAppend(
 		valueAlign,
-		p.value+p.spaceAfterValue+p.trailingComment+p.spaceAfterComment+p.continuation)
+		p.value+p.spaceAfterComment+p.continuation)
 }
 
 type mklineInts struct {
