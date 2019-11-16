@@ -704,7 +704,7 @@ func (VaralignSplitter) parseValue(lexer *textproc.Lexer) (string, string, strin
 		backslash--
 	}
 
-	if (end-backslash)&1 == 0 { // see https://github.com/golang/go/issues/34166
+	if (end-backslash)%2 == 0 {
 		return rest[:end], "", ""
 	}
 
