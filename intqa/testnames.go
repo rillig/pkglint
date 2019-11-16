@@ -125,11 +125,6 @@ func (ck *TestNameChecker) collectTesteeByName(elements testees) map[string]*tes
 			prefixes[element.Prefix] = element
 		}
 	}
-
-	for _, p := range ck.prefixes {
-		prefixes[p.prefix] = ck.newElement(p.prefix, "", p.filename)
-	}
-
 	return prefixes
 }
 
