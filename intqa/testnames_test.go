@@ -69,8 +69,6 @@ func (s *Suite) Test_TestNameChecker_Check(c *check.C) {
 		"W: Missing unit test \"Test_TestNameChecker_nextOrder\" for \"TestNameChecker.nextOrder\".",
 		"W: Missing unit test \"Test_TestNameChecker_relate\" for \"TestNameChecker.relate\".",
 		"W: Missing unit test \"Test_TestNameChecker_checkTests\" for \"TestNameChecker.checkTests\".",
-		"W: Missing unit test \"Test_TestNameChecker_checkTestFile\" for \"TestNameChecker.checkTestFile\".",
-		"W: Missing unit test \"Test_TestNameChecker_checkTestName\" for \"TestNameChecker.checkTestName\".",
 		"W: Missing unit test \"Test_TestNameChecker_checkTestees\" for \"TestNameChecker.checkTestees\".",
 		"W: Missing unit test \"Test_TestNameChecker_isIgnored\" for \"TestNameChecker.isIgnored\".",
 		"W: Missing unit test \"Test_TestNameChecker_checkOrder\" for \"TestNameChecker.checkOrder\".",
@@ -83,7 +81,7 @@ func (s *Suite) Test_TestNameChecker_Check(c *check.C) {
 		"W: Missing unit test \"Test_Suite_CheckErrors\" for \"Suite.CheckErrors\".",
 		"W: Missing unit test \"Test_Suite_CheckSummary\" for \"Suite.CheckSummary\".",
 		"W: Missing unit test \"Test_Value_Method\" for \"Value.Method\".")
-	s.CheckSummary("24 warnings.")
+	s.CheckSummary("22 warnings.")
 }
 
 func (s *Suite) Test_TestNameChecker_addTest(c *check.C) {
@@ -93,6 +91,29 @@ func (s *Suite) Test_TestNameChecker_addTest(c *check.C) {
 
 	s.CheckErrors(
 		"E: Test \"Type.Method\" must start with \"Test_\".")
+}
+
+func (s *Suite) Test_TestNameChecker_addTest__empty_description(c *check.C) {
+	ck := s.Init(c)
+
+	ck.addTest(code{"filename.go", "Suite", "Test_Method__", 0})
+
+	s.CheckErrors(
+		"E: Test \"Suite.Test_Method__\" must not have a nonempty description.")
+}
+
+func (s *Suite) Test_TestNameChecker_checkTestFile__global(c *check.C) {
+	ck := s.Init(c)
+
+	ck.checkTestFile(&test{
+		code{"demo_test.go", "Suite", "Test__Global", 0},
+		"",
+		"",
+		&testee{code{"other.go", "", "Global", 0}}})
+
+	s.CheckErrors(
+		"E: Test \"Suite.Test__Global\" for \"Global\" " +
+			"must be in other_test.go instead of demo_test.go.")
 }
 
 func (s *Suite) Test_TestNameChecker_checkTestTestee__global(c *check.C) {
@@ -132,6 +153,20 @@ func (s *Suite) Test_TestNameChecker_checkTestTestee__testee_exists(c *check.C) 
 
 	s.CheckErrors(
 		nil...)
+}
+
+func (s *Suite) Test_TestNameChecker_checkTestName__camel_case(c *check.C) {
+	ck := s.Init(c)
+
+	ck.checkTestName(&test{
+		code{"demo_test.go", "Suite", "Test_Missing__CamelCase", 0},
+		"Missing",
+		"CamelCase",
+		&testee{}})
+
+	s.CheckErrors(
+		"E: Suite.Test_Missing__CamelCase: Test description \"CamelCase\" " +
+			"must not use CamelCase in the first word.")
 }
 
 func (s *Suite) Test_TestNameChecker_print__empty(c *check.C) {

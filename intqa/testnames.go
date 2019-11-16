@@ -121,7 +121,7 @@ func (ck *TestNameChecker) addTest(code code) {
 	descr := ""
 	if len(parts) > 1 {
 		if parts[1] == "" {
-			ck.addError("Test %q must not have an empty description.", code.fullName())
+			ck.addError("Test %q must not have a nonempty description.", code.fullName())
 			return
 		}
 		descr = parts[1]
