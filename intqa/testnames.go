@@ -121,7 +121,7 @@ func (ck *TestNameChecker) addElement(elements *testees, decl ast.Decl, filename
 func (ck *TestNameChecker) collectTesteeByName(elements testees) map[string]*testeeElement {
 	prefixes := make(map[string]*testeeElement)
 	for _, element := range elements.elements {
-		if element.Prefix != "" {
+		if element.Prefix != "" { // Ignore tests named Test__description.
 			prefixes[element.Prefix] = element
 		}
 	}

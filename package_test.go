@@ -1680,7 +1680,7 @@ func (s *Suite) Test_NewPackage(c *check.C) {
 // "gst-x11/${.CURDIR}" was interpreted as "category/package", and the whole
 // path was resolved to "x11/multimedia/gst-base/distinfo, which of course
 // could not be found.
-func (s *Suite) Test__distinfo_from_other_package(c *check.C) {
+func (s *Suite) Test_Package__distinfo_from_other_package(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("-Wall,no-space")

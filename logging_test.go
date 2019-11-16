@@ -315,7 +315,7 @@ func (s *Suite) Test_Logger__show_source_without_explanation_in_same_line(c *che
 // the "Replacing" message. Since these are shown in diff style, they
 // must be kept together. And since the "+" line must be below the "Replacing"
 // line, this order of lines seems to be the most intuitive.
-func (s *Suite) Test__show_source_separator_show_autofix(c *check.C) {
+func (s *Suite) Test_Logger__show_source_separator_show_autofix(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("--source", "--show-autofix")
@@ -348,7 +348,7 @@ func (s *Suite) Test__show_source_separator_show_autofix(c *check.C) {
 		"+\tThe bronze medal line")
 }
 
-func (s *Suite) Test__show_source_separator_show_autofix_with_explanation(c *check.C) {
+func (s *Suite) Test_Logger__show_source_separator_show_autofix_with_explanation(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("--source", "--show-autofix", "--explain")
@@ -393,7 +393,7 @@ func (s *Suite) Test__show_source_separator_show_autofix_with_explanation(c *che
 //
 // TODO: Giving the diagnostics again would be useful, but the warning and
 //  error counters should not be affected, as well as the exitcode.
-func (s *Suite) Test__show_source_separator_autofix(c *check.C) {
+func (s *Suite) Test_Logger__show_source_separator_autofix(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("--source", "--autofix")
