@@ -214,7 +214,10 @@ func (ck *TestNameChecker) newElement(typeName, funcName, filename string) *test
 
 	var prefix string
 	if isTest {
-		testeeAndDescr := strings.TrimPrefix(funcName, "Test")
+		testeeAndDescr := strings.TrimPrefix(funcName, "Test_")
+		if testeeAndDescr == funcName {
+			ck.addError("Test %q must start with %q.", fullName, "Test_")
+		}
 		parts := strings.SplitN(testeeAndDescr, "__", 2)
 		if len(parts) > 1 && parts[1] == "" {
 			ck.addError("Test %q must not have an empty description.", fullName)
