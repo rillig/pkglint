@@ -161,6 +161,31 @@ func (s *Suite) Test_TestNameChecker_checkTestName__camel_case(c *check.C) {
 			"must not use CamelCase in the first word.")
 }
 
+func (s *Suite) Test_TestNameChecker_checkOrder(c *check.C) {
+	ck := s.Init(c)
+
+	ck.addTestee(code{"f.go", "T", "", 10})
+	ck.addTestee(code{"f.go", "T", "M1", 11})
+	ck.addTestee(code{"f.go", "T", "M2", 12})
+	ck.addTestee(code{"f.go", "T", "M3", 13})
+	ck.addTest(code{"f_test.go", "S", "Test_T_M1", 100})    // maxTestee = 11
+	ck.addTest(code{"f_test.go", "S", "Test_T_M2", 101})    // maxTestee = 12
+	ck.addTest(code{"f_test.go", "S", "Test_T", 102})       // testee 10 < maxTestee 12: insert before first [.testee > testee 10] == T_M1
+	ck.addTest(code{"f_test.go", "S", "Test_T_M3", 103})    // maxTestee = 13
+	ck.addTest(code{"f_test.go", "S", "Test_T__1", 104})    // testee < maxTestee: insert before first [testee > 10]
+	ck.addTest(code{"f_test.go", "S", "Test_T__2", 105})    // testee < maxTestee: insert before first [testee > 10]
+	ck.addTest(code{"f_test.go", "S", "Test_T_M2__1", 106}) // testee < maxTestee: insert before first [testee > 12] == T_M3
+	ck.relate()
+
+	ck.checkOrder()
+
+	s.CheckErrors(
+		"Test \"S.Test_T\" should be ordered before \"S.Test_T_M1\".",
+		"Test \"S.Test_T__1\" should be ordered before \"S.Test_T_M1\".",
+		"Test \"S.Test_T__2\" should be ordered before \"S.Test_T_M1\".",
+		"Test \"S.Test_T_M2__1\" should be ordered before \"S.Test_T_M3\".")
+}
+
 func (s *Suite) Test_TestNameChecker_print__empty(c *check.C) {
 	var out bytes.Buffer
 	ck := s.Init(c)

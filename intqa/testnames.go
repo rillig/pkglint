@@ -312,10 +312,17 @@ func (ck *TestNameChecker) checkOrder() {
 		}
 
 		if maxOrder != nil && testee.order < maxOrder.testee.order {
+			insertBefore := maxOrder
+			for _, before := range ck.tests {
+				if before.file == test.file && before.testee != nil && before.testee.order > testee.order {
+					insertBefore = before
+					break
+				}
+			}
 			ck.addError(
 				EOrder,
 				"Test %q should be ordered before %q.",
-				test.fullName(), maxOrder.fullName())
+				test.fullName(), insertBefore.fullName())
 		}
 	}
 }
