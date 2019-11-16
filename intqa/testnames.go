@@ -33,6 +33,31 @@ type testeePrefix struct {
 	filename string
 }
 
+type testees struct {
+	elements []*testeeElement
+}
+
+func (t *testees) add(element *testeeElement) {
+	t.elements = append(t.elements, element)
+}
+
+func (t *testees) sort() {
+	less := func(i, j int) bool {
+		ei := t.elements[i]
+		ej := t.elements[j]
+		switch {
+		case ei.Type != ej.Type:
+			return ei.Type < ej.Type
+		case ei.Func != ej.Func:
+			return ei.Func < ej.Func
+		default:
+			return ei.File < ej.File
+		}
+	}
+
+	sort.Slice(t.elements, less)
+}
+
 // testeeElement is an element of the source code that can be tested.
 // It is either a type, a function or a method.
 // The test methods are also testeeElements.
@@ -71,7 +96,7 @@ func (ck *TestNameChecker) addWarning(format string, args ...interface{}) {
 
 // addElement adds a single type or function declaration
 // to the known elements.
-func (ck *TestNameChecker) addElement(elements *[]*testeeElement, decl ast.Decl, filename string) {
+func (ck *TestNameChecker) addElement(elements *testees, decl ast.Decl, filename string) {
 	switch decl := decl.(type) {
 
 	case *ast.GenDecl:
@@ -79,7 +104,7 @@ func (ck *TestNameChecker) addElement(elements *[]*testeeElement, decl ast.Decl,
 			switch spec := spec.(type) {
 			case *ast.TypeSpec:
 				typeName := spec.Name.Name
-				*elements = append(*elements, ck.newElement(typeName, "", filename))
+				elements.add(ck.newElement(typeName, "", filename))
 			}
 		}
 
@@ -93,21 +118,21 @@ func (ck *TestNameChecker) addElement(elements *[]*testeeElement, decl ast.Decl,
 				typeName = typeExpr.(*ast.Ident).Name
 			}
 		}
-		*elements = append(*elements, ck.newElement(typeName, decl.Name.Name, filename))
+		elements.add(ck.newElement(typeName, decl.Name.Name, filename))
 	}
 }
 
 // loadAllElements returns all type, function and method names
 // from the current package, in the form FunctionName or
 // TypeName.MethodName (omitting the * from the type name).
-func (ck *TestNameChecker) loadAllElements() []*testeeElement {
+func (ck *TestNameChecker) loadAllElements() testees {
 	fileSet := token.NewFileSet()
 	pkgs, err := parser.ParseDir(fileSet, ".", func(fi os.FileInfo) bool { return true }, 0)
 	if err != nil {
 		panic(err)
 	}
 
-	var elements []*testeeElement
+	var elements testees
 	for _, pkg := range pkgs {
 		for filename, file := range pkg.Files {
 			for _, decl := range file.Decls {
@@ -116,7 +141,7 @@ func (ck *TestNameChecker) loadAllElements() []*testeeElement {
 		}
 	}
 
-	sort.Slice(elements, func(i, j int) bool { return elements[i].Less(elements[j]) })
+	elements.sort()
 
 	return elements
 }
@@ -127,9 +152,9 @@ func (ck *TestNameChecker) loadAllElements() []*testeeElement {
 //  Autofix
 //  Line_Warnf
 //  match5
-func (ck *TestNameChecker) collectTesteeByName(elements []*testeeElement) map[string]*testeeElement {
+func (ck *TestNameChecker) collectTesteeByName(elements testees) map[string]*testeeElement {
 	prefixes := make(map[string]*testeeElement)
-	for _, element := range elements {
+	for _, element := range elements.elements {
 		if element.Prefix != "" {
 			prefixes[element.Prefix] = element
 		}
@@ -172,10 +197,10 @@ func (ck *TestNameChecker) checkTestNameCamelCase(descr string, test *testeeElem
 	ck.addError("%s: Test description %q must not use CamelCase.", test.FullName, descr)
 }
 
-func (ck *TestNameChecker) checkAll(elements []*testeeElement, testeeByName map[string]*testeeElement) {
+func (ck *TestNameChecker) checkAll(elements testees, testeeByName map[string]*testeeElement) {
 	testNames := make(map[string]bool)
 
-	for _, element := range elements {
+	for _, element := range elements.elements {
 		if element.Test {
 			method := element.Func
 			switch {
@@ -197,7 +222,7 @@ func (ck *TestNameChecker) checkAll(elements []*testeeElement, testeeByName map[
 		}
 	}
 
-	for _, element := range elements {
+	for _, element := range elements.elements {
 		if !strings.HasSuffix(element.File, "_test.go") && !ck.isIgnored(element.File) {
 			if !testNames[element.Prefix] {
 				ck.addWarning("Missing unit test %q for %q.",
@@ -262,17 +287,6 @@ func (ck *TestNameChecker) newElement(typeName, funcName, filename string) *test
 	}
 
 	return &testeeElement{filename, typeName, funcName, fullName, isTest, prefix}
-}
-
-func (el *testeeElement) Less(other *testeeElement) bool {
-	switch {
-	case el.Type != other.Type:
-		return el.Type < other.Type
-	case el.Func != other.Func:
-		return el.Func < other.Func
-	default:
-		return el.File < other.File
-	}
 }
 
 func plural(n int, sg, pl string) string {
