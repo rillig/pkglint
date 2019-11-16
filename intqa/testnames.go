@@ -59,16 +59,6 @@ func (ck *TestNameChecker) IgnoreFiles(fileGlob string) {
 	ck.ignoredFiles = append(ck.ignoredFiles, fileGlob)
 }
 
-// AllowPrefix allows tests with the given prefix to appear in the test
-// file corresponding to the given source file (which doesn't even have
-// to exist).
-//
-// In all other cases, the tests may only be named after things from the
-// main code that can actually be tested.
-func (ck *TestNameChecker) AllowPrefix(prefix, sourceFileName string) {
-	ck.prefixes = append(ck.prefixes, testeePrefix{prefix, sourceFileName})
-}
-
 func (ck *TestNameChecker) ShowWarnings(warn bool) { ck.warn = warn }
 
 func (ck *TestNameChecker) addError(format string, args ...interface{}) {
@@ -233,9 +223,9 @@ func (ck *TestNameChecker) Check() {
 	if len(ck.errors) > 0 || (ck.warn && len(ck.warnings) > 0) {
 		ck.c.Errorf("%d %s and %d %s.",
 			len(ck.errors),
-			condStr(len(ck.errors) == 1, "error", "errors"),
+			plural(len(ck.errors), "error", "errors"),
 			len(ck.warnings),
-			condStr(len(ck.warnings) == 1, "warning", "warnings"))
+			plural(len(ck.warnings), "warning", "warnings"))
 	}
 }
 
@@ -255,25 +245,23 @@ func (ck *TestNameChecker) isIgnored(filename string) bool {
 func (ck *TestNameChecker) newElement(typeName, funcName, filename string) *testeeElement {
 	typeName = strings.TrimSuffix(typeName, "Impl")
 
-	e := testeeElement{File: filename, Type: typeName, Func: funcName}
+	fullName := join(typeName, ".", funcName)
+	isTest := strings.HasSuffix(filename, "_test.go") && typeName != "" && strings.HasPrefix(funcName, "Test")
 
-	e.FullName = e.Type + condStr(e.Type != "" && e.Func != "", ".", "") + e.Func
-
-	e.Test = strings.HasSuffix(e.File, "_test.go") && e.Type != "" && strings.HasPrefix(e.Func, "Test")
-
-	if e.Test {
-		testeeAndDescr := strings.TrimPrefix(e.Func, "Test")
+	var prefix string
+	if isTest {
+		testeeAndDescr := strings.TrimPrefix(funcName, "Test")
 		parts := strings.SplitN(testeeAndDescr, "__", 2)
 		if len(parts) > 1 && parts[1] == "" {
-			ck.addError("Test %q must not have an empty description.", e.FullName)
+			ck.addError("Test %q must not have an empty description.", fullName)
 		}
-		e.Prefix = parts[0]
+		prefix = parts[0]
 
 	} else {
-		e.Prefix = e.Type + condStr(e.Type != "" && e.Func != "", "_", "") + e.Func
+		prefix = join(typeName, "_", funcName)
 	}
 
-	return &e
+	return &testeeElement{filename, typeName, funcName, fullName, isTest, prefix}
 }
 
 func (el *testeeElement) Less(other *testeeElement) bool {
@@ -287,11 +275,11 @@ func (el *testeeElement) Less(other *testeeElement) bool {
 	}
 }
 
-func condStr(cond bool, a, b string) string {
-	if cond {
-		return a
+func plural(n int, sg, pl string) string {
+	if n == 1 {
+		return sg
 	}
-	return b
+	return pl
 }
 
 func isCamelCase(str string) bool {
@@ -304,4 +292,11 @@ func isCamelCase(str string) bool {
 		}
 	}
 	return false
+}
+
+func join(a, sep, b string) string {
+	if a == "" || b == "" {
+		sep = ""
+	}
+	return a + sep + b
 }
