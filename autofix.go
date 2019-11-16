@@ -216,44 +216,6 @@ func (fix *Autofix) ReplaceRegex(from regex.Pattern, toText string, howOften int
 		})
 }
 
-// Custom runs a custom fix action, unless the fix is skipped anyway
-// because of the --only option.
-//
-// The fixer function must check whether it can actually fix something,
-// and if so, call Describef to describe the actual fix.
-//
-// If showAutofix and autofix are both false, the fix must only be
-// described by calling Describef. No observable modification must be done,
-// not even in memory.
-//
-// If showAutofix is true but autofix is false, the fix should be done in
-// memory as far as possible. For example, changing the text of Line.raw
-// is appropriate, but changing files in the file system is not.
-//
-// Only if autofix is true, fixes other than modifying the current Line
-// should be done persistently, such as changes to the file system.
-//
-// In any case, changes to the current Line will be written back to disk
-// by SaveAutofixChanges, after fixing all the lines in the file at once.
-func (fix *Autofix) Custom(fixer func(showAutofix, autofix bool)) {
-	// Contrary to the fixes that modify the line text, this one
-	// can be run even on dummy lines (like those standing for a
-	// file at whole), for example to fix the permissions of the file.
-
-	if fix.skip() {
-		return
-	}
-
-	fixer(G.Logger.Opts.ShowAutofix, G.Logger.Opts.Autofix)
-}
-
-// Describef is used while Autofix.Custom is called to remember a description
-// of the actual fix for logging it later when Apply is called.
-// Describef may be called multiple times before calling Apply.
-func (fix *Autofix) Describef(lineno int, format string, args ...interface{}) {
-	fix.actions = append(fix.actions, autofixAction{sprintf(format, args...), lineno})
-}
-
 // InsertBefore prepends a line before the current line.
 // The newline is added internally.
 func (fix *Autofix) InsertBefore(text string) {
@@ -297,6 +259,44 @@ func (fix *Autofix) Delete() {
 		}
 		fix.Describef(line.Lineno, "Deleting this line.")
 	}
+}
+
+// Custom runs a custom fix action, unless the fix is skipped anyway
+// because of the --only option.
+//
+// The fixer function must check whether it can actually fix something,
+// and if so, call Describef to describe the actual fix.
+//
+// If showAutofix and autofix are both false, the fix must only be
+// described by calling Describef. No observable modification must be done,
+// not even in memory.
+//
+// If showAutofix is true but autofix is false, the fix should be done in
+// memory as far as possible. For example, changing the text of Line.raw
+// is appropriate, but changing files in the file system is not.
+//
+// Only if autofix is true, fixes other than modifying the current Line
+// should be done persistently, such as changes to the file system.
+//
+// In any case, changes to the current Line will be written back to disk
+// by SaveAutofixChanges, after fixing all the lines in the file at once.
+func (fix *Autofix) Custom(fixer func(showAutofix, autofix bool)) {
+	// Contrary to the fixes that modify the line text, this one
+	// can be run even on dummy lines (like those standing for a
+	// file at whole), for example to fix the permissions of the file.
+
+	if fix.skip() {
+		return
+	}
+
+	fixer(G.Logger.Opts.ShowAutofix, G.Logger.Opts.Autofix)
+}
+
+// Describef is used while Autofix.Custom is called to remember a description
+// of the actual fix for logging it later when Apply is called.
+// Describef may be called multiple times before calling Apply.
+func (fix *Autofix) Describef(lineno int, format string, args ...interface{}) {
+	fix.actions = append(fix.actions, autofixAction{sprintf(format, args...), lineno})
 }
 
 // Anyway has the effect of showing the diagnostic even when nothing can
@@ -374,6 +374,21 @@ func (fix *Autofix) Apply() {
 	reset()
 }
 
+func (fix *Autofix) setDiag(level *LogLevel, format string, args []interface{}) {
+	if G.Testing && format != SilentAutofixFormat {
+		assertf(
+			hasSuffix(format, "."),
+			"Autofix: format %q must end with a period.",
+			format)
+	}
+	assert(fix.level == nil)     // Autofix can only have a single diagnostic.
+	assert(fix.diagFormat == "") // Autofix can only have a single diagnostic.
+
+	fix.level = level
+	fix.diagFormat = format
+	fix.diagArgs = args
+}
+
 func (fix *Autofix) affectedLinenos() string {
 	if len(fix.actions) == 0 {
 		return fix.line.Linenos()
@@ -400,21 +415,6 @@ func (fix *Autofix) affectedLinenos() string {
 	} else {
 		return strconv.Itoa(first)
 	}
-}
-
-func (fix *Autofix) setDiag(level *LogLevel, format string, args []interface{}) {
-	if G.Testing && format != SilentAutofixFormat {
-		assertf(
-			hasSuffix(format, "."),
-			"Autofix: format %q must end with a period.",
-			format)
-	}
-	assert(fix.level == nil)     // Autofix can only have a single diagnostic.
-	assert(fix.diagFormat == "") // Autofix can only have a single diagnostic.
-
-	fix.level = level
-	fix.diagFormat = format
-	fix.diagArgs = args
 }
 
 // skip returns whether this autofix should be skipped because
