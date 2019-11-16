@@ -9,8 +9,8 @@ import (
 //
 //  Test_${Type}_${Method}__${description_using_underscores}
 func (s *Suite) Test__test_names(c *check.C) {
-	ck := intqa.NewTestNameChecker(c)
+	ck := intqa.NewTestNameChecker(c.Errorf)
 	ck.IgnoreFiles("*yacc.go")
-	ck.ShowWarnings(false)
+	ck.Enable(intqa.EAll, -intqa.EMissing, -intqa.EOrder)
 	ck.Check()
 }

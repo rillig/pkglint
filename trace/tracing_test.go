@@ -144,7 +144,7 @@ func (str) String() string {
 }
 
 func (s *Suite) Test__test_names(c *check.C) {
-	ck := intqa.NewTestNameChecker(c)
-	ck.ShowWarnings(false)
+	ck := intqa.NewTestNameChecker(c.Errorf)
+	ck.Enable(intqa.EAll, -intqa.EMissing)
 	ck.Check()
 }

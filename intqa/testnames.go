@@ -7,9 +7,32 @@ import (
 	"go/parser"
 	"go/token"
 	"io"
+	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"unicode"
+)
+
+type Error int
+
+const (
+	ENone Error = iota
+	EAll
+
+	// A function or method does not have a corresponding test.
+	EMissing
+
+	// The tests are not in the same order as their corresponding
+	// testees in the main code.
+	EOrder
+
+	// The test method does not have a valid name.
+	EName
+
+	// The file of the test method does not correspond to the
+	// file of the testee.
+	EFile
 )
 
 // TestNameChecker ensures that all test names follow a common naming scheme:
@@ -24,21 +47,34 @@ type TestNameChecker struct {
 	testees []*testee
 	tests   []*test
 
-	warn     bool
-	errors   []string
-	warnings []string
-	out      io.Writer
+	errorsMask uint64
+	errors     []string
+	out        io.Writer
 }
 
+// NewTestNameChecker creates a new checker.
+// By default, all errors are disabled; call Enable to enable them.
 func NewTestNameChecker(errorf func(format string, args ...interface{})) *TestNameChecker {
-	return &TestNameChecker{errorf: errorf}
+	return &TestNameChecker{errorf: errorf, out: os.Stderr}
 }
 
 func (ck *TestNameChecker) IgnoreFiles(fileGlob string) {
 	ck.ignoredFiles = append(ck.ignoredFiles, fileGlob)
 }
 
-func (ck *TestNameChecker) ShowWarnings(warn bool) { ck.warn = warn }
+func (ck *TestNameChecker) Enable(errors ...Error) {
+	for _, err := range errors {
+		if err == ENone {
+			ck.errorsMask = 0
+		} else if err == EAll {
+			ck.errorsMask = ^uint64(0)
+		} else if err < 0 {
+			ck.errorsMask &= ^(1 << -err)
+		} else {
+			ck.errorsMask |= 1 << err
+		}
+	}
+}
 
 func (ck *TestNameChecker) Check() {
 	ck.load()
@@ -56,8 +92,23 @@ func (ck *TestNameChecker) load() {
 		panic(err)
 	}
 
-	for _, pkg := range pkgs {
-		for filename, file := range pkg.Files {
+	var pkgnames []string
+	for pkgname := range pkgs {
+		pkgnames = append(pkgnames, pkgname)
+	}
+	sort.Strings(pkgnames)
+
+	for _, pkgname := range pkgnames {
+		files := pkgs[pkgname].Files
+
+		var filenames []string
+		for filename := range files {
+			filenames = append(filenames, filename)
+		}
+		sort.Strings(filenames)
+
+		for _, filename := range filenames {
+			file := files[filename]
 			for _, decl := range file.Decls {
 				ck.loadDecl(decl, filename)
 			}
@@ -112,7 +163,10 @@ func (ck *TestNameChecker) addTestee(code code) {
 
 func (ck *TestNameChecker) addTest(code code) {
 	if !strings.HasPrefix(code.Func, "Test_") {
-		ck.addError("Test %q must start with %q.", code.fullName(), "Test_")
+		ck.addError(
+			EName,
+			"Test %q must start with %q.",
+			code.fullName(), "Test_")
 		return
 	}
 
@@ -121,7 +175,10 @@ func (ck *TestNameChecker) addTest(code code) {
 	descr := ""
 	if len(parts) > 1 {
 		if parts[1] == "" {
-			ck.addError("Test %q must not have a nonempty description.", code.fullName())
+			ck.addError(
+				EName,
+				"Test %q must not have a nonempty description.",
+				code.fullName())
 			return
 		}
 		descr = parts[1]
@@ -165,7 +222,9 @@ func (ck *TestNameChecker) checkTestFile(test *test) {
 
 	correctTestFile := strings.TrimSuffix(testee.file, ".go") + "_test.go"
 	if correctTestFile != test.file {
-		ck.addError("Test %q for %q must be in %s instead of %s.",
+		ck.addError(
+			EFile,
+			"Test %q for %q must be in %s instead of %s.",
 			test.fullName(), testee.fullName(), correctTestFile, test.file)
 	}
 }
@@ -177,7 +236,9 @@ func (ck *TestNameChecker) checkTestTestee(test *test) {
 	}
 
 	testeeName := strings.ReplaceAll(test.testeeName, "_", ".")
-	ck.addError("Missing testee %q for test %q.",
+	ck.addError(
+		EMissing,
+		"Missing testee %q for test %q.",
 		testeeName, test.fullName())
 }
 
@@ -197,6 +258,7 @@ func (ck *TestNameChecker) checkTestName(test *test) {
 	}
 
 	ck.addError(
+		EName,
 		"%s: Test description %q must not use CamelCase in the first word.",
 		test.fullName(), test.descr)
 }
@@ -213,7 +275,9 @@ func (ck *TestNameChecker) checkTestees() {
 		}
 
 		testName := "Test_" + join(testee.Type, "_", testee.Func)
-		ck.addWarning("Missing unit test %q for %q.",
+		ck.addError(
+			EMissing,
+			"Missing unit test %q for %q.",
 			testName, testee.fullName())
 	}
 }
@@ -248,19 +312,17 @@ func (ck *TestNameChecker) checkOrder() {
 		}
 
 		if maxOrder != nil && testee.order < maxOrder.testee.order {
-			ck.addWarning("Test %q should be ordered before %q.",
+			ck.addError(
+				EOrder,
+				"Test %q should be ordered before %q.",
 				test.fullName(), maxOrder.fullName())
 		}
 	}
 }
 
-func (ck *TestNameChecker) addError(format string, args ...interface{}) {
-	ck.errors = append(ck.errors, "E: "+fmt.Sprintf(format, args...))
-}
-
-func (ck *TestNameChecker) addWarning(format string, args ...interface{}) {
-	if ck.warn {
-		ck.warnings = append(ck.warnings, "W: "+fmt.Sprintf(format, args...))
+func (ck *TestNameChecker) addError(e Error, format string, args ...interface{}) {
+	if ck.errorsMask&(1<<e) != 0 {
+		ck.errors = append(ck.errors, fmt.Sprintf(format, args...))
 	}
 }
 
@@ -268,16 +330,10 @@ func (ck *TestNameChecker) print() {
 	for _, msg := range ck.errors {
 		_, _ = fmt.Fprintln(ck.out, msg)
 	}
-	for _, msg := range ck.warnings {
-		_, _ = fmt.Fprintln(ck.out, msg)
-	}
 
 	errors := plural(len(ck.errors), "error", "errors")
-	warnings := plural(len(ck.warnings), "warning", "warnings")
-
-	if len(ck.errors) > 0 || (ck.warn && len(ck.warnings) > 0) {
-		ck.errorf("%s.",
-			join(errors, " and ", warnings))
+	if len(ck.errors) > 0 {
+		ck.errorf("%s.", errors)
 	}
 }
 
