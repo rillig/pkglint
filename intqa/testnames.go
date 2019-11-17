@@ -73,9 +73,9 @@ func (ck *TestNameChecker) Enable(errors ...Error) {
 		} else if err == EAll {
 			ck.errorsMask = ^uint64(0)
 		} else if err < 0 {
-			ck.errorsMask &= ^(1 << -err)
+			ck.errorsMask &= ^(1 << -int(err))
 		} else {
-			ck.errorsMask |= 1 << err
+			ck.errorsMask |= 1 << int(err)
 		}
 	}
 }
@@ -239,7 +239,7 @@ func (ck *TestNameChecker) checkTestTestee(test *test) {
 		return
 	}
 
-	testeeName := strings.ReplaceAll(test.testeeName, "_", ".")
+	testeeName := strings.Replace(test.testeeName, "_", ".", -1)
 	ck.addError(
 		EMissingTestee,
 		"Missing testee %q for test %q.",
@@ -332,7 +332,7 @@ func (ck *TestNameChecker) checkOrder() {
 }
 
 func (ck *TestNameChecker) addError(e Error, format string, args ...interface{}) {
-	if ck.errorsMask&(1<<e) != 0 {
+	if ck.errorsMask&(1<<int(e)) != 0 {
 		ck.errors = append(ck.errors, fmt.Sprintf(format, args...))
 	}
 }
