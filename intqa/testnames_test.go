@@ -130,7 +130,6 @@ func (s *Suite) Test_TestNameChecker_Configure__ignore_single_function(c *check.
 func (s *Suite) Test_TestNameChecker_Check(c *check.C) {
 	ck := s.Init(c)
 
-	ck.Configure("*", "Value", "*", -EMissingTest)
 	ck.Configure("*", "Suite", "*", -EMissingTest)
 
 	ck.Check()
@@ -138,10 +137,8 @@ func (s *Suite) Test_TestNameChecker_Check(c *check.C) {
 	s.CheckErrors(
 		"Missing unit test \"Test_TestNameChecker_addCode\" for \"TestNameChecker.addCode\".",
 		"Missing unit test \"Test_TestNameChecker_relate\" for \"TestNameChecker.relate\".",
-		"Missing unit test \"Test_TestNameChecker_checkTests\" for \"TestNameChecker.checkTests\".",
-		"Missing unit test \"Test_TestNameChecker_checkTestees\" for \"TestNameChecker.checkTestees\".",
 		"Missing unit test \"Test_TestNameChecker_isRelevant\" for \"TestNameChecker.isRelevant\".")
-	s.CheckSummary("5 errors.")
+	s.CheckSummary("3 errors.")
 }
 
 func (s *Suite) Test_TestNameChecker_load__filtered_nothing(c *check.C) {
@@ -253,6 +250,20 @@ func (s *Suite) Test_TestNameChecker_nextOrder(c *check.C) {
 	c.Check(ck.nextOrder(), check.Equals, 2)
 }
 
+func (s *Suite) Test_TestNameChecker_checkTests(c *check.C) {
+	ck := s.Init(c)
+
+	ck.tests = append(ck.tests,
+		s.newTest("wrong_test.go", "", "Test_Func", 0, "Func", "",
+			s.newTestee("source.go", "", "Func", 1)))
+
+	ck.checkTests()
+
+	s.CheckErrors(
+		"Test \"Test_Func\" for \"Func\" " +
+			"must be in source_test.go instead of wrong_test.go.")
+}
+
 func (s *Suite) Test_TestNameChecker_checkTestFile__global(c *check.C) {
 	ck := s.Init(c)
 
@@ -320,6 +331,18 @@ func (s *Suite) Test_TestNameChecker_checkTestDescr__camel_case(c *check.C) {
 			"must not use CamelCase in the first word.")
 }
 
+func (s *Suite) Test_TestNameChecker_checkTestees(c *check.C) {
+	ck := s.Init(c)
+
+	ck.testees = []*testee{s.newTestee("s.go", "", "Func", 0)}
+	ck.tests = nil // force an error
+
+	ck.checkTestees()
+
+	s.CheckErrors(
+		"Missing unit test \"Test_Func\" for \"Func\".")
+}
+
 func (s *Suite) Test_TestNameChecker_checkTesteeTest(c *check.C) {
 	ck := s.Init(c)
 
@@ -354,6 +377,7 @@ func (s *Suite) Test_TestNameChecker_checkOrder(c *check.C) {
 	ck.addTestee(code{"f.go", "T", "M1", 11})
 	ck.addTestee(code{"f.go", "T", "M2", 12})
 	ck.addTestee(code{"f.go", "T", "M3", 13})
+	ck.addTest(code{"a_test.go", "S", "Test_A", 99})        // different file, is ignored
 	ck.addTest(code{"f_test.go", "S", "Test_T_M1", 100})    // maxTestee = 11
 	ck.addTest(code{"f_test.go", "S", "Test_T_M2", 101})    // maxTestee = 12
 	ck.addTest(code{"f_test.go", "S", "Test_T", 102})       // testee 10 < maxTestee 12: insert before first [.testee > testee 10] == T_M1
@@ -554,6 +578,13 @@ func (s *Suite) Test_sortedKeys(c *check.C) {
 		sortedKeys(m),
 		check.DeepEquals,
 		[]string{"first", "fourth", "second", "third"})
+}
+
+func (s *Suite) Test_Value_Method(c *check.C) {
+	_ = s.Init(c)
+
+	// Just for code coverage of checkTestFile, to have a piece of code
+	// that lives in the same file as its test.
 }
 
 type Value struct{}
