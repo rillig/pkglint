@@ -141,9 +141,8 @@ func (s *Suite) Test_TestNameChecker_Check(c *check.C) {
 		"Missing unit test \"Test_TestNameChecker_checkTests\" for \"TestNameChecker.checkTests\".",
 		"Missing unit test \"Test_TestNameChecker_checkTestees\" for \"TestNameChecker.checkTestees\".",
 		"Missing unit test \"Test_TestNameChecker_isRelevant\" for \"TestNameChecker.isRelevant\".",
-		"Missing unit test \"Test_TestNameChecker_errorsMask\" for \"TestNameChecker.errorsMask\".",
-		"Missing unit test \"Test_TestNameChecker_addError\" for \"TestNameChecker.addError\".")
-	s.CheckSummary("7 errors.")
+		"Missing unit test \"Test_TestNameChecker_errorsMask\" for \"TestNameChecker.errorsMask\".")
+	s.CheckSummary("6 errors.")
 }
 
 func (s *Suite) Test_TestNameChecker_load__filtered_nothing(c *check.C) {
@@ -363,6 +362,19 @@ func (s *Suite) Test_TestNameChecker_checkOrder(c *check.C) {
 		"Test \"S.Test_T__1\" must be ordered before \"S.Test_T_M1\".",
 		"Test \"S.Test_T__2\" must be ordered before \"S.Test_T_M1\".",
 		"Test \"S.Test_T_M2__1\" must be ordered before \"S.Test_T_M3\".")
+}
+
+func (s *Suite) Test_TestNameChecker_addError(c *check.C) {
+	ck := s.Init(c)
+
+	ck.Configure("ignored*", "*", "*", -EName)
+	ok1 := ck.addError(EName, code{"ignored.go", "", "Func", 0}, "E1")
+	ok2 := ck.addError(EName, code{"reported.go", "", "Func", 0}, "E2")
+
+	c.Check(ok1, check.Equals, false)
+	c.Check(ok2, check.Equals, true)
+	s.CheckErrors(
+		"E2")
 }
 
 func (s *Suite) Test_TestNameChecker_print__empty(c *check.C) {
