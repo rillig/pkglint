@@ -47,6 +47,16 @@ func (s *Suite) CheckSummary(summary string) {
 	s.summary = ""
 }
 
+func (s *Suite) Test_NewTestNameChecker(c *check.C) {
+	ck := s.Init(c)
+
+	c.Check(ck.isRelevant("*_test.go", "Suite", "SetUpTest", EAll), check.Equals, true)
+	c.Check(ck.isRelevant("*_test.go", "Suite", "SetUpTest", EMissingTest), check.Equals, false)
+
+	c.Check(ck.isRelevant("*_test.go", "Suite", "TearDownTest", EAll), check.Equals, true)
+	c.Check(ck.isRelevant("*_test.go", "Suite", "TearDownTest", EMissingTest), check.Equals, false)
+}
+
 func (s *Suite) Test_TestNameChecker_Configure(c *check.C) {
 	ck := s.Init(c)
 
@@ -93,6 +103,8 @@ func (s *Suite) Test_TestNameChecker_Configure__ignore_single_function(c *check.
 	c.Check(ck.isRelevant("file_test.go", "", "", EAll), check.Equals, true)
 	c.Check(ck.isRelevant("file_test.go", "*", "*", EAll), check.Equals, true)
 	c.Check(ck.isRelevant("file_test.go", "*", "Other", EAll), check.Equals, true)
+	c.Check(ck.isRelevant("file_test.go", "", "TestMain", EAll), check.Equals, false)
+	c.Check(ck.isRelevant("file_test.go", "*", "TestMain", EAll), check.Equals, true)
 }
 
 func (s *Suite) Test_TestNameChecker_Check(c *check.C) {
@@ -104,7 +116,6 @@ func (s *Suite) Test_TestNameChecker_Check(c *check.C) {
 	ck.Check()
 
 	s.CheckErrors(
-		"Missing unit test \"Test_NewTestNameChecker\" for \"NewTestNameChecker\".",
 		"Missing unit test \"Test_TestNameChecker_loadDecl\" for \"TestNameChecker.loadDecl\".",
 		"Missing unit test \"Test_TestNameChecker_addCode\" for \"TestNameChecker.addCode\".",
 		"Missing unit test \"Test_TestNameChecker_relate\" for \"TestNameChecker.relate\".",
@@ -113,7 +124,7 @@ func (s *Suite) Test_TestNameChecker_Check(c *check.C) {
 		"Missing unit test \"Test_TestNameChecker_isRelevant\" for \"TestNameChecker.isRelevant\".",
 		"Missing unit test \"Test_TestNameChecker_errorsMask\" for \"TestNameChecker.errorsMask\".",
 		"Missing unit test \"Test_TestNameChecker_addError\" for \"TestNameChecker.addError\".")
-	s.CheckSummary("9 errors.")
+	s.CheckSummary("8 errors.")
 }
 
 func (s *Suite) Test_TestNameChecker_load__filtered_nothing(c *check.C) {

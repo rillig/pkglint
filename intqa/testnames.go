@@ -64,7 +64,11 @@ func NewTestNameChecker(errorf func(format string, args ...interface{})) *TestNa
 
 	// This function is created by https://github.com/rillig/gobco when
 	// measuring the branch coverage of a package.
-	ck.Configure("*_test.go", "", "TestMain", ENone)
+	ck.Configure("*_test.go", "", "TestMain", -EMissingTest)
+
+	// For test fixtures from https://gopkg.in/check/v1.
+	ck.Configure("*_test.go", "*", "SetUpTest", -EMissingTest)
+	ck.Configure("*_test.go", "*", "TearDownTest", -EMissingTest)
 
 	return &ck
 }
