@@ -343,22 +343,6 @@ func (ck *TestNameChecker) print() {
 	}
 }
 
-type code struct {
-	file  string // the file containing the code
-	Type  string // the type, e.g. MkLine
-	Func  string // the function or method name, e.g. Warnf
-	order int    // the relative order in the file
-}
-
-func (c *code) fullName() string { return join(c.Type, ".", c.Func) }
-func (c *code) isType() bool     { return c.Func == "" }
-func (c *code) isMethod() bool   { return c.Type != "" && c.Func != "" }
-
-func (c *code) isTest() bool {
-	return strings.HasSuffix(c.file, "_test.go") &&
-		strings.HasPrefix(c.Func, "Test")
-}
-
 // testee is an element of the source code that can be tested.
 // It is either a type, a function or a method.
 type testee struct {
@@ -371,6 +355,24 @@ type test struct {
 	testeeName string // The method name without the "Test_" prefix and description
 	descr      string // The part after the "__" in the method name
 	testee     *testee
+}
+
+type code struct {
+	file  string // the file containing the code
+	Type  string // the type, e.g. MkLine
+	Func  string // the function or method name, e.g. Warnf
+	order int    // the relative order in the file
+}
+
+func (c *code) fullName() string { return join(c.Type, ".", c.Func) }
+func (c *code) isType() bool     { return c.Func == "" }
+func (c *code) isMethod() bool   { return c.Type != "" && c.Func != "" }
+
+func (c *code) isTest() bool {
+	return c.isTestScope() && strings.HasPrefix(c.Func, "Test")
+}
+func (c *code) isTestScope() bool {
+	return strings.HasSuffix(c.file, "_test.go")
 }
 
 func plural(n int, sg, pl string) string {

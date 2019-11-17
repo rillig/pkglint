@@ -309,6 +309,21 @@ func (s *Suite) Test_code_isTest(c *check.C) {
 	test("f_test.go", "", "Test_Type_Method", true)
 }
 
+func (s *Suite) Test_code_isTestScope(c *check.C) {
+	_ = s.Init(c)
+
+	test := func(filename string, isTestScope bool) {
+		code := code{filename, "", "", 0}
+		c.Check(code.isTestScope(), check.Equals, isTestScope)
+	}
+
+	test("f.go", false)
+	test("test.go", false)
+	test("_test.go", true)
+	test("file_test.go", true)
+	test("file_linux_test.go", true)
+}
+
 func (s *Suite) Test_plural(c *check.C) {
 	_ = s.Init(c)
 
