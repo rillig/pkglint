@@ -62,10 +62,6 @@ type TestNameChecker struct {
 func NewTestNameChecker(errorf func(format string, args ...interface{})) *TestNameChecker {
 	ck := TestNameChecker{errorf: errorf, out: os.Stderr}
 
-	// This function is created by https://github.com/rillig/gobco when
-	// measuring the branch coverage of a package.
-	ck.Configure("*_test.go", "", "TestMain", -EMissingTest)
-
 	// For test fixtures from https://gopkg.in/check/v1.
 	ck.Configure("*_test.go", "*", "SetUpTest", -EMissingTest)
 	ck.Configure("*_test.go", "*", "TearDownTest", -EMissingTest)
@@ -125,9 +121,7 @@ func (ck *TestNameChecker) loadDecl(decl ast.Decl, filename string) {
 			switch spec := spec.(type) {
 			case *ast.TypeSpec:
 				typeName := spec.Name.Name
-				if ck.isRelevant(filename, typeName, "", EAll) {
-					ck.addCode(code{filename, typeName, "", ck.nextOrder()})
-				}
+				ck.addCode(code{filename, typeName, "", 0})
 			}
 		}
 
@@ -142,13 +136,26 @@ func (ck *TestNameChecker) loadDecl(decl ast.Decl, filename string) {
 			}
 		}
 		funcName := decl.Name.Name
-		if ck.isRelevant(filename, typeName, funcName, EAll) {
-			ck.addCode(code{filename, typeName, funcName, ck.nextOrder()})
-		}
+		ck.addCode(code{filename, typeName, funcName, 0})
 	}
 }
 
 func (ck *TestNameChecker) addCode(code code) {
+	if code.isTestScope() && code.isFunc() && code.Func == "TestMain" {
+		// This is not a test for Main, but a wrapper function of the test.
+		// Therefore it is completely ignored.
+		// See https://golang.org/pkg/testing/#hdr-Main.
+		//
+		// Among others, this function is created by
+		// https://github.com/rillig/gobco when measuring the branch
+		// coverage of a package.
+		return
+	}
+
+	if !ck.isRelevant(code.file, code.Type, code.Func, EAll) {
+		return
+	}
+
 	if code.isTest() {
 		ck.addTest(code)
 	} else {
@@ -157,16 +164,19 @@ func (ck *TestNameChecker) addCode(code code) {
 }
 
 func (ck *TestNameChecker) addTestee(code code) {
+	code.order = ck.nextOrder()
 	ck.testees = append(ck.testees, &testee{code})
 }
 
 func (ck *TestNameChecker) addTest(code code) {
-	if !strings.HasPrefix(code.Func, "Test_") && code.Func != "Test" {
+	if !strings.HasPrefix(code.Func, "Test_") &&
+		code.Func != "Test" &&
 		ck.addError(
 			EName,
 			code,
 			"Test %q must start with %q.",
-			code.fullName(), "Test_")
+			code.fullName(), "Test_") {
+
 		return
 	}
 
@@ -174,17 +184,18 @@ func (ck *TestNameChecker) addTest(code code) {
 	testeeName := strings.TrimPrefix(strings.TrimPrefix(parts[0], "Test"), "_")
 	descr := ""
 	if len(parts) > 1 {
-		if parts[1] == "" {
+		if parts[1] == "" &&
 			ck.addError(
 				EName,
 				code,
 				"Test %q must have a nonempty description.",
-				code.fullName())
+				code.fullName()) {
 			return
 		}
 		descr = parts[1]
 	}
 
+	code.order = ck.nextOrder()
 	ck.tests = append(ck.tests, &test{code, testeeName, descr, nil})
 }
 
@@ -349,10 +360,12 @@ func (ck *TestNameChecker) checkOrder() {
 	}
 }
 
-func (ck *TestNameChecker) addError(e Error, c code, format string, args ...interface{}) {
-	if ck.isRelevant(c.file, c.Type, c.Func, e) {
+func (ck *TestNameChecker) addError(e Error, c code, format string, args ...interface{}) bool {
+	relevant := ck.isRelevant(c.file, c.Type, c.Func, e)
+	if relevant {
 		ck.errors = append(ck.errors, fmt.Sprintf(format, args...))
 	}
+	return relevant
 }
 
 func (ck *TestNameChecker) print() {
@@ -397,6 +410,7 @@ type code struct {
 }
 
 func (c *code) fullName() string { return join(c.Type, ".", c.Func) }
+func (c *code) isFunc() bool     { return c.Type == "" }
 func (c *code) isType() bool     { return c.Func == "" }
 func (c *code) isMethod() bool   { return c.Type != "" && c.Func != "" }
 

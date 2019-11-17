@@ -3,6 +3,7 @@ package intqa
 import (
 	"bytes"
 	"fmt"
+	"go/ast"
 	"gopkg.in/check.v1"
 	"io/ioutil"
 	"path"
@@ -35,6 +36,25 @@ func (s *Suite) TearDownTest(c *check.C) {
 	s.c = c
 	s.CheckErrors(nil...)
 	s.CheckSummary("")
+}
+
+func (s *Suite) CheckTestees(testees ...*testee) {
+	s.c.Check(s.ck.testees, check.DeepEquals, testees)
+	s.ck.testees = nil
+}
+
+func (*Suite) newTestee(filename, typeName, funcName string, order int) *testee {
+	return &testee{code{filename, typeName, funcName, order}}
+}
+
+func (s *Suite) CheckTests(tests ...*test) {
+	s.c.Check(s.ck.tests, check.DeepEquals, tests)
+	s.ck.tests = nil
+}
+
+func (*Suite) newTest(filename, typeName, funcName string, order int, testeeName, descr string, testee *testee) *test {
+	c := code{filename, typeName, funcName, order}
+	return &test{c, testeeName, descr, testee}
 }
 
 func (s *Suite) CheckErrors(errors ...string) {
@@ -111,12 +131,11 @@ func (s *Suite) Test_TestNameChecker_Check(c *check.C) {
 	ck := s.Init(c)
 
 	ck.Configure("*", "Value", "*", -EMissingTest)
-	ck.Configure("*", "Suite", "[A-Z]*", -EMissingTest)
+	ck.Configure("*", "Suite", "*", -EMissingTest)
 
 	ck.Check()
 
 	s.CheckErrors(
-		"Missing unit test \"Test_TestNameChecker_loadDecl\" for \"TestNameChecker.loadDecl\".",
 		"Missing unit test \"Test_TestNameChecker_addCode\" for \"TestNameChecker.addCode\".",
 		"Missing unit test \"Test_TestNameChecker_relate\" for \"TestNameChecker.relate\".",
 		"Missing unit test \"Test_TestNameChecker_checkTests\" for \"TestNameChecker.checkTests\".",
@@ -124,7 +143,7 @@ func (s *Suite) Test_TestNameChecker_Check(c *check.C) {
 		"Missing unit test \"Test_TestNameChecker_isRelevant\" for \"TestNameChecker.isRelevant\".",
 		"Missing unit test \"Test_TestNameChecker_errorsMask\" for \"TestNameChecker.errorsMask\".",
 		"Missing unit test \"Test_TestNameChecker_addError\" for \"TestNameChecker.addError\".")
-	s.CheckSummary("8 errors.")
+	s.CheckSummary("7 errors.")
 }
 
 func (s *Suite) Test_TestNameChecker_load__filtered_nothing(c *check.C) {
@@ -150,6 +169,54 @@ func (s *Suite) Test_TestNameChecker_load__filtered_only_Value(c *check.C) {
 		{code{"testnames_test.go", "Value", "", 0}},
 		{code{"testnames_test.go", "Value", "Method", 1}}})
 	c.Check(ck.tests, check.IsNil)
+}
+
+func (s *Suite) Test_TestNameChecker_loadDecl(c *check.C) {
+	ck := s.Init(c)
+
+	typeDecl := func(name string) *ast.GenDecl {
+		return &ast.GenDecl{Specs: []ast.Spec{&ast.TypeSpec{Name: &ast.Ident{Name: name}}}}
+	}
+	funcDecl := func(name string) *ast.FuncDecl {
+		return &ast.FuncDecl{Name: &ast.Ident{Name: name}}
+	}
+	methodDecl := func(typeName, methodName string) *ast.FuncDecl {
+		return &ast.FuncDecl{
+			Name: &ast.Ident{Name: methodName},
+			Recv: &ast.FieldList{List: []*ast.Field{{Type: &ast.Ident{Name: typeName}}}}}
+	}
+
+	ck.loadDecl(typeDecl("TypeName"), "file_test.go")
+
+	s.CheckTestees(
+		s.newTestee("file_test.go", "TypeName", "", 0))
+
+	// The freestanding TestMain function is ignored by a hardcoded rule,
+	// independently of the configuration.
+	ck.loadDecl(funcDecl("TestMain"), "file_test.go")
+
+	// The TestMain method on a type is relevant, but violates the naming rule.
+	// Therefore it is ignored.
+	ck.loadDecl(methodDecl("Suite", "TestMain"), "file_test.go")
+
+	s.CheckTests(
+		nil...)
+	s.CheckErrors(
+		"Test \"Suite.TestMain\" must start with \"Test_\".")
+
+	// The above error can be disabled, and then the method is handled
+	// like any other test method.
+	ck.Configure("*", "Suite", "*", -EName)
+	ck.loadDecl(methodDecl("Suite", "TestMain"), "file_test.go")
+
+	s.CheckTests(
+		s.newTest("file_test.go", "Suite", "TestMain", 1, "Main", "", nil))
+
+	// There is no special handling for TestMain method with a description.
+	ck.loadDecl(methodDecl("Suite", "TestMain__descr"), "file_test.go")
+
+	s.CheckTests(
+		s.newTest("file_test.go", "Suite", "TestMain__descr", 2, "Main", "descr", nil))
 }
 
 func (s *Suite) Test_TestNameChecker_addTestee(c *check.C) {
@@ -346,6 +413,19 @@ func (s *Suite) Test_code_fullName(c *check.C) {
 	test("Type", "", "Type")
 	test("", "Func", "Func")
 	test("Type", "Method", "Type.Method")
+}
+
+func (s *Suite) Test_code_isFunc(c *check.C) {
+	_ = s.Init(c)
+
+	test := func(typeName, funcName string, isFunc bool) {
+		code := code{"filename", typeName, funcName, 0}
+		c.Check(code.isFunc(), check.Equals, isFunc)
+	}
+
+	test("Type", "", false)
+	test("", "Func", true)
+	test("Type", "Method", false)
 }
 
 func (s *Suite) Test_code_isType(c *check.C) {
