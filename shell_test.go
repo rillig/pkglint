@@ -344,7 +344,56 @@ func (s *Suite) Test_SimpleCommandChecker_checkEchoN(c *check.C) {
 		"WARN: Makefile:4: Please use ${ECHO_N} instead of \"echo -n\".")
 }
 
-func (s *Suite) Test_ShellProgramChecker_checkConditionalCd(c *check.C) {
+func (s *Suite) Test_ShellLineChecker__shell_comment_with_line_continuation(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpTool("echo", "", AtRunTime)
+
+	test := func(lines ...string) {
+		i := 0
+		for ; i < len(lines) && hasPrefix(lines[i], "\t"); i++ {
+		}
+
+		mklines := t.SetUpFileMkLines("Makefile",
+			append([]string{MkCvsID, "pre-install:"},
+				lines[:i]...)...)
+
+		mklines.Check()
+
+		t.CheckOutput(lines[i:])
+	}
+
+	// The comment can start at the beginning of a follow-up line.
+	test(
+		"\techo first; \\",
+		"\t# comment at the beginning of a command \\",
+		"\techo \"hello\"",
+
+		// TODO: Warn that the "echo hello" is commented out.
+	)
+
+	// The comment can start at the beginning of a simple command.
+	test(
+		"\techo first; # comment at the beginning of a command \\",
+		"\techo \"hello\"",
+
+		// TODO: Warn that the "echo hello" is commented out.
+	)
+
+	// The comment can start at a word in the middle of a command.
+	test(
+		// TODO: Warn that the "echo hello" is commented out.
+		"\techo # comment starts inside a command \\",
+		"\techo \"hello\"")
+
+	// If the comment starts in the last line, there's no further
+	// line that might be commented out accidentally.
+	test(
+		"\techo 'first line'; \\",
+		"\t# comment in last line")
+}
+
+func (s *Suite) Test_ShellLineChecker_checkConditionalCd(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpTool("ls", "", AtRunTime)
@@ -370,7 +419,7 @@ func (s *Suite) Test_ShellProgramChecker_checkConditionalCd(c *check.C) {
 		"WARN: Makefile:8: The exitcode of \"cd\" at the left of the | operator is ignored.")
 }
 
-func (s *Suite) Test_ShellProgramChecker_checkSetE__simple_commands(c *check.C) {
+func (s *Suite) Test_ShellLineChecker_checkSetE__simple_commands(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpTool("echo", "", AtRunTime)
@@ -390,7 +439,7 @@ func (s *Suite) Test_ShellProgramChecker_checkSetE__simple_commands(c *check.C) 
 			"(after \"touch file\") to separate commands.")
 }
 
-func (s *Suite) Test_ShellProgramChecker_checkSetE__compound_commands(c *check.C) {
+func (s *Suite) Test_ShellLineChecker_checkSetE__compound_commands(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpTool("echo", "", AtRunTime)
@@ -411,7 +460,7 @@ func (s *Suite) Test_ShellProgramChecker_checkSetE__compound_commands(c *check.C
 			"(after \"touch 1\") to separate commands.")
 }
 
-func (s *Suite) Test_ShellProgramChecker_checkSetE__no_tracing(c *check.C) {
+func (s *Suite) Test_ShellLineChecker_checkSetE__no_tracing(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpTool("touch", "", AtRunTime)
@@ -428,7 +477,7 @@ func (s *Suite) Test_ShellProgramChecker_checkSetE__no_tracing(c *check.C) {
 			"(after \"touch 1\") to separate commands.")
 }
 
-func (s *Suite) Test_ShellProgramChecker_canFail(c *check.C) {
+func (s *Suite) Test_ShellLineChecker_canFail(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
@@ -525,7 +574,7 @@ func (s *Suite) Test_ShellProgramChecker_canFail(c *check.C) {
 		nil...)
 }
 
-func (s *Suite) Test_ShellProgramChecker_checkPipeExitcode(c *check.C) {
+func (s *Suite) Test_ShellLineChecker_checkPipeExitcode(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
@@ -562,55 +611,6 @@ func (s *Suite) Test_ShellProgramChecker_checkPipeExitcode(c *check.C) {
 		"WARN: Makefile:9: The exitcode of \"./unknown\" at the left of the | operator is ignored.",
 		"WARN: Makefile:11: The exitcode of the command at the left of the | operator is ignored.",
 		"WARN: Makefile:12: The exitcode of the command at the left of the | operator is ignored.")
-}
-
-func (s *Suite) Test_ShellLineChecker__shell_comment_with_line_continuation(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpTool("echo", "", AtRunTime)
-
-	test := func(lines ...string) {
-		i := 0
-		for ; i < len(lines) && hasPrefix(lines[i], "\t"); i++ {
-		}
-
-		mklines := t.SetUpFileMkLines("Makefile",
-			append([]string{MkCvsID, "pre-install:"},
-				lines[:i]...)...)
-
-		mklines.Check()
-
-		t.CheckOutput(lines[i:])
-	}
-
-	// The comment can start at the beginning of a follow-up line.
-	test(
-		"\techo first; \\",
-		"\t# comment at the beginning of a command \\",
-		"\techo \"hello\"",
-
-		// TODO: Warn that the "echo hello" is commented out.
-	)
-
-	// The comment can start at the beginning of a simple command.
-	test(
-		"\techo first; # comment at the beginning of a command \\",
-		"\techo \"hello\"",
-
-		// TODO: Warn that the "echo hello" is commented out.
-	)
-
-	// The comment can start at a word in the middle of a command.
-	test(
-		// TODO: Warn that the "echo hello" is commented out.
-		"\techo # comment starts inside a command \\",
-		"\techo \"hello\"")
-
-	// If the comment starts in the last line, there's no further
-	// line that might be commented out accidentally.
-	test(
-		"\techo 'first line'; \\",
-		"\t# comment in last line")
 }
 
 func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine(c *check.C) {

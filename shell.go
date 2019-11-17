@@ -356,12 +356,21 @@ func (scc *SimpleCommandChecker) Explain(explanation ...string) {
 	scc.mkline.Explain(explanation...)
 }
 
-// TODO: Can ShellLine and ShellProgramChecker be merged into one type?
-type ShellProgramChecker struct {
-	*ShellLineChecker
+// ShellLineChecker is either a line from a Makefile starting with a tab,
+// thereby containing shell commands to be executed.
+//
+// Or it is a variable assignment line from a Makefile with a left-hand
+// side variable that is of some shell-like type; see Vartype.IsShell.
+type ShellLineChecker struct {
+	MkLines *MkLines
+	mkline  *MkLine
+
+	// checkVarUse is set to false when checking a single shell word
+	// in order to skip duplicate warnings in variable assignments.
+	checkVarUse bool
 }
 
-func (spc *ShellProgramChecker) checkConditionalCd(list *MkShList) {
+func (ck *ShellLineChecker) checkConditionalCd(list *MkShList) {
 	if trace.Tracing {
 		defer trace.Call0()()
 	}
@@ -379,8 +388,8 @@ func (spc *ShellProgramChecker) checkConditionalCd(list *MkShList) {
 
 	checkConditionalCd := func(cmd *MkShSimpleCommand) {
 		if NewStrCommand(cmd).Name == "cd" {
-			spc.Errorf("The Solaris /bin/sh cannot handle \"cd\" inside conditionals.")
-			spc.Explain(
+			ck.Errorf("The Solaris /bin/sh cannot handle \"cd\" inside conditionals.")
+			ck.Explain(
 				"When the Solaris shell is in \"set -e\" mode and \"cd\" fails, the",
 				"shell will exit, no matter if it is protected by an \"if\" or the",
 				"\"||\" operator.")
@@ -404,8 +413,8 @@ func (spc *ShellProgramChecker) checkConditionalCd(list *MkShList) {
 	}
 	walker.Callback.Pipeline = func(pipeline *MkShPipeline) {
 		if pipeline.Negated {
-			spc.Warnf("The Solaris /bin/sh does not support negation of shell commands.")
-			spc.Explain(
+			ck.Warnf("The Solaris /bin/sh does not support negation of shell commands.")
+			ck.Explain(
 				"The GNU Autoconf manual has many more details of what shell",
 				"features to avoid for portable programs.",
 				"It can be read at:",
@@ -415,17 +424,17 @@ func (spc *ShellProgramChecker) checkConditionalCd(list *MkShList) {
 	walker.Walk(list)
 }
 
-func (spc *ShellProgramChecker) checkSetE(list *MkShList, index int) {
+func (ck *ShellLineChecker) checkSetE(list *MkShList, index int) {
 	if trace.Tracing {
 		defer trace.Call0()()
 	}
 
 	command := list.AndOrs[index-1].Pipes[0].Cmds[0]
-	if command.Simple == nil || !spc.canFail(command) {
+	if command.Simple == nil || !ck.canFail(command) {
 		return
 	}
 
-	line := spc.mkline.Line
+	line := ck.mkline.Line
 	if !line.once.FirstTime("switch to set -e") {
 		return
 	}
@@ -464,7 +473,7 @@ func (spc *ShellProgramChecker) checkSetE(list *MkShList, index int) {
 //  echo "hello"
 //  sed 's,$, world,,'
 //  wc -l
-func (spc *ShellProgramChecker) canFail(cmd *MkShCommand) bool {
+func (ck *ShellLineChecker) canFail(cmd *MkShCommand) bool {
 	simple := cmd.Simple
 	if simple == nil {
 		return true
@@ -500,7 +509,7 @@ func (spc *ShellProgramChecker) canFail(cmd *MkShCommand) bool {
 	case "set":
 	}
 
-	tool, _ := G.Tool(spc.MkLines, cmdName, RunTime)
+	tool, _ := G.Tool(ck.MkLines, cmdName, RunTime)
 	if tool == nil {
 		return true
 	}
@@ -523,14 +532,14 @@ func (spc *ShellProgramChecker) canFail(cmd *MkShCommand) bool {
 	return true
 }
 
-func (spc *ShellProgramChecker) checkPipeExitcode(pipeline *MkShPipeline) {
+func (ck *ShellLineChecker) checkPipeExitcode(pipeline *MkShPipeline) {
 	if trace.Tracing {
 		defer trace.Call0()()
 	}
 
 	canFail := func() (bool, string) {
 		for _, cmd := range pipeline.Cmds[:len(pipeline.Cmds)-1] {
-			if spc.canFail(cmd) {
+			if ck.canFail(cmd) {
 				if cmd.Simple != nil && cmd.Simple.Name != nil {
 					return true, cmd.Simple.Name.MkText
 				}
@@ -543,11 +552,11 @@ func (spc *ShellProgramChecker) checkPipeExitcode(pipeline *MkShPipeline) {
 	if G.Opts.WarnExtra && len(pipeline.Cmds) > 1 {
 		if canFail, cmd := canFail(); canFail {
 			if cmd != "" {
-				spc.Warnf("The exitcode of %q at the left of the | operator is ignored.", cmd)
+				ck.Warnf("The exitcode of %q at the left of the | operator is ignored.", cmd)
 			} else {
-				spc.Warnf("The exitcode of the command at the left of the | operator is ignored.")
+				ck.Warnf("The exitcode of the command at the left of the | operator is ignored.")
 			}
-			spc.Explain(
+			ck.Explain(
 				"In a shell command like \"cat *.txt | grep keyword\", if the command",
 				"on the left side of the \"|\" fails, this failure is ignored.",
 				"",
@@ -556,30 +565,6 @@ func (spc *ShellProgramChecker) checkPipeExitcode(pipeline *MkShPipeline) {
 				"A good place to create those files is in ${WRKDIR}.")
 		}
 	}
-}
-
-func (spc *ShellProgramChecker) Errorf(format string, args ...interface{}) {
-	spc.mkline.Errorf(format, args...)
-}
-func (spc *ShellProgramChecker) Warnf(format string, args ...interface{}) {
-	spc.mkline.Warnf(format, args...)
-}
-func (spc *ShellProgramChecker) Explain(explanation ...string) {
-	spc.mkline.Explain(explanation...)
-}
-
-// ShellLineChecker is either a line from a Makefile starting with a tab,
-// thereby containing shell commands to be executed.
-//
-// Or it is a variable assignment line from a Makefile with a left-hand
-// side variable that is of some shell-like type; see Vartype.IsShell.
-type ShellLineChecker struct {
-	MkLines *MkLines
-	mkline  *MkLine
-
-	// checkVarUse is set to false when checking a single shell word
-	// in order to skip duplicate warnings in variable assignments.
-	checkVarUse bool
 }
 
 var shellCommandsType = NewVartype(BtShellCommands, NoVartypeOptions, NewACLEntry("*", aclpAllRuntime))
@@ -715,8 +700,7 @@ func (ck *ShellLineChecker) CheckShellCommand(shellcmd string, pSetE *bool, time
 		return
 	}
 
-	spc := ShellProgramChecker{ck}
-	spc.checkConditionalCd(program)
+	ck.checkConditionalCd(program)
 
 	walker := NewMkShWalker()
 	walker.Callback.SimpleCommand = func(command *MkShSimpleCommand) {
@@ -729,16 +713,16 @@ func (ck *ShellLineChecker) CheckShellCommand(shellcmd string, pSetE *bool, time
 	}
 	walker.Callback.AndOr = func(andor *MkShAndOr) {
 		if G.Opts.WarnExtra && !*pSetE && walker.Current().Index != 0 {
-			spc.checkSetE(walker.Parent(1).(*MkShList), walker.Current().Index)
+			ck.checkSetE(walker.Parent(1).(*MkShList), walker.Current().Index)
 		}
 	}
 	walker.Callback.Pipeline = func(pipeline *MkShPipeline) {
-		spc.checkPipeExitcode(pipeline)
+		ck.checkPipeExitcode(pipeline)
 	}
 	walker.Callback.Word = func(word *ShToken) {
 		// TODO: Try to replace false with true here; it had been set to false
 		//  in 2016 for no apparent reason.
-		spc.CheckWord(word.MkText, false, time)
+		ck.CheckWord(word.MkText, false, time)
 	}
 
 	walker.Walk(program)
@@ -1043,6 +1027,10 @@ func (ck *ShellLineChecker) checkInstallCommand(shellcmd string) {
 			"use:",
 			"\tcd ${WRKSRC} && ${PAX} -wr * ${PREFIX}/foodir")
 	}
+}
+
+func (ck *ShellLineChecker) Errorf(format string, args ...interface{}) {
+	ck.mkline.Errorf(format, args...)
 }
 
 func (ck *ShellLineChecker) Warnf(format string, args ...interface{}) {
