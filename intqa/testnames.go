@@ -86,7 +86,7 @@ func (ck *TestNameChecker) Configure(filenames, typeNames, funcNames string, err
 }
 
 func (ck *TestNameChecker) Check() {
-	ck.load()
+	ck.load(".")
 	ck.checkTestees()
 	ck.checkTests()
 	ck.checkOrder()
@@ -94,10 +94,10 @@ func (ck *TestNameChecker) Check() {
 }
 
 // load loads all type, function and method names from the current package.
-func (ck *TestNameChecker) load() {
+func (ck *TestNameChecker) load(dir string) {
 
 	fileSet := token.NewFileSet()
-	pkgs, err := parser.ParseDir(fileSet, ".", nil, 0)
+	pkgs, err := parser.ParseDir(fileSet, dir, nil, 0)
 	if err != nil {
 		panic(err)
 	}

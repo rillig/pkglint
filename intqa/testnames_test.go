@@ -146,7 +146,7 @@ func (s *Suite) Test_TestNameChecker_load__filtered_nothing(c *check.C) {
 
 	ck.Configure("*", "*", "*", ENone)
 
-	ck.load()
+	ck.load(".")
 
 	c.Check(ck.testees, check.IsNil)
 	c.Check(ck.tests, check.IsNil)
@@ -158,12 +158,21 @@ func (s *Suite) Test_TestNameChecker_load__filtered_only_Value(c *check.C) {
 	ck.Configure("*", "*", "*", ENone)
 	ck.Configure("*", "Value", "*", EAll)
 
-	ck.load()
+	ck.load(".")
 
 	c.Check(ck.testees, check.DeepEquals, []*testee{
 		{code{"testnames_test.go", "Value", "", 0}},
 		{code{"testnames_test.go", "Value", "Method", 1}}})
 	c.Check(ck.tests, check.IsNil)
+}
+
+func (s *Suite) Test_TestNameChecker_load__panic(c *check.C) {
+	ck := s.Init(c)
+
+	c.Check(
+		func() { ck.load("does-not-exist") },
+		check.PanicMatches,
+		`^open does-not-exist\b.*`)
 }
 
 func (s *Suite) Test_TestNameChecker_loadDecl(c *check.C) {
@@ -236,10 +245,34 @@ func (s *Suite) Test_TestNameChecker_addTest(c *check.C) {
 func (s *Suite) Test_TestNameChecker_addTest__empty_description(c *check.C) {
 	ck := s.Init(c)
 
-	ck.addTest(code{"filename.go", "Suite", "Test_Method__", 0})
+	ck.addTest(code{"f_test.go", "Suite", "Test_Method__", 0})
 
 	s.CheckErrors(
 		"Test \"Suite.Test_Method__\" must have a nonempty description.")
+
+	// The test is not registered and thus cannot complain about its missing
+	// testee.
+	ck.checkTests()
+
+	s.CheckErrors(
+		nil...)
+}
+
+func (s *Suite) Test_TestNameChecker_addTest__suppressed_empty_description(c *check.C) {
+	ck := s.Init(c)
+
+	ck.Configure("*", "*", "*", -EName)
+	ck.addTest(code{"f_test.go", "Suite", "Test_Method__", 0})
+
+	s.CheckErrors(
+		nil...)
+
+	// Since there was no error above, the test is added normally
+	// and can complain about its missing testee.
+	ck.checkTests()
+
+	s.CheckErrors(
+		"Missing testee \"Method\" for test \"Suite.Test_Method__\".")
 }
 
 func (s *Suite) Test_TestNameChecker_nextOrder(c *check.C) {
@@ -377,7 +410,8 @@ func (s *Suite) Test_TestNameChecker_checkOrder(c *check.C) {
 	ck.addTestee(code{"f.go", "T", "M1", 11})
 	ck.addTestee(code{"f.go", "T", "M2", 12})
 	ck.addTestee(code{"f.go", "T", "M3", 13})
-	ck.addTest(code{"a_test.go", "S", "Test_A", 99})        // different file, is ignored
+	ck.addTest(code{"a_test.go", "S", "Test_A", 98})        // different file, is skipped
+	ck.addTest(code{"f_test.go", "S", "Test_Missing", 99})  // missing testee, is skipped
 	ck.addTest(code{"f_test.go", "S", "Test_T_M1", 100})    // maxTestee = 11
 	ck.addTest(code{"f_test.go", "S", "Test_T_M2", 101})    // maxTestee = 12
 	ck.addTest(code{"f_test.go", "S", "Test_T", 102})       // testee 10 < maxTestee 12: insert before first [.testee > testee 10] == T_M1
