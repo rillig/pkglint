@@ -1449,7 +1449,7 @@ func (s *Suite) Test_RedundantScope_handleVarassign__shell_followed_by_default(c
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_RedundantScope__overwrite_definition_from_included_file(c *check.C) {
+func (s *Suite) Test_RedundantScope_handleVarassign__overwrite_definition_from_included_file(c *check.C) {
 	t := s.Init(c)
 
 	include, get := t.SetUpHierarchy()
@@ -1504,7 +1504,7 @@ func (s *Suite) Test_RedundantScope_handleVarassign__conditional(c *check.C) {
 }
 
 // Ensures that commented variables do not influence the redundancy check.
-func (s *Suite) Test_RedundantScope__commented_variable_assignment(c *check.C) {
+func (s *Suite) Test_RedundantScope_handleVarassign__commented_variable_assignment(c *check.C) {
 	t := s.Init(c)
 
 	include, get := t.SetUpHierarchy()

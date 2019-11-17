@@ -2635,6 +2635,202 @@ func (s *Suite) Test_VaralignBlock__aligned(c *check.C) {
 		false)
 }
 
+// It's ok to have all backslashes in the same column, even if that column
+// is not 73.
+func (s *Suite) Test_VaralignBlock__continuation_backslashes_aligned(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR=\tvalue value value\t\\",
+		"\tvalue\t\t\t\\",
+		"\tvalue\t\t\t\\",
+		"\tvalue")
+	vt.Internals(
+		"04 08 32",
+		"   08 32",
+		"   08 32",
+		"   08")
+	vt.Diagnostics(
+		nil...)
+	vt.Autofixes(
+		nil...)
+	vt.Fixed(
+		"VAR=    value value value       \\",
+		"        value                   \\",
+		"        value                   \\",
+		"        value")
+	vt.Run()
+}
+
+// The backslash in the first line is separated by a single tab.
+// This looks strange but pkglint considers it acceptable
+// since there is a simple rule saying "a single tab is always ok".
+// Any rule that would replace this simple rule
+// would have to be similarly simple and intuitive.
+func (s *Suite) Test_VaralignBlock__continuation_backslashes_aligned_except_initial(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR=\tvalue value value\t\\",
+		"\tvalue\t\t\t\t\\",
+		"\tvalue\t\t\t\t\\",
+		"\tvalue")
+	vt.Internals(
+		"04 08 32",
+		"   08 40",
+		"   08 40",
+		"   08")
+	vt.Diagnostics(
+		nil...)
+	vt.Autofixes(
+		nil...)
+	// TODO: The backslashes should be aligned by a _simple_ rule.
+	vt.Fixed(
+		"VAR=    value value value       \\",
+		"        value                           \\",
+		"        value                           \\",
+		"        value")
+	vt.Run()
+}
+
+// Lines whose continuation backslash is indented by a single space are
+// usually those that stick out further than column 73. These are not
+// touched by the realignment.
+func (s *Suite) Test_VaralignBlock__continuation_backslashes_one_sticks_out(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR=\tvalue\t\\",
+		"\tvalue value value \\",
+		"\tvalue\t\\",
+		"\tvalue")
+	vt.Internals(
+		"04 08 16",
+		"   08 26",
+		"   08 16",
+		"   08")
+	vt.Diagnostics(
+		nil...)
+	vt.Autofixes(
+		nil...)
+	vt.Fixed(
+		"VAR=    value   \\",
+		"        value value value \\",
+		"        value   \\",
+		"        value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__realign_continuation_backslashes(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR4567890.234567890=\t----30--------40--------50\t\t\t\\",
+		"\t\t--20--------30--------40--------50\t\t\t\\",
+		"\t\t--20--------30--------40--------50")
+	vt.InputDetab(
+		"VAR4567890.234567890=   ----30--------40--------50                      \\",
+		"                --20--------30--------40--------50                      \\",
+		"                --20--------30--------40--------50")
+	vt.Internals(
+		"21 24 72",
+		"   16 72",
+		"   16")
+	vt.Diagnostics(
+		"NOTE: Makefile:2: This continuation line should be indented with \"\\t\\t\\t\".",
+		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\\t\\t\".")
+	vt.Autofixes(
+		"AUTOFIX: Makefile:2: Replacing \"\\t\\t\" with \"\\t\\t\\t\".",
+		"AUTOFIX: Makefile:2: Replacing \"\\t\\t\\t\\\\\" with \"\\t\\t\\\\\".",
+		"AUTOFIX: Makefile:3: Replacing \"\\t\\t\" with \"\\t\\t\\t\".")
+	vt.Fixed(
+		"VAR4567890.234567890=   ----30--------40--------50                      \\",
+		"                        --20--------30--------40--------50              \\",
+		"                        --20--------30--------40--------50")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__initial_value_tab80(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VVVVVVVVVVVVVVVVVVV=\tvalue\t\t\t\t\t\t\t\\",
+		"\t\t\tvalue\t\t\t\t\t\t\\",
+		"\t\t\tvalue\t\t\t\t\t\t\\",
+		"\t\t\tvalue")
+	vt.Internals(
+		"20 24 80",
+		"   24 72",
+		"   24 72",
+		"   24")
+	vt.Diagnostics(
+		"NOTE: Makefile:1: The continuation backslash should be preceded " +
+			"by a single space or tab, or be in column 73, not 81.")
+	vt.Autofixes(
+		"AUTOFIX: Makefile:1: Replacing \"\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\\t\".")
+	vt.Fixed(
+		"VVVVVVVVVVVVVVVVVVV=    value                                           \\",
+		"                        value                                           \\",
+		"                        value                                           \\",
+		"                        value")
+	vt.Run()
+}
+
+func (s *Suite) Test_VaralignBlock__long_lines(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR=\t\t\t\t\t\tvalue\t\t \\",
+		"\tvalue \t \\",
+		"\tvalue")
+	vt.Internals(
+		"04 48 65",
+		"   08 17",
+		"   08")
+	vt.Diagnostics(
+		"NOTE: Makefile:1: The continuation backslash should be preceded "+
+			"by a single space or tab, or be in column 57, not 66.",
+		"NOTE: Makefile:2: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".",
+		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".")
+	vt.Autofixes(
+		"AUTOFIX: Makefile:1: Replacing \"\\t\\t \" with \"\\t\".",
+		"AUTOFIX: Makefile:2: Replacing \"\\t\" with \"\\t\\t\\t\\t\\t\\t\".",
+		"AUTOFIX: Makefile:3: Replacing \"\\t\" with \"\\t\\t\\t\\t\\t\\t\".")
+	vt.Fixed(
+		"VAR=                                            value   \\",
+		// FIXME: The backslash should be aligned properly.
+		"                                                value    \\",
+		"                                                value")
+	vt.Run()
+}
+
+// A practical chaotic test case, derived from wip/compat32_mit-krb5/Makefile.
+// It made pkglint before 2019-09-03 panic.
+func (s *Suite) Test_VaralignBlock__long_lines_2(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"INSTALLATION_DIRS=\t_____________________________________________________________________   \\"+
+			"\t\t\t\t __________________________________________________________\t\t \\",
+		"\t\t\t__________________________________________________________\t\t       \t\\",
+		"\t\t\t__________________________________________________________\t\t       \t\\",
+		"\t\t\t_________________________")
+	vt.InputDetab(
+		"INSTALLATION_DIRS=      _____________________________________________________________________   \\                                __________________________________________________________              \\",
+		"                        __________________________________________________________                      \\",
+		"                        __________________________________________________________                      \\",
+		"                        _________________________")
+	vt.Internals(
+		"18 24 201",
+		"   24 104",
+		"   24 104",
+		"   24")
+	vt.Diagnostics(
+		"NOTE: Makefile:1: The continuation backslash should be preceded by a single space or tab.")
+	vt.Autofixes(
+		"AUTOFIX: Makefile:1: Replacing \"\\t\\t \" with \" \".")
+	vt.Fixed(
+		"INSTALLATION_DIRS=      _____________________________________________________________________   \\"+
+			"                                __________________________________________________________ \\",
+		"                        __________________________________________________________                      \\",
+		"                        __________________________________________________________                      \\",
+		"                        _________________________")
+	vt.Run()
+}
+
 func (s *Suite) Test_VaralignBlock_Process__var_spaces7_value(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -2847,26 +3043,6 @@ func (s *Suite) Test_VaralignBlock_realignMultiEmptyInitial__spaces(c *check.C) 
 	vt.Run()
 }
 
-func (s *Suite) Test_VaralignBlock_realignMultiInitial__spaces(c *check.C) {
-	vt := NewVaralignTester(s, c)
-	vt.Input(
-		"VAR=    value1 \\",
-		"        value2")
-	vt.Internals(
-		"04 08 15",
-		"   08")
-	vt.Diagnostics(
-		"NOTE: Makefile:1: Variable values should be aligned with tabs, not spaces.",
-		"NOTE: Makefile:2: This continuation line should be indented with \"\\t\".")
-	vt.Autofixes(
-		"AUTOFIX: Makefile:1: Replacing \"    \" with \"\\t\".",
-		"AUTOFIX: Makefile:2: Replacing \"        \" with \"\\t\".")
-	vt.Fixed(
-		"VAR=    value1 \\",
-		"        value2")
-	vt.Run()
-}
-
 // This example is quite unrealistic since typically the first line is
 // the least indented.
 //
@@ -2915,114 +3091,23 @@ func (s *Suite) Test_VaralignBlock_realignMultiEmptyFollow(c *check.C) {
 	vt.Run()
 }
 
-// It's ok to have all backslashes in the same column, even if that column
-// is not 73.
-func (s *Suite) Test_VaralignBlock__continuation_backslashes_aligned(c *check.C) {
+func (s *Suite) Test_VaralignBlock_realignMultiInitial__spaces(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
-		"VAR=\tvalue value value\t\\",
-		"\tvalue\t\t\t\\",
-		"\tvalue\t\t\t\\",
-		"\tvalue")
+		"VAR=    value1 \\",
+		"        value2")
 	vt.Internals(
-		"04 08 32",
-		"   08 32",
-		"   08 32",
+		"04 08 15",
 		"   08")
 	vt.Diagnostics(
-		nil...)
+		"NOTE: Makefile:1: Variable values should be aligned with tabs, not spaces.",
+		"NOTE: Makefile:2: This continuation line should be indented with \"\\t\".")
 	vt.Autofixes(
-		nil...)
+		"AUTOFIX: Makefile:1: Replacing \"    \" with \"\\t\".",
+		"AUTOFIX: Makefile:2: Replacing \"        \" with \"\\t\".")
 	vt.Fixed(
-		"VAR=    value value value       \\",
-		"        value                   \\",
-		"        value                   \\",
-		"        value")
-	vt.Run()
-}
-
-// The backslash in the first line is separated by a single tab.
-// This looks strange but pkglint considers it acceptable
-// since there is a simple rule saying "a single tab is always ok".
-// Any rule that would replace this simple rule
-// would have to be similarly simple and intuitive.
-func (s *Suite) Test_VaralignBlock__continuation_backslashes_aligned_except_initial(c *check.C) {
-	vt := NewVaralignTester(s, c)
-	vt.Input(
-		"VAR=\tvalue value value\t\\",
-		"\tvalue\t\t\t\t\\",
-		"\tvalue\t\t\t\t\\",
-		"\tvalue")
-	vt.Internals(
-		"04 08 32",
-		"   08 40",
-		"   08 40",
-		"   08")
-	vt.Diagnostics(
-		nil...)
-	vt.Autofixes(
-		nil...)
-	// TODO: The backslashes should be aligned by a _simple_ rule.
-	vt.Fixed(
-		"VAR=    value value value       \\",
-		"        value                           \\",
-		"        value                           \\",
-		"        value")
-	vt.Run()
-}
-
-// Lines whose continuation backslash is indented by a single space are
-// usually those that stick out further than column 73. These are not
-// touched by the realignment.
-func (s *Suite) Test_VaralignBlock__continuation_backslashes_one_sticks_out(c *check.C) {
-	vt := NewVaralignTester(s, c)
-	vt.Input(
-		"VAR=\tvalue\t\\",
-		"\tvalue value value \\",
-		"\tvalue\t\\",
-		"\tvalue")
-	vt.Internals(
-		"04 08 16",
-		"   08 26",
-		"   08 16",
-		"   08")
-	vt.Diagnostics(
-		nil...)
-	vt.Autofixes(
-		nil...)
-	vt.Fixed(
-		"VAR=    value   \\",
-		"        value value value \\",
-		"        value   \\",
-		"        value")
-	vt.Run()
-}
-
-func (s *Suite) Test_VaralignBlock__realign_continuation_backslashes(c *check.C) {
-	vt := NewVaralignTester(s, c)
-	vt.Input(
-		"VAR4567890.234567890=\t----30--------40--------50\t\t\t\\",
-		"\t\t--20--------30--------40--------50\t\t\t\\",
-		"\t\t--20--------30--------40--------50")
-	vt.InputDetab(
-		"VAR4567890.234567890=   ----30--------40--------50                      \\",
-		"                --20--------30--------40--------50                      \\",
-		"                --20--------30--------40--------50")
-	vt.Internals(
-		"21 24 72",
-		"   16 72",
-		"   16")
-	vt.Diagnostics(
-		"NOTE: Makefile:2: This continuation line should be indented with \"\\t\\t\\t\".",
-		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\\t\\t\".")
-	vt.Autofixes(
-		"AUTOFIX: Makefile:2: Replacing \"\\t\\t\" with \"\\t\\t\\t\".",
-		"AUTOFIX: Makefile:2: Replacing \"\\t\\t\\t\\\\\" with \"\\t\\t\\\\\".",
-		"AUTOFIX: Makefile:3: Replacing \"\\t\\t\" with \"\\t\\t\\t\".")
-	vt.Fixed(
-		"VAR4567890.234567890=   ----30--------40--------50                      \\",
-		"                        --20--------30--------40--------50              \\",
-		"                        --20--------30--------40--------50")
+		"VAR=    value1 \\",
+		"        value2")
 	vt.Run()
 }
 
@@ -3136,114 +3221,6 @@ func (s *Suite) Test_VaralignBlock_realignMultiFollow__unindent_long_initial_lin
 		// FIXME: Preserve the original relative indentation.
 		"                        ----5                                           \\",
 		"                        -7")
-	vt.Run()
-}
-
-func (s *Suite) Test_VaralignBlock__initial_value_tab80(c *check.C) {
-	vt := NewVaralignTester(s, c)
-	vt.Input(
-		"VVVVVVVVVVVVVVVVVVV=\tvalue\t\t\t\t\t\t\t\\",
-		"\t\t\tvalue\t\t\t\t\t\t\\",
-		"\t\t\tvalue\t\t\t\t\t\t\\",
-		"\t\t\tvalue")
-	vt.Internals(
-		"20 24 80",
-		"   24 72",
-		"   24 72",
-		"   24")
-	vt.Diagnostics(
-		"NOTE: Makefile:1: The continuation backslash should be preceded " +
-			"by a single space or tab, or be in column 73, not 81.")
-	vt.Autofixes(
-		"AUTOFIX: Makefile:1: Replacing \"\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\\t\".")
-	vt.Fixed(
-		"VVVVVVVVVVVVVVVVVVV=    value                                           \\",
-		"                        value                                           \\",
-		"                        value                                           \\",
-		"                        value")
-	vt.Run()
-}
-
-func (s *Suite) Test_VaralignBlock__long_lines(c *check.C) {
-	vt := NewVaralignTester(s, c)
-	vt.Input(
-		"VAR=\t\t\t\t\t\tvalue\t\t \\",
-		"\tvalue \t \\",
-		"\tvalue")
-	vt.Internals(
-		"04 48 65",
-		"   08 17",
-		"   08")
-	vt.Diagnostics(
-		"NOTE: Makefile:1: The continuation backslash should be preceded "+
-			"by a single space or tab, or be in column 57, not 66.",
-		"NOTE: Makefile:2: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".",
-		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".")
-	vt.Autofixes(
-		"AUTOFIX: Makefile:1: Replacing \"\\t\\t \" with \"\\t\".",
-		"AUTOFIX: Makefile:2: Replacing \"\\t\" with \"\\t\\t\\t\\t\\t\\t\".",
-		"AUTOFIX: Makefile:3: Replacing \"\\t\" with \"\\t\\t\\t\\t\\t\\t\".")
-	vt.Fixed(
-		"VAR=                                            value   \\",
-		// FIXME: The backslash should be aligned properly.
-		"                                                value    \\",
-		"                                                value")
-	vt.Run()
-}
-
-// A practical chaotic test case, derived from wip/compat32_mit-krb5/Makefile.
-// It made pkglint before 2019-09-03 panic.
-func (s *Suite) Test_VaralignBlock__long_lines_2(c *check.C) {
-	vt := NewVaralignTester(s, c)
-	vt.Input(
-		"INSTALLATION_DIRS=\t_____________________________________________________________________   \\"+
-			"\t\t\t\t __________________________________________________________\t\t \\",
-		"\t\t\t__________________________________________________________\t\t       \t\\",
-		"\t\t\t__________________________________________________________\t\t       \t\\",
-		"\t\t\t_________________________")
-	vt.InputDetab(
-		"INSTALLATION_DIRS=      _____________________________________________________________________   \\                                __________________________________________________________              \\",
-		"                        __________________________________________________________                      \\",
-		"                        __________________________________________________________                      \\",
-		"                        _________________________")
-	vt.Internals(
-		"18 24 201",
-		"   24 104",
-		"   24 104",
-		"   24")
-	vt.Diagnostics(
-		"NOTE: Makefile:1: The continuation backslash should be preceded by a single space or tab.")
-	vt.Autofixes(
-		"AUTOFIX: Makefile:1: Replacing \"\\t\\t \" with \" \".")
-	vt.Fixed(
-		"INSTALLATION_DIRS=      _____________________________________________________________________   \\"+
-			"                                __________________________________________________________ \\",
-		"                        __________________________________________________________                      \\",
-		"                        __________________________________________________________                      \\",
-		"                        _________________________")
-	vt.Run()
-}
-
-// I've never seen an intentionally continued comment in practice,
-// but pkglint needs to be able to handle this situation anyway.
-func (s *Suite) Test_varalignParts_spaceBeforeContinuation__continued_comment(c *check.C) {
-	vt := NewVaralignTester(s, c)
-	vt.Input(
-		"VAR=\tvalue # comment \\",
-		"\tstill comment \\",
-		"\tand still")
-	vt.Internals(
-		"04 08 24",
-		"   08 22",
-		"   08")
-	vt.Diagnostics(
-		nil...)
-	vt.Autofixes(
-		nil...)
-	vt.Fixed(
-		"VAR=    value # comment \\",
-		"        still comment \\",
-		"        and still")
 	vt.Run()
 }
 
@@ -3469,6 +3446,39 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 		func() { test("VAR=\tvalue\n", true, varalignParts{}) })
 }
 
+// This constellation doesn't occur in practice because the code in
+// VaralignBlock.processVarassign skips it, see INCLUSION_GUARD_MK.
+func (s *Suite) Test_varalignParts_isEmptyContinuation__edge_case(c *check.C) {
+	t := s.Init(c)
+
+	parts := NewVaralignSplitter().split("VAR=", true)
+
+	t.CheckEquals(parts.isEmptyContinuation(), false)
+}
+
+// I've never seen an intentionally continued comment in practice,
+// but pkglint needs to be able to handle this situation anyway.
+func (s *Suite) Test_varalignParts_spaceBeforeContinuation__continued_comment(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR=\tvalue # comment \\",
+		"\tstill comment \\",
+		"\tand still")
+	vt.Internals(
+		"04 08 24",
+		"   08 22",
+		"   08")
+	vt.Diagnostics(
+		nil...)
+	vt.Autofixes(
+		nil...)
+	vt.Fixed(
+		"VAR=    value # comment \\",
+		"        still comment \\",
+		"        and still")
+	vt.Run()
+}
+
 // This test runs isCanonicalInitial directly since as of August 2019
 // that function is only used in a single place, and from this place
 // varnameOpSpaceWidth is always bigger than width.
@@ -3527,14 +3537,4 @@ func (s *Suite) Test_varalignParts_isCanonicalFollow(c *check.C) {
 	test("#", "", false)
 	test("#", " ", false)
 	test("#", "\t", true)
-}
-
-// This constellation doesn't occur in practice because the code in
-// VaralignBlock.processVarassign skips it, see INCLUSION_GUARD_MK.
-func (s *Suite) Test_varalignParts_isEmptyContinuation__edge_case(c *check.C) {
-	t := s.Init(c)
-
-	parts := NewVaralignSplitter().split("VAR=", true)
-
-	t.CheckEquals(parts.isEmptyContinuation(), false)
 }

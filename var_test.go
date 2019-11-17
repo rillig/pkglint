@@ -2,6 +2,42 @@ package pkglint
 
 import "gopkg.in/check.v1"
 
+func (s *Suite) Test_Var_ConditionalVars(c *check.C) {
+	t := s.Init(c)
+
+	v := NewVar("VARNAME")
+
+	t.CheckEquals(v.IsConditional(), false)
+	t.Check(v.ConditionalVars(), check.IsNil)
+
+	v.Write(t.NewMkLine("write.mk", 123, "VARNAME=\tconditional"), true, "OPSYS")
+
+	t.CheckEquals(v.IsConstant(), false)
+	t.CheckEquals(v.IsConditional(), true)
+	t.CheckDeepEquals(v.ConditionalVars(), []string{"OPSYS"})
+
+	v.Write(t.NewMkLine("write.mk", 124, "VARNAME=\tconditional"), true, "OPSYS")
+
+	t.CheckEquals(v.IsConditional(), true)
+	t.CheckDeepEquals(v.ConditionalVars(), []string{"OPSYS"})
+}
+
+func (s *Suite) Test_Var_Refs(c *check.C) {
+	t := s.Init(c)
+
+	v := NewVar("VAR")
+
+	t.Check(v.Refs(), check.IsNil)
+
+	// The referenced variables are taken from the mkline.
+	// They don't need to be passed separately.
+	v.Write(t.NewMkLine("write.mk", 123, "VAR=${OTHER} ${${OPSYS} == NetBSD :? ${THEN} : ${ELSE}}"), true, "COND")
+
+	v.AddRef("FOR")
+
+	t.CheckDeepEquals(v.Refs(), []string{"OTHER", "OPSYS", "THEN", "ELSE", "COND", "FOR"})
+}
+
 func (s *Suite) Test_Var_ConstantValue__assign(c *check.C) {
 	t := s.Init(c)
 
@@ -177,72 +213,6 @@ func (s *Suite) Test_Var_ConstantValue__referenced_in_between(c *check.C) {
 	t.CheckEquals(v.IsConstant(), false)
 }
 
-func (s *Suite) Test_Var_ConditionalVars(c *check.C) {
-	t := s.Init(c)
-
-	v := NewVar("VARNAME")
-
-	t.CheckEquals(v.IsConditional(), false)
-	t.Check(v.ConditionalVars(), check.IsNil)
-
-	v.Write(t.NewMkLine("write.mk", 123, "VARNAME=\tconditional"), true, "OPSYS")
-
-	t.CheckEquals(v.IsConstant(), false)
-	t.CheckEquals(v.IsConditional(), true)
-	t.CheckDeepEquals(v.ConditionalVars(), []string{"OPSYS"})
-
-	v.Write(t.NewMkLine("write.mk", 124, "VARNAME=\tconditional"), true, "OPSYS")
-
-	t.CheckEquals(v.IsConditional(), true)
-	t.CheckDeepEquals(v.ConditionalVars(), []string{"OPSYS"})
-}
-
-func (s *Suite) Test_Var_Value__initial_conditional_write(c *check.C) {
-	t := s.Init(c)
-
-	v := NewVar("VARNAME")
-
-	v.Write(t.NewMkLine("write.mk", 124, "VARNAME:=\toverwritten conditionally"), true, "OPSYS")
-
-	// Since there is no previous value, the simplest choice is to just
-	// take the first seen value, no matter if that value is conditional
-	// or not.
-	t.CheckEquals(v.IsConditional(), true)
-	t.CheckEquals(v.IsConstant(), false)
-	t.CheckEquals(v.Value(), "overwritten conditionally")
-}
-
-func (s *Suite) Test_Var_Write__conditional_without_variables(c *check.C) {
-	t := s.Init(c)
-
-	mklines := t.NewMkLines("filename.mk",
-		MkCvsID,
-		".if exists(/usr/bin)",
-		"VAR=\tvalue",
-		".endif")
-
-	scope := NewRedundantScope()
-	mklines.ForEach(func(mkline *MkLine) {
-		if mkline.IsVarassign() {
-			t.CheckEquals(scope.get("VAR").vari.IsConditional(), false)
-		}
-
-		scope.checkLine(mklines, mkline)
-
-		if mkline.IsVarassign() {
-			t.CheckEquals(scope.get("VAR").vari.IsConditional(), true)
-		}
-	})
-}
-
-func (s *Suite) Test_Var_Write__assertion(c *check.C) {
-	t := s.Init(c)
-
-	v := NewVar("VAR")
-	t.ExpectAssert(
-		func() { v.Write(t.NewMkLine("filename.mk", 1, "OTHER=value"), false, nil...) })
-}
-
 func (s *Suite) Test_Var_Value__conditional_write_after_unconditional(c *check.C) {
 	t := s.Init(c)
 
@@ -288,6 +258,21 @@ func (s *Suite) Test_Var_Value__infrastructure(c *check.C) {
 	v.Write(t.NewMkLine(t.File("wip/mk/write.mk"), 123, "VARNAME=\twip infra"), false)
 
 	t.CheckEquals(v.Value(), "value")
+}
+
+func (s *Suite) Test_Var_Value__initial_conditional_write(c *check.C) {
+	t := s.Init(c)
+
+	v := NewVar("VARNAME")
+
+	v.Write(t.NewMkLine("write.mk", 124, "VARNAME:=\toverwritten conditionally"), true, "OPSYS")
+
+	// Since there is no previous value, the simplest choice is to just
+	// take the first seen value, no matter if that value is conditional
+	// or not.
+	t.CheckEquals(v.IsConditional(), true)
+	t.CheckEquals(v.IsConstant(), false)
+	t.CheckEquals(v.Value(), "overwritten conditionally")
 }
 
 func (s *Suite) Test_Var_ValueInfra(c *check.C) {
@@ -351,18 +336,33 @@ func (s *Suite) Test_Var_WriteLocations(c *check.C) {
 	t.CheckDeepEquals(v.WriteLocations(), []*MkLine{mkline123, mkline125, mkline125})
 }
 
-func (s *Suite) Test_Var_Refs(c *check.C) {
+func (s *Suite) Test_Var_Write__conditional_without_variables(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		".if exists(/usr/bin)",
+		"VAR=\tvalue",
+		".endif")
+
+	scope := NewRedundantScope()
+	mklines.ForEach(func(mkline *MkLine) {
+		if mkline.IsVarassign() {
+			t.CheckEquals(scope.get("VAR").vari.IsConditional(), false)
+		}
+
+		scope.checkLine(mklines, mkline)
+
+		if mkline.IsVarassign() {
+			t.CheckEquals(scope.get("VAR").vari.IsConditional(), true)
+		}
+	})
+}
+
+func (s *Suite) Test_Var_Write__assertion(c *check.C) {
 	t := s.Init(c)
 
 	v := NewVar("VAR")
-
-	t.Check(v.Refs(), check.IsNil)
-
-	// The referenced variables are taken from the mkline.
-	// They don't need to be passed separately.
-	v.Write(t.NewMkLine("write.mk", 123, "VAR=${OTHER} ${${OPSYS} == NetBSD :? ${THEN} : ${ELSE}}"), true, "COND")
-
-	v.AddRef("FOR")
-
-	t.CheckDeepEquals(v.Refs(), []string{"OTHER", "OPSYS", "THEN", "ELSE", "COND", "FOR"})
+	t.ExpectAssert(
+		func() { v.Write(t.NewMkLine("filename.mk", 1, "OTHER=value"), false, nil...) })
 }

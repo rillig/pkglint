@@ -549,6 +549,40 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftPermissions__infrastructure
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_MkLineChecker_explainPermissions(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--explain")
+	t.SetUpVartypes()
+
+	mklines := t.NewMkLines("buildlink3.mk",
+		MkCvsID,
+		"AUTO_MKDIRS=\tyes")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: buildlink3.mk:2: The variable AUTO_MKDIRS should not be set in this file; "+
+			"it would be ok in Makefile, Makefile.* or *.mk, "+
+			"but not buildlink3.mk or builtin.mk.",
+		"",
+		"\tThe allowed actions for a variable are determined based on the file",
+		"\tname in which the variable is used or defined. The rules for",
+		"\tAUTO_MKDIRS are:",
+		"",
+		"\t* in buildlink3.mk, it should not be accessed at all",
+		"\t* in builtin.mk, it should not be accessed at all",
+		"\t* in Makefile, it may be set, given a default value, or used",
+		"\t* in Makefile.*, it may be set, given a default value, or used",
+		"\t* in *.mk, it may be set, given a default value, or used",
+		// TODO: Add a check for infrastructure permissions
+		//  when the "infra:" prefix is added.
+		"",
+		"\tIf these rules seem to be incorrect, please ask on the",
+		"\ttech-pkg@NetBSD.org mailing list.",
+		"")
+}
+
 func (s *Suite) Test_MkLineChecker_checkVarassignLeftRationale(c *check.C) {
 	t := s.Init(c)
 
@@ -638,40 +672,6 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftRationale(c *check.C) {
 			"NOT_FOR_PLATFORM=\t*-*-*",  // Neither does this line have a rationale.
 		),
 		nil...)
-}
-
-func (s *Suite) Test_MkLineChecker_explainPermissions(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpCommandLine("-Wall", "--explain")
-	t.SetUpVartypes()
-
-	mklines := t.NewMkLines("buildlink3.mk",
-		MkCvsID,
-		"AUTO_MKDIRS=\tyes")
-
-	mklines.Check()
-
-	t.CheckOutputLines(
-		"WARN: buildlink3.mk:2: The variable AUTO_MKDIRS should not be set in this file; "+
-			"it would be ok in Makefile, Makefile.* or *.mk, "+
-			"but not buildlink3.mk or builtin.mk.",
-		"",
-		"\tThe allowed actions for a variable are determined based on the file",
-		"\tname in which the variable is used or defined. The rules for",
-		"\tAUTO_MKDIRS are:",
-		"",
-		"\t* in buildlink3.mk, it should not be accessed at all",
-		"\t* in builtin.mk, it should not be accessed at all",
-		"\t* in Makefile, it may be set, given a default value, or used",
-		"\t* in Makefile.*, it may be set, given a default value, or used",
-		"\t* in *.mk, it may be set, given a default value, or used",
-		// TODO: Add a check for infrastructure permissions
-		//  when the "infra:" prefix is added.
-		"",
-		"\tIf these rules seem to be incorrect, please ask on the",
-		"\ttech-pkg@NetBSD.org mailing list.",
-		"")
 }
 
 // The ${VARNAME:=suffix} expression should only be used with lists.
@@ -834,61 +834,6 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__user_defined_variable_and_BUILD_
 		"WARN: file.mk:3: The user-defined variable VARBASE is used but not added to BUILD_DEFS.")
 }
 
-func (s *Suite) Test_MkLineChecker_checkVaruseModifiersSuffix(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpVartypes()
-	mklines := t.NewMkLines("file.mk",
-		MkCvsID,
-		"\t: ${HOMEPAGE:=subdir/:Q}", // wrong
-		"\t: ${BUILD_DIRS:=subdir/}", // correct
-		"\t: ${BIN_PROGRAMS:=.exe}")  // unknown since BIN_PROGRAMS doesn't have a type
-
-	mklines.Check()
-
-	t.CheckOutputLines(
-		"WARN: file.mk:2: The :from=to modifier should only be used with lists, not with HOMEPAGE.",
-		"WARN: file.mk:4: BIN_PROGRAMS is used but not defined.")
-}
-
-func (s *Suite) Test_MkLineChecker_checkVaruseModifiersRange(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpCommandLine("--show-autofix", "--source")
-	t.SetUpVartypes()
-	mklines := t.NewMkLines("mk/compiler/gcc.mk",
-		MkCvsID,
-		"CC:=\t${CC:C/^/_asdf_/1:M_asdf_*:S/^_asdf_//}")
-
-	mklines.Check()
-
-	t.CheckOutputLines(
-		"NOTE: mk/compiler/gcc.mk:2: "+
-			"The modifier \":C/^/_asdf_/1:M_asdf_*:S/^_asdf_//\" can be written as \":[1]\".",
-		"AUTOFIX: mk/compiler/gcc.mk:2: "+
-			"Replacing \":C/^/_asdf_/1:M_asdf_*:S/^_asdf_//\" with \":[1]\".",
-		"-\tCC:=\t${CC:C/^/_asdf_/1:M_asdf_*:S/^_asdf_//}",
-		"+\tCC:=\t${CC:[1]}")
-
-	// Now go through all the "almost" cases, to reach full branch coverage.
-	mklines = t.NewMkLines("gcc.mk",
-		MkCvsID,
-		"\t: ${CC:M1:M2:M3}",
-		"\t: ${CC:C/^begin//:M2:M3}",                    // M1 pattern not exactly ^
-		"\t: ${CC:C/^/_asdf_/g:M2:M3}",                  // M1 options != "1"
-		"\t: ${CC:C/^/....../g:M2:M3}",                  // M1 replacement doesn't match \w+
-		"\t: ${CC:C/^/_asdf_/1:O:M3}",                   // M2 is not a match modifier
-		"\t: ${CC:C/^/_asdf_/1:N2:M3}",                  // M2 is :N instead of :M
-		"\t: ${CC:C/^/_asdf_/1:M_asdf_:M3}",             // M2 pattern is missing the * at the end
-		"\t: ${CC:C/^/_asdf_/1:Mother:M3}",              // M2 pattern differs from the M1 pattern
-		"\t: ${CC:C/^/_asdf_/1:M_asdf_*:M3}",            // M3 ist not a substitution modifier
-		"\t: ${CC:C/^/_asdf_/1:M_asdf_*:S,from,to,}",    // M3 pattern differs from the M1 pattern
-		"\t: ${CC:C/^/_asdf_/1:M_asdf_*:S,^_asdf_,to,}", // M3 replacement is not empty
-		"\t: ${CC:C/^/_asdf_/1:M_asdf_*:S,^_asdf_,,g}")  // M3 modifier has options
-
-	mklines.Check()
-}
-
 func (s *Suite) Test_MkLineChecker_CheckVaruse__deprecated_PKG_DEBUG(c *check.C) {
 	t := s.Init(c)
 
@@ -978,6 +923,61 @@ func (s *Suite) Test_MkLineChecker_checkVaruseUndefined__documented(c *check.C) 
 	mklines.Check()
 
 	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_MkLineChecker_checkVaruseModifiersSuffix(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("file.mk",
+		MkCvsID,
+		"\t: ${HOMEPAGE:=subdir/:Q}", // wrong
+		"\t: ${BUILD_DIRS:=subdir/}", // correct
+		"\t: ${BIN_PROGRAMS:=.exe}")  // unknown since BIN_PROGRAMS doesn't have a type
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: file.mk:2: The :from=to modifier should only be used with lists, not with HOMEPAGE.",
+		"WARN: file.mk:4: BIN_PROGRAMS is used but not defined.")
+}
+
+func (s *Suite) Test_MkLineChecker_checkVaruseModifiersRange(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--show-autofix", "--source")
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("mk/compiler/gcc.mk",
+		MkCvsID,
+		"CC:=\t${CC:C/^/_asdf_/1:M_asdf_*:S/^_asdf_//}")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"NOTE: mk/compiler/gcc.mk:2: "+
+			"The modifier \":C/^/_asdf_/1:M_asdf_*:S/^_asdf_//\" can be written as \":[1]\".",
+		"AUTOFIX: mk/compiler/gcc.mk:2: "+
+			"Replacing \":C/^/_asdf_/1:M_asdf_*:S/^_asdf_//\" with \":[1]\".",
+		"-\tCC:=\t${CC:C/^/_asdf_/1:M_asdf_*:S/^_asdf_//}",
+		"+\tCC:=\t${CC:[1]}")
+
+	// Now go through all the "almost" cases, to reach full branch coverage.
+	mklines = t.NewMkLines("gcc.mk",
+		MkCvsID,
+		"\t: ${CC:M1:M2:M3}",
+		"\t: ${CC:C/^begin//:M2:M3}",                    // M1 pattern not exactly ^
+		"\t: ${CC:C/^/_asdf_/g:M2:M3}",                  // M1 options != "1"
+		"\t: ${CC:C/^/....../g:M2:M3}",                  // M1 replacement doesn't match \w+
+		"\t: ${CC:C/^/_asdf_/1:O:M3}",                   // M2 is not a match modifier
+		"\t: ${CC:C/^/_asdf_/1:N2:M3}",                  // M2 is :N instead of :M
+		"\t: ${CC:C/^/_asdf_/1:M_asdf_:M3}",             // M2 pattern is missing the * at the end
+		"\t: ${CC:C/^/_asdf_/1:Mother:M3}",              // M2 pattern differs from the M1 pattern
+		"\t: ${CC:C/^/_asdf_/1:M_asdf_*:M3}",            // M3 ist not a substitution modifier
+		"\t: ${CC:C/^/_asdf_/1:M_asdf_*:S,from,to,}",    // M3 pattern differs from the M1 pattern
+		"\t: ${CC:C/^/_asdf_/1:M_asdf_*:S,^_asdf_,to,}", // M3 replacement is not empty
+		"\t: ${CC:C/^/_asdf_/1:M_asdf_*:S,^_asdf_,,g}")  // M3 modifier has options
+
+	mklines.Check()
 }
 
 func (s *Suite) Test_MkLineChecker_checkVarusePermissions(c *check.C) {
@@ -1657,6 +1657,55 @@ func (s *Suite) Test_MkLineChecker_checkVarassignOpShell(c *check.C) {
 		"WARN: ~/category/package/standalone.mk:15: Please use \"${ECHO}\" instead of \"echo\".")
 }
 
+func (s *Suite) Test_MkLineChecker_checkText(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+
+	t.SetUpCommandLine("-Wall,no-space")
+	mklines := t.SetUpFileMkLines("module.mk",
+		MkCvsID,
+		"CFLAGS+=                -Wl,--rpath,${PREFIX}/lib",
+		"PKG_FAIL_REASON+=       \"Group ${GAMEGRP} doesn't exist.\"")
+	t.FinishSetUp()
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: ~/module.mk:2: Please use ${COMPILER_RPATH_FLAG} instead of \"-Wl,--rpath,\".",
+		"WARN: ~/module.mk:3: Use of \"GAMEGRP\" is deprecated. Use GAMES_GROUP instead.")
+}
+
+func (s *Suite) Test_MkLineChecker_checkText__WRKSRC(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--explain")
+	mklines := t.SetUpFileMkLines("module.mk",
+		MkCvsID,
+		"pre-configure:",
+		"\tcd ${WRKSRC}/..")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: ~/module.mk:3: Building the package should take place entirely inside ${WRKSRC}, not \"${WRKSRC}/..\".",
+		"",
+		"\tWRKSRC should be defined so that there is no need to do anything",
+		"\toutside of this directory.",
+		"",
+		"\tExample:",
+		"",
+		"\t\tWRKSRC=\t${WRKDIR}",
+		"\t\tCONFIGURE_DIRS=\t${WRKSRC}/lib ${WRKSRC}/src",
+		"\t\tBUILD_DIRS=\t${WRKSRC}/lib ${WRKSRC}/src ${WRKSRC}/cmd",
+		"",
+		"\tSee the pkgsrc guide, section \"Directories used during the build",
+		"\tprocess\":",
+		"\thttps://www.NetBSD.org/docs/pkgsrc/pkgsrc.html#build.builddirs",
+		"",
+		"WARN: ~/module.mk:3: WRKSRC is used but not defined.")
+}
+
 func (s *Suite) Test_MkLineChecker_checkVartype__simple_type(c *check.C) {
 	t := s.Init(c)
 
@@ -1925,6 +1974,70 @@ func (s *Suite) Test_MkLineChecker_checkVarassignRightCategory__other_file(c *ch
 			"The primary category should be \"obscure\", not \"perl5\".")
 }
 
+func (s *Suite) Test_MkLineChecker_checkVarassignMisc(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.SetUpMasterSite("MASTER_SITE_GITHUB", "https://download.github.com/")
+	t.SetUpCommandLine("-Wall,no-space")
+	mklines := t.SetUpFileMkLines("module.mk",
+		MkCvsID,
+		"EGDIR=                  ${PREFIX}/etc/rc.d",
+		"RPMIGNOREPATH+=         ${PREFIX}/etc/rc.d",
+		"_TOOLS_VARNAME.sed=     SED",
+		"DIST_SUBDIR=            ${PKGNAME}",
+		"WRKSRC=                 ${PKGNAME}",
+		"SITES_distfile.tar.gz=  ${MASTER_SITE_GITHUB:=user/}",
+		"MASTER_SITES=           https://cdn.example.org/${PKGNAME}/",
+		"MASTER_SITES=           https://cdn.example.org/distname-${PKGVERSION}/")
+	t.FinishSetUp()
+
+	mklines.Check()
+
+	// TODO: Split this test into several, one for each topic.
+	t.CheckOutputLines(
+		"WARN: ~/module.mk:2: Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.",
+		"WARN: ~/module.mk:4: Variable names starting with an underscore (_TOOLS_VARNAME.sed) are reserved for internal pkgsrc use.",
+		"WARN: ~/module.mk:4: _TOOLS_VARNAME.sed is defined but not used.",
+		"WARN: ~/module.mk:5: PKGNAME should not be used in DIST_SUBDIR as it includes the PKGREVISION. Please use PKGNAME_NOREV instead.",
+		"WARN: ~/module.mk:6: PKGNAME should not be used in WRKSRC as it includes the PKGREVISION. Please use PKGNAME_NOREV instead.",
+		"WARN: ~/module.mk:7: SITES_distfile.tar.gz is defined but not used.",
+		"WARN: ~/module.mk:7: SITES_* is deprecated. Please use SITES.* instead.",
+		"WARN: ~/module.mk:8: PKGNAME should not be used in MASTER_SITES as it includes the PKGREVISION. Please use PKGNAME_NOREV instead.",
+		"WARN: ~/module.mk:9: PKGVERSION should not be used in MASTER_SITES as it includes the PKGREVISION. Please use PKGVERSION_NOREV instead.")
+}
+
+func (s *Suite) Test_MkLineChecker_checkVarassignMisc__multiple_inclusion_guards(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.CreateFileLines("filename.mk",
+		MkCvsID,
+		".if !defined(FILENAME_MK)",
+		"FILENAME_MK=\t# defined",
+		".endif")
+	t.CreateFileLines("Makefile.common",
+		MkCvsID,
+		".if !defined(MAKEFILE_COMMON)",
+		"MAKEFILE_COMMON=\t# defined",
+		"",
+		".endif")
+	t.CreateFileLines("other.mk",
+		MkCvsID,
+		"COMMENT=\t# defined")
+	t.FinishSetUp()
+
+	G.Check(t.File("filename.mk"))
+	G.Check(t.File("Makefile.common"))
+	G.Check(t.File("other.mk"))
+
+	// For multiple-inclusion guards, the meaning of the variable value
+	// is clear, therefore they are exempted from the warnings.
+	t.CheckOutputLines(
+		"NOTE: ~/other.mk:2: Please use \"# empty\", \"# none\" or \"# yes\" " +
+			"instead of \"# defined\".")
+}
+
 func (s *Suite) Test_MkLineChecker_checkVarassignDecreasingVersions(c *check.C) {
 	t := s.Init(c)
 
@@ -2144,39 +2257,6 @@ func (s *Suite) Test_MkLineChecker_checkInclude__builtin_mk_rationale(c *check.C
 			"Include \"../../category/package/buildlink3.mk\" instead.")
 }
 
-func (s *Suite) Test_MkLineChecker_CheckRelativePkgdir(c *check.C) {
-	t := s.Init(c)
-
-	t.CreateFileLines("other/package/Makefile")
-
-	test := func(relativePkgdir string, diagnostics ...string) {
-		// Must be in the filesystem because of directory references.
-		mklines := t.SetUpFileMkLines("category/package/Makefile",
-			"# dummy")
-
-		checkRelativePkgdir := func(mkline *MkLine) {
-			MkLineChecker{mklines, mkline}.CheckRelativePkgdir(relativePkgdir)
-		}
-
-		mklines.ForEach(checkRelativePkgdir)
-
-		t.CheckOutput(diagnostics)
-	}
-
-	test("../pkgbase",
-		"ERROR: ~/category/package/Makefile:1: Relative path \"../pkgbase/Makefile\" does not exist.",
-		"WARN: ~/category/package/Makefile:1: \"../pkgbase\" is not a valid relative package directory.")
-
-	test("../../other/package",
-		nil...)
-
-	test("../../other/does-not-exist",
-		"ERROR: ~/category/package/Makefile:1: Relative path \"../../other/does-not-exist/Makefile\" does not exist.")
-
-	test("${OTHER_PACKAGE}",
-		nil...)
-}
-
 func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation__autofix(c *check.C) {
 	t := s.Init(c)
 
@@ -2236,6 +2316,129 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation__autofix_multiline(
 		"   ${PLATFORM:MNetBSD-4.*}",
 		".  endif",
 		".endif")
+}
+
+func (s *Suite) Test_MkLineChecker_CheckRelativePath(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.CreateFileLines("wip/package/Makefile")
+	t.CreateFileLines("wip/package/module.mk")
+	mklines := t.SetUpFileMkLines("category/package/module.mk",
+		MkCvsID,
+		"DEPENDS+=       wip-package-[0-9]*:../../wip/package",
+		".include \"../../wip/package/module.mk\"",
+		"",
+		"DEPENDS+=       unresolvable-[0-9]*:../../lang/${LATEST_PYTHON}",
+		".include \"../../lang/${LATEST_PYTHON}/module.mk\"",
+		"",
+		".include \"module.mk\"",
+		".include \"../../category/../category/package/module.mk\"", // Oops
+		".include \"../../mk/bsd.prefs.mk\"",
+		".include \"../package/module.mk\"",
+		// TODO: warn about this as well, since ${.CURDIR} is essentially
+		//  equivalent to ".".
+		".include \"${.CURDIR}/../package/module.mk\"")
+	t.FinishSetUp()
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"ERROR: ~/category/package/module.mk:2: A main pkgsrc package must not depend on a pkgsrc-wip package.",
+		"ERROR: ~/category/package/module.mk:3: A main pkgsrc package must not depend on a pkgsrc-wip package.",
+		"WARN: ~/category/package/module.mk:5: LATEST_PYTHON is used but not defined.",
+		"WARN: ~/category/package/module.mk:11: References to other packages should "+
+			"look like \"../../category/package\", not \"../package\".",
+		"WARN: ~/category/package/module.mk:12: References to other packages should "+
+			"look like \"../../category/package\", not \"../package\".")
+}
+
+func (s *Suite) Test_MkLineChecker_CheckRelativePath__absolute_path(c *check.C) {
+	t := s.Init(c)
+
+	absDir := condStr(runtime.GOOS == "windows", "C:/", "/")
+	// Just a random UUID, to really guarantee that the file does not exist.
+	absPath := absDir + "0f5c2d56-8a7a-4c9d-9caa-859b52bbc8c7"
+
+	t.SetUpPkgsrc()
+	mklines := t.SetUpFileMkLines("category/package/module.mk",
+		MkCvsID,
+		"DISTINFO_FILE=\t"+absPath)
+	t.FinishSetUp()
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"ERROR: ~/category/package/module.mk:2: The path \"" + absPath + "\" must be relative.")
+}
+
+func (s *Suite) Test_MkLineChecker_CheckRelativePath__include_if_exists(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.SetUpFileMkLines("filename.mk",
+		MkCvsID,
+		".include \"included.mk\"",
+		".sinclude \"included.mk\"")
+
+	mklines.Check()
+
+	// There is no warning for line 3 because of the "s" in "sinclude".
+	t.CheckOutputLines(
+		"ERROR: ~/filename.mk:2: Relative path \"included.mk\" does not exist.")
+}
+
+func (s *Suite) Test_MkLineChecker_CheckRelativePath__wip_mk(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("wip/mk/git-package.mk",
+		MkCvsID)
+	t.CreateFileLines("wip/other/version.mk",
+		MkCvsID)
+	t.SetUpPackage("wip/package",
+		".include \"../mk/git-package.mk\"",
+		".include \"../other/version.mk\"")
+	t.FinishSetUp()
+
+	G.Check(t.File("wip/package"))
+
+	t.CheckOutputLines(
+		"WARN: ~/wip/package/Makefile:20: References to the pkgsrc-wip "+
+			"infrastructure should look like \"../../wip/mk\", not \"../mk\".",
+		"WARN: ~/wip/package/Makefile:21: References to other packages "+
+			"should look like \"../../category/package\", not \"../package\".")
+}
+
+func (s *Suite) Test_MkLineChecker_CheckRelativePkgdir(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("other/package/Makefile")
+
+	test := func(relativePkgdir string, diagnostics ...string) {
+		// Must be in the filesystem because of directory references.
+		mklines := t.SetUpFileMkLines("category/package/Makefile",
+			"# dummy")
+
+		checkRelativePkgdir := func(mkline *MkLine) {
+			MkLineChecker{mklines, mkline}.CheckRelativePkgdir(relativePkgdir)
+		}
+
+		mklines.ForEach(checkRelativePkgdir)
+
+		t.CheckOutput(diagnostics)
+	}
+
+	test("../pkgbase",
+		"ERROR: ~/category/package/Makefile:1: Relative path \"../pkgbase/Makefile\" does not exist.",
+		"WARN: ~/category/package/Makefile:1: \"../pkgbase\" is not a valid relative package directory.")
+
+	test("../../other/package",
+		nil...)
+
+	test("../../other/does-not-exist",
+		"ERROR: ~/category/package/Makefile:1: Relative path \"../../other/does-not-exist/Makefile\" does not exist.")
+
+	test("${OTHER_PACKAGE}",
+		nil...)
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirective(c *check.C) {
@@ -2530,6 +2733,23 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond__compare_pattern_with_empt
 		"WARN: filename.mk:5: The pathname \"*\" contains the invalid character \"*\".")
 }
 
+func (s *Suite) Test_MkLineChecker_checkDirectiveCond__comparing_PKGSRC_COMPILER_with_eqeq(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		".if ${PKGSRC_COMPILER} == \"clang\"",
+		".elif ${PKGSRC_COMPILER} != \"gcc\"",
+		".endif")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:2: Use ${PKGSRC_COMPILER:Mclang} instead of the == operator.",
+		"WARN: Makefile:3: Use ${PKGSRC_COMPILER:Ngcc} instead of the != operator.")
+}
+
 func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 	t := s.Init(c)
 
@@ -2778,23 +2998,6 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 		".if ${MACHINE_ARCH} == x86_64")
 }
 
-func (s *Suite) Test_MkLineChecker_checkDirectiveCond__comparing_PKGSRC_COMPILER_with_eqeq(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpVartypes()
-	mklines := t.NewMkLines("Makefile",
-		MkCvsID,
-		".if ${PKGSRC_COMPILER} == \"clang\"",
-		".elif ${PKGSRC_COMPILER} != \"gcc\"",
-		".endif")
-
-	mklines.Check()
-
-	t.CheckOutputLines(
-		"WARN: Makefile:2: Use ${PKGSRC_COMPILER:Mclang} instead of the == operator.",
-		"WARN: Makefile:3: Use ${PKGSRC_COMPILER:Ngcc} instead of the != operator.")
-}
-
 func (s *Suite) Test_MkLineChecker_checkDirectiveCondCompare(c *check.C) {
 	t := s.Init(c)
 
@@ -2929,207 +3132,4 @@ func (s *Suite) Test_MkLineChecker_checkDependencyRule(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: category/package/filename.mk:8: Undeclared target \"target-3\".")
-}
-
-func (s *Suite) Test_MkLineChecker_checkVarassignMisc(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpPkgsrc()
-	t.SetUpMasterSite("MASTER_SITE_GITHUB", "https://download.github.com/")
-	t.SetUpCommandLine("-Wall,no-space")
-	mklines := t.SetUpFileMkLines("module.mk",
-		MkCvsID,
-		"EGDIR=                  ${PREFIX}/etc/rc.d",
-		"RPMIGNOREPATH+=         ${PREFIX}/etc/rc.d",
-		"_TOOLS_VARNAME.sed=     SED",
-		"DIST_SUBDIR=            ${PKGNAME}",
-		"WRKSRC=                 ${PKGNAME}",
-		"SITES_distfile.tar.gz=  ${MASTER_SITE_GITHUB:=user/}",
-		"MASTER_SITES=           https://cdn.example.org/${PKGNAME}/",
-		"MASTER_SITES=           https://cdn.example.org/distname-${PKGVERSION}/")
-	t.FinishSetUp()
-
-	mklines.Check()
-
-	// TODO: Split this test into several, one for each topic.
-	t.CheckOutputLines(
-		"WARN: ~/module.mk:2: Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.",
-		"WARN: ~/module.mk:4: Variable names starting with an underscore (_TOOLS_VARNAME.sed) are reserved for internal pkgsrc use.",
-		"WARN: ~/module.mk:4: _TOOLS_VARNAME.sed is defined but not used.",
-		"WARN: ~/module.mk:5: PKGNAME should not be used in DIST_SUBDIR as it includes the PKGREVISION. Please use PKGNAME_NOREV instead.",
-		"WARN: ~/module.mk:6: PKGNAME should not be used in WRKSRC as it includes the PKGREVISION. Please use PKGNAME_NOREV instead.",
-		"WARN: ~/module.mk:7: SITES_distfile.tar.gz is defined but not used.",
-		"WARN: ~/module.mk:7: SITES_* is deprecated. Please use SITES.* instead.",
-		"WARN: ~/module.mk:8: PKGNAME should not be used in MASTER_SITES as it includes the PKGREVISION. Please use PKGNAME_NOREV instead.",
-		"WARN: ~/module.mk:9: PKGVERSION should not be used in MASTER_SITES as it includes the PKGREVISION. Please use PKGVERSION_NOREV instead.")
-}
-
-func (s *Suite) Test_MkLineChecker_checkVarassignMisc__multiple_inclusion_guards(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpPkgsrc()
-	t.CreateFileLines("filename.mk",
-		MkCvsID,
-		".if !defined(FILENAME_MK)",
-		"FILENAME_MK=\t# defined",
-		".endif")
-	t.CreateFileLines("Makefile.common",
-		MkCvsID,
-		".if !defined(MAKEFILE_COMMON)",
-		"MAKEFILE_COMMON=\t# defined",
-		"",
-		".endif")
-	t.CreateFileLines("other.mk",
-		MkCvsID,
-		"COMMENT=\t# defined")
-	t.FinishSetUp()
-
-	G.Check(t.File("filename.mk"))
-	G.Check(t.File("Makefile.common"))
-	G.Check(t.File("other.mk"))
-
-	// For multiple-inclusion guards, the meaning of the variable value
-	// is clear, therefore they are exempted from the warnings.
-	t.CheckOutputLines(
-		"NOTE: ~/other.mk:2: Please use \"# empty\", \"# none\" or \"# yes\" " +
-			"instead of \"# defined\".")
-}
-
-func (s *Suite) Test_MkLineChecker_checkText(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpPkgsrc()
-
-	t.SetUpCommandLine("-Wall,no-space")
-	mklines := t.SetUpFileMkLines("module.mk",
-		MkCvsID,
-		"CFLAGS+=                -Wl,--rpath,${PREFIX}/lib",
-		"PKG_FAIL_REASON+=       \"Group ${GAMEGRP} doesn't exist.\"")
-	t.FinishSetUp()
-
-	mklines.Check()
-
-	t.CheckOutputLines(
-		"WARN: ~/module.mk:2: Please use ${COMPILER_RPATH_FLAG} instead of \"-Wl,--rpath,\".",
-		"WARN: ~/module.mk:3: Use of \"GAMEGRP\" is deprecated. Use GAMES_GROUP instead.")
-}
-
-func (s *Suite) Test_MkLineChecker_checkText__WRKSRC(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpCommandLine("-Wall", "--explain")
-	mklines := t.SetUpFileMkLines("module.mk",
-		MkCvsID,
-		"pre-configure:",
-		"\tcd ${WRKSRC}/..")
-
-	mklines.Check()
-
-	t.CheckOutputLines(
-		"WARN: ~/module.mk:3: Building the package should take place entirely inside ${WRKSRC}, not \"${WRKSRC}/..\".",
-		"",
-		"\tWRKSRC should be defined so that there is no need to do anything",
-		"\toutside of this directory.",
-		"",
-		"\tExample:",
-		"",
-		"\t\tWRKSRC=\t${WRKDIR}",
-		"\t\tCONFIGURE_DIRS=\t${WRKSRC}/lib ${WRKSRC}/src",
-		"\t\tBUILD_DIRS=\t${WRKSRC}/lib ${WRKSRC}/src ${WRKSRC}/cmd",
-		"",
-		"\tSee the pkgsrc guide, section \"Directories used during the build",
-		"\tprocess\":",
-		"\thttps://www.NetBSD.org/docs/pkgsrc/pkgsrc.html#build.builddirs",
-		"",
-		"WARN: ~/module.mk:3: WRKSRC is used but not defined.")
-}
-
-func (s *Suite) Test_MkLineChecker_CheckRelativePath(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpPkgsrc()
-	t.CreateFileLines("wip/package/Makefile")
-	t.CreateFileLines("wip/package/module.mk")
-	mklines := t.SetUpFileMkLines("category/package/module.mk",
-		MkCvsID,
-		"DEPENDS+=       wip-package-[0-9]*:../../wip/package",
-		".include \"../../wip/package/module.mk\"",
-		"",
-		"DEPENDS+=       unresolvable-[0-9]*:../../lang/${LATEST_PYTHON}",
-		".include \"../../lang/${LATEST_PYTHON}/module.mk\"",
-		"",
-		".include \"module.mk\"",
-		".include \"../../category/../category/package/module.mk\"", // Oops
-		".include \"../../mk/bsd.prefs.mk\"",
-		".include \"../package/module.mk\"",
-		// TODO: warn about this as well, since ${.CURDIR} is essentially
-		//  equivalent to ".".
-		".include \"${.CURDIR}/../package/module.mk\"")
-	t.FinishSetUp()
-
-	mklines.Check()
-
-	t.CheckOutputLines(
-		"ERROR: ~/category/package/module.mk:2: A main pkgsrc package must not depend on a pkgsrc-wip package.",
-		"ERROR: ~/category/package/module.mk:3: A main pkgsrc package must not depend on a pkgsrc-wip package.",
-		"WARN: ~/category/package/module.mk:5: LATEST_PYTHON is used but not defined.",
-		"WARN: ~/category/package/module.mk:11: References to other packages should "+
-			"look like \"../../category/package\", not \"../package\".",
-		"WARN: ~/category/package/module.mk:12: References to other packages should "+
-			"look like \"../../category/package\", not \"../package\".")
-}
-
-func (s *Suite) Test_MkLineChecker_CheckRelativePath__absolute_path(c *check.C) {
-	t := s.Init(c)
-
-	absDir := condStr(runtime.GOOS == "windows", "C:/", "/")
-	// Just a random UUID, to really guarantee that the file does not exist.
-	absPath := absDir + "0f5c2d56-8a7a-4c9d-9caa-859b52bbc8c7"
-
-	t.SetUpPkgsrc()
-	mklines := t.SetUpFileMkLines("category/package/module.mk",
-		MkCvsID,
-		"DISTINFO_FILE=\t"+absPath)
-	t.FinishSetUp()
-
-	mklines.Check()
-
-	t.CheckOutputLines(
-		"ERROR: ~/category/package/module.mk:2: The path \"" + absPath + "\" must be relative.")
-}
-
-func (s *Suite) Test_MkLineChecker_CheckRelativePath__include_if_exists(c *check.C) {
-	t := s.Init(c)
-
-	mklines := t.SetUpFileMkLines("filename.mk",
-		MkCvsID,
-		".include \"included.mk\"",
-		".sinclude \"included.mk\"")
-
-	mklines.Check()
-
-	// There is no warning for line 3 because of the "s" in "sinclude".
-	t.CheckOutputLines(
-		"ERROR: ~/filename.mk:2: Relative path \"included.mk\" does not exist.")
-}
-
-func (s *Suite) Test_MkLineChecker_CheckRelativePath__wip_mk(c *check.C) {
-	t := s.Init(c)
-
-	t.CreateFileLines("wip/mk/git-package.mk",
-		MkCvsID)
-	t.CreateFileLines("wip/other/version.mk",
-		MkCvsID)
-	t.SetUpPackage("wip/package",
-		".include \"../mk/git-package.mk\"",
-		".include \"../other/version.mk\"")
-	t.FinishSetUp()
-
-	G.Check(t.File("wip/package"))
-
-	t.CheckOutputLines(
-		"WARN: ~/wip/package/Makefile:20: References to the pkgsrc-wip "+
-			"infrastructure should look like \"../../wip/mk\", not \"../mk\".",
-		"WARN: ~/wip/package/Makefile:21: References to other packages "+
-			"should look like \"../../category/package\", not \"../package\".")
 }

@@ -11,6 +11,6 @@ import (
 func (s *Suite) Test__test_names(c *check.C) {
 	ck := intqa.NewTestNameChecker(c.Errorf)
 	ck.IgnoreFiles("*yacc.go")
-	ck.Enable(intqa.EAll, -intqa.EMissing, -intqa.EOrder)
+	ck.Enable(intqa.EAll, -intqa.EMissing)
 	ck.Check()
 }

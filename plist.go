@@ -48,12 +48,6 @@ type PlistChecker struct {
 	nonAsciiAllowed bool
 }
 
-type PlistLine struct {
-	*Line
-	conditions []string // e.g. PLIST.docs
-	text       string   // Line.Text without any conditions of the form ${PLIST.cond}
-}
-
 func (ck *PlistChecker) Load(lines *Lines) []*PlistLine {
 	plines := ck.NewLines(lines)
 	ck.collectFilesAndDirs(plines)
@@ -436,6 +430,12 @@ func (ck *PlistChecker) checkPathShareIcons(pline *PlistLine) {
 	if contains(text[12:], "/") && !pkg.vars.IsDefined("ICON_THEMES") && ck.once.FirstTime("ICON_THEMES") {
 		pline.Warnf("Packages that install icon theme files should set ICON_THEMES.")
 	}
+}
+
+type PlistLine struct {
+	*Line
+	conditions []string // e.g. PLIST.docs
+	text       string   // Line.Text without any conditions of the form ${PLIST.cond}
 }
 
 func (pline *PlistLine) CheckTrailingWhitespace() {
