@@ -8,7 +8,7 @@ import (
 	"go/token"
 	"io"
 	"os"
-	"path/filepath"
+	"path"
 	"sort"
 	"strings"
 	"unicode"
@@ -45,15 +45,14 @@ const (
 type TestNameChecker struct {
 	errorf func(format string, args ...interface{})
 
-	ignoredFiles []string
-	order        int
+	filters []filter
+	order   int
 
 	testees []*testee
 	tests   []*test
 
-	errorsMask uint64
-	errors     []string
-	out        io.Writer
+	errors []string
+	out    io.Writer
 }
 
 // NewTestNameChecker creates a new checker.
@@ -62,22 +61,12 @@ func NewTestNameChecker(errorf func(format string, args ...interface{})) *TestNa
 	return &TestNameChecker{errorf: errorf, out: os.Stderr}
 }
 
-func (ck *TestNameChecker) IgnoreFiles(fileGlob string) {
-	ck.ignoredFiles = append(ck.ignoredFiles, fileGlob)
-}
-
-func (ck *TestNameChecker) Enable(errors ...Error) {
-	for _, err := range errors {
-		if err == ENone {
-			ck.errorsMask = 0
-		} else if err == EAll {
-			ck.errorsMask = ^uint64(0)
-		} else if err < 0 {
-			ck.errorsMask &= ^(uint64(1) << -uint(err))
-		} else {
-			ck.errorsMask |= uint64(1) << uint(err)
-		}
-	}
+// Configure sets the errors that are activated for the given code,
+// specified by shell patterns like in path.Match.
+//
+// The last matching rule wins.
+func (ck *TestNameChecker) Configure(filenames, typeNames, funcNames string, errors ...Error) {
+	ck.filters = append(ck.filters, filter{filenames, typeNames, funcNames, errors})
 }
 
 func (ck *TestNameChecker) Check() {
@@ -165,6 +154,7 @@ func (ck *TestNameChecker) addTest(code code) {
 	if !strings.HasPrefix(code.Func, "Test_") && code.Func != "Test" {
 		ck.addError(
 			EName,
+			code,
 			"Test %q must start with %q.",
 			code.fullName(), "Test_")
 		return
@@ -177,6 +167,7 @@ func (ck *TestNameChecker) addTest(code code) {
 		if parts[1] == "" {
 			ck.addError(
 				EName,
+				code,
 				"Test %q must not have a nonempty description.",
 				code.fullName())
 			return
@@ -227,6 +218,7 @@ func (ck *TestNameChecker) checkTestFile(test *test) {
 
 	ck.addError(
 		EFile,
+		test.code,
 		"Test %q for %q must be in %s instead of %s.",
 		test.fullName(), testee.fullName(), correctTestFile, test.file)
 }
@@ -240,6 +232,7 @@ func (ck *TestNameChecker) checkTestTestee(test *test) {
 	testeeName := strings.Replace(test.testeeName, "_", ".", -1)
 	ck.addError(
 		EMissingTestee,
+		test.code,
 		"Missing testee %q for test %q.",
 		testeeName, test.fullName())
 }
@@ -255,6 +248,7 @@ func (ck *TestNameChecker) checkTestDescr(test *test) {
 
 	ck.addError(
 		EName,
+		testee.code,
 		"%s: Test description %q must not use CamelCase in the first word.",
 		test.fullName(), test.descr)
 }
@@ -278,21 +272,47 @@ func (ck *TestNameChecker) checkTesteeTest(testee *testee, tested map[*testee]bo
 	testName := "Test_" + join(testee.Type, "_", testee.Func)
 	ck.addError(
 		EMissingTest,
+		testee.code,
 		"Missing unit test %q for %q.",
 		testName, testee.fullName())
 }
 
-func (ck *TestNameChecker) isIgnored(filename string) bool {
-	for _, mask := range ck.ignoredFiles {
-		ok, err := filepath.Match(mask, filename)
+func (ck *TestNameChecker) isRelevant(filename, typeName, funcName string, e Error) bool {
+
+	matches := func(subj string, pattern string) bool {
+		ok, err := path.Match(pattern, subj)
 		if err != nil {
 			panic(err)
 		}
-		if ok {
-			return true
+		return ok
+	}
+
+	for i := range ck.filters {
+		filter := ck.filters[len(ck.filters)-1-i]
+		if matches(filename, filter.filenames) &&
+			matches(typeName, filter.typeNames) &&
+			matches(funcName, filter.funcNames) {
+
+			return ck.errorsMask(e)&ck.errorsMask(filter.errors...) != 0
 		}
 	}
 	return false
+}
+
+func (ck *TestNameChecker) errorsMask(errors ...Error) uint64 {
+	errorsMask := uint64(0)
+	for _, err := range errors {
+		if err == ENone {
+			errorsMask = 0
+		} else if err == EAll {
+			errorsMask = ^uint64(0)
+		} else if err < 0 {
+			errorsMask &= ^(uint64(1) << -uint(err))
+		} else {
+			errorsMask |= uint64(1) << uint(err)
+		}
+	}
+	return errorsMask
 }
 
 // checkOrder ensures that the tests appear in the same order as their
@@ -321,14 +341,15 @@ func (ck *TestNameChecker) checkOrder() {
 			}
 			ck.addError(
 				EOrder,
+				test.code,
 				"Test %q must be ordered before %q.",
 				test.fullName(), insertBefore.fullName())
 		}
 	}
 }
 
-func (ck *TestNameChecker) addError(e Error, format string, args ...interface{}) {
-	if ck.errorsMask&(uint64(1)<<uint(e)) != 0 {
+func (ck *TestNameChecker) addError(e Error, c code, format string, args ...interface{}) {
+	if ck.isRelevant(c.file, c.Type, c.Func, e) {
 		ck.errors = append(ck.errors, fmt.Sprintf(format, args...))
 	}
 }
@@ -341,6 +362,13 @@ func (ck *TestNameChecker) print() {
 	if len(ck.errors) > 0 {
 		ck.errorf("%s.", plural(len(ck.errors), "error", "errors"))
 	}
+}
+
+type filter struct {
+	filenames string
+	typeNames string
+	funcNames string
+	errors    []Error
 }
 
 // testee is an element of the source code that can be tested.

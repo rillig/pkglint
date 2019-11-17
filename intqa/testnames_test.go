@@ -26,7 +26,7 @@ func (s *Suite) Init(c *check.C) *TestNameChecker {
 
 	s.c = c
 	s.ck = NewTestNameChecker(errorf)
-	s.ck.Enable(EAll)
+	s.ck.Configure("*", "*", "*", EAll)
 	s.ck.out = ioutil.Discard
 	return s.ck
 }
@@ -47,24 +47,32 @@ func (s *Suite) CheckSummary(summary string) {
 	s.summary = ""
 }
 
-func (s *Suite) Test_TestNameChecker_Enable(c *check.C) {
+func (s *Suite) Test_TestNameChecker_Configure(c *check.C) {
 	ck := s.Init(c)
 
-	ck.Enable(ENone) // overwrite initialization from Suite.Init
+	s.ck.Configure("*", "*", "*", ENone) // overwrite initialization from Suite.Init
 
-	c.Check(ck.errorsMask, check.Equals, uint64(0))
+	c.Check(ck.isRelevant("", "", "", EAll), check.Equals, false)
+	c.Check(ck.isRelevant("", "", "", EMissingTestee), check.Equals, false)
+	c.Check(ck.isRelevant("", "", "", EMissingTest), check.Equals, false)
 
-	ck.Enable(EAll)
+	s.ck.Configure("*", "*", "*", EAll)
 
-	c.Check(ck.errorsMask, check.Equals, ^uint64(0))
+	c.Check(ck.isRelevant("", "", "", EAll), check.Equals, true)
+	c.Check(ck.isRelevant("", "", "", EMissingTestee), check.Equals, true)
+	c.Check(ck.isRelevant("", "", "", EMissingTest), check.Equals, true)
 
-	ck.Enable(ENone, EMissingTest)
+	s.ck.Configure("*", "*", "*", ENone, EMissingTest)
 
-	c.Check(ck.errorsMask, check.Equals, uint64(4))
+	c.Check(ck.isRelevant("", "", "", EAll), check.Equals, true)
+	c.Check(ck.isRelevant("", "", "", EMissingTestee), check.Equals, false)
+	c.Check(ck.isRelevant("", "", "", EMissingTest), check.Equals, true)
 
-	ck.Enable(EAll, -EMissingTest)
+	s.ck.Configure("*", "*", "*", EAll, -EMissingTest)
 
-	c.Check(ck.errorsMask, check.Equals, ^uint64(0)^4)
+	c.Check(ck.isRelevant("", "", "", EAll), check.Equals, true)
+	c.Check(ck.isRelevant("", "", "", EMissingTestee), check.Equals, true)
+	c.Check(ck.isRelevant("", "", "", EMissingTest), check.Equals, false)
 }
 
 func (s *Suite) Test_TestNameChecker_Check(c *check.C) {
@@ -74,7 +82,6 @@ func (s *Suite) Test_TestNameChecker_Check(c *check.C) {
 
 	s.CheckErrors(
 		"Missing unit test \"Test_NewTestNameChecker\" for \"NewTestNameChecker\".",
-		"Missing unit test \"Test_TestNameChecker_IgnoreFiles\" for \"TestNameChecker.IgnoreFiles\".",
 		"Missing unit test \"Test_TestNameChecker_load\" for \"TestNameChecker.load\".",
 		"Missing unit test \"Test_TestNameChecker_loadDecl\" for \"TestNameChecker.loadDecl\".",
 		"Missing unit test \"Test_TestNameChecker_addCode\" for \"TestNameChecker.addCode\".",
@@ -82,7 +89,8 @@ func (s *Suite) Test_TestNameChecker_Check(c *check.C) {
 		"Missing unit test \"Test_TestNameChecker_relate\" for \"TestNameChecker.relate\".",
 		"Missing unit test \"Test_TestNameChecker_checkTests\" for \"TestNameChecker.checkTests\".",
 		"Missing unit test \"Test_TestNameChecker_checkTestees\" for \"TestNameChecker.checkTestees\".",
-		"Missing unit test \"Test_TestNameChecker_isIgnored\" for \"TestNameChecker.isIgnored\".",
+		"Missing unit test \"Test_TestNameChecker_isRelevant\" for \"TestNameChecker.isRelevant\".",
+		"Missing unit test \"Test_TestNameChecker_errorsMask\" for \"TestNameChecker.errorsMask\".",
 		"Missing unit test \"Test_TestNameChecker_addError\" for \"TestNameChecker.addError\".",
 		"Missing unit test \"Test_Suite_Init\" for \"Suite.Init\".",
 		"Missing unit test \"Test_Suite_TearDownTest\" for \"Suite.TearDownTest\".",
@@ -243,7 +251,7 @@ func (s *Suite) Test_TestNameChecker_print__errors(c *check.C) {
 	ck := s.Init(c)
 	ck.out = &out
 
-	ck.addError(EName, "1")
+	ck.addError(EName, code{}, "1")
 	ck.print()
 
 	c.Check(out.String(), check.Equals, "1\n")
