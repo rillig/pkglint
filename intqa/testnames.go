@@ -356,8 +356,11 @@ func (ck *TestNameChecker) print() {
 		_, _ = fmt.Fprintln(ck.out, msg)
 	}
 
-	if len(ck.errors) > 0 {
-		ck.errorf("%s.", plural(len(ck.errors), "error", "errors"))
+	n := len(ck.errors)
+	if n > 1 {
+		ck.errorf("%d errors.", n)
+	} else if n == 1 {
+		ck.errorf("%d error.", n)
 	}
 }
 
@@ -398,14 +401,6 @@ func (c *code) isTest() bool {
 }
 func (c *code) isTestScope() bool {
 	return strings.HasSuffix(c.file, "_test.go")
-}
-
-func plural(n int, sg, pl string) string {
-	form := pl
-	if n == 1 {
-		form = sg
-	}
-	return fmt.Sprintf("%d %s", n, form)
 }
 
 func isCamelCase(str string) bool {

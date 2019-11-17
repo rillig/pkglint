@@ -27,7 +27,6 @@ func (s *Suite) Init(c *check.C) *TestNameChecker {
 
 	s.c = c
 	s.ck = NewTestNameChecker(errorf)
-	s.ck.Configure("*", "*", "*", EAll)
 	s.ck.out = ioutil.Discard
 	return s.ck
 }
@@ -298,17 +297,31 @@ func (s *Suite) Test_TestNameChecker_print__empty(c *check.C) {
 	c.Check(out.String(), check.Equals, "")
 }
 
-func (s *Suite) Test_TestNameChecker_print__errors(c *check.C) {
+func (s *Suite) Test_TestNameChecker_print__1_error(c *check.C) {
 	var out bytes.Buffer
 	ck := s.Init(c)
 	ck.out = &out
-
 	ck.addError(EName, code{}, "1")
+
 	ck.print()
 
 	c.Check(out.String(), check.Equals, "1\n")
 	s.CheckErrors("1")
 	s.CheckSummary("1 error.")
+}
+
+func (s *Suite) Test_TestNameChecker_print__2_errors(c *check.C) {
+	var out bytes.Buffer
+	ck := s.Init(c)
+	ck.out = &out
+	ck.addError(EName, code{}, "1")
+	ck.addError(EName, code{}, "2")
+
+	ck.print()
+
+	c.Check(out.String(), check.Equals, "1\n2\n")
+	s.CheckErrors("1", "2")
+	s.CheckSummary("2 errors.")
 }
 
 func (s *Suite) Test_code_fullName(c *check.C) {
@@ -382,15 +395,6 @@ func (s *Suite) Test_code_isTestScope(c *check.C) {
 	test("_test.go", true)
 	test("file_test.go", true)
 	test("file_linux_test.go", true)
-}
-
-func (s *Suite) Test_plural(c *check.C) {
-	_ = s.Init(c)
-
-	c.Check(plural(0, "singular", "plural"), check.Equals, "0 plural")
-	c.Check(plural(1, "singular", "plural"), check.Equals, "1 singular")
-	c.Check(plural(2, "singular", "plural"), check.Equals, "2 plural")
-	c.Check(plural(1000, "singular", "plural"), check.Equals, "1000 plural")
 }
 
 func (s *Suite) Test_isCamelCase(c *check.C) {
