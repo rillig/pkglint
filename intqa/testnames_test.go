@@ -387,7 +387,7 @@ func (s *Suite) Test_code_isTestScope(c *check.C) {
 func (s *Suite) Test_plural(c *check.C) {
 	_ = s.Init(c)
 
-	c.Check(plural(0, "singular", "plural"), check.Equals, "")
+	c.Check(plural(0, "singular", "plural"), check.Equals, "0 plural")
 	c.Check(plural(1, "singular", "plural"), check.Equals, "1 singular")
 	c.Check(plural(2, "singular", "plural"), check.Equals, "2 plural")
 	c.Check(plural(1000, "singular", "plural"), check.Equals, "1000 plural")

@@ -121,7 +121,7 @@ func (ck *TestNameChecker) loadDecl(decl ast.Decl, filename string) {
 			switch spec := spec.(type) {
 			case *ast.TypeSpec:
 				typeName := spec.Name.Name
-				if ck.isRelevant(filename, typeName, "*", EAll) {
+				if ck.isRelevant(filename, typeName, "", EAll) {
 					ck.addCode(code{filename, typeName, "", ck.nextOrder()})
 				}
 			}
@@ -284,7 +284,6 @@ func (ck *TestNameChecker) checkTesteeTest(testee *testee, tested map[*testee]bo
 }
 
 // isRelevant checks whether the given error is enabled.
-// In each of the filter arguments, "*" means any.
 func (ck *TestNameChecker) isRelevant(filename, typeName, funcName string, e Error) bool {
 	mask := ^uint64(0)
 	for _, filter := range ck.filters {
@@ -336,6 +335,7 @@ func (ck *TestNameChecker) checkOrder() {
 					break
 				}
 			}
+
 			ck.addError(
 				EOrder,
 				test.code,
@@ -369,7 +369,6 @@ type filter struct {
 }
 
 // testee is an element of the source code that can be tested.
-// It is either a type, a function or a method.
 type testee struct {
 	code
 }
@@ -382,6 +381,7 @@ type test struct {
 	testee     *testee
 }
 
+// code is either a type, a function or a method.
 type code struct {
 	file  string // the file containing the code
 	Type  string // the type, e.g. MkLine
@@ -401,9 +401,6 @@ func (c *code) isTestScope() bool {
 }
 
 func plural(n int, sg, pl string) string {
-	if n == 0 {
-		return ""
-	}
 	form := pl
 	if n == 1 {
 		form = sg
