@@ -66,6 +66,10 @@ func NewTestNameChecker(errorf func(format string, args ...interface{})) *TestNa
 	ck.Configure("*_test.go", "*", "SetUpTest", -EMissingTest)
 	ck.Configure("*_test.go", "*", "TearDownTest", -EMissingTest)
 
+	// See https://github.com/rillig/gobco.
+	ck.Configure("gobco_*.go", "gobco*", "*", -EMissingTest)
+	ck.Configure("gobco_*.go", "", "gobco*", -EMissingTest)
+
 	return &ck
 }
 
