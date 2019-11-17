@@ -572,7 +572,9 @@ func (src *Pkgsrc) initDeprecatedVars() {
 		"SKIP_PORTABILITY_CHECK": "Use CHECK_PORTABILITY_SKIP (a list of patterns) instead.",
 
 		// January 2007
-		"BUILDLINK_TRANSFORM.*": "Use BUILDLINK_FNAME_TRANSFORM.* instead.",
+		// Only applies to BUILDLINK_TRANSFORM.${pkgbase}.
+		// There is still BUILDLINK_TRANSFORM.${OPSYS}.
+		// "BUILDLINK_TRANSFORM.*": "Use BUILDLINK_FNAME_TRANSFORM.* instead.",
 
 		// March 2007
 		"SCRIPTDIR":       "You can just remove it.",
@@ -585,7 +587,7 @@ func (src *Pkgsrc) initDeprecatedVars() {
 		"LICENCE":     "Use LICENSE instead.",
 
 		// November 2007
-		//USE_NCURSES: Include "../../devel/ncurses/buildlink3.mk" instead.
+		// USE_NCURSES: Include "../../devel/ncurses/buildlink3.mk" instead.
 
 		// December 2007
 		"INSTALLATION_DIRS_FROM_PLIST": "Use AUTO_MKDIRS instead.",
