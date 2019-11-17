@@ -17,7 +17,7 @@ import (
 type Error int
 
 const (
-	ENone Error = iota
+	ENone Error = iota + 1
 	EAll
 
 	// A function or method does not have a corresponding test.
@@ -66,6 +66,7 @@ func NewTestNameChecker(errorf func(format string, args ...interface{})) *TestNa
 //
 // The last matching rule wins.
 func (ck *TestNameChecker) Configure(filenames, typeNames, funcNames string, errors ...Error) {
+	_ = ck.errorsMask(errors...) // just for error checking
 	ck.filters = append(ck.filters, filter{filenames, typeNames, funcNames, errors})
 }
 
@@ -79,8 +80,12 @@ func (ck *TestNameChecker) Check() {
 
 // load loads all type, function and method names from the current package.
 func (ck *TestNameChecker) load() {
+	isRelevant := func(info os.FileInfo) bool {
+		return ck.isRelevant(info.Name(), "*", "*", EAll)
+	}
+
 	fileSet := token.NewFileSet()
-	pkgs, err := parser.ParseDir(fileSet, ".", nil, 0)
+	pkgs, err := parser.ParseDir(fileSet, ".", isRelevant, 0)
 	if err != nil {
 		panic(err)
 	}
@@ -120,7 +125,9 @@ func (ck *TestNameChecker) loadDecl(decl ast.Decl, filename string) {
 			switch spec := spec.(type) {
 			case *ast.TypeSpec:
 				typeName := spec.Name.Name
-				ck.addCode(code{filename, typeName, "", ck.nextOrder()})
+				if ck.isRelevant(filename, typeName, "*", EAll) {
+					ck.addCode(code{filename, typeName, "", ck.nextOrder()})
+				}
 			}
 		}
 
@@ -134,7 +141,10 @@ func (ck *TestNameChecker) loadDecl(decl ast.Decl, filename string) {
 				typeName = typeExpr.(*ast.Ident).Name
 			}
 		}
-		ck.addCode(code{filename, typeName, decl.Name.Name, ck.nextOrder()})
+		funcName := decl.Name.Name
+		if ck.isRelevant(filename, typeName, funcName, EAll) {
+			ck.addCode(code{filename, typeName, funcName, ck.nextOrder()})
+		}
 	}
 }
 
@@ -284,7 +294,7 @@ func (ck *TestNameChecker) isRelevant(filename, typeName, funcName string, e Err
 		if err != nil {
 			panic(err)
 		}
-		return ok
+		return subj == "*" || ok
 	}
 
 	for i := range ck.filters {
@@ -307,6 +317,9 @@ func (ck *TestNameChecker) errorsMask(errors ...Error) uint64 {
 		} else if err == EAll {
 			errorsMask = ^uint64(0)
 		} else if err < 0 {
+			if errorsMask == 0 {
+				panic("cannot subtract from zero, specify EAll before")
+			}
 			errorsMask &= ^(uint64(1) << -uint(err))
 		} else {
 			errorsMask |= uint64(1) << uint(err)

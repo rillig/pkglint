@@ -75,6 +75,15 @@ func (s *Suite) Test_TestNameChecker_Configure(c *check.C) {
 	c.Check(ck.isRelevant("", "", "", EMissingTest), check.Equals, false)
 }
 
+func (s *Suite) Test_TestNameChecker_Configure__panic(c *check.C) {
+	_ = s.Init(c)
+
+	c.Check(
+		func() { s.ck.Configure("*", "*", "*", -ENone) },
+		check.Panics,
+		"cannot subtract from zero, specify EAll before")
+}
+
 func (s *Suite) Test_TestNameChecker_Check(c *check.C) {
 	ck := s.Init(c)
 
@@ -82,10 +91,8 @@ func (s *Suite) Test_TestNameChecker_Check(c *check.C) {
 
 	s.CheckErrors(
 		"Missing unit test \"Test_NewTestNameChecker\" for \"NewTestNameChecker\".",
-		"Missing unit test \"Test_TestNameChecker_load\" for \"TestNameChecker.load\".",
 		"Missing unit test \"Test_TestNameChecker_loadDecl\" for \"TestNameChecker.loadDecl\".",
 		"Missing unit test \"Test_TestNameChecker_addCode\" for \"TestNameChecker.addCode\".",
-		"Missing unit test \"Test_TestNameChecker_addTestee\" for \"TestNameChecker.addTestee\".",
 		"Missing unit test \"Test_TestNameChecker_relate\" for \"TestNameChecker.relate\".",
 		"Missing unit test \"Test_TestNameChecker_checkTests\" for \"TestNameChecker.checkTests\".",
 		"Missing unit test \"Test_TestNameChecker_checkTestees\" for \"TestNameChecker.checkTestees\".",
@@ -97,7 +104,41 @@ func (s *Suite) Test_TestNameChecker_Check(c *check.C) {
 		"Missing unit test \"Test_Suite_CheckErrors\" for \"Suite.CheckErrors\".",
 		"Missing unit test \"Test_Suite_CheckSummary\" for \"Suite.CheckSummary\".",
 		"Missing unit test \"Test_Value_Method\" for \"Value.Method\".")
-	s.CheckSummary("16 errors.")
+	s.CheckSummary("14 errors.")
+}
+
+func (s *Suite) Test_TestNameChecker_load__filtered_nothing(c *check.C) {
+	ck := s.Init(c)
+
+	ck.Configure("*", "*", "*", ENone)
+
+	ck.load()
+
+	c.Check(ck.testees, check.IsNil)
+	c.Check(ck.tests, check.IsNil)
+}
+
+func (s *Suite) Test_TestNameChecker_load__filtered_only_Value(c *check.C) {
+	ck := s.Init(c)
+
+	ck.Configure("*", "*", "*", ENone)
+	ck.Configure("*", "Value", "*", EAll)
+
+	ck.load()
+
+	c.Check(ck.testees, check.DeepEquals, []*testee{
+		{code{"testnames_test.go", "Value", "", 0}},
+		{code{"testnames_test.go", "Value", "Method", 1}}})
+	c.Check(ck.tests, check.IsNil)
+}
+
+func (s *Suite) Test_TestNameChecker_addTestee(c *check.C) {
+	ck := s.Init(c)
+
+	code := code{"filename.go", "Type", "Method", 0}
+	ck.addTestee(code)
+
+	c.Check(ck.testees, check.DeepEquals, []*testee{{code}})
 }
 
 func (s *Suite) Test_TestNameChecker_addTest(c *check.C) {
@@ -105,6 +146,7 @@ func (s *Suite) Test_TestNameChecker_addTest(c *check.C) {
 
 	ck.addTest(code{"filename.go", "Type", "Method", 0})
 
+	c.Check(ck.tests, check.IsNil)
 	s.CheckErrors(
 		"Test \"Type.Method\" must start with \"Test_\".")
 }
