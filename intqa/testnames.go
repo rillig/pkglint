@@ -56,17 +56,27 @@ type TestNameChecker struct {
 }
 
 // NewTestNameChecker creates a new checker.
-// By default, all errors are disabled; call Enable to enable them.
+// By default, all errors are enabled;
+// call Configure to disable them selectively.
 func NewTestNameChecker(errorf func(format string, args ...interface{})) *TestNameChecker {
-	return &TestNameChecker{errorf: errorf, out: os.Stderr}
+	ck := TestNameChecker{errorf: errorf, out: os.Stderr}
+
+	// This function is created by https://github.com/rillig/gobco when
+	// measuring the branch coverage of a package.
+	ck.Configure("*_test.go", "", "TestMain", ENone)
+
+	return &ck
 }
 
 // Configure sets the errors that are activated for the given code,
 // specified by shell patterns like in path.Match.
 //
-// The last matching rule wins.
+// All rules are applied in order. Later rules overwrite earlier rules.
+//
+// Individual errors can be enabled by giving their constant and disabled
+// by negating them, such as -EMissingTestee. To reset everything, use
+// either EAll or ENone.
 func (ck *TestNameChecker) Configure(filenames, typeNames, funcNames string, errors ...Error) {
-	_ = ck.errorsMask(errors...) // just for error checking
 	ck.filters = append(ck.filters, filter{filenames, typeNames, funcNames, errors})
 }
 
@@ -297,35 +307,30 @@ func (ck *TestNameChecker) isRelevant(filename, typeName, funcName string, e Err
 		return subj == "*" || ok
 	}
 
-	for i := range ck.filters {
-		filter := ck.filters[len(ck.filters)-1-i]
+	mask := ^uint64(0)
+	for _, filter := range ck.filters {
 		if matches(filename, filter.filenames) &&
 			matches(typeName, filter.typeNames) &&
 			matches(funcName, filter.funcNames) {
-
-			return ck.errorsMask(e)&ck.errorsMask(filter.errors...) != 0
+			mask = ck.errorsMask(mask, filter.errors...)
 		}
 	}
-	return false
+	return mask&ck.errorsMask(0, e) != 0
 }
 
-func (ck *TestNameChecker) errorsMask(errors ...Error) uint64 {
-	errorsMask := uint64(0)
+func (ck *TestNameChecker) errorsMask(mask uint64, errors ...Error) uint64 {
 	for _, err := range errors {
 		if err == ENone {
-			errorsMask = 0
+			mask = 0
 		} else if err == EAll {
-			errorsMask = ^uint64(0)
+			mask = ^uint64(0)
 		} else if err < 0 {
-			if errorsMask == 0 {
-				panic("cannot subtract from zero, specify EAll before")
-			}
-			errorsMask &= ^(uint64(1) << -uint(err))
+			mask &= ^(uint64(1) << -uint(err))
 		} else {
-			errorsMask |= uint64(1) << uint(err)
+			mask |= uint64(1) << uint(err)
 		}
 	}
-	return errorsMask
+	return mask
 }
 
 // checkOrder ensures that the tests appear in the same order as their

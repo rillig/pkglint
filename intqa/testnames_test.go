@@ -62,6 +62,12 @@ func (s *Suite) Test_TestNameChecker_Configure(c *check.C) {
 	c.Check(ck.isRelevant("", "", "", EMissingTestee), check.Equals, true)
 	c.Check(ck.isRelevant("", "", "", EMissingTest), check.Equals, true)
 
+	s.ck.Configure("*", "*", "*", -EMissingTestee)
+
+	c.Check(ck.isRelevant("", "", "", EAll), check.Equals, true)
+	c.Check(ck.isRelevant("", "", "", EMissingTestee), check.Equals, false)
+	c.Check(ck.isRelevant("", "", "", EMissingTest), check.Equals, true)
+
 	s.ck.Configure("*", "*", "*", ENone, EMissingTest)
 
 	c.Check(ck.isRelevant("", "", "", EAll), check.Equals, true)
@@ -73,15 +79,6 @@ func (s *Suite) Test_TestNameChecker_Configure(c *check.C) {
 	c.Check(ck.isRelevant("", "", "", EAll), check.Equals, true)
 	c.Check(ck.isRelevant("", "", "", EMissingTestee), check.Equals, true)
 	c.Check(ck.isRelevant("", "", "", EMissingTest), check.Equals, false)
-}
-
-func (s *Suite) Test_TestNameChecker_Configure__panic(c *check.C) {
-	_ = s.Init(c)
-
-	c.Check(
-		func() { s.ck.Configure("*", "*", "*", -ENone) },
-		check.Panics,
-		"cannot subtract from zero, specify EAll before")
 }
 
 func (s *Suite) Test_TestNameChecker_Check(c *check.C) {
