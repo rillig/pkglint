@@ -269,9 +269,12 @@ func (*Pkgsrc) parseDocChange(line *Line, warn bool) *Change {
 
 	invalid := func() *Change {
 		if warn {
-			line.Warnf("Unknown doc/CHANGES line: %s", line.Text)
+			line.Warnf("Invalid doc/CHANGES line: %s", line.Text)
 			line.Explain(
-				"See mk/misc/developer.mk for the rules.")
+				"See mk/misc/developer.mk for the rules.",
+				"",
+				"To generate these entries automatically, run",
+				sprintf("%q.", bmakeHelp("cce")))
 		}
 		return nil
 	}
@@ -295,7 +298,7 @@ func (*Pkgsrc) parseDocChange(line *Line, warn bool) *Change {
 		author = f[n-2]
 	}
 
-	if !hasPrefix(author, "[") || !hasSuffix(date, "]") {
+	if !matches(author, `^\[\w+$`) || !matches(date, `\d\d\d\d-\d\d-\d\d]$`) {
 		return invalid()
 	}
 	author, date = author[1:], date[:len(date)-1]
