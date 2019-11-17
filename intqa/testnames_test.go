@@ -99,6 +99,9 @@ func (s *Suite) Test_TestNameChecker_Configure__ignore_single_function(c *check.
 func (s *Suite) Test_TestNameChecker_Check(c *check.C) {
 	ck := s.Init(c)
 
+	ck.Configure("*", "Value", "*", -EMissingTest)
+	ck.Configure("*", "Suite", "[A-Z]*", -EMissingTest)
+
 	ck.Check()
 
 	s.CheckErrors(
@@ -110,13 +113,8 @@ func (s *Suite) Test_TestNameChecker_Check(c *check.C) {
 		"Missing unit test \"Test_TestNameChecker_checkTestees\" for \"TestNameChecker.checkTestees\".",
 		"Missing unit test \"Test_TestNameChecker_isRelevant\" for \"TestNameChecker.isRelevant\".",
 		"Missing unit test \"Test_TestNameChecker_errorsMask\" for \"TestNameChecker.errorsMask\".",
-		"Missing unit test \"Test_TestNameChecker_addError\" for \"TestNameChecker.addError\".",
-		"Missing unit test \"Test_Suite_Init\" for \"Suite.Init\".",
-		"Missing unit test \"Test_Suite_TearDownTest\" for \"Suite.TearDownTest\".",
-		"Missing unit test \"Test_Suite_CheckErrors\" for \"Suite.CheckErrors\".",
-		"Missing unit test \"Test_Suite_CheckSummary\" for \"Suite.CheckSummary\".",
-		"Missing unit test \"Test_Value_Method\" for \"Value.Method\".")
-	s.CheckSummary("14 errors.")
+		"Missing unit test \"Test_TestNameChecker_addError\" for \"TestNameChecker.addError\".")
+	s.CheckSummary("9 errors.")
 }
 
 func (s *Suite) Test_TestNameChecker_load__filtered_nothing(c *check.C) {
