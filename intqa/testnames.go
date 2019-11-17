@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"reflect"
 	"sort"
 	"strings"
 	"unicode"
@@ -97,22 +98,10 @@ func (ck *TestNameChecker) load() {
 		panic(err)
 	}
 
-	var pkgnames []string
-	for pkgname := range pkgs {
-		pkgnames = append(pkgnames, pkgname)
-	}
-	sort.Strings(pkgnames)
-
-	for _, pkgname := range pkgnames {
+	for _, pkgname := range sortedKeys(pkgs) {
 		files := pkgs[pkgname].Files
 
-		var filenames []string
-		for filename := range files {
-			filenames = append(filenames, filename)
-		}
-		sort.Strings(filenames)
-
-		for _, filename := range filenames {
+		for _, filename := range sortedKeys(files) {
 			file := files[filename]
 			for _, decl := range file.Decls {
 				ck.loadDecl(decl, filename)
@@ -447,4 +436,14 @@ func matches(subj string, pattern string) bool {
 		panic(err)
 	}
 	return ok
+}
+
+// sortedKeys returns the sorted keys from an arbitrary map.
+func sortedKeys(m interface{}) []string {
+	var keys []string
+	for _, key := range reflect.ValueOf(m).MapKeys() {
+		keys = append(keys, key.Interface().(string))
+	}
+	sort.Strings(keys)
+	return keys
 }

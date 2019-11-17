@@ -428,6 +428,21 @@ func (s *Suite) Test_matches(c *check.C) {
 	c.Check(func() { matches("any", "[") }, check.Panics, path.ErrBadPattern)
 }
 
+func (s *Suite) Test_sortedKeys(c *check.C) {
+	_ = s.Init(c)
+
+	m := make(map[string]uint8)
+	m["first"] = 1
+	m["second"] = 2
+	m["third"] = 3
+	m["fourth"] = 4
+
+	c.Check(
+		sortedKeys(m),
+		check.DeepEquals,
+		[]string{"first", "fourth", "second", "third"})
+}
+
 type Value struct{}
 
 // Method has no star on the receiver,
