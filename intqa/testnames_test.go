@@ -140,9 +140,8 @@ func (s *Suite) Test_TestNameChecker_Check(c *check.C) {
 		"Missing unit test \"Test_TestNameChecker_relate\" for \"TestNameChecker.relate\".",
 		"Missing unit test \"Test_TestNameChecker_checkTests\" for \"TestNameChecker.checkTests\".",
 		"Missing unit test \"Test_TestNameChecker_checkTestees\" for \"TestNameChecker.checkTestees\".",
-		"Missing unit test \"Test_TestNameChecker_isRelevant\" for \"TestNameChecker.isRelevant\".",
-		"Missing unit test \"Test_TestNameChecker_errorsMask\" for \"TestNameChecker.errorsMask\".")
-	s.CheckSummary("6 errors.")
+		"Missing unit test \"Test_TestNameChecker_isRelevant\" for \"TestNameChecker.isRelevant\".")
+	s.CheckSummary("5 errors.")
 }
 
 func (s *Suite) Test_TestNameChecker_load__filtered_nothing(c *check.C) {
@@ -337,6 +336,15 @@ func (s *Suite) Test_TestNameChecker_checkTesteeTest(c *check.C) {
 	s.CheckErrors(
 		"Missing unit test \"Test_Func\" for \"Func\".",
 		"Missing unit test \"Test_Type_Method\" for \"Type.Method\".")
+}
+
+func (s *Suite) Test_TestNameChecker_errorsMask(c *check.C) {
+	ck := s.Init(c)
+
+	c.Check(ck.errorsMask(0, EAll), check.Equals, ^uint64(0))
+	c.Check(ck.errorsMask(12345, ENone), check.Equals, uint64(0))
+	c.Check(ck.errorsMask(12345, ENone, EMissingTest), check.Equals, uint64(8))
+	c.Check(ck.errorsMask(2, EMissingTest), check.Equals, uint64(10))
 }
 
 func (s *Suite) Test_TestNameChecker_checkOrder(c *check.C) {
