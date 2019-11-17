@@ -73,9 +73,9 @@ func (ck *TestNameChecker) Enable(errors ...Error) {
 		} else if err == EAll {
 			ck.errorsMask = ^uint64(0)
 		} else if err < 0 {
-			ck.errorsMask &= ^(1 << -int(err))
+			ck.errorsMask &= ^(uint64(1) << -uint(err))
 		} else {
-			ck.errorsMask |= 1 << int(err)
+			ck.errorsMask |= uint64(1) << uint(err)
 		}
 	}
 }
@@ -332,7 +332,7 @@ func (ck *TestNameChecker) checkOrder() {
 }
 
 func (ck *TestNameChecker) addError(e Error, format string, args ...interface{}) {
-	if ck.errorsMask&(1<<int(e)) != 0 {
+	if ck.errorsMask&(uint64(1)<<uint(e)) != 0 {
 		ck.errors = append(ck.errors, fmt.Sprintf(format, args...))
 	}
 }
