@@ -297,6 +297,8 @@ func (ck *TestNameChecker) checkTesteeTest(testee *testee, tested map[*testee]bo
 		testName, testee.fullName())
 }
 
+// isRelevant checks whether the given error is enabled.
+// In each of the filter arguments, "*" means any.
 func (ck *TestNameChecker) isRelevant(filename, typeName, funcName string, e Error) bool {
 
 	matches := func(subj string, pattern string) bool {

@@ -50,35 +50,49 @@ func (s *Suite) CheckSummary(summary string) {
 func (s *Suite) Test_TestNameChecker_Configure(c *check.C) {
 	ck := s.Init(c)
 
-	s.ck.Configure("*", "*", "*", ENone) // overwrite initialization from Suite.Init
+	ck.Configure("*", "*", "*", ENone) // overwrite initialization from Suite.Init
 
 	c.Check(ck.isRelevant("", "", "", EAll), check.Equals, false)
 	c.Check(ck.isRelevant("", "", "", EMissingTestee), check.Equals, false)
 	c.Check(ck.isRelevant("", "", "", EMissingTest), check.Equals, false)
 
-	s.ck.Configure("*", "*", "*", EAll)
+	ck.Configure("*", "*", "*", EAll)
 
 	c.Check(ck.isRelevant("", "", "", EAll), check.Equals, true)
 	c.Check(ck.isRelevant("", "", "", EMissingTestee), check.Equals, true)
 	c.Check(ck.isRelevant("", "", "", EMissingTest), check.Equals, true)
 
-	s.ck.Configure("*", "*", "*", -EMissingTestee)
+	ck.Configure("*", "*", "*", -EMissingTestee)
 
 	c.Check(ck.isRelevant("", "", "", EAll), check.Equals, true)
 	c.Check(ck.isRelevant("", "", "", EMissingTestee), check.Equals, false)
 	c.Check(ck.isRelevant("", "", "", EMissingTest), check.Equals, true)
 
-	s.ck.Configure("*", "*", "*", ENone, EMissingTest)
+	ck.Configure("*", "*", "*", ENone, EMissingTest)
 
 	c.Check(ck.isRelevant("", "", "", EAll), check.Equals, true)
 	c.Check(ck.isRelevant("", "", "", EMissingTestee), check.Equals, false)
 	c.Check(ck.isRelevant("", "", "", EMissingTest), check.Equals, true)
 
-	s.ck.Configure("*", "*", "*", EAll, -EMissingTest)
+	ck.Configure("*", "*", "*", EAll, -EMissingTest)
 
 	c.Check(ck.isRelevant("", "", "", EAll), check.Equals, true)
 	c.Check(ck.isRelevant("", "", "", EMissingTestee), check.Equals, true)
 	c.Check(ck.isRelevant("", "", "", EMissingTest), check.Equals, false)
+}
+
+func (s *Suite) Test_TestNameChecker_Configure__ignore_single_function(c *check.C) {
+	ck := s.Init(c)
+
+	ck.Configure("*", "*", "*", EAll)
+
+	// The intention of this rule is that this particular function is ignored.
+	// Everything else from that file is still processed.
+	ck.Configure("*_test.go", "", "TestMain", ENone)
+
+	c.Check(ck.isRelevant("file_test.go", "", "", EAll), check.Equals, true)
+	c.Check(ck.isRelevant("file_test.go", "*", "*", EAll), check.Equals, false) // FIXME
+	c.Check(ck.isRelevant("file_test.go", "*", "Other", EAll), check.Equals, true)
 }
 
 func (s *Suite) Test_TestNameChecker_Check(c *check.C) {
