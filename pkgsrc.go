@@ -267,19 +267,33 @@ func (*Pkgsrc) parseDocChange(line *Line, warn bool) *Change {
 		return nil
 	}
 
-	f := strings.Fields(lex.Rest())
-	n := len(f)
-	if n < 4 || n > 6 {
+	invalid := func() *Change {
+		if warn {
+			line.Warnf("Unknown doc/CHANGES line: %s", line.Text)
+			line.Explain(
+				"See mk/misc/developer.mk for the rules.")
+		}
 		return nil
 	}
 
+	f := strings.Fields(lex.Rest())
+	n := len(f)
+	if n == 0 {
+		return invalid()
+	}
+
 	action := ParseChangeAction(f[0])
-	pkgpath := f[1]
-	author := f[len(f)-2]
-	date := f[len(f)-1]
+	var pkgpath, author, date string
+	if n > 1 {
+		pkgpath = f[1]
+		date = f[n-1]
+	}
+	if n > 2 {
+		author = f[n-2]
+	}
 
 	if !hasPrefix(author, "[") || !hasSuffix(date, "]") {
-		return nil
+		return invalid()
 	}
 	author, date = author[1:], date[:len(date)-1]
 
@@ -300,13 +314,7 @@ func (*Pkgsrc) parseDocChange(line *Line, warn bool) *Change {
 		}
 	}
 
-	if warn {
-		line.Warnf("Unknown doc/CHANGES line: %s", line.Text)
-		line.Explain(
-			"See mk/misc/developer.mk for the rules.")
-	}
-
-	return nil
+	return invalid()
 }
 
 func (src *Pkgsrc) checkRemovedAfterLastFreeze() {

@@ -179,6 +179,9 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile(c *check.C) {
 		"WARN: ~/doc/CHANGES-2018:1: Year \"2015\" for category/package does not match the filename ~/doc/CHANGES-2018.",
 		"WARN: ~/doc/CHANGES-2018:6: Date \"2018-01-06\" for category/package is earlier than \"2018-01-09\" in line 5.",
 		"WARN: ~/doc/CHANGES-2018:8: Unknown doc/CHANGES line: \tReworked category/package to 1.2 [author8 2018-01-08]",
+		"WARN: ~/doc/CHANGES-2018:10: Unknown doc/CHANGES line: \ttoo few fields",
+		"WARN: ~/doc/CHANGES-2018:11: Unknown doc/CHANGES line: \ttoo many many many many many fields",
+		"WARN: ~/doc/CHANGES-2018:12: Unknown doc/CHANGES line: \tmissing brackets around author",
 		"WARN: ~/doc/CHANGES-2018:13: Unknown doc/CHANGES line: \tAdded another [new package]")
 }
 
@@ -363,17 +366,16 @@ func (s *Suite) Test_Pkgsrc_parseDocChange(c *check.C) {
 	test("\t Too large indentation",
 		"WARN: doc/CHANGES-2019:123: Package changes should be indented using a single tab, not \"\\t \".")
 
-	// TODO: Add a warning here, since it's easy to forget a bracket.
 	test("\t1 2 3 4",
-		nil...)
+		"WARN: doc/CHANGES-2019:123: Unknown doc/CHANGES line: \t1 2 3 4")
 	test("\t1 2 3 4 5",
-		nil...)
+		"WARN: doc/CHANGES-2019:123: Unknown doc/CHANGES line: \t1 2 3 4 5")
 	test("\t1 2 3 4 5 6",
-		nil...)
+		"WARN: doc/CHANGES-2019:123: Unknown doc/CHANGES line: \t1 2 3 4 5 6")
 	test("\t1 2 3 4 5 6 7",
-		nil...)
+		"WARN: doc/CHANGES-2019:123: Unknown doc/CHANGES line: \t1 2 3 4 5 6 7")
 	test("\t1 2 [3 4",
-		nil...)
+		"WARN: doc/CHANGES-2019:123: Unknown doc/CHANGES line: \t1 2 [3 4")
 	test("\t1 2 [3 4]",
 		"WARN: doc/CHANGES-2019:123: Unknown doc/CHANGES line: \t1 2 [3 4]")
 	test("\tAdded 2 [3 4]",
@@ -418,9 +420,8 @@ func (s *Suite) Test_Pkgsrc_parseDocChange(c *check.C) {
 		"WARN: doc/CHANGES-2019:123: Unknown doc/CHANGES line: \tMoved pkgpath from previous [author date]")
 
 	// "Split" is wrong
-	// TODO: Add a warning since this is probably a typo.
 	test("\tSplit pkgpath into a and b [author date]",
-		nil...)
+		"WARN: doc/CHANGES-2019:123: Unknown doc/CHANGES line: \tSplit pkgpath into a and b [author date]")
 }
 
 func (s *Suite) Test_Pkgsrc_checkRemovedAfterLastFreeze(c *check.C) {
