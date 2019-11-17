@@ -90,12 +90,9 @@ func (ck *TestNameChecker) Check() {
 
 // load loads all type, function and method names from the current package.
 func (ck *TestNameChecker) load() {
-	isRelevant := func(info os.FileInfo) bool {
-		return ck.isRelevant(info.Name(), "*", "*", EAll)
-	}
 
 	fileSet := token.NewFileSet()
-	pkgs, err := parser.ParseDir(fileSet, ".", isRelevant, 0)
+	pkgs, err := parser.ParseDir(fileSet, ".", nil, 0)
 	if err != nil {
 		panic(err)
 	}
@@ -300,15 +297,6 @@ func (ck *TestNameChecker) checkTesteeTest(testee *testee, tested map[*testee]bo
 // isRelevant checks whether the given error is enabled.
 // In each of the filter arguments, "*" means any.
 func (ck *TestNameChecker) isRelevant(filename, typeName, funcName string, e Error) bool {
-
-	matches := func(subj string, pattern string) bool {
-		ok, err := path.Match(pattern, subj)
-		if err != nil {
-			panic(err)
-		}
-		return subj == "*" || ok
-	}
-
 	mask := ^uint64(0)
 	for _, filter := range ck.filters {
 		if matches(filename, filter.filenames) &&
@@ -451,4 +439,12 @@ func join(a, sep, b string) string {
 		sep = ""
 	}
 	return a + sep + b
+}
+
+func matches(subj string, pattern string) bool {
+	ok, err := path.Match(pattern, subj)
+	if err != nil {
+		panic(err)
+	}
+	return ok
 }

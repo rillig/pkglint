@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gopkg.in/check.v1"
 	"io/ioutil"
+	"path"
 	"testing"
 )
 
@@ -91,7 +92,7 @@ func (s *Suite) Test_TestNameChecker_Configure__ignore_single_function(c *check.
 	ck.Configure("*_test.go", "", "TestMain", ENone)
 
 	c.Check(ck.isRelevant("file_test.go", "", "", EAll), check.Equals, true)
-	c.Check(ck.isRelevant("file_test.go", "*", "*", EAll), check.Equals, false) // FIXME
+	c.Check(ck.isRelevant("file_test.go", "*", "*", EAll), check.Equals, true)
 	c.Check(ck.isRelevant("file_test.go", "*", "Other", EAll), check.Equals, true)
 }
 
@@ -416,6 +417,15 @@ func (s *Suite) Test_join(c *check.C) {
 	c.Check(join("one", " and ", ""), check.Equals, "one")
 	c.Check(join("", " and ", "two"), check.Equals, "two")
 	c.Check(join("one", " and ", "two"), check.Equals, "one and two")
+}
+
+func (s *Suite) Test_matches(c *check.C) {
+	_ = s.Init(c)
+
+	c.Check(matches("*", "*"), check.Equals, true)
+	c.Check(matches("anything", "*"), check.Equals, true)
+	c.Check(matches("*", "anything"), check.Equals, false)
+	c.Check(func() { matches("any", "[") }, check.Panics, path.ErrBadPattern)
 }
 
 type Value struct{}
