@@ -79,19 +79,17 @@ func (s *Suite) Test_TestNameChecker_Check(c *check.C) {
 		"Missing unit test \"Test_TestNameChecker_loadDecl\" for \"TestNameChecker.loadDecl\".",
 		"Missing unit test \"Test_TestNameChecker_addCode\" for \"TestNameChecker.addCode\".",
 		"Missing unit test \"Test_TestNameChecker_addTestee\" for \"TestNameChecker.addTestee\".",
-		"Missing unit test \"Test_TestNameChecker_nextOrder\" for \"TestNameChecker.nextOrder\".",
 		"Missing unit test \"Test_TestNameChecker_relate\" for \"TestNameChecker.relate\".",
 		"Missing unit test \"Test_TestNameChecker_checkTests\" for \"TestNameChecker.checkTests\".",
 		"Missing unit test \"Test_TestNameChecker_checkTestees\" for \"TestNameChecker.checkTestees\".",
 		"Missing unit test \"Test_TestNameChecker_isIgnored\" for \"TestNameChecker.isIgnored\".",
 		"Missing unit test \"Test_TestNameChecker_addError\" for \"TestNameChecker.addError\".",
-		"Missing unit test \"Test_Test\" for \"Test\".",
 		"Missing unit test \"Test_Suite_Init\" for \"Suite.Init\".",
 		"Missing unit test \"Test_Suite_TearDownTest\" for \"Suite.TearDownTest\".",
 		"Missing unit test \"Test_Suite_CheckErrors\" for \"Suite.CheckErrors\".",
 		"Missing unit test \"Test_Suite_CheckSummary\" for \"Suite.CheckSummary\".",
 		"Missing unit test \"Test_Value_Method\" for \"Value.Method\".")
-	s.CheckSummary("18 errors.")
+	s.CheckSummary("16 errors.")
 }
 
 func (s *Suite) Test_TestNameChecker_addTest(c *check.C) {
@@ -110,6 +108,14 @@ func (s *Suite) Test_TestNameChecker_addTest__empty_description(c *check.C) {
 
 	s.CheckErrors(
 		"Test \"Suite.Test_Method__\" must not have a nonempty description.")
+}
+
+func (s *Suite) Test_TestNameChecker_nextOrder(c *check.C) {
+	ck := s.Init(c)
+
+	c.Check(ck.nextOrder(), check.Equals, 0)
+	c.Check(ck.nextOrder(), check.Equals, 1)
+	c.Check(ck.nextOrder(), check.Equals, 2)
 }
 
 func (s *Suite) Test_TestNameChecker_checkTestFile__global(c *check.C) {
@@ -165,10 +171,10 @@ func (s *Suite) Test_TestNameChecker_checkTestTestee__testee_exists(c *check.C) 
 		nil...)
 }
 
-func (s *Suite) Test_TestNameChecker_checkTestName__camel_case(c *check.C) {
+func (s *Suite) Test_TestNameChecker_checkTestDescr__camel_case(c *check.C) {
 	ck := s.Init(c)
 
-	ck.checkTestName(&test{
+	ck.checkTestDescr(&test{
 		code{"demo_test.go", "Suite", "Test_Missing__CamelCase", 0},
 		"Missing",
 		"CamelCase",
@@ -177,6 +183,24 @@ func (s *Suite) Test_TestNameChecker_checkTestName__camel_case(c *check.C) {
 	s.CheckErrors(
 		"Suite.Test_Missing__CamelCase: Test description \"CamelCase\" " +
 			"must not use CamelCase in the first word.")
+}
+
+func (s *Suite) Test_TestNameChecker_checkTesteeTest(c *check.C) {
+	ck := s.Init(c)
+
+	ck.checkTesteeTest(
+		&testee{code{"demo.go", "Type", "", 0}},
+		nil)
+	ck.checkTesteeTest(
+		&testee{code{"demo.go", "", "Func", 0}},
+		nil)
+	ck.checkTesteeTest(
+		&testee{code{"demo.go", "Type", "Method", 0}},
+		nil)
+
+	s.CheckErrors(
+		"Missing unit test \"Test_Func\" for \"Func\".",
+		"Missing unit test \"Test_Type_Method\" for \"Type.Method\".")
 }
 
 func (s *Suite) Test_TestNameChecker_checkOrder(c *check.C) {
@@ -198,10 +222,10 @@ func (s *Suite) Test_TestNameChecker_checkOrder(c *check.C) {
 	ck.checkOrder()
 
 	s.CheckErrors(
-		"Test \"S.Test_T\" should be ordered before \"S.Test_T_M1\".",
-		"Test \"S.Test_T__1\" should be ordered before \"S.Test_T_M1\".",
-		"Test \"S.Test_T__2\" should be ordered before \"S.Test_T_M1\".",
-		"Test \"S.Test_T_M2__1\" should be ordered before \"S.Test_T_M3\".")
+		"Test \"S.Test_T\" must be ordered before \"S.Test_T_M1\".",
+		"Test \"S.Test_T__1\" must be ordered before \"S.Test_T_M1\".",
+		"Test \"S.Test_T__2\" must be ordered before \"S.Test_T_M1\".",
+		"Test \"S.Test_T_M2__1\" must be ordered before \"S.Test_T_M3\".")
 }
 
 func (s *Suite) Test_TestNameChecker_print__empty(c *check.C) {
@@ -238,6 +262,51 @@ func (s *Suite) Test_code_fullName(c *check.C) {
 	test("Type", "", "Type")
 	test("", "Func", "Func")
 	test("Type", "Method", "Type.Method")
+}
+
+func (s *Suite) Test_code_isType(c *check.C) {
+	_ = s.Init(c)
+
+	test := func(typeName, funcName string, isType bool) {
+		code := code{"filename", typeName, funcName, 0}
+		c.Check(code.isType(), check.Equals, isType)
+	}
+
+	test("Type", "", true)
+	test("", "Func", false)
+	test("Type", "Method", false)
+}
+
+func (s *Suite) Test_code_isMethod(c *check.C) {
+	_ = s.Init(c)
+
+	test := func(typeName, funcName string, isMethod bool) {
+		code := code{"filename", typeName, funcName, 0}
+		c.Check(code.isMethod(), check.Equals, isMethod)
+	}
+
+	test("Type", "", false)
+	test("", "Func", false)
+	test("Type", "Method", true)
+}
+
+func (s *Suite) Test_code_isTest(c *check.C) {
+	_ = s.Init(c)
+
+	test := func(filename, typeName, funcName string, isTest bool) {
+		code := code{filename, typeName, funcName, 0}
+		c.Check(code.isTest(), check.Equals, isTest)
+	}
+
+	test("f.go", "Type", "", false)
+	test("f.go", "", "Func", false)
+	test("f.go", "Type", "Method", false)
+	test("f.go", "Type", "Test", false)
+	test("f.go", "Type", "Test_Type_Method", false)
+	test("f.go", "", "Test_Type_Method", false)
+	test("f_test.go", "Type", "Test", true)
+	test("f_test.go", "Type", "Test_Type_Method", true)
+	test("f_test.go", "", "Test_Type_Method", true)
 }
 
 func (s *Suite) Test_plural(c *check.C) {

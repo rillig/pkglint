@@ -150,11 +150,7 @@ func (ck *TestNameChecker) loadDecl(decl ast.Decl, filename string) {
 }
 
 func (ck *TestNameChecker) addCode(code code) {
-	isTest := strings.HasSuffix(code.file, "_test.go") &&
-		code.Type != "" &&
-		strings.HasPrefix(code.Func, "Test")
-
-	if isTest {
+	if code.isTest() {
 		ck.addTest(code)
 	} else {
 		ck.addTestee(code)
@@ -166,7 +162,7 @@ func (ck *TestNameChecker) addTestee(code code) {
 }
 
 func (ck *TestNameChecker) addTest(code code) {
-	if !strings.HasPrefix(code.Func, "Test_") {
+	if !strings.HasPrefix(code.Func, "Test_") && code.Func != "Test" {
 		ck.addError(
 			EName,
 			"Test %q must start with %q.",
@@ -213,8 +209,8 @@ func (ck *TestNameChecker) relate() {
 func (ck *TestNameChecker) checkTests() {
 	for _, test := range ck.tests {
 		ck.checkTestFile(test)
-		ck.checkTestName(test)
 		ck.checkTestTestee(test)
+		ck.checkTestDescr(test)
 	}
 }
 
@@ -225,12 +221,14 @@ func (ck *TestNameChecker) checkTestFile(test *test) {
 	}
 
 	correctTestFile := strings.TrimSuffix(testee.file, ".go") + "_test.go"
-	if correctTestFile != test.file {
-		ck.addError(
-			EFile,
-			"Test %q for %q must be in %s instead of %s.",
-			test.fullName(), testee.fullName(), correctTestFile, test.file)
+	if correctTestFile == test.file {
+		return
 	}
+
+	ck.addError(
+		EFile,
+		"Test %q for %q must be in %s instead of %s.",
+		test.fullName(), testee.fullName(), correctTestFile, test.file)
 }
 
 func (ck *TestNameChecker) checkTestTestee(test *test) {
@@ -246,18 +244,12 @@ func (ck *TestNameChecker) checkTestTestee(test *test) {
 		testeeName, test.fullName())
 }
 
-// checkTestName ensures that the method name does not accidentally
-// end up in the description of the test. This could happen if there is a
-// double underscore instead of a single underscore.
-func (ck *TestNameChecker) checkTestName(test *test) {
+// checkTestDescr ensures that the type or function name of the testee
+// does not accidentally end up in the description of the test. This could
+// happen if there is a double underscore instead of a single underscore.
+func (ck *TestNameChecker) checkTestDescr(test *test) {
 	testee := test.testee
-	if testee == nil {
-		return
-	}
-	if testee.Type != "" && testee.Func != "" {
-		return
-	}
-	if !isCamelCase(test.descr) {
+	if testee == nil || testee.isMethod() || !isCamelCase(test.descr) {
 		return
 	}
 
@@ -274,16 +266,20 @@ func (ck *TestNameChecker) checkTestees() {
 	}
 
 	for _, testee := range ck.testees {
-		if tested[testee] || testee.Func == "" {
-			continue
-		}
-
-		testName := "Test_" + join(testee.Type, "_", testee.Func)
-		ck.addError(
-			EMissingTest,
-			"Missing unit test %q for %q.",
-			testName, testee.fullName())
+		ck.checkTesteeTest(testee, tested)
 	}
+}
+
+func (ck *TestNameChecker) checkTesteeTest(testee *testee, tested map[*testee]bool) {
+	if tested[testee] || testee.isType() {
+		return
+	}
+
+	testName := "Test_" + join(testee.Type, "_", testee.Func)
+	ck.addError(
+		EMissingTest,
+		"Missing unit test %q for %q.",
+		testName, testee.fullName())
 }
 
 func (ck *TestNameChecker) isIgnored(filename string) bool {
@@ -325,7 +321,7 @@ func (ck *TestNameChecker) checkOrder() {
 			}
 			ck.addError(
 				EOrder,
-				"Test %q should be ordered before %q.",
+				"Test %q must be ordered before %q.",
 				test.fullName(), insertBefore.fullName())
 		}
 	}
@@ -342,20 +338,26 @@ func (ck *TestNameChecker) print() {
 		_, _ = fmt.Fprintln(ck.out, msg)
 	}
 
-	errors := plural(len(ck.errors), "error", "errors")
 	if len(ck.errors) > 0 {
-		ck.errorf("%s.", errors)
+		ck.errorf("%s.", plural(len(ck.errors), "error", "errors"))
 	}
 }
 
 type code struct {
-	file  string // The file containing the code
-	Type  string // The type, e.g. MkLine
-	Func  string // The function or method name, e.g. Warnf
-	order int    // The relative order in the file
+	file  string // the file containing the code
+	Type  string // the type, e.g. MkLine
+	Func  string // the function or method name, e.g. Warnf
+	order int    // the relative order in the file
 }
 
 func (c *code) fullName() string { return join(c.Type, ".", c.Func) }
+func (c *code) isType() bool     { return c.Func == "" }
+func (c *code) isMethod() bool   { return c.Type != "" && c.Func != "" }
+
+func (c *code) isTest() bool {
+	return strings.HasSuffix(c.file, "_test.go") &&
+		strings.HasPrefix(c.Func, "Test")
+}
 
 // testee is an element of the source code that can be tested.
 // It is either a type, a function or a method.
