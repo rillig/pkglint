@@ -65,7 +65,6 @@ func (s *Suite) Test_TestNameChecker_Check(c *check.C) {
 		"Missing unit test \"Test_TestNameChecker_checkTests\" for \"TestNameChecker.checkTests\".",
 		"Missing unit test \"Test_TestNameChecker_checkTestees\" for \"TestNameChecker.checkTestees\".",
 		"Missing unit test \"Test_TestNameChecker_isIgnored\" for \"TestNameChecker.isIgnored\".",
-		"Missing unit test \"Test_TestNameChecker_checkOrder\" for \"TestNameChecker.checkOrder\".",
 		"Missing unit test \"Test_TestNameChecker_addError\" for \"TestNameChecker.addError\".",
 		"Missing unit test \"Test_Test\" for \"Test\".",
 		"Missing unit test \"Test_Suite_Init\" for \"Suite.Init\".",
@@ -73,7 +72,7 @@ func (s *Suite) Test_TestNameChecker_Check(c *check.C) {
 		"Missing unit test \"Test_Suite_CheckErrors\" for \"Suite.CheckErrors\".",
 		"Missing unit test \"Test_Suite_CheckSummary\" for \"Suite.CheckSummary\".",
 		"Missing unit test \"Test_Value_Method\" for \"Value.Method\".")
-	s.CheckSummary("20 errors.")
+	s.CheckSummary("19 errors.")
 }
 
 func (s *Suite) Test_TestNameChecker_addTest(c *check.C) {
