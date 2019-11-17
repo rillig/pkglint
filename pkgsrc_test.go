@@ -422,6 +422,10 @@ func (s *Suite) Test_Pkgsrc_parseDocChange(c *check.C) {
 	// "Split" is wrong
 	test("\tSplit pkgpath into a and b [author date]",
 		"WARN: doc/CHANGES-2019:123: Unknown doc/CHANGES line: \tSplit pkgpath into a and b [author date]")
+
+	// Entries ending in a colon are used for infrastructure changes.
+	test("\tmk: remove support for USE_CROSSBASE [author 2016-06-19]",
+		nil...)
 }
 
 func (s *Suite) Test_Pkgsrc_checkRemovedAfterLastFreeze(c *check.C) {

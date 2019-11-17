@@ -278,6 +278,9 @@ func (*Pkgsrc) parseDocChange(line *Line, warn bool) *Change {
 
 	f := strings.Fields(lex.Rest())
 	n := len(f)
+	if n > 1 && hasSuffix(f[0], ":") {
+		return nil
+	}
 	if n == 0 {
 		return invalid()
 	}
