@@ -178,7 +178,7 @@ func (ck *TestNameChecker) addTest(code code) {
 			ck.addError(
 				EName,
 				code,
-				"Test %q must not have a nonempty description.",
+				"Test %q must have a nonempty description.",
 				code.fullName())
 			return
 		}

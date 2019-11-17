@@ -177,7 +177,7 @@ func (s *Suite) Test_TestNameChecker_addTest__empty_description(c *check.C) {
 	ck.addTest(code{"filename.go", "Suite", "Test_Method__", 0})
 
 	s.CheckErrors(
-		"Test \"Suite.Test_Method__\" must not have a nonempty description.")
+		"Test \"Suite.Test_Method__\" must have a nonempty description.")
 }
 
 func (s *Suite) Test_TestNameChecker_nextOrder(c *check.C) {
