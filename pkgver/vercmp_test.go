@@ -95,6 +95,6 @@ func (s *Suite) Test_newVersion(c *check.C) {
 
 func (s *Suite) Test__test_names(c *check.C) {
 	ck := intqa.NewTestNameChecker(c.Errorf)
-	ck.Enable(intqa.EAll, -intqa.EMissing)
+	ck.Enable(intqa.EAll, -intqa.EMissingTest)
 	ck.Check()
 }

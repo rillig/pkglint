@@ -21,7 +21,11 @@ const (
 	EAll
 
 	// A function or method does not have a corresponding test.
-	EMissing
+	EMissingTest
+
+	// The name of a test function does not correspond to a program
+	// element to be tested.
+	EMissingTestee
 
 	// The tests are not in the same order as their corresponding
 	// testees in the main code.
@@ -237,7 +241,7 @@ func (ck *TestNameChecker) checkTestTestee(test *test) {
 
 	testeeName := strings.ReplaceAll(test.testeeName, "_", ".")
 	ck.addError(
-		EMissing,
+		EMissingTestee,
 		"Missing testee %q for test %q.",
 		testeeName, test.fullName())
 }
@@ -276,7 +280,7 @@ func (ck *TestNameChecker) checkTestees() {
 
 		testName := "Test_" + join(testee.Type, "_", testee.Func)
 		ck.addError(
-			EMissing,
+			EMissingTest,
 			"Missing unit test %q for %q.",
 			testName, testee.fullName())
 	}
