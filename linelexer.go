@@ -75,8 +75,7 @@ func (llex *LinesLexer) SkipPrefix(prefix string) bool {
 	return false
 }
 
-// TODO: rename to SkipText
-func (llex *LinesLexer) SkipString(text string) bool {
+func (llex *LinesLexer) SkipText(text string) bool {
 	if trace.Tracing {
 		defer trace.Call2(llex.CurrentLine().Text, text)()
 	}
@@ -89,7 +88,7 @@ func (llex *LinesLexer) SkipString(text string) bool {
 }
 
 func (llex *LinesLexer) SkipEmptyOrNote() bool {
-	if llex.SkipString("") {
+	if llex.SkipText("") {
 		return true
 	}
 
@@ -110,7 +109,7 @@ func (llex *LinesLexer) SkipEmptyOrNote() bool {
 }
 
 func (llex *LinesLexer) SkipContainsOrWarn(text string) bool {
-	result := llex.SkipString(text)
+	result := llex.SkipText(text)
 	if !result {
 		llex.CurrentLine().Warnf("This line should contain the following text: %s", text)
 	}

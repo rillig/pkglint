@@ -40,7 +40,7 @@ func (ck *Buildlink3Checker) Check() {
 
 	if llex.SkipRegexp(`^BUILDLINK_DEPMETHOD\.([^\t ]+)\?=.*$`) {
 		llex.PreviousLine().Warnf("This line belongs inside the .ifdef block.")
-		for llex.SkipString("") {
+		for llex.SkipText("") {
 		}
 	}
 

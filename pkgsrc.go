@@ -362,16 +362,16 @@ func (src *Pkgsrc) parseSuggestedUpdates(lines *Lines) []SuggestedUpdate {
 	var updates []SuggestedUpdate
 
 	llex := NewLinesLexer(lines)
-	for !llex.EOF() && !llex.SkipString("Suggested package updates") {
+	for !llex.EOF() && !llex.SkipText("Suggested package updates") {
 		llex.Skip()
 	}
-	for !llex.EOF() && !llex.SkipString("") {
+	for !llex.EOF() && !llex.SkipText("") {
 		llex.Skip()
 	}
-	for llex.SkipString("") {
+	for llex.SkipText("") {
 	}
 
-	for !llex.EOF() && !llex.SkipString("") {
+	for !llex.EOF() && !llex.SkipText("") {
 		line := llex.CurrentLine()
 		text := line.Text
 		llex.Skip()
