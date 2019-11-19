@@ -581,6 +581,33 @@ func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates__wip(c *check.C) {
 			"This package should be updated to 1.13 ([cool new features]) (see ../../wip/TODO:5).")
 }
 
+func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates__parse_errors(c *check.C) {
+	t := s.Init(c)
+
+	lines := t.NewLines("doc/TODO",
+		"", // missing CvsID
+		"Suggested package updates",
+		"==============", // usually this line is a bit longer
+		"",
+		"", // usually there's only a single empty line
+		"\t"+"O wrong bullet",
+		"\t"+"o package-without-version",
+		"\t"+"o CSP-0.34",
+		"\t"+"o freeciv-client-2.5.0 (urgent)", // missing [brackets]
+		"",
+		"\t"+"o ignored-0.0")
+
+	todo := G.Pkgsrc.parseSuggestedUpdates(lines)
+
+	t.CheckDeepEquals(todo, []SuggestedUpdate{
+		{lines.Lines[7].Location, "CSP", "0.34", ""},
+		{lines.Lines[8].Location, "freeciv-client", "2.5.0", "(urgent)"}})
+
+	t.CheckOutputLines(
+		"WARN: doc/TODO:6: Invalid line format \"\\tO wrong bullet\".",
+		"WARN: doc/TODO:7: Invalid package name \"package-without-version\".")
+}
+
 func (s *Suite) Test_Pkgsrc_loadTools(c *check.C) {
 	t := s.Init(c)
 
