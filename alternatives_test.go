@@ -126,9 +126,5 @@ func (s *Suite) Test_CheckFileAlternatives__PLIST_man(c *check.C) {
 
 	G.Check(t.File("category/package"))
 
-	// FIXME
-	t.CheckOutputLines(
-		"ERROR: ~/category/package/ALTERNATIVES:1: " +
-			"Alternative implementation \"@PREFIX@/@PKGMANDIR@/man1/blockdiag-@PYVERSSUFFIX@.1\" " +
-			"must appear in the PLIST as \"${PKGMANDIR}/man1/blockdiag-${PYVERSSUFFIX}.1\".")
+	t.CheckOutputEmpty()
 }
