@@ -1177,9 +1177,6 @@ func (ind *Indentation) TrackBefore(mkline *MkLine) {
 	if !mkline.IsDirective() {
 		return
 	}
-	if trace.Tracing {
-		trace.Stepf("Indentation before line %s: %s", mkline.Linenos(), ind)
-	}
 
 	switch mkline.Directive() {
 	case "for", "if", "ifdef", "ifndef":
@@ -1240,10 +1237,6 @@ func (ind *Indentation) TrackAfter(mkline *MkLine) {
 					ind.AddCheckedFile(arg)
 				}
 			}})
-	}
-
-	if trace.Tracing {
-		trace.Stepf("Indentation after line %s: %s", mkline.Linenos(), ind)
 	}
 }
 

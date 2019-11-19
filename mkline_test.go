@@ -1308,7 +1308,7 @@ func (s *Suite) Test_Indentation__realistic(c *check.C) {
 		".if 1",
 		".  if !defined(GUARD_MK)",
 		".  for var in 1 2 3",
-		".    if !defined(GUARD_MK)",
+		".    if !defined(GUARD_MK)", // well, not entirely realistic
 		".    if 3",
 		".    endif",
 		".    endif",
@@ -1322,43 +1322,9 @@ func (s *Suite) Test_Indentation__realistic(c *check.C) {
 		".  endfor",
 		".endif")
 
-	t.EnableTracingToLog()
-
 	mklines.ForEach(func(mkline *MkLine) {})
 
-	t.CheckOutputLinesMatching(`Indentation`,
-		"TRACE:   Indentation before line 3: []",
-		"TRACE:   Indentation after line 3: [2]",
-		"TRACE:   Indentation before line 4: [2]",
-		"TRACE:   Indentation after line 4: [2 2]",
-		"TRACE:   Indentation before line 5: [2 2]",
-		"TRACE:   Indentation after line 5: [2 2 4]",
-		"TRACE:   Indentation before line 6: [2 2 4]",
-		"TRACE:   Indentation after line 6: [2 2 4 4]",
-		"TRACE:   Indentation before line 7: [2 2 4 4]",
-		"TRACE:   Indentation after line 7: [2 2 4 4 6]",
-		"TRACE:   Indentation before line 8: [2 2 4 4 6]",
-		"TRACE:   Indentation after line 8: [2 2 4 4]",
-		"TRACE:   Indentation before line 9: [2 2 4 4]",
-		"TRACE:   Indentation after line 9: [2 2 4]",
-		"TRACE:   Indentation before line 10: [2 2 4]",
-		"TRACE:   Indentation after line 10: [2 2]",
-		"TRACE:   Indentation before line 11: [2 2]",
-		"TRACE:   Indentation after line 11: [2]",
-		"TRACE:   Indentation before line 12: [2]",
-		"TRACE:   Indentation after line 12: [2]",
-		"TRACE:   Indentation before line 13: [2]",
-		"TRACE:   Indentation after line 13: [2 4]",
-		"TRACE:   Indentation before line 14: [2 4]",
-		"TRACE:   Indentation after line 14: [2]",
-		"TRACE:   Indentation before line 15: [2]",
-		"TRACE:   Indentation after line 15: [2]",
-		"TRACE:   Indentation before line 16: [2]",
-		"TRACE:   Indentation after line 16: [2 4]",
-		"TRACE:   Indentation before line 17: [2 4]",
-		"TRACE:   Indentation after line 17: [2]",
-		"TRACE:   Indentation before line 18: [2]",
-		"TRACE:   Indentation after line 18: []")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_Indentation_RememberUsedVariables(c *check.C) {
