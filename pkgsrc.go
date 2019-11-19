@@ -1015,11 +1015,14 @@ func (src *Pkgsrc) ReadDir(dirName string) []os.FileInfo {
 	return relevantFiles
 }
 
-func (src *Pkgsrc) LoadMkInfra(filename string, options LoadOptions) *MkLines {
-	if G.Testing {
-		// During testing, the infrastructure files don't have to exist.
-		// They are often emulated by setting their data structures manually.
-		options &^= MustSucceed
+// LoadMkExisting loads a file that must exist.
+//
+// During pkglint testing, these files often don't exist, as they are
+// emulated by setting their data structures manually.
+func (src *Pkgsrc) LoadMkExisting(filename string) *MkLines {
+	options := NotEmpty
+	if !G.Testing {
+		options |= MustSucceed
 	}
 	return src.LoadMk(filename, options)
 }

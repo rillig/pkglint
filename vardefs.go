@@ -331,7 +331,7 @@ func (reg *VarTypeRegistry) infralist(varname string, basicType *BasicType) {
 // compilerLanguages reads the available languages that are typically
 // bundled in a single compiler framework, such as GCC or Clang.
 func (reg *VarTypeRegistry) compilerLanguages(src *Pkgsrc) *BasicType {
-	mklines := src.LoadMkInfra("mk/compiler.mk", NotEmpty|MustSucceed)
+	mklines := src.LoadMkExisting("mk/compiler.mk")
 
 	languages := make(map[string]bool)
 	if mklines != nil {
@@ -372,7 +372,7 @@ func (reg *VarTypeRegistry) compilerLanguages(src *Pkgsrc) *BasicType {
 // If the file cannot be found, the allowed values are taken from
 // defval. This is mostly useful when testing pkglint.
 func (reg *VarTypeRegistry) enumFrom(pkgsrc *Pkgsrc, filename string, defval string, varcanons ...string) *BasicType {
-	mklines := LoadMk(pkgsrc.File(filename), NotEmpty)
+	mklines := pkgsrc.LoadMkExisting(filename)
 	if mklines == nil {
 		return enum(defval)
 	}
@@ -1250,7 +1250,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.pkglist("MASTER_SITES", BtFetchURL)
 
 	for _, filename := range []string{"mk/fetch/sites.mk", "mk/fetch/fetch.mk"} {
-		sitesMk := src.LoadMkInfra(filename, NotEmpty|MustSucceed)
+		sitesMk := src.LoadMkExisting(filename)
 		if sitesMk != nil {
 			sitesMk.ForEach(func(mkline *MkLine) {
 				if mkline.IsVarassign() && hasPrefix(mkline.Varname(), "MASTER_SITE_") {
