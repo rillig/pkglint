@@ -378,6 +378,9 @@ func (src *Pkgsrc) parseSuggestedUpdates(lines *Lines) []SuggestedUpdate {
 
 		if m, pkgname, comment := match2(text, `^\to[\t ]([^\t ]+)(?:[\t ]*(.+))?$`); m {
 			if m, pkgbase, pkgversion := match2(pkgname, rePkgname); m {
+				if hasPrefix(comment, "[") && hasSuffix(comment, "]") {
+					comment = comment[1 : len(comment)-1]
+				}
 				updates = append(updates, SuggestedUpdate{line.Location, intern(pkgbase), intern(pkgversion), intern(comment)})
 			} else {
 				line.Warnf("Invalid package name %q.", pkgname)
