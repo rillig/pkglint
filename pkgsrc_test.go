@@ -543,6 +543,7 @@ func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("doc/TODO",
+		CvsID,
 		"",
 		"Suggested package updates",
 		"==============",
@@ -556,8 +557,8 @@ func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates(c *check.C) {
 	todo := G.Pkgsrc.parseSuggestedUpdates(lines)
 
 	t.CheckDeepEquals(todo, []SuggestedUpdate{
-		{lines.Lines[5].Location, "CSP", "0.34", ""},
-		{lines.Lines[6].Location, "freeciv-client", "2.5.0", "(urgent)"}})
+		{lines.Lines[6].Location, "CSP", "0.34", ""},
+		{lines.Lines[7].Location, "freeciv-client", "2.5.0", "(urgent)"}})
 }
 
 func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates__wip(c *check.C) {
