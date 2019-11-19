@@ -80,6 +80,7 @@ netbsd() {
     --cvs-exclude \
     --exclude="qa-pkglint" \
     --exclude="*.out" \
+    --exclude="/.editorconfig" \
     --exclude=".git*" \
     --exclude="/.travis.yml" \
     --exclude="/COPYING" \
