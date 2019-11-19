@@ -1151,24 +1151,25 @@ func (pkg *Package) checkUpdate() {
 			comment = " (" + comment + ")"
 		}
 
-		pkgnameLine := pkg.EffectivePkgnameLine
+		mkline := pkg.EffectivePkgnameLine
 		cmp := pkgver.Compare(pkg.EffectivePkgversion, suggver)
+		ref := mkline.RefToLocation(sugg.Line)
 		switch {
 
 		case cmp < 0:
-			pkgnameLine.Warnf("This package should be updated to %s%s.",
-				sugg.Version, comment)
-			pkgnameLine.Explain(
+			mkline.Warnf("This package should be updated to %s%s (see %s).",
+				sugg.Version, comment, ref)
+			mkline.Explain(
 				"The wishlist for package updates in doc/TODO mentions that a newer",
 				"version of this package is available.")
 
 		case cmp > 0:
-			pkgnameLine.Notef("This package is newer than the update request to %s%s.",
-				suggver, comment)
+			mkline.Notef("This package is newer than the update request to %s%s from %s.",
+				suggver, comment, ref)
 
 		default:
-			pkgnameLine.Notef("The update request to %s from doc/TODO%s has been done.",
-				suggver, comment)
+			mkline.Notef("The update request to %s%s from %s has been done.",
+				suggver, comment, ref)
 		}
 	}
 }
