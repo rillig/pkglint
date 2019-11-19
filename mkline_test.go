@@ -1129,7 +1129,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__uncovered_cases(c *check.C) {
 		"")
 
 	// Just for branch coverage.
-	trace.Tracing = false
+	t.DisableTracing()
 	MkLineChecker{mklines, mklines.mklines[2]}.Check()
 
 	t.CheckOutputEmpty()
