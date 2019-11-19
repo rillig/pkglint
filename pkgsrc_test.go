@@ -578,7 +578,7 @@ func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates__wip(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: ~/wip/package/Makefile:3: " +
-			"This package should be updated to 1.13 (cool new features) (see ../../wip/TODO:5).")
+			"This package should be updated to 1.13 (cool new features; see ../../wip/TODO:5).")
 }
 
 func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates__parse_errors(c *check.C) {

@@ -2484,11 +2484,10 @@ func (s *Suite) Test_Package_checkUpdate(c *check.C) {
 		"NOTE: category/pkg1/Makefile:4: The update request to 1.0 from ../../doc/TODO:6 has been done.",
 		"NOTE: category/pkg1/Makefile:4: The update request to 1.0 (with comment) from ../../doc/TODO:7 has been done.",
 		"WARN: category/pkg2/Makefile:4: This package should be updated to 2.0 (see ../../doc/TODO:8).",
-		"WARN: category/pkg2/Makefile:4: This package should be updated to 2.0 (nice new features) (see ../../doc/TODO:9).",
+		"WARN: category/pkg2/Makefile:4: This package should be updated to 2.0 (nice new features; see ../../doc/TODO:9).",
 		"NOTE: category/pkg3/Makefile:4: This package is newer than the update request to 3.0 from ../../doc/TODO:10.",
 		"NOTE: category/pkg3/Makefile:4: This package is newer than the update request to 3.0 (security update) from ../../doc/TODO:11.",
-		"2 warnings and 4 notes found.",
-		"(Run \"pkglint -e -Wall,no-space category/pkg1 category/pkg2 category/pkg3\" to show explanations.)")
+		"2 warnings and 4 notes found.")
 }
 
 func (s *Suite) Test_Package_checkDirent__errors(c *check.C) {

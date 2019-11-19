@@ -238,7 +238,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 			"Package version \"1.11\" is greater than the latest \"1.10\" "+
 			"from ../../doc/CHANGES-2018:5.",
 		"WARN: ~/sysutils/checkperms/Makefile:3: "+
-			"This package should be updated to 1.13 (supports more file formats) (see ../../doc/TODO:5).",
+			"This package should be updated to 1.13 (supports more file formats; see ../../doc/TODO:5).",
 		"ERROR: ~/sysutils/checkperms/Makefile:4: Invalid category \"tools\".",
 		"ERROR: ~/sysutils/checkperms/README: Packages in main pkgsrc must not have a README file.",
 		"ERROR: ~/sysutils/checkperms/TODO: Packages in main pkgsrc must not have a TODO file.",

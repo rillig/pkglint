@@ -1147,8 +1147,12 @@ func (pkg *Package) checkUpdate() {
 		}
 
 		suggver, comment := sugg.Version, sugg.Comment
-		if comment != "" {
-			comment = " (" + comment + ")"
+
+		commentSuffix := func() string {
+			if comment != "" {
+				return " (" + comment + ")"
+			}
+			return ""
 		}
 
 		mkline := pkg.EffectivePkgnameLine
@@ -1157,19 +1161,21 @@ func (pkg *Package) checkUpdate() {
 		switch {
 
 		case cmp < 0:
-			mkline.Warnf("This package should be updated to %s%s (see %s).",
-				sugg.Version, comment, ref)
-			mkline.Explain(
-				"The wishlist for package updates in doc/TODO mentions that a newer",
-				"version of this package is available.")
+			if comment != "" {
+				mkline.Warnf("This package should be updated to %s (%s; see %s).",
+					sugg.Version, comment, ref)
+			} else {
+				mkline.Warnf("This package should be updated to %s (see %s).",
+					sugg.Version, ref)
+			}
 
 		case cmp > 0:
 			mkline.Notef("This package is newer than the update request to %s%s from %s.",
-				suggver, comment, ref)
+				suggver, commentSuffix(), ref)
 
 		default:
 			mkline.Notef("The update request to %s%s from %s has been done.",
-				suggver, comment, ref)
+				suggver, commentSuffix(), ref)
 		}
 	}
 }
