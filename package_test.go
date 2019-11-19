@@ -2469,7 +2469,10 @@ func (s *Suite) Test_Package_checkUpdate(c *check.C) {
 		"\t"+"O wrong bullet",
 		"\t"+"o package-without-version",
 		"\t"+"o package1-1.0",
+		"\t"+"o package1-1.0 [with comment]",
+		"\t"+"o package2-2.0",
 		"\t"+"o package2-2.0 [nice new features]",
+		"\t"+"o package3-3.0",
 		"\t"+"o package3-3.0 [security update]")
 	t.Chdir(".")
 
@@ -2480,9 +2483,12 @@ func (s *Suite) Test_Package_checkUpdate(c *check.C) {
 		"WARN: category/pkg1/../../doc/TODO:4: Invalid line format \"\\tO wrong bullet\".",
 		"WARN: category/pkg1/../../doc/TODO:5: Invalid package name \"package-without-version\".",
 		"NOTE: category/pkg1/Makefile:4: The update request to 1.0 from doc/TODO has been done.",
+		"NOTE: category/pkg1/Makefile:4: The update request to 1.0 from doc/TODO ([with comment]) has been done.",
+		"WARN: category/pkg2/Makefile:4: This package should be updated to 2.0.",
 		"WARN: category/pkg2/Makefile:4: This package should be updated to 2.0 ([nice new features]).",
+		"NOTE: category/pkg3/Makefile:4: This package is newer than the update request to 3.0.",
 		"NOTE: category/pkg3/Makefile:4: This package is newer than the update request to 3.0 ([security update]).",
-		"4 warnings and 2 notes found.",
+		"5 warnings and 4 notes found.",
 		"(Run \"pkglint -e -Wall,no-space category/pkg1 category/pkg2 category/pkg3\" to show explanations.)")
 }
 
