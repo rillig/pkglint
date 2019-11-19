@@ -360,32 +360,30 @@ func (src *Pkgsrc) parseSuggestedUpdates(lines *Lines) []SuggestedUpdate {
 	}
 
 	var updates []SuggestedUpdate
-	state := 0
-	for _, line := range lines.Lines {
+
+	llex := NewLinesLexer(lines)
+	for !llex.EOF() && !llex.SkipString("Suggested package updates") {
+		llex.Skip()
+	}
+	for !llex.EOF() && !llex.SkipString("") {
+		llex.Skip()
+	}
+	for llex.SkipString("") {
+	}
+
+	for !llex.EOF() && !llex.SkipString("") {
+		line := llex.CurrentLine()
 		text := line.Text
+		llex.Skip()
 
-		// TODO: Replace this state transition scheme with explicit code,
-		//  hoping that the code will be easier to understand.
-		if state == 0 && text == "Suggested package updates" {
-			state = 1
-		} else if state == 1 && text == "" {
-			state = 2
-		} else if state == 2 {
-			state = 3
-		} else if state == 3 && text == "" {
-			state = 4
-		}
-
-		if state == 3 {
-			if m, pkgname, comment := match2(text, `^\to[\t ]([^\t ]+)(?:[\t ]*(.+))?$`); m {
-				if m, pkgbase, pkgversion := match2(pkgname, rePkgname); m {
-					updates = append(updates, SuggestedUpdate{line.Location, intern(pkgbase), intern(pkgversion), intern(comment)})
-				} else {
-					line.Warnf("Invalid package name %q.", pkgname)
-				}
+		if m, pkgname, comment := match2(text, `^\to[\t ]([^\t ]+)(?:[\t ]*(.+))?$`); m {
+			if m, pkgbase, pkgversion := match2(pkgname, rePkgname); m {
+				updates = append(updates, SuggestedUpdate{line.Location, intern(pkgbase), intern(pkgversion), intern(comment)})
 			} else {
-				line.Warnf("Invalid line format %q.", text)
+				line.Warnf("Invalid package name %q.", pkgname)
 			}
+		} else {
+			line.Warnf("Invalid line format %q.", text)
 		}
 	}
 	return updates
