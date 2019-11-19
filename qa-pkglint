@@ -103,8 +103,8 @@ netbsd() {
   step_msg "Installing NetBSD package"
   cmd=". ./.bash_profile"
   cmd="$cmd && cd proj/pkgsrc/pkgtools/pkglint"
-  cmd="$cmd && env - PATH=/bin:/usr/bin PKGSRC_RUN_TEST=no \"\$HOME/minipkg/bin/bmake\" clean update"
   cmd="$cmd && env - PATH=/bin:/usr/bin PKGSRC_RUN_TEST=yes \"\$HOME/minipkg/bin/bmake\" clean update"
+  cmd="$cmd && env - PATH=/bin:/usr/bin PKGSRC_RUN_TEST=no \"\$HOME/minipkg/bin/bmake\" clean update"
   cmd="$cmd && \"\$HOME/minipkg/bin/pkglint\" -Wall"
   # shellcheck disable=SC2029
   ssh netbsd "$cmd"
