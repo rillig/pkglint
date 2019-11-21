@@ -70,17 +70,23 @@ func (p Path) HasSuffixPath(suffix Path) bool {
 		(len(p) == len(suffix) || p[len(p)-len(suffix)-1] == '/')
 }
 
+func (p Path) HasBase(base string) bool { return p.Base() == base }
+
 func (p Path) TrimSuffix(suffix string) Path {
 	return Path(strings.TrimSuffix(string(p), suffix))
 }
 
-func (p Path) HasBase(base string) bool { return p.Base() == base }
-
-func (p Path) JoinClean(s string) Path {
-	return Path(path.Join(string(p), s))
+func (p Path) Replace(from, to string) Path {
+	return Path(strings.Replace(string(p), from, to, -1))
 }
 
-func (p Path) JoinNoClean(s string) Path { return Path(string(p) + "/" + s) }
+func (p Path) JoinClean(s Path) Path {
+	return Path(path.Join(string(p), string(s)))
+}
+
+func (p Path) JoinNoClean(s Path) Path {
+	return Path(string(p) + "/" + string(s))
+}
 
 func (p Path) Clean() Path { return NewPath(path.Clean(string(p))) }
 
@@ -104,8 +110,9 @@ func (p Path) Lstat() (os.FileInfo, error) { return os.Lstat(string(p)) }
 
 func (p Path) Stat() (os.FileInfo, error) { return os.Stat(string(p)) }
 
-func (p Path) Chmod(mode os.FileMode) error {
-	return os.Chmod(string(p), mode)
+func (p Path) Exists() bool {
+	_, err := p.Lstat()
+	return err == nil
 }
 
 func (p Path) IsFile() bool {
@@ -116,6 +123,10 @@ func (p Path) IsFile() bool {
 func (p Path) IsDir() bool {
 	info, err := p.Lstat()
 	return err == nil && info.IsDir()
+}
+
+func (p Path) Chmod(mode os.FileMode) error {
+	return os.Chmod(string(p), mode)
 }
 
 func (p Path) ReadDir() ([]os.FileInfo, error) {

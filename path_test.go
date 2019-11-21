@@ -213,20 +213,6 @@ func (s *Suite) Test_Path_HasSuffixPath(c *check.C) {
 	test("aa/b/c", "bb", false)
 }
 
-func (s *Suite) Test_Path_TrimSuffix(c *check.C) {
-	t := s.Init(c)
-
-	test := func(p Path, suffix string, result Path) {
-		t.CheckEquals(p.TrimSuffix(suffix), result)
-	}
-
-	test("dir/file", "e", "dir/fil")
-	test("dir/file", "file", "dir/")
-	test("dir/file", "/file", "dir")
-	test("dir/file", "dir/file", "")
-	test("dir/file", "subdir/file", "dir/file")
-}
-
 func (s *Suite) Test_Path_HasBase(c *check.C) {
 	t := s.Init(c)
 
@@ -241,10 +227,36 @@ func (s *Suite) Test_Path_HasBase(c *check.C) {
 	test("dir/file", "dir/file", false)
 }
 
-func (s *Suite) Test_Path_JoinClean(c *check.C) {
+func (s *Suite) Test_Path_TrimSuffix(c *check.C) {
 	t := s.Init(c)
 
 	test := func(p Path, suffix string, result Path) {
+		t.CheckEquals(p.TrimSuffix(suffix), result)
+	}
+
+	test("dir/file", "e", "dir/fil")
+	test("dir/file", "file", "dir/")
+	test("dir/file", "/file", "dir")
+	test("dir/file", "dir/file", "")
+	test("dir/file", "subdir/file", "dir/file")
+}
+
+func (s *Suite) Test_Path_Replace(c *check.C) {
+	t := s.Init(c)
+
+	test := func(p Path, from, to string, result Path) {
+		t.CheckEquals(p.Replace(from, to), result)
+	}
+
+	test("dir/file", "dir", "other", "other/file")
+	test("dir/file", "r", "sk", "disk/file")
+	test("aaa/file", "a", "sub/", "sub/sub/sub//file")
+}
+
+func (s *Suite) Test_Path_JoinClean(c *check.C) {
+	t := s.Init(c)
+
+	test := func(p Path, suffix Path, result Path) {
 		t.CheckEquals(p.JoinClean(suffix), result)
 	}
 
@@ -257,7 +269,7 @@ func (s *Suite) Test_Path_JoinClean(c *check.C) {
 func (s *Suite) Test_Path_JoinNoClean(c *check.C) {
 	t := s.Init(c)
 
-	test := func(p Path, suffix string, result Path) {
+	test := func(p, suffix Path, result Path) {
 		t.CheckEquals(p.JoinNoClean(suffix), result)
 	}
 
@@ -355,22 +367,19 @@ func (s *Suite) Test_Path_Stat(c *check.C) {
 	testDir(t.File("file"), false)
 }
 
-func (s *Suite) Test_Path_Chmod(c *check.C) {
+func (s *Suite) Test_Path_Exists(c *check.C) {
 	t := s.Init(c)
 
-	testWritable := func(f Path, writable bool) {
-		lstat, err := f.Lstat()
-		assertNil(err, "Lstat")
-		t.CheckEquals(lstat.Mode().Perm()&0200 != 0, writable)
+	test := func(f Path, exists bool) {
+		t.CheckEquals(f.Exists(), exists)
 	}
 
-	f := NewPath(t.CreateFileLines("file"))
-	testWritable(f, true)
+	t.CreateFileLines("subdir/file")
+	t.CreateFileLines("file")
 
-	err := f.Chmod(0444)
-	assertNil(err, "Chmod")
-
-	testWritable(f, false)
+	test(NewPath(t.File("subdir")), true)
+	test(NewPath(t.File("file")), true)
+	test(NewPath(t.File("enoent")), false)
 }
 
 func (s *Suite) Test_Path_IsFile(c *check.C) {
@@ -393,6 +402,24 @@ func (s *Suite) Test_Path_IsDir(c *check.C) {
 	t.CheckEquals(NewPath(t.File("dir")).IsDir(), true)
 	t.CheckEquals(NewPath(t.File("dir/nonexistent")).IsDir(), false)
 	t.CheckEquals(NewPath(t.File("dir/file")).IsDir(), false)
+}
+
+func (s *Suite) Test_Path_Chmod(c *check.C) {
+	t := s.Init(c)
+
+	testWritable := func(f Path, writable bool) {
+		lstat, err := f.Lstat()
+		assertNil(err, "Lstat")
+		t.CheckEquals(lstat.Mode().Perm()&0200 != 0, writable)
+	}
+
+	f := NewPath(t.CreateFileLines("file"))
+	testWritable(f, true)
+
+	err := f.Chmod(0444)
+	assertNil(err, "Chmod")
+
+	testWritable(f, false)
 }
 
 func (s *Suite) Test_Path_ReadDir(c *check.C) {
