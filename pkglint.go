@@ -630,7 +630,7 @@ func (pkglint *Pkglint) checkReg(filename Path, basename string, depth int) {
 		// Skip files directly in the files/ directory, but not those further down.
 
 	case basename == "spec":
-		if !pkglint.Pkgsrc.ToRel(filename).HasPrefixText("regress/") {
+		if !pkglint.Pkgsrc.ToRel(filename).HasPrefixPath("regress") {
 			NewLineWhole(filename).Warnf("Only packages in regress/ may have spec files.")
 		}
 

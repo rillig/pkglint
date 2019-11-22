@@ -1079,7 +1079,7 @@ func (cv *VartypeCheck) Pkgpath() {
 	}
 
 	pkgpath := NewPath(value)
-	if !G.Wip && pkgpath.HasPrefixText("wip/") {
+	if !G.Wip && pkgpath.HasPrefixPath("wip") {
 		cv.MkLine.Errorf("A main pkgsrc package must not depend on a pkgsrc-wip package.")
 	}
 

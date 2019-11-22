@@ -354,7 +354,7 @@ func (pkg *Package) resolveIncludedFile(mkline *MkLine, includingFilename Path) 
 	includedText := resolveVariableRefs(nil /* XXX: or maybe some mklines? */, resolved.String())
 	includedFile := NewPath(includedText)
 	if containsVarRef(includedText) {
-		if trace.Tracing && !includingFilename.ContainsText("/mk/") {
+		if trace.Tracing && !includingFilename.ContainsPath("mk") {
 			trace.Stepf("%s:%s: Skipping unresolvable include file %q.",
 				mkline.Filename, mkline.Linenos(), includedFile)
 		}
@@ -383,7 +383,7 @@ func (*Package) shouldDiveInto(includingFile, includedFile Path) bool {
 		return false
 	}
 
-	if includingFile.ContainsText("/mk/") && !G.Pkgsrc.ToRel(includingFile).HasPrefixText("wip/mk") {
+	if includingFile.ContainsPath("mk") && !G.Pkgsrc.ToRel(includingFile).HasPrefixPath("wip/mk") {
 		// TODO: ".buildlink.mk", ".builtin.mk"
 		return includingFile.HasSuffixText("buildlink3.mk") && includedFile.HasSuffixText("builtin.mk")
 	}
@@ -399,7 +399,7 @@ func (pkg *Package) collectSeenInclude(mkline *MkLine, includedFile Path) {
 	incDir, incBase := includedFile.Split()
 	switch {
 	case
-		incDir.HasPrefixText("../../mk/"),
+		incDir.HasPrefixPath("../../mk"),
 		incBase == "buildlink3.mk",
 		incBase == "builtin.mk",
 		incBase == "options.mk":
@@ -478,7 +478,7 @@ func (pkg *Package) check(filenames []Path, mklines, allLines *MkLines) {
 
 		if filename.ContainsText("/patches/patch-") {
 			havePatches = true
-		} else if filename.HasSuffixText("/distinfo") {
+		} else if filename.HasSuffixPath("distinfo") {
 			haveDistinfo = true
 		}
 		pkg.checkOwnerMaintainer(filename)
@@ -559,7 +559,7 @@ func (pkg *Package) checkfilePackageMakefile(filename Path, mklines *MkLines, al
 
 	if imake := vars.FirstDefinition("USE_IMAKE"); imake != nil {
 		if x11 := vars.FirstDefinition("USE_X11"); x11 != nil {
-			if !x11.Filename.HasSuffixText("/mk/x11.buildlink3.mk") {
+			if !x11.Filename.HasSuffixPath("mk/x11.buildlink3.mk") {
 				imake.Notef("USE_IMAKE makes USE_X11 in %s redundant.", imake.RefTo(x11))
 			}
 		}
@@ -1329,7 +1329,7 @@ func (pkg *Package) checkLinesBuildlink3Inclusion(mklines *MkLines) {
 	for _, mkline := range mklines.mklines {
 		if mkline.IsInclude() {
 			includedFile := mkline.IncludedFile()
-			if includedFile.HasSuffixText("/buildlink3.mk") {
+			if includedFile.HasSuffixPath("buildlink3.mk") {
 				includedFiles[includedFile] = mkline
 				if pkg.bl3[includedFile] == nil {
 					mkline.Warnf("%s is included by this file but not by the package.", includedFile)

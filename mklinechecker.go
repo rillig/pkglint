@@ -1310,7 +1310,7 @@ func (ck MkLineChecker) checkInclude() {
 	ck.CheckRelativePath(includedFile, mustExist)
 
 	switch {
-	case includedFile.HasSuffixText("/Makefile"): // TODO: HasSuffixPath
+	case includedFile.HasBase("Makefile"):
 		mkline.Errorf("Other Makefiles must not be included directly.")
 		mkline.Explain(
 			"To include portions of another Makefile, extract the common parts",
@@ -1326,19 +1326,19 @@ func (ck MkLineChecker) checkInclude() {
 			fix.Apply()
 		}
 
-	case includedFile.HasSuffixText("pkgtools/x11-links/buildlink3.mk"): // TODO: HasSuffixPath
+	case includedFile.HasSuffixPath("pkgtools/x11-links/buildlink3.mk"):
 		fix := mkline.Autofix()
 		fix.Errorf("%s must not be included directly. Include \"../../mk/x11.buildlink3.mk\" instead.", includedFile)
 		fix.Replace("pkgtools/x11-links/buildlink3.mk", "mk/x11.buildlink3.mk")
 		fix.Apply()
 
-	case includedFile.HasSuffixText("graphics/jpeg/buildlink3.mk"): // TODO: HasSuffixPath
+	case includedFile.HasSuffixPath("graphics/jpeg/buildlink3.mk"):
 		fix := mkline.Autofix()
 		fix.Errorf("%s must not be included directly. Include \"../../mk/jpeg.buildlink3.mk\" instead.", includedFile)
 		fix.Replace("graphics/jpeg/buildlink3.mk", "mk/jpeg.buildlink3.mk")
 		fix.Apply()
 
-	case includedFile.HasSuffixText("/intltool/buildlink3.mk"): // TODO: HasSuffixPath
+	case includedFile.HasSuffixPath("intltool/buildlink3.mk"):
 		mkline.Warnf("Please write \"USE_TOOLS+= intltool\" instead of this line.")
 
 	case includedFile.HasSuffixText("/builtin.mk"): // TODO: maybe HasSuffixPath

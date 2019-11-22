@@ -1056,7 +1056,7 @@ func (src *Pkgsrc) ToRel(filename Path) Path {
 // working directory) is part of the pkgsrc infrastructure.
 func (src *Pkgsrc) IsInfra(filename Path) bool {
 	rel := src.ToRel(filename)
-	return rel.HasPrefixText("mk/") || rel.HasPrefixText("wip/mk/")
+	return rel.HasPrefixPath("mk") || rel.HasPrefixPath("wip/mk")
 }
 
 // Change describes a modification to a single package, from the doc/CHANGES-* files.

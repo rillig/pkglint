@@ -28,6 +28,7 @@ func (ynu YesNoUnknown) String() string {
 }
 
 // Short names for commonly used functions.
+
 func contains(s, substr string) bool {
 	return strings.Contains(s, substr)
 }
