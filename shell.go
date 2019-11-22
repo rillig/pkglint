@@ -250,7 +250,7 @@ func (scc *SimpleCommandChecker) checkAutoMkdirs() {
 			if m, dirname := match1(arg, `^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/(.*)`); m {
 				autoMkdirs := false
 				if G.Pkg != nil {
-					plistLine := G.Pkg.Plist.Dirs[dirname]
+					plistLine := G.Pkg.Plist.Dirs[NewPath(dirname)]
 					if plistLine != nil && !containsVarRef(plistLine.Text) {
 						autoMkdirs = true
 					}

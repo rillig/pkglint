@@ -21,6 +21,8 @@ func NewPathSlash(name string) Path { return Path(filepath.ToSlash(name)) }
 
 func (p Path) String() string { return string(p) }
 
+func (p Path) GoString() string { return sprintf("%q", string(p)) }
+
 func (p Path) Dir() Path { return Path(path.Dir(string(p))) }
 
 func (p Path) Base() string { return path.Base(string(p)) }
@@ -36,6 +38,7 @@ func (p Path) Parts() []string {
 
 func (p Path) Count() int { return len(p.Parts()) }
 
+// TODO: Check each call whether HasPrefixPath is more appropriate; add tests
 func (p Path) HasPrefixText(prefix string) bool {
 	return hasPrefix(string(p), prefix)
 }
@@ -45,6 +48,7 @@ func (p Path) HasPrefixPath(prefix Path) bool {
 		(len(p) == len(prefix) || p[len(prefix)] == '/')
 }
 
+// TODO: Check each call whether ContainsPath is more appropriate; add tests
 func (p Path) ContainsText(contained string) bool {
 	return contains(string(p), contained)
 }
@@ -61,6 +65,7 @@ func (p Path) ContainsPath(contained Path) bool {
 	return false
 }
 
+// TODO: Check each call whether HasSuffixPath is more appropriate; add tests
 func (p Path) HasSuffixText(suffix string) bool {
 	return hasSuffix(string(p), suffix)
 }

@@ -32,6 +32,19 @@ func (s *Suite) Test_Path_String(c *check.C) {
 	}
 }
 
+func (s *Suite) Test_Path_GoString(c *check.C) {
+	t := s.Init(c)
+
+	test := func(p Path, s string) {
+		t.CheckEquals(p.GoString(), s)
+	}
+
+	test("", "\"\"")
+	test("filename", "\"filename\"")
+	test("a/b", "\"a/b\"")
+	test("c\\d", "\"c\\\\d\"")
+}
+
 func (s *Suite) Test_Path_Dir(c *check.C) {
 	t := s.Init(c)
 
@@ -322,8 +335,8 @@ func (s *Suite) Test_Path_Rel(c *check.C) {
 func (s *Suite) Test_Path_Rename(c *check.C) {
 	t := s.Init(c)
 
-	f := NewPath(t.CreateFileLines("filename.old",
-		"line 1"))
+	f := t.CreateFileLines("filename.old",
+		"line 1")
 	t.CheckEquals(f.IsFile(), true)
 	dst := NewPath(f.TrimSuffix(".old").String() + ".new")
 
@@ -338,8 +351,8 @@ func (s *Suite) Test_Path_Rename(c *check.C) {
 func (s *Suite) Test_Path_Lstat(c *check.C) {
 	t := s.Init(c)
 
-	testDir := func(f string, isDir bool) {
-		st, err := NewPath(f).Lstat()
+	testDir := func(f Path, isDir bool) {
+		st, err := f.Lstat()
 		assertNil(err, "Lstat")
 		t.CheckEquals(st.Mode()&os.ModeDir != 0, isDir)
 	}
@@ -354,8 +367,8 @@ func (s *Suite) Test_Path_Lstat(c *check.C) {
 func (s *Suite) Test_Path_Stat(c *check.C) {
 	t := s.Init(c)
 
-	testDir := func(f string, isDir bool) {
-		st, err := NewPath(f).Stat()
+	testDir := func(f Path, isDir bool) {
+		st, err := f.Stat()
 		assertNil(err, "Stat")
 		t.CheckEquals(st.Mode()&os.ModeDir != 0, isDir)
 	}
@@ -377,9 +390,9 @@ func (s *Suite) Test_Path_Exists(c *check.C) {
 	t.CreateFileLines("subdir/file")
 	t.CreateFileLines("file")
 
-	test(NewPath(t.File("subdir")), true)
-	test(NewPath(t.File("file")), true)
-	test(NewPath(t.File("enoent")), false)
+	test(t.File("subdir"), true)
+	test(t.File("file"), true)
+	test(t.File("enoent"), false)
 }
 
 func (s *Suite) Test_Path_IsFile(c *check.C) {
@@ -387,10 +400,10 @@ func (s *Suite) Test_Path_IsFile(c *check.C) {
 
 	t.CreateFileLines("dir/file")
 
-	t.CheckEquals(NewPath(t.File("nonexistent")).IsFile(), false)
-	t.CheckEquals(NewPath(t.File("dir")).IsFile(), false)
-	t.CheckEquals(NewPath(t.File("dir/nonexistent")).IsFile(), false)
-	t.CheckEquals(NewPath(t.File("dir/file")).IsFile(), true)
+	t.CheckEquals(t.File("nonexistent").IsFile(), false)
+	t.CheckEquals(t.File("dir").IsFile(), false)
+	t.CheckEquals(t.File("dir/nonexistent").IsFile(), false)
+	t.CheckEquals(t.File("dir/file").IsFile(), true)
 }
 
 func (s *Suite) Test_Path_IsDir(c *check.C) {
@@ -398,10 +411,10 @@ func (s *Suite) Test_Path_IsDir(c *check.C) {
 
 	t.CreateFileLines("dir/file")
 
-	t.CheckEquals(NewPath(t.File("nonexistent")).IsDir(), false)
-	t.CheckEquals(NewPath(t.File("dir")).IsDir(), true)
-	t.CheckEquals(NewPath(t.File("dir/nonexistent")).IsDir(), false)
-	t.CheckEquals(NewPath(t.File("dir/file")).IsDir(), false)
+	t.CheckEquals(t.File("nonexistent").IsDir(), false)
+	t.CheckEquals(t.File("dir").IsDir(), true)
+	t.CheckEquals(t.File("dir/nonexistent").IsDir(), false)
+	t.CheckEquals(t.File("dir/file").IsDir(), false)
 }
 
 func (s *Suite) Test_Path_Chmod(c *check.C) {
@@ -413,7 +426,7 @@ func (s *Suite) Test_Path_Chmod(c *check.C) {
 		t.CheckEquals(lstat.Mode().Perm()&0200 != 0, writable)
 	}
 
-	f := NewPath(t.CreateFileLines("file"))
+	f := t.CreateFileLines("file")
 	testWritable(f, true)
 
 	err := f.Chmod(0444)
@@ -430,7 +443,7 @@ func (s *Suite) Test_Path_ReadDir(c *check.C) {
 	t.CreateFileLines("CVS/Entries")
 	t.CreateFileLines(".git/info/exclude")
 
-	infos, err := NewPath(t.File(".")).ReadDir()
+	infos, err := t.File(".").ReadDir()
 
 	assertNil(err, "ReadDir")
 	var names []string
@@ -448,7 +461,7 @@ func (s *Suite) Test_Path_Open(c *check.C) {
 		"line 1",
 		"line 2")
 
-	f, err := NewPath(t.File("filename")).Open()
+	f, err := t.File("filename").Open()
 
 	assertNil(err, "Open")
 	defer func() { assertNil(f.Close(), "Close") }()
@@ -466,7 +479,7 @@ func (s *Suite) Test_Path_ReadString(c *check.C) {
 		"line 1",
 		"line 2")
 
-	text, err := NewPath(t.File("filename")).ReadString()
+	text, err := t.File("filename").ReadString()
 
 	assertNil(err, "ReadString")
 	t.CheckEquals(text, "line 1\nline 2\n")
@@ -475,7 +488,7 @@ func (s *Suite) Test_Path_ReadString(c *check.C) {
 func (s *Suite) Test_Path_WriteString(c *check.C) {
 	t := s.Init(c)
 
-	err := NewPath(t.File("filename")).WriteString("line 1\nline 2\n")
+	err := t.File("filename").WriteString("line 1\nline 2\n")
 
 	assertNil(err, "WriteString")
 	t.CheckFileLines("filename",

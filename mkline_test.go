@@ -503,7 +503,7 @@ func (s *Suite) Test_MkLine_ResolveVarsInRelativePath(c *check.C) {
 		MkCvsID)
 	mkline := mklines.mklines[0]
 
-	test := func(before string, after string) {
+	test := func(before Path, after Path) {
 		t.CheckEquals(mkline.ResolveVarsInRelativePath(before), after)
 	}
 
@@ -1406,7 +1406,7 @@ func (s *Suite) Test_Indentation_TrackAfter__lonely_else(c *check.C) {
 func (s *Suite) Test_MatchMkInclude(c *check.C) {
 	t := s.Init(c)
 
-	test := func(input, expectedIndent, expectedDirective, expectedFilename, expectedComment string) {
+	test := func(input, expectedIndent, expectedDirective string, expectedFilename Path, expectedComment string) {
 		splitResult := NewMkLineParser().split(nil, input, true)
 		m, indent, directive, args := MatchMkInclude(splitResult.main)
 		t.CheckDeepEquals(

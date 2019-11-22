@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"netbsd.org/pkglint/regex"
 	"netbsd.org/pkglint/textproc"
-	"path"
 	"strings"
 )
 
@@ -60,7 +59,7 @@ type mkLineInclude struct {
 	mustExist       bool     // for .sinclude, nonexistent files are ignored
 	sys             bool     // whether the include uses <file.mk> (very rare) instead of "file.mk"
 	indent          string   // the space between the leading "." and the directive
-	includedFile    string   // the text between the <brackets> or "quotes"
+	includedFile    Path     // the text between the <brackets> or "quotes"
 	conditionalVars []string // variables on which this inclusion depends (filled in later, as needed)
 }
 
@@ -277,12 +276,12 @@ func (mkline *MkLine) SetHasElseBranch(elseLine *MkLine) {
 
 func (mkline *MkLine) MustExist() bool { return mkline.data.(*mkLineInclude).mustExist }
 
-func (mkline *MkLine) IncludedFile() string { return mkline.data.(*mkLineInclude).includedFile }
+func (mkline *MkLine) IncludedFile() Path { return mkline.data.(*mkLineInclude).includedFile }
 
 // IncludedFileFull returns the path to the included file, relative to the
 // current working directory.
-func (mkline *MkLine) IncludedFileFull() string {
-	return cleanpath(path.Join(path.Dir(mkline.Filename), mkline.IncludedFile()))
+func (mkline *MkLine) IncludedFileFull() Path {
+	return cleanpath(mkline.Filename.Dir().JoinClean(mkline.IncludedFile())) // FIXME: JoinNoClean?
 }
 
 func (mkline *MkLine) Targets() string { return mkline.data.(mkLineDependency).targets }
@@ -554,31 +553,31 @@ func (*MkLine) WithoutMakeVariables(value string) string {
 	return valueNovar.String()
 }
 
-func (mkline *MkLine) ResolveVarsInRelativePath(relativePath string) string {
-	if !contains(relativePath, "$") {
+func (mkline *MkLine) ResolveVarsInRelativePath(relativePath Path) Path {
+	if !relativePath.ContainsText("$") { // TODO: containsVarRef
 		return cleanpath(relativePath)
 	}
 
-	var basedir string
+	var basedir Path
 	if G.Pkg != nil {
 		basedir = G.Pkg.File(".")
 	} else {
-		basedir = path.Dir(mkline.Filename)
+		basedir = mkline.Filename.Dir()
 	}
 
 	tmp := relativePath
-	if contains(tmp, "PKGSRCDIR") {
+	if tmp.ContainsText("PKGSRCDIR") {
 		pkgsrcdir := relpath(basedir, G.Pkgsrc.File("."))
 
 		if G.Testing {
 			// Relative pkgsrc paths usually only contain two or three levels.
 			// A possible reason for reaching this assertion is a pkglint unit test
 			// that uses t.NewMkLines instead of the correct t.SetUpFileMkLines.
-			assertf(!contains(pkgsrcdir, "../../../../.."),
+			assertf(!pkgsrcdir.ContainsText("../../../../.."),
 				"Relative path %q for %q is too deep below the pkgsrc root %q.",
 				pkgsrcdir, basedir, G.Pkgsrc.File("."))
 		}
-		tmp = strings.Replace(tmp, "${PKGSRCDIR}", pkgsrcdir, -1)
+		tmp = tmp.Replace("${PKGSRCDIR}", pkgsrcdir.String())
 	}
 
 	// Strictly speaking, the .CURDIR should be replaced with the basedir.
@@ -586,7 +585,7 @@ func (mkline *MkLine) ResolveVarsInRelativePath(relativePath string) string {
 	// path, this would produce diagnostics that "this relative path must not
 	// be absolute". Since ${.CURDIR} is usually used in package Makefiles and
 	// followed by "../.." anyway, the exact directory doesn't matter.
-	tmp = strings.Replace(tmp, "${.CURDIR}", ".", -1)
+	tmp = tmp.Replace("${.CURDIR}", ".")
 
 	// TODO: Add test for exists(${.PARSEDIR}/file).
 	// TODO: Add test for evaluating ${.PARSEDIR} in an included package.
@@ -595,12 +594,12 @@ func (mkline *MkLine) ResolveVarsInRelativePath(relativePath string) string {
 	//  This is the only practically relevant use case since the category
 	//  directories don't contain any *.mk files that could be included.
 	// TODO: Add test that suggests ${.PARSEDIR} in .include to be omitted.
-	tmp = strings.Replace(tmp, "${.PARSEDIR}", ".", -1)
+	tmp = tmp.Replace("${.PARSEDIR}", ".")
 
-	replaceLatest := func(varuse, category string, pattern regex.Pattern, replacement string) {
-		if contains(tmp, varuse) {
+	replaceLatest := func(varuse string, category Path, pattern regex.Pattern, replacement string) {
+		if tmp.ContainsText(varuse) {
 			latest := G.Pkgsrc.Latest(category, pattern, replacement)
-			tmp = strings.Replace(tmp, varuse, latest, -1)
+			tmp = tmp.Replace(varuse, latest)
 		}
 	}
 
@@ -617,14 +616,14 @@ func (mkline *MkLine) ResolveVarsInRelativePath(relativePath string) string {
 		// XXX: Even if these variables are defined indirectly,
 		// pkglint should be able to resolve them properly.
 		// There is already G.Pkg.Value, maybe that can be used here.
-		tmp = strings.Replace(tmp, "${FILESDIR}", G.Pkg.Filesdir, -1)
-		tmp = strings.Replace(tmp, "${PKGDIR}", G.Pkg.Pkgdir, -1)
+		tmp = tmp.Replace("${FILESDIR}", G.Pkg.Filesdir.String())
+		tmp = tmp.Replace("${PKGDIR}", G.Pkg.Pkgdir.String())
 	}
 
 	tmp = cleanpath(tmp)
 
 	if trace.Tracing && relativePath != tmp {
-		trace.Step2("resolveVarsInRelativePath: %q => %q", relativePath, tmp)
+		trace.Stepf("resolveVarsInRelativePath: %q => %q", relativePath, tmp)
 	}
 	return tmp
 }
@@ -820,7 +819,7 @@ func (mkline *MkLine) ForEachUsed(action func(varUse *MkVarUse, time VucTime)) {
 		searchIn(mkline.Sources(), VucLoadTime)
 
 	case mkline.IsInclude():
-		searchIn(mkline.IncludedFile(), VucLoadTime)
+		searchIn(mkline.IncludedFile().String(), VucLoadTime)
 	}
 }
 
@@ -1053,7 +1052,7 @@ type indentationLevel struct {
 	// pkglint will happily accept .include "fname" in both the then and
 	// the else branch. This is ok since the primary job of this file list
 	// is to prevent wrong pkglint warnings about missing files.
-	checkedFiles []string
+	checkedFiles []Path
 }
 
 func (ind *Indentation) IsEmpty() bool {
@@ -1155,14 +1154,14 @@ func (ind *Indentation) Args() string {
 	return ind.top().args
 }
 
-func (ind *Indentation) AddCheckedFile(filename string) {
+func (ind *Indentation) AddCheckedFile(filename Path) {
 	top := ind.top()
 	top.checkedFiles = append(top.checkedFiles, filename)
 }
 
 // HasExists returns whether the given filename has been tested in an
 // exists(filename) condition and thus may or may not exist.
-func (ind *Indentation) HasExists(filename string) bool {
+func (ind *Indentation) HasExists(filename Path) bool {
 	for _, level := range ind.levels {
 		for _, levelFilename := range level.checkedFiles {
 			if filename == levelFilename {
@@ -1234,13 +1233,13 @@ func (ind *Indentation) TrackAfter(mkline *MkLine) {
 		cond.Walk(&MkCondCallback{
 			Call: func(name string, arg string) {
 				if name == "exists" {
-					ind.AddCheckedFile(arg)
+					ind.AddCheckedFile(NewPath(arg))
 				}
 			}})
 	}
 }
 
-func (ind *Indentation) CheckFinish(filename string) {
+func (ind *Indentation) CheckFinish(filename Path) {
 	if ind.IsEmpty() {
 		return
 	}
@@ -1270,7 +1269,7 @@ var (
 	VarparamBytes = textproc.NewByteSet("A-Za-z_0-9#*+---./[")
 )
 
-func MatchMkInclude(text string) (m bool, indentation, directive, filename string) {
+func MatchMkInclude(text string) (m bool, indentation, directive string, filename Path) {
 	lexer := textproc.NewLexer(text)
 	if lexer.SkipByte('.') {
 		indentation = lexer.NextHspace()
@@ -1284,7 +1283,7 @@ func MatchMkInclude(text string) (m bool, indentation, directive, filename strin
 				// Note: strictly speaking, the full MkVarUse would have to be parsed
 				// here. But since these usually don't contain double quotes, it has
 				// worked fine up to now.
-				filename = lexer.NextBytesFunc(func(c byte) bool { return c != '"' })
+				filename = NewPath(lexer.NextBytesFunc(func(c byte) bool { return c != '"' }))
 				if filename != "" && lexer.SkipByte('"') {
 					lexer.NextHspace()
 					if lexer.EOF() {

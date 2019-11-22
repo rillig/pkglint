@@ -292,7 +292,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__infrastructure(c *check.C) {
 		"\t\tdistfile directly from GitHub [rillig 2018-01-01]",
 		"\tmk/bsd.pkg.mk: Another infrastructure change [rillig 2018-01-02]")
 
-	t.Main(t.File("category/package"))
+	t.Main("category/package")
 
 	// For pkglint's purpose, the infrastructure entries are simply ignored
 	// since they do not belong to a single package.
@@ -1053,12 +1053,12 @@ func (s *Suite) Test_Pkgsrc_VariableType__from_mk(c *check.C) {
 		"PKGSRC_MAKE_ENV?=\t# none",
 		"CPPPATH?=\tcpp",
 		"OSNAME.Linux?=\tLinux")
-	pkg := t.SetUpPackage("category/package",
+	t.SetUpPackage("category/package",
 		"PKGSRC_MAKE_ENV+=\tCPP=${CPPPATH:Q}",
 		"PKGSRC_UNKNOWN_ENV+=\tCPP=${ABCPATH:Q}",
 		"OSNAME.SunOS=\t\t${OSNAME.Other}")
 
-	t.Main("-Wall", pkg)
+	t.Main("-Wall", "category/package")
 
 	if typ := G.Pkgsrc.VariableType(nil, "PKGSRC_MAKE_ENV"); c.Check(typ, check.NotNil) {
 		t.CheckEquals(typ.String(), "ShellWord (list, guessed)")
@@ -1138,7 +1138,7 @@ func (s *Suite) Test_Pkgsrc_checkToplevelUnusedLicenses(c *check.C) {
 	t.SetUpPackage("category/package2",
 		"LICENSE=\tmissing")
 
-	t.Main("-r", "-Cglobal", t.File("."))
+	t.Main("-r", "-Cglobal", ".")
 
 	t.CheckOutputLines(
 		"WARN: ~/category/package2/Makefile:11: License file ~/licenses/missing does not exist.",
@@ -1190,8 +1190,8 @@ func (s *Suite) Test_Change_Target(c *check.C) {
 	moved := Change{loc, Moved, "category/path", "category/other", "author", "2019-01-01"}
 	downgraded := Change{loc, Downgraded, "category/path", "1.0", "author", "2019-01-01"}
 
-	t.CheckEquals(renamed.Target(), "category/other")
-	t.CheckEquals(moved.Target(), "category/other")
+	t.CheckEquals(renamed.Target(), NewPath("category/other"))
+	t.CheckEquals(moved.Target(), NewPath("category/other"))
 	t.ExpectAssert(func() { downgraded.Target() })
 }
 

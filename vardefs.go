@@ -2,7 +2,6 @@ package pkglint
 
 import (
 	"netbsd.org/pkglint/regex"
-	"path"
 	"strings"
 )
 
@@ -371,7 +370,7 @@ func (reg *VarTypeRegistry) compilerLanguages(src *Pkgsrc) *BasicType {
 //
 // If the file cannot be found, the allowed values are taken from
 // defval. This is mostly useful when testing pkglint.
-func (reg *VarTypeRegistry) enumFrom(pkgsrc *Pkgsrc, filename string, defval string, varcanons ...string) *BasicType {
+func (reg *VarTypeRegistry) enumFrom(pkgsrc *Pkgsrc, filename Path, defval string, varcanons ...string) *BasicType {
 	mklines := pkgsrc.LoadMkExisting(filename)
 	if mklines == nil {
 		return enum(defval)
@@ -419,7 +418,7 @@ func (reg *VarTypeRegistry) enumFrom(pkgsrc *Pkgsrc, filename string, defval str
 //
 // If the directories cannot be found, the allowed values are taken
 // from defval. This is mostly useful when testing pkglint.
-func (reg *VarTypeRegistry) enumFromDirs(pkgsrc *Pkgsrc, category string, re regex.Pattern, repl string, defval string) *BasicType {
+func (reg *VarTypeRegistry) enumFromDirs(pkgsrc *Pkgsrc, category Path, re regex.Pattern, repl string, defval string) *BasicType {
 	versions := pkgsrc.ListVersions(category, re, repl, false)
 	if len(versions) == 0 {
 		return enum(defval)
@@ -432,10 +431,10 @@ func (reg *VarTypeRegistry) enumFromDirs(pkgsrc *Pkgsrc, category string, re reg
 //
 // If no files are found, the allowed values are taken
 // from defval. This should only happen in the pkglint tests.
-func (reg *VarTypeRegistry) enumFromFiles(basedir string, re regex.Pattern, repl string, defval string) *BasicType {
+func (reg *VarTypeRegistry) enumFromFiles(basedir Path, re regex.Pattern, repl string, defval string) *BasicType {
 	var relevant []string
 	for _, filename := range dirglob(G.Pkgsrc.File(basedir)) {
-		basename := path.Base(filename)
+		basename := filename.Base()
 		if matches(basename, re) {
 			relevant = append(relevant, replaceAll(basename, re, repl))
 		}
@@ -1249,7 +1248,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.sys("MANOWN", BtUserGroupName)
 	reg.pkglist("MASTER_SITES", BtFetchURL)
 
-	for _, filename := range []string{"mk/fetch/sites.mk", "mk/fetch/fetch.mk"} {
+	for _, filename := range []Path{"mk/fetch/sites.mk", "mk/fetch/fetch.mk"} {
 		sitesMk := src.LoadMkExisting(filename)
 		if sitesMk != nil {
 			sitesMk.ForEach(func(mkline *MkLine) {

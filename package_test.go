@@ -311,7 +311,7 @@ func (s *Suite) Test_Package__case_insensitive(c *check.C) {
 	t.FinishSetUp()
 
 	// this test is only interesting on a case-insensitive filesystem
-	if !fileExists(t.File("mk/BSD.PKG.MK")) {
+	if !t.File("mk/BSD.PKG.MK").IsFile() {
 		return
 	}
 
@@ -1011,7 +1011,7 @@ func (s *Suite) Test_Package_shouldDiveInto(c *check.C) {
 	t := s.Init(c)
 	t.Chdir(".")
 
-	test := func(including, included string, expected bool) {
+	test := func(including, included Path, expected bool) {
 		actual := (*Package)(nil).shouldDiveInto(including, included)
 		t.CheckEquals(actual, expected)
 	}
@@ -1105,13 +1105,13 @@ func (s *Suite) Test_Package_loadPlistDirs__empty(c *check.C) {
 	pkg := NewPackage(t.File("category/package"))
 	pkg.load()
 
-	var dirs []string
+	var dirs []Path
 	for dir := range pkg.Plist.Dirs {
 		dirs = append(dirs, dir)
 	}
-	sort.Strings(dirs)
+	sort.Slice(dirs, func(i, j int) bool { return dirs[i] < dirs[j] })
 
-	t.CheckDeepEquals(dirs, []string{"bin"})
+	t.CheckDeepEquals(dirs, []Path{"bin"})
 }
 
 func (s *Suite) Test_Package_loadPlistDirs(c *check.C) {
@@ -1128,13 +1128,13 @@ func (s *Suite) Test_Package_loadPlistDirs(c *check.C) {
 	pkg := NewPackage(t.File("category/package"))
 	pkg.load()
 
-	var dirs []string
+	var dirs []Path
 	for dir := range pkg.Plist.Dirs {
 		dirs = append(dirs, dir)
 	}
-	sort.Strings(dirs)
+	sort.Slice(dirs, func(i, j int) bool { return dirs[i] < dirs[j] })
 
-	t.CheckDeepEquals(dirs, []string{"bin", "dir", "dir/subdir"})
+	t.CheckDeepEquals(dirs, []Path{"bin", "dir", "dir/subdir"})
 }
 
 func (s *Suite) Test_Package_check__files_Makefile(c *check.C) {
