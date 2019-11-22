@@ -21,7 +21,10 @@ func (s *Suite) Test_NewPathSlash(c *check.C) {
 
 	t.CheckEquals(NewPathSlash("filename"), NewPathSlash("filename"))
 	t.CheckEquals(NewPathSlash("\\"), NewPathSlash("\\"))
-	t.CheckEquals(NewPathSlash("\\"), NewPathSlash("/"))
+
+	t.CheckEquals(
+		NewPathSlash("\\"),
+		NewPathSlash(condStr(runtime.GOOS == "windows", "/", "\\")))
 }
 
 func (s *Suite) Test_Path_String(c *check.C) {
