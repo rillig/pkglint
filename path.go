@@ -13,6 +13,12 @@ import (
 // Some paths may contain placeholders like @VAR@ or ${VAR}.
 // The base directory of relative paths depends on the context
 // in which the path is used.
+//
+// TODO: Consider adding several more specialized types of path:
+// TODO: CurrPath, relative to the current working directory
+// TODO: PkgsrcPath, relative to the pkgsrc root
+// TODO: PackagePath, relative to the package directory
+// TODO: RelativePath, relative to some other basedir
 type Path string
 
 func NewPath(name string) Path { return Path(name) }
