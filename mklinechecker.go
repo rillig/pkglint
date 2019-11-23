@@ -1719,11 +1719,30 @@ func (ck MkLineChecker) checkCompareVarStr(varname, op, value string) {
 	ck.checkVartype(varname, opUseCompare, value, "")
 
 	if varname == "PKGSRC_COMPILER" {
-		ck.MkLine.Warnf("Use ${PKGSRC_COMPILER:%s%s} instead of the %s operator.", condStr(op == "==", "M", "N"), value, op)
-		ck.MkLine.Explain(
-			"The PKGSRC_COMPILER can be a list of chained compilers, e.g. \"ccache distcc clang\".",
-			"Therefore, comparing it using == or != leads to wrong results in these cases.")
+		ck.checkCompareVarStrCompiler(op, value)
 	}
+}
+
+func (ck MkLineChecker) checkCompareVarStrCompiler(op string, value string) {
+	if !matches(value, `^\w+$`) {
+		return
+	}
+
+	// It would be nice if original text of the whole comparison expression
+	// were available at this point, to avoid guessing how much whitespace
+	// the package author really used.
+
+	matchOp := condStr(op == "==", "M", "N")
+
+	fix := ck.MkLine.Autofix()
+	fix.Errorf("Use ${PKGSRC_COMPILER:%s%s} instead of the %s operator.", matchOp, value, op)
+	fix.Explain(
+		"The PKGSRC_COMPILER can be a list of chained compilers, e.g. \"ccache distcc clang\".",
+		"Therefore, comparing it using == or != leads to wrong results in these cases.")
+	fix.Replace("${PKGSRC_COMPILER} "+op+" "+value, "${PKGSRC_COMPILER:"+matchOp+value+"}")
+	fix.Replace("${PKGSRC_COMPILER} "+op+" \""+value+"\"", "${PKGSRC_COMPILER:"+matchOp+value+"}")
+	fix.Anyway()
+	fix.Apply()
 }
 
 func (ck MkLineChecker) checkDirectiveFor(forVars map[string]bool, indentation *Indentation) {

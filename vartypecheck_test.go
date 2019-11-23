@@ -498,7 +498,7 @@ func (s *Suite) Test_VartypeCheck_Enum__use_match(c *check.C) {
 		"\tlike ^, *, $. In such a case, using the :M or :N modifiers is useful",
 		"\tand preferred.",
 		"",
-		"WARN: module.mk:5: Use ${PKGSRC_COMPILER:Mclang} instead of the == operator.",
+		"ERROR: module.mk:5: Use ${PKGSRC_COMPILER:Mclang} instead of the == operator.",
 		"",
 		"\tThe PKGSRC_COMPILER can be a list of chained compilers, e.g. \"ccache",
 		"\tdistcc clang\". Therefore, comparing it using == or != leads to wrong",
