@@ -109,7 +109,7 @@ func (p Path) JoinNoClean(s Path) Path {
 func (p Path) Clean() Path { return NewPath(path.Clean(string(p))) }
 
 func (p Path) IsAbs() bool {
-	return filepath.IsAbs(filepath.FromSlash(string(p)))
+	return p.HasPrefixText("/") || filepath.IsAbs(filepath.FromSlash(string(p)))
 }
 
 func (p Path) Rel(other Path) Path {

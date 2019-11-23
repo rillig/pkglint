@@ -347,7 +347,7 @@ func (s *Suite) Test_Path_IsAbs(c *check.C) {
 	test("", false)
 	test(".", false)
 	test("a/b", false)
-	test("/a", runtime.GOOS != "windows")
+	test("/a", true)
 	test("C:/", runtime.GOOS == "windows")
 	test("c:/", runtime.GOOS == "windows")
 }
