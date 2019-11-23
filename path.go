@@ -43,6 +43,8 @@ func (p Path) HasPrefixText(prefix string) bool {
 	return hasPrefix(string(p), prefix)
 }
 
+// HasPrefixPath returns whether the path starts with the given prefix.
+// The basic unit of comparison is a path component, not a character.
 func (p Path) HasPrefixPath(prefix Path) bool {
 	return hasPrefix(string(p), string(prefix)) &&
 		(len(p) == len(prefix) || p[len(prefix)] == '/')
@@ -53,16 +55,25 @@ func (p Path) ContainsText(contained string) bool {
 	return contains(string(p), contained)
 }
 
-func (p Path) ContainsPath(contained Path) bool {
-	limit := len(p) - len(contained)
+// ContainsPath returns whether the sub path is part of the path.
+// The basic unit of comparison is a path component, not a character.
+//
+// Note that the paths used in pkglint may contains apparently unnecessary
+// components, like "../../wip/mk/../../devel/gettext-lib". To ignore these
+// components, use ContainsPathCanonical instead.
+func (p Path) ContainsPath(sub Path) bool {
+	limit := len(p) - len(sub)
 	for i := 0; i <= limit; i++ {
-		if (i == 0 || p[i-1] == '/') &&
-			(i == limit || p[i+len(contained)] == '/') &&
-			hasPrefix(string(p)[i:], string(contained)) {
+		if (i == 0 || p[i-1] == '/') && p[i:].HasPrefixPath(sub) {
 			return true
 		}
 	}
 	return false
+}
+
+func (p Path) ContainsPathCanonical(sub Path) bool {
+	cleaned := cleanpath(p)
+	return cleaned.ContainsPath(sub)
 }
 
 // TODO: Check each call whether HasSuffixPath is more appropriate; add tests
@@ -70,6 +81,8 @@ func (p Path) HasSuffixText(suffix string) bool {
 	return hasSuffix(string(p), suffix)
 }
 
+// HasSuffixPath returns whether the path ends with the given prefix.
+// The basic unit of comparison is a path component, not a character.
 func (p Path) HasSuffixPath(suffix Path) bool {
 	return hasSuffix(string(p), string(suffix)) &&
 		(len(p) == len(suffix) || p[len(p)-len(suffix)-1] == '/')

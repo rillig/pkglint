@@ -185,7 +185,8 @@ func (s *Suite) Test_Path_ContainsPath(c *check.C) {
 		t.CheckEquals(p.ContainsPath(sub), contains)
 	}
 
-	test("", "", true)
+	test("", "", true)   // It doesn't make sense to search for empty paths.
+	test(".", "", false) // It doesn't make sense to search for empty paths.
 	test("filename", "", false)
 	test("filename", "filename", true)
 	test("a/b/c", "a", true)
@@ -197,6 +198,30 @@ func (s *Suite) Test_Path_ContainsPath(c *check.C) {
 	test("aa/b/c", "a", false)
 	test("a/bb/c", "b", false)
 	test("a/bb/c", "b/c", false)
+	test("category/package/../../wip/mk/../..", "mk", true)
+}
+
+func (s *Suite) Test_Path_ContainsPathCanonical(c *check.C) {
+	t := s.Init(c)
+
+	test := func(p, sub Path, contains bool) {
+		t.CheckEquals(p.ContainsPathCanonical(sub), contains)
+	}
+
+	test("", "", false)
+	test(".", "", false)
+	test("filename", "", false)
+	test("filename", "filename", true)
+	test("a/b/c", "a", true)
+	test("a/b/c", "b", true)
+	test("a/b/c", "c", true)
+	test("a/b/c", "a/b", true)
+	test("a/b/c", "b/c", true)
+	test("a/b/c", "a/b/c", true)
+	test("aa/b/c", "a", false)
+	test("a/bb/c", "b", false)
+	test("a/bb/c", "b/c", false)
+	test("category/package/../../wip/mk/../..", "mk", false)
 }
 
 func (s *Suite) Test_Path_HasSuffixText(c *check.C) {
