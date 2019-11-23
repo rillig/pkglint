@@ -1265,7 +1265,7 @@ func (s *Suite) Test_Indentation(c *check.C) {
 	t.CheckEquals(ind.Depth("if"), 0)
 	t.CheckEquals(ind.DependsOn("VARNAME"), false)
 
-	ind.Push(mkline, 2, "")
+	ind.Push(mkline, 2, "", false)
 
 	t.CheckEquals(ind.Depth("if"), 2)
 	t.CheckEquals(ind.Depth("endfor"), 0)
@@ -1280,7 +1280,7 @@ func (s *Suite) Test_Indentation(c *check.C) {
 	t.CheckEquals(ind.DependsOn("LEVEL1.VAR1"), true)
 	t.CheckEquals(ind.DependsOn("OTHER_VAR"), false)
 
-	ind.Push(mkline, 2, "")
+	ind.Push(mkline, 2, "", false)
 
 	ind.AddVar("LEVEL2.VAR")
 
@@ -1338,7 +1338,7 @@ func (s *Suite) Test_Indentation_String(c *check.C) {
 
 	mklines.ForEach(func(mkline *MkLine) {
 		if mkline.IsComment() {
-			t.CheckEquals(mklines.indentation.IsConditional(), false) // FIXME
+			t.CheckEquals(mklines.indentation.IsConditional(), true)
 			t.Check(mklines.indentation.Varnames(), check.IsNil)
 			str = mklines.indentation.String()
 		}

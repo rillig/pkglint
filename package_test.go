@@ -3220,8 +3220,12 @@ func (s *Suite) Test_Package_Includes(c *check.C) {
 	t.CheckEquals(pkg.Includes("conditionally.mk"), true)
 	t.CheckEquals(pkg.Includes("other.mk"), false)
 
-	// TODO: Strictly speaking, never.mk should be in conditionalIncludes.
-	//  This is an edge case though. See collectConditionalIncludes and
-	//  Indentation.IsConditional for the current implementation.
-	t.CheckEquals(pkg.conditionalIncludes["never.mk"], (*MkLine)(nil))
+	// The file never.mk is in conditionalIncludes since pkglint only
+	// analyzes on the syntactical level. It doesn't evaluate the
+	// condition from the .if to see whether it is satisfiable.
+	//
+	// See Package.collectConditionalIncludes and Indentation.IsConditional.
+	t.CheckEquals(
+		pkg.conditionalIncludes["never.mk"].Location,
+		NewLocation(t.File("category/package/Makefile"), 22, 22))
 }

@@ -1053,6 +1053,9 @@ type indentationLevel struct {
 	// the else branch. This is ok since the primary job of this file list
 	// is to prevent wrong pkglint warnings about missing files.
 	checkedFiles []Path
+
+	// whether the line is a multiple-inclusion guard
+	guard bool
 }
 
 func (ind *Indentation) IsEmpty() bool {
@@ -1084,9 +1087,9 @@ func (ind *Indentation) Pop() {
 	ind.levels = ind.levels[:len(ind.levels)-1]
 }
 
-func (ind *Indentation) Push(mkline *MkLine, indent int, condition string) {
+func (ind *Indentation) Push(mkline *MkLine, indent int, args string, guard bool) {
 	assert(mkline.IsDirective())
-	ind.levels = append(ind.levels, indentationLevel{mkline, indent, condition, nil, nil})
+	ind.levels = append(ind.levels, indentationLevel{mkline, indent, args, nil, nil, guard})
 }
 
 // AddVar remembers that the current indentation depends on the given variable,
@@ -1120,12 +1123,12 @@ func (ind *Indentation) DependsOn(varname string) bool {
 }
 
 // IsConditional returns whether the current line depends on evaluating
-// any variable in an .if or .elif expression or from a .for loop.
+// any .if or .elif expression, or is inside a .for loop.
 //
 // Variables named *_MK are excluded since they are usually not interesting.
 func (ind *Indentation) IsConditional() bool {
 	for _, level := range ind.levels {
-		if len(level.conditionalVars) > 0 {
+		if !level.guard {
 			return true
 		}
 	}
@@ -1177,9 +1180,15 @@ func (ind *Indentation) TrackBefore(mkline *MkLine) {
 		return
 	}
 
-	switch mkline.Directive() {
+	directive := mkline.Directive()
+	switch directive {
 	case "for", "if", "ifdef", "ifndef":
-		ind.Push(mkline, ind.Depth(mkline.Directive()), mkline.Args())
+		guard := false
+		if directive == "if" {
+			cond := mkline.Cond()
+			guard = cond != nil && cond.Not != nil && hasSuffix(cond.Not.Defined, "_MK")
+		}
+		ind.Push(mkline, ind.Depth(directive), mkline.Args(), guard)
 	}
 }
 
@@ -1193,11 +1202,8 @@ func (ind *Indentation) TrackAfter(mkline *MkLine) {
 
 	switch directive {
 	case "if":
-		cond := mkline.Cond()
-
 		// For multiple-inclusion guards, the indentation stays at the same level.
-		guard := cond != nil && cond.Not != nil && hasSuffix(cond.Not.Defined, "_MK")
-		if !guard {
+		if !ind.top().guard {
 			ind.top().depth += 2
 		}
 

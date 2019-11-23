@@ -2668,10 +2668,11 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 		"WARN: filename.mk:1: VAR is used but not defined.")
 
 	test(".if ${MASTER_SITES:Mftp://*} == \"ftp://netbsd.org/\"",
+		// FIXME: duplicate diagnostic, see MkParser.MkCond.
+		"WARN: filename.mk:1: Invalid variable modifier \"//*\" for \"MASTER_SITES\".",
 		"WARN: filename.mk:1: Invalid variable modifier \"//*\" for \"MASTER_SITES\".",
 		"WARN: filename.mk:1: \"ftp\" is not a valid URL.",
-		"WARN: filename.mk:1: MASTER_SITES should not be used at load time in any file.",
-		"WARN: filename.mk:1: Invalid variable modifier \"//*\" for \"MASTER_SITES\".")
+		"WARN: filename.mk:1: MASTER_SITES should not be used at load time in any file.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirectiveCond__tracing(c *check.C) {
