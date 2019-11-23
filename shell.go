@@ -760,7 +760,7 @@ func (ck *ShellLineChecker) CheckWord(token string, checkQuoting bool, time Tool
 }
 
 func (ck *ShellLineChecker) checkWordQuoting(token string, checkQuoting bool, time ToolTime) {
-	tok := NewShTokenizer(ck.mkline.Line, token, false)
+	tok := NewShTokenizer(ck.mkline.Line, token, true)
 
 	atoms := tok.ShAtoms()
 	quoting := shqPlain
