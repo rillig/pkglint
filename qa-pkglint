@@ -131,7 +131,7 @@ diffs() {
   step_msg "Generating diffs"
   (
     cd "$archivedir"
-    for out in 20*.out; do
+    for out in [0-9]*-*-*.out; do
       diff -u -- *.ref "$out" > "${out%.out}.diff" || true
       perl -e '
         use strict;
