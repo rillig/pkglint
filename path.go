@@ -38,7 +38,6 @@ func (p Path) Parts() []string {
 
 func (p Path) Count() int { return len(p.Parts()) }
 
-// TODO: Check each call whether HasPrefixPath is more appropriate; add tests
 func (p Path) HasPrefixText(prefix string) bool {
 	return hasPrefix(string(p), prefix)
 }
