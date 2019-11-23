@@ -499,7 +499,7 @@ func relpath(from, to Path) (result Path) {
 	}
 
 	// Take a shortcut for the common case from "dir" to "dir/subdir/...".
-	if cto.HasPrefixText(cfrom.String()) && cto[len(cfrom):].HasPrefixText("/") {
+	if cto.HasPrefixPath(cfrom) {
 		return cleanpath(cto[len(cfrom)+1:])
 	}
 
