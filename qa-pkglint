@@ -6,6 +6,8 @@ archivedir="$srcdir/archive"
 pkgsrcdir="$HOME/git/pkgsrc"
 : "${GOPATH:="$HOME/go"}"
 
+run_tests=yes
+
 step_msg() {
   printf '%s => %s\n' "$(date +'%H:%M:%S')" "$1"
 }
@@ -24,6 +26,10 @@ genrunid() {
   fi
 }
 
+notest() {
+  run_tests=no
+}
+
 install() {
   genrunid
   (cd "$srcdir" && chmod 644 -- *.go)
@@ -31,20 +37,10 @@ install() {
   go fmt netbsd.org/pkglint/...
   step_msg "Generating source code"
   go generate netbsd.org/pkglint/...
-  step_msg "Testing pkglint"
-  go test netbsd.org/pkglint/...
-  step_msg "Installing pkglint"
-  go install netbsd.org/pkglint/...
-  cp "$GOPATH/bin/pkglint.exe" "$archivedir/$runid.exe"
-}
-
-install_notest() {
-  genrunid
-  (cd "$srcdir" && chmod 644 -- *.go)
-  step_msg "Formatting pkglint"
-  go fmt netbsd.org/pkglint/...
-  step_msg "Generating source code"
-  go generate netbsd.org/pkglint/...
+  if [ $run_tests = yes ]; then
+    step_msg "Testing pkglint"
+    go test netbsd.org/pkglint/...
+  fi
   step_msg "Installing pkglint"
   go install netbsd.org/pkglint/...
   cp "$GOPATH/bin/pkglint.exe" "$archivedir/$runid.exe"
