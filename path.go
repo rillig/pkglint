@@ -67,7 +67,7 @@ func (p Path) ContainsPath(sub Path) bool {
 			return true
 		}
 	}
-	return false
+	return sub == "."
 }
 
 func (p Path) ContainsPathCanonical(sub Path) bool {

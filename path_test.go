@@ -188,11 +188,11 @@ func (s *Suite) Test_Path_ContainsPath(c *check.C) {
 		t.CheckEquals(p.ContainsPath(sub), contains)
 	}
 
-	test("", "", true)           // It doesn't make sense to search for empty paths.
-	test(".", "", false)         // It doesn't make sense to search for empty paths.
-	test("filename", ".", false) // FIXME
-	test("a.b", ".", false)      // FIXME
-	test("..", ".", false)       // FIXME
+	test("", "", true)          // It doesn't make sense to search for empty paths.
+	test(".", "", false)        // It doesn't make sense to search for empty paths.
+	test("filename", ".", true) // Every path contains "." implicitly at the beginning
+	test("a.b", ".", true)
+	test("..", ".", true)
 	test("filename", "", false)
 	test("filename", "filename", true)
 	test("a/b/c", "a", true)
