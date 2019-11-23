@@ -123,9 +123,10 @@ func (pkg *Package) load() ([]Path, *MkLines, *MkLines) {
 		if filename.Dir().Base() == "patches" {
 			return false
 		}
-
-		// TODO: ContainsPath
-		return !filename.ContainsText(pkg.Pkgdir.String() + "/")
+		if pkg.Pkgdir == "." {
+			return true
+		}
+		return !filename.ContainsPath(pkg.Pkgdir)
 	}
 
 	// Determine the used variables and PLIST directories before checking any of the Makefile fragments.
