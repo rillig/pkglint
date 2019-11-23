@@ -347,11 +347,13 @@ func (s *Suite) Test_Package_load__variable_from_Makefile_used_in_builtin_mk(c *
 
 	G.Check(t.File("devel/binutils"))
 
-	// TODO: There should be a warning about the BINUTILS_PREFIX from the
-	//  Makefile not being used since the builtin.mk file is only parsed
-	//  inside of buildlink3.mk, and that doesn't happen for the package
-	//  itself, but only for those packages that depend on this package.
-	t.CheckOutputEmpty()
+	// The BINUTILS_PREFIX from the Makefile is not used since the
+	// builtin.mk file is only parsed inside of buildlink3.mk, and
+	// that doesn't happen for the package itself, but only for those
+	// packages that depend on this package.
+	t.CheckOutputLines(
+		"WARN: ~/devel/binutils/Makefile:20: " +
+			"BINUTILS_PREFIX is defined but not used.")
 }
 
 // Demonstrates that Makefile fragments are handled differently,

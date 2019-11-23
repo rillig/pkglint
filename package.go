@@ -132,7 +132,9 @@ func (pkg *Package) load() ([]Path, *MkLines, *MkLines) {
 		basename := filename.Base()
 		if isRelevantMk(filename, basename) {
 			fragmentMklines := LoadMk(filename, MustSucceed)
-			fragmentMklines.collectUsedVariables() // TODO: Does this have any effect?
+			if basename != "buildlink3.mk" && basename != "builtin.mk" {
+				fragmentMklines.collectUsedVariables() // TODO: Does this have any effect?
+			}
 			pkg.collectConditionalIncludes(fragmentMklines)
 		}
 		if hasPrefix(basename, "PLIST") {
