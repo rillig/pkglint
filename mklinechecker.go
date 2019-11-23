@@ -1373,7 +1373,7 @@ func (ck MkLineChecker) CheckRelativePath(relativePath Path, mustExist bool) {
 	}
 
 	mkline := ck.MkLine
-	if !G.Wip && relativePath.ContainsText("/wip/") {
+	if !G.Wip && relativePath.ContainsPath("wip") {
 		mkline.Errorf("A main pkgsrc package must not depend on a pkgsrc-wip package.")
 	}
 

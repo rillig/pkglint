@@ -554,7 +554,7 @@ func (*MkLine) WithoutMakeVariables(value string) string {
 }
 
 func (mkline *MkLine) ResolveVarsInRelativePath(relativePath Path) Path {
-	if !relativePath.ContainsText("$") { // TODO: containsVarRef
+	if !containsVarRef(relativePath.String()) {
 		return cleanpath(relativePath)
 	}
 
@@ -573,7 +573,7 @@ func (mkline *MkLine) ResolveVarsInRelativePath(relativePath Path) Path {
 			// Relative pkgsrc paths usually only contain two or three levels.
 			// A possible reason for reaching this assertion is a pkglint unit test
 			// that uses t.NewMkLines instead of the correct t.SetUpFileMkLines.
-			assertf(!pkgsrcdir.ContainsText("../../../../.."),
+			assertf(!pkgsrcdir.ContainsPath("../../../../.."),
 				"Relative path %q for %q is too deep below the pkgsrc root %q.",
 				pkgsrcdir, basedir, G.Pkgsrc.File("."))
 		}
