@@ -356,6 +356,40 @@ func (s *Suite) Test_Package_load__variable_from_Makefile_used_in_builtin_mk(c *
 			"BINUTILS_PREFIX is defined but not used.")
 }
 
+func (s *Suite) Test_Package_load__buildlink3_mk_includes_other_mk(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--explain")
+	t.SetUpPackage("multimedia/libav")
+	t.CreateFileDummyBuildlink3("multimedia/libav/buildlink3.mk",
+		".include \"available.mk\"")
+	t.CreateFileLines("multimedia/libav/available.mk",
+		MkCvsID,
+		"",
+		"LIBAV_AVAILABLE=\tno")
+	t.FinishSetUp()
+
+	G.Check(t.File("multimedia/libav"))
+
+	// From looking at the file available.mk alone, this variable looks
+	// unused indeed, but its intention is to be used by other packages.
+	// The explanation has a large paragraph covering exactly this case,
+	// therefore the warning is ok.
+	t.CheckOutputLines(
+		"WARN: ~/multimedia/libav/available.mk:3: "+
+			"LIBAV_AVAILABLE is defined but not used.",
+		"",
+		"\tThis might be a simple typo.",
+		"",
+		"\tIf a package provides a file containing several related variables",
+		"\t(such as module.mk, app.mk, extension.mk), that file may define",
+		"\tvariables that look unused since they are only used by other",
+		"\tpackages. These variables should be documented at the head of the",
+		"\tfile; see mk/subst.mk for an example of such a documentation",
+		"\tcomment.",
+		"")
+}
+
 // Demonstrates that Makefile fragments are handled differently,
 // depending on the directory they are in.
 func (s *Suite) Test_Package_load__extra_files(c *check.C) {
