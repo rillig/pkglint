@@ -123,10 +123,9 @@ func (pkg *Package) load() ([]Path, *MkLines, *MkLines) {
 		basename := filename.Base()
 		if (hasPrefix(basename, "Makefile.") || filename.HasSuffixText(".mk")) &&
 			!matches(filename.String(), `patch-`) &&
-			!filename.ContainsText(pkg.Pkgdir.String()+"/") && // TODO: ContainsPath
-			!filename.ContainsText(pkg.Filesdir.String()+"/") { // TODO: ContainsPath
+			!filename.ContainsText(pkg.Pkgdir.String()+"/") { // TODO: ContainsPath
 			fragmentMklines := LoadMk(filename, MustSucceed)
-			fragmentMklines.collectUsedVariables()
+			fragmentMklines.collectUsedVariables() // TODO: Does this have any effect?
 			pkg.collectConditionalIncludes(fragmentMklines)
 		}
 		if hasPrefix(basename, "PLIST") {
