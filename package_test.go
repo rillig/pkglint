@@ -332,6 +332,28 @@ func (s *Suite) Test_NewPackage(c *check.C) {
 	t.ExpectAssert(func() { NewPackage("category") })
 }
 
+func (s *Suite) Test_Package_load__variable_from_Makefile_used_in_builtin_mk(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("devel/binutils",
+		"BINUTILS_PREFIX=\t${PREFIX}/${MACHINE_GNU_PLATFORM}")
+	t.CreateFileLines("devel/binutils/builtin.mk",
+		MkCvsID,
+		".include \"../../mk/bsd.prefs.mk\"",
+		"BINUTILS_PREFIX?=\t/usr",
+		"",
+		"BUILTIN_FIND_FILES.BINUTILS_FILES:=\t${BINUTILS_PREFIX}/include/bfd.h")
+	t.FinishSetUp()
+
+	G.Check(t.File("devel/binutils"))
+
+	// TODO: There should be a warning about the BINUTILS_PREFIX from the
+	//  Makefile not being used since the builtin.mk file is only parsed
+	//  inside of buildlink3.mk, and that doesn't happen for the package
+	//  itself, but only for those packages that depend on this package.
+	t.CheckOutputEmpty()
+}
+
 // Demonstrates that Makefile fragments are handled differently,
 // depending on the directory they are in.
 func (s *Suite) Test_Package_load__extra_files(c *check.C) {
