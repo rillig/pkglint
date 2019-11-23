@@ -14,12 +14,12 @@ genrunid() {
   if [ -n "${runid-}" ]; then
     return
   fi
+  timestamp="$(cd "$srcdir" && git show -s --format=%ai HEAD | awk -F '[- :]' '{print substr($1,3)$2$3"-"$4$5}')"
   headcommit=$(cd "$srcdir" && git rev-parse --short HEAD)
   if (cd "$srcdir" && git diff --quiet && git diff --cached --quiet); then
-    timestamp="$(cd "$srcdir" && git show -s --format=%ai HEAD | awk -F '[- :]' '{print $1$2$3"-"$4$5}')"
     runid="$timestamp-$headcommit"
   else
-    runid="$(date +'%Y%m%d-%H%M')-$headcommit-mod-$$"
+    runid="$timestamp-$headcommit-$(date +'%H%M%S')"
   fi
 }
 
