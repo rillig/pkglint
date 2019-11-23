@@ -169,6 +169,9 @@ func (s *Suite) Test_Path_ContainsText(c *check.C) {
 
 	test("", "", true)
 	test("filename", "", true)
+	test("filename", ".", false)
+	test("a.b", ".", true)
+	test("..", ".", true)
 	test("", "x", false)
 	test("/root", "/r", true)
 	test("/root", "/root", true)
@@ -185,8 +188,11 @@ func (s *Suite) Test_Path_ContainsPath(c *check.C) {
 		t.CheckEquals(p.ContainsPath(sub), contains)
 	}
 
-	test("", "", true)   // It doesn't make sense to search for empty paths.
-	test(".", "", false) // It doesn't make sense to search for empty paths.
+	test("", "", true)           // It doesn't make sense to search for empty paths.
+	test(".", "", false)         // It doesn't make sense to search for empty paths.
+	test("filename", ".", false) // FIXME
+	test("a.b", ".", false)      // FIXME
+	test("..", ".", false)       // FIXME
 	test("filename", "", false)
 	test("filename", "filename", true)
 	test("a/b/c", "a", true)
