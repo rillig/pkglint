@@ -2989,28 +2989,43 @@ func (s *Suite) Test_Package_checkIncludeConditionally__no_explanation(c *check.
 			"(depending on OPSYS) and unconditionally in buildlink3.mk:12.")
 }
 
-func (s *Suite) Test_Package_checkIncludeConditionally__no_variable(c *check.C) {
+func (s *Suite) Test_Package_checkIncludeConditionally__conditionally_no_variable(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Wall", "--explain")
-	t.CreateFileLines("devel/zlib/buildlink3.mk",
-		MkCvsID)
+	t.SetUpOption("zlib", "")
 	t.SetUpPackage("category/package",
-		".if exists(/usr/include/zlib.h)",
 		".include \"../../devel/zlib/buildlink3.mk\"",
+		".if exists(/usr/include)",
+		".include \"../../sysutils/coreutils/buildlink3.mk\"",
 		".endif")
-	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
-		".include \"../../devel/zlib/buildlink3.mk\"")
+	t.CreateFileLines("mk/bsd.options.mk", "")
+	t.CreateFileLines("devel/zlib/buildlink3.mk", "")
+	t.CreateFileLines("sysutils/coreutils/buildlink3.mk", "")
+
+	t.CreateFileLines("category/package/options.mk",
+		MkCvsID,
+		"",
+		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
+		"PKG_SUPPORTED_OPTIONS=\t# none",
+		"",
+		".include \"../../mk/bsd.options.mk\"",
+		"",
+		".if exists(/usr/include)",
+		".  include \"../../devel/zlib/buildlink3.mk\"",
+		".endif",
+		".include \"../../sysutils/coreutils/buildlink3.mk\"")
 	t.Chdir("category/package")
 	t.FinishSetUp()
 
 	G.checkdirPackage(".")
 
 	t.CheckOutputLines(
-		"WARN: Makefile:21: " +
-			"\"../../devel/zlib/buildlink3.mk\" is included conditionally here " +
-			// FIXME: leave out the part in parentheses
-			"(depending on ) and unconditionally in buildlink3.mk:12.")
+		"WARN: Makefile:20: \"../../devel/zlib/buildlink3.mk\" "+
+			"is included unconditionally here "+
+			"and conditionally in options.mk:9.",
+		"WARN: Makefile:22: \"../../sysutils/coreutils/buildlink3.mk\" "+
+			"is included conditionally here "+
+			"and unconditionally in options.mk:11.")
 }
 
 func (s *Suite) Test_Package_checkIncludeConditionally__explain_PKG_OPTIONS_in_options_mk(c *check.C) {

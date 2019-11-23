@@ -1377,6 +1377,13 @@ func (pkg *Package) checkIncludeConditionally(mkline *MkLine, indentation *Inden
 		}
 	}
 
+	dependingOn := func(varnames []string) string {
+		if len(varnames) == 0 {
+			return ""
+		}
+		return sprintf(" (depending on %s)", strings.Join(varnames, ", "))
+	}
+
 	if indentation.IsConditional() {
 		if other := pkg.unconditionalIncludes[key]; other != nil {
 			if !pkg.Once.FirstTimeSlice("checkIncludeConditionally", mkline.Location.String(), other.Location.String()) {
@@ -1384,9 +1391,11 @@ func (pkg *Package) checkIncludeConditionally(mkline *MkLine, indentation *Inden
 			}
 
 			mkline.Warnf(
-				"%q is included conditionally here (depending on %s) "+
+				"%q is included conditionally here%s "+
 					"and unconditionally in %s.",
-				cleanpath(mkline.IncludedFile()), strings.Join(mkline.ConditionalVars(), ", "), mkline.RefTo(other))
+				cleanpath(mkline.IncludedFile()),
+				dependingOn(mkline.ConditionalVars()),
+				mkline.RefTo(other))
 
 			explainPkgOptions(other, mkline)
 		}
@@ -1399,8 +1408,10 @@ func (pkg *Package) checkIncludeConditionally(mkline *MkLine, indentation *Inden
 
 			mkline.Warnf(
 				"%q is included unconditionally here "+
-					"and conditionally in %s (depending on %s).",
-				cleanpath(mkline.IncludedFile()), mkline.RefTo(other), strings.Join(other.ConditionalVars(), ", "))
+					"and conditionally in %s%s.",
+				cleanpath(mkline.IncludedFile()),
+				mkline.RefTo(other),
+				dependingOn(other.ConditionalVars()))
 
 			explainPkgOptions(mkline, other)
 		}
