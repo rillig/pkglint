@@ -594,6 +594,7 @@ func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates__parse_errors(c *check.C) {
 		"\t"+"o package-without-version",
 		"\t"+"o CSP-0.34",
 		"\t"+"o freeciv-client-2.5.0 (urgent)", // missing [brackets]
+		"\t"+"o mix-2.5.0 [urgent)",            // bracket + parenthesis
 		"",
 		"\t"+"o ignored-0.0")
 
@@ -601,7 +602,8 @@ func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates__parse_errors(c *check.C) {
 
 	t.CheckDeepEquals(todo, []SuggestedUpdate{
 		{lines.Lines[7].Location, "CSP", "0.34", ""},
-		{lines.Lines[8].Location, "freeciv-client", "2.5.0", "(urgent)"}})
+		{lines.Lines[8].Location, "freeciv-client", "2.5.0", "(urgent)"},
+		{lines.Lines[9].Location, "mix", "2.5.0", "[urgent)"}})
 
 	t.CheckOutputLines(
 		"WARN: doc/TODO:6: Invalid line format \"\\tO wrong bullet\".",
