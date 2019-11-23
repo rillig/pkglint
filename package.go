@@ -379,12 +379,14 @@ func (pkg *Package) resolveIncludedFile(mkline *MkLine, includingFilename Path) 
 // the includedFile is taken directly from the .include directive.
 func (*Package) shouldDiveInto(includingFile, includedFile Path) bool {
 
-	if includedFile.HasSuffixText("/bsd.pkg.mk") || IsPrefs(includedFile) {
+	if includedFile.HasSuffixPath("bsd.pkg.mk") || IsPrefs(includedFile) {
 		return false
 	}
 
+	// FIXME: includingFile may be "../../mk/../devel/readline/buildlink.mk" and thus contain "mk"
+	//  even though the resolved file is not part of the pkgsrc infrastructure.
 	if includingFile.ContainsPath("mk") && !G.Pkgsrc.ToRel(includingFile).HasPrefixPath("wip/mk") {
-		// TODO: ".buildlink.mk", ".builtin.mk"
+		// TODO: try ".buildlink.mk", ".builtin.mk" instead, see wip/clfswm.
 		return includingFile.HasSuffixText("buildlink3.mk") && includedFile.HasSuffixText("builtin.mk")
 	}
 

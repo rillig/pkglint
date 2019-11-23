@@ -1396,21 +1396,21 @@ func (ck MkLineChecker) CheckRelativePath(relativePath Path, mustExist bool) {
 	}
 
 	switch {
-	case !resolvedPath.HasPrefixText("../"): // TODO: HasPrefixPath
+	case !resolvedPath.HasPrefixPath(".."):
 		break
 
-	case resolvedPath.HasPrefixText("../../mk/"): // TODO: HasPrefixPath
+	case resolvedPath.HasPrefixPath("../../mk"):
 		// From a package to the infrastructure.
 
 	case matches(resolvedPath.String(), `^\.\./\.\./[^./][^/]*/[^/]`):
 		// From a package to another package.
 
-	case resolvedPath.HasPrefixText("../mk/") && relpath(mkline.Filename.Dir(), G.Pkgsrc.File(".")) == "..": // TODO: ContainsPath
+	case resolvedPath.HasPrefixPath("../mk") && G.Pkgsrc.ToRel(mkline.Filename).Count() == 2:
 		// For category Makefiles.
 		// TODO: Or from a pkgsrc wip package to wip/mk.
 
 	case matches(resolvedPath.String(), `^\.\./[^./][^/]*/[^/]`):
-		if G.Wip && resolvedPath.ContainsText("/mk/") { // TODO: ContainsPath
+		if G.Wip && resolvedPath.ContainsPath("mk") {
 			mkline.Warnf("References to the pkgsrc-wip infrastructure should look like \"../../wip/mk\", not \"../mk\".")
 		} else {
 			mkline.Warnf("References to other packages should look like \"../../category/package\", not \"../package\".")
