@@ -5,7 +5,6 @@ import (
 	"hash/crc64"
 	"netbsd.org/pkglint/regex"
 	"netbsd.org/pkglint/textproc"
-	"os"
 	"path"
 	"reflect"
 	"regexp"
@@ -435,16 +434,6 @@ func varnameParam(varname string) string {
 		return varname[dot+1:]
 	}
 	return ""
-}
-
-func fileExists(filename string) bool {
-	st, err := os.Stat(filename)
-	return err == nil && st.Mode().IsRegular()
-}
-
-func dirExists(filename string) bool {
-	st, err := os.Stat(filename)
-	return err == nil && st.Mode().IsDir()
 }
 
 func toInt(s string, def int) int {
