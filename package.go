@@ -117,12 +117,15 @@ func (pkg *Package) load() ([]Path, *MkLines, *MkLines) {
 	}
 
 	isRelevantMk := func(filename Path, basename string) bool {
-		if (hasPrefix(basename, "Makefile.") || filename.HasSuffixText(".mk")) &&
-			!matches(filename.String(), `patch-`) &&
-			!filename.ContainsText(pkg.Pkgdir.String()+"/") { // TODO: ContainsPath
-			return true
+		if !hasPrefix(basename, "Makefile.") && !filename.HasSuffixText(".mk") {
+			return false
 		}
-		return false
+		if filename.Dir().Base() == "patches" {
+			return false
+		}
+
+		// TODO: ContainsPath
+		return !filename.ContainsText(pkg.Pkgdir.String() + "/")
 	}
 
 	// Determine the used variables and PLIST directories before checking any of the Makefile fragments.

@@ -415,7 +415,7 @@ func (s *Suite) Test_Package_load__extra_files(c *check.C) {
 		"@@ -1,1 +1,1 @@",
 		"- old",
 		"+ new")
-	t.CreateFileLines("patches/readme.mk",
+	t.CreateFileLines("patches/readme.mk", // Is ignored
 		"This is not a BSD-style Makefile.")
 	t.Copy("gnu-style.mk", "files/gnu-style.mk")
 	t.Copy("gnu-style.mk", "../../category/other/gnu-style.mk")
@@ -432,10 +432,6 @@ func (s *Suite) Test_Package_load__extra_files(c *check.C) {
 		"ERROR: gnu-style.mk:3: Unknown Makefile line format: \"else\".",
 		"ERROR: gnu-style.mk:5: Unknown Makefile line format: \"endif\".",
 
-		// Since the patches directory should contain only patches,
-		// each other file is treated as a file belonging to pkgsrc,
-		// therefore *.mk is interpreted as a Makefile fragment.
-		"ERROR: patches/readme.mk:1: Unknown Makefile line format: \"This is not a BSD-style Makefile.\".",
 		"ERROR: distinfo: Patch \"patches/patch-Makefile.mk\" is not recorded. Run \""+confMake+" makepatchsum\".",
 
 		// The following diagnostics are duplicated because the files from
