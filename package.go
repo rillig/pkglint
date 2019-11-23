@@ -116,14 +116,21 @@ func (pkg *Package) load() ([]Path, *MkLines, *MkLines) {
 		files = append(files, pkg.File(pkg.DistinfoFile))
 	}
 
+	isRelevantMk := func(filename Path, basename string) bool {
+		if (hasPrefix(basename, "Makefile.") || filename.HasSuffixText(".mk")) &&
+			!matches(filename.String(), `patch-`) &&
+			!filename.ContainsText(pkg.Pkgdir.String()+"/") { // TODO: ContainsPath
+			return true
+		}
+		return false
+	}
+
 	// Determine the used variables and PLIST directories before checking any of the Makefile fragments.
 	// TODO: Why is this code necessary? What effect does it have?
 	pkg.collectConditionalIncludes(mklines)
 	for _, filename := range files {
 		basename := filename.Base()
-		if (hasPrefix(basename, "Makefile.") || filename.HasSuffixText(".mk")) &&
-			!matches(filename.String(), `patch-`) &&
-			!filename.ContainsText(pkg.Pkgdir.String()+"/") { // TODO: ContainsPath
+		if isRelevantMk(filename, basename) {
 			fragmentMklines := LoadMk(filename, MustSucceed)
 			fragmentMklines.collectUsedVariables() // TODO: Does this have any effect?
 			pkg.collectConditionalIncludes(fragmentMklines)
