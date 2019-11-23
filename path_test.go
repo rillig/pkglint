@@ -198,6 +198,7 @@ func (s *Suite) Test_Path_ContainsPath(c *check.C) {
 	test("aa/b/c", "a", false)
 	test("a/bb/c", "b", false)
 	test("a/bb/c", "b/c", false)
+	test("mk/fetch/fetch.mk", "mk", true)
 	test("category/package/../../wip/mk/../..", "mk", true)
 }
 
@@ -221,6 +222,9 @@ func (s *Suite) Test_Path_ContainsPathCanonical(c *check.C) {
 	test("aa/b/c", "a", false)
 	test("a/bb/c", "b", false)
 	test("a/bb/c", "b/c", false)
+	test("mk/fetch/fetch.mk", "mk", true)
+	test("category/package/../../wip/mk", "mk", true)
+	test("category/package/../../wip/mk/..", "mk", true) // FIXME
 	test("category/package/../../wip/mk/../..", "mk", false)
 }
 
