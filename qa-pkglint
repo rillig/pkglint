@@ -20,6 +20,7 @@ genrunid() {
     runid="$timestamp-$headcommit"
   else
     runid="$timestamp-$headcommit-$(date +'%H%M%S')"
+    (cd "$srcdir" && git diff && git diff --cached) > "$archivedir/$runid.patch"
   fi
 }
 
