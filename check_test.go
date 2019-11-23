@@ -477,6 +477,7 @@ func (t *Tester) CreateFileDummyPatch(relativeFileName Path) {
 }
 
 func (t *Tester) CreateFileDummyBuildlink3(relativeFileName Path, customLines ...string) {
+	assert(relativeFileName.Count() == 3)
 	dir := relativeFileName.Dir()
 	lower := dir.Base()
 	// see pkgtools/createbuildlink/files/createbuildlink, "package specific variables"
