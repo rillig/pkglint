@@ -1327,6 +1327,26 @@ func (s *Suite) Test_Indentation__realistic(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_Indentation_String(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("filename.mk",
+		".if exists(/bin)",
+		"# probably POSIX",
+		".endif")
+	var str string
+
+	mklines.ForEach(func(mkline *MkLine) {
+		if mkline.IsComment() {
+			t.CheckEquals(mklines.indentation.IsConditional(), false) // FIXME
+			t.Check(mklines.indentation.Varnames(), check.IsNil)
+			str = mklines.indentation.String()
+		}
+	})
+
+	t.CheckEquals(str, "[2]")
+}
+
 func (s *Suite) Test_Indentation_RememberUsedVariables(c *check.C) {
 	t := s.Init(c)
 
