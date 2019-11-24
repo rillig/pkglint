@@ -2433,10 +2433,14 @@ func (s *Suite) Test_Package_pkgnameFromDistname(c *check.C) {
 
 	test("${DISTFILE:C,\\..*,,}", "aspell-af-0.50-0", "")
 
-	// Parse error because of missing closing brace
+	// Parse error because of missing closing brace, parsing succeeds.
 	test("${DISTNAME:M", "package-1.0", "",
 		"WARN: ~/category/package/Makefile:4: "+
 			"Missing closing \"}\" for \"DISTNAME\".")
+
+	// Parse error with an unparseable rest.
+	test("$", "package-1.0", "",
+		nil...)
 }
 
 func (s *Suite) Test_Package_checkPossibleDowngrade(c *check.C) {
