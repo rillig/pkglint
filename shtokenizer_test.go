@@ -109,7 +109,8 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	// testRest ensures that the given string is parsed to the expected
 	// atoms, and returns the remaining text.
 	testRest := func(s string, expectedAtoms []*ShAtom, expectedRest string) {
-		p := NewShTokenizer(dummyLine, s, false)
+		line := t.NewLine("filename.mk", 1, "")
+		p := NewShTokenizer(line, s, false)
 
 		actualAtoms := p.ShAtoms()
 
@@ -516,7 +517,8 @@ func (s *Suite) Test_ShTokenizer_ShAtom__quoting(c *check.C) {
 	t := s.Init(c)
 
 	test := func(input, expectedOutput string) {
-		p := NewShTokenizer(dummyLine, input, false)
+		line := t.NewLine("filename.mk", 1, "")
+		p := NewShTokenizer(line, input, false)
 		q := shqPlain
 		result := ""
 		for {
@@ -605,7 +607,8 @@ func (s *Suite) Test_ShTokenizer_ShToken(c *check.C) {
 	// testRest ensures that the given string is parsed to the expected
 	// tokens, and returns the remaining text.
 	testRest := func(str string, expected ...string) string {
-		p := NewShTokenizer(dummyLine, str, false)
+		line := t.NewLine("testRest.mk", 1, "")
+		p := NewShTokenizer(line, str, false)
 		for _, exp := range expected {
 			t.CheckEquals(p.ShToken().MkText, exp)
 		}
@@ -613,7 +616,8 @@ func (s *Suite) Test_ShTokenizer_ShToken(c *check.C) {
 	}
 
 	test := func(str string, expected ...string) {
-		p := NewShTokenizer(dummyLine, str, false)
+		line := t.NewLine("test.mk", 1, "")
+		p := NewShTokenizer(line, str, false)
 		for _, exp := range expected {
 			t.CheckEquals(p.ShToken().MkText, exp)
 		}
@@ -622,7 +626,8 @@ func (s *Suite) Test_ShTokenizer_ShToken(c *check.C) {
 	}
 
 	testNil := func(str string) {
-		p := NewShTokenizer(dummyLine, str, false)
+		line := t.NewLine("testNil.mk", 1, "")
+		p := NewShTokenizer(line, str, false)
 		c.Check(p.ShToken(), check.IsNil)
 		t.CheckEquals(p.Rest(), "")
 		t.CheckOutputEmpty()

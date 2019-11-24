@@ -52,8 +52,6 @@ var (
 	AutofixLogLevel = &LogLevel{"AUTOFIX", "autofix"}
 )
 
-var dummyLine = NewLineMulti("", 0, 0, "", nil)
-
 // Explain outputs an explanation for the preceding diagnostic
 // if the --explain option is given. Otherwise it just records
 // that an explanation is available.
