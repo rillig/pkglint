@@ -85,6 +85,7 @@ func (p MkLineParser) parseVarassign(line *Line, text string, splitResult mkLine
 			fix.Notef("Unnecessary space after variable name %q.", varname)
 			fix.Replace(varname+a.spaceAfterVarname+op.String(), varname+op.String())
 			fix.Apply()
+			// FIXME: Preserve the alignment of the variable value.
 		}
 	}
 
