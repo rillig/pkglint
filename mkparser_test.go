@@ -417,15 +417,16 @@ func (s *Suite) Test_MkParser_VarUse__ambiguous(c *check.C) {
 // of nested variables though because this case is not important enough to
 // invest much development time. It occurs so seldom that it is acceptable
 // to run pkglint multiple times in such a case.
-func (s *Suite) Test_MkParser_VarUse__parentheses_autofix(c *check.C) {
+func (s *Suite) Test_MkParser_varUseBrace__autofix_parentheses(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("--autofix")
 	t.SetUpVartypes()
-	lines := t.SetUpFileLines("Makefile",
+	mklines := t.SetUpFileMkLines("Makefile",
 		MkCvsID,
-		"COMMENT=$(P1) $(P2)) $(P3:Q) ${BRACES} $(A.$(B.$(C)))")
-	mklines := NewMkLines(lines)
+		"COMMENT=$(P1) $(P2)) $(P3:Q) ${BRACES} $(A.$(B.$(C))) $(A:M\\#)")
+
+	// FIXME: Ensure that a warning is issued for $(A:M\#).
 
 	mklines.Check()
 
@@ -436,7 +437,7 @@ func (s *Suite) Test_MkParser_VarUse__parentheses_autofix(c *check.C) {
 		"AUTOFIX: ~/Makefile:2: Replacing \"$(C)\" with \"${C}\".")
 	t.CheckFileLines("Makefile",
 		MkCvsID,
-		"COMMENT=${P1} ${P2}) ${P3:Q} ${BRACES} $(A.$(B.${C}))")
+		"COMMENT=${P1} ${P2}) ${P3:Q} ${BRACES} $(A.$(B.${C})) $(A:M\\#)")
 }
 
 func (s *Suite) Test_MkParser_VarUseModifiers(c *check.C) {
