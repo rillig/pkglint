@@ -334,6 +334,18 @@ func (s *Suite) Test_Pkglint_Main__profiling_error(c *check.C) {
 		`ERROR: pkglint\.pprof: Cannot create profiling file: open pkglint\.pprof: .*`)
 }
 
+// Branch coverage for Logger.Logf, the level != Fatal case.
+func (s *Suite) Test_Pkglint_prepareMainLoop__fatal(c *check.C) {
+	t := s.Init(c)
+
+	t.Chdir(".")
+	t.Main("--profiling", t.File("does-not-exist").String())
+
+	t.CheckOutputLines(
+		"fileCache: 0 hits, 0 misses",
+		"FATAL: does-not-exist: Must be inside a pkgsrc tree.")
+}
+
 func (s *Suite) Test_Pkglint_ParseCommandLine__only(c *check.C) {
 	t := s.Init(c)
 
