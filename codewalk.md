@@ -25,7 +25,7 @@ therefore the decision whether each element should be exported or not is not car
 If you want to use some of the code in your own pkgsrc programs,
 [just ask](mailto:%72%69%6C%6C%69%67%40NetBSD.org?subject=using%20pkglint%20as%20a%20library).
 
-> from [pkglint.go](pkglint.go#L171):
+> from [pkglint.go](pkglint.go#L121):
 
 ```go
 func (pkglint *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) (exitCode int) {
@@ -34,13 +34,13 @@ func (pkglint *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) 
 When running pkglint, the `G` variable is set up first.
 It contains the whole global state of pkglint:
 
-> from [pkglint.go](pkglint.go#L156):
+> from [pkglint.go](pkglint.go#L106):
 
 ```go
 // G is the abbreviation for "global state";
 // this and the tracer are the only global variables in this Go package.
 var (
-	G     = NewPkglint()
+	G     = NewPkglint(os.Stdout, os.Stderr)
 	trace tracePkg.Tracer
 )
 ```
@@ -48,7 +48,7 @@ var (
 All the interesting code is in the `Pkglint` type.
 Having only two global variables makes it easy to reset the global state during testing.
 
-> from [pkglint.go](pkglint.go#L163):
+> from [pkglint.go](pkglint.go#L113):
 
 ```go
 // Main runs the main program with the given arguments.
@@ -81,10 +81,8 @@ func (pkglint *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) 
 
 	pkglint.prepareMainLoop()
 
-	for len(pkglint.Todo) > 0 {
-		item := pkglint.Todo[0]
-		pkglint.Todo = pkglint.Todo[1:]
-		pkglint.Check(item)
+	for !pkglint.Todo.IsEmpty() {
+		pkglint.Check(pkglint.Todo.Pop())
 	}
 
 	pkglint.Pkgsrc.checkToplevelUnusedLicenses()
@@ -101,17 +99,15 @@ func (pkglint *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) 
 
 The code for setting up the tests looks similar to the main code:
 
-> from [check_test.go](check_test.go#L56):
+> from [check_test.go](check_test.go#L54):
 
 ```go
 func (s *Suite) SetUpTest(c *check.C) {
 	t := Tester{c: c, testName: c.TestName()}
 	s.Tester = &t
 
-	G = NewPkglint()
+	G = NewPkglint(&t.stdout, &t.stderr)
 	G.Testing = true
-	G.Logger.out = NewSeparatorWriter(&t.stdout)
-	G.Logger.err = NewSeparatorWriter(&t.stderr)
 	trace.Out = &t.stdout
 
 	// XXX: Maybe the tests can run a bit faster when they don't
@@ -120,6 +116,7 @@ func (s *Suite) SetUpTest(c *check.C) {
 
 	t.c = c
 	t.SetUpCommandLine("-Wall")    // To catch duplicate warnings
+	G.Todo.Pop()                   // The "." was inserted by default.
 	t.seenSetUpCommandLine = false // This default call doesn't count.
 
 	// To improve code coverage and ensure that trace.Result works
@@ -153,13 +150,13 @@ func main() {
 }
 ```
 
-> from [pkglint.go](pkglint.go#L171):
+> from [pkglint.go](pkglint.go#L121):
 
 ```go
 func (pkglint *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) (exitCode int) {
 ```
 
-> from [pkglint.go](pkglint.go#L183):
+> from [pkglint.go](pkglint.go#L133):
 
 ```go
 	if exitcode := pkglint.ParseCommandLine(args); exitcode != -1 {
@@ -174,14 +171,14 @@ and that is saved in `pkglint.Todo`, which contains all items that still need to
 The default use case for pkglint is to check the package from the
 current working directory, therefore this is done if no arguments are given.
 
-> from [pkglint.go](pkglint.go#L337):
+> from [pkglint.go](pkglint.go#L284):
 
 ```go
 	for _, arg := range pkglint.Opts.args {
-		pkglint.Todo = append(pkglint.Todo, filepath.ToSlash(arg))
+		pkglint.Todo.Push(NewPathSlash(arg))
 	}
-	if len(pkglint.Todo) == 0 {
-		pkglint.Todo = []string{"."}
+	if pkglint.Todo.IsEmpty() {
+		pkglint.Todo.Push(".")
 	}
 ```
 
@@ -195,12 +192,12 @@ In this example run, the first and only argument is `DESCR`.
 From there, the pkgsrc root is usually reachable via `../../`,
 and this is what pkglint tries.
 
-> from [pkglint.go](pkglint.go#L261):
+> from [pkglint.go](pkglint.go#L210):
 
 ```go
-	firstDir := pkglint.Todo[0]
-	if fileExists(firstDir) {
-		firstDir = path.Dir(firstDir)
+	firstDir := pkglint.Todo.Front()
+	if firstDir.IsFile() {
+		firstDir = firstDir.Dir()
 	}
 
 	relTopdir := findPkgsrcTopdir(firstDir)
@@ -209,11 +206,11 @@ and this is what pkglint tries.
 		// pkglint doesn't know where to load the infrastructure files from,
 		// and these are needed for virtually every single check.
 		// Therefore, the only sensible thing to do is to quit immediately.
-		dummyLine.Fatalf("%q must be inside a pkgsrc tree.", firstDir)
+		NewLineWhole(firstDir).Fatalf("Must be inside a pkgsrc tree.")
 	}
 
 	pkglint.Pkgsrc = NewPkgsrc(joinPath(firstDir, relTopdir))
-	pkglint.Wip = matches(pkglint.Pkgsrc.ToRel(firstDir), `^wip(/|$)`) // Same as in Pkglint.Check.
+	pkglint.Wip = pkglint.Pkgsrc.IsWip(firstDir) // See Pkglint.checkMode.
 	pkglint.Pkgsrc.LoadInfrastructure()
 ```
 
@@ -223,25 +220,22 @@ one after another. When pkglint is called with the `-r` option,
 some entries may be added to the Todo list,
 but that doesn't happen in this simple example run.
 
-> from [pkglint.go](pkglint.go#L193):
+> from [pkglint.go](pkglint.go#L143):
 
 ```go
-	for len(pkglint.Todo) > 0 {
-		item := pkglint.Todo[0]
-		pkglint.Todo = pkglint.Todo[1:]
-		pkglint.Check(item)
+	for !pkglint.Todo.IsEmpty() {
+		pkglint.Check(pkglint.Todo.Pop())
 	}
 ```
 
 The main work is done in `Pkglint.Check`:
 
-> from [pkglint.go](pkglint.go#L393):
+> from [pkglint.go](pkglint.go#L340):
 
 ```go
 	if isReg {
-		depth := strings.Count(pkgsrcRel, "/")
 		pkglint.checkExecutable(dirent, mode)
-		pkglint.checkReg(dirent, basename, depth)
+		pkglint.checkReg(dirent, basename, pkgsrcRel.Count())
 		return
 	}
 ```
@@ -250,15 +244,15 @@ Since `DESCR` is a regular file, the next function to call is `checkReg`.
 For directories, the next function would depend on the depth from the
 pkgsrc root directory.
 
-> from [pkglint.go](pkglint.go#L602):
+> from [pkglint.go](pkglint.go#L552):
 
 ```go
-func (pkglint *Pkglint) checkReg(filename, basename string, depth int) {
+func (pkglint *Pkglint) checkReg(filename Path, basename string, depth int) {
 ```
 
 The relevant part of `Pkglint.checkReg` is:
 
-> from [pkglint.go](pkglint.go#L628):
+> from [pkglint.go](pkglint.go#L579):
 
 ```go
 	case basename == "buildlink3.mk":
@@ -289,12 +283,12 @@ The actual checks usually work on `Line` objects instead of files
 because the lines offer nice methods for logging the diagnostics
 and for automatically fixing the text (in pkglint's `--autofix` mode).
 
-> from [pkglint.go](pkglint.go#L492):
+> from [pkglint.go](pkglint.go#L438):
 
 ```go
 func CheckLinesDescr(lines *Lines) {
 	if trace.Tracing {
-		defer trace.Call1(lines.Filename)()
+		defer trace.Call(lines.Filename)()
 	}
 
 	for _, line := range lines.Lines {
@@ -303,8 +297,9 @@ func CheckLinesDescr(lines *Lines) {
 		ck.CheckTrailingWhitespace()
 		ck.CheckValidCharacters()
 
-		if contains(line.Text, "${") {
-			for _, token := range NewMkParser(nil, line.Text).MkTokens() {
+		if containsVarRef(line.Text) {
+			tokens, _ := NewMkLexer(line.Text, nil).MkTokens()
+			for _, token := range tokens {
 				if token.Varuse != nil && G.Pkgsrc.VariableType(nil, token.Varuse.varname) != nil {
 					line.Notef("Variables are not expanded in the DESCR file.")
 				}
@@ -364,7 +359,7 @@ This code is a typical example for using the autofix feature.
 Some more possibilities are described at the `Autofix` type itself
 and at its typical call site `Line.Autofix()`:
 
-> from [autofix.go](autofix.go#L11):
+> from [autofix.go](autofix.go#L10):
 
 ```go
 // Autofix handles all modifications to a single line,
@@ -383,7 +378,7 @@ type Autofix struct {
 }
 ```
 
-> from [line.go](line.go#L160):
+> from [line.go](line.go#L159):
 
 ```go
 // Autofix returns the autofix instance belonging to the line.
@@ -412,6 +407,10 @@ type Autofix struct {
 func (line *Line) Autofix() *Autofix {
 	if line.autofix == nil {
 		line.autofix = NewAutofix(line)
+	} else {
+		// This assertion fails if an Autofix is reused before
+		// its Apply method is called.
+		assert(line.autofix.autofixShortTerm.diagFormat == "")
 	}
 	return line.autofix
 }
@@ -420,7 +419,7 @@ func (line *Line) Autofix() *Autofix {
 The journey ends here, and it hasn't been that difficult.
 If that was too easy, have a look at the complex cases here:
 
-> from [mkline.go](mkline.go#L648):
+> from [mkline.go](mkline.go#L652):
 
 ```go
 // VariableNeedsQuoting determines whether the given variable needs the :Q
@@ -450,8 +449,8 @@ func (mkline *MkLine) VariableNeedsQuoting(mklines *MkLines, varuse *MkVarUse, v
 	}
 
 	if !vartype.basicType.NeedsQ() {
-		if !vartype.List() {
-			if vartype.Guessed() {
+		if !vartype.IsList() {
+			if vartype.IsGuessed() {
 				return unknown
 			}
 			return no
@@ -463,7 +462,7 @@ func (mkline *MkLine) VariableNeedsQuoting(mklines *MkLines, varuse *MkVarUse, v
 
 	// A shell word may appear as part of a shell word, for example COMPILER_RPATH_FLAG.
 	if vuc.IsWordPart && vuc.quoting == VucQuotPlain {
-		if !vartype.List() && vartype.basicType == BtShellWord {
+		if !vartype.IsList() && vartype.basicType == BtShellWord {
 			return no
 		}
 	}
@@ -563,7 +562,7 @@ WARN: Makefile:3: COMMENT should not start with "A" or "An".
 
 The definition for the `Line` type is:
 
-> from [line.go](line.go#L67):
+> from [line.go](line.go#L66):
 
 ```go
 // Line represents a line of text from a file.
@@ -593,7 +592,7 @@ In these, there may be line continuations  (the ones ending in backslash).
 Plus, they may contain Make variables of the form `${VARNAME}` or `${VARNAME:Modifiers}`,
 and these are handled specially.
 
-> from [mkline.go](mkline.go#L11):
+> from [mkline.go](mkline.go#L10):
 
 ```go
 // MkLine is a line from a Makefile fragment.
@@ -635,7 +634,7 @@ The instructions for building and installing packages are written in shell comma
 which are embedded in Makefile fragments.
 The `ShellLineChecker` type provides methods for checking shell commands and their individual parts.
 
-> from [shell.go](shell.go#L13):
+> from [shell.go](shell.go#L359):
 
 ```go
 // ShellLineChecker is either a line from a Makefile starting with a tab,
@@ -675,7 +674,7 @@ The `t` variable is the center of most tests.
 It is of type `Tester` and provides a high-level interface
 for setting up tests and checking the results.
 
-> from [check_test.go](check_test.go#L121):
+> from [check_test.go](check_test.go#L105):
 
 ```go
 // Tester provides utility methods for testing pkglint.
@@ -689,9 +688,9 @@ type Tester struct {
 
 	stdout  bytes.Buffer
 	stderr  bytes.Buffer
-	tmpdir  string
+	tmpdir  Path
 	prevdir string // The current working directory before the test started
-	relCwd  string // See Tester.Chdir
+	relCwd  Path   // See Tester.Chdir
 
 	seenSetUpCommandLine bool
 	seenSetupPkgsrc      int
@@ -708,7 +707,7 @@ which is the underlying testing framework.
 Most pkglint tests don't need this variable.
 Low-level tests call `c.Check` to compare their results to the expected values.
 
-> from [util_test.go](util_test.go#L98):
+> from [util_test.go](util_test.go#L168):
 
 ```go
 func (s *Suite) Test_tabWidth(c *check.C) {
@@ -737,7 +736,7 @@ t.DisableTracing()
 To see how to setup complicated tests, have a look at the following test,
 which sets up a realistic environment to run the tests in.
 
-> from [pkglint_test.go](pkglint_test.go#L106):
+> from [pkglint_test.go](pkglint_test.go#L121):
 
 ```go
 // Demonstrates which infrastructure files are necessary to actually run
@@ -859,7 +858,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 			"Package version \"1.11\" is greater than the latest \"1.10\" "+
 			"from ../../doc/CHANGES-2018:5.",
 		"WARN: ~/sysutils/checkperms/Makefile:3: "+
-			"This package should be updated to 1.13 ([supports more file formats]).",
+			"This package should be updated to 1.13 (supports more file formats; see ../../doc/TODO:5).",
 		"ERROR: ~/sysutils/checkperms/Makefile:4: Invalid category \"tools\".",
 		"ERROR: ~/sysutils/checkperms/README: Packages in main pkgsrc must not have a README file.",
 		"ERROR: ~/sysutils/checkperms/TODO: Packages in main pkgsrc must not have a TODO file.",
