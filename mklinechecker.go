@@ -814,7 +814,6 @@ func (ck MkLineChecker) checkVarUseQuoting(varUse *MkVarUse, vartype *Vartype, v
 				fix.Explain(
 					seeGuide("Echoing a string exactly as-is", "echo-literal"))
 				fix.Replace("${"+varname+mod+"}", "${"+varname+correctMod+"}")
-				fix.Anyway()
 				fix.Apply()
 			} else {
 				mkline.Warnf("Please use ${%s%s} instead of ${%s%s} and make sure"+
@@ -1103,7 +1102,6 @@ func (ck MkLineChecker) checkVarassignRightCategory() {
 	if len(categories) > 1 && categories[1] == expected {
 		fix.Replace(categories[0]+" "+categories[1], categories[1]+" "+categories[0])
 	}
-	fix.Anyway()
 	fix.Apply()
 }
 
@@ -1671,7 +1669,6 @@ func (ck MkLineChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, notE
 			"An entirely different case is when the pattern contains wildcards like ^, *, $.",
 			"In such a case, using the :M or :N modifiers is useful and preferred.")
 		fix.Replace(replace(varname, positive, pattern))
-		fix.Anyway()
 		fix.Apply()
 	}
 }
@@ -1741,7 +1738,6 @@ func (ck MkLineChecker) checkCompareVarStrCompiler(op string, value string) {
 		"Therefore, comparing it using == or != leads to wrong results in these cases.")
 	fix.Replace("${PKGSRC_COMPILER} "+op+" "+value, "${PKGSRC_COMPILER:"+matchOp+value+"}")
 	fix.Replace("${PKGSRC_COMPILER} "+op+" \""+value+"\"", "${PKGSRC_COMPILER:"+matchOp+value+"}")
-	fix.Anyway()
 	fix.Apply()
 }
 

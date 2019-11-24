@@ -127,6 +127,7 @@ func (s *Suite) Test_MkLineChecker_checkEmptyContinuation(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
+		"NOTE: ~/filename.mk:2--3: Trailing whitespace.",
 		"WARN: ~/filename.mk:3: This line looks empty but continues the previous line.")
 }
 

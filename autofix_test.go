@@ -245,7 +245,8 @@ func (s *Suite) Test_Autofix__show_autofix_and_source_continuation_line(c *check
 // shown even when they cannot be autofixed.
 //
 // This is typical when an autofix is provided for simple scenarios,
-// but the code actually found is a little more complicated.
+// but the code actually found is a little more complicated, like needing
+// special escaping for some of the characters or containing linebreaks.
 func (s *Suite) Test_Autofix__show_unfixable_diagnostics_in_default_mode(c *check.C) {
 	t := s.Init(c)
 
@@ -258,17 +259,11 @@ func (s *Suite) Test_Autofix__show_unfixable_diagnostics_in_default_mode(c *chec
 	lines.Lines[0].Warnf("This warning is shown since the --show-autofix option is not given.")
 
 	fix := lines.Lines[1].Autofix()
-	fix.Warnf("This warning cannot be fixed and is therefore not shown.")
+	fix.Warnf("This warning cannot be fixed, nevertheless it is shown (1).")
 	fix.Replace("XXX", "TODO")
 	fix.Apply()
 
-	fix.Warnf("This warning cannot be fixed automatically but should be shown anyway.")
-	fix.Replace("XXX", "TODO")
-	fix.Anyway()
-	fix.Apply()
-
-	// If this warning should ever appear it is probably because fix.anyway is not reset properly.
-	fix.Warnf("This warning cannot be fixed and is therefore not shown.")
+	fix.Warnf("This warning cannot be fixed, nevertheless it is shown (2).")
 	fix.Replace("XXX", "TODO")
 	fix.Apply()
 
@@ -279,7 +274,8 @@ func (s *Suite) Test_Autofix__show_unfixable_diagnostics_in_default_mode(c *chec
 		"WARN: Makefile:1: This warning is shown since the --show-autofix option is not given.",
 		"",
 		">\tline2",
-		"WARN: Makefile:2: This warning cannot be fixed automatically but should be shown anyway.",
+		"WARN: Makefile:2: This warning cannot be fixed, nevertheless it is shown (1).",
+		"WARN: Makefile:2: This warning cannot be fixed, nevertheless it is shown (2).",
 		"",
 		">\tline3",
 		"WARN: Makefile:3: This warning is also shown.")
@@ -321,7 +317,7 @@ func (s *Suite) Test_Autofix__suppress_unfixable_warnings_with_show_autofix(c *c
 		"+\tTODO")
 }
 
-// If an Autofix doesn't do anything, it must not log any diagnostics.
+// If an Autofix doesn't do anything, it nevertheless logs the diagnostics.
 func (s *Suite) Test_Autofix__noop_replace(c *check.C) {
 	t := s.Init(c)
 
@@ -332,8 +328,14 @@ func (s *Suite) Test_Autofix__noop_replace(c *check.C) {
 	fix.ReplaceRegex(`\b[A-Z]{3,}\b`, "---censored---", -1)
 	fix.Apply()
 
-	// No output since there was no all-uppercase word in the text.
-	t.CheckOutputEmpty()
+	// This warning is wrong. This test therefore demonstrates that each
+	// autofix must be properly guarded to only apply when it actually
+	// does something.
+	//
+	// As of November 2019 there is no Rollback method since it was not
+	// needed yet.
+	t.CheckOutputLines(
+		"WARN: Makefile:14: All-uppercase words should not be used at all.")
 }
 
 func (s *Suite) Test_Autofix_Warnf__duplicate(c *check.C) {
@@ -560,7 +562,6 @@ func (s *Suite) Test_Autofix_ReplaceAt(c *check.C) {
 			fix := mkline.Autofix()
 			fix.Notef("Should be appended instead of assigned.")
 			fix.ReplaceAt(rawIndex, column, from, to)
-			fix.Anyway()
 			fix.Apply()
 		}
 
@@ -847,7 +848,7 @@ func (s *Suite) Test_Autofix_Custom__in_memory(c *check.C) {
 // With the default command line options, this warning is printed.
 // With the --show-autofix option this warning is NOT printed since it
 // cannot be fixed automatically.
-func (s *Suite) Test_Autofix_Anyway__options(c *check.C) {
+func (s *Suite) Test_Autofix_Apply__show_autofix_option(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("--show-autofix")
@@ -857,7 +858,6 @@ func (s *Suite) Test_Autofix_Anyway__options(c *check.C) {
 
 	fix.Warnf("This autofix doesn't match.")
 	fix.Replace("doesn't match", "")
-	fix.Anyway()
 	fix.Apply()
 
 	t.CheckOutputEmpty()
@@ -866,14 +866,13 @@ func (s *Suite) Test_Autofix_Anyway__options(c *check.C) {
 
 	fix.Warnf("This autofix doesn't match.")
 	fix.Replace("doesn't match", "")
-	fix.Anyway()
 	fix.Apply()
 
 	t.CheckOutputLines(
 		"WARN: filename:3: This autofix doesn't match.")
 }
 
-func (s *Suite) Test_Autofix_Anyway__autofix_option(c *check.C) {
+func (s *Suite) Test_Autofix_Apply__autofix_option(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("--autofix")
@@ -882,17 +881,13 @@ func (s *Suite) Test_Autofix_Anyway__autofix_option(c *check.C) {
 	fix := line.Autofix()
 	fix.Notef("This line is quite short.")
 	fix.Replace("not found", "needle")
-	fix.Anyway()
 	fix.Apply()
 
-	// The replacement text is not found, therefore the note should not be logged.
-	// Because of fix.Anyway, the note should be logged anyway.
-	// But because of the --autofix option, the note should not be logged.
-	// Therefore, in the end nothing is shown in this case.
+	// Because of the --autofix option, the note is not logged.
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Autofix_Anyway__autofix_and_show_autofix_options(c *check.C) {
+func (s *Suite) Test_Autofix_Apply__autofix_and_show_autofix_options_no_match(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("--autofix", "--show-autofix")
@@ -901,27 +896,11 @@ func (s *Suite) Test_Autofix_Anyway__autofix_and_show_autofix_options(c *check.C
 	fix := line.Autofix()
 	fix.Notef("This line is quite short.")
 	fix.Replace("not found", "needle")
-	fix.Anyway()
 	fix.Apply()
 
-	// The text to be replaced is not found. Because nothing is fixed here,
-	// there's no need to log anything.
-	//
-	// But fix.Anyway is set, therefore the diagnostic should be logged even
-	// though it cannot be fixed automatically. This comes handy in situations
-	// where simple cases can be fixed automatically and more complex cases
-	// (often involving special characters that need to be escaped properly)
-	// should nevertheless result in a diagnostics.
-	//
-	// The --autofix option is set, which means that the diagnostics don't
-	// get logged, only the actual fixes do.
-	//
-	// But then there's also the --show-autofix option, which logs the
-	// corresponding diagnostic for each autofix that actually changes
-	// something. But this autofix doesn't change anything, therefore even
-	// the --show-autofix doesn't have an effect.
-	//
-	// Therefore, in the end nothing is logged in this case.
+	// Since at least one of the --show-autofix or --autofix options is given,
+	// only those autofixes that actually change something are logged.
+	// This one doesn't find the "not found" text, therefore it is not logged.
 	t.CheckOutputEmpty()
 }
 
@@ -1032,7 +1011,6 @@ func (s *Suite) Test_Autofix_Apply__anyway_error(c *check.C) {
 	fix := mklines.mklines[1].Autofix()
 	fix.Errorf("From must be To.")
 	fix.Replace("from", "to")
-	fix.Anyway()
 	fix.Apply()
 
 	mklines.SaveAutofixChanges()
@@ -1051,7 +1029,6 @@ func (s *Suite) Test_Autofix_Apply__source_autofix_no_change(c *check.C) {
 	fix := lines.Lines[0].Autofix()
 	fix.Notef("Word should be replaced, but pkglint is not sure which one.")
 	fix.Replace("word", "replacement")
-	fix.Anyway()
 	fix.Apply()
 
 	lines.SaveAutofixChanges()
@@ -1156,7 +1133,8 @@ func (s *Suite) Test_Autofix_setDiag__no_testing_mode(c *check.C) {
 	fix.Replace("from", "to")
 	fix.Apply()
 
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"NOTE: file.mk:123: Note.")
 }
 
 func (s *Suite) Test_Autofix_setDiag__bad_call_sequence(c *check.C) {

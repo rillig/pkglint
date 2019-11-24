@@ -67,4 +67,7 @@ func (s *Suite) Test_Line_Autofix__reuse_incomplete(c *check.C) {
 
 	// Properly finish the standard call sequence for an Autofix.
 	fix.Apply()
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:1: Warning.")
 }

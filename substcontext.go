@@ -271,7 +271,6 @@ func (ctx *SubstContext) suggestSubstVars(mkline *MkLine) {
 		if !mkline.HasComment() && len(tokens) == 2 && tokens[0] == "-e" {
 			fix.Replace(mkline.Text, alignWith(varop, mkline.ValueAlign())+varname)
 		}
-		fix.Anyway()
 		fix.Apply()
 
 		ctx.curr.seenVars = true

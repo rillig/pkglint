@@ -726,8 +726,6 @@ func (cv *VartypeCheck) Homepage() {
 		"Defining MASTER_SITES=${HOMEPAGE} is ok, though.")
 	if baseURL != "" {
 		fix.Replace(wrong, fixedURL)
-	} else {
-		fix.Anyway()
 	}
 	fix.Apply()
 }
