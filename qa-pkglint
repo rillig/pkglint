@@ -12,7 +12,7 @@ step_msg() {
   printf '%s => %s\n' "$(date +'%H:%M:%S')" "$1"
 }
 
-genrunid() {
+qa_genrunid() {
   if [ -n "${runid-}" ]; then
     return
   fi
@@ -26,12 +26,12 @@ genrunid() {
   fi
 }
 
-notest() {
+qa_notest() {
   run_tests=no
 }
 
-install() {
-  genrunid
+qa_install() {
+  qa_genrunid
   (cd "$srcdir" && chmod 644 -- *.go)
   step_msg "Formatting pkglint"
   go fmt netbsd.org/pkglint/...
@@ -46,17 +46,17 @@ install() {
   cp "$GOPATH/bin/pkglint.exe" "$archivedir/$runid.exe"
 }
 
-analyze() {
+qa_analyze() {
   step_msg "Analyzing code style"
   (cd "$srcdir" && golangci-lint run)
 }
 
-gobco() {
+qa_gobco() {
   # see https://github.com/rillig/gobco
   (cd "$srcdir" && command gobco > "$archivedir/gobco.txt.tmp" && mv -f "$archivedir/gobco.txt.tmp" "$archivedir/gobco.txt")
 }
 
-netbsd() {
+qa_netbsd() {
   step_msg "Checking for @beta"
   if (cd "$srcdir" && grep -n "@beta" -- *.go); then
     exit 1
@@ -108,8 +108,8 @@ netbsd() {
   ssh netbsd "$cmd"
 }
 
-pkgsrc() {
-  genrunid
+qa_pkgsrc() {
+  qa_genrunid
   step_msg "Running pkglint on the pkgsrc tree"
   time (
     cd "$pkgsrcdir" \
@@ -123,7 +123,7 @@ pkgsrc() {
   mv "$archivedir/$runid.tmp" "$archivedir/$runid.out"
 }
 
-diffs() {
+qa_diffs() {
   step_msg "Generating diffs"
   (
     cd "$archivedir"
@@ -177,7 +177,7 @@ case "$*" in
 esac
 
 for cmd in "$@"; do
-  "$cmd"
+  "qa_$cmd"
 done
 
 step_msg "OK"
