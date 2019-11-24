@@ -36,6 +36,8 @@ func (s *Suite) Init(c *check.C) *TestNameChecker {
 
 func (s *Suite) TearDownTest(c *check.C) {
 	s.c = c
+	// The testees and tests are not validated to be checked
+	// since that would create too much boilerplate code.
 	s.CheckErrors(nil...)
 	s.CheckSummary("")
 }
@@ -150,9 +152,10 @@ func (s *Suite) Test_TestNameChecker_load__filtered_nothing(c *check.C) {
 
 	ck.load(".")
 
-	// FIXME
-	c.Check(ck.testees, check.IsNil)
-	c.Check(ck.tests, check.IsNil)
+	s.CheckTestees(
+		nil...)
+	s.CheckTests(
+		nil...)
 }
 
 func (s *Suite) Test_TestNameChecker_load__filtered_only_Value(c *check.C) {
@@ -163,11 +166,11 @@ func (s *Suite) Test_TestNameChecker_load__filtered_only_Value(c *check.C) {
 
 	ck.load(".")
 
-	// FIXME
-	c.Check(ck.testees, check.DeepEquals, []*testee{
-		{code{"testnames_test.go", "Value", "", 0}},
-		{code{"testnames_test.go", "Value", "Method", 1}}})
-	c.Check(ck.tests, check.IsNil)
+	s.CheckTestees(
+		s.newTestee("testnames_test.go", "Value", "", 0),
+		s.newTestee("testnames_test.go", "Value", "Method", 1))
+	s.CheckTests(
+		nil...)
 }
 
 func (s *Suite) Test_TestNameChecker_load__panic(c *check.C) {
@@ -198,15 +201,17 @@ func (s *Suite) Test_TestNameChecker_loadDecl(c *check.C) {
 	// independently of the configuration.
 	load("file_test.go", "func TestMain() {}")
 
-	s.CheckTests(
-		nil...)
 	s.CheckTestees(
+		nil...)
+	s.CheckTests(
 		nil...)
 
 	// The TestMain method on a type is relevant, but violates the naming rule.
 	// Therefore it is ignored.
 	load("file_test.go", "func (Suite) TestMain(*check.C) {}")
 
+	s.CheckTestees(
+		nil...)
 	s.CheckTests(
 		nil...)
 	s.CheckErrors(
@@ -217,14 +222,20 @@ func (s *Suite) Test_TestNameChecker_loadDecl(c *check.C) {
 	ck.Configure("*", "Suite", "*", -EName)
 	load("file_test.go", "func (Suite) TestMain(*check.C) {}")
 
+	s.CheckTestees(
+		nil...)
 	s.CheckTests(
 		s.newTest("file_test.go", "Suite", "TestMain", 1, "Main", "", nil))
 
 	// There is no special handling for TestMain method with a description.
 	load("file_test.go", "func (Suite) TestMain__descr(*check.C) {}")
 
+	s.CheckTestees(
+		nil...)
 	s.CheckTests(
 		s.newTest("file_test.go", "Suite", "TestMain__descr", 2, "Main", "descr", nil))
+	s.CheckErrors(
+		nil...)
 }
 
 func (s *Suite) Test_TestNameChecker_parseFuncDecl(c *check.C) {
@@ -286,10 +297,10 @@ func (s *Suite) Test_TestNameChecker_isTest(c *check.C) {
 func (s *Suite) Test_TestNameChecker_addTestee(c *check.C) {
 	ck := s.Init(c)
 
-	code := code{"filename.go", "Type", "Method", 0}
-	ck.addTestee(code)
+	ck.addTestee(code{"filename.go", "Type", "Method", 0})
 
-	c.Check(ck.testees, check.DeepEquals, []*testee{{code}})
+	s.CheckTestees(
+		s.newTestee("filename.go", "Type", "Method", 0))
 }
 
 func (s *Suite) Test_TestNameChecker_addTest(c *check.C) {
@@ -297,7 +308,8 @@ func (s *Suite) Test_TestNameChecker_addTest(c *check.C) {
 
 	ck.addTest(code{"filename.go", "Type", "Method", 0})
 
-	c.Check(ck.tests, check.IsNil)
+	s.CheckTests(
+		nil...)
 	s.CheckErrors(
 		"Test \"Type.Method\" must start with \"Test_\".")
 }
