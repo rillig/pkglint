@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"go/ast"
+	"go/parser"
+	"go/token"
 	"gopkg.in/check.v1"
 	"io/ioutil"
 	"path"
@@ -148,6 +150,7 @@ func (s *Suite) Test_TestNameChecker_load__filtered_nothing(c *check.C) {
 
 	ck.load(".")
 
+	// FIXME
 	c.Check(ck.testees, check.IsNil)
 	c.Check(ck.tests, check.IsNil)
 }
@@ -160,6 +163,7 @@ func (s *Suite) Test_TestNameChecker_load__filtered_only_Value(c *check.C) {
 
 	ck.load(".")
 
+	// FIXME
 	c.Check(ck.testees, check.DeepEquals, []*testee{
 		{code{"testnames_test.go", "Value", "", 0}},
 		{code{"testnames_test.go", "Value", "Method", 1}}})
@@ -178,30 +182,30 @@ func (s *Suite) Test_TestNameChecker_load__panic(c *check.C) {
 func (s *Suite) Test_TestNameChecker_loadDecl(c *check.C) {
 	ck := s.Init(c)
 
-	typeDecl := func(name string) *ast.GenDecl {
-		return &ast.GenDecl{Specs: []ast.Spec{&ast.TypeSpec{Name: &ast.Ident{Name: name}}}}
-	}
-	funcDecl := func(name string) *ast.FuncDecl {
-		return &ast.FuncDecl{Name: &ast.Ident{Name: name}}
-	}
-	methodDecl := func(typeName, methodName string) *ast.FuncDecl {
-		return &ast.FuncDecl{
-			Name: &ast.Ident{Name: methodName},
-			Recv: &ast.FieldList{List: []*ast.Field{{Type: &ast.Ident{Name: typeName}}}}}
+	load := func(filename, decl string) {
+		fset := token.NewFileSet()
+		file, err := parser.ParseFile(fset, filename, "package p; "+decl, 0)
+		c.Assert(err, check.IsNil)
+		ck.loadDecl(file.Decls[0], filename)
 	}
 
-	ck.loadDecl(typeDecl("TypeName"), "file_test.go")
+	load("file_test.go", "type TypeName int")
 
 	s.CheckTestees(
 		s.newTestee("file_test.go", "TypeName", "", 0))
 
 	// The freestanding TestMain function is ignored by a hardcoded rule,
 	// independently of the configuration.
-	ck.loadDecl(funcDecl("TestMain"), "file_test.go")
+	load("file_test.go", "func TestMain() {}")
+
+	s.CheckTests(
+		nil...)
+	s.CheckTestees(
+		nil...)
 
 	// The TestMain method on a type is relevant, but violates the naming rule.
 	// Therefore it is ignored.
-	ck.loadDecl(methodDecl("Suite", "TestMain"), "file_test.go")
+	load("file_test.go", "func (Suite) TestMain(*check.C) {}")
 
 	s.CheckTests(
 		nil...)
@@ -211,16 +215,72 @@ func (s *Suite) Test_TestNameChecker_loadDecl(c *check.C) {
 	// The above error can be disabled, and then the method is handled
 	// like any other test method.
 	ck.Configure("*", "Suite", "*", -EName)
-	ck.loadDecl(methodDecl("Suite", "TestMain"), "file_test.go")
+	load("file_test.go", "func (Suite) TestMain(*check.C) {}")
 
 	s.CheckTests(
 		s.newTest("file_test.go", "Suite", "TestMain", 1, "Main", "", nil))
 
 	// There is no special handling for TestMain method with a description.
-	ck.loadDecl(methodDecl("Suite", "TestMain__descr"), "file_test.go")
+	load("file_test.go", "func (Suite) TestMain__descr(*check.C) {}")
 
 	s.CheckTests(
 		s.newTest("file_test.go", "Suite", "TestMain__descr", 2, "Main", "descr", nil))
+}
+
+func (s *Suite) Test_TestNameChecker_parseFuncDecl(c *check.C) {
+	_ = s.Init(c)
+
+	testFunc := func(filename, decl, typeName, funcName string) {
+		fset := token.NewFileSet()
+		file, err := parser.ParseFile(fset, filename, "package p; "+decl, 0)
+		c.Assert(err, check.IsNil)
+		fn := file.Decls[0].(*ast.FuncDecl)
+		actual := (*TestNameChecker).parseFuncDecl(nil, filename, fn)
+		c.Check(actual, check.Equals, code{filename, typeName, funcName, 0})
+	}
+
+	testFunc("f_test.go", "func (t Type) Test() {}",
+		"Type", "Test")
+	testFunc("f_test.go", "func (t Type) Test_Type_Method() {}",
+		"Type", "Test_Type_Method")
+	testFunc("f_test.go", "func Test() {}",
+		"", "Test")
+	testFunc("f_test.go", "func Test_Type_Method() {}",
+		"", "Test_Type_Method")
+}
+
+func (s *Suite) Test_TestNameChecker_isTest(c *check.C) {
+	_ = s.Init(c)
+
+	test := func(filename, typeName, funcName string, isTest bool) {
+		code := code{filename, typeName, funcName, 0}
+		c.Check((*TestNameChecker).isTest(nil, code, nil), check.Equals, isTest)
+	}
+
+	testFunc := func(filename, decl string, isTest bool) {
+		fset := token.NewFileSet()
+		file, err := parser.ParseFile(fset, filename, "package p; "+decl, 0)
+		c.Assert(err, check.IsNil)
+		fn := file.Decls[0].(*ast.FuncDecl)
+		code := (*TestNameChecker).parseFuncDecl(nil, filename, fn)
+		c.Check((*TestNameChecker).isTest(nil, code, fn), check.Equals, isTest)
+	}
+
+	test("f.go", "Type", "", false)
+	test("f.go", "", "Func", false)
+	test("f.go", "Type", "Method", false)
+	test("f.go", "Type", "Test", false)
+	test("f.go", "Type", "Test_Type_Method", false)
+	test("f.go", "", "Test_Type_Method", false)
+
+	testFunc("f_test.go", "func (t Type) Test(c *check.C) {}", true)
+	testFunc("f_test.go", "func (t Type) Test_Type_Method(c *check.C) {}", true)
+	testFunc("f_test.go", "func Test_Type_Method(c *check.C) {}", true)
+	testFunc("f_test.go", "func Test_Type_Method(c *C) {}", true)
+	testFunc("f_test.go", "func Test_Type_Method(c C) {}", true)
+	testFunc("f_test.go", "func Test_Type_Method(t *testing.T) {}", true)
+	testFunc("f_test.go", "func Test_Type_Method(X) {}", false)
+	testFunc("f_test.go", "func Test_Type_Method(int) {}", false)
 }
 
 func (s *Suite) Test_TestNameChecker_addTestee(c *check.C) {
@@ -530,25 +590,6 @@ func (s *Suite) Test_code_isMethod(c *check.C) {
 	test("Type", "", false)
 	test("", "Func", false)
 	test("Type", "Method", true)
-}
-
-func (s *Suite) Test_code_isTest(c *check.C) {
-	_ = s.Init(c)
-
-	test := func(filename, typeName, funcName string, isTest bool) {
-		code := code{filename, typeName, funcName, 0}
-		c.Check(code.isTest(), check.Equals, isTest)
-	}
-
-	test("f.go", "Type", "", false)
-	test("f.go", "", "Func", false)
-	test("f.go", "Type", "Method", false)
-	test("f.go", "Type", "Test", false)
-	test("f.go", "Type", "Test_Type_Method", false)
-	test("f.go", "", "Test_Type_Method", false)
-	test("f_test.go", "Type", "Test", true)
-	test("f_test.go", "Type", "Test_Type_Method", true)
-	test("f_test.go", "", "Test_Type_Method", true)
 }
 
 func (s *Suite) Test_code_isTestScope(c *check.C) {

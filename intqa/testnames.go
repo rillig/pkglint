@@ -125,26 +125,31 @@ func (ck *TestNameChecker) loadDecl(decl ast.Decl, filename string) {
 			switch spec := spec.(type) {
 			case *ast.TypeSpec:
 				typeName := spec.Name.Name
-				ck.addCode(code{filename, typeName, "", 0})
+				ck.addCode(code{filename, typeName, "", 0}, nil)
 			}
 		}
 
 	case *ast.FuncDecl:
-		typeName := ""
-		if decl.Recv != nil {
-			typeExpr := decl.Recv.List[0].Type.(ast.Expr)
-			if star, ok := typeExpr.(*ast.StarExpr); ok {
-				typeName = star.X.(*ast.Ident).Name
-			} else {
-				typeName = typeExpr.(*ast.Ident).Name
-			}
-		}
-		funcName := decl.Name.Name
-		ck.addCode(code{filename, typeName, funcName, 0})
+		code := ck.parseFuncDecl(filename, decl)
+		ck.addCode(code, decl)
 	}
 }
 
-func (ck *TestNameChecker) addCode(code code) {
+func (*TestNameChecker) parseFuncDecl(filename string, decl *ast.FuncDecl) code {
+	typeName := ""
+	if decl.Recv != nil {
+		typeExpr := decl.Recv.List[0].Type.(ast.Expr)
+		if star, ok := typeExpr.(*ast.StarExpr); ok {
+			typeExpr = star.X
+		}
+		typeName = typeExpr.(*ast.Ident).Name
+	}
+
+	funcName := decl.Name.Name
+	return code{filename, typeName, funcName, 0}
+}
+
+func (ck *TestNameChecker) addCode(code code, decl *ast.FuncDecl) {
 	if code.isTestScope() && code.isFunc() && code.Func == "TestMain" {
 		// This is not a test for Main, but a wrapper function of the test.
 		// Therefore it is completely ignored.
@@ -160,11 +165,31 @@ func (ck *TestNameChecker) addCode(code code) {
 		return
 	}
 
-	if code.isTest() {
+	if ck.isTest(code, decl) {
 		ck.addTest(code)
 	} else {
 		ck.addTestee(code)
 	}
+}
+
+func (*TestNameChecker) isTest(code code, decl *ast.FuncDecl) bool {
+	if !code.isTestScope() || !strings.HasPrefix(code.Func, "Test") {
+		return false
+	}
+	if decl.Type.Params.NumFields() != 1 {
+		return false
+	}
+
+	paramType := decl.Type.Params.List[0].Type
+	if star, ok := paramType.(*ast.StarExpr); ok {
+		paramType = star.X
+	}
+	if sel, ok := paramType.(*ast.SelectorExpr); ok {
+		paramType = sel.Sel
+	}
+
+	paramTypeName := paramType.(*ast.Ident).Name
+	return paramTypeName == "C" || paramTypeName == "T"
 }
 
 func (ck *TestNameChecker) addTestee(code code) {
@@ -418,9 +443,6 @@ func (c *code) isFunc() bool     { return c.Type == "" }
 func (c *code) isType() bool     { return c.Func == "" }
 func (c *code) isMethod() bool   { return c.Type != "" && c.Func != "" }
 
-func (c *code) isTest() bool {
-	return c.isTestScope() && strings.HasPrefix(c.Func, "Test")
-}
 func (c *code) isTestScope() bool {
 	return strings.HasSuffix(c.file, "_test.go")
 }
