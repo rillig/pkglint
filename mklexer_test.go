@@ -9,7 +9,7 @@ func (s *Suite) Test_MkLexer_MkTokens(c *check.C) {
 	testRest := func(input string, expectedTokens []*MkToken, expectedRest string) {
 		line := t.NewLines("Test_MkLexer_MkTokens.mk", input).Lines[0]
 		p := NewMkLexer(input, line)
-		actualTokens := p.MkTokens()
+		actualTokens, rest := p.MkTokens()
 		t.CheckDeepEquals(actualTokens, expectedTokens)
 		for i, expectedToken := range expectedTokens {
 			if i < len(actualTokens) {
@@ -17,7 +17,7 @@ func (s *Suite) Test_MkLexer_MkTokens(c *check.C) {
 				t.CheckDeepEquals(actualTokens[i].Varuse, expectedToken.Varuse)
 			}
 		}
-		t.CheckEquals(p.Rest(), expectedRest)
+		t.CheckEquals(rest, expectedRest)
 	}
 	test := func(input string, expectedToken *MkToken) {
 		testRest(input, b.Tokens(expectedToken), "")
@@ -83,7 +83,7 @@ func (s *Suite) Test_MkLexer_VarUse(c *check.C) {
 		line := t.NewLines("Test_MkLexer_VarUse.mk", input).Lines[0]
 		p := NewMkLexer(input, line)
 
-		actualTokens := p.MkTokens()
+		actualTokens, rest := p.MkTokens()
 
 		t.CheckDeepEquals(actualTokens, expectedTokens)
 		for i, expectedToken := range expectedTokens {
@@ -92,7 +92,7 @@ func (s *Suite) Test_MkLexer_VarUse(c *check.C) {
 				t.CheckDeepEquals(actualTokens[i].Varuse, expectedToken.Varuse)
 			}
 		}
-		t.CheckEquals(p.Rest(), expectedRest)
+		t.CheckEquals(rest, expectedRest)
 		t.CheckOutput(diagnostics)
 	}
 	test := func(input string, expectedToken *MkToken, diagnostics ...string) {
@@ -388,11 +388,12 @@ func (s *Suite) Test_MkLexer_VarUse__ambiguous(c *check.C) {
 	line := t.NewLine("module.mk", 123, "\t$Varname $X")
 	p := NewMkLexer(line.Text[1:], line)
 
-	tokens := p.MkTokens()
+	tokens, rest := p.MkTokens()
 	t.CheckDeepEquals(tokens, b.Tokens(
 		b.VaruseTextToken("$V", "V"),
 		b.TextToken("arname "),
 		b.VaruseTextToken("$X", "X")))
+	t.CheckEquals(rest, "")
 
 	t.CheckOutputLines(
 		"ERROR: module.mk:123: $Varname is ambiguous. Use ${Varname} if you mean a Make variable or $$Varname if you mean a shell variable.",

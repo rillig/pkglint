@@ -331,8 +331,7 @@ func (mkline *MkLine) Tokenize(text string, warn bool) []*MkToken {
 			line = mkline.Line
 		}
 		p := NewMkLexer(text, line)
-		tokens = p.MkTokens()
-		rest = p.Rest()
+		tokens, rest = p.MkTokens()
 	}
 
 	if warn && rest != "" {
@@ -503,8 +502,7 @@ func (mkline *MkLine) ValueTokens() ([]*MkToken, string) {
 	// No error checking here since all this has already been done when the
 	// whole line was parsed in MkLineParser.Parse.
 	p := NewMkLexer(value, nil)
-	assign.valueMk = p.MkTokens()
-	assign.valueMkRest = p.Rest()
+	assign.valueMk, assign.valueMkRest = p.MkTokens()
 	return assign.valueMk, assign.valueMkRest
 }
 
@@ -545,7 +543,8 @@ func (mkline *MkLine) Fields() []string {
 
 func (*MkLine) WithoutMakeVariables(value string) string {
 	var valueNovar strings.Builder
-	for _, token := range NewMkLexer(value, nil).MkTokens() {
+	tokens, _ := NewMkLexer(value, nil).MkTokens()
+	for _, token := range tokens {
 		if token.Varuse == nil {
 			valueNovar.WriteString(token.Text)
 		}
@@ -789,7 +788,8 @@ func (mkline *MkLine) ForEachUsed(action func(varUse *MkVarUse, time VucTime)) {
 			return
 		}
 
-		for _, token := range NewMkLexer(text, nil).MkTokens() {
+		tokens, _ := NewMkLexer(text, nil).MkTokens()
+		for _, token := range tokens {
 			if token.Varuse != nil {
 				searchInVarUse(token.Varuse, time)
 			}

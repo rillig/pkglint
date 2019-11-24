@@ -387,7 +387,7 @@ func (ck MkLineChecker) checkTextVarUse(text string, vartype *Vartype, time VucT
 		defer trace.Call(vartype, time)()
 	}
 
-	tokens := NewMkLexer(text, nil).MkTokens()
+	tokens, _ := NewMkLexer(text, nil).MkTokens()
 	for i, token := range tokens {
 		if token.Varuse != nil {
 			spaceLeft := i-1 < 0 || matches(tokens[i-1].Text, `[\t ]$`)

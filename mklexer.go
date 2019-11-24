@@ -25,11 +25,11 @@ func NewMkLexer(text string, line *Line) *MkLexer {
 //  ${VAR2}
 //  more text
 //  ${VAR3}
-func (p *MkLexer) MkTokens() []*MkToken {
+func (p *MkLexer) MkTokens() ([]*MkToken, string) {
 	lexer := p.lexer
 
 	var tokens []*MkToken
-	for !p.EOF() {
+	for !lexer.EOF() {
 		mark := lexer.Mark()
 		if varuse := p.VarUse(); varuse != nil {
 			tokens = append(tokens, &MkToken{Text: lexer.Since(mark), Varuse: varuse})
@@ -46,7 +46,7 @@ func (p *MkLexer) MkTokens() []*MkToken {
 
 		break
 	}
-	return tokens
+	return tokens, lexer.Rest()
 }
 
 func (p *MkLexer) VarUse() *MkVarUse {

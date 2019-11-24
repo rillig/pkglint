@@ -583,7 +583,7 @@ func (w *MkCondWalker) walkAtom(atom *MkCondTerm, callback *MkCondCallback) {
 
 func (w *MkCondWalker) walkStr(str string, callback *MkCondCallback) {
 	if callback.VarUse != nil {
-		tokens := NewMkLexer(str, nil).MkTokens()
+		tokens, _ := NewMkLexer(str, nil).MkTokens()
 		for _, token := range tokens {
 			if token.Varuse != nil {
 				callback.VarUse(token.Varuse)
