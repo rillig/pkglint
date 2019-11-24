@@ -182,6 +182,10 @@ func (line *Line) String() string {
 func (line *Line) Autofix() *Autofix {
 	if line.autofix == nil {
 		line.autofix = NewAutofix(line)
+	} else {
+		// This assertion fails if an Autofix is reused before
+		// its Apply method is called.
+		assert(line.autofix.autofixShortTerm.diagFormat == "")
 	}
 	return line.autofix
 }
