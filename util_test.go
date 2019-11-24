@@ -89,6 +89,11 @@ func (s *Suite) Test_isEmptyDir(c *check.C) {
 
 	t.CheckEquals(isEmptyDir(t.File(".")), true)
 	t.CheckEquals(isEmptyDir(t.File("CVS")), true)
+
+	t.Chdir(".")
+
+	t.CheckEquals(isEmptyDir("."), true)
+	t.CheckEquals(isEmptyDir("CVS"), false) // FIXME
 }
 
 func (s *Suite) Test_isEmptyDir__and_getSubdirs(c *check.C) {
