@@ -566,7 +566,7 @@ func (mkline *MkLine) ResolveVarsInRelativePath(relativePath Path) Path {
 
 	tmp := relativePath
 	if tmp.ContainsText("PKGSRCDIR") {
-		pkgsrcdir := relpath(basedir, G.Pkgsrc.File("."))
+		pkgsrcdir := G.Pkgsrc.Relpath(basedir, G.Pkgsrc.File("."))
 
 		if G.Testing {
 			// Relative pkgsrc paths usually only contain two or three levels.

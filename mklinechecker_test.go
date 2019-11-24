@@ -57,7 +57,7 @@ func (s *Suite) Test_MkLineChecker_Check__buildlink3_include_prefs(c *check.C) {
 	// relative path fails since that depends on the actual file system,
 	// not on syntactical paths; see os.Stat in CheckRelativePath.
 	//
-	// TODO: Refactor relpath to be independent of a filesystem.
+	// TODO: Refactor Relpath to be independent of a filesystem.
 
 	mklines.Check()
 

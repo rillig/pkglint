@@ -116,7 +116,7 @@ func (s *Suite) Test_Package__relative_included_filenames_in_same_directory(c *c
 	// TODO: Since other.mk is referenced via "../../category/package",
 	//  it would be nice if this relative path would be reflected in the output
 	//  instead of referring just to "other.mk".
-	//  This needs to be fixed somewhere near relpath.
+	//  This needs to be fixed somewhere near Relpath.
 	//
 	// The notes are in reverse order because they are produced when checking
 	// other.mk, and there the relative order is correct (line 2 before line 3).

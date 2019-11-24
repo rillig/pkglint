@@ -1169,14 +1169,14 @@ func (s *Suite) Test_Pkgsrc_ReadDir(c *check.C) {
 	t.CheckDeepEquals(names, []string{"aaa-subdir", "file", "subdir"})
 }
 
-func (s *Suite) Test_relpath(c *check.C) {
+func (s *Suite) Test_Pkgsrc_Relpath(c *check.C) {
 	t := s.Init(c)
 
 	t.Chdir(".")
 	t.CheckEquals(G.Pkgsrc.topdir, t.tmpdir)
 
 	test := func(from, to Path, result Path) {
-		t.CheckEquals(relpath(from, to), result)
+		t.CheckEquals(G.Pkgsrc.Relpath(from, to), result)
 	}
 
 	test("some/dir", "some/directory", "../../some/directory")
@@ -1208,11 +1208,11 @@ func (s *Suite) Test_relpath(c *check.C) {
 
 // Relpath is called so often that handling the most common calls
 // without file system IO makes sense.
-func (s *Suite) Test_relpath__quick(c *check.C) {
+func (s *Suite) Test_Pkgsrc_Relpath__quick(c *check.C) {
 	t := s.Init(c)
 
 	test := func(from, to Path, result Path) {
-		t.CheckEquals(relpath(from, to), result)
+		t.CheckEquals(G.Pkgsrc.Relpath(from, to), result)
 	}
 
 	test("some/dir", "some/dir/../..", "../..")

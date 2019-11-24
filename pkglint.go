@@ -43,7 +43,7 @@ type Pkglint struct {
 	interner  StringInterner
 
 	// cwd is the absolute path to the current working
-	// directory. It is used for speeding up relpath and abspath.
+	// directory. It is used for speeding up Relpath and abspath.
 	// There is no other use for it.
 	cwd Path
 

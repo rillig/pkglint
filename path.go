@@ -120,7 +120,7 @@ func (p Path) Rel(other Path) Path {
 	fp := filepath.FromSlash(p.String())
 	fpOther := filepath.FromSlash(other.String())
 	rel, err := filepath.Rel(fp, fpOther)
-	assertNil(err, "relpath from %q to %q", p, other)
+	assertNil(err, "Relpath from %q to %q", p, other)
 	return NewPath(filepath.ToSlash(rel))
 }
 

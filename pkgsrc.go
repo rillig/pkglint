@@ -1035,7 +1035,7 @@ func (src *Pkgsrc) Load(filename Path, options LoadOptions) *Lines {
 	return Load(src.File(filename), options)
 }
 
-// relpath returns the relative path from the directory "from"
+// Relpath returns the relative path from the directory "from"
 // to the filesystem entry "to".
 //
 // The relative path is built by going from the "from" directory via the
@@ -1052,7 +1052,7 @@ func (src *Pkgsrc) Load(filename Path, options LoadOptions) *Lines {
 //
 // TODO: Invent data types for all kinds of relative paths that occur in pkgsrc
 //  and pkglint. Make sure that these paths cannot be accidentally mixed.
-func relpath(from, to Path) (result Path) {
+func (src *Pkgsrc) Relpath(from, to Path) (result Path) {
 
 	if trace.Tracing {
 		defer trace.Call(from, to, trace.Result(&result))()
@@ -1084,7 +1084,7 @@ func relpath(from, to Path) (result Path) {
 	}
 
 	absFrom := abspath(cfrom)
-	absTopdir := abspath(G.Pkgsrc.topdir)
+	absTopdir := abspath(src.topdir)
 	absTo := abspath(cto)
 
 	toTop := absFrom.Rel(absTopdir)
@@ -1093,7 +1093,7 @@ func relpath(from, to Path) (result Path) {
 	result = cleanpath(toTop.JoinNoClean(fromTop))
 
 	if trace.Tracing {
-		trace.Stepf("relpath from %q to %q = %q", cfrom, cto, result)
+		trace.Stepf("Relpath from %q to %q = %q", cfrom, cto, result)
 	}
 	return
 }
@@ -1112,7 +1112,7 @@ func (src *Pkgsrc) File(relativeName Path) Path {
 // Example:
 //  NewPkgsrc("/usr/pkgsrc").ToRel("/usr/pkgsrc/distfiles") => "distfiles"
 func (src *Pkgsrc) ToRel(filename Path) Path {
-	return relpath(src.topdir, filename)
+	return src.Relpath(src.topdir, filename)
 }
 
 // IsInfra returns whether the given filename (relative to the current

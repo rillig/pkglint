@@ -230,7 +230,7 @@ func (pkg *Package) parse(mklines *MkLines, allLines *MkLines, includingFileForU
 	filename := mklines.lines.Filename
 	if filename.Base() == "buildlink3.mk" {
 		builtin := cleanpath(filename.Dir().JoinNoClean("builtin.mk"))
-		builtinRel := relpath(pkg.dir, builtin)
+		builtinRel := G.Pkgsrc.Relpath(pkg.dir, builtin)
 		if pkg.included.FirstTime(builtinRel.String()) && builtin.IsFile() {
 			builtinMkLines := LoadMk(builtin, MustSucceed|LogErrors)
 			pkg.parse(builtinMkLines, allLines, "")
@@ -297,7 +297,7 @@ func (pkg *Package) loadIncluded(mkline *MkLine, includingFile Path) (includedMk
 	dirname, _ := includingFile.Split()
 	dirname = cleanpath(dirname)
 	fullIncluded := joinPath(dirname, includedFile)
-	relIncludedFile := relpath(pkg.dir, fullIncluded)
+	relIncludedFile := G.Pkgsrc.Relpath(pkg.dir, fullIncluded)
 
 	if !pkg.shouldDiveInto(includingFile, includedFile) {
 		return nil, true
@@ -969,7 +969,7 @@ func (pkg *Package) checkUseLanguagesCompilerMk(mklines *MkLines) {
 		}
 
 		if mkline.Basename == "compiler.mk" {
-			if relpath(pkg.dir, mkline.Filename) == "../../mk/compiler.mk" {
+			if G.Pkgsrc.Relpath(pkg.dir, mkline.Filename) == "../../mk/compiler.mk" {
 				return
 			}
 		}
@@ -1451,7 +1451,7 @@ func (pkg *Package) File(relativeFileName Path) Path {
 // Example:
 //  NewPackage("category/package").Rel("other/package") == "../../other/package"
 func (pkg *Package) Rel(filename Path) Path {
-	return relpath(pkg.dir, filename)
+	return G.Pkgsrc.Relpath(pkg.dir, filename)
 }
 
 // Returns whether the given file (relative to the package directory)
