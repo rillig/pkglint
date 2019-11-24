@@ -65,10 +65,11 @@ type ShSuite struct {
 var _ = check.Suite(&ShSuite{})
 
 func (s *ShSuite) SetUpTest(*check.C) {
-	G = NewPkglint(nil, nil)
+	G = unusablePkglint()
 }
 
 func (s *ShSuite) TearDownTest(*check.C) {
+	s.t.ReportUncheckedOutput()
 	G = unusablePkglint()
 }
 
@@ -658,7 +659,9 @@ func (s *ShSuite) Test_parseShellProgram__io_here(c *check.C) {
 
 func (s *ShSuite) init(c *check.C) *MkShBuilder {
 	s.c = c
-	s.t = &Tester{c: c, testName: c.TestName()}
+	tmpdir := NewPath("The ShSuite tests don't need a temporary directory")
+	s.t = &Tester{c: c, testName: c.TestName(), tmpdir: tmpdir}
+	G = NewPkglint(&s.t.stdout, &s.t.stderr)
 	return NewMkShBuilder()
 }
 
@@ -704,6 +707,7 @@ func (s *ShSuite) testFail(program string, expectedRemaining ...string) {
 }
 
 func (s *ShSuite) Test_ShellLexer_Lex__redirects(c *check.C) {
+	_ = s.init(c)
 	t := s.t
 
 	tokens, rest := splitIntoShellTokens(dummyLine, "2>&1 <& <>file >>file <<EOF <<-EOF > /dev/stderr")

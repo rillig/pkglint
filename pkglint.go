@@ -106,7 +106,7 @@ type pkglintFatal struct{}
 // G is the abbreviation for "global state";
 // this and the tracer are the only global variables in this Go package.
 var (
-	G     = NewPkglint(nil, nil)
+	G     = NewPkglint(os.Stdout, os.Stderr)
 	trace tracePkg.Tracer
 )
 

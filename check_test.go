@@ -91,20 +91,7 @@ func (s *Suite) TearDownTest(c *check.C) {
 		t.InternalErrorf("After t.SetupPkgsrc(), either t.FinishSetUp() or t.Main() must be called.")
 	}
 
-	if out := t.Output(); out != "" {
-		var msg strings.Builder
-		msg.WriteString("\n")
-		_, _ = fmt.Fprintf(&msg, "Unchecked output in %s; check with:\n", c.TestName())
-		msg.WriteString("\n")
-		msg.WriteString("t.CheckOutputLines(\n")
-		lines := strings.Split(strings.TrimSpace(out), "\n")
-		for i, line := range lines {
-			_, _ = fmt.Fprintf(&msg, "\t%q%s\n", line, condStr(i == len(lines)-1, ")", ","))
-		}
-		_, _ = fmt.Fprintf(&msg, "\n")
-		_, _ = os.Stderr.WriteString(msg.String())
-	}
-
+	t.ReportUncheckedOutput()
 	t.tmpdir = ""
 	t.DisableTracing()
 
@@ -1176,4 +1163,23 @@ func (t *Tester) Shquote(format string, rels ...Path) string {
 		subs = append(subs, strings.Replace(quoted, t.tmpdir.String(), "~", -1))
 	}
 	return sprintf(format, subs...)
+}
+
+func (t *Tester) ReportUncheckedOutput() {
+	out := t.Output()
+	if out == "" {
+		return
+	}
+
+	var msg strings.Builder
+	msg.WriteString("\n")
+	_, _ = fmt.Fprintf(&msg, "Unchecked output in %s; check with:\n", t.testName)
+	msg.WriteString("\n")
+	msg.WriteString("t.CheckOutputLines(\n")
+	lines := strings.Split(strings.TrimSpace(out), "\n")
+	for i, line := range lines {
+		_, _ = fmt.Fprintf(&msg, "\t%q%s\n", line, condStr(i == len(lines)-1, ")", ","))
+	}
+	_, _ = fmt.Fprintf(&msg, "\n")
+	_, _ = os.Stderr.WriteString(msg.String())
 }

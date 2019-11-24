@@ -359,6 +359,7 @@ type SeparatorWriter struct {
 }
 
 func NewSeparatorWriter(out io.Writer) *SeparatorWriter {
+	assertNotNil(out)
 	return &SeparatorWriter{out, 3, bytes.Buffer{}}
 }
 
