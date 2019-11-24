@@ -239,7 +239,7 @@ func assertf(cond bool, format string, args ...interface{}) {
 }
 
 func isEmptyDir(filename Path) bool {
-	if filename.HasSuffixText("/CVS") {
+	if filename.HasSuffixPath("CVS") {
 		return true
 	}
 
