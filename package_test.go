@@ -2432,6 +2432,11 @@ func (s *Suite) Test_Package_pkgnameFromDistname(c *check.C) {
 		"WARN: ~/category/package/Makefile:4: Invalid variable modifier \"c,d\" for \"DISTNAME\".")
 
 	test("${DISTFILE:C,\\..*,,}", "aspell-af-0.50-0", "")
+
+	// Parse error because of missing closing brace
+	test("${DISTNAME:M", "package-1.0", "",
+		"WARN: ~/category/package/Makefile:4: "+
+			"Missing closing \"}\" for \"DISTNAME\".")
 }
 
 func (s *Suite) Test_Package_checkPossibleDowngrade(c *check.C) {
