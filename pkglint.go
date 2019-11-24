@@ -222,7 +222,7 @@ func (pkglint *Pkglint) prepareMainLoop() {
 	}
 
 	pkglint.Pkgsrc = NewPkgsrc(joinPath(firstDir, relTopdir))
-	pkglint.Wip = pkglint.Pkgsrc.ToRel(firstDir).HasPrefixPath("wip") // Same as in Pkglint.Check.
+	pkglint.Wip = pkglint.Pkgsrc.IsWip(firstDir) // See Pkglint.checkMode.
 	pkglint.Pkgsrc.LoadInfrastructure()
 
 	currentUser, err := user.Current()

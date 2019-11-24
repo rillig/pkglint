@@ -1063,7 +1063,7 @@ func (s *Suite) Test_Package_resolveIncludedFile__skipping(c *check.C) {
 
 func (s *Suite) Test_Package_shouldDiveInto(c *check.C) {
 	t := s.Init(c)
-	t.Chdir(".")
+	t.Chdir("category/package")
 
 	test := func(including, included Path, expected bool) {
 		actual := (*Package)(nil).shouldDiveInto(including, included)

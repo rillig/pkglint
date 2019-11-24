@@ -1052,11 +1052,21 @@ func (src *Pkgsrc) ToRel(filename Path) Path {
 	return relpath(src.topdir, filename)
 }
 
-// IsInfra returns whether the given filename (relative to the pkglint
+// IsInfra returns whether the given filename (relative to the current
 // working directory) is part of the pkgsrc infrastructure.
 func (src *Pkgsrc) IsInfra(filename Path) bool {
 	rel := src.ToRel(filename)
 	return rel.HasPrefixPath("mk") || rel.HasPrefixPath("wip/mk")
+}
+
+func (src *Pkgsrc) IsInfraMain(filename Path) bool {
+	rel := src.ToRel(filename)
+	return rel.HasPrefixPath("mk")
+}
+
+func (src *Pkgsrc) IsWip(filename Path) bool {
+	rel := src.ToRel(filename)
+	return rel.HasPrefixPath("wip")
 }
 
 // Change describes a modification to a single package, from the doc/CHANGES-* files.

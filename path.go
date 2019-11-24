@@ -81,7 +81,6 @@ func (p Path) ContainsPathCanonical(sub Path) bool {
 	return cleaned.ContainsPath(sub)
 }
 
-// TODO: Check each call whether HasSuffixPath is more appropriate; add tests
 func (p Path) HasSuffixText(suffix string) bool {
 	return hasSuffix(string(p), suffix)
 }
