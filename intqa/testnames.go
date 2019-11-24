@@ -307,31 +307,33 @@ func (ck *TestNameChecker) checkTestDescr(test *test) {
 }
 
 func (ck *TestNameChecker) checkTestees() {
+	ck.checkTesteesTest()
+	ck.checkTesteesMethodsSameFile()
+}
+
+// checkTesteesTest ensures that each testee has a corresponding unit test.
+func (ck *TestNameChecker) checkTesteesTest() {
 	tested := make(map[*testee]bool)
 	for _, test := range ck.tests {
 		tested[test.testee] = true
 	}
 
 	for _, testee := range ck.testees {
-		ck.checkTesteeTest(testee, tested)
-	}
+		if tested[testee] || testee.isType() { // FIXME: Remove testee.isType condition.
+			continue
+		}
 
-	ck.checkTesteesMethodsSameFile()
+		testName := "Test_" + join(testee.Type, "_", testee.Func)
+		ck.addError(
+			EMissingTest,
+			testee.code,
+			"Missing unit test %q for %q.",
+			testName, testee.fullName())
+	}
 }
 
-func (ck *TestNameChecker) checkTesteeTest(testee *testee, tested map[*testee]bool) {
-	if tested[testee] || testee.isType() {
-		return
-	}
-
-	testName := "Test_" + join(testee.Type, "_", testee.Func)
-	ck.addError(
-		EMissingTest,
-		testee.code,
-		"Missing unit test %q for %q.",
-		testName, testee.fullName())
-}
-
+// checkTesteesMethodsSameFile ensures that all methods of a type are
+// defined in the same file or in the corresponding test file.
 func (ck *TestNameChecker) checkTesteesMethodsSameFile() {
 	types := map[string]*testee{}
 	for _, testee := range ck.testees {
@@ -347,6 +349,7 @@ func (ck *TestNameChecker) checkTesteesMethodsSameFile() {
 				continue
 			}
 			if testee.file != typ.file && testee.file != typ.testFile() {
+				// FIXME: suggest the correct file (X_test.go)
 				ck.addError(
 					EMethodsSameFile,
 					testee.code,

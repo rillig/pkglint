@@ -448,20 +448,24 @@ func (s *Suite) Test_TestNameChecker_checkTestees(c *check.C) {
 		"Missing unit test \"Test_Func\" for \"Func\".")
 }
 
-func (s *Suite) Test_TestNameChecker_checkTesteeTest(c *check.C) {
+func (s *Suite) Test_TestNameChecker_checkTesteesTest(c *check.C) {
 	ck := s.Init(c)
 
-	ck.checkTesteeTest(
-		&testee{code{"demo.go", "Type", "", 0}},
-		nil)
-	ck.checkTesteeTest(
-		&testee{code{"demo.go", "", "Func", 0}},
-		nil)
-	ck.checkTesteeTest(
-		&testee{code{"demo.go", "Type", "Method", 0}},
-		nil)
+	ck.addTestee(code{"demo.go", "Type", "", 0})
+	ck.addTestee(code{"demo.go", "", "Func", 0})
+	ck.addTestee(code{"demo.go", "Type", "Method", 0})
+	ck.addTestee(code{"demo.go", "OkType", "", 0})
+	ck.addTestee(code{"demo.go", "", "OkFunc", 0})
+	ck.addTestee(code{"demo.go", "OkType", "Method", 0})
+	ck.addTest(code{"demo_test.go", "", "Test_OkType", 0})
+	ck.addTest(code{"demo_test.go", "", "Test_OkFunc", 0})
+	ck.addTest(code{"demo_test.go", "", "Test_OkType_Method", 0})
+	ck.relate()
+
+	ck.checkTesteesTest()
 
 	s.CheckErrors(
+		// FIXME: Add "Missing unit test \"Test_Type\" for \"Type\"."
 		"Missing unit test \"Test_Func\" for \"Func\".",
 		"Missing unit test \"Test_Type_Method\" for \"Type.Method\".")
 }
