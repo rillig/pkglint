@@ -485,9 +485,10 @@ func (s *Suite) Test_TestNameChecker_checkTesteesMethodsSameFile(c *check.C) {
 	ck.checkTesteesMethodsSameFile()
 
 	s.CheckErrors(
-		"Method Main.MethodWrong must be in same file (main.go) as its type definition.",
-		"Method Main.MethodWrongTest must be in same file (main.go) as its type definition.",
-		"Method T.MethodWrong must be in same file (main_test.go) as its type definition.")
+		"Method Main.MethodWrong must be in main.go, like its type.",
+		"Method Main.MethodWrongTest must be in main_test.go, "+
+			"corresponding to its type.",
+		"Method T.MethodWrong must be in main_test.go, like its type.")
 }
 
 func (s *Suite) Test_TestNameChecker_errorsMask(c *check.C) {

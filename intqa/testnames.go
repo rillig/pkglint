@@ -343,20 +343,35 @@ func (ck *TestNameChecker) checkTesteesMethodsSameFile() {
 	}
 
 	for _, testee := range ck.testees {
-		if testee.isMethod() {
-			typ := types[testee.Type]
-			if typ == nil {
-				continue
-			}
-			if testee.file != typ.file && testee.file != typ.testFile() {
-				// FIXME: suggest the correct file (X_test.go)
-				ck.addError(
-					EMethodsSameFile,
-					testee.code,
-					"Method %s must be in same file (%s) as its type definition.",
-					testee.fullName(), typ.file)
-			}
+		if !testee.isMethod() {
+			continue
 		}
+		method := testee
+
+		typ := types[method.Type]
+		if typ == nil || method.file == typ.file {
+			continue
+		}
+
+		if method.isTestScope() == typ.isTestScope() {
+			ck.addError(
+				EMethodsSameFile,
+				testee.code,
+				"Method %s must be in %s, like its type.",
+				testee.fullName(), typ.file)
+			continue
+		}
+
+		correctFile := typ.testFile()
+		if method.file == correctFile {
+			continue
+		}
+
+		ck.addError(
+			EMethodsSameFile,
+			testee.code,
+			"Method %s must be in %s, corresponding to its type.",
+			testee.fullName(), correctFile)
 	}
 }
 
