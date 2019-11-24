@@ -1341,7 +1341,7 @@ func (ck MkLineChecker) checkInclude() {
 	case includedFile.HasSuffixPath("intltool/buildlink3.mk"):
 		mkline.Warnf("Please write \"USE_TOOLS+= intltool\" instead of this line.")
 
-	case includedFile.HasSuffixPath("builtin.mk"):
+	case includedFile != "builtin.mk" && includedFile.HasSuffixPath("builtin.mk"):
 		if mkline.Basename != "hacks.mk" && !mkline.HasRationale() {
 			fix := mkline.Autofix()
 			fix.Errorf("%s must not be included directly. Include \"%s/buildlink3.mk\" instead.", includedFile, includedFile.Dir())

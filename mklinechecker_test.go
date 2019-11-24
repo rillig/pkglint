@@ -2255,9 +2255,7 @@ func (s *Suite) Test_MkLineChecker_checkInclude__buildlink3_mk_includes_builtin_
 
 	mklines.Check()
 
-	t.CheckOutputLines(
-		// FIXME
-		"ERROR: ~/category/package/buildlink3.mk:2: builtin.mk must not be included directly. Include \"./buildlink3.mk\" instead.")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLineChecker_checkInclude__builtin_mk_rationale(c *check.C) {
