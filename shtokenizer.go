@@ -9,6 +9,9 @@ type ShTokenizer struct {
 func NewShTokenizer(line *Line, text string, emitWarnings bool) *ShTokenizer {
 	// TODO: Switching to NewMkParser is nontrivial since emitWarnings must equal (line != nil).
 	// assert((line != nil) == emitWarnings)
+	if line != nil {
+		emitWarnings = true
+	}
 	p := MkParser{line, textproc.NewLexer(text), emitWarnings}
 	return &ShTokenizer{&p}
 }

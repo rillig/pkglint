@@ -90,9 +90,13 @@ func (s *Suite) Test_ShTokenizer__fuzzing(c *check.C) {
 	fuzzer.Char("\"'`$();|_#", 10)
 	fuzzer.Range('a', 'z', 5)
 
+	// This "real" line is necessary because the autofix
+	// in MkParser.varUseBrace checks this.
+	line := t.NewLine("Makefile", 1, "\t:")
+
 	defer fuzzer.CheckOk()
 	for i := 0; i < 1000; i++ {
-		tokenizer := NewShTokenizer(dummyLine, fuzzer.Generate(50), false)
+		tokenizer := NewShTokenizer(line, fuzzer.Generate(50), false)
 		tokenizer.ShAtoms()
 		t.Output() // Discard the output, only react on panics.
 	}

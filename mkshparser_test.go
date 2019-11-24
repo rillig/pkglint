@@ -269,10 +269,19 @@ func (s *ShSuite) Test_parseShellProgram__compound_command(c *check.C) {
 			b.Words("*"),
 			b.List().AddCommand(b.SimpleCommand("echo", "$i")).AddSemicolon())))
 
+	s.t.CheckOutputLines(
+		// FIXME: Don't use dummyLine for anything.
+		"WARN: $i is ambiguous. Use ${i} if you mean a Make variable " +
+			"or $$i if you mean a shell variable.")
+
 	s.test("case $i in esac",
 		b.List().AddCommand(b.Case(
 			b.Token("$i"))))
 
+	s.t.CheckOutputLines(
+		// FIXME: Don't use dummyLine for anything.
+		"WARN: $i is ambiguous. Use ${i} if you mean a Make variable " +
+			"or $$i if you mean a shell variable.")
 }
 
 func (s *ShSuite) Test_parseShellProgram__subshell(c *check.C) {
@@ -313,6 +322,11 @@ func (s *ShSuite) Test_parseShellProgram__for_clause(c *check.C) {
 			b.Words("\"$$@\""),
 			b.List().AddCommand(b.SimpleCommand("echo", "$var")).AddSemicolon())))
 
+	s.t.CheckOutputLines(
+		// FIXME: Don't use dummyLine for anything.
+		"ERROR: $var is ambiguous. Use ${var} if you mean a Make variable " +
+			"or $$var if you mean a shell variable.")
+
 	// Only linebreak is allowed, but not semicolon.
 	s.test("for var \n do echo $var ; done",
 		b.List().AddCommand(b.For(
@@ -320,11 +334,21 @@ func (s *ShSuite) Test_parseShellProgram__for_clause(c *check.C) {
 			b.Words("\"$$@\""),
 			b.List().AddCommand(b.SimpleCommand("echo", "$var")).AddSemicolon())))
 
+	s.t.CheckOutputLines(
+		// FIXME: Don't use dummyLine for anything.
+		"ERROR: $var is ambiguous. Use ${var} if you mean a Make variable " +
+			"or $$var if you mean a shell variable.")
+
 	s.test("for var in a b c ; do echo $var ; done",
 		b.List().AddCommand(b.For(
 			"var",
 			b.Words("a", "b", "c"),
 			b.List().AddCommand(b.SimpleCommand("echo", "$var")).AddSemicolon())))
+
+	s.t.CheckOutputLines(
+		// FIXME: Don't use dummyLine for anything.
+		"ERROR: $var is ambiguous. Use ${var} if you mean a Make variable " +
+			"or $$var if you mean a shell variable.")
 
 	s.test("for var \n \n \n in a b c ; do echo $var ; done",
 		b.List().AddCommand(b.For(
@@ -332,17 +356,32 @@ func (s *ShSuite) Test_parseShellProgram__for_clause(c *check.C) {
 			b.Words("a", "b", "c"),
 			b.List().AddCommand(b.SimpleCommand("echo", "$var")).AddSemicolon())))
 
+	s.t.CheckOutputLines(
+		// FIXME: Don't use dummyLine for anything.
+		"ERROR: $var is ambiguous. Use ${var} if you mean a Make variable " +
+			"or $$var if you mean a shell variable.")
+
 	s.test("for var \n in ; do echo $var ; done",
 		b.List().AddCommand(b.For(
 			"var",
 			nil,
 			b.List().AddCommand(b.SimpleCommand("echo", "$var")).AddSemicolon())))
 
+	s.t.CheckOutputLines(
+		// FIXME: Don't use dummyLine for anything.
+		"ERROR: $var is ambiguous. Use ${var} if you mean a Make variable " +
+			"or $$var if you mean a shell variable.")
+
 	s.test("for var in in esac ; do echo $var ; done",
 		b.List().AddCommand(b.For(
 			"var",
 			b.Words("in", "esac"),
 			b.List().AddCommand(b.SimpleCommand("echo", "$var")).AddSemicolon())))
+
+	s.t.CheckOutputLines(
+		// FIXME: Don't use dummyLine for anything.
+		"ERROR: $var is ambiguous. Use ${var} if you mean a Make variable " +
+			"or $$var if you mean a shell variable.")
 
 	s.test("for var in \n do : ; done",
 		b.List().AddCommand(b.For(
@@ -366,6 +405,12 @@ func (s *ShSuite) Test_parseShellProgram__case_clause(c *check.C) {
 
 	s.test("case $var in esac",
 		b.List().AddCommand(b.Case(b.Token("$var"))))
+
+	s.t.CheckOutputLines(
+		// FIXME: Don't use dummyLine for anything.
+		"ERROR: $var is ambiguous. " +
+			"Use ${var} if you mean a Make variable " +
+			"or $$var if you mean a shell variable.")
 
 	s.test("case selector in pattern) ;; pattern) esac",
 		b.List().AddCommand(b.Case(

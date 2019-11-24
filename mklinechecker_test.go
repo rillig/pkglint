@@ -102,7 +102,9 @@ func (s *Suite) Test_MkLineChecker_Check__varuse_modifier_L(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: x11/xkeyboard-config/Makefile:3: "+
 			"Invalid part \"/xkbcomp\" after variable name \"${XKBBASE}\".",
-		// TODO: Avoid this duplicate diagnostic.
+		// TODO: Avoid these duplicate diagnostics.
+		"WARN: x11/xkeyboard-config/Makefile:3: "+
+			"Invalid part \"/xkbcomp\" after variable name \"${XKBBASE}\".",
 		"WARN: x11/xkeyboard-config/Makefile:3: "+
 			"Invalid part \"/xkbcomp\" after variable name \"${XKBBASE}\".",
 		"WARN: x11/xkeyboard-config/Makefile:3: XKBBASE is used but not defined.")
