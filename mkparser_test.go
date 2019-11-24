@@ -443,7 +443,7 @@ func (s *Suite) Test_MkParser_varUseBrace__autofix_parentheses(c *check.C) {
 		"WARN: ~/Makefile:2: Please use curly braces {} instead of round parentheses () for C.",
 		"WARN: ~/Makefile:2: Please use curly braces {} instead of round parentheses () for B.$(C).",
 		"WARN: ~/Makefile:2: Please use curly braces {} instead of round parentheses () for A.$(B.$(C)).",
-		// FIXME: Ensure that a warning is issued for $(A:M\#).
+		"WARN: ~/Makefile:2: Please use curly braces {} instead of round parentheses () for A.",
 		"AUTOFIX: ~/Makefile:2: Replacing \"$(P1)\" with \"${P1}\".",
 		"AUTOFIX: ~/Makefile:2: Replacing \"$(P2)\" with \"${P2}\".",
 		"AUTOFIX: ~/Makefile:2: Replacing \"$(P3:Q)\" with \"${P3:Q}\".",
