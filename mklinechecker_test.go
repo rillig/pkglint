@@ -2242,6 +2242,24 @@ func (s *Suite) Test_MkLineChecker_checkInclude__builtin_mk(c *check.C) {
 			"Include \"../../category/package/buildlink3.mk\" instead.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkInclude__buildlink3_mk_includes_builtin_mk(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	mklines := t.SetUpFileMkLines("category/package/buildlink3.mk",
+		MkCvsID,
+		".include \"builtin.mk\"")
+	t.CreateFileLines("category/package/builtin.mk",
+		MkCvsID)
+	t.FinishSetUp()
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		// FIXME
+		"ERROR: ~/category/package/buildlink3.mk:2: builtin.mk must not be included directly. Include \"./buildlink3.mk\" instead.")
+}
+
 func (s *Suite) Test_MkLineChecker_checkInclude__builtin_mk_rationale(c *check.C) {
 	t := s.Init(c)
 
