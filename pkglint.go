@@ -610,7 +610,7 @@ func (pkglint *Pkglint) checkReg(filename Path, basename string, depth int) {
 			CheckLinesPatch(lines)
 		}
 
-	case matches(filename.String(), `(?:^|/)patches/manual[^/]*$`):
+	case filename.Dir().Base() == "patches" && matches(filename.Base(), `^manual[^/]*$`):
 		if trace.Tracing {
 			trace.Stepf("Unchecked file %q.", filename)
 		}

@@ -1059,7 +1059,7 @@ func (s *Suite) Test_Pkglint_checkExecutable(c *check.C) {
 	t := s.Init(c)
 
 	filename := t.CreateFileLines("file.mk")
-	err := os.Chmod(filename.String(), 0555)
+	err := filename.Chmod(0555)
 	assertNil(err, "")
 
 	G.checkExecutable(filename, 0555)
