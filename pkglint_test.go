@@ -874,12 +874,12 @@ func (s *Suite) Test_Pkglint_checkReg__file_not_found(c *check.C) {
 
 	t.Chdir(".")
 
-	G.checkReg("buildlink3.mk", "buildlink3.mk", 2)
-	G.checkReg("DESCR", "DESCR", 2)
-	G.checkReg("distinfo", "distinfo", 2)
-	G.checkReg("MESSAGE", "MESSAGE", 2)
-	G.checkReg("patches/patch-aa", "patch-aa", 2)
-	G.checkReg("PLIST", "PLIST", 2)
+	G.checkReg("buildlink3.mk", "buildlink3.mk", 3)
+	G.checkReg("DESCR", "DESCR", 3)
+	G.checkReg("distinfo", "distinfo", 3)
+	G.checkReg("MESSAGE", "MESSAGE", 3)
+	G.checkReg("patches/patch-aa", "patch-aa", 3)
+	G.checkReg("PLIST", "PLIST", 3)
 
 	t.CheckOutputLines(
 		"ERROR: buildlink3.mk: Cannot be read.",
@@ -897,7 +897,7 @@ func (s *Suite) Test_Pkglint_checkReg__no_tracing(c *check.C) {
 	t.Chdir(".")
 	t.DisableTracing()
 
-	G.checkReg("patches/manual-aa", "manual-aa", 2)
+	G.checkReg("patches/manual-aa", "manual-aa", 4)
 
 	t.CheckOutputEmpty()
 }
@@ -1001,7 +1001,7 @@ func (s *Suite) Test_Pkglint_checkReg__unknown_file_in_patches(c *check.C) {
 
 	t.CreateFileDummyPatch("category/Makefile/patches/index")
 
-	G.checkReg(t.File("category/Makefile/patches/index"), "index", 3)
+	G.checkReg(t.File("category/Makefile/patches/index"), "index", 4)
 
 	t.CheckOutputLines(
 		"WARN: ~/category/Makefile/patches/index: " +
@@ -1014,7 +1014,7 @@ func (s *Suite) Test_Pkglint_checkReg__patch_for_Makefile_fragment(c *check.C) {
 	t.CreateFileDummyPatch("category/package/patches/patch-compiler.mk")
 	t.Chdir("category/package")
 
-	G.checkReg(t.File("patches/patch-compiler.mk"), "patch-compiler.mk", 3)
+	G.checkReg(t.File("patches/patch-compiler.mk"), "patch-compiler.mk", 4)
 
 	t.CheckOutputEmpty()
 }
@@ -1024,7 +1024,7 @@ func (s *Suite) Test_Pkglint_checkReg__file_in_files(c *check.C) {
 
 	t.CreateFileLines("category/package/files/index")
 
-	G.checkReg(t.File("category/package/files/index"), "index", 3)
+	G.checkReg(t.File("category/package/files/index"), "index", 4)
 
 	// These files are ignored since they could contain anything.
 	t.CheckOutputEmpty()
@@ -1036,8 +1036,8 @@ func (s *Suite) Test_Pkglint_checkReg__spec(c *check.C) {
 	t.CreateFileLines("category/package/spec")
 	t.CreateFileLines("regress/package/spec")
 
-	G.checkReg(t.File("category/package/spec"), "spec", 2)
-	G.checkReg(t.File("regress/package/spec"), "spec", 2)
+	G.checkReg(t.File("category/package/spec"), "spec", 3)
+	G.checkReg(t.File("regress/package/spec"), "spec", 3)
 
 	t.CheckOutputLines(
 		"WARN: ~/category/package/spec: Only packages in regress/ may have spec files.")

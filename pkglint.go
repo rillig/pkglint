@@ -338,9 +338,8 @@ func (pkglint *Pkglint) checkMode(dirent Path, mode os.FileMode) {
 	}
 
 	if isReg {
-		depth := pkgsrcRel.Count() - 1 // FIXME
 		pkglint.checkExecutable(dirent, mode)
-		pkglint.checkReg(dirent, basename, depth)
+		pkglint.checkReg(dirent, basename, pkgsrcRel.Count())
 		return
 	}
 
@@ -546,9 +545,13 @@ func CheckFileMk(filename Path) {
 	mklines.SaveAutofixChanges()
 }
 
+// checkReg checks the given regular file.
+// depth is 3 for files in the package directory, and 4 or more for files
+// deeper in the directory hierarchy, such as in files/ or patches/.
 func (pkglint *Pkglint) checkReg(filename Path, basename string, depth int) {
 
-	if depth == 2 && !pkglint.Wip {
+	if depth == 3 && !pkglint.Wip {
+		// FIXME: There's no good reason for prohibiting a README file.
 		if contains(basename, "README") || contains(basename, "TODO") {
 			NewLineWhole(filename).Errorf("Packages in main pkgsrc must not have a %s file.", basename)
 			// TODO: Add a convincing explanation.
@@ -560,8 +563,8 @@ func (pkglint *Pkglint) checkReg(filename Path, basename string, depth int) {
 	case hasSuffix(basename, "~"),
 		hasSuffix(basename, ".orig"),
 		hasSuffix(basename, ".rej"),
-		contains(basename, "README") && depth == 2,
-		contains(basename, "TODO") && depth == 2:
+		contains(basename, "README") && depth == 3,
+		contains(basename, "TODO") && depth == 3:
 		if pkglint.Opts.Import {
 			NewLineWhole(filename).Errorf("Must be cleaned up before committing the package.")
 		}

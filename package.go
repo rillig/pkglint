@@ -1206,9 +1206,7 @@ func (pkg *Package) checkDirent(dirent Path, mode os.FileMode) {
 	switch {
 
 	case mode.IsRegular():
-		pkgsrcRel := G.Pkgsrc.ToRel(dirent)
-		depth := pkgsrcRel.Count() - 1 // FIXME
-		G.checkReg(dirent, basename, depth)
+		G.checkReg(dirent, basename, G.Pkgsrc.ToRel(dirent).Count())
 
 	case hasPrefix(basename, "work"):
 		if G.Opts.Import {
