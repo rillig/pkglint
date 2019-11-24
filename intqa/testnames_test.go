@@ -466,6 +466,26 @@ func (s *Suite) Test_TestNameChecker_checkTesteeTest(c *check.C) {
 		"Missing unit test \"Test_Type_Method\" for \"Type.Method\".")
 }
 
+func (s *Suite) Test_TestNameChecker_checkTesteesMethodsSameFile(c *check.C) {
+	ck := s.Init(c)
+
+	ck.addTestee(code{"main.go", "Main", "", 0})
+	ck.addTestee(code{"main.go", "Main", "MethodOk", 1})
+	ck.addTestee(code{"other.go", "Main", "MethodWrong", 2})
+	ck.addTestee(code{"main_test.go", "Main", "MethodOkTest", 3})
+	ck.addTestee(code{"other_test.go", "Main", "MethodWrongTest", 4})
+	ck.addTestee(code{"main_test.go", "T", "", 100})
+	ck.addTestee(code{"main_test.go", "T", "MethodOk", 101})
+	ck.addTestee(code{"other_test.go", "T", "MethodWrong", 102})
+
+	ck.checkTesteesMethodsSameFile()
+
+	s.CheckErrors(
+		"Method Main.MethodWrong must be in same file (main.go) as its type definition.",
+		"Method Main.MethodWrongTest must be in same file (main.go) as its type definition.",
+		"Method T.MethodWrong must be in same file (main_test.go) as its type definition.")
+}
+
 func (s *Suite) Test_TestNameChecker_errorsMask(c *check.C) {
 	ck := s.Init(c)
 
@@ -617,6 +637,21 @@ func (s *Suite) Test_code_isTestScope(c *check.C) {
 	test("_test.go", true)
 	test("file_test.go", true)
 	test("file_linux_test.go", true)
+}
+
+func (s *Suite) Test_code_testFile(c *check.C) {
+	_ = s.Init(c)
+
+	test := func(filename string, testFile string) {
+		code := code{filename, "", "", 0}
+		c.Check(code.testFile(), check.Equals, testFile)
+	}
+
+	test("f.go", "f_test.go")
+	test("test.go", "test_test.go")
+	test("_test.go", "_test.go")
+	test("file_test.go", "file_test.go")
+	test("file_linux_test.go", "file_linux_test.go")
 }
 
 func (s *Suite) Test_isCamelCase(c *check.C) {

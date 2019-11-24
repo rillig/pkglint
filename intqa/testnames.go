@@ -38,6 +38,9 @@ const (
 	// The file of the test method does not correspond to the
 	// file of the testee.
 	EFile
+
+	// All methods of a type must be in the same file as the type definition.
+	EMethodsSameFile
 )
 
 // TestNameChecker ensures that all test names follow a common naming scheme:
@@ -261,7 +264,7 @@ func (ck *TestNameChecker) checkTestFile(test *test) {
 		return
 	}
 
-	correctTestFile := strings.TrimSuffix(testee.file, ".go") + "_test.go"
+	correctTestFile := testee.testFile()
 	if correctTestFile == test.file {
 		return
 	}
@@ -312,6 +315,8 @@ func (ck *TestNameChecker) checkTestees() {
 	for _, testee := range ck.testees {
 		ck.checkTesteeTest(testee, tested)
 	}
+
+	ck.checkTesteesMethodsSameFile()
 }
 
 func (ck *TestNameChecker) checkTesteeTest(testee *testee, tested map[*testee]bool) {
@@ -325,6 +330,31 @@ func (ck *TestNameChecker) checkTesteeTest(testee *testee, tested map[*testee]bo
 		testee.code,
 		"Missing unit test %q for %q.",
 		testName, testee.fullName())
+}
+
+func (ck *TestNameChecker) checkTesteesMethodsSameFile() {
+	types := map[string]*testee{}
+	for _, testee := range ck.testees {
+		if testee.isType() {
+			types[testee.Type] = testee
+		}
+	}
+
+	for _, testee := range ck.testees {
+		if testee.isMethod() {
+			typ := types[testee.Type]
+			if typ == nil {
+				continue
+			}
+			if testee.file != typ.file && testee.file != typ.testFile() {
+				ck.addError(
+					EMethodsSameFile,
+					testee.code,
+					"Method %s must be in same file (%s) as its type definition.",
+					testee.fullName(), typ.file)
+			}
+		}
+	}
 }
 
 // isRelevant checks whether the given error is enabled.
@@ -445,6 +475,13 @@ func (c *code) isMethod() bool   { return c.Type != "" && c.Func != "" }
 
 func (c *code) isTestScope() bool {
 	return strings.HasSuffix(c.file, "_test.go")
+}
+
+func (c *code) testFile() string {
+	if strings.HasSuffix(c.file, "_test.go") {
+		return c.file
+	}
+	return strings.TrimSuffix(c.file, ".go") + "_test.go"
 }
 
 func isCamelCase(str string) bool {
