@@ -393,8 +393,8 @@ func (*Package) shouldDiveInto(includingFile, includedFile Path) bool {
 	}
 
 	if G.Pkgsrc.IsInfraMain(includingFile) {
-		// TODO: try ".buildlink.mk", ".builtin.mk" instead, see wip/clfswm.
-		return includingFile.HasSuffixText("buildlink3.mk") && includedFile.HasSuffixText("builtin.mk")
+		return includingFile.HasSuffixText(".buildlink3.mk") &&
+			includedFile.HasSuffixText(".builtin.mk")
 	}
 
 	return true
