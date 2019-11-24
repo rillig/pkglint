@@ -102,7 +102,7 @@ func (s *Suite) Test_Pkglint_Main__no_args(c *check.C) {
 	// The "." from the error message is the implicit argument added in Pkglint.Main.
 	t.CheckEquals(exitcode, 1)
 	t.CheckOutputLines(
-		"FATAL: \".\" must be inside a pkgsrc tree.")
+		"FATAL: .: Must be inside a pkgsrc tree.")
 }
 
 func (s *Suite) Test_Pkglint_Main__unknown_option(c *check.C) {
@@ -331,7 +331,7 @@ func (s *Suite) Test_Pkglint_Main__profiling_error(c *check.C) {
 
 	t.CheckEquals(exitcode, 1)
 	t.CheckOutputMatches(
-		`FATAL: Cannot create profiling file: open pkglint\.pprof: .*`)
+		`ERROR: pkglint\.pprof: Cannot create profiling file: open pkglint\.pprof: .*`)
 }
 
 func (s *Suite) Test_Pkglint_ParseCommandLine__only(c *check.C) {

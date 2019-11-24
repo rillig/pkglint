@@ -827,7 +827,7 @@ func (s *Suite) Test_Pkgsrc_Latest__not_found(c *check.C) {
 	t.CheckEquals(latest, "")
 
 	t.CheckOutputLines(
-		"ERROR: Cannot find package versions of \"^python[0-9]+$\" in \"~/lang\".")
+		"ERROR: ~/lang: Cannot find package versions of \"^python[0-9]+$\".")
 }
 
 // In 2017, PostgreSQL changed their versioning scheme to SemVer,
@@ -956,7 +956,7 @@ func (s *Suite) Test_Pkgsrc_ListVersions__no_basedir(c *check.C) {
 
 	c.Check(versions, check.HasLen, 0)
 	t.CheckOutputLines(
-		"ERROR: Cannot find package versions of \"^python[0-9]+$\" in \"~/lang\".")
+		"ERROR: ~/lang: Cannot find package versions of \"^python[0-9]+$\".")
 }
 
 func (s *Suite) Test_Pkgsrc_ListVersions__no_subdirs(c *check.C) {
@@ -968,7 +968,7 @@ func (s *Suite) Test_Pkgsrc_ListVersions__no_subdirs(c *check.C) {
 
 	c.Check(versions, check.HasLen, 0)
 	t.CheckOutputLines(
-		"ERROR: Cannot find package versions of \"^python[0-9]+$\" in \"~/lang\".")
+		"ERROR: ~/lang: Cannot find package versions of \"^python[0-9]+$\".")
 }
 
 // Ensures that failed lookups are also cached since they can be assumed
@@ -980,7 +980,7 @@ func (s *Suite) Test_Pkgsrc_ListVersions__error_is_cached(c *check.C) {
 
 	c.Check(versions, check.HasLen, 0)
 	t.CheckOutputLines(
-		"ERROR: Cannot find package versions of \"^python[0-9]+$\" in \"~/lang\".")
+		"ERROR: ~/lang: Cannot find package versions of \"^python[0-9]+$\".")
 
 	versions2 := G.Pkgsrc.ListVersions("lang", `^python[0-9]+$`, "../../lang/$0", true)
 

@@ -179,7 +179,8 @@ func (pkglint *Pkglint) setUpProfiling() func() {
 
 	f, err := os.Create("pkglint.pprof")
 	if err != nil {
-		dummyLine.Fatalf("Cannot create profiling file: %s", err)
+		pkglint.Logger.TechErrorf("pkglint.pprof", "Cannot create profiling file: %s", err)
+		panic(pkglintFatal{})
 	}
 	atExit(func() { assertNil(f.Close(), "") })
 
@@ -217,7 +218,7 @@ func (pkglint *Pkglint) prepareMainLoop() {
 		// pkglint doesn't know where to load the infrastructure files from,
 		// and these are needed for virtually every single check.
 		// Therefore, the only sensible thing to do is to quit immediately.
-		dummyLine.Fatalf("%q must be inside a pkgsrc tree.", firstDir)
+		NewLineWhole(firstDir).Fatalf("Must be inside a pkgsrc tree.")
 	}
 
 	pkglint.Pkgsrc = NewPkgsrc(joinPath(firstDir, relTopdir))

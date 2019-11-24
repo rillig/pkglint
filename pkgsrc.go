@@ -813,7 +813,7 @@ func (src *Pkgsrc) ListVersions(category Path, re regex.Pattern, repl string, er
 	}
 	if len(names) == 0 {
 		if errorIfEmpty {
-			dummyLine.Errorf("Cannot find package versions of %q in %q.", re, src.File(category))
+			NewLineWhole(src.File(category)).Errorf("Cannot find package versions of %q.", re)
 		}
 		src.listVersions[cacheKey] = nil
 		return nil
