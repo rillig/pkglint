@@ -7,8 +7,8 @@ func (s *Suite) Test_MkLexer_MkTokens(c *check.C) {
 	b := NewMkTokenBuilder()
 
 	testRest := func(input string, expectedTokens []*MkToken, expectedRest string) {
-		line := t.NewLines("Test_MkParser_MkTokens.mk", input).Lines[0]
-		p := NewMkParser(line, input)
+		line := t.NewLines("Test_MkLexer_MkTokens.mk", input).Lines[0]
+		p := NewMkLexer(input, line)
 		actualTokens := p.MkTokens()
 		t.CheckDeepEquals(actualTokens, expectedTokens)
 		for i, expectedToken := range expectedTokens {
@@ -61,7 +61,7 @@ func (s *Suite) Test_MkLexer_MkTokens(c *check.C) {
 		b.Tokens(b.VaruseTextToken("${VAR:S,a,b,c,d,e,f}", "VAR", "S,a,b,")),
 		"")
 	t.CheckOutputLines(
-		"WARN: Test_MkParser_MkTokens.mk:1: Invalid variable modifier \"c,d,e,f\" for \"VAR\".")
+		"WARN: Test_MkLexer_MkTokens.mk:1: Invalid variable modifier \"c,d,e,f\" for \"VAR\".")
 
 	testRest("Text${VAR:Mmodifier}${VAR2}more text${VAR3}",
 		b.Tokens(
@@ -80,8 +80,8 @@ func (s *Suite) Test_MkLexer_VarUse(c *check.C) {
 	varuseText := b.VaruseTextToken
 
 	testRest := func(input string, expectedTokens []*MkToken, expectedRest string, diagnostics ...string) {
-		line := t.NewLines("Test_MkParser_VarUse.mk", input).Lines[0]
-		p := NewMkParser(line, input)
+		line := t.NewLines("Test_MkLexer_VarUse.mk", input).Lines[0]
+		p := NewMkLexer(input, line)
 
 		actualTokens := p.MkTokens()
 
@@ -228,7 +228,7 @@ func (s *Suite) Test_MkLexer_VarUse(c *check.C) {
 
 	test("${GZIP_CMD:[asdf]:Q}",
 		varuseText("${GZIP_CMD:[asdf]:Q}", "GZIP_CMD", "Q"),
-		"WARN: Test_MkParser_VarUse.mk:1: Invalid variable modifier \"[asdf]\" for \"GZIP_CMD\".")
+		"WARN: Test_MkLexer_VarUse.mk:1: Invalid variable modifier \"[asdf]\" for \"GZIP_CMD\".")
 
 	test("${DISTNAME:C/-[0-9]+$$//:C/_/-/}",
 		varuse("DISTNAME", "C/-[0-9]+$$//", "C/_/-/"))
@@ -310,28 +310,28 @@ func (s *Suite) Test_MkLexer_VarUse(c *check.C) {
 	// The :ts modifier only takes single-character separators.
 	test("${VAR:ts---}",
 		varuse("VAR", "ts---"),
-		"WARN: Test_MkParser_VarUse.mk:1: Invalid separator \"---\" for :ts modifier of \"VAR\".")
+		"WARN: Test_MkLexer_VarUse.mk:1: Invalid separator \"---\" for :ts modifier of \"VAR\".")
 
 	test("$<",
 		varuseText("$<", "<")) // Same as ${.IMPSRC}
 
 	test("$(GNUSTEP_USER_ROOT)",
 		varuseText("$(GNUSTEP_USER_ROOT)", "GNUSTEP_USER_ROOT"),
-		"WARN: Test_MkParser_VarUse.mk:1: Please use curly braces {} instead of round parentheses () for GNUSTEP_USER_ROOT.")
+		"WARN: Test_MkLexer_VarUse.mk:1: Please use curly braces {} instead of round parentheses () for GNUSTEP_USER_ROOT.")
 
 	// Opening brace, closing parenthesis.
 	// Warnings are only printed for balanced expressions.
 	test("${VAR)",
 		varuseText("${VAR)", "VAR)"),
-		"WARN: Test_MkParser_VarUse.mk:1: Missing closing \"}\" for \"VAR)\".",
-		"WARN: Test_MkParser_VarUse.mk:1: Invalid part \")\" after variable name \"VAR\".")
+		"WARN: Test_MkLexer_VarUse.mk:1: Missing closing \"}\" for \"VAR)\".",
+		"WARN: Test_MkLexer_VarUse.mk:1: Invalid part \")\" after variable name \"VAR\".")
 
 	// Opening parenthesis, closing brace
 	// Warnings are only printed for balanced expressions.
 	test("$(VAR}",
 		varuseText("$(VAR}", "VAR}"),
-		"WARN: Test_MkParser_VarUse.mk:1: Missing closing \")\" for \"VAR}\".",
-		"WARN: Test_MkParser_VarUse.mk:1: Invalid part \"}\" after variable name \"VAR\".")
+		"WARN: Test_MkLexer_VarUse.mk:1: Missing closing \")\" for \"VAR}\".",
+		"WARN: Test_MkLexer_VarUse.mk:1: Invalid part \"}\" after variable name \"VAR\".")
 
 	test("${PLIST_SUBST_VARS:@var@${var}=${${var}:Q}@}",
 		varuse("PLIST_SUBST_VARS", "@var@${var}=${${var}:Q}@"))
@@ -339,8 +339,8 @@ func (s *Suite) Test_MkLexer_VarUse(c *check.C) {
 	test("${PLIST_SUBST_VARS:@var@${var}=${${var}:Q}}",
 		varuseText("${PLIST_SUBST_VARS:@var@${var}=${${var}:Q}}",
 			"PLIST_SUBST_VARS", "@var@${var}=${${var}:Q}}"),
-		"WARN: Test_MkParser_VarUse.mk:1: Modifier ${PLIST_SUBST_VARS:@var@...@} is missing the final \"@\".",
-		"WARN: Test_MkParser_VarUse.mk:1: Missing closing \"}\" for \"PLIST_SUBST_VARS\".")
+		"WARN: Test_MkLexer_VarUse.mk:1: Modifier ${PLIST_SUBST_VARS:@var@...@} is missing the final \"@\".",
+		"WARN: Test_MkLexer_VarUse.mk:1: Missing closing \"}\" for \"PLIST_SUBST_VARS\".")
 
 	// The replacement text may include closing braces, which is useful
 	// for AWK programs.
@@ -352,19 +352,19 @@ func (s *Suite) Test_MkLexer_VarUse(c *check.C) {
 	// Unfinished variable use
 	test("${",
 		varuseText("${", ""),
-		"WARN: Test_MkParser_VarUse.mk:1: Missing closing \"}\" for \"\".")
+		"WARN: Test_MkLexer_VarUse.mk:1: Missing closing \"}\" for \"\".")
 
 	// Unfinished nested variable use
 	test("${${",
 		varuseText("${${", "${"),
-		"WARN: Test_MkParser_VarUse.mk:1: Missing closing \"}\" for \"\".",
-		"WARN: Test_MkParser_VarUse.mk:1: Missing closing \"}\" for \"${\".")
+		"WARN: Test_MkLexer_VarUse.mk:1: Missing closing \"}\" for \"\".",
+		"WARN: Test_MkLexer_VarUse.mk:1: Missing closing \"}\" for \"${\".")
 
 	test("${arbitrary :Mpattern:---:Q}",
 		varuseText("${arbitrary :Mpattern:---:Q}", "arbitrary ", "Mpattern", "Q"),
 		// TODO: Swap the order of these message
-		"WARN: Test_MkParser_VarUse.mk:1: Invalid variable modifier \"---\" for \"arbitrary \".",
-		"WARN: Test_MkParser_VarUse.mk:1: Invalid part \" \" after variable name \"arbitrary\".")
+		"WARN: Test_MkLexer_VarUse.mk:1: Invalid variable modifier \"---\" for \"arbitrary \".",
+		"WARN: Test_MkLexer_VarUse.mk:1: Invalid part \" \" after variable name \"arbitrary\".")
 
 	// Variable names containing spaces do not occur in pkgsrc.
 	// Technically they are possible:
@@ -376,7 +376,7 @@ func (s *Suite) Test_MkLexer_VarUse(c *check.C) {
 	//         @echo ${name with spaces:Q}''
 	test("${arbitrary text}",
 		varuse("arbitrary text"),
-		"WARN: Test_MkParser_VarUse.mk:1: Invalid part \" text\" after variable name \"arbitrary\".")
+		"WARN: Test_MkLexer_VarUse.mk:1: Invalid part \" text\" after variable name \"arbitrary\".")
 }
 
 func (s *Suite) Test_MkLexer_VarUse__ambiguous(c *check.C) {
@@ -386,7 +386,7 @@ func (s *Suite) Test_MkLexer_VarUse__ambiguous(c *check.C) {
 	t.SetUpCommandLine("--explain")
 
 	line := t.NewLine("module.mk", 123, "\t$Varname $X")
-	p := NewMkParser(line, line.Text[1:])
+	p := NewMkLexer(line.Text[1:], line)
 
 	tokens := p.MkTokens()
 	t.CheckDeepEquals(tokens, b.Tokens(
@@ -452,7 +452,7 @@ func (s *Suite) Test_MkLexer_Varname(c *check.C) {
 
 	test := func(text string) {
 		line := t.NewLine("filename.mk", 1, text)
-		p := NewMkParser(line, text)
+		p := NewMkLexer(text, line)
 
 		varname := p.Varname()
 
@@ -462,7 +462,7 @@ func (s *Suite) Test_MkLexer_Varname(c *check.C) {
 
 	testRest := func(text string, expectedVarname string, expectedRest string) {
 		line := t.NewLine("filename.mk", 1, text)
-		p := NewMkParser(line, text)
+		p := NewMkLexer(text, line)
 
 		varname := p.Varname()
 
@@ -487,7 +487,7 @@ func (s *Suite) Test_MkLexer_VarUseModifiers(c *check.C) {
 	varUse := NewMkTokenBuilder().VarUse
 	test := func(text string, varUse *MkVarUse, diagnostics ...string) {
 		line := t.NewLine("Makefile", 20, "\t"+text)
-		p := NewMkParser(line, text)
+		p := NewMkLexer(text, line)
 
 		actual := p.VarUse()
 
@@ -524,7 +524,7 @@ func (s *Suite) Test_MkLexer_varUseModifier__invalid_ts_modifier_with_warning(c 
 
 	t.SetUpCommandLine("-Wall", "--explain")
 	line := t.NewLine("filename.mk", 123, "${VAR:tsabc}")
-	p := NewMkParser(line, "tsabc}")
+	p := NewMkLexer("tsabc}", line)
 
 	modifier := p.varUseModifier("VAR", '}')
 
@@ -542,7 +542,7 @@ func (s *Suite) Test_MkLexer_varUseModifier__invalid_ts_modifier_with_warning(c 
 func (s *Suite) Test_MkLexer_varUseModifier__invalid_ts_modifier_without_warning(c *check.C) {
 	t := s.Init(c)
 
-	p := NewMkParser(nil, "tsabc}")
+	p := NewMkLexer("tsabc}", nil)
 
 	modifier := p.varUseModifier("VAR", '}')
 
@@ -554,7 +554,7 @@ func (s *Suite) Test_MkLexer_varUseModifier__square_bracket(c *check.C) {
 	t := s.Init(c)
 
 	line := t.NewLine("filename.mk", 123, "\t${VAR:[asdf]}")
-	p := NewMkParser(line, "[asdf]")
+	p := NewMkLexer("[asdf]", line)
 
 	modifier := p.varUseModifier("VAR", '}')
 
@@ -570,7 +570,7 @@ func (s *Suite) Test_MkLexer_varUseModifier__condition_without_colon(c *check.C)
 	b := NewMkTokenBuilder()
 
 	line := t.NewLine("filename.mk", 123, "${${VAR}:?yes:no}${${VAR}:?yes}")
-	p := NewMkParser(line, line.Text)
+	p := NewMkLexer(line.Text, line)
 
 	varUse1 := p.VarUse()
 	varUse2 := p.VarUse()
@@ -588,7 +588,7 @@ func (s *Suite) Test_MkLexer_varUseModifier__malformed_in_parentheses(c *check.C
 	b := NewMkTokenBuilder()
 
 	line := t.NewLine("filename.mk", 123, "$(${VAR}:?yes)")
-	p := NewMkParser(line, line.Text)
+	p := NewMkLexer(line.Text, line)
 
 	varUse := p.VarUse()
 
@@ -605,7 +605,7 @@ func (s *Suite) Test_MkLexer_varUseModifier__varuse_in_malformed_modifier(c *che
 	b := NewMkTokenBuilder()
 
 	line := t.NewLine("filename.mk", 123, "${${VAR}:?yes${INNER}}")
-	p := NewMkParser(line, line.Text)
+	p := NewMkLexer(line.Text, line)
 
 	varUse := p.VarUse()
 
@@ -622,7 +622,7 @@ func (s *Suite) Test_MkLexer_varUseModifierSubst(c *check.C) {
 	varUse := NewMkTokenBuilder().VarUse
 	test := func(text string, varUse *MkVarUse, rest string, diagnostics ...string) {
 		line := t.NewLine("Makefile", 20, "\t"+text)
-		p := NewMkParser(line, text)
+		p := NewMkLexer(text, line)
 
 		actual := p.VarUse()
 
@@ -679,7 +679,7 @@ func (s *Suite) Test_MkLexer_varUseModifierAt__missing_at_after_variable_name(c 
 	b := NewMkTokenBuilder()
 
 	line := t.NewLine("filename.mk", 123, "${VAR:@varname}")
-	p := NewMkParser(line, line.Text)
+	p := NewMkLexer(line.Text, line)
 
 	varUse := p.VarUse()
 
@@ -694,7 +694,7 @@ func (s *Suite) Test_MkLexer_varUseModifierAt__dollar(c *check.C) {
 	b := NewMkTokenBuilder()
 
 	line := t.NewLine("filename.mk", 123, "${VAR:@var@$$var@}")
-	p := NewMkParser(line, line.Text)
+	p := NewMkLexer(line.Text, line)
 
 	varUse := p.VarUse()
 
@@ -707,7 +707,7 @@ func (s *Suite) Test_MkLexer_varUseModifierAt__incomplete_without_warning(c *che
 	t := s.Init(c)
 	b := NewMkTokenBuilder()
 
-	p := NewMkParser(nil, "${VAR:@var@$$var}rest")
+	p := NewMkLexer("${VAR:@var@$$var}rest", nil)
 
 	varUse := p.VarUse()
 
@@ -722,7 +722,7 @@ func (s *Suite) Test_MkLexer_varUseModifierAt(c *check.C) {
 	varUse := NewMkTokenBuilder().VarUse
 	test := func(text string, varUse *MkVarUse, rest string, diagnostics ...string) {
 		line := t.NewLine("Makefile", 20, "\t"+text)
-		p := NewMkParser(line, text)
+		p := NewMkLexer(text, line)
 
 		actual := p.VarUse()
 
