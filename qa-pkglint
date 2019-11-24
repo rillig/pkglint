@@ -112,6 +112,12 @@ qa_netbsd() {
   ssh netbsd "$cmd"
 }
 
+qa_codewalk() {
+  step_msg "Regenerating codewalk.md"
+  # See https://github.com/rillig/go-codewalk
+  (cd "$srcdir" && codewalk codewalk.src.md codewalk.md)
+}
+
 qa_pkgsrc() {
   qa_genrunid
   step_msg "Running pkglint on the pkgsrc tree"
