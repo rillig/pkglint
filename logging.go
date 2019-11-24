@@ -283,13 +283,13 @@ func (l *Logger) Logf(level *LogLevel, filename Path, lineno, format, msg string
 	}
 }
 
-// Errorf logs a technical error on the error output.
+// TechErrorf logs a technical error on the error output.
 //
 // location must be a slash-separated filename, such as the one in
 // Location.Filename. It may be followed by the usual ":123" for line numbers.
 //
 // For diagnostics, use Logf instead.
-func (l *Logger) Errorf(location Path, format string, args ...interface{}) {
+func (l *Logger) TechErrorf(location Path, format string, args ...interface{}) {
 	msg := sprintf(format, args...)
 	var diag string
 	if l.Opts.GccOutput {

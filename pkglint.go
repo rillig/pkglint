@@ -680,7 +680,7 @@ func (pkglint *Pkglint) checkExecutable(filename Path, mode os.FileMode) {
 		fix.Describef(0, "Clearing executable bits")
 		if autofix {
 			if err := filename.Chmod(mode &^ 0111); err != nil {
-				G.Logger.Errorf(cleanpath(filename), "Cannot clear executable bits: %s", err)
+				G.Logger.TechErrorf(cleanpath(filename), "Cannot clear executable bits: %s", err)
 			}
 		}
 	})

@@ -801,12 +801,12 @@ func (s *Suite) Test_Logger_Logf__panic(c *check.C) {
 		"Pkglint internal error: Diagnostic format \"No period\" must end in a period.")
 }
 
-func (s *Suite) Test_Logger_Errorf__gcc_format(c *check.C) {
+func (s *Suite) Test_Logger_TechErrorf__gcc_format(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("--gcc-output-format")
 
-	G.Logger.Errorf("filename", "Cannot be opened for %s.", "reading")
+	G.Logger.TechErrorf("filename", "Cannot be opened for %s.", "reading")
 
 	t.CheckOutputLines(
 		"filename: error: Cannot be opened for reading.")

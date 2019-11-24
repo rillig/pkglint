@@ -488,12 +488,12 @@ func SaveAutofixChanges(lines *Lines) (autofixed bool) {
 		}
 		err := tmpName.WriteString(text.String())
 		if err != nil {
-			G.Logger.Errorf(tmpName, "Cannot write: %s", err)
+			G.Logger.TechErrorf(tmpName, "Cannot write: %s", err)
 			continue
 		}
 		err = tmpName.Rename(filename)
 		if err != nil {
-			G.Logger.Errorf(tmpName, "Cannot overwrite with autofixed content: %s", err)
+			G.Logger.TechErrorf(tmpName, "Cannot overwrite with autofixed content: %s", err)
 			continue
 		}
 		autofixed = true
