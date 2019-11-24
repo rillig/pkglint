@@ -12,7 +12,8 @@ func NewShTokenizer(line *Line, text string, emitWarnings bool) *ShTokenizer {
 	if line != nil {
 		emitWarnings = true
 	}
-	p := MkParser{line, textproc.NewLexer(text), emitWarnings}
+	mklex := NewMkLexer(text, line)
+	p := MkParser{line, mklex, mklex.lexer, emitWarnings}
 	return &ShTokenizer{&p}
 }
 
