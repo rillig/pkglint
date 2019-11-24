@@ -807,6 +807,18 @@ func (t *Tester) ExpectAssert(action func()) {
 	t.Check(action, check.Panics, "Pkglint internal error")
 }
 
+// ExpectDiagnosticsAutofix first runs the given action with -Wall, and
+// then another time with -Wall --autofix.
+func (t *Tester) ExpectDiagnosticsAutofix(action func(), diagnostics ...string) {
+	t.SetUpCommandLine("-Wall")
+	action()
+
+	t.SetUpCommandLine("-Wall", "--autofix")
+	action()
+
+	t.CheckOutput(diagnostics)
+}
+
 // NewRawLines creates lines from line numbers and raw text, including newlines.
 //
 // Arguments are sequences of either (lineno, orignl) or (lineno, orignl, textnl).

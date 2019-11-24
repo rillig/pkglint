@@ -550,9 +550,7 @@ func (s *Suite) Test_Autofix_ReplaceAt(c *check.C) {
 	t := s.Init(c)
 
 	lines := func(lines ...string) []string { return lines }
-	diagnostics := lines
-	autofixes := lines
-	test := func(texts []string, rawIndex int, column int, from, to string, diagnostics []string, autofixes []string) {
+	test := func(texts []string, rawIndex int, column int, from, to string, diagnostics ...string) {
 
 		mainPart := func() {
 			mklines := t.NewMkLines("filename.mk", texts...)
@@ -566,13 +564,7 @@ func (s *Suite) Test_Autofix_ReplaceAt(c *check.C) {
 			fix.Apply()
 		}
 
-		t.SetUpCommandLine("-Wall")
-		mainPart()
-		t.CheckOutput(diagnostics)
-
-		t.SetUpCommandLine("-Wall", "--autofix")
-		mainPart()
-		t.CheckOutput(autofixes)
+		t.ExpectDiagnosticsAutofix(mainPart, diagnostics...)
 	}
 
 	test(
@@ -580,10 +572,9 @@ func (s *Suite) Test_Autofix_ReplaceAt(c *check.C) {
 			"VAR=value1 \\",
 			"\tvalue2"),
 		0, 3, "=", "+=",
-		diagnostics(
-			"NOTE: filename.mk:1: Should be appended instead of assigned."),
-		autofixes(
-			"AUTOFIX: filename.mk:1: Replacing \"=\" with \"+=\"."))
+
+		"NOTE: filename.mk:1: Should be appended instead of assigned.",
+		"AUTOFIX: filename.mk:1: Replacing \"=\" with \"+=\".")
 
 	// If the text at the precisely given position does not match,
 	// the note is still printed because of the fix.Anyway(), but
@@ -593,21 +584,19 @@ func (s *Suite) Test_Autofix_ReplaceAt(c *check.C) {
 			"VAR=value1 \\",
 			"\tvalue2"),
 		0, 3, "?", "+=",
-		diagnostics(
-			"NOTE: filename.mk:1--2: Should be appended instead of assigned."),
-		autofixes(
-			nil...))
+
+		"NOTE: filename.mk:1--2: Should be appended instead of assigned.")
 
 	// Getting the line number wrong is a strange programming error, and
 	// there does not need to be any code checking for this in the main code.
 	t.ExpectPanicMatches(
-		func() { test(lines("VAR=value"), 10, 3, "from", "to", nil, nil) },
+		func() { test(lines("VAR=value"), 10, 3, "from", "to", nil...) },
 		`runtime error: index out of range.*`)
 
 	// It is a programming error to replace a string with itself, since that
 	// would produce confusing diagnostics.
 	t.ExpectAssert(
-		func() { test(lines("VAR=value"), 0, 4, "value", "value", nil, nil) })
+		func() { test(lines("VAR=value"), 0, 4, "value", "value", nil...) })
 
 	// Getting the column number wrong may happen when a previous replacement
 	// has made the string shorter than before, therefore no panic in this case.
@@ -616,10 +605,8 @@ func (s *Suite) Test_Autofix_ReplaceAt(c *check.C) {
 			"VAR=value1 \\",
 			"\tvalue2"),
 		0, 20, "?", "+=",
-		diagnostics(
-			"NOTE: filename.mk:1--2: Should be appended instead of assigned."),
-		autofixes(
-			nil...))
+
+		"NOTE: filename.mk:1--2: Should be appended instead of assigned.")
 }
 
 func (s *Suite) Test_Autofix_ReplaceRegex__show_autofix(c *check.C) {
