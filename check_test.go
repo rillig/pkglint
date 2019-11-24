@@ -88,7 +88,7 @@ func (s *Suite) TearDownTest(c *check.C) {
 	assertNil(err, "Cannot chdir back to previous dir: %s", err)
 
 	if t.seenSetupPkgsrc > 0 && !t.seenFinish && !t.seenMain {
-		t.Errorf("After t.SetupPkgsrc(), either t.FinishSetUp() or t.Main() must be called.")
+		t.InternalErrorf("After t.SetupPkgsrc(), either t.FinishSetUp() or t.Main() must be called.")
 	}
 
 	if out := t.Output(); out != "" {
@@ -678,14 +678,14 @@ func (s *Suite) Test_Tester_SetUpHierarchy(c *check.C) {
 
 func (t *Tester) FinishSetUp() {
 	if t.seenSetupPkgsrc == 0 {
-		t.Errorf("Unnecessary t.FinishSetUp() since t.SetUpPkgsrc() has not been called.")
+		t.InternalErrorf("Unnecessary t.FinishSetUp() since t.SetUpPkgsrc() has not been called.")
 	}
 
 	if !t.seenFinish {
 		t.seenFinish = true
 		G.Pkgsrc.LoadInfrastructure()
 	} else {
-		t.Errorf("Redundant t.FinishSetup() since it was called multiple times.")
+		t.InternalErrorf("Redundant t.FinishSetup() since it was called multiple times.")
 	}
 }
 
@@ -698,11 +698,11 @@ func (t *Tester) FinishSetUp() {
 // Does not work in combination with SetUpOption.
 func (t *Tester) Main(args ...string) int {
 	if t.seenFinish && !t.seenMain {
-		t.Errorf("Calling t.FinishSetup() before t.Main() is redundant " +
+		t.InternalErrorf("Calling t.FinishSetup() before t.Main() is redundant " +
 			"since t.Main() loads the pkgsrc infrastructure.")
 	}
 	if t.seenSetUpCommandLine {
-		t.Errorf("Calling t.SetupCommandLine() before t.Main() is redundant " +
+		t.InternalErrorf("Calling t.SetupCommandLine() before t.Main() is redundant " +
 			"since t.Main() accepts the command line options directly.")
 	}
 
@@ -741,7 +741,10 @@ func (t *Tester) CheckDeepEquals(actual interface{}, expected interface{}) bool 
 	return t.c.Check(actual, check.DeepEquals, expected)
 }
 
-func (t *Tester) Errorf(format string, args ...interface{}) {
+// InternalErrorf reports a consistency error in the tests.
+func (t *Tester) InternalErrorf(format string, args ...interface{}) {
+	// It is not possible to panic here since check.v1 would then
+	// ignore all subsequent tests.
 	_, _ = fmt.Fprintf(os.Stderr, "In %s: %s\n", t.testName, sprintf(format, args...))
 }
 
