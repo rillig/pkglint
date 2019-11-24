@@ -138,6 +138,7 @@ func (p *MkParser) varUseBrace(usingRoundParen bool) *MkVarUse {
 			fix := p.Line.Autofix()
 			fix.Warnf("Please use curly braces {} instead of round parentheses () for %s.", varExpr)
 			fix.Replace(parenVaruse, bracesVaruse)
+			// FIXME: fix.Anyway()
 			fix.Apply()
 		}
 

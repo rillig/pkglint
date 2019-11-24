@@ -420,24 +420,34 @@ func (s *Suite) Test_MkParser_VarUse__ambiguous(c *check.C) {
 func (s *Suite) Test_MkParser_varUseBrace__autofix_parentheses(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("--autofix")
-	t.SetUpVartypes()
-	mklines := t.SetUpFileMkLines("Makefile",
-		MkCvsID,
-		"COMMENT=$(P1) $(P2)) $(P3:Q) ${BRACES} $(A.$(B.$(C))) $(A:M\\#)")
+	test := func() {
+		mklines := t.SetUpFileMkLines("Makefile",
+			MkCvsID,
+			"COMMENT=\t$(P1) $(P2)) $(P3:Q) ${BRACES} $(A.$(B.$(C))) $(A:M\\#)",
+			"P1=\t\t${COMMENT}",
+			"P2=\t\t# nothing",
+			"P3=\t\t# nothing",
+			"BRACES=\t\t# nothing",
+			"C=\t\t# nothing",
+			"A=\t\t# nothing")
 
-	// FIXME: Ensure that a warning is issued for $(A:M\#).
+		mklines.Check()
+	}
 
-	mklines.Check()
+	t.ExpectDiagnosticsAutofix(
+		test,
 
-	t.CheckOutputLines(
+		"WARN: ~/Makefile:2: Please use curly braces {} instead of round parentheses () for P1.",
+		"WARN: ~/Makefile:2: Please use curly braces {} instead of round parentheses () for P2.",
+		"WARN: ~/Makefile:2: Please use curly braces {} instead of round parentheses () for P3.",
+		"WARN: ~/Makefile:2: Please use curly braces {} instead of round parentheses () for C.",
+		"WARN: ~/Makefile:2: Please use curly braces {} instead of round parentheses () for B.$(C).",
+		"WARN: ~/Makefile:2: Please use curly braces {} instead of round parentheses () for A.$(B.$(C)).",
+		// FIXME: Ensure that a warning is issued for $(A:M\#).
 		"AUTOFIX: ~/Makefile:2: Replacing \"$(P1)\" with \"${P1}\".",
 		"AUTOFIX: ~/Makefile:2: Replacing \"$(P2)\" with \"${P2}\".",
 		"AUTOFIX: ~/Makefile:2: Replacing \"$(P3:Q)\" with \"${P3:Q}\".",
 		"AUTOFIX: ~/Makefile:2: Replacing \"$(C)\" with \"${C}\".")
-	t.CheckFileLines("Makefile",
-		MkCvsID,
-		"COMMENT=${P1} ${P2}) ${P3:Q} ${BRACES} $(A.$(B.${C})) $(A:M\\#)")
 }
 
 func (s *Suite) Test_MkParser_VarUseModifiers(c *check.C) {
