@@ -917,11 +917,6 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__shell_variables(c *
 		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Make variable or $$f if you mean a shell variable.",
 		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Make variable or $$f if you mean a shell variable.",
 		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Make variable or $$f if you mean a shell variable.",
-		// FIXME: Don't use dummyLine for anything.
-		"WARN: $f is ambiguous. Use ${f} if you mean a Make variable or $$f if you mean a shell variable.",
-		"WARN: $f is ambiguous. Use ${f} if you mean a Make variable or $$f if you mean a shell variable.",
-		"WARN: $f is ambiguous. Use ${f} if you mean a Make variable or $$f if you mean a shell variable.",
-		"WARN: $f is ambiguous. Use ${f} if you mean a Make variable or $$f if you mean a shell variable.",
 		"WARN: Makefile:3: f is used but not defined.",
 		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Make variable or $$f if you mean a shell variable.",
 		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Make variable or $$f if you mean a shell variable.")
