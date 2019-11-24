@@ -299,7 +299,7 @@ func (MkLineParser) split(line *Line, text string, trimComment bool) mkLineSplit
 		mainWithSpaces = text
 	}
 
-	parser := NewMkParser(line, mainWithSpaces)
+	parser := NewMkLexer(mainWithSpaces, line)
 	lexer := parser.lexer
 
 	parseOther := func() string {

@@ -387,7 +387,7 @@ func (ck MkLineChecker) checkTextVarUse(text string, vartype *Vartype, time VucT
 		defer trace.Call(vartype, time)()
 	}
 
-	tokens := NewMkParser(nil, text).MkTokens()
+	tokens := NewMkLexer(text, nil).MkTokens()
 	for i, token := range tokens {
 		if token.Varuse != nil {
 			spaceLeft := i-1 < 0 || matches(tokens[i-1].Text, `[\t ]$`)
@@ -1809,7 +1809,7 @@ func (ck MkLineChecker) checkDependencyRule(allowedTargets map[string]bool) {
 func (ck MkLineChecker) checkDependencyTarget(target string, allowedTargets map[string]bool) {
 	if target == ".PHONY" ||
 		target == ".ORDER" ||
-		NewMkParser(nil, target).VarUse() != nil ||
+		NewMkLexer(target, nil).VarUse() != nil ||
 		allowedTargets[target] {
 		return
 	}

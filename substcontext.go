@@ -280,7 +280,7 @@ func (ctx *SubstContext) suggestSubstVars(mkline *MkLine) {
 // extractVarname extracts the variable name from a sed command of the form
 // s,@VARNAME@,${VARNAME}, and some related variants thereof.
 func (*SubstContext) extractVarname(token string) string {
-	parser := NewMkParser(nil, token)
+	parser := NewMkLexer(token, nil)
 	lexer := parser.lexer
 	if !lexer.SkipByte('s') {
 		return ""

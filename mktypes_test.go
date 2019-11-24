@@ -220,7 +220,7 @@ func (s *Suite) Test_MkVarUse_Mod(c *check.C) {
 
 	test := func(varUseText string, mod string) {
 		line := t.NewLine("filename.mk", 123, "")
-		varUse := NewMkParser(line, varUseText).VarUse()
+		varUse := NewMkLexer(varUseText, line).VarUse()
 		t.CheckOutputEmpty()
 		t.CheckEquals(varUse.Mod(), mod)
 	}

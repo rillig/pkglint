@@ -1075,7 +1075,7 @@ func (pkg *Package) nbPart() string {
 }
 
 func (pkg *Package) pkgnameFromDistname(pkgname, distname string) (string, bool) {
-	tokens := NewMkParser(nil, pkgname).MkTokens()
+	tokens := NewMkLexer(pkgname, nil).MkTokens()
 
 	// TODO: Make this resolving of variable references available to all other variables as well.
 
