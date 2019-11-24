@@ -18,6 +18,7 @@ type Logger struct {
 	suppressExpl bool
 	prevLine     *Line
 
+	verbose   bool // allow duplicate diagnostics, even in the same line
 	logged    Once
 	explained Once
 	histo     *histogram.Histogram
@@ -34,7 +35,6 @@ type LoggerOpts struct {
 	Autofix,
 	Explain,
 	ShowSource,
-	LogVerbose,
 	GccOutput,
 	Quiet bool
 }
@@ -124,7 +124,7 @@ func (l *Logger) Diag(line *Line, level *LogLevel, format string, args ...interf
 }
 
 func (l *Logger) FirstTime(filename Path, linenos, msg string) bool {
-	if l.Opts.LogVerbose {
+	if l.verbose {
 		return true
 	}
 

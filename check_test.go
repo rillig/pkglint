@@ -147,7 +147,9 @@ func (t *Tester) SetUpCommandLine(args ...string) {
 	//
 	// It also reveals diagnostics that are logged multiple times per
 	// line and thus can easily get annoying to the pkgsrc developers.
-	G.Logger.Opts.LogVerbose = true
+	//
+	// To avoid running a check multiple times, see Line.once or MkLines.once.
+	G.Logger.verbose = true
 
 	t.seenSetUpCommandLine = true
 }

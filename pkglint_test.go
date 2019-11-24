@@ -58,7 +58,6 @@ func (s *Suite) Test_Pkglint_Main__help(c *check.C) {
 		"  -h, --help                  show a detailed usage message",
 		"  -I, --dumpmakefile          dump the Makefile after parsing",
 		"  -i, --import                prepare the import of a wip package",
-		"  -m, --log-verbose           allow the same diagnostic more than once",
 		"  -o, --only                  only log diagnostics containing the given text",
 		"  -p, --profiling             profile the executing program",
 		"  -q, --quiet                 don't show a summary line when finishing",
