@@ -1807,10 +1807,10 @@ func (ck MkLineChecker) checkDependencyRule(allowedTargets map[string]bool) {
 }
 
 func (ck MkLineChecker) checkDependencyTarget(target string, allowedTargets map[string]bool) {
-	if target == ".PHONY" ||
-		target == ".ORDER" ||
-		NewMkLexer(target, nil).VarUse() != nil ||
-		allowedTargets[target] {
+	if target == ".PHONY" || target == ".ORDER" || allowedTargets[target] {
+		return
+	}
+	if NewMkLexer(target, nil).VarUse() != nil {
 		return
 	}
 
