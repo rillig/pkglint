@@ -13,5 +13,6 @@ func (s *Suite) Test__test_names(c *check.C) {
 	ck.Configure("*", "*", "*", -intqa.EMissingTest)
 	ck.Configure("path.go", "*", "*", +intqa.EMissingTest)
 	ck.Configure("*yacc.go", "*", "*", intqa.ENone)
+	ck.Configure("*", "*", "", -intqa.EMissingTest)
 	ck.Check()
 }

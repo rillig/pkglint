@@ -319,7 +319,7 @@ func (ck *TestNameChecker) checkTesteesTest() {
 	}
 
 	for _, testee := range ck.testees {
-		if tested[testee] || testee.isType() { // FIXME: Remove testee.isType condition.
+		if tested[testee] {
 			continue
 		}
 

@@ -134,6 +134,7 @@ func (s *Suite) Test_TestNameChecker_Configure__ignore_single_function(c *check.
 func (s *Suite) Test_TestNameChecker_Check(c *check.C) {
 	ck := s.Init(c)
 
+	ck.Configure("*", "*", "", -EMissingTest)
 	ck.Configure("*", "Suite", "*", -EMissingTest)
 
 	ck.Check()
@@ -465,7 +466,7 @@ func (s *Suite) Test_TestNameChecker_checkTesteesTest(c *check.C) {
 	ck.checkTesteesTest()
 
 	s.CheckErrors(
-		// FIXME: Add "Missing unit test \"Test_Type\" for \"Type\"."
+		"Missing unit test \"Test_Type\" for \"Type\".",
 		"Missing unit test \"Test_Func\" for \"Func\".",
 		"Missing unit test \"Test_Type_Method\" for \"Type.Method\".")
 }
