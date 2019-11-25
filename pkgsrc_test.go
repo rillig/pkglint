@@ -1211,17 +1211,9 @@ func (s *Suite) Test_Pkgsrc_Relpath(c *check.C) {
 	test(
 		G.Pkgsrc.topdir.JoinNoClean("wip/package"),
 		G.Pkgsrc.topdir.JoinNoClean("wip/package/../mk/git-package.mk"),
-		"../mk/git-package.mk") // FIXME: double dotdot
-}
+		"../../wip/mk/git-package.mk")
 
-// Relpath is called so often that handling the most common calls
-// without file system IO makes sense.
-func (s *Suite) Test_Pkgsrc_Relpath__quick(c *check.C) {
-	t := s.Init(c)
-
-	test := func(from, to Path, result Path) {
-		t.CheckEquals(G.Pkgsrc.Relpath(from, to), result)
-	}
+	G.Pkgsrc.topdir = t.tmpdir
 
 	test("some/dir", "some/dir/../..", "../..")
 	test("some/dir", "some/dir/./././../..", "../..")
