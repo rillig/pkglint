@@ -872,3 +872,29 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		t.Shquote("(Run \"pkglint -F -Wall -Call %s\" to automatically fix some issues.)", "sysutils/checkperms"))
 }
 ```
+
+### Typical warnings during a test
+
+When running a newly written pkglint test, it may output more warnings than
+necessary or interesting for the current test. Here are the most frequent
+warnings and how to repair them properly:
+
+#### Unknown shell command %q
+
+* Load the standard variables using `t.SetUpVartypes()`
+* Define the corresponding tool using `t.SetUpTool("tool", "TOOL", AtRunTime)`
+
+#### %s is used but not defined
+
+* Load the standard variables using `t.SetUpVartypes()`
+
+#### %s is defined but not used
+
+* Load the standard variables using `t.SetUpVartypes()`
+
+### Traps and pitfalls during a test
+
+If a file is not checked although it should be, check whether you have created
+the lines using `t.NewLines` instead of `t.CreateFileLines`. The former creates
+the lines only in memory, and the result of that method must be used, otherwise
+the call doesn't make sense.
