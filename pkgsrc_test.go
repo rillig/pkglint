@@ -1217,8 +1217,7 @@ func (s *Suite) Test_Pkgsrc_Relpath(c *check.C) {
 	test(
 		G.Pkgsrc.topdir.JoinNoClean("category/package"),
 		G.Pkgsrc.topdir.JoinNoClean("category/package/../package/extra.mk"),
-		// FIXME: Just extra.mk
-		"../../category/package/extra.mk")
+		"extra.mk")
 
 	G.Pkgsrc.topdir = t.tmpdir
 
