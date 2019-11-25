@@ -1204,6 +1204,14 @@ func (s *Suite) Test_Pkgsrc_Relpath(c *check.C) {
 		"x11/..",
 		"x11/frameworkintegration/../../meta-pkgs/kde/kf5.mk",
 		"meta-pkgs/kde/kf5.mk")
+
+	G.Pkgsrc.topdir = "/usr/pkgsrc"
+
+	// Taken from Test_MkLineChecker_CheckRelativePath__wip_mk
+	test(
+		G.Pkgsrc.topdir.JoinNoClean("wip/package"),
+		G.Pkgsrc.topdir.JoinNoClean("wip/package/../mk/git-package.mk"),
+		"../mk/git-package.mk") // FIXME: double dotdot
 }
 
 // Relpath is called so often that handling the most common calls
