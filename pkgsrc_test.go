@@ -1213,6 +1213,13 @@ func (s *Suite) Test_Pkgsrc_Relpath(c *check.C) {
 		G.Pkgsrc.topdir.JoinNoClean("wip/package/../mk/git-package.mk"),
 		"../../wip/mk/git-package.mk")
 
+	// Taken from Test_Package_parse__relative
+	test(
+		G.Pkgsrc.topdir.JoinNoClean("category/package"),
+		G.Pkgsrc.topdir.JoinNoClean("category/package/../package/extra.mk"),
+		// FIXME: Just extra.mk
+		"../../category/package/extra.mk")
+
 	G.Pkgsrc.topdir = t.tmpdir
 
 	test("some/dir", "some/dir/../..", "../..")
