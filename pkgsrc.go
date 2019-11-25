@@ -1058,6 +1058,7 @@ func (src *Pkgsrc) Relpath(from, to Path) (result Path) {
 		defer trace.Call(from, to, trace.Result(&result))()
 	}
 
+	// TODO: Why only cleanpath and not Path.Clean
 	cfrom := cleanpath(from)
 	cto := cleanpath(to)
 
