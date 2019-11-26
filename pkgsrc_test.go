@@ -2,6 +2,7 @@ package pkglint
 
 import (
 	"gopkg.in/check.v1"
+	"os"
 	"path/filepath"
 )
 
@@ -1182,6 +1183,8 @@ func (s *Suite) Test_Pkgsrc_Relpath(c *check.C) {
 		t.CheckEquals(G.Pkgsrc.Relpath(from, to), result)
 	}
 
+	// TODO: add tests going from each of (top, cat, pkg, pkgsub) to the others
+
 	test("some/dir", "some/directory", "../../some/directory")
 	test("some/directory", "some/dir", "../../some/dir")
 
@@ -1237,6 +1240,60 @@ func (s *Suite) Test_Pkgsrc_Relpath(c *check.C) {
 
 	test("some/dir", ".", "../..")
 	test("some/dir/.", ".", "../..")
+
+	chdir := func(path Path) {
+		// See Tester.Chdir; a direct Chdir works here since this test
+		// neither loads lines nor processes them.
+		assertNil(os.Chdir(path.String()), "Chdir %s", path)
+		G.cwd = abspath(path)
+	}
+
+	t.CreateFileLines("testdir/subdir/dummy")
+	chdir("testdir/subdir")
+
+	test(".", ".", ".")
+	test("./.", "./dir", "dir")
+
+	test("dir", ".", "../../../testdir/subdir") // FIXME: ".."
+	test("dir", "dir", ".")
+	test("dir", "dir/file", "file")
+	test("dir", "dir/..", "../../../testdir/subdir") // FIXME: ".."
+
+	test(".", "../../other/package", "../../other/package")
+
+	// Even though this path could be shortened to "../package",
+	// in pkgsrc the convention is to always go from a package
+	// directory up to the root and then back to the other package
+	// directory.
+	test(".", "../../testdir/package", "../../testdir/package")
+
+	chdir("..")
+
+	// When pkglint is run from a category directory to test
+	// the complete pkgsrc.
+	test("..", "../other/package", "other/package")
+
+	chdir(t.tmpdir.JoinNoClean(".."))
+
+	// test(
+	// 	"pkgsrc/category/package",
+	// 	"pkgsrc/category/package/../../other/package",
+	// 	// FIXME: The $digits comes from the temporary folder.
+	// 	// FIXME: "../../category/other"
+	// 	"../../../$digits/../pkgsrc/other/package")
+
+	// test(
+	// 	"pkgsrc/category/package",
+	// 	"pkgsrc/category/package/../../category/other",
+	// 	// FIXME: The $digits comes from the temporary folder.
+	// 	// FIXME: "../../category/other"
+	// 	"../../../$digits/../pkgsrc/category/other")
+
+	chdir(t.tmpdir.JoinNoClean("testdir").JoinNoClean("subdir"))
+
+	test("..", ".", "../testdir/subdir") // FIXME: "subdir"
+	test("../..", ".", "testdir/subdir")
+	test("../../", ".", "testdir/subdir")
 }
 
 func (s *Suite) Test_Pkgsrc_File(c *check.C) {
