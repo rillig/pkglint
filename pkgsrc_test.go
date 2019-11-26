@@ -1209,20 +1209,20 @@ func (s *Suite) Test_Pkgsrc_Relpath(c *check.C) {
 
 	// Taken from Test_MkLineChecker_CheckRelativePath__wip_mk
 	test(
-		G.Pkgsrc.topdir.JoinNoClean("wip/package"),
-		G.Pkgsrc.topdir.JoinNoClean("wip/package/../mk/git-package.mk"),
+		G.Pkgsrc.File("wip/package"),
+		G.Pkgsrc.File("wip/package/../mk/git-package.mk"),
 		"../../wip/mk/git-package.mk")
 
 	// Taken from Test_Package_parse__relative
 	test(
-		G.Pkgsrc.topdir.JoinNoClean("category/package"),
-		G.Pkgsrc.topdir.JoinNoClean("category/package/../package/extra.mk"),
+		G.Pkgsrc.File("category/package"),
+		G.Pkgsrc.File("category/package/../package/extra.mk"),
 		"extra.mk")
 
 	// Make sure that .. in later positions is resolved correctly as well.
 	test(
-		G.Pkgsrc.topdir.JoinNoClean("category/package"),
-		G.Pkgsrc.topdir.JoinNoClean("category/package/sub/../../package/extra.mk"),
+		G.Pkgsrc.File("category/package"),
+		G.Pkgsrc.File("category/package/sub/../../package/extra.mk"),
 		"extra.mk")
 
 	G.Pkgsrc.topdir = t.tmpdir
