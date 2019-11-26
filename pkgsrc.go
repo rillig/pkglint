@@ -1035,11 +1035,11 @@ func (src *Pkgsrc) Load(filename Path, options LoadOptions) *Lines {
 	return Load(src.File(filename), options)
 }
 
-// Relpath returns the relative path from the directory "from"
+// Relpath returns the canonical relative path from the directory "from"
 // to the filesystem entry "to".
 //
-// The relative path is built by going from the "from" directory via the
-// pkgsrc root to the "to" filename. This produces the form
+// The relative path is built by going from the "from" directory up to the
+// pkgsrc root and from there to the "to" filename. This produces the form
 // "../../category/package" that is found in DEPENDS and .include lines.
 //
 // Both from and to are interpreted relative to the current working directory,
@@ -1053,11 +1053,6 @@ func (src *Pkgsrc) Load(filename Path, options LoadOptions) *Lines {
 // TODO: Invent data types for all kinds of relative paths that occur in pkgsrc
 //  and pkglint. Make sure that these paths cannot be accidentally mixed.
 func (src *Pkgsrc) Relpath(from, to Path) (result Path) {
-
-	if trace.Tracing {
-		defer trace.Call(from, to, trace.Result(&result))()
-	}
-
 	cfrom := from.Clean()
 	cto := to.Clean()
 
@@ -1069,7 +1064,7 @@ func (src *Pkgsrc) Relpath(from, to Path) (result Path) {
 	if cto.HasPrefixPath(cfrom) {
 		rel := cto[len(cfrom)+1:]
 		if !rel.HasPrefixPath("..") {
-			return cleanpath(rel)
+			return rel
 		}
 	}
 
@@ -1077,7 +1072,7 @@ func (src *Pkgsrc) Relpath(from, to Path) (result Path) {
 	// This is the most common variant in a complete pkgsrc scan.
 	if cto == "." {
 		fromParts := cfrom.Parts()
-		if len(fromParts) == 2 && !hasPrefix(fromParts[0], ".") && !hasPrefix(fromParts[1], ".") {
+		if len(fromParts) == 2 && fromParts[0] != ".." && fromParts[1] != ".." {
 			return "../.."
 		}
 	}
@@ -1094,10 +1089,6 @@ func (src *Pkgsrc) Relpath(from, to Path) (result Path) {
 	fromTop := absTopdir.Rel(absTo)
 
 	result = cleanpath(toTop.JoinNoClean(fromTop))
-
-	if trace.Tracing {
-		trace.Stepf("Relpath from %q to %q = %q", cfrom, cto, result)
-	}
 	return
 }
 
