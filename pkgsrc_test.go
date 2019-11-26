@@ -1,6 +1,9 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import (
+	"gopkg.in/check.v1"
+	"path/filepath"
+)
 
 func (s *Suite) Test_Pkgsrc__frozen(c *check.C) {
 	t := s.Init(c)
@@ -1205,7 +1208,8 @@ func (s *Suite) Test_Pkgsrc_Relpath(c *check.C) {
 		"x11/frameworkintegration/../../meta-pkgs/kde/kf5.mk",
 		"meta-pkgs/kde/kf5.mk")
 
-	G.Pkgsrc.topdir = "/usr/pkgsrc"
+	tmpdirRoot := NewPathSlash(filepath.VolumeName(t.tmpdir.String()))
+	G.Pkgsrc.topdir = tmpdirRoot.JoinNoClean("usr/pkgsrc")
 
 	// Taken from Test_MkLineChecker_CheckRelativePath__wip_mk
 	test(
@@ -1247,10 +1251,14 @@ func (s *Suite) Test_Pkgsrc_File(c *check.C) {
 	test(".", "$pkgsrcdir")
 	test("category", "$pkgsrcdir/category")
 
-	// FIXME
 	test(
 		"category/package/../../mk/bsd.prefs.mk",
-		"$pkgsrcdir/category/package/../../mk/bsd.prefs.mk")
+		"$pkgsrcdir/mk/bsd.prefs.mk")
+
+	G.Pkgsrc.topdir = "."
+
+	test(".", ".")
+	test("filename", "filename")
 }
 
 func (s *Suite) Test_Change_Version(c *check.C) {

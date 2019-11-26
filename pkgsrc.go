@@ -1097,8 +1097,12 @@ func (src *Pkgsrc) Relpath(from, to Path) (result Path) {
 // Example:
 //  NewPkgsrc("/usr/pkgsrc").File("distfiles") => "/usr/pkgsrc/distfiles"
 func (src *Pkgsrc) File(relativeName Path) Path {
+	cleaned := relativeName.Clean()
+	if cleaned == "." {
+		return src.topdir.CleanDot()
+	}
 	// TODO: Package.File resolves variables, Pkgsrc.File doesn't. They should behave the same.
-	return cleanpath(joinPath(src.topdir, relativeName))
+	return src.topdir.JoinNoClean(cleaned).CleanDot()
 }
 
 // ToRel returns the path of `filename`, relative to the pkgsrc top directory.

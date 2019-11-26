@@ -121,9 +121,12 @@ func (p Path) CleanDot() Path {
 
 	var parts []string
 	for i, part := range p.Parts() {
-		if i == 0 || (part != "." && part != "/") {
+		if !(part == "." || i > 0 && part == "") {
 			parts = append(parts, part)
 		}
+	}
+	if len(parts) == 0 {
+		return "."
 	}
 	return NewPath(strings.Join(parts, "/"))
 }

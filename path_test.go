@@ -356,7 +356,7 @@ func (s *Suite) Test_Path_CleanDot(c *check.C) {
 	test(".", ".")
 	test("./././", ".")
 	test("a/bb///../c", "a/bb/../c")
-	test("./filename", "./filename") // FIXME
+	test("./filename", "filename")
 	test("/absolute", "/absolute")
 }
 
