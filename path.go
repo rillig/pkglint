@@ -112,6 +112,22 @@ func (p Path) JoinNoClean(s Path) Path {
 
 func (p Path) Clean() Path { return NewPath(path.Clean(string(p))) }
 
+// CleanDot returns the path with single dots removed and double slashes
+// collapsed.
+func (p Path) CleanDot() Path {
+	if !p.ContainsText(".") {
+		return p
+	}
+
+	var parts []string
+	for i, part := range p.Parts() {
+		if i == 0 || (part != "." && part != "/") {
+			parts = append(parts, part)
+		}
+	}
+	return NewPath(strings.Join(parts, "/"))
+}
+
 func (p Path) IsAbs() bool {
 	return p.HasPrefixText("/") || filepath.IsAbs(filepath.FromSlash(string(p)))
 }

@@ -345,6 +345,19 @@ func (s *Suite) Test_Path_Clean(c *check.C) {
 	test("a/bb///../c", "a/c")
 }
 
+func (s *Suite) Test_Path_CleanDot(c *check.C) {
+	t := s.Init(c)
+
+	test := func(p, result Path) {
+		t.CheckEquals(p.CleanDot(), result)
+	}
+
+	test("", "")
+	test(".", ".")
+	test("./././", ".")
+	test("a/bb///../c", "a/bb/../c")
+}
+
 func (s *Suite) Test_Path_IsAbs(c *check.C) {
 	t := s.Init(c)
 
