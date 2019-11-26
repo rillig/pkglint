@@ -1235,6 +1235,24 @@ func (s *Suite) Test_Pkgsrc_Relpath(c *check.C) {
 	test("some/dir/.", ".", "../..")
 }
 
+func (s *Suite) Test_Pkgsrc_File(c *check.C) {
+	t := s.Init(c)
+
+	G.Pkgsrc.topdir = "$pkgsrcdir"
+
+	test := func(rel, resolved Path) {
+		t.CheckEquals(G.Pkgsrc.File(rel), resolved)
+	}
+
+	test(".", "$pkgsrcdir")
+	test("category", "$pkgsrcdir/category")
+
+	// FIXME
+	test(
+		"category/package/../../mk/bsd.prefs.mk",
+		"$pkgsrcdir/category/package/../../mk/bsd.prefs.mk")
+}
+
 func (s *Suite) Test_Change_Version(c *check.C) {
 	t := s.Init(c)
 
