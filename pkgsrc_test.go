@@ -1219,6 +1219,12 @@ func (s *Suite) Test_Pkgsrc_Relpath(c *check.C) {
 		G.Pkgsrc.topdir.JoinNoClean("category/package/../package/extra.mk"),
 		"extra.mk")
 
+	// Make sure that .. in later positions is resolved correctly as well.
+	test(
+		G.Pkgsrc.topdir.JoinNoClean("category/package"),
+		G.Pkgsrc.topdir.JoinNoClean("category/package/sub/../../package/extra.mk"),
+		"extra.mk")
+
 	G.Pkgsrc.topdir = t.tmpdir
 
 	test("some/dir", "some/dir/../..", "../..")
