@@ -22,16 +22,15 @@ func (s *Suite) Test_LicenseChecker_Check(c *check.C) {
 	}
 
 	test("gpl-v2",
-		// FIXME: The path in the diagnostic must be relative to the MkLine.
-		"WARN: ~/Makefile:1: License file ~/licenses/gpl-v2 does not exist.")
+		"WARN: ~/Makefile:1: License file licenses/gpl-v2 does not exist.")
 
 	test("no-profit shareware",
 		"ERROR: ~/Makefile:1: Parse error for license condition \"no-profit shareware\".")
 
 	test("no-profit AND shareware",
-		"WARN: ~/Makefile:1: License file ~/licenses/no-profit does not exist.",
+		"WARN: ~/Makefile:1: License file licenses/no-profit does not exist.",
 		"ERROR: ~/Makefile:1: License \"no-profit\" must not be used.",
-		"WARN: ~/Makefile:1: License file ~/licenses/shareware does not exist.",
+		"WARN: ~/Makefile:1: License file licenses/shareware does not exist.",
 		"ERROR: ~/Makefile:1: License \"shareware\" must not be used.")
 
 	test("gnu-gpl-v2",
