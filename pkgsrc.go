@@ -1085,10 +1085,28 @@ func (src *Pkgsrc) Relpath(from, to Path) (result Path) {
 	absTopdir := abspath(src.topdir)
 	absTo := abspath(cto)
 
-	toTop := absFrom.Rel(absTopdir)
-	fromTop := absTopdir.Rel(absTo)
+	up := absFrom.Rel(absTopdir)
+	down := absTopdir.Rel(absTo)
 
-	result = cleanpath(toTop.JoinNoClean(fromTop))
+	if absFrom.HasPrefixPath(absTo) || absTo.HasPrefixPath(absFrom) {
+		return absFrom.Rel(absTo)
+	}
+
+	fromParts := absTopdir.Rel(absFrom).Parts()
+	toParts := down.Parts()
+
+	if len(fromParts) >= 2 && len(toParts) >= 2 {
+		if fromParts[0] == toParts[0] && fromParts[1] == toParts[1] {
+			var relParts []string
+			for _ = range fromParts[2:] {
+				relParts = append(relParts, "..")
+			}
+			relParts = append(relParts, toParts[2:]...)
+			return NewPath(strings.Join(relParts, "/")).CleanDot()
+		}
+	}
+
+	result = up.JoinNoClean(down).CleanDot()
 	return
 }
 

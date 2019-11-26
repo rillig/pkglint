@@ -1254,10 +1254,10 @@ func (s *Suite) Test_Pkgsrc_Relpath(c *check.C) {
 	test(".", ".", ".")
 	test("./.", "./dir", "dir")
 
-	test("dir", ".", "../../../testdir/subdir") // FIXME: ".."
+	test("dir", ".", "..")
 	test("dir", "dir", ".")
 	test("dir", "dir/file", "file")
-	test("dir", "dir/..", "../../../testdir/subdir") // FIXME: ".."
+	test("dir", "dir/..", "..")
 
 	test(".", "../../other/package", "../../other/package")
 
@@ -1275,23 +1275,19 @@ func (s *Suite) Test_Pkgsrc_Relpath(c *check.C) {
 
 	chdir(t.tmpdir.JoinNoClean(".."))
 
-	// test(
-	// 	"pkgsrc/category/package",
-	// 	"pkgsrc/category/package/../../other/package",
-	// 	// FIXME: The $digits comes from the temporary folder.
-	// 	// FIXME: "../../category/other"
-	// 	"../../../$digits/../pkgsrc/other/package")
+	test(
+		"pkgsrc/category/package",
+		"pkgsrc/category/package/../../other/package",
+		"../../other/package")
 
-	// test(
-	// 	"pkgsrc/category/package",
-	// 	"pkgsrc/category/package/../../category/other",
-	// 	// FIXME: The $digits comes from the temporary folder.
-	// 	// FIXME: "../../category/other"
-	// 	"../../../$digits/../pkgsrc/category/other")
+	test(
+		"pkgsrc/category/package",
+		"pkgsrc/category/package/../../category/other",
+		"../../category/other")
 
 	chdir(t.tmpdir.JoinNoClean("testdir").JoinNoClean("subdir"))
 
-	test("..", ".", "../testdir/subdir") // FIXME: "subdir"
+	test("..", ".", "subdir")
 	test("../..", ".", "testdir/subdir")
 	test("../../", ".", "testdir/subdir")
 }
