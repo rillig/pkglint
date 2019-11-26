@@ -873,7 +873,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 }
 ```
 
-### Typical warnings during a test
+### Typical mistakes during a test
 
 When running a newly written pkglint test, it may output more warnings than
 necessary or interesting for the current test. Here are the most frequent
@@ -892,9 +892,25 @@ warnings and how to repair them properly:
 
 * Load the standard variables using `t.SetUpVartypes()`
 
-### Traps and pitfalls during a test
+#### The created MkLines are not found
 
-If a file is not checked although it should be, check whether you have created
-the lines using `t.NewLines` instead of `t.CreateFileLines`. The former creates
-the lines only in memory, and the result of that method must be used, otherwise
-the call doesn't make sense.
+Check whether you have created the lines using `t.NewLines`
+instead of `t.CreateFileLines`.
+The former creates the lines only in memory,
+and the result of that method must be used,
+otherwise the call doesn't make sense.
+
+#### Test failure because of differing paths
+
+If a test fails like this:
+
+~~~text
+obtained: file ../../../../AppData/Local/Temp/check-.../licenses/gpl-v2
+expected: file ~/licenses/gpl-v2
+~~~
+
+Check whether you have created the lines using `t.NewLines`
+instead of `t.CreateFileLines`.
+The former creates the lines only in memory,
+and the result of that method must be used,
+otherwise the call doesn't make sense.
