@@ -158,6 +158,8 @@ func (s *Suite) Test_Path_HasPrefixPath(c *check.C) {
 	test("/root", "/root/", false)
 	test("/root/", "/root", true)
 	test("/root/subdir", "/root", true)
+	test("filename", ".", false) // FIXME
+	test("/anything", ".", false)
 }
 
 func (s *Suite) Test_Path_ContainsText(c *check.C) {
