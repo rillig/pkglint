@@ -612,7 +612,10 @@ func (t *Tester) SetUpHierarchy() (
 			case string:
 				addLine(arg)
 			case *MkLines:
-				text := sprintf(".include %q", G.Pkgsrc.Relpath(filename.Dir(), arg.lines.Filename))
+				fromDir := G.Pkgsrc.File(filename.Dir())
+				to := G.Pkgsrc.File(arg.lines.Filename)
+				rel := G.Pkgsrc.Relpath(fromDir, to)
+				text := sprintf(".include %q", rel)
 				addLine(text)
 				lines = append(lines, arg.lines.Lines...)
 			default:
