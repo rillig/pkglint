@@ -457,6 +457,7 @@ func mkopSubst(s string, left bool, from string, right bool, to string, flags st
 	})
 }
 
+// FIXME: Replace with Path.JoinNoClean
 func joinPath(a, b Path, others ...Path) Path {
 	if len(others) == 0 {
 		return a + "/" + b
