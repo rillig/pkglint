@@ -200,10 +200,20 @@ func (s *Suite) Test_Path_HasPrefixPath(c *check.C) {
 	test("", "x", false)
 	test("/root", "/r", false)
 	test("/root", "/root", true)
-	test("/root", "/root/", false)
+
+	// Even though the textual representation of the prefix is longer than
+	// the path. The trailing slash marks the path as a directory, and
+	// there are only a few cases where the difference matters, such as
+	// in rsync and mkdir.
+	test("/root", "/root/", false) // FIXME
+
 	test("/root/", "/root", true)
+	test("/root/", "root", false)
 	test("/root/subdir", "/root", true)
-	test("filename", ".", false) // FIXME
+	test("filename", ".", false)          // FIXME
+	test("filename", "./filename", false) // FIXME
+	test("filename", "./file", false)
+	test("filename", "./filename/sub", false)
 	test("/anything", ".", false)
 }
 
