@@ -38,10 +38,18 @@ func (p Path) Split() (dir Path, base string) {
 	return Path(strDir), strBase
 }
 
+// Parts splits the path into its components.
+// Multiple adjacent slashes are treated like a single slash.
+// Parts that are single dots are skipped.
+// Absolute paths have an empty string as its first part.
+// All other parts are nonempty.
+// FIXME: implement all of the above.
 func (p Path) Parts() []string {
 	return strings.FieldsFunc(string(p), func(r rune) bool { return r == '/' })
 }
 
+// Count returns the number of meaningful parts of the path.
+// See Parts.
 func (p Path) Count() int { return len(p.Parts()) }
 
 func (p Path) HasPrefixText(prefix string) bool {

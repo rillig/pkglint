@@ -104,11 +104,29 @@ func (s *Suite) Test_Path_Parts(c *check.C) {
 		t.CheckDeepEquals(NewPath(p).Parts(), parts)
 	}
 
-	test("", []string{}...)
-	test("././././", ".", ".", ".", ".") // No trailing ""
-	test("/root", "root")                // No leading ""
-	test("filename", "filename")
-	test("dir/filename", "dir", "filename")
+	// Only the empty path returns an empty slice.
+	test("", []string{}...) // FIXME: return nil...
+
+	// The standard cases for relative paths.
+	test("relative", "relative")
+	test("relative/subdir", "relative", "subdir")
+	test("relative////subdir", "relative", "subdir")
+	test("relative/..", "relative", "..")
+	test("relative/.", "relative", ".") // FIXME: Remove the dot.
+
+	// A path consisting of only dots produces a single dot.
+	test("./././.", ".", ".", ".", ".") // FIXME: Return a single dot.
+
+	// Slashes at the end are treated like a single dot.
+	test("././././", ".", ".", ".", ".") // FIXME: Return a single dot.
+	test(".///////", ".")
+
+	// Absolute paths have an empty first component.
+	test("/", []string{}...) // FIXME: Return a single empty string.
+	test("/.", ".")          // FIXME: Add an empty string at the beginning.
+	test("/root", "root")    // FIXME: Add an empty string at the beginning.
+
+	// The backslash is not a path separator.
 	test("dir/filename\\with\\backslash", "dir", "filename\\with\\backslash")
 }
 
@@ -119,11 +137,34 @@ func (s *Suite) Test_Path_Count(c *check.C) {
 		t.CheckEquals(NewPath(p).Count(), count)
 	}
 
-	test("", 0) // FIXME
-	test("././././", 4)
-	test("/root", 1) // FIXME
+	test("././././", 4) // FIXME: 1
+	test("/root", 1)    // FIXME
 	test("filename", 1)
 	test("dir/filename", 2)
+	test("dir/filename\\with\\backslash", 2)
+
+	// Only the empty path returns an empty slice.
+	test("", 0)
+
+	// The standard cases for canonical relative paths.
+	test("relative", 1)
+	test("relative/subdir", 2)
+	test("relative////subdir", 2)
+	test("relative/..", 2)
+	test("relative/.", 2) // FIXME: Remove the dot, therefore 1.
+
+	// A path consisting of only dots produces a single dot.
+	test("./././.", 4) // FIXME: 1
+
+	// Slashes at the end are treated like a single dot.
+	test("././././", 4) // FIXME: 1
+	test(".///////", 1)
+
+	// Absolute paths have an empty first component.
+	test("/", 0)     // FIXME: Return a single empty string.
+	test("/root", 1) // FIXME: 2; Add an empty string at the beginning.
+
+	// The backslash is not a path separator.
 	test("dir/filename\\with\\backslash", 2)
 }
 
