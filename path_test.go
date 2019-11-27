@@ -114,6 +114,9 @@ func (s *Suite) Test_Path_Parts(c *check.C) {
 	test("relative/..", "relative", "..")
 	test("relative/.", "relative")
 
+	// Leading dots are removed when they are followed by something.
+	test("./relative", ".", "relative") // FIXME
+
 	// A path consisting of only dots produces a single dot.
 	test("./././.", ".")
 
