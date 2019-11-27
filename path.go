@@ -74,8 +74,26 @@ func (p Path) HasPrefixText(prefix string) bool {
 // HasPrefixPath returns whether the path starts with the given prefix.
 // The basic unit of comparison is a path component, not a character.
 func (p Path) HasPrefixPath(prefix Path) bool {
-	return hasPrefix(string(p), string(prefix)) &&
-		(len(p) == len(prefix) || p[len(prefix)] == '/')
+	// Handle the simple case first, without any memory allocations.
+	if hasPrefix(string(p), string(prefix)) {
+		return len(p) == len(prefix) || p[len(prefix)] == '/'
+	}
+
+	if prefix == "." {
+		return !p.IsAbs()
+	}
+
+	parts := p.Parts()
+	prefixParts := prefix.Parts()
+	if len(prefixParts) > len(parts) {
+		return false
+	}
+	for i, prefixPart := range prefixParts {
+		if parts[i] != prefixPart {
+			return false
+		}
+	}
+	return true
 }
 
 // TODO: Check each call whether ContainsPath is more appropriate; add tests
@@ -144,7 +162,7 @@ func (p Path) CleanDot() Path {
 
 	var parts []string
 	for i, part := range p.Parts() {
-		if !(part == "." || i > 0 && part == "") {
+		if !(part == "." || i > 0 && part == "") { // See Parts
 			parts = append(parts, part)
 		}
 	}
@@ -158,6 +176,7 @@ func (p Path) IsAbs() bool {
 	return p.HasPrefixText("/") || filepath.IsAbs(filepath.FromSlash(string(p)))
 }
 
+// Rel returns the relative path from this path to the other.
 func (p Path) Rel(other Path) Path {
 	fp := filepath.FromSlash(p.String())
 	fpOther := filepath.FromSlash(other.String())

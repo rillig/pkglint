@@ -1062,7 +1062,7 @@ func (src *Pkgsrc) Relpath(from, to Path) (result Path) {
 
 	// Take a shortcut for the common case from "dir" to "dir/subdir/...".
 	if cto.HasPrefixPath(cfrom) {
-		rel := cto[len(cfrom)+1:]
+		rel := cfrom.Rel(cto)
 		if !rel.HasPrefixPath("..") {
 			return rel
 		}
