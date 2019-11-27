@@ -1211,8 +1211,8 @@ func (s *Suite) Test_Pkgsrc_Relpath(c *check.C) {
 		"x11/frameworkintegration/../../meta-pkgs/kde/kf5.mk",
 		"meta-pkgs/kde/kf5.mk")
 
-	tmpdirRoot := NewPathSlash(filepath.VolumeName(t.tmpdir.String()))
-	G.Pkgsrc.topdir = tmpdirRoot.JoinNoClean("usr/pkgsrc")
+	volume := NewPathSlash(filepath.VolumeName(t.tmpdir.String()))
+	G.Pkgsrc.topdir = volume.JoinNoClean("usr/pkgsrc")
 
 	// Taken from Test_MkLineChecker_CheckRelativePath__wip_mk
 	test(
