@@ -45,6 +45,9 @@ func (p Path) Split() (dir Path, base string) {
 // All other parts are nonempty.
 // FIXME: implement all of the above.
 func (p Path) Parts() []string {
+	if p == "" {
+		return nil
+	}
 	return strings.FieldsFunc(string(p), func(r rune) bool { return r == '/' })
 }
 

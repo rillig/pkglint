@@ -105,7 +105,7 @@ func (s *Suite) Test_Path_Parts(c *check.C) {
 	}
 
 	// Only the empty path returns an empty slice.
-	test("", []string{}...) // FIXME: return nil...
+	test("", nil...)
 
 	// The standard cases for relative paths.
 	test("relative", "relative")
