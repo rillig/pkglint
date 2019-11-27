@@ -358,6 +358,8 @@ func (s *Suite) Test_Path_CleanDot(c *check.C) {
 	test("a/bb///../c", "a/bb/../c")
 	test("./filename", "filename")
 	test("/absolute", "/absolute")
+	test("/usr/pkgsrc/wip/package", "/usr/pkgsrc/wip/package")
+	test("/usr/pkgsrc/wip/package/../mk/git-package.mk", "usr/pkgsrc/wip/package/../mk/git-package.mk") // FIXME: must be absolute
 }
 
 func (s *Suite) Test_Path_IsAbs(c *check.C) {
