@@ -1081,9 +1081,9 @@ func (src *Pkgsrc) Relpath(from, to Path) (result Path) {
 		return cto.Clean()
 	}
 
-	absFrom := abspath(cfrom)
-	absTopdir := abspath(src.topdir)
-	absTo := abspath(cto)
+	absFrom := G.Abs(cfrom)
+	absTopdir := G.Abs(src.topdir)
+	absTo := G.Abs(cto)
 
 	up := absFrom.Rel(absTopdir)
 	down := absTopdir.Rel(absTo)

@@ -457,14 +457,6 @@ func mkopSubst(s string, left bool, from string, right bool, to string, flags st
 	})
 }
 
-func abspath(filename Path) Path {
-	abs := filename
-	if !filename.IsAbs() {
-		abs = G.cwd.JoinNoClean(abs)
-	}
-	return abs.Clean()
-}
-
 // Differs from path.Clean in that only "../../" is replaced, not "../".
 // Also, the initial directory is always kept.
 // This is to provide the package path as context in recursive invocations of pkglint.

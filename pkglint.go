@@ -786,6 +786,13 @@ func (pkglint *Pkglint) loadCvsEntries(filename Path) map[string]CvsEntry {
 	return entries
 }
 
+func (pkglint *Pkglint) Abs(filename Path) Path {
+	if !filename.IsAbs() {
+		return pkglint.cwd.JoinNoClean(filename).Clean()
+	}
+	return filename.Clean()
+}
+
 type InterPackage struct {
 	hashes       map[string]*Hash    // Maps "alg:filename" => hash (inter-package check).
 	usedLicenses map[string]struct{} // Maps "license name" => true (inter-package check).
