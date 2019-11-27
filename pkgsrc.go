@@ -158,7 +158,7 @@ func (src *Pkgsrc) loadDocChanges() {
 
 	src.LastChange = make(map[Path]*Change)
 	for _, filename := range filenames {
-		changes := src.loadDocChangesFromFile(joinPath(docDir, filename))
+		changes := src.loadDocChangesFromFile(docDir.JoinNoClean(filename))
 		for _, change := range changes {
 			src.LastChange[change.Pkgpath] = change
 			if change.Action == Renamed || change.Action == Moved {
@@ -971,7 +971,7 @@ func (src *Pkgsrc) checkToplevelUnusedLicenses() {
 	for _, licenseFile := range src.ReadDir("licenses") {
 		licenseName := licenseFile.Name()
 		if !G.InterPackage.IsLicenseUsed(licenseName) {
-			licensePath := joinPath(licensesDir, NewPath(licenseName))
+			licensePath := licensesDir.JoinNoClean(NewPath(licenseName))
 			NewLineWhole(licensePath).Warnf("This license seems to be unused.")
 		}
 	}

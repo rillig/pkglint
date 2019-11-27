@@ -221,7 +221,7 @@ func (pkglint *Pkglint) prepareMainLoop() {
 		NewLineWhole(firstDir).Fatalf("Must be inside a pkgsrc tree.")
 	}
 
-	pkglint.Pkgsrc = NewPkgsrc(joinPath(firstDir, relTopdir))
+	pkglint.Pkgsrc = NewPkgsrc(firstDir.JoinNoClean(relTopdir))
 	pkglint.Wip = pkglint.Pkgsrc.IsWip(firstDir) // See Pkglint.checkMode.
 	pkglint.Pkgsrc.LoadInfrastructure()
 
@@ -377,7 +377,7 @@ func (pkglint *Pkglint) checkdirPackage(dir Path) {
 // Returns the pkgsrc top-level directory, relative to the given directory.
 func findPkgsrcTopdir(dirname Path) Path {
 	for _, dir := range [...]Path{".", "..", "../..", "../../.."} {
-		if joinPath(dirname, dir, "mk/bsd.pkg.mk").IsFile() {
+		if dirname.JoinNoClean(dir).JoinNoClean("mk/bsd.pkg.mk").IsFile() {
 			return dir
 		}
 	}

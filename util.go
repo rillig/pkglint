@@ -457,22 +457,10 @@ func mkopSubst(s string, left bool, from string, right bool, to string, flags st
 	})
 }
 
-// FIXME: Replace with Path.JoinNoClean
-func joinPath(a, b Path, others ...Path) Path {
-	if len(others) == 0 {
-		return a + "/" + b
-	}
-	parts := []string{a.String(), b.String()}
-	for _, part := range others {
-		parts = append(parts, part.String())
-	}
-	return NewPath(strings.Join(parts, "/"))
-}
-
 func abspath(filename Path) Path {
 	abs := filename
 	if !filename.IsAbs() {
-		abs = joinPath(G.cwd, abs)
+		abs = G.cwd.JoinNoClean(abs)
 	}
 	return abs.Clean()
 }

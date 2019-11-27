@@ -294,9 +294,9 @@ func (pkg *Package) loadIncluded(mkline *MkLine, includingFile Path) (includedMk
 		return nil, true
 	}
 
-	dirname, _ := includingFile.Split()
+	dirname, _ := includingFile.Split() // TODO: .Dir?
 	dirname = cleanpath(dirname)
-	fullIncluded := joinPath(dirname, includedFile)
+	fullIncluded := dirname.JoinNoClean(includedFile)
 	relIncludedFile := G.Pkgsrc.Relpath(pkg.dir, fullIncluded)
 
 	if !pkg.shouldDiveInto(includingFile, includedFile) {
@@ -334,7 +334,7 @@ func (pkg *Package) loadIncluded(mkline *MkLine, includingFile Path) (includedMk
 
 	dirname = pkgBasedir
 
-	fullIncludedFallback := joinPath(dirname, includedFile)
+	fullIncludedFallback := dirname.JoinNoClean(includedFile)
 	includedMklines = LoadMk(fullIncludedFallback, 0)
 	if includedMklines == nil {
 		return nil, false
