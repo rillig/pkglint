@@ -96,7 +96,6 @@ func (p Path) HasPrefixPath(prefix Path) bool {
 	return true
 }
 
-// TODO: Check each call whether ContainsPath is more appropriate; add tests
 func (p Path) ContainsText(contained string) bool {
 	return contains(string(p), contained)
 }
