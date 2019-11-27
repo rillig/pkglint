@@ -43,12 +43,21 @@ func (p Path) Split() (dir Path, base string) {
 // Parts that are single dots are skipped.
 // Absolute paths have an empty string as its first part.
 // All other parts are nonempty.
-// FIXME: implement all of the above.
 func (p Path) Parts() []string {
 	if p == "" {
 		return nil
 	}
-	return strings.FieldsFunc(string(p), func(r rune) bool { return r == '/' })
+
+	parts := strings.Split(string(p), "/")
+	j := 0
+	for i, part := range parts {
+		if i == 0 || part != "" && part != "." {
+			parts[j] = part
+			j++
+		}
+	}
+	parts = parts[:j]
+	return parts
 }
 
 // Count returns the number of meaningful parts of the path.

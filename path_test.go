@@ -112,19 +112,19 @@ func (s *Suite) Test_Path_Parts(c *check.C) {
 	test("relative/subdir", "relative", "subdir")
 	test("relative////subdir", "relative", "subdir")
 	test("relative/..", "relative", "..")
-	test("relative/.", "relative", ".") // FIXME: Remove the dot.
+	test("relative/.", "relative")
 
 	// A path consisting of only dots produces a single dot.
-	test("./././.", ".", ".", ".", ".") // FIXME: Return a single dot.
+	test("./././.", ".")
 
 	// Slashes at the end are treated like a single dot.
-	test("././././", ".", ".", ".", ".") // FIXME: Return a single dot.
+	test("././././", ".")
 	test(".///////", ".")
 
 	// Absolute paths have an empty first component.
-	test("/", []string{}...) // FIXME: Return a single empty string.
-	test("/.", ".")          // FIXME: Add an empty string at the beginning.
-	test("/root", "root")    // FIXME: Add an empty string at the beginning.
+	test("/", "")
+	test("/.", "")
+	test("/root", "", "root")
 
 	// The backslash is not a path separator.
 	test("dir/filename\\with\\backslash", "dir", "filename\\with\\backslash")
@@ -137,8 +137,8 @@ func (s *Suite) Test_Path_Count(c *check.C) {
 		t.CheckEquals(NewPath(p).Count(), count)
 	}
 
-	test("././././", 4) // FIXME: 1
-	test("/root", 1)    // FIXME
+	test("././././", 1)
+	test("/root", 2)
 	test("filename", 1)
 	test("dir/filename", 2)
 	test("dir/filename\\with\\backslash", 2)
@@ -151,18 +151,19 @@ func (s *Suite) Test_Path_Count(c *check.C) {
 	test("relative/subdir", 2)
 	test("relative////subdir", 2)
 	test("relative/..", 2)
-	test("relative/.", 2) // FIXME: Remove the dot, therefore 1.
+	test("relative/.", 1)
 
 	// A path consisting of only dots produces a single dot.
-	test("./././.", 4) // FIXME: 1
+	test("./././.", 1)
 
 	// Slashes at the end are treated like a single dot.
-	test("././././", 4) // FIXME: 1
+	test("././././", 1)
 	test(".///////", 1)
 
 	// Absolute paths have an empty first component.
-	test("/", 0)     // FIXME: Return a single empty string.
-	test("/root", 1) // FIXME: 2; Add an empty string at the beginning.
+	test("/", 1)
+	test("/.", 1)
+	test("/root", 2)
 
 	// The backslash is not a path separator.
 	test("dir/filename\\with\\backslash", 2)
@@ -400,7 +401,7 @@ func (s *Suite) Test_Path_CleanDot(c *check.C) {
 	test("./filename", "filename")
 	test("/absolute", "/absolute")
 	test("/usr/pkgsrc/wip/package", "/usr/pkgsrc/wip/package")
-	test("/usr/pkgsrc/wip/package/../mk/git-package.mk", "usr/pkgsrc/wip/package/../mk/git-package.mk") // FIXME: must be absolute
+	test("/usr/pkgsrc/wip/package/../mk/git-package.mk", "/usr/pkgsrc/wip/package/../mk/git-package.mk")
 }
 
 func (s *Suite) Test_Path_IsAbs(c *check.C) {
