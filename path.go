@@ -51,12 +51,15 @@ func (p Path) Parts() []string {
 	parts := strings.Split(string(p), "/")
 	j := 0
 	for i, part := range parts {
-		if i == 0 || part != "" && part != "." {
+		if (i == 0 || part != "") && part != "." {
 			parts[j] = part
 			j++
 		}
 	}
 	parts = parts[:j]
+	if len(parts) == 0 {
+		return []string{"."}
+	}
 	return parts
 }
 
