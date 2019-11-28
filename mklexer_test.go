@@ -673,7 +673,7 @@ func (s *Suite) Test_MkLexer_varUseModifier__eq_suffix_replacement(c *check.C) {
 		t.CheckEquals(p.Rest(), rest)
 	}
 
-	test("%.c=%.o", "%.c=%.o", "")     // FIXME: remove the escaping.
+	test("%.c=%.o", "%.c=%.o", "")
 	test("%\\:c=%.o", "%\\:c=%.o", "") // FIXME: remove the escaping.
 	test("%\\:c=%.o", "%\\:c=%.o", "") // FIXME: remove the escaping.
 
@@ -690,7 +690,7 @@ func (s *Suite) Test_MkLexer_varUseModifier__eq_suffix_replacement(c *check.C) {
 	// FIXME: test("=\\}\\\\\\$\\&", "=}\\$&", "")
 }
 
-func (s *Suite) Test_MkLexer_varUseModifier__M_and_N(c *check.C) {
+func (s *Suite) Test_MkLexer_varUseModifierMatch(c *check.C) {
 	t := s.Init(c)
 
 	test := func(input, modifier, rest string) {

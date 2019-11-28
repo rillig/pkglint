@@ -246,12 +246,7 @@ func (p *MkLexer) varUseModifier(varname string, closing byte) string {
 		}
 
 	case '=', 'D', 'M', 'N', 'U':
-		lexer.Skip(1)
-		re := regcomp(regex.Pattern(condStr(closing == '}', `^([^$:\\}]|\$\$|\\.)+`, `^([^$:\\)]|\$\$|\\.)+`)))
-		for p.VarUse() != nil || lexer.SkipRegexp(re) {
-		}
-		arg := lexer.Since(mark)
-		return strings.Replace(arg, "\\:", ":", -1)
+		return p.varUseModifierMatch(closing)
 
 	case 'C', 'S':
 		if ok, _, _, _, _ := p.varUseModifierSubst(closing); ok {
@@ -291,6 +286,20 @@ func (p *MkLexer) varUseModifier(varname string, closing byte) string {
 	}
 
 	return ""
+}
+
+// varUseModifierMatch parses an :M or :N pattern.
+//
+// See devel/bmake/files/var.c:/^ApplyModifiers/, case 'M'.
+func (p *MkLexer) varUseModifierMatch(closing byte) string {
+	lexer := p.lexer
+	mark := lexer.Mark()
+	lexer.Skip(1)
+	re := regcomp(regex.Pattern(condStr(closing == '}', `^([^$:\\}]|\$\$|\\.)+`, `^([^$:\\)]|\$\$|\\.)+`)))
+	for p.VarUse() != nil || lexer.SkipRegexp(re) {
+	}
+	arg := lexer.Since(mark)
+	return strings.Replace(arg, "\\:", ":", -1)
 }
 
 // varUseModifierSubst parses a :S,from,to, or a :C,from,to, modifier.
