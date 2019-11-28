@@ -125,7 +125,7 @@ func (p Path) HasSuffixText(suffix string) bool {
 	return hasSuffix(string(p), suffix)
 }
 
-// HasSuffixPath returns whether the path ends with the given prefix.
+// HasSuffixPath returns whether the path ends with the given suffix.
 // The basic unit of comparison is a path component, not a character.
 func (p Path) HasSuffixPath(suffix Path) bool {
 	return hasSuffix(string(p), string(suffix)) &&
