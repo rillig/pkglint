@@ -482,6 +482,44 @@ func (s *Suite) Test_MkLexer_Varname(c *check.C) {
 	testRest("VARNAME/rest", "VARNAME", "/rest")
 }
 
+func (s *Suite) Test_MkLexer_varUseText(c *check.C) {
+	t := s.Init(c)
+
+	test := func(text string, expected string, diagnostics ...string) {
+		line := t.NewLine("Makefile", 20, "\t"+text)
+		p := NewMkLexer(text, line)
+
+		actual := p.varUseText('}')
+
+		t.CheckDeepEquals(actual, expected)
+		t.CheckEquals(p.Rest(), text[len(expected):])
+		t.CheckOutput(diagnostics)
+	}
+
+	test("", "")
+	test("asdf", "asdf")
+
+	test("a$$a b", "a$$a b")
+	test("a$$a b", "a$$a b")
+
+	test("a$a b", "a$a b",
+		"WARN: Makefile:20: $a is ambiguous. Use ${a} if you mean "+
+			"a Make variable or $$a if you mean a shell variable.")
+
+	test("a${INNER} b", "a${INNER} b")
+
+	test("a${${${${${$(NESTED)}}}}}", "a${${${${${$(NESTED)}}}}}",
+		"WARN: Makefile:20: Please use curly braces {} "+
+			"instead of round parentheses () for NESTED.")
+
+	test("a)b", "a)b") // Since the closing character is '}', not ')'.
+
+	test("a:b", "a")
+	test("a\\ba", "a\\ba")
+	test("a\\:a", "a\\") // FIXME: The colon is escaped
+	test("a\\\\:a", "a\\\\")
+}
+
 func (s *Suite) Test_MkLexer_VarUseModifiers(c *check.C) {
 	t := s.Init(c)
 
