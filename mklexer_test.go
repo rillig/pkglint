@@ -690,6 +690,29 @@ func (s *Suite) Test_MkLexer_varUseModifier__eq_suffix_replacement(c *check.C) {
 	// FIXME: test("=\\}\\\\\\$\\&", "=}\\$&", "")
 }
 
+func (s *Suite) Test_MkLexer_varUseModifier__M_and_N(c *check.C) {
+	t := s.Init(c)
+
+	test := func(input, modifier, rest string) {
+		line := t.NewLine("filename.mk", 123, "")
+		p := NewMkLexer(input, line)
+
+		actual := p.varUseModifier("VARNAME", '}')
+
+		t.CheckDeepEquals(actual, modifier)
+		t.CheckEquals(p.Rest(), rest)
+	}
+
+	test("Mpattern", "Mpattern", "")
+
+	// FIXME: test("M{{{}}}}", "M{{{}}}", "}")
+	test("M{{{}}}}", "M{{{", "}}}}")
+
+	// See devel/bmake/files/var.c:/== '\('/.
+	// FIXME: bmake says "M(}", "}"
+	test("M(}}", "M(", "}}")
+}
+
 func (s *Suite) Test_MkLexer_varUseModifierSubst(c *check.C) {
 	t := s.Init(c)
 
