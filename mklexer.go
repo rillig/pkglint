@@ -153,6 +153,8 @@ func (p *MkLexer) Varname() string {
 // This is used for the :L and :? modifiers since they accept arbitrary
 // text as the "variable name" and effectively interpret it as the variable
 // value instead.
+//
+// See devel/bmake/files/var.c:/^VarGetPattern/
 func (p *MkLexer) varUseText(closing byte) string {
 	lexer := p.lexer
 	start := lexer.Mark()

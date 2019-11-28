@@ -655,16 +655,23 @@ func (s *Suite) Test_MkLexer_varUseModifier__varuse_in_malformed_modifier(c *che
 		"WARN: filename.mk:123: Invalid variable modifier \"?yes${INNER}\" for \"${VAR}\".")
 }
 
-func (s *Suite) Test_MkLexer_varUseModifier__colon_in_suffix_replacement(c *check.C) {
+func (s *Suite) Test_MkLexer_varUseModifier__eq_suffix_replacement(c *check.C) {
 	t := s.Init(c)
 
-	line := t.NewLine("filename.mk", 123, "")
-	p := NewMkLexer("%\\:c=%.o", line)
+	test := func(input, modifier, rest string) {
+		line := t.NewLine("filename.mk", 123, "")
+		p := NewMkLexer(input, line)
 
-	modifier := p.varUseModifier("VARNAME", '}')
+		actual := p.varUseModifier("VARNAME", '}')
 
-	t.CheckDeepEquals(modifier, "%\\:c=%.o") // FIXME: remove the escaping.
-	t.CheckEquals(p.Rest(), "")
+		t.CheckDeepEquals(actual, modifier)
+		t.CheckEquals(p.Rest(), rest)
+	}
+
+	test("%.c=%.o", "%.c=%.o", "")                 // FIXME: remove the escaping.
+	test("%\\:c=%.o", "%\\:c=%.o", "")             // FIXME: remove the escaping.
+	test(".\\a\\b\\c=.abc", ".\\a\\b\\c=.abc", "") // FIXME: remove the escaping.
+	test("%.c=%.o:rest", "%.c=%.o", ":rest")
 }
 
 func (s *Suite) Test_MkLexer_varUseModifierSubst(c *check.C) {
