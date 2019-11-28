@@ -156,7 +156,7 @@ func (p *MkLexer) Varname() string {
 func (p *MkLexer) varUseText(closing byte) string {
 	lexer := p.lexer
 	start := lexer.Mark()
-	re := regcomp(regex.Pattern(condStr(closing == '}', `^([^$:}]|\$\$)+`, `^([^$:)]|\$\$)+`)))
+	re := regcomp(regex.Pattern(condStr(closing == '}', `^([^$:\\}]|\$\$|\\.)+`, `^([^$:\\)]|\$\$|\\.)+`)))
 	for p.VarUse() != nil || lexer.SkipRegexp(re) {
 	}
 	return lexer.Since(start)

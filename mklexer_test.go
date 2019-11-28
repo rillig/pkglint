@@ -516,7 +516,7 @@ func (s *Suite) Test_MkLexer_varUseText(c *check.C) {
 
 	test("a:b", "a")
 	test("a\\ba", "a\\ba")
-	test("a\\:a", "a\\") // FIXME: The colon is escaped
+	test("a\\:a", "a\\:a")
 	test("a\\\\:a", "a\\\\")
 }
 
