@@ -663,11 +663,8 @@ func (s *Suite) Test_MkLexer_varUseModifier__colon_in_suffix_replacement(c *chec
 
 	modifier := p.varUseModifier("VARNAME", '}')
 
-	t.CheckDeepEquals(modifier, "")   // FIXME: must not be empty.
-	t.CheckEquals(p.Rest(), ":c=%.o") // FIXME: move that to the modifier.
-	t.CheckOutputLines(
-		"WARN: filename.mk:123: " +
-			"Invalid variable modifier \"%\\\\\" for \"VARNAME\".")
+	t.CheckDeepEquals(modifier, "%\\:c=%.o") // FIXME: remove the escaping.
+	t.CheckEquals(p.Rest(), "")
 }
 
 func (s *Suite) Test_MkLexer_varUseModifierSubst(c *check.C) {

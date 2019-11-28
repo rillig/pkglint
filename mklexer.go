@@ -268,10 +268,7 @@ func (p *MkLexer) varUseModifier(varname string, closing byte) string {
 
 	lexer.Reset(mark)
 
-	re := regcomp(regex.Pattern(condStr(closing == '}', `^([^:$}]|\$\$)+`, `^([^:$)]|\$\$)+`)))
-	for p.VarUse() != nil || lexer.SkipRegexp(re) {
-	}
-	modifier := lexer.Since(mark)
+	modifier := p.varUseText(closing)
 
 	// ${SOURCES:%.c=%.o} or ${:!uname -a!:[2]}
 	if contains(modifier, "=") || (hasPrefix(modifier, "!") && hasSuffix(modifier, "!")) {
