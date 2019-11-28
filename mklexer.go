@@ -8,6 +8,15 @@ import (
 
 // MkLexer splits a text into a sequence of variable uses
 // and plain text.
+//
+// The actual parsing algorithm in devel/bmake/files/var.c differs from
+// pkglint's parser in many ways and produces different results in
+// almost all edge cases. See devel/bmake/files/var.c:/'\\\\'/.
+//
+// The pkglint parser had been built from scratch using naive assumptions
+// about how bmake parses these expressions. These assumptions do not hold
+// a strict test, but luckily the pkgsrc package developers don't explore
+// these edge cases anyway.
 type MkLexer struct {
 	lexer *textproc.Lexer
 	line  *Line
