@@ -495,34 +495,6 @@ func cleanpath(filename Path) Path {
 	return NewPath(strings.Join(parts, "/"))
 }
 
-func pathContains(haystack, needle string) bool {
-	n0 := needle[0]
-	for i := 0; i < 1+len(haystack)-len(needle); i++ {
-		if haystack[i] == n0 && hasPrefix(haystack[i:], needle) {
-			if i == 0 || haystack[i-1] == '/' {
-				if i+len(needle) == len(haystack) || haystack[i+len(needle)] == '/' {
-					return true
-				}
-			}
-		}
-	}
-	return false
-}
-
-func pathContainsDir(haystack, needle Path) bool {
-	n0 := needle[0]
-	for i := 0; i < 1+len(haystack)-len(needle); i++ {
-		if haystack[i] == n0 && hasPrefix(haystack.String()[i:], needle.String()) {
-			if i == 0 || haystack[i-1] == '/' {
-				if i+len(needle) < len(haystack) && haystack[i+len(needle)] == '/' {
-					return true
-				}
-			}
-		}
-	}
-	return false
-}
-
 func containsVarRef(s string) bool {
 	return contains(s, "${") || contains(s, "$(")
 }
