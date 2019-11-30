@@ -459,7 +459,7 @@ func mkopSubst(s string, left bool, from string, right bool, to string, flags st
 
 // Differs from path.Clean in that only "../../" is replaced, not "../".
 // Also, the initial directory is always kept.
-// This is to provide the package path as context in recursive invocations of pkglint.
+// This is to provide the package path as context in deeply nested .include chains.
 func cleanpath(filename Path) Path {
 	parts := make([]string, 0, 5)
 	lex := textproc.NewLexer(filename.String())
