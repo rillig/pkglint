@@ -23,7 +23,7 @@ func (s *Suite) Test_Parse(c *check.C) {
 	testDeep("gnu-gpl-v2", NewName("gnu-gpl-v2"))
 
 	test("gnu-gpl-v2", "{Name:gnu-gpl-v2}")
-	test("citrix_ica-license", "null") // FIXME: "{Name:citrix_ica-license}"
+	test("citrix_ica-license", "{Name:citrix_ica-license}")
 
 	test("a AND b", "{And:true,Children:[{Name:a},{Name:b}]}")
 	test("a OR b", "{Or:true,Children:[{Name:a},{Name:b}]}")
@@ -139,7 +139,7 @@ func (s *Suite) Test_licenseLexer_Lex(c *check.C) {
 	test("AND-rest", ltNAME)
 
 	testName("license-name", "license-name")
-	testName("license_name", "license")
+	testName("license_name", "license_name")
 	testName("AND-rest", "AND-rest")
 }
 
