@@ -48,7 +48,7 @@ func (p Path) Split() (dir Path, base string) {
 // Absolute paths have an empty string as its first part.
 // All other parts are nonempty.
 func (p Path) Parts() []string {
-	if p == "" {
+	if p.IsEmpty() {
 		return nil
 	}
 

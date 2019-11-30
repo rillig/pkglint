@@ -89,7 +89,7 @@ func (ck *distinfoLinesChecker) parse() {
 			continue
 		}
 
-		if prevFilename != "" && filename != prevFilename {
+		if !prevFilename.IsEmpty() && filename != prevFilename {
 			finishGroup()
 		}
 		prevFilename = filename
@@ -97,7 +97,7 @@ func (ck *distinfoLinesChecker) parse() {
 		hashes = append(hashes, distinfoHash{line, filename, alg, hash})
 	}
 
-	if prevFilename != "" {
+	if !prevFilename.IsEmpty() {
 		finishGroup()
 	}
 }

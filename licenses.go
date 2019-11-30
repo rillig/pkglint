@@ -30,8 +30,8 @@ func (lc *LicenseChecker) checkName(license string) {
 			licenseFile = G.Pkg.File(mkline.ResolveVarsInRelativePath(NewPath(mkline.Value())))
 		}
 	}
-	if licenseFile == "" {
-		licenseFile = G.Pkgsrc.File("licenses").JoinNoClean(NewPath(license))
+	if licenseFile.IsEmpty() {
+		licenseFile = G.Pkgsrc.File(NewPath("licenses")).JoinNoClean(NewPath(license))
 		G.InterPackage.UseLicense(license)
 	}
 

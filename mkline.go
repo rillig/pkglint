@@ -1291,7 +1291,7 @@ func MatchMkInclude(text string) (m bool, indentation, directive string, filenam
 				// here. But since these usually don't contain double quotes, it has
 				// worked fine up to now.
 				filename = NewPath(lexer.NextBytesFunc(func(c byte) bool { return c != '"' }))
-				if filename != "" && lexer.SkipByte('"') {
+				if !filename.IsEmpty() && lexer.SkipByte('"') {
 					lexer.NextHspace()
 					if lexer.EOF() {
 						m = true

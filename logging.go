@@ -246,7 +246,7 @@ func (l *Logger) Logf(level *LogLevel, filename Path, lineno, format, msg string
 		}
 	}
 
-	if filename != "" {
+	if !filename.IsEmpty() {
 		filename = cleanpath(filename)
 	}
 	if G.Opts.Profiling && format != AutofixFormat && level != Fatal {
@@ -258,8 +258,8 @@ func (l *Logger) Logf(level *LogLevel, filename Path, lineno, format, msg string
 		out = l.err
 	}
 
-	filenameSep := condStr(filename != "", ": ", "")
-	effLineno := condStr(filename != "", lineno, "")
+	filenameSep := condStr(!filename.IsEmpty(), ": ", "")
+	effLineno := condStr(!filename.IsEmpty(), lineno, "")
 	linenoSep := condStr(effLineno != "", ":", "")
 	var diag string
 	if l.Opts.GccOutput {
