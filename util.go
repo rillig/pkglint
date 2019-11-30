@@ -1080,23 +1080,13 @@ func wrap(max int, lines ...string) []string {
 // at the risk of interpreting malicious data from the files checked by pkglint.
 // This escaping is not reversible, and it doesn't need to.
 func escapePrintable(s string) string {
-	i := 0
-	for i < len(s) && textproc.XPrint.Contains(s[i]) {
-		i++
-	}
-	if i == len(s) {
-		return s
-	}
-
-	var escaped strings.Builder
-	escaped.WriteString(s[:i])
-	rest := s[i:]
-	for j, r := range rest {
+	escaped := NewLazyStringBuilder(s)
+	for i, r := range s {
 		switch {
-		case rune(byte(r)) == r && textproc.XPrint.Contains(byte(rest[j])):
+		case rune(byte(r)) == r && textproc.XPrint.Contains(s[i]):
 			escaped.WriteByte(byte(r))
-		case r == 0xFFFD && !hasPrefix(rest[j:], "\uFFFD"):
-			_, _ = fmt.Fprintf(&escaped, "<0x%02X>", rest[j])
+		case r == 0xFFFD && !hasPrefix(s[i:], "\uFFFD"):
+			_, _ = fmt.Fprintf(&escaped, "<0x%02X>", s[i])
 		default:
 			_, _ = fmt.Fprintf(&escaped, "<%U>", r)
 		}
@@ -1310,8 +1300,15 @@ type LazyStringBuilder struct {
 	buf      []byte
 }
 
-func NewLazyStringBuilder(expected string) *LazyStringBuilder {
-	return &LazyStringBuilder{Expected: expected}
+func (b *LazyStringBuilder) Write(p []byte) (n int, err error) {
+	for _, c := range p {
+		b.WriteByte(c)
+	}
+	return len(p), nil
+}
+
+func NewLazyStringBuilder(expected string) LazyStringBuilder {
+	return LazyStringBuilder{Expected: expected}
 }
 
 func (b *LazyStringBuilder) Len() int {
@@ -1319,19 +1316,25 @@ func (b *LazyStringBuilder) Len() int {
 }
 
 func (b *LazyStringBuilder) WriteString(s string) {
+	if !b.usingBuf && b.len+len(s) <= len(b.Expected) && hasPrefix(b.Expected[b.len:], s) {
+		b.len += len(s)
+		return
+	}
 	for _, c := range []byte(s) {
-		b.Write(c)
+		b.WriteByte(c)
 	}
 }
 
-func (b *LazyStringBuilder) WriteByte(c byte) { b.Write(c) }
+func (b *LazyStringBuilder) WriteByte(c byte) {
+	if !b.usingBuf && b.len < len(b.Expected) && b.Expected[b.len] == c {
+		b.len++
+		return
+	}
+	b.writeToBuf(c)
+}
 
-func (b *LazyStringBuilder) Write(c byte) {
+func (b *LazyStringBuilder) writeToBuf(c byte) {
 	if !b.usingBuf {
-		if b.len < len(b.Expected) && b.Expected[b.len] == c {
-			b.len++
-			return
-		}
 		if len(b.buf) < b.len {
 			b.buf = make([]byte, b.len, len(b.Expected))
 		} else {

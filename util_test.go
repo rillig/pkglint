@@ -1038,59 +1038,59 @@ func (s *Suite) Test_shquote(c *check.C) {
 	test("~", "'~'")
 }
 
-func (s *Suite) Test_LazyStringBuilder_Write__exact_match(c *check.C) {
+func (s *Suite) Test_LazyStringBuilder_WriteByte__exact_match(c *check.C) {
 	t := s.Init(c)
 
 	sb := NewLazyStringBuilder("word")
 
-	sb.Write('w')
-	sb.Write('o')
-	sb.Write('r')
-	sb.Write('d')
+	sb.WriteByte('w')
+	sb.WriteByte('o')
+	sb.WriteByte('r')
+	sb.WriteByte('d')
 
 	t.CheckEquals(sb.String(), "word")
 	c.Check(sb.buf, check.IsNil)
 }
 
-func (s *Suite) Test_LazyStringBuilder_Write__longer_than_expected(c *check.C) {
+func (s *Suite) Test_LazyStringBuilder_WriteByte__longer_than_expected(c *check.C) {
 	t := s.Init(c)
 
 	sb := NewLazyStringBuilder("word")
-	sb.Write('w')
-	sb.Write('o')
-	sb.Write('r')
-	sb.Write('d')
-	sb.Write('s')
+	sb.WriteByte('w')
+	sb.WriteByte('o')
+	sb.WriteByte('r')
+	sb.WriteByte('d')
+	sb.WriteByte('s')
 
 	t.CheckEquals(sb.String(), "words")
 	t.CheckDeepEquals(sb.buf, []byte{'w', 'o', 'r', 'd', 's'})
 }
 
-func (s *Suite) Test_LazyStringBuilder_Write__shorter_than_expected(c *check.C) {
+func (s *Suite) Test_LazyStringBuilder_WriteByte__shorter_than_expected(c *check.C) {
 	t := s.Init(c)
 
 	sb := NewLazyStringBuilder("word")
-	sb.Write('w')
-	sb.Write('o')
+	sb.WriteByte('w')
+	sb.WriteByte('o')
 
 	t.CheckEquals(sb.String(), "wo")
 	c.Check(sb.buf, check.IsNil)
 
-	sb.Write('r')
-	sb.Write('d')
+	sb.WriteByte('r')
+	sb.WriteByte('d')
 
 	t.CheckEquals(sb.String(), "word")
 	c.Check(sb.buf, check.IsNil)
 }
 
-func (s *Suite) Test_LazyStringBuilder_Write__other_than_expected(c *check.C) {
+func (s *Suite) Test_LazyStringBuilder_WriteByte__other_than_expected(c *check.C) {
 	t := s.Init(c)
 
 	sb := NewLazyStringBuilder("word")
-	sb.Write('w')
-	sb.Write('o')
-	sb.Write('l')
-	sb.Write('f')
+	sb.WriteByte('w')
+	sb.WriteByte('o')
+	sb.WriteByte('l')
+	sb.WriteByte('f')
 
 	t.CheckEquals(sb.String(), "wolf")
 	t.CheckDeepEquals(sb.buf, []byte{'w', 'o', 'l', 'f'})
@@ -1100,7 +1100,7 @@ func (s *Suite) Test_LazyStringBuilder_Reset(c *check.C) {
 	t := s.Init(c)
 
 	sb := NewLazyStringBuilder("word")
-	sb.Write('w')
+	sb.WriteByte('w')
 
 	sb.Reset("other")
 
@@ -1118,7 +1118,7 @@ func (s *Suite) Test_LazyStringBuilder_Reset(c *check.C) {
 	t.CheckEquals(sb.usingBuf, false)
 	t.CheckDeepEquals(sb.buf, []byte("word"))
 
-	sb.Write('x')
+	sb.WriteByte('x')
 
 	// Ensure that the buffer is reset properly.
 	t.CheckEquals(sb.String(), "x")

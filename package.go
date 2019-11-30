@@ -1080,7 +1080,7 @@ func (pkg *Package) pkgnameFromDistname(pkgname, distname string) (string, bool)
 
 	// TODO: Make this resolving of variable references available to all other variables as well.
 
-	var result strings.Builder
+	result := NewLazyStringBuilder(pkgname)
 	for _, token := range tokens {
 		if token.Varuse != nil {
 			if token.Varuse.varname != "DISTNAME" {
