@@ -414,15 +414,16 @@ var notSpace = textproc.Space.Inverse()
 // See UnquoteShell.
 func (mkline *MkLine) ValueFields(value string) []string {
 	var fields []string
-	var field strings.Builder
+	var field LazyStringBuilder
 
 	lexer := NewMkTokensLexer(mkline.Tokenize(value, false))
 	lexer.SkipHspace()
+	field.Reset(lexer.Rest())
 
 	emit := func() {
 		if field.Len() > 0 {
 			fields = append(fields, field.String())
-			field.Reset()
+			field.Reset(lexer.Rest())
 		}
 	}
 
