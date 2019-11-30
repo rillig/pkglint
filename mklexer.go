@@ -309,11 +309,41 @@ func (p *MkLexer) varUseModifierMatch(closing byte) string {
 	lexer := p.lexer
 	mark := lexer.Mark()
 	lexer.Skip(1)
-	re := regcomp(regex.Pattern(condStr(closing == '}', `^([^$:\\}]|\$\$|\\.)+`, `^([^$:\\)]|\$\$|\\.)+`)))
-	for p.VarUse() != nil || lexer.SkipRegexp(re) {
+	opening := byte(condInt(closing == '}', '{', '('))
+	_ = opening
+
+	nest := 1
+	seenBackslash := false
+	for !lexer.EOF() {
+		ch := lexer.PeekByte()
+		if ch == ':' && nest == 1 {
+			break
+		}
+
+		if ch == '\\' {
+			seenBackslash = true
+			lexer.Skip(1)
+			_ = lexer.SkipByte(':') || lexer.SkipByte(opening) || lexer.SkipByte(closing)
+			continue
+		}
+
+		if ch == '(' || ch == '{' {
+			nest++
+		} else if ch == ')' || ch == '}' {
+			nest--
+			if nest == 0 {
+				break
+			}
+		}
+		lexer.Skip(1)
 	}
+
 	arg := lexer.Since(mark)
-	return replaceAll(arg, `\\([():{}])`, "$1")
+	if seenBackslash {
+		re := regex.Pattern(condStr(closing == '}', `\\([:}])`, `\\([:)])`))
+		arg = replaceAll(arg, re, "$1")
+	}
+	return arg
 }
 
 // varUseModifierSubst parses a :S,from,to, or a :C,from,to, modifier.

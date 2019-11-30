@@ -693,36 +693,57 @@ func (s *Suite) Test_MkLexer_varUseModifier__eq_suffix_replacement(c *check.C) {
 func (s *Suite) Test_MkLexer_varUseModifierMatch(c *check.C) {
 	t := s.Init(c)
 
-	test := func(input, modifier, rest string, diagnostics ...string) {
+	testClosing := func(input string, closing byte, modifier, rest string, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, "")
 		p := NewMkLexer(input, line)
 
-		actual := p.varUseModifier("VARNAME", '}')
+		actual := p.varUseModifier("VARNAME", closing)
 
 		t.CheckDeepEquals(actual, modifier)
 		t.CheckEquals(p.Rest(), rest)
 		t.CheckOutput(diagnostics)
 	}
 
-	// Backslashes are removed before some few characters.
-	test("M\\(\\{\\}\\)\\::rest", "M({}):", ":rest")
+	test := func(input, modifier, rest string, diagnostics ...string) {
+		testClosing(input, '}', modifier, rest, diagnostics...)
+	}
+	testParen := func(input, modifier, rest string, diagnostics ...string) {
+		testClosing(input, ')', modifier, rest, diagnostics...)
+	}
+
+	// Backslashes are removed only for : and the closing character.
+	test("M\\(\\{\\}\\)\\::rest", "M\\(\\{}\\):", ":rest")
 
 	// But not before other backslashes.
-	test("M\\\\(:rest", "M\\(", ":rest")
+	// Therefore, the first backslash does not escape the second.
+	// The second backslash doesn't have an effect either,
+	// since the parenthesis is just an ordinary character here.
+	test("M\\\\(:nested):rest", "M\\\\(:nested)", ":rest")
+
+	// If the variable uses parentheses instead of braces,
+	// the opening parenthesis is escaped by the second backslash
+	// and thus doesn't increase the nesting level.
+	// Nevertheless it is not unescaped. This is probably a bug in bmake.
+	testParen("M\\\\(:rest", "M\\\\(", ":rest")
+	testParen("M(:nested):rest", "M(:nested)", ":rest")
 
 	test("Mpattern", "Mpattern", "")
 	test("Mpattern}closed", "Mpattern", "}closed")
 	test("Mpattern:rest", "Mpattern", ":rest")
 
-	// FIXME: test("M{{{}}}}", "M{{{}}}", "}")
-	test("M{{{}}}}", "M{{{", "}}}}")
+	test("M{{{}}}}", "M{{{}}}", "}")
 
 	// See devel/bmake/files/var.c:/== '\('/.
-	// FIXME: test("M(}}", "M(}", "}")
-	test("M(}}", "M(", "}}")
+	test("M(}}", "M(}", "}")
 }
 
-// See src/usr.bin/make/unit-tests/varmod-edge.mk 1.3.
+// See src/usr.bin/make/unit-tests/varmod-edge.mk 1.4.
+//
+// The difference between this test and the bmake unit test is that in
+// this test the pattern is visible, while in the bmake test it is hidden
+// and can only be made visible by adding a fprintf to Str_Match or by
+// carefully analyzing the result of Str_Match, which removes another level
+// of backslashes.
 func (s *Suite) Test_MkLexer_varUseModifierMatch__varmod_edge(c *check.C) {
 	t := s.Init(c)
 
@@ -737,22 +758,31 @@ func (s *Suite) Test_MkLexer_varUseModifierMatch__varmod_edge(c *check.C) {
 		t.CheckOutput(diagnostics)
 	}
 
-	test("M(*)}", "M(*)", "}") // M-paren
+	// M-paren
+	test("M(*)}", "M(*)", "}")
 
-	// FIXME: test("M(*}}", "M(*}", "}") // M-mixed
-	test("M(*}}", "M(*", "}}") // M-mixed
+	// M-mixed
+	test("M(*}}", "M(*}", "}")
 
-	// FIXME: test("M${:U*)}}", "M${:U*)", "}}")         // M-nest-mix
-	test("M${:U*)}}", "M${:U*)}", "}") // M-nest-mix
+	// M-nest-mix
+	test("M${:U*)}}", "M${:U*)", "}}")
 
-	test("M${:U[[[[[]}}", "M${:U[[[[[]}", "}") // M-nest-brk
+	// M-nest-brk
+	test("M${:U[[[[[]}}", "M${:U[[[[[]}", "}")
 
+	// M-pat-err
 	// TODO: Warn about the malformed pattern, since bmake doesn't.
 	//  See devel/bmake/files/str.c:/^Str_Match/.
-	test("M${:U[[}}", "M${:U[[}", "}") // M-pat-err
+	test("M${:U[[}}", "M${:U[[}", "}")
 
-	// FIXME: test("M\\\\(}}", "M\\(}", "}") // M-bsbs
-	test("M\\\\(}}", "M\\(", "}}") // M-bsbs
+	// M-bsbs
+	test("M\\\\(}}", "M\\\\(}", "}")
+
+	// M-bs1-par
+	test("M\\(:M*}}", "M\\(:M*}", "}")
+
+	// M-bs2-par
+	test("M\\\\(:M*}}", "M\\\\(:M*}", "}")
 }
 
 func (s *Suite) Test_MkLexer_varUseModifierSubst(c *check.C) {
