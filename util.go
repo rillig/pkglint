@@ -1335,14 +1335,15 @@ func (b *LazyStringBuilder) WriteByte(c byte) {
 
 func (b *LazyStringBuilder) writeToBuf(c byte) {
 	if !b.usingBuf {
-		if len(b.buf) < b.len {
-			b.buf = make([]byte, b.len, len(b.Expected))
+		if cap(b.buf) >= b.len {
+			b.buf = b.buf[:b.len]
+			assert(copy(b.buf, b.Expected) == b.len)
 		} else {
-			b.buf = b.buf[:0]
+			b.buf = []byte(b.Expected)[:b.len]
 		}
-		copy(b.buf, b.Expected[:b.len])
 		b.usingBuf = true
 	}
+
 	b.buf = append(b.buf, c)
 	b.len++
 }
