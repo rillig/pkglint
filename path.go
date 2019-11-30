@@ -29,6 +29,10 @@ func (p Path) String() string { return string(p) }
 
 func (p Path) GoString() string { return sprintf("%q", string(p)) }
 
+// IsEmpty returns true if the path is completely empty,
+// which is usually a sign of an uninitialized variable.
+func (p Path) IsEmpty() bool { return p == "" }
+
 func (p Path) Dir() Path { return Path(path.Dir(string(p))) }
 
 func (p Path) Base() string { return path.Base(string(p)) }

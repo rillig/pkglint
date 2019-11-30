@@ -48,6 +48,18 @@ func (s *Suite) Test_Path_GoString(c *check.C) {
 	test("c\\d", "\"c\\\\d\"")
 }
 
+func (s *Suite) Test_Path_IsEmpty(c *check.C) {
+	t := s.Init(c)
+
+	test := func(p Path, isEmpty bool) {
+		t.CheckEquals(p.IsEmpty(), isEmpty)
+	}
+
+	test("", true)
+	test(".", false)
+	test("/", false)
+}
+
 func (s *Suite) Test_Path_Dir(c *check.C) {
 	t := s.Init(c)
 
