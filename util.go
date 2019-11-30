@@ -1305,12 +1305,17 @@ func (q *PathQueue) Pop() Path {
 // already existing string. In that case, it avoids any memory allocations.
 type LazyStringBuilder struct {
 	Expected string
-	buf      []byte
 	len      int
+	usingBuf bool
+	buf      []byte
 }
 
 func NewLazyStringBuilder(expected string) *LazyStringBuilder {
 	return &LazyStringBuilder{Expected: expected}
+}
+
+func (b *LazyStringBuilder) Len() int {
+	return b.len
 }
 
 func (b *LazyStringBuilder) WriteString(s string) {
@@ -1319,22 +1324,35 @@ func (b *LazyStringBuilder) WriteString(s string) {
 	}
 }
 
+func (b *LazyStringBuilder) WriteByte(c byte) { b.Write(c) }
+
 func (b *LazyStringBuilder) Write(c byte) {
-	if b.buf == nil {
+	if !b.usingBuf {
 		if b.len < len(b.Expected) && b.Expected[b.len] == c {
 			b.len++
 			return
 		}
-		b.buf = make([]byte, b.len, len(b.Expected))
+		if len(b.buf) < b.len {
+			b.buf = make([]byte, b.len, len(b.Expected))
+		} else {
+			b.buf = b.buf[:0]
+		}
 		copy(b.buf, b.Expected[:b.len])
+		b.usingBuf = true
 	}
 	b.buf = append(b.buf, c)
 	b.len++
 }
 
+func (b *LazyStringBuilder) Reset(expected string) {
+	b.Expected = expected
+	b.usingBuf = false
+	b.len = 0
+}
+
 func (b *LazyStringBuilder) String() string {
-	if b.buf == nil {
-		return b.Expected[:b.len]
+	if b.usingBuf {
+		return string(b.buf[:b.len])
 	}
-	return string(b.buf[:b.len])
+	return b.Expected[:b.len]
 }

@@ -1095,3 +1095,33 @@ func (s *Suite) Test_LazyStringBuilder_Write__other_than_expected(c *check.C) {
 	t.CheckEquals(sb.String(), "wolf")
 	t.CheckDeepEquals(sb.buf, []byte{'w', 'o', 'l', 'f'})
 }
+
+func (s *Suite) Test_LazyStringBuilder_Reset(c *check.C) {
+	t := s.Init(c)
+
+	sb := NewLazyStringBuilder("word")
+	sb.Write('w')
+
+	sb.Reset("other")
+
+	t.CheckEquals(sb.String(), "")
+
+	sb.WriteString("word")
+
+	t.CheckEquals(sb.String(), "word")
+	t.CheckEquals(sb.usingBuf, true)
+	t.CheckDeepEquals(sb.buf, []byte("word"))
+
+	sb.Reset("")
+
+	t.CheckEquals(sb.String(), "")
+	t.CheckEquals(sb.usingBuf, false)
+	t.CheckDeepEquals(sb.buf, []byte("word"))
+
+	sb.Write('x')
+
+	// Ensure that the buffer is reset properly.
+	t.CheckEquals(sb.String(), "x")
+	t.CheckEquals(sb.usingBuf, true)
+	t.CheckDeepEquals(sb.buf, []byte("x"))
+}
