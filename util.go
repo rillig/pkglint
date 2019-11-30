@@ -1300,3 +1300,41 @@ func (q *PathQueue) Pop() Path {
 	q.entries = q.entries[1:]
 	return front
 }
+
+// LazyStringBuilder builds a string that is most probably equal to an
+// already existing string. In that case, it avoids any memory allocations.
+type LazyStringBuilder struct {
+	Expected string
+	buf      []byte
+	len      int
+}
+
+func NewLazyStringBuilder(expected string) *LazyStringBuilder {
+	return &LazyStringBuilder{Expected: expected}
+}
+
+func (b *LazyStringBuilder) WriteString(s string) {
+	for _, c := range []byte(s) {
+		b.Write(c)
+	}
+}
+
+func (b *LazyStringBuilder) Write(c byte) {
+	if b.buf == nil {
+		if b.len < len(b.Expected) && b.Expected[b.len] == c {
+			b.len++
+			return
+		}
+		b.buf = make([]byte, b.len, len(b.Expected))
+		copy(b.buf, b.Expected[:b.len])
+	}
+	b.buf = append(b.buf, c)
+	b.len++
+}
+
+func (b *LazyStringBuilder) String() string {
+	if b.buf == nil {
+		return b.Expected[:b.len]
+	}
+	return string(b.buf[:b.len])
+}
