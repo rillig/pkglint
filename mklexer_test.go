@@ -690,10 +690,11 @@ func (s *Suite) Test_MkLexer_varUseModifier__eq_suffix_replacement(c *check.C) {
 	// FIXME: test("=\\}\\\\\\$\\&", "=}\\$&", "")
 }
 
+// See src/usr.bin/make/unit-tests/varmod-edge.mk.
 func (s *Suite) Test_MkLexer_varUseModifierMatch(c *check.C) {
 	t := s.Init(c)
 
-	test := func(input, modifier, rest string) {
+	test := func(input, modifier, rest string, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, "")
 		p := NewMkLexer(input, line)
 
@@ -701,16 +702,46 @@ func (s *Suite) Test_MkLexer_varUseModifierMatch(c *check.C) {
 
 		t.CheckDeepEquals(actual, modifier)
 		t.CheckEquals(p.Rest(), rest)
+		t.CheckOutput(diagnostics)
 	}
 
+	// Backslashes are removed before some few characters.
+	// FIXME: M({}):
+	// FIXME: Research why the backslash before the colon is already removed.
+	test("M\\(\\{\\}\\)\\::rest", "M\\(\\{\\}\\):", ":rest")
+
+	// But not before other backslashes.
+	// FIXME: M\\(
+	test("M\\\\(:rest", "M\\\\(", ":rest")
+
 	test("Mpattern", "Mpattern", "")
+	test("Mpattern}closed", "Mpattern", "}closed")
+	test("Mpattern:rest", "Mpattern", ":rest")
 
 	// FIXME: test("M{{{}}}}", "M{{{}}}", "}")
 	test("M{{{}}}}", "M{{{", "}}}}")
 
 	// See devel/bmake/files/var.c:/== '\('/.
-	// FIXME: bmake says "M(}", "}"
+	// FIXME: test("M(}}", "M(}", "}")
 	test("M(}}", "M(", "}}")
+
+	// begin src/usr.bin/make/unit-tests/varmod-edge.mk 1.1
+
+	test("M(*)}", "M(*)", "}") // M-paren
+
+	// FIXME: test("M(*}}", "M(*}", "}") // M-mixed
+	test("M(*}}", "M(*", "}}") // M-mixed
+
+	// FIXME: test("M${:U*)}}", "M${:U*)", "}}")         // M-nest-mix
+	test("M${:U*)}}", "M${:U*)}", "}") // M-nest-mix
+
+	test("M${:U[[[[[]}}", "M${:U[[[[[]}", "}") // M-nest-brk
+
+	// TODO: Warn about the malformed pattern, since bmake doesn't.
+	//  See devel/bmake/files/str.c:/^Str_Match/.
+	test("M${:U[[}}", "M${:U[[}", "}") // M-pat-err
+
+	// end src/usr.bin/make/unit-tests/varmod-edge.mk 1.1
 }
 
 func (s *Suite) Test_MkLexer_varUseModifierSubst(c *check.C) {
