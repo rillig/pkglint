@@ -313,7 +313,7 @@ func (p *MkLexer) varUseModifierMatch(closing byte) string {
 	for p.VarUse() != nil || lexer.SkipRegexp(re) {
 	}
 	arg := lexer.Since(mark)
-	return strings.Replace(arg, "\\:", ":", -1)
+	return replaceAll(arg, `\\([():{}])`, "$1")
 }
 
 // varUseModifierSubst parses a :S,from,to, or a :C,from,to, modifier.

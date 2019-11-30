@@ -706,13 +706,10 @@ func (s *Suite) Test_MkLexer_varUseModifierMatch(c *check.C) {
 	}
 
 	// Backslashes are removed before some few characters.
-	// FIXME: M({}):
-	// FIXME: Research why the backslash before the colon is already removed.
-	test("M\\(\\{\\}\\)\\::rest", "M\\(\\{\\}\\):", ":rest")
+	test("M\\(\\{\\}\\)\\::rest", "M({}):", ":rest")
 
 	// But not before other backslashes.
-	// FIXME: M\\(
-	test("M\\\\(:rest", "M\\\\(", ":rest")
+	test("M\\\\(:rest", "M\\(", ":rest")
 
 	test("Mpattern", "Mpattern", "")
 	test("Mpattern}closed", "Mpattern", "}closed")
