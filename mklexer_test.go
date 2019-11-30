@@ -690,7 +690,6 @@ func (s *Suite) Test_MkLexer_varUseModifier__eq_suffix_replacement(c *check.C) {
 	// FIXME: test("=\\}\\\\\\$\\&", "=}\\$&", "")
 }
 
-// See src/usr.bin/make/unit-tests/varmod-edge.mk.
 func (s *Suite) Test_MkLexer_varUseModifierMatch(c *check.C) {
 	t := s.Init(c)
 
@@ -721,8 +720,22 @@ func (s *Suite) Test_MkLexer_varUseModifierMatch(c *check.C) {
 	// See devel/bmake/files/var.c:/== '\('/.
 	// FIXME: test("M(}}", "M(}", "}")
 	test("M(}}", "M(", "}}")
+}
 
-	// begin src/usr.bin/make/unit-tests/varmod-edge.mk 1.1
+// See src/usr.bin/make/unit-tests/varmod-edge.mk 1.3.
+func (s *Suite) Test_MkLexer_varUseModifierMatch__varmod_edge(c *check.C) {
+	t := s.Init(c)
+
+	test := func(input, modifier, rest string, diagnostics ...string) {
+		line := t.NewLine("filename.mk", 123, "")
+		p := NewMkLexer(input, line)
+
+		actual := p.varUseModifier("VARNAME", '}')
+
+		t.CheckDeepEquals(actual, modifier)
+		t.CheckEquals(p.Rest(), rest)
+		t.CheckOutput(diagnostics)
+	}
 
 	test("M(*)}", "M(*)", "}") // M-paren
 
@@ -738,7 +751,8 @@ func (s *Suite) Test_MkLexer_varUseModifierMatch(c *check.C) {
 	//  See devel/bmake/files/str.c:/^Str_Match/.
 	test("M${:U[[}}", "M${:U[[}", "}") // M-pat-err
 
-	// end src/usr.bin/make/unit-tests/varmod-edge.mk 1.1
+	// FIXME: test("M\\\\(}}", "M\\(}", "}") // M-bsbs
+	test("M\\\\(}}", "M\\(", "}}") // M-bsbs
 }
 
 func (s *Suite) Test_MkLexer_varUseModifierSubst(c *check.C) {
