@@ -227,7 +227,7 @@ func (p *MkLexer) varUseModifier(varname string, closing byte) string {
 			return p.varUseModifierSeparator(mod, closing, lexer, varname, mark)
 		}
 
-	case '=', 'D', 'M', 'N', 'U':
+	case 'D', 'M', 'N', 'U':
 		return p.varUseModifierMatch(closing)
 
 	case 'C', 'S':
