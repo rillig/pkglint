@@ -442,17 +442,17 @@ func (cv *VartypeCheck) DependencyWithPath() {
 	parts := cv.MkLine.ValueSplit(value, ":")
 	if len(parts) == 2 {
 		pattern := parts[0]
-		relpath := parts[1]
-		pathParts := cv.MkLine.ValueSplit(relpath, "/")
+		relpath := NewRelPath(parts[1])
+		pathParts := relpath.AsPath().Parts()
 		pkg := pathParts[len(pathParts)-1]
 
-		if matches(relpath, `^\.\./[^.]`) {
+		if len(pathParts) >= 2 && pathParts[0] == ".." && pathParts[1] != ".." {
 			cv.Warnf("Dependency paths should have the form \"../../category/package\".")
 			cv.MkLine.ExplainRelativeDirs()
 		}
 
-		if !containsVarRef(relpath) {
-			MkLineChecker{cv.MkLines, cv.MkLine}.CheckRelativePkgdir(NewPath(relpath))
+		if !containsVarRef(relpath.AsPath().String()) { // XXX
+			MkLineChecker{cv.MkLines, cv.MkLine}.CheckRelativePkgdir(relpath.AsPath())
 		}
 
 		switch pkg {
