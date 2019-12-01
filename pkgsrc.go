@@ -1048,7 +1048,7 @@ func (src *Pkgsrc) Load(filename PkgsrcPath, options LoadOptions) *Lines {
 //
 // TODO: Invent data types for all kinds of relative paths that occur in pkgsrc
 //  and pkglint. Make sure that these paths cannot be accidentally mixed.
-func (src *Pkgsrc) Relpath(from, to CurrPath) (result Path) {
+func (src *Pkgsrc) Relpath(from, to CurrPath) Path {
 	cfrom := from.Clean()
 	cto := to.Clean()
 
@@ -1091,7 +1091,7 @@ func (src *Pkgsrc) Relpath(from, to CurrPath) (result Path) {
 	if len(fromParts) >= 2 && len(toParts) >= 2 {
 		if fromParts[0] == toParts[0] && fromParts[1] == toParts[1] {
 			var relParts []string
-			for _ = range fromParts[2:] {
+			for range fromParts[2:] {
 				relParts = append(relParts, "..")
 			}
 			relParts = append(relParts, toParts[2:]...)
@@ -1099,8 +1099,7 @@ func (src *Pkgsrc) Relpath(from, to CurrPath) (result Path) {
 		}
 	}
 
-	result = up.JoinNoClean(down).CleanDot()
-	return
+	return up.JoinNoClean(down).CleanDot()
 }
 
 // File resolves a filename relative to the pkgsrc top directory.

@@ -1186,6 +1186,9 @@ func (s *Suite) Test_Pkgsrc_Relpath(c *check.C) {
 
 	// TODO: add tests going from each of (top, cat, pkg, pkgsub) to the others
 
+	test("category", "other/package", "../other/package")
+	test("category/package", "other", "../../other")
+
 	test("some/dir", "some/directory", "../../some/directory")
 	test("some/directory", "some/dir", "../../some/dir")
 
