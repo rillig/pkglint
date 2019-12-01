@@ -636,3 +636,13 @@ func (s *Suite) Test_Path_WriteString(c *check.C) {
 		"line 1",
 		"line 2")
 }
+
+func (s *Suite) Test_RelPath_AsPath(c *check.C) {
+	t := s.Init(c)
+
+	rel := RelPath("relative")
+
+	path := rel.AsPath()
+
+	t.CheckEquals(path.String(), "relative")
+}

@@ -229,3 +229,11 @@ func (p Path) ReadString() (string, error) {
 func (p Path) WriteString(s string) error {
 	return ioutil.WriteFile(string(p), []byte(s), 0666)
 }
+
+// A path that is relative to some base directory that is not further
+// specified.
+type RelPath string
+
+func (p RelPath) AsPath() Path {
+	return NewPath(string(p))
+}

@@ -589,15 +589,18 @@ func (t *Tester) Remove(relativeFileName Path) {
 //  module := get("subdir/module.mk")
 //
 // The filenames passed to the include function are all relative to the
-// same location, but that location is irrelevant in practice. The generated
-// .include lines take the relative paths into account. For example, when
-// subdir/module.mk includes subdir/version.mk, the include line is just:
+// same location, which is typically the pkgsrc root or a package directory,
+// but the code doesn't care.
+//
+// The generated .include lines take the relative paths into account.
+// For example, when subdir/module.mk includes subdir/version.mk,
+// the include line is just:
 //  .include "version.mk"
 func (t *Tester) SetUpHierarchy() (
-	include func(filename Path, args ...interface{}) *MkLines,
-	get func(Path) *MkLines) {
+	include func(filename RelPath, args ...interface{}) *MkLines,
+	get func(path RelPath) *MkLines) {
 
-	files := map[Path]*MkLines{}
+	files := map[RelPath]*MkLines{}
 	basedir := NewPath(".")
 
 	// includePath returns the path to be used in an .include.
@@ -613,12 +616,13 @@ func (t *Tester) SetUpHierarchy() (
 		}
 	}
 
-	include = func(filename Path, args ...interface{}) *MkLines {
+	include = func(filename RelPath, args ...interface{}) *MkLines {
 		var lines []*Line
 		lineno := 1
+		relFilename := basedir.Rel(filename.AsPath())
 
 		addLine := func(text string) {
-			lines = append(lines, t.NewLine(filename, lineno, text))
+			lines = append(lines, t.NewLine(relFilename, lineno, text))
 			lineno++
 		}
 
@@ -627,7 +631,7 @@ func (t *Tester) SetUpHierarchy() (
 			case string:
 				addLine(arg)
 			case *MkLines:
-				rel := includePath(filename, arg.lines.Filename)
+				rel := includePath(relFilename, arg.lines.Filename)
 				addLine(sprintf(".include %q", rel))
 				lines = append(lines, arg.lines.Lines...)
 			default:
@@ -635,13 +639,13 @@ func (t *Tester) SetUpHierarchy() (
 			}
 		}
 
-		mklines := NewMkLines(NewLines(filename, lines))
+		mklines := NewMkLines(NewLines(relFilename, lines))
 		assertf(files[filename] == nil, "MkLines with name %q already exists.", filename)
 		files[filename] = mklines
 		return mklines
 	}
 
-	get = func(filename Path) *MkLines {
+	get = func(filename RelPath) *MkLines {
 		assertf(files[filename] != nil, "MkLines with name %q doesn't exist.", filename)
 		return files[filename]
 	}
