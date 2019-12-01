@@ -1298,7 +1298,7 @@ func (s *Suite) Test_Pkgsrc_File(c *check.C) {
 
 	G.Pkgsrc.topdir = "$pkgsrcdir"
 
-	test := func(rel, resolved Path) {
+	test := func(rel PkgsrcPath, resolved Path) {
 		t.CheckEquals(G.Pkgsrc.File(rel), resolved)
 	}
 
@@ -1338,8 +1338,8 @@ func (s *Suite) Test_Change_Target(c *check.C) {
 	moved := Change{loc, Moved, "category/path", "category/other", "author", "2019-01-01"}
 	downgraded := Change{loc, Downgraded, "category/path", "1.0", "author", "2019-01-01"}
 
-	t.CheckEquals(renamed.Target(), NewPath("category/other"))
-	t.CheckEquals(moved.Target(), NewPath("category/other"))
+	t.CheckEquals(renamed.Target(), NewPkgsrcPath("category/other"))
+	t.CheckEquals(moved.Target(), NewPkgsrcPath("category/other"))
 	t.ExpectAssert(func() { downgraded.Target() })
 }
 

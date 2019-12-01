@@ -233,9 +233,52 @@ func (p Path) WriteString(s string) error {
 	return ioutil.WriteFile(string(p), []byte(s), 0666)
 }
 
+// PkgsrcPath is a path relative to the pkgsrc root.
+type PkgsrcPath string
+
+func NewPkgsrcPath(p string) PkgsrcPath {
+	return PkgsrcPath(p)
+}
+
+func (p PkgsrcPath) String() string {
+	return string(p)
+}
+
+func (p PkgsrcPath) AsPath() Path {
+	return NewPath(string(p))
+}
+
+func (p PkgsrcPath) Dir() PkgsrcPath {
+	return NewPkgsrcPath(p.AsPath().Dir().String())
+}
+
+func (p PkgsrcPath) Base() string {
+	return p.AsPath().Base()
+}
+
+func (p PkgsrcPath) Count() int {
+	return p.AsPath().Count()
+}
+
+func (p PkgsrcPath) HasPrefixPath(prefix Path) bool {
+	return p.AsPath().HasPrefixPath(prefix)
+}
+
+func (p PkgsrcPath) JoinNoClean(other Path) PkgsrcPath {
+	return NewPkgsrcPath(p.AsPath().JoinNoClean(other).String())
+}
+
+func (p PkgsrcPath) JoinRel(other RelPath) PkgsrcPath {
+	return p.JoinNoClean(other.AsPath())
+}
+
 // A path that is relative to some base directory that is not further
 // specified.
 type RelPath string
+
+func NewRelPath(p string) RelPath {
+	return RelPath(p)
+}
 
 func (p RelPath) AsPath() Path {
 	return NewPath(string(p))

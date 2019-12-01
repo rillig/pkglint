@@ -17,7 +17,7 @@ const rePkgname = `^([\w\-.+]+)-(\d[.0-9A-Z_a-z]*)$`
 // and such dependencies often span multiple files that are included indirectly.
 type Package struct {
 	dir                  Path         // The directory of the package, for resolving files
-	Pkgpath              Path         // e.g. "category/pkgdir"
+	Pkgpath              PkgsrcPath   // e.g. "category/pkgdir"
 	Pkgdir               Path         // PKGDIR from the package Makefile
 	Filesdir             Path         // FILESDIR from the package Makefile
 	Patchdir             Path         // PATCHDIR from the package Makefile
@@ -259,7 +259,7 @@ func (pkg *Package) parseLine(mklines *MkLines, mkline *MkLine, allLines *MkLine
 
 		filenameForUsedCheck := NewPath("")
 		dir, base := includedFile.Split()
-		if dir != "" && base == "Makefile.common" && dir != "../../"+pkg.Pkgpath+"/" {
+		if dir != "" && base == "Makefile.common" && dir.String() != "../../"+pkg.Pkgpath.String()+"/" {
 			filenameForUsedCheck = includingFile
 		}
 		if !pkg.parse(includedMkLines, allLines, filenameForUsedCheck) {

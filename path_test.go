@@ -637,6 +637,103 @@ func (s *Suite) Test_Path_WriteString(c *check.C) {
 		"line 2")
 }
 
+func (s *Suite) Test_NewPkgsrcPath(c *check.C) {
+	t := s.Init(c)
+
+	p := NewPkgsrcPath("category/package")
+
+	t.CheckEquals(p.AsPath().Dir(), NewPath("category"))
+}
+
+func (s *Suite) Test_PkgsrcPath_String(c *check.C) {
+	t := s.Init(c)
+
+	p := NewPkgsrcPath("any string..././")
+
+	str := p.String()
+
+	// No normalization takes place because it is typically not needed.
+	t.CheckEquals(str, "any string..././")
+}
+
+func (s *Suite) Test_PkgsrcPath_AsPath(c *check.C) {
+	t := s.Init(c)
+
+	pp := NewPkgsrcPath("./category/package/Makefile")
+
+	p := pp.AsPath()
+
+	t.CheckEquals(p.String(), "./category/package/Makefile")
+}
+
+func (s *Suite) Test_PkgsrcPath_Dir(c *check.C) {
+	t := s.Init(c)
+
+	pp := NewPkgsrcPath("dir/base///.")
+
+	dir := pp.Dir()
+
+	t.CheckEquals(dir, NewPkgsrcPath("dir/base"))
+}
+
+func (s *Suite) Test_PkgsrcPath_Base(c *check.C) {
+	t := s.Init(c)
+
+	pp := NewPkgsrcPath("dir/base///.")
+
+	base := pp.Base()
+
+	t.CheckEquals(base, ".")
+}
+
+func (s *Suite) Test_PkgsrcPath_Count(c *check.C) {
+	t := s.Init(c)
+
+	pp := NewPkgsrcPath("./...////dir")
+
+	count := pp.Count()
+
+	t.CheckEquals(count, 2)
+}
+
+func (s *Suite) Test_PkgsrcPath_HasPrefixPath(c *check.C) {
+	t := s.Init(c)
+
+	pp := NewPkgsrcPath("./././///prefix/suffix")
+
+	hasPrefixPath := pp.HasPrefixPath("prefix")
+
+	t.CheckEquals(hasPrefixPath, true)
+}
+
+func (s *Suite) Test_PkgsrcPath_JoinNoClean(c *check.C) {
+	t := s.Init(c)
+
+	pp := NewPkgsrcPath("base///.")
+
+	joined := pp.JoinNoClean("./../rel")
+
+	t.CheckEquals(joined, NewPkgsrcPath("base///././../rel"))
+}
+
+func (s *Suite) Test_PkgsrcPath_JoinRel(c *check.C) {
+	t := s.Init(c)
+
+	pp := NewPkgsrcPath("base///.")
+
+	joined := pp.JoinRel("./../rel")
+
+	t.CheckEquals(joined, NewPkgsrcPath("base///././../rel"))
+}
+
+func (s *Suite) Test_NewRelPath(c *check.C) {
+	t := s.Init(c)
+
+	rel := NewRelPath("dir/file")
+
+	t.CheckEquals(rel.AsPath().String(), "dir/file")
+}
+
 func (s *Suite) Test_RelPath_AsPath(c *check.C) {
 	t := s.Init(c)
 

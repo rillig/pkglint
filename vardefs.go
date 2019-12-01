@@ -372,7 +372,7 @@ func (reg *VarTypeRegistry) compilerLanguages(src *Pkgsrc) *BasicType {
 // If the file is not found, the allowed values are taken from
 // defval. This is only done in the pkglint tests.
 func (reg *VarTypeRegistry) enumFrom(
-	src *Pkgsrc, filename Path, defval string,
+	src *Pkgsrc, filename PkgsrcPath, defval string,
 	varcanons ...string) *BasicType {
 
 	mklines := src.LoadMkExisting(filename)
@@ -429,7 +429,7 @@ func (reg *VarTypeRegistry) enumFrom(
 // If no directories are found, the allowed values are taken
 // from defval. This is only done in the pkglint tests.
 func (reg *VarTypeRegistry) enumFromDirs(
-	src *Pkgsrc, category Path, re regex.Pattern, repl string,
+	src *Pkgsrc, category PkgsrcPath, re regex.Pattern, repl string,
 	defval string) *BasicType {
 
 	versions := src.ListVersions(category, re, repl, false)
@@ -450,7 +450,7 @@ func (reg *VarTypeRegistry) enumFromDirs(
 // If no files are found, the allowed values are taken
 // from defval. This is only done in the pkglint tests.
 func (reg *VarTypeRegistry) enumFromFiles(
-	src *Pkgsrc, basedir Path, re regex.Pattern, repl string,
+	src *Pkgsrc, basedir PkgsrcPath, re regex.Pattern, repl string,
 	defval string) *BasicType {
 
 	var relevant []string
@@ -1279,7 +1279,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.sys("MANOWN", BtUserGroupName)
 	reg.pkglist("MASTER_SITES", BtFetchURL)
 
-	for _, filename := range []Path{"mk/fetch/sites.mk", "mk/fetch/fetch.mk"} {
+	for _, filename := range []PkgsrcPath{"mk/fetch/sites.mk", "mk/fetch/fetch.mk"} {
 		sitesMk := src.LoadMkExisting(filename)
 		if sitesMk != nil {
 			sitesMk.ForEach(func(mkline *MkLine) {

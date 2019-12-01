@@ -597,7 +597,7 @@ func (mkline *MkLine) ResolveVarsInRelativePath(relativePath Path) Path {
 	// TODO: Add test that suggests ${.PARSEDIR} in .include to be omitted.
 	tmp = tmp.Replace("${.PARSEDIR}", ".")
 
-	replaceLatest := func(varuse string, category Path, pattern regex.Pattern, replacement string) {
+	replaceLatest := func(varuse string, category PkgsrcPath, pattern regex.Pattern, replacement string) {
 		if tmp.ContainsText(varuse) {
 			latest := G.Pkgsrc.Latest(category, pattern, replacement)
 			tmp = tmp.Replace(varuse, latest)

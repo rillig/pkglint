@@ -225,7 +225,7 @@ func (cv *VartypeCheck) BuildlinkDepmethod() {
 }
 
 func (cv *VartypeCheck) Category() {
-	if cv.Value != "wip" && G.Pkgsrc.File(NewPath(cv.Value).JoinNoClean("Makefile")).IsFile() {
+	if cv.Value != "wip" && G.Pkgsrc.File(NewPkgsrcPath(cv.Value).JoinNoClean("Makefile")).IsFile() {
 		return
 	}
 
@@ -1076,7 +1076,7 @@ func (cv *VartypeCheck) Pkgpath() {
 		return
 	}
 
-	pkgpath := NewPath(value)
+	pkgpath := NewPkgsrcPath(value)
 	if !G.Wip && pkgpath.HasPrefixPath("wip") {
 		cv.MkLine.Errorf("A main pkgsrc package must not depend on a pkgsrc-wip package.")
 	}
