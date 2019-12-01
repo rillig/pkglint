@@ -18,10 +18,10 @@ const rePkgname = `^([\w\-.+]+)-(\d[.0-9A-Z_a-z]*)$`
 type Package struct {
 	dir                  CurrPath     // The directory of the package, for resolving files
 	Pkgpath              PkgsrcPath   // e.g. "category/pkgdir"
-	Pkgdir               RelPath      // PKGDIR from the package Makefile
-	Filesdir             RelPath      // FILESDIR from the package Makefile
-	Patchdir             RelPath      // PATCHDIR from the package Makefile
-	DistinfoFile         RelPath      // DISTINFO_FILE from the package Makefile
+	Pkgdir               PackagePath  // PKGDIR from the package Makefile
+	Filesdir             PackagePath  // FILESDIR from the package Makefile
+	Patchdir             PackagePath  // PATCHDIR from the package Makefile
+	DistinfoFile         PackagePath  // DISTINFO_FILE from the package Makefile
 	EffectivePkgname     string       // PKGNAME or DISTNAME from the package Makefile, including nb13, can be empty
 	EffectivePkgbase     string       // EffectivePkgname without the version
 	EffectivePkgversion  string       // The version part of the effective PKGNAME, excluding nb13
@@ -112,7 +112,7 @@ func (pkg *Package) load() ([]CurrPath, *MkLines, *MkLines) {
 		files = append(files, pkg.File(pkg.Pkgdir).ReadPaths()...)
 	}
 	files = append(files, pkg.File(pkg.Patchdir).ReadPaths()...)
-	if pkg.DistinfoFile != NewRelPath(pkg.vars.fallback["DISTINFO_FILE"]) {
+	if pkg.DistinfoFile != NewPackagePath(pkg.vars.fallback["DISTINFO_FILE"]) {
 		files = append(files, pkg.File(pkg.DistinfoFile))
 	}
 
@@ -181,10 +181,10 @@ func (pkg *Package) loadPackageMakefile() (*MkLines, *MkLines) {
 
 	allLines.collectUsedVariables()
 
-	pkg.Pkgdir = NewRelPath(pkg.vars.LastValue("PKGDIR"))
-	pkg.DistinfoFile = NewRelPath(pkg.vars.LastValue("DISTINFO_FILE"))
-	pkg.Filesdir = NewRelPath(pkg.vars.LastValue("FILESDIR"))
-	pkg.Patchdir = NewRelPath(pkg.vars.LastValue("PATCHDIR"))
+	pkg.Pkgdir = NewPackagePath(pkg.vars.LastValue("PKGDIR"))
+	pkg.DistinfoFile = NewPackagePath(pkg.vars.LastValue("DISTINFO_FILE"))
+	pkg.Filesdir = NewPackagePath(pkg.vars.LastValue("FILESDIR"))
+	pkg.Patchdir = NewPackagePath(pkg.vars.LastValue("PATCHDIR"))
 
 	// See lang/php/ext.mk
 	if pkg.vars.IsDefinedSimilar("PHPEXT_MK") {
@@ -606,7 +606,7 @@ func (pkg *Package) checkPlist() {
 
 	needsPlist, line := pkg.needsPlist()
 	hasPlist := pkg.File(pkg.Pkgdir.JoinNoClean("PLIST")).IsFile() ||
-		pkg.File(pkg.Pkgdir.JoinNoClean("/PLIST.common")).IsFile()
+		pkg.File(pkg.Pkgdir.JoinNoClean("PLIST.common")).IsFile()
 
 	if needsPlist && !hasPlist {
 		line.Warnf("This package should have a PLIST file.")
@@ -1437,7 +1437,7 @@ func (pkg *Package) AutofixDistinfo(oldSha1, newSha1 string) {
 // File returns the (possibly absolute) path to relativeFileName,
 // as resolved from the package's directory.
 // Variables that are known in the package are resolved, e.g. ${PKGDIR}.
-func (pkg *Package) File(relativeFileName RelPath) CurrPath {
+func (pkg *Package) File(relativeFileName PackagePath) CurrPath {
 	joined := pkg.dir.JoinNoClean(relativeFileName.AsPath())
 	resolved := resolveVariableRefs(nil /* XXX: or maybe some mklines? */, joined.String())
 	return NewCurrPathString(resolved).CleanPath()

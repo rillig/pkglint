@@ -27,7 +27,8 @@ func (lc *LicenseChecker) checkName(license string) {
 	licenseFile := NewCurrPath("")
 	if G.Pkg != nil {
 		if mkline := G.Pkg.vars.FirstDefinition("LICENSE_FILE"); mkline != nil {
-			licenseFile = G.Pkg.File(mkline.ResolveVarsInRelativePath(NewRelPath(mkline.Value())))
+			rel := mkline.ResolveVarsInRelativePath(NewRelPath(mkline.Value()))
+			licenseFile = G.Pkg.File(NewPackagePath(rel.String()))
 		}
 	}
 	if licenseFile.IsEmpty() {

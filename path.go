@@ -383,6 +383,24 @@ func (p PkgsrcPath) JoinRel(other RelPath) PkgsrcPath {
 	return p.JoinNoClean(other.AsPath())
 }
 
+// PackagePath is a path relative to the package directory. It is used
+// for the PATCHDIR and PKGDIR variables, as well as dependencies and
+// conflicts on other packages.
+type PackagePath Path
+
+func NewPackagePath(p string) PackagePath { return PackagePath(p) }
+
+func (p PackagePath) AsPath() Path { return Path(p) }
+
+func (p PackagePath) String() string { return p.AsPath().String() }
+
+// TODO: try RelPath instead of Path
+func (p PackagePath) JoinNoClean(other Path) PackagePath {
+	return NewPackagePath(p.AsPath().JoinNoClean(other).String())
+}
+
+func (p PackagePath) IsEmpty() bool { return p.AsPath().IsEmpty() }
+
 // RelPath is a path that is relative to some base directory that is not
 // further specified.
 type RelPath string

@@ -1056,6 +1056,55 @@ func (s *Suite) Test_PkgsrcPath_JoinRel(c *check.C) {
 	t.CheckEquals(joined, NewPkgsrcPath("base///././../rel"))
 }
 
+func (s *Suite) Test_NewPackagePath(c *check.C) {
+	t := s.Init(c)
+
+	p := NewPackagePath("../../category/package")
+
+	t.CheckEquals(p.AsPath(), NewPath("../../category/package"))
+}
+
+func (s *Suite) Test_PackagePath_AsPath(c *check.C) {
+	t := s.Init(c)
+
+	pp := NewPackagePath("../../category/package/Makefile")
+
+	p := pp.AsPath()
+
+	t.CheckEquals(p.String(), "../../category/package/Makefile")
+}
+
+func (s *Suite) Test_PackagePath_String(c *check.C) {
+	t := s.Init(c)
+
+	pp := NewPackagePath("../../category/package/Makefile")
+
+	str := pp.String()
+
+	t.CheckEquals(str, "../../category/package/Makefile")
+}
+
+func (s *Suite) Test_PackagePath_JoinNoClean(c *check.C) {
+	t := s.Init(c)
+
+	pp := NewPackagePath("../../category/package/Makefile")
+
+	p := pp.JoinNoClean("patches")
+
+	t.CheckEquals(p.String(), "../../category/package/Makefile/patches")
+}
+
+func (s *Suite) Test_PackagePath_IsEmpty(c *check.C) {
+	t := s.Init(c)
+
+	test := func(p PackagePath, isEmpty bool) {
+		t.CheckEquals(p.IsEmpty(), isEmpty)
+	}
+
+	test("", true)
+	test(".", false)
+}
+
 func (s *Suite) Test_NewRelPath(c *check.C) {
 	t := s.Init(c)
 

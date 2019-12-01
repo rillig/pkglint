@@ -17,7 +17,7 @@ func CheckLinesDistinfo(pkg *Package, lines *Lines) {
 	}
 
 	filename := lines.Filename
-	patchdir := NewRelPath("patches")
+	patchdir := NewPackagePath("patches")
 	if pkg != nil && pkg.File(pkg.Patchdir).IsDir() {
 		patchdir = pkg.Patchdir
 	}
@@ -40,7 +40,7 @@ func CheckLinesDistinfo(pkg *Package, lines *Lines) {
 type distinfoLinesChecker struct {
 	pkg                 *Package
 	lines               *Lines
-	patchdir            RelPath // Relative to pkg
+	patchdir            PackagePath
 	distinfoIsCommitted bool
 
 	filenames []Path // For keeping the order from top to bottom
@@ -380,7 +380,7 @@ func (ck *distinfoLinesChecker) checkUncommittedPatch(info distinfoHash) {
 	}
 }
 
-func (ck *distinfoLinesChecker) checkPatchSha1(line *Line, patchFileName RelPath, distinfoSha1Hex string) {
+func (ck *distinfoLinesChecker) checkPatchSha1(line *Line, patchFileName PackagePath, distinfoSha1Hex string) {
 	lines := Load(ck.pkg.File(patchFileName), 0)
 	if lines == nil {
 		line.Errorf("Patch %s does not exist.", patchFileName)
