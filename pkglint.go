@@ -213,7 +213,7 @@ func (pkglint *Pkglint) prepareMainLoop() {
 	}
 
 	relTopdir := findPkgsrcTopdir(firstDir)
-	if relTopdir == "" {
+	if relTopdir.IsEmpty() {
 		// If the first argument to pkglint is not inside a pkgsrc tree,
 		// pkglint doesn't know where to load the infrastructure files from,
 		// and these are needed for virtually every single check.
@@ -331,7 +331,7 @@ func (pkglint *Pkglint) checkMode(dirent CurrPath, mode os.FileMode) {
 	pkglint.Wip = pkgsrcRel.HasPrefixPath("wip")
 	pkglint.Infrastructure = pkgsrcRel.HasPrefixPath("mk")
 	pkgsrcdir := findPkgsrcTopdir(dir)
-	if pkgsrcdir == "" {
+	if pkgsrcdir.IsEmpty() {
 		NewLineWhole(dirent).Errorf("Cannot determine the pkgsrc root directory for %q.", dir.CleanPath())
 		return
 	}

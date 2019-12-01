@@ -221,7 +221,7 @@ func (p CurrPath) String() string { return string(p) }
 
 func (p CurrPath) AsPath() Path { return Path(p) }
 
-func (p CurrPath) IsEmpty() bool { return p == "" }
+func (p CurrPath) IsEmpty() bool { return p.AsPath().IsEmpty() }
 
 func (p CurrPath) Dir() CurrPath { return CurrPath(p.AsPath().Dir()) }
 

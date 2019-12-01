@@ -509,7 +509,7 @@ func (t *Tester) CreateFileDummyBuildlink3(relativeFileName RelPath, customLines
 // temporary directory. It doesn't check whether that file exists.
 // Calls to Tester.Chdir change the base directory for the relative filename.
 func (t *Tester) File(relativeFileName RelPath) CurrPath {
-	if t.tmpdir == "" {
+	if t.tmpdir.IsEmpty() {
 		t.tmpdir = NewCurrPathSlash(t.c.MkDir())
 	}
 	if t.relCwd != "" {

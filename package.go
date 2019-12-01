@@ -290,7 +290,7 @@ func (pkg *Package) parseLine(mklines *MkLines, mkline *MkLine, allLines *MkLine
 func (pkg *Package) loadIncluded(mkline *MkLine, includingFile CurrPath) (includedMklines *MkLines, skip bool) {
 	includedFile := pkg.resolveIncludedFile(mkline, includingFile)
 
-	if includedFile == "" {
+	if includedFile.IsEmpty() {
 		return nil, true
 	}
 
