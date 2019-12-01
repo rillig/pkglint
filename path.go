@@ -148,7 +148,7 @@ func (p Path) Clean() Path { return NewPath(path.Clean(string(p))) }
 // CleanDot returns the path with single dots removed and double slashes
 // collapsed.
 func (p Path) CleanDot() Path {
-	if !p.ContainsText(".") {
+	if !p.ContainsText(".") && !p.ContainsText("//") {
 		return p
 	}
 
