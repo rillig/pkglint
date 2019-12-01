@@ -113,6 +113,28 @@ func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable__from_package(c 
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_SimpleCommandChecker_handleComment(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpTool("printf", "", AtRunTime)
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"\tprintf 'line 1'; \\",
+		"\t\t# comment \\",
+		"\t\tprintf 'this is never printed'")
+
+	mklines.Check()
+
+	// TODO: Issue a warning that the comment in line 3 extends to line 4.
+	//
+	// In ShellLineChecker.CheckShellCommand, the comment is still there.
+	// The parsed program doesn't contain the comment though.
+	//
+	// In parseShellProgram, the information about the line continuations
+	// is gone. Therefore it's difficult to diagnose this.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_SimpleCommandChecker_checkRegexReplace(c *check.C) {
 	t := s.Init(c)
 
