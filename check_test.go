@@ -557,6 +557,7 @@ func (t *Tester) Chdir(relativeDirName Path) {
 	assertNil(os.Chdir(absDirName.String()), "Chdir")
 	t.relCwd = relativeDirName
 	G.cwd = absDirName
+	G.Pkgsrc.topdir = absDirName.Rel(G.Pkgsrc.topdir)
 }
 
 // Remove removes the file or directory from the temporary directory.

@@ -1176,8 +1176,9 @@ func (s *Suite) Test_Pkgsrc_ReadDir(c *check.C) {
 func (s *Suite) Test_Pkgsrc_Relpath(c *check.C) {
 	t := s.Init(c)
 
-	t.Chdir(".")
 	t.CheckEquals(G.Pkgsrc.topdir, t.tmpdir)
+	t.Chdir(".")
+	t.CheckEquals(G.Pkgsrc.topdir, NewPath("."))
 
 	test := func(from, to Path, result Path) {
 		t.CheckEquals(G.Pkgsrc.Relpath(from, to), result)
