@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"netbsd.org/pkglint/intqa"
 	"netbsd.org/pkglint/regex"
 	"os"
 	"regexp"
@@ -96,6 +97,19 @@ func (s *Suite) TearDownTest(c *check.C) {
 	t.DisableTracing()
 
 	G = unusablePkglint()
+}
+
+// Ensures that all test names follow a common naming scheme:
+//
+//  Test_${Type}_${Method}__${description_using_underscores}
+func (s *Suite) Test__qa(c *check.C) {
+	ck := intqa.NewQAChecker(c.Errorf)
+	ck.Configure("*", "*", "*", -intqa.EMissingTest)
+	ck.Configure("path.go", "*", "*", +intqa.EMissingTest)
+	ck.Configure("*yacc.go", "*", "*", intqa.ENone)
+	ck.Configure("*", "*", "", -intqa.EMissingTest)
+	ck.Configure("*.go", "Suite", "*", -intqa.EMethodsSameFile)
+	ck.Check()
 }
 
 var _ = check.Suite(new(Suite))
