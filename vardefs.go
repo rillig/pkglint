@@ -428,7 +428,7 @@ func (reg *VarTypeRegistry) enumFromDirs(pkgsrc *Pkgsrc, category Path, re regex
 	versions := pkgsrc.ListVersions(category, re, repl, false)
 	if len(versions) == 0 {
 		if !G.Testing {
-			NewLineWhole(category).Fatalf(
+			NewLineWhole(pkgsrc.File(category)).Fatalf(
 				"Must contain at least 1 subdirectory matching %q.", re)
 		}
 		return enum(defval)
@@ -442,7 +442,7 @@ func (reg *VarTypeRegistry) enumFromDirs(pkgsrc *Pkgsrc, category Path, re regex
 //
 // If no files are found, the allowed values are taken
 // from defval. This should only happen in the pkglint tests.
-func (reg *VarTypeRegistry) enumFromFiles(basedir Path, re regex.Pattern, repl string, defval string) *BasicType {
+func (reg *VarTypeRegistry) enumFromFiles(pkgsrc *Pkgsrc, basedir Path, re regex.Pattern, repl string, defval string) *BasicType {
 	var relevant []string
 	for _, filename := range dirglob(G.Pkgsrc.File(basedir)) {
 		basename := filename.Base()
@@ -452,7 +452,7 @@ func (reg *VarTypeRegistry) enumFromFiles(basedir Path, re regex.Pattern, repl s
 	}
 	if len(relevant) == 0 {
 		if !G.Testing {
-			NewLineWhole(basedir).Fatalf(
+			NewLineWhole(pkgsrc.File(basedir)).Fatalf(
 				"Must contain at least 1 file matching %q.", re)
 		}
 		return enum(defval)
@@ -1307,7 +1307,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.pkglistrat("ONLY_FOR_COMPILER", compilers)
 	reg.pkglistrat("ONLY_FOR_PLATFORM", BtMachinePlatformPattern)
 	reg.pkgrat("ONLY_FOR_UNPRIVILEGED", BtYesNo)
-	reg.sysload("OPSYS", reg.enumFromFiles("mk/platform", `(.*)\.mk$`, "$1",
+	reg.sysload("OPSYS", reg.enumFromFiles(src, "mk/platform", `(.*)\.mk$`, "$1",
 		"Cygwin DragonFly FreeBSD Linux NetBSD SunOS"))
 	reg.pkglistbl3("OPSYSVARS", BtVariableName)
 	reg.pkg("OSVERSION_SPECIFIC", BtYes)
