@@ -169,8 +169,6 @@ type varalignLine struct {
 
 func (va *VaralignBlock) Process(mkline *MkLine) {
 	switch {
-	case !G.Opts.WarnSpace:
-
 	case mkline.IsEmpty():
 		va.Finish()
 
@@ -464,7 +462,7 @@ func (*VaralignBlock) realignMultiEmptyInitial(info *varalignLine, newWidth int)
 	if hasSpace && column != oldColumn {
 		fix.Notef("This variable value should be aligned with tabs, not spaces, to column %d.", column+1)
 	} else if column != oldColumn {
-		fix.Notef("This variable value should be aligned to column %d.", column+1)
+		fix.Notef("This variable value should be aligned to column %d.", column+1) // TODO: to column %d instead of %d.
 	} else {
 		fix.Notef("Variable values should be aligned with tabs, not spaces.")
 	}

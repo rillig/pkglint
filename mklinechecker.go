@@ -1348,9 +1348,6 @@ func (ck MkLineChecker) checkInclude() {
 }
 
 func (ck MkLineChecker) checkDirectiveIndentation(expectedDepth int) {
-	if !G.Opts.WarnSpace {
-		return
-	}
 	mkline := ck.MkLine
 	indent := mkline.Indent()
 	if expected := strings.Repeat(" ", expectedDepth); indent != expected {

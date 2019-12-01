@@ -81,8 +81,7 @@ type CmdOpts struct {
 
 	WarnExtra,
 	WarnPerm,
-	WarnQuoting,
-	WarnSpace bool
+	WarnQuoting bool
 
 	Profiling,
 	ShowHelp,
@@ -258,7 +257,6 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) int {
 	warn.AddFlagVar("extra", &gopts.WarnExtra, false, "enable some extra warnings")
 	warn.AddFlagVar("perm", &gopts.WarnPerm, false, "warn about unforeseen variable definition and use")
 	warn.AddFlagVar("quoting", &gopts.WarnQuoting, false, "warn about quoting issues")
-	warn.AddFlagVar("space", &gopts.WarnSpace, false, "warn about inconsistent use of whitespace")
 
 	remainingArgs, err := opts.Parse(args)
 	if err != nil {

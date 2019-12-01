@@ -1132,6 +1132,7 @@ func (s *Suite) Test_Pkgsrc_checkToplevelUnusedLicenses(c *check.C) {
 
 	t.CreateFileLines("category/Makefile",
 		MkCvsID,
+		"",
 		"COMMENT=\tExample category",
 		"",
 		"SUBDIR+=\tpackage",
