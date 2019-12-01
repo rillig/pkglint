@@ -1242,7 +1242,7 @@ func (q *CurrPathQueue) Pop() CurrPath {
 // LazyStringBuilder builds a string that is most probably equal to an
 // already existing string. In that case, it avoids any memory allocations.
 type LazyStringBuilder struct {
-	Expected string
+	expected string
 	len      int
 	usingBuf bool
 	buf      []byte
@@ -1256,7 +1256,7 @@ func (b *LazyStringBuilder) Write(p []byte) (n int, err error) {
 }
 
 func NewLazyStringBuilder(expected string) LazyStringBuilder {
-	return LazyStringBuilder{Expected: expected}
+	return LazyStringBuilder{expected: expected}
 }
 
 func (b *LazyStringBuilder) Len() int {
@@ -1264,7 +1264,7 @@ func (b *LazyStringBuilder) Len() int {
 }
 
 func (b *LazyStringBuilder) WriteString(s string) {
-	if !b.usingBuf && b.len+len(s) <= len(b.Expected) && hasPrefix(b.Expected[b.len:], s) {
+	if !b.usingBuf && b.len+len(s) <= len(b.expected) && hasPrefix(b.expected[b.len:], s) {
 		b.len += len(s)
 		return
 	}
@@ -1274,7 +1274,7 @@ func (b *LazyStringBuilder) WriteString(s string) {
 }
 
 func (b *LazyStringBuilder) WriteByte(c byte) {
-	if !b.usingBuf && b.len < len(b.Expected) && b.Expected[b.len] == c {
+	if !b.usingBuf && b.len < len(b.expected) && b.expected[b.len] == c {
 		b.len++
 		return
 	}
@@ -1285,9 +1285,9 @@ func (b *LazyStringBuilder) writeToBuf(c byte) {
 	if !b.usingBuf {
 		if cap(b.buf) >= b.len {
 			b.buf = b.buf[:b.len]
-			assert(copy(b.buf, b.Expected) == b.len)
+			assert(copy(b.buf, b.expected) == b.len)
 		} else {
-			b.buf = []byte(b.Expected)[:b.len]
+			b.buf = []byte(b.expected)[:b.len]
 		}
 		b.usingBuf = true
 	}
@@ -1297,7 +1297,7 @@ func (b *LazyStringBuilder) writeToBuf(c byte) {
 }
 
 func (b *LazyStringBuilder) Reset(expected string) {
-	b.Expected = expected
+	b.expected = expected
 	b.usingBuf = false
 	b.len = 0
 }
@@ -1306,5 +1306,5 @@ func (b *LazyStringBuilder) String() string {
 	if b.usingBuf {
 		return string(b.buf[:b.len])
 	}
-	return b.Expected[:b.len]
+	return b.expected[:b.len]
 }

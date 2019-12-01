@@ -1059,7 +1059,7 @@ func (s *Suite) Test_LazyStringBuilder_writeToBuf__assertion(c *check.C) {
 
 	// Intentionally violate the invariant of the LazyStringBuilder that
 	// as long as sb.usingBuf is false, sb.len is at most len(sb.expected).
-	sb.Expected = ""
+	sb.expected = ""
 	t.ExpectAssert(func() { sb.writeToBuf('x') })
 }
 
