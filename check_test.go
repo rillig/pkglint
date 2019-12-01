@@ -996,7 +996,7 @@ func (t *Tester) CheckOutputLinesMatching(pattern regex.Pattern, expectedLines .
 // See CheckOutputEmpty, CheckOutputLines.
 func (t *Tester) CheckOutputLinesIgnoreSpace(expectedLines ...string) {
 	assertf(len(expectedLines) > 0, "To check empty lines, use CheckOutputEmpty instead.")
-	assertf(t.tmpdir != "", "Tester must be initialized before checking the output.")
+	assertf(!t.tmpdir.IsEmpty(), "Tester must be initialized before checking the output.")
 
 	rawOutput := t.stdout.String() + t.stderr.String()
 	_ = t.Output() // Just to consume the output

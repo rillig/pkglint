@@ -356,7 +356,7 @@ func (pkg *Package) loadIncluded(mkline *MkLine, includingFile CurrPath) (includ
 // their actual values.
 func (pkg *Package) resolveIncludedFile(mkline *MkLine, includingFilename CurrPath) Path {
 
-	// TODO: resolveVariableRefs uses G.Pkg implicitly. It should be made explicit.
+	// FIXME: resolveVariableRefs uses G.Pkg implicitly. It should be made explicit.
 	// TODO: Try to combine resolveVariableRefs and ResolveVarsInRelativePath.
 	resolved := mkline.ResolveVarsInRelativePath(NewRelPath(mkline.IncludedFile().String()))
 	includedText := resolveVariableRefs(nil /* XXX: or maybe some mklines? */, resolved.String())

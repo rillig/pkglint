@@ -1127,8 +1127,8 @@ func (src *Pkgsrc) ToRel(filename CurrPath) PkgsrcPath {
 	return NewPkgsrcPath(src.Relpath(src.topdir, filename).String())
 }
 
-// IsInfra returns whether the given filename (relative to the current
-// working directory) is part of the pkgsrc infrastructure.
+// IsInfra returns whether the given filename is part of the pkgsrc
+// infrastructure.
 func (src *Pkgsrc) IsInfra(filename CurrPath) bool {
 	rel := src.ToRel(filename)
 	return rel.HasPrefixPath("mk") || rel.HasPrefixPath("wip/mk")

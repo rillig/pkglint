@@ -383,8 +383,8 @@ func (p PkgsrcPath) JoinRel(other RelPath) PkgsrcPath {
 	return p.JoinNoClean(other.AsPath())
 }
 
-// A path that is relative to some base directory that is not further
-// specified.
+// RelPath is a path that is relative to some base directory that is not
+// further specified.
 type RelPath string
 
 func NewRelPath(p string) RelPath {

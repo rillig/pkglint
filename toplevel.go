@@ -12,7 +12,7 @@ func CheckdirToplevel(dir CurrPath) {
 	}
 
 	ctx := Toplevel{dir, "", nil}
-	filename := dir + "/Makefile"
+	filename := dir.JoinNoClean("Makefile")
 
 	mklines := LoadMk(filename, NotEmpty|LogErrors)
 	if mklines == nil {

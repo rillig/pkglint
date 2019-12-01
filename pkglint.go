@@ -760,14 +760,14 @@ func (pkglint *Pkglint) loadCvsEntries(filename CurrPath) map[string]CvsEntry {
 		}
 	}
 
-	lines := Load(dir+"/CVS/Entries", 0)
+	lines := Load(dir.JoinNoClean("CVS/Entries"), 0)
 	if lines != nil {
 		entries = make(map[string]CvsEntry)
 		for _, line := range lines.Lines {
 			handle(line, true, line.Text)
 		}
 
-		logLines := Load(dir+"/CVS/Entries.Log", 0)
+		logLines := Load(dir.JoinNoClean("CVS/Entries.Log"), 0)
 		if logLines != nil {
 			for _, line := range logLines.Lines {
 				text := line.Text
