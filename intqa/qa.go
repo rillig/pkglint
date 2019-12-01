@@ -90,7 +90,7 @@ func (ck *QAChecker) Configure(filenames, typeNames, funcNames string, errors ..
 
 func (ck *QAChecker) Check() {
 	ck.load(".")
-	ck.checkTestees()
+	ck.checkTesteesTest()
 	ck.checkTests()
 	ck.checkMethodsSameFile()
 	ck.checkOrder()
@@ -305,10 +305,6 @@ func (ck *QAChecker) checkTestDescr(test *test) {
 		testee.code,
 		"%s: Test description %q must not use CamelCase in the first word.",
 		test.fullName(), test.descr)
-}
-
-func (ck *QAChecker) checkTestees() {
-	ck.checkTesteesTest()
 }
 
 // checkTesteesTest ensures that each testee has a corresponding unit test.

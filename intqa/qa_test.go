@@ -437,18 +437,6 @@ func (s *Suite) Test_QAChecker_checkTestDescr__camel_case(c *check.C) {
 			"must not use CamelCase in the first word.")
 }
 
-func (s *Suite) Test_QAChecker_checkTestees(c *check.C) {
-	ck := s.Init(c)
-
-	ck.testees = []*testee{s.newTestee("s.go", "", "Func", 0)}
-	ck.tests = nil // force an error
-
-	ck.checkTestees()
-
-	s.CheckErrors(
-		"Missing unit test \"Test_Func\" for \"Func\".")
-}
-
 func (s *Suite) Test_QAChecker_checkTesteesTest(c *check.C) {
 	ck := s.Init(c)
 
