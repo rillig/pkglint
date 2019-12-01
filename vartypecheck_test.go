@@ -341,6 +341,7 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 	vt := NewVartypeCheckTester(t, BtDependencyWithPath)
 
 	t.CreateFileLines("category/package/Makefile")
+	t.CreateFileLines("category/package/files/dummy")
 	t.CreateFileLines("databases/py-sqlite3/Makefile")
 	t.CreateFileLines("devel/gettext/Makefile")
 	t.CreateFileLines("devel/gmake/Makefile")
@@ -404,6 +405,14 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 			"Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3\".",
 		"WARN: ~/category/package/filename.mk:22: "+
 			"Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3\".")
+
+	vt.Values(
+		"gettext-[0-9]*:files/../../../databases/py-sqlite3")
+
+	vt.Output(
+		"WARN: ~/category/package/filename.mk:31: " +
+			"\"files/../../../databases/py-sqlite3\" is " +
+			"not a valid relative package directory.")
 }
 
 func (s *Suite) Test_VartypeCheck_DistSuffix(c *check.C) {
