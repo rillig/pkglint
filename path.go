@@ -152,18 +152,7 @@ func (p Path) CleanDot() Path {
 		return p
 	}
 
-	// TODO: See whether it is worth to avoid memory allocations
-	//  in this method using LazyStringBuilder.
-
-	var parts []string
-	for i, part := range p.Parts() {
-		if !(part == "." || i > 0 && part == "") { // See Parts
-			parts = append(parts, part)
-		}
-	}
-	if len(parts) == 0 {
-		return "."
-	}
+	parts := p.Parts()
 	return NewPath(strings.Join(parts, "/"))
 }
 
