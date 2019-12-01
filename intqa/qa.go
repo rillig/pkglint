@@ -336,20 +336,20 @@ func (ck *QAChecker) checkTesteesTest() {
 // defined in the same file or in the corresponding test file.
 func (ck *QAChecker) checkMethodsSameFile() {
 	types := map[string]*code{}
-	var methods []code
+	var methods []*code
 
 	for _, testee := range ck.testees {
 		if testee.isType() {
 			types[testee.Type] = &testee.code
 		} else if testee.isMethod() {
-			methods = append(methods, testee.code)
+			methods = append(methods, &testee.code)
 		}
 	}
 	for _, test := range ck.tests {
 		if test.isType() {
 			types[test.Type] = &test.code
 		} else if test.isMethod() {
-			methods = append(methods, test.code)
+			methods = append(methods, &test.code)
 		}
 	}
 
@@ -362,7 +362,7 @@ func (ck *QAChecker) checkMethodsSameFile() {
 		if method.isTestScope() == typ.isTestScope() {
 			ck.addError(
 				EMethodsSameFile,
-				method,
+				*method,
 				"Method %s must be in %s, like its type.",
 				method.fullName(), typ.file)
 			continue
@@ -375,7 +375,7 @@ func (ck *QAChecker) checkMethodsSameFile() {
 
 		ck.addError(
 			EMethodsSameFile,
-			method,
+			*method,
 			"Method %s must be in %s, corresponding to its type.",
 			method.fullName(), correctFile)
 	}
