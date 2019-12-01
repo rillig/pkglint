@@ -482,6 +482,8 @@ func (s *Suite) Test_QAChecker_checkTesteesMethodsSameFile(c *check.C) {
 	ck.addTestee(code{"main_test.go", "T", "", 100})
 	ck.addTestee(code{"main_test.go", "T", "MethodOk", 101})
 	ck.addTestee(code{"other_test.go", "T", "MethodWrong", 102})
+	ck.addTest(code{"main_test.go", "T", "Test_MethodOk", 101})
+	ck.addTest(code{"other_test.go", "T", "Test_MethodWrong", 102})
 
 	ck.checkTesteesMethodsSameFile()
 
@@ -490,6 +492,7 @@ func (s *Suite) Test_QAChecker_checkTesteesMethodsSameFile(c *check.C) {
 		"Method Main.MethodWrongTest must be in main_test.go, "+
 			"corresponding to its type.",
 		"Method T.MethodWrong must be in main_test.go, like its type.")
+	// FIXME: Method T.Test_MethodWrong must be in main_test.go, like its type.
 }
 
 func (s *Suite) Test_QAChecker_errorsMask(c *check.C) {
