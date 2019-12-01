@@ -72,13 +72,6 @@ func unusablePkglint() Pkglint { return Pkglint{} }
 type CmdOpts struct {
 	CheckGlobal bool
 
-	// TODO: Are these Warn* options really all necessary?
-	//
-	// Some of them may have been unreliable in the past when they were new.
-	// Instead of these fine-grained options, there is already --only, which
-	// could be contrasted by a future --ignore option, in order to suppress
-	// individual checks.
-
 	WarnExtra,
 	WarnPerm,
 	WarnQuoting bool
