@@ -43,7 +43,9 @@ const (
 	EMethodsSameFile
 )
 
-// QAChecker ensures that all test names follow a common naming scheme:
+// QAChecker analyzes Go source code for consistency.
+//
+// Among others, it enforces a strict naming scheme for test methods:
 //  Test_${Type}_${Method}__${description_using_underscores}
 // Each of the variable parts may be omitted.
 type QAChecker struct {
