@@ -553,7 +553,7 @@ func (*MkLine) WithoutMakeVariables(value string) string {
 	return valueNovar.String()
 }
 
-func (mkline *MkLine) ResolveVarsInRelativePath(relativePath Path) Path {
+func (mkline *MkLine) ResolveVarsInRelativePath(relativePath RelPath) RelPath {
 	if !containsVarRef(relativePath.String()) {
 		return relativePath.CleanPath()
 	}
@@ -1053,7 +1053,7 @@ type indentationLevel struct {
 	// pkglint will happily accept .include "fname" in both the then and
 	// the else branch. This is ok since the primary job of this file list
 	// is to prevent wrong pkglint warnings about missing files.
-	checkedFiles []Path
+	checkedFiles []RelPath
 
 	// whether the line is a multiple-inclusion guard
 	guard bool
@@ -1158,14 +1158,14 @@ func (ind *Indentation) Args() string {
 	return ind.top().args
 }
 
-func (ind *Indentation) AddCheckedFile(filename Path) {
+func (ind *Indentation) AddCheckedFile(filename RelPath) {
 	top := ind.top()
 	top.checkedFiles = append(top.checkedFiles, filename)
 }
 
 // HasExists returns whether the given filename has been tested in an
 // exists(filename) condition and thus may or may not exist.
-func (ind *Indentation) HasExists(filename Path) bool {
+func (ind *Indentation) HasExists(filename RelPath) bool {
 	for _, level := range ind.levels {
 		for _, levelFilename := range level.checkedFiles {
 			if filename == levelFilename {
@@ -1240,7 +1240,7 @@ func (ind *Indentation) TrackAfter(mkline *MkLine) {
 		cond.Walk(&MkCondCallback{
 			Call: func(name string, arg string) {
 				if name == "exists" {
-					ind.AddCheckedFile(NewPath(arg))
+					ind.AddCheckedFile(NewRelPath(arg))
 				}
 			}})
 	}

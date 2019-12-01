@@ -1303,7 +1303,7 @@ func (ck MkLineChecker) checkInclude() {
 	if trace.Tracing {
 		trace.Stepf("includingFile=%s includedFile=%s", mkline.Filename, includedFile)
 	}
-	ck.CheckRelativePath(includedFile, mustExist)
+	ck.CheckRelativePath(NewRelPath(includedFile.String()), mustExist)
 
 	switch {
 	case includedFile.HasBase("Makefile"):
@@ -1363,7 +1363,7 @@ func (ck MkLineChecker) checkDirectiveIndentation(expectedDepth int) {
 
 // CheckRelativePath checks a relative path that leads to the directory of another package
 // or to a subdirectory thereof or a file within there.
-func (ck MkLineChecker) CheckRelativePath(relativePath Path, mustExist bool) {
+func (ck MkLineChecker) CheckRelativePath(relativePath RelPath, mustExist bool) {
 	if trace.Tracing {
 		defer trace.Call(relativePath, mustExist)()
 	}
@@ -1378,12 +1378,12 @@ func (ck MkLineChecker) CheckRelativePath(relativePath Path, mustExist bool) {
 		return
 	}
 
-	if resolvedPath.IsAbs() {
+	if resolvedPath.AsPath().IsAbs() {
 		mkline.Errorf("The path %q must be relative.", resolvedPath)
 		return
 	}
 
-	abs := mkline.Filename.Dir().JoinNoClean(resolvedPath)
+	abs := mkline.Filename.Dir().JoinNoClean(resolvedPath.AsPath())
 	if !abs.Exists() {
 		if mustExist && !ck.MkLines.indentation.HasExists(resolvedPath) {
 			mkline.Errorf("Relative path %q does not exist.", resolvedPath)
@@ -1426,13 +1426,13 @@ func (ck MkLineChecker) CheckRelativePath(relativePath Path, mustExist bool) {
 //
 // When used in .include directives, the relative package directories must be written
 // with the leading ../.. anyway, so the benefit might not be too big at all.
-func (ck MkLineChecker) CheckRelativePkgdir(pkgdir Path) {
+func (ck MkLineChecker) CheckRelativePkgdir(pkgdir RelPath) {
 	if trace.Tracing {
 		defer trace.Call(pkgdir)()
 	}
 
 	mkline := ck.MkLine
-	ck.CheckRelativePath(pkgdir+"/Makefile", true)
+	ck.CheckRelativePath(NewRelPath(pkgdir.JoinNoClean("Makefile").String()), true)
 	pkgdir = mkline.ResolveVarsInRelativePath(pkgdir)
 
 	if !matches(pkgdir.String(), `^\.\./\.\./([^./][^/]*/[^./][^/]*)$`) && !containsVarRef(pkgdir.String()) {

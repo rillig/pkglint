@@ -18,10 +18,10 @@ const rePkgname = `^([\w\-.+]+)-(\d[.0-9A-Z_a-z]*)$`
 type Package struct {
 	dir                  Path         // The directory of the package, for resolving files
 	Pkgpath              PkgsrcPath   // e.g. "category/pkgdir"
-	Pkgdir               Path         // PKGDIR from the package Makefile
-	Filesdir             Path         // FILESDIR from the package Makefile
-	Patchdir             Path         // PATCHDIR from the package Makefile
-	DistinfoFile         Path         // DISTINFO_FILE from the package Makefile
+	Pkgdir               RelPath      // PKGDIR from the package Makefile
+	Filesdir             RelPath      // FILESDIR from the package Makefile
+	Patchdir             RelPath      // PATCHDIR from the package Makefile
+	DistinfoFile         RelPath      // DISTINFO_FILE from the package Makefile
 	EffectivePkgname     string       // PKGNAME or DISTNAME from the package Makefile, including nb13, can be empty
 	EffectivePkgbase     string       // EffectivePkgname without the version
 	EffectivePkgversion  string       // The version part of the effective PKGNAME, excluding nb13
@@ -112,7 +112,7 @@ func (pkg *Package) load() ([]Path, *MkLines, *MkLines) {
 		files = append(files, dirglob(pkg.File(pkg.Pkgdir))...)
 	}
 	files = append(files, dirglob(pkg.File(pkg.Patchdir))...)
-	if pkg.DistinfoFile != NewPath(pkg.vars.fallback["DISTINFO_FILE"]) {
+	if pkg.DistinfoFile != NewRelPath(pkg.vars.fallback["DISTINFO_FILE"]) {
 		files = append(files, pkg.File(pkg.DistinfoFile))
 	}
 
@@ -126,7 +126,7 @@ func (pkg *Package) load() ([]Path, *MkLines, *MkLines) {
 		if pkg.Pkgdir == "." {
 			return true
 		}
-		return !filename.ContainsPath(pkg.Pkgdir)
+		return !filename.ContainsPath(pkg.Pkgdir.AsPath())
 	}
 
 	// Determine the used variables and PLIST directories before checking any of the Makefile fragments.
@@ -181,10 +181,10 @@ func (pkg *Package) loadPackageMakefile() (*MkLines, *MkLines) {
 
 	allLines.collectUsedVariables()
 
-	pkg.Pkgdir = NewPath(pkg.vars.LastValue("PKGDIR"))
-	pkg.DistinfoFile = NewPath(pkg.vars.LastValue("DISTINFO_FILE"))
-	pkg.Filesdir = NewPath(pkg.vars.LastValue("FILESDIR"))
-	pkg.Patchdir = NewPath(pkg.vars.LastValue("PATCHDIR"))
+	pkg.Pkgdir = NewRelPath(pkg.vars.LastValue("PKGDIR"))
+	pkg.DistinfoFile = NewRelPath(pkg.vars.LastValue("DISTINFO_FILE"))
+	pkg.Filesdir = NewRelPath(pkg.vars.LastValue("FILESDIR"))
+	pkg.Patchdir = NewRelPath(pkg.vars.LastValue("PATCHDIR"))
 
 	// See lang/php/ext.mk
 	if pkg.vars.IsDefinedSimilar("PHPEXT_MK") {
@@ -250,7 +250,7 @@ func (pkg *Package) parseLine(mklines *MkLines, mkline *MkLine, allLines *MkLine
 		includedMkLines, skip := pkg.loadIncluded(mkline, includingFile)
 
 		if includedMkLines == nil {
-			if skip || mklines.indentation.HasExists(includedFile) {
+			if skip || mklines.indentation.HasExists(NewRelPath(includedFile.String())) {
 				return true // See https://github.com/rillig/pkglint/issues/1
 			}
 			mkline.Errorf("Cannot read %q.", includedFile)
@@ -359,7 +359,7 @@ func (pkg *Package) resolveIncludedFile(mkline *MkLine, includingFilename Path) 
 
 	// TODO: resolveVariableRefs uses G.Pkg implicitly. It should be made explicit.
 	// TODO: Try to combine resolveVariableRefs and ResolveVarsInRelativePath.
-	resolved := mkline.ResolveVarsInRelativePath(mkline.IncludedFile())
+	resolved := mkline.ResolveVarsInRelativePath(NewRelPath(mkline.IncludedFile().String()))
 	includedText := resolveVariableRefs(nil /* XXX: or maybe some mklines? */, resolved.String())
 	includedFile := NewPath(includedText)
 	if containsVarRef(includedText) {
@@ -1438,8 +1438,8 @@ func (pkg *Package) AutofixDistinfo(oldSha1, newSha1 string) {
 // File returns the (possibly absolute) path to relativeFileName,
 // as resolved from the package's directory.
 // Variables that are known in the package are resolved, e.g. ${PKGDIR}.
-func (pkg *Package) File(relativeFileName Path) Path {
-	joined := pkg.dir.JoinNoClean(relativeFileName)
+func (pkg *Package) File(relativeFileName RelPath) Path {
+	joined := pkg.dir.JoinNoClean(relativeFileName.AsPath())
 	resolved := resolveVariableRefs(nil /* XXX: or maybe some mklines? */, joined.String())
 	return NewPath(resolved).CleanPath()
 }

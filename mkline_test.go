@@ -505,7 +505,7 @@ func (s *Suite) Test_MkLine_ResolveVarsInRelativePath(c *check.C) {
 		MkCvsID)
 	mkline := mklines.mklines[0]
 
-	test := func(before Path, after Path) {
+	test := func(before RelPath, after RelPath) {
 		t.CheckEquals(mkline.ResolveVarsInRelativePath(before), after)
 	}
 

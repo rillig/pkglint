@@ -305,3 +305,47 @@ func NewRelPath(p string) RelPath {
 func (p RelPath) AsPath() Path {
 	return NewPath(string(p))
 }
+
+func (p RelPath) String() string {
+	return p.AsPath().String()
+}
+
+func (p RelPath) Dir() RelPath {
+	return RelPath(p.AsPath().Dir())
+}
+
+func (p RelPath) HasBase(base string) bool {
+	return p.AsPath().HasBase(base)
+}
+
+func (p RelPath) Parts() []string {
+	return p.AsPath().Parts()
+}
+
+func (p RelPath) CleanPath() RelPath {
+	return RelPath(p.AsPath().CleanPath())
+}
+
+func (p RelPath) JoinNoClean(other Path) RelPath {
+	return RelPath(p.AsPath().JoinNoClean(other))
+}
+
+func (p RelPath) Replace(from string, to string) RelPath {
+	return RelPath(p.AsPath().Replace(from, to))
+}
+
+func (p RelPath) HasPrefixPath(prefix Path) bool {
+	return p.AsPath().HasPrefixPath(prefix)
+}
+
+func (p RelPath) ContainsPath(sub Path) bool {
+	return p.AsPath().ContainsPath(sub)
+}
+
+func (p RelPath) ContainsText(text string) bool {
+	return p.AsPath().ContainsText(text)
+}
+
+func (p RelPath) HasSuffixPath(suffix Path) bool {
+	return p.AsPath().HasSuffixPath(suffix)
+}

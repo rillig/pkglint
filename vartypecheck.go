@@ -443,7 +443,7 @@ func (cv *VartypeCheck) DependencyWithPath() {
 	if len(parts) == 2 {
 		pattern := parts[0]
 		relpath := NewRelPath(parts[1])
-		pathParts := relpath.AsPath().Parts()
+		pathParts := relpath.Parts()
 		pkg := pathParts[len(pathParts)-1]
 
 		if len(pathParts) >= 2 && pathParts[0] == ".." && pathParts[1] != ".." {
@@ -451,8 +451,8 @@ func (cv *VartypeCheck) DependencyWithPath() {
 			cv.MkLine.ExplainRelativeDirs()
 		}
 
-		if !containsVarRef(relpath.AsPath().String()) { // XXX
-			MkLineChecker{cv.MkLines, cv.MkLine}.CheckRelativePkgdir(relpath.AsPath())
+		if !containsVarRef(relpath.String()) {
+			MkLineChecker{cv.MkLines, cv.MkLine}.CheckRelativePkgdir(relpath)
 		}
 
 		switch pkg {
@@ -1164,7 +1164,7 @@ func (cv *VartypeCheck) RPkgVer() {
 
 // RelativePkgDir refers to a package directory, e.g. ../../category/pkgbase.
 func (cv *VartypeCheck) RelativePkgDir() {
-	MkLineChecker{cv.MkLines, cv.MkLine}.CheckRelativePkgdir(NewPath(cv.Value))
+	MkLineChecker{cv.MkLines, cv.MkLine}.CheckRelativePkgdir(NewRelPath(cv.Value))
 }
 
 // RelativePkgPath refers to a file or directory, e.g. ../../category/pkgbase,
@@ -1172,7 +1172,7 @@ func (cv *VartypeCheck) RelativePkgDir() {
 //
 // See RelativePkgDir, which requires a directory, not a file.
 func (cv *VartypeCheck) RelativePkgPath() {
-	MkLineChecker{cv.MkLines, cv.MkLine}.CheckRelativePath(NewPath(cv.Value), true)
+	MkLineChecker{cv.MkLines, cv.MkLine}.CheckRelativePath(NewRelPath(cv.Value), true)
 }
 
 func (cv *VartypeCheck) Restricted() {
