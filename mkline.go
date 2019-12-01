@@ -276,6 +276,7 @@ func (mkline *MkLine) SetHasElseBranch(elseLine *MkLine) {
 
 func (mkline *MkLine) MustExist() bool { return mkline.data.(*mkLineInclude).mustExist }
 
+// TODO: Return RelPath instead of Path.
 func (mkline *MkLine) IncludedFile() Path { return mkline.data.(*mkLineInclude).includedFile }
 
 // IncludedFileFull returns the path to the included file, relative to the
