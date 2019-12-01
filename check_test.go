@@ -598,6 +598,20 @@ func (t *Tester) SetUpHierarchy() (
 	get func(Path) *MkLines) {
 
 	files := map[Path]*MkLines{}
+	basedir := NewPath(".")
+
+	// includePath returns the path to be used in an .include.
+	//
+	// This is the same mechanism that is used in Pkgsrc.Relpath.
+	includePath := func(including, included Path) Path {
+		fromDir := including.Dir()
+		to := basedir.Rel(included)
+		if fromDir == to.Dir() {
+			return NewPath(to.Base())
+		} else {
+			return fromDir.Rel(basedir).JoinNoClean(to).CleanDot()
+		}
+	}
 
 	include = func(filename Path, args ...interface{}) *MkLines {
 		var lines []*Line
@@ -613,11 +627,8 @@ func (t *Tester) SetUpHierarchy() (
 			case string:
 				addLine(arg)
 			case *MkLines:
-				fromDir := G.Pkgsrc.File(filename.Dir())
-				to := G.Pkgsrc.File(arg.lines.Filename)
-				rel := G.Pkgsrc.Relpath(fromDir, to)
-				text := sprintf(".include %q", rel)
-				addLine(text)
+				rel := includePath(filename, arg.lines.Filename)
+				addLine(sprintf(".include %q", rel))
 				lines = append(lines, arg.lines.Lines...)
 			default:
 				panic("invalid type")
