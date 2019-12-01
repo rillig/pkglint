@@ -107,11 +107,11 @@ func (pkg *Package) load() ([]Path, *MkLines, *MkLines) {
 		return nil, nil, nil
 	}
 
-	files := dirglob(pkg.File("."))
+	files := pkg.File(".").ReadPaths()
 	if pkg.Pkgdir != "." {
-		files = append(files, dirglob(pkg.File(pkg.Pkgdir))...)
+		files = append(files, pkg.File(pkg.Pkgdir).ReadPaths()...)
 	}
-	files = append(files, dirglob(pkg.File(pkg.Patchdir))...)
+	files = append(files, pkg.File(pkg.Patchdir).ReadPaths()...)
 	if pkg.DistinfoFile != NewRelPath(pkg.vars.fallback["DISTINFO_FILE"]) {
 		files = append(files, pkg.File(pkg.DistinfoFile))
 	}

@@ -454,7 +454,7 @@ func (reg *VarTypeRegistry) enumFromFiles(
 	defval string) *BasicType {
 
 	var relevant []string
-	for _, filename := range dirglob(src.File(basedir)) {
+	for _, filename := range src.File(basedir).ReadPaths() {
 		basename := filename.Base()
 		if matches(basename, re) {
 			relevant = append(relevant, replaceAll(basename, re, repl))

@@ -648,6 +648,22 @@ func (s *Suite) Test_Path_ReadDir(c *check.C) {
 	t.CheckDeepEquals(names, []string{".git", "CVS", "file", "subdir"})
 }
 
+func (s *Suite) Test_Path_ReadPaths(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("dir/subdir/file")
+	t.CreateFileLines("dir/CVS/Entries")
+	t.CreateFileLines("dir/file")
+
+	p := t.File("dir")
+
+	paths := p.ReadPaths()
+
+	t.CheckDeepEquals(paths, []Path{
+		t.File("dir/file"),
+		t.File("dir/subdir")})
+}
+
 func (s *Suite) Test_Path_Open(c *check.C) {
 	t := s.Init(c)
 

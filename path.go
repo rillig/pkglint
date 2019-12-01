@@ -244,6 +244,20 @@ func (p Path) ReadDir() ([]os.FileInfo, error) {
 	return ioutil.ReadDir(string(p))
 }
 
+func (p Path) ReadPaths() []Path {
+	infos, err := p.ReadDir()
+	if err != nil {
+		return nil
+	}
+	var filenames []Path
+	for _, info := range infos {
+		if !(isIgnoredFilename(info.Name())) {
+			filenames = append(filenames, p.JoinNoClean(NewPath(info.Name())).CleanPath())
+		}
+	}
+	return filenames
+}
+
 func (p Path) Open() (*os.File, error) { return os.Open(string(p)) }
 
 func (p Path) ReadString() (string, error) {

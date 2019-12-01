@@ -285,20 +285,6 @@ func isIgnoredFilename(filename string) bool {
 	return hasPrefix(filename, ".#")
 }
 
-func dirglob(dirname Path) []Path {
-	infos, err := dirname.ReadDir()
-	if err != nil {
-		return nil
-	}
-	var filenames []Path
-	for _, info := range infos {
-		if !(isIgnoredFilename(info.Name())) {
-			filenames = append(filenames, dirname.JoinNoClean(NewPath(info.Name())).CleanPath())
-		}
-	}
-	return filenames
-}
-
 // Checks whether a file is already committed to the CVS repository.
 func isCommitted(filename Path) bool {
 	entries := G.loadCvsEntries(filename)
