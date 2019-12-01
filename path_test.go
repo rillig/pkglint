@@ -421,6 +421,7 @@ func (s *Suite) Test_Path_CleanDot(c *check.C) {
 	test("/absolute", "/absolute")
 	test("/usr/pkgsrc/wip/package", "/usr/pkgsrc/wip/package")
 	test("/usr/pkgsrc/wip/package/../mk/git-package.mk", "/usr/pkgsrc/wip/package/../mk/git-package.mk")
+	test("a//b", "a//b") // FIXME
 }
 
 func (s *Suite) Test_Path_CleanPath(c *check.C) {
