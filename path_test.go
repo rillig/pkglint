@@ -297,32 +297,6 @@ func (s *Suite) Test_Path_ContainsPath(c *check.C) {
 	test("aa/bb/cc", "c", false)
 }
 
-func (s *Suite) Test_Path_ContainsPathCanonical(c *check.C) {
-	t := s.Init(c)
-
-	test := func(p, sub Path, contains bool) {
-		t.CheckEquals(p.ContainsPathCanonical(sub), contains)
-	}
-
-	test("", "", false)
-	test(".", "", false)
-	test("filename", "", false)
-	test("filename", "filename", true)
-	test("a/b/c", "a", true)
-	test("a/b/c", "b", true)
-	test("a/b/c", "c", true)
-	test("a/b/c", "a/b", true)
-	test("a/b/c", "b/c", true)
-	test("a/b/c", "a/b/c", true)
-	test("aa/b/c", "a", false)
-	test("a/bb/c", "b", false)
-	test("a/bb/c", "b/c", false)
-	test("mk/fetch/fetch.mk", "mk", true)
-	test("category/package/../../wip/mk", "mk", true)
-	test("category/package/../../wip/mk/..", "mk", true) // FIXME
-	test("category/package/../../wip/mk/../..", "mk", false)
-}
-
 func (s *Suite) Test_Path_HasSuffixText(c *check.C) {
 	t := s.Init(c)
 

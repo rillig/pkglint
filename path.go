@@ -114,11 +114,6 @@ func (p Path) ContainsPath(sub Path) bool {
 	return sub == "."
 }
 
-func (p Path) ContainsPathCanonical(sub Path) bool {
-	cleaned := p.CleanPath()
-	return cleaned.ContainsPath(sub)
-}
-
 func (p Path) HasSuffixText(suffix string) bool {
 	return hasSuffix(string(p), suffix)
 }
