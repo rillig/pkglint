@@ -16,7 +16,7 @@ const rePkgname = `^([\w\-.+]+)-(\d[.0-9A-Z_a-z]*)$`
 // This is necessary because variables in Makefiles may be used before they are defined,
 // and such dependencies often span multiple files that are included indirectly.
 type Package struct {
-	dir                  Path         // The directory of the package, for resolving files
+	dir                  CurrPath     // The directory of the package, for resolving files
 	Pkgpath              PkgsrcPath   // e.g. "category/pkgdir"
 	Pkgdir               RelPath      // PKGDIR from the package Makefile
 	Filesdir             RelPath      // FILESDIR from the package Makefile
@@ -59,7 +59,7 @@ type Package struct {
 	Once Once
 }
 
-func NewPackage(dir Path) *Package {
+func NewPackage(dir CurrPath) *Package {
 	pkgpath := G.Pkgsrc.ToRel(dir)
 
 	// Package directory must be two subdirectories below the pkgsrc root.
@@ -99,7 +99,7 @@ func NewPackage(dir Path) *Package {
 	return &pkg
 }
 
-func (pkg *Package) load() ([]Path, *MkLines, *MkLines) {
+func (pkg *Package) load() ([]CurrPath, *MkLines, *MkLines) {
 	// Load the package Makefile and all included files,
 	// to collect all used and defined variables and similar data.
 	mklines, allLines := pkg.loadPackageMakefile()
@@ -116,7 +116,7 @@ func (pkg *Package) load() ([]Path, *MkLines, *MkLines) {
 		files = append(files, pkg.File(pkg.DistinfoFile))
 	}
 
-	isRelevantMk := func(filename Path, basename string) bool {
+	isRelevantMk := func(filename CurrPath, basename string) bool {
 		if !hasPrefix(basename, "Makefile.") && !filename.HasSuffixText(".mk") {
 			return false
 		}
@@ -212,7 +212,7 @@ func (pkg *Package) loadPackageMakefile() (*MkLines, *MkLines) {
 }
 
 // TODO: What is allLines used for, is it still necessary? Would it be better as a field in Package?
-func (pkg *Package) parse(mklines *MkLines, allLines *MkLines, includingFileForUsedCheck Path) bool {
+func (pkg *Package) parse(mklines *MkLines, allLines *MkLines, includingFileForUsedCheck CurrPath) bool {
 	if trace.Tracing {
 		defer trace.Call(mklines.lines.Filename)()
 	}
@@ -257,7 +257,7 @@ func (pkg *Package) parseLine(mklines *MkLines, mkline *MkLine, allLines *MkLine
 			return false
 		}
 
-		filenameForUsedCheck := NewPath("")
+		filenameForUsedCheck := NewCurrPath("")
 		dir, base := includedFile.Split()
 		if dir != "" && base == "Makefile.common" && dir.String() != "../../"+pkg.Pkgpath.String()+"/" {
 			filenameForUsedCheck = includingFile
@@ -287,15 +287,14 @@ func (pkg *Package) parseLine(mklines *MkLines, mkline *MkLine, allLines *MkLine
 // the included file is not processed further for whatever reason. But if
 // skip is false, the file could not be read and an appropriate error message
 // has already been logged.
-func (pkg *Package) loadIncluded(mkline *MkLine, includingFile Path) (includedMklines *MkLines, skip bool) {
+func (pkg *Package) loadIncluded(mkline *MkLine, includingFile CurrPath) (includedMklines *MkLines, skip bool) {
 	includedFile := pkg.resolveIncludedFile(mkline, includingFile)
 
 	if includedFile == "" {
 		return nil, true
 	}
 
-	dirname, _ := includingFile.Split() // TODO: .Dir?
-	dirname = dirname.CleanPath()
+	dirname := includingFile.Dir().CleanPath()
 	fullIncluded := dirname.JoinNoClean(includedFile)
 	relIncludedFile := G.Pkgsrc.Relpath(pkg.dir, fullIncluded)
 
@@ -355,7 +354,7 @@ func (pkg *Package) loadIncluded(mkline *MkLine, includingFile Path) (includedMk
 
 // resolveIncludedFile resolves Makefile variables such as ${PKGPATH} to
 // their actual values.
-func (pkg *Package) resolveIncludedFile(mkline *MkLine, includingFilename Path) Path {
+func (pkg *Package) resolveIncludedFile(mkline *MkLine, includingFilename CurrPath) Path {
 
 	// TODO: resolveVariableRefs uses G.Pkg implicitly. It should be made explicit.
 	// TODO: Try to combine resolveVariableRefs and ResolveVarsInRelativePath.
@@ -386,7 +385,7 @@ func (pkg *Package) resolveIncludedFile(mkline *MkLine, includingFilename Path) 
 //
 // The includingFile is relative to the current working directory,
 // the includedFile is taken directly from the .include directive.
-func (*Package) shouldDiveInto(includingFile, includedFile Path) bool {
+func (*Package) shouldDiveInto(includingFile CurrPath, includedFile Path) bool {
 
 	if includedFile.HasSuffixPath("bsd.pkg.mk") || IsPrefs(includedFile) {
 		return false
@@ -436,7 +435,7 @@ func (pkg *Package) collectConditionalIncludes(mklines *MkLines) {
 	})
 }
 
-func (pkg *Package) loadPlistDirs(plistFilename Path) {
+func (pkg *Package) loadPlistDirs(plistFilename CurrPath) {
 	lines := Load(plistFilename, MustSucceed)
 	ck := PlistChecker{
 		pkg,
@@ -455,7 +454,7 @@ func (pkg *Package) loadPlistDirs(plistFilename Path) {
 	}
 }
 
-func (pkg *Package) check(filenames []Path, mklines, allLines *MkLines) {
+func (pkg *Package) check(filenames []CurrPath, mklines, allLines *MkLines) {
 	haveDistinfo := false
 	havePatches := false
 
@@ -505,7 +504,7 @@ func (pkg *Package) check(filenames []Path, mklines, allLines *MkLines) {
 	}
 }
 
-func (pkg *Package) checkfilePackageMakefile(filename Path, mklines *MkLines, allLines *MkLines) {
+func (pkg *Package) checkfilePackageMakefile(filename CurrPath, mklines *MkLines, allLines *MkLines) {
 	if trace.Tracing {
 		defer trace.Call(filename)()
 	}
@@ -1199,7 +1198,7 @@ func (pkg *Package) checkUpdate() {
 
 // checkDirent checks a directory entry based on its filename and its mode
 // (regular file, directory, symlink).
-func (pkg *Package) checkDirent(dirent Path, mode os.FileMode) {
+func (pkg *Package) checkDirent(dirent CurrPath, mode os.FileMode) {
 	// TODO: merge duplicate code in Pkglint.checkMode
 
 	basename := dirent.Base()
@@ -1241,7 +1240,7 @@ func (pkg *Package) checkDirent(dirent Path, mode os.FileMode) {
 //
 // Pkglint assumes that the local username is the same as the NetBSD
 // username, which fits most scenarios.
-func (pkg *Package) checkOwnerMaintainer(filename Path) {
+func (pkg *Package) checkOwnerMaintainer(filename CurrPath) {
 	if trace.Tracing {
 		defer trace.Call(filename)()
 	}
@@ -1283,7 +1282,7 @@ func (pkg *Package) checkOwnerMaintainer(filename Path) {
 		"keyword \"maintainer\", for more information.")
 }
 
-func (pkg *Package) checkFreeze(filename Path) {
+func (pkg *Package) checkFreeze(filename CurrPath) {
 	freezeStart := G.Pkgsrc.LastFreezeStart
 	if freezeStart == "" || G.Pkgsrc.LastFreezeEnd != "" {
 		return
@@ -1300,7 +1299,7 @@ func (pkg *Package) checkFreeze(filename Path) {
 		"See https://www.NetBSD.org/developers/pkgsrc/ for the exact rules.")
 }
 
-func (pkg *Package) checkFileMakefileExt(filename Path) {
+func (pkg *Package) checkFileMakefileExt(filename CurrPath) {
 	base := filename.Base()
 	if !hasPrefix(base, "Makefile.") || base == "Makefile.common" {
 		return
@@ -1438,10 +1437,10 @@ func (pkg *Package) AutofixDistinfo(oldSha1, newSha1 string) {
 // File returns the (possibly absolute) path to relativeFileName,
 // as resolved from the package's directory.
 // Variables that are known in the package are resolved, e.g. ${PKGDIR}.
-func (pkg *Package) File(relativeFileName RelPath) Path {
+func (pkg *Package) File(relativeFileName RelPath) CurrPath {
 	joined := pkg.dir.JoinNoClean(relativeFileName.AsPath())
 	resolved := resolveVariableRefs(nil /* XXX: or maybe some mklines? */, joined.String())
-	return NewPath(resolved).CleanPath()
+	return NewCurrPathString(resolved).CleanPath()
 }
 
 // Rel returns the path by which the given filename (as seen from the
@@ -1450,7 +1449,7 @@ func (pkg *Package) File(relativeFileName RelPath) Path {
 //
 // Example:
 //  NewPackage("category/package").Rel("other/package") == "../../other/package"
-func (pkg *Package) Rel(filename Path) Path {
+func (pkg *Package) Rel(filename CurrPath) Path {
 	return G.Pkgsrc.Relpath(pkg.dir, filename)
 }
 

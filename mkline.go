@@ -280,7 +280,7 @@ func (mkline *MkLine) IncludedFile() Path { return mkline.data.(*mkLineInclude).
 
 // IncludedFileFull returns the path to the included file, relative to the
 // current working directory.
-func (mkline *MkLine) IncludedFileFull() Path {
+func (mkline *MkLine) IncludedFileFull() CurrPath {
 	return mkline.Filename.Dir().JoinClean(mkline.IncludedFile()).CleanPath() // FIXME: JoinNoClean?
 }
 
@@ -558,7 +558,7 @@ func (mkline *MkLine) ResolveVarsInRelativePath(relativePath RelPath) RelPath {
 		return relativePath.CleanPath()
 	}
 
-	var basedir Path
+	var basedir CurrPath
 	if G.Pkg != nil {
 		basedir = G.Pkg.File(".")
 	} else {
@@ -1246,7 +1246,7 @@ func (ind *Indentation) TrackAfter(mkline *MkLine) {
 	}
 }
 
-func (ind *Indentation) CheckFinish(filename Path) {
+func (ind *Indentation) CheckFinish(filename CurrPath) {
 	if ind.IsEmpty() {
 		return
 	}

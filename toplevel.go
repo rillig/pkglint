@@ -1,12 +1,12 @@
 package pkglint
 
 type Toplevel struct {
-	dir            Path
+	dir            CurrPath
 	previousSubdir Path
-	subdirs        []Path
+	subdirs        []CurrPath
 }
 
-func CheckdirToplevel(dir Path) {
+func CheckdirToplevel(dir CurrPath) {
 	if trace.Tracing {
 		defer trace.Call(dir)()
 	}

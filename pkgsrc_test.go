@@ -1178,9 +1178,9 @@ func (s *Suite) Test_Pkgsrc_Relpath(c *check.C) {
 
 	t.CheckEquals(G.Pkgsrc.topdir, t.tmpdir)
 	t.Chdir(".")
-	t.CheckEquals(G.Pkgsrc.topdir, NewPath("."))
+	t.CheckEquals(G.Pkgsrc.topdir, NewCurrPath("."))
 
-	test := func(from, to Path, result Path) {
+	test := func(from, to CurrPath, result Path) {
 		t.CheckEquals(G.Pkgsrc.Relpath(from, to), result)
 	}
 
@@ -1212,7 +1212,7 @@ func (s *Suite) Test_Pkgsrc_Relpath(c *check.C) {
 		"x11/frameworkintegration/../../meta-pkgs/kde/kf5.mk",
 		"meta-pkgs/kde/kf5.mk")
 
-	volume := NewPathSlash(filepath.VolumeName(t.tmpdir.String()))
+	volume := NewCurrPathSlash(filepath.VolumeName(t.tmpdir.String()))
 	G.Pkgsrc.topdir = volume.JoinNoClean("usr/pkgsrc")
 
 	// Taken from Test_MkLineChecker_CheckRelativePath__wip_mk
@@ -1242,7 +1242,7 @@ func (s *Suite) Test_Pkgsrc_Relpath(c *check.C) {
 	test("some/dir", ".", "../..")
 	test("some/dir/.", ".", "../..")
 
-	chdir := func(path Path) {
+	chdir := func(path CurrPath) {
 		// See Tester.Chdir; a direct Chdir works here since this test
 		// neither loads lines nor processes them.
 		assertNil(os.Chdir(path.String()), "Chdir %s", path)
@@ -1298,7 +1298,7 @@ func (s *Suite) Test_Pkgsrc_File(c *check.C) {
 
 	G.Pkgsrc.topdir = "$pkgsrcdir"
 
-	test := func(rel PkgsrcPath, resolved Path) {
+	test := func(rel PkgsrcPath, resolved CurrPath) {
 		t.CheckEquals(G.Pkgsrc.File(rel), resolved)
 	}
 

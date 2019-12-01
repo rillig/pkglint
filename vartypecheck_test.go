@@ -1793,7 +1793,7 @@ func (s *Suite) Test_VartypeCheck_YesNoIndirectly(c *check.C) {
 type VartypeCheckTester struct {
 	tester    *Tester
 	basicType *BasicType
-	filename  Path
+	filename  CurrPath
 	lineno    int
 	varname   string
 	op        MkOperator
@@ -1821,7 +1821,7 @@ func (vt *VartypeCheckTester) Varname(varname string) {
 	vt.nextSection()
 }
 
-func (vt *VartypeCheckTester) File(filename Path) {
+func (vt *VartypeCheckTester) File(filename CurrPath) {
 	vt.filename = filename
 	vt.lineno = 1
 }

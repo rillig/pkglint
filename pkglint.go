@@ -25,14 +25,15 @@ type Pkglint struct {
 	Pkgsrc Pkgsrc   // Global data, mostly extracted from mk/*.
 	Pkg    *Package // The package that is currently checked, or nil.
 
-	Todo           PathQueue // The files or directories that still need to be checked.
-	Wip            bool      // Is the currently checked file or package from pkgsrc-wip?
-	Infrastructure bool      // Is the currently checked file from the pkgsrc infrastructure?
-	Testing        bool      // Is pkglint in self-testing mode (only during development)?
-	Experimental   bool      // For experimental features, only enabled individually in tests
-	Username       string    // For checking against OWNER and MAINTAINER
+	Todo CurrPathQueue // The files or directories that still need to be checked.
 
-	cvsEntriesDir Path // Cached to avoid I/O
+	Wip            bool   // Is the currently checked file or package from pkgsrc-wip?
+	Infrastructure bool   // Is the currently checked file from the pkgsrc infrastructure?
+	Testing        bool   // Is pkglint in self-testing mode (only during development)?
+	Experimental   bool   // For experimental features, only enabled individually in tests
+	Username       string // For checking against OWNER and MAINTAINER
+
+	cvsEntriesDir CurrPath // Cached to avoid I/O
 	cvsEntries    map[string]CvsEntry
 
 	Logger Logger
@@ -45,7 +46,7 @@ type Pkglint struct {
 	// cwd is the absolute path to the current working
 	// directory. It is used for speeding up Relpath and abspath.
 	// There is no other use for it.
-	cwd Path
+	cwd CurrPath
 
 	InterPackage InterPackage
 }
@@ -57,7 +58,7 @@ func NewPkglint(stdout io.Writer, stderr io.Writer) Pkglint {
 	p := Pkglint{
 		res:       regex.NewRegistry(),
 		fileCache: NewFileCache(200),
-		cwd:       NewPathSlash(cwd),
+		cwd:       NewCurrPathSlash(cwd),
 		interner:  NewStringInterner()}
 	p.Logger.out = NewSeparatorWriter(stdout)
 	p.Logger.err = NewSeparatorWriter(stderr)
@@ -280,7 +281,7 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) int {
 	}
 
 	for _, arg := range pkglint.Opts.args {
-		pkglint.Todo.Push(NewPathSlash(arg))
+		pkglint.Todo.Push(NewCurrPathSlash(arg))
 	}
 	if pkglint.Todo.IsEmpty() {
 		pkglint.Todo.Push(".")
@@ -296,7 +297,7 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) int {
 //
 // It sets up all the global state (infrastructure, wip) for accurately
 // classifying the entry.
-func (pkglint *Pkglint) Check(dirent Path) {
+func (pkglint *Pkglint) Check(dirent CurrPath) {
 	if trace.Tracing {
 		defer trace.Call(dirent)()
 	}
@@ -310,7 +311,7 @@ func (pkglint *Pkglint) Check(dirent Path) {
 	pkglint.checkMode(dirent, st.Mode())
 }
 
-func (pkglint *Pkglint) checkMode(dirent Path, mode os.FileMode) {
+func (pkglint *Pkglint) checkMode(dirent CurrPath, mode os.FileMode) {
 	// TODO: merge duplicate code in Package.checkDirent
 	isDir := mode.IsDir()
 	isReg := mode.IsRegular()
@@ -359,7 +360,7 @@ func (pkglint *Pkglint) checkMode(dirent Path, mode os.FileMode) {
 
 // checkdirPackage checks a complete pkgsrc package, including each
 // of the files individually, and also when seen in combination.
-func (pkglint *Pkglint) checkdirPackage(dir Path) {
+func (pkglint *Pkglint) checkdirPackage(dir CurrPath) {
 	if trace.Tracing {
 		defer trace.Call(dir)()
 	}
@@ -373,7 +374,7 @@ func (pkglint *Pkglint) checkdirPackage(dir Path) {
 }
 
 // Returns the pkgsrc top-level directory, relative to the given directory.
-func findPkgsrcTopdir(dirname Path) Path {
+func findPkgsrcTopdir(dirname CurrPath) Path {
 	for _, dir := range [...]Path{".", "..", "../..", "../../.."} {
 		if dirname.JoinNoClean(dir).JoinNoClean("mk/bsd.pkg.mk").IsFile() {
 			return dir
@@ -423,7 +424,7 @@ func resolveVariableRefs(mklines *MkLines, text string) (resolved string) {
 	}
 }
 
-func CheckFileOther(filename Path) {
+func CheckFileOther(filename CurrPath) {
 	if trace.Tracing {
 		defer trace.Call(filename)()
 	}
@@ -526,7 +527,7 @@ func CheckLinesMessage(lines *Lines) {
 	SaveAutofixChanges(lines)
 }
 
-func CheckFileMk(filename Path) {
+func CheckFileMk(filename CurrPath) {
 	if trace.Tracing {
 		defer trace.Call(filename)()
 	}
@@ -547,7 +548,7 @@ func CheckFileMk(filename Path) {
 // checkReg checks the given regular file.
 // depth is 3 for files in the package directory, and 4 or more for files
 // deeper in the directory hierarchy, such as in files/ or patches/.
-func (pkglint *Pkglint) checkReg(filename Path, basename string, depth int) {
+func (pkglint *Pkglint) checkReg(filename CurrPath, basename string, depth int) {
 
 	if depth == 3 && !pkglint.Wip {
 		// FIXME: There's no good reason for prohibiting a README file.
@@ -653,7 +654,7 @@ func (pkglint *Pkglint) matchesLicenseFile(basename string) bool {
 	return basename == path.Base(licenseFile)
 }
 
-func (pkglint *Pkglint) checkExecutable(filename Path, mode os.FileMode) {
+func (pkglint *Pkglint) checkExecutable(filename CurrPath, mode os.FileMode) {
 	if mode.Perm()&0111 == 0 {
 		// Not executable at all.
 		return
@@ -733,7 +734,7 @@ func (pkglint *Pkglint) tools(mklines *MkLines) *Tools {
 	}
 }
 
-func (pkglint *Pkglint) loadCvsEntries(filename Path) map[string]CvsEntry {
+func (pkglint *Pkglint) loadCvsEntries(filename CurrPath) map[string]CvsEntry {
 	dir := filename.Dir()
 	if dir == pkglint.cvsEntriesDir {
 		return pkglint.cvsEntries
@@ -784,9 +785,9 @@ func (pkglint *Pkglint) loadCvsEntries(filename Path) map[string]CvsEntry {
 	return entries
 }
 
-func (pkglint *Pkglint) Abs(filename Path) Path {
+func (pkglint *Pkglint) Abs(filename CurrPath) CurrPath {
 	if !filename.IsAbs() {
-		return pkglint.cwd.JoinNoClean(filename).Clean()
+		return pkglint.cwd.JoinNoClean(filename.AsPath()).Clean()
 	}
 	return filename.Clean()
 }

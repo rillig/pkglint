@@ -1065,7 +1065,7 @@ func (s *Suite) Test_Package_shouldDiveInto(c *check.C) {
 	t := s.Init(c)
 	t.Chdir("category/package")
 
-	test := func(including, included Path, expected bool) {
+	test := func(including CurrPath, included Path, expected bool) {
 		actual := (*Package)(nil).shouldDiveInto(including, included)
 		t.CheckEquals(actual, expected)
 	}

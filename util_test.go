@@ -655,15 +655,15 @@ func (s *Suite) Test_FileCache(c *check.C) {
 	c.Check(cache.Get("Makefile", MustSucceed|LogErrors), check.IsNil) // Wrong LoadOptions.
 
 	linesFromCache := cache.Get("Makefile", 0)
-	t.CheckEquals(linesFromCache.Filename, NewPath("Makefile"))
+	t.CheckEquals(linesFromCache.Filename, NewCurrPath("Makefile"))
 	c.Check(linesFromCache.Lines, check.HasLen, 2)
-	t.CheckEquals(linesFromCache.Lines[0].Filename, NewPath("Makefile"))
+	t.CheckEquals(linesFromCache.Lines[0].Filename, NewCurrPath("Makefile"))
 
 	// Cache keys are normalized using path.Clean.
 	linesFromCache2 := cache.Get("./Makefile", 0)
-	t.CheckEquals(linesFromCache2.Filename, NewPath("./Makefile"))
+	t.CheckEquals(linesFromCache2.Filename, NewCurrPath("./Makefile"))
 	c.Check(linesFromCache2.Lines, check.HasLen, 2)
-	t.CheckEquals(linesFromCache2.Lines[0].Filename, NewPath("./Makefile"))
+	t.CheckEquals(linesFromCache2.Lines[0].Filename, NewCurrPath("./Makefile"))
 
 	cache.Put("file1.mk", 0, lines)
 	cache.Put("file2.mk", 0, lines)

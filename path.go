@@ -8,17 +8,11 @@ import (
 	"strings"
 )
 
-// Path is a slash-separated path in the filesystem.
+// Path is a slash-separated path.
+// It may or may not resolve to an existing file.
 // It may be absolute or relative.
 // Some paths may contain placeholders like @VAR@ or ${VAR}.
-// The base directory of relative paths depends on the context
-// in which the path is used.
-//
-// TODO: Consider adding several more specialized types of path:
-// TODO: CurrPath, relative to the current working directory
-// TODO: PkgsrcPath, relative to the pkgsrc root
-// TODO: PackagePath, relative to the package directory
-// TODO: RelativePath, relative to some other basedir
+// The base directory of relative paths is unspecified.
 type Path string
 
 func NewPath(name string) Path { return Path(name) }
@@ -213,59 +207,145 @@ func (p Path) Rel(other Path) Path {
 	return NewPath(filepath.ToSlash(rel))
 }
 
-func (p Path) Rename(newName Path) error {
+// CurrPath is a path that is either absolute or relative to the current
+// working directory. It is used in command line arguments and for
+// loading files from the file system, and later in the diagnostics.
+type CurrPath Path
+
+func NewCurrPath(p Path) CurrPath { return CurrPath(p) }
+
+func NewCurrPathString(p string) CurrPath { return CurrPath(p) }
+
+func NewCurrPathSlash(p string) CurrPath {
+	return CurrPath(NewPathSlash(p).String())
+}
+
+func (p CurrPath) GoString() string { return p.AsPath().GoString() }
+
+func (p CurrPath) String() string { return string(p) }
+
+func (p CurrPath) AsPath() Path { return Path(p) }
+
+func (p CurrPath) IsEmpty() bool { return p == "" }
+
+func (p CurrPath) Dir() CurrPath { return CurrPath(p.AsPath().Dir()) }
+
+func (p CurrPath) Base() string { return p.AsPath().Base() }
+
+func (p CurrPath) Parts() []string { return p.AsPath().Parts() }
+
+func (p CurrPath) IsAbs() bool { return p.AsPath().IsAbs() }
+
+func (p CurrPath) HasPrefixPath(prefix CurrPath) bool {
+	return p.AsPath().HasPrefixPath(prefix.AsPath())
+}
+
+func (p CurrPath) ContainsPath(sub Path) bool {
+	return p.AsPath().ContainsPath(sub)
+}
+
+func (p CurrPath) ContainsText(text string) bool {
+	return p.AsPath().ContainsText(text)
+}
+
+func (p CurrPath) HasSuffixPath(suffix Path) bool {
+	return p.AsPath().HasSuffixPath(suffix)
+}
+
+func (p CurrPath) HasSuffixText(suffix string) bool {
+	return p.AsPath().HasSuffixText(suffix)
+}
+
+func (p CurrPath) HasBase(base string) bool {
+	return p.AsPath().HasBase(base)
+}
+
+func (p CurrPath) TrimSuffix(suffix string) CurrPath {
+	return NewCurrPath(p.AsPath().TrimSuffix(suffix))
+}
+
+func (p CurrPath) ReplaceSuffix(from string, to string) CurrPath {
+	trimmed := p.TrimSuffix(from)
+	assert(trimmed != p)
+	return NewCurrPathString(trimmed.String() + to)
+}
+
+func (p CurrPath) Clean() CurrPath { return CurrPath(p.AsPath().Clean()) }
+
+func (p CurrPath) CleanDot() CurrPath {
+	return NewCurrPath(p.AsPath().CleanDot())
+}
+
+func (p CurrPath) CleanPath() CurrPath {
+	return CurrPath(p.AsPath().CleanPath())
+}
+
+func (p CurrPath) JoinNoClean(other Path) CurrPath {
+	return CurrPath(p.AsPath().JoinNoClean(other))
+}
+
+func (p CurrPath) JoinClean(other Path) CurrPath {
+	return NewCurrPath(p.AsPath().JoinClean(other))
+}
+
+func (p CurrPath) Rel(rel CurrPath) Path {
+	return p.AsPath().Rel(rel.AsPath())
+}
+
+func (p CurrPath) Rename(newName CurrPath) error {
 	return os.Rename(string(p), string(newName))
 }
 
-func (p Path) Lstat() (os.FileInfo, error) { return os.Lstat(string(p)) }
+func (p CurrPath) Lstat() (os.FileInfo, error) { return os.Lstat(string(p)) }
 
-func (p Path) Stat() (os.FileInfo, error) { return os.Stat(string(p)) }
+func (p CurrPath) Stat() (os.FileInfo, error) { return os.Stat(string(p)) }
 
-func (p Path) Exists() bool {
+func (p CurrPath) Exists() bool {
 	_, err := p.Lstat()
 	return err == nil
 }
 
-func (p Path) IsFile() bool {
+func (p CurrPath) IsFile() bool {
 	info, err := p.Lstat()
 	return err == nil && info.Mode().IsRegular()
 }
 
-func (p Path) IsDir() bool {
+func (p CurrPath) IsDir() bool {
 	info, err := p.Lstat()
 	return err == nil && info.IsDir()
 }
 
-func (p Path) Chmod(mode os.FileMode) error {
+func (p CurrPath) Chmod(mode os.FileMode) error {
 	return os.Chmod(string(p), mode)
 }
 
-func (p Path) ReadDir() ([]os.FileInfo, error) {
+func (p CurrPath) ReadDir() ([]os.FileInfo, error) {
 	return ioutil.ReadDir(string(p))
 }
 
-func (p Path) ReadPaths() []Path {
+func (p CurrPath) ReadPaths() []CurrPath {
 	infos, err := p.ReadDir()
 	if err != nil {
 		return nil
 	}
-	var filenames []Path
+	var filenames []CurrPath
 	for _, info := range infos {
 		if !(isIgnoredFilename(info.Name())) {
-			filenames = append(filenames, p.JoinNoClean(NewPath(info.Name())).CleanPath())
+			joined := p.JoinNoClean(NewPath(info.Name())).CleanPath()
+			filenames = append(filenames, joined)
 		}
 	}
 	return filenames
 }
 
-func (p Path) Open() (*os.File, error) { return os.Open(string(p)) }
+func (p CurrPath) Open() (*os.File, error) { return os.Open(string(p)) }
 
-func (p Path) ReadString() (string, error) {
+func (p CurrPath) ReadString() (string, error) {
 	bytes, err := ioutil.ReadFile(string(p))
 	return string(bytes), err
 }
 
-func (p Path) WriteString(s string) error {
+func (p CurrPath) WriteString(s string) error {
 	return ioutil.WriteFile(string(p), []byte(s), 0666)
 }
 

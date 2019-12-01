@@ -238,7 +238,7 @@ func assertf(cond bool, format string, args ...interface{}) {
 	}
 }
 
-func isEmptyDir(filename Path) bool {
+func isEmptyDir(filename CurrPath) bool {
 	if filename.HasSuffixPath("CVS") {
 		return true
 	}
@@ -261,7 +261,7 @@ func isEmptyDir(filename Path) bool {
 	return true
 }
 
-func getSubdirs(filename Path) []Path {
+func getSubdirs(filename CurrPath) []Path {
 	dirents, err := filename.ReadDir()
 	if err != nil {
 		NewLineWhole(filename).Fatalf("Cannot be read: %s", err)
@@ -286,7 +286,7 @@ func isIgnoredFilename(filename string) bool {
 }
 
 // Checks whether a file is already committed to the CVS repository.
-func isCommitted(filename Path) bool {
+func isCommitted(filename CurrPath) bool {
 	entries := G.loadCvsEntries(filename)
 	_, found := entries[filename.Base()]
 	return found
@@ -297,7 +297,7 @@ func isCommitted(filename Path) bool {
 //
 // There is no corresponding test for Git (as used by pkgsrc-wip) since that
 // is more difficult to implement than simply reading a CVS/Entries file.
-func isLocallyModified(filename Path) bool {
+func isLocallyModified(filename CurrPath) bool {
 	entries := G.loadCvsEntries(filename)
 	entry, found := entries[filename.Base()]
 	if !found {
@@ -874,7 +874,7 @@ func NewFileCache(size int) *FileCache {
 		0}
 }
 
-func (c *FileCache) Put(filename Path, options LoadOptions, lines *Lines) {
+func (c *FileCache) Put(filename CurrPath, options LoadOptions, lines *Lines) {
 	key := c.key(filename)
 
 	entry := c.mapping[key]
@@ -928,7 +928,7 @@ func (c *FileCache) removeOldEntries() {
 	}
 }
 
-func (c *FileCache) Get(filename Path, options LoadOptions) *Lines {
+func (c *FileCache) Get(filename CurrPath, options LoadOptions) *Lines {
 	key := c.key(filename)
 	entry, found := c.mapping[key]
 	if found && entry.options == options {
@@ -945,7 +945,7 @@ func (c *FileCache) Get(filename Path, options LoadOptions) *Lines {
 	return nil
 }
 
-func (c *FileCache) Evict(filename Path) {
+func (c *FileCache) Evict(filename CurrPath) {
 	key := c.key(filename)
 	entry, found := c.mapping[key]
 	if !found {
@@ -963,7 +963,7 @@ func (c *FileCache) Evict(filename Path) {
 	}
 }
 
-func (c *FileCache) key(filename Path) string { return filename.Clean().String() }
+func (c *FileCache) key(filename CurrPath) string { return filename.Clean().String() }
 
 func bmakeHelp(topic string) string { return bmake("help topic=" + topic) }
 
@@ -1213,27 +1213,27 @@ func pathMatches(pattern, s string) bool {
 	return err == nil && matched
 }
 
-type PathQueue struct {
-	entries []Path
+type CurrPathQueue struct {
+	entries []CurrPath
 }
 
-func (q *PathQueue) PushFront(entries ...Path) {
-	q.entries = append(append([]Path(nil), entries...), q.entries...)
+func (q *CurrPathQueue) PushFront(entries ...CurrPath) {
+	q.entries = append(append([]CurrPath(nil), entries...), q.entries...)
 }
 
-func (q *PathQueue) Push(entries ...Path) {
+func (q *CurrPathQueue) Push(entries ...CurrPath) {
 	q.entries = append(q.entries, entries...)
 }
 
-func (q *PathQueue) IsEmpty() bool {
+func (q *CurrPathQueue) IsEmpty() bool {
 	return len(q.entries) == 0
 }
 
-func (q *PathQueue) Front() Path {
+func (q *CurrPathQueue) Front() CurrPath {
 	return q.entries[0]
 }
 
-func (q *PathQueue) Pop() Path {
+func (q *CurrPathQueue) Pop() CurrPath {
 	front := q.entries[0]
 	q.entries = q.entries[1:]
 	return front

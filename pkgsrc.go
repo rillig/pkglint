@@ -17,9 +17,8 @@ import (
 // Everything else (distfile hashes, package names) is recorded in the Pkglint
 // type instead.
 type Pkgsrc struct {
-	// The top directory (PKGSRCDIR), either absolute or relative to
-	// the current working directory.
-	topdir Path
+	// The top directory (PKGSRCDIR).
+	topdir CurrPath
 
 	// The set of user-defined variables that are added to BUILD_DEFS
 	// within the bsd.pkg.mk file.
@@ -52,7 +51,7 @@ type Pkgsrc struct {
 	vartypes   VarTypeRegistry
 }
 
-func NewPkgsrc(dir Path) Pkgsrc {
+func NewPkgsrc(dir CurrPath) Pkgsrc {
 	return Pkgsrc{
 		dir,
 		make(map[string]bool),
@@ -170,7 +169,7 @@ func (src *Pkgsrc) loadDocChanges() {
 	src.checkRemovedAfterLastFreeze()
 }
 
-func (src *Pkgsrc) loadDocChangesFromFile(filename Path) []*Change {
+func (src *Pkgsrc) loadDocChangesFromFile(filename CurrPath) []*Change {
 
 	warn := G.Opts.CheckGlobal && !G.Wip
 
@@ -670,7 +669,7 @@ func (src *Pkgsrc) loadUntypedVars() {
 		}
 	}
 
-	handleMkFile := func(path Path) {
+	handleMkFile := func(path CurrPath) {
 		mklines := LoadMk(path, MustSucceed)
 		mklines.collectVariables()
 		mklines.collectUsedVariables()
@@ -686,7 +685,7 @@ func (src *Pkgsrc) loadUntypedVars() {
 		assertNil(err, "handleFile %q", pathName)
 		baseName := info.Name()
 		if info.Mode().IsRegular() && (hasSuffix(baseName, ".mk") || baseName == "mk.conf") {
-			handleMkFile(NewPath(filepath.ToSlash(pathName))) // FIXME: This is too deep to handle os-specific paths
+			handleMkFile(NewCurrPathSlash(pathName)) // FIXME: This is too deep to handle os-specific paths
 		}
 		return nil
 	}
@@ -1042,9 +1041,6 @@ func (src *Pkgsrc) Load(filename PkgsrcPath, options LoadOptions) *Lines {
 // pkgsrc root and from there to the "to" filename. This produces the form
 // "../../category/package" that is found in DEPENDS and .include lines.
 //
-// Both from and to are interpreted relative to the current working directory,
-// unless they are absolute paths.
-//
 // This function should only be used if the relative path from one file to
 // another cannot be computed in another way. The preferred way is to take
 // the relative filenames directly from the .include or exists() where they
@@ -1052,7 +1048,7 @@ func (src *Pkgsrc) Load(filename PkgsrcPath, options LoadOptions) *Lines {
 //
 // TODO: Invent data types for all kinds of relative paths that occur in pkgsrc
 //  and pkglint. Make sure that these paths cannot be accidentally mixed.
-func (src *Pkgsrc) Relpath(from, to Path) (result Path) {
+func (src *Pkgsrc) Relpath(from, to CurrPath) (result Path) {
 	cfrom := from.Clean()
 	cto := to.Clean()
 
@@ -1078,7 +1074,7 @@ func (src *Pkgsrc) Relpath(from, to Path) (result Path) {
 	}
 
 	if cfrom == "." && !cto.IsAbs() {
-		return cto.Clean()
+		return cto.Clean().AsPath()
 	}
 
 	absFrom := G.Abs(cfrom)
@@ -1114,7 +1110,7 @@ func (src *Pkgsrc) Relpath(from, to Path) (result Path) {
 //
 // Example:
 //  NewPkgsrc("/usr/pkgsrc").File("distfiles") => "/usr/pkgsrc/distfiles"
-func (src *Pkgsrc) File(relativeName PkgsrcPath) Path {
+func (src *Pkgsrc) File(relativeName PkgsrcPath) CurrPath {
 	cleaned := relativeName.AsPath().Clean()
 	if cleaned == "." {
 		return src.topdir.CleanDot()
@@ -1127,23 +1123,23 @@ func (src *Pkgsrc) File(relativeName PkgsrcPath) Path {
 //
 // Example:
 //  NewPkgsrc("/usr/pkgsrc").ToRel("/usr/pkgsrc/distfiles") => "distfiles"
-func (src *Pkgsrc) ToRel(filename Path) PkgsrcPath {
+func (src *Pkgsrc) ToRel(filename CurrPath) PkgsrcPath {
 	return NewPkgsrcPath(src.Relpath(src.topdir, filename).String())
 }
 
 // IsInfra returns whether the given filename (relative to the current
 // working directory) is part of the pkgsrc infrastructure.
-func (src *Pkgsrc) IsInfra(filename Path) bool {
+func (src *Pkgsrc) IsInfra(filename CurrPath) bool {
 	rel := src.ToRel(filename)
 	return rel.HasPrefixPath("mk") || rel.HasPrefixPath("wip/mk")
 }
 
-func (src *Pkgsrc) IsInfraMain(filename Path) bool {
+func (src *Pkgsrc) IsInfraMain(filename CurrPath) bool {
 	rel := src.ToRel(filename)
 	return rel.HasPrefixPath("mk")
 }
 
-func (src *Pkgsrc) IsWip(filename Path) bool {
+func (src *Pkgsrc) IsWip(filename CurrPath) bool {
 	rel := src.ToRel(filename)
 	return rel.HasPrefixPath("wip")
 }

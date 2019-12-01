@@ -307,7 +307,7 @@ func (s *Suite) Test_Pkglint_Main__profiling(c *check.C) {
 
 	// Pkglint always writes the profiling data into the current directory.
 	// TODO: Make the location of the profiling log a mandatory parameter.
-	t.CheckEquals(NewPath("pkglint.pprof").IsFile(), true)
+	t.CheckEquals(NewCurrPath("pkglint.pprof").IsFile(), true)
 
 	err := os.Remove("pkglint.pprof")
 	c.Check(err, check.IsNil)
