@@ -405,9 +405,17 @@ func (p RelPath) String() string { return p.AsPath().String() }
 
 func (p RelPath) Dir() RelPath { return RelPath(p.AsPath().Dir()) }
 
+func (p RelPath) Base() string { return p.AsPath().Base() }
+
 func (p RelPath) HasBase(base string) bool { return p.AsPath().HasBase(base) }
 
 func (p RelPath) Parts() []string { return p.AsPath().Parts() }
+
+func (p RelPath) Count() int { return p.AsPath().Count() }
+
+func (p RelPath) Clean() RelPath {
+	return NewRelPath(p.AsPath().Clean().String())
+}
 
 func (p RelPath) CleanPath() RelPath {
 	return RelPath(p.AsPath().CleanPath())

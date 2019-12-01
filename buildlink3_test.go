@@ -599,7 +599,7 @@ func (s *Suite) Test_Buildlink3Checker_checkUniquePkgbase(c *check.C) {
 
 	G.InterPackage.Enable()
 
-	test := func(pkgbase string, pkgpath Path, diagnostics ...string) {
+	test := func(pkgbase string, pkgpath RelPath, diagnostics ...string) {
 		mkline := t.NewMkLine(t.File(pkgpath+"/buildlink3.mk"), 123, "")
 
 		(*Buildlink3Checker).checkUniquePkgbase(nil, pkgbase, mkline)

@@ -1143,6 +1143,16 @@ func (s *Suite) Test_RelPath_Dir(c *check.C) {
 	t.CheckEquals(dir, NewRelPath("dir"))
 }
 
+func (s *Suite) Test_RelPath_Base(c *check.C) {
+	t := s.Init(c)
+
+	rel := NewRelPath("./dir////./file")
+
+	base := rel.Base()
+
+	t.CheckEquals(base, "file")
+}
+
 func (s *Suite) Test_RelPath_HasBase(c *check.C) {
 	t := s.Init(c)
 
@@ -1164,6 +1174,26 @@ func (s *Suite) Test_RelPath_Parts(c *check.C) {
 	parts := rel.Parts()
 
 	t.CheckDeepEquals(parts, []string{"dir", "base"})
+}
+
+func (s *Suite) Test_RelPath_Count(c *check.C) {
+	t := s.Init(c)
+
+	rel := NewRelPath("./dir/.///base")
+
+	count := rel.Count()
+
+	t.CheckDeepEquals(count, 2)
+}
+
+func (s *Suite) Test_RelPath_Clean(c *check.C) {
+	t := s.Init(c)
+
+	rel := NewRelPath("a/b/../../c/d/../../e/../f")
+
+	cleaned := rel.Clean()
+
+	t.CheckEquals(cleaned, NewRelPath("f"))
 }
 
 func (s *Suite) Test_RelPath_CleanPath(c *check.C) {
