@@ -1164,6 +1164,8 @@ func (ind *Indentation) AddCheckedFile(filename RelPath) {
 
 // HasExists returns whether the given filename has been tested in an
 // exists(filename) condition and thus may or may not exist.
+//
+// FIXME: Replace RelPath with PkgsrcPath, to make the filenames reliable.
 func (ind *Indentation) HasExists(filename RelPath) bool {
 	for _, level := range ind.levels {
 		for _, levelFilename := range level.checkedFiles {
