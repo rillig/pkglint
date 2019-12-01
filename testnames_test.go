@@ -14,5 +14,6 @@ func (s *Suite) Test__qa(c *check.C) {
 	ck.Configure("path.go", "*", "*", +intqa.EMissingTest)
 	ck.Configure("*yacc.go", "*", "*", intqa.ENone)
 	ck.Configure("*", "*", "", -intqa.EMissingTest)
+	ck.Configure("*.go", "Suite", "*", -intqa.EMethodsSameFile)
 	ck.Check()
 }

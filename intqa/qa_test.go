@@ -471,7 +471,7 @@ func (s *Suite) Test_QAChecker_checkTesteesTest(c *check.C) {
 		"Missing unit test \"Test_Type_Method\" for \"Type.Method\".")
 }
 
-func (s *Suite) Test_QAChecker_checkTesteesMethodsSameFile(c *check.C) {
+func (s *Suite) Test_QAChecker_checkCodesMethodsSameFile(c *check.C) {
 	ck := s.Init(c)
 
 	ck.addTestee(code{"main.go", "Main", "", 0})
@@ -485,14 +485,14 @@ func (s *Suite) Test_QAChecker_checkTesteesMethodsSameFile(c *check.C) {
 	ck.addTest(code{"main_test.go", "T", "Test_MethodOk", 101})
 	ck.addTest(code{"other_test.go", "T", "Test_MethodWrong", 102})
 
-	ck.checkTesteesMethodsSameFile()
+	ck.checkCodesMethodsSameFile()
 
 	s.CheckErrors(
 		"Method Main.MethodWrong must be in main.go, like its type.",
 		"Method Main.MethodWrongTest must be in main_test.go, "+
 			"corresponding to its type.",
-		"Method T.MethodWrong must be in main_test.go, like its type.")
-	// FIXME: Method T.Test_MethodWrong must be in main_test.go, like its type.
+		"Method T.MethodWrong must be in main_test.go, like its type.",
+		"Method T.Test_MethodWrong must be in main_test.go, like its type.")
 }
 
 func (s *Suite) Test_QAChecker_errorsMask(c *check.C) {

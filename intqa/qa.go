@@ -92,6 +92,7 @@ func (ck *QAChecker) Check() {
 	ck.load(".")
 	ck.checkTestees()
 	ck.checkTests()
+	ck.checkCodesMethodsSameFile()
 	ck.checkOrder()
 	ck.print()
 }
@@ -308,7 +309,6 @@ func (ck *QAChecker) checkTestDescr(test *test) {
 
 func (ck *QAChecker) checkTestees() {
 	ck.checkTesteesTest()
-	ck.checkTesteesMethodsSameFile()
 }
 
 // checkTesteesTest ensures that each testee has a corresponding unit test.
@@ -334,19 +334,32 @@ func (ck *QAChecker) checkTesteesTest() {
 
 // checkTesteesMethodsSameFile ensures that all methods of a type are
 // defined in the same file or in the corresponding test file.
-func (ck *QAChecker) checkTesteesMethodsSameFile() {
-	types := map[string]*testee{}
+func (ck *QAChecker) checkCodesMethodsSameFile() {
+	types := map[string]*code{}
 	for _, testee := range ck.testees {
 		if testee.isType() {
-			types[testee.Type] = testee
+			types[testee.Type] = &testee.code
+		}
+	}
+	for _, test := range ck.tests {
+		if test.isType() {
+			types[test.Type] = &test.code
 		}
 	}
 
+	var codes []code
 	for _, testee := range ck.testees {
-		if !testee.isMethod() {
+		codes = append(codes, testee.code)
+	}
+	for _, test := range ck.tests {
+		codes = append(codes, test.code)
+	}
+
+	for _, code := range codes {
+		if !code.isMethod() {
 			continue
 		}
-		method := testee
+		method := code
 
 		typ := types[method.Type]
 		if typ == nil || method.file == typ.file {
@@ -356,9 +369,9 @@ func (ck *QAChecker) checkTesteesMethodsSameFile() {
 		if method.isTestScope() == typ.isTestScope() {
 			ck.addError(
 				EMethodsSameFile,
-				testee.code,
+				code,
 				"Method %s must be in %s, like its type.",
-				testee.fullName(), typ.file)
+				code.fullName(), typ.file)
 			continue
 		}
 
@@ -369,9 +382,9 @@ func (ck *QAChecker) checkTesteesMethodsSameFile() {
 
 		ck.addError(
 			EMethodsSameFile,
-			testee.code,
+			code,
 			"Method %s must be in %s, corresponding to its type.",
-			testee.fullName(), correctFile)
+			code.fullName(), correctFile)
 	}
 }
 
