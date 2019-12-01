@@ -463,10 +463,6 @@ func mkopSubst(s string, left bool, from string, right bool, to string, flags st
 func cleanpath(filename Path) Path {
 	parts := filename.Parts()
 
-	for len(parts) > 1 && parts[len(parts)-1] == "." {
-		parts = parts[:len(parts)-1]
-	}
-
 	for i := 2; i+3 < len(parts); /* nothing */ {
 		if parts[i] != ".." && parts[i+1] != ".." && parts[i+2] == ".." && parts[i+3] == ".." {
 			if i+4 == len(parts) || parts[i+4] != ".." {
