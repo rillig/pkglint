@@ -347,29 +347,19 @@ func (p CurrPath) WriteString(s string) error {
 // PkgsrcPath is a path relative to the pkgsrc root.
 type PkgsrcPath string
 
-func NewPkgsrcPath(p string) PkgsrcPath {
-	return PkgsrcPath(p)
-}
+func NewPkgsrcPath(p string) PkgsrcPath { return PkgsrcPath(p) }
 
-func (p PkgsrcPath) String() string {
-	return string(p)
-}
+func (p PkgsrcPath) String() string { return string(p) }
 
-func (p PkgsrcPath) AsPath() Path {
-	return NewPath(string(p))
-}
+func (p PkgsrcPath) AsPath() Path { return NewPath(string(p)) }
 
 func (p PkgsrcPath) Dir() PkgsrcPath {
 	return NewPkgsrcPath(p.AsPath().Dir().String())
 }
 
-func (p PkgsrcPath) Base() string {
-	return p.AsPath().Base()
-}
+func (p PkgsrcPath) Base() string { return p.AsPath().Base() }
 
-func (p PkgsrcPath) Count() int {
-	return p.AsPath().Count()
-}
+func (p PkgsrcPath) Count() int { return p.AsPath().Count() }
 
 func (p PkgsrcPath) HasPrefixPath(prefix Path) bool {
 	return p.AsPath().HasPrefixPath(prefix)
@@ -409,25 +399,15 @@ func NewRelPath(p string) RelPath {
 	return RelPath(p)
 }
 
-func (p RelPath) AsPath() Path {
-	return NewPath(string(p))
-}
+func (p RelPath) AsPath() Path { return NewPath(string(p)) }
 
-func (p RelPath) String() string {
-	return p.AsPath().String()
-}
+func (p RelPath) String() string { return p.AsPath().String() }
 
-func (p RelPath) Dir() RelPath {
-	return RelPath(p.AsPath().Dir())
-}
+func (p RelPath) Dir() RelPath { return RelPath(p.AsPath().Dir()) }
 
-func (p RelPath) HasBase(base string) bool {
-	return p.AsPath().HasBase(base)
-}
+func (p RelPath) HasBase(base string) bool { return p.AsPath().HasBase(base) }
 
-func (p RelPath) Parts() []string {
-	return p.AsPath().Parts()
-}
+func (p RelPath) Parts() []string { return p.AsPath().Parts() }
 
 func (p RelPath) CleanPath() RelPath {
 	return RelPath(p.AsPath().CleanPath())
