@@ -1065,7 +1065,7 @@ func (src *Pkgsrc) Relpath(from, to CurrPath) Path {
 	// This is the most common variant in a complete pkgsrc scan.
 	if cto == "." {
 		fromParts := cfrom.Parts()
-		if len(fromParts) == 2 && fromParts[0] != ".." && fromParts[1] != ".." {
+		if len(fromParts) == 2 && fromParts[0] != ".." {
 			return "../.."
 		}
 	}
