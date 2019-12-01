@@ -1256,7 +1256,7 @@ func (ck MkLineChecker) checkShellCommand() {
 	mkline := ck.MkLine
 
 	shellCommand := mkline.ShellCommand()
-	if G.Opts.WarnSpace && hasPrefix(mkline.Text, "\t\t") {
+	if hasPrefix(mkline.Text, "\t\t") {
 		lexer := textproc.NewLexer(mkline.raw[0].textnl)
 		tabs := lexer.NextBytesFunc(func(b byte) bool { return b == '\t' })
 
