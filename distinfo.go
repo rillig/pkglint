@@ -194,7 +194,7 @@ func (ck *distinfoLinesChecker) checkAlgorithmsDistfile(info distinfoFileInfo) {
 
 	distdir := G.Pkgsrc.File("distfiles")
 
-	distfile := cleanpath(distdir.JoinNoClean(info.filename()))
+	distfile := distdir.JoinNoClean(info.filename()).CleanPath()
 	if !distfile.IsFile() {
 
 		// It's a rare situation that the explanation is generated

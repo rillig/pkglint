@@ -121,7 +121,7 @@ func (p Path) ContainsPath(sub Path) bool {
 }
 
 func (p Path) ContainsPathCanonical(sub Path) bool {
-	cleaned := cleanpath(p)
+	cleaned := p.CleanPath()
 	return cleaned.ContainsPath(sub)
 }
 
@@ -172,6 +172,28 @@ func (p Path) CleanDot() Path {
 			parts = append(parts, part)
 		}
 	}
+	if len(parts) == 0 {
+		return "."
+	}
+	return NewPath(strings.Join(parts, "/"))
+}
+
+// Differs from path.Clean in that only "../../" is replaced, not "../".
+// Also, the initial directory is always kept.
+// This is to provide the package path as context in deeply nested .include chains.
+func (p Path) CleanPath() Path {
+	parts := p.Parts()
+
+	for i := 2; i+3 < len(parts); /* nothing */ {
+		if parts[i] != ".." && parts[i+1] != ".." && parts[i+2] == ".." && parts[i+3] == ".." {
+			if i+4 == len(parts) || parts[i+4] != ".." {
+				parts = append(parts[:i], parts[i+4:]...)
+				continue
+			}
+		}
+		i++
+	}
+
 	if len(parts) == 0 {
 		return "."
 	}

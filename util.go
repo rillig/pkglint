@@ -293,7 +293,7 @@ func dirglob(dirname Path) []Path {
 	var filenames []Path
 	for _, info := range infos {
 		if !(isIgnoredFilename(info.Name())) {
-			filenames = append(filenames, cleanpath(dirname.JoinNoClean(NewPath(info.Name()))))
+			filenames = append(filenames, dirname.JoinNoClean(NewPath(info.Name())).CleanPath())
 		}
 	}
 	return filenames
@@ -455,28 +455,6 @@ func mkopSubst(s string, left bool, from string, right bool, to string, flags st
 		}
 		return match
 	})
-}
-
-// Differs from path.Clean in that only "../../" is replaced, not "../".
-// Also, the initial directory is always kept.
-// This is to provide the package path as context in deeply nested .include chains.
-func cleanpath(filename Path) Path {
-	parts := filename.Parts()
-
-	for i := 2; i+3 < len(parts); /* nothing */ {
-		if parts[i] != ".." && parts[i+1] != ".." && parts[i+2] == ".." && parts[i+3] == ".." {
-			if i+4 == len(parts) || parts[i+4] != ".." {
-				parts = append(parts[:i], parts[i+4:]...)
-				continue
-			}
-		}
-		i++
-	}
-
-	if len(parts) == 0 {
-		return "."
-	}
-	return NewPath(strings.Join(parts, "/"))
 }
 
 func containsVarRef(s string) bool {

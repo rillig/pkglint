@@ -446,6 +446,56 @@ func (s *Suite) Test_Path_CleanDot(c *check.C) {
 	test("/usr/pkgsrc/wip/package/../mk/git-package.mk", "/usr/pkgsrc/wip/package/../mk/git-package.mk")
 }
 
+func (s *Suite) Test_Path_CleanPath(c *check.C) {
+	t := s.Init(c)
+
+	test := func(from, to Path) {
+		t.CheckEquals(from.CleanPath(), to)
+	}
+
+	test("simple/path", "simple/path")
+	test("/absolute/path", "/absolute/path")
+
+	// Single dot components are removed, unless it's the only component of the path.
+	test("./././.", ".")
+	test("./././", ".")
+	test("dir/multi/././/file", "dir/multi/file")
+	test("dir/", "dir")
+
+	test("dir/", "dir")
+
+	// Components like aa/bb/../.. are removed, but not in the initial part of the path,
+	// and only if they are not followed by another "..".
+	test("dir/../dir/../dir/../dir/subdir/../../Makefile", "dir/../dir/../dir/../Makefile")
+	test("111/222/../../333/444/../../555/666/../../777/888/9", "111/222/../../777/888/9")
+	test("1/2/3/../../4/5/6/../../7/8/9/../../../../10", "1/2/3/../../4/7/8/9/../../../../10")
+	test("cat/pkg.v1/../../cat/pkg.v2/Makefile", "cat/pkg.v1/../../cat/pkg.v2/Makefile")
+	test("aa/../../../../../a/b/c/d", "aa/../../../../../a/b/c/d")
+	test("aa/bb/../../../../a/b/c/d", "aa/bb/../../../../a/b/c/d")
+	test("aa/bb/cc/../../../a/b/c/d", "aa/bb/cc/../../../a/b/c/d")
+	test("aa/bb/cc/dd/../../a/b/c/d", "aa/bb/a/b/c/d")
+	test("aa/bb/cc/dd/ee/../a/b/c/d", "aa/bb/cc/dd/ee/../a/b/c/d")
+	test("../../../../../a/b/c/d", "../../../../../a/b/c/d")
+	test("aa/../../../../a/b/c/d", "aa/../../../../a/b/c/d")
+	test("aa/bb/../../../a/b/c/d", "aa/bb/../../../a/b/c/d")
+	test("aa/bb/cc/../../a/b/c/d", "aa/bb/cc/../../a/b/c/d")
+	test("aa/bb/cc/dd/../a/b/c/d", "aa/bb/cc/dd/../a/b/c/d")
+	test("aa/../cc/../../a/b/c/d", "aa/../cc/../../a/b/c/d")
+
+	// The initial 2 components of the path are typically category/package, when
+	// pkglint is called from the pkgsrc top-level directory.
+	// This path serves as the context and therefore is always kept.
+	test("aa/bb/../../cc/dd/../../ee/ff", "aa/bb/../../ee/ff")
+	test("aa/bb/../../cc/dd/../..", "aa/bb/../..")
+	test("aa/bb/cc/dd/../..", "aa/bb")
+	test("aa/bb/../../cc/dd/../../ee/ff/buildlink3.mk", "aa/bb/../../ee/ff/buildlink3.mk")
+	test("./aa/bb/../../cc/dd/../../ee/ff/buildlink3.mk", "aa/bb/../../ee/ff/buildlink3.mk")
+
+	test("../.", "..")
+	test("../././././././.", "..")
+	test(".././././././././", "..")
+}
+
 func (s *Suite) Test_Path_IsAbs(c *check.C) {
 	t := s.Init(c)
 

@@ -282,7 +282,7 @@ func (mkline *MkLine) IncludedFile() Path { return mkline.data.(*mkLineInclude).
 // IncludedFileFull returns the path to the included file, relative to the
 // current working directory.
 func (mkline *MkLine) IncludedFileFull() Path {
-	return cleanpath(mkline.Filename.Dir().JoinClean(mkline.IncludedFile())) // FIXME: JoinNoClean?
+	return mkline.Filename.Dir().JoinClean(mkline.IncludedFile()).CleanPath() // FIXME: JoinNoClean?
 }
 
 func (mkline *MkLine) Targets() string { return mkline.data.(mkLineDependency).targets }
@@ -556,7 +556,7 @@ func (*MkLine) WithoutMakeVariables(value string) string {
 
 func (mkline *MkLine) ResolveVarsInRelativePath(relativePath Path) Path {
 	if !containsVarRef(relativePath.String()) {
-		return cleanpath(relativePath)
+		return relativePath.CleanPath()
 	}
 
 	var basedir Path
@@ -621,7 +621,7 @@ func (mkline *MkLine) ResolveVarsInRelativePath(relativePath Path) Path {
 		tmp = tmp.Replace("${PKGDIR}", G.Pkg.Pkgdir.String())
 	}
 
-	tmp = cleanpath(tmp)
+	tmp = tmp.CleanPath()
 
 	if trace.Tracing && relativePath != tmp {
 		trace.Stepf("resolveVarsInRelativePath: %q => %q", relativePath, tmp)

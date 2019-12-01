@@ -331,7 +331,7 @@ func (pkglint *Pkglint) checkMode(dirent Path, mode os.FileMode) {
 	pkglint.Infrastructure = pkgsrcRel.HasPrefixPath("mk")
 	pkgsrcdir := findPkgsrcTopdir(dir)
 	if pkgsrcdir == "" {
-		NewLineWhole(dirent).Errorf("Cannot determine the pkgsrc root directory for %q.", cleanpath(dir))
+		NewLineWhole(dirent).Errorf("Cannot determine the pkgsrc root directory for %q.", dir.CleanPath())
 		return
 	}
 
@@ -679,7 +679,7 @@ func (pkglint *Pkglint) checkExecutable(filename Path, mode os.FileMode) {
 		fix.Describef(0, "Clearing executable bits")
 		if autofix {
 			if err := filename.Chmod(mode &^ 0111); err != nil {
-				G.Logger.TechErrorf(cleanpath(filename), "Cannot clear executable bits: %s", err)
+				G.Logger.TechErrorf(filename.CleanPath(), "Cannot clear executable bits: %s", err)
 			}
 		}
 	})

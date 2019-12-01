@@ -229,7 +229,7 @@ func (pkg *Package) parse(mklines *MkLines, allLines *MkLines, includingFileForU
 	// automatically since the pkgsrc infrastructure does the same.
 	filename := mklines.lines.Filename
 	if filename.Base() == "buildlink3.mk" {
-		builtin := cleanpath(filename.Dir().JoinNoClean("builtin.mk"))
+		builtin := filename.Dir().JoinNoClean("builtin.mk").CleanPath()
 		builtinRel := G.Pkgsrc.Relpath(pkg.dir, builtin)
 		if pkg.included.FirstTime(builtinRel.String()) && builtin.IsFile() {
 			builtinMkLines := LoadMk(builtin, MustSucceed|LogErrors)
@@ -295,7 +295,7 @@ func (pkg *Package) loadIncluded(mkline *MkLine, includingFile Path) (includedMk
 	}
 
 	dirname, _ := includingFile.Split() // TODO: .Dir?
-	dirname = cleanpath(dirname)
+	dirname = dirname.CleanPath()
 	fullIncluded := dirname.JoinNoClean(includedFile)
 	relIncludedFile := G.Pkgsrc.Relpath(pkg.dir, fullIncluded)
 
@@ -1392,7 +1392,7 @@ func (pkg *Package) checkIncludeConditionally(mkline *MkLine, indentation *Inden
 			mkline.Warnf(
 				"%q is included conditionally here%s "+
 					"and unconditionally in %s.",
-				cleanpath(mkline.IncludedFile()),
+				mkline.IncludedFile().CleanPath(),
 				dependingOn(mkline.ConditionalVars()),
 				mkline.RefTo(other))
 
@@ -1408,7 +1408,7 @@ func (pkg *Package) checkIncludeConditionally(mkline *MkLine, indentation *Inden
 			mkline.Warnf(
 				"%q is included unconditionally here "+
 					"and conditionally in %s%s.",
-				cleanpath(mkline.IncludedFile()),
+				mkline.IncludedFile().CleanPath(),
 				mkline.RefTo(other),
 				dependingOn(other.ConditionalVars()))
 
@@ -1441,7 +1441,7 @@ func (pkg *Package) AutofixDistinfo(oldSha1, newSha1 string) {
 func (pkg *Package) File(relativeFileName Path) Path {
 	joined := pkg.dir.JoinNoClean(relativeFileName)
 	resolved := resolveVariableRefs(nil /* XXX: or maybe some mklines? */, joined.String())
-	return cleanpath(NewPath(resolved))
+	return NewPath(resolved).CleanPath()
 }
 
 // Rel returns the path by which the given filename (as seen from the
