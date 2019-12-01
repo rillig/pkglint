@@ -1046,6 +1046,23 @@ func (s *Suite) Test_LazyStringBuilder_WriteByte__other_than_expected(c *check.C
 	t.CheckDeepEquals(sb.buf, []byte{'w', 'o', 'l', 'f'})
 }
 
+func (s *Suite) Test_LazyStringBuilder_writeToBuf__assertion(c *check.C) {
+	t := s.Init(c)
+
+	sb := NewLazyStringBuilder("0123456789abcdef0123456789abcdef")
+	sb.WriteString("0123456789abcdef0123456789abcdeX")
+
+	t.CheckEquals(cap(sb.buf), 32)
+
+	sb.Reset("0123456789abcdef")
+	sb.WriteString("01234567")
+
+	// Intentionally violate the invariant of the LazyStringBuilder that
+	// as long as sb.usingBuf is false, sb.len is at most len(sb.expected).
+	sb.Expected = ""
+	t.ExpectAssert(func() { sb.writeToBuf('x') })
+}
+
 func (s *Suite) Test_LazyStringBuilder_Reset(c *check.C) {
 	t := s.Init(c)
 
