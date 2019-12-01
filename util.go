@@ -461,19 +461,7 @@ func mkopSubst(s string, left bool, from string, right bool, to string, flags st
 // Also, the initial directory is always kept.
 // This is to provide the package path as context in deeply nested .include chains.
 func cleanpath(filename Path) Path {
-	parts := make([]string, 0, 5)
-	lex := textproc.NewLexer(filename.String())
-	for lex.SkipString("./") {
-	}
-
-	for !lex.EOF() {
-		part := lex.NextBytesFunc(func(b byte) bool { return b != '/' })
-		parts = append(parts, part)
-		if lex.SkipByte('/') {
-			for lex.SkipByte('/') || lex.SkipString("./") {
-			}
-		}
-	}
+	parts := filename.Parts()
 
 	for len(parts) > 1 && parts[len(parts)-1] == "." {
 		parts = parts[:len(parts)-1]
