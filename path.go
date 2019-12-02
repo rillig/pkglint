@@ -212,7 +212,7 @@ func (p Path) Rel(other Path) Path {
 // CurrPath is a path that is either absolute or relative to the current
 // working directory. It is used in command line arguments and for
 // loading files from the file system, and later in the diagnostics.
-type CurrPath Path
+type CurrPath string
 
 func NewCurrPath(p Path) CurrPath { return CurrPath(p) }
 
@@ -398,7 +398,7 @@ func (p PkgsrcPath) JoinRel(other RelPath) PkgsrcPath {
 // PackagePath is a path relative to the package directory. It is used
 // for the PATCHDIR and PKGDIR variables, as well as dependencies and
 // conflicts on other packages.
-type PackagePath Path
+type PackagePath string
 
 func NewPackagePath(p string) PackagePath { return PackagePath(p) }
 
