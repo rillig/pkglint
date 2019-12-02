@@ -231,7 +231,7 @@ func (cv *VartypeCheck) Category() {
 
 	switch cv.Value {
 	case
-		"chinese", "crosspkgtools",
+		"chinese",
 		"gnome", "gnustep",
 		"japanese", "java",
 		"kde", "korean",
