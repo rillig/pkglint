@@ -17,6 +17,7 @@ type Path string
 
 func NewPath(name string) Path { return Path(name) }
 
+// FIXME: NewSlash only makes sense for CurrPath.
 func NewPathSlash(name string) Path { return Path(filepath.ToSlash(name)) }
 
 func (p Path) String() string { return string(p) }
@@ -215,6 +216,11 @@ func (p CurrPath) IsEmpty() bool { return p.AsPath().IsEmpty() }
 func (p CurrPath) Dir() CurrPath { return CurrPath(p.AsPath().Dir()) }
 
 func (p CurrPath) Base() string { return p.AsPath().Base() }
+
+func (p CurrPath) Split() (dir CurrPath, base string) {
+	pathDir, pathBase := p.AsPath().Split()
+	return NewCurrPath(pathDir), pathBase
+}
 
 func (p CurrPath) Parts() []string { return p.AsPath().Parts() }
 

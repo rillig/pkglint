@@ -294,7 +294,10 @@ func (pkg *Package) loadIncluded(mkline *MkLine, includingFile CurrPath) (includ
 		return nil, true
 	}
 
-	dirname := includingFile.Dir().CleanPath()
+	// TODO: .Dir? Add test before changing this.
+	// pkglint -Wall x11/kde-runtime4
+	dirname, _ := includingFile.Split()
+	dirname = dirname.CleanPath()
 	fullIncluded := dirname.JoinNoClean(includedFile)
 	relIncludedFile := G.Pkgsrc.Relpath(pkg.dir, fullIncluded)
 

@@ -596,6 +596,18 @@ func (s *Suite) Test_CurrPath_Base(c *check.C) {
 	test("dir/file", "file")
 }
 
+func (s *Suite) Test_CurrPath_Split(c *check.C) {
+	t := s.Init(c)
+
+	test := func(curr, dir CurrPath, base string) {
+		actualDir, actualBase := curr.Split()
+		t.CheckEquals(actualDir, dir)
+		t.CheckEquals(actualBase, base)
+	}
+
+	test("dir/file", "dir/", "file")
+}
+
 func (s *Suite) Test_CurrPath_Parts(c *check.C) {
 	t := s.Init(c)
 
