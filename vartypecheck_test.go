@@ -1780,6 +1780,24 @@ func (s *Suite) Test_VartypeCheck_YesNo(c *check.C) {
 	vt.Output(
 		"WARN: filename.mk:3: PKG_DEVELOPER should be set to YES, yes, NO, or no.",
 		"WARN: filename.mk:4: PKG_DEVELOPER should be set to YES, yes, NO, or no.")
+
+	vt.Op(opUseMatch)
+	vt.Values(
+		"yes",
+		"[Yy]es",
+		"[Yy][Ee][Ss]",
+		"[yY][eE][sS]",
+		"[Nn]o",
+		"[Nn][Oo]",
+		"[nN][oO]")
+
+	vt.Output(
+		"WARN: filename.mk:11: PKG_DEVELOPER should be matched against "+
+			"\"[yY][eE][sS]\" or \"[nN][oO]\", not \"yes\".",
+		"WARN: filename.mk:12: PKG_DEVELOPER should be matched against "+
+			"\"[yY][eE][sS]\" or \"[nN][oO]\", not \"[Yy]es\".",
+		"WARN: filename.mk:15: PKG_DEVELOPER should be matched against "+
+			"\"[yY][eE][sS]\" or \"[nN][oO]\", not \"[Nn]o\".")
 }
 
 func (s *Suite) Test_VartypeCheck_YesNoIndirectly(c *check.C) {
