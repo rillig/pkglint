@@ -293,6 +293,15 @@ func (s *Suite) Test_QAChecker_isTest(c *check.C) {
 	testFunc("f_test.go", "func Test_Type_Method(t *testing.T) {}", true)
 	testFunc("f_test.go", "func Test_Type_Method(X) {}", false)
 	testFunc("f_test.go", "func Test_Type_Method(int) {}", false)
+
+	// Having such a method in a test suite is unlikely since check.v1
+	// checks the number of parameters.
+	testFunc("f_test.go", "func Test_Type_Method() {}", false)
+	testFunc("f_test.go", "func (s *Suite) Test(int, int) {}", false)
+
+	// In a test helper type, it is reasonable that some of the method
+	// names start with "Test". This doesn't make them tests though.
+	testFunc("f_test.go", "func (h *Helper) TestEqInt(int, int) {}", false)
 }
 
 func (s *Suite) Test_QAChecker_addTestee(c *check.C) {
