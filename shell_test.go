@@ -1562,6 +1562,8 @@ func (s *Suite) Test_ShellLineChecker_checkMultiLineComment(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpTool("echo", "", AtRunTime)
+	t.SetUpTool("sed", "", AtRunTime)
+	t.SetUpVartypes()
 
 	test := func(lines ...string) {
 		i := 0
@@ -1569,7 +1571,7 @@ func (s *Suite) Test_ShellLineChecker_checkMultiLineComment(c *check.C) {
 		}
 
 		mklines := t.SetUpFileMkLines("Makefile",
-			append([]string{MkCvsID, "pre-install:"},
+			append([]string{MkCvsID, "pre-build:"},
 				lines[:i]...)...)
 
 		mklines.Check()
@@ -1612,6 +1614,13 @@ func (s *Suite) Test_ShellLineChecker_checkMultiLineComment(c *check.C) {
 		"\t\tafter'; \\",
 		"\t# comment \\",
 		"\techo 'still a comment'")
+
+	test(
+		"\tsed -e s#@PREFIX@#${PREFIX}#g \\",
+		"\tfilename",
+
+		"WARN: ~/Makefile:3--4: Substitution commands like "+
+			"\"s#@PREFIX@#${PREFIX}#g\" should always be quoted.")
 }
 
 func (s *Suite) Test_splitIntoShellTokens__line_continuation(c *check.C) {
