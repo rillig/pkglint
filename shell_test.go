@@ -968,6 +968,66 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__sed_and_mv(c *check
 		"NOTE: filename.mk:1: Please use the SUBST framework instead of ${SED} and ${MV}.")
 }
 
+func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__sed_and_mv_explained(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--explain")
+	t.SetUpVartypes()
+	t.SetUpTool("sed", "SED", AtRunTime)
+	t.SetUpTool("mv", "MV", AtRunTime)
+	ck := t.NewShellLineChecker("\t${RUN} ${SED} 's,#,// comment:,g' filename > filename.tmp; ${MV} filename.tmp filename")
+
+	ck.CheckShellCommandLine(ck.mkline.ShellCommand())
+
+	t.CheckOutputLines(
+		"NOTE: filename.mk:1: Please use the SUBST framework instead of ${SED} and ${MV}.",
+		"",
+		"\tUsing the SUBST framework instead of explicit commands is easier to",
+		"\tunderstand, since all the complexity of using sed and mv is hidden",
+		"\tbehind the scenes.",
+		"",
+		"\tRun \"@BMAKE@ help topic=subst\" for more information.",
+		"",
+		"\tWhen migrating to the SUBST framework, pay attention to \"#\"",
+		"\tcharacters. In shell commands, make(1) does not interpret them as",
+		"\tcomment character, but in variable assignments it does. Therefore,",
+		"\tinstead of the shell command",
+		"",
+		"\t\tsed -e 's,#define foo,,'",
+		"",
+		"\tyou need to write",
+		"",
+		"\t\tSUBST_SED.foo+=\t's,\\#define foo,,'",
+		"")
+}
+
+func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__sed_and_mv_autofix_explained(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--explain", "--autofix")
+	t.SetUpVartypes()
+	t.SetUpTool("sed", "SED", AtRunTime)
+	t.SetUpTool("mv", "MV", AtRunTime)
+	ck := t.NewShellLineChecker("\t${RUN} ${SED} 's,#,// comment:,g' filename > filename.tmp; ${MV} filename.tmp filename")
+
+	ck.CheckShellCommandLine(ck.mkline.ShellCommand())
+
+	// FIXME: Only ever output an explanation if there's a corresponding
+	//  diagnostic. Even if Explain is called twice in a row.
+	t.CheckOutputLines(
+		"\tWhen migrating to the SUBST framework, pay attention to \"#\"",
+		"\tcharacters. In shell commands, make(1) does not interpret them as",
+		"\tcomment character, but in variable assignments it does. Therefore,",
+		"\tinstead of the shell command",
+		"",
+		"\t\tsed -e 's,#define foo,,'",
+		"",
+		"\tyou need to write",
+		"",
+		"\t\tSUBST_SED.foo+=\t's,\\#define foo,,'",
+		"")
+}
+
 func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__subshell(c *check.C) {
 	t := s.Init(c)
 
