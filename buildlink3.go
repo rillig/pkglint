@@ -100,7 +100,8 @@ func (ck *Buildlink3Checker) checkUniquePkgbase(pkgbase string, mkline *MkLine) 
 	}
 
 	// FIXME: consider DirNoClean
-	base, name := trimCommon(pkgbase, mkline.Filename.DirClean().Base())
+	dirname := mkline.Filename.DirClean().Base()
+	base, name := trimCommon(pkgbase, dirname)
 	if base == "" && matches(name, `^(\d*|-cvs|-fossil|-git|-hg|-svn|-devel|-snapshot)$`) {
 		return
 	}
