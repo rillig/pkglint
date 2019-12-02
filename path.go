@@ -17,9 +17,6 @@ type Path string
 
 func NewPath(name string) Path { return Path(name) }
 
-// FIXME: NewSlash only makes sense for CurrPath.
-func NewPathSlash(name string) Path { return Path(filepath.ToSlash(name)) }
-
 func (p Path) String() string { return string(p) }
 
 func (p Path) GoString() string { return sprintf("%q", string(p)) }
@@ -219,7 +216,7 @@ func NewCurrPath(p Path) CurrPath { return CurrPath(p) }
 func NewCurrPathString(p string) CurrPath { return CurrPath(p) }
 
 func NewCurrPathSlash(p string) CurrPath {
-	return CurrPath(NewPathSlash(p).String())
+	return CurrPath(filepath.ToSlash(p))
 }
 
 func (p CurrPath) GoString() string { return p.AsPath().GoString() }

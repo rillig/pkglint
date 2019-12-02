@@ -16,17 +16,6 @@ func (s *Suite) Test_NewPath(c *check.C) {
 	c.Check(NewPath("\\"), check.Not(check.Equals), NewPath("/"))
 }
 
-func (s *Suite) Test_NewPathSlash(c *check.C) {
-	t := s.Init(c)
-
-	t.CheckEquals(NewPathSlash("filename"), NewPathSlash("filename"))
-	t.CheckEquals(NewPathSlash("\\"), NewPathSlash("\\"))
-
-	t.CheckEquals(
-		NewPathSlash("\\"),
-		NewPathSlash(condStr(runtime.GOOS == "windows", "/", "\\")))
-}
-
 func (s *Suite) Test_Path_String(c *check.C) {
 	t := s.Init(c)
 
@@ -539,9 +528,19 @@ func (s *Suite) Test_NewCurrPathString(c *check.C) {
 func (s *Suite) Test_NewCurrPathSlash(c *check.C) {
 	t := s.Init(c)
 
-	curr := NewCurrPathSlash("dir/.///file")
+	test := func(path, curr string) {
+		t.CheckEquals(NewCurrPathSlash(path).String(), curr)
+	}
+	testWindows := func(path, currWindows, currOther string) {
+		t.CheckEquals(
+			NewCurrPathSlash(path).String(),
+			condStr(runtime.GOOS == "windows", currWindows, currOther))
+	}
 
-	t.CheckEquals(curr.String(), "dir/.///file")
+	test("filename", "filename")
+	test("dir/.///file", "dir/.///file")
+
+	testWindows("\\", "/", "\\")
 }
 
 func (s *Suite) Test_NewCurrPathSlash__windows(c *check.C) {
