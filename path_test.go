@@ -60,11 +60,11 @@ func (s *Suite) Test_Path_IsEmpty(c *check.C) {
 	test("/", false)
 }
 
-func (s *Suite) Test_Path_Dir(c *check.C) {
+func (s *Suite) Test_Path_DirClean(c *check.C) {
 	t := s.Init(c)
 
 	test := func(p, dir Path) {
-		t.CheckEquals(p.Dir(), dir)
+		t.CheckEquals(p.DirClean(), dir)
 	}
 
 	test("", ".")
@@ -76,6 +76,21 @@ func (s *Suite) Test_Path_Dir(c *check.C) {
 
 	// TODO: I didn't expect that Dir would return the cleaned path.
 	test("././././dir/filename", "dir")
+}
+
+func (s *Suite) Test_Path_DirNoClean(c *check.C) {
+	t := s.Init(c)
+
+	test := func(p, dir Path) {
+		t.CheckEquals(p.DirNoClean(), dir)
+	}
+
+	test("", ".")
+	test("././././", ".")
+	test("/root", "/")
+	test("filename", ".")
+	test("dir/filename", "dir")
+	test("dir/filename\\with\\backslash", "dir")
 }
 
 func (s *Suite) Test_Path_Base(c *check.C) {
@@ -580,14 +595,24 @@ func (s *Suite) Test_CurrPath_IsEmpty(c *check.C) {
 	test("/", false)
 }
 
-func (s *Suite) Test_CurrPath_Dir(c *check.C) {
+func (s *Suite) Test_CurrPath_DirClean(c *check.C) {
 	t := s.Init(c)
 
 	test := func(curr, dir CurrPath) {
-		t.CheckEquals(curr.Dir(), dir)
+		t.CheckEquals(curr.DirClean(), dir)
 	}
 
-	test("dir/file", "dir")
+	test("./dir/../dir///./file", "dir")
+}
+
+func (s *Suite) Test_CurrPath_DirNoClean(c *check.C) {
+	t := s.Init(c)
+
+	test := func(curr, dir CurrPath) {
+		t.CheckEquals(curr.DirNoClean(), dir)
+	}
+
+	test("./dir/../dir///./file", "./dir/../dir")
 }
 
 func (s *Suite) Test_CurrPath_Base(c *check.C) {
@@ -989,7 +1014,7 @@ func (s *Suite) Test_NewPkgsrcPath(c *check.C) {
 
 	p := NewPkgsrcPath("category/package")
 
-	t.CheckEquals(p.AsPath().Dir(), NewPath("category"))
+	t.CheckEquals(p.AsPath(), NewPath("category/package"))
 }
 
 func (s *Suite) Test_PkgsrcPath_String(c *check.C) {
@@ -1013,14 +1038,24 @@ func (s *Suite) Test_PkgsrcPath_AsPath(c *check.C) {
 	t.CheckEquals(p.String(), "./category/package/Makefile")
 }
 
-func (s *Suite) Test_PkgsrcPath_Dir(c *check.C) {
+func (s *Suite) Test_PkgsrcPath_DirClean(c *check.C) {
 	t := s.Init(c)
 
-	pp := NewPkgsrcPath("dir/base///.")
+	pp := NewPkgsrcPath("./dir/../dir/base///.")
 
-	dir := pp.Dir()
+	dir := pp.DirClean()
 
 	t.CheckEquals(dir, NewPkgsrcPath("dir/base"))
+}
+
+func (s *Suite) Test_PkgsrcPath_DirNoClean(c *check.C) {
+	t := s.Init(c)
+
+	pp := NewPkgsrcPath("./dir/../dir/base///.")
+
+	dir := pp.DirNoClean()
+
+	t.CheckEquals(dir, NewPkgsrcPath("./dir/../dir/base"))
 }
 
 func (s *Suite) Test_PkgsrcPath_Base(c *check.C) {
@@ -1150,14 +1185,24 @@ func (s *Suite) Test_RelPath_String(c *check.C) {
 	t.CheckEquals(str, ".///rel")
 }
 
-func (s *Suite) Test_RelPath_Dir(c *check.C) {
+func (s *Suite) Test_RelPath_DirClean(c *check.C) {
 	t := s.Init(c)
 
-	rel := NewRelPath("./dir////./file")
+	rel := NewRelPath("./dir/../dir///./file")
 
-	dir := rel.Dir()
+	dir := rel.DirClean()
 
 	t.CheckEquals(dir, NewRelPath("dir"))
+}
+
+func (s *Suite) Test_RelPath_DirNoClean(c *check.C) {
+	t := s.Init(c)
+
+	rel := NewRelPath("./dir/../dir///./file")
+
+	dir := rel.DirNoClean()
+
+	t.CheckEquals(dir, NewRelPath("./dir/../dir"))
 }
 
 func (s *Suite) Test_RelPath_Base(c *check.C) {

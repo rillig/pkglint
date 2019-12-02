@@ -119,7 +119,8 @@ func (line *Line) RefToLocation(other Location) string {
 // This is typically used for arguments in diagnostics, which should always be
 // relative to the line with which the diagnostic is associated.
 func (line *Line) PathToFile(filePath CurrPath) Path {
-	return G.Pkgsrc.Relpath(line.Filename.Dir(), filePath)
+	// FIXME: consider DirNoClean
+	return G.Pkgsrc.Relpath(line.Filename.DirClean(), filePath)
 }
 
 func (line *Line) IsMultiline() bool {

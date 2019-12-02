@@ -280,7 +280,9 @@ func (mkline *MkLine) IncludedFile() Path { return mkline.data.(*mkLineInclude).
 
 // IncludedFileFull returns the path to the included file.
 func (mkline *MkLine) IncludedFileFull() CurrPath {
-	return mkline.Filename.Dir().JoinClean(mkline.IncludedFile()).CleanPath() // FIXME: JoinNoClean?
+	// FIXME: consider DirNoClean
+	// FIXME: consider JoinNoClean
+	return mkline.Filename.DirClean().JoinClean(mkline.IncludedFile()).CleanPath()
 }
 
 func (mkline *MkLine) Targets() string { return mkline.data.(mkLineDependency).targets }
@@ -561,7 +563,8 @@ func (mkline *MkLine) ResolveVarsInRelativePath(relativePath RelPath) RelPath {
 	if G.Pkg != nil {
 		basedir = G.Pkg.File(".")
 	} else {
-		basedir = mkline.Filename.Dir()
+		// FIXME: consider DirNoClean
+		basedir = mkline.Filename.DirClean()
 	}
 
 	tmp := relativePath

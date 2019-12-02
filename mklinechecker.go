@@ -1085,7 +1085,9 @@ func (ck MkLineChecker) checkVarassignRightCategory() {
 
 	categories := mkline.ValueFields(mkline.Value())
 	actual := categories[0]
-	expected := G.Pkgsrc.ToRel(mkline.Filename).Dir().Dir().Base()
+	// FIXME: consider DirNoClean
+	// FIXME: consider DirNoClean
+	expected := G.Pkgsrc.ToRel(mkline.Filename).DirClean().DirClean().Base()
 
 	if expected == "wip" || actual == expected {
 		return
@@ -1340,7 +1342,9 @@ func (ck MkLineChecker) checkInclude() {
 	case includedFile != "builtin.mk" && includedFile.HasSuffixPath("builtin.mk"):
 		if mkline.Basename != "hacks.mk" && !mkline.HasRationale() {
 			fix := mkline.Autofix()
-			fix.Errorf("%s must not be included directly. Include \"%s/buildlink3.mk\" instead.", includedFile, includedFile.Dir())
+			// FIXME: Use %q instead of %s.
+			// FIXME: consider DirNoClean
+			fix.Errorf("%s must not be included directly. Include \"%s/buildlink3.mk\" instead.", includedFile, includedFile.DirClean())
 			fix.Replace("builtin.mk", "buildlink3.mk")
 			fix.Apply()
 		}
@@ -1380,7 +1384,8 @@ func (ck MkLineChecker) CheckRelativePath(relativePath RelPath, mustExist bool) 
 		return
 	}
 
-	abs := mkline.Filename.Dir().JoinNoClean(resolvedPath.AsPath())
+	// FIXME: consider DirNoClean
+	abs := mkline.Filename.DirClean().JoinNoClean(resolvedPath.AsPath())
 	if !abs.Exists() {
 		if mustExist && !ck.MkLines.indentation.HasExists(resolvedPath) {
 			mkline.Errorf("Relative path %q does not exist.", resolvedPath)

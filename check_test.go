@@ -358,7 +358,8 @@ func (t *Tester) SetUpPackage(pkgpath RelPath, makefileLines ...string) CurrPath
 	assertf(matches(pkgpath.String(), `^[^/]+/[^/]+$`), "pkgpath %q must have the form \"category/package\"", pkgpath)
 
 	distname := pkgpath.Base()
-	category := pkgpath.Dir()
+	// FIXME: consider DirNoClean
+	category := pkgpath.DirClean()
 	if category == "wip" {
 		// To avoid boilerplate CATEGORIES definitions for wip packages.
 		category = "local"
@@ -453,7 +454,8 @@ func (t *Tester) CreateFileLines(relativeFileName RelPath, lines ...string) Curr
 	}
 
 	filename := t.File(relativeFileName)
-	err := os.MkdirAll(filename.Dir().String(), 0777)
+	// FIXME: consider DirNoClean
+	err := os.MkdirAll(filename.DirClean().String(), 0777)
 	t.c.Assert(err, check.IsNil)
 
 	err = filename.WriteString(content.String())
@@ -481,7 +483,8 @@ func (t *Tester) CreateFileDummyPatch(relativeFileName RelPath) {
 
 func (t *Tester) CreateFileDummyBuildlink3(relativeFileName RelPath, customLines ...string) {
 	assert(relativeFileName.Count() == 3)
-	dir := relativeFileName.Dir()
+	// FIXME: consider DirNoClean
+	dir := relativeFileName.DirClean()
 	lower := dir.Base()
 	// see pkgtools/createbuildlink/files/createbuildlink, "package specific variables"
 	upper := strings.Replace(strings.ToUpper(lower), "-", "_", -1)
@@ -539,7 +542,8 @@ func (t *Tester) Copy(relativeSrc, relativeDst RelPath) {
 
 	data, err := src.ReadString()
 	assertNil(err, "Copy.Read")
-	err = os.MkdirAll(dst.Dir().String(), 0777)
+	// FIXME: consider DirNoClean
+	err = os.MkdirAll(dst.DirClean().String(), 0777)
 	assertNil(err, "Copy.MkdirAll")
 	err = dst.WriteString(data)
 	assertNil(err, "Copy.Write")
@@ -621,9 +625,11 @@ func (t *Tester) SetUpHierarchy() (
 	//
 	// This is the same mechanism that is used in Pkgsrc.Relpath.
 	includePath := func(including, included Path) Path {
-		fromDir := including.Dir()
+		// FIXME: consider DirNoClean
+		fromDir := including.DirClean()
 		to := basedir.Rel(included)
-		if fromDir == to.Dir() {
+		// FIXME: consider DirNoClean
+		if fromDir == to.DirClean() {
 			return NewPath(to.Base())
 		} else {
 			return fromDir.Rel(basedir).JoinNoClean(to).CleanDot()

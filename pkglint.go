@@ -201,7 +201,8 @@ func (pkglint *Pkglint) setUpProfiling() func() {
 func (pkglint *Pkglint) prepareMainLoop() {
 	firstDir := pkglint.Todo.Front()
 	if firstDir.IsFile() {
-		firstDir = firstDir.Dir()
+		// FIXME: consider DirNoClean
+		firstDir = firstDir.DirClean()
 	}
 
 	relTopdir := findPkgsrcTopdir(firstDir)
@@ -313,7 +314,8 @@ func (pkglint *Pkglint) checkMode(dirent CurrPath, mode os.FileMode) {
 
 	dir := dirent
 	if !isDir {
-		dir = dirent.Dir()
+		// FIXME: consider DirNoClean
+		dir = dirent.DirClean()
 	}
 
 	basename := dirent.Base()
@@ -599,16 +601,20 @@ func (pkglint *Pkglint) checkReg(filename CurrPath, basename string, depth int) 
 			CheckLinesPatch(lines)
 		}
 
-	case filename.Dir().Base() == "patches" && matches(filename.Base(), `^manual[^/]*$`):
+		// FIXME: consider DirNoClean
+	case filename.DirClean().Base() == "patches" && matches(filename.Base(), `^manual[^/]*$`):
 		if trace.Tracing {
 			trace.Stepf("Unchecked file %q.", filename)
 		}
 
-	case filename.Dir().Base() == "patches":
+		// FIXME: consider DirNoClean
+	case filename.DirClean().Base() == "patches":
 		NewLineWhole(filename).Warnf("Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
 
 	case (hasPrefix(basename, "Makefile") || hasSuffix(basename, ".mk")) &&
-		!filename.Dir().ContainsPath("files"): // FIXME: G.Pkgsrc.Rel(filename) instead of filename
+		// FIXME: consider DirNoClean
+		// FIXME: G.Pkgsrc.Rel(filename) instead of filename
+		!filename.DirClean().ContainsPath("files"):
 		CheckFileMk(filename)
 
 	case hasPrefix(basename, "PLIST"):
@@ -620,7 +626,8 @@ func (pkglint *Pkglint) checkReg(filename CurrPath, basename string, depth int) 
 		// This only checks the file but doesn't register the changes globally.
 		_ = pkglint.Pkgsrc.loadDocChangesFromFile(filename)
 
-	case filename.Dir().Base() == "files":
+		// FIXME: consider DirNoClean
+	case filename.DirClean().Base() == "files":
 		// Skip files directly in the files/ directory, but not those further down.
 
 	case basename == "spec":
@@ -726,7 +733,8 @@ func (pkglint *Pkglint) tools(mklines *MkLines) *Tools {
 }
 
 func (pkglint *Pkglint) loadCvsEntries(filename CurrPath) map[string]CvsEntry {
-	dir := filename.Dir()
+	// FIXME: consider DirNoClean
+	dir := filename.DirClean()
 	if dir == pkglint.cvsEntriesDir {
 		return pkglint.cvsEntries
 	}

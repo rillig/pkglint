@@ -28,7 +28,24 @@ func (p Path) GoString() string { return sprintf("%q", string(p)) }
 // which is usually a sign of an uninitialized variable.
 func (p Path) IsEmpty() bool { return p == "" }
 
-func (p Path) Dir() Path { return Path(path.Dir(string(p))) }
+func (p Path) DirClean() Path { return Path(path.Dir(string(p))) }
+
+// Returns the directory of the path, with only minimal cleaning.
+// Only redundant dots and slashes are removed, and only at the end.
+func (p Path) DirNoClean() Path {
+	s := p.String()
+	end := len(s)
+	for end > 0 && s[end-1] != '/' {
+		end--
+	}
+	for end > 1 && s[end-1] == '/' || end > 2 && hasPrefix(s[end-2:], "/.") {
+		end--
+	}
+	if end == 0 {
+		return "."
+	}
+	return NewPath(s[:end])
+}
 
 func (p Path) Base() string { return path.Base(string(p)) }
 
@@ -213,7 +230,13 @@ func (p CurrPath) AsPath() Path { return Path(p) }
 
 func (p CurrPath) IsEmpty() bool { return p.AsPath().IsEmpty() }
 
-func (p CurrPath) Dir() CurrPath { return CurrPath(p.AsPath().Dir()) }
+func (p CurrPath) DirClean() CurrPath {
+	return CurrPath(p.AsPath().DirClean())
+}
+
+func (p CurrPath) DirNoClean() CurrPath {
+	return CurrPath(p.AsPath().DirNoClean())
+}
 
 func (p CurrPath) Base() string { return p.AsPath().Base() }
 
@@ -348,8 +371,12 @@ func (p PkgsrcPath) String() string { return string(p) }
 
 func (p PkgsrcPath) AsPath() Path { return NewPath(string(p)) }
 
-func (p PkgsrcPath) Dir() PkgsrcPath {
-	return NewPkgsrcPath(p.AsPath().Dir().String())
+func (p PkgsrcPath) DirClean() PkgsrcPath {
+	return NewPkgsrcPath(p.AsPath().DirClean().String())
+}
+
+func (p PkgsrcPath) DirNoClean() PkgsrcPath {
+	return NewPkgsrcPath(p.AsPath().DirNoClean().String())
 }
 
 func (p PkgsrcPath) Base() string { return p.AsPath().Base() }
@@ -398,7 +425,11 @@ func (p RelPath) AsPath() Path { return NewPath(string(p)) }
 
 func (p RelPath) String() string { return p.AsPath().String() }
 
-func (p RelPath) Dir() RelPath { return RelPath(p.AsPath().Dir()) }
+func (p RelPath) DirClean() RelPath { return RelPath(p.AsPath().DirClean()) }
+
+func (p RelPath) DirNoClean() RelPath {
+	return RelPath(p.AsPath().DirNoClean())
+}
 
 func (p RelPath) Base() string { return p.AsPath().Base() }
 
