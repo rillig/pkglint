@@ -334,7 +334,7 @@ func (t *Tester) SetUpPkgsrc() {
 // SetUpCategory makes the given category valid by creating a dummy Makefile.
 // After that, it can be mentioned in the CATEGORIES variable of a package.
 func (t *Tester) SetUpCategory(name RelPath) {
-	assert(name.Count() == 1)
+	assert(G.Pkgsrc.ToRel(t.File(name)).Count() == 1)
 
 	makefile := name.JoinNoClean("Makefile")
 	if !t.File(makefile).IsFile() {
@@ -467,6 +467,9 @@ func (t *Tester) CreateFileLines(relativeFileName RelPath, lines ...string) Curr
 // CreateFileDummyPatch creates a patch file with the given name in the
 // temporary directory.
 func (t *Tester) CreateFileDummyPatch(relativeFileName RelPath) {
+	// Patch files only make sense in category/package/patches directories.
+	assert(G.Pkgsrc.ToRel(t.File(relativeFileName)).Count() == 4)
+
 	t.CreateFileLines(relativeFileName,
 		CvsID,
 		"",
@@ -480,8 +483,9 @@ func (t *Tester) CreateFileDummyPatch(relativeFileName RelPath) {
 }
 
 func (t *Tester) CreateFileDummyBuildlink3(relativeFileName RelPath, customLines ...string) {
-	assert(relativeFileName.Count() == 3)
-	// FIXME: consider DirNoClean
+	// Buildlink3.mk files only make sense in category/package directories.
+	assert(G.Pkgsrc.ToRel(t.File(relativeFileName)).Count() == 3)
+
 	dir := relativeFileName.DirClean()
 	lower := dir.Base()
 	// see pkgtools/createbuildlink/files/createbuildlink, "package specific variables"
