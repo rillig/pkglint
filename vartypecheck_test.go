@@ -1553,6 +1553,16 @@ func (s *Suite) Test_VartypeCheck_Tool(c *check.C) {
 		"${t}\\:build")
 
 	vt.OutputEmpty()
+
+	vt.Op(opAssignAppend)
+	vt.Values(
+		"tool1:bootstrap",
+		"tool1:build",
+		"tool1:pkgsrc",
+		"tool1:run",
+		"tool1:test")
+
+	vt.OutputEmpty()
 }
 
 func (s *Suite) Test_VartypeCheck_URL(c *check.C) {
