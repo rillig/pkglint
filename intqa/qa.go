@@ -344,9 +344,7 @@ func (ck *QAChecker) checkMethodsSameFile() {
 		}
 	}
 	for _, test := range ck.tests {
-		if test.isType() {
-			types[test.Type] = &test.code
-		} else if test.isMethod() {
+		if test.isMethod() {
 			methods = append(methods, &test.code)
 		}
 	}
