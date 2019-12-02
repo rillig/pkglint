@@ -915,7 +915,7 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__sed_and_mv_explaine
 		"\tunderstand, since all the complexity of using sed and mv is hidden",
 		"\tbehind the scenes.",
 		"",
-		"\tRun \"@BMAKE@ help topic=subst\" for more information.",
+		sprintf("\tRun %q for more information.", bmakeHelp("subst")),
 		"",
 		"\tWhen migrating to the SUBST framework, pay attention to \"#\"",
 		"\tcharacters. In shell commands, make(1) does not interpret them as",
