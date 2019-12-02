@@ -340,7 +340,7 @@ func (p CurrPath) ReadPaths() []CurrPath {
 	}
 	var filenames []CurrPath
 	for _, info := range infos {
-		if !(isIgnoredFilename(info.Name())) {
+		if !isIgnoredFilename(info.Name()) {
 			joined := p.JoinNoClean(NewPath(info.Name())).CleanPath()
 			filenames = append(filenames, joined)
 		}

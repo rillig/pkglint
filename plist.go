@@ -563,8 +563,8 @@ func (s *plistLineSorter) Sort() {
 		mi := s.middle[i]
 		mj := s.middle[j]
 		less := mi.text < mj.text ||
-			(mi.text == mj.text && stringSliceLess(mi.conditions, mj.conditions))
-		if (i < j) != less {
+			mi.text == mj.text && stringSliceLess(mi.conditions, mj.conditions)
+		if i < j != less {
 			s.changed = true
 		}
 		return less

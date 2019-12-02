@@ -297,7 +297,7 @@ func (*VaralignBlock) rightMargin(infos []*varalignLine) int {
 			}
 		}
 	}
-	return (min & -8) + 8
+	return min&-8 + 8
 }
 
 // optimalWidth computes the desired screen width for the variable assignment
@@ -331,7 +331,7 @@ func (*VaralignBlock) optimalWidth(infos []*varalignLine) int {
 	// Widths of the current indentation (including whitespace)
 	var spaceWidths mklineInts
 	for _, info := range infos {
-		if info.multiEmpty || info.rawIndex > 0 || (outlier > 0 && info.varnameOpWidth() == outlier) {
+		if info.multiEmpty || info.rawIndex > 0 || outlier > 0 && info.varnameOpWidth() == outlier {
 			continue
 		}
 		spaceWidths.append(info.mkline, info.varnameOpSpaceWidth())
@@ -360,7 +360,7 @@ func (*VaralignBlock) optimalWidth(infos []*varalignLine) int {
 		return 0
 	}
 
-	return (minVarnameOpWidth & -8) + 8
+	return minVarnameOpWidth&-8 + 8
 }
 
 // adjustLong allows any follow-up line to start either in column 8 or at

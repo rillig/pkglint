@@ -735,7 +735,7 @@ func (pkg *Package) CheckVarorder(mklines *MkLines) {
 		{"TOOL_DEPENDS", many},
 		{"DEPENDS", many}}
 
-	relevantLines := (func() []*MkLine {
+	relevantLines := func() []*MkLine {
 		firstRelevant := -1
 		lastRelevant := -1
 
@@ -783,7 +783,7 @@ func (pkg *Package) CheckVarorder(mklines *MkLines) {
 			return nil
 		}
 		return mklines.mklines[firstRelevant : lastRelevant+1]
-	})()
+	}()
 
 	// If there are foreign variables, skip the whole check.
 	// The check is only intended for the most simple packages.
