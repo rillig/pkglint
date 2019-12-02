@@ -664,13 +664,11 @@ func (s *Suite) Test_Buildlink3Checker_checkUniquePkgbase__chdir(c *check.C) {
 	test("php", "../../lang/php72",
 		nil...)
 
+	// Using the identifier "php" is ok in the current directory since
+	// its relative path from the pkgsrc root is "lang/php56", which
+	// starts with "php" as well.
 	test("php", ".",
-		// FIXME: This error is wrong. Using the identifier "php" is ok
-		//  in the current directory since its relative path from the
-		//  pkgsrc root is "lang/php56", which starts with "php" as well.
-		"ERROR: buildlink3.mk:123: "+
-			"Duplicate package identifier \"php\" already appeared "+
-			"in ../../lang/php72/buildlink3.mk:123.")
+		nil...)
 }
 
 func (s *Suite) Test_Buildlink3Checker_checkSecondParagraph__missing_mkbase(c *check.C) {
