@@ -61,7 +61,7 @@ qa_gobco() {
 }
 
 qa_netbsd() {
-  step_msg "Checking for @beta"
+  step_msg "Checking for release blockers"
   if (cd "$srcdir" && grep -n "@beta" -- *.go); then
     exit 1
   fi
