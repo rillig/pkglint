@@ -121,6 +121,7 @@ func rtrimHspace(str string) string {
 	return str[:end]
 }
 
+// trimCommon returns the middle portion of the given strings that differs.
 func trimCommon(a, b string) (string, string) {
 	// trim common prefix
 	for len(a) > 0 && len(b) > 0 && a[0] == b[0] {
