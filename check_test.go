@@ -358,8 +358,7 @@ func (t *Tester) SetUpPackage(pkgpath RelPath, makefileLines ...string) CurrPath
 	assertf(matches(pkgpath.String(), `^[^/]+/[^/]+$`), "pkgpath %q must have the form \"category/package\"", pkgpath)
 
 	distname := pkgpath.Base()
-	// FIXME: consider DirNoClean
-	category := pkgpath.DirClean()
+	category := pkgpath.DirNoClean()
 	if category == "wip" {
 		// To avoid boilerplate CATEGORIES definitions for wip packages.
 		category = "local"
