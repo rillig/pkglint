@@ -1164,6 +1164,14 @@ func (s *Suite) Test_NewRelPath(c *check.C) {
 	t.CheckEquals(rel.String(), "dir/file")
 }
 
+func (s *Suite) Test_NewRelPathString(c *check.C) {
+	t := s.Init(c)
+
+	rel := NewRelPathString("dir/file")
+
+	t.CheckEquals(rel.String(), "dir/file")
+}
+
 func (s *Suite) Test_RelPath_AsPath(c *check.C) {
 	t := s.Init(c)
 

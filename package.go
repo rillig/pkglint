@@ -112,7 +112,7 @@ func (pkg *Package) load() ([]CurrPath, *MkLines, *MkLines) {
 		files = append(files, pkg.File(pkg.Pkgdir).ReadPaths()...)
 	}
 	files = append(files, pkg.File(pkg.Patchdir).ReadPaths()...)
-	if pkg.DistinfoFile != NewPackagePath(pkg.vars.fallback["DISTINFO_FILE"]) {
+	if pkg.DistinfoFile != NewPackagePath(NewPath(pkg.vars.fallback["DISTINFO_FILE"])) {
 		files = append(files, pkg.File(pkg.DistinfoFile))
 	}
 
@@ -182,10 +182,10 @@ func (pkg *Package) loadPackageMakefile() (*MkLines, *MkLines) {
 
 	allLines.collectUsedVariables()
 
-	pkg.Pkgdir = NewPackagePath(pkg.vars.LastValue("PKGDIR"))
-	pkg.DistinfoFile = NewPackagePath(pkg.vars.LastValue("DISTINFO_FILE"))
-	pkg.Filesdir = NewPackagePath(pkg.vars.LastValue("FILESDIR"))
-	pkg.Patchdir = NewPackagePath(pkg.vars.LastValue("PATCHDIR"))
+	pkg.Pkgdir = NewPackagePath(NewPath(pkg.vars.LastValue("PKGDIR")))
+	pkg.DistinfoFile = NewPackagePath(NewPath(pkg.vars.LastValue("DISTINFO_FILE")))
+	pkg.Filesdir = NewPackagePath(NewPath(pkg.vars.LastValue("FILESDIR")))
+	pkg.Patchdir = NewPackagePath(NewPath(pkg.vars.LastValue("PATCHDIR")))
 
 	// See lang/php/ext.mk
 	if pkg.vars.IsDefinedSimilar("PHPEXT_MK") {
@@ -252,7 +252,7 @@ func (pkg *Package) parseLine(mklines *MkLines, mkline *MkLine, allLines *MkLine
 		includedMkLines, skip := pkg.loadIncluded(mkline, includingFile)
 
 		if includedMkLines == nil {
-			if skip || mklines.indentation.HasExists(NewRelPath(includedFile.String())) {
+			if skip || mklines.indentation.HasExists(NewRelPath(includedFile)) {
 				return true // See https://github.com/rillig/pkglint/issues/1
 			}
 			mkline.Errorf("Cannot read %q.", includedFile)
@@ -363,7 +363,7 @@ func (pkg *Package) resolveIncludedFile(mkline *MkLine, includingFilename CurrPa
 
 	// FIXME: resolveVariableRefs uses G.Pkg implicitly. It should be made explicit.
 	// TODO: Try to combine resolveVariableRefs and ResolveVarsInRelativePath.
-	resolved := mkline.ResolveVarsInRelativePath(NewRelPath(mkline.IncludedFile().String()))
+	resolved := mkline.ResolveVarsInRelativePath(NewRelPath(mkline.IncludedFile()))
 	includedText := resolveVariableRefs(nil /* XXX: or maybe some mklines? */, resolved.String())
 	includedFile := NewPath(includedText)
 	if containsVarRef(includedText) {

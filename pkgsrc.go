@@ -311,7 +311,7 @@ func (*Pkgsrc) parseDocChange(line *Line, warn bool) *Change {
 		return &Change{
 			Location: line.Location,
 			Action:   action,
-			Pkgpath:  NewPkgsrcPath(intern(pkgpath)),
+			Pkgpath:  NewPkgsrcPath(NewPath(intern(pkgpath))),
 			target:   intern(condStr(n == 6, f[3], "")),
 			Author:   intern(author),
 			Date:     intern(date),
@@ -412,7 +412,7 @@ func (src *Pkgsrc) loadTools() {
 			if mkline.IsInclude() {
 				includedFile := mkline.IncludedFile()
 				if !includedFile.ContainsText("/") {
-					toolFiles = append(toolFiles, NewRelPath(includedFile.String()))
+					toolFiles = append(toolFiles, NewRelPath(includedFile))
 				}
 			}
 		}
@@ -1120,7 +1120,7 @@ func (src *Pkgsrc) File(relativeName PkgsrcPath) CurrPath {
 // Example:
 //  NewPkgsrc("/usr/pkgsrc").ToRel("/usr/pkgsrc/distfiles") => "distfiles"
 func (src *Pkgsrc) ToRel(filename CurrPath) PkgsrcPath {
-	return NewPkgsrcPath(src.Relpath(src.topdir, filename).String())
+	return NewPkgsrcPath(src.Relpath(src.topdir, filename))
 }
 
 // IsInfra returns whether the given filename is part of the pkgsrc
@@ -1159,7 +1159,7 @@ func (ch *Change) Version() string {
 // Target returns the target PKGPATH for a Renamed or Moved package.
 func (ch *Change) Target() PkgsrcPath {
 	assert(ch.Action == Renamed || ch.Action == Moved)
-	return NewPkgsrcPath(ch.target)
+	return NewPkgsrcPath(NewPath(ch.target))
 }
 
 // Successor returns the successor for a Removed package.

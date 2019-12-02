@@ -747,7 +747,7 @@ func (t *Tester) Main(args ...string) int {
 
 	argv := []string{"pkglint"}
 	for _, arg := range args {
-		fileArg := t.File(NewRelPath(arg))
+		fileArg := t.File(NewRelPath(NewPath(arg)))
 		if fileArg.Exists() {
 			argv = append(argv, fileArg.String())
 		} else {

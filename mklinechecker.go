@@ -1305,7 +1305,7 @@ func (ck MkLineChecker) checkInclude() {
 	if trace.Tracing {
 		trace.Stepf("includingFile=%s includedFile=%s", mkline.Filename, includedFile)
 	}
-	ck.CheckRelativePath(NewRelPath(includedFile.String()), mustExist)
+	ck.CheckRelativePath(NewRelPath(includedFile), mustExist)
 
 	switch {
 	case includedFile.HasBase("Makefile"):
@@ -1434,7 +1434,7 @@ func (ck MkLineChecker) CheckRelativePkgdir(pkgdir RelPath) {
 	}
 
 	mkline := ck.MkLine
-	ck.CheckRelativePath(NewRelPath(pkgdir.JoinNoClean("Makefile").String()), true)
+	ck.CheckRelativePath(pkgdir.JoinNoClean("Makefile"), true)
 	pkgdir = mkline.ResolveVarsInRelativePath(pkgdir)
 
 	if !matches(pkgdir.String(), `^\.\./\.\./([^./][^/]*/[^./][^/]*)$`) && !containsVarRef(pkgdir.String()) {

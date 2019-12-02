@@ -15,7 +15,7 @@ import (
 // The base directory of relative paths is unspecified.
 type Path string
 
-func NewPath(name string) Path { return Path(name) }
+func NewPath(p string) Path { return Path(p) }
 
 func (p Path) String() string { return string(p) }
 
@@ -362,18 +362,18 @@ func (p CurrPath) WriteString(s string) error {
 // PkgsrcPath is a path relative to the pkgsrc root.
 type PkgsrcPath string
 
-func NewPkgsrcPath(p string) PkgsrcPath { return PkgsrcPath(p) }
+func NewPkgsrcPath(p Path) PkgsrcPath { return PkgsrcPath(p) }
 
 func (p PkgsrcPath) String() string { return string(p) }
 
 func (p PkgsrcPath) AsPath() Path { return NewPath(string(p)) }
 
 func (p PkgsrcPath) DirClean() PkgsrcPath {
-	return NewPkgsrcPath(p.AsPath().DirClean().String())
+	return NewPkgsrcPath(p.AsPath().DirClean())
 }
 
 func (p PkgsrcPath) DirNoClean() PkgsrcPath {
-	return NewPkgsrcPath(p.AsPath().DirNoClean().String())
+	return NewPkgsrcPath(p.AsPath().DirNoClean())
 }
 
 func (p PkgsrcPath) Base() string { return p.AsPath().Base() }
@@ -385,7 +385,7 @@ func (p PkgsrcPath) HasPrefixPath(prefix Path) bool {
 }
 
 func (p PkgsrcPath) JoinNoClean(other Path) PkgsrcPath {
-	return NewPkgsrcPath(p.AsPath().JoinNoClean(other).String())
+	return NewPkgsrcPath(p.AsPath().JoinNoClean(other))
 }
 
 func (p PkgsrcPath) JoinRel(other RelPath) PkgsrcPath {
@@ -397,7 +397,7 @@ func (p PkgsrcPath) JoinRel(other RelPath) PkgsrcPath {
 // conflicts on other packages.
 type PackagePath string
 
-func NewPackagePath(p string) PackagePath { return PackagePath(p) }
+func NewPackagePath(p Path) PackagePath { return PackagePath(p) }
 
 func (p PackagePath) AsPath() Path { return Path(p) }
 
@@ -405,7 +405,7 @@ func (p PackagePath) String() string { return p.AsPath().String() }
 
 // TODO: try RelPath instead of Path
 func (p PackagePath) JoinNoClean(other Path) PackagePath {
-	return NewPackagePath(p.AsPath().JoinNoClean(other).String())
+	return NewPackagePath(p.AsPath().JoinNoClean(other))
 }
 
 func (p PackagePath) IsEmpty() bool { return p.AsPath().IsEmpty() }
@@ -414,9 +414,9 @@ func (p PackagePath) IsEmpty() bool { return p.AsPath().IsEmpty() }
 // further specified.
 type RelPath string
 
-func NewRelPath(p string) RelPath {
-	return RelPath(p)
-}
+func NewRelPath(p Path) RelPath { return RelPath(p) }
+
+func NewRelPathString(p string) RelPath { return RelPath(p) }
 
 func (p RelPath) AsPath() Path { return NewPath(string(p)) }
 
@@ -436,9 +436,7 @@ func (p RelPath) Parts() []string { return p.AsPath().Parts() }
 
 func (p RelPath) Count() int { return p.AsPath().Count() }
 
-func (p RelPath) Clean() RelPath {
-	return NewRelPath(p.AsPath().Clean().String())
-}
+func (p RelPath) Clean() RelPath { return NewRelPath(p.AsPath().Clean()) }
 
 func (p RelPath) CleanPath() RelPath {
 	return RelPath(p.AsPath().CleanPath())
