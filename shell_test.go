@@ -113,28 +113,6 @@ func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable__from_package(c 
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_SimpleCommandChecker_handleComment(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpTool("printf", "", AtRunTime)
-	mklines := t.NewMkLines("filename.mk",
-		MkCvsID,
-		"\tprintf 'line 1'; \\",
-		"\t\t# comment \\",
-		"\t\tprintf 'this is never printed'")
-
-	mklines.Check()
-
-	// TODO: Issue a warning that the comment in line 3 extends to line 4.
-	//
-	// In ShellLineChecker.CheckShellCommand, the comment is still there.
-	// The parsed program doesn't contain the comment though.
-	//
-	// In parseShellProgram, the information about the line continuations
-	// is gone. Therefore it's difficult to diagnose this.
-	t.CheckOutputEmpty()
-}
-
 func (s *Suite) Test_SimpleCommandChecker_checkRegexReplace(c *check.C) {
 	t := s.Init(c)
 
@@ -364,55 +342,6 @@ func (s *Suite) Test_SimpleCommandChecker_checkEchoN(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: Makefile:4: Please use ${ECHO_N} instead of \"echo -n\".")
-}
-
-func (s *Suite) Test_ShellLineChecker__shell_comment_with_line_continuation(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpTool("echo", "", AtRunTime)
-
-	test := func(lines ...string) {
-		i := 0
-		for ; i < len(lines) && hasPrefix(lines[i], "\t"); i++ {
-		}
-
-		mklines := t.SetUpFileMkLines("Makefile",
-			append([]string{MkCvsID, "pre-install:"},
-				lines[:i]...)...)
-
-		mklines.Check()
-
-		t.CheckOutput(lines[i:])
-	}
-
-	// The comment can start at the beginning of a follow-up line.
-	test(
-		"\techo first; \\",
-		"\t# comment at the beginning of a command \\",
-		"\techo \"hello\"",
-
-		// TODO: Warn that the "echo hello" is commented out.
-	)
-
-	// The comment can start at the beginning of a simple command.
-	test(
-		"\techo first; # comment at the beginning of a command \\",
-		"\techo \"hello\"",
-
-		// TODO: Warn that the "echo hello" is commented out.
-	)
-
-	// The comment can start at a word in the middle of a command.
-	test(
-		// TODO: Warn that the "echo hello" is commented out.
-		"\techo # comment starts inside a command \\",
-		"\techo \"hello\"")
-
-	// If the comment starts in the last line, there's no further
-	// line that might be commented out accidentally.
-	test(
-		"\techo 'first line'; \\",
-		"\t# comment in last line")
 }
 
 func (s *Suite) Test_ShellLineChecker_checkConditionalCd(c *check.C) {
@@ -1627,6 +1556,62 @@ func (s *Suite) Test_ShellLineChecker_checkInstallCommand(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: filename.mk:1: ${CP} should not be used to install files.")
+}
+
+func (s *Suite) Test_ShellLineChecker_checkMultiLineComment(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpTool("echo", "", AtRunTime)
+
+	test := func(lines ...string) {
+		i := 0
+		for ; i < len(lines) && hasPrefix(lines[i], "\t"); i++ {
+		}
+
+		mklines := t.SetUpFileMkLines("Makefile",
+			append([]string{MkCvsID, "pre-install:"},
+				lines[:i]...)...)
+
+		mklines.Check()
+
+		t.CheckOutput(lines[i:])
+	}
+
+	// The comment can start at the beginning of a follow-up line.
+	test(
+		"\techo first; \\",
+		"\t# comment at the beginning of a command \\",
+		"\techo \"hello\"",
+
+		"WARN: ~/Makefile:4: A shell comment does not stop at the end of line.")
+
+	// The comment can start at the beginning of a simple command.
+	test(
+		"\techo first; # comment at the beginning of a command \\",
+		"\techo \"hello\"",
+
+		"WARN: ~/Makefile:3: A shell comment does not stop at the end of line.")
+
+	// The comment can start at a word in the middle of a command.
+	test(
+		"\techo # comment starts inside a command \\",
+		"\techo \"hello\"",
+
+		"WARN: ~/Makefile:3: A shell comment does not stop at the end of line.")
+
+	// If the comment starts in the last line, there's no further
+	// line that might be commented out accidentally.
+	test(
+		"\techo 'first line'; \\",
+		"\t# comment in last line")
+
+	// If there's a shell token that extends over several lines,
+	// that's unusual enough that pkglint refuses to check this.
+	test(
+		"\techo 'before \\",
+		"\t\tafter'; \\",
+		"\t# comment \\",
+		"\techo 'still a comment'")
 }
 
 func (s *Suite) Test_splitIntoShellTokens__line_continuation(c *check.C) {

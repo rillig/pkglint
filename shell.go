@@ -57,8 +57,6 @@ func (scc *SimpleCommandChecker) checkCommandStart() {
 		break
 	case matches(shellword, `\$\{(PKGSRCDIR|PREFIX)(:Q)?\}`):
 		break
-	case scc.handleComment():
-		break
 	default:
 		if G.Opts.WarnExtra && !scc.MkLines.indentation.DependsOn("OPSYS") {
 			scc.mkline.Warnf("Unknown shell command %q.", shellword)
@@ -143,43 +141,6 @@ func (scc *SimpleCommandChecker) handleShellBuiltin() bool {
 		return true
 	}
 	return false
-}
-
-func (scc *SimpleCommandChecker) handleComment() bool {
-	if trace.Tracing {
-		defer trace.Call0()()
-	}
-
-	shellword := scc.strcmd.Name
-	if trace.Tracing {
-		defer trace.Call1(shellword)()
-	}
-
-	if !hasPrefix(shellword, "#") {
-		return false
-	}
-
-	if !scc.mkline.IsMultiline() {
-		return false
-	}
-
-	scc.mkline.Warnf("A shell comment does not stop at the end of line.")
-	scc.Explain(
-		"When a shell command is split into multiple lines that are",
-		"continued with a backslash, they will nevertheless be converted to",
-		"a single line before the shell sees them.",
-		"",
-		"This means that even if it looks as if the comment only spanned",
-		"one line in the Makefile, in fact it spans until the end of the whole",
-		"shell command.",
-		"",
-		"To insert a comment into shell code, you can write it like this:",
-		"",
-		"\t"+"${SHCOMMENT} \"The following command might fail; this is ok.\"",
-		"",
-		"Note that any special characters in the comment are still",
-		"interpreted by the shell.")
-	return true
 }
 
 func (scc *SimpleCommandChecker) checkRegexReplace() {
@@ -632,6 +593,7 @@ func (ck *ShellLineChecker) CheckShellCommandLine(shelltext string) {
 	}
 
 	ck.CheckShellCommand(lexer.Rest(), &setE, RunTime)
+	ck.checkMultiLineComment()
 }
 
 func (ck *ShellLineChecker) checkHiddenAndSuppress(hiddenAndSuppress, rest string) {
@@ -1029,6 +991,51 @@ func (ck *ShellLineChecker) checkInstallCommand(shellcmd string) {
 			"use:",
 			"\tcd ${WRKSRC} && ${PAX} -wr * ${PREFIX}/foodir")
 	}
+}
+
+func (ck *ShellLineChecker) checkMultiLineComment() {
+	mkline := ck.mkline
+	if !mkline.IsMultiline() || !contains(mkline.Text, "#") {
+		return
+	}
+
+	for _, line := range mkline.raw[:len(mkline.raw)-1] {
+		text := strings.TrimSuffix(line.textnl, "\\\n")
+
+		tokens, rest := splitIntoShellTokens(nil, text)
+		if rest != "" {
+			return
+		}
+
+		for _, token := range tokens {
+			if hasPrefix(token, "#") {
+				ck.warnMultiLineComment(line)
+				return
+			}
+		}
+	}
+}
+
+func (ck *ShellLineChecker) warnMultiLineComment(raw *RawLine) {
+	text := strings.TrimSuffix(raw.textnl, "\n")
+	line := NewLine(ck.mkline.Filename, raw.Lineno, text, raw)
+
+	line.Warnf("A shell comment does not stop at the end of line.")
+	line.Explain(
+		"When a shell command is split into multiple lines that are",
+		"continued with a backslash, they will nevertheless be converted to",
+		"a single line before the shell sees them.",
+		"",
+		"This means that even if it looks as if the comment only spanned",
+		"one line in the Makefile, in fact it spans until the end of the whole",
+		"shell command.",
+		"",
+		"To insert a comment into shell code, you can write it like this:",
+		"",
+		"\t"+"${SHCOMMENT} \"The following command might fail; this is ok.\"",
+		"",
+		"Note that any special characters in the comment are still",
+		"interpreted by the shell.")
 }
 
 func (ck *ShellLineChecker) Errorf(format string, args ...interface{}) {
