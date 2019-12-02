@@ -472,6 +472,10 @@ func (s *Suite) Test_Path_CleanPath(c *check.C) {
 	test("../.", "..")
 	test("../././././././.", "..")
 	test(".././././././././", "..")
+
+	test(
+		"x11/kde-runtime4/../../misc/kdepimlibs4/../../databases/openldap-client/buildlink3.mk",
+		"x11/kde-runtime4/../../databases/openldap-client/buildlink3.mk")
 }
 
 func (s *Suite) Test_Path_IsAbs(c *check.C) {

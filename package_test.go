@@ -1009,6 +1009,33 @@ func (s *Suite) Test_Package_parse__fallback_lookup_in_package_directory(c *chec
 			"The path to the included file should be \"pthread.builtin.mk\".")
 }
 
+func (s *Suite) Test_Package_loadIncluded__nested_inclusion(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("x11/kde-runtime4",
+		".include \"../../x11/kde-libs4/buildlink3.mk\"")
+	t.SetUpPackage("x11/kde-libs4")
+	t.CreateFileDummyBuildlink3("x11/kde-libs4/buildlink3.mk",
+		".include \"../../databases/openldap/buildlink3.mk\"")
+	t.SetUpPackage("databases/openldap")
+	t.CreateFileDummyBuildlink3("databases/openldap/buildlink3.mk",
+		"VAR=\tvalue",
+		"VAR=\tvalue") // Provoke a warning in this file.
+	t.FinishSetUp()
+	// Without this line, the current directory is an absolute directory,
+	// and the pkgsrc top directory is as well. One of them prevents the
+	// verbose paths from being generated.
+	t.Chdir(".")
+
+	G.Check("x11/kde-runtime4")
+
+	// The first part of the path must be "x11/kde-runtime4" to easily
+	// identify the package by which all other files are included.
+	t.CheckOutputLines(
+		"NOTE: x11/kde-runtime4/../../databases/openldap/buildlink3.mk:13: " +
+			"Definition of VAR is redundant because of line 12.")
+}
+
 // Just for code coverage.
 func (s *Suite) Test_Package_resolveIncludedFile__no_tracing(c *check.C) {
 	t := s.Init(c)
