@@ -1787,7 +1787,6 @@ func (s *Suite) Test_splitIntoShellTokens__varuse(c *check.C) {
 
 		"sed",
 		"-e",
-		"s#@PREFIX@#${PREFIX}",
-		// FIXME: The "#g" must be merged with the previous token
-		"#g filename")
+		"s#@PREFIX@#${PREFIX}#g",
+		"filename")
 }
