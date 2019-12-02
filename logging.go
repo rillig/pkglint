@@ -57,7 +57,6 @@ var (
 // that an explanation is available.
 func (l *Logger) Explain(explanation ...string) {
 	if l.suppressExpl {
-		l.suppressExpl = false
 		return
 	}
 
