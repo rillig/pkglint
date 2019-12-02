@@ -1769,3 +1769,25 @@ func (s *Suite) Test_splitIntoShellTokens__redirect(c *check.C) {
 		">>", "append"})
 	t.CheckEquals(rest, "")
 }
+
+func (s *Suite) Test_splitIntoShellTokens__varuse(c *check.C) {
+	t := s.Init(c)
+
+	test := func(text string, tokens ...string) {
+		line := t.NewLine("filename.mk", 1, "")
+
+		words, rest := splitIntoShellTokens(line, text)
+
+		t.CheckDeepEquals(words, tokens)
+		t.CheckEquals(rest, "")
+	}
+
+	test(
+		"sed -e s#@PREFIX@#${PREFIX}#g filename",
+
+		"sed",
+		"-e",
+		"s#@PREFIX@#${PREFIX}",
+		// FIXME: The "#g" must be merged with the previous token
+		"#g filename")
+}
