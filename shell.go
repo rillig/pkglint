@@ -575,6 +575,8 @@ func NewShellLineChecker(mklines *MkLines, mkline *MkLine) *ShellLineChecker {
 	return &ShellLineChecker{mklines, mkline, true}
 }
 
+// CheckShellCommands checks for a list of shell commands, of which each one
+// is terminated with a semicolon. These are used in GENERATE_PLIST.
 func (ck *ShellLineChecker) CheckShellCommands(shellcmds string, time ToolTime) {
 	setE := true
 	ck.CheckShellCommand(shellcmds, &setE, time)
