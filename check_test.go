@@ -453,8 +453,7 @@ func (t *Tester) CreateFileLines(relativeFileName RelPath, lines ...string) Curr
 	}
 
 	filename := t.File(relativeFileName)
-	// FIXME: consider DirNoClean
-	err := os.MkdirAll(filename.DirClean().String(), 0777)
+	err := os.MkdirAll(filename.DirNoClean().String(), 0777)
 	t.c.Assert(err, check.IsNil)
 
 	err = filename.WriteString(content.String())
