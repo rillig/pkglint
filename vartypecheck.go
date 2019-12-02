@@ -236,7 +236,7 @@ func (cv *VartypeCheck) Category() {
 		"japanese", "java",
 		"kde", "korean",
 		"linux", "local",
-		"packages", "perl5", "plan9", "python",
+		"perl5", "plan9", "python",
 		"R", "ruby",
 		"scm",
 		"tcl", "tk",
