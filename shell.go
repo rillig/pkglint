@@ -1020,9 +1020,9 @@ func (ck *ShellLineChecker) warnMultiLineComment(raw *RawLine) {
 	text := strings.TrimSuffix(raw.textnl, "\n")
 	line := NewLine(ck.mkline.Filename, raw.Lineno, text, raw)
 
-	line.Warnf("A shell comment does not stop at the end of line.")
+	line.Warnf("The shell comment does not stop at the end of this line.")
 	line.Explain(
-		"When a shell command is split into multiple lines that are",
+		"When a shell command is spread out on multiple lines that are",
 		"continued with a backslash, they will nevertheless be converted to",
 		"a single line before the shell sees them.",
 		"",
@@ -1032,10 +1032,15 @@ func (ck *ShellLineChecker) warnMultiLineComment(raw *RawLine) {
 		"",
 		"To insert a comment into shell code, you can write it like this:",
 		"",
-		"\t"+"${SHCOMMENT} \"The following command might fail; this is ok.\"",
+		"\t${SHCOMMENT} \"The following command might fail; this is ok.\"",
 		"",
 		"Note that any special characters in the comment are still",
-		"interpreted by the shell.")
+		"interpreted by the shell.",
+		"",
+		"If that is not possible, you can apply the :D modifier to the",
+		"variable with the empty name, which is guaranteed to be undefined:",
+		"",
+		"\t${:D this is commented out}")
 }
 
 func (ck *ShellLineChecker) Errorf(format string, args ...interface{}) {

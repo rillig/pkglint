@@ -1585,21 +1585,24 @@ func (s *Suite) Test_ShellLineChecker_checkMultiLineComment(c *check.C) {
 		"\t# comment at the beginning of a command \\",
 		"\techo \"hello\"",
 
-		"WARN: ~/Makefile:4: A shell comment does not stop at the end of line.")
+		"WARN: ~/Makefile:4: "+
+			"The shell comment does not stop at the end of this line.")
 
 	// The comment can start at the beginning of a simple command.
 	test(
 		"\techo first; # comment at the beginning of a command \\",
 		"\techo \"hello\"",
 
-		"WARN: ~/Makefile:3: A shell comment does not stop at the end of line.")
+		"WARN: ~/Makefile:3: "+
+			"The shell comment does not stop at the end of this line.")
 
 	// The comment can start at a word in the middle of a command.
 	test(
 		"\techo # comment starts inside a command \\",
 		"\techo \"hello\"",
 
-		"WARN: ~/Makefile:3: A shell comment does not stop at the end of line.")
+		"WARN: ~/Makefile:3: "+
+			"The shell comment does not stop at the end of this line.")
 
 	// If the comment starts in the last line, there's no further
 	// line that might be commented out accidentally.
