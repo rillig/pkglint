@@ -1244,7 +1244,7 @@ func (ind *Indentation) TrackAfter(mkline *MkLine) {
 		cond.Walk(&MkCondCallback{
 			Call: func(name string, arg string) {
 				if name == "exists" {
-					ind.AddCheckedFile(NewRelPath(NewPath(arg)))
+					ind.AddCheckedFile(NewRelPathString(arg))
 				}
 			}})
 	}

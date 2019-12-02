@@ -442,7 +442,7 @@ func (cv *VartypeCheck) DependencyWithPath() {
 	parts := cv.MkLine.ValueSplit(value, ":")
 	if len(parts) == 2 {
 		pattern := parts[0]
-		relpath := NewRelPath(NewPath(parts[1]))
+		relpath := NewRelPathString(parts[1])
 		pathParts := relpath.Parts()
 		pkg := pathParts[len(pathParts)-1]
 
@@ -1164,7 +1164,7 @@ func (cv *VartypeCheck) RPkgVer() {
 
 // RelativePkgDir refers to a package directory, e.g. ../../category/pkgbase.
 func (cv *VartypeCheck) RelativePkgDir() {
-	MkLineChecker{cv.MkLines, cv.MkLine}.CheckRelativePkgdir(NewRelPath(NewPath(cv.Value)))
+	MkLineChecker{cv.MkLines, cv.MkLine}.CheckRelativePkgdir(NewRelPathString(cv.Value))
 }
 
 // RelativePkgPath refers to a file or directory, e.g. ../../category/pkgbase,
@@ -1172,7 +1172,7 @@ func (cv *VartypeCheck) RelativePkgDir() {
 //
 // See RelativePkgDir, which requires a directory, not a file.
 func (cv *VartypeCheck) RelativePkgPath() {
-	MkLineChecker{cv.MkLines, cv.MkLine}.CheckRelativePath(NewRelPath(NewPath(cv.Value)), true)
+	MkLineChecker{cv.MkLines, cv.MkLine}.CheckRelativePath(NewRelPathString(cv.Value), true)
 }
 
 func (cv *VartypeCheck) Restricted() {
