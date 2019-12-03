@@ -890,11 +890,16 @@ func (pkg *Package) checkCategories() {
 		return
 	}
 
+	// FIXME: Decide what exactly this map means.
+	//  Is it "this category has been seen somewhere",
+	//  or is it "this category has definitely been added"?
 	seen := map[string]*MkLine{}
 	for _, mkline := range categories.vari.WriteLocations() {
 		switch mkline.Op() {
 		case opAssignDefault:
 			for _, category := range mkline.ValueFields(mkline.Value()) {
+				// FIXME: This looks wrong. It should probably be replaced by
+				//  an "if len(seen) == 0" outside the for loop.
 				if seen[category] == nil {
 					seen[category] = mkline
 				}
