@@ -2129,6 +2129,44 @@ func (s *Suite) Test_MkLineChecker_checkVarassignDecreasingVersions(c *check.C) 
 			"should be in decreasing order (37 before 36).")
 }
 
+func (s *Suite) Test_MkLineChecker_checkVarassignMiscRedundantInstallationDirs__AUTO_MKDIRS_yes(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"INSTALLATION_DIRS=\tbin man ${PKGMANDIR}",
+		"AUTO_MKDIRS=\t\tyes")
+	t.CreateFileLines("category/package/PLIST",
+		PlistCvsID,
+		"bin/program",
+		"man/man1/program.1")
+	t.FinishSetUp()
+
+	G.checkdirPackage(t.File("category/package"))
+
+	t.CheckOutputLines(
+		"NOTE: ~/category/package/Makefile:20: "+
+			"The directory \"bin\" is redundant in INSTALLATION_DIRS.",
+		"NOTE: ~/category/package/Makefile:20: "+
+			"The directory \"man\" is redundant in INSTALLATION_DIRS.")
+}
+
+func (s *Suite) Test_MkLineChecker_checkVarassignMiscRedundantInstallationDirs__AUTO_MKDIRS_no(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"INSTALLATION_DIRS=\tbin man ${PKGMANDIR}",
+		"AUTO_MKDIRS=\t\tno")
+	t.CreateFileLines("category/package/PLIST",
+		PlistCvsID,
+		"bin/program",
+		"man/man1/program.1")
+	t.FinishSetUp()
+
+	G.checkdirPackage(t.File("category/package"))
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_MkLineChecker_checkVarassignRightVaruse(c *check.C) {
 	t := s.Init(c)
 

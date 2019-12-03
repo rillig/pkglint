@@ -1193,7 +1193,7 @@ func (ck MkLineChecker) checkVarassignMiscRedundantInstallationDirs() {
 			mkline.Notef("The directory %q is redundant in %s.", dir, varname)
 			mkline.Explain(
 				"This package defines AUTO_MKDIR, and the directory is contained in the PLIST.",
-				"Therefore it will be created anyways.")
+				"Therefore it will be created anyway.")
 		}
 	}
 }
