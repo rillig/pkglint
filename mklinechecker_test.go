@@ -839,7 +839,7 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__user_defined_variable_and_BUILD_
 		"WARN: file.mk:3: The user-defined variable VARBASE is used but not added to BUILD_DEFS.")
 }
 
-func (s *Suite) Test_MkLineChecker_CheckVaruse__deprecated_PKG_DEBUG(c *check.C) {
+func (s *Suite) Test_MkLineChecker_CheckVaruse__obsolete_PKG_DEBUG(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
@@ -852,7 +852,7 @@ func (s *Suite) Test_MkLineChecker_CheckVaruse__deprecated_PKG_DEBUG(c *check.C)
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: module.mk:2: Use of _PKG_SILENT and _PKG_DEBUG is deprecated. Use ${RUN} instead.")
+		"ERROR: module.mk:2: Use of _PKG_SILENT and _PKG_DEBUG is obsolete. Use ${RUN} instead.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVaruseUndefined(c *check.C) {

@@ -590,7 +590,7 @@ func (ck *ShellLineChecker) CheckShellCommandLine(shelltext string) {
 	setE := lexer.SkipString("${RUN}")
 	if !setE {
 		if lexer.NextString("${_PKG_SILENT}${_PKG_DEBUG}") != "" {
-			line.Warnf("Use of _PKG_SILENT and _PKG_DEBUG is deprecated. Use ${RUN} instead.")
+			line.Errorf("Use of _PKG_SILENT and _PKG_DEBUG is obsolete. Use ${RUN} instead.")
 		}
 	}
 
