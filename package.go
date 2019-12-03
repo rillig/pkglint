@@ -904,7 +904,7 @@ func (pkg *Package) checkCategories() {
 					seen[category] = mkline
 				}
 			}
-		case opAssign, opAssignAppend:
+		default:
 			for _, category := range mkline.ValueFields(mkline.Value()) {
 				if seen[category] != nil {
 					mkline.Notef("Category %q is already added in %s.",

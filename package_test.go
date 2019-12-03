@@ -1995,6 +1995,8 @@ func (s *Suite) Test_Package_checkCategories__redundant_but_not_constant(c *chec
 	t.CheckOutputEmpty()
 }
 
+// The := assignment operator is equivalent to the simple = operator
+// if its right-hand side does not contain references to any variables.
 func (s *Suite) Test_Package_checkCategories__eval_assignment(c *check.C) {
 	t := s.Init(c)
 
@@ -2009,8 +2011,9 @@ func (s *Suite) Test_Package_checkCategories__eval_assignment(c *check.C) {
 
 	G.Check(".")
 
-	// FIXME: The := assignment should be equivalent to =.
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"NOTE: included.mk:2: " +
+			"Category \"category\" is already added in Makefile:5.")
 }
 
 func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__no_C(c *check.C) {
