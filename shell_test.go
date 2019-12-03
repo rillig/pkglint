@@ -113,6 +113,33 @@ func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable__from_package(c 
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_SimpleCommandChecker_handleShellBuiltin(c *check.C) {
+	t := s.Init(c)
+
+	test := func(command string, isBuiltin bool) {
+		token := NewShToken(command, NewShAtom(shtText, command, shqPlain))
+		simpleCommand := &MkShSimpleCommand{Name: token}
+		scc := NewSimpleCommandChecker(nil, simpleCommand, RunTime)
+		t.CheckEquals(scc.handleShellBuiltin(), isBuiltin)
+	}
+
+	test(":", true)
+	test("break", true)
+	test("cd", true)
+	test("continue", true)
+	test("eval", true)
+	test("exec", true)
+	test("exit", true)
+	test("export", true)
+	test("read", true)
+	test("set", true)
+	test("shift", true)
+	test("umask", true)
+	test("unset", true)
+
+	test("git", false)
+}
+
 func (s *Suite) Test_SimpleCommandChecker_checkRegexReplace(c *check.C) {
 	t := s.Init(c)
 
