@@ -115,7 +115,22 @@ func (s *Suite) Test_VartypeCheck_Category(c *check.C) {
 		"chinese",
 		"arabic",
 		"filesyscategory",
-		"wip")
+		"wip",
+		"gnome",
+		"gnustep",
+		"java",
+		"kde",
+		"korean",
+		"linux",
+		"local",
+		"plan9",
+		"R",
+		"ruby",
+		"scm",
+		"tcl",
+		"tk",
+		"windowmaker",
+		"xmms")
 
 	vt.Output(
 		"ERROR: filename.mk:2: Invalid category \"arabic\".",
