@@ -630,6 +630,52 @@ func (s *Suite) Test_PatchChecker_checkConfigure__GNU(c *check.C) {
 		"ERROR: ~/patch-aa:9: This code must not be included in patches.")
 }
 
+// I'm not sure whether configure.in is really relevant for this check.
+// As of December 2019, there is absolutely no package that uses
+// CONFIGURE_SCRIPTS_OVERRIDE.
+func (s *Suite) Test_PatchChecker_checkConfigure__configure_in(c *check.C) {
+	t := s.Init(c)
+
+	lines := t.SetUpFileLines("patch-aa",
+		CvsID,
+		"",
+		"Documentation",
+		"",
+		"--- configure.in.orig",
+		"+++ configure.in",
+		"@@ -1,1 +1,1 @@",
+		"-old line",
+		"+: Avoid regenerating within pkgsrc")
+
+	CheckLinesPatch(lines)
+
+	t.CheckOutputLines(
+		"ERROR: ~/patch-aa:9: This code must not be included in patches.")
+}
+
+// I'm not sure whether configure.ac is really relevant for this check.
+// As of December 2019, there is absolutely no package that uses
+// CONFIGURE_SCRIPTS_OVERRIDE.
+func (s *Suite) Test_PatchChecker_checkConfigure__configure_ac(c *check.C) {
+	t := s.Init(c)
+
+	lines := t.SetUpFileLines("patch-aa",
+		CvsID,
+		"",
+		"Documentation",
+		"",
+		"--- configure.ac.orig",
+		"+++ configure.ac",
+		"@@ -1,1 +1,1 @@",
+		"-old line",
+		"+: Avoid regenerating within pkgsrc")
+
+	CheckLinesPatch(lines)
+
+	t.CheckOutputLines(
+		"ERROR: ~/patch-aa:9: This code must not be included in patches.")
+}
+
 func (s *Suite) Test_PatchChecker_checktextCvsID(c *check.C) {
 	t := s.Init(c)
 
