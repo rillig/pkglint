@@ -463,8 +463,10 @@ func (s *Suite) Test_ShellLineChecker_canFail(c *check.C) {
 	t.SetUpTool("dirname", "", AtRunTime)
 	t.SetUpTool("echo", "", AtRunTime)
 	t.SetUpTool("env", "", AtRunTime)
+	t.SetUpTool("ggrep", "", AtRunTime)
 	t.SetUpTool("grep", "GREP", AtRunTime)
 	t.SetUpTool("sed", "", AtRunTime)
+	t.SetUpTool("gsed", "", AtRunTime)
 	t.SetUpTool("touch", "", AtRunTime)
 	t.SetUpTool("tr", "tr", AtRunTime)
 	t.SetUpTool("true", "TRUE", AtRunTime)
@@ -501,6 +503,30 @@ func (s *Suite) Test_ShellLineChecker_canFail(c *check.C) {
 	test("${ECHO_MSG} \"Message\"",
 		nil...)
 
+	test("${PHASE_MSG} \"Message\"",
+		nil...)
+
+	test("${STEP_MSG} \"Message\"",
+		nil...)
+
+	test("${INFO_MSG} \"Message\"",
+		nil...)
+
+	test("${WARNING_MSG} \"Message\"",
+		nil...)
+
+	test("${ERROR_MSG} \"Message\"",
+		nil...)
+
+	test("${WARNING_CAT} \"Message\"",
+		nil...)
+
+	test("${ERROR_CAT} \"Message\"",
+		nil...)
+
+	test("${DO_NADA} \"Message\"",
+		nil...)
+
 	test("${FAIL_MSG} \"Failure\"",
 		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon "+
 			"(after \"${FAIL_MSG} \\\"Failure\\\"\") to separate commands.")
@@ -517,6 +543,24 @@ func (s *Suite) Test_ShellLineChecker_canFail(c *check.C) {
 
 	test("sed s,in,out,",
 		nil...)
+
+	test("gsed -e s,in,out,",
+		nil...)
+
+	test("gsed s,in,out,",
+		nil...)
+
+	test("gsed s,in,out, filename",
+		"WARN: Makefile:3: Please switch to \"set -e\" mode "+
+			"before using a semicolon (after \"gsed s,in,out, filename\") "+
+			"to separate commands.")
+
+	test("ggrep input",
+		nil...)
+
+	test("ggrep pattern file...",
+		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon "+
+			"(after \"ggrep pattern file...\") to separate commands.")
 
 	test("grep input",
 		nil...)
@@ -549,6 +593,9 @@ func (s *Suite) Test_ShellLineChecker_canFail(c *check.C) {
 		nil...)
 
 	test("dirname dir/file",
+		nil...)
+
+	test("tr A-Z a-z",
 		nil...)
 }
 
