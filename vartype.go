@@ -244,7 +244,7 @@ func (vt *Vartype) IsShell() bool {
 // NeedsQ returns whether variables of this type need the :Q
 // modifier to be safely embedded in other variables or shell programs.
 //
-// Variables that can consists only of characters like A-Za-z0-9-._
+// Variables that can consist only of characters like A-Za-z0-9-._
 // don't need the :Q modifier. All others do, for safety reasons.
 func (bt *BasicType) NeedsQ() bool {
 	switch bt {
