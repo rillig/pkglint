@@ -1074,8 +1074,11 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__install_option_d(c 
 func (s *Suite) Test_ShellLineChecker_checkHiddenAndSuppress(c *check.C) {
 	t := s.Init(c)
 
+	t.SetUpVartypes()
 	t.SetUpTool("echo", "ECHO", AtRunTime)
 	t.SetUpTool("ls", "LS", AtRunTime)
+	t.SetUpTool("mkdir", "MKDIR", AtRunTime)
+	t.SetUpTool("printf", "PRINTF", AtRunTime)
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
 		"",
@@ -1088,13 +1091,28 @@ func (s *Suite) Test_ShellLineChecker_checkHiddenAndSuppress(c *check.C) {
 		"\t@ls 'may be hidden'",
 		"",
 		"pre-configure:",
-		"\t@")
+		"\t@",
+		"\t@mkdir ${WRKSRC}",
+		"\t@${ECHO} 'ok'",
+		"\t@${ECHO_MSG} 'ok'",
+		"\t@${ECHO_N} 'ok'",
+		"\t@${ERROR_CAT} 'ok'",
+		"\t@${ERROR_MSG} 'ok'",
+		"\t@${FAIL_MSG} 'ok'",
+		"\t@${INFO_MSG} 'ok'",
+		"\t@${PHASE_MSG} 'ok'",
+		"\t@${PRINTF} 'ok'",
+		"\t@${SHCOMMENT} 'ok'",
+		"\t@${STEP_MSG} 'ok'",
+		"\t@${WARNING_CAT} 'ok'",
+		"\t@${WARNING_MSG} 'ok'")
 
 	mklines.Check()
 
 	// No warning about the hidden ls since the target names start
 	// with "show-" or end with "-message".
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: Makefile:13: The shell command \"mkdir\" should not be hidden.")
 }
 
 func (s *Suite) Test_ShellLineChecker_checkHiddenAndSuppress__no_tracing(c *check.C) {
