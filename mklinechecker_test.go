@@ -2481,7 +2481,15 @@ func (s *Suite) Test_MkLineChecker_checkDirective(c *check.C) {
 		"",
 		".for var in a b c",
 		".endfor",
-		".undef var unrelated")
+		".undef var unrelated",
+		"",
+		".if 0",
+		".  info Unsupported operating system",
+		".  warning Unsupported operating system",
+		".  error Unsupported operating system",
+		".  export-env A",
+		".  unexport A",
+		".endif")
 
 	mklines.Check()
 
