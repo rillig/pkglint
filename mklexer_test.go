@@ -563,6 +563,17 @@ func (s *Suite) Test_MkLexer_VarUseModifiers(c *check.C) {
 	test("${VAR:old=new:Q}", varUse("VAR", "old=new", "Q")) // FIXME
 }
 
+func (s *Suite) Test_MkLexer_varUseModifier(c *check.C) {
+	t := s.Init(c)
+
+	p := NewMkLexer("${VAR:R:E:Ox:tA:tW:tw}", nil)
+
+	varUse := p.VarUse()
+
+	t.CheckDeepEquals(varUse.modifiers, []MkVarUseModifier{
+		{"R"}, {"E"}, {"Ox"}, {"tA"}, {"tW"}, {"tw"}})
+}
+
 func (s *Suite) Test_MkLexer_varUseModifier__invalid_ts_modifier_with_warning(c *check.C) {
 	t := s.Init(c)
 
