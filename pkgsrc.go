@@ -938,6 +938,8 @@ func (src *Pkgsrc) guessVariableType(varname string) (vartype *Vartype) {
 	case hasSuffix(varbase, "_MK"):
 		// TODO: Add BtGuard for inclusion guards, since these variables may only be checked using defined().
 		return plainType(BtUnknown, aclpAll)
+	case hasSuffix(varbase, "_AWK"):
+		return plainType(BtAwkCommand, aclpAll)
 	case hasSuffix(varbase, "_SKIP"):
 		return listType(BtPathPattern, aclpAllRuntime)
 	}
