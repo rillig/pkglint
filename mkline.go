@@ -1146,9 +1146,6 @@ func (ind *Indentation) Varnames() []string {
 	varnames := NewStringSet()
 	for _, level := range ind.levels {
 		for _, levelVarname := range level.conditionalVars {
-			// multiple-inclusion guard must be filtered out earlier.
-			assert(!hasSuffix(levelVarname, "_MK"))
-
 			varnames.Add(levelVarname)
 		}
 	}

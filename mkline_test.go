@@ -1428,6 +1428,30 @@ func (s *Suite) Test_Indentation_Varnames__repetition(c *check.C) {
 			"conditionally in buildlink3.mk:14 (depending on OPSYS).")
 }
 
+// Multiple-inclusion guards are too technical to be of any use on
+// the application level. Therefore they are filtered out early, in
+// Indentation.AddVar.
+func (s *Suite) Test_Indentation_Varnames__guard(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		".if !defined(GUARD_MK)",
+		".  if !defined(VAR)",
+		"VAR=\tvalue",
+		".  endif",
+		".endif")
+
+	var varnames []string
+	mklines.ForEach(func(mkline *MkLine) {
+		if mkline.IsVarassign() {
+			varnames = mklines.indentation.Varnames()
+		}
+	})
+
+	t.CheckDeepEquals(varnames, []string{"VAR"})
+}
+
 func (s *Suite) Test_Indentation_TrackAfter__checked_files(c *check.C) {
 	t := s.Init(c)
 
