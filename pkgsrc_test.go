@@ -1148,10 +1148,11 @@ func (s *Suite) Test_Pkgsrc_checkToplevelUnusedLicenses(c *check.C) {
 	t.Main("-r", "-Cglobal", ".")
 
 	t.CheckOutputLines(
-		"WARN: ~/category/package2/Makefile:11: License file ../../licenses/missing does not exist.",
+		"ERROR: ~/category/package2/Makefile:11: License file ../../licenses/missing does not exist.",
 		"WARN: ~/licenses/gnu-gpl-v2: This license seems to be unused.", // Added by Tester.SetUpPkgsrc
 		"WARN: ~/licenses/gnu-gpl-v3: This license seems to be unused.",
-		"3 warnings found.")
+		"1 error and 2 warnings found.",
+		"(Run \"pkglint -e -r -Cglobal ~\" to show explanations.)")
 }
 
 func (s *Suite) Test_Pkgsrc_ReadDir(c *check.C) {
