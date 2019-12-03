@@ -1633,21 +1633,66 @@ func (s *Suite) Test_ShellLineChecker_variableNeedsQuoting__integration(c *check
 func (s *Suite) Test_ShellLineChecker_checkInstallCommand(c *check.C) {
 	t := s.Init(c)
 
-	mklines := t.NewMkLines("filename.mk",
-		"\t# dummy")
-	mklines.target = "do-install"
+	test := func(lines ...string) {
+		var cmds []string
+		i := 0
+		for i < len(lines) && lines[i] != "" {
+			cmds = append(cmds, "\t"+lines[i])
+			i++
+		}
+		diagnostics := lines[i+1:]
 
-	ck := NewShellLineChecker(mklines, mklines.mklines[0])
+		mklines := t.NewMkLines("filename.mk", cmds...)
+		mklines.target = "do-install"
 
-	ck.checkInstallCommand("sed")
+		mklines.ForEach(func(mkline *MkLine) {
+			ck := NewShellLineChecker(mklines, mkline)
+			ck.checkInstallCommand(mkline.ShellCommand())
+		})
 
-	t.CheckOutputLines(
-		"WARN: filename.mk:1: The shell command \"sed\" should not be used in the install phase.")
+		t.CheckOutput(diagnostics)
+	}
 
-	ck.checkInstallCommand("cp")
+	test(
+		"sed",
+		"${SED}",
+		"",
+		"WARN: filename.mk:1: The shell command \"sed\" "+
+			"should not be used in the install phase.",
+		"WARN: filename.mk:2: The shell command \"${SED}\" "+
+			"should not be used in the install phase.")
 
-	t.CheckOutputLines(
-		"WARN: filename.mk:1: ${CP} should not be used to install files.")
+	test(
+		"tr",
+		"${TR}",
+		"",
+		"WARN: filename.mk:1: The shell command \"tr\" "+
+			"should not be used in the install phase.",
+		"WARN: filename.mk:2: The shell command \"${TR}\" "+
+			"should not be used in the install phase.")
+
+	test(
+		"cp",
+		"${CP}",
+		"",
+		"WARN: filename.mk:1: ${CP} should not be used to install files.",
+		"WARN: filename.mk:2: ${CP} should not be used to install files.")
+
+	test(
+		"${INSTALL}",
+		"${INSTALL_DATA}",
+		"${INSTALL_DATA_DIR}",
+		"${INSTALL_LIB}",
+		"${INSTALL_LIB_DIR}",
+		"${INSTALL_MAN}",
+		"${INSTALL_MAN_DIR}",
+		"${INSTALL_PROGRAM}",
+		"${INSTALL_PROGRAM_DIR}",
+		"${INSTALL_SCRIPT}",
+		"${LIBTOOL}",
+		"${LN}",
+		"${PAX}",
+		"")
 }
 
 func (s *Suite) Test_ShellLineChecker_checkMultiLineComment(c *check.C) {
