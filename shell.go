@@ -529,6 +529,8 @@ func (ck *ShellLineChecker) checkPipeExitcode(pipeline *MkShPipeline) {
 }
 
 var shellCommandsType = NewVartype(BtShellCommands, NoVartypeOptions, NewACLEntry("*", aclpAllRuntime))
+
+// FIXME: Why is this called shell_Word_Vuc and not shell_Commands_Vuc?
 var shellWordVuc = &VarUseContext{shellCommandsType, VucUnknownTime, VucQuotPlain, false}
 
 func NewShellLineChecker(mklines *MkLines, mkline *MkLine) *ShellLineChecker {

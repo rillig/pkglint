@@ -1011,6 +1011,34 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__tool_in_shell_command(c *check
 	t.CheckOutputEmpty()
 }
 
+// This test provides code coverage for the "switch vuc.quoting" in the case
+// that vuc.quoting is VucQuotUnknown.
+//
+// It is not possible to construct this scenario by calling mklines.Check(),
+// therefore it is specially crafted.
+func (s *Suite) Test_MkLine_VariableNeedsQuoting__tool_in_unknown_quotes(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	t.SetUpTool("bash", "BASH", AtRunTime)
+
+	mklines := t.SetUpFileMkLines("Makefile",
+		"\t:")
+	mkline := mklines.mklines[0]
+
+	varUse := &MkVarUse{"BASH", nil}
+	vartype := G.Pkgsrc.VariableType(mklines, "BASH")
+	vuc := VarUseContext{
+		vartype:    NewVartype(BtShellWord, NoVartypeOptions, NewACLEntry("*", aclpAll)),
+		time:       VucRunTime,
+		quoting:    VucQuotUnknown,
+		IsWordPart: false}
+	needsQuoting := mkline.VariableNeedsQuoting(mklines, varUse, vartype, &vuc)
+
+	// This "yes" comes from the end of the "wantList != haveList" branch.
+	t.CheckEquals(needsQuoting, yes)
+}
+
 func (s *Suite) Test_MkLine_VariableNeedsQuoting__D_and_U_modifiers(c *check.C) {
 	t := s.Init(c)
 
