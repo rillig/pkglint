@@ -823,7 +823,7 @@ func (pkg *Package) CheckVarorder(mklines *MkLines) {
 					}
 					return false
 				}
-			case many:
+			default:
 				for varcanon() == variable.Name {
 					interesting = interesting[1:]
 				}
