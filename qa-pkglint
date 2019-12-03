@@ -57,7 +57,9 @@ qa_analyze() {
 
 qa_gobco() {
   # see https://github.com/rillig/gobco
-  (cd "$srcdir" && command gobco > "$archivedir/gobco.txt.tmp" && mv -f "$archivedir/gobco.txt.tmp" "$archivedir/gobco.txt")
+  (cd "$srcdir" \
+   && command gobco > "$archivedir/gobco.txt.tmp" || true \
+   && mv -f "$archivedir/gobco.txt.tmp" "$archivedir/gobco.txt")
 }
 
 qa_netbsd() {
