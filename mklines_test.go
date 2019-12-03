@@ -630,6 +630,42 @@ func (s *Suite) Test_MkLines_collectVariables__no_tracing(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_MkLines_collectVariables__BUILD_DEFS(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"",
+		"BUILD_DEFS+=\t\tBD_VAR",
+		// In practice, these variables are called *_GROUP.
+		"PKG_GROUPS_VARS+=\tGRP",
+		// In practice, these variables are called *_USER.
+		"PKG_USERS_VARS+=\tUSR")
+
+	mklines.Check()
+
+	t.CheckEquals(keys(mklines.buildDefs), "BD_VAR GRP USR")
+}
+
+func (s *Suite) Test_MkLines_collectVariables__find_files_and_headers(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("builtin.mk",
+		MkCvsID,
+		"",
+		"BUILTIN_FIND_FILES_VAR=\t\tX1_FILE X2_FILE",
+		"BUILTIN_FIND_HEADERS_VAR=\tX1_HEADER X2_HEADER")
+
+	mklines.Check()
+
+	t.CheckEquals(
+		keys(mklines.vars.firstDef),
+		"BUILTIN_FIND_FILES_VAR BUILTIN_FIND_HEADERS_VAR "+
+			"X1_FILE X1_HEADER X2_FILE X2_HEADER")
+}
+
 // Ensures that during MkLines.ForEach, the conditional variables in
 // MkLines.Indentation are correctly updated for each line.
 func (s *Suite) Test_MkLines_ForEach__conditional_variables(c *check.C) {

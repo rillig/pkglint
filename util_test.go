@@ -4,6 +4,9 @@ import (
 	"errors"
 	"gopkg.in/check.v1"
 	"os"
+	"reflect"
+	"sort"
+	"strings"
 	"testing"
 	"time"
 )
@@ -1111,4 +1114,16 @@ func (s *Suite) Test_LazyStringBuilder_Reset(c *check.C) {
 	t.CheckEquals(sb.String(), "x")
 	t.CheckEquals(sb.usingBuf, true)
 	t.CheckDeepEquals(sb.buf, []byte("x"))
+}
+
+// sortedKeys returns the sorted keys from an arbitrary map.
+//
+// It is only available during tests since it uses reflection.
+func keys(m interface{}) string {
+	var keys []string
+	for _, key := range reflect.ValueOf(m).MapKeys() {
+		keys = append(keys, key.Interface().(string))
+	}
+	sort.Strings(keys)
+	return strings.Join(keys, " ")
 }
