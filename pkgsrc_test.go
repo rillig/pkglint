@@ -1152,7 +1152,7 @@ func (s *Suite) Test_Pkgsrc_checkToplevelUnusedLicenses(c *check.C) {
 		"WARN: ~/licenses/gnu-gpl-v2: This license seems to be unused.", // Added by Tester.SetUpPkgsrc
 		"WARN: ~/licenses/gnu-gpl-v3: This license seems to be unused.",
 		"1 error and 2 warnings found.",
-		"(Run \"pkglint -e -r -Cglobal ~\" to show explanations.)")
+		t.Shquote("(Run \"pkglint -e -r -Cglobal %s\" to show explanations.)", "."))
 }
 
 func (s *Suite) Test_Pkgsrc_ReadDir(c *check.C) {

@@ -1213,10 +1213,15 @@ func (t *Tester) CheckFileLinesDetab(filename RelPath, lines ...string) {
 // development.
 func (t *Tester) Use(...interface{}) {}
 
-func (t *Tester) Shquote(format string, rels ...Path) string {
+// Shquote renders the given paths into the message, adding shell quoting
+// around the paths if necessary.
+//
+// It is typically used to check the advertisement lines at the very end
+// of the pkglint output. ("Run \"pkglint -e %s\" to show explanations.")
+func (t *Tester) Shquote(format string, rels ...RelPath) string {
 	var subs []interface{}
 	for _, rel := range rels {
-		quoted := shquote(t.tmpdir.JoinClean(rel).String())
+		quoted := shquote(t.tmpdir.JoinClean(rel.AsPath()).String())
 		subs = append(subs, strings.Replace(quoted, t.tmpdir.String(), "~", -1))
 	}
 	return sprintf(format, subs...)
