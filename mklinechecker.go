@@ -148,8 +148,7 @@ func (ck MkLineChecker) checkVarassignLeftBsdPrefs() {
 	if !G.Opts.WarnExtra ||
 		G.Infrastructure ||
 		mkline.Op() != opAssignDefault ||
-		ck.MkLines.Tools.SeenPrefs ||
-		!ck.MkLines.once.FirstTime("include bsd.prefs.mk before using ?=") {
+		ck.MkLines.Tools.SeenPrefs {
 		return
 	}
 
@@ -165,6 +164,9 @@ func (ck MkLineChecker) checkVarassignLeftBsdPrefs() {
 		return
 	}
 
+	if !ck.MkLines.once.FirstTime("include bsd.prefs.mk before using ?=") {
+		return
+	}
 	mkline.Warnf("Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
 	mkline.Explain(
 		"The ?= operator is used to provide a default value to a variable.",

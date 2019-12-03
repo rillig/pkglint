@@ -359,9 +359,10 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftBsdPrefs__first_time(c *che
 
 	mklines.Check()
 
-	// FIXME: bsd.prefs.mk must be included before MYSQL_USER gets its default value.
 	t.CheckOutputLines(
-		"WARN: module.mk:4: The variable MYSQL_USER should not " +
+		"WARN: module.mk:4: Please include \"../../mk/bsd.prefs.mk\" "+
+			"before using \"?=\".",
+		"WARN: module.mk:4: The variable MYSQL_USER should not "+
 			"be given a default value by any package.")
 }
 
