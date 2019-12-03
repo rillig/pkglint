@@ -314,6 +314,57 @@ func (s *Suite) Test_MkLineChecker_checkVarassignLeftNotUsed__infra(c *check.C) 
 		"WARN: ~/category/package/Makefile:22: UNDOCUMENTED is used but not defined.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkVarassignLeftBsdPrefs(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--only", "bsd.prefs.mk")
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("module.mk",
+		MkCvsID,
+		"",
+		"BUILDLINK_PKGSRCDIR.pkgbase?=\t${PREFIX}",
+		"BUILDLINK_DEPMETHOD.pkgbase?=\tfull",
+		"BUILDLINK_ABI_DEPENDS.pkgbase?=\tpkgbase>=1",
+		"BUILDLINK_INCDIRS.pkgbase?=\t# none",
+		"BUILDLINK_LIBDIRS.pkgbase?=\t# none",
+		"",
+		// User-settable, therefore bsd.prefs.mk must be included before.
+		// To avoid frightening pkgsrc developers, this is currently a
+		// warning instead of an error. An error would be better though.
+		"MYSQL_USER?=\tmysqld",
+		// Package-settable variables do not depend on the user settings,
+		// therefore it is ok to give them default values without
+		// including bsd.prefs.mk before.
+		"PKGNAME?=\tpkgname-1.0")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: module.mk:9: " +
+			"Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
+}
+
+// Up to 2019-12-03, pkglint didn't issue a warning if a default assignment
+// to a package-settable variable appeared before one to a user-settable
+// variable. This was a mistake.
+func (s *Suite) Test_MkLineChecker_checkVarassignLeftBsdPrefs__first_time(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("module.mk",
+		MkCvsID,
+		"",
+		"PKGNAME?=\tpkgname-1.0",
+		"MYSQL_USER?=\tmysqld")
+
+	mklines.Check()
+
+	// FIXME: bsd.prefs.mk must be included before MYSQL_USER gets its default value.
+	t.CheckOutputLines(
+		"WARN: module.mk:4: The variable MYSQL_USER should not " +
+			"be given a default value by any package.")
+}
+
 func (s *Suite) Test_MkLineChecker_checkVarassignLeftBsdPrefs__vartype_nil(c *check.C) {
 	t := s.Init(c)
 
