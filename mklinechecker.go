@@ -272,10 +272,8 @@ func (ck MkLineChecker) checkVarassignLeftPermissions() {
 		}
 	}
 
-	var needed ACLPermissions
+	needed := aclpSet
 	switch op {
-	case opAssign, opAssignShell, opAssignEval:
-		needed = aclpSet
 	case opAssignDefault:
 		needed = aclpSetDefault
 	case opAssignAppend:
