@@ -562,6 +562,21 @@ func (s *Suite) Test_MkLine_ResolveVarsInRelativePath__without_tracing(c *check.
 		"WARN: ~/buildlink3.mk:2: PKGPATH.multimedia/totem is used but not defined.")
 }
 
+func (s *Suite) Test_MkLine_ResolveVarsInRelativePath__assertion(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	t.Chdir(".")
+	mkline := t.NewMkLine("a/b/c/d/e/f/g.mk", 123, "")
+
+	t.ExpectPanic(
+		func() { mkline.ResolveVarsInRelativePath("${PKGSRCDIR}") },
+		"Pkglint internal error: "+
+			"Relative path \"../../../../../..\" for \"a/b/c/d/e/f\" is too deep "+
+			"below the pkgsrc root \".\".")
+
+}
+
 func (s *Suite) Test_MkLine_VariableNeedsQuoting__unknown_rhs(c *check.C) {
 	t := s.Init(c)
 
