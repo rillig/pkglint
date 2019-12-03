@@ -1995,6 +1995,24 @@ func (s *Suite) Test_Package_checkCategories__redundant_but_not_constant(c *chec
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_Package_checkCategories__eval_assignment(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"CATEGORIES:=\tcategory",
+		".include \"included.mk\"")
+	t.CreateFileLines("category/package/included.mk",
+		MkCvsID,
+		"CATEGORIES+=\tcategory")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	// FIXME: The := assignment should be equivalent to =.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Package_checkGnuConfigureUseLanguages__no_C(c *check.C) {
 	t := s.Init(c)
 
