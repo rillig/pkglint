@@ -132,6 +132,26 @@ func (s *Suite) Test_getSubdirs(c *check.C) {
 	t.CheckDeepEquals(getSubdirs(t.File(".")), []Path{"subdir"})
 }
 
+func (s *Suite) Test_isIgnoredFilename(c *check.C) {
+	t := s.Init(c)
+
+	test := func(filename string, isIgnored bool) {
+		t.CheckEquals(isIgnoredFilename(filename), isIgnored)
+	}
+
+	test("filename.mk", false)
+	test(".gitignore", false)
+	test(".git", true)
+	test(".gitattributes", false)
+	test("CVS", true)
+	test(".svn", true)
+	test(".hg", true)
+
+	// There is actually an IDEA plugin for pkgsrc.
+	// See https://github.com/rillig/intellij-pkgsrc.
+	test(".idea", true)
+}
+
 func (s *Suite) Test_isLocallyModified(c *check.C) {
 	t := s.Init(c)
 
