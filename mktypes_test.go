@@ -173,17 +173,25 @@ func (s *Suite) Test_MkVarUseModifier_ChangesWords(c *check.C) {
 		t.CheckEquals(mod.ChangesWords(), changes)
 	}
 
+	test("C,from,to,", true)
 	test("E", false)
-	test("R", false)
+	test("H", false)
+
+	// FIXME: The :M and :N modifiers obviously change the number of words.
 	test("Mpattern", false)
 	test("Npattern", false)
-	test("S,from,to,", true)
-	test("C,from,to,", true)
-	test("tl", false)
-	test("tu", false)
-	test("sh", true)
 
-	test("unknown", true)
+	test("O", false)
+	test("Q", true)
+	test("R", false)
+	test("S,from,to,", true)
+	test("T", false)
+	test("invalid", true)
+	test("sh", true)
+	test("tl", false)
+	test("tW", true)
+	test("tu", false)
+	test("tw", true)
 }
 
 // Ensures that ChangesWords cannot be called with an empty string as modifier.
