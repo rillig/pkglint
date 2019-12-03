@@ -280,7 +280,7 @@ func getSubdirs(filename CurrPath) []Path {
 
 func isIgnoredFilename(filename string) bool {
 	switch filename {
-	case ".", "..", "CVS", ".svn", ".git", ".hg", ".idea":
+	case "CVS", ".svn", ".git", ".hg", ".idea":
 		return true
 	}
 	return hasPrefix(filename, ".#")
