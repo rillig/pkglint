@@ -1553,6 +1553,18 @@ func (s *Suite) Test_ShellLineChecker_unescapeBackticks(c *check.C) {
 		"WARN: filename.mk:1: Backslashes should be doubled inside backticks.",
 		"WARN: filename.mk:1: Double quotes inside backticks inside double quotes are error prone.",
 		"WARN: filename.mk:1: Double quotes inside backticks inside double quotes are error prone.")
+
+	// The inner shell command in the backticks is malformed since it
+	// contains an unpaired backtick.
+	test("`echo \\``rest", "echo `", "rest")
+
+	// Enclosing the inner backtick in single quotes makes it valid.
+	test("`echo '\\`'`rest", "echo '`'", "rest")
+
+	// FIXME: Oops, line.Warnf is called without a guarding nil check.
+	t.ExpectPanicMatches(
+		func() { test("`echo \\${VAR}`", "???", "???") },
+		`runtime error: invalid memory address or nil pointer dereference`)
 }
 
 func (s *Suite) Test_ShellLineChecker_unescapeBackticks__dquotBacktDquot(c *check.C) {
