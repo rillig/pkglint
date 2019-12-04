@@ -429,7 +429,7 @@ func (src *Pkgsrc) loadTools() {
 	tools.def("true", "TRUE", true, AfterPrefsMk, nil)
 
 	for _, basename := range toolFiles {
-		mklines := src.LoadMk(NewPkgsrcPath("mk/tools").JoinRel(basename), MustSucceed|NotEmpty)
+		mklines := src.LoadMk(NewPkgsrcPath("mk/tools").JoinNoClean(basename), MustSucceed|NotEmpty)
 		mklines.ForEach(func(mkline *MkLine) {
 			conditional := mklines.indentation.IsConditional()
 			tools.ParseToolLine(mklines, mkline, true, !conditional)

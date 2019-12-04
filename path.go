@@ -388,10 +388,6 @@ func (p PkgsrcPath) JoinNoClean(other RelPath) PkgsrcPath {
 	return NewPkgsrcPath(p.AsPath().JoinNoClean(other))
 }
 
-func (p PkgsrcPath) JoinRel(other RelPath) PkgsrcPath {
-	return p.JoinNoClean(other)
-}
-
 // PackagePath is a path relative to the package directory. It is used
 // for the PATCHDIR and PKGDIR variables, as well as dependencies and
 // conflicts on other packages.
