@@ -317,10 +317,10 @@ func (scc *SimpleCommandChecker) Explain(explanation ...string) {
 	scc.mkline.Explain(explanation...)
 }
 
-// ShellLineChecker is either a line from a Makefile starting with a tab,
+// ShellLineChecker checks either a line from a Makefile starting with a tab,
 // thereby containing shell commands to be executed.
 //
-// Or it is a variable assignment line from a Makefile with a left-hand
+// Or it checks a variable assignment line from a Makefile with a left-hand
 // side variable that is of some shell-like type; see Vartype.IsShell.
 type ShellLineChecker struct {
 	MkLines *MkLines
