@@ -128,16 +128,18 @@ func (s *Suite) Test_MkLine_IncludedFileFull(c *check.C) {
 	test("Makefile", "../options.mk", "../options.mk")
 	test("Makefile", "../options.mk", "../options.mk")
 
-	// This test fails if TMPDIR=/.
-	test(t.File("Makefile"), "../options.mk", t.File("../options.mk"))
+	// Keep a bit of context information in the path.
+	test(
+		t.File("subdir/Makefile"), "../options.mk",
+		t.File("subdir").JoinNoClean("../options.mk"))
 
 	t.Chdir(".")
-	test("category/package/Makefile", "../../devel/lib/buildlink3.mk", "devel/lib/buildlink3.mk")
+	test("category/package/Makefile", "../../devel/lib/buildlink3.mk",
+		"category/package/../../devel/lib/buildlink3.mk")
 
-	// Since the result of this method is a CurrPath, it is intended to
-	// be used for file system things, therefore it doesn't need the
-	// additional context of "a/b/../..".
-	test("a/b/c.mk", "../../d/e/../../f/g/h.mk", "f/g/h.mk")
+	// Keep a bit of context information in the path.
+	test("a/b/c.mk", "../../d/e/../../f/g/h.mk",
+		"a/b/../../f/g/h.mk")
 }
 
 // Ensures that the conditional variables of a line can be set even
