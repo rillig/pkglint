@@ -380,6 +380,13 @@ func (s *Suite) Test_MkLexer_VarUse(c *check.C) {
 	test("${arbitrary text}",
 		varuse("arbitrary text"),
 		"WARN: Test_MkLexer_VarUse.mk:1: Invalid part \" text\" after variable name \"arbitrary\".")
+
+	testRest("${:!command!:Q}",
+		// FIXME: The :Q is a modifier here.
+		[]*MkToken{varuseText("${:!command!:Q}", "")},
+		"",
+		"WARN: Test_MkLexer_VarUse.mk:1: "+
+			"Invalid variable modifier \"!command!:Q\" for \"\".")
 }
 
 func (s *Suite) Test_MkLexer_VarUse__ambiguous(c *check.C) {
