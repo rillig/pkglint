@@ -431,6 +431,10 @@ func toInt(s string, def int) int {
 }
 
 // mkopSubst evaluates make(1)'s :S substitution operator.
+// It does not resolve any variables.
+// FIXME: Move this function to the MkVarUseModifier type.
+// FIXME: Clearly signal that substituting is not possible if either
+//  of the strings contains a variable reference.
 func mkopSubst(s string, left bool, from string, right bool, to string, flags string) string {
 	re := regex.Pattern(condStr(left, "^", "") + regexp.QuoteMeta(from) + condStr(right, "$", ""))
 	done := false

@@ -140,6 +140,21 @@ func (s *Suite) Test_MkVarUseModifier_Subst__C_with_complex_replacement(c *check
 	t.CheckEquals(result, "")
 }
 
+func (s *Suite) Test_MkVarUseModifier_Subst__S_dollar_at(c *check.C) {
+	t := s.Init(c)
+
+	mod := MkVarUseModifier{"S/$@/replaced/"}
+
+	result, ok := mod.Subst("The target")
+
+	// As of December 2019, nothing is substituted. If pkglint should ever
+	// handle variables in the modifier, this test would been to provide a
+	// context in which to resolve the variables. If that happens, the
+	// .TARGET variable needs to be set to "target".
+	t.CheckEquals(ok, true)
+	t.CheckEquals(result, "The target")
+}
+
 func (s *Suite) Test_MkVarUseModifier_MatchMatch(c *check.C) {
 	t := s.Init(c)
 

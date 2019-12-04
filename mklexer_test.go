@@ -179,10 +179,13 @@ func (s *Suite) Test_MkLexer_VarUse(c *check.C) {
 	test("${PKGNAME:C/-[0-9].*$/-[0-9]*/}",
 		varuse("PKGNAME", "C/-[0-9].*$/-[0-9]*/"))
 
-	// TODO: Does the $@ refer to ${.TARGET}, or is it just an unmatchable
-	//  regular expression?
-	test("${PKGNAME:C/$@/target?/}",
-		varuse("PKGNAME", "C/$@/target?/"))
+	// The $@ in the :S modifier refers to ${.TARGET}.
+	// When used in a target called "target",
+	// the whole expression evaluates to "-replaced-".
+	test("${:U-target-:S/$@/replaced/:Q}",
+		varuse("", "U-target-", "S/$@/replaced/", "Q"))
+	test("${:U-target-:C/$@/replaced/:Q}",
+		varuse("", "U-target-", "C/$@/replaced/", "Q"))
 
 	test("${PKGNAME:S/py${_PYTHON_VERSION}/py${i}/:C/-[0-9].*$/-[0-9]*/}",
 		varuse("PKGNAME", "S/py${_PYTHON_VERSION}/py${i}/", "C/-[0-9].*$/-[0-9]*/"))
