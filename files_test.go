@@ -57,10 +57,9 @@ func (s *Suite) Test_Load__not_found_in_autofix_mode(c *check.C) {
 	t.SetUpCommandLine("--autofix")
 	t.Chdir(".")
 
-	lines := Load("nonexistent", MustSucceed)
-
-	// FIXME: Must panic instead.
-	t.Check(lines, check.IsNil)
+	t.ExpectFatal(
+		func() { Load("nonexistent", MustSucceed) },
+		"FATAL: nonexistent: Cannot be read.")
 }
 
 func (s *Suite) Test_convertToLogicalLines__no_continuation(c *check.C) {

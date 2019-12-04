@@ -93,7 +93,7 @@ func (l *Logger) Explain(explanation ...string) {
 //
 // See Logf for logging arbitrary messages.
 func (l *Logger) Diag(line *Line, level *LogLevel, format string, args ...interface{}) {
-	if l.IsAutofix() {
+	if l.IsAutofix() && level != Fatal {
 		// In these two cases, the only interesting diagnostics are those that can
 		// be fixed automatically. These are logged by Autofix.Apply.
 		l.suppressExpl = true
