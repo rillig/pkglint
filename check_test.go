@@ -630,8 +630,7 @@ func (t *Tester) SetUpHierarchy() (
 	includePath := func(including, included RelPath) RelPath {
 		fromDir := including.DirClean()
 		to := basedir.Rel(included.AsPath())
-		// FIXME: consider DirNoClean
-		if fromDir == to.DirClean() {
+		if fromDir == to.DirNoClean() {
 			return NewRelPathString(to.Base())
 		} else {
 			return fromDir.Rel(basedir).JoinNoClean(to).CleanDot()

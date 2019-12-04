@@ -517,6 +517,13 @@ func (s *Suite) Test_Path_Rel(c *check.C) {
 	// The trailing dot marks the difference between a file and a directory.
 	// This is the same behavior as with filepath.Rel.
 	test("a/b/c", ".", "../../../.")
+
+	// Intermediate dotdot components are removed.
+	test("a/../b", "c/../d", "../d")
+
+	test(".", "dir/file", "dir/file")
+	test(".", "dir/subdir/", "dir/subdir")  // FIXME: missing /. at the end
+	test(".", "dir/subdir/.", "dir/subdir") // FIXME: missing /. at the end
 }
 
 func (s *Suite) Test_NewCurrPath(c *check.C) {

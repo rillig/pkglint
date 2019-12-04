@@ -198,6 +198,11 @@ func (p Path) IsAbs() bool {
 }
 
 // Rel returns the relative path from this path to the other.
+//
+// The returned path is a canonical relative path.
+// It starts with a possibly empty sequence of "../",
+// followed by a possibly empty sequence of non-dotdot directories.
+// It may have a single dot at the end, which means the path goes to a directory.
 func (p Path) Rel(other Path) RelPath {
 	fp := filepath.FromSlash(p.String())
 	fpOther := filepath.FromSlash(other.String())
