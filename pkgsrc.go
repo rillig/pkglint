@@ -225,7 +225,7 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename CurrPath) []*Change {
 		if len(changes) >= 2 && year != "" {
 			if prev := changes[len(changes)-2]; change.Date < prev.Date {
 				line.Warnf("Date %q for %s is earlier than %q in %s.",
-					change.Date, change.Pkgpath, prev.Date, line.RefToLocation(prev.Location))
+					change.Date, change.Pkgpath, prev.Date, line.RelLocation(prev.Location))
 				line.Explain(
 					"The entries in doc/CHANGES should be in chronological order, and",
 					"all dates are assumed to be in the UTC timezone, to prevent time",

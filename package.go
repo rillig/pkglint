@@ -1143,7 +1143,7 @@ func (pkg *Package) checkPossibleDowngrade() {
 		switch {
 		case cmp < 0:
 			mkline.Warnf("The package is being downgraded from %s (see %s) to %s.",
-				change.Version(), mkline.Line.RefToLocation(change.Location), pkgversion)
+				change.Version(), mkline.Line.RelLocation(change.Location), pkgversion)
 			mkline.Explain(
 				"The files in doc/CHANGES-*, in which all version changes are",
 				"recorded, have a higher version number than what the package says.",
@@ -1152,7 +1152,7 @@ func (pkg *Package) checkPossibleDowngrade() {
 
 		case cmp > 0 && !isLocallyModified(mkline.Filename):
 			mkline.Notef("Package version %q is greater than the latest %q from %s.",
-				pkgversion, change.Version(), mkline.Line.RefToLocation(change.Location))
+				pkgversion, change.Version(), mkline.Line.RelLocation(change.Location))
 			mkline.Explain(
 				"Each update to a package should be mentioned in the doc/CHANGES file.",
 				"That file is used for the quarterly statistics of updated packages.",
@@ -1185,7 +1185,7 @@ func (pkg *Package) checkUpdate() {
 
 		mkline := pkg.EffectivePkgnameLine
 		cmp := pkgver.Compare(pkg.EffectivePkgversion, suggver)
-		ref := mkline.RefToLocation(sugg.Line)
+		ref := mkline.RelLocation(sugg.Line)
 		switch {
 
 		case cmp < 0:

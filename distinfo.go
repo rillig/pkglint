@@ -359,7 +359,7 @@ func (ck *distinfoLinesChecker) checkGlobalDistfileMismatch(info distinfoHash) {
 	if otherHash != nil {
 		if !bytes.Equal(otherHash.hash, hashBytes) {
 			line.Errorf("The %s hash for %s is %s, which conflicts with %s in %s.",
-				alg, filename, hash, hex.EncodeToString(otherHash.hash), line.RefToLocation(otherHash.location))
+				alg, filename, hash, hex.EncodeToString(otherHash.hash), line.RelLocation(otherHash.location))
 		}
 	}
 }

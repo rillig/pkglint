@@ -105,11 +105,10 @@ func NewLineWhole(filename CurrPath) *Line {
 // RelLine returns a reference to another line,
 // which can be in the same file or in a different file.
 func (line *Line) RelLine(other *Line) string {
-	return line.RefToLocation(other.Location)
+	return line.RelLocation(other.Location)
 }
 
-// FIXME: Rename to RelLocation.
-func (line *Line) RefToLocation(other Location) string {
+func (line *Line) RelLocation(other Location) string {
 	if line.Filename != other.Filename {
 		return line.Rel(other.Filename).String() + ":" + other.Linenos()
 	}
@@ -119,8 +118,8 @@ func (line *Line) RefToLocation(other Location) string {
 // Rel returns the relative path from this line to the given file path.
 // This is typically used for arguments in diagnostics, which should always be
 // relative to the line with which the diagnostic is associated.
-func (line *Line) Rel(filePath CurrPath) RelPath {
-	return G.Pkgsrc.Relpath(line.Filename.DirNoClean(), filePath)
+func (line *Line) Rel(other CurrPath) RelPath {
+	return G.Pkgsrc.Relpath(line.Filename.DirNoClean(), other)
 }
 
 func (line *Line) IsMultiline() bool {

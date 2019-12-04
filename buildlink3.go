@@ -106,7 +106,7 @@ func (ck *Buildlink3Checker) checkUniquePkgbase(pkgbase string, mkline *MkLine) 
 	}
 
 	mkline.Errorf("Duplicate package identifier %q already appeared in %s.",
-		pkgbase, mkline.RefToLocation(*prev))
+		pkgbase, mkline.RelLocation(*prev))
 	mkline.Explain(
 		"Each buildlink3.mk file must have a unique identifier.",
 		"These identifiers are used for multiple-inclusion guards,",
