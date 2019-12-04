@@ -431,7 +431,8 @@ func (src *Pkgsrc) loadTools() {
 	for _, basename := range toolFiles {
 		mklines := src.LoadMk(NewPkgsrcPath("mk/tools").JoinRel(basename), MustSucceed|NotEmpty)
 		mklines.ForEach(func(mkline *MkLine) {
-			tools.ParseToolLine(mklines, mkline, true, !mklines.indentation.IsConditional())
+			conditional := mklines.indentation.IsConditional()
+			tools.ParseToolLine(mklines, mkline, true, !conditional)
 		})
 	}
 
