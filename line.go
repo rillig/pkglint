@@ -42,12 +42,12 @@ type Location struct {
 	lastLine  int32 // usually the same as firstLine, may differ in Makefiles
 }
 
-func (loc *Location) String() string {
-	return loc.Filename.String() + ":" + loc.Linenos()
-}
-
 func NewLocation(filename CurrPath, firstLine, lastLine int) Location {
 	return Location{filename, int32(firstLine), int32(lastLine)}
+}
+
+func (loc *Location) String() string {
+	return loc.Filename.String() + ":" + loc.Linenos()
 }
 
 func (loc *Location) Linenos() string {
@@ -61,6 +61,10 @@ func (loc *Location) Linenos() string {
 	default:
 		return sprintf("%d--%d", loc.firstLine, loc.lastLine)
 	}
+}
+
+func (loc *Location) File(rel RelPath) CurrPath {
+	return loc.Filename.DirNoClean().JoinNoClean(rel)
 }
 
 // Line represents a line of text from a file.

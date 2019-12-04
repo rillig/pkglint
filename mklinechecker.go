@@ -1387,7 +1387,8 @@ func (ck MkLineChecker) CheckRelativePath(relativePath RelPath, mustExist bool) 
 	// FIXME: consider DirNoClean
 	abs := mkline.Filename.DirClean().JoinNoClean(resolvedPath)
 	if !abs.Exists() {
-		if mustExist && !ck.MkLines.indentation.HasExists(resolvedPath) {
+		pkgsrcPath := G.Pkgsrc.ToRel(ck.MkLine.File(resolvedPath))
+		if mustExist && !ck.MkLines.indentation.HasExists(pkgsrcPath) {
 			mkline.Errorf("Relative path %q does not exist.", resolvedPath)
 		}
 		return

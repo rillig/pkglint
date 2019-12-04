@@ -254,7 +254,8 @@ func (pkg *Package) parseLine(mklines *MkLines, mkline *MkLine, allLines *MkLine
 		includedMkLines, skip := pkg.loadIncluded(mkline, includingFile)
 
 		if includedMkLines == nil {
-			if skip || mklines.indentation.HasExists(includedFile) {
+			pkgsrcPath := G.Pkgsrc.ToRel(mkline.File(includedFile))
+			if skip || mklines.indentation.HasExists(pkgsrcPath) {
 				return true // See https://github.com/rillig/pkglint/issues/1
 			}
 			mkline.Errorf("Cannot read %q.", includedFile)
