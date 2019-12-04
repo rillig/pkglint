@@ -1663,7 +1663,8 @@ func (ck MkLineChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, notE
 			"Therefore it feels strange to apply list operators like :M and :N onto it.",
 			"A more direct approach is to use the == and != operators.",
 			"",
-			"An entirely different case is when the pattern contains wildcards like ^, *, $.",
+			"An entirely different case is when the pattern contains",
+			"wildcards like *, ?, [].",
 			"In such a case, using the :M or :N modifiers is useful and preferred.")
 		fix.Replace(replace(varname, positive, pattern))
 		fix.Apply()
