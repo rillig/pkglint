@@ -118,7 +118,8 @@ func (line *Line) RefToLocation(other Location) string {
 // PathToFile returns the relative path from this line to the given file path.
 // This is typically used for arguments in diagnostics, which should always be
 // relative to the line with which the diagnostic is associated.
-func (line *Line) PathToFile(filePath CurrPath) Path {
+// FIXME: Rename to Rel.
+func (line *Line) PathToFile(filePath CurrPath) RelPath {
 	// FIXME: consider DirNoClean
 	return G.Pkgsrc.Relpath(line.Filename.DirClean(), filePath)
 }

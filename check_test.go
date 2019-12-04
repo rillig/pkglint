@@ -536,7 +536,7 @@ func (t *Tester) File(filename RelPath) CurrPath {
 	if t.cwd != "" {
 		return NewCurrPath(filename.Clean().AsPath())
 	}
-	return t.tmpdir.JoinClean(filename.AsPath())
+	return t.tmpdir.JoinClean(filename)
 }
 
 // Copy copies a file inside the temporary directory.
@@ -578,7 +578,7 @@ func (t *Tester) Chdir(dirname RelPath) {
 	assertNil(os.Chdir(absDirName.String()), "Chdir")
 	t.cwd = dirname
 	G.cwd = absDirName
-	G.Pkgsrc.topdir = NewCurrPath(absDirName.Rel(G.Pkgsrc.topdir))
+	G.Pkgsrc.topdir = NewCurrPath(absDirName.Rel(G.Pkgsrc.topdir).AsPath())
 }
 
 // Remove removes the file or directory from the temporary directory.
@@ -627,12 +627,12 @@ func (t *Tester) SetUpHierarchy() (
 	// includePath returns the path to be used in an .include.
 	//
 	// This is the same mechanism that is used in Pkgsrc.Relpath.
-	includePath := func(including, included Path) Path {
+	includePath := func(including, included RelPath) RelPath {
 		fromDir := including.DirClean()
-		to := basedir.Rel(included)
+		to := basedir.Rel(included.AsPath())
 		// FIXME: consider DirNoClean
 		if fromDir == to.DirClean() {
-			return NewPath(to.Base())
+			return NewRelPathString(to.Base())
 		} else {
 			return fromDir.Rel(basedir).JoinNoClean(to).CleanDot()
 		}
@@ -644,7 +644,7 @@ func (t *Tester) SetUpHierarchy() (
 		relFilename := basedir.Rel(filename.AsPath())
 
 		addLine := func(text string) {
-			lines = append(lines, t.NewLine(NewCurrPath(relFilename), lineno, text))
+			lines = append(lines, t.NewLine(NewCurrPath(relFilename.AsPath()), lineno, text))
 			lineno++
 		}
 
@@ -653,7 +653,7 @@ func (t *Tester) SetUpHierarchy() (
 			case string:
 				addLine(arg)
 			case *MkLines:
-				rel := includePath(relFilename, arg.lines.Filename.AsPath())
+				rel := includePath(relFilename, NewRelPath(arg.lines.Filename.AsPath()))
 				addLine(sprintf(".include %q", rel))
 				lines = append(lines, arg.lines.Lines...)
 			default:
@@ -661,7 +661,7 @@ func (t *Tester) SetUpHierarchy() (
 			}
 		}
 
-		mklines := NewMkLines(NewLines(NewCurrPath(relFilename), lines))
+		mklines := NewMkLines(NewLines(NewCurrPath(relFilename.AsPath()), lines))
 		assertf(files[filename] == nil, "MkLines with name %q already exists.", filename)
 		files[filename] = mklines
 		return mklines
@@ -1219,7 +1219,7 @@ func (t *Tester) Use(...interface{}) {}
 func (t *Tester) Shquote(format string, rels ...RelPath) string {
 	var subs []interface{}
 	for _, rel := range rels {
-		quoted := shquote(t.tmpdir.JoinClean(rel.AsPath()).String())
+		quoted := shquote(t.tmpdir.JoinClean(rel).String())
 		subs = append(subs, strings.Replace(quoted, t.tmpdir.String(), "~", -1))
 	}
 	return sprintf(format, subs...)

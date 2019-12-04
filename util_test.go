@@ -107,12 +107,12 @@ func (s *Suite) Test_isEmptyDir__and_getSubdirs(c *check.C) {
 
 	if dir := t.File("."); true {
 		t.CheckEquals(isEmptyDir(dir), true)
-		t.CheckDeepEquals(getSubdirs(dir), []Path(nil))
+		t.CheckDeepEquals(getSubdirs(dir), []RelPath(nil))
 
 		t.CreateFileLines("somedir/file")
 
 		t.CheckEquals(isEmptyDir(dir), false)
-		t.CheckDeepEquals(getSubdirs(dir), []Path{"somedir"})
+		t.CheckDeepEquals(getSubdirs(dir), []RelPath{"somedir"})
 	}
 
 	if absent := t.File("nonexistent"); true {
@@ -132,7 +132,7 @@ func (s *Suite) Test_getSubdirs(c *check.C) {
 	t.CreateFileLines("empty/file")
 	c.Check(os.Remove(t.File("empty/file").String()), check.IsNil)
 
-	t.CheckDeepEquals(getSubdirs(t.File(".")), []Path{"subdir"})
+	t.CheckDeepEquals(getSubdirs(t.File(".")), []RelPath{"subdir"})
 }
 
 func (s *Suite) Test_isIgnoredFilename(c *check.C) {

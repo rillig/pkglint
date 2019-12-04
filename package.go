@@ -31,7 +31,8 @@ type Package struct {
 	vars      Scope
 	redundant *RedundantScope
 
-	bl3 map[Path]*MkLine // buildlink3.mk name => line; contains only buildlink3.mk files that are directly included.
+	// FIXME: What is the base directory of the map keys?
+	bl3 map[RelPath]*MkLine // buildlink3.mk name => line; contains only buildlink3.mk files that are directly included.
 
 	// Remembers the Makefile fragments that have already been included.
 	// The key to the map is the filename relative to the package directory.
@@ -49,10 +50,11 @@ type Package struct {
 
 	// Files from .include lines that are nested inside .if.
 	// They often depend on OPSYS or on the existence of files in the build environment.
-	conditionalIncludes map[Path]*MkLine
+	// FIXME: Define "relative to what" for the keys of the map.
+	conditionalIncludes map[RelPath]*MkLine
 	// Files from .include lines that are not nested.
 	// These are cross-checked with buildlink3.mk whether they are unconditional there, too.
-	unconditionalIncludes map[Path]*MkLine
+	unconditionalIncludes map[RelPath]*MkLine
 
 	IgnoreMissingPatches bool // In distinfo, don't warn about patches that cannot be found.
 
@@ -77,10 +79,10 @@ func NewPackage(dir CurrPath) *Package {
 		DistinfoFile:          "${PKGDIR}/distinfo", // TODO: Redundant, see the vars.Fallback below.
 		Plist:                 NewPlistContent(),
 		vars:                  NewScope(),
-		bl3:                   make(map[Path]*MkLine),
+		bl3:                   make(map[RelPath]*MkLine),
 		included:              Once{},
-		conditionalIncludes:   make(map[Path]*MkLine),
-		unconditionalIncludes: make(map[Path]*MkLine),
+		conditionalIncludes:   make(map[RelPath]*MkLine),
+		unconditionalIncludes: make(map[RelPath]*MkLine),
 	}
 	pkg.vars.DefineAll(G.Pkgsrc.UserDefinedVars)
 
@@ -252,7 +254,7 @@ func (pkg *Package) parseLine(mklines *MkLines, mkline *MkLine, allLines *MkLine
 		includedMkLines, skip := pkg.loadIncluded(mkline, includingFile)
 
 		if includedMkLines == nil {
-			if skip || mklines.indentation.HasExists(NewRelPath(includedFile)) {
+			if skip || mklines.indentation.HasExists(includedFile) {
 				return true // See https://github.com/rillig/pkglint/issues/1
 			}
 			mkline.Errorf("Cannot read %q.", includedFile)
@@ -359,13 +361,13 @@ func (pkg *Package) loadIncluded(mkline *MkLine, includingFile CurrPath) (includ
 
 // resolveIncludedFile resolves Makefile variables such as ${PKGPATH} to
 // their actual values.
-func (pkg *Package) resolveIncludedFile(mkline *MkLine, includingFilename CurrPath) Path {
+func (pkg *Package) resolveIncludedFile(mkline *MkLine, includingFilename CurrPath) RelPath {
 
 	// FIXME: resolveVariableRefs uses G.Pkg implicitly. It should be made explicit.
 	// TODO: Try to combine resolveVariableRefs and ResolveVarsInRelativePath.
-	resolved := mkline.ResolveVarsInRelativePath(NewRelPath(mkline.IncludedFile()))
+	resolved := mkline.ResolveVarsInRelativePath(mkline.IncludedFile())
 	includedText := resolveVariableRefs(nil /* XXX: or maybe some mklines? */, resolved.String())
-	includedFile := NewPath(includedText)
+	includedFile := NewRelPathString(includedText)
 	if containsVarRef(includedText) {
 		if trace.Tracing && !includingFilename.ContainsPath("mk") {
 			trace.Stepf("%s:%s: Skipping unresolvable include file %q.",
@@ -390,7 +392,7 @@ func (pkg *Package) resolveIncludedFile(mkline *MkLine, includingFilename CurrPa
 //
 // The includingFile is relative to the current working directory,
 // the includedFile is taken directly from the .include directive.
-func (*Package) shouldDiveInto(includingFile CurrPath, includedFile Path) bool {
+func (*Package) shouldDiveInto(includingFile CurrPath, includedFile RelPath) bool {
 
 	if includedFile.HasSuffixPath("bsd.pkg.mk") || IsPrefs(includedFile) {
 		return false
@@ -404,7 +406,7 @@ func (*Package) shouldDiveInto(includingFile CurrPath, includedFile Path) bool {
 	return true
 }
 
-func (pkg *Package) collectSeenInclude(mkline *MkLine, includedFile Path) {
+func (pkg *Package) collectSeenInclude(mkline *MkLine, includedFile RelPath) {
 	if mkline.Basename != "Makefile" {
 		return
 	}
@@ -1345,7 +1347,9 @@ func (pkg *Package) checkLinesBuildlink3Inclusion(mklines *MkLines) {
 	}
 
 	// Collect all the included buildlink3.mk files from the file.
-	includedFiles := make(map[Path]*MkLine)
+	// FIXME: Clarify what the base directory of the RelPath is.
+	//  Right now it is "the including file", which does not make sense.
+	includedFiles := make(map[RelPath]*MkLine)
 	for _, mkline := range mklines.mklines {
 		if mkline.IsInclude() {
 			includedFile := mkline.IncludedFile()
@@ -1449,7 +1453,7 @@ func (pkg *Package) AutofixDistinfo(oldSha1, newSha1 string) {
 // as resolved from the package's directory.
 // Variables that are known in the package are resolved, e.g. ${PKGDIR}.
 func (pkg *Package) File(relativeFileName PackagePath) CurrPath {
-	joined := pkg.dir.JoinNoClean(relativeFileName.AsPath())
+	joined := pkg.dir.JoinNoClean(NewRelPath(relativeFileName.AsPath()))
 	resolved := resolveVariableRefs(nil /* XXX: or maybe some mklines? */, joined.String())
 	return NewCurrPathString(resolved).CleanPath()
 }
@@ -1460,13 +1464,13 @@ func (pkg *Package) File(relativeFileName PackagePath) CurrPath {
 //
 // Example:
 //  NewPackage("category/package").Rel("other/package") == "../../other/package"
-func (pkg *Package) Rel(filename CurrPath) Path {
+func (pkg *Package) Rel(filename CurrPath) RelPath {
 	return G.Pkgsrc.Relpath(pkg.dir, filename)
 }
 
 // Returns whether the given file (relative to the package directory)
 // is included somewhere in the package, either directly or indirectly.
-func (pkg *Package) Includes(filename Path) bool {
+func (pkg *Package) Includes(filename RelPath) bool {
 	return pkg.unconditionalIncludes[filename] != nil ||
 		pkg.conditionalIncludes[filename] != nil
 }

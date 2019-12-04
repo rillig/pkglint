@@ -150,11 +150,11 @@ func (p Path) Replace(from, to string) Path {
 	return Path(strings.Replace(string(p), from, to, -1))
 }
 
-func (p Path) JoinClean(s Path) Path {
+func (p Path) JoinClean(s RelPath) Path {
 	return Path(path.Join(string(p), string(s)))
 }
 
-func (p Path) JoinNoClean(s Path) Path {
+func (p Path) JoinNoClean(s RelPath) Path {
 	return Path(string(p) + "/" + string(s))
 }
 
@@ -198,12 +198,12 @@ func (p Path) IsAbs() bool {
 }
 
 // Rel returns the relative path from this path to the other.
-func (p Path) Rel(other Path) Path {
+func (p Path) Rel(other Path) RelPath {
 	fp := filepath.FromSlash(p.String())
 	fpOther := filepath.FromSlash(other.String())
 	rel, err := filepath.Rel(fp, fpOther)
 	assertNil(err, "Relpath from %q to %q", p, other)
-	return NewPath(filepath.ToSlash(rel))
+	return NewRelPath(NewPath(filepath.ToSlash(rel)))
 }
 
 // CurrPath is a path that is either absolute or relative to the current
@@ -290,15 +290,15 @@ func (p CurrPath) CleanPath() CurrPath {
 	return CurrPath(p.AsPath().CleanPath())
 }
 
-func (p CurrPath) JoinNoClean(other Path) CurrPath {
+func (p CurrPath) JoinNoClean(other RelPath) CurrPath {
 	return CurrPath(p.AsPath().JoinNoClean(other))
 }
 
-func (p CurrPath) JoinClean(other Path) CurrPath {
+func (p CurrPath) JoinClean(other RelPath) CurrPath {
 	return NewCurrPath(p.AsPath().JoinClean(other))
 }
 
-func (p CurrPath) Rel(rel CurrPath) Path {
+func (p CurrPath) Rel(rel CurrPath) RelPath {
 	return p.AsPath().Rel(rel.AsPath())
 }
 
@@ -341,7 +341,7 @@ func (p CurrPath) ReadPaths() []CurrPath {
 	var filenames []CurrPath
 	for _, info := range infos {
 		if !isIgnoredFilename(info.Name()) {
-			joined := p.JoinNoClean(NewPath(info.Name())).CleanPath()
+			joined := p.JoinNoClean(NewRelPathString(info.Name())).CleanPath()
 			filenames = append(filenames, joined)
 		}
 	}
@@ -384,12 +384,12 @@ func (p PkgsrcPath) HasPrefixPath(prefix Path) bool {
 	return p.AsPath().HasPrefixPath(prefix)
 }
 
-func (p PkgsrcPath) JoinNoClean(other Path) PkgsrcPath {
+func (p PkgsrcPath) JoinNoClean(other RelPath) PkgsrcPath {
 	return NewPkgsrcPath(p.AsPath().JoinNoClean(other))
 }
 
 func (p PkgsrcPath) JoinRel(other RelPath) PkgsrcPath {
-	return p.JoinNoClean(other.AsPath())
+	return p.JoinNoClean(other)
 }
 
 // PackagePath is a path relative to the package directory. It is used
@@ -403,8 +403,7 @@ func (p PackagePath) AsPath() Path { return Path(p) }
 
 func (p PackagePath) String() string { return p.AsPath().String() }
 
-// TODO: try RelPath instead of Path
-func (p PackagePath) JoinNoClean(other Path) PackagePath {
+func (p PackagePath) JoinNoClean(other RelPath) PackagePath {
 	return NewPackagePath(p.AsPath().JoinNoClean(other))
 }
 
@@ -422,6 +421,13 @@ func (p RelPath) AsPath() Path { return NewPath(string(p)) }
 
 func (p RelPath) String() string { return p.AsPath().String() }
 
+func (p RelPath) IsEmpty() bool { return p.AsPath().IsEmpty() }
+
+func (p RelPath) Split() (RelPath, string) {
+	dir, base := p.AsPath().Split()
+	return NewRelPath(dir), base
+}
+
 func (p RelPath) DirClean() RelPath { return RelPath(p.AsPath().DirClean()) }
 
 func (p RelPath) DirNoClean() RelPath {
@@ -438,11 +444,15 @@ func (p RelPath) Count() int { return p.AsPath().Count() }
 
 func (p RelPath) Clean() RelPath { return NewRelPath(p.AsPath().Clean()) }
 
+func (p RelPath) CleanDot() RelPath {
+	return NewRelPath(p.AsPath().CleanDot())
+}
+
 func (p RelPath) CleanPath() RelPath {
 	return RelPath(p.AsPath().CleanPath())
 }
 
-func (p RelPath) JoinNoClean(other Path) RelPath {
+func (p RelPath) JoinNoClean(other RelPath) RelPath {
 	return RelPath(p.AsPath().JoinNoClean(other))
 }
 
@@ -452,6 +462,10 @@ func (p RelPath) Replace(from string, to string) RelPath {
 
 func (p RelPath) HasPrefixPath(prefix Path) bool {
 	return p.AsPath().HasPrefixPath(prefix)
+}
+
+func (p RelPath) HasPrefixText(prefix string) bool {
+	return p.AsPath().HasPrefixText(prefix)
 }
 
 func (p RelPath) ContainsPath(sub Path) bool {
@@ -465,3 +479,9 @@ func (p RelPath) ContainsText(text string) bool {
 func (p RelPath) HasSuffixPath(suffix Path) bool {
 	return p.AsPath().HasSuffixPath(suffix)
 }
+
+func (p RelPath) HasSuffixText(suffix string) bool {
+	return p.AsPath().HasSuffixText(suffix)
+}
+
+func (p RelPath) Rel(other Path) RelPath { return p.AsPath().Rel(other) }

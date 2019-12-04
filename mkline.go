@@ -59,7 +59,7 @@ type mkLineInclude struct {
 	mustExist       bool     // for .sinclude, nonexistent files are ignored
 	sys             bool     // whether the include uses <file.mk> (very rare) instead of "file.mk"
 	indent          string   // the space between the leading "." and the directive
-	includedFile    Path     // the text between the <brackets> or "quotes"
+	includedFile    RelPath  // the text between the <brackets> or "quotes"
 	conditionalVars []string // variables on which this inclusion depends (filled in later, as needed)
 }
 
@@ -276,7 +276,7 @@ func (mkline *MkLine) SetHasElseBranch(elseLine *MkLine) {
 
 func (mkline *MkLine) MustExist() bool { return mkline.data.(*mkLineInclude).mustExist }
 
-func (mkline *MkLine) IncludedFile() Path { return mkline.data.(*mkLineInclude).includedFile }
+func (mkline *MkLine) IncludedFile() RelPath { return mkline.data.(*mkLineInclude).includedFile }
 
 // IncludedFileFull returns the path to the included file.
 func (mkline *MkLine) IncludedFileFull() CurrPath {
@@ -1277,7 +1277,7 @@ var (
 	VarparamBytes = textproc.NewByteSet("A-Za-z_0-9#*+---./[")
 )
 
-func MatchMkInclude(text string) (m bool, indentation, directive string, filename Path) {
+func MatchMkInclude(text string) (m bool, indentation, directive string, filename RelPath) {
 	lexer := textproc.NewLexer(text)
 	if lexer.SkipByte('.') {
 		indentation = lexer.NextHspace()
@@ -1291,7 +1291,7 @@ func MatchMkInclude(text string) (m bool, indentation, directive string, filenam
 				// Note: strictly speaking, the full MkVarUse would have to be parsed
 				// here. But since these usually don't contain double quotes, it has
 				// worked fine up to now.
-				filename = NewPath(lexer.NextBytesFunc(func(c byte) bool { return c != '"' }))
+				filename = NewRelPathString(lexer.NextBytesFunc(func(c byte) bool { return c != '"' }))
 				if !filename.IsEmpty() && lexer.SkipByte('"') {
 					lexer.NextHspace()
 					if lexer.EOF() {

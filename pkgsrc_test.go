@@ -1226,7 +1226,7 @@ func (s *Suite) Test_Pkgsrc_Relpath(c *check.C) {
 	t.Chdir(".")
 	t.CheckEquals(G.Pkgsrc.topdir, NewCurrPath("."))
 
-	test := func(from, to CurrPath, result Path) {
+	test := func(from, to CurrPath, result RelPath) {
 		t.CheckEquals(G.Pkgsrc.Relpath(from, to), result)
 	}
 

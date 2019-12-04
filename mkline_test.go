@@ -1493,7 +1493,7 @@ func (s *Suite) Test_Indentation_TrackAfter__lonely_else(c *check.C) {
 func (s *Suite) Test_MatchMkInclude(c *check.C) {
 	t := s.Init(c)
 
-	test := func(input, expectedIndent, expectedDirective string, expectedFilename Path, expectedComment string) {
+	test := func(input, expectedIndent, expectedDirective string, expectedFilename RelPath, expectedComment string) {
 		splitResult := NewMkLineParser().split(nil, input, true)
 		m, indent, directive, args := MatchMkInclude(splitResult.main)
 		t.CheckDeepEquals(

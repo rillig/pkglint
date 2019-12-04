@@ -147,11 +147,11 @@ func (src *Pkgsrc) loadDocChanges() {
 		NewLineWhole(docDir).Fatalf("Cannot be read for loading the package changes.")
 	}
 
-	var filenames []Path
+	var filenames []RelPath
 	for _, file := range files {
 		filename := file.Name()
 		if matches(filename, `^CHANGES-20\d\d$`) && filename >= "CHANGES-2011" { // TODO: Why 2011?
-			filenames = append(filenames, NewPath(filename))
+			filenames = append(filenames, NewRelPathString(filename)) // FIXME: low-level API
 		}
 	}
 
@@ -412,7 +412,7 @@ func (src *Pkgsrc) loadTools() {
 			if mkline.IsInclude() {
 				includedFile := mkline.IncludedFile()
 				if !includedFile.ContainsText("/") {
-					toolFiles = append(toolFiles, NewRelPath(includedFile))
+					toolFiles = append(toolFiles, includedFile)
 				}
 			}
 		}
@@ -974,7 +974,7 @@ func (src *Pkgsrc) checkToplevelUnusedLicenses() {
 	for _, licenseFile := range src.ReadDir("licenses") {
 		licenseName := licenseFile.Name()
 		if !G.InterPackage.IsLicenseUsed(licenseName) {
-			licensePath := licensesDir.JoinNoClean(NewPath(licenseName))
+			licensePath := licensesDir.JoinNoClean(NewRelPathString(licenseName))
 			NewLineWhole(licensePath).Warnf("This license seems to be unused.")
 		}
 	}
@@ -1008,7 +1008,7 @@ func (src *Pkgsrc) ReadDir(dirName PkgsrcPath) []os.FileInfo {
 	var relevantFiles []os.FileInfo
 	for _, dirent := range files {
 		name := dirent.Name()
-		if !dirent.IsDir() || !isIgnoredFilename(name) && !isEmptyDir(dir.JoinNoClean(NewPath(name))) {
+		if !dirent.IsDir() || !isIgnoredFilename(name) && !isEmptyDir(dir.JoinNoClean(NewRelPathString(name))) {
 			relevantFiles = append(relevantFiles, dirent)
 		}
 	}
@@ -1049,10 +1049,7 @@ func (src *Pkgsrc) Load(filename PkgsrcPath, options LoadOptions) *Lines {
 // another cannot be computed in another way. The preferred way is to take
 // the relative filenames directly from the .include or exists() where they
 // appear.
-//
-// TODO: Invent data types for all kinds of relative paths that occur in pkgsrc
-//  and pkglint. Make sure that these paths cannot be accidentally mixed.
-func (src *Pkgsrc) Relpath(from, to CurrPath) Path {
+func (src *Pkgsrc) Relpath(from, to CurrPath) RelPath {
 	cfrom := from.Clean()
 	cto := to.Clean()
 
@@ -1075,7 +1072,7 @@ func (src *Pkgsrc) Relpath(from, to CurrPath) Path {
 	}
 
 	if cfrom == "." && !cto.IsAbs() {
-		return cto.Clean().AsPath()
+		return NewRelPath(cto.Clean().AsPath())
 	}
 
 	absFrom := G.Abs(cfrom)
@@ -1099,7 +1096,7 @@ func (src *Pkgsrc) Relpath(from, to CurrPath) Path {
 				relParts = append(relParts, "..")
 			}
 			relParts = append(relParts, toParts[2:]...)
-			return NewPath(strings.Join(relParts, "/")).CleanDot()
+			return NewRelPath(NewPath(strings.Join(relParts, "/")).CleanDot())
 		}
 	}
 
@@ -1111,7 +1108,7 @@ func (src *Pkgsrc) Relpath(from, to CurrPath) Path {
 // Example:
 //  NewPkgsrc("/usr/pkgsrc").File("distfiles") => "/usr/pkgsrc/distfiles"
 func (src *Pkgsrc) File(relativeName PkgsrcPath) CurrPath {
-	cleaned := relativeName.AsPath().Clean()
+	cleaned := NewRelPath(relativeName.AsPath()).Clean()
 	if cleaned == "." {
 		return src.topdir.CleanDot()
 	}
@@ -1124,7 +1121,7 @@ func (src *Pkgsrc) File(relativeName PkgsrcPath) CurrPath {
 // Example:
 //  NewPkgsrc("/usr/pkgsrc").ToRel("/usr/pkgsrc/distfiles") => "distfiles"
 func (src *Pkgsrc) ToRel(filename CurrPath) PkgsrcPath {
-	return NewPkgsrcPath(src.Relpath(src.topdir, filename))
+	return NewPkgsrcPath(src.Relpath(src.topdir, filename).AsPath())
 }
 
 // IsInfra returns whether the given filename is part of the pkgsrc

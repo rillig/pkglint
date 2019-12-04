@@ -32,7 +32,7 @@ func (lc *LicenseChecker) checkName(license string) {
 		}
 	}
 	if licenseFile.IsEmpty() {
-		licenseFile = G.Pkgsrc.File("licenses").JoinNoClean(NewPath(license))
+		licenseFile = G.Pkgsrc.File("licenses").JoinNoClean(NewRelPathString(license))
 		G.InterPackage.UseLicense(license)
 	}
 

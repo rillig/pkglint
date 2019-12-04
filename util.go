@@ -254,7 +254,7 @@ func isEmptyDir(filename CurrPath) bool {
 		if isIgnoredFilename(name) {
 			continue
 		}
-		if dirent.IsDir() && isEmptyDir(filename.JoinNoClean(NewPath(name))) {
+		if dirent.IsDir() && isEmptyDir(filename.JoinNoClean(NewRelPathString(name))) {
 			continue
 		}
 		return false
@@ -262,17 +262,17 @@ func isEmptyDir(filename CurrPath) bool {
 	return true
 }
 
-func getSubdirs(filename CurrPath) []Path {
+func getSubdirs(filename CurrPath) []RelPath {
 	dirents, err := filename.ReadDir()
 	if err != nil {
 		NewLineWhole(filename).Fatalf("Cannot be read: %s", err)
 	}
 
-	var subdirs []Path
+	var subdirs []RelPath
 	for _, dirent := range dirents {
 		name := dirent.Name()
-		if dirent.IsDir() && !isIgnoredFilename(name) && !isEmptyDir(filename.JoinNoClean(NewPath(name))) {
-			subdirs = append(subdirs, NewPath(name))
+		if dirent.IsDir() && !isIgnoredFilename(name) && !isEmptyDir(filename.JoinNoClean(NewRelPathString(name))) {
+			subdirs = append(subdirs, NewRelPathString(name))
 		}
 	}
 	return subdirs
@@ -840,7 +840,7 @@ func naturalLess(str1, str2 string) bool {
 
 // IsPrefs returns whether the given file, when included, loads the user
 // preferences.
-func IsPrefs(filename Path) bool {
+func IsPrefs(filename RelPath) bool {
 	switch filename.Base() {
 	case // See https://github.com/golang/go/issues/28057
 		"bsd.prefs.mk",         // in mk/

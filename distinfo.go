@@ -28,7 +28,7 @@ func CheckLinesDistinfo(pkg *Package, lines *Lines) {
 	distinfoIsCommitted := isCommitted(filename)
 	ck := distinfoLinesChecker{
 		pkg, lines, patchdir, distinfoIsCommitted,
-		nil, make(map[Path]distinfoFileInfo)}
+		nil, make(map[RelPath]distinfoFileInfo)}
 	ck.parse()
 	ck.check()
 	CheckLinesTrailingEmptyLines(lines)
@@ -43,8 +43,8 @@ type distinfoLinesChecker struct {
 	patchdir            PackagePath
 	distinfoIsCommitted bool
 
-	filenames []Path // For keeping the order from top to bottom
-	infos     map[Path]distinfoFileInfo
+	filenames []RelPath // For keeping the order from top to bottom
+	infos     map[RelPath]distinfoFileInfo
 }
 
 func (ck *distinfoLinesChecker) parse() {
@@ -56,7 +56,7 @@ func (ck *distinfoLinesChecker) parse() {
 	}
 	llex.SkipEmptyOrNote()
 
-	prevFilename := NewPath("")
+	prevFilename := NewRelPath("")
 	var hashes []distinfoHash
 
 	isPatch := func() YesNoUnknown {
@@ -83,7 +83,7 @@ func (ck *distinfoLinesChecker) parse() {
 		llex.Skip()
 
 		m, alg, file, hash := match3(line.Text, `^(\w+) \((\w[^)]*)\) = (\S+(?: bytes)?)$`)
-		filename := NewPath(file)
+		filename := NewRelPathString(file)
 		if !m {
 			line.Errorf("Invalid line: %s", line.Text)
 			continue
@@ -310,7 +310,7 @@ func (ck *distinfoLinesChecker) checkUnrecordedPatches() {
 	}
 
 	for _, file := range patchFiles {
-		patchName := NewPath(file.Name())
+		patchName := NewRelPathString(file.Name())
 		if file.Mode().IsRegular() && ck.infos[patchName].isPatch != yes && patchName.HasPrefixText("patch-") {
 			line := NewLineWhole(ck.lines.Filename)
 			line.Errorf("Patch %q is not recorded. Run %q.",
@@ -408,8 +408,8 @@ type distinfoFileInfo struct {
 	hashes  []distinfoHash
 }
 
-func (info *distinfoFileInfo) filename() Path { return info.hashes[0].filename }
-func (info *distinfoFileInfo) line() *Line    { return info.hashes[0].line }
+func (info *distinfoFileInfo) filename() RelPath { return info.hashes[0].filename }
+func (info *distinfoFileInfo) line() *Line       { return info.hashes[0].line }
 
 func (info *distinfoFileInfo) algorithms() string {
 	var algs []string
@@ -421,7 +421,7 @@ func (info *distinfoFileInfo) algorithms() string {
 
 type distinfoHash struct {
 	line      *Line
-	filename  Path
+	filename  RelPath
 	algorithm string
 	hash      string
 }

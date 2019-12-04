@@ -1305,7 +1305,7 @@ func (ck MkLineChecker) checkInclude() {
 	if trace.Tracing {
 		trace.Stepf("includingFile=%s includedFile=%s", mkline.Filename, includedFile)
 	}
-	ck.CheckRelativePath(NewRelPath(includedFile), mustExist)
+	ck.CheckRelativePath(includedFile, mustExist)
 
 	switch {
 	case includedFile.HasBase("Makefile"):
@@ -1385,7 +1385,7 @@ func (ck MkLineChecker) CheckRelativePath(relativePath RelPath, mustExist bool) 
 	}
 
 	// FIXME: consider DirNoClean
-	abs := mkline.Filename.DirClean().JoinNoClean(resolvedPath.AsPath())
+	abs := mkline.Filename.DirClean().JoinNoClean(resolvedPath)
 	if !abs.Exists() {
 		if mustExist && !ck.MkLines.indentation.HasExists(resolvedPath) {
 			mkline.Errorf("Relative path %q does not exist.", resolvedPath)
@@ -1612,6 +1612,7 @@ func (ck MkLineChecker) checkDirectiveCondEmpty(varuse *MkVarUse, fromEmpty bool
 // It also applies to the ${VAR} form.
 //
 // * toplevel is true for ${VAR...} and false for ${VAR...} && ${VAR2...}.
+// FIXME: remove unused parameter toplevel
 func (ck MkLineChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, notEmpty bool, toplevel bool) {
 
 	// replace constructs the state before and after the autofix.
