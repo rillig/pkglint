@@ -19,11 +19,17 @@ func (s *Suite) Test_NewPath(c *check.C) {
 func (s *Suite) Test_Path_String(c *check.C) {
 	t := s.Init(c)
 
-	// FIXME: test := func(...) { }
-
-	for _, p := range []string{"", "filename", "a/b", "c\\d"} {
-		t.CheckEquals(NewPath(p).String(), p)
+	test := func(p Path) {
+		t.CheckEquals(p.String(), string(p))
 	}
+
+	test("")
+	test("filename")
+	test("a/b")
+
+	// No normalization takes place here.
+	// That's what NewPathSlash is for.
+	test("c\\d")
 }
 
 func (s *Suite) Test_Path_GoString(c *check.C) {
@@ -65,7 +71,6 @@ func (s *Suite) Test_Path_DirClean(c *check.C) {
 	test("dir/filename", "dir")
 	test("dir/filename\\with\\backslash", "dir")
 
-	// TODO: I didn't expect that Dir would return the cleaned path.
 	test("././././dir/filename", "dir")
 }
 
@@ -514,8 +519,6 @@ func (s *Suite) Test_Path_Rel(c *check.C) {
 func (s *Suite) Test_NewCurrPath(c *check.C) {
 	t := s.Init(c)
 
-	// FIXME: test := func(...) { }
-
 	curr := NewCurrPath("dir/.///file")
 
 	t.CheckEquals(curr.String(), "dir/.///file")
@@ -523,8 +526,6 @@ func (s *Suite) Test_NewCurrPath(c *check.C) {
 
 func (s *Suite) Test_NewCurrPathString(c *check.C) {
 	t := s.Init(c)
-
-	// FIXME: test := func(...) { }
 
 	curr := NewCurrPathString("dir/.///file")
 
@@ -537,63 +538,55 @@ func (s *Suite) Test_NewCurrPathSlash(c *check.C) {
 	test := func(path, curr string) {
 		t.CheckEquals(NewCurrPathSlash(path).String(), curr)
 	}
-	testWindows := func(path, currWindows, currOther string) {
-		t.CheckEquals(
-			NewCurrPathSlash(path).String(),
-			condStr(runtime.GOOS == "windows", currWindows, currOther))
-	}
 
 	test("filename", "filename")
 	test("dir/.///file", "dir/.///file")
-
-	testWindows("\\", "/", "\\")
 }
 
 func (s *Suite) Test_NewCurrPathSlash__windows(c *check.C) {
 	t := s.Init(c)
 
-	if runtime.GOOS != "windows" {
-		return
+	test := func(path, currWindows, currOther string) {
+		t.CheckEquals(
+			NewCurrPathSlash(path).String(),
+			condStr(runtime.GOOS == "windows", currWindows, currOther))
 	}
 
-	// FIXME: test := func(...) { }
-
-	curr := NewCurrPathSlash("dir\\.\\\\\\file")
-
-	t.CheckEquals(curr.String(), "dir/.///file")
+	test("\\", "/", "\\")
+	test("dir\\.\\\\\\file", "dir/.///file", "dir\\.\\\\\\file")
 }
 
 func (s *Suite) Test_CurrPath_GoString(c *check.C) {
 	t := s.Init(c)
 
-	// FIXME: test := func(...) { }
+	test := func(p CurrPath, str string) {
+		t.CheckEquals(p.GoString(), str)
+	}
 
 	// Tabs in filenames are rare, probably typos.
-	curr := NewCurrPath("dir/file\t")
-
-	t.CheckEquals(curr.GoString(), "\"dir/file\\t\"")
+	test("dir/file\t", "\"dir/file\\t\"")
 }
 
 func (s *Suite) Test_CurrPath_String(c *check.C) {
 	t := s.Init(c)
 
-	// FIXME: test := func(...) { }
+	test := func(p CurrPath, str string) {
+		t.CheckEquals(p.String(), str)
+	}
 
 	// Tabs in filenames are rare, probably typos.
-	curr := NewCurrPath("dir/file\t")
-
-	t.CheckEquals(curr.String(), "dir/file\t")
+	test("dir/file\t", "dir/file\t")
 }
 
 func (s *Suite) Test_CurrPath_AsPath(c *check.C) {
 	t := s.Init(c)
 
-	// FIXME: test := func(...) { }
+	test := func(curr CurrPath, asPath Path) {
+		t.CheckEquals(curr.AsPath(), asPath)
+	}
 
 	// Tabs in filenames are rare, probably typos.
-	curr := NewCurrPath("dir/file\t")
-
-	t.CheckEquals(curr.AsPath(), NewPath("dir/file\t"))
+	test("dir/file\t", "dir/file\t")
 }
 
 func (s *Suite) Test_CurrPath_IsEmpty(c *check.C) {
@@ -861,9 +854,7 @@ func (s *Suite) Test_CurrPath_Rename(c *check.C) {
 func (s *Suite) Test_CurrPath_Lstat(c *check.C) {
 	t := s.Init(c)
 
-	// FIXME: test := func(...) { }
-
-	testDir := func(f CurrPath, isDir bool) {
+	test := func(f CurrPath, isDir bool) {
 		st, err := f.Lstat()
 		assertNil(err, "Lstat")
 		t.CheckEquals(st.Mode()&os.ModeDir != 0, isDir)
@@ -872,16 +863,14 @@ func (s *Suite) Test_CurrPath_Lstat(c *check.C) {
 	t.CreateFileLines("subdir/file")
 	t.CreateFileLines("file")
 
-	testDir(t.File("subdir"), true)
-	testDir(t.File("file"), false)
+	test(t.File("subdir"), true)
+	test(t.File("file"), false)
 }
 
 func (s *Suite) Test_CurrPath_Stat(c *check.C) {
 	t := s.Init(c)
 
-	// FIXME: test := func(...) { }
-
-	testDir := func(f CurrPath, isDir bool) {
+	test := func(f CurrPath, isDir bool) {
 		st, err := f.Stat()
 		assertNil(err, "Stat")
 		t.CheckEquals(st.Mode()&os.ModeDir != 0, isDir)
@@ -890,8 +879,8 @@ func (s *Suite) Test_CurrPath_Stat(c *check.C) {
 	t.CreateFileLines("subdir/file")
 	t.CreateFileLines("file")
 
-	testDir(t.File("subdir"), true)
-	testDir(t.File("file"), false)
+	test(t.File("subdir"), true)
+	test(t.File("file"), false)
 }
 
 func (s *Suite) Test_CurrPath_Exists(c *check.C) {
@@ -912,27 +901,33 @@ func (s *Suite) Test_CurrPath_Exists(c *check.C) {
 func (s *Suite) Test_CurrPath_IsFile(c *check.C) {
 	t := s.Init(c)
 
-	// FIXME: test := func(...) { }
-
 	t.CreateFileLines("dir/file")
+	t.Chdir(".")
 
-	t.CheckEquals(t.File("nonexistent").IsFile(), false)
-	t.CheckEquals(t.File("dir").IsFile(), false)
-	t.CheckEquals(t.File("dir/nonexistent").IsFile(), false)
-	t.CheckEquals(t.File("dir/file").IsFile(), true)
+	test := func(curr CurrPath, isFile bool) {
+		t.CheckEquals(curr.IsFile(), isFile)
+	}
+
+	test("nonexistent", false)
+	test("dir", false)
+	test("dir/nonexistent", false)
+	test("dir/file", true)
 }
 
 func (s *Suite) Test_CurrPath_IsDir(c *check.C) {
 	t := s.Init(c)
 
-	// FIXME: test := func(...) { }
-
 	t.CreateFileLines("dir/file")
+	t.Chdir(".")
 
-	t.CheckEquals(t.File("nonexistent").IsDir(), false)
-	t.CheckEquals(t.File("dir").IsDir(), true)
-	t.CheckEquals(t.File("dir/nonexistent").IsDir(), false)
-	t.CheckEquals(t.File("dir/file").IsDir(), false)
+	test := func(curr CurrPath, isFile bool) {
+		t.CheckEquals(curr.IsDir(), isFile)
+	}
+
+	test("nonexistent", false)
+	test("dir", true)
+	test("dir/nonexistent", false)
+	test("dir/file", false)
 }
 
 func (s *Suite) Test_CurrPath_Chmod(c *check.C) {
@@ -960,18 +955,26 @@ func (s *Suite) Test_CurrPath_ReadDir(c *check.C) {
 	t.CreateFileLines("file")
 	t.CreateFileLines("CVS/Entries")
 	t.CreateFileLines(".git/info/exclude")
+	t.Chdir(".")
 
-	// FIXME: test := func(...) { }
+	test := func(curr CurrPath, entries ...string) {
+		infos, err := curr.ReadDir()
+		assertNil(err, "ReadDir")
 
-	infos, err := t.File(".").ReadDir()
+		var names []string
+		for _, info := range infos {
+			names = append(names, info.Name())
+		}
 
-	assertNil(err, "ReadDir")
-	var names []string
-	for _, info := range infos {
-		names = append(names, info.Name())
+		t.CheckDeepEquals(names, entries)
 	}
 
-	t.CheckDeepEquals(names, []string{".git", "CVS", "file", "subdir"})
+	test(".",
+		".git", "CVS", "file", "subdir")
+	test("subdir",
+		"file")
+	test("CVS",
+		"Entries")
 }
 
 func (s *Suite) Test_CurrPath_ReadPaths(c *check.C) {
