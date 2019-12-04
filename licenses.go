@@ -38,7 +38,7 @@ func (lc *LicenseChecker) checkName(license string) {
 
 	if !licenseFile.IsFile() {
 		lc.MkLine.Errorf("License file %s does not exist.",
-			lc.MkLine.PathToFile(licenseFile))
+			lc.MkLine.Rel(licenseFile))
 		lc.MkLine.Explain(
 			sprintf("Run %q to see which licenses the package uses.",
 				bmake("guess-license")),

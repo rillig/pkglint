@@ -1084,7 +1084,7 @@ func (cv *VartypeCheck) Pkgpath() {
 	pkgdir := G.Pkgsrc.File(pkgpath)
 	if !pkgdir.JoinNoClean("Makefile").IsFile() {
 		cv.MkLine.Errorf("There is no package in %q.",
-			cv.MkLine.PathToFile(pkgdir))
+			cv.MkLine.Rel(pkgdir))
 		return
 	}
 
