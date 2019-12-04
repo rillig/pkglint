@@ -1548,26 +1548,26 @@ func (ck MkLineChecker) checkDirectiveCond() {
 	checkNotEmpty := func(not *MkCond) {
 		empty := not.Empty
 		if empty != nil {
-			ck.checkDirectiveCondEmpty(empty, true, true, not == cond.Not)
+			ck.checkDirectiveCondEmpty(empty, true, true)
 			done[empty] = true
 		}
 
 		if not.Term != nil && not.Term.Var != nil {
 			varUse := not.Term.Var
-			ck.checkDirectiveCondEmpty(varUse, false, false, not == cond.Not)
+			ck.checkDirectiveCondEmpty(varUse, false, false)
 			done[varUse] = true
 		}
 	}
 
 	checkEmpty := func(empty *MkVarUse) {
 		if !done[empty] {
-			ck.checkDirectiveCondEmpty(empty, true, false, empty == cond.Empty)
+			ck.checkDirectiveCondEmpty(empty, true, false)
 		}
 	}
 
 	checkVar := func(varUse *MkVarUse) {
 		if !done[varUse] {
-			ck.checkDirectiveCondEmpty(varUse, false, true, cond.Term != nil)
+			ck.checkDirectiveCondEmpty(varUse, false, true)
 		}
 	}
 
@@ -1581,7 +1581,7 @@ func (ck MkLineChecker) checkDirectiveCond() {
 
 // checkDirectiveCondEmpty checks a condition of the form empty(VAR),
 // empty(VAR:Mpattern) or ${VAR:Mpattern} in an .if directive.
-func (ck MkLineChecker) checkDirectiveCondEmpty(varuse *MkVarUse, fromEmpty bool, notEmpty bool, toplevel bool) {
+func (ck MkLineChecker) checkDirectiveCondEmpty(varuse *MkVarUse, fromEmpty bool, notEmpty bool) {
 	varname := varuse.varname
 	if matches(varname, `^\$.*:[MN]`) {
 		ck.MkLine.Warnf("The empty() function takes a variable name as parameter, not a variable expression.")
@@ -1597,7 +1597,7 @@ func (ck MkLineChecker) checkDirectiveCondEmpty(varuse *MkVarUse, fromEmpty bool
 			"\t${VARNAME:Mpattern}")
 	}
 
-	ck.simplifyCondition(varuse, fromEmpty, notEmpty, toplevel)
+	ck.simplifyCondition(varuse, fromEmpty, notEmpty)
 }
 
 // simplifyCondition replaces an unnecessarily complex condition with
@@ -1609,8 +1609,7 @@ func (ck MkLineChecker) checkDirectiveCondEmpty(varuse *MkVarUse, fromEmpty bool
 // It also applies to the ${VAR} form.
 //
 // * toplevel is true for ${VAR...} and false for ${VAR...} && ${VAR2...}.
-// FIXME: remove unused parameter toplevel
-func (ck MkLineChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, notEmpty bool, toplevel bool) {
+func (ck MkLineChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, notEmpty bool) {
 
 	// replace constructs the state before and after the autofix.
 	// The before state is constructed to ensure that only very simple
