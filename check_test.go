@@ -546,7 +546,6 @@ func (t *Tester) Copy(source, target RelPath) {
 
 	data, err := absSource.ReadString()
 	assertNil(err, "Copy.Read")
-	// FIXME: consider DirNoClean
 	err = os.MkdirAll(absTarget.DirClean().String(), 0777)
 	assertNil(err, "Copy.MkdirAll")
 	err = absTarget.WriteString(data)
@@ -629,7 +628,6 @@ func (t *Tester) SetUpHierarchy() (
 	//
 	// This is the same mechanism that is used in Pkgsrc.Relpath.
 	includePath := func(including, included Path) Path {
-		// FIXME: consider DirNoClean
 		fromDir := including.DirClean()
 		to := basedir.Rel(included)
 		// FIXME: consider DirNoClean
