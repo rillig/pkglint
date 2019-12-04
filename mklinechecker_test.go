@@ -2874,118 +2874,118 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond__comparing_PKGSRC_COMPILER
 func (s *Suite) Test_MkLineChecker_simplifyCondition(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
-	t.Chdir(".")
+	t.SetUpPackage("category/package")
+	t.Chdir("category/package")
+	t.FinishSetUp()
 
 	// before: the directive before the condition is simplified
-	// diagnostics: the usual ones
 	// after: the directive after the condition is simplified
-	test := func(before string, diagnosticsAndAfter ...string) {
-
+	// diagnostics: the usual ones
+	test := func(before, after string, diagnostics ...string) {
 		mklines := t.SetUpFileMkLines("module.mk",
 			MkCvsID,
 			"",
 			before,
 			".endif")
 
-		t.SetUpCommandLine("-Wall")
-		mklines.Check()
+		t.ExpectDiagnosticsAutofix(
+			mklines.Check,
+			diagnostics...)
 
-		t.SetUpCommandLine("-Wall", "--autofix")
-		mklines.Check()
-
-		mklines.SaveAutofixChanges()
-		afterMklines := t.LoadMkInclude("module.mk")
-
-		if len(diagnosticsAndAfter) > 0 {
-			diagLen := len(diagnosticsAndAfter)
-			diagnostics := diagnosticsAndAfter[:diagLen-1]
-			after := diagnosticsAndAfter[diagLen-1]
-
-			t.CheckOutput(diagnostics)
-			t.CheckEquals(afterMklines.mklines[2].Text, after)
-		} else {
-			t.CheckOutputEmpty()
-		}
+		afterMklines := LoadMk(t.File("module.mk"), MustSucceed)
+		t.CheckEquals(afterMklines.mklines[2].Text, after)
 	}
 
 	test(
 		".if ${PKGPATH:Mpattern}",
+		".if ${PKGPATH} == pattern",
 
 		"NOTE: module.mk:3: PKGPATH "+
 			"should be compared using \"${PKGPATH} == pattern\" "+
 			"instead of matching against \":Mpattern\".",
-		"AUTOFIX: module.mk:3: Replacing \"${PKGPATH:Mpattern}\" with \"${PKGPATH} == pattern\".",
-
-		".if ${PKGPATH} == pattern")
+		"AUTOFIX: module.mk:3: Replacing \"${PKGPATH:Mpattern}\" "+
+			"with \"${PKGPATH} == pattern\".")
 
 	// When the pattern contains placeholders, it cannot be converted to == or !=.
 	test(
 		".if ${PKGPATH:Mpa*n}",
+		".if ${PKGPATH:Mpa*n}",
+
 		nil...)
 
 	// The :tl modifier prevents the autofix.
+	// It would be possible though to fix this since the :M modifier
+	// is the last one in the chain.
 	test(
+		".if ${PKGPATH:tl:Mpattern}",
 		".if ${PKGPATH:tl:Mpattern}",
 
 		"NOTE: module.mk:3: PKGPATH "+
 			// FIXME: The :tl modifier is missing.
 			"should be compared using \"${PKGPATH} == pattern\" "+
-			"instead of matching against \":Mpattern\".",
+			"instead of matching against \":Mpattern\".")
 
-		".if ${PKGPATH:tl:Mpattern}")
-
+	// Negated pattern matches are supported as well,
+	// as long as the variable is guaranteed to be nonempty.
 	test(
 		".if ${PKGPATH:Ncategory/package}",
+		".if ${PKGPATH} != category/package",
 
 		"NOTE: module.mk:3: PKGPATH "+
 			"should be compared using \"${PKGPATH} != category/package\" "+
 			"instead of matching against \":Ncategory/package\".",
 		"AUTOFIX: module.mk:3: Replacing \"${PKGPATH:Ncategory/package}\" "+
-			"with \"${PKGPATH} != category/package\".",
-
-		".if ${PKGPATH} != category/package")
+			"with \"${PKGPATH} != category/package\".")
 
 	// ${PKGPATH:None:Ntwo} is a short variant of ${PKGPATH} != "one" &&
 	// ${PKGPATH} != "two". Applying the transformation would make the
 	// condition longer than before, therefore nothing is done here.
 	test(
 		".if ${PKGPATH:None:Ntwo}",
+		".if ${PKGPATH:None:Ntwo}",
+
 		nil...)
 
-	// Note: this combination doesn't make sense since the patterns "one" and "two" don't overlap.
-	test(".if ${PKGPATH:Mone:Mtwo}",
+	// Note: this combination doesn't make sense since the patterns
+	// "one" and "two" don't overlap.
+	test(
+		".if ${PKGPATH:Mone:Mtwo}",
+		".if ${PKGPATH:Mone:Mtwo}",
 
 		"NOTE: module.mk:3: PKGPATH "+
-			// FIXME: The diagnostic doesn't fit the complex expression.
+			// FIXME: The diagnostic doesn't correspond to the whole expression.
 			"should be compared using \"${PKGPATH} == one\" "+
 			"instead of matching against \":Mone\".",
 		"NOTE: module.mk:3: PKGPATH "+
-			// FIXME: The diagnostic doesn't fit the complex expression.
+			// FIXME: The diagnostic doesn't correspond to the whole expression.
 			"should be compared using \"${PKGPATH} == two\" "+
-			"instead of matching against \":Mtwo\".",
+			"instead of matching against \":Mtwo\".")
 
-		".if ${PKGPATH:Mone:Mtwo}")
-
-	test(".if !empty(PKGPATH:Mpattern)",
+	test(
+		".if !empty(PKGPATH:Mpattern)",
+		".if ${PKGPATH} == pattern",
 
 		"NOTE: module.mk:3: PKGPATH "+
 			"should be compared using \"${PKGPATH} == pattern\" "+
 			"instead of matching against \":Mpattern\".",
-		"AUTOFIX: module.mk:3: Replacing \"!empty(PKGPATH:Mpattern)\" with \"${PKGPATH} == pattern\".",
+		"AUTOFIX: module.mk:3: Replacing \"!empty(PKGPATH:Mpattern)\" "+
+			"with \"${PKGPATH} == pattern\".")
 
-		".if ${PKGPATH} == pattern")
-
-	test(".if empty(PKGPATH:Mpattern)",
+	test(
+		".if empty(PKGPATH:Mpattern)",
+		".if ${PKGPATH} != pattern",
 
 		"NOTE: module.mk:3: PKGPATH "+
 			"should be compared using \"${PKGPATH} != pattern\" "+
 			"instead of matching against \":Mpattern\".",
-		"AUTOFIX: module.mk:3: Replacing \"empty(PKGPATH:Mpattern)\" with \"${PKGPATH} != pattern\".",
+		"AUTOFIX: module.mk:3: Replacing \"empty(PKGPATH:Mpattern)\" "+
+			"with \"${PKGPATH} != pattern\".")
 
-		".if ${PKGPATH} != pattern")
-
-	test(".if !!empty(PKGPATH:Mpattern)",
+	test(
+		".if !!empty(PKGPATH:Mpattern)",
+		// TODO: The ! and == could be combined into a !=.
+		//  Luckily the !! pattern doesn't occur in practice.
+		".if !${PKGPATH} == pattern",
 
 		// TODO: When taking all the ! into account, this is actually a
 		//  test for emptiness, therefore the diagnostics should suggest
@@ -2993,58 +2993,55 @@ func (s *Suite) Test_MkLineChecker_simplifyCondition(c *check.C) {
 		"NOTE: module.mk:3: PKGPATH "+
 			"should be compared using \"${PKGPATH} == pattern\" "+
 			"instead of matching against \":Mpattern\".",
-		"AUTOFIX: module.mk:3: Replacing \"!empty(PKGPATH:Mpattern)\" with \"${PKGPATH} == pattern\".",
-
-		// TODO: The ! and == could be combined into a !=.
-		//  Luckily the !! pattern doesn't occur in practice.
-		".if !${PKGPATH} == pattern")
+		"AUTOFIX: module.mk:3: Replacing \"!empty(PKGPATH:Mpattern)\" "+
+			"with \"${PKGPATH} == pattern\".")
 
 	test(".if empty(PKGPATH:Mpattern) || 0",
+		".if ${PKGPATH} != pattern || 0",
 
 		"NOTE: module.mk:3: PKGPATH "+
 			"should be compared using \"${PKGPATH} != pattern\" "+
 			"instead of matching against \":Mpattern\".",
-		"AUTOFIX: module.mk:3: Replacing \"empty(PKGPATH:Mpattern)\" with \"${PKGPATH} != pattern\".",
-
-		".if ${PKGPATH} != pattern || 0")
+		"AUTOFIX: module.mk:3: Replacing \"empty(PKGPATH:Mpattern)\" "+
+			"with \"${PKGPATH} != pattern\".")
 
 	// No note in this case since there is no implicit !empty around the varUse.
-	test(".if ${PKGPATH:Mpattern} != ${OTHER}",
+	test(
+		".if ${PKGPATH:Mpattern} != ${OTHER}",
+		".if ${PKGPATH:Mpattern} != ${OTHER}",
 
-		"WARN: module.mk:3: OTHER is used but not defined.",
-
-		".if ${PKGPATH:Mpattern} != ${OTHER}")
+		"WARN: module.mk:3: OTHER is used but not defined.")
 
 	test(
 		".if ${PKGPATH:Mpattern}",
+		".if ${PKGPATH} == pattern",
 
 		"NOTE: module.mk:3: PKGPATH "+
 			"should be compared using \"${PKGPATH} == pattern\" "+
 			"instead of matching against \":Mpattern\".",
-		"AUTOFIX: module.mk:3: Replacing \"${PKGPATH:Mpattern}\" with \"${PKGPATH} == pattern\".",
-
-		".if ${PKGPATH} == pattern")
+		"AUTOFIX: module.mk:3: Replacing \"${PKGPATH:Mpattern}\" "+
+			"with \"${PKGPATH} == pattern\".")
 
 	test(
 		".if !${PKGPATH:Mpattern}",
+		".if ${PKGPATH} != pattern",
 
 		"NOTE: module.mk:3: PKGPATH "+
 			"should be compared using \"${PKGPATH} != pattern\" "+
 			"instead of matching against \":Mpattern\".",
-		"AUTOFIX: module.mk:3: Replacing \"!${PKGPATH:Mpattern}\" with \"${PKGPATH} != pattern\".",
-
-		".if ${PKGPATH} != pattern")
+		"AUTOFIX: module.mk:3: Replacing \"!${PKGPATH:Mpattern}\" "+
+			"with \"${PKGPATH} != pattern\".")
 
 	// TODO: Merge the double negation into the comparison operator.
 	test(
 		".if !!${PKGPATH:Mpattern}",
+		".if !${PKGPATH} != pattern",
 
 		"NOTE: module.mk:3: PKGPATH "+
 			"should be compared using \"${PKGPATH} != pattern\" "+
 			"instead of matching against \":Mpattern\".",
-		"AUTOFIX: module.mk:3: Replacing \"!${PKGPATH:Mpattern}\" with \"${PKGPATH} != pattern\".",
-
-		".if !${PKGPATH} != pattern")
+		"AUTOFIX: module.mk:3: Replacing \"!${PKGPATH:Mpattern}\" "+
+			"with \"${PKGPATH} != pattern\".")
 
 	// This pattern with spaces doesn't make sense at all in the :M
 	// modifier since it can never match.
@@ -3052,29 +3049,26 @@ func (s *Suite) Test_MkLineChecker_simplifyCondition(c *check.C) {
 	// How exactly does bmake apply the matching here, are both values unquoted?
 	test(
 		".if ${PKGPATH:Mpattern with spaces}",
+		".if ${PKGPATH:Mpattern with spaces}",
 
 		"WARN: module.mk:3: The pathname pattern \"pattern with spaces\" "+
-			"contains the invalid characters \"  \".",
-
-		".if ${PKGPATH:Mpattern with spaces}")
+			"contains the invalid characters \"  \".")
 	// TODO: ".if ${PKGPATH} == \"pattern with spaces\"")
 
 	test(
 		".if ${PKGPATH:M'pattern with spaces'}",
+		".if ${PKGPATH:M'pattern with spaces'}",
 
 		"WARN: module.mk:3: The pathname pattern \"'pattern with spaces'\" "+
-			"contains the invalid characters \"'  '\".",
-
-		".if ${PKGPATH:M'pattern with spaces'}")
+			"contains the invalid characters \"'  '\".")
 	// TODO: ".if ${PKGPATH} == 'pattern with spaces'")
 
 	test(
 		".if ${PKGPATH:M&&}",
+		".if ${PKGPATH:M&&}",
 
 		"WARN: module.mk:3: The pathname pattern \"&&\" "+
-			"contains the invalid characters \"&&\".",
-
-		".if ${PKGPATH:M&&}")
+			"contains the invalid characters \"&&\".")
 	// TODO: ".if ${PKGPATH} == '&&'")
 
 	// If PKGPATH is "", the condition is false.
@@ -3091,26 +3085,26 @@ func (s *Suite) Test_MkLineChecker_simplifyCondition(c *check.C) {
 	// has been included, like everywhere else.
 	test(
 		".if ${PKGPATH:Nnegative-pattern}",
+		".if ${PKGPATH} != negative-pattern",
 
 		"NOTE: module.mk:3: PKGPATH "+
 			"should be compared using \"${PKGPATH} != negative-pattern\" "+
 			"instead of matching against \":Nnegative-pattern\".",
-		"AUTOFIX: module.mk:3: Replacing \"${PKGPATH:Nnegative-pattern}\" with \"${PKGPATH} != negative-pattern\".",
-
-		".if ${PKGPATH} != negative-pattern")
+		"AUTOFIX: module.mk:3: Replacing \"${PKGPATH:Nnegative-pattern}\" "+
+			"with \"${PKGPATH} != negative-pattern\".")
 
 	// Since UNKNOWN is not a well-known system-provided variable that is
 	// guaranteed to be non-empty (see the previous example), it is not
 	// transformed at all.
 	test(
 		".if ${UNKNOWN:Nnegative-pattern}",
+		".if ${UNKNOWN:Nnegative-pattern}",
 
-		"WARN: module.mk:3: UNKNOWN is used but not defined.",
-
-		".if ${UNKNOWN:Nnegative-pattern}")
+		"WARN: module.mk:3: UNKNOWN is used but not defined.")
 
 	test(
 		".if ${PKGPATH:Mpath1} || ${PKGPATH:Mpath2}",
+		".if ${PKGPATH} == path1 || ${PKGPATH} == path2",
 
 		"NOTE: module.mk:3: PKGPATH "+
 			"should be compared using \"${PKGPATH} == path1\" "+
@@ -3118,30 +3112,30 @@ func (s *Suite) Test_MkLineChecker_simplifyCondition(c *check.C) {
 		"NOTE: module.mk:3: PKGPATH "+
 			"should be compared using \"${PKGPATH} == path2\" "+
 			"instead of matching against \":Mpath2\".",
-		"AUTOFIX: module.mk:3: Replacing \"${PKGPATH:Mpath1}\" with \"${PKGPATH} == path1\".",
-		"AUTOFIX: module.mk:3: Replacing \"${PKGPATH:Mpath2}\" with \"${PKGPATH} == path2\".",
-
-		".if ${PKGPATH} == path1 || ${PKGPATH} == path2")
+		"AUTOFIX: module.mk:3: Replacing \"${PKGPATH:Mpath1}\" "+
+			"with \"${PKGPATH} == path1\".",
+		"AUTOFIX: module.mk:3: Replacing \"${PKGPATH:Mpath2}\" "+
+			"with \"${PKGPATH} == path2\".")
 
 	test(
 		".if (((((${PKGPATH:Mpath})))))",
+		".if (((((${PKGPATH} == path)))))",
 
 		"NOTE: module.mk:3: PKGPATH "+
 			"should be compared using \"${PKGPATH} == path\" "+
 			"instead of matching against \":Mpath\".",
-		"AUTOFIX: module.mk:3: Replacing \"${PKGPATH:Mpath}\" with \"${PKGPATH} == path\".",
-
-		".if (((((${PKGPATH} == path)))))")
+		"AUTOFIX: module.mk:3: Replacing \"${PKGPATH:Mpath}\" "+
+			"with \"${PKGPATH} == path\".")
 
 	test(
 		".if ${MACHINE_ARCH:Mx86_64}",
+		".if ${MACHINE_ARCH} == x86_64",
 
 		"NOTE: module.mk:3: MACHINE_ARCH "+
 			"should be compared using \"${MACHINE_ARCH} == x86_64\" "+
 			"instead of matching against \":Mx86_64\".",
-		"AUTOFIX: module.mk:3: Replacing \"${MACHINE_ARCH:Mx86_64}\" with \"${MACHINE_ARCH} == x86_64\".",
-
-		".if ${MACHINE_ARCH} == x86_64")
+		"AUTOFIX: module.mk:3: Replacing \"${MACHINE_ARCH:Mx86_64}\" "+
+			"with \"${MACHINE_ARCH} == x86_64\".")
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirectiveCondCompare(c *check.C) {
