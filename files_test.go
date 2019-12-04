@@ -48,6 +48,21 @@ func (s *Suite) Test_Load(c *check.C) {
 		"FATAL: ~/empty: Must not be empty.")
 }
 
+// Up to 2019-12-04, pkglint suppressed fatal errors when it was started
+// with the --autofix option. This was another case where the clear
+// separation between diagnostics and technical errors had been confused.
+func (s *Suite) Test_Load__not_found_in_autofix_mode(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--autofix")
+	t.Chdir(".")
+
+	lines := Load("nonexistent", MustSucceed)
+
+	// FIXME: Must panic instead.
+	t.Check(lines, check.IsNil)
+}
+
 func (s *Suite) Test_convertToLogicalLines__no_continuation(c *check.C) {
 	t := s.Init(c)
 
