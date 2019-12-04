@@ -688,7 +688,9 @@ func (s *Suite) Test_Pkgsrc_loadTools__BUILD_DEFS(c *check.C) {
 		"\t@${ECHO} ${PKG_SYSCONFDIR} ${VARBASE}")
 	t.CreateFileLines("mk/bsd.pkg.mk",
 		MkCvsID,
-		"_BUILD_DEFS+=\tPKG_SYSCONFBASEDIR PKG_SYSCONFDIR")
+		"_BUILD_DEFS+=\tPKG_SYSCONFBASEDIR PKG_SYSCONFDIR",
+		"",
+		"BUILD_DEFINITIONS+=\tIGNORED\t")
 	t.CreateFileLines("mk/defaults/mk.conf",
 		MkCvsID,
 		"",
