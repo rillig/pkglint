@@ -114,6 +114,32 @@ func (s *Suite) Test_MkLine_Cond(c *check.C) {
 	t.CheckEquals(mkline.Cond(), cond)
 }
 
+func (s *Suite) Test_MkLine_IncludedFileFull(c *check.C) {
+	t := s.Init(c)
+
+	test := func(including CurrPath, included RelPath, resolved CurrPath) {
+		text := sprintf(".include %q", included)
+		mkline := t.NewMkLine(including, 123, text)
+
+		t.CheckEquals(mkline.IncludedFileFull(), resolved)
+	}
+
+	test("Makefile", "options.mk", "options.mk")
+	test("Makefile", "../options.mk", "../options.mk")
+	test("Makefile", "../options.mk", "../options.mk")
+
+	// This test fails if TMPDIR=/.
+	test(t.File("Makefile"), "../options.mk", t.File("../options.mk"))
+
+	t.Chdir(".")
+	test("category/package/Makefile", "../../devel/lib/buildlink3.mk", "devel/lib/buildlink3.mk")
+
+	// Since the result of this method is a CurrPath, it is intended to
+	// be used for file system things, therefore it doesn't need the
+	// additional context of "a/b/../..".
+	test("a/b/c.mk", "../../d/e/../../f/g/h.mk", "f/g/h.mk")
+}
+
 // Ensures that the conditional variables of a line can be set even
 // after initializing the MkLine.
 //
