@@ -688,8 +688,8 @@ func (s *Suite) Test_MkLexer_varUseModifier__eq_suffix_replacement(c *check.C) {
 	}
 
 	test("%.c=%.o", "%.c=%.o", "")
-	test("%\\:c=%.o", "%\\:c=%.o", "") // FIXME: remove the escaping.
-	test("%\\:c=%.o", "%\\:c=%.o", "") // FIXME: remove the escaping.
+	test("%\\:c=%.o", "%\\:c=%.o", "") // XXX: maybe someday remove the escaping.
+	test("%\\:c=%.o", "%\\:c=%.o", "") // XXX: maybe someday remove the escaping.
 
 	// The backslashes are only removed before parentheses,
 	// braces and colons; see devel/bmake/files/var.c:/^VarGetPattern/
@@ -698,9 +698,9 @@ func (s *Suite) Test_MkLexer_varUseModifier__eq_suffix_replacement(c *check.C) {
 	// See devel/bmake/files/var.c:/^#define IS_A_MATCH/.
 	test("%.c=%.o:rest", "%.c=%.o:rest", "")
 	test("\\}\\\\\\$=", "\\}\\\\\\$=", "")
-	// FIXME: test("\\}\\\\\\$=", "}\\$=", "")
+	// XXX: maybe someday test("\\}\\\\\\$=", "}\\$=", "")
 	test("=\\}\\\\\\$\\&", "=\\}\\\\\\$\\&", "")
-	// FIXME: test("=\\}\\\\\\$\\&", "=}\\$&", "")
+	// XXX: maybe someday test("=\\}\\\\\\$\\&", "=}\\$&", "")
 }
 
 func (s *Suite) Test_MkLexer_varUseModifierMatch(c *check.C) {
