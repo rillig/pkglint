@@ -2249,15 +2249,15 @@ func (s *Suite) Test_MkLineChecker_checkInclude(c *check.C) {
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/filename.mk:3: "+
-			"../../pkgtools/x11-links/buildlink3.mk must not be included directly. "+
+			"\"../../pkgtools/x11-links/buildlink3.mk\" must not be included directly. "+
 			"Include \"../../mk/x11.buildlink3.mk\" instead.",
 		"ERROR: ~/category/package/filename.mk:4: "+
-			"../../graphics/jpeg/buildlink3.mk must not be included directly. "+
+			"\"../../graphics/jpeg/buildlink3.mk\" must not be included directly. "+
 			"Include \"../../mk/jpeg.buildlink3.mk\" instead.",
 		"WARN: ~/category/package/filename.mk:5: "+
 			"Please write \"USE_TOOLS+= intltool\" instead of this line.",
 		"ERROR: ~/category/package/filename.mk:6: "+
-			"../../devel/intltool/builtin.mk must not be included directly. "+
+			"\"../../devel/intltool/builtin.mk\" must not be included directly. "+
 			"Include \"../../devel/intltool/buildlink3.mk\" instead.")
 }
 
@@ -2325,7 +2325,7 @@ func (s *Suite) Test_MkLineChecker_checkInclude__builtin_mk(c *check.C) {
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/Makefile:20: " +
-			"../../category/package/builtin.mk must not be included directly. " +
+			"\"../../category/package/builtin.mk\" must not be included directly. " +
 			"Include \"../../category/package/buildlink3.mk\" instead.")
 }
 
@@ -2361,7 +2361,7 @@ func (s *Suite) Test_MkLineChecker_checkInclude__builtin_mk_rationale(c *check.C
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/Makefile:23: " +
-			"../../category/package/builtin.mk must not be included directly. " +
+			"\"../../category/package/builtin.mk\" must not be included directly. " +
 			"Include \"../../category/package/buildlink3.mk\" instead.")
 }
 

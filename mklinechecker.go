@@ -1324,13 +1324,13 @@ func (ck MkLineChecker) checkInclude() {
 
 	case includedFile.HasSuffixPath("pkgtools/x11-links/buildlink3.mk"):
 		fix := mkline.Autofix()
-		fix.Errorf("%s must not be included directly. Include \"../../mk/x11.buildlink3.mk\" instead.", includedFile)
+		fix.Errorf("%q must not be included directly. Include \"../../mk/x11.buildlink3.mk\" instead.", includedFile)
 		fix.Replace("pkgtools/x11-links/buildlink3.mk", "mk/x11.buildlink3.mk")
 		fix.Apply()
 
 	case includedFile.HasSuffixPath("graphics/jpeg/buildlink3.mk"):
 		fix := mkline.Autofix()
-		fix.Errorf("%s must not be included directly. Include \"../../mk/jpeg.buildlink3.mk\" instead.", includedFile)
+		fix.Errorf("%q must not be included directly. Include \"../../mk/jpeg.buildlink3.mk\" instead.", includedFile)
 		fix.Replace("graphics/jpeg/buildlink3.mk", "mk/jpeg.buildlink3.mk")
 		fix.Apply()
 
@@ -1340,9 +1340,8 @@ func (ck MkLineChecker) checkInclude() {
 	case includedFile != "builtin.mk" && includedFile.HasSuffixPath("builtin.mk"):
 		if mkline.Basename != "hacks.mk" && !mkline.HasRationale() {
 			fix := mkline.Autofix()
-			// FIXME: Use %q instead of %s.
-			// FIXME: consider DirNoClean
-			fix.Errorf("%s must not be included directly. Include \"%s/buildlink3.mk\" instead.", includedFile, includedFile.DirClean())
+			fix.Errorf("%q must not be included directly. Include %q instead.",
+				includedFile, includedFile.DirNoClean().JoinNoClean("buildlink3.mk"))
 			fix.Replace("builtin.mk", "buildlink3.mk")
 			fix.Apply()
 		}
