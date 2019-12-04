@@ -2733,7 +2733,9 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 		"ERROR: filename.mk:2: Use ${PKGSRC_COMPILER:Mmsvc} instead of the == operator.")
 
 	test(".if ${PKG_LIBTOOL:Mlibtool}",
-		"NOTE: filename.mk:2: PKG_LIBTOOL should be compared using == instead of matching against \":Mlibtool\".",
+		"NOTE: filename.mk:2: PKG_LIBTOOL "+
+			"should be compared using \"${PKG_LIBTOOL} == libtool\" "+
+			"instead of matching against \":Mlibtool\".",
 		"WARN: filename.mk:2: PKG_LIBTOOL should not be used at load time in any file.")
 
 	test(".if ${MACHINE_PLATFORM:MUnknownOS-*-*} || ${MACHINE_ARCH:Mx86}",
@@ -2750,7 +2752,9 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond(c *check.C) {
 			"m68000 m68k m88k mips mips64 mips64eb mips64el mipseb mipsel mipsn32 mlrisc ns32k pc532 pmax "+
 			"powerpc powerpc64 rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 "+
 			"} for MACHINE_ARCH.",
-		"NOTE: filename.mk:2: MACHINE_ARCH should be compared using == instead of matching against \":Mx86\".")
+		"NOTE: filename.mk:2: MACHINE_ARCH "+
+			"should be compared using \"${MACHINE_ARCH} == x86\" "+
+			"instead of matching against \":Mx86\".")
 
 	// Doesn't occur in practice since it is surprising that the ! applies
 	// to the comparison operator, and not to one of its arguments.
@@ -2913,7 +2917,9 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 	test(
 		".if ${PKGPATH:Mpattern}",
 
-		"NOTE: module.mk:2: PKGPATH should be compared using == instead of matching against \":Mpattern\".",
+		"NOTE: module.mk:2: PKGPATH "+
+			"should be compared using \"${PKGPATH} == pattern\" "+
+			"instead of matching against \":Mpattern\".",
 		"AUTOFIX: module.mk:2: Replacing \"${PKGPATH:Mpattern}\" with \"${PKGPATH} == pattern\".",
 
 		".if ${PKGPATH} == pattern")
@@ -2927,15 +2933,21 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 	test(
 		".if ${PKGPATH:tl:Mpattern}",
 
-		"NOTE: module.mk:2: PKGPATH should be compared using == instead of matching against \":Mpattern\".",
+		"NOTE: module.mk:2: PKGPATH "+
+			// FIXME: The :tl modifier is missing.
+			"should be compared using \"${PKGPATH} == pattern\" "+
+			"instead of matching against \":Mpattern\".",
 
 		".if ${PKGPATH:tl:Mpattern}")
 
 	test(
 		".if ${PKGPATH:Ncategory/package}",
 
-		"NOTE: module.mk:2: PKGPATH should be compared using != instead of matching against \":Ncategory/package\".",
-		"AUTOFIX: module.mk:2: Replacing \"${PKGPATH:Ncategory/package}\" with \"${PKGPATH} != category/package\".",
+		"NOTE: module.mk:2: PKGPATH "+
+			"should be compared using \"${PKGPATH} != category/package\" "+
+			"instead of matching against \":Ncategory/package\".",
+		"AUTOFIX: module.mk:2: Replacing \"${PKGPATH:Ncategory/package}\" "+
+			"with \"${PKGPATH} != category/package\".",
 
 		".if ${PKGPATH} != category/package")
 
@@ -2949,21 +2961,31 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 	// Note: this combination doesn't make sense since the patterns "one" and "two" don't overlap.
 	test(".if ${PKGPATH:Mone:Mtwo}",
 
-		"NOTE: module.mk:2: PKGPATH should be compared using == instead of matching against \":Mone\".",
-		"NOTE: module.mk:2: PKGPATH should be compared using == instead of matching against \":Mtwo\".",
+		"NOTE: module.mk:2: PKGPATH "+
+			// FIXME: The diagnostic doesn't fit the complex expression.
+			"should be compared using \"${PKGPATH} == one\" "+
+			"instead of matching against \":Mone\".",
+		"NOTE: module.mk:2: PKGPATH "+
+			// FIXME: The diagnostic doesn't fit the complex expression.
+			"should be compared using \"${PKGPATH} == two\" "+
+			"instead of matching against \":Mtwo\".",
 
 		".if ${PKGPATH:Mone:Mtwo}")
 
 	test(".if !empty(PKGPATH:Mpattern)",
 
-		"NOTE: module.mk:2: PKGPATH should be compared using == instead of matching against \":Mpattern\".",
+		"NOTE: module.mk:2: PKGPATH "+
+			"should be compared using \"${PKGPATH} == pattern\" "+
+			"instead of matching against \":Mpattern\".",
 		"AUTOFIX: module.mk:2: Replacing \"!empty(PKGPATH:Mpattern)\" with \"${PKGPATH} == pattern\".",
 
 		".if ${PKGPATH} == pattern")
 
 	test(".if empty(PKGPATH:Mpattern)",
 
-		"NOTE: module.mk:2: PKGPATH should be compared using != instead of matching against \":Mpattern\".",
+		"NOTE: module.mk:2: PKGPATH "+
+			"should be compared using \"${PKGPATH} != pattern\" "+
+			"instead of matching against \":Mpattern\".",
 		"AUTOFIX: module.mk:2: Replacing \"empty(PKGPATH:Mpattern)\" with \"${PKGPATH} != pattern\".",
 
 		".if ${PKGPATH} != pattern")
@@ -2973,7 +2995,9 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 		// TODO: When taking all the ! into account, this is actually a
 		//  test for emptiness, therefore the diagnostics should suggest
 		//  the != operator instead of ==.
-		"NOTE: module.mk:2: PKGPATH should be compared using == instead of matching against \":Mpattern\".",
+		"NOTE: module.mk:2: PKGPATH "+
+			"should be compared using \"${PKGPATH} == pattern\" "+
+			"instead of matching against \":Mpattern\".",
 		"AUTOFIX: module.mk:2: Replacing \"!empty(PKGPATH:Mpattern)\" with \"${PKGPATH} == pattern\".",
 
 		// TODO: The ! and == could be combined into a !=.
@@ -2982,7 +3006,9 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 
 	test(".if empty(PKGPATH:Mpattern) || 0",
 
-		"NOTE: module.mk:2: PKGPATH should be compared using != instead of matching against \":Mpattern\".",
+		"NOTE: module.mk:2: PKGPATH "+
+			"should be compared using \"${PKGPATH} != pattern\" "+
+			"instead of matching against \":Mpattern\".",
 		"AUTOFIX: module.mk:2: Replacing \"empty(PKGPATH:Mpattern)\" with \"${PKGPATH} != pattern\".",
 
 		".if ${PKGPATH} != pattern || 0")
@@ -2997,7 +3023,9 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 	test(
 		".if ${PKGPATH:Mpattern}",
 
-		"NOTE: module.mk:2: PKGPATH should be compared using == instead of matching against \":Mpattern\".",
+		"NOTE: module.mk:2: PKGPATH "+
+			"should be compared using \"${PKGPATH} == pattern\" "+
+			"instead of matching against \":Mpattern\".",
 		"AUTOFIX: module.mk:2: Replacing \"${PKGPATH:Mpattern}\" with \"${PKGPATH} == pattern\".",
 
 		".if ${PKGPATH} == pattern")
@@ -3005,15 +3033,20 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 	test(
 		".if !${PKGPATH:Mpattern}",
 
-		"NOTE: module.mk:2: PKGPATH should be compared using != instead of matching against \":Mpattern\".",
+		"NOTE: module.mk:2: PKGPATH "+
+			"should be compared using \"${PKGPATH} != pattern\" "+
+			"instead of matching against \":Mpattern\".",
 		"AUTOFIX: module.mk:2: Replacing \"!${PKGPATH:Mpattern}\" with \"${PKGPATH} != pattern\".",
 
 		".if ${PKGPATH} != pattern")
 
+	// TODO: Merge the double negation into the comparison operator.
 	test(
 		".if !!${PKGPATH:Mpattern}",
 
-		"NOTE: module.mk:2: PKGPATH should be compared using != instead of matching against \":Mpattern\".",
+		"NOTE: module.mk:2: PKGPATH "+
+			"should be compared using \"${PKGPATH} != pattern\" "+
+			"instead of matching against \":Mpattern\".",
 		"AUTOFIX: module.mk:2: Replacing \"!${PKGPATH:Mpattern}\" with \"${PKGPATH} != pattern\".",
 
 		".if !${PKGPATH} != pattern")
@@ -3064,7 +3097,9 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 	test(
 		".if ${PKGPATH:Nnegative-pattern}",
 
-		"NOTE: module.mk:2: PKGPATH should be compared using != instead of matching against \":Nnegative-pattern\".",
+		"NOTE: module.mk:2: PKGPATH "+
+			"should be compared using \"${PKGPATH} != negative-pattern\" "+
+			"instead of matching against \":Nnegative-pattern\".",
 		"AUTOFIX: module.mk:2: Replacing \"${PKGPATH:Nnegative-pattern}\" with \"${PKGPATH} != negative-pattern\".",
 
 		".if ${PKGPATH} != negative-pattern")
@@ -3082,8 +3117,12 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 	test(
 		".if ${PKGPATH:Mpath1} || ${PKGPATH:Mpath2}",
 
-		"NOTE: module.mk:2: PKGPATH should be compared using == instead of matching against \":Mpath1\".",
-		"NOTE: module.mk:2: PKGPATH should be compared using == instead of matching against \":Mpath2\".",
+		"NOTE: module.mk:2: PKGPATH "+
+			"should be compared using \"${PKGPATH} == path1\" "+
+			"instead of matching against \":Mpath1\".",
+		"NOTE: module.mk:2: PKGPATH "+
+			"should be compared using \"${PKGPATH} == path2\" "+
+			"instead of matching against \":Mpath2\".",
 		"AUTOFIX: module.mk:2: Replacing \"${PKGPATH:Mpath1}\" with \"${PKGPATH} == path1\".",
 		"AUTOFIX: module.mk:2: Replacing \"${PKGPATH:Mpath2}\" with \"${PKGPATH} == path2\".",
 
@@ -3092,24 +3131,19 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 	test(
 		".if (((((${PKGPATH:Mpath})))))",
 
-		"NOTE: module.mk:2: PKGPATH should be compared using == instead of matching against \":Mpath\".",
+		"NOTE: module.mk:2: PKGPATH "+
+			"should be compared using \"${PKGPATH} == path\" "+
+			"instead of matching against \":Mpath\".",
 		"AUTOFIX: module.mk:2: Replacing \"${PKGPATH:Mpath}\" with \"${PKGPATH} == path\".",
 
 		".if (((((${PKGPATH} == path)))))")
 
-	// Note: this combination doesn't make sense since the patterns "one" and "two" don't overlap.
-	test(
-		".if ${PKGPATH:Mone:Mtwo}",
-
-		"NOTE: module.mk:2: PKGPATH should be compared using == instead of matching against \":Mone\".",
-		"NOTE: module.mk:2: PKGPATH should be compared using == instead of matching against \":Mtwo\".",
-
-		".if ${PKGPATH:Mone:Mtwo}")
-
 	test(
 		".if ${MACHINE_ARCH:Mx86_64}",
 
-		"NOTE: module.mk:2: MACHINE_ARCH should be compared using == instead of matching against \":Mx86_64\".",
+		"NOTE: module.mk:2: MACHINE_ARCH "+
+			"should be compared using \"${MACHINE_ARCH} == x86_64\" "+
+			"instead of matching against \":Mx86_64\".",
 		"AUTOFIX: module.mk:2: Replacing \"${MACHINE_ARCH:Mx86_64}\" with \"${MACHINE_ARCH} == x86_64\".",
 
 		".if ${MACHINE_ARCH} == x86_64")

@@ -1653,11 +1653,13 @@ func (ck MkLineChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, notE
 			continue
 		}
 
+		from, to := replace(varname, positive, pattern)
+
 		// FIXME: This transformation is only valid if the variable is guaranteed to
 		//  be defined. If that's not the case, the :U modifier must be added.
 		fix := ck.MkLine.Autofix()
-		fix.Notef("%s should be compared using %s instead of matching against %q.",
-			varname, condStr(positive == notEmpty, "==", "!="), ":"+modifier.Text)
+		fix.Notef("%s should be compared using \"%s\" instead of matching against %q.",
+			varname, to, ":"+modifier.Text)
 		fix.Explain(
 			"This variable has a single value, not a list of values.",
 			"Therefore it feels strange to apply list operators like :M and :N onto it.",
@@ -1666,7 +1668,7 @@ func (ck MkLineChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, notE
 			"An entirely different case is when the pattern contains",
 			"wildcards like *, ?, [].",
 			"In such a case, using the :M or :N modifiers is useful and preferred.")
-		fix.Replace(replace(varname, positive, pattern))
+		fix.Replace(from, to)
 		fix.Apply()
 	}
 }
