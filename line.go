@@ -102,10 +102,9 @@ func NewLineWhole(filename CurrPath) *Line {
 	return NewLineMulti(filename, 0, 0, "", nil)
 }
 
-// RefTo returns a reference to another line,
+// RelLine returns a reference to another line,
 // which can be in the same file or in a different file.
-// FIXME: Rename to RelLine.
-func (line *Line) RefTo(other *Line) string {
+func (line *Line) RelLine(other *Line) string {
 	return line.RefToLocation(other.Location)
 }
 

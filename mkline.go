@@ -642,8 +642,9 @@ func (mkline *MkLine) ExplainRelativeDirs() {
 //
 // If there is a type mismatch when calling this function, try to add ".line" to
 // either the method receiver or the other line.
+// FIXME: Rename to RelMkLine.
 func (mkline *MkLine) RefTo(other *MkLine) string {
-	return mkline.Line.RefTo(other.Line)
+	return mkline.Line.RelLine(other.Line)
 }
 
 var (
@@ -1254,7 +1255,7 @@ func (ind *Indentation) CheckFinish(filename CurrPath) {
 	eofLine := NewLineEOF(filename)
 	for !ind.IsEmpty() {
 		openingMkline := ind.top().mkline
-		eofLine.Errorf(".%s from %s must be closed.", openingMkline.Directive(), eofLine.RefTo(openingMkline.Line))
+		eofLine.Errorf(".%s from %s must be closed.", openingMkline.Directive(), eofLine.RelLine(openingMkline.Line))
 		ind.Pop()
 	}
 }
