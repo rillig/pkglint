@@ -198,16 +198,16 @@ func (s *RedundantScope) access(varname string) {
 func (s *RedundantScope) onRedundant(redundant *MkLine, because *MkLine) {
 	if redundant.Op() == opAssignDefault {
 		redundant.Notef("Default assignment of %s has no effect because of %s.",
-			because.Varname(), redundant.RefTo(because))
+			because.Varname(), redundant.RelMkLine(because))
 	} else {
 		redundant.Notef("Definition of %s is redundant because of %s.",
-			because.Varname(), redundant.RefTo(because))
+			because.Varname(), redundant.RelMkLine(because))
 	}
 }
 
 func (s *RedundantScope) onOverwrite(overwritten *MkLine, by *MkLine) {
 	overwritten.Warnf("Variable %s is overwritten in %s.",
-		overwritten.Varname(), overwritten.RefTo(by))
+		overwritten.Varname(), overwritten.RelMkLine(by))
 	overwritten.Explain(
 		"The variable definition in this line does not have an effect since",
 		"it is overwritten elsewhere.",

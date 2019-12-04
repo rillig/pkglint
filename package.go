@@ -546,7 +546,7 @@ func (pkg *Package) checkfilePackageMakefile(filename CurrPath, mklines *MkLines
 	if noConfigureLine := vars.FirstDefinition("NO_CONFIGURE"); noConfigureLine != nil {
 		if replacePerlLine := vars.FirstDefinition("REPLACE_PERL"); replacePerlLine != nil {
 			replacePerlLine.Warnf("REPLACE_PERL is ignored when NO_CONFIGURE is set (in %s).",
-				replacePerlLine.RefTo(noConfigureLine))
+				replacePerlLine.RelMkLine(noConfigureLine))
 		}
 	}
 
@@ -575,7 +575,7 @@ func (pkg *Package) checkfilePackageMakefile(filename CurrPath, mklines *MkLines
 	if imake := vars.FirstDefinition("USE_IMAKE"); imake != nil {
 		if x11 := vars.FirstDefinition("USE_X11"); x11 != nil {
 			if !x11.Filename.HasSuffixPath("mk/x11.buildlink3.mk") {
-				imake.Notef("USE_IMAKE makes USE_X11 in %s redundant.", imake.RefTo(x11))
+				imake.Notef("USE_IMAKE makes USE_X11 in %s redundant.", imake.RelMkLine(x11))
 			}
 		}
 	}
@@ -910,7 +910,7 @@ func (pkg *Package) checkCategories() {
 			for _, category := range mkline.ValueFields(mkline.Value()) {
 				if seen[category] != nil {
 					mkline.Notef("Category %q is already added in %s.",
-						category, mkline.RefTo(seen[category]))
+						category, mkline.RelMkLine(seen[category]))
 				}
 				if seen[category] == nil {
 					seen[category] = mkline
@@ -959,7 +959,7 @@ func (pkg *Package) checkGnuConfigureUseLanguages() {
 		gnuLine.Warnf(
 			"GNU_CONFIGURE almost always needs a C compiler, "+
 				"but \"c\" is not added to USE_LANGUAGES in %s.",
-			gnuLine.RefTo(useLine))
+			gnuLine.RelMkLine(useLine))
 	}
 }
 
@@ -1408,7 +1408,7 @@ func (pkg *Package) checkIncludeConditionally(mkline *MkLine, indentation *Inden
 					"and unconditionally in %s.",
 				mkline.IncludedFile().CleanPath(),
 				dependingOn(mkline.ConditionalVars()),
-				mkline.RefTo(other))
+				mkline.RelMkLine(other))
 
 			explainPkgOptions(other, mkline)
 		}
@@ -1423,7 +1423,7 @@ func (pkg *Package) checkIncludeConditionally(mkline *MkLine, indentation *Inden
 				"%q is included unconditionally here "+
 					"and conditionally in %s%s.",
 				mkline.IncludedFile().CleanPath(),
-				mkline.RefTo(other),
+				mkline.RelMkLine(other),
 				dependingOn(other.ConditionalVars()))
 
 			explainPkgOptions(mkline, other)

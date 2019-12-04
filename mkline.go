@@ -636,13 +636,12 @@ func (mkline *MkLine) ExplainRelativeDirs() {
 		"main pkgsrc repository.")
 }
 
-// RefTo returns a reference to another line,
+// RelMkLine returns a reference to another line,
 // which can be in the same file or in a different file.
 //
 // If there is a type mismatch when calling this function, try to add ".line" to
 // either the method receiver or the other line.
-// FIXME: Rename to RelMkLine.
-func (mkline *MkLine) RefTo(other *MkLine) string {
+func (mkline *MkLine) RelMkLine(other *MkLine) string {
 	return mkline.Line.RelLine(other.Line)
 }
 

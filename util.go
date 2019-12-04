@@ -671,7 +671,7 @@ func (s *Scope) FirstDefinition(varname string) *MkLine {
 		lastLine := s.LastDefinition(varname)
 		if trace.Tracing && lastLine != mkline {
 			trace.Stepf("%s: FirstDefinition differs from LastDefinition in %s.",
-				mkline.String(), mkline.RefTo(lastLine))
+				mkline.String(), mkline.RelMkLine(lastLine))
 		}
 		return mkline
 	}

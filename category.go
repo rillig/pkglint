@@ -73,7 +73,7 @@ func CheckdirCategory(dir CurrPath) {
 			}
 
 			if prev := seen[name]; prev != nil {
-				mkline.Errorf("%q must only appear once, already seen in %s.", name, mkline.RefTo(prev))
+				mkline.Errorf("%q must only appear once, already seen in %s.", name, mkline.RelMkLine(prev))
 			}
 			seen[name] = mkline
 
