@@ -1181,13 +1181,13 @@ func (s *Suite) Test_PackagePath_String(c *check.C) {
 func (s *Suite) Test_PackagePath_JoinNoClean(c *check.C) {
 	t := s.Init(c)
 
-	// FIXME: test := func(...) { }
+	test := func(pp PackagePath, other RelPath, joined PackagePath) {
+		t.CheckEquals(pp.JoinNoClean(other), joined)
 
-	pp := NewPackagePath("../../category/package/Makefile")
+	}
 
-	p := pp.JoinNoClean("patches")
-
-	t.CheckEquals(p.String(), "../../category/package/Makefile/patches")
+	test("../../category/package/patches", "patch-aa",
+		"../../category/package/patches/patch-aa")
 }
 
 func (s *Suite) Test_PackagePath_IsEmpty(c *check.C) {
@@ -1203,8 +1203,6 @@ func (s *Suite) Test_PackagePath_IsEmpty(c *check.C) {
 
 func (s *Suite) Test_NewRelPath(c *check.C) {
 	t := s.Init(c)
-
-	// FIXME: test := func(...) { }
 
 	rel := NewRelPath("dir/file")
 
@@ -1268,37 +1266,31 @@ func (s *Suite) Test_RelPath_Split(c *check.C) {
 func (s *Suite) Test_RelPath_DirClean(c *check.C) {
 	t := s.Init(c)
 
-	// FIXME: test := func(...) { }
+	test := func(rel RelPath, dir RelPath) {
+		t.CheckEquals(rel.DirClean(), dir)
+	}
 
-	rel := NewRelPath("./dir/../dir///./file")
-
-	dir := rel.DirClean()
-
-	t.CheckEquals(dir, NewRelPath("dir"))
+	test("./dir/../dir///./file", "dir")
 }
 
 func (s *Suite) Test_RelPath_DirNoClean(c *check.C) {
 	t := s.Init(c)
 
-	// FIXME: test := func(...) { }
+	test := func(rel RelPath, dir RelPath) {
+		t.CheckEquals(rel.DirNoClean(), dir)
+	}
 
-	rel := NewRelPath("./dir/../dir///./file")
-
-	dir := rel.DirNoClean()
-
-	t.CheckEquals(dir, NewRelPath("./dir/../dir"))
+	test("./dir/../dir///./file", "./dir/../dir")
 }
 
 func (s *Suite) Test_RelPath_Base(c *check.C) {
 	t := s.Init(c)
 
-	// FIXME: test := func(...) { }
+	test := func(rel RelPath, base string) {
+		t.CheckEquals(rel.Base(), base)
+	}
 
-	rel := NewRelPath("./dir////./file")
-
-	base := rel.Base()
-
-	t.CheckEquals(base, "file")
+	test("./dir/../dir///./file", "file")
 }
 
 func (s *Suite) Test_RelPath_HasBase(c *check.C) {
@@ -1317,161 +1309,149 @@ func (s *Suite) Test_RelPath_HasBase(c *check.C) {
 func (s *Suite) Test_RelPath_Parts(c *check.C) {
 	t := s.Init(c)
 
-	// FIXME: test := func(...) { }
+	test := func(rel RelPath, parts ...string) {
+		t.CheckDeepEquals(rel.Parts(), parts)
+	}
 
-	rel := NewRelPath("./dir/.///base")
-
-	parts := rel.Parts()
-
-	t.CheckDeepEquals(parts, []string{"dir", "base"})
+	test("./dir/.///base", "dir", "base")
 }
 
 func (s *Suite) Test_RelPath_Count(c *check.C) {
 	t := s.Init(c)
 
-	// FIXME: test := func(...) { }
+	test := func(rel RelPath, count int) {
+		t.CheckEquals(rel.Count(), count)
+	}
 
-	rel := NewRelPath("./dir/.///base")
-
-	count := rel.Count()
-
-	t.CheckDeepEquals(count, 2)
+	test("./dir/.///base", 2)
 }
 
 func (s *Suite) Test_RelPath_Clean(c *check.C) {
 	t := s.Init(c)
 
-	// FIXME: test := func(...) { }
+	test := func(rel RelPath, cleaned RelPath) {
+		t.CheckDeepEquals(rel.Clean(), cleaned)
+	}
 
-	rel := NewRelPath("a/b/../../c/d/../.././e/../f")
-
-	cleaned := rel.Clean()
-
-	t.CheckEquals(cleaned, NewRelPath("f"))
+	test("a/b/../../c/d/../.././e/../f", "f")
 }
 
 func (s *Suite) Test_RelPath_CleanDot(c *check.C) {
 	t := s.Init(c)
 
-	// FIXME: test := func(...) { }
+	test := func(rel RelPath, cleaned RelPath) {
+		t.CheckEquals(rel.CleanDot(), cleaned)
+	}
 
-	rel := NewRelPath("a/b/../../c/d/../.././e/../f")
-
-	cleaned := rel.CleanDot()
-
-	t.CheckEquals(cleaned, NewRelPath("a/b/../../c/d/../../e/../f"))
+	test("a/b/../../c/d/../.././e/../f", "a/b/../../c/d/../../e/../f")
 }
 
 func (s *Suite) Test_RelPath_CleanPath(c *check.C) {
 	t := s.Init(c)
 
-	// FIXME: test := func(...) { }
+	test := func(rel RelPath, cleaned RelPath) {
+		t.CheckEquals(rel.CleanPath(), cleaned)
+	}
 
-	rel := NewRelPath("a/b/../../c/d/../.././e/../f")
-
-	cleaned := rel.CleanPath()
-
-	t.CheckEquals(cleaned, NewRelPath("a/b/../../e/../f"))
+	test("a/b/../../c/d/../.././e/../f", "a/b/../../e/../f")
 }
 
 func (s *Suite) Test_RelPath_JoinNoClean(c *check.C) {
 	t := s.Init(c)
 
-	// FIXME: test := func(...) { }
+	test := func(rel, other, joined RelPath) {
+		t.CheckEquals(rel.JoinNoClean(other), joined)
+	}
 
-	rel := NewRelPath("basedir/.//")
-
-	joined := rel.JoinNoClean("./other")
-
-	t.CheckEquals(joined, NewRelPath("basedir/.///./other"))
+	test("basedir/.//", "./other", "basedir/.///./other")
 }
 
 func (s *Suite) Test_RelPath_Replace(c *check.C) {
 	t := s.Init(c)
 
-	// FIXME: test := func(...) { }
+	test := func(rel RelPath, from, to string, result RelPath) {
+		t.CheckEquals(rel.Replace(from, to), result)
+	}
 
-	rel := NewRelPath("dir/subdir/file")
-
-	replaced := rel.Replace("/", ":")
-
-	t.CheckEquals(replaced, NewRelPath("dir:subdir:file"))
+	test("dir/subdir/file", "/", ":", "dir:subdir:file")
 }
 
 func (s *Suite) Test_RelPath_HasPrefixPath(c *check.C) {
 	t := s.Init(c)
 
-	// FIXME: test := func(...) { }
+	test := func(rel RelPath, prefix Path, hasPrefixPath bool) {
+		t.CheckEquals(rel.HasPrefixPath(prefix), hasPrefixPath)
+	}
 
-	rel := NewRelPath("dir/subdir/file")
-
-	t.CheckEquals(rel.HasPrefixPath("dir"), true)
-	t.CheckEquals(rel.HasPrefixPath("dir/sub"), false)
-	t.CheckEquals(rel.HasPrefixPath("subdir"), false)
+	test("dir/subdir/file", "dir", true)
+	test("dir/subdir/file", "dir/sub", false)
+	test("dir/subdir/file", "subdir", false)
 }
 
 func (s *Suite) Test_RelPath_HasPrefixText(c *check.C) {
 	t := s.Init(c)
 
-	// FIXME: test := func(...) { }
+	test := func(rel RelPath, prefix string, hasPrefixPath bool) {
+		t.CheckEquals(rel.HasPrefixText(prefix), hasPrefixPath)
+	}
 
-	rel := NewRelPath("dir/subdir/file")
-
-	t.CheckEquals(rel.HasPrefixText("dir"), true)
-	t.CheckEquals(rel.HasPrefixText("dir/sub"), true)
-	t.CheckEquals(rel.HasPrefixText("subdir"), false)
-	t.CheckEquals(rel.HasPrefixText("super"), false)
+	test("dir/subdir/file", "dir", true)
+	test("dir/subdir/file", "dir/sub", true)
+	test("dir/subdir/file", "subdir", false)
+	test("dir/subdir/file", "super", false)
 }
 
 func (s *Suite) Test_RelPath_ContainsPath(c *check.C) {
 	t := s.Init(c)
 
-	// FIXME: test := func(...) { }
+	test := func(rel RelPath, prefix Path, hasPrefixPath bool) {
+		t.CheckEquals(rel.ContainsPath(prefix), hasPrefixPath)
+	}
 
-	rel := NewRelPath("dir/subdir/file")
-
-	t.CheckEquals(rel.ContainsPath("dir"), true)
-	t.CheckEquals(rel.ContainsPath("dir/sub"), false)
-	t.CheckEquals(rel.ContainsPath("subdir"), true)
+	test("dir/subdir/file", "dir", true)
+	test("dir/subdir/file", "dir/sub", false)
+	test("dir/subdir/file", "subdir", true)
 }
 
 func (s *Suite) Test_RelPath_ContainsText(c *check.C) {
 	t := s.Init(c)
 
-	// FIXME: test := func(...) { }
+	test := func(rel RelPath, prefix string, hasPrefixPath bool) {
+		t.CheckEquals(rel.ContainsText(prefix), hasPrefixPath)
+	}
 
-	rel := NewRelPath("dir/subdir/file")
-
-	t.CheckEquals(rel.ContainsText("dir"), true)
-	t.CheckEquals(rel.ContainsText("dir/sub"), true)
-	t.CheckEquals(rel.ContainsText("subdir"), true)
-	t.CheckEquals(rel.ContainsText("super"), false)
+	test("dir/subdir/file", "dir", true)
+	test("dir/subdir/file", "dir/sub", true)
+	test("dir/subdir/file", "subdir", true)
+	test("dir/subdir/file", "super", false)
 }
 
 func (s *Suite) Test_RelPath_HasSuffixPath(c *check.C) {
 	t := s.Init(c)
 
-	// FIXME: test := func(...) { }
+	test := func(rel RelPath, prefix Path, hasPrefixPath bool) {
+		t.CheckEquals(rel.HasSuffixPath(prefix), hasPrefixPath)
+	}
 
-	rel := NewRelPath("dir/subdir/file")
-
-	t.CheckEquals(rel.HasSuffixPath("file"), true)
-	t.CheckEquals(rel.HasSuffixPath("le"), false)
-	t.CheckEquals(rel.HasSuffixPath("subdir/file"), true)
-	t.CheckEquals(rel.HasSuffixPath("subdir"), false)
+	test("dir/subdir/file", "dir", false)
+	test("dir/subdir/file", "file", true)
+	test("dir/subdir/file", "le", false)
+	test("dir/subdir/file", "subdir/file", true)
+	test("dir/subdir/file", "subdir", false)
 }
 
 func (s *Suite) Test_RelPath_HasSuffixText(c *check.C) {
 	t := s.Init(c)
 
-	// FIXME: test := func(...) { }
+	test := func(rel RelPath, prefix string, hasPrefixPath bool) {
+		t.CheckEquals(rel.HasSuffixText(prefix), hasPrefixPath)
+	}
 
-	rel := NewRelPath("dir/subdir/file")
-
-	t.CheckEquals(rel.HasSuffixText("file"), true)
-	t.CheckEquals(rel.HasSuffixText("le"), true)
-	t.CheckEquals(rel.HasSuffixText("subdir/file"), true)
-	t.CheckEquals(rel.HasSuffixText("subdir"), false)
+	test("dir/subdir/file", "dir", false)
+	test("dir/subdir/file", "file", true)
+	test("dir/subdir/file", "le", true)
+	test("dir/subdir/file", "subdir/file", true)
+	test("dir/subdir/file", "subdir", false)
 }
 
 func (s *Suite) Test_RelPath_Rel(c *check.C) {
