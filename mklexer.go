@@ -275,12 +275,17 @@ func (p *MkLexer) varUseModifier(varname string, closing byte) string {
 		}
 	}
 
+	// ${SOURCES:%.c=%.o}
 	lexer.Reset(mark)
-
 	modifier := p.varUseModifierSysV(closing)
+	if contains(modifier, "=") {
+		return modifier
+	}
 
-	// ${SOURCES:%.c=%.o} or ${:!uname -a!:[2]}
-	if contains(modifier, "=") || hasPrefix(modifier, "!") && hasSuffix(modifier, "!") {
+	// or ${:!uname -a!:[2]}
+	lexer.Reset(mark)
+	modifier = p.varUseText(closing)
+	if hasPrefix(modifier, "!") && hasSuffix(modifier, "!") {
 		return modifier
 	}
 

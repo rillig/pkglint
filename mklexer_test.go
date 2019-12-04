@@ -230,8 +230,8 @@ func (s *Suite) Test_MkLexer_VarUse(c *check.C) {
 		varuse("RUBY_RAILS_SUPPORTED", "[#]"))
 
 	test("${GZIP_CMD:[asdf]:Q}",
-		varuseText("${GZIP_CMD:[asdf]:Q}", "GZIP_CMD"),
-		"WARN: Test_MkLexer_VarUse.mk:1: Invalid variable modifier \"[asdf]:Q\" for \"GZIP_CMD\".")
+		varuseText("${GZIP_CMD:[asdf]:Q}", "GZIP_CMD", "Q"),
+		"WARN: Test_MkLexer_VarUse.mk:1: Invalid variable modifier \"[asdf]\" for \"GZIP_CMD\".")
 
 	test("${DISTNAME:C/-[0-9]+$$//:C/_/-/}",
 		varuse("DISTNAME", "C/-[0-9]+$$//", "C/_/-/"))
@@ -364,9 +364,9 @@ func (s *Suite) Test_MkLexer_VarUse(c *check.C) {
 		"WARN: Test_MkLexer_VarUse.mk:1: Missing closing \"}\" for \"${\".")
 
 	test("${arbitrary :Mpattern:---:Q}",
-		varuseText("${arbitrary :Mpattern:---:Q}", "arbitrary ", "Mpattern"),
+		varuseText("${arbitrary :Mpattern:---:Q}", "arbitrary ", "Mpattern", "Q"),
 		// TODO: Swap the order of these message
-		"WARN: Test_MkLexer_VarUse.mk:1: Invalid variable modifier \"---:Q\" for \"arbitrary \".",
+		"WARN: Test_MkLexer_VarUse.mk:1: Invalid variable modifier \"---\" for \"arbitrary \".",
 		"WARN: Test_MkLexer_VarUse.mk:1: Invalid part \" \" after variable name \"arbitrary\".")
 
 	// Variable names containing spaces do not occur in pkgsrc.
@@ -381,12 +381,8 @@ func (s *Suite) Test_MkLexer_VarUse(c *check.C) {
 		varuse("arbitrary text"),
 		"WARN: Test_MkLexer_VarUse.mk:1: Invalid part \" text\" after variable name \"arbitrary\".")
 
-	testRest("${:!command!:Q}",
-		// FIXME: The :Q is a modifier here.
-		[]*MkToken{varuseText("${:!command!:Q}", "")},
-		"",
-		"WARN: Test_MkLexer_VarUse.mk:1: "+
-			"Invalid variable modifier \"!command!:Q\" for \"\".")
+	test("${:!command!:Q}",
+		varuse("", "!command!", "Q"))
 }
 
 func (s *Suite) Test_MkLexer_VarUse__ambiguous(c *check.C) {
