@@ -5,6 +5,45 @@ import (
 	"strings"
 )
 
+// When pkglint is called without -Wextra, the check for unknown shell
+// commands is disabled, as it is still unreliable. As of December 2019
+// there are around 500 warnings in pkgsrc, and several of them are wrong.
+func (s *Suite) Test_SimpleCommandChecker_checkCommandStart__unknown_default(c *check.C) {
+	t := s.Init(c)
+
+	test := func(commandLineArg string, diagnostics ...string) {
+		t.SetUpCommandLine(commandLineArg)
+		mklines := t.NewMkLines("Makefile",
+			MkCvsID,
+			"",
+			"MY_TOOL.i386=\t${PREFIX}/bin/tool-i386",
+			"MY_TOOL.x86_64=\t${PREFIX}/bin/tool-x86_64",
+			"",
+			"pre-configure:",
+			"\t${MY_TOOL.amd64} -e 'print 12345'",
+			"\t${UNKNOWN_TOOL}")
+
+		mklines.Check()
+
+		t.CheckOutput(diagnostics)
+	}
+
+	t.SetUpPackage("category/package")
+	G.Pkg = NewPackage(t.File("category/package"))
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	test(".", // Override the default -Wall option.
+		nil...)
+
+	test("-Wall,no-extra",
+		nil...)
+
+	test("-Wall",
+		"WARN: Makefile:8: Unknown shell command \"${UNKNOWN_TOOL}\".",
+		"WARN: Makefile:8: UNKNOWN_TOOL is used but not defined.")
+}
+
 func (s *Suite) Test_SimpleCommandChecker_handleForbiddenCommand(c *check.C) {
 	t := s.Init(c)
 
