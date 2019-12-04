@@ -444,7 +444,8 @@ func (src *Pkgsrc) loadTools() {
 				varname := mkline.Varname()
 				switch varname {
 				case "USE_TOOLS":
-					tools.ParseToolLine(mklines, mkline, true, !mklines.indentation.IsConditional())
+					conditional := mklines.indentation.IsConditional()
+					tools.ParseToolLine(mklines, mkline, true, !conditional)
 
 				case "_BUILD_DEFS":
 					// TODO: Compare with src.loadDefaultBuildDefs; is it redundant?

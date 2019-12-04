@@ -709,11 +709,32 @@ func (s *Suite) Test_Pkgsrc_loadTools__BUILD_DEFS(c *check.C) {
 			"The user-defined variable VARBASE is used but not added to BUILD_DEFS.")
 }
 
-func (s *Suite) Test_Pkgsrc_loadTools__conditional(c *check.C) {
+func (s *Suite) Test_Pkgsrc_loadTools__conditional_in_mk_tools(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/tools/defaults.mk",
+		".if 0",
+		"USE_TOOLS+=\tcond-false",
+		".endif",
+		".if 1",
+		"USE_TOOLS+=\tcond-true",
+		".endif",
+		"USE_TOOLS+=\tunconditional")
+	t.FinishSetUp()
+
+	// The above FinishSetUp implicitly and indirectly calls loadTools.
+
+	t.CheckEquals(G.Pkgsrc.Tools.ByName("cond-false").Validity, Nowhere)
+	t.CheckEquals(G.Pkgsrc.Tools.ByName("cond-true").Validity, Nowhere)
+	t.CheckEquals(G.Pkgsrc.Tools.ByName("unconditional").Validity, AtRunTime)
+}
+
+func (s *Suite) Test_Pkgsrc_loadTools__conditional_in_bsd_pkg_mk(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.CreateFileLines("mk/bsd.pkg.mk",
 		".if 0",
 		"USE_TOOLS+=\tcond-false",
 		".endif",
