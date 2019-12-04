@@ -2871,7 +2871,7 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond__comparing_PKGSRC_COMPILER
 		"ERROR: Makefile:3: Use ${PKGSRC_COMPILER:Ngcc} instead of the != operator.")
 }
 
-func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
+func (s *Suite) Test_MkLineChecker_simplifyCondition(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
