@@ -562,6 +562,31 @@ func (s *Suite) Test_ShTokenizer_ShAtom__quoting(c *check.C) {
 	test("x`x\\\"x\\'x\\`x\\\\", "x`[b]x\\\"x\\'x\\`x\\\\")
 }
 
+// The switch statement in ShTokenizer.ShAtom is exhaustive.
+// If a new quoting mode is added (in which case the shell tokenizer
+// should rather be rewritten completely and correctly), it is ok
+// to panic if ShQuoting is not adjusted in the same commit.
+func (s *Suite) Test_ShTokenizer_ShAtom__internal_error(c *check.C) {
+	t := s.Init(c)
+
+	line := t.NewLine("filename.mk", 123, "\ttoken")
+	tok := NewShTokenizer(line, line.Text, true)
+	atom := tok.ShAtom(^ShQuoting(0))
+
+	t.Check(atom, check.IsNil)
+	output := t.Output()
+	// Normalize the panic message, for Go < 12 if I remember correctly.
+	outputWithoutIndex := replaceAll(
+		output,
+		`index out of range[^)]*`,
+		"index out of range")
+	t.CheckEquals(outputWithoutIndex,
+		"WARN: filename.mk:123: "+
+			"Internal pkglint error in ShTokenizer.ShAtom "+
+			"at \"\\ttoken\" (quoting=%!s("+
+			"PANIC=String method: runtime error: index out of range)).\n")
+}
+
 func (s *Suite) Test_ShTokenizer_shVarUse(c *check.C) {
 	t := s.Init(c)
 
