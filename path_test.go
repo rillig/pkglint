@@ -513,7 +513,10 @@ func (s *Suite) Test_Path_Rel(c *check.C) {
 
 	test("a/b/c", "d/e/f/file", "../../../d/e/f/file")
 	test(".", ".", ".")
-	test("a/b/c", ".", "../../../.") // FIXME: Why the trailing dot?
+
+	// The trailing dot marks the difference between a file and a directory.
+	// This is the same behavior as with filepath.Rel.
+	test("a/b/c", ".", "../../../.")
 }
 
 func (s *Suite) Test_NewCurrPath(c *check.C) {
@@ -1463,5 +1466,8 @@ func (s *Suite) Test_RelPath_Rel(c *check.C) {
 
 	test("a/b/c", "d/e/f/file", "../../../d/e/f/file")
 	test(".", ".", ".")
-	test("a/b/c", ".", "../../../.") // FIXME: Why the trailing dot?
+
+	// The trailing dot marks the difference between a file and a directory.
+	// This is the same behavior as with filepath.Rel.
+	test("a/b/c", ".", "../../../.")
 }
