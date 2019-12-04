@@ -282,7 +282,9 @@ func (mkline *MkLine) IncludedFile() RelPath { return mkline.data.(*mkLineInclud
 func (mkline *MkLine) IncludedFileFull() CurrPath {
 	// FIXME: consider DirNoClean
 	// FIXME: consider JoinNoClean
-	return mkline.Filename.DirClean().JoinClean(mkline.IncludedFile()).CleanPath()
+	dir := mkline.Filename.DirClean()
+	joined := dir.JoinClean(mkline.IncludedFile())
+	return joined.CleanPath()
 }
 
 func (mkline *MkLine) Targets() string { return mkline.data.(mkLineDependency).targets }
