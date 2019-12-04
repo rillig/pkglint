@@ -2883,21 +2883,12 @@ func (s *Suite) Test_MkLineChecker_simplifyCondition(c *check.C) {
 			MkCvsID,
 			before,
 			".endif")
-		ck := MkLineChecker{mklines, mklines.mklines[1]}
 
 		t.SetUpCommandLine("-Wall")
-		mklines.ForEach(func(mkline *MkLine) {
-			if mkline == mklines.mklines[1] {
-				ck.checkDirectiveCond()
-			}
-		})
+		mklines.Check()
 
 		t.SetUpCommandLine("-Wall", "--autofix")
-		mklines.ForEach(func(mkline *MkLine) {
-			if mkline == mklines.mklines[1] {
-				ck.checkDirectiveCond()
-			}
-		})
+		mklines.Check()
 
 		mklines.SaveAutofixChanges()
 		afterMklines := t.LoadMkInclude("module.mk")
