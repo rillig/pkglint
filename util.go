@@ -555,12 +555,14 @@ func (s *Scope) Define(varname string, mkline *MkLine) {
 		// see MkLines.collectDocumentedVariables.
 		if mkline.IsVarassign() {
 			switch mkline.Op() {
-			case opAssign, opAssignEval, opAssignShell:
-				s.value[name] = mkline.Value()
 			case opAssignAppend:
 				s.value[name] += " " + mkline.Value()
 			case opAssignDefault:
 				// No change to the value.
+			case opAssignShell:
+				s.value[name] = mkline.Value() // FIXME: Really?
+			default:
+				s.value[name] = mkline.Value()
 			}
 		}
 	}
