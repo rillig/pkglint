@@ -563,8 +563,7 @@ func (mkline *MkLine) ResolveVarsInRelativePath(relativePath RelPath) RelPath {
 	if G.Pkg != nil {
 		basedir = G.Pkg.File(".")
 	} else {
-		// FIXME: consider DirNoClean
-		basedir = mkline.Filename.DirClean()
+		basedir = mkline.Filename.DirNoClean()
 	}
 
 	tmp := relativePath
