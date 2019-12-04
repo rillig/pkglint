@@ -230,8 +230,8 @@ func (s *Suite) Test_MkLexer_VarUse(c *check.C) {
 		varuse("RUBY_RAILS_SUPPORTED", "[#]"))
 
 	test("${GZIP_CMD:[asdf]:Q}",
-		varuseText("${GZIP_CMD:[asdf]:Q}", "GZIP_CMD", "Q"),
-		"WARN: Test_MkLexer_VarUse.mk:1: Invalid variable modifier \"[asdf]\" for \"GZIP_CMD\".")
+		varuseText("${GZIP_CMD:[asdf]:Q}", "GZIP_CMD"),
+		"WARN: Test_MkLexer_VarUse.mk:1: Invalid variable modifier \"[asdf]:Q\" for \"GZIP_CMD\".")
 
 	test("${DISTNAME:C/-[0-9]+$$//:C/_/-/}",
 		varuse("DISTNAME", "C/-[0-9]+$$//", "C/_/-/"))
@@ -364,9 +364,9 @@ func (s *Suite) Test_MkLexer_VarUse(c *check.C) {
 		"WARN: Test_MkLexer_VarUse.mk:1: Missing closing \"}\" for \"${\".")
 
 	test("${arbitrary :Mpattern:---:Q}",
-		varuseText("${arbitrary :Mpattern:---:Q}", "arbitrary ", "Mpattern", "Q"),
+		varuseText("${arbitrary :Mpattern:---:Q}", "arbitrary ", "Mpattern"),
 		// TODO: Swap the order of these message
-		"WARN: Test_MkLexer_VarUse.mk:1: Invalid variable modifier \"---\" for \"arbitrary \".",
+		"WARN: Test_MkLexer_VarUse.mk:1: Invalid variable modifier \"---:Q\" for \"arbitrary \".",
 		"WARN: Test_MkLexer_VarUse.mk:1: Invalid part \" \" after variable name \"arbitrary\".")
 
 	// Variable names containing spaces do not occur in pkgsrc.
@@ -563,7 +563,7 @@ func (s *Suite) Test_MkLexer_VarUseModifiers(c *check.C) {
 	// The :Q at the end is part of the right-hand side of the = modifier.
 	// It does not quote anything.
 	// See devel/bmake/files/var.c:/^VarGetPattern/.
-	test("${VAR:old=new:Q}", varUse("VAR", "old=new", "Q")) // FIXME
+	test("${VAR:old=new:Q}", varUse("VAR", "old=new:Q"))
 }
 
 func (s *Suite) Test_MkLexer_varUseModifier(c *check.C) {
@@ -696,8 +696,7 @@ func (s *Suite) Test_MkLexer_varUseModifier__eq_suffix_replacement(c *check.C) {
 	test(".\\a\\b\\c=.abc", ".\\a\\b\\c=.abc", "")
 
 	// See devel/bmake/files/var.c:/^#define IS_A_MATCH/.
-	// FIXME: The :rest must be part of the replacement.
-	test("%.c=%.o:rest", "%.c=%.o", ":rest")
+	test("%.c=%.o:rest", "%.c=%.o:rest", "")
 	test("\\}\\\\\\$=", "\\}\\\\\\$=", "")
 	// FIXME: test("\\}\\\\\\$=", "}\\$=", "")
 	test("=\\}\\\\\\$\\&", "=\\}\\\\\\$\\&", "")

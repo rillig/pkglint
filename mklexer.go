@@ -58,6 +58,7 @@ func (p *MkLexer) MkTokens() ([]*MkToken, string) {
 	return tokens, lexer.Rest()
 }
 
+// VarUse parses a variable expression like ${VAR}, $@, ${VAR:Mpattern:Ox}.
 func (p *MkLexer) VarUse() *MkVarUse {
 	rest := p.lexer.Rest()
 	if len(rest) < 2 || rest[0] != '$' {
@@ -173,6 +174,23 @@ func (p *MkLexer) varUseText(closing byte) string {
 	return lexer.Since(start)
 }
 
+// varUseText parses any text up to the closing mark, including any colons.
+//
+// This is used for the :from=to modifier.
+//
+// See devel/bmake/files/var.c:/eqFound = FALSE/
+func (p *MkLexer) varUseModifierSysV(closing byte) string {
+	lexer := p.lexer
+	start := lexer.Mark()
+	re := regcomp(regex.Pattern(condStr(closing == '}', `^([^$\\}]|\$\$|\\.)+`, `^([^$\\)]|\$\$|\\.)+`)))
+
+	// pkglint deviates from bmake here by properly parsing nested
+	// variables. bmake only counts opening and closing characters.
+	for p.VarUse() != nil || lexer.SkipRegexp(re) {
+	}
+	return lexer.Since(start)
+}
+
 // VarUseModifiers parses the modifiers of a variable being used, such as :Q, :Mpattern.
 //
 // See the bmake manual page.
@@ -259,7 +277,7 @@ func (p *MkLexer) varUseModifier(varname string, closing byte) string {
 
 	lexer.Reset(mark)
 
-	modifier := p.varUseText(closing)
+	modifier := p.varUseModifierSysV(closing)
 
 	// ${SOURCES:%.c=%.o} or ${:!uname -a!:[2]}
 	if contains(modifier, "=") || hasPrefix(modifier, "!") && hasSuffix(modifier, "!") {
