@@ -180,12 +180,12 @@ func (s *Suite) Test_MkVarUseModifier_MatchMatch(c *check.C) {
 	test("Npattern", false, "pattern", true)
 }
 
-func (s *Suite) Test_MkVarUseModifier_ChangesWords(c *check.C) {
+func (s *Suite) Test_MkVarUseModifier_ChangesList(c *check.C) {
 	t := s.Init(c)
 
 	test := func(modifier string, changes bool) {
 		mod := MkVarUseModifier{modifier}
-		t.CheckEquals(mod.ChangesWords(), changes)
+		t.CheckEquals(mod.ChangesList(), changes)
 	}
 
 	test("C,from,to,", true)
@@ -209,8 +209,9 @@ func (s *Suite) Test_MkVarUseModifier_ChangesWords(c *check.C) {
 	test("tw", true)
 }
 
-// Ensures that ChangesWords cannot be called with an empty string as modifier.
-func (s *Suite) Test_MkVarUseModifier_ChangesWords__empty(c *check.C) {
+// Ensures that ChangesList cannot be called with an empty string as modifier.
+// Therefore it is safe to index text[0] without a preceding length check.
+func (s *Suite) Test_MkVarUseModifier_ChangesList__empty(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("filename.mk", 123, "\t${VAR:}")
@@ -219,7 +220,7 @@ func (s *Suite) Test_MkVarUseModifier_ChangesWords__empty(c *check.C) {
 	mkline.ForEachUsed(func(varUse *MkVarUse, time VucTime) {
 		n += 100
 		for _, mod := range varUse.modifiers {
-			mod.ChangesWords()
+			mod.ChangesList()
 			n++
 		}
 	})

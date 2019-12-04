@@ -751,7 +751,7 @@ func (mkline *MkLine) VariableNeedsQuoting(mklines *MkLines, varuse *MkVarUse, v
 
 		// .for dir in ${PATH:C,:, ,g}
 		for _, modifier := range varuse.modifiers {
-			if modifier.ChangesWords() {
+			if modifier.ChangesList() {
 				return unknown
 			}
 		}

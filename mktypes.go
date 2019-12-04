@@ -105,9 +105,10 @@ func (m MkVarUseModifier) MatchMatch() (ok bool, positive bool, pattern string, 
 
 func (m MkVarUseModifier) IsToLower() bool { return m.Text == "tl" }
 
-// ChangesWords returns true if applying this modifier to a list variable
-// may change the number of words in the list, or their boundaries.
-func (m MkVarUseModifier) ChangesWords() bool {
+// ChangesList returns true if applying this modifier to a variable
+// may change the expression from a list type to a non-list type
+// or vice versa.
+func (m MkVarUseModifier) ChangesList() bool {
 	text := m.Text
 
 	// See MkParser.varUseModifier for the meaning of these modifiers.
