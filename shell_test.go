@@ -1561,6 +1561,8 @@ func (s *Suite) Test_ShellLineChecker_unescapeBackticks(c *check.C) {
 	// Enclosing the inner backtick in single quotes makes it valid.
 	test("`echo '\\`'`rest", "echo '`'", "rest")
 
+	test("`echo \\$$var`rest", "echo $$var", "rest")
+
 	// FIXME: Oops, line.Warnf is called without a guarding nil check.
 	t.ExpectPanicMatches(
 		func() { test("`echo \\${VAR}`", "???", "???") },
