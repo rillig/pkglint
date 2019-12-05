@@ -1403,6 +1403,19 @@ func (s *Suite) Test_MkLineChecker_simplifyCondition(c *check.C) {
 
 		"WARN: module.mk:3: The pattern \"Unknown\" cannot match any of "+
 			"{ Cygwin DragonFly FreeBSD Linux NetBSD SunOS } for OPSYS.")
+
+	// Numbers must be enclosed in quotes, otherwise they are compared
+	// as numbers, not as strings. The :M and :N modifiers always compare
+	// strings.
+	test(
+		".if empty(ABI:U:M64)",
+		// FIXME: ${ABI:U} != "64" with quotes
+		".if ${ABI:U} != 64",
+
+		"NOTE: module.mk:3: ABI should be compared using \"${ABI:U} != 64\" "+
+			"instead of matching against \":M64\".",
+		"AUTOFIX: module.mk:3: Replacing \"empty(ABI:U:M64)\" "+
+			"with \"${ABI:U} != 64\".")
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirectiveCondCompare(c *check.C) {
