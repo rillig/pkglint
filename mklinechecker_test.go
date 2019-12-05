@@ -1032,17 +1032,14 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 		"AUTOFIX: module.mk:3: Replacing \"!empty(OPSYS:MUnknown)\" "+
 			"with \"${OPSYS} == Unknown\".")
 
+	// The condition can only be simplified if the :M or :N modifier is
+	// the last one on the chain.
 	test(
 		".if !empty(OPSYS:O:MUnknown:S,a,b,)",
 		".if !empty(OPSYS:O:MUnknown:S,a,b,)",
 
 		"WARN: module.mk:3: The pattern \"Unknown\" cannot match any of "+
-			"{ Cygwin DragonFly FreeBSD Linux NetBSD SunOS } for OPSYS.",
-		// FIXME: only possible if the :M modifier is the last one.
-		"NOTE: module.mk:3: OPSYS should be "+
-			// FIXME: That's incomplete.
-			"compared using \"${OPSYS} == Unknown\" "+
-			"instead of matching against \":MUnknown\".")
+			"{ Cygwin DragonFly FreeBSD Linux NetBSD SunOS } for OPSYS.")
 }
 
 func (s *Suite) Test_MkLineChecker_simplifyCondition(c *check.C) {
@@ -1126,10 +1123,6 @@ func (s *Suite) Test_MkLineChecker_simplifyCondition(c *check.C) {
 		".if ${PKGPATH:Mone:Mtwo}",
 		".if ${PKGPATH:Mone:Mtwo}",
 
-		"NOTE: module.mk:3: PKGPATH "+
-			// FIXME: The diagnostic doesn't correspond to the whole expression.
-			"should be compared using \"${PKGPATH} == one\" "+
-			"instead of matching against \":Mone\".",
 		"NOTE: module.mk:3: PKGPATH "+
 			// FIXME: The diagnostic doesn't correspond to the whole expression.
 			"should be compared using \"${PKGPATH} == two\" "+
@@ -1353,12 +1346,7 @@ func (s *Suite) Test_MkLineChecker_simplifyCondition(c *check.C) {
 		".if !empty(OPSYS:O:MUnknown:S,a,b,)",
 
 		"WARN: module.mk:3: The pattern \"Unknown\" cannot match any of "+
-			"{ Cygwin DragonFly FreeBSD Linux NetBSD SunOS } for OPSYS.",
-		// FIXME: only possible if the :M modifier is the last one.
-		"NOTE: module.mk:3: OPSYS should be "+
-			// FIXME: That's incomplete.
-			"compared using \"${OPSYS} == Unknown\" "+
-			"instead of matching against \":MUnknown\".")
+			"{ Cygwin DragonFly FreeBSD Linux NetBSD SunOS } for OPSYS.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirectiveCondCompare(c *check.C) {
