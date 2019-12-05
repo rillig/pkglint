@@ -90,7 +90,7 @@ func (ck *MkVarUseChecker) checkModifiersSuffix() {
 			"Write:",
 			"\tMASTER_SITES=\t${HOMEPAGE}repository/",
 			"",
-			"This is a clearer expression of the same thought.")
+			"This expresses the intention of the code more clearly.")
 	}
 }
 
