@@ -28,9 +28,8 @@ func (ck *MkVarUseChecker) Check(vuc *VarUseContext) {
 	}
 
 	ck.checkUndefined()
-	ck.checkModifiers()
-	// FIXME: check the name before the modifiers
 	ck.checkVarname()
+	ck.checkModifiers()
 	ck.checkPermissions(vuc)
 	ck.checkQuoting(vuc)
 	ck.checkBuildDefs()
