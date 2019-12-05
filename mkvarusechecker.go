@@ -442,7 +442,7 @@ func (ck *MkVarUseChecker) checkQuoting(vuc *VarUseContext) {
 		ck.checkQuotingQM(mod, needMstar, vuc)
 	}
 
-	if hasSuffix(mod, ":Q") && needsQuoting != yes {
+	if hasSuffix(mod, ":Q") && needsQuoting == no {
 		ck.warnRedundantModifierQ(mod)
 	}
 }
