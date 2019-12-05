@@ -970,6 +970,49 @@ func (s *Suite) Test_MkVarUseChecker_checkQuoting__list_variable_with_two_consta
 			"The list variable BUILD_DIRS should not be embedded in a word.")
 }
 
+func (s *Suite) Test_MkVarUseChecker_checkQuotingQM(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"",
+		"CONFIGURE_ENV+=\tCFLAGS=${CFLAGS:Q}",
+		"CONFIGURE_ENV+=\tCFLAGS=${CFLAGS:M*:Q}",
+		"CONFIGURE_ENV+=\tCFLAGS=${CFLAGS:N*:Q}")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:3: Please use ${CFLAGS:M*:Q} instead of ${CFLAGS:Q}.",
+		// XXX: Doesn't matter in this case since :N* results in an empty list.
+		"WARN: filename.mk:5: Please use ${CFLAGS:N*:M*:Q} instead of ${CFLAGS:N*:Q}.")
+}
+
+func (s *Suite) Test_MkVarUseChecker_fixQuotingModifiers(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+
+	test := func() {
+		mklines := t.SetUpFileMkLines("filename.mk",
+			MkCvsID,
+			"",
+			"CONFIGURE_ENV+=\tCFLAGS=${CFLAGS:Q}",
+			"CONFIGURE_ENV+=\tCFLAGS=${CFLAGS:M*:Q}",
+			"CONFIGURE_ENV+=\tCFLAGS=${CFLAGS:N*:Q}")
+
+		mklines.Check()
+	}
+
+	t.ExpectDiagnosticsAutofix(
+		test,
+		"WARN: ~/filename.mk:3: Please use ${CFLAGS:M*:Q} instead of ${CFLAGS:Q}.",
+		"WARN: ~/filename.mk:5: Please use ${CFLAGS:N*:M*:Q} instead of ${CFLAGS:N*:Q}.",
+		"AUTOFIX: ~/filename.mk:3: Replacing \"${CFLAGS:Q}\" with \"${CFLAGS:M*:Q}\".",
+		"AUTOFIX: ~/filename.mk:5: Replacing \"${CFLAGS:N*:Q}\" with \"${CFLAGS:N*:M*:Q}\".")
+}
+
 func (s *Suite) Test_MkVarUseChecker_checkBuildDefs(c *check.C) {
 	t := s.Init(c)
 

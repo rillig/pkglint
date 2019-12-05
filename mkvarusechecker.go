@@ -421,7 +421,6 @@ func (ck *MkVarUseChecker) checkQuoting(vuc *VarUseContext) {
 		return
 	}
 
-	varname := varUse.varname
 	mod := varUse.Mod()
 
 	// In GNU configure scripts, a few variables need to be passed through
@@ -431,7 +430,7 @@ func (ck *MkVarUseChecker) checkQuoting(vuc *VarUseContext) {
 	//
 	// When doing checks outside a package, the :M* modifier is needed for safety.
 	needMstar := (G.Pkg == nil || G.Pkg.vars.IsDefined("GNU_CONFIGURE")) &&
-		matches(varname, `^(?:.*_)?(?:CFLAGS|CPPFLAGS|CXXFLAGS|FFLAGS|LDFLAGS|LIBS)$`)
+		matches(varUse.varname, `^(?:.*_)?(?:CFLAGS|CPPFLAGS|CXXFLAGS|FFLAGS|LDFLAGS|LIBS)$`)
 
 	mkline := ck.MkLine
 	if mod == ":M*:Q" && !needMstar {
@@ -440,116 +439,164 @@ func (ck *MkVarUseChecker) checkQuoting(vuc *VarUseContext) {
 		}
 
 	} else if needsQuoting == yes {
-		modNoQ := strings.TrimSuffix(mod, ":Q")
-		modNoM := strings.TrimSuffix(modNoQ, ":M*")
-		correctMod := modNoM + condStr(needMstar, ":M*:Q", ":Q")
-		if correctMod == mod+":Q" && vuc.IsWordPart && !vartype.IsShell() {
-
-			isSingleWordConstant := func() bool {
-				if G.Pkg == nil {
-					return false
-				}
-
-				varinfo := G.Pkg.redundant.vars[varname]
-				if varinfo == nil || !varinfo.vari.IsConstant() {
-					return false
-				}
-
-				value := varinfo.vari.ConstantValue()
-				return len(mkline.ValueFields(value)) == 1
-			}
-
-			if vartype.IsList() && isSingleWordConstant() {
-				// Do not warn in this special case, which typically occurs
-				// for BUILD_DIRS or similar package-settable variables.
-
-			} else if vartype.IsList() {
-				mkline.Warnf("The list variable %s should not be embedded in a word.", varname)
-				mkline.Explain(
-					"When a list variable has multiple elements, this expression expands",
-					"to something unexpected:",
-					"",
-					"Example: ${MASTER_SITE_SOURCEFORGE}directory/ expands to",
-					"",
-					"\thttps://mirror1.sf.net/ https://mirror2.sf.net/directory/",
-					"",
-					"The first URL is missing the directory.",
-					"To fix this, write",
-					"\t${MASTER_SITE_SOURCEFORGE:=directory/}.",
-					"",
-					"Example: -l${LIBS} expands to",
-					"",
-					"\t-llib1 lib2",
-					"",
-					"The second library is missing the -l.",
-					"To fix this, write ${LIBS:S,^,-l,}.")
-			} else {
-				mkline.Warnf("The variable %s should be quoted as part of a shell word.", varname)
-				mkline.Explain(
-					"This variable can contain spaces or other special characters.",
-					"Therefore it should be quoted by replacing ${VAR} with ${VAR:Q}.")
-			}
-
-		} else if mod != correctMod {
-			if vuc.quoting == VucQuotPlain {
-				fix := mkline.Autofix()
-				fix.Warnf("Please use ${%s%s} instead of ${%s%s}.", varname, correctMod, varname, mod)
-				fix.Explain(
-					seeGuide("Echoing a string exactly as-is", "echo-literal"))
-				fix.Replace("${"+varname+mod+"}", "${"+varname+correctMod+"}")
-				fix.Apply()
-			} else {
-				mkline.Warnf("Please use ${%s%s} instead of ${%s%s} and make sure"+
-					" the variable appears outside of any quoting characters.", varname, correctMod, varname, mod)
-				mkline.Explain(
-					"The :Q modifier only works reliably when it is used outside of any",
-					"quoting characters like 'single' or \"double\" quotes or `backticks`.",
-					"",
-					"Examples:",
-					"Instead of CFLAGS=\"${CFLAGS:Q}\",",
-					"     write CFLAGS=${CFLAGS:Q}.",
-					"Instead of 's,@CFLAGS@,${CFLAGS:Q},',",
-					"     write 's,@CFLAGS@,'${CFLAGS:Q}','.",
-					"",
-					seeGuide("Echoing a string exactly as-is", "echo-literal"))
-			}
-
-		} else if vuc.quoting != VucQuotPlain {
-			mkline.Warnf("Please move ${%s%s} outside of any quoting characters.", varname, mod)
-			mkline.Explain(
-				"The :Q modifier only works reliably when it is used outside of any",
-				"quoting characters like 'single' or \"double\" quotes or `backticks`.",
-				"",
-				"Examples:",
-				"Instead of CFLAGS=\"${CFLAGS:Q}\",",
-				"     write CFLAGS=${CFLAGS:Q}.",
-				"Instead of 's,@CFLAGS@,${CFLAGS:Q},',",
-				"     write 's,@CFLAGS@,'${CFLAGS:Q}','.",
-				"",
-				seeGuide("Echoing a string exactly as-is", "echo-literal"))
-		}
+		ck.checkQuotingQM(mod, needMstar, vuc)
 	}
 
 	if hasSuffix(mod, ":Q") && needsQuoting != yes {
-		bad := "${" + varname + mod + "}"
-		good := "${" + varname + strings.TrimSuffix(mod, ":Q") + "}"
-
-		fix := mkline.Line.Autofix()
-		fix.Notef("The :Q modifier isn't necessary for ${%s} here.", varname)
-		fix.Explain(
-			"Many variables in pkgsrc do not need the :Q modifier since they",
-			"are not expected to contain whitespace or other special characters.",
-			"Examples for these \"safe\" variables are:",
-			"",
-			"\t* filenames",
-			"\t* directory names",
-			"\t* user and group names",
-			"\t* tool names and tool paths",
-			"\t* variable names",
-			"\t* package names (but not dependency patterns like pkg>=1.2)")
-		fix.Replace(bad, good)
-		fix.Apply()
+		ck.warnRedundantModifierQ(mod)
 	}
+}
+
+func (ck *MkVarUseChecker) checkQuotingQM(mod string, needMstar bool, vuc *VarUseContext) {
+	vartype := ck.vartype
+	varname := ck.use.varname
+
+	modNoQ := strings.TrimSuffix(mod, ":Q")
+	modNoM := strings.TrimSuffix(modNoQ, ":M*")
+	correctMod := modNoM + condStr(needMstar, ":M*:Q", ":Q")
+
+	if correctMod == mod+":Q" && vuc.IsWordPart && !vartype.IsShell() {
+
+		isSingleWordConstant := func() bool {
+			if G.Pkg == nil {
+				return false
+			}
+
+			varinfo := G.Pkg.redundant.vars[varname]
+			if varinfo == nil || !varinfo.vari.IsConstant() {
+				return false
+			}
+
+			value := varinfo.vari.ConstantValue()
+			return len(ck.MkLine.ValueFields(value)) == 1
+		}
+
+		if vartype.IsList() && isSingleWordConstant() {
+			// Do not warn in this special case, which typically occurs
+			// for BUILD_DIRS or similar package-settable variables.
+
+		} else if vartype.IsList() {
+			ck.warnListVariableInWord()
+		} else {
+			ck.warnMissingModifierQInWord()
+		}
+
+	} else if mod != correctMod {
+		if vuc.quoting == VucQuotPlain {
+			ck.fixQuotingModifiers(correctMod, mod)
+		} else {
+			ck.warnWrongQuotingModifiers(correctMod, mod)
+		}
+
+	} else if vuc.quoting != VucQuotPlain {
+		ck.warnModifierQInQuotes(mod)
+	}
+}
+
+func (ck *MkVarUseChecker) warnListVariableInWord() {
+	mkline := ck.MkLine
+
+	mkline.Warnf("The list variable %s should not be embedded in a word.",
+		ck.use.varname)
+	mkline.Explain(
+		"When a list variable has multiple elements, this expression expands",
+		"to something unexpected:",
+		"",
+		"Example: ${MASTER_SITE_SOURCEFORGE}directory/ expands to",
+		"",
+		"\thttps://mirror1.sf.net/ https://mirror2.sf.net/directory/",
+		"",
+		"The first URL is missing the directory.",
+		"To fix this, write",
+		"\t${MASTER_SITE_SOURCEFORGE:=directory/}.",
+		"",
+		"Example: -l${LIBS} expands to",
+		"",
+		"\t-llib1 lib2",
+		"",
+		"The second library is missing the -l.",
+		"To fix this, write ${LIBS:S,^,-l,}.")
+}
+
+func (ck *MkVarUseChecker) warnMissingModifierQInWord() {
+	mkline := ck.MkLine
+
+	mkline.Warnf("The variable %s should be quoted as part of a shell word.",
+		ck.use.varname)
+	mkline.Explain(
+		"This variable can contain spaces or other special characters.",
+		"Therefore it should be quoted by replacing ${VAR} with ${VAR:Q}.")
+}
+
+func (ck *MkVarUseChecker) fixQuotingModifiers(correctMod string, mod string) {
+	varname := ck.use.varname
+
+	fix := ck.MkLine.Autofix()
+	fix.Warnf("Please use ${%s%s} instead of ${%s%s}.", varname, correctMod, varname, mod)
+	fix.Explain(
+		seeGuide("Echoing a string exactly as-is", "echo-literal"))
+	fix.Replace("${"+varname+mod+"}", "${"+varname+correctMod+"}")
+	fix.Apply()
+}
+
+func (ck *MkVarUseChecker) warnWrongQuotingModifiers(correctMod string, mod string) {
+	mkline := ck.MkLine
+	varname := ck.use.varname
+
+	mkline.Warnf("Please use ${%s%s} instead of ${%s%s} and make sure"+
+		" the variable appears outside of any quoting characters.", varname, correctMod, varname, mod)
+	mkline.Explain(
+		"The :Q modifier only works reliably when it is used outside of any",
+		"quoting characters like 'single' or \"double\" quotes or `backticks`.",
+		"",
+		"Examples:",
+		"Instead of CFLAGS=\"${CFLAGS:Q}\",",
+		"     write CFLAGS=${CFLAGS:Q}.",
+		"Instead of 's,@CFLAGS@,${CFLAGS:Q},',",
+		"     write 's,@CFLAGS@,'${CFLAGS:Q}','.",
+		"",
+		seeGuide("Echoing a string exactly as-is", "echo-literal"))
+}
+
+func (ck *MkVarUseChecker) warnModifierQInQuotes(mod string) {
+	mkline := ck.MkLine
+
+	mkline.Warnf("Please move ${%s%s} outside of any quoting characters.",
+		ck.use.varname, mod)
+	mkline.Explain(
+		"The :Q modifier only works reliably when it is used outside of any",
+		"quoting characters like 'single' or \"double\" quotes or `backticks`.",
+		"",
+		"Examples:",
+		"Instead of CFLAGS=\"${CFLAGS:Q}\",",
+		"     write CFLAGS=${CFLAGS:Q}.",
+		"Instead of 's,@CFLAGS@,${CFLAGS:Q},',",
+		"     write 's,@CFLAGS@,'${CFLAGS:Q}','.",
+		"",
+		seeGuide("Echoing a string exactly as-is", "echo-literal"))
+}
+
+func (ck *MkVarUseChecker) warnRedundantModifierQ(mod string) {
+	varname := ck.use.varname
+
+	bad := "${" + varname + mod + "}"
+	good := "${" + varname + strings.TrimSuffix(mod, ":Q") + "}"
+
+	fix := ck.MkLine.Line.Autofix()
+	fix.Notef("The :Q modifier isn't necessary for ${%s} here.", varname)
+	fix.Explain(
+		"Many variables in pkgsrc do not need the :Q modifier since they",
+		"are not expected to contain whitespace or other special characters.",
+		"Examples for these \"safe\" variables are:",
+		"",
+		"\t* filenames",
+		"\t* directory names",
+		"\t* user and group names",
+		"\t* tool names and tool paths",
+		"\t* variable names",
+		"\t* package names (but not dependency patterns like pkg>=1.2)")
+	fix.Replace(bad, good)
+	fix.Apply()
 }
 
 func (ck *MkVarUseChecker) checkBuildDefs() {
