@@ -1642,6 +1642,7 @@ func (ck MkLineChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, notE
 			continue
 		}
 
+		// FIXME: This code doesn't belong here. It needs to be in a separate method.
 		ck.checkVartype(varname, opUseMatch, pattern, "")
 
 		vartype := G.Pkgsrc.VariableType(ck.MkLines, varname)
