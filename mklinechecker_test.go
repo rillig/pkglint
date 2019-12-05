@@ -2871,6 +2871,56 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCond__comparing_PKGSRC_COMPILER
 		"ERROR: Makefile:3: Use ${PKGSRC_COMPILER:Ngcc} instead of the != operator.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	// before: the directive before the condition is simplified
+	// after: the directive after the condition is simplified
+	// diagnostics: the usual ones
+	test := func(before, after string, diagnostics ...string) {
+		mklines := t.SetUpFileMkLines("module.mk",
+			MkCvsID,
+			"",
+			before,
+			".endif")
+
+		t.ExpectDiagnosticsAutofix(
+			mklines.Check,
+			diagnostics...)
+
+		afterMklines := LoadMk(t.File("module.mk"), MustSucceed)
+		t.CheckEquals(afterMklines.mklines[2].Text, after)
+	}
+
+	test(
+		".if !empty(OPSYS:MUnknown)",
+		".if ${OPSYS} == Unknown",
+
+		"WARN: module.mk:3: The pattern \"Unknown\" cannot match any of "+
+			"{ Cygwin DragonFly FreeBSD Linux NetBSD SunOS } for OPSYS.",
+		"NOTE: module.mk:3: OPSYS should be "+
+			"compared using \"${OPSYS} == Unknown\" "+
+			"instead of matching against \":MUnknown\".",
+		"AUTOFIX: module.mk:3: Replacing \"!empty(OPSYS:MUnknown)\" "+
+			"with \"${OPSYS} == Unknown\".")
+
+	test(
+		".if !empty(OPSYS:O:MUnknown:S,a,b,)",
+		".if !empty(OPSYS:O:MUnknown:S,a,b,)",
+
+		"WARN: module.mk:3: The pattern \"Unknown\" cannot match any of "+
+			"{ Cygwin DragonFly FreeBSD Linux NetBSD SunOS } for OPSYS.",
+		// FIXME: only possible if the :M modifier is the last one.
+		"NOTE: module.mk:3: OPSYS should be "+
+			// FIXME: That's incomplete.
+			"compared using \"${OPSYS} == Unknown\" "+
+			"instead of matching against \":MUnknown\".")
+}
+
 func (s *Suite) Test_MkLineChecker_simplifyCondition(c *check.C) {
 	t := s.Init(c)
 
@@ -3136,6 +3186,55 @@ func (s *Suite) Test_MkLineChecker_simplifyCondition(c *check.C) {
 			"instead of matching against \":Mx86_64\".",
 		"AUTOFIX: module.mk:3: Replacing \"${MACHINE_ARCH:Mx86_64}\" "+
 			"with \"${MACHINE_ARCH} == x86_64\".")
+
+	test(
+		".if !empty(OPSYS:MUnknown)",
+		".if ${OPSYS} == Unknown",
+
+		// FIXME: This warning is not the job of simplifyCondition.
+		"WARN: module.mk:3: The pattern \"Unknown\" cannot match any of "+
+			"{ Cygwin DragonFly FreeBSD Linux NetBSD SunOS } for OPSYS.",
+		"NOTE: module.mk:3: OPSYS should be "+
+			"compared using \"${OPSYS} == Unknown\" "+
+			"instead of matching against \":MUnknown\".",
+		"AUTOFIX: module.mk:3: Replacing \"!empty(OPSYS:MUnknown)\" "+
+			"with \"${OPSYS} == Unknown\".")
+
+	test(
+		".if !empty(OPSYS:S,NetBSD,ok,:Mok)",
+		".if !empty(OPSYS:S,NetBSD,ok,:Mok)",
+
+		// FIXME: That's wrong. After a :S modifier, the values may have changed.
+		"WARN: module.mk:3: The pattern \"ok\" cannot match any of "+
+			"{ Cygwin DragonFly FreeBSD Linux NetBSD SunOS } for OPSYS.",
+		"NOTE: module.mk:3: OPSYS should be "+
+			// FIXME: The :S modifier is missing here.
+			"compared using \"${OPSYS} == ok\" "+
+			"instead of matching against \":Mok\".")
+
+	test(
+		".if empty(OPSYS:tl:Msunos)",
+		".if empty(OPSYS:tl:Msunos)",
+
+		// FIXME: That's wrong. After the :tl modifier, everything is lowercase.
+		"WARN: module.mk:3: The pattern \"sunos\" cannot match any of "+
+			"{ Cygwin DragonFly FreeBSD Linux NetBSD SunOS } for OPSYS.",
+		"NOTE: module.mk:3: OPSYS should be "+
+			// FIXME: That's incomplete.
+			"compared using \"${OPSYS} != sunos\" "+
+			"instead of matching against \":Msunos\".")
+
+	test(
+		".if !empty(OPSYS:O:MUnknown:S,a,b,)",
+		".if !empty(OPSYS:O:MUnknown:S,a,b,)",
+
+		"WARN: module.mk:3: The pattern \"Unknown\" cannot match any of "+
+			"{ Cygwin DragonFly FreeBSD Linux NetBSD SunOS } for OPSYS.",
+		// FIXME: only possible if the :M modifier is the last one.
+		"NOTE: module.mk:3: OPSYS should be "+
+			// FIXME: That's incomplete.
+			"compared using \"${OPSYS} == Unknown\" "+
+			"instead of matching against \":MUnknown\".")
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirectiveCondCompare(c *check.C) {
