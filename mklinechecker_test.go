@@ -1404,6 +1404,17 @@ func (s *Suite) Test_MkLineChecker_simplifyCondition(c *check.C) {
 		"WARN: module.mk:3: The pattern \"Unknown\" cannot match any of "+
 			"{ Cygwin DragonFly FreeBSD Linux NetBSD SunOS } for OPSYS.")
 
+	// TODO: Allow the dot without quotes.
+	test(
+		".if !empty(PKGPATH:Mcategory/package1.2)",
+		".if ${PKGPATH} == \"category/package1.2\"",
+
+		"NOTE: module.mk:3: PKGPATH should be "+
+			"compared using \"${PKGPATH} == \"category/package1.2\"\" "+
+			"instead of matching against \":Mcategory/package1.2\".",
+		"AUTOFIX: module.mk:3: Replacing \"!empty(PKGPATH:Mcategory/package1.2)\" "+
+			"with \"${PKGPATH} == \\\"category/package1.2\\\"\".")
+
 	// Numbers must be enclosed in quotes, otherwise they are compared
 	// as numbers, not as strings. The :M and :N modifiers always compare
 	// strings.
