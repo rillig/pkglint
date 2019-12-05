@@ -1581,7 +1581,7 @@ func (ck MkLineChecker) checkDirectiveCond() {
 
 // checkDirectiveCondEmpty checks a condition of the form empty(VAR),
 // empty(VAR:Mpattern) or ${VAR:Mpattern} in an .if directive.
-func (ck MkLineChecker) checkDirectiveCondEmpty(varuse *MkVarUse, fromEmpty bool, notEmpty bool) {
+func (ck MkLineChecker) checkDirectiveCondEmpty(varuse *MkVarUse, fromEmpty bool, neg bool) {
 	varname := varuse.varname
 	if matches(varname, `^\$.*:[MN]`) {
 		ck.MkLine.Warnf("The empty() function takes a variable name as parameter, not a variable expression.")
@@ -1597,7 +1597,7 @@ func (ck MkLineChecker) checkDirectiveCondEmpty(varuse *MkVarUse, fromEmpty bool
 			"\t${VARNAME:Mpattern}")
 	}
 
-	ck.simplifyCondition(varuse, fromEmpty, notEmpty)
+	ck.simplifyCondition(varuse, fromEmpty, neg)
 }
 
 // simplifyCondition replaces an unnecessarily complex condition with
@@ -1605,11 +1605,9 @@ func (ck MkLineChecker) checkDirectiveCondEmpty(varuse *MkVarUse, fromEmpty bool
 //
 // * fromEmpty is true for the form empty(VAR...), and false for ${VAR...}.
 //
-// * notEmpty is true for the form !empty(VAR...), and false for empty(VAR...).
+// * neg is true for the form !empty(VAR...), and false for empty(VAR...).
 // It also applies to the ${VAR} form.
-//
-// * toplevel is true for ${VAR...} and false for ${VAR...} && ${VAR2...}.
-func (ck MkLineChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, notEmpty bool) {
+func (ck MkLineChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, neg bool) {
 
 	// replace constructs the state before and after the autofix.
 	// The before state is constructed to ensure that only very simple
@@ -1618,10 +1616,10 @@ func (ck MkLineChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, notE
 	// Before putting any cases involving special characters into
 	// production, there need to be more tests for the edge cases.
 	replace := func(varname string, m bool, pattern string) (string, string) {
-		op := condStr(notEmpty == m, "==", "!=")
+		op := condStr(neg == m, "==", "!=")
 
 		from := "" +
-			condStr(notEmpty != fromEmpty, "", "!") +
+			condStr(neg != fromEmpty, "", "!") +
 			condStr(fromEmpty, "empty(", "${") +
 			varname +
 			condStr(m, ":M", ":N") +
