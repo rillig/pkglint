@@ -1404,7 +1404,8 @@ func (s *Suite) Test_MkLineChecker_simplifyCondition(c *check.C) {
 		"WARN: module.mk:3: The pattern \"Unknown\" cannot match any of "+
 			"{ Cygwin DragonFly FreeBSD Linux NetBSD SunOS } for OPSYS.")
 
-	// TODO: Allow the dot without quotes.
+	// The dot is just an ordinary character.
+	// It's only special when used in number literals.
 	test(
 		".if !empty(PKGPATH:Mcategory/package1.2)",
 		".if ${PKGPATH} == category/package1.2",
