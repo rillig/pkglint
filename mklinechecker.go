@@ -592,8 +592,12 @@ func (ck MkLineChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, neg 
 			pattern,
 			condStr(fromEmpty, ")", "}"))
 
-		quote := condStr(matches(pattern, `[^\-/0-9@A-Z_a-z]`), "\"", "")
+		needsQuotes := matches(pattern, `[^\-/0-9@A-Z_a-z]`) ||
+			matches(pattern, `^\d+\.?\d*$`)
+		quote := condStr(needsQuotes, "\"", "")
+
 		to := sprintf("${%s%s} %s %s%s%s", varname, modsExceptLast, op, quote, pattern, quote)
+
 		return from, to
 	}
 

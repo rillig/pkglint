@@ -1409,13 +1409,12 @@ func (s *Suite) Test_MkLineChecker_simplifyCondition(c *check.C) {
 	// strings.
 	test(
 		".if empty(ABI:U:M64)",
-		// FIXME: ${ABI:U} != "64" with quotes
-		".if ${ABI:U} != 64",
+		".if ${ABI:U} != \"64\"",
 
-		"NOTE: module.mk:3: ABI should be compared using \"${ABI:U} != 64\" "+
+		"NOTE: module.mk:3: ABI should be compared using \"${ABI:U} != \"64\"\" "+
 			"instead of matching against \":M64\".",
 		"AUTOFIX: module.mk:3: Replacing \"empty(ABI:U:M64)\" "+
-			"with \"${ABI:U} != 64\".")
+			"with \"${ABI:U} != \\\"64\\\"\".")
 
 	// Fractional numbers must also be enclosed in quotes.
 	test(
