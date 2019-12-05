@@ -50,11 +50,10 @@ type Package struct {
 
 	// Files from .include lines that are nested inside .if.
 	// They often depend on OPSYS or on the existence of files in the build environment.
-	// FIXME: Define "relative to what" for the keys of the map.
-	conditionalIncludes map[RelPath]*MkLine
+	conditionalIncludes map[PackagePath]*MkLine
 	// Files from .include lines that are not nested.
 	// These are cross-checked with buildlink3.mk whether they are unconditional there, too.
-	unconditionalIncludes map[RelPath]*MkLine
+	unconditionalIncludes map[PackagePath]*MkLine
 
 	IgnoreMissingPatches bool // In distinfo, don't warn about patches that cannot be found.
 
@@ -81,8 +80,8 @@ func NewPackage(dir CurrPath) *Package {
 		vars:                  NewScope(),
 		bl3:                   make(map[RelPath]*MkLine),
 		included:              Once{},
-		conditionalIncludes:   make(map[RelPath]*MkLine),
-		unconditionalIncludes: make(map[RelPath]*MkLine),
+		conditionalIncludes:   make(map[PackagePath]*MkLine),
+		unconditionalIncludes: make(map[PackagePath]*MkLine),
 	}
 	pkg.vars.DefineAll(G.Pkgsrc.UserDefinedVars)
 
@@ -114,7 +113,7 @@ func (pkg *Package) load() ([]CurrPath, *MkLines, *MkLines) {
 		files = append(files, pkg.File(pkg.Pkgdir).ReadPaths()...)
 	}
 	files = append(files, pkg.File(pkg.Patchdir).ReadPaths()...)
-	if pkg.DistinfoFile != NewPackagePath(NewPath(pkg.vars.fallback["DISTINFO_FILE"])) {
+	if pkg.DistinfoFile != NewPackagePathString(pkg.vars.fallback["DISTINFO_FILE"]) {
 		files = append(files, pkg.File(pkg.DistinfoFile))
 	}
 
@@ -184,10 +183,10 @@ func (pkg *Package) loadPackageMakefile() (*MkLines, *MkLines) {
 
 	allLines.collectUsedVariables()
 
-	pkg.Pkgdir = NewPackagePath(NewPath(pkg.vars.LastValue("PKGDIR")))
-	pkg.DistinfoFile = NewPackagePath(NewPath(pkg.vars.LastValue("DISTINFO_FILE")))
-	pkg.Filesdir = NewPackagePath(NewPath(pkg.vars.LastValue("FILESDIR")))
-	pkg.Patchdir = NewPackagePath(NewPath(pkg.vars.LastValue("PATCHDIR")))
+	pkg.Pkgdir = NewPackagePathString(pkg.vars.LastValue("PKGDIR"))
+	pkg.DistinfoFile = NewPackagePathString(pkg.vars.LastValue("DISTINFO_FILE"))
+	pkg.Filesdir = NewPackagePathString(pkg.vars.LastValue("FILESDIR"))
+	pkg.Patchdir = NewPackagePathString(pkg.vars.LastValue("PATCHDIR"))
 
 	// See lang/php/ext.mk
 	if pkg.vars.IsDefinedSimilar("PHPEXT_MK") {
@@ -1465,13 +1464,13 @@ func (pkg *Package) File(relativeFileName PackagePath) CurrPath {
 //
 // Example:
 //  NewPackage("category/package").Rel("other/package") == "../../other/package"
-func (pkg *Package) Rel(filename CurrPath) RelPath {
-	return G.Pkgsrc.Relpath(pkg.dir, filename)
+func (pkg *Package) Rel(filename CurrPath) PackagePath {
+	return NewPackagePath(G.Pkgsrc.Relpath(pkg.dir, filename))
 }
 
 // Returns whether the given file (relative to the package directory)
 // is included somewhere in the package, either directly or indirectly.
-func (pkg *Package) Includes(filename RelPath) bool {
+func (pkg *Package) Includes(filename PackagePath) bool {
 	return pkg.unconditionalIncludes[filename] != nil ||
 		pkg.conditionalIncludes[filename] != nil
 }

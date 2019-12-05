@@ -398,14 +398,16 @@ func (p PkgsrcPath) JoinNoClean(other RelPath) PkgsrcPath {
 // conflicts on other packages.
 type PackagePath string
 
-func NewPackagePath(p Path) PackagePath { return PackagePath(p) }
+func NewPackagePath(p RelPath) PackagePath { return PackagePath(p) }
+
+func NewPackagePathString(p string) PackagePath { return PackagePath(p) }
 
 func (p PackagePath) AsPath() Path { return Path(p) }
 
 func (p PackagePath) String() string { return p.AsPath().String() }
 
 func (p PackagePath) JoinNoClean(other RelPath) PackagePath {
-	return NewPackagePath(p.AsPath().JoinNoClean(other))
+	return NewPackagePathString(p.AsPath().JoinNoClean(other).String())
 }
 
 func (p PackagePath) IsEmpty() bool { return p.AsPath().IsEmpty() }

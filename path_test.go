@@ -1168,6 +1168,14 @@ func (s *Suite) Test_NewPackagePath(c *check.C) {
 	t.CheckEquals(p.AsPath(), NewPath("../../category/package"))
 }
 
+func (s *Suite) Test_NewPackagePathString(c *check.C) {
+	t := s.Init(c)
+
+	p := NewPackagePathString("../../category/package")
+
+	t.CheckEquals(p.AsPath(), NewPath("../../category/package"))
+}
+
 func (s *Suite) Test_PackagePath_AsPath(c *check.C) {
 	t := s.Init(c)
 
