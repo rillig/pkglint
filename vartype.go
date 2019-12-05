@@ -368,6 +368,7 @@ var (
 	BtYesNo                  = &BasicType{"YesNo", (*VartypeCheck).YesNo}
 	BtYesNoIndirectly        = &BasicType{"YesNoIndirectly", (*VartypeCheck).YesNoIndirectly}
 
+	btCond    = &BasicType{".if condition", nil /* never called */}
 	btForLoop = &BasicType{".for loop", nil /* never called */}
 )
 

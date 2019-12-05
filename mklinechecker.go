@@ -516,22 +516,37 @@ func (ck MkLineChecker) checkDirectiveCond() {
 // checkDirectiveCondEmpty checks a condition of the form empty(VAR),
 // empty(VAR:Mpattern) or ${VAR:Mpattern} in an .if directive.
 func (ck MkLineChecker) checkDirectiveCondEmpty(varuse *MkVarUse, fromEmpty bool, neg bool) {
-	varname := varuse.varname
-	if matches(varname, `^\$.*:[MN]`) {
-		ck.MkLine.Warnf("The empty() function takes a variable name as parameter, not a variable expression.")
-		ck.MkLine.Explain(
-			"Instead of empty(${VARNAME:Mpattern}), you should write either of the following:",
-			"",
-			"\tempty(VARNAME:Mpattern)",
-			"\t${VARNAME:Mpattern} == \"\"",
-			"",
-			"Instead of !empty(${VARNAME:Mpattern}), you should write either of the following:",
-			"",
-			"\t!empty(VARNAME:Mpattern)",
-			"\t${VARNAME:Mpattern}")
+	ck.checkDirectiveCondEmptyExpr(varuse)
+	ck.checkDirectiveCondEmptyType(varuse)
+	ck.simplifyCondition(varuse, fromEmpty, neg)
+}
+
+func (ck MkLineChecker) checkDirectiveCondEmptyExpr(varuse *MkVarUse) {
+	if !matches(varuse.varname, `^\$.*:[MN]`) {
+		return
 	}
 
-	ck.simplifyCondition(varuse, fromEmpty, neg)
+	ck.MkLine.Warnf("The empty() function takes a variable name as parameter, " +
+		"not a variable expression.")
+	ck.MkLine.Explain(
+		"Instead of empty(${VARNAME:Mpattern}), you should write either of the following:",
+		"",
+		"\tempty(VARNAME:Mpattern)",
+		"\t${VARNAME:Mpattern} == \"\"",
+		"",
+		"Instead of !empty(${VARNAME:Mpattern}), you should write either of the following:",
+		"",
+		"\t!empty(VARNAME:Mpattern)",
+		"\t${VARNAME:Mpattern}")
+}
+
+func (ck MkLineChecker) checkDirectiveCondEmptyType(varuse *MkVarUse) {
+	for _, modifier := range varuse.modifiers {
+		ok, _, pattern, _ := modifier.MatchMatch()
+		if ok {
+			ck.checkVartype(varuse.varname, opUseMatch, pattern, "")
+		}
+	}
 }
 
 // simplifyCondition replaces an unnecessarily complex condition with
@@ -568,14 +583,12 @@ func (ck MkLineChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, neg 
 	varname := varuse.varname
 	modifiers := varuse.modifiers
 
+	// FIXME: Only ever modify the last modifier
 	for _, modifier := range modifiers {
 		m, positive, pattern, exact := modifier.MatchMatch()
 		if !m || !positive && len(modifiers) != 1 {
 			continue
 		}
-
-		// FIXME: This code doesn't belong here. It needs to be in a separate method.
-		ck.checkVartype(varname, opUseMatch, pattern, "")
 
 		vartype := G.Pkgsrc.VariableType(ck.MkLines, varname)
 		switch {
