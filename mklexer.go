@@ -372,8 +372,10 @@ func (p *MkLexer) varUseModifierMatch(closing byte) string {
 // varUseModifierSubst parses a :S,from,to, or a :C,from,to, modifier.
 func (p *MkLexer) varUseModifierSubst(closing byte) (ok bool, regex bool, from string, to string, options string) {
 	lexer := p.lexer
-	regex = lexer.PeekByte() == 'C'
-	lexer.Skip(1 /* the initial S or C */)
+	regex = lexer.SkipByte('C')
+	if !regex && !lexer.SkipByte('S') {
+		return
+	}
 
 	sep := lexer.PeekByte() // bmake allows _any_ separator, even letters.
 	if sep == -1 || byte(sep) == closing {

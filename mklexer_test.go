@@ -844,10 +844,9 @@ func (s *Suite) Test_MkLexer_varUseModifierSubst(c *check.C) {
 
 	// Up to 2019-12-05, these were considered valid substitutions,
 	// having [ as the separator and ss] as the rest.
-	// FIXME
-	test("M[Y][eE][sS]", false, "Y]", "eE]", "", "sS]",
+	testFail("M[Y][eE][sS]", "M[Y][eE][sS]",
 		nil...)
-	test("N[Y][eE][sS]", false, "Y]", "eE]", "", "sS]",
+	testFail("N[Y][eE][sS]", "M[Y][eE][sS]",
 		nil...)
 
 	test("S,from,to,}", false, "from", "to", "", "}")
