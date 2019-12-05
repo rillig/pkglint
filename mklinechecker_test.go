@@ -1084,17 +1084,17 @@ func (s *Suite) Test_MkLineChecker_simplifyCondition(c *check.C) {
 
 		nil...)
 
-	// The :tl modifier prevents the autofix.
-	// It would be possible though to fix this since the :M modifier
-	// is the last one in the chain.
+	// When deciding whether to replace the expression, only the
+	// last modifier is inspected. All the others are copied.
 	test(
 		".if ${PKGPATH:tl:Mpattern}",
-		".if ${PKGPATH:tl:Mpattern}",
+		".if ${PKGPATH:tl} == pattern",
 
 		"NOTE: module.mk:3: PKGPATH "+
-			// FIXME: The :tl modifier is missing.
-			"should be compared using \"${PKGPATH} == pattern\" "+
-			"instead of matching against \":Mpattern\".")
+			"should be compared using \"${PKGPATH:tl} == pattern\" "+
+			"instead of matching against \":Mpattern\".",
+		"AUTOFIX: module.mk:3: Replacing \"${PKGPATH:tl:Mpattern}\" "+
+			"with \"${PKGPATH:tl} == pattern\".")
 
 	// Negated pattern matches are supported as well,
 	// as long as the variable is guaranteed to be nonempty.
@@ -1121,12 +1121,13 @@ func (s *Suite) Test_MkLineChecker_simplifyCondition(c *check.C) {
 	// "one" and "two" don't overlap.
 	test(
 		".if ${PKGPATH:Mone:Mtwo}",
-		".if ${PKGPATH:Mone:Mtwo}",
+		".if ${PKGPATH:Mone} == two",
 
 		"NOTE: module.mk:3: PKGPATH "+
-			// FIXME: The diagnostic doesn't correspond to the whole expression.
-			"should be compared using \"${PKGPATH} == two\" "+
-			"instead of matching against \":Mtwo\".")
+			"should be compared using \"${PKGPATH:Mone} == two\" "+
+			"instead of matching against \":Mtwo\".",
+		"AUTOFIX: module.mk:3: Replacing \"${PKGPATH:Mone:Mtwo}\" "+
+			"with \"${PKGPATH:Mone} == two\".")
 
 	test(
 		".if !empty(PKGPATH:Mpattern)",
@@ -1319,27 +1320,29 @@ func (s *Suite) Test_MkLineChecker_simplifyCondition(c *check.C) {
 
 	test(
 		".if !empty(OPSYS:S,NetBSD,ok,:Mok)",
-		".if !empty(OPSYS:S,NetBSD,ok,:Mok)",
+		".if ${OPSYS:S,NetBSD,ok,} == ok",
 
 		// FIXME: That's wrong. After a :S modifier, the values may have changed.
 		"WARN: module.mk:3: The pattern \"ok\" cannot match any of "+
 			"{ Cygwin DragonFly FreeBSD Linux NetBSD SunOS } for OPSYS.",
 		"NOTE: module.mk:3: OPSYS should be "+
-			// FIXME: The :S modifier is missing here.
-			"compared using \"${OPSYS} == ok\" "+
-			"instead of matching against \":Mok\".")
+			"compared using \"${OPSYS:S,NetBSD,ok,} == ok\" "+
+			"instead of matching against \":Mok\".",
+		"AUTOFIX: module.mk:3: Replacing \"!empty(OPSYS:S,NetBSD,ok,:Mok)\" "+
+			"with \"${OPSYS:S,NetBSD,ok,} == ok\".")
 
 	test(
 		".if empty(OPSYS:tl:Msunos)",
-		".if empty(OPSYS:tl:Msunos)",
+		".if ${OPSYS:tl} != sunos",
 
 		// FIXME: That's wrong. After the :tl modifier, everything is lowercase.
 		"WARN: module.mk:3: The pattern \"sunos\" cannot match any of "+
 			"{ Cygwin DragonFly FreeBSD Linux NetBSD SunOS } for OPSYS.",
 		"NOTE: module.mk:3: OPSYS should be "+
-			// FIXME: That's incomplete.
-			"compared using \"${OPSYS} != sunos\" "+
-			"instead of matching against \":Msunos\".")
+			"compared using \"${OPSYS:tl} != sunos\" "+
+			"instead of matching against \":Msunos\".",
+		"AUTOFIX: module.mk:3: Replacing \"empty(OPSYS:tl:Msunos)\" "+
+			"with \"${OPSYS:tl} != sunos\".")
 
 	test(
 		".if !empty(OPSYS:O:MUnknown:S,a,b,)",

@@ -557,6 +557,15 @@ func (ck MkLineChecker) checkDirectiveCondEmptyType(varuse *MkVarUse) {
 // * neg is true for the form !empty(VAR...), and false for empty(VAR...).
 // It also applies to the ${VAR} form.
 func (ck MkLineChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, neg bool) {
+	varname := varuse.varname
+	mods := varuse.modifiers
+	modifiers := mods
+
+	n := len(modifiers)
+	if n == 0 {
+		return
+	}
+	modsExceptLast := (&MkVarUse{"", mods[:n-1]}).Mod()
 
 	// replace constructs the state before and after the autofix.
 	// The before state is constructed to ensure that only very simple
@@ -564,26 +573,21 @@ func (ck MkLineChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, neg 
 	//
 	// Before putting any cases involving special characters into
 	// production, there need to be more tests for the edge cases.
-	replace := func(varname string, m bool, pattern string) (string, string) {
-		op := condStr(neg == m, "==", "!=")
+	replace := func(positive bool, pattern string) (string, string) {
+		op := condStr(neg == positive, "==", "!=")
 
-		from := "" +
-			condStr(neg != fromEmpty, "", "!") +
-			condStr(fromEmpty, "empty(", "${") +
-			varname +
-			condStr(m, ":M", ":N") +
-			pattern +
-			condStr(fromEmpty, ")", "}")
+		from := sprintf("%s%s%s%s%s%s%s",
+			condStr(neg != fromEmpty, "", "!"),
+			condStr(fromEmpty, "empty(", "${"),
+			varname,
+			modsExceptLast,
+			condStr(positive, ":M", ":N"),
+			pattern,
+			condStr(fromEmpty, ")", "}"))
 
 		quote := condStr(matches(pattern, `[^\-/0-9@A-Z_a-z]`), "\"", "")
-		to := sprintf("${%s} %s %s%s%s", varname, op, quote, pattern, quote)
+		to := sprintf("${%s%s} %s %s%s%s", varname, modsExceptLast, op, quote, pattern, quote)
 		return from, to
-	}
-
-	modifiers := varuse.modifiers
-	n := len(modifiers)
-	if n == 0 {
-		return
 	}
 
 	modifier := modifiers[n-1]
@@ -592,7 +596,6 @@ func (ck MkLineChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, neg 
 		return
 	}
 
-	varname := varuse.varname
 	vartype := G.Pkgsrc.VariableType(ck.MkLines, varname)
 	switch {
 	case !exact,
@@ -602,7 +605,7 @@ func (ck MkLineChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, neg 
 		return
 	}
 
-	from, to := replace(varname, positive, pattern)
+	from, to := replace(positive, pattern)
 
 	// FIXME: This transformation is only valid if the variable is guaranteed to
 	//  be defined. If that's not the case, the :U modifier must be added.
