@@ -2,6 +2,21 @@ package pkglint
 
 import "gopkg.in/check.v1"
 
+func (s *Suite) Test_NewMkAssignChecker(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("filename.mk",
+		"VAR=\t${OTHER}")
+
+	ck := NewMkAssignChecker(mklines.mklines[0], mklines)
+
+	ck.checkVarassign()
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:1: VAR is defined but not used.",
+		"WARN: filename.mk:1: OTHER is used but not defined.")
+}
+
 func (s *Suite) Test_MkAssignChecker_checkVarassign(c *check.C) {
 	t := s.Init(c)
 
@@ -183,6 +198,30 @@ func (s *Suite) Test_MkAssignChecker_checkVarassignLeftNotUsed__infra(c *check.C
 	t.CheckOutputLines(
 		"WARN: ~/category/package/Makefile:22: UNUSED_INFRA is defined but not used.",
 		"WARN: ~/category/package/Makefile:22: UNDOCUMENTED is used but not defined.")
+}
+
+func (s *Suite) Test_MkAssignChecker_checkVarassignLeftDeprecated(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.FinishSetUp()
+
+	test := func(varname string, diagnostics ...string) {
+		mklines := t.NewMkLines("filename.mk",
+			varname+"=\t# none")
+		ck := NewMkAssignChecker(mklines.mklines[0], mklines)
+
+		ck.checkVarassignLeftDeprecated()
+
+		t.CheckOutput(diagnostics)
+	}
+
+	test("FIX_RPATH",
+		"WARN: filename.mk:1: Definition of FIX_RPATH is deprecated. "+
+			"It has been removed from pkgsrc in 2003.")
+
+	test("PKGNAME",
+		nil...)
 }
 
 func (s *Suite) Test_MkAssignChecker_checkVarassignLeftBsdPrefs(c *check.C) {
@@ -569,6 +608,28 @@ func (s *Suite) Test_MkAssignChecker_checkVarassignLeftRationale(c *check.C) {
 		nil...)
 }
 
+func (s *Suite) Test_MkAssignChecker_checkVarassignOp(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpTool("uname", "UNAME", AfterPrefsMk)
+	t.SetUpTool("echo", "", AtRunTime)
+	t.SetUpPkgsrc()
+	t.SetUpPackage("category/package",
+		"OPSYS_NAME!=\t${UNAME}",
+		"",
+		"PKG_FAIL_REASON+=\t${OPSYS_NAME}")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputLines(
+		"NOTE: ~/category/package/Makefile:20: "+
+			"Consider the :sh modifier instead of != for \"${UNAME}\".",
+		"WARN: ~/category/package/Makefile:20: "+
+			"To use the tool ${UNAME} at load time, "+
+			"bsd.prefs.mk has to be included before.")
+}
+
 func (s *Suite) Test_MkAssignChecker_checkVarassignOpShell(c *check.C) {
 	t := s.Init(c)
 
@@ -643,6 +704,26 @@ func (s *Suite) Test_MkAssignChecker_checkVarassignOpShell(c *check.C) {
 		"",
 		"WARN: ~/category/package/standalone.mk:14: Please use \"${ECHO}\" instead of \"echo\".",
 		"WARN: ~/category/package/standalone.mk:15: Please use \"${ECHO}\" instead of \"echo\".")
+}
+
+func (s *Suite) Test_MkAssignChecker_checkVarassignRight(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("filename.mk",
+		"BUILD_CMD.${UNKNOWN}=\tcd ${WRKSRC}/.. && make")
+
+	mklines.ForEach(func(mkline *MkLine) {
+		ck := NewMkAssignChecker(mkline, mklines)
+		ck.checkVarassignRight()
+	})
+
+	// No warning about the UNKNOWN variable on the left-hand side,
+	// since that is out of scope.
+	t.CheckOutputLines(
+		"WARN: filename.mk:1: Building the package should take place "+
+			"entirely inside ${WRKSRC}, not \"${WRKSRC}/..\".",
+		"WARN: filename.mk:1: Unknown shell command \"make\".")
 }
 
 func (s *Suite) Test_MkAssignChecker_checkVarassignRightCategory__none(c *check.C) {
@@ -938,4 +1019,20 @@ func (s *Suite) Test_MkAssignChecker_checkVarassignRightVaruse(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: module.mk:2: Please use PREFIX instead of LOCALBASE.",
 		"NOTE: module.mk:2: The :Q modifier isn't necessary for ${LOCALBASE} here.")
+}
+
+func (s *Suite) Test_MkAssignChecker_checkVarassignVaruseShell(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("filename.mk",
+		"EXAMPLE_CMD=\tgrep word ${EXAMPLE_FILES}; continue")
+
+	mklines.ForEach(func(mkline *MkLine) {
+		ck := NewMkAssignChecker(mkline, mklines)
+		ck.checkVarassignRight()
+	})
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:1: Unknown shell command \"grep\".",
+		"WARN: filename.mk:1: EXAMPLE_FILES is used but not defined.")
 }
