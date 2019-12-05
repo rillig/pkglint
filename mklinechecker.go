@@ -115,6 +115,9 @@ func (ck MkLineChecker) checkTextRpath(text string) {
 	}
 }
 
+// checkVartype checks the type of the given variable, when it is assigned the given value,
+// or if op is either opUseCompare or opUseMatch, when it is compared to the given value.
+//
 // comment is an empty string for no comment, or "#" + the actual comment otherwise.
 func (ck MkLineChecker) checkVartype(varname string, op MkOperator, value, comment string) {
 	if trace.Tracing {
