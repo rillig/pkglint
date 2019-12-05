@@ -507,6 +507,9 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		`(.*)\.mk$`, "$1",
 		"Cygwin DragonFly FreeBSD Linux NetBSD SunOS")
 
+	// TODO: Only mark those variables as user-settable that actually influence
+	//  the generated packages. For example, UPDATE_TARGET doesn't.
+
 	// Last synced with mk/defaults/mk.conf revision 1.300 (fe3d998769f).
 	reg.usr("USE_CWRAPPERS", enum("yes no auto"))
 	reg.usr("ALLOW_VULNERABLE_PACKAGES", BtYes)
@@ -1644,7 +1647,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.usr("UNPRIVILEGED_USER", BtUserGroupName)
 	reg.usr("UNPRIVILEGED_GROUP", BtUserGroupName)
 	reg.pkglist("UNWRAP_FILES", BtPathPattern)
-	reg.usrlist("UPDATE_TARGET", BtIdentifier)
+	reg.usrlist("UPDATE_TARGET", BtIdentifier) // FIXME: command-line, not user
 	reg.pkg("USERGROUP_PHASE", enum("configure build pre-install"))
 	reg.usrlist("USER_ADDITIONAL_PKGS", BtPkgpath)
 	reg.pkg("USE_BSD_MAKEFILE", BtYes)
