@@ -709,7 +709,7 @@ func (ck *ShellLineChecker) CheckWord(token string, checkQuoting bool, time Tool
 	// to the MkLineChecker. Examples for these are ${VAR:Mpattern} or $@.
 	if varuse := ToVarUse(token); varuse != nil {
 		if ck.checkVarUse {
-			MkLineChecker{ck.MkLines, ck.mkline}.CheckVaruse(varuse, shellWordVuc)
+			NewMkVarUseChecker(varuse, ck.MkLines, ck.mkline).Check(shellWordVuc)
 		}
 		return
 	}
@@ -944,7 +944,7 @@ func (ck *ShellLineChecker) checkVaruseToken(atoms *[]*ShAtom, quoting ShQuoting
 
 	if ck.checkVarUse {
 		vuc := VarUseContext{shellCommandsType, VucUnknownTime, quoting.ToVarUseContext(), true}
-		MkLineChecker{ck.MkLines, ck.mkline}.CheckVaruse(varuse, &vuc)
+		NewMkVarUseChecker(varuse, ck.MkLines, ck.mkline).Check(&vuc)
 	}
 
 	return true

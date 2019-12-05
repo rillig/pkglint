@@ -1153,7 +1153,7 @@ func (s *Suite) Test_Pkgsrc_guessVariableType__SKIP(c *check.C) {
 	// aclpUseLoadtime. Therefore there should be a warning about the VarUse in
 	// the .if line. As of March 2019, pkglint skips the permissions check for
 	// guessed variables since that variable might have an entirely different
-	// meaning; see MkLineChecker.checkVarusePermissions.
+	// meaning; see MkVarUseChecker.checkPermissions.
 	//
 	// There is no warning for the += operator in line 3 since the variable type
 	// (although guessed) is a list of things, and lists may be appended to.

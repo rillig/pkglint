@@ -106,6 +106,7 @@ func (s *Suite) Test__qa(c *check.C) {
 	ck := intqa.NewQAChecker(c.Errorf)
 	ck.Configure("*", "*", "*", -intqa.EMissingTest)
 	ck.Configure("path.go", "*", "*", +intqa.EMissingTest)
+	ck.Configure("mkvarusechecker.go", "*", "*", +intqa.EMissingTest)
 	ck.Configure("*yacc.go", "*", "*", intqa.ENone)
 	ck.Configure("*", "*", "", -intqa.EMissingTest)
 	ck.Configure("*.go", "Suite", "*", -intqa.EMethodsSameFile)
