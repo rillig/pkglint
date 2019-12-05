@@ -974,16 +974,25 @@ func (s *Suite) Test_MkVarUseChecker_checkBuildDefs(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPkgsrc()
+	t.CreateFileLines("mk/defaults/mk.conf",
+		MkCvsID,
+		"USER_SETTABLE_OK?=\tyes",
+		"USER_SETTABLE_MISSING?=\tyes")
 	t.FinishSetUp()
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
 		"",
-		"\t: ${VARBASE} ${DISTNAME}")
+		"BUILD_DEFS+=\tUSER_SETTABLE_OK",
+		"",
+		"\t: ${USER_SETTABLE_OK}",
+		"\t: ${USER_SETTABLE_MISSING}",
+		"\t: ${PKGNAME}")
 
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:3: VARBASE is used but not defined.")
+		"WARN: filename.mk:6: The user-defined variable " +
+			"USER_SETTABLE_MISSING is used but not added to BUILD_DEFS.")
 }
 
 func (s *Suite) Test_MkVarUseChecker_checkDeprecated(c *check.C) {
