@@ -1099,7 +1099,7 @@ func (ind *Indentation) Push(mkline *MkLine, indent int, args string, guard bool
 //
 // Variables named *_MK are ignored since they are usually not interesting.
 func (ind *Indentation) AddVar(varname string) {
-	if hasSuffix(varname, "_MK") || ind.IsEmpty() {
+	if hasSuffix(varname, "_MK") {
 		return
 	}
 
