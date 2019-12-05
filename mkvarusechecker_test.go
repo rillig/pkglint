@@ -3,12 +3,26 @@ package pkglint
 import "gopkg.in/check.v1"
 
 func (s *Suite) Test_NewMkVarUseChecker(c *check.C) {
-	// FIXME
+	t := s.Init(c)
 
+	t.ExpectPanicMatches(
+		func() { NewMkVarUseChecker(nil, nil, nil) },
+		`runtime error: invalid memory address or nil pointer dereference`)
 }
 
 func (s *Suite) Test_MkVarUseChecker_Check(c *check.C) {
-	// FIXME
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"",
+		"PKGNAME=\t${UNKNOWN}")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:3: UNKNOWN is used but not defined.")
 }
 
 // The ${VARNAME:=suffix} expression should only be used with lists.
@@ -957,9 +971,35 @@ func (s *Suite) Test_MkVarUseChecker_checkQuoting__list_variable_with_two_consta
 }
 
 func (s *Suite) Test_MkVarUseChecker_checkBuildDefs(c *check.C) {
-	// FIXME
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.FinishSetUp()
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"",
+		"\t: ${VARBASE} ${DISTNAME}")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:3: VARBASE is used but not defined.")
 }
 
 func (s *Suite) Test_MkVarUseChecker_checkDeprecated(c *check.C) {
-	// FIXME
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.FinishSetUp()
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"",
+		"\t: ${USE_CROSSBASE}")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:3: USE_CROSSBASE is used but not defined.",
+		"WARN: filename.mk:3: Use of \"USE_CROSSBASE\" is deprecated. "+
+			"Has been removed.")
 }
