@@ -1042,6 +1042,65 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmpty(c *check.C) {
 			"{ Cygwin DragonFly FreeBSD Linux NetBSD SunOS } for OPSYS.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkDirectiveCondEmptyType(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	test := func(line string, diagnostics ...string) {
+		mklines := t.SetUpFileMkLines("module.mk",
+			MkCvsID,
+			"",
+			line,
+			".endif")
+
+		mklines.ForEach(func(mkline *MkLine) {
+			ck := NewMkLineChecker(mklines, mkline)
+			mkline.ForEachUsed(func(varUse *MkVarUse, time VucTime) {
+				ck.checkDirectiveCondEmptyType(varUse)
+			})
+		})
+
+		t.CheckOutput(diagnostics)
+	}
+
+	test(".if !empty(OPSYS:Mok)",
+		"WARN: module.mk:3: The pattern \"ok\" cannot match any of "+
+			"{ Cygwin DragonFly FreeBSD Linux NetBSD SunOS } for OPSYS.")
+
+	// As of December 2019, pkglint doesn't analyze the :S modifier in
+	// depth and therefore simply skips the type check for the :M
+	// modifier.
+	test(".if !empty(OPSYS:S,NetBSD,ok,:Mok)",
+		nil...)
+	test(".if !empty(OPSYS:C,NetBSD,ok,:Mok)",
+		nil...)
+
+	// Several other modifiers are ok since they don't modify the
+	// individual words.
+	test(".if !empty(OPSYS:O:u:Mok)",
+		"WARN: module.mk:3: The pattern \"ok\" cannot match any of "+
+			"{ Cygwin DragonFly FreeBSD Linux NetBSD SunOS } for OPSYS.")
+
+	// Other modifiers can modify the words themselves. As long as
+	// pkglint doesn't actually evaluate these modifiers, suppress
+	// any warnings.
+	test(".if !empty(OPSYS:E:Mok)",
+		nil...)
+	test(".if !empty(OPSYS:H:Mok)",
+		nil...)
+	test(".if !empty(OPSYS:R:Mok)",
+		nil...)
+	test(".if !empty(OPSYS:tl:Mok)",
+		nil...)
+	test(".if !empty(OPSYS:tW:Mok)",
+		nil...)
+	test(".if !empty(OPSYS:tW:Mok)",
+		nil...)
+}
+
 func (s *Suite) Test_MkLineChecker_simplifyCondition(c *check.C) {
 	t := s.Init(c)
 
@@ -1322,9 +1381,6 @@ func (s *Suite) Test_MkLineChecker_simplifyCondition(c *check.C) {
 		".if !empty(OPSYS:S,NetBSD,ok,:Mok)",
 		".if ${OPSYS:S,NetBSD,ok,} == ok",
 
-		// FIXME: That's wrong. After a :S modifier, the values may have changed.
-		"WARN: module.mk:3: The pattern \"ok\" cannot match any of "+
-			"{ Cygwin DragonFly FreeBSD Linux NetBSD SunOS } for OPSYS.",
 		"NOTE: module.mk:3: OPSYS should be "+
 			"compared using \"${OPSYS:S,NetBSD,ok,} == ok\" "+
 			"instead of matching against \":Mok\".",
@@ -1335,9 +1391,6 @@ func (s *Suite) Test_MkLineChecker_simplifyCondition(c *check.C) {
 		".if empty(OPSYS:tl:Msunos)",
 		".if ${OPSYS:tl} != sunos",
 
-		// FIXME: That's wrong. After the :tl modifier, everything is lowercase.
-		"WARN: module.mk:3: The pattern \"sunos\" cannot match any of "+
-			"{ Cygwin DragonFly FreeBSD Linux NetBSD SunOS } for OPSYS.",
 		"NOTE: module.mk:3: OPSYS should be "+
 			"compared using \"${OPSYS:tl} != sunos\" "+
 			"instead of matching against \":Msunos\".",

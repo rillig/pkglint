@@ -545,6 +545,13 @@ func (ck MkLineChecker) checkDirectiveCondEmptyType(varuse *MkVarUse) {
 		ok, _, pattern, _ := modifier.MatchMatch()
 		if ok {
 			ck.checkVartype(varuse.varname, opUseMatch, pattern, "")
+			continue
+		}
+
+		switch modifier.Text {
+		default:
+			return
+		case "O", "u":
 		}
 	}
 }
