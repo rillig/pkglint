@@ -1416,6 +1416,18 @@ func (s *Suite) Test_MkLineChecker_simplifyCondition(c *check.C) {
 			"instead of matching against \":M64\".",
 		"AUTOFIX: module.mk:3: Replacing \"empty(ABI:U:M64)\" "+
 			"with \"${ABI:U} != 64\".")
+
+	// Fractional numbers must also be enclosed in quotes.
+	test(
+		".if empty(PKGVERSION_NOREV:U:M19.12)",
+		".if ${PKGVERSION_NOREV:U} != \"19.12\"",
+
+		"NOTE: module.mk:3: PKGVERSION_NOREV should be "+
+			"compared using \"${PKGVERSION_NOREV:U} != \"19.12\"\" "+
+			"instead of matching against \":M19.12\".",
+		"WARN: module.mk:3: PKGVERSION_NOREV should not be used at load time in any file.",
+		"AUTOFIX: module.mk:3: Replacing \"empty(PKGVERSION_NOREV:U:M19.12)\" "+
+			"with \"${PKGVERSION_NOREV:U} != \\\"19.12\\\"\".")
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirectiveCondCompare(c *check.C) {
