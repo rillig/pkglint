@@ -804,49 +804,60 @@ func (s *Suite) Test_MkLexer_varUseModifierMatch__varmod_edge(c *check.C) {
 func (s *Suite) Test_MkLexer_varUseModifierSubst(c *check.C) {
 	t := s.Init(c)
 
-	varUse := NewMkTokenBuilder().VarUse
-	test := func(text string, varUse *MkVarUse, rest string, diagnostics ...string) {
-		line := t.NewLine("Makefile", 20, "\t"+text)
-		p := NewMkLexer(text, line)
+	test := func(mod string, regex bool, from, to, options, rest string, diagnostics ...string) {
+		line := t.NewLine("Makefile", 20, "")
+		p := NewMkLexer(mod, line)
 
-		actual := p.VarUse()
+		ok, actualRegex, actualFrom, actualTo, actualOptions := p.varUseModifierSubst('}')
 
-		t.CheckDeepEquals(actual, varUse)
-		t.CheckEquals(p.Rest(), rest)
+		t.CheckDeepEquals(
+			[]interface{}{ok, actualRegex, actualFrom, actualTo, actualOptions, p.Rest()},
+			[]interface{}{true, regex, from, to, options, rest})
 		t.CheckOutput(diagnostics)
 	}
 
-	test("${VAR:S", varUse("VAR"), "",
-		"WARN: Makefile:20: Invalid variable modifier \"S\" for \"VAR\".",
-		"WARN: Makefile:20: Missing closing \"}\" for \"VAR\".")
+	testFail := func(mod, rest string, diagnostics ...string) {
+		line := t.NewLine("Makefile", 20, "")
+		p := NewMkLexer(mod, line)
 
-	test("${VAR:S}", varUse("VAR"), "",
-		"WARN: Makefile:20: Invalid variable modifier \"S\" for \"VAR\".")
+		ok, regex, from, to, options := p.varUseModifierSubst('}')
+		if !ok {
+			return
+		}
+		t.CheckDeepEquals(
+			[]interface{}{ok, regex, from, to, options, p.Rest()},
+			[]interface{}{false, false, "", "", "", rest})
+		t.CheckOutput(diagnostics)
+	}
 
-	test("${VAR:S,}", varUse("VAR"), "",
+	testFail("S", "S",
+		nil...)
+
+	testFail("S}", "S}",
+		nil...)
+
+	testFail("S,}", "S,}",
 		"WARN: Makefile:20: Invalid variable modifier \"S,\" for \"VAR\".")
 
-	test("${VAR:S,from,to}", varUse("VAR"), "",
+	testFail("S,from,to}", "",
 		"WARN: Makefile:20: Invalid variable modifier \"S,from,to\" for \"VAR\".")
 
-	test("${VAR:S,from,to,}", varUse("VAR", "S,from,to,"), "")
+	test("S,from,to,}", false, "from", "to", "", "}")
 
-	test("${VAR:S,^from$,to,}", varUse("VAR", "S,^from$,to,"), "")
+	test("S,^from$,to,}", false, "^from$", "to", "", "}")
 
-	test("${VAR:S,@F@,${F},}", varUse("VAR", "S,@F@,${F},"), "")
+	test("S,@F@,${F},}", false, "@F@", "${F}", "", "}")
 
-	test("${VAR:S,from,to,1}", varUse("VAR", "S,from,to,1"), "")
-	test("${VAR:S,from,to,g}", varUse("VAR", "S,from,to,g"), "")
-	test("${VAR:S,from,to,W}", varUse("VAR", "S,from,to,W"), "")
+	test("S,from,to,1}", false, "from", "to", "1", "}")
+	test("S,from,to,g}", false, "from", "to", "g", "}")
+	test("S,from,to,W}", false, "from", "to", "W", "}")
 
-	test("${VAR:S,from,to,1gW}", varUse("VAR", "S,from,to,1gW"), "")
+	test("S,from,to,1gW}", false, "from", "to", "1gW", "}")
 
 	// Inside the :S or :C modifiers, neither a colon nor the closing
 	// brace need to be escaped. Otherwise these patterns would become
 	// too difficult to read and write.
-	test("${VAR:C/[[:alnum:]]{2}/**/g}",
-		varUse("VAR", "C/[[:alnum:]]{2}/**/g"),
-		"")
+	test("C/[[:alnum:]]{2}/**/g}", true, "[[:alnum:]]{2}", "**", "g", "}")
 
 	// Some pkgsrc users really explore the darkest corners of bmake by using
 	// the backslash as the separator in the :S modifier. Sure, it works, it
@@ -854,9 +865,7 @@ func (s *Suite) Test_MkLexer_varUseModifierSubst(c *check.C) {
 	//
 	// Using the backslash as separator means that it cannot be used for anything
 	// else, not even for escaping other characters.
-	test("${VAR:S\\.post1\\\\1}",
-		varUse("VAR", "S\\.post1\\\\1"),
-		"")
+	test("S\\.post1\\\\1}", false, ".post1", "", "1", "}")
 }
 
 func (s *Suite) Test_MkLexer_varUseModifierAt__missing_at_after_variable_name(c *check.C) {
