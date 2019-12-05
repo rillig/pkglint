@@ -2,8 +2,6 @@ package pkglint
 
 import "strings"
 
-// TODO: flatten each method.
-
 type MkVarUseChecker struct {
 	use     *MkVarUse
 	vartype *Vartype
@@ -81,17 +79,20 @@ func (ck *MkVarUseChecker) checkModifiers() {
 func (ck *MkVarUseChecker) checkModifiersSuffix() {
 	varuse := ck.use
 	vartype := ck.vartype
-	if varuse.modifiers[0].IsSuffixSubst() && vartype != nil && !vartype.IsList() {
-		ck.MkLine.Warnf("The :from=to modifier should only be used with lists, not with %s.", varuse.varname)
-		ck.MkLine.Explain(
-			"Instead of (for example):",
-			"\tMASTER_SITES=\t${HOMEPAGE:=repository/}",
-			"",
-			"Write:",
-			"\tMASTER_SITES=\t${HOMEPAGE}repository/",
-			"",
-			"This expresses the intention of the code more clearly.")
+
+	if !varuse.modifiers[0].IsSuffixSubst() || vartype == nil || vartype.IsList() {
+		return
 	}
+
+	ck.MkLine.Warnf("The :from=to modifier should only be used with lists, not with %s.", varuse.varname)
+	ck.MkLine.Explain(
+		"Instead of (for example):",
+		"\tMASTER_SITES=\t${HOMEPAGE:=repository/}",
+		"",
+		"Write:",
+		"\tMASTER_SITES=\t${HOMEPAGE}repository/",
+		"",
+		"This expresses the intention of the code more clearly.")
 }
 
 // checkModifiersRange suggests to replace
@@ -100,23 +101,34 @@ func (ck *MkVarUseChecker) checkModifiersRange() {
 	varuse := ck.use
 	mods := varuse.modifiers
 
-	if len(mods) == 3 {
-		if m, _, from, to, options := mods[0].MatchSubst(); m && from == "^" && matches(to, `^\w+$`) && options == "1" {
-			magic := to
-			if m, positive, pattern, _ := mods[1].MatchMatch(); m && positive && pattern == magic+"*" {
-				if m, _, from, to, options = mods[2].MatchSubst(); m && from == "^"+magic && to == "" && options == "" {
-					fix := ck.MkLine.Autofix()
-					fix.Notef("The modifier %q can be written as %q.", varuse.Mod(), ":[1]")
-					fix.Explain(
-						"The range modifier is much easier to understand than the",
-						"complicated regular expressions, which were needed before",
-						"the year 2006.")
-					fix.Replace(varuse.Mod(), ":[1]")
-					fix.Apply()
-				}
-			}
-		}
+	if len(mods) != 3 {
+		return
 	}
+
+	m, _, from, to, options := mods[0].MatchSubst()
+	if !m || from != "^" || !matches(to, `^\w+$`) || options != "1" {
+		return
+	}
+
+	magic := to
+	m, positive, pattern, _ := mods[1].MatchMatch()
+	if !m || !positive || pattern != magic+"*" {
+		return
+	}
+
+	m, _, from, to, options = mods[2].MatchSubst()
+	if !m || from != "^"+magic || to != "" || options != "" {
+		return
+	}
+
+	fix := ck.MkLine.Autofix()
+	fix.Notef("The modifier %q can be written as %q.", varuse.Mod(), ":[1]")
+	fix.Explain(
+		"The range modifier is much easier to understand than the",
+		"complicated regular expressions, which were needed before",
+		"the year 2006.")
+	fix.Replace(varuse.Mod(), ":[1]")
+	fix.Apply()
 }
 
 func (ck *MkVarUseChecker) checkVarname() {
@@ -543,11 +555,13 @@ func (ck *MkVarUseChecker) checkQuoting(vuc *VarUseContext) {
 func (ck *MkVarUseChecker) checkBuildDefs() {
 	varname := ck.use.varname
 
-	if !(G.Pkgsrc.UserDefinedVars.IsDefined(varname) && !G.Pkgsrc.IsBuildDef(varname)) {
+	if !G.Pkgsrc.UserDefinedVars.IsDefined(varname) || G.Pkgsrc.IsBuildDef(varname) {
 		return
 	}
-
-	if !(!ck.MkLines.buildDefs[varname] && ck.MkLines.once.FirstTimeSlice("BUILD_DEFS", varname)) {
+	if ck.MkLines.buildDefs[varname] {
+		return
+	}
+	if !ck.MkLines.once.FirstTimeSlice("BUILD_DEFS", varname) {
 		return
 	}
 
@@ -567,7 +581,9 @@ func (ck *MkVarUseChecker) checkDeprecated() {
 	if instead == "" {
 		instead = G.Pkgsrc.Deprecated[varnameCanon(varname)]
 	}
-	if instead != "" {
-		ck.MkLine.Warnf("Use of %q is deprecated. %s", varname, instead)
+	if instead == "" {
+		return
 	}
+
+	ck.MkLine.Warnf("Use of %q is deprecated. %s", varname, instead)
 }
