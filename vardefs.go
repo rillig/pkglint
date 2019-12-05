@@ -510,7 +510,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// TODO: Only mark those variables as user-settable that actually influence
 	//  the generated packages. For example, UPDATE_TARGET doesn't.
 
-	// Last synced with mk/defaults/mk.conf revision 1.300 (fe3d998769f).
+	// Last synced with mk/defaults/mk.conf revision 1.300 (abbf617a26f3).
 	reg.usr("USE_CWRAPPERS", enum("yes no auto"))
 	reg.usr("ALLOW_VULNERABLE_PACKAGES", BtYes)
 	reg.usrlist("AUDIT_PACKAGES_FLAGS", BtShellWord)
