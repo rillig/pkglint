@@ -842,6 +842,14 @@ func (s *Suite) Test_MkLexer_varUseModifierSubst(c *check.C) {
 	testFail("S,from,to}", "",
 		"WARN: Makefile:20: Invalid variable modifier \"S,from,to\" for \"VAR\".")
 
+	// Up to 2019-12-05, these were considered valid substitutions,
+	// having [ as the separator and ss] as the rest.
+	// FIXME
+	test("M[Y][eE][sS]", false, "Y]", "eE]", "", "sS]",
+		nil...)
+	test("N[Y][eE][sS]", false, "Y]", "eE]", "", "sS]",
+		nil...)
+
 	test("S,from,to,}", false, "from", "to", "", "}")
 
 	test("S,^from$,to,}", false, "^from$", "to", "", "}")
