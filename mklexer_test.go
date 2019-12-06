@@ -710,9 +710,9 @@ func (s *Suite) Test_MkLexer_varUseModifier__eq_suffix_replacement(c *check.C) {
 	test("=\\}\\\\\\$\\&", "=\\}\\\\\\$\\&", "")
 	// XXX: maybe someday test("=\\}\\\\\\$\\&", "=}\\$&", "")
 
-	// FIXME: That's clearly wrong.
-	test("=${VAR:D/}}", "=${VAR:D/}", "}",
-		"WARN: filename.mk:123: The text \":D/}\" looks like a modifier but isn't.")
+	// The colon in the nested variable expression does not count as
+	// a separator for parsing the outer modifier.
+	test("=${VAR:D/}}", "=${VAR:D/}", "}")
 }
 
 func (s *Suite) Test_MkLexer_varUseModifier__assigment(c *check.C) {

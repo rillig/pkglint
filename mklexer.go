@@ -179,16 +179,25 @@ func (p *MkLexer) varUseText(closing byte) string {
 // This is used for the :from=to modifier.
 //
 // See devel/bmake/files/var.c:/eqFound = FALSE/
-func (p *MkLexer) varUseModifierSysV(closing byte) string {
+func (p *MkLexer) varUseModifierSysV(closing byte) (string, string) {
 	lexer := p.lexer
 	start := lexer.Mark()
 	re := regcomp(regex.Pattern(condStr(closing == '}', `^([^$\\}]|\$\$|\\.)+`, `^([^$\\)]|\$\$|\\.)+`)))
 
+	noVars := NewLazyStringBuilder(lexer.Rest())
 	// pkglint deviates from bmake here by properly parsing nested
 	// variables. bmake only counts opening and closing characters.
-	for p.VarUse() != nil || lexer.SkipRegexp(re) {
+	for {
+		if p.VarUse() != nil {
+			continue
+		}
+		m := lexer.NextRegexp(re)
+		if len(m) == 0 {
+			break
+		}
+		noVars.WriteString(m[0])
 	}
-	return lexer.Since(start)
+	return lexer.Since(start), noVars.String()
 }
 
 // VarUseModifiers parses the modifiers of a variable being used, such as :Q, :Mpattern.
@@ -311,9 +320,9 @@ func (p *MkLexer) varUseModifier(varname string, closing byte) string {
 
 	// ${SOURCES:%.c=%.o}
 	lexer.Reset(mark)
-	modifier := p.varUseModifierSysV(closing)
+	modifier, modifierNoVar := p.varUseModifierSysV(closing)
 	if contains(modifier, "=") {
-		if contains(modifier, ":") {
+		if contains(modifierNoVar, ":") {
 			unrealModifier := modifier[strings.Index(modifier, ":"):]
 			p.Warnf("The text %q looks like a modifier but isn't.", unrealModifier)
 			p.Explain(
