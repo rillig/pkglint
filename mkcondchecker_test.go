@@ -763,6 +763,45 @@ func (s *Suite) Test_MkCondChecker_simplifyCondition(c *check.C) {
 		".if ${MAKE}",
 
 		nil...)
+
+	// Special characters must be enclosed in quotes when they are
+	// used in string literals.
+	// As of December 2019, strings with special characters are not yet
+	// replaced automatically, see mkCondLiteralChars.
+	// TODO: Add tests for all characters that are special in string literals or patterns.
+	// TODO: Then, extend the set of characters for which the expressions are simplified.
+	testAfterPrefs(
+		".if ${FETCH_CMD:M&&}",
+		".if ${FETCH_CMD:M&&}",
+
+		nil...)
+
+	// The character '+' had been added to mkCondLiteralChars, but not
+	// to the regular expression for needsQuotes.
+	// FIXME: Fix this inconsistency.
+	// TODO: Then replace the '+' in this test by a character that needs
+	//  quotes and is nevertheless supported by the simplifier.
+	testAfterPrefs(
+		".if ${PKGPATH:Mcategory/gtk+}",
+		".if ${PKGPATH} == \"category/gtk+\"",
+
+		"NOTE: module.mk:3: PKGPATH should be "+
+			"compared using \"${PKGPATH} == \"category/gtk+\"\" "+
+			"instead of matching against \":Mcategory/gtk+\".",
+		"AUTOFIX: module.mk:3: "+
+			"Replacing \"${PKGPATH:Mcategory/gtk+}\" "+
+			"with \"${PKGPATH} == \\\"category/gtk+\\\"\".")
+
+	// If pkglint replaces this particular pattern, the resulting string
+	// literal must be escaped properly.
+	testAfterPrefs(
+		".if ${PKGPATH:M\"}",
+		".if ${PKGPATH:M\"}",
+
+		// TODO: Find a better variable than PKGPATH,
+		//  to get rid of this unrelated warning.
+		"WARN: module.mk:3: The pathname pattern \"\\\"\" "+
+			"contains the invalid character \"\\\"\".")
 }
 
 func (s *Suite) Test_MkCondChecker_simplifyCondition__defined_in_same_file(c *check.C) {

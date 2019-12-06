@@ -114,6 +114,10 @@ func (ck *MkCondChecker) checkDirectiveCondEmptyType(varuse *MkVarUse) {
 	}
 }
 
+// mkCondLiteralChars contains the characters that may be used outside
+// quotes in a comparison condition such as ${PKGPATH} == category/package.
+var mkCondLiteralChars = textproc.NewByteSet("+---./0-9A-Z_a-z")
+
 // simplifyCondition replaces an unnecessarily complex condition with
 // a simpler condition that's still equivalent.
 //
