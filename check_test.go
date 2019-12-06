@@ -104,15 +104,72 @@ func (s *Suite) TearDownTest(c *check.C) {
 //  Test_${Type}_${Method}__${description_using_underscores}
 func (s *Suite) Test__qa(c *check.C) {
 	ck := intqa.NewQAChecker(c.Errorf)
-	ck.Configure("*", "*", "*", -intqa.EMissingTest)
-	ck.Configure("path.go", "*", "*", +intqa.EMissingTest)
-	ck.Configure("mkassignchecker.go", "*", "*", +intqa.EMissingTest)
-	ck.Configure("mkcondchecker.go", "*", "*", +intqa.EMissingTest)
-	ck.Configure("mkvarusechecker.go", "*", "*", +intqa.EMissingTest)
+
+	ck.Configure("autofix.go", "*", "*", -intqa.EMissingTest)     // TODO
+	ck.Configure("buildlink3.go", "*", "*", -intqa.EMissingTest)  // TODO
+	ck.Configure("distinfo.go", "*", "*", -intqa.EMissingTest)    // TODO
+	ck.Configure("files.go", "*", "*", -intqa.EMissingTest)       // TODO
+	ck.Configure("licenses.go", "*", "*", -intqa.EMissingTest)    // TODO
+	ck.Configure("line.go", "*", "*", -intqa.EMissingTest)        // TODO
+	ck.Configure("linechecker.go", "*", "*", -intqa.EMissingTest) // TODO
+	// FIXME: What is LinesLexer doing in linelexer.go? That doesn't match.
+	ck.Configure("linelexer.go", "*", "*", -intqa.EMissingTest)      // TODO
+	ck.Configure("lines.go", "*", "*", -intqa.EMissingTest)          // TODO
+	ck.Configure("logging.go", "*", "*", -intqa.EMissingTest)        // TODO
+	ck.Configure("mklexer.go", "*", "*", -intqa.EMissingTest)        // TODO
+	ck.Configure("mkline.go", "*", "*", -intqa.EMissingTest)         // TODO
+	ck.Configure("mklineparser.go", "*", "*", -intqa.EMissingTest)   // TODO
+	ck.Configure("mklinechecker.go", "*", "*", -intqa.EMissingTest)  // TODO
+	ck.Configure("mklines.go", "*", "*", -intqa.EMissingTest)        // TODO
+	ck.Configure("mkparser.go", "*", "*", -intqa.EMissingTest)       // TODO
+	ck.Configure("mkshparser.go", "*", "*", -intqa.EMissingTest)     // TODO
+	ck.Configure("mkshtypes.go", "*", "*", -intqa.EMissingTest)      // TODO
+	ck.Configure("mkshwalker.go", "*", "*", -intqa.EMissingTest)     // TODO
+	ck.Configure("mktokenslexer.go", "*", "*", -intqa.EMissingTest)  // TODO
+	ck.Configure("mktypes.go", "*", "*", -intqa.EMissingTest)        // TODO
+	ck.Configure("options.go", "*", "*", -intqa.EMissingTest)        // TODO
+	ck.Configure("package.go", "*", "*", -intqa.EMissingTest)        // TODO
+	ck.Configure("paragraph.go", "*", "*", -intqa.EMissingTest)      // TODO
+	ck.Configure("patches.go", "*", "*", -intqa.EMissingTest)        // TODO
+	ck.Configure("pkglint.go", "*", "*", -intqa.EMissingTest)        // TODO
+	ck.Configure("pkgsrc.go", "*", "*", -intqa.EMissingTest)         // TODO
+	ck.Configure("plist.go", "*", "*", -intqa.EMissingTest)          // TODO
+	ck.Configure("redundantscope.go", "*", "*", -intqa.EMissingTest) // TODO
+	ck.Configure("shell.go", "*", "*", -intqa.EMissingTest)          // TODO
+	ck.Configure("shtokenizer.go", "*", "*", -intqa.EMissingTest)    // TODO
+	ck.Configure("shtypes.go", "*", "*", -intqa.EMissingTest)        // TODO
+	ck.Configure("substcontext.go", "*", "*", -intqa.EMissingTest)   // TODO
+	ck.Configure("tools.go", "*", "*", -intqa.EMissingTest)          // TODO
+	ck.Configure("util.go", "*", "*", -intqa.EMissingTest)           // TODO
+	ck.Configure("var.go", "*", "*", -intqa.EMissingTest)            // TODO
+	ck.Configure("varalignblock.go", "*", "*", -intqa.EMissingTest)  // TODO
+	ck.Configure("vardefs.go", "*", "*", -intqa.EMissingTest)        // TODO
+	ck.Configure("vargroups.go", "*", "*", -intqa.EMissingTest)      // TODO
+	ck.Configure("vartype.go", "*", "*", -intqa.EMissingTest)        // TODO
+	ck.Configure("vartypecheck.go", "*", "*", -intqa.EMissingTest)   // TODO
+
+	// For now, don't require tests for all the test code.
+	// Having good coverage for the main code is more important.
+	ck.Configure("*_test.go", "*", "*", -intqa.EMissingTest)
+
+	// These helper methods are usually so simple that they don't need
+	// separate tests.
+	// They are tested indirectly by the tests of their corresponding checks.
 	ck.Configure("*", "*", "warn[A-Z]*", -intqa.EMissingTest)
+
+	// Generated code doesn't need a unit test.
+	// If any, every grammar production in the corresponding yacc file
+	// should have a unit test.
 	ck.Configure("*yacc.go", "*", "*", intqa.ENone)
+
+	// Type definitions don't need a unit test.
+	// Only functions and methods do.
 	ck.Configure("*", "*", "", -intqa.EMissingTest)
+
+	// The Suite type is used for testing all parts of pkglint.
+	// Therefore its test methods may be everywhere.
 	ck.Configure("*.go", "Suite", "*", -intqa.EMethodsSameFile)
+
 	ck.Check()
 }
 
