@@ -28,16 +28,50 @@ const (
 	// and as lists of arbitrary things.
 	List vartypeOptions = 1 << iota
 
+	// The variable is not defined by the pkgsrc infrastructure.
+	// It follows the common naming convention, therefore its type can be guessed.
+	// Sometimes, with files and paths, this leads to wrong decisions.
 	Guessed
+
+	// The variable can, or in some cases must, be defined by the package.
+	// For several of these variables, the pkgsrc infrastructure provides
+	// a reasonable default value, either in bsd.prefs.mk or in bsd.pkg.mk.
 	PackageSettable
+
+	// The variable can be defined by the pkgsrc user in mk.conf.
+	// Its value is available at load time after bsd.prefs.mk has been included.
 	UserSettable
+
+	// This variable is provided by either the pkgsrc infrastructure in
+	// mk/*, or by <sys.mk>, which is included at the very beginning.
+	//
+	// FIXME: Clearly distinguish between:
+	//  * sys.mk
+	//  * bsd.prefs.mk
+	//  * bsd.pkg.mk
+	//  * other parts of the pkgsrc infrastructure
+	//  Having all these possibilities as boolean flags is probably not
+	//  expressive enough. This is related to the scope and lifetime of
+	//  variables and should be modelled separately.
+	//
+	// See DefinedInSysMk.
 	SystemProvided
+
+	// This variable may be provided in the command line by the pkgsrc
+	// user when building a package.
+	//
+	// Since the values of these variables are not written down in any
+	// file, they must not influence the generated binary packages.
+	//
+	// See UserSettable.
 	CommandLineProvided
 
 	// NeedsRationale marks variables that should always contain a comment
 	// describing why they are set. Typical examples are NOT_FOR_* variables.
 	NeedsRationale
 
+	// When something is appended to this variable, each additional
+	// value should be on a line of its own.
 	OnePerLine
 
 	NoVartypeOptions = 0

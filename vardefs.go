@@ -94,7 +94,10 @@ func (reg *VarTypeRegistry) DefineParse(varname string, basicType *BasicType, op
 //  - why the predefined permission set is not good enough
 //  - which packages need this custom permission set.
 func (reg *VarTypeRegistry) acl(varname string, basicType *BasicType, options vartypeOptions, aclEntries ...string) {
+	// If this assertion fails, it usually means that the test
+	// calls SetUpVartypes redundantly.
 	assertf(!reg.IsDefinedExact(varname), "Variable %q must only be defined once.", varname)
+
 	reg.DefineParse(varname, basicType, options, aclEntries...)
 }
 
@@ -1503,9 +1506,11 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.pkg("PLIST_TYPE", enum("dynamic static"))
 	reg.pkglistbl3("PREPEND_PATH", BtPathname)
 
+	// PREFIX is indeed defined late, in bsd.pkg.use.mk, included by bsd.pkg.mk.
 	reg.acl("PREFIX", BtPathname,
 		UserSettable,
 		"*: use")
+
 	// BtPathname instead of BtPkgpath since the original package doesn't exist anymore.
 	// It would be more precise to check for a Pkgpath that doesn't exist anymore.
 	reg.pkg("PREV_PKGPATH", BtPathname)
