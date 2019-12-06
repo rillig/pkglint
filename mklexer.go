@@ -313,6 +313,13 @@ func (p *MkLexer) varUseModifier(varname string, closing byte) string {
 	lexer.Reset(mark)
 	modifier := p.varUseModifierSysV(closing)
 	if contains(modifier, "=") {
+		if contains(modifier, ":") {
+			unrealModifier := modifier[strings.Index(modifier, ":"):]
+			p.Warnf("The text %q looks like a modifier but isn't.", unrealModifier)
+			p.Explain(
+				"The :from=to modifier consumes all the text until the end of the variable.",
+				"There cannot be any further modifiers after it.")
+		}
 		return modifier
 	}
 

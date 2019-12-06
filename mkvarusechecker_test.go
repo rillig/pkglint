@@ -291,7 +291,10 @@ func (s *Suite) Test_MkVarUseChecker_checkModifiersSuffix(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
+		"WARN: file.mk:2: The text \":Q\" looks like a modifier but isn't.",
+		"WARN: file.mk:2: The text \":Q\" looks like a modifier but isn't.",
 		"WARN: file.mk:2: The :from=to modifier should only be used with lists, not with HOMEPAGE.",
+		"WARN: file.mk:2: The text \":Q\" looks like a modifier but isn't.",
 		"WARN: file.mk:4: BIN_PROGRAMS is used but not defined.")
 }
 

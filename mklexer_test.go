@@ -566,7 +566,8 @@ func (s *Suite) Test_MkLexer_VarUseModifiers(c *check.C) {
 	// The :Q at the end is part of the right-hand side of the = modifier.
 	// It does not quote anything.
 	// See devel/bmake/files/var.c:/^VarGetPattern/.
-	test("${VAR:old=new:Q}", varUse("VAR", "old=new:Q"))
+	test("${VAR:old=new:Q}", varUse("VAR", "old=new:Q"),
+		"WARN: Makefile:20: The text \":Q\" looks like a modifier but isn't.")
 }
 
 func (s *Suite) Test_MkLexer_varUseModifier(c *check.C) {
@@ -680,7 +681,7 @@ func (s *Suite) Test_MkLexer_varUseModifier__varuse_in_malformed_modifier(c *che
 func (s *Suite) Test_MkLexer_varUseModifier__eq_suffix_replacement(c *check.C) {
 	t := s.Init(c)
 
-	test := func(input, modifier, rest string) {
+	test := func(input, modifier, rest string, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, "")
 		p := NewMkLexer(input, line)
 
@@ -688,18 +689,22 @@ func (s *Suite) Test_MkLexer_varUseModifier__eq_suffix_replacement(c *check.C) {
 
 		t.CheckDeepEquals(actual, modifier)
 		t.CheckEquals(p.Rest(), rest)
+		t.CheckOutput(diagnostics)
 	}
 
 	test("%.c=%.o", "%.c=%.o", "")
-	test("%\\:c=%.o", "%\\:c=%.o", "") // XXX: maybe someday remove the escaping.
-	test("%\\:c=%.o", "%\\:c=%.o", "") // XXX: maybe someday remove the escaping.
+	test("%\\:c=%.o", "%\\:c=%.o", "", // XXX: maybe someday remove the escaping.
+		"WARN: filename.mk:123: The text \":c=%.o\" looks like a modifier but isn't.")
+	test("%\\:c=%.o", "%\\:c=%.o", "", // XXX: maybe someday remove the escaping.
+		"WARN: filename.mk:123: The text \":c=%.o\" looks like a modifier but isn't.")
 
 	// The backslashes are only removed before parentheses,
 	// braces and colons; see devel/bmake/files/var.c:/^VarGetPattern/
 	test(".\\a\\b\\c=.abc", ".\\a\\b\\c=.abc", "")
 
 	// See devel/bmake/files/var.c:/^#define IS_A_MATCH/.
-	test("%.c=%.o:rest", "%.c=%.o:rest", "")
+	test("%.c=%.o:rest", "%.c=%.o:rest", "",
+		"WARN: filename.mk:123: The text \":rest\" looks like a modifier but isn't.")
 	test("\\}\\\\\\$=", "\\}\\\\\\$=", "")
 	// XXX: maybe someday test("\\}\\\\\\$=", "}\\$=", "")
 	test("=\\}\\\\\\$\\&", "=\\}\\\\\\$\\&", "")
@@ -740,11 +745,15 @@ func (s *Suite) Test_MkLexer_varUseModifier__assigment(c *check.C) {
 	// remaining text.
 	//
 	// See devel/bmake/files/var.c:/tstr\[2\] == '='/.
-	test("VAR", "::=${OTHER}:rest", "::=${OTHER}:rest", "")
+	test("VAR", "::=${OTHER}:rest", "::=${OTHER}:rest", "",
+		"WARN: filename.mk:123: The text \"::=${OTHER}:rest\" "+
+			"looks like a modifier but isn't.")
 
 	test("", ":=value", ":=value", "",
 		"ERROR: filename.mk:123: "+
-			"Assignment to the empty variable is not possible.")
+			"Assignment to the empty variable is not possible.",
+		"WARN: filename.mk:123: The text \":=value\" "+
+			"looks like a modifier but isn't.")
 }
 
 func (s *Suite) Test_MkLexer_varUseModifierMatch(c *check.C) {
