@@ -1276,15 +1276,24 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.sysload("LOWER_VENDOR", BtIdentifier, NonemptyIfDefined)
 	reg.sysloadlist("LP64PLATFORMS", BtMachinePlatformPattern, DefinedIfInScope|NonemptyIfDefined)
 	reg.pkglist("LTCONFIG_OVERRIDE", BtPathPattern)
+
 	// See devel/bmake/files/main.c:/Var_Set."MACHINE_ARCH"/.
 	reg.sysload("MACHINE_ARCH", enumMachineArch, AlwaysInScope|DefinedIfInScope|NonemptyIfDefined)
+
 	reg.sysload("MACHINE_GNU_ARCH", enumMachineGnuArch, DefinedIfInScope|NonemptyIfDefined)
 	reg.sysload("MACHINE_GNU_PLATFORM", BtMachineGnuPlatform, DefinedIfInScope|NonemptyIfDefined)
 	reg.sysload("MACHINE_PLATFORM", BtMachinePlatform, DefinedIfInScope|NonemptyIfDefined)
 	reg.pkg("MAINTAINER", BtMailAddress)
+
 	// See devel/bmake/files/main.c:/Var_Set."MAKE"/.
 	reg.sysload("MAKE", BtShellCommand, AlwaysInScope|DefinedIfInScope|NonemptyIfDefined)
+
+	// System-provided, but packages may extend them.
+	// TODO: This needs a special declaration since the very first
+	//  assignment in a package must use += as well.
+	// See devel/bmake/files/main.c:/Var_Set."MAKEFLAGS"/.
 	reg.pkglist("MAKEFLAGS", BtShellWord)
+
 	reg.pkglistbl3("MAKEVARS", BtVariableName)
 	reg.pkglist("MAKE_DIRS", BtPathname)
 	reg.pkglist("MAKE_DIRS_PERMS", BtPerms)
