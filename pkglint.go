@@ -314,8 +314,7 @@ func (pkglint *Pkglint) checkMode(dirent CurrPath, mode os.FileMode) {
 
 	dir := dirent
 	if !isDir {
-		// FIXME: consider DirNoClean
-		dir = dirent.DirClean()
+		dir = dirent.DirNoClean()
 	}
 
 	basename := dirent.Base()
@@ -325,7 +324,9 @@ func (pkglint *Pkglint) checkMode(dirent CurrPath, mode os.FileMode) {
 	pkglint.Infrastructure = pkgsrcRel.HasPrefixPath("mk")
 	pkgsrcdir := findPkgsrcTopdir(dir)
 	if pkgsrcdir.IsEmpty() {
-		NewLineWhole(dirent).Errorf("Cannot determine the pkgsrc root directory for %q.", dir.CleanPath())
+		G.Logger.TechErrorf("",
+			"Cannot determine the pkgsrc root directory for %q.",
+			dirent)
 		return
 	}
 

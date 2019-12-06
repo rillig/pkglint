@@ -180,7 +180,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile(c *check.C) {
 		Downgraded, "category/package", "1.2", "author7", "2018-01-07"})
 
 	t.CheckOutputLines(
-		"WARN: ~/doc/CHANGES-2018:1: Year \"2015\" for category/package does not match the filename ~/doc/CHANGES-2018.",
+		"WARN: ~/doc/CHANGES-2018:1: Year \"2015\" for category/package does not match the filename CHANGES-2018.",
 		"WARN: ~/doc/CHANGES-2018:6: Date \"2018-01-06\" for category/package is earlier than \"2018-01-09\" in line 5.",
 		"WARN: ~/doc/CHANGES-2018:8: Invalid doc/CHANGES line: \tReworked category/package to 1.2 [author8 2018-01-08]",
 		"WARN: ~/doc/CHANGES-2018:10: Invalid doc/CHANGES line: \ttoo few fields",
@@ -254,7 +254,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__default(c *check.C) {
 		"WARN: ~/doc/CHANGES-2018:6: Date \"2018-01-01\" for sysutils/checkperms is earlier than \"2018-01-05\" in line 5.",
 		"WARN: ~/doc/CHANGES-2018:7: Package changes should be indented using a single tab, not \"\\t\\t\".",
 		"WARN: ~/doc/CHANGES-2018:8: Invalid doc/CHANGES line: \tInvalid pkgpath to 1.16 [rillig 2019-06-16]",
-		"WARN: ~/doc/CHANGES-2018:9: Year \"2019\" for category/package does not match the filename ~/doc/CHANGES-2018.",
+		"WARN: ~/doc/CHANGES-2018:9: Year \"2019\" for category/package does not match the filename CHANGES-2018.",
 		"4 warnings found.",
 		t.Shquote("(Run \"pkglint -e -Cglobal -Wall %s\" to show explanations.)", "."))
 }

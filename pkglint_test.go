@@ -371,7 +371,7 @@ func (s *Suite) Test_Pkglint_Check__outside(c *check.C) {
 	// pkglint will exit with a fatal error message since it doesn't
 	// know where to load the infrastructure files from.
 	t.CheckOutputLines(
-		"ERROR: ~: Cannot determine the pkgsrc root directory for \"~\".")
+		"ERROR: Cannot determine the pkgsrc root directory for \"~\".")
 }
 
 func (s *Suite) Test_Pkglint_Check__empty_directory(c *check.C) {
