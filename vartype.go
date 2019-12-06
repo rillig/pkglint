@@ -17,7 +17,7 @@ func NewVartype(basicType *BasicType, options vartypeOptions, aclEntries ...ACLE
 	return &Vartype{basicType, options, aclEntries}
 }
 
-type vartypeOptions uint8
+type vartypeOptions uint16
 
 const (
 	// List is a compound type, consisting of several space-separated elements.
@@ -73,6 +73,64 @@ const (
 	// When something is appended to this variable, each additional
 	// value should be on a line of its own.
 	OnePerLine
+
+	// AlwaysInScope is true when the variable is always available.
+	//
+	// One possibility is that the variable is defined in <sys.mk>,
+	// which means that its value is loaded even before the package
+	// Makefile is parsed.
+	//
+	// Another possibility is that the variable is local to a target,
+	// such as .TARGET or .IMPSRC.
+	//
+	// These variables may be used at load time in .if and .for
+	// directives even before bsd.prefs.mk is included.
+	//
+	// XXX: This option is related to the lifetime of the variable.
+	//  Other aspects of the lifetime are handled by ACLPermissions,
+	//  see aclpUseLoadtime.
+	AlwaysInScope
+
+	// DefinedIfInScope is true if the variable is guaranteed to be
+	// defined, provided that it is in scope.
+	//
+	// This means the variable can be used in expressions like ${VAR}
+	// without having to add the :U modifier like in ${VAR:U}.
+	//
+	// This option is independent of the lifetime of the variable,
+	// it merely expresses "if the variable is in scope, it is defined".
+	// As of December 2019, the lifetime of variables is managed by
+	// the ACLPermissions, but is incomplete.
+	//
+	// TODO: Model the lifetime and scope separately, see SystemProvided.
+	//
+	// Examples:
+	//  MACHINE_PLATFORM (from sys.mk)
+	//  PKGPATH (from bsd.prefs.mk)
+	//  PREFIX (from bsd.pkg.mk)
+	DefinedIfInScope
+
+	// NonemptyIfDefined is true if the variable is guaranteed to be
+	// nonempty, provided that the variable is in scope and defined.
+	//
+	// This is typical for system-provided variables like PKGPATH or
+	// MACHINE_PLATFORM, as well as package-settable variables like
+	// PKGNAME.
+	//
+	// This option is independent of the lifetime of the variable,
+	// it merely expresses "if the variable is in scope, it is defined".
+	// As of December 2019, the lifetime of variables is managed by
+	// the ACLPermissions, but is incomplete.
+	//
+	// TODO: Model the lifetime and scope separately, see SystemProvided.
+	//
+	// Examples:
+	//  MACHINE_PLATFORM (from sys.mk)
+	//  PKGPATH (from bsd.prefs.mk)
+	//  PREFIX (from bsd.pkg.mk)
+	//  PKGNAME (package-settable)
+	//  X11_TYPE (user-settable)
+	NonemptyIfDefined
 
 	NoVartypeOptions = 0
 )
@@ -138,6 +196,9 @@ func (vt *Vartype) IsSystemProvided() bool      { return vt.options&SystemProvid
 func (vt *Vartype) IsCommandLineProvided() bool { return vt.options&CommandLineProvided != 0 }
 func (vt *Vartype) NeedsRationale() bool        { return vt.options&NeedsRationale != 0 }
 func (vt *Vartype) IsOnePerLine() bool          { return vt.options&OnePerLine != 0 }
+func (vt *Vartype) IsAlwaysInScope() bool       { return vt.options&AlwaysInScope != 0 }
+func (vt *Vartype) IsDefinedIfInScope() bool    { return vt.options&DefinedIfInScope != 0 }
+func (vt *Vartype) IsNonemptyIfInScope() bool   { return vt.options&NonemptyIfDefined != 0 }
 
 func (vt *Vartype) EffectivePermissions(basename string) ACLPermissions {
 	for _, aclEntry := range vt.aclEntries {

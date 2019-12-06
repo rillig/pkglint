@@ -131,6 +131,21 @@ func (ck *MkCondChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, neg
 		return
 	}
 	modsExceptLast := (&MkVarUse{"", mods[:n-1]}).Mod()
+	vartype := G.Pkgsrc.VariableType(ck.MkLines, varname)
+
+	isDefined := func() bool {
+		if vartype.IsAlwaysInScope() && vartype.IsDefinedIfInScope() {
+			return true
+		}
+
+		if ck.MkLines.vars.IsDefined(varname) {
+			return true
+		}
+
+		return ck.MkLines.Tools.SeenPrefs &&
+			vartype.Union().Contains(aclpUseLoadtime) &&
+			vartype.IsDefinedIfInScope()
+	}
 
 	// replace constructs the state before and after the autofix.
 	// The before state is constructed to ensure that only very simple
@@ -138,7 +153,20 @@ func (ck *MkCondChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, neg
 	//
 	// Before putting any cases involving special characters into
 	// production, there need to be more tests for the edge cases.
-	replace := func(positive bool, pattern string) (string, string) {
+	replace := func(positive bool, pattern string) (bool, string, string) {
+		defined := isDefined()
+		if !defined && !positive {
+			// TODO: This is a double negation, maybe even triple.
+			//  There is an :N pattern, and the variable may be undefined.
+			//  If it is indeed undefined, should the whole condition
+			//  evaluate to true or false?
+			//  The cases to be distinguished are: undefined, empty, filled.
+
+			// For now, be conservative and don't suggest anything wrong.
+			return false, "", ""
+		}
+		uMod := condStr(!defined && !varuse.HasModifier("U"), ":U", "")
+
 		op := condStr(neg == positive, "==", "!=")
 
 		from := sprintf("%s%s%s%s%s%s%s",
@@ -154,9 +182,11 @@ func (ck *MkCondChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, neg
 			matches(pattern, `^\d+\.?\d*$`)
 		quote := condStr(needsQuotes, "\"", "")
 
-		to := sprintf("${%s%s} %s %s%s%s", varname, modsExceptLast, op, quote, pattern, quote)
+		to := sprintf(
+			"${%s%s%s} %s %s%s%s",
+			varname, uMod, modsExceptLast, op, quote, pattern, quote)
 
-		return from, to
+		return true, from, to
 	}
 
 	modifier := modifiers[n-1]
@@ -165,7 +195,6 @@ func (ck *MkCondChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, neg
 		return
 	}
 
-	vartype := G.Pkgsrc.VariableType(ck.MkLines, varname)
 	switch {
 	case !exact,
 		vartype == nil,
@@ -174,10 +203,11 @@ func (ck *MkCondChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, neg
 		return
 	}
 
-	from, to := replace(positive, pattern)
+	ok, from, to := replace(positive, pattern)
+	if !ok {
+		return
+	}
 
-	// FIXME: This transformation is only valid if the variable is guaranteed to
-	//  be defined. If that's not the case, the :U modifier must be added.
 	fix := ck.MkLine.Autofix()
 	fix.Notef("%s should be compared using \"%s\" instead of matching against %q.",
 		varname, to, ":"+modifier.Text)
