@@ -1435,11 +1435,11 @@ func (s *Suite) Test_Indentation_Varnames__repetition(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/other")
-	t.CreateFileDummyBuildlink3("category/other/buildlink3.mk")
+	t.CreateFileBuildlink3("category/other/buildlink3.mk")
 	t.SetUpPackage("category/package",
 		"DISTNAME=\tpackage-1.0",
 		".include \"../../category/other/buildlink3.mk\"")
-	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
+	t.CreateFileBuildlink3("category/package/buildlink3.mk",
 		".if ${OPSYS} == NetBSD || ${OPSYS} == FreeBSD",
 		".  if ${OPSYS} == NetBSD",
 		".    include \"../../category/other/buildlink3.mk\"",

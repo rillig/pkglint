@@ -146,7 +146,7 @@ func (s *Suite) Test_Autofix__lonely_source(c *check.C) {
 		".include \"../../x11/xorgproto/buildlink3.mk\"")
 	t.SetUpPackage("x11/xorgproto",
 		"DISTNAME=\txorgproto-1.0")
-	t.CreateFileDummyBuildlink3("x11/xorgproto/buildlink3.mk")
+	t.CreateFileBuildlink3("x11/xorgproto/buildlink3.mk")
 	t.CreateFileLines("x11/xorgproto/builtin.mk",
 		MkCvsID,
 		"",

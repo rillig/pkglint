@@ -1246,7 +1246,7 @@ func (s *Suite) Test_RedundantScope__included_OPSYS_variable(c *check.C) {
 		"CONFIGURE_ARGS=         two",
 		"CONFIGURE_ARGS+=        three")
 	t.SetUpPackage("category/dependency")
-	t.CreateFileDummyBuildlink3("category/dependency/buildlink3.mk")
+	t.CreateFileBuildlink3("category/dependency/buildlink3.mk")
 	t.CreateFileLines("category/dependency/builtin.mk",
 		MkCvsID,
 		"CONFIGURE_ARGS.Darwin+= darwin")

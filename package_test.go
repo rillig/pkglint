@@ -360,7 +360,7 @@ func (s *Suite) Test_Package_load__buildlink3_mk_includes_other_mk(c *check.C) {
 
 	t.SetUpCommandLine("-Wall", "--explain")
 	t.SetUpPackage("multimedia/libav")
-	t.CreateFileDummyBuildlink3("multimedia/libav/buildlink3.mk",
+	t.CreateFileBuildlink3("multimedia/libav/buildlink3.mk",
 		".include \"available.mk\"")
 	t.CreateFileLines("multimedia/libav/available.mk",
 		MkCvsID,
@@ -897,7 +897,7 @@ func (s *Suite) Test_Package_parse__builtin_mk(c *check.C) {
 		"",
 		"show-var-from-builtin: .PHONY",
 		"\techo ${VAR_FROM_BUILTIN} ${OTHER_VAR}")
-	t.CreateFileDummyBuildlink3("category/lib1/buildlink3.mk")
+	t.CreateFileBuildlink3("category/lib1/buildlink3.mk")
 	t.CreateFileLines("category/lib1/builtin.mk",
 		MkCvsID,
 		"VAR_FROM_BUILTIN=\t# defined")
@@ -919,7 +919,7 @@ func (s *Suite) Test_Package_parse__included(c *check.C) {
 		".include \"../../devel/library/buildlink3.mk\"",
 		".include \"../../lang/language/module.mk\"")
 	t.SetUpPackage("devel/library")
-	t.CreateFileDummyBuildlink3("devel/library/buildlink3.mk")
+	t.CreateFileBuildlink3("devel/library/buildlink3.mk")
 	t.CreateFileLines("devel/library/builtin.mk",
 		MkCvsID)
 	t.CreateFileLines("lang/language/module.mk",
@@ -1015,10 +1015,10 @@ func (s *Suite) Test_Package_loadIncluded__nested_inclusion(c *check.C) {
 	t.SetUpPackage("x11/kde-runtime4",
 		".include \"../../x11/kde-libs4/buildlink3.mk\"")
 	t.SetUpPackage("x11/kde-libs4")
-	t.CreateFileDummyBuildlink3("x11/kde-libs4/buildlink3.mk",
+	t.CreateFileBuildlink3("x11/kde-libs4/buildlink3.mk",
 		".include \"../../databases/openldap/buildlink3.mk\"")
 	t.SetUpPackage("databases/openldap")
-	t.CreateFileDummyBuildlink3("databases/openldap/buildlink3.mk",
+	t.CreateFileBuildlink3("databases/openldap/buildlink3.mk",
 		"VAR=\tvalue",
 		"VAR=\tvalue") // Provoke a warning in this file.
 	t.FinishSetUp()
@@ -2896,7 +2896,7 @@ func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__infra_buildlink_file
 
 	t.SetUpPackage("category/package",
 		".include \"../../mk/motif.buildlink3.mk\"")
-	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
+	t.CreateFileBuildlink3("category/package/buildlink3.mk",
 		".include \"../../mk/motif.buildlink3.mk\"")
 	t.CreateFileLines("mk/motif.buildlink3.mk",
 		MkCvsID)
@@ -2934,7 +2934,7 @@ func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__no_tracing(c *check.
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
-	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk")
+	t.CreateFileBuildlink3("category/package/buildlink3.mk")
 	t.FinishSetUp()
 
 	t.DisableTracing()
@@ -3001,7 +3001,7 @@ func (s *Suite) Test_Package_checkIncludeConditionally__explain_PKG_OPTIONS_in_M
 		".if ${PKG_OPTIONS:Mzlib}",
 		".include \"../../devel/zlib/buildlink3.mk\"",
 		".endif")
-	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
+	t.CreateFileBuildlink3("category/package/buildlink3.mk",
 		".include \"../../devel/zlib/buildlink3.mk\"")
 	t.Chdir("category/package")
 	t.FinishSetUp()
@@ -3031,7 +3031,7 @@ func (s *Suite) Test_Package_checkIncludeConditionally__no_explanation(c *check.
 		".if ${OPSYS} == Linux",
 		".include \"../../devel/zlib/buildlink3.mk\"",
 		".endif")
-	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
+	t.CreateFileBuildlink3("category/package/buildlink3.mk",
 		".include \"../../devel/zlib/buildlink3.mk\"")
 	t.Chdir("category/package")
 	t.FinishSetUp()
@@ -3106,7 +3106,7 @@ func (s *Suite) Test_Package_checkIncludeConditionally__explain_PKG_OPTIONS_in_o
 		".if ${PKG_OPTIONS:Mzlib}",
 		".include \"../../devel/zlib/buildlink3.mk\"",
 		".endif")
-	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
+	t.CreateFileBuildlink3("category/package/buildlink3.mk",
 		".include \"../../devel/zlib/buildlink3.mk\"")
 	t.Chdir("category/package")
 	t.FinishSetUp()

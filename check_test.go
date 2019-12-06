@@ -543,7 +543,7 @@ func (t *Tester) CreateFileDummyPatch(filename RelPath) {
 		"+new")
 }
 
-func (t *Tester) CreateFileDummyBuildlink3(filename RelPath, customLines ...string) {
+func (t *Tester) CreateFileBuildlink3(filename RelPath, customLines ...string) {
 	// Buildlink3.mk files only make sense in category/package directories.
 	assert(G.Pkgsrc.ToRel(t.File(filename)).Count() == 3)
 

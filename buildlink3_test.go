@@ -15,7 +15,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__package(c *check.C) {
 	t.SetUpPackage("category/package",
 		".include \"../../category/dependency1/buildlink3.mk\"")
 
-	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
+	t.CreateFileBuildlink3("category/package/buildlink3.mk",
 		".include \"../../category/dependency2/buildlink3.mk\"")
 	t.FinishSetUp()
 
@@ -585,7 +585,7 @@ func (s *Suite) Test_Buildlink3Checker_Check__no_tracing(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
-	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk")
+	t.CreateFileBuildlink3("category/package/buildlink3.mk")
 	t.DisableTracing()
 	t.FinishSetUp()
 
@@ -677,7 +677,7 @@ func (s *Suite) Test_Buildlink3Checker_checkSecondParagraph__missing_mkbase(c *c
 	t.SetUpPackage("category/package",
 		"DISTNAME=\t# empty",
 		"PKGNAME=\t# empty, to force mkbase to be empty")
-	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk")
+	t.CreateFileBuildlink3("category/package/buildlink3.mk")
 	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))
@@ -694,7 +694,7 @@ func (s *Suite) Test_Buildlink3Checker_checkMainPart__if_else_endif(c *check.C) 
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
-	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
+	t.CreateFileBuildlink3("category/package/buildlink3.mk",
 		".if ${X11_TYPE} == modular",
 		".else",
 		".endif")
@@ -797,7 +797,7 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__dependencies_with_path(c 
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
-	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
+	t.CreateFileBuildlink3("category/package/buildlink3.mk",
 		"BUILDLINK_ABI_DEPENDS.package+=\tpackage>=1.0:../../category/package",
 		"BUILDLINK_API_DEPENDS.package+=\tpackage>=1.5:../../category/package")
 	t.FinishSetUp()
@@ -817,7 +817,7 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__abi_without_api(c *check.
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
-	// t.CreateFileDummyBuildlink3() cannot be used here since it always adds an API line.
+	// t.CreateFileBuildlink3() cannot be used here since it always adds an API line.
 	t.CreateFileLines("category/package/buildlink3.mk",
 		MkCvsID,
 		"",
@@ -846,7 +846,7 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__abi_and_api_with_variable
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
-	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
+	t.CreateFileBuildlink3("category/package/buildlink3.mk",
 		"BUILDLINK_ABI_DEPENDS.package+=\tpackage>=${ABI_VERSION}",
 		"BUILDLINK_API_DEPENDS.package+=\tpackage>=${API_VERSION}",
 		"",
@@ -864,7 +864,7 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__api_with_variable(c *chec
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
-	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
+	t.CreateFileBuildlink3("category/package/buildlink3.mk",
 		"BUILDLINK_ABI_DEPENDS.package+=\tpackage>=1.0",
 		"BUILDLINK_API_DEPENDS.package+=\tpackage>=${API_VERSION}",
 		"",
@@ -881,7 +881,7 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__abi_and_api_with_pattern(
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
-	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
+	t.CreateFileBuildlink3("category/package/buildlink3.mk",
 		"BUILDLINK_ABI_DEPENDS.package+=\tpackage-1.*",
 		"BUILDLINK_API_DEPENDS.package+=\tpackage-2.*")
 	t.FinishSetUp()
@@ -897,7 +897,7 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__api_with_pattern(c *check
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
-	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
+	t.CreateFileBuildlink3("category/package/buildlink3.mk",
 		"BUILDLINK_ABI_DEPENDS.package+=\tpackage>=1",
 		"BUILDLINK_API_DEPENDS.package+=\tpackage-1.*")
 	t.FinishSetUp()
@@ -913,7 +913,7 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__other_variables(c *check.
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
-	t.CreateFileDummyBuildlink3("category/package/buildlink3.mk",
+	t.CreateFileBuildlink3("category/package/buildlink3.mk",
 		"BUILDLINK_TREE+=\tmistake", // Wrong, but doesn't happen in practice.
 		"",
 		"LDFLAGS.NetBSD+=\t-ldl",
