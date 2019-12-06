@@ -608,6 +608,10 @@ func (s *Suite) Test_Scope_FirstDefinition(c *check.C) {
 	// These sneaky variables with implicit definition are an edge
 	// case that only few people actually know. It's better that way.
 	t.Check(scope.FirstDefinition("SNEAKY"), check.IsNil)
+
+	t.CheckOutputLines(
+		"ERROR: fname.mk:3: Assignment modifiers like \":=\" " +
+			"must not be used at all.")
 }
 
 func (s *Suite) Test_Scope_Commented(c *check.C) {

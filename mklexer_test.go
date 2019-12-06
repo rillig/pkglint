@@ -709,29 +709,29 @@ func (s *Suite) Test_MkLexer_varUseModifier__eq_suffix_replacement(c *check.C) {
 func (s *Suite) Test_MkLexer_varUseModifier__assigment(c *check.C) {
 	t := s.Init(c)
 
-	test := func(input, modifier, rest string, diagnostics ...string) {
+	test := func(varname, input, modifier, rest string, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, "")
 		p := NewMkLexer(input, line)
 
-		actual := p.varUseModifier("VAR", '}')
+		actual := p.varUseModifier(varname, '}')
 
 		t.CheckDeepEquals(actual, modifier)
 		t.CheckEquals(p.Rest(), rest)
 		t.CheckOutput(diagnostics)
 	}
 
-	test(":!=${OTHER}:rest", ":!=${OTHER}", ":rest",
-		"WARN: filename.mk:123: "+
-			"Assignment modifiers like \":!=\" should not be used at all.")
-	test(":=${OTHER}:rest", ":=${OTHER}", ":rest",
-		"WARN: filename.mk:123: "+
-			"Assignment modifiers like \":=\" should not be used at all.")
-	test(":+=${OTHER}:rest", ":+=${OTHER}", ":rest",
-		"WARN: filename.mk:123: "+
-			"Assignment modifiers like \":+=\" should not be used at all.")
-	test(":?=${OTHER}:rest", ":?=${OTHER}", ":rest",
-		"WARN: filename.mk:123: "+
-			"Assignment modifiers like \":?=\" should not be used at all.")
+	test("VAR", ":!=${OTHER}:rest", ":!=${OTHER}", ":rest",
+		"ERROR: filename.mk:123: "+
+			"Assignment modifiers like \":!=\" must not be used at all.")
+	test("VAR", ":=${OTHER}:rest", ":=${OTHER}", ":rest",
+		"ERROR: filename.mk:123: "+
+			"Assignment modifiers like \":=\" must not be used at all.")
+	test("VAR", ":+=${OTHER}:rest", ":+=${OTHER}", ":rest",
+		"ERROR: filename.mk:123: "+
+			"Assignment modifiers like \":+=\" must not be used at all.")
+	test("VAR", ":?=${OTHER}:rest", ":?=${OTHER}", ":rest",
+		"ERROR: filename.mk:123: "+
+			"Assignment modifiers like \":?=\" must not be used at all.")
 
 	// This one is not treated as an assignment operator since at this
 	// point the operators := and = are equivalent. There is no special
@@ -740,7 +740,11 @@ func (s *Suite) Test_MkLexer_varUseModifier__assigment(c *check.C) {
 	// remaining text.
 	//
 	// See devel/bmake/files/var.c:/tstr\[2\] == '='/.
-	test("::=${OTHER}:rest", "::=${OTHER}:rest", "")
+	test("VAR", "::=${OTHER}:rest", "::=${OTHER}:rest", "")
+
+	test("", ":=value", ":=value", "",
+		"ERROR: filename.mk:123: "+
+			"Assignment to the empty variable is not possible.")
 }
 
 func (s *Suite) Test_MkLexer_varUseModifierMatch(c *check.C) {

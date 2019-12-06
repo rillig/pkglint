@@ -299,14 +299,16 @@ func (p *MkLexer) varUseModifier(varname string, closing byte) string {
 
 		// TODO: Add MkLexer.Warnf.
 		if p.line != nil {
-			p.line.Warnf("Assignment modifiers like %q should not be used at all.",
+			p.line.Errorf("Assignment modifiers like %q must not be used at all.",
 				lexer.Since(mark))
 			p.line.Explain(
 				"These modifiers modify other variables when they are evaluated.",
 				"This makes it more difficult to understand them since all the",
 				"other modifiers only affect the one expression that is being",
 				"evaluated, without any long-lasting side effects.",
-				"Even shell commands usually have only local consequences.")
+				"",
+				"A similarly unpredictable mechanism are shell commands,",
+				"but even these have only local consequences.")
 		}
 
 		p.varUseText(closing)
