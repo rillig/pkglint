@@ -31,8 +31,13 @@ type Package struct {
 	vars      Scope
 	redundant *RedundantScope
 
-	// FIXME: What is the base directory of the map keys?
-	bl3 map[RelPath]*MkLine // buildlink3.mk name => line; contains only buildlink3.mk files that are directly included.
+	// bl3 contains the buildlink3.mk files that are included by the
+	// package, including any transitively included files.
+	//
+	// This is later compared to those buildlink3.mk files that are
+	// included by the package's own buildlink3.mk file.
+	// These included files should match.
+	bl3 map[PackagePath]*MkLine
 
 	// Remembers the Makefile fragments that have already been included.
 	// The key to the map is the filename relative to the package directory.
@@ -78,7 +83,7 @@ func NewPackage(dir CurrPath) *Package {
 		DistinfoFile:          "${PKGDIR}/distinfo", // TODO: Redundant, see the vars.Fallback below.
 		Plist:                 NewPlistContent(),
 		vars:                  NewScope(),
-		bl3:                   make(map[RelPath]*MkLine),
+		bl3:                   make(map[PackagePath]*MkLine),
 		included:              Once{},
 		conditionalIncludes:   make(map[PackagePath]*MkLine),
 		unconditionalIncludes: make(map[PackagePath]*MkLine),
@@ -378,7 +383,7 @@ func (pkg *Package) resolveIncludedFile(mkline *MkLine, includingFilename CurrPa
 
 	if mkline.Basename != "buildlink3.mk" {
 		if includedFile.HasSuffixPath("buildlink3.mk") {
-			pkg.bl3[includedFile] = mkline
+			pkg.bl3[pkg.Rel(mkline.File(includedFile))] = mkline
 			if trace.Tracing {
 				trace.Step1("Buildlink3 file in package: %q", includedText)
 			}
@@ -1347,16 +1352,15 @@ func (pkg *Package) checkLinesBuildlink3Inclusion(mklines *MkLines) {
 	}
 
 	// Collect all the included buildlink3.mk files from the file.
-	// FIXME: Clarify what the base directory of the RelPath is.
-	//  Right now it is "the including file", which does not make sense.
-	includedFiles := make(map[RelPath]*MkLine)
+	includedFiles := make(map[PackagePath]*MkLine)
 	for _, mkline := range mklines.mklines {
 		if mkline.IsInclude() {
-			includedFile := mkline.IncludedFile()
-			if includedFile.HasSuffixPath("buildlink3.mk") {
-				includedFiles[includedFile] = mkline
-				if pkg.bl3[includedFile] == nil {
-					mkline.Warnf("%s is included by this file but not by the package.", includedFile)
+			included := pkg.Rel(mkline.IncludedFileFull())
+			if included.AsPath().HasSuffixPath("buildlink3.mk") {
+				includedFiles[included] = mkline
+				if pkg.bl3[included] == nil {
+					mkline.Warnf("%s is included by this file but not by the package.",
+						mkline.IncludedFile())
 				}
 			}
 		}
