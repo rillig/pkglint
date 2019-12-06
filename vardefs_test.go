@@ -195,6 +195,18 @@ func (s *Suite) Test_VarTypeRegistry_enumFromFiles__no_testing(c *check.C) {
 			"file matching \"^(\\\\w+)\\\\.mk$\".")
 }
 
+func (s *Suite) Test_VarTypeRegistry_options__assertion(c *check.C) {
+	t := s.Init(c)
+
+	reg := NewVarTypeRegistry()
+
+	t.ExpectAssert(func() {
+		reg.options(
+			SystemProvided,
+			[]vartypeOptions{DefinedIfInScope, NonemptyIfDefined})
+	})
+}
+
 func (s *Suite) Test_VarTypeRegistry_Init(c *check.C) {
 	t := s.Init(c)
 
