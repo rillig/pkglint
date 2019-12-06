@@ -581,6 +581,22 @@ func (s *Suite) Test_MkLexer_varUseModifier(c *check.C) {
 		{"R"}, {"E"}, {"Ox"}, {"tA"}, {"tW"}, {"tw"}})
 }
 
+func (s *Suite) Test_MkLexer_varUseModifier__S_parse_error(c *check.C) {
+	t := s.Init(c)
+
+	diag := t.NewLine("filename.mk", 123, "")
+	p := NewMkLexer("S,}", diag)
+
+	mod := p.varUseModifier("VAR", '}')
+
+	t.CheckEquals(mod, "")
+	// FIXME: The "S," has just disappeared.
+	t.CheckEquals(p.Rest(), "}")
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:123: Invalid variable modifier \"S,\" for \"VAR\".")
+}
+
 func (s *Suite) Test_MkLexer_varUseModifier__invalid_ts_modifier_with_warning(c *check.C) {
 	t := s.Init(c)
 
