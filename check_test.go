@@ -105,15 +105,14 @@ func (s *Suite) TearDownTest(c *check.C) {
 func (s *Suite) Test__qa(c *check.C) {
 	ck := intqa.NewQAChecker(c.Errorf)
 
-	ck.Configure("autofix.go", "*", "*", -intqa.EMissingTest)     // TODO
-	ck.Configure("buildlink3.go", "*", "*", -intqa.EMissingTest)  // TODO
-	ck.Configure("distinfo.go", "*", "*", -intqa.EMissingTest)    // TODO
-	ck.Configure("files.go", "*", "*", -intqa.EMissingTest)       // TODO
-	ck.Configure("licenses.go", "*", "*", -intqa.EMissingTest)    // TODO
-	ck.Configure("line.go", "*", "*", -intqa.EMissingTest)        // TODO
-	ck.Configure("linechecker.go", "*", "*", -intqa.EMissingTest) // TODO
-	// FIXME: What is LinesLexer doing in linelexer.go? That doesn't match.
-	ck.Configure("linelexer.go", "*", "*", -intqa.EMissingTest)      // TODO
+	ck.Configure("autofix.go", "*", "*", -intqa.EMissingTest)        // TODO
+	ck.Configure("buildlink3.go", "*", "*", -intqa.EMissingTest)     // TODO
+	ck.Configure("distinfo.go", "*", "*", -intqa.EMissingTest)       // TODO
+	ck.Configure("files.go", "*", "*", -intqa.EMissingTest)          // TODO
+	ck.Configure("licenses.go", "*", "*", -intqa.EMissingTest)       // TODO
+	ck.Configure("line.go", "*", "*", -intqa.EMissingTest)           // TODO
+	ck.Configure("linechecker.go", "*", "*", -intqa.EMissingTest)    // TODO
+	ck.Configure("lineslexer.go", "*", "*", -intqa.EMissingTest)     // TODO
 	ck.Configure("lines.go", "*", "*", -intqa.EMissingTest)          // TODO
 	ck.Configure("logging.go", "*", "*", -intqa.EMissingTest)        // TODO
 	ck.Configure("mklexer.go", "*", "*", -intqa.EMissingTest)        // TODO
