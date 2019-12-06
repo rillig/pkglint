@@ -118,7 +118,7 @@ func (p *MkLexer) varUseBrace(usingRoundParen bool) *MkVarUse {
 
 	if p.line != nil {
 		if !closed {
-			p.line.Warnf("Missing closing %q for %q.", string(rune(closing)), varExpr)
+			p.Warnf("Missing closing %q for %q.", string(rune(closing)), varExpr)
 		}
 
 		if usingRoundParen && closed {
@@ -135,7 +135,7 @@ func (p *MkLexer) varUseBrace(usingRoundParen bool) *MkVarUse {
 		}
 
 		if len(varExpr) > len(varname) && !(&MkVarUse{varExpr, modifiers}).IsExpression() {
-			p.line.Warnf("Invalid part %q after variable name %q.", varExpr[len(varname):], varname)
+			p.Warnf("Invalid part %q after variable name %q.", varExpr[len(varname):], varname)
 		}
 	}
 
@@ -290,26 +290,20 @@ func (p *MkLexer) varUseModifier(varname string, closing byte) string {
 		// It could also happen that the assignment happens in an
 		// indirect variable reference, which is even more unexpected.
 		if varname == "" {
-			// TODO: Add MkLexer.Warnf.
-			if p.line != nil {
-				p.line.Errorf("Assignment to the empty variable is not possible.")
-			}
+			p.Errorf("Assignment to the empty variable is not possible.")
 			break
 		}
 
-		// TODO: Add MkLexer.Warnf.
-		if p.line != nil {
-			p.line.Errorf("Assignment modifiers like %q must not be used at all.",
-				lexer.Since(mark))
-			p.line.Explain(
-				"These modifiers modify other variables when they are evaluated.",
-				"This makes it more difficult to understand them since all the",
-				"other modifiers only affect the one expression that is being",
-				"evaluated, without any long-lasting side effects.",
-				"",
-				"A similarly unpredictable mechanism are shell commands,",
-				"but even these have only local consequences.")
-		}
+		p.Errorf("Assignment modifiers like %q must not be used at all.",
+			lexer.Since(mark))
+		p.Explain(
+			"These modifiers modify other variables when they are evaluated.",
+			"This makes it more difficult to understand them since all the",
+			"other modifiers only affect the one expression that is being",
+			"evaluated, without any long-lasting side effects.",
+			"",
+			"A similarly unpredictable mechanism are shell commands,",
+			"but even these have only local consequences.")
 
 		p.varUseText(closing)
 		return lexer.Since(mark)
@@ -329,8 +323,8 @@ func (p *MkLexer) varUseModifier(varname string, closing byte) string {
 		return modifier
 	}
 
-	if p.line != nil && modifier != "" {
-		p.line.Warnf("Invalid variable modifier %q for %q.", modifier, varname)
+	if modifier != "" {
+		p.Warnf("Invalid variable modifier %q for %q.", modifier, varname)
 	}
 
 	return ""
@@ -354,13 +348,11 @@ func (p *MkLexer) varUseModifierSeparator(
 	case matches(sep, `^\\\d+`):
 		break
 	default:
-		if p.line != nil {
-			p.line.Warnf("Invalid separator %q for :ts modifier of %q.", sep, varname)
-			p.line.Explain(
-				"The separator for the :ts modifier must be either a single character",
-				"or an escape sequence like \\t or \\n or an octal or decimal escape",
-				"sequence; see the bmake man page for further details.")
-		}
+		p.Warnf("Invalid separator %q for :ts modifier of %q.", sep, varname)
+		p.Explain(
+			"The separator for the :ts modifier must be either a single character",
+			"or an escape sequence like \\t or \\n or an octal or decimal escape",
+			"sequence; see the bmake man page for further details.")
 	}
 	return lexer.Since(mark)
 }
@@ -495,8 +487,8 @@ func (p *MkLexer) varUseModifierAt(lexer *textproc.Lexer, varname string) bool {
 	for p.VarUse() != nil || lexer.SkipString("$$") || lexer.SkipRegexp(re) {
 	}
 
-	if !lexer.SkipByte('@') && p.line != nil {
-		p.line.Warnf("Modifier ${%s:@%s@...@} is missing the final \"@\".", varname, loopVar)
+	if !lexer.SkipByte('@') {
+		p.Warnf("Modifier ${%s:@%s@...@} is missing the final \"@\".", varname, loopVar)
 	}
 
 	return true
@@ -512,20 +504,18 @@ func (p *MkLexer) varUseAlnum() *MkVarUse {
 
 	lexer.Skip(2)
 
-	if p.line != nil {
-		if len(apparentVarname) > 1 {
-			p.line.Errorf("$%[1]s is ambiguous. Use ${%[1]s} if you mean a Make variable or $$%[1]s if you mean a shell variable.",
-				apparentVarname)
-			p.line.Explain(
-				"Only the first letter after the dollar is the variable name.",
-				"Everything following it is normal text, even if it looks like a variable name to human readers.")
-		} else {
-			p.line.Warnf("$%[1]s is ambiguous. Use ${%[1]s} if you mean a Make variable or $$%[1]s if you mean a shell variable.", apparentVarname)
-			p.line.Explain(
-				"In its current form, this variable is parsed as a Make variable.",
-				"For human readers though, $x looks more like a shell variable than a Make variable,",
-				"since Make variables are usually written using braces (BSD-style) or parentheses (GNU-style).")
-		}
+	if len(apparentVarname) > 1 {
+		p.Errorf("$%[1]s is ambiguous. Use ${%[1]s} if you mean a Make variable or $$%[1]s if you mean a shell variable.",
+			apparentVarname)
+		p.Explain(
+			"Only the first letter after the dollar is the variable name.",
+			"Everything following it is normal text, even if it looks like a variable name to human readers.")
+	} else {
+		p.Warnf("$%[1]s is ambiguous. Use ${%[1]s} if you mean a Make variable or $$%[1]s if you mean a shell variable.", apparentVarname)
+		p.Explain(
+			"In its current form, this variable is parsed as a Make variable.",
+			"For human readers though, $x looks more like a shell variable than a Make variable,",
+			"since Make variables are usually written using braces (BSD-style) or parentheses (GNU-style).")
 	}
 
 	return &MkVarUse{apparentVarname[:1], nil}
@@ -537,4 +527,28 @@ func (p *MkLexer) EOF() bool {
 
 func (p *MkLexer) Rest() string {
 	return p.lexer.Rest()
+}
+
+func (p *MkLexer) Errorf(format string, args ...interface{}) {
+	if p.line != nil {
+		p.line.Errorf(format, args...)
+	}
+}
+
+func (p *MkLexer) Warnf(format string, args ...interface{}) {
+	if p.line != nil {
+		p.line.Warnf(format, args...)
+	}
+}
+
+func (p *MkLexer) Notef(format string, args ...interface{}) {
+	if p.line != nil {
+		p.line.Notef(format, args...)
+	}
+}
+
+func (p *MkLexer) Explain(explanation ...string) {
+	if p.line != nil {
+		p.line.Explain(explanation...)
+	}
 }
