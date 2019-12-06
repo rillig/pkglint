@@ -12,9 +12,6 @@ import (
 // and notes, and explanations for them.
 //
 // For convenience, it is implemented by several types in pkglint.
-//
-// TODO: Replace concrete implementations with this interface where possible.
-//  One example is MkLexer.
 type Diagnoser interface {
 	Errorf(format string, args ...interface{})
 	Warnf(format string, args ...interface{})
