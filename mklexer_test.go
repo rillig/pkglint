@@ -706,6 +706,34 @@ func (s *Suite) Test_MkLexer_varUseModifier__eq_suffix_replacement(c *check.C) {
 	// XXX: maybe someday test("=\\}\\\\\\$\\&", "=}\\$&", "")
 }
 
+func (s *Suite) Test_MkLexer_varUseModifier__assigment(c *check.C) {
+	t := s.Init(c)
+
+	test := func(input, modifier, rest string) {
+		line := t.NewLine("filename.mk", 123, "")
+		p := NewMkLexer(input, line)
+
+		actual := p.varUseModifier("VAR", '}')
+
+		t.CheckDeepEquals(actual, modifier)
+		t.CheckEquals(p.Rest(), rest)
+	}
+
+	test(":=${OTHER}:rest", ":=${OTHER}:rest", "")   // FIXME
+	test(":!=${OTHER}:rest", ":!=${OTHER}:rest", "") // FIXME
+	test(":+=${OTHER}:rest", ":+=${OTHER}:rest", "") // FIXME
+	test(":?=${OTHER}:rest", ":?=${OTHER}:rest", "") // FIXME
+
+	// This one is not treated as an assignment operator since at this
+	// point the operators := and = are equivalent. There is no special
+	// parsing code for this case, therefore it falls back to the SysV
+	// interpretation of the :from=to modifier, which consumes all the
+	// remaining text.
+	//
+	// See devel/bmake/files/var.c:/tstr\[2\] == '='/.
+	test("::=${OTHER}:rest", "::=${OTHER}:rest", "")
+}
+
 func (s *Suite) Test_MkLexer_varUseModifierMatch(c *check.C) {
 	t := s.Init(c)
 
