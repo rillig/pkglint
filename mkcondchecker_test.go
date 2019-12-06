@@ -81,7 +81,7 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCond(c *check.C) {
 			"powerpc powerpc64 rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 "+
 			"} for MACHINE_ARCH.",
 		"NOTE: filename.mk:2: MACHINE_ARCH "+
-			"should be compared using \"${MACHINE_ARCH:U} == x86\" "+
+			"should be compared using \"${MACHINE_ARCH} == x86\" "+
 			"instead of matching against \":Mx86\".")
 
 	// Doesn't occur in practice since it is surprising that the ! applies
@@ -603,17 +603,21 @@ func (s *Suite) Test_MkCondChecker_simplifyCondition(c *check.C) {
 		"AUTOFIX: module.mk:3: Replacing \"${PKGPATH:Mpath}\" "+
 			"with \"${PKGPATH} == path\".")
 
+	// MACHINE_ARCH is built-in into bmake and is always available.
+	// Therefore it doesn't matter whether bsd.prefs.mk is included or not.
 	test(
 		false,
 		".if ${MACHINE_ARCH:Mx86_64}",
-		".if ${MACHINE_ARCH:U} == x86_64",
+		".if ${MACHINE_ARCH} == x86_64",
 
 		"NOTE: module.mk:3: MACHINE_ARCH "+
-			"should be compared using \"${MACHINE_ARCH:U} == x86_64\" "+
+			"should be compared using \"${MACHINE_ARCH} == x86_64\" "+
 			"instead of matching against \":Mx86_64\".",
 		"AUTOFIX: module.mk:3: Replacing \"${MACHINE_ARCH:Mx86_64}\" "+
-			"with \"${MACHINE_ARCH:U} == x86_64\".")
+			"with \"${MACHINE_ARCH} == x86_64\".")
 
+	// MACHINE_ARCH is built-in into bmake and is always available.
+	// Therefore it doesn't matter whether bsd.prefs.mk is included or not.
 	test(
 		true,
 		".if ${MACHINE_ARCH:Mx86_64}",
