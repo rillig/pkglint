@@ -1562,11 +1562,6 @@ func (s *Suite) Test_ShellLineChecker_unescapeBackticks(c *check.C) {
 	test("`echo '\\`'`rest", "echo '`'", "rest")
 
 	test("`echo \\$$var`rest", "echo $$var", "rest")
-
-	// FIXME: Oops, line.Warnf is called without a guarding nil check.
-	t.ExpectPanicMatches(
-		func() { test("`echo \\${VAR}`", "???", "???") },
-		`runtime error: invalid memory address or nil pointer dereference`)
 }
 
 func (s *Suite) Test_ShellLineChecker_unescapeBackticks__dquotBacktDquot(c *check.C) {

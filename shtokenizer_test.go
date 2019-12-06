@@ -523,6 +523,16 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		operator(")"), space,
 		text("still-subshell"), operator(";;"), space,
 		text("esac"), operator(")"), operator(";"))
+
+	testRest("`echo \\${VAR}`",
+		atoms(
+			backt(text("`")),
+			backt(text("echo")),
+			backt(space)),
+		"\\${VAR}`")
+	t.CheckOutputLines(
+		"WARN: filename.mk:1: Internal pkglint error " +
+			"in ShTokenizer.ShAtom at \"\\\\${VAR}`\" (quoting=b).")
 }
 
 func (s *Suite) Test_ShTokenizer_ShAtom__quoting(c *check.C) {

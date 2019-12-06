@@ -8,7 +8,7 @@ import (
 // MkParser wraps a Parser and provides methods for parsing
 // things related to Makefiles.
 type MkParser struct {
-	Line         *Line
+	diag         Diagnoser
 	mklex        *MkLexer
 	lexer        *textproc.Lexer
 	EmitWarnings bool
@@ -30,9 +30,9 @@ func (p *MkParser) Rest() string {
 // The text argument is assumed to be after unescaping the # character,
 // which means the # is a normal character and does not introduce a Makefile comment.
 // For VarUse, this distinction is irrelevant.
-func NewMkParser(line *Line, text string) *MkParser {
-	mklex := NewMkLexer(text, line)
-	return &MkParser{line, mklex, mklex.lexer, line != nil}
+func NewMkParser(diag Autofixer, text string) *MkParser {
+	mklex := NewMkLexer(text, diag)
+	return &MkParser{diag, mklex, mklex.lexer, diag != nil}
 }
 
 // MkCond parses a condition like ${OPSYS} == "NetBSD".

@@ -19,11 +19,11 @@ import (
 // these edge cases anyway.
 type MkLexer struct {
 	lexer *textproc.Lexer
-	line  *Line
+	diag  Autofixer
 }
 
-func NewMkLexer(text string, line *Line) *MkLexer {
-	return &MkLexer{textproc.NewLexer(text), line}
+func NewMkLexer(text string, diag Autofixer) *MkLexer {
+	return &MkLexer{textproc.NewLexer(text), diag}
 }
 
 // MkTokens splits a text like in the following example:
@@ -116,7 +116,7 @@ func (p *MkLexer) varUseBrace(usingRoundParen bool) *MkVarUse {
 
 	closed := lexer.SkipByte(closing)
 
-	if p.line != nil {
+	if p.diag != nil {
 		if !closed {
 			p.Warnf("Missing closing %q for %q.", string(rune(closing)), varExpr)
 		}
@@ -128,7 +128,7 @@ func (p *MkLexer) varUseBrace(usingRoundParen bool) *MkVarUse {
 			edit[len(edit)-1] = '}'
 			bracesVaruse := string(edit)
 
-			fix := p.line.Autofix()
+			fix := p.Autofix()
 			fix.Warnf("Please use curly braces {} instead of round parentheses () for %s.", varExpr)
 			fix.Replace(parenVaruse, bracesVaruse)
 			fix.Apply()
@@ -530,25 +530,32 @@ func (p *MkLexer) Rest() string {
 }
 
 func (p *MkLexer) Errorf(format string, args ...interface{}) {
-	if p.line != nil {
-		p.line.Errorf(format, args...)
+	if p.HasDiag() {
+		p.diag.Errorf(format, args...)
 	}
 }
 
 func (p *MkLexer) Warnf(format string, args ...interface{}) {
-	if p.line != nil {
-		p.line.Warnf(format, args...)
+	if p.HasDiag() {
+		p.diag.Warnf(format, args...)
 	}
 }
 
 func (p *MkLexer) Notef(format string, args ...interface{}) {
-	if p.line != nil {
-		p.line.Notef(format, args...)
+	if p.HasDiag() {
+		p.diag.Notef(format, args...)
 	}
 }
 
 func (p *MkLexer) Explain(explanation ...string) {
-	if p.line != nil {
-		p.line.Explain(explanation...)
+	if p.HasDiag() {
+		p.diag.Explain(explanation...)
 	}
 }
+
+// Autofix must only be called if HasDiag returns true.
+func (p *MkLexer) Autofix() *Autofix {
+	return p.diag.Autofix()
+}
+
+func (p *MkLexer) HasDiag() bool { return p.diag != nil }

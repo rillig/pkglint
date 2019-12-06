@@ -327,11 +327,11 @@ func (mkline *MkLine) Tokenize(text string, warn bool) []*MkToken {
 	if mkline.IsVarassignMaybeCommented() && text == mkline.Value() {
 		tokens, rest = mkline.ValueTokens()
 	} else {
-		var line *Line
+		var diag Autofixer
 		if warn {
-			line = mkline.Line
+			diag = mkline.Line
 		}
-		p := NewMkLexer(text, line)
+		p := NewMkLexer(text, diag)
 		tokens, rest = p.MkTokens()
 	}
 
