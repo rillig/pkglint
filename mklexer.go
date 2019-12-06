@@ -251,7 +251,7 @@ func (p *MkLexer) varUseModifier(varname string, closing byte) string {
 		}
 
 		if hasPrefix(mod, "ts") {
-			return p.varUseModifierSeparator(mod, closing, lexer, varname, mark)
+			return p.varUseModifierTs(mod, closing, lexer, varname, mark)
 		}
 
 	case 'D', 'U':
@@ -346,11 +346,11 @@ func (p *MkLexer) varUseModifier(varname string, closing byte) string {
 	return ""
 }
 
-// varUseModifierSeparator parses the :ts modifier.
+// varUseModifierTs parses the :ts modifier.
 //
 // The API of this method is tricky.
 // It is only extracted from varUseModifier to make the latter smaller.
-func (p *MkLexer) varUseModifierSeparator(
+func (p *MkLexer) varUseModifierTs(
 	mod string, closing byte, lexer *textproc.Lexer, varname string,
 	mark textproc.LexerMark) string {
 
