@@ -1451,7 +1451,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.sys("PKG_JAVA_HOME", BtPathname)
 	reg.sys("PKG_JVM", jvms)
 	reg.pkglistrat("PKG_JVMS_ACCEPTED", jvms)
-	reg.pkg("PKG_LIBTOOL", BtPathname)
+	reg.sys("PKG_LIBTOOL", BtPathname)
 
 	// begin PKG_OPTIONS section
 	//
