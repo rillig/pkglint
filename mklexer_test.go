@@ -709,6 +709,10 @@ func (s *Suite) Test_MkLexer_varUseModifier__eq_suffix_replacement(c *check.C) {
 	// XXX: maybe someday test("\\}\\\\\\$=", "}\\$=", "")
 	test("=\\}\\\\\\$\\&", "=\\}\\\\\\$\\&", "")
 	// XXX: maybe someday test("=\\}\\\\\\$\\&", "=}\\$&", "")
+
+	// FIXME: That's clearly wrong.
+	test("=${VAR:D/}}", "=${VAR:D/}", "}",
+		"WARN: filename.mk:123: The text \":D/}\" looks like a modifier but isn't.")
 }
 
 func (s *Suite) Test_MkLexer_varUseModifier__assigment(c *check.C) {
