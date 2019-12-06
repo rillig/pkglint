@@ -709,7 +709,7 @@ func (s *Suite) Test_MkLexer_varUseModifier__eq_suffix_replacement(c *check.C) {
 func (s *Suite) Test_MkLexer_varUseModifier__assigment(c *check.C) {
 	t := s.Init(c)
 
-	test := func(input, modifier, rest string) {
+	test := func(input, modifier, rest string, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, "")
 		p := NewMkLexer(input, line)
 
@@ -717,12 +717,21 @@ func (s *Suite) Test_MkLexer_varUseModifier__assigment(c *check.C) {
 
 		t.CheckDeepEquals(actual, modifier)
 		t.CheckEquals(p.Rest(), rest)
+		t.CheckOutput(diagnostics)
 	}
 
-	test(":=${OTHER}:rest", ":=${OTHER}:rest", "")   // FIXME
-	test(":!=${OTHER}:rest", ":!=${OTHER}:rest", "") // FIXME
-	test(":+=${OTHER}:rest", ":+=${OTHER}:rest", "") // FIXME
-	test(":?=${OTHER}:rest", ":?=${OTHER}:rest", "") // FIXME
+	test(":!=${OTHER}:rest", ":!=${OTHER}", ":rest",
+		"WARN: filename.mk:123: "+
+			"Assignment modifiers like \":!=\" should not be used at all.")
+	test(":=${OTHER}:rest", ":=${OTHER}", ":rest",
+		"WARN: filename.mk:123: "+
+			"Assignment modifiers like \":=\" should not be used at all.")
+	test(":+=${OTHER}:rest", ":+=${OTHER}", ":rest",
+		"WARN: filename.mk:123: "+
+			"Assignment modifiers like \":+=\" should not be used at all.")
+	test(":?=${OTHER}:rest", ":?=${OTHER}", ":rest",
+		"WARN: filename.mk:123: "+
+			"Assignment modifiers like \":?=\" should not be used at all.")
 
 	// This one is not treated as an assignment operator since at this
 	// point the operators := and = are equivalent. There is no special

@@ -273,6 +273,44 @@ func (p *MkLexer) varUseModifier(varname string, closing byte) string {
 			p.varUseText(closing)
 			return lexer.Since(mark)
 		}
+
+	case ':':
+		lexer.Skip(1)
+		if !lexer.SkipRegexp(regcomp(`^[!+?]?=`)) {
+			break
+		}
+
+		// The corresponding code in bmake is much more complicated
+		// because it evaluates the expression immediately instead of
+		// only parsing it.
+		//
+		// This modifier should not be used at all since it hides
+		// variable assignments deep in a line.
+		//
+		// It could also happen that the assignment happens in an
+		// indirect variable reference, which is even more unexpected.
+		if varname == "" {
+			// TODO: Add MkLexer.Warnf.
+			if p.line != nil {
+				p.line.Errorf("Assignment to the empty variable is not possible.")
+			}
+			break
+		}
+
+		// TODO: Add MkLexer.Warnf.
+		if p.line != nil {
+			p.line.Warnf("Assignment modifiers like %q should not be used at all.",
+				lexer.Since(mark))
+			p.line.Explain(
+				"These modifiers modify other variables when they are evaluated.",
+				"This makes it more difficult to understand them since all the",
+				"other modifiers only affect the one expression that is being",
+				"evaluated, without any long-lasting side effects.",
+				"Even shell commands usually have only local consequences.")
+		}
+
+		p.varUseText(closing)
+		return lexer.Since(mark)
 	}
 
 	// ${SOURCES:%.c=%.o}
