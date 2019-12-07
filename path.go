@@ -376,6 +376,8 @@ func (p PkgsrcPath) String() string { return string(p) }
 
 func (p PkgsrcPath) AsPath() Path { return NewPath(string(p)) }
 
+func (p PkgsrcPath) AsRelPath() RelPath { return RelPath(p) }
+
 func (p PkgsrcPath) DirClean() PkgsrcPath {
 	return NewPkgsrcPath(p.AsPath().DirClean())
 }
@@ -411,6 +413,8 @@ func NewPackagePathString(p string) PackagePath {
 }
 
 func (p PackagePath) AsPath() Path { return Path(p) }
+
+func (p PackagePath) AsRelPath() RelPath { return RelPath(p) }
 
 func (p PackagePath) String() string { return p.AsPath().String() }
 

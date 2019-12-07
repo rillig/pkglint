@@ -1100,6 +1100,16 @@ func (s *Suite) Test_PkgsrcPath_AsPath(c *check.C) {
 	t.CheckEquals(p.String(), "./category/package/Makefile")
 }
 
+func (s *Suite) Test_PkgsrcPath_AsRelPath(c *check.C) {
+	t := s.Init(c)
+
+	pp := NewPkgsrcPath("./category/package/Makefile")
+
+	rel := pp.AsRelPath()
+
+	t.CheckEquals(rel.String(), "./category/package/Makefile")
+}
+
 func (s *Suite) Test_PkgsrcPath_DirClean(c *check.C) {
 	t := s.Init(c)
 
@@ -1184,6 +1194,16 @@ func (s *Suite) Test_PackagePath_AsPath(c *check.C) {
 	p := pp.AsPath()
 
 	t.CheckEquals(p.String(), "../../category/package/Makefile")
+}
+
+func (s *Suite) Test_PackagePath_AsRelPath(c *check.C) {
+	t := s.Init(c)
+
+	pp := NewPackagePath("./category/package/Makefile")
+
+	rel := pp.AsRelPath()
+
+	t.CheckEquals(rel.String(), "./category/package/Makefile")
 }
 
 func (s *Suite) Test_PackagePath_String(c *check.C) {
