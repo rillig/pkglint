@@ -1695,7 +1695,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// this check, a package may set this variable before including the
 	// corresponding buildlink3.mk file.
 	reg.acl("USE_BUILTIN.*", BtYesNoIndirectly,
-		PackageSettable,
+		PackageSettable|DefinedIfInScope|NonemptyIfDefined,
 		"Makefile, Makefile.*, *.mk: set, use, use-loadtime")
 
 	reg.pkg("USE_CMAKE", BtYes)
