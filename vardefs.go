@@ -320,9 +320,9 @@ func (reg *VarTypeRegistry) bl3list(varname string, basicType *BasicType) {
 
 // cmdline declares a variable that is defined on the command line. There
 // are only few variables of this type, such as PKG_DEBUG_LEVEL.
-func (reg *VarTypeRegistry) cmdline(varname string, basicType *BasicType) {
+func (reg *VarTypeRegistry) cmdline(varname string, basicType *BasicType, options ...vartypeOptions) {
 	reg.acl(varname, basicType,
-		CommandLineProvided,
+		reg.options(CommandLineProvided, options),
 		"buildlink3.mk, builtin.mk: none",
 		"*: use, use-loadtime")
 }
@@ -571,7 +571,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// X11_TYPE and X11BASE may be used in buildlink3.mk as well, which the
 	// standard sysload doesn't allow.
 	reg.acl("X11_TYPE", enum("modular native"),
-		UserSettable,
+		UserSettable|DefinedIfInScope|NonemptyIfDefined,
 		"*: use, use-loadtime")
 	reg.acl("X11BASE", BtPathname,
 		UserSettable,
@@ -1692,7 +1692,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.usr("UNPRIVILEGED_USER", BtUserGroupName)
 	reg.usr("UNPRIVILEGED_GROUP", BtUserGroupName)
 	reg.pkglist("UNWRAP_FILES", BtPathPattern)
-	reg.usrlist("UPDATE_TARGET", BtIdentifier) // FIXME: command-line, not user
+	reg.cmdline("UPDATE_TARGET", BtIdentifier, List)
 	reg.pkg("USERGROUP_PHASE", enum("configure build pre-install"))
 	reg.usrlist("USER_ADDITIONAL_PKGS", BtPkgpath)
 	reg.pkg("USE_BSD_MAKEFILE", BtYes)
