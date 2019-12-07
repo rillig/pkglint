@@ -1007,6 +1007,9 @@ func (t *Tester) NewLinesAt(filename CurrPath, firstLine int, texts ...string) *
 //
 // No actual file is created for the lines;
 // see SetUpFileMkLines for loading Makefile fragments with line continuations.
+//
+// After calling Tester.Chdir, NewMkLines creates the same object as
+// SetUpFileMkLines, just without anything being written to disk.
 func (t *Tester) NewMkLines(filename CurrPath, lines ...string) *MkLines {
 	basename := filename.Base()
 	assertf(
