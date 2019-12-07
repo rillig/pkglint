@@ -374,7 +374,8 @@ func (mklines *MkLines) checkAll() {
 				// Needs to be set here because it is reset in MkLines.ForEach.
 				mklines.Tools.SeenPrefs = true
 			}
-			return mklines.checkLine(mkline, vargroupsChecker, &varalign, substContext, allowedTargets)
+			mklines.checkLine(mkline, vargroupsChecker, &varalign, substContext, allowedTargets)
+			return true
 		},
 		func(mkline *MkLine) {
 			// This check is not done by ForEach because ForEach only
@@ -394,7 +395,7 @@ func (mklines *MkLines) checkLine(
 	vargroupsChecker *VargroupsChecker,
 	varalign *VaralignBlock,
 	substContext *SubstContext,
-	allowedTargets map[string]bool) bool {
+	allowedTargets map[string]bool) {
 
 	ck := MkLineChecker{mklines, mkline}
 	ck.Check()
@@ -432,7 +433,6 @@ func (mklines *MkLines) checkLine(
 	if mklines.postLine != nil {
 		mklines.postLine(mkline)
 	}
-	return true
 }
 
 func (mklines *MkLines) checkVarassignPlist(mkline *MkLine) {
