@@ -753,7 +753,9 @@ func (s *Suite) Test_MkLineChecker_checkDirective__for_loop_varname(c *check.C) 
 func (s *Suite) Test_MkLineChecker_checkDirectiveEnd__ending_comments(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
+	t.SetUpPkgsrc()
+	t.Chdir("category/package")
+	t.FinishSetUp()
 	mklines := t.NewMkLines("opsys.mk",
 		MkCvsID,
 		"",

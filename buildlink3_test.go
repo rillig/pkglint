@@ -602,11 +602,15 @@ func (s *Suite) Test_Buildlink3Checker_checkMainPart__if_else_endif(c *check.C) 
 
 // Since the buildlink3 checker does not use MkLines.ForEach, it has to keep
 // track of the nesting depth of .if directives.
+//
+// TODO: Use MkLines.ForEach.
 func (s *Suite) Test_Buildlink3Checker_checkMainPart__nested_if(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
-	mklines := t.SetUpFileMkLines("category/package/buildlink3.mk",
+	t.SetUpPkgsrc()
+	t.Chdir("category/package")
+	t.FinishSetUp()
+	mklines := t.SetUpFileMkLines("buildlink3.mk",
 		MkCvsID,
 		"",
 		"BUILDLINK_TREE+=\ths-X11",

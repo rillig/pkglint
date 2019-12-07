@@ -496,7 +496,9 @@ func (s *Suite) Test_VartypeCheck_Enum(c *check.C) {
 func (s *Suite) Test_VartypeCheck_Enum__use_match(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
+	t.SetUpPkgsrc()
+	t.Chdir("category/package")
+	t.FinishSetUp()
 	t.SetUpCommandLine("-Wall", "--explain")
 
 	mklines := t.NewMkLines("module.mk",

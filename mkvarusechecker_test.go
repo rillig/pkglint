@@ -415,7 +415,9 @@ func (s *Suite) Test_MkVarUseChecker_checkPermissions__explain(c *check.C) {
 func (s *Suite) Test_MkVarUseChecker_checkPermissions__load_time(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
+	t.SetUpPkgsrc()
+	t.Chdir("category/package")
+	t.FinishSetUp()
 	mklines := t.NewMkLines("options.mk",
 		MkCvsID,
 		"",

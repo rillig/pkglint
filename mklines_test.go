@@ -52,7 +52,9 @@ func (s *Suite) Test_MkLines__for_loop_multiple_variables(c *check.C) {
 func (s *Suite) Test_MkLines__comparing_YesNo_variable_to_string(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
+	t.SetUpPkgsrc()
+	t.Chdir(".")
+	t.FinishSetUp()
 	mklines := t.NewMkLines("databases/gdbm_compat/builtin.mk",
 		MkCvsID,
 		"",
@@ -200,7 +202,9 @@ func (s *Suite) Test_MkLines_Check__loop_modifier(c *check.C) {
 func (s *Suite) Test_MkLines_Check__PKG_SKIP_REASON_depending_on_OPSYS(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
+	t.SetUpPkgsrc()
+	t.Chdir("category/package")
+	t.FinishSetUp()
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
 		"",
@@ -235,7 +239,9 @@ func (s *Suite) Test_MkLines_Check__use_list_variable_as_part_of_word(c *check.C
 func (s *Suite) Test_MkLines_Check__absolute_pathname_depending_on_OPSYS(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
+	t.SetUpPkgsrc()
+	t.Chdir(".")
+	t.FinishSetUp()
 	mklines := t.NewMkLines("games/heretic2-demo/Makefile",
 		MkCvsID,
 		"",
@@ -261,7 +267,9 @@ func (s *Suite) Test_MkLines_Check__absolute_pathname_depending_on_OPSYS(c *chec
 func (s *Suite) Test_MkLines_Check__indentation(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
+	t.SetUpPkgsrc()
+	t.Chdir("category/package")
+	t.FinishSetUp()
 	mklines := t.NewMkLines("options.mk",
 		MkCvsID,
 		"",
@@ -315,7 +323,9 @@ func (s *Suite) Test_MkLines_Check__indentation(c *check.C) {
 func (s *Suite) Test_MkLines_Check__indentation_include(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
+	t.SetUpPkgsrc()
+	t.Chdir("category/package")
+	t.FinishSetUp()
 	t.CreateFileLines("included.mk")
 	mklines := t.SetUpFileMkLines("module.mk",
 		MkCvsID,
@@ -333,15 +343,17 @@ func (s *Suite) Test_MkLines_Check__indentation_include(c *check.C) {
 
 	t.CheckOutputLines(
 		// TODO: Use relative path for missing package.
-		"ERROR: ~/module.mk:5: There is no package in \"category/nonexistent\".",
-		"NOTE: ~/module.mk:7: This directive should be indented by 2 spaces.",
-		"NOTE: ~/module.mk:9: This directive should be indented by 2 spaces.")
+		"ERROR: module.mk:5: There is no package in \"../../category/nonexistent\".",
+		"NOTE: module.mk:7: This directive should be indented by 2 spaces.",
+		"NOTE: module.mk:9: This directive should be indented by 2 spaces.")
 }
 
 func (s *Suite) Test_MkLines_Check__unfinished_directives(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
+	t.SetUpPkgsrc()
+	t.Chdir("category/package")
+	t.FinishSetUp()
 	mklines := t.NewMkLines("opsys.mk",
 		MkCvsID,
 		"",
@@ -364,7 +376,9 @@ func (s *Suite) Test_MkLines_Check__unfinished_directives(c *check.C) {
 func (s *Suite) Test_MkLines_Check__unbalanced_directives(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
+	t.SetUpPkgsrc()
+	t.Chdir("category/package")
+	t.FinishSetUp()
 	mklines := t.NewMkLines("opsys.mk",
 		MkCvsID,
 		"",

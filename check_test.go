@@ -387,6 +387,10 @@ func (t *Tester) SetUpPkgsrc() {
 	// Category Makefiles require this file for the common definitions.
 	t.CreateFileLines("mk/misc/category.mk")
 
+	// TODO
+	// assert(!t.File("mk/bsd.options.mk").IsFile())
+	// t.CreateFileLines("mk/bsd.options.mk")
+
 	t.seenSetupPkgsrc++
 }
 

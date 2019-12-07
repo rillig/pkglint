@@ -214,7 +214,9 @@ func (s *Suite) Test_VargroupsChecker__used_in_BUILD_DEFS(c *check.C) {
 func (s *Suite) Test_VargroupsChecker__ignore(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
+	t.SetUpPkgsrc()
+	t.Chdir("category/package")
+	t.FinishSetUp()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,

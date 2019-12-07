@@ -146,7 +146,9 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCond__tracing(c *check.C) {
 func (s *Suite) Test_MkCondChecker_checkDirectiveCond__comparison_with_shell_command(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
+	t.SetUpPkgsrc()
+	t.Chdir(".")
+	t.FinishSetUp()
 	mklines := t.NewMkLines("security/openssl/Makefile",
 		MkCvsID,
 		"",
@@ -168,7 +170,9 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCond__comparison_with_shell_com
 func (s *Suite) Test_MkCondChecker_checkDirectiveCond__compare_pattern_with_empty(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
+	t.SetUpPkgsrc()
+	t.Chdir("category/package")
+	t.FinishSetUp()
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
 		"",
@@ -195,7 +199,9 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCond__compare_pattern_with_empt
 func (s *Suite) Test_MkCondChecker_checkDirectiveCond__comparing_PKGSRC_COMPILER_with_eqeq(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
+	t.SetUpPkgsrc()
+	t.Chdir("category/package")
+	t.FinishSetUp()
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
 		"",
@@ -980,8 +986,9 @@ func (s *Suite) Test_MkCondChecker_checkCompareVarStr(c *check.C) {
 func (s *Suite) Test_MkCondChecker_checkCompareVarStrCompiler(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
-	t.Chdir(".")
+	t.SetUpPkgsrc()
+	t.Chdir("category/package")
+	t.FinishSetUp()
 
 	test := func(cond string, diagnostics ...string) {
 		mklines := t.SetUpFileMkLines("filename.mk",
