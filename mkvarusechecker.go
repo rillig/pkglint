@@ -381,6 +381,15 @@ func (ck *MkVarUseChecker) checkUseAtLoadTime(time VucTime) {
 		return
 	}
 
+	if ck.vartype.IsPackageSettable() &&
+		basename != "Makefile" && basename != "options.mk" {
+
+		// For package-settable variables, the explanation doesn't
+		// make sense since it talks about completely different
+		// types of variables.
+		return
+	}
+
 	if !ck.MkLines.once.FirstTime("bsd.prefs.mk") {
 		return
 	}
