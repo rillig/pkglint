@@ -473,113 +473,6 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__invalid_dependency_patterns(c *chec
 		"WARN: buildlink3.mk:10: Invalid dependency pattern \"hs-X11!=1.6.1.2nb2\".")
 }
 
-func (s *Suite) Test_CheckLinesBuildlink3Mk__PKGBASE_with_variable(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpVartypes()
-	mklinesPhp := t.NewMkLines("x11/php-wxwidgets/buildlink3.mk",
-		MkCvsID,
-		"",
-		"BUILDLINK_TREE+=\t${PHP_PKG_PREFIX}-wxWidgets",
-		"",
-		".if !defined(PHP_WXWIDGETS_BUILDLINK3_MK)",
-		"PHP_WXWIDGETS_BUILDLINK3_MK:=",
-		"",
-		"BUILDLINK_API_DEPENDS.${PHP_PKG_PREFIX}-wxWidgets+=\t${PHP_PKG_PREFIX}-wxWidgets>=2.6.1.0",
-		"BUILDLINK_ABI_DEPENDS.${PHP_PKG_PREFIX}-wxWidgets+=\t${PHP_PKG_PREFIX}-wxWidgets>=2.8.10.1nb26",
-		"",
-		".endif",
-		"",
-		"BUILDLINK_TREE+=\t-${PHP_PKG_PREFIX}-wxWidgets")
-	mklinesPy := t.NewMkLines("x11/py-wxwidgets/buildlink3.mk",
-		MkCvsID,
-		"",
-		"BUILDLINK_TREE+=\t${PYPKGPREFIX}-wxWidgets",
-		"",
-		".if !defined(PY_WXWIDGETS_BUILDLINK3_MK)",
-		"PY_WXWIDGETS_BUILDLINK3_MK:=",
-		"",
-		"BUILDLINK_API_DEPENDS.${PYPKGPREFIX}-wxWidgets+=\t${PYPKGPREFIX}-wxWidgets>=2.6.1.0",
-		"BUILDLINK_ABI_DEPENDS.${PYPKGPREFIX}-wxWidgets+=\t${PYPKGPREFIX}-wxWidgets>=2.8.10.1nb26",
-		"",
-		".endif",
-		"",
-		"BUILDLINK_TREE+=\t-${PYPKGPREFIX}-wxWidgets")
-	mklinesRuby1 := t.NewMkLines("x11/ruby1-wxwidgets/buildlink3.mk",
-		MkCvsID,
-		"",
-		"BUILDLINK_TREE+=\t${RUBY_BASE}-wxWidgets",
-		"",
-		".if !defined(RUBY_WXWIDGETS_BUILDLINK3_MK)",
-		"RUBY_WXWIDGETS_BUILDLINK3_MK:=",
-		"",
-		"BUILDLINK_API_DEPENDS.${RUBY_BASE}-wxWidgets+=\t${RUBY_BASE}-wxWidgets>=2.6.1.0",
-		"BUILDLINK_ABI_DEPENDS.${RUBY_BASE}-wxWidgets+=\t${RUBY_BASE}-wxWidgets>=2.8.10.1nb26",
-		"",
-		".endif",
-		"",
-		"BUILDLINK_TREE+=\t-${RUBY_BASE}-wxWidgets")
-	mklinesRuby2 := t.NewMkLines("x11/ruby2-wxwidgets/buildlink3.mk",
-		MkCvsID,
-		"",
-		"BUILDLINK_TREE+=\t${RUBY_PKGPREFIX}-wxWidgets",
-		"",
-		".if !defined(RUBY_WXWIDGETS_BUILDLINK3_MK)",
-		"RUBY_WXWIDGETS_BUILDLINK3_MK:=",
-		"",
-		"BUILDLINK_API_DEPENDS.${RUBY_PKGPREFIX}-wxWidgets+=\t${RUBY_PKGPREFIX}-wxWidgets>=2.6.1.0",
-		"BUILDLINK_ABI_DEPENDS.${RUBY_PKGPREFIX}-wxWidgets+=\t${RUBY_PKGPREFIX}-wxWidgets>=2.8.10.1nb26",
-		"",
-		".endif",
-		"",
-		"BUILDLINK_TREE+=\t-${RUBY_PKGPREFIX}-wxWidgets")
-
-	CheckLinesBuildlink3Mk(mklinesPhp)
-	CheckLinesBuildlink3Mk(mklinesPy)
-	CheckLinesBuildlink3Mk(mklinesRuby1)
-	CheckLinesBuildlink3Mk(mklinesRuby2)
-
-	t.CheckOutputLines(
-		"WARN: x11/php-wxwidgets/buildlink3.mk:3: Please use \"php\" instead of \"${PHP_PKG_PREFIX}\" (also in other variables in this file).",
-		"WARN: x11/py-wxwidgets/buildlink3.mk:3: Please use \"py\" instead of \"${PYPKGPREFIX}\" (also in other variables in this file).",
-		"WARN: x11/ruby1-wxwidgets/buildlink3.mk:3: Please use \"ruby\" instead of \"${RUBY_BASE}\" (also in other variables in this file).",
-		"WARN: x11/ruby2-wxwidgets/buildlink3.mk:3: Please use \"ruby\" instead of \"${RUBY_PKGPREFIX}\" (also in other variables in this file).")
-}
-
-func (s *Suite) Test_CheckLinesBuildlink3Mk__PKGBASE_with_unknown_variable(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpVartypes()
-	mklines := t.NewMkLines("buildlink3.mk",
-		MkCvsID,
-		"",
-		"BUILDLINK_TREE+=\t${LICENSE}-wxWidgets",
-		"",
-		".if !defined(LICENSE_BUILDLINK3_MK)",
-		"LICENSE_BUILDLINK3_MK:=",
-		"",
-		"BUILDLINK_API_DEPENDS.${LICENSE}-wxWidgets+=\t${LICENSE}-wxWidgets>=2.6.1.0",
-		"BUILDLINK_ABI_DEPENDS.${LICENSE}-wxWidgets+=\t${LICENSE}-wxWidgets>=2.8.10.1nb26",
-		"",
-		".endif",
-		"",
-		"BUILDLINK_TREE+=\t-${LICENSE}-wxWidgets")
-
-	CheckLinesBuildlink3Mk(mklines)
-
-	t.CheckOutputLines(
-		"WARN: buildlink3.mk:3: LICENSE should not be used in this file; "+
-			"it would be ok in Makefile, Makefile.* or *.mk, but not buildlink3.mk or builtin.mk.",
-		"WARN: buildlink3.mk:3: The variable LICENSE should be quoted as part of a shell word.",
-		"WARN: buildlink3.mk:8: The variable LICENSE should be quoted as part of a shell word.",
-		"WARN: buildlink3.mk:8: The variable LICENSE should be quoted as part of a shell word.",
-		"WARN: buildlink3.mk:9: The variable LICENSE should be quoted as part of a shell word.",
-		"WARN: buildlink3.mk:9: The variable LICENSE should be quoted as part of a shell word.",
-		"WARN: buildlink3.mk:13: The variable LICENSE should be quoted as part of a shell word.",
-		"WARN: buildlink3.mk:3: Please replace \"${LICENSE}\" with a simple string "+
-			"(also in other variables in this file).")
-}
-
 // Just for branch coverage.
 func (s *Suite) Test_Buildlink3Checker_Check__no_tracing(c *check.C) {
 	t := s.Init(c)
@@ -929,4 +822,146 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__other_variables(c *check.
 		"WARN: ~/category/package/buildlink3.mk:16: " +
 			"Only buildlink variables for \"package\", " +
 			"not \"other\" may be set in this file.")
+}
+
+func (s *Suite) Test_Buildlink3Checker_checkVaruseInPkgbase__PKGBASE_with_variable_PHP_PKG_PREFIX(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("x11/php-wxwidgets/buildlink3.mk",
+		MkCvsID,
+		"",
+		"BUILDLINK_TREE+=\t${PHP_PKG_PREFIX}-wxWidgets",
+		"",
+		".if !defined(PHP_WXWIDGETS_BUILDLINK3_MK)",
+		"PHP_WXWIDGETS_BUILDLINK3_MK:=",
+		"",
+		"BUILDLINK_API_DEPENDS.${PHP_PKG_PREFIX}-wxWidgets+=\t${PHP_PKG_PREFIX}-wxWidgets>=2.6.1.0",
+		"BUILDLINK_ABI_DEPENDS.${PHP_PKG_PREFIX}-wxWidgets+=\t${PHP_PKG_PREFIX}-wxWidgets>=2.8.10.1nb26",
+		"",
+		".endif",
+		"",
+		"BUILDLINK_TREE+=\t-${PHP_PKG_PREFIX}-wxWidgets")
+
+	CheckLinesBuildlink3Mk(mklines)
+
+	t.CheckOutputLines(
+		"WARN: x11/php-wxwidgets/buildlink3.mk:3: " +
+			"Please use \"php\" instead of \"${PHP_PKG_PREFIX}\" " +
+			"(also in other variables in this file).")
+}
+
+func (s *Suite) Test_Buildlink3Checker_checkVaruseInPkgbase__PKGBASE_with_variable_PYPKGPREFIX(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("x11/py-wxwidgets/buildlink3.mk",
+		MkCvsID,
+		"",
+		"BUILDLINK_TREE+=\t${PYPKGPREFIX}-wxWidgets",
+		"",
+		".if !defined(PY_WXWIDGETS_BUILDLINK3_MK)",
+		"PY_WXWIDGETS_BUILDLINK3_MK:=",
+		"",
+		"BUILDLINK_API_DEPENDS.${PYPKGPREFIX}-wxWidgets+=\t${PYPKGPREFIX}-wxWidgets>=2.6.1.0",
+		"BUILDLINK_ABI_DEPENDS.${PYPKGPREFIX}-wxWidgets+=\t${PYPKGPREFIX}-wxWidgets>=2.8.10.1nb26",
+		"",
+		".endif",
+		"",
+		"BUILDLINK_TREE+=\t-${PYPKGPREFIX}-wxWidgets")
+
+	CheckLinesBuildlink3Mk(mklines)
+
+	t.CheckOutputLines(
+		"WARN: x11/py-wxwidgets/buildlink3.mk:3: " +
+			"Please use \"py\" instead of \"${PYPKGPREFIX}\" " +
+			"(also in other variables in this file).")
+}
+
+func (s *Suite) Test_Buildlink3Checker_checkVaruseInPkgbase__PKGBASE_with_variable_RUBY_BASE(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("x11/ruby1-wxwidgets/buildlink3.mk",
+		MkCvsID,
+		"",
+		"BUILDLINK_TREE+=\t${RUBY_BASE}-wxWidgets",
+		"",
+		".if !defined(RUBY_WXWIDGETS_BUILDLINK3_MK)",
+		"RUBY_WXWIDGETS_BUILDLINK3_MK:=",
+		"",
+		"BUILDLINK_API_DEPENDS.${RUBY_BASE}-wxWidgets+=\t${RUBY_BASE}-wxWidgets>=2.6.1.0",
+		"BUILDLINK_ABI_DEPENDS.${RUBY_BASE}-wxWidgets+=\t${RUBY_BASE}-wxWidgets>=2.8.10.1nb26",
+		"",
+		".endif",
+		"",
+		"BUILDLINK_TREE+=\t-${RUBY_BASE}-wxWidgets")
+
+	CheckLinesBuildlink3Mk(mklines)
+
+	t.CheckOutputLines(
+		"WARN: x11/ruby1-wxwidgets/buildlink3.mk:3: " +
+			"Please use \"ruby\" instead of \"${RUBY_BASE}\" " +
+			"(also in other variables in this file).")
+}
+
+func (s *Suite) Test_Buildlink3Checker_checkVaruseInPkgbase__PKGBASE_with_variable_RUBY_PKGPREFIX(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("x11/ruby2-wxwidgets/buildlink3.mk",
+		MkCvsID,
+		"",
+		"BUILDLINK_TREE+=\t${RUBY_PKGPREFIX}-wxWidgets",
+		"",
+		".if !defined(RUBY_WXWIDGETS_BUILDLINK3_MK)",
+		"RUBY_WXWIDGETS_BUILDLINK3_MK:=",
+		"",
+		"BUILDLINK_API_DEPENDS.${RUBY_PKGPREFIX}-wxWidgets+=\t${RUBY_PKGPREFIX}-wxWidgets>=2.6.1.0",
+		"BUILDLINK_ABI_DEPENDS.${RUBY_PKGPREFIX}-wxWidgets+=\t${RUBY_PKGPREFIX}-wxWidgets>=2.8.10.1nb26",
+		"",
+		".endif",
+		"",
+		"BUILDLINK_TREE+=\t-${RUBY_PKGPREFIX}-wxWidgets")
+
+	CheckLinesBuildlink3Mk(mklines)
+
+	t.CheckOutputLines(
+		"WARN: x11/ruby2-wxwidgets/buildlink3.mk:3: " +
+			"Please use \"ruby\" instead of \"${RUBY_PKGPREFIX}\" " +
+			"(also in other variables in this file).")
+}
+
+func (s *Suite) Test_Buildlink3Checker_checkVaruseInPkgbase__PKGBASE_with_unknown_variable(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("buildlink3.mk",
+		MkCvsID,
+		"",
+		"BUILDLINK_TREE+=\t${LICENSE}-wxWidgets",
+		"",
+		".if !defined(LICENSE_BUILDLINK3_MK)",
+		"LICENSE_BUILDLINK3_MK:=",
+		"",
+		"BUILDLINK_API_DEPENDS.${LICENSE}-wxWidgets+=\t${LICENSE}-wxWidgets>=2.6.1.0",
+		"BUILDLINK_ABI_DEPENDS.${LICENSE}-wxWidgets+=\t${LICENSE}-wxWidgets>=2.8.10.1nb26",
+		"",
+		".endif",
+		"",
+		"BUILDLINK_TREE+=\t-${LICENSE}-wxWidgets")
+
+	CheckLinesBuildlink3Mk(mklines)
+
+	t.CheckOutputLines(
+		"WARN: buildlink3.mk:3: LICENSE should not be used in this file; "+
+			"it would be ok in Makefile, Makefile.* or *.mk, but not buildlink3.mk or builtin.mk.",
+		"WARN: buildlink3.mk:3: The variable LICENSE should be quoted as part of a shell word.",
+		"WARN: buildlink3.mk:8: The variable LICENSE should be quoted as part of a shell word.",
+		"WARN: buildlink3.mk:8: The variable LICENSE should be quoted as part of a shell word.",
+		"WARN: buildlink3.mk:9: The variable LICENSE should be quoted as part of a shell word.",
+		"WARN: buildlink3.mk:9: The variable LICENSE should be quoted as part of a shell word.",
+		"WARN: buildlink3.mk:13: The variable LICENSE should be quoted as part of a shell word.",
+		"WARN: buildlink3.mk:3: Please replace \"${LICENSE}\" with a simple string "+
+			"(also in other variables in this file).")
 }
