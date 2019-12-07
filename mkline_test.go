@@ -672,8 +672,6 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__eval_shell(c *check.C) {
 	})
 
 	t.CheckOutputLines(
-		"WARN: builtin.mk:5: To use PKG_ADMIN at load time, "+
-			".include \"../../mk/bsd.prefs.mk\" first.",
 		"NOTE: builtin.mk:5: The :Q modifier isn't necessary for ${BUILTIN_PKG.Xfixes} here.")
 }
 

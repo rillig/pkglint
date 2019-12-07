@@ -375,14 +375,18 @@ func (ck *MkVarUseChecker) checkUseAtLoadTime(time VucTime) {
 	if G.Pkg != nil && G.Pkg.seenPrefs {
 		return
 	}
+	mkline := ck.MkLine
+	basename := mkline.Basename
+	if basename == "builtin.mk" {
+		return
+	}
 
 	if !ck.MkLines.once.FirstTime("bsd.prefs.mk") {
 		return
 	}
 
-	mkline := ck.MkLine
 	include := condStr(
-		mkline.Basename == "buildlink3.mk",
+		basename == "buildlink3.mk",
 		"mk/bsd.fast.prefs.mk",
 		"mk/bsd.prefs.mk")
 	currInclude := G.Pkgsrc.File(NewPkgsrcPath(NewPath(include)))
