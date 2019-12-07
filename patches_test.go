@@ -592,6 +592,7 @@ func (s *Suite) Test_PatchChecker_Check__absolute_path(c *check.C) {
 
 	// FIXME: Patches must not apply to absolute paths.
 	// The only allowed exception is /dev/null.
+	// ^(---|\+\+\+) /(?!dev/null)
 	t.CheckOutputEmpty()
 }
 
