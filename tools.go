@@ -285,7 +285,7 @@ func (tr *Tools) ParseToolLine(mklines *MkLines, mkline *MkLine, fromInfrastruct
 		}
 
 	case mkline.IsInclude():
-		if IsPrefs(mkline.IncludedFile()) {
+		if IsPrefs(mkline.IncludedFile()) || mkline.IncludedFile().Base() == "options.mk" {
 			tr.SeenPrefs = true
 		}
 	}

@@ -1467,11 +1467,7 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__options_mk(c *check.C) {
 
 	G.Check(t.File("category/package"))
 
-	// FIXME
-	t.CheckOutputLines(
-		"WARN: ~/category/package/Makefile:22: " +
-			"To use PKG_OPTIONS at load time, " +
-			".include \"../../mk/bsd.prefs.mk\" first.")
+	t.CheckOutputEmpty()
 }
 
 // When a package defines PLIST_SRC, it may or may not use the
