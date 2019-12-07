@@ -1164,6 +1164,11 @@ func (cv *VartypeCheck) RPkgVer() {
 
 // RelativePkgDir refers to a package directory, e.g. ../../category/pkgbase.
 func (cv *VartypeCheck) RelativePkgDir() {
+	if NewPath(cv.Value).IsAbs() {
+		cv.Errorf("The path %q must be relative.", cv.Value)
+		return
+	}
+
 	MkLineChecker{cv.MkLines, cv.MkLine}.CheckRelativePkgdir(NewRelPathString(cv.Value))
 }
 
@@ -1172,6 +1177,11 @@ func (cv *VartypeCheck) RelativePkgDir() {
 //
 // See RelativePkgDir, which requires a directory, not a file.
 func (cv *VartypeCheck) RelativePkgPath() {
+	if NewPath(cv.Value).IsAbs() {
+		cv.Errorf("The path %q must be relative.", cv.Value)
+		return
+	}
+
 	MkLineChecker{cv.MkLines, cv.MkLine}.CheckRelativePath(NewRelPathString(cv.Value), true)
 }
 

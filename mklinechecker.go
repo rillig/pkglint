@@ -310,11 +310,6 @@ func (ck MkLineChecker) CheckRelativePath(relativePath RelPath, mustExist bool) 
 		return
 	}
 
-	if resolvedPath.AsPath().IsAbs() {
-		mkline.Errorf("The path %q must be relative.", resolvedPath)
-		return
-	}
-
 	abs := mkline.Filename.DirNoClean().JoinNoClean(resolvedPath)
 	if !abs.Exists() {
 		pkgsrcPath := G.Pkgsrc.ToRel(ck.MkLine.File(resolvedPath))

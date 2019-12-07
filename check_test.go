@@ -803,9 +803,15 @@ func (t *Tester) Main(args ...string) int {
 
 	argv := []string{"pkglint"}
 	for _, arg := range args {
-		fileArg := t.File(NewRelPathString(arg))
-		if fileArg.Exists() {
-			argv = append(argv, fileArg.String())
+		fileArg := NewCurrPathSlash(arg)
+		if fileArg.IsAbs() {
+			argv = append(argv, arg)
+			continue
+		}
+
+		file := t.File(NewRelPathString(arg))
+		if file.Exists() {
+			argv = append(argv, file.String())
 		} else {
 			argv = append(argv, arg)
 		}

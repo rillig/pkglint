@@ -416,9 +416,15 @@ func (p PackagePath) IsEmpty() bool { return p.AsPath().IsEmpty() }
 // further specified.
 type RelPath string
 
-func NewRelPath(p Path) RelPath { return RelPath(p) }
+func NewRelPath(p Path) RelPath {
+	assert(!p.IsAbs())
+	return RelPath(p)
+}
 
-func NewRelPathString(p string) RelPath { return RelPath(p) }
+func NewRelPathString(p string) RelPath {
+	assert(!NewPath(p).IsAbs())
+	return RelPath(p)
+}
 
 func (p RelPath) AsPath() Path { return NewPath(string(p)) }
 

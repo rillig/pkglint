@@ -1278,7 +1278,10 @@ func (s *Suite) Test_RelPath_Split(c *check.C) {
 
 	test("dir/file", "dir/", "file")
 	test("././///file", "././///", "file")
-	test("/", "/", "")
+
+	t.ExpectAssert(
+		func() { test("/", "/", "") })
+
 }
 
 func (s *Suite) Test_RelPath_DirClean(c *check.C) {
