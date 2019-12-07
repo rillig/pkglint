@@ -1113,6 +1113,12 @@ func (cv *VartypeCheck) Pkgrevision() {
 
 // PrefixPathname checks for a pathname relative to ${PREFIX}.
 func (cv *VartypeCheck) PrefixPathname() {
+	if NewPath(cv.Value).IsAbs() {
+		cv.Errorf("The pathname %q in %s must be relative to ${PREFIX}.",
+			cv.Value, cv.Varname)
+		return
+	}
+
 	if m, manSubdir := match1(cv.Value, `^man/(.+)`); m {
 		from := "${PKGMANDIR}/" + manSubdir
 		fix := cv.Autofix()

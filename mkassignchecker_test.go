@@ -1021,7 +1021,7 @@ func (s *Suite) Test_MkAssignChecker_checkVarassignMiscRedundantInstallationDirs
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/Makefile:20: " +
-			"The directories in INSTALLATION_DIRS " +
+			"The pathname \"/bin\" in INSTALLATION_DIRS " +
 			"must be relative to ${PREFIX}.")
 }
 

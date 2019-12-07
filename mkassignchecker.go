@@ -487,7 +487,6 @@ func (ck *MkAssignChecker) checkVarassignMiscRedundantInstallationDirs() {
 
 	for _, dir := range mkline.ValueFields(mkline.Value()) {
 		if NewPath(dir).IsAbs() {
-			mkline.Errorf("The directories in INSTALLATION_DIRS must be relative to ${PREFIX}.")
 			continue
 		}
 

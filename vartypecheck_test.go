@@ -1283,10 +1283,14 @@ func (s *Suite) Test_VartypeCheck_PrefixPathname(c *check.C) {
 	vt.Varname("PKGMANDIR")
 	vt.Values(
 		"man/man1",
-		"share/locale")
+		"share/locale",
+		"/absolute")
 
 	vt.Output(
-		"WARN: filename.mk:1: Please use \"${PKGMANDIR}/man1\" instead of \"man/man1\".")
+		"WARN: filename.mk:1: "+
+			"Please use \"${PKGMANDIR}/man1\" instead of \"man/man1\".",
+		"ERROR: filename.mk:3: The pathname \"/absolute\" in PKGMANDIR "+
+			"must be relative to ${PREFIX}.")
 }
 
 func (s *Suite) Test_VartypeCheck_PythonDependency(c *check.C) {
