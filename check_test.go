@@ -275,6 +275,8 @@ func (t *Tester) SetUpFileLines(filename RelPath, lines ...string) *Lines {
 // The file is then read in, handling line continuations for Makefiles.
 //
 // See SetUpFileLines for loading an ordinary file.
+//
+// If the filename is irrelevant for the particular test, take filename.mk.
 func (t *Tester) SetUpFileMkLines(filename RelPath, lines ...string) *MkLines {
 	abs := t.CreateFileLines(filename, lines...)
 	return LoadMk(abs, MustSucceed)
@@ -1012,6 +1014,8 @@ func (t *Tester) NewLinesAt(filename CurrPath, firstLine int, texts ...string) *
 // SetUpFileMkLines, just without anything being written to disk.
 // This can lead to strange error messages such as "Relative path %s does
 // not exist." because an intermediate directory in the path does not exist.
+//
+// If the filename is irrelevant for the particular test, take filename.mk.
 func (t *Tester) NewMkLines(filename CurrPath, lines ...string) *MkLines {
 	basename := filename.Base()
 	assertf(
