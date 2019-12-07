@@ -857,7 +857,10 @@ func LoadsPrefs(filename RelPath) bool {
 		"bsd.options.mk":       // in mk/
 		return true
 	}
-	return false
+
+	// Just assume that every pkgsrc infrastructure file includes
+	// bsd.prefs.mk, at least indirectly.
+	return filename.ContainsPath("mk")
 }
 
 func IsPrefs(filename RelPath) bool {
