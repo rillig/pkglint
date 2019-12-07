@@ -3,7 +3,7 @@ package pkglint
 import "netbsd.org/pkglint/textproc"
 
 // MkCondChecker checks conditions in Makefiles.
-// These conditions occur in .if and .elif clauses, as wenn as the
+// These conditions occur in .if and .elif clauses, as well as the
 // :? modifier.
 type MkCondChecker struct {
 	MkLine  *MkLine
