@@ -759,7 +759,7 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveEnd__ending_comments(c *check.C
 	mklines := t.NewMkLines("opsys.mk",
 		MkCvsID,
 		"",
-		"# placeholder for .include \"../../mk/bsd.prefs.mk\"",
+		".include \"../../mk/bsd.prefs.mk\"",
 		"",
 		".for i in 1 2 3 4 5",
 		".  if ${OPSYS} == NetBSD",

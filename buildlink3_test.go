@@ -588,7 +588,7 @@ func (s *Suite) Test_Buildlink3Checker_checkMainPart__if_else_endif(c *check.C) 
 
 	t.SetUpPackage("category/package")
 	t.CreateFileBuildlink3("category/package/buildlink3.mk",
-		"# placeholder for .include \"../../mk/bsd.fast.prefs.mk\"",
+		".include \"../../mk/bsd.fast.prefs.mk\"",
 		"",
 		".if ${X11_TYPE} == modular",
 		".else",
@@ -621,7 +621,7 @@ func (s *Suite) Test_Buildlink3Checker_checkMainPart__nested_if(c *check.C) {
 		"BUILDLINK_API_DEPENDS.hs-X11+=\ths-X11>=1.6.1",
 		"BUILDLINK_ABI_DEPENDS.hs-X11+=\ths-X11>=1.6.1.2nb2",
 		"",
-		"# placeholder for .include \"../../mk/bsd.fast.prefs.mk\"",
+		".include \"../../mk/bsd.fast.prefs.mk\"",
 		"",
 		".if ${OPSYS} == NetBSD",
 		".endif",
@@ -835,7 +835,9 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__other_variables(c *check.
 func (s *Suite) Test_Buildlink3Checker_checkVaruseInPkgbase__PKGBASE_with_variable_PHP_PKG_PREFIX(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
+	t.SetUpPkgsrc()
+	t.Chdir(".")
+	t.FinishSetUp()
 	mklines := t.NewMkLines("x11/php-wxwidgets/buildlink3.mk",
 		MkCvsID,
 		"",
@@ -854,15 +856,20 @@ func (s *Suite) Test_Buildlink3Checker_checkVaruseInPkgbase__PKGBASE_with_variab
 	CheckLinesBuildlink3Mk(mklines)
 
 	t.CheckOutputLines(
-		"WARN: x11/php-wxwidgets/buildlink3.mk:3: " +
-			"Please use \"php\" instead of \"${PHP_PKG_PREFIX}\" " +
+		"WARN: x11/php-wxwidgets/buildlink3.mk:8: "+
+			"To use PHP_PKG_PREFIX at load time, "+
+			".include \"../../mk/bsd.fast.prefs.mk\" first.",
+		"WARN: x11/php-wxwidgets/buildlink3.mk:3: "+
+			"Please use \"php\" instead of \"${PHP_PKG_PREFIX}\" "+
 			"(also in other variables in this file).")
 }
 
 func (s *Suite) Test_Buildlink3Checker_checkVaruseInPkgbase__PKGBASE_with_variable_PYPKGPREFIX(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
+	t.SetUpPkgsrc()
+	t.Chdir(".")
+	t.FinishSetUp()
 	mklines := t.NewMkLines("x11/py-wxwidgets/buildlink3.mk",
 		MkCvsID,
 		"",
@@ -881,15 +888,20 @@ func (s *Suite) Test_Buildlink3Checker_checkVaruseInPkgbase__PKGBASE_with_variab
 	CheckLinesBuildlink3Mk(mklines)
 
 	t.CheckOutputLines(
-		"WARN: x11/py-wxwidgets/buildlink3.mk:3: " +
-			"Please use \"py\" instead of \"${PYPKGPREFIX}\" " +
+		"WARN: x11/py-wxwidgets/buildlink3.mk:8: "+
+			"To use PYPKGPREFIX at load time, "+
+			".include \"../../mk/bsd.fast.prefs.mk\" first.",
+		"WARN: x11/py-wxwidgets/buildlink3.mk:3: "+
+			"Please use \"py\" instead of \"${PYPKGPREFIX}\" "+
 			"(also in other variables in this file).")
 }
 
 func (s *Suite) Test_Buildlink3Checker_checkVaruseInPkgbase__PKGBASE_with_variable_RUBY_BASE(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
+	t.SetUpPkgsrc()
+	t.Chdir(".")
+	t.FinishSetUp()
 	mklines := t.NewMkLines("x11/ruby1-wxwidgets/buildlink3.mk",
 		MkCvsID,
 		"",
@@ -908,15 +920,20 @@ func (s *Suite) Test_Buildlink3Checker_checkVaruseInPkgbase__PKGBASE_with_variab
 	CheckLinesBuildlink3Mk(mklines)
 
 	t.CheckOutputLines(
-		"WARN: x11/ruby1-wxwidgets/buildlink3.mk:3: " +
-			"Please use \"ruby\" instead of \"${RUBY_BASE}\" " +
+		"WARN: x11/ruby1-wxwidgets/buildlink3.mk:8: "+
+			"To use RUBY_BASE at load time, "+
+			".include \"../../mk/bsd.fast.prefs.mk\" first.",
+		"WARN: x11/ruby1-wxwidgets/buildlink3.mk:3: "+
+			"Please use \"ruby\" instead of \"${RUBY_BASE}\" "+
 			"(also in other variables in this file).")
 }
 
 func (s *Suite) Test_Buildlink3Checker_checkVaruseInPkgbase__PKGBASE_with_variable_RUBY_PKGPREFIX(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
+	t.SetUpPkgsrc()
+	t.Chdir(".")
+	t.FinishSetUp()
 	mklines := t.NewMkLines("x11/ruby2-wxwidgets/buildlink3.mk",
 		MkCvsID,
 		"",
@@ -935,15 +952,20 @@ func (s *Suite) Test_Buildlink3Checker_checkVaruseInPkgbase__PKGBASE_with_variab
 	CheckLinesBuildlink3Mk(mklines)
 
 	t.CheckOutputLines(
-		"WARN: x11/ruby2-wxwidgets/buildlink3.mk:3: " +
-			"Please use \"ruby\" instead of \"${RUBY_PKGPREFIX}\" " +
+		"WARN: x11/ruby2-wxwidgets/buildlink3.mk:8: "+
+			"To use RUBY_PKGPREFIX at load time, "+
+			".include \"../../mk/bsd.fast.prefs.mk\" first.",
+		"WARN: x11/ruby2-wxwidgets/buildlink3.mk:3: "+
+			"Please use \"ruby\" instead of \"${RUBY_PKGPREFIX}\" "+
 			"(also in other variables in this file).")
 }
 
 func (s *Suite) Test_Buildlink3Checker_checkVaruseInPkgbase__PKGBASE_with_unknown_variable(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
+	t.SetUpPkgsrc()
+	t.Chdir(".")
+	t.FinishSetUp()
 	mklines := t.NewMkLines("buildlink3.mk",
 		MkCvsID,
 		"",

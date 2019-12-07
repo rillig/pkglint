@@ -3030,7 +3030,7 @@ func (s *Suite) Test_Package_checkIncludeConditionally__conditional_and_uncondit
 
 	t.SetUpOption("zlib", "")
 	t.SetUpPackage("category/package",
-		"# placeholder for .include \"../../mk/bsd.prefs.mk\"",
+		".include \"../../mk/bsd.prefs.mk\"",
 		".include \"../../devel/zlib/buildlink3.mk\"",
 		".if ${OPSYS} == \"Linux\"",
 		".include \"../../sysutils/coreutils/buildlink3.mk\"",
@@ -3111,7 +3111,7 @@ func (s *Suite) Test_Package_checkIncludeConditionally__no_explanation(c *check.
 	t.CreateFileLines("devel/zlib/buildlink3.mk",
 		MkCvsID)
 	t.SetUpPackage("category/package",
-		"# placeholder for .include \"../../mk/bsd.prefs.mk\"",
+		".include \"../../mk/bsd.prefs.mk\"",
 		"",
 		".if ${OPSYS} == Linux",
 		".include \"../../devel/zlib/buildlink3.mk\"",
@@ -3219,7 +3219,7 @@ func (s *Suite) Test_Package_checkIncludeConditionally__unconditionally_first(c 
 	t.CreateFileLines("including.mk",
 		MkCvsID,
 		"",
-		"# placeholder for .include \"../../mk/bsd.prefs.mk\"",
+		".include \"../../mk/bsd.prefs.mk\"",
 		"",
 		".include \"included.mk\"",
 		".if ${OPSYS} == \"Linux\"",
@@ -3240,7 +3240,7 @@ func (s *Suite) Test_Package_checkIncludeConditionally__only_conditionally(c *ch
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package",
-		"# placeholder for .include \"../../mk/bsd.prefs.mk\"",
+		".include \"../../mk/bsd.prefs.mk\"",
 		"",
 		".if ${OPSYS} == \"Linux\"",
 		".include \"included.mk\"",
@@ -3263,7 +3263,7 @@ func (s *Suite) Test_Package_checkIncludeConditionally__conditionally_first(c *c
 	t.CreateFileLines("including.mk",
 		MkCvsID,
 		"",
-		"# placeholder for .include \"../../mk/bsd.prefs.mk\"",
+		".include \"../../mk/bsd.prefs.mk\"",
 		"",
 		".if ${OPSYS} == \"Linux\"",
 		".include \"included.mk\"",
@@ -3288,7 +3288,7 @@ func (s *Suite) Test_Package_checkIncludeConditionally__included_multiple_times(
 	t.CreateFileLines("including.mk",
 		MkCvsID,
 		"",
-		"# placeholder for .include \"../../mk/bsd.prefs.mk\"",
+		".include \"../../mk/bsd.prefs.mk\"",
 		"",
 		".include \"included.mk\"",
 		".if ${OPSYS} == \"Linux\"",

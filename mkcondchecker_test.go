@@ -152,7 +152,7 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCond__comparison_with_shell_com
 	mklines := t.NewMkLines("security/openssl/Makefile",
 		MkCvsID,
 		"",
-		"# placeholder for .include \"../../mk/bsd.prefs.mk\"",
+		".include \"../../mk/bsd.prefs.mk\"",
 		"",
 		".if ${PKGSRC_COMPILER} == \"gcc\" && ${CC} == \"cc\"",
 		".endif")
@@ -176,7 +176,7 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCond__compare_pattern_with_empt
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
 		"",
-		"# placeholder for .include \"../../mk/bsd.fast.prefs.mk\"",
+		".include \"../../mk/bsd.fast.prefs.mk\"",
 		"",
 		".if ${X11BASE:Npattern} == \"\"",
 		".endif",
@@ -205,7 +205,7 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCond__comparing_PKGSRC_COMPILER
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
 		"",
-		"# placeholder for .include \"../../mk/bsd.prefs.mk\"",
+		".include \"../../mk/bsd.prefs.mk\"",
 		"",
 		".if ${PKGSRC_COMPILER} == \"clang\"",
 		".elif ${PKGSRC_COMPILER} != \"gcc\"",
@@ -247,14 +247,15 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCondEmpty(c *check.C) {
 		".if !empty(OPSYS:MUnknown)",
 		".if ${OPSYS:U} == Unknown",
 
-		// FIXME: Warn that OPSYS is only available after including bsd.prefs.mk
-		// TODO: Error that OPSYS is only available after including bsd.prefs.mk,
-		//  as soon as pkglint is confident enough to get this check right.
 		"WARN: module.mk:3: The pattern \"Unknown\" cannot match any of "+
 			"{ Cygwin DragonFly FreeBSD Linux NetBSD SunOS } for OPSYS.",
 		"NOTE: module.mk:3: OPSYS should be "+
 			"compared using \"${OPSYS:U} == Unknown\" "+
 			"instead of matching against \":MUnknown\".",
+		// TODO: Turn the bsd.prefs.mk warning into an error,
+		//  once pkglint is confident enough to get this check right.
+		"WARN: module.mk:3: To use OPSYS at load time, "+
+			".include \"../../mk/bsd.prefs.mk\" first.",
 		"AUTOFIX: module.mk:3: Replacing \"!empty(OPSYS:MUnknown)\" "+
 			"with \"${OPSYS:U} == Unknown\".")
 
@@ -265,7 +266,9 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCondEmpty(c *check.C) {
 		".if !empty(OPSYS:O:MUnknown:S,a,b,)",
 
 		"WARN: module.mk:3: The pattern \"Unknown\" cannot match any of "+
-			"{ Cygwin DragonFly FreeBSD Linux NetBSD SunOS } for OPSYS.")
+			"{ Cygwin DragonFly FreeBSD Linux NetBSD SunOS } for OPSYS.",
+		"WARN: module.mk:3: To use OPSYS at load time, "+
+			".include \"../../mk/bsd.prefs.mk\" first.")
 }
 
 func (s *Suite) Test_MkCondChecker_checkDirectiveCondEmptyExpr(c *check.C) {
@@ -379,10 +382,11 @@ func (s *Suite) Test_MkCondChecker_simplifyCondition(c *check.C) {
 		".if ${PKGPATH:Mpattern}",
 		".if ${PKGPATH:U} == pattern",
 
-		// FIXME: Warn that PKGPATH needs bsd.prefs.mk
 		"NOTE: module.mk:3: PKGPATH "+
 			"should be compared using \"${PKGPATH:U} == pattern\" "+
 			"instead of matching against \":Mpattern\".",
+		"WARN: module.mk:3: To use PKGPATH at load time, "+
+			".include \"../../mk/bsd.prefs.mk\" first.",
 		"AUTOFIX: module.mk:3: Replacing \"${PKGPATH:Mpattern}\" "+
 			"with \"${PKGPATH:U} == pattern\".")
 
@@ -660,6 +664,8 @@ func (s *Suite) Test_MkCondChecker_simplifyCondition(c *check.C) {
 		"NOTE: module.mk:3: OPSYS should be "+
 			"compared using \"${OPSYS:U} == Unknown\" "+
 			"instead of matching against \":MUnknown\".",
+		"WARN: module.mk:3: To use OPSYS at load time, "+
+			".include \"../../mk/bsd.prefs.mk\" first.",
 		"AUTOFIX: module.mk:3: Replacing \"!empty(OPSYS:MUnknown)\" "+
 			"with \"${OPSYS:U} == Unknown\".")
 
@@ -994,7 +1000,7 @@ func (s *Suite) Test_MkCondChecker_checkCompareVarStrCompiler(c *check.C) {
 		mklines := t.SetUpFileMkLines("filename.mk",
 			MkCvsID,
 			"",
-			"# placeholder for .include \"../../mk/bsd.fast.prefs.mk\"",
+			".include \"../../mk/bsd.fast.prefs.mk\"",
 			"",
 			".if "+cond,
 			".endif")

@@ -364,7 +364,7 @@ func (s *Suite) Test_CheckLinesOptionsMk__malformed_condition(c *check.C) {
 		"PKG_SUPPORTED_OPTIONS=\t\t# none",
 		"PKG_SUGGESTED_OPTIONS=\t\t# none",
 		"",
-		"# placeholder for .include \"../../mk/bsd.fast.prefs.mk\"",
+		".include \"../../mk/bsd.fast.prefs.mk\"",
 		"",
 		"# Comments and conditionals are allowed at this point.",
 		".if ${OPSYS} == NetBSD",

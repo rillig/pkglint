@@ -661,7 +661,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__eval_shell(c *check.C) {
 	mklines := t.NewMkLines("builtin.mk",
 		MkCvsID,
 		"",
-		"# placeholder for .include \"../../mk/bsd.fast.prefs.mk\"",
+		".include \"../../mk/bsd.fast.prefs.mk\"",
 		"",
 		"USE_BUILTIN.Xfixes!=\t${PKG_ADMIN} pmatch 'pkg-[0-9]*' ${BUILTIN_PKG.Xfixes:Q}")
 
@@ -672,6 +672,8 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__eval_shell(c *check.C) {
 	})
 
 	t.CheckOutputLines(
+		"WARN: builtin.mk:5: To use PKG_ADMIN at load time, "+
+			".include \"../../mk/bsd.prefs.mk\" first.",
 		"NOTE: builtin.mk:5: The :Q modifier isn't necessary for ${BUILTIN_PKG.Xfixes} here.")
 }
 
@@ -1449,7 +1451,7 @@ func (s *Suite) Test_Indentation_Varnames__repetition(c *check.C) {
 		"DISTNAME=\tpackage-1.0",
 		".include \"../../category/other/buildlink3.mk\"")
 	t.CreateFileBuildlink3("category/package/buildlink3.mk",
-		"# placeholder for .include \"../../mk/bsd.fast.prefs.mk\"",
+		".include \"../../mk/bsd.fast.prefs.mk\"",
 		"",
 		".if ${OPSYS} == NetBSD || ${OPSYS} == FreeBSD",
 		".  if ${OPSYS} == NetBSD",

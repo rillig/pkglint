@@ -421,29 +421,34 @@ func (s *Suite) Test_MkVarUseChecker_checkPermissions__load_time(c *check.C) {
 	mklines := t.NewMkLines("options.mk",
 		MkCvsID,
 		"",
-		"# placeholder for .include \"../../mk/bsd.prefs.mk\"",
+		"# don't include bsd.prefs.mk here",
 		"",
-		"WRKSRC:=${.CURDIR}",
+		"WRKSRC:=\t${.CURDIR}",
 		".if ${PKG_SYSCONFDIR.gdm} != \"etc\"",
 		".endif")
 
 	mklines.Check()
 
-	// Evaluating PKG_SYSCONFDIR.* at load time is probably ok,
-	// though pkglint cannot prove anything here.
+	// The PKG_SYSCONFDIR.* depend on the directory layout that is
+	// specified in mk.conf, therefore bsd.prefs.mk must be included first.
 	//
-	// Evaluating .CURDIR at load time is definitely ok since it is defined from the beginning.
+	// Evaluating .CURDIR at load time is definitely ok since it is defined
+	// internally by bmake to be AlwaysInScope.
 	t.CheckOutputLines(
-		"NOTE: options.mk:5: This variable value should be aligned to column 17.")
+		"WARN: options.mk:6: To use PKG_SYSCONFDIR.gdm at load time, " +
+			".include \"../../mk/bsd.prefs.mk\" first.")
 }
 
 func (s *Suite) Test_MkVarUseChecker_checkPermissions__load_time_in_condition(c *check.C) {
 	t := s.Init(c)
 
+	t.SetUpPkgsrc()
 	G.Pkgsrc.vartypes.DefineParse("LOAD_TIME", BtPathPattern, List,
 		"special:filename.mk: use-loadtime")
 	G.Pkgsrc.vartypes.DefineParse("RUN_TIME", BtPathPattern, List,
 		"special:filename.mk: use")
+	t.Chdir(".")
+	t.FinishSetUp()
 
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
@@ -453,16 +458,21 @@ func (s *Suite) Test_MkVarUseChecker_checkPermissions__load_time_in_condition(c 
 	mklines.Check()
 
 	t.CheckOutputLines(
+		"WARN: filename.mk:2: To use LOAD_TIME at load time, "+
+			".include \"mk/bsd.prefs.mk\" first.",
 		"WARN: filename.mk:2: RUN_TIME should not be used at load time in any file.")
 }
 
 func (s *Suite) Test_MkVarUseChecker_checkPermissions__load_time_in_for_loop(c *check.C) {
 	t := s.Init(c)
 
+	t.SetUpPkgsrc()
 	G.Pkgsrc.vartypes.DefineParse("LOAD_TIME", BtPathPattern, List,
 		"special:filename.mk: use-loadtime")
 	G.Pkgsrc.vartypes.DefineParse("RUN_TIME", BtPathPattern, List,
 		"special:filename.mk: use")
+	t.Chdir(".")
+	t.FinishSetUp()
 
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
@@ -472,6 +482,8 @@ func (s *Suite) Test_MkVarUseChecker_checkPermissions__load_time_in_for_loop(c *
 	mklines.Check()
 
 	t.CheckOutputLines(
+		"WARN: filename.mk:2: To use LOAD_TIME at load time, "+
+			".include \"mk/bsd.prefs.mk\" first.",
 		"WARN: filename.mk:2: RUN_TIME should not be used at load time in any file.")
 }
 
@@ -507,6 +519,7 @@ func (s *Suite) Test_MkVarUseChecker_checkPermissions__load_time_guessed(c *chec
 func (s *Suite) Test_MkVarUseChecker_checkPermissions__load_time_run_time(c *check.C) {
 	t := s.Init(c)
 
+	t.SetUpPkgsrc()
 	G.Pkgsrc.vartypes.DefineParse("LOAD_TIME", BtUnknown, NoVartypeOptions,
 		"*.mk: use, use-loadtime")
 	G.Pkgsrc.vartypes.DefineParse("RUN_TIME", BtUnknown, NoVartypeOptions,
@@ -519,6 +532,8 @@ func (s *Suite) Test_MkVarUseChecker_checkPermissions__load_time_run_time(c *che
 	G.Pkgsrc.vartypes.DefineParse("RUN_TIME_ELSEWHERE", BtUnknown, NoVartypeOptions,
 		"Makefile: use",
 		"*.mk: set")
+	t.Chdir(".")
+	t.FinishSetUp()
 
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
@@ -529,6 +544,8 @@ func (s *Suite) Test_MkVarUseChecker_checkPermissions__load_time_run_time(c *che
 	mklines.Check()
 
 	t.CheckOutputLines(
+		"WARN: filename.mk:2: To use LOAD_TIME at load time, "+
+			".include \"mk/bsd.prefs.mk\" first.",
 		"WARN: filename.mk:2: RUN_TIME should not be used at load time in any file.",
 		"WARN: filename.mk:2: "+
 			"WRITE_ONLY should not be used in any file; "+
@@ -767,6 +784,41 @@ func (s *Suite) Test_MkVarUseChecker_explainPermissions(c *check.C) {
 		"\tIf these rules seem to be incorrect, please ask on the",
 		"\ttech-pkg@NetBSD.org mailing list.",
 		"")
+}
+
+func (s *Suite) Test_MkVarUseChecker_checkUseAtLoadTime__buildlink3_mk(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.CreateFileBuildlink3("category/package/buildlink3.mk",
+		".if ${OPSYS} == NetBSD",
+		".endif")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.Check("buildlink3.mk")
+
+	t.CheckOutputLines(
+		"WARN: buildlink3.mk:12: To use OPSYS at load time, " +
+			".include \"../../mk/bsd.fast.prefs.mk\" first.")
+}
+
+func (s *Suite) Test_MkVarUseChecker_checkUseAtLoadTime__other_mk(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.CreateFileLines("category/package/filename.mk",
+		MkCvsID,
+		".if ${OPSYS} == NetBSD",
+		".endif")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.Check("filename.mk")
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:2: To use OPSYS at load time, " +
+			".include \"../../mk/bsd.prefs.mk\" first.")
 }
 
 func (s *Suite) Test_MkVarUseChecker_warnToolLoadTime(c *check.C) {

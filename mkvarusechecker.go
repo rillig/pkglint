@@ -201,6 +201,8 @@ func (ck *MkVarUseChecker) checkPermissions(vuc *VarUseContext) {
 
 	effPerms := vartype.EffectivePermissions(basename)
 	if effPerms.Contains(aclpUseLoadtime) {
+		ck.checkUseAtLoadTime(vuc.time)
+
 		// Since the variable may be used at load time, it probably
 		// may be used at run time as well. If it weren't, that would
 		// be a rather strange permissions set.
@@ -361,6 +363,35 @@ func (ck *MkVarUseChecker) explainPermissions(varname string, vartype *Vartype, 
 		"If these rules seem to be incorrect, please ask on the tech-pkg@NetBSD.org mailing list.")
 
 	ck.MkLine.Explain(expl...)
+}
+
+func (ck *MkVarUseChecker) checkUseAtLoadTime(time VucTime) {
+	if time != VucLoadTime {
+		return
+	}
+	if ck.vartype.IsAlwaysInScope() || ck.MkLines.Tools.SeenPrefs {
+		return
+	}
+
+	if !ck.MkLines.once.FirstTime("bsd.prefs.mk") {
+		return
+	}
+
+	mkline := ck.MkLine
+	include := condStr(
+		mkline.Basename == "buildlink3.mk",
+		"mk/bsd.fast.prefs.mk",
+		"mk/bsd.prefs.mk")
+	currInclude := G.Pkgsrc.File(NewPkgsrcPath(NewPath(include)))
+
+	mkline.Warnf("To use %s at load time, .include %q first.",
+		ck.use.varname, mkline.Rel(currInclude))
+	mkline.Explain(
+		"The user-settable variables and several other variables",
+		"from the pkgsrc infrastructure are only available",
+		"after the preferences have been loaded.",
+		"",
+		"Before that, these variables are undefined.")
 }
 
 // warnToolLoadTime logs a warning that the tool ${varname}

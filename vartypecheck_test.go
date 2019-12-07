@@ -504,7 +504,7 @@ func (s *Suite) Test_VartypeCheck_Enum__use_match(c *check.C) {
 	mklines := t.NewMkLines("module.mk",
 		MkCvsID,
 		"",
-		"# placeholder for .include \"../../mk/bsd.prefs.mk\"",
+		".include \"../../mk/bsd.prefs.mk\"",
 		"",
 		".if !empty(MACHINE_ARCH:Mi386) || ${MACHINE_ARCH} == i386",
 		".endif",

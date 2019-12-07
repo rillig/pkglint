@@ -227,7 +227,7 @@ func (s *Suite) Test_VargroupsChecker__ignore(c *check.C) {
 		"_IGN_VARS.group=\t.CURDIR",
 		"_UNDERSCORE=\t\t_", // This is not an isVargroups name.
 		"",
-		"# placeholder for .include \"../../mk/bsd.prefs.mk\"",
+		".include \"../../mk/bsd.prefs.mk\"",
 		"",
 		".if ${PREFER_PKGSRC:U} || ${WRKOBJDIR:U}",
 		".endif")
