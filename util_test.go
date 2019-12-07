@@ -2,11 +2,11 @@ package pkglint
 
 import (
 	"errors"
+	"fmt"
 	"gopkg.in/check.v1"
 	"os"
 	"reflect"
 	"sort"
-	"strings"
 	"testing"
 	"time"
 )
@@ -1152,14 +1152,21 @@ func (s *Suite) Test_LazyStringBuilder_Reset(c *check.C) {
 	t.CheckDeepEquals(sb.buf, []byte("x"))
 }
 
-// sortedKeys returns the sorted keys from an arbitrary map.
+// sortedKeys takes the keys from an arbitrary map,
+// converts them to strings if necessary,
+// and then returns them sorted.
 //
 // It is only available during tests since it uses reflection.
-func keys(m interface{}) string {
+func keys(m interface{}) []string {
 	var keys []string
 	for _, key := range reflect.ValueOf(m).MapKeys() {
-		keys = append(keys, key.Interface().(string))
+		switch key := key.Interface().(type) {
+		case fmt.Stringer:
+			keys = append(keys, key.String())
+		default:
+			keys = append(keys, key.(string))
+		}
 	}
 	sort.Strings(keys)
-	return strings.Join(keys, " ")
+	return keys
 }

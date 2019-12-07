@@ -645,7 +645,9 @@ func (s *Suite) Test_MkLines_collectVariables__BUILD_DEFS(c *check.C) {
 
 	mklines.Check()
 
-	t.CheckEquals(keys(mklines.buildDefs), "BD_VAR GRP USR")
+	t.CheckDeepEquals(
+		keys(mklines.buildDefs),
+		[]string{"BD_VAR", "GRP", "USR"})
 }
 
 func (s *Suite) Test_MkLines_collectVariables__find_files_and_headers(c *check.C) {
@@ -660,10 +662,15 @@ func (s *Suite) Test_MkLines_collectVariables__find_files_and_headers(c *check.C
 
 	mklines.Check()
 
-	t.CheckEquals(
+	t.CheckDeepEquals(
 		keys(mklines.vars.firstDef),
-		"BUILTIN_FIND_FILES_VAR BUILTIN_FIND_HEADERS_VAR "+
-			"X1_FILE X1_HEADER X2_FILE X2_HEADER")
+		[]string{
+			"BUILTIN_FIND_FILES_VAR",
+			"BUILTIN_FIND_HEADERS_VAR",
+			"X1_FILE",
+			"X1_HEADER",
+			"X2_FILE",
+			"X2_HEADER"})
 }
 
 // Ensures that during MkLines.ForEach, the conditional variables in
