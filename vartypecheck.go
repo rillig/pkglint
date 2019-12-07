@@ -887,8 +887,9 @@ func (cv *VartypeCheck) MailAddress() {
 	}
 }
 
-// Message is a plain string. It should not be enclosed in quotes since
-// that is the job of the code that uses the message.
+// Message is a plain string. When defining a message variable, it should
+// not be enclosed in quotes since that is the job of the code that uses
+// the message.
 //
 // Lists of messages use a different type since they need the quotes
 // around each message; see PKG_FAIL_REASON.
