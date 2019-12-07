@@ -274,12 +274,35 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCondEmpty(c *check.C) {
 func (s *Suite) Test_MkCondChecker_checkDirectiveCondEmptyExpr(c *check.C) {
 	t := s.Init(c)
 
-	test := func() {
-		// FIXME
-		t.CheckEquals(true, true)
+	test := func(use *MkVarUse, diagnostics ...string) {
+		mklines := t.NewMkLines("filename.mk",
+			"# dummy")
+		ck := NewMkCondChecker(mklines.mklines[0], mklines)
+
+		ck.checkDirectiveCondEmptyExpr(use)
+
+		t.CheckOutput(diagnostics)
 	}
 
-	test()
+	// In some cases it makes sense to use indirection in a !empty(...)
+	// expression.
+	test(
+		NewMkVarUse("${PREFIX}"),
+
+		nil...)
+
+	// Typical examples for indirection are .for loops.
+	test(
+		NewMkVarUse("${var}"),
+
+		nil...)
+
+	// This one is obvious enough for pkglint.
+	test(
+		NewMkVarUse("${PREFIX:Mpattern}"),
+
+		"WARN: filename.mk:1: The empty() function takes a variable "+
+			"name as parameter, not a variable expression.")
 }
 
 func (s *Suite) Test_MkCondChecker_checkDirectiveCondEmptyType(c *check.C) {
