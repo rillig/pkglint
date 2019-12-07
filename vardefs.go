@@ -1363,6 +1363,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.sysload("OPSYS", platforms, DefinedIfInScope|NonemptyIfDefined)
 	reg.pkglistbl3("OPSYSVARS", BtVariableName)
 	reg.pkg("OSVERSION_SPECIFIC", BtYes)
+	reg.sysload("OS_VARIANT", BtIdentifier, DefinedIfInScope)
 	reg.sysload("OS_VERSION", BtVersion)
 	reg.sysload("OSX_VERSION", BtVersion) // See mk/platform/Darwin.mk.
 	reg.pkg("OVERRIDE_DIRDEPTH*", BtInteger)
