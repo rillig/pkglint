@@ -842,9 +842,9 @@ func naturalLess(str1, str2 string) bool {
 	return len1 < len2
 }
 
-// IsPrefs returns whether the given file, when included, loads the user
+// LoadsPrefs returns whether the given file, when included, loads the user
 // preferences.
-func IsPrefs(filename RelPath) bool {
+func LoadsPrefs(filename RelPath) bool {
 	switch filename.Base() {
 	case // See https://github.com/golang/go/issues/28057
 		"bsd.prefs.mk",         // in mk/
@@ -852,10 +852,17 @@ func IsPrefs(filename RelPath) bool {
 		"bsd.builtin.mk",       // in mk/buildlink3/
 		"pkgconfig-builtin.mk", // in mk/buildlink3/
 		"pkg-build-options.mk", // in mk/
+		"compiler.mk",          // in mk/
+		"options.mk",           // in package directories
 		"bsd.options.mk":       // in mk/
 		return true
 	}
 	return false
+}
+
+func IsPrefs(filename RelPath) bool {
+	base := filename.Base()
+	return base == "bsd.prefs.mk" || base == "bsd.fast.prefs.mk"
 }
 
 // FileCache reduces the IO load for commonly loaded files by about 50%,

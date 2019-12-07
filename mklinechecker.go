@@ -248,13 +248,11 @@ func (ck MkLineChecker) checkInclude() {
 			"module.mk or similar.",
 			"After that, both this one and the other package should include the newly created file.")
 
-	case IsPrefs(includedFile):
-		if mkline.Basename == "buildlink3.mk" && includedFile.Base() == "bsd.prefs.mk" {
-			fix := mkline.Autofix()
-			fix.Notef("For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
-			fix.Replace("bsd.prefs.mk", "bsd.fast.prefs.mk")
-			fix.Apply()
-		}
+	case mkline.Basename == "buildlink3.mk" && includedFile.Base() == "bsd.prefs.mk":
+		fix := mkline.Autofix()
+		fix.Notef("For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
+		fix.Replace("bsd.prefs.mk", "bsd.fast.prefs.mk")
+		fix.Apply()
 
 	case includedFile.HasSuffixPath("pkgtools/x11-links/buildlink3.mk"):
 		fix := mkline.Autofix()
