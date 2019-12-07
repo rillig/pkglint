@@ -1078,19 +1078,19 @@ func (cv *VartypeCheck) Pkgpath() {
 
 	pkgpath := NewPkgsrcPath(NewPath(value))
 	if !G.Wip && pkgpath.HasPrefixPath("wip") {
-		cv.MkLine.Errorf("A main pkgsrc package must not depend on a pkgsrc-wip package.")
+		cv.Errorf("A main pkgsrc package must not depend on a pkgsrc-wip package.")
 	}
 
 	pkgdir := G.Pkgsrc.File(pkgpath)
 	if !pkgdir.JoinNoClean("Makefile").IsFile() {
-		cv.MkLine.Errorf("There is no package in %q.",
+		cv.Errorf("There is no package in %q.",
 			cv.MkLine.Rel(pkgdir))
 		return
 	}
 
 	if !matches(value, `^([^./][^/]*/[^./][^/]*)$`) {
-		cv.MkLine.Errorf("%q is not a valid path to a package.", pkgpath)
-		cv.MkLine.Explain(
+		cv.Errorf("%q is not a valid path to a package.", pkgpath.String())
+		cv.Explain(
 			"A path to a package has the form \"category/pkgbase\".",
 			"It is relative to the pkgsrc root.")
 	}
