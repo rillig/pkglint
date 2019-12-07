@@ -92,7 +92,8 @@ func (s *Suite) Test_AlternativesChecker_checkLine(c *check.C) {
 		"bin/no-args @PREFIX@/bin/echo",
 		"bin/with-args @PREFIX@/bin/echo hello,",
 		"bin/with-quoted-args @PREFIX@/bin/echo \"hello, world\" \\ cowboy",
-	)
+		"bin/trailing @PREFIX@/bin/echo spaces ", // TODO: warn about this
+		"/abs-echo @PREFIX@/bin/echo")
 	t.CreateFileLines("PLIST",
 		PlistCvsID,
 		"bin/echo")
@@ -100,25 +101,23 @@ func (s *Suite) Test_AlternativesChecker_checkLine(c *check.C) {
 
 	G.Check(".")
 
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"ERROR: ALTERNATIVES:5: Alternative wrapper \"/abs-echo\" " +
+			"must be relative to PREFIX.")
 }
 
-func (s *Suite) Test_AlternativesChecker_checkAlternativeAbs(c *check.C) {
+func (s *Suite) Test_AlternativesChecker_checkWrapperAbs(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpPackage("category/package")
-	t.Chdir("category/package")
 	t.CreateFileLines("ALTERNATIVES",
-		"bin/echo bin/gnu-echo",
-		"bin/editor bin/vim -e")
-	t.CreateFileLines("PLIST",
-		PlistCvsID,
-		"bin/echo",
-		"bin/gnu-echo",
-		"bin/vim")
-	t.FinishSetUp()
+		"relative @PREFIX@/bin/echo",
+		"/absolute @PREFIX@/bin/echo")
 
-	t.CheckOutputEmpty()
+	CheckFileAlternatives(t.File("ALTERNATIVES"))
+
+	t.CheckOutputLines(
+		"ERROR: ~/ALTERNATIVES:2: Alternative wrapper \"/absolute\" " +
+			"must be relative to PREFIX.")
 }
 
 func (s *Suite) Test_AlternativesChecker_checkWrapperPlist(c *check.C) {
@@ -141,6 +140,24 @@ func (s *Suite) Test_AlternativesChecker_checkWrapperPlist(c *check.C) {
 	t.CheckOutputLines(
 		"ERROR: ALTERNATIVES:1: Alternative wrapper \"bin/echo\" " +
 			"must not appear in the PLIST.")
+}
+
+func (s *Suite) Test_AlternativesChecker_checkAlternativeAbs(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.Chdir("category/package")
+	t.CreateFileLines("ALTERNATIVES",
+		"bin/echo bin/gnu-echo",
+		"bin/editor bin/vim -e")
+	t.CreateFileLines("PLIST",
+		PlistCvsID,
+		"bin/echo",
+		"bin/gnu-echo",
+		"bin/vim")
+	t.FinishSetUp()
+
+	t.CheckOutputEmpty()
 }
 
 // A file that is mentioned in the ALTERNATIVES file must appear

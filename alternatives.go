@@ -28,6 +28,8 @@ func (ck *AlternativesChecker) Check(lines *Lines, pkg *Package) {
 	}
 }
 
+// checkLine checks a single line for the following format:
+//  wrapper alternative [optional arguments]
 func (ck *AlternativesChecker) checkLine(line *Line, plistFiles map[RelPath]*PlistLine) {
 	// TODO: Add $ to the regex, just for confidence
 	m, wrapper, space, alternative := match3(line.Text, `^([^\t ]+)([ \t]+)([^\t ]+)`)
@@ -38,13 +40,31 @@ func (ck *AlternativesChecker) checkLine(line *Line, plistFiles map[RelPath]*Pli
 		return
 	}
 
-	if plistFiles != nil {
-		// FIXME: Add test for absolute path.
+	if ck.checkWrapperAbs(line, NewPath(wrapper)) && plistFiles != nil {
 		ck.checkWrapperPlist(line, NewRelPathString(wrapper), plistFiles)
+	}
+	if plistFiles != nil {
 		ck.checkAlternativePlist(line, alternative, plistFiles)
 	}
 
 	ck.checkAlternativeAbs(alternative, line, space)
+}
+
+func (ck *AlternativesChecker) checkWrapperAbs(line *Line, wrapper Path) bool {
+	if !wrapper.IsAbs() {
+		return true
+	}
+
+	line.Errorf("Alternative wrapper %q must be relative to PREFIX.", wrapper.String())
+	return false
+}
+
+func (ck *AlternativesChecker) checkWrapperPlist(line *Line, wrapper RelPath,
+	plistFiles map[RelPath]*PlistLine) {
+
+	if plistFiles[wrapper] != nil {
+		line.Errorf("Alternative wrapper %q must not appear in the PLIST.", wrapper)
+	}
 }
 
 func (ck *AlternativesChecker) checkAlternativeAbs(alternative string, line *Line, space string) {
@@ -62,14 +82,6 @@ func (ck *AlternativesChecker) checkAlternativeAbs(alternative string, line *Lin
 		fix.ReplaceAfter(space, alternative, "@PREFIX@/"+alternative)
 	}
 	fix.Apply()
-}
-
-func (ck *AlternativesChecker) checkWrapperPlist(line *Line, wrapper RelPath,
-	plistFiles map[RelPath]*PlistLine) {
-
-	if plistFiles[wrapper] != nil {
-		line.Errorf("Alternative wrapper %q must not appear in the PLIST.", wrapper)
-	}
 }
 
 func (ck *AlternativesChecker) checkAlternativePlist(line *Line, alternative string,
