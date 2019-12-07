@@ -851,7 +851,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// TODO: Determine DefinedIfInScope automatically.
 	// TODO: Determine NonemptyIfDefined automatically.
 
-	reg.sysload(".CURDIR", BtPathname, NonemptyIfDefined)
+	reg.sysload(".CURDIR", BtPathname, AlwaysInScope|DefinedIfInScope|NonemptyIfDefined)
 	reg.sysload(".IMPSRC", BtPathname)
 	reg.sys(".TARGET", BtPathname)
 	reg.sys("@", BtPathname)
@@ -1376,8 +1376,11 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.pkg("PATCH_DIST_STRIP*", BtShellWord)
 	reg.pkglist("PATCH_SITES", BtFetchURL)
 	reg.pkg("PATCH_STRIP", BtShellWord)
-	reg.sysload("PATH", BtPathlist, DefinedIfInScope|NonemptyIfDefined) // From the PATH environment variable.
-	reg.sys("PAXCTL", BtShellCommand)                                   // See mk/pax.mk.
+
+	// From the PATH environment variable.
+	reg.sysload("PATH", BtPathlist, AlwaysInScope|DefinedIfInScope|NonemptyIfDefined)
+
+	reg.sys("PAXCTL", BtShellCommand) // See mk/pax.mk.
 	reg.pkglist("PERL5_PACKLIST", BtPerl5Packlist)
 	reg.pkg("PERL5_PACKLIST_DIR", BtPathname)
 	reg.pkglistrat("PERL5_REQD", BtVersion)
