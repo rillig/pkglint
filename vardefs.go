@@ -851,6 +851,8 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	// TODO: Determine DefinedIfInScope automatically.
 	// TODO: Determine NonemptyIfDefined automatically.
 
+	reg.sysload(".newline", BtMessage, AlwaysInScope|DefinedIfInScope|NonemptyIfDefined)
+	reg.sysloadlist(".ALLSRC", BtPathname, AlwaysInScope)
 	reg.sysload(".CURDIR", BtPathname, AlwaysInScope|DefinedIfInScope|NonemptyIfDefined)
 	reg.sysload(".IMPSRC", BtPathname)
 	reg.sys(".TARGET", BtPathname)
@@ -1009,7 +1011,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.sys("BUILTIN_X11_TYPE", BtUnknown)
 	reg.sys("BUILTIN_X11_VERSION", BtUnknown)
 	reg.pkglist("CATEGORIES", BtCategory)
-	reg.sysload("CC_VERSION", BtMessage)
+	reg.sysload("CC_VERSION", BtMessage, DefinedIfInScope|NonemptyIfDefined)
 	reg.sysload("CC", BtShellCommand)
 	reg.pkglistbl3("CFLAGS", BtCFlag)   // may also be changed by the user
 	reg.pkglistbl3("CFLAGS.*", BtCFlag) // may also be changed by the user
@@ -1456,7 +1458,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.sys("PKGVERSION_NOREV", BtVersion) // Without the nb* part.
 	reg.sys("PKGWILDCARD", BtFilePattern)
 	reg.sysload("PKG_ADMIN", BtShellCommand)
-	reg.sys("PKG_APACHE", enum("apache24"))
+	reg.sys("PKG_APACHE", enum("apache24"), DefinedIfInScope|NonemptyIfDefined)
 	reg.pkglistrat("PKG_APACHE_ACCEPTED", enum("apache24"))
 	reg.usr("PKG_APACHE_DEFAULT", enum("apache24"))
 	reg.sysloadlist("PKG_BUILD_OPTIONS.*", BtOption)
