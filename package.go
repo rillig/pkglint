@@ -456,8 +456,8 @@ func (pkg *Package) loadPlistDirs(plistFilename CurrPath) {
 	lines := Load(plistFilename, MustSucceed)
 	ck := PlistChecker{
 		pkg,
-		make(map[Path]*PlistLine),
-		make(map[Path]*PlistLine),
+		make(map[RelPath]*PlistLine),
+		make(map[RelPath]*PlistLine),
 		"",
 		Once{},
 		false}
@@ -1493,12 +1493,12 @@ func (pkg *Package) Includes(filename PackagePath) bool {
 // 2. Ensure that the entries mentioned in the ALTERNATIVES file
 // also appear in the PLIST files.
 type PlistContent struct {
-	Dirs  map[Path]*PlistLine
-	Files map[Path]*PlistLine
+	Dirs  map[RelPath]*PlistLine
+	Files map[RelPath]*PlistLine
 }
 
 func NewPlistContent() PlistContent {
 	return PlistContent{
-		make(map[Path]*PlistLine),
-		make(map[Path]*PlistLine)}
+		make(map[RelPath]*PlistLine),
+		make(map[RelPath]*PlistLine)}
 }

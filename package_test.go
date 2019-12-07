@@ -1184,13 +1184,13 @@ func (s *Suite) Test_Package_loadPlistDirs__empty(c *check.C) {
 	pkg := NewPackage(t.File("category/package"))
 	pkg.load()
 
-	var dirs []Path
+	var dirs []RelPath
 	for dir := range pkg.Plist.Dirs {
 		dirs = append(dirs, dir)
 	}
 	sort.Slice(dirs, func(i, j int) bool { return dirs[i] < dirs[j] })
 
-	t.CheckDeepEquals(dirs, []Path{"bin"})
+	t.CheckDeepEquals(dirs, []RelPath{"bin"})
 }
 
 func (s *Suite) Test_Package_loadPlistDirs(c *check.C) {
@@ -1207,13 +1207,13 @@ func (s *Suite) Test_Package_loadPlistDirs(c *check.C) {
 	pkg := NewPackage(t.File("category/package"))
 	pkg.load()
 
-	var dirs []Path
+	var dirs []RelPath
 	for dir := range pkg.Plist.Dirs {
 		dirs = append(dirs, dir)
 	}
 	sort.Slice(dirs, func(i, j int) bool { return dirs[i] < dirs[j] })
 
-	t.CheckDeepEquals(dirs, []Path{"bin", "dir", "dir/subdir"})
+	t.CheckDeepEquals(dirs, []RelPath{"bin", "dir", "dir/subdir"})
 }
 
 func (s *Suite) Test_Package_check__files_Makefile(c *check.C) {

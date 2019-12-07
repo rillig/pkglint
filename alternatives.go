@@ -16,7 +16,7 @@ func CheckFileAlternatives(filename CurrPath) {
 		plist = G.Pkg.Plist
 	}
 
-	checkPlistWrapper := func(line *Line, wrapper Path) {
+	checkPlistWrapper := func(line *Line, wrapper RelPath) {
 		if plist.Files[wrapper] != nil {
 			line.Errorf("Alternative wrapper %q must not appear in the PLIST.", wrapper)
 		}
@@ -25,24 +25,23 @@ func CheckFileAlternatives(filename CurrPath) {
 	checkPlistAlternative := func(line *Line, alternative string) {
 		relImplementation := strings.Replace(alternative, "@PREFIX@/", "", 1)
 		plistName := replaceAll(relImplementation, `@(\w+)@`, "${$1}")
-		if plist.Files[NewPath(plistName)] != nil || G.Pkg.vars.IsDefined("ALTERNATIVES_SRC") {
-			return
-		}
-		if plist.Files[NewPath(strings.Replace(plistName, "${PKGMANDIR}", "man", 1))] != nil {
-			return
-		}
-
-		switch {
-
-		case hasPrefix(alternative, "/"):
+		if NewPath(plistName).IsAbs() {
 			// It's possible but unusual to refer to a fixed absolute path.
 			// These cannot be mentioned in the PLIST since they are not part of the package.
-			break
+			return
+		}
 
-		case plistName == alternative:
+		rel := NewRelPathString(plistName)
+		if plist.Files[rel] != nil || G.Pkg.vars.IsDefined("ALTERNATIVES_SRC") {
+			return
+		}
+		if plist.Files[rel.Replace("${PKGMANDIR}", "man")] != nil {
+			return
+		}
+
+		if plistName == alternative {
 			line.Errorf("Alternative implementation %q must appear in the PLIST.", alternative)
-
-		default:
+		} else {
 			line.Errorf("Alternative implementation %q must appear in the PLIST as %q.", alternative, plistName)
 		}
 	}
@@ -57,7 +56,8 @@ func CheckFileAlternatives(filename CurrPath) {
 		}
 
 		if plist.Files != nil {
-			checkPlistWrapper(line, NewPath(wrapper))
+			// FIXME: Add test for absolute path.
+			checkPlistWrapper(line, NewRelPathString(wrapper))
 			checkPlistAlternative(line, alternative)
 		}
 
