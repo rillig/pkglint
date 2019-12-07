@@ -55,6 +55,16 @@ type Package struct {
 	// TODO: Be more precise about the purpose of this field.
 	seenInclude bool
 
+	// During both load() and check(), tells whether bsd.prefs.mk has
+	// already been loaded directly or indirectly.
+	//
+	// At the end of load(), it is reset to false.
+	seenPrefs bool
+
+	// The first line of the package Makefile at which bsd.prefs.mk is
+	// guaranteed to be loaded.
+	prefsLine *MkLine
+
 	// Files from .include lines that are nested inside .if.
 	// They often depend on OPSYS or on the existence of files in the build environment.
 	conditionalIncludes map[PackagePath]*MkLine
@@ -157,6 +167,7 @@ func (pkg *Package) load() ([]CurrPath, *MkLines, *MkLines) {
 		}
 	}
 
+	pkg.seenPrefs = false
 	return files, mklines, allLines
 }
 
@@ -172,7 +183,7 @@ func (pkg *Package) loadPackageMakefile() (*MkLines, *MkLines) {
 	}
 
 	allLines := NewMkLines(NewLines("", nil))
-	if !pkg.parse(mainLines, allLines, "") {
+	if !pkg.parse(mainLines, allLines, "", true) {
 		return nil, nil
 	}
 
@@ -226,13 +237,13 @@ func (pkg *Package) loadPackageMakefile() (*MkLines, *MkLines) {
 }
 
 // TODO: What is allLines used for, is it still necessary? Would it be better as a field in Package?
-func (pkg *Package) parse(mklines *MkLines, allLines *MkLines, includingFileForUsedCheck CurrPath) bool {
+func (pkg *Package) parse(mklines *MkLines, allLines *MkLines, includingFileForUsedCheck CurrPath, main bool) bool {
 	if trace.Tracing {
 		defer trace.Call(mklines.lines.Filename)()
 	}
 
 	result := mklines.ForEachEnd(
-		func(mkline *MkLine) bool { return pkg.parseLine(mklines, mkline, allLines) },
+		func(mkline *MkLine) bool { return pkg.parseLine(mklines, mkline, allLines, main) },
 		func(mkline *MkLine) {})
 
 	if includingFileForUsedCheck != "" {
@@ -248,16 +259,19 @@ func (pkg *Package) parse(mklines *MkLines, allLines *MkLines, includingFileForU
 		builtinRel := G.Pkgsrc.Relpath(pkg.dir, builtin)
 		if pkg.included.FirstTime(builtinRel.String()) && builtin.IsFile() {
 			builtinMkLines := LoadMk(builtin, MustSucceed|LogErrors)
-			pkg.parse(builtinMkLines, allLines, "")
+			pkg.parse(builtinMkLines, allLines, "", false)
 		}
 	}
 
 	return result
 }
 
-func (pkg *Package) parseLine(mklines *MkLines, mkline *MkLine, allLines *MkLines) bool {
+func (pkg *Package) parseLine(mklines *MkLines, mkline *MkLine, allLines *MkLines, main bool) bool {
 	allLines.mklines = append(allLines.mklines, mkline)
 	allLines.lines.Lines = append(allLines.lines.Lines, mkline.Line)
+	if main && pkg.seenPrefs && pkg.prefsLine == nil {
+		pkg.prefsLine = mkline
+	}
 
 	if mkline.IsInclude() {
 		includingFile := mkline.Filename
@@ -278,7 +292,7 @@ func (pkg *Package) parseLine(mklines *MkLines, mkline *MkLine, allLines *MkLine
 		if dir != "" && base == "Makefile.common" && dir.String() != "../../"+pkg.Pkgpath.String()+"/" {
 			filenameForUsedCheck = includingFile
 		}
-		if !pkg.parse(includedMkLines, allLines, filenameForUsedCheck) {
+		if !pkg.parse(includedMkLines, allLines, filenameForUsedCheck, false) {
 			return false
 		}
 	}
@@ -409,9 +423,10 @@ func (pkg *Package) resolveIncludedFile(mkline *MkLine, includingFilename CurrPa
 //
 // The includingFile is relative to the current working directory,
 // the includedFile is taken directly from the .include directive.
-func (*Package) shouldDiveInto(includingFile CurrPath, includedFile RelPath) bool {
+func (pkg *Package) shouldDiveInto(includingFile CurrPath, includedFile RelPath) bool {
 
 	if includedFile.HasSuffixPath("bsd.pkg.mk") || IsPrefs(includedFile) {
+		pkg.seenPrefs = true
 		return false
 	}
 
@@ -612,6 +627,11 @@ func (pkg *Package) checkfilePackageMakefile(filename CurrPath, mklines *MkLines
 	//  set Tools.SeenPrefs, but it should.
 	//
 	// See Test_Package_checkfilePackageMakefile__options_mk.
+	mklines.postLine = func(mkline *MkLine) {
+		if mkline == pkg.prefsLine {
+			pkg.seenPrefs = true
+		}
+	}
 	mklines.Check()
 
 	// This check is experimental because it's not yet clear how to

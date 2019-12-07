@@ -16,6 +16,7 @@ type MkLines struct {
 	indentation   *Indentation       // Indentation depth of preprocessing directives; only available during MkLines.ForEach.
 	forVars       map[string]bool    // The variables currently used in .for loops; only available during MkLines.checkAll.
 	once          Once
+	postLine      func(mkline *MkLine) // Custom action that is run after checking each line
 
 	// TODO: Consider extracting plistVarAdded, plistVarSet, plistVarSkip into an own type.
 	// TODO: Describe where each of the above fields is valid.
@@ -42,7 +43,8 @@ func NewMkLines(lines *Lines) *MkLines {
 		tools,
 		nil,
 		make(map[string]bool),
-		Once{}}
+		Once{},
+		nil}
 }
 
 // TODO: Consider defining an interface MkLinesChecker (different name, though, since this one confuses even me)
@@ -402,6 +404,9 @@ func (mklines *MkLines) checkAll() {
 			mkline.Tokenize(mkline.ShellCommand(), true) // Just for the side-effect of the warnings.
 		}
 
+		if mklines.postLine != nil {
+			mklines.postLine(mkline)
+		}
 		return true
 	}
 

@@ -1091,7 +1091,8 @@ func (s *Suite) Test_Package_shouldDiveInto(c *check.C) {
 	t.Chdir("category/package")
 
 	test := func(including CurrPath, included RelPath, expected bool) {
-		actual := (*Package)(nil).shouldDiveInto(including, included)
+		pkg := NewPackage(".")
+		actual := pkg.shouldDiveInto(including, included)
 		t.CheckEquals(actual, expected)
 	}
 
@@ -1484,14 +1485,23 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__prefs_indirect(c *check.C
 		"",
 		".include \"../../mk/bsd.prefs.mk\"")
 	t.FinishSetUp()
+	pkg := NewPackage(t.File("category/package"))
+	G.Pkg = pkg
+	defer func() { G.Pkg = nil }()
 
-	G.Check(t.File("category/package"))
+	files, mklines, allLines := G.Pkg.load()
 
-	// FIXME: bsd.prefs.mk is included indirectly by common.mk.
-	t.CheckOutputLines(
-		"WARN: ~/category/package/Makefile:22: " +
-			"To use OPSYS at load time, " +
-			".include \"../../mk/bsd.prefs.mk\" first.")
+	t.CheckEquals(G.Pkg.seenPrefs, false)
+	t.CheckEquals(G.Pkg.prefsLine, mklines.mklines[20])
+
+	G.Pkg.check(files, mklines, allLines)
+
+	t.CheckEquals(G.Pkg.seenPrefs, true)
+	t.CheckEquals(G.Pkg.prefsLine, mklines.mklines[20])
+
+	// Since bsd.prefs.mk is included indirectly by common.mk,
+	// OPSYS may be used at load time in line 22.
+	t.CheckOutputEmpty()
 }
 
 // When a package defines PLIST_SRC, it may or may not use the

@@ -372,6 +372,9 @@ func (ck *MkVarUseChecker) checkUseAtLoadTime(time VucTime) {
 	if ck.vartype.IsAlwaysInScope() || ck.MkLines.Tools.SeenPrefs {
 		return
 	}
+	if G.Pkg != nil && G.Pkg.seenPrefs {
+		return
+	}
 
 	if !ck.MkLines.once.FirstTime("bsd.prefs.mk") {
 		return
