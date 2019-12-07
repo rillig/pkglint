@@ -2929,6 +2929,93 @@ func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__package_but_not_file
 		"TRACE: - (*Package).checkLinesBuildlink3Inclusion()")
 }
 
+// The file mk/ocaml.mk uses ../.. to reach PKGSRCDIR.
+// The canonical path is .. since ocaml.mk is only one directory away
+// from PKGSRCDIR.
+// Before 2019-12-07, pkglint didn't resolve the resulting path correctly.
+func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__mk_dotdot_dotdot(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("x11/ocaml-graphics",
+		".include \"../../mk/ocaml.mk\"")
+	t.CreateFileLines("mk/ocaml.mk",
+		MkCvsID,
+		".include \"../../lang/ocaml/buildlink3.mk\"")
+	t.CreateFileLines("lang/ocaml/buildlink3.mk",
+		MkCvsID)
+	t.Chdir(".")
+	t.FinishSetUp()
+	pkg := NewPackage("x11/ocaml-graphics")
+	G.Pkg = pkg
+
+	files, mklines, allLines := pkg.load()
+	pkg.check(files, mklines, allLines)
+
+	t.CheckDeepEquals(
+		keys(pkg.bl3),
+		// FIXME: triple dotdot
+		[]string{"../../../lang/ocaml/buildlink3.mk"})
+	t.CheckOutputEmpty()
+}
+
+// The file mk/ocaml.mk uses the canonical .. to reach PKGSRCDIR,
+// not the ../.. that is typically used in packages.
+func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__mk_dotdot(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("x11/ocaml-graphics",
+		".include \"../../mk/ocaml.mk\"")
+	t.CreateFileLines("mk/ocaml.mk",
+		MkCvsID,
+		".include \"../lang/ocaml/buildlink3.mk\"")
+	t.CreateFileLines("lang/ocaml/buildlink3.mk",
+		MkCvsID)
+	t.Chdir(".")
+	t.FinishSetUp()
+	pkg := NewPackage("x11/ocaml-graphics")
+	G.Pkg = pkg
+
+	files, mklines, allLines := pkg.load()
+	pkg.check(files, mklines, allLines)
+
+	t.CheckDeepEquals(
+		keys(pkg.bl3),
+		[]string{"../../lang/ocaml/buildlink3.mk"})
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__ocaml(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("x11/ocaml-graphics",
+		".include \"../../mk/ocaml.mk\"")
+	t.CreateFileBuildlink3("x11/ocaml-graphics/buildlink3.mk",
+		".include \"../../lang/ocaml/buildlink3.mk\"")
+	t.CreateFileLines("mk/ocaml.mk",
+		MkCvsID,
+		// Note: this is ../.. even though .. is enough.
+		".include \"../../lang/ocaml/buildlink3.mk\"")
+	t.CreateFileLines("lang/ocaml/buildlink3.mk",
+		MkCvsID)
+	t.Chdir(".")
+	t.FinishSetUp()
+
+	G.Check("mk/ocaml.mk")
+	G.checkdirPackage("x11/ocaml-graphics")
+
+	t.CheckOutputLines(
+		// This error is only reported if the file is checked on its own.
+		// If it is checked as part of a package, both bmake and pkglint
+		// use the package path as the fallback search path.
+		"ERROR: mk/ocaml.mk:2: Relative path "+
+			"\"../../lang/ocaml/buildlink3.mk\" does not exist.",
+
+		// FIXME: That's wrong.
+		"WARN: x11/ocaml-graphics/buildlink3.mk:12: "+
+			"../../lang/ocaml/buildlink3.mk is included by this file "+
+			"but not by the package.")
+}
+
 // Just for code coverage.
 func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__no_tracing(c *check.C) {
 	t := s.Init(c)
