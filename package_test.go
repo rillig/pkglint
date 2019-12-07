@@ -1470,6 +1470,30 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__options_mk(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_Package_checkfilePackageMakefile__prefs_indirect(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpOption("option", "An example option")
+	t.SetUpPackage("category/package",
+		".include \"common.mk\"",
+		"",
+		".if ${OPSYS} == NetBSD",
+		".endif")
+	t.CreateFileLines("category/package/common.mk",
+		MkCvsID,
+		"",
+		".include \"../../mk/bsd.prefs.mk\"")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package"))
+
+	// FIXME: bsd.prefs.mk is included indirectly by common.mk.
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile:22: " +
+			"To use OPSYS at load time, " +
+			".include \"../../mk/bsd.prefs.mk\" first.")
+}
+
 // When a package defines PLIST_SRC, it may or may not use the
 // PLIST file from the package directory. Therefore the check
 // is skipped completely.
