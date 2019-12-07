@@ -17,11 +17,15 @@ func (s *Suite) Test_NewMkCondChecker(c *check.C) {
 func (s *Suite) Test_MkCondChecker_checkDirectiveCond(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
+	t.SetUpPkgsrc()
+	t.Chdir("category/package")
+	t.FinishSetUp()
 
 	test := func(cond string, output ...string) {
-		mklines := t.NewMkLines("filename.mk",
+		mklines := t.SetUpFileMkLines("filename.mk",
 			MkCvsID,
+			".include \"../../mk/bsd.fast.prefs.mk\"",
+			"",
 			cond,
 			".endif")
 		mklines.Check()
@@ -30,49 +34,49 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCond(c *check.C) {
 
 	test(
 		".if !empty(PKGSRC_COMPILER:Mmycc)",
-		"WARN: filename.mk:2: The pattern \"mycc\" cannot match any of "+
+		"WARN: filename.mk:4: The pattern \"mycc\" cannot match any of "+
 			"{ ccache ccc clang distcc f2c gcc hp icc ido "+
 			"mipspro mipspro-ucode pcc sunpro xlc } for PKGSRC_COMPILER.")
 
 	test(
 		".if ${A} != ${B}",
-		"WARN: filename.mk:2: A is used but not defined.",
-		"WARN: filename.mk:2: B is used but not defined.")
+		"WARN: filename.mk:4: A is used but not defined.",
+		"WARN: filename.mk:4: B is used but not defined.")
 
 	test(".if ${HOMEPAGE} == \"mailto:someone@example.org\"",
-		"WARN: filename.mk:2: \"mailto:someone@example.org\" is not a valid URL.",
-		"WARN: filename.mk:2: HOMEPAGE should not be used at load time in any file.")
+		"WARN: filename.mk:4: \"mailto:someone@example.org\" is not a valid URL.",
+		"WARN: filename.mk:4: HOMEPAGE should not be used at load time in any file.")
 
 	test(".if !empty(PKGSRC_RUN_TEST:M[Y][eE][sS])",
-		"WARN: filename.mk:2: PKGSRC_RUN_TEST should be matched "+
+		"WARN: filename.mk:4: PKGSRC_RUN_TEST should be matched "+
 			"against \"[yY][eE][sS]\" or \"[nN][oO]\", not \"[Y][eE][sS]\".")
 
 	test(".if !empty(IS_BUILTIN.Xfixes:M[yY][eE][sS])")
 
 	test(".if !empty(${IS_BUILTIN.Xfixes:M[yY][eE][sS]})",
-		"WARN: filename.mk:2: The empty() function takes a variable name as parameter, "+
+		"WARN: filename.mk:4: The empty() function takes a variable name as parameter, "+
 			"not a variable expression.")
 
 	test(".if ${PKGSRC_COMPILER} == \"msvc\"",
-		"WARN: filename.mk:2: \"msvc\" is not valid for PKGSRC_COMPILER. "+
+		"WARN: filename.mk:4: \"msvc\" is not valid for PKGSRC_COMPILER. "+
 			"Use one of { ccache ccc clang distcc f2c gcc hp icc ido mipspro mipspro-ucode pcc sunpro xlc } instead.",
-		"ERROR: filename.mk:2: Use ${PKGSRC_COMPILER:Mmsvc} instead of the == operator.")
+		"ERROR: filename.mk:4: Use ${PKGSRC_COMPILER:Mmsvc} instead of the == operator.")
 
 	// PKG_LIBTOOL is only available after including bsd.pkg.mk,
 	// therefore the :U and the subsequent warning.
 	test(".if ${PKG_LIBTOOL:U:Mlibtool}",
-		"NOTE: filename.mk:2: PKG_LIBTOOL "+
+		"NOTE: filename.mk:4: PKG_LIBTOOL "+
 			"should be compared using \"${PKG_LIBTOOL:U} == libtool\" "+
 			"instead of matching against \":Mlibtool\".",
-		"WARN: filename.mk:2: PKG_LIBTOOL should not be used at load time in any file.")
+		"WARN: filename.mk:4: PKG_LIBTOOL should not be used at load time in any file.")
 
 	test(".if ${MACHINE_PLATFORM:MUnknownOS-*-*} || ${MACHINE_ARCH:Mx86}",
-		"WARN: filename.mk:2: "+
+		"WARN: filename.mk:4: "+
 			"The pattern \"UnknownOS\" cannot match any of "+
 			"{ AIX BSDOS Bitrig Cygwin Darwin DragonFly FreeBSD FreeMiNT GNUkFreeBSD HPUX Haiku "+
 			"IRIX Interix Linux Minix MirBSD NetBSD OSF1 OpenBSD QNX SCO_SV SunOS UnixWare "+
 			"} for the operating system part of MACHINE_PLATFORM.",
-		"WARN: filename.mk:2: "+
+		"WARN: filename.mk:4: "+
 			"The pattern \"x86\" cannot match any of "+
 			"{ aarch64 aarch64eb alpha amd64 arc arm arm26 arm32 cobalt coldfire convex dreamcast earm "+
 			"earmeb earmhf earmhfeb earmv4 earmv4eb earmv5 earmv5eb earmv6 earmv6eb earmv6hf earmv6hfeb "+
@@ -80,23 +84,23 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCond(c *check.C) {
 			"m68000 m68k m88k mips mips64 mips64eb mips64el mipseb mipsel mipsn32 mlrisc ns32k pc532 pmax "+
 			"powerpc powerpc64 rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 "+
 			"} for MACHINE_ARCH.",
-		"NOTE: filename.mk:2: MACHINE_ARCH "+
+		"NOTE: filename.mk:4: MACHINE_ARCH "+
 			"should be compared using \"${MACHINE_ARCH} == x86\" "+
 			"instead of matching against \":Mx86\".")
 
 	// Doesn't occur in practice since it is surprising that the ! applies
 	// to the comparison operator, and not to one of its arguments.
 	test(".if !${VAR} == value",
-		"WARN: filename.mk:2: VAR is used but not defined.")
+		"WARN: filename.mk:4: VAR is used but not defined.")
 
 	// Doesn't occur in practice since this string can never be empty.
 	test(".if !\"${VAR}str\"",
-		"WARN: filename.mk:2: VAR is used but not defined.")
+		"WARN: filename.mk:4: VAR is used but not defined.")
 
 	// Doesn't occur in practice since !${VAR} && !${VAR2} is more idiomatic.
 	test(".if !\"${VAR}${VAR2}\"",
-		"WARN: filename.mk:2: VAR is used but not defined.",
-		"WARN: filename.mk:2: VAR2 is used but not defined.")
+		"WARN: filename.mk:4: VAR is used but not defined.",
+		"WARN: filename.mk:4: VAR2 is used but not defined.")
 
 	// Just for code coverage; always evaluates to true.
 	test(".if \"string\"",
@@ -107,20 +111,20 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCond(c *check.C) {
 		nil...)
 
 	test(".if ${VAR}",
-		"WARN: filename.mk:2: VAR is used but not defined.")
+		"WARN: filename.mk:4: VAR is used but not defined.")
 
 	test(".if ${VAR} == 3",
-		"WARN: filename.mk:2: VAR is used but not defined.")
+		"WARN: filename.mk:4: VAR is used but not defined.")
 
 	test(".if \"value\" == ${VAR}",
-		"WARN: filename.mk:2: VAR is used but not defined.")
+		"WARN: filename.mk:4: VAR is used but not defined.")
 
 	test(".if ${MASTER_SITES:Mftp://*} == \"ftp://netbsd.org/\"",
 		// XXX: duplicate diagnostic, see MkParser.MkCond.
-		"WARN: filename.mk:2: Invalid variable modifier \"//*\" for \"MASTER_SITES\".",
-		"WARN: filename.mk:2: Invalid variable modifier \"//*\" for \"MASTER_SITES\".",
-		"WARN: filename.mk:2: \"ftp\" is not a valid URL.",
-		"WARN: filename.mk:2: MASTER_SITES should not be used at load time in any file.")
+		"WARN: filename.mk:4: Invalid variable modifier \"//*\" for \"MASTER_SITES\".",
+		"WARN: filename.mk:4: Invalid variable modifier \"//*\" for \"MASTER_SITES\".",
+		"WARN: filename.mk:4: \"ftp\" is not a valid URL.",
+		"WARN: filename.mk:4: MASTER_SITES should not be used at load time in any file.")
 }
 
 func (s *Suite) Test_MkCondChecker_checkDirectiveCond__tracing(c *check.C) {
