@@ -1632,7 +1632,8 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.sys("SHLIBTOOL", BtShellCommand)
 	reg.pkglist("SHLIBTOOL_OVERRIDE", BtPathPattern)
 	reg.sysload("SHLIB_TYPE",
-		enum("COFF ECOFF ELF SOM XCOFF Mach-O PE PEwin a.out aixlib dylib none"))
+		enum("COFF ECOFF ELF SOM XCOFF Mach-O PE PEwin a.out aixlib dylib none"),
+		DefinedIfInScope|NonemptyIfDefined)
 	reg.pkglist("SITES.*", BtFetchURL)
 	reg.usr("SMF_PREFIS", BtPathname)
 	reg.pkg("SMF_SRCDIR", BtPathname)
