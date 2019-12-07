@@ -176,6 +176,8 @@ func (s *Suite) Test_Autofix__lonely_source_2(c *check.C) {
 	G.Logger.verbose = false // For realistic conditions; otherwise all diagnostics are logged.
 
 	t.SetUpPackage("print/tex-bibtex8",
+		"# placeholder for .include \"../../mk/compiler.mk\"",
+		"",
 		"MAKE_FLAGS+=\tCFLAGS=${CFLAGS.${PKGSRC_COMPILER}}")
 	t.Chdir(".")
 	t.FinishSetUp()
@@ -184,13 +186,13 @@ func (s *Suite) Test_Autofix__lonely_source_2(c *check.C) {
 
 	t.CheckOutputLines(
 		">\tMAKE_FLAGS+=\tCFLAGS=${CFLAGS.${PKGSRC_COMPILER}}",
-		"WARN: print/tex-bibtex8/Makefile:20: Please use ${CFLAGS.${PKGSRC_COMPILER}:Q} instead of ${CFLAGS.${PKGSRC_COMPILER}}.",
+		"WARN: print/tex-bibtex8/Makefile:22: Please use ${CFLAGS.${PKGSRC_COMPILER}:Q} instead of ${CFLAGS.${PKGSRC_COMPILER}}.",
 		"",
 		"\tSee the pkgsrc guide, section \"Echoing a string exactly as-is\":",
 		"\thttps://www.NetBSD.org/docs/pkgsrc/pkgsrc.html#echo-literal",
 		"",
 		">\tMAKE_FLAGS+=\tCFLAGS=${CFLAGS.${PKGSRC_COMPILER}}",
-		"WARN: print/tex-bibtex8/Makefile:20: The list variable PKGSRC_COMPILER should not be embedded in a word.",
+		"WARN: print/tex-bibtex8/Makefile:22: The list variable PKGSRC_COMPILER should not be embedded in a word.",
 		"",
 		"\tWhen a list variable has multiple elements, this expression expands",
 		"\tto something unexpected:",

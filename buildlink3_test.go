@@ -588,6 +588,8 @@ func (s *Suite) Test_Buildlink3Checker_checkMainPart__if_else_endif(c *check.C) 
 
 	t.SetUpPackage("category/package")
 	t.CreateFileBuildlink3("category/package/buildlink3.mk",
+		"# placeholder for .include \"../../mk/bsd.fast.prefs.mk\"",
+		"",
 		".if ${X11_TYPE} == modular",
 		".else",
 		".endif")
@@ -614,6 +616,8 @@ func (s *Suite) Test_Buildlink3Checker_checkMainPart__nested_if(c *check.C) {
 		"",
 		"BUILDLINK_API_DEPENDS.hs-X11+=\ths-X11>=1.6.1",
 		"BUILDLINK_ABI_DEPENDS.hs-X11+=\ths-X11>=1.6.1.2nb2",
+		"",
+		"# placeholder for .include \"../../mk/bsd.fast.prefs.mk\"",
 		"",
 		".if ${OPSYS} == NetBSD",
 		".endif",

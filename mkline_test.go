@@ -658,12 +658,19 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__eval_shell(c *check.C) {
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("builtin.mk",
 		MkCvsID,
+		"",
+		"# placeholder for .include \"../../mk/bsd.fast.prefs.mk\"",
+		"",
 		"USE_BUILTIN.Xfixes!=\t${PKG_ADMIN} pmatch 'pkg-[0-9]*' ${BUILTIN_PKG.Xfixes:Q}")
 
-	NewMkAssignChecker(mklines.mklines[1], mklines).checkVarassign()
+	mklines.ForEach(func(mkline *MkLine) {
+		if mkline.IsVarassign() {
+			NewMkAssignChecker(mkline, mklines).checkVarassign()
+		}
+	})
 
 	t.CheckOutputLines(
-		"NOTE: builtin.mk:2: The :Q modifier isn't necessary for ${BUILTIN_PKG.Xfixes} here.")
+		"NOTE: builtin.mk:5: The :Q modifier isn't necessary for ${BUILTIN_PKG.Xfixes} here.")
 }
 
 func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_in_single_quotes(c *check.C) {
@@ -1440,6 +1447,8 @@ func (s *Suite) Test_Indentation_Varnames__repetition(c *check.C) {
 		"DISTNAME=\tpackage-1.0",
 		".include \"../../category/other/buildlink3.mk\"")
 	t.CreateFileBuildlink3("category/package/buildlink3.mk",
+		"# placeholder for .include \"../../mk/bsd.fast.prefs.mk\"",
+		"",
 		".if ${OPSYS} == NetBSD || ${OPSYS} == FreeBSD",
 		".  if ${OPSYS} == NetBSD",
 		".    include \"../../category/other/buildlink3.mk\"",
@@ -1453,7 +1462,7 @@ func (s *Suite) Test_Indentation_Varnames__repetition(c *check.C) {
 		"WARN: ~/category/package/Makefile:20: " +
 			"\"../../category/other/buildlink3.mk\" is included " +
 			"unconditionally here and " +
-			"conditionally in buildlink3.mk:14 (depending on OPSYS).")
+			"conditionally in buildlink3.mk:16 (depending on OPSYS).")
 }
 
 // Multiple-inclusion guards are too technical to be of any use on

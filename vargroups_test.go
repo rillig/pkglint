@@ -225,6 +225,8 @@ func (s *Suite) Test_VargroupsChecker__ignore(c *check.C) {
 		"_IGN_VARS.group=\t.CURDIR",
 		"_UNDERSCORE=\t\t_", // This is not an isVargroups name.
 		"",
+		"# placeholder for .include \"../../mk/bsd.prefs.mk\"",
+		"",
 		".if ${PREFER_PKGSRC:U} || ${WRKOBJDIR:U}",
 		".endif")
 
@@ -236,7 +238,7 @@ func (s *Suite) Test_VargroupsChecker__ignore(c *check.C) {
 			"are reserved for internal pkgsrc use.",
 		"WARN: Makefile:7: _UNDERSCORE is defined but not used.",
 		"WARN: Makefile:7: Variable _UNDERSCORE is defined but not mentioned in the _VARGROUPS section.",
-		"WARN: Makefile:9: Variable WRKOBJDIR is used but not mentioned in the _VARGROUPS section.")
+		"WARN: Makefile:11: Variable WRKOBJDIR is used but not mentioned in the _VARGROUPS section.")
 }
 
 func (s *Suite) Test_VargroupsChecker__private_before_public(c *check.C) {

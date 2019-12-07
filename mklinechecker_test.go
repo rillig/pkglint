@@ -749,12 +749,15 @@ func (s *Suite) Test_MkLineChecker_checkDirective__for_loop_varname(c *check.C) 
 		"ERROR: filename.mk:12: Invalid variable name \"${VAR}\".")
 }
 
+// TODO: Split into separate tests.
 func (s *Suite) Test_MkLineChecker_checkDirectiveEnd__ending_comments(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("opsys.mk",
 		MkCvsID,
+		"",
+		"# placeholder for .include \"../../mk/bsd.prefs.mk\"",
 		"",
 		".for i in 1 2 3 4 5",
 		".  if ${OPSYS} == NetBSD",
@@ -784,12 +787,13 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveEnd__ending_comments(c *check.C
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: opsys.mk:7: Comment \"MACHINE_ARCH\" does not match condition \"${OS_VERSION:M8.*}\".",
-		"WARN: opsys.mk:8: Comment \"OS_VERSION\" does not match condition \"${MACHINE_ARCH} == x86_64\".",
-		"WARN: opsys.mk:10: Comment \"j\" does not match loop \"i in 1 2 3 4 5\".",
-		"WARN: opsys.mk:12: Unknown option \"option\".",
-		"WARN: opsys.mk:20: Comment \"NetBSD\" does not match condition \"${OPSYS} == FreeBSD\".",
-		"WARN: opsys.mk:24: Comment \"ii\" does not match loop \"jj in 1 2\".")
+		// TODO: mention the line number of the corresponding condition.
+		"WARN: opsys.mk:9: Comment \"MACHINE_ARCH\" does not match condition \"${OS_VERSION:M8.*}\".",
+		"WARN: opsys.mk:10: Comment \"OS_VERSION\" does not match condition \"${MACHINE_ARCH} == x86_64\".",
+		"WARN: opsys.mk:12: Comment \"j\" does not match loop \"i in 1 2 3 4 5\".",
+		"WARN: opsys.mk:14: Unknown option \"option\".",
+		"WARN: opsys.mk:22: Comment \"NetBSD\" does not match condition \"${OPSYS} == FreeBSD\".",
+		"WARN: opsys.mk:26: Comment \"ii\" does not match loop \"jj in 1 2\".")
 }
 
 // After removing the dummy indentation in commit d5a926af,

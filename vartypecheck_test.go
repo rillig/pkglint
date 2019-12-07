@@ -502,6 +502,8 @@ func (s *Suite) Test_VartypeCheck_Enum__use_match(c *check.C) {
 	mklines := t.NewMkLines("module.mk",
 		MkCvsID,
 		"",
+		"# placeholder for .include \"../../mk/bsd.prefs.mk\"",
+		"",
 		".if !empty(MACHINE_ARCH:Mi386) || ${MACHINE_ARCH} == i386",
 		".endif",
 		".if !empty(PKGSRC_COMPILER:Mclang) || ${PKGSRC_COMPILER} == clang",
@@ -512,7 +514,7 @@ func (s *Suite) Test_VartypeCheck_Enum__use_match(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"NOTE: module.mk:3: MACHINE_ARCH "+
+		"NOTE: module.mk:5: MACHINE_ARCH "+
 			"should be compared using \"${MACHINE_ARCH} == i386\" "+
 			"instead of matching against \":Mi386\".",
 		"",
@@ -524,7 +526,7 @@ func (s *Suite) Test_VartypeCheck_Enum__use_match(c *check.C) {
 		"\tlike *, ?, []. In such a case, using the :M or :N modifiers is",
 		"\tuseful and preferred.",
 		"",
-		"ERROR: module.mk:5: Use ${PKGSRC_COMPILER:Mclang} instead of the == operator.",
+		"ERROR: module.mk:7: Use ${PKGSRC_COMPILER:Mclang} instead of the == operator.",
 		"",
 		"\tThe PKGSRC_COMPILER can be a list of chained compilers, e.g. \"ccache",
 		"\tdistcc clang\". Therefore, comparing it using == or != leads to wrong",

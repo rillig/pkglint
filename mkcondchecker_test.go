@@ -149,6 +149,9 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCond__comparison_with_shell_com
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("security/openssl/Makefile",
 		MkCvsID,
+		"",
+		"# placeholder for .include \"../../mk/bsd.prefs.mk\"",
+		"",
 		".if ${PKGSRC_COMPILER} == \"gcc\" && ${CC} == \"cc\"",
 		".endif")
 
@@ -156,7 +159,7 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCond__comparison_with_shell_com
 
 	// Don't warn about unknown shell command "cc".
 	t.CheckOutputLines(
-		"ERROR: security/openssl/Makefile:2: Use ${PKGSRC_COMPILER:Mgcc} instead of the == operator.")
+		"ERROR: security/openssl/Makefile:5: Use ${PKGSRC_COMPILER:Mgcc} instead of the == operator.")
 }
 
 // The :N modifier filters unwanted values. After this filter, any variable value
@@ -168,6 +171,9 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCond__compare_pattern_with_empt
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
+		"",
+		"# placeholder for .include \"../../mk/bsd.fast.prefs.mk\"",
+		"",
 		".if ${X11BASE:Npattern} == \"\"",
 		".endif",
 		"",
@@ -182,8 +188,8 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCond__compare_pattern_with_empt
 	// TODO: There should be a warning about "<>" containing invalid
 	//  characters for a path. See VartypeCheck.Pathname
 	t.CheckOutputLines(
-		"WARN: filename.mk:5: The pathname pattern \"<>\" contains the invalid characters \"<>\".",
-		"WARN: filename.mk:5: The pathname \"*\" contains the invalid character \"*\".")
+		"WARN: filename.mk:8: The pathname pattern \"<>\" contains the invalid characters \"<>\".",
+		"WARN: filename.mk:8: The pathname \"*\" contains the invalid character \"*\".")
 }
 
 func (s *Suite) Test_MkCondChecker_checkDirectiveCond__comparing_PKGSRC_COMPILER_with_eqeq(c *check.C) {
@@ -192,6 +198,9 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCond__comparing_PKGSRC_COMPILER
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
+		"",
+		"# placeholder for .include \"../../mk/bsd.prefs.mk\"",
+		"",
 		".if ${PKGSRC_COMPILER} == \"clang\"",
 		".elif ${PKGSRC_COMPILER} != \"gcc\"",
 		".endif")
@@ -199,8 +208,8 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCond__comparing_PKGSRC_COMPILER
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"ERROR: Makefile:2: Use ${PKGSRC_COMPILER:Mclang} instead of the == operator.",
-		"ERROR: Makefile:3: Use ${PKGSRC_COMPILER:Ngcc} instead of the != operator.")
+		"ERROR: Makefile:5: Use ${PKGSRC_COMPILER:Mclang} instead of the == operator.",
+		"ERROR: Makefile:6: Use ${PKGSRC_COMPILER:Ngcc} instead of the != operator.")
 }
 
 func (s *Suite) Test_MkCondChecker_checkDirectiveCondEmpty(c *check.C) {
@@ -978,6 +987,8 @@ func (s *Suite) Test_MkCondChecker_checkCompareVarStrCompiler(c *check.C) {
 		mklines := t.SetUpFileMkLines("filename.mk",
 			MkCvsID,
 			"",
+			"# placeholder for .include \"../../mk/bsd.fast.prefs.mk\"",
+			"",
 			".if "+cond,
 			".endif")
 
@@ -992,9 +1003,9 @@ func (s *Suite) Test_MkCondChecker_checkCompareVarStrCompiler(c *check.C) {
 	test(
 		"${PKGSRC_COMPILER} == gcc",
 
-		"ERROR: filename.mk:3: "+
+		"ERROR: filename.mk:5: "+
 			"Use ${PKGSRC_COMPILER:Mgcc} instead of the == operator.",
-		"AUTOFIX: filename.mk:3: "+
+		"AUTOFIX: filename.mk:5: "+
 			"Replacing \"${PKGSRC_COMPILER} == gcc\" "+
 			"with \"${PKGSRC_COMPILER:Mgcc}\".")
 
@@ -1003,16 +1014,16 @@ func (s *Suite) Test_MkCondChecker_checkCompareVarStrCompiler(c *check.C) {
 	test(
 		"${PKGSRC_COMPILER}==gcc",
 
-		"ERROR: filename.mk:3: "+
+		"ERROR: filename.mk:5: "+
 			"Use ${PKGSRC_COMPILER:Mgcc} instead of the == operator.")
 
 	// The comparison value can be with or without quotes.
 	test(
 		"${PKGSRC_COMPILER} == \"gcc\"",
 
-		"ERROR: filename.mk:3: "+
+		"ERROR: filename.mk:5: "+
 			"Use ${PKGSRC_COMPILER:Mgcc} instead of the == operator.",
-		"AUTOFIX: filename.mk:3: "+
+		"AUTOFIX: filename.mk:5: "+
 			"Replacing \"${PKGSRC_COMPILER} == \\\"gcc\\\"\" "+
 			"with \"${PKGSRC_COMPILER:Mgcc}\".")
 

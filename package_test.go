@@ -3030,6 +3030,7 @@ func (s *Suite) Test_Package_checkIncludeConditionally__conditional_and_uncondit
 
 	t.SetUpOption("zlib", "")
 	t.SetUpPackage("category/package",
+		"# placeholder for .include \"../../mk/bsd.prefs.mk\"",
 		".include \"../../devel/zlib/buildlink3.mk\"",
 		".if ${OPSYS} == \"Linux\"",
 		".include \"../../sysutils/coreutils/buildlink3.mk\"",
@@ -3056,10 +3057,10 @@ func (s *Suite) Test_Package_checkIncludeConditionally__conditional_and_uncondit
 	G.checkdirPackage(".")
 
 	t.CheckOutputLines(
-		"WARN: Makefile:20: \"../../devel/zlib/buildlink3.mk\" is included "+
+		"WARN: Makefile:21: \"../../devel/zlib/buildlink3.mk\" is included "+
 			"unconditionally here "+
 			"and conditionally in options.mk:9 (depending on PKG_OPTIONS).",
-		"WARN: Makefile:22: \"../../sysutils/coreutils/buildlink3.mk\" is included "+
+		"WARN: Makefile:23: \"../../sysutils/coreutils/buildlink3.mk\" is included "+
 			"conditionally here (depending on OPSYS) and "+
 			"unconditionally in options.mk:11.")
 }
@@ -3110,6 +3111,8 @@ func (s *Suite) Test_Package_checkIncludeConditionally__no_explanation(c *check.
 	t.CreateFileLines("devel/zlib/buildlink3.mk",
 		MkCvsID)
 	t.SetUpPackage("category/package",
+		"# placeholder for .include \"../../mk/bsd.prefs.mk\"",
+		"",
 		".if ${OPSYS} == Linux",
 		".include \"../../devel/zlib/buildlink3.mk\"",
 		".endif")
@@ -3121,7 +3124,7 @@ func (s *Suite) Test_Package_checkIncludeConditionally__no_explanation(c *check.
 	G.checkdirPackage(".")
 
 	t.CheckOutputLines(
-		"WARN: Makefile:21: " +
+		"WARN: Makefile:23: " +
 			"\"../../devel/zlib/buildlink3.mk\" is included conditionally here " +
 			"(depending on OPSYS) and unconditionally in buildlink3.mk:12.")
 }
@@ -3216,6 +3219,8 @@ func (s *Suite) Test_Package_checkIncludeConditionally__unconditionally_first(c 
 	t.CreateFileLines("including.mk",
 		MkCvsID,
 		"",
+		"# placeholder for .include \"../../mk/bsd.prefs.mk\"",
+		"",
 		".include \"included.mk\"",
 		".if ${OPSYS} == \"Linux\"",
 		".include \"included.mk\"",
@@ -3227,14 +3232,16 @@ func (s *Suite) Test_Package_checkIncludeConditionally__unconditionally_first(c 
 	G.Check(".")
 
 	t.CheckOutputLines(
-		"WARN: including.mk:3: \"included.mk\" is included " +
-			"unconditionally here and conditionally in line 5 (depending on OPSYS).")
+		"WARN: including.mk:5: \"included.mk\" is included " +
+			"unconditionally here and conditionally in line 7 (depending on OPSYS).")
 }
 
 func (s *Suite) Test_Package_checkIncludeConditionally__only_conditionally(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package",
+		"# placeholder for .include \"../../mk/bsd.prefs.mk\"",
+		"",
 		".if ${OPSYS} == \"Linux\"",
 		".include \"included.mk\"",
 		".endif")
@@ -3256,6 +3263,8 @@ func (s *Suite) Test_Package_checkIncludeConditionally__conditionally_first(c *c
 	t.CreateFileLines("including.mk",
 		MkCvsID,
 		"",
+		"# placeholder for .include \"../../mk/bsd.prefs.mk\"",
+		"",
 		".if ${OPSYS} == \"Linux\"",
 		".include \"included.mk\"",
 		".endif",
@@ -3267,8 +3276,8 @@ func (s *Suite) Test_Package_checkIncludeConditionally__conditionally_first(c *c
 	G.Check(".")
 
 	t.CheckOutputLines(
-		"WARN: including.mk:4: \"included.mk\" is included " +
-			"conditionally here (depending on OPSYS) and unconditionally in line 6.")
+		"WARN: including.mk:6: \"included.mk\" is included " +
+			"conditionally here (depending on OPSYS) and unconditionally in line 8.")
 }
 
 func (s *Suite) Test_Package_checkIncludeConditionally__included_multiple_times(c *check.C) {
@@ -3278,6 +3287,8 @@ func (s *Suite) Test_Package_checkIncludeConditionally__included_multiple_times(
 	t.Chdir("category/package")
 	t.CreateFileLines("including.mk",
 		MkCvsID,
+		"",
+		"# placeholder for .include \"../../mk/bsd.prefs.mk\"",
 		"",
 		".include \"included.mk\"",
 		".if ${OPSYS} == \"Linux\"",
@@ -3295,12 +3306,12 @@ func (s *Suite) Test_Package_checkIncludeConditionally__included_multiple_times(
 	G.Check(".")
 
 	t.CheckOutputLines(
-		"WARN: including.mk:3: \"included.mk\" is included "+
-			"unconditionally here and conditionally in line 10 (depending on OPSYS).",
 		"WARN: including.mk:5: \"included.mk\" is included "+
-			"conditionally here (depending on OPSYS) and unconditionally in line 8.",
-		"WARN: including.mk:8: \"included.mk\" is included "+
-			"unconditionally here and conditionally in line 10 (depending on OPSYS).")
+			"unconditionally here and conditionally in line 12 (depending on OPSYS).",
+		"WARN: including.mk:7: \"included.mk\" is included "+
+			"conditionally here (depending on OPSYS) and unconditionally in line 10.",
+		"WARN: including.mk:10: \"included.mk\" is included "+
+			"unconditionally here and conditionally in line 12 (depending on OPSYS).")
 }
 
 // For preferences files, it doesn't matter whether they are included

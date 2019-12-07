@@ -418,6 +418,9 @@ func (s *Suite) Test_MkVarUseChecker_checkPermissions__load_time(c *check.C) {
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("options.mk",
 		MkCvsID,
+		"",
+		"# placeholder for .include \"../../mk/bsd.prefs.mk\"",
+		"",
 		"WRKSRC:=${.CURDIR}",
 		".if ${PKG_SYSCONFDIR.gdm} != \"etc\"",
 		".endif")
@@ -429,7 +432,7 @@ func (s *Suite) Test_MkVarUseChecker_checkPermissions__load_time(c *check.C) {
 	//
 	// Evaluating .CURDIR at load time is definitely ok since it is defined from the beginning.
 	t.CheckOutputLines(
-		"NOTE: options.mk:2: This variable value should be aligned to column 17.")
+		"NOTE: options.mk:5: This variable value should be aligned to column 17.")
 }
 
 func (s *Suite) Test_MkVarUseChecker_checkPermissions__load_time_in_condition(c *check.C) {
