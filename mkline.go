@@ -1238,12 +1238,7 @@ func (ind *Indentation) TrackAfter(mkline *MkLine) {
 
 		cond.Walk(&MkCondCallback{
 			Call: func(name string, arg string) {
-				switch {
-				case name != "exists":
-					return
-				case NewPath(arg).IsAbs():
-					ind.AddCheckedFile(NewPkgsrcPath(NewPath(arg)))
-				default:
+				if name == "exists" && !NewPath(arg).IsAbs() {
 					rel := G.Pkgsrc.ToRel(mkline.File(NewRelPathString(arg)))
 					ind.AddCheckedFile(rel)
 				}

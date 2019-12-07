@@ -367,7 +367,10 @@ func (p CurrPath) WriteString(s string) error {
 // PkgsrcPath is a path relative to the pkgsrc root.
 type PkgsrcPath string
 
-func NewPkgsrcPath(p Path) PkgsrcPath { return PkgsrcPath(p) }
+func NewPkgsrcPath(p Path) PkgsrcPath {
+	_ = NewRelPath(p)
+	return PkgsrcPath(p)
+}
 
 func (p PkgsrcPath) String() string { return string(p) }
 
@@ -398,9 +401,14 @@ func (p PkgsrcPath) JoinNoClean(other RelPath) PkgsrcPath {
 // conflicts on other packages.
 type PackagePath string
 
-func NewPackagePath(p RelPath) PackagePath { return PackagePath(p) }
+func NewPackagePath(p RelPath) PackagePath {
+	return PackagePath(p)
+}
 
-func NewPackagePathString(p string) PackagePath { return PackagePath(p) }
+func NewPackagePathString(p string) PackagePath {
+	_ = NewRelPathString(p)
+	return PackagePath(p)
+}
 
 func (p PackagePath) AsPath() Path { return Path(p) }
 
