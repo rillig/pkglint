@@ -114,9 +114,14 @@ func (ck *MkCondChecker) checkDirectiveCondEmptyType(varuse *MkVarUse) {
 	}
 }
 
-// mkCondLiteralChars contains the characters that may be used outside
-// quotes in a comparison condition such as ${PKGPATH} == category/package.
-var mkCondLiteralChars = textproc.NewByteSet("+---./0-9A-Z_a-z")
+// mkCondStringLiteralUnquoted contains a safe subset of the characters
+// that may be used without surrounding quotes in a comparison such as
+// ${PKGPATH} == category/package.
+var mkCondStringLiteralUnquoted = textproc.NewByteSet("+---./0-9@A-Z_a-z")
+
+// mkCondModifierPatternLiteral contains a safe subset of the characters
+// that are interpreted literally in the :M and :N modifiers.
+var mkCondModifierPatternLiteral = textproc.NewByteSet("+---./0-9@A-Z_a-z")
 
 // simplifyCondition replaces an unnecessarily complex condition with
 // a simpler condition that's still equivalent.
@@ -182,8 +187,7 @@ func (ck *MkCondChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, neg
 			pattern,
 			condStr(fromEmpty, ")", "}"))
 
-		needsQuotes := matches(pattern, `[^\-./0-9@A-Z_a-z]`) ||
-			matches(pattern, `^\d+\.?\d*$`)
+		needsQuotes := matches(pattern, `^\d+\.?\d*$`)
 		quote := condStr(needsQuotes, "\"", "")
 
 		to := sprintf(
@@ -203,7 +207,7 @@ func (ck *MkCondChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, neg
 	case !exact,
 		vartype == nil,
 		vartype.IsList(),
-		textproc.NewLexer(pattern).NextBytesSet(mkCondLiteralChars) != pattern:
+		textproc.NewLexer(pattern).NextBytesSet(mkCondModifierPatternLiteral) != pattern:
 		return
 	}
 

@@ -834,14 +834,14 @@ func (s *Suite) Test_MkCondChecker_simplifyCondition(c *check.C) {
 	//  quotes and is nevertheless supported by the simplifier.
 	testAfterPrefs(
 		".if ${PKGPATH:Mcategory/gtk+}",
-		".if ${PKGPATH} == \"category/gtk+\"",
+		".if ${PKGPATH} == category/gtk+",
 
 		"NOTE: filename.mk:3: PKGPATH should be "+
-			"compared using \"${PKGPATH} == \"category/gtk+\"\" "+
+			"compared using \"${PKGPATH} == category/gtk+\" "+
 			"instead of matching against \":Mcategory/gtk+\".",
 		"AUTOFIX: filename.mk:3: "+
 			"Replacing \"${PKGPATH:Mcategory/gtk+}\" "+
-			"with \"${PKGPATH} == \\\"category/gtk+\\\"\".")
+			"with \"${PKGPATH} == category/gtk+\".")
 
 	// If pkglint replaces this particular pattern, the resulting string
 	// literal must be escaped properly.

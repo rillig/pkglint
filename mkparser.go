@@ -154,7 +154,7 @@ func (p *MkParser) mkCondCompare() *MkCond {
 			return &MkCond{Compare: &MkCondCompare{*lhs, op, *rhs}}
 		}
 
-		if str := lexer.NextBytesSet(mkCondLiteralChars); str != "" {
+		if str := lexer.NextBytesSet(mkCondStringLiteralUnquoted); str != "" {
 			return &MkCond{Compare: &MkCondCompare{*lhs, op, MkCondTerm{Str: str}}}
 		}
 	}
