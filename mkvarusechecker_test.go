@@ -821,10 +821,7 @@ func (s *Suite) Test_MkVarUseChecker_checkUseAtLoadTime__pkg_build_options_mk(c 
 
 	G.Check("buildlink3.mk")
 
-	// FIXME
-	t.CheckOutputLines(
-		"WARN: buildlink3.mk:14: To use PKG_BUILD_OPTIONS.package at load time, " +
-			".include \"../../mk/bsd.fast.prefs.mk\" first.")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkVarUseChecker_checkUseAtLoadTime__other_mk(c *check.C) {

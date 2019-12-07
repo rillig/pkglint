@@ -851,6 +851,7 @@ func IsPrefs(filename RelPath) bool {
 		"bsd.fast.prefs.mk",    // in mk/
 		"bsd.builtin.mk",       // in mk/buildlink3/
 		"pkgconfig-builtin.mk", // in mk/buildlink3/
+		"pkg-build-options.mk", // in mk/
 		"bsd.options.mk":       // in mk/
 		return true
 	}
