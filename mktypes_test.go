@@ -36,7 +36,7 @@ func (MkTokenBuilder) VarUse(varname string, modifiers ...string) *MkVarUse {
 	for _, modifier := range modifiers {
 		mods = append(mods, MkVarUseModifier{modifier})
 	}
-	return &MkVarUse{varname, mods}
+	return NewMkVarUse(varname, mods...)
 }
 
 func (s *Suite) Test_MkVarUseModifier_MatchSubst(c *check.C) {

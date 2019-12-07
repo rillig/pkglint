@@ -134,7 +134,7 @@ func (ck *MkCondChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, neg
 	if n == 0 {
 		return
 	}
-	modsExceptLast := (&MkVarUse{"", mods[:n-1]}).Mod()
+	modsExceptLast := NewMkVarUse("", mods[:n-1]...).Mod()
 	vartype := G.Pkgsrc.VariableType(ck.MkLines, varname)
 
 	isDefined := func() bool {

@@ -243,7 +243,7 @@ func (p *MkParser) mkCondFunc() *MkCond {
 		if varname := p.mklex.Varname(); varname != "" {
 			modifiers := p.mklex.VarUseModifiers(varname, ')')
 			if lexer.SkipByte(')') {
-				return &MkCond{Empty: &MkVarUse{varname, modifiers}}
+				return &MkCond{Empty: NewMkVarUse(varname, modifiers...)}
 			}
 		}
 
@@ -523,7 +523,7 @@ func (w *MkCondWalker) Walk(cond *MkCond, callback *MkCondCallback) {
 		if callback.VarUse != nil {
 			// This is not really a VarUse, it's more a VarUseDefined.
 			// But in practice they are similar enough to be treated the same.
-			callback.VarUse(&MkVarUse{cond.Defined, nil})
+			callback.VarUse(NewMkVarUse(cond.Defined))
 		}
 
 	case cond.Term != nil && cond.Term.Var != nil:

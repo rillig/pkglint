@@ -906,7 +906,7 @@ func (ck *ShellLineChecker) checkVaruseToken(atoms *[]*ShAtom, quoting ShQuoting
 			"the same name, which has a completely different meaning.")
 
 		varname = ".TARGET"
-		varuse = &MkVarUse{varname, varuse.modifiers}
+		varuse = NewMkVarUse(varname, varuse.modifiers...)
 	}
 
 	switch {

@@ -13,7 +13,7 @@ func (s *Suite) Test_NewMkLexer__with_diag(c *check.C) {
 	lex := NewMkLexer("${", diag)
 
 	use := lex.VarUse()
-	t.CheckDeepEquals(use, &MkVarUse{"", nil})
+	t.CheckDeepEquals(use, NewMkVarUse(""))
 	t.CheckEquals(lex.Rest(), "")
 	t.CheckOutputLines(
 		"WARN: filename.mk:123: Missing closing \"}\" for \"\".")
@@ -25,7 +25,7 @@ func (s *Suite) Test_NewMkLexer__without_diag(c *check.C) {
 	lex := NewMkLexer("${", nil)
 
 	use := lex.VarUse()
-	t.CheckDeepEquals(use, &MkVarUse{"", nil})
+	t.CheckDeepEquals(use, NewMkVarUse(""))
 	t.CheckEquals(lex.Rest(), "")
 	t.CheckOutputEmpty()
 }
@@ -1080,7 +1080,7 @@ func (s *Suite) Test_MkLexer_varUseAlnum(c *check.C) {
 
 		use := lex.varUseAlnum()
 
-		t.CheckDeepEquals(use, &MkVarUse{varname, nil})
+		t.CheckDeepEquals(use, NewMkVarUse(varname))
 		t.CheckEquals(lex.Rest(), rest)
 		t.CheckOutput(diagnostics)
 	}

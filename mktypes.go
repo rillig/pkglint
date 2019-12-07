@@ -7,7 +7,7 @@ import "strings"
 //
 // Example: /usr/share/${PKGNAME}/data consists of 3 tokens:
 //  1. MkToken{Text: "/usr/share/"}
-//  2. MkToken{Text: "${PKGNAME}", Varuse: &MkVarUse{varname: "PKGNAME"}}
+//  2. MkToken{Text: "${PKGNAME}", Varuse: NewMkVarUse("PKGNAME")}
 //  3. MkToken{Text: "/data"}
 //
 type MkToken struct {
@@ -27,6 +27,10 @@ type MkToken struct {
 type MkVarUse struct {
 	varname   string             // E.g. "PKGNAME", or "${BUILD_DEFS}"
 	modifiers []MkVarUseModifier // E.g. "Q", "S/from/to/"
+}
+
+func NewMkVarUse(varname string, modifiers ...MkVarUseModifier) *MkVarUse {
+	return &MkVarUse{varname, modifiers}
 }
 
 func (vu *MkVarUse) String() string { return sprintf("${%s%s}", vu.varname, vu.Mod()) }

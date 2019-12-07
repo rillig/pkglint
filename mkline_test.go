@@ -612,7 +612,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__unknown_rhs(c *check.C) {
 	t.SetUpVartypes()
 
 	vuc := VarUseContext{G.Pkgsrc.VariableType(nil, "PKGNAME"), VucLoadTime, VucQuotUnknown, false}
-	nq := mkline.VariableNeedsQuoting(nil, &MkVarUse{"UNKNOWN", nil}, nil, &vuc)
+	nq := mkline.VariableNeedsQuoting(nil, NewMkVarUse("UNKNOWN"), nil, &vuc)
 
 	t.CheckEquals(nq, unknown)
 }
@@ -628,7 +628,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__append_URL_to_list_of_URLs(c *
 	mkline := mklines.mklines[1]
 
 	vuc := VarUseContext{G.Pkgsrc.vartypes.Canon("MASTER_SITES"), VucRunTime, VucQuotPlain, false}
-	nq := mkline.VariableNeedsQuoting(nil, &MkVarUse{"HOMEPAGE", nil}, G.Pkgsrc.vartypes.Canon("HOMEPAGE"), &vuc)
+	nq := mkline.VariableNeedsQuoting(nil, NewMkVarUse("HOMEPAGE"), G.Pkgsrc.vartypes.Canon("HOMEPAGE"), &vuc)
 
 	t.CheckEquals(nq, no)
 
@@ -1063,7 +1063,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__tool_in_unknown_quotes(c *chec
 		"\t:")
 	mkline := mklines.mklines[0]
 
-	varUse := &MkVarUse{"BASH", nil}
+	varUse := NewMkVarUse("BASH")
 	vartype := G.Pkgsrc.VariableType(mklines, "BASH")
 	vuc := VarUseContext{
 		vartype:    NewVartype(BtShellWord, NoVartypeOptions, NewACLEntry("*", aclpAll)),

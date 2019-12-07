@@ -83,7 +83,7 @@ func (p *MkLexer) VarUse() *MkVarUse {
 		//
 		// TODO: Find out whether $" is a variable use when it appears in the :M modifier.
 		p.lexer.Skip(2)
-		return &MkVarUse{rest[1:2], nil}
+		return NewMkVarUse(rest[1:2])
 
 	default:
 		return p.varUseAlnum()
@@ -134,12 +134,12 @@ func (p *MkLexer) varUseBrace(usingRoundParen bool) *MkVarUse {
 			fix.Apply()
 		}
 
-		if len(varExpr) > len(varname) && !(&MkVarUse{varExpr, modifiers}).IsExpression() {
+		if len(varExpr) > len(varname) && !NewMkVarUse(varExpr, modifiers...).IsExpression() {
 			p.Warnf("Invalid part %q after variable name %q.", varExpr[len(varname):], varname)
 		}
 	}
 
-	return &MkVarUse{varExpr, modifiers}
+	return NewMkVarUse(varExpr, modifiers...)
 }
 
 func (p *MkLexer) Varname() string {
@@ -534,7 +534,7 @@ func (p *MkLexer) varUseAlnum() *MkVarUse {
 			"since Make variables are usually written using braces (BSD-style) or parentheses (GNU-style).")
 	}
 
-	return &MkVarUse{apparentVarname[:1], nil}
+	return NewMkVarUse(apparentVarname[:1])
 }
 
 func (p *MkLexer) EOF() bool {
