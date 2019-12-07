@@ -51,6 +51,8 @@ type Package struct {
 	included Once
 
 	// Does the package have any .includes?
+	//
+	// TODO: Be more precise about the purpose of this field.
 	seenInclude bool
 
 	// Files from .include lines that are nested inside .if.
