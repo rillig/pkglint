@@ -764,6 +764,8 @@ func (s *Suite) Test_Tester_SetUpHierarchy(c *check.C) {
 		"NOTE: subdir/env.mk:1: Text is: VAR= env")
 }
 
+// FinishSetup loads the pkgsrc infrastructure.
+// Later changes to the files in mk/ have no effect.
 func (t *Tester) FinishSetUp() {
 	if t.seenSetupPkgsrc == 0 {
 		t.InternalErrorf("Unnecessary t.FinishSetUp() since t.SetUpPkgsrc() has not been called.")

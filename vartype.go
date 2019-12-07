@@ -50,6 +50,7 @@ const (
 	//  * bsd.prefs.mk
 	//  * bsd.pkg.mk
 	//  * other parts of the pkgsrc infrastructure
+	//  * environment variables
 	//  Having all these possibilities as boolean flags is probably not
 	//  expressive enough. This is related to the scope and lifetime of
 	//  variables and should be modelled separately.

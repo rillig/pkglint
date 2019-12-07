@@ -94,8 +94,10 @@ func (reg *VarTypeRegistry) DefineParse(varname string, basicType *BasicType, op
 //  - why the predefined permission set is not good enough
 //  - which packages need this custom permission set.
 func (reg *VarTypeRegistry) acl(varname string, basicType *BasicType, options vartypeOptions, aclEntries ...string) {
-	// If this assertion fails, it usually means that the test
-	// calls SetUpVartypes redundantly.
+
+	// If this assertion fails, it usually means that
+	// the test calls SetUpVartypes redundantly.
+	// For example, it is called by SetUpPkgsrc or SetUpPackage as well.
 	assertf(!reg.IsDefinedExact(varname), "Variable %q must only be defined once.", varname)
 
 	reg.DefineParse(varname, basicType, options, aclEntries...)
