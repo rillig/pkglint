@@ -1427,6 +1427,25 @@ func (s *Suite) Test_RedundantScope__procedure_parameters(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_RedundantScope__infra(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("mk/bsd.options.mk",
+		"PKG_OPTIONS:=\t# empty",
+		"PKG_OPTIONS=\t# empty")
+	t.CreateFileLines("options.mk",
+		".include \"mk/bsd.options.mk\"")
+	mklines := t.LoadMkInclude("options.mk")
+
+	NewRedundantScope().Check(mklines)
+
+	// FIXME: When a package is checked without -Cglobal, don't
+	//  report problems in the pkgsrc infrastructure.
+	t.CheckOutputLines(
+		"NOTE: ~/mk/bsd.options.mk:2: " +
+			"Definition of PKG_OPTIONS is redundant because of line 1.")
+}
+
 // Branch coverage for info.vari.IsConstant(). The other tests typically
 // make a variable non-constant by adding conditional assignments between
 // .if/.endif. But there are other ways. The output of shell commands is
