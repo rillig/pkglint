@@ -26,10 +26,12 @@ func (ck *MkVarUseChecker) Check(vuc *VarUseContext) {
 	}
 
 	ck.checkUndefined()
+	ck.checkPermissions(vuc)
+
 	ck.checkVarname()
 	ck.checkModifiers()
-	ck.checkPermissions(vuc)
 	ck.checkQuoting(vuc)
+
 	ck.checkBuildDefs()
 	ck.checkDeprecated()
 
