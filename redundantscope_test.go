@@ -1522,6 +1522,21 @@ func (s *Suite) Test_RedundantScope_handleVarassign__commented_variable_assignme
 		"NOTE: main.mk:3: Definition of VAR is redundant because of redundant.mk:1.")
 }
 
+func (s *Suite) Test_RedundantScope_handleVarassign__assign_then_eval(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("mk/bsd.options.mk",
+		"PKG_OPTIONS=\t# empty",
+		"PKG_OPTIONS:=\t# empty")
+
+	scope := NewRedundantScope()
+	scope.Check(mklines)
+
+	// TODO: Should be just a "redundant" note.
+	t.CheckOutputLines(
+		"WARN: mk/bsd.options.mk:1: Variable PKG_OPTIONS is overwritten in line 2.")
+}
+
 func (s *Suite) Test_includePath_includes(c *check.C) {
 	t := s.Init(c)
 
