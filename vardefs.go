@@ -56,7 +56,7 @@ func (reg *VarTypeRegistry) DefineType(varcanon string, vartype *Vartype) {
 }
 
 func (reg *VarTypeRegistry) Define(varname string, basicType *BasicType, options vartypeOptions, aclEntries ...ACLEntry) {
-	m, varbase, varparam := match2(varname, `^([A-Z_.][A-Z0-9_]*|@)(|\*|\.\*)$`)
+	m, varbase, varparam := match2(varname, `^([A-Z_.][A-Z0-9_]*|@|\.newline)(|\*|\.\*)$`)
 	assert(m) // invalid variable name
 
 	vartype := NewVartype(basicType, options, aclEntries...)
