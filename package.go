@@ -269,9 +269,6 @@ func (pkg *Package) parse(mklines *MkLines, allLines *MkLines, includingFileForU
 func (pkg *Package) parseLine(mklines *MkLines, mkline *MkLine, allLines *MkLines, main bool) bool {
 	allLines.mklines = append(allLines.mklines, mkline)
 	allLines.lines.Lines = append(allLines.lines.Lines, mkline.Line)
-	if main && pkg.seenPrefs && pkg.prefsLine == nil {
-		pkg.prefsLine = mkline
-	}
 
 	if mkline.IsInclude() {
 		includingFile := mkline.Filename
@@ -294,6 +291,9 @@ func (pkg *Package) parseLine(mklines *MkLines, mkline *MkLine, allLines *MkLine
 		}
 		if !pkg.parse(includedMkLines, allLines, filenameForUsedCheck, false) {
 			return false
+		}
+		if main && pkg.seenPrefs && pkg.prefsLine == nil {
+			pkg.prefsLine = mkline
 		}
 	}
 

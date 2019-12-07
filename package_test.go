@@ -1491,19 +1491,16 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__prefs_indirect(c *check.C
 	files, mklines, allLines := G.Pkg.load()
 
 	t.CheckEquals(G.Pkg.seenPrefs, false)
-	t.CheckEquals(G.Pkg.prefsLine, mklines.mklines[20])
+	t.CheckEquals(G.Pkg.prefsLine, mklines.mklines[19])
 
 	G.Pkg.check(files, mklines, allLines)
 
 	t.CheckEquals(G.Pkg.seenPrefs, true)
-	t.CheckEquals(G.Pkg.prefsLine, mklines.mklines[20])
+	t.CheckEquals(G.Pkg.prefsLine, mklines.mklines[19])
 
 	// Since bsd.prefs.mk is included indirectly by common.mk,
 	// OPSYS may be used at load time in line 21.
-	// FIXME
-	t.CheckOutputLines(
-		"WARN: ~/category/package/Makefile:21: To use OPSYS at load time, " +
-			".include \"../../mk/bsd.prefs.mk\" first.")
+	t.CheckOutputEmpty()
 }
 
 // When a package defines PLIST_SRC, it may or may not use the
