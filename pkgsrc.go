@@ -1120,6 +1120,7 @@ func (src *Pkgsrc) File(relativeName PkgsrcPath) CurrPath {
 //
 // Example:
 //  NewPkgsrc("/usr/pkgsrc").ToRel("/usr/pkgsrc/distfiles") => "distfiles"
+// FIXME: Rename to Rel.
 func (src *Pkgsrc) ToRel(filename CurrPath) PkgsrcPath {
 	return NewPkgsrcPath(src.Relpath(src.topdir, filename).AsPath())
 }
