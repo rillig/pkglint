@@ -1580,6 +1580,8 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	//  to "files".
 	reg.pkg("RCD_SCRIPT_SRC.*", BtPathname)
 	reg.pkg("RCD_SCRIPT_WRK.*", BtPathname)
+	reg.sysload("READLINE_TYPE", enum("editline none readline"),
+		DefinedIfInScope|NonemptyIfDefined)
 	reg.usr("REAL_ROOT_USER", BtUserGroupName)
 	reg.usr("REAL_ROOT_GROUP", BtUserGroupName)
 
