@@ -2953,12 +2953,12 @@ func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__mk_dotdot_dotdot(c *
 
 	t.CheckDeepEquals(
 		keys(pkg.bl3),
-		// FIXME: triple dotdot
-		[]string{"../../../lang/ocaml/buildlink3.mk"})
+		[]string{"../../lang/ocaml/buildlink3.mk"})
 	t.CheckOutputEmpty()
 }
 
-// The file mk/ocaml.mk uses the canonical .. to reach PKGSRCDIR,
+// Ocaml packages include ../../mk/ocaml.mk.
+// That file uses the canonical .. to reach PKGSRCDIR,
 // not the ../.. that is typically used in packages.
 func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__mk_dotdot(c *check.C) {
 	t := s.Init(c)
@@ -3007,13 +3007,8 @@ func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__ocaml(c *check.C) {
 		// This error is only reported if the file is checked on its own.
 		// If it is checked as part of a package, both bmake and pkglint
 		// use the package path as the fallback search path.
-		"ERROR: mk/ocaml.mk:2: Relative path "+
-			"\"../../lang/ocaml/buildlink3.mk\" does not exist.",
-
-		// FIXME: That's wrong.
-		"WARN: x11/ocaml-graphics/buildlink3.mk:12: "+
-			"../../lang/ocaml/buildlink3.mk is included by this file "+
-			"but not by the package.")
+		"ERROR: mk/ocaml.mk:2: Relative path " +
+			"\"../../lang/ocaml/buildlink3.mk\" does not exist.")
 }
 
 // Just for code coverage.

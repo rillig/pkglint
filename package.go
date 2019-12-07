@@ -383,9 +383,14 @@ func (pkg *Package) resolveIncludedFile(mkline *MkLine, includingFilename CurrPa
 
 	if mkline.Basename != "buildlink3.mk" {
 		if includedFile.HasSuffixPath("buildlink3.mk") {
-			pkg.bl3[pkg.Rel(mkline.File(includedFile))] = mkline
+			curr := mkline.File(includedFile)
+			if G.Pkg != nil && !curr.ContainsText("$") && !curr.IsFile() {
+				curr = G.Pkg.File(PackagePath(includedFile))
+			}
+			packagePath := pkg.Rel(curr)
+			pkg.bl3[packagePath] = mkline
 			if trace.Tracing {
-				trace.Step1("Buildlink3 file in package: %q", includedText)
+				trace.Stepf("Buildlink3 file in package: %q", packagePath)
 			}
 		}
 	}
