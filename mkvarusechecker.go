@@ -18,10 +18,7 @@ func NewMkVarUseChecker(use *MkVarUse, mklines *MkLines, mkline *MkLine) *MkVarU
 
 // CheckVaruse checks a single use of a variable in a specific context.
 func (ck *MkVarUseChecker) Check(vuc *VarUseContext) {
-	mklines := ck.MkLines
-	use := ck.use
-
-	if use.IsExpression() {
+	if ck.use.IsExpression() {
 		return
 	}
 
@@ -35,7 +32,8 @@ func (ck *MkVarUseChecker) Check(vuc *VarUseContext) {
 	ck.checkBuildDefs()
 	ck.checkDeprecated()
 
-	NewMkLineChecker(mklines, ck.MkLine).checkTextVarUse(use.varname, ck.vartype, vuc.time)
+	NewMkLineChecker(ck.MkLines, ck.MkLine).
+		checkTextVarUse(ck.use.varname, ck.vartype, vuc.time)
 }
 
 func (ck *MkVarUseChecker) checkUndefined() {
