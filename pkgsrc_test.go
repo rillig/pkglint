@@ -856,13 +856,36 @@ func (s *Suite) Test_Pkgsrc_loadUntypedVars__badly_named_directory(c *check.C) {
 func (s *Suite) Test_Pkgsrc_loadUntypedVars__loop_variable(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/check/check-files.mk",
 		MkCvsID,
-		"${:U}=\t${CHECK_FILES_SKIP:@f@${f}@}")
-	t.FinishSetUp()
+		"${:U}=\t${CHECK_FILES_SKIP:@f@${f}@}",
+		"\t${/} ${} ${UNKNOWN}")
 
-	t.Check(G.Pkgsrc.VariableType(nil, "f"), check.IsNil)
+	G.Pkgsrc.loadUntypedVars()
+
+	ignored := func(varname string) {
+		vartype := G.Pkgsrc.VariableType(nil, varname)
+		t.Check(vartype, check.IsNil, check.Commentf("%s", varname))
+	}
+	added := func(varname string, basicType *BasicType) {
+		vartype := G.Pkgsrc.VariableType(nil, "CHECK_FILES_SKIP")
+		if t.Check(vartype, check.NotNil) {
+			t.CheckEquals(vartype.basicType, BtPathPattern)
+		}
+	}
+
+	added("CHECK_FILES_SKIP", BtPathPattern)
+	added("UNKNOWN", BtUnknown)
+
+	ignored("")
+	ignored("f")
+	ignored(".f.")
+	ignored("/")
+	ignored("PREFIX")
+
+	t.CheckOutputLines(
+		"WARN: ~/mk/check/check-files.mk:3: " +
+			"Invalid part \"/\" after variable name \"\".")
 }
 
 func (s *Suite) Test_Pkgsrc_Latest__multiple_candidates(c *check.C) {
