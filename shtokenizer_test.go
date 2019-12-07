@@ -581,20 +581,10 @@ func (s *Suite) Test_ShTokenizer_ShAtom__internal_error(c *check.C) {
 
 	line := t.NewLine("filename.mk", 123, "\ttoken")
 	tok := NewShTokenizer(line, line.Text, true)
-	atom := tok.ShAtom(^ShQuoting(0))
-
-	t.Check(atom, check.IsNil)
-	output := t.Output()
-	// Normalize the panic message, for Go < 12 if I remember correctly.
-	outputWithoutIndex := replaceAll(
-		output,
-		`index out of range[^)]*`,
-		"index out of range")
-	t.CheckEquals(outputWithoutIndex,
-		"WARN: filename.mk:123: "+
-			"Internal pkglint error in ShTokenizer.ShAtom "+
-			"at \"\\ttoken\" (quoting=%!s("+
-			"PANIC=String method: runtime error: index out of range)).\n")
+	t.ExpectPanicMatches(
+		func() { tok.ShAtom(^ShQuoting(0)) },
+		// Normalize the panic message, for Go < 12 if I remember correctly.
+		`^runtime error: index out of range.*`)
 }
 
 func (s *Suite) Test_ShTokenizer_shVarUse(c *check.C) {

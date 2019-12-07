@@ -106,13 +106,12 @@ func (l *Logger) Explain(explanation ...string) {
 func (l *Logger) Diag(line *Line, level *LogLevel, format string, args ...interface{}) {
 	if G.Testing {
 		for _, arg := range args {
-			// FIXME: Switch to a whitelist. Allowed types should be:
-			//  string, int, RelPath.
 			switch arg.(type) {
-			case CurrPath:
+			case int, string, error:
+			default:
 				// All paths in diagnostics must be relative to the line.
 				// To achieve that, call line.File(currPath).
-				assert(false)
+				_ = arg.(RelPath)
 			}
 		}
 	}

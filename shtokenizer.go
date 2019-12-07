@@ -71,7 +71,9 @@ func (p *ShTokenizer) ShAtom(quoting ShQuoting) *ShAtom {
 		if hasPrefix(lexer.Rest(), "$${") {
 			p.parser.Warnf("Unclosed shell variable starting at %q.", shorten(lexer.Rest(), 20))
 		} else {
-			p.parser.Warnf("Internal pkglint error in ShTokenizer.ShAtom at %q (quoting=%s).", lexer.Rest(), quoting)
+			p.parser.Warnf("Internal pkglint error in ShTokenizer.ShAtom at %q (quoting=%s).",
+				// TODO: shorten(lexer.Rest(), 20)
+				lexer.Rest(), quoting.String())
 		}
 	}
 	return atom

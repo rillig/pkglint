@@ -785,7 +785,7 @@ outer:
 
 	if trimHspace(tok.Rest()) != "" {
 		ck.Warnf("Internal pkglint error in ShellLine.CheckWord at %q (quoting=%s), rest: %s",
-			token, quoting, tok.Rest())
+			token, quoting.String(), tok.Rest())
 	}
 }
 

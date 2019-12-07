@@ -38,7 +38,8 @@ func (ck *PatchChecker) Check() {
 		if ck.llex.SkipRegexp(rePatchUniFileDel) {
 			if m := ck.llex.NextRegexp(rePatchUniFileAdd); m != nil {
 				ck.checkBeginDiff(line, patchedFiles)
-				ck.checkUnifiedDiff(NewPath(m[1]))
+				// FIXME: Add test for absolute path.
+				ck.checkUnifiedDiff(NewRelPathString(m[1]))
 				patchedFiles++
 				continue
 			}
@@ -47,7 +48,8 @@ func (ck *PatchChecker) Check() {
 		}
 
 		if m := ck.llex.NextRegexp(rePatchUniFileAdd); m != nil {
-			patchedFile := NewPath(m[1])
+			// FIXME: Add test for absolute path.
+			patchedFile := NewRelPathString(m[1])
 			if ck.llex.SkipRegexp(rePatchUniFileDel) {
 				ck.checkBeginDiff(line, patchedFiles)
 				ck.llex.PreviousLine().Warnf("Unified diff headers should be first ---, then +++.")
@@ -92,7 +94,7 @@ func (ck *PatchChecker) Check() {
 }
 
 // See https://www.gnu.org/software/diffutils/manual/html_node/Detailed-Unified.html
-func (ck *PatchChecker) checkUnifiedDiff(patchedFile Path) {
+func (ck *PatchChecker) checkUnifiedDiff(patchedFile RelPath) {
 	isConfigure := ck.isConfigure(patchedFile)
 
 	hasHunks := false
@@ -262,7 +264,7 @@ func (ck *PatchChecker) isEmptyLine(text string) bool {
 		hasPrefix(text, "=============")
 }
 
-func (*PatchChecker) isConfigure(filename Path) bool {
+func (*PatchChecker) isConfigure(filename RelPath) bool {
 	switch filename.Base() {
 	case "configure", "configure.in", "configure.ac":
 		return true

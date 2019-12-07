@@ -219,13 +219,13 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename CurrPath) []*Change {
 
 		if year != "" && change.Date[0:4] != year {
 			line.Warnf("Year %q for %s does not match the filename %s.",
-				change.Date[0:4], change.Pkgpath, line.Rel(filename))
+				change.Date[0:4], change.Pkgpath.String(), line.Rel(filename))
 		}
 
 		if len(changes) >= 2 && year != "" {
 			if prev := changes[len(changes)-2]; change.Date < prev.Date {
 				line.Warnf("Date %q for %s is earlier than %q in %s.",
-					change.Date, change.Pkgpath, prev.Date, line.RelLocation(prev.Location))
+					change.Date, change.Pkgpath.String(), prev.Date, line.RelLocation(prev.Location))
 				line.Explain(
 					"The entries in doc/CHANGES should be in chronological order, and",
 					"all dates are assumed to be in the UTC timezone, to prevent time",
@@ -343,7 +343,7 @@ func (src *Pkgsrc) checkRemovedAfterLastFreeze() {
 		// without the wrong text. That's only because I'm too lazy loading
 		// the file again, and the original text is not lying around anywhere.
 		line := NewLineMulti(change.Location.Filename, int(change.Location.firstLine), int(change.Location.lastLine), "", nil)
-		line.Errorf("Package %s must either exist or be marked as removed.", change.Pkgpath)
+		line.Errorf("Package %s must either exist or be marked as removed.", change.Pkgpath.String())
 	}
 }
 
@@ -814,7 +814,7 @@ func (src *Pkgsrc) ListVersions(category PkgsrcPath, re regex.Pattern, repl stri
 	}
 	if len(names) == 0 {
 		if errorIfEmpty {
-			NewLineWhole(src.File(category)).Errorf("Cannot find package versions of %q.", re)
+			G.Logger.TechErrorf(src.File(category), "Cannot find package versions of %q.", string(re))
 		}
 		src.listVersions[cacheKey] = nil
 		return nil

@@ -487,8 +487,9 @@ func (ck *MkAssignChecker) checkVarassignMiscRedundantInstallationDirs() {
 
 	for _, dir := range mkline.ValueFields(mkline.Value()) {
 		// FIXME: Add test for absolute path.
-		if G.Pkg.Plist.Dirs[NewRelPathString(dir)] != nil {
-			mkline.Notef("The directory %q is redundant in %s.", dir, varname)
+		rel := NewRelPathString(dir)
+		if G.Pkg.Plist.Dirs[rel] != nil {
+			mkline.Notef("The directory %q is redundant in %s.", rel, varname)
 			mkline.Explain(
 				"This package defines AUTO_MKDIR, and the directory is contained in the PLIST.",
 				"Therefore it will be created anyway.")

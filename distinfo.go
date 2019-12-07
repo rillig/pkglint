@@ -383,7 +383,9 @@ func (ck *distinfoLinesChecker) checkUncommittedPatch(info distinfoHash) {
 func (ck *distinfoLinesChecker) checkPatchSha1(line *Line, patchFileName PackagePath, distinfoSha1Hex string) {
 	lines := Load(ck.pkg.File(patchFileName), 0)
 	if lines == nil {
-		line.Errorf("Patch %s does not exist.", patchFileName)
+		line.Errorf("Patch %s does not exist.",
+			// FIXME: Add test for absolute path.
+			NewRelPathString(patchFileName.String()))
 		return
 	}
 
