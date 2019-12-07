@@ -862,10 +862,7 @@ func (s *Suite) Test_Pkgsrc_loadUntypedVars__loop_variable(c *check.C) {
 		"${:U}=\t${CHECK_FILES_SKIP:@f@${f}@}")
 	t.FinishSetUp()
 
-	vartype := G.Pkgsrc.VariableType(nil, "f")
-
-	// FIXME: Local variables must not be exported.
-	t.CheckEquals(vartype.basicType, BtUnknown)
+	t.Check(G.Pkgsrc.VariableType(nil, "f"), check.IsNil)
 }
 
 func (s *Suite) Test_Pkgsrc_Latest__multiple_candidates(c *check.C) {

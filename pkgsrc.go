@@ -650,9 +650,10 @@ func (src *Pkgsrc) loadUntypedVars() {
 		case src.vartypes.IsDefinedCanon(varcanon):
 			// Already defined, can also be a tool.
 
-		case hasPrefix(varcanon, "_"):
-			// Variables starting with an underscore are reserved for the
-			// infrastructure and are not available for use by packages.
+		case !matches(varcanon, `^[A-Z]`):
+			// This filters out several unwanted variables: empty strings,
+			// punctuation, lowercase letters (that are used in .for loops),
+			// dotted names (that are used in ${VAR:@f@${f}@}).
 
 		case contains(varcanon, "$"):
 			// Indirect, but not the usual parameterized form. Variables of
