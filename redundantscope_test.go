@@ -1434,15 +1434,38 @@ func (s *Suite) Test_RedundantScope__infra(c *check.C) {
 		"PKG_OPTIONS:=\t# empty",
 		"PKG_OPTIONS=\t# empty")
 	t.CreateFileLines("options.mk",
+		"OUTSIDE:=\t# empty",
+		"OUTSIDE=\t# empty",
 		".include \"mk/bsd.options.mk\"")
-	mklines := t.LoadMkInclude("options.mk")
 
-	NewRedundantScope().Check(mklines)
+	test := func(diagnostics ...string) {
+		mklines := t.LoadMkInclude("options.mk")
+		scope := NewRedundantScope()
+		scope.IsRelevant = func(mkline *MkLine) bool {
+			// See checkfilePackageMakefile.
+			if !G.Infrastructure && !G.Opts.CheckGlobal {
+				return !G.Pkgsrc.IsInfra(mkline.Filename)
+			}
+			return true
+		}
 
-	// FIXME: When a package is checked without -Cglobal, don't
-	//  report problems in the pkgsrc infrastructure.
-	t.CheckOutputLines(
-		"NOTE: ~/mk/bsd.options.mk:2: " +
+		scope.Check(mklines)
+
+		// No note about the redundant variable assignment in bsd.options.mk
+		// because it is part of the infrastructure, which is filtered out.
+		t.CheckOutput(diagnostics)
+	}
+
+	test(
+		"NOTE: ~/options.mk:2: " +
+			"Definition of OUTSIDE is redundant because of line 1.")
+
+	t.SetUpCommandLine("-Cglobal")
+
+	test(
+		"NOTE: ~/options.mk:2: "+
+			"Definition of OUTSIDE is redundant because of line 1.",
+		"NOTE: ~/mk/bsd.options.mk:2: "+
 			"Definition of PKG_OPTIONS is redundant because of line 1.")
 }
 

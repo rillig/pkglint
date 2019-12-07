@@ -16,6 +16,7 @@ package pkglint
 type RedundantScope struct {
 	vars        map[string]*redundantScopeVarinfo
 	includePath includePath
+	IsRelevant  func(mkline *MkLine) bool
 }
 type redundantScopeVarinfo struct {
 	vari         *Var
@@ -24,7 +25,7 @@ type redundantScopeVarinfo struct {
 }
 
 func NewRedundantScope() *RedundantScope {
-	return &RedundantScope{vars: make(map[string]*redundantScopeVarinfo)}
+	return &RedundantScope{make(map[string]*redundantScopeVarinfo), includePath{}, nil}
 }
 
 func (s *RedundantScope) Check(mklines *MkLines) {
@@ -196,6 +197,9 @@ func (s *RedundantScope) access(varname string) {
 }
 
 func (s *RedundantScope) onRedundant(redundant *MkLine, because *MkLine) {
+	if s.IsRelevant != nil && !s.IsRelevant(redundant) {
+		return
+	}
 	if redundant.Op() == opAssignDefault {
 		redundant.Notef("Default assignment of %s has no effect because of %s.",
 			because.Varname(), redundant.RelMkLine(because))
@@ -206,6 +210,9 @@ func (s *RedundantScope) onRedundant(redundant *MkLine, because *MkLine) {
 }
 
 func (s *RedundantScope) onOverwrite(overwritten *MkLine, by *MkLine) {
+	if s.IsRelevant != nil && !s.IsRelevant(overwritten) {
+		return
+	}
 	overwritten.Warnf("Variable %s is overwritten in %s.",
 		overwritten.Varname(), overwritten.RelMkLine(by))
 	overwritten.Explain(

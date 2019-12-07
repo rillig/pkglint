@@ -592,6 +592,12 @@ func (pkg *Package) checkfilePackageMakefile(filename CurrPath, mklines *MkLines
 	}
 
 	pkg.redundant = NewRedundantScope()
+	pkg.redundant.IsRelevant = func(mkline *MkLine) bool {
+		if !G.Infrastructure && !G.Opts.CheckGlobal {
+			return !G.Pkgsrc.IsInfra(mkline.Filename)
+		}
+		return true
+	}
 	pkg.redundant.Check(allLines) // Updates the variables in the scope
 	pkg.checkCategories()
 	pkg.checkGnuConfigureUseLanguages()
