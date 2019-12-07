@@ -105,6 +105,11 @@ func NewPackage(dir CurrPath) *Package {
 	return &pkg
 }
 
+func (pkg *Package) Check() {
+	files, mklines, allLines := pkg.load()
+	pkg.check(files, mklines, allLines)
+}
+
 func (pkg *Package) load() ([]CurrPath, *MkLines, *MkLines) {
 	// Load the package Makefile and all included files,
 	// to collect all used and defined variables and similar data.

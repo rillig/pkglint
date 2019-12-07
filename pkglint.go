@@ -361,10 +361,7 @@ func (pkglint *Pkglint) checkdirPackage(dir CurrPath) {
 
 	pkglint.Pkg = NewPackage(dir)
 	defer func() { pkglint.Pkg = nil }()
-	pkg := pkglint.Pkg
-
-	files, mklines, allLines := pkg.load()
-	pkg.check(files, mklines, allLines)
+	pkglint.Pkg.Check()
 }
 
 // Returns the pkgsrc top-level directory, relative to the given directory.
