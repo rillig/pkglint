@@ -1005,6 +1005,26 @@ func (s *Suite) Test_MkAssignChecker_checkVarassignMiscRedundantInstallationDirs
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_MkAssignChecker_checkVarassignMiscRedundantInstallationDirs__absolute(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"INSTALLATION_DIRS=\t/bin",
+		"AUTO_MKDIRS=\t\tyes")
+	t.CreateFileLines("category/package/PLIST",
+		PlistCvsID,
+		"bin/program",
+		"man/man1/program.1")
+	t.FinishSetUp()
+
+	G.checkdirPackage(t.File("category/package"))
+
+	t.CheckOutputLines(
+		"ERROR: ~/category/package/Makefile:20: " +
+			"The directories in INSTALLATION_DIRS " +
+			"must be relative to ${PREFIX}.")
+}
+
 func (s *Suite) Test_MkAssignChecker_checkVarassignRightVaruse(c *check.C) {
 	t := s.Init(c)
 

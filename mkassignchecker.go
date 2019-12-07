@@ -486,7 +486,11 @@ func (ck *MkAssignChecker) checkVarassignMiscRedundantInstallationDirs() {
 	}
 
 	for _, dir := range mkline.ValueFields(mkline.Value()) {
-		// FIXME: Add test for absolute path.
+		if NewPath(dir).IsAbs() {
+			mkline.Errorf("The directories in INSTALLATION_DIRS must be relative to ${PREFIX}.")
+			continue
+		}
+
 		rel := NewRelPathString(dir)
 		if G.Pkg.Plist.Dirs[rel] != nil {
 			mkline.Notef("The directory %q is redundant in %s.", rel, varname)
