@@ -1477,7 +1477,6 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__prefs_indirect(c *check.C
 	t.SetUpOption("option", "An example option")
 	t.SetUpPackage("category/package",
 		".include \"common.mk\"",
-		"",
 		".if ${OPSYS} == NetBSD",
 		".endif")
 	t.CreateFileLines("category/package/common.mk",
@@ -1500,8 +1499,11 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__prefs_indirect(c *check.C
 	t.CheckEquals(G.Pkg.prefsLine, mklines.mklines[20])
 
 	// Since bsd.prefs.mk is included indirectly by common.mk,
-	// OPSYS may be used at load time in line 22.
-	t.CheckOutputEmpty()
+	// OPSYS may be used at load time in line 21.
+	// FIXME
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile:21: To use OPSYS at load time, " +
+			".include \"../../mk/bsd.prefs.mk\" first.")
 }
 
 // When a package defines PLIST_SRC, it may or may not use the
