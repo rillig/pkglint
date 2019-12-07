@@ -827,11 +827,8 @@ func (s *Suite) Test_MkCondChecker_simplifyCondition(c *check.C) {
 
 		nil...)
 
-	// The character '+' had been added to mkCondLiteralChars, but not
-	// to the regular expression for needsQuotes.
-	// FIXME: Fix this inconsistency.
-	// TODO: Then replace the '+' in this test by a character that needs
-	//  quotes and is nevertheless supported by the simplifier.
+	// The + is contained in mkCondStringLiteralUnquoted.
+	// The + is contained in mkCondModifierPatternLiteral.
 	testAfterPrefs(
 		".if ${PKGPATH:Mcategory/gtk+}",
 		".if ${PKGPATH} == category/gtk+",
@@ -842,6 +839,21 @@ func (s *Suite) Test_MkCondChecker_simplifyCondition(c *check.C) {
 		"AUTOFIX: filename.mk:3: "+
 			"Replacing \"${PKGPATH:Mcategory/gtk+}\" "+
 			"with \"${PKGPATH} == category/gtk+\".")
+
+	// The characters <=> may be used unescaped in :M and :N patterns
+	// but not in .if conditions. There they must be enclosed in quotes.
+	testAfterPrefs(
+		".if ${PKGPATH:M<=>}",
+		".if ${PKGPATH} == \"<=>\"",
+
+		"WARN: filename.mk:3: The pathname pattern \"<=>\" "+
+			"contains the invalid characters \"<=>\".",
+		"NOTE: filename.mk:3: PKGPATH should be "+
+			"compared using \"${PKGPATH} == \"<=>\"\" "+
+			"instead of matching against \":M<=>\".",
+		"AUTOFIX: filename.mk:3: "+
+			"Replacing \"${PKGPATH:M<=>}\" "+
+			"with \"${PKGPATH} == \\\"<=>\\\"\".")
 
 	// If pkglint replaces this particular pattern, the resulting string
 	// literal must be escaped properly.

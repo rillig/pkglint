@@ -121,7 +121,7 @@ var mkCondStringLiteralUnquoted = textproc.NewByteSet("+---./0-9@A-Z_a-z")
 
 // mkCondModifierPatternLiteral contains a safe subset of the characters
 // that are interpreted literally in the :M and :N modifiers.
-var mkCondModifierPatternLiteral = textproc.NewByteSet("+---./0-9@A-Z_a-z")
+var mkCondModifierPatternLiteral = textproc.NewByteSet("+---./0-9<=>@A-Z_a-z")
 
 // simplifyCondition replaces an unnecessarily complex condition with
 // a simpler condition that's still equivalent.
@@ -187,7 +187,8 @@ func (ck *MkCondChecker) simplifyCondition(varuse *MkVarUse, fromEmpty bool, neg
 			pattern,
 			condStr(fromEmpty, ")", "}"))
 
-		needsQuotes := matches(pattern, `^\d+\.?\d*$`)
+		needsQuotes := textproc.NewLexer(pattern).NextBytesSet(mkCondStringLiteralUnquoted) != pattern ||
+			matches(pattern, `^\d+\.?\d*$`)
 		quote := condStr(needsQuotes, "\"", "")
 
 		to := sprintf(
