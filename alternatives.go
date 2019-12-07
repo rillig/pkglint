@@ -11,72 +11,91 @@ func CheckFileAlternatives(filename CurrPath) {
 		return
 	}
 
-	var plist PlistContent
-	if G.Pkg != nil {
-		plist = G.Pkg.Plist
-	}
+	var ck AlternativesChecker
+	ck.Check(lines, G.Pkg)
+}
 
-	checkPlistWrapper := func(line *Line, wrapper RelPath) {
-		if plist.Files[wrapper] != nil {
-			line.Errorf("Alternative wrapper %q must not appear in the PLIST.", wrapper)
-		}
-	}
+type AlternativesChecker struct{}
 
-	checkPlistAlternative := func(line *Line, alternative string) {
-		relImplementation := strings.Replace(alternative, "@PREFIX@/", "", 1)
-		plistName := replaceAll(relImplementation, `@(\w+)@`, "${$1}")
-		if NewPath(plistName).IsAbs() {
-			// It's possible but unusual to refer to a fixed absolute path.
-			// These cannot be mentioned in the PLIST since they are not part of the package.
-			return
-		}
-
-		rel := NewRelPathString(plistName)
-		if plist.Files[rel] != nil || G.Pkg.vars.IsDefined("ALTERNATIVES_SRC") {
-			return
-		}
-		if plist.Files[rel.Replace("${PKGMANDIR}", "man")] != nil {
-			return
-		}
-
-		if plistName == alternative {
-			line.Errorf("Alternative implementation %q must appear in the PLIST.", alternative)
-		} else {
-			line.Errorf("Alternative implementation %q must appear in the PLIST as %q.", alternative, plistName)
-		}
+func (ck *AlternativesChecker) Check(lines *Lines, pkg *Package) {
+	var plistFiles map[RelPath]*PlistLine
+	if pkg != nil {
+		plistFiles = pkg.Plist.Files
 	}
 
 	for _, line := range lines.Lines {
-		m, wrapper, space, alternative := match3(line.Text, `^([^\t ]+)([ \t]+)([^\t ]+)`)
-		if !m {
-			line.Errorf("Invalid line %q.", line.Text)
-			line.Explain(
-				sprintf("Run %q for more information.", bmakeHelp("alternatives")))
-			continue
-		}
+		ck.checkLine(line, plistFiles)
+	}
+}
 
-		if plist.Files != nil {
-			// FIXME: Add test for absolute path.
-			checkPlistWrapper(line, NewRelPathString(wrapper))
-			checkPlistAlternative(line, alternative)
-		}
+func (ck *AlternativesChecker) checkLine(line *Line, plistFiles map[RelPath]*PlistLine) {
+	// TODO: Add $ to the regex, just for confidence
+	m, wrapper, space, alternative := match3(line.Text, `^([^\t ]+)([ \t]+)([^\t ]+)`)
+	if !m {
+		line.Errorf("Invalid line %q.", line.Text)
+		line.Explain(
+			sprintf("Run %q for more information.", bmakeHelp("alternatives")))
+		return
+	}
 
-		switch {
-		case hasPrefix(alternative, "/"), hasPrefix(alternative, "@"):
-			break
+	if plistFiles != nil {
+		// FIXME: Add test for absolute path.
+		ck.checkWrapperPlist(line, NewRelPathString(wrapper), plistFiles)
+		ck.checkAlternativePlist(line, alternative, plistFiles)
+	}
 
-		case textproc.NewLexer(alternative).NextByteSet(textproc.Alnum) != -1:
-			fix := line.Autofix()
-			fix.Errorf("Alternative implementation %q must be an absolute path.", alternative)
-			fix.Explain(
-				"It usually starts with @PREFIX@/... to refer to a path inside the installation prefix.")
-			fix.ReplaceAfter(space, alternative, "@PREFIX@/"+alternative)
-			fix.Apply()
+	ck.checkAlternativeAbs(alternative, line, space)
+}
 
-		default:
-			line.Errorf("Alternative implementation %q must be an absolute path.", alternative)
-			line.Explain(
-				"It usually starts with @PREFIX@/... to refer to a path inside the installation prefix.")
-		}
+func (ck *AlternativesChecker) checkAlternativeAbs(alternative string, line *Line, space string) {
+	lex := textproc.NewLexer(alternative)
+
+	if lex.SkipByte('/') || lex.SkipByte('@') {
+		return
+	}
+
+	fix := line.Autofix()
+	fix.Errorf("Alternative implementation %q must be an absolute path.", alternative)
+	fix.Explain(
+		"It usually starts with @PREFIX@/... to refer to a path inside the installation prefix.")
+	if lex.TestByteSet(textproc.Alnum) {
+		fix.ReplaceAfter(space, alternative, "@PREFIX@/"+alternative)
+	}
+	fix.Apply()
+}
+
+func (ck *AlternativesChecker) checkWrapperPlist(line *Line, wrapper RelPath,
+	plistFiles map[RelPath]*PlistLine) {
+
+	if plistFiles[wrapper] != nil {
+		line.Errorf("Alternative wrapper %q must not appear in the PLIST.", wrapper)
+	}
+}
+
+func (ck *AlternativesChecker) checkAlternativePlist(line *Line, alternative string,
+	plistFiles map[RelPath]*PlistLine) {
+
+	relImplementation := strings.Replace(alternative, "@PREFIX@/", "", 1)
+	plistName := replaceAll(relImplementation, `@(\w+)@`, "${$1}")
+	if NewPath(plistName).IsAbs() {
+		// It's possible but unusual to refer to a fixed absolute path.
+		// These cannot be mentioned in the PLIST since they are not part of the package.
+		return
+	}
+
+	rel := NewRelPathString(plistName)
+	if plistFiles[rel] != nil || G.Pkg.vars.IsDefined("ALTERNATIVES_SRC") {
+		return
+	}
+	if plistFiles[rel.Replace("${PKGMANDIR}", "man")] != nil {
+		return
+	}
+
+	if plistName == alternative {
+		line.Errorf("Alternative implementation %q must appear in the PLIST.",
+			alternative)
+	} else {
+		line.Errorf("Alternative implementation %q must appear in the PLIST as %q.",
+			alternative, plistName)
 	}
 }
