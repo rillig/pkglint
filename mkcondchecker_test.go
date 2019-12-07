@@ -116,7 +116,7 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCond(c *check.C) {
 		"WARN: filename.mk:2: VAR is used but not defined.")
 
 	test(".if ${MASTER_SITES:Mftp://*} == \"ftp://netbsd.org/\"",
-		// FIXME: duplicate diagnostic, see MkParser.MkCond.
+		// XXX: duplicate diagnostic, see MkParser.MkCond.
 		"WARN: filename.mk:2: Invalid variable modifier \"//*\" for \"MASTER_SITES\".",
 		"WARN: filename.mk:2: Invalid variable modifier \"//*\" for \"MASTER_SITES\".",
 		"WARN: filename.mk:2: \"ftp\" is not a valid URL.",
