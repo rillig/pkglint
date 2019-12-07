@@ -803,6 +803,30 @@ func (s *Suite) Test_MkVarUseChecker_checkUseAtLoadTime__buildlink3_mk(c *check.
 			".include \"../../mk/bsd.fast.prefs.mk\" first.")
 }
 
+func (s *Suite) Test_MkVarUseChecker_checkUseAtLoadTime__pkg_build_options_mk(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpOption("option", "An example option")
+	t.CreateFileLines("mk/pkg-build-options.mk",
+		MkCvsID)
+	t.SetUpPackage("category/package")
+
+	t.CreateFileBuildlink3("category/package/buildlink3.mk",
+		"pkgbase := package",
+		".include \"../../mk/pkg-build-options.mk\"",
+		".if ${PKG_BUILD_OPTIONS.package:Moption}",
+		".endif")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.Check("buildlink3.mk")
+
+	// FIXME
+	t.CheckOutputLines(
+		"WARN: buildlink3.mk:14: To use PKG_BUILD_OPTIONS.package at load time, " +
+			".include \"../../mk/bsd.fast.prefs.mk\" first.")
+}
+
 func (s *Suite) Test_MkVarUseChecker_checkUseAtLoadTime__other_mk(c *check.C) {
 	t := s.Init(c)
 
