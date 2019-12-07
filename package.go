@@ -599,6 +599,12 @@ func (pkg *Package) checkfilePackageMakefile(filename CurrPath, mklines *MkLines
 
 	allLines.collectVariables()    // To get the tool definitions
 	mklines.Tools = allLines.Tools // TODO: also copy the other collected data
+
+	// TODO: Checking only mklines instead of allLines ignores the
+	//  .include lines. For example, including "options.mk" does not
+	//  set Tools.SeenPrefs, but it should.
+	//
+	// See Test_Package_checkfilePackageMakefile__options_mk.
 	mklines.Check()
 
 	// This check is experimental because it's not yet clear how to

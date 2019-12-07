@@ -1438,6 +1438,42 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__distfiles(c *check.C) {
 			"A package that downloads files should have a distinfo file.")
 }
 
+// The fonts/t1lib package has split the options handling between the
+// package Makefile and options.mk. Make sure that this situation is
+// handled correctly by pkglint.
+//
+// See "tr.SeenPrefs = true".
+func (s *Suite) Test_Package_checkfilePackageMakefile__options_mk(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpOption("option", "An example option")
+	t.SetUpPackage("category/package",
+		".include \"options.mk\"",
+		"",
+		".if ${PKG_OPTIONS:Moption}",
+		".endif")
+	t.CreateFileLines("mk/bsd.options.mk")
+	t.CreateFileLines("category/package/options.mk",
+		MkCvsID,
+		"",
+		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
+		"PKG_SUPPORTED_OPTIONS=\toption",
+		"",
+		".include \"../../mk/bsd.options.mk\"",
+		"",
+		".if ${PKG_OPTIONS:Moption}",
+		".endif")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package"))
+
+	// FIXME
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile:22: " +
+			"To use PKG_OPTIONS at load time, " +
+			".include \"../../mk/bsd.prefs.mk\" first.")
+}
+
 // When a package defines PLIST_SRC, it may or may not use the
 // PLIST file from the package directory. Therefore the check
 // is skipped completely.
