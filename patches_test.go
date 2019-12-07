@@ -538,6 +538,63 @@ func (s *Suite) Test_PatchChecker_Check__missing_CVS_Id(c *check.C) {
 		"ERROR: ~/patch-aa: Contains no patch.")
 }
 
+func (s *Suite) Test_PatchChecker_Check__add_file(c *check.C) {
+	t := s.Init(c)
+
+	lines := t.SetUpFileLines("patch-aa",
+		CvsID,
+		"",
+		"This patch creates a new file.",
+		"",
+		"--- /dev/null",
+		"+++ added-file",
+		"@@ -0,0 +1,1 @@",
+		"+ added line")
+
+	CheckLinesPatch(lines)
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_PatchChecker_Check__delete_file(c *check.C) {
+	t := s.Init(c)
+
+	lines := t.SetUpFileLines("patch-aa",
+		CvsID,
+		"",
+		"This patch deletes an existing file.",
+		"",
+		"--- deleted-file",
+		"+++ /dev/null",
+		"@@ -1,1 +0,0 @@",
+		"- deleted line")
+
+	CheckLinesPatch(lines)
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_PatchChecker_Check__absolute_path(c *check.C) {
+	t := s.Init(c)
+
+	lines := t.SetUpFileLines("patch-aa",
+		CvsID,
+		"",
+		"This patch deletes an existing file.",
+		"",
+		"--- /absolute",
+		"+++ /absolute",
+		"@@ -1,1 +1,1 @@",
+		"- deleted line",
+		"+ added line")
+
+	CheckLinesPatch(lines)
+
+	// FIXME: Patches must not apply to absolute paths.
+	// The only allowed exception is /dev/null.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_PatchChecker_checkUnifiedDiff__lines_at_end(c *check.C) {
 	t := s.Init(c)
 
