@@ -1010,6 +1010,8 @@ func (t *Tester) NewLinesAt(filename CurrPath, firstLine int, texts ...string) *
 //
 // After calling Tester.Chdir, NewMkLines creates the same object as
 // SetUpFileMkLines, just without anything being written to disk.
+// This can lead to strange error messages such as "Relative path %s does
+// not exist." because an intermediate directory in the path does not exist.
 func (t *Tester) NewMkLines(filename CurrPath, lines ...string) *MkLines {
 	basename := filename.Base()
 	assertf(

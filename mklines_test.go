@@ -55,7 +55,7 @@ func (s *Suite) Test_MkLines__comparing_YesNo_variable_to_string(c *check.C) {
 	t.SetUpPkgsrc()
 	t.Chdir(".")
 	t.FinishSetUp()
-	mklines := t.NewMkLines("databases/gdbm_compat/builtin.mk",
+	mklines := t.SetUpFileMkLines("databases/gdbm_compat/builtin.mk",
 		MkCvsID,
 		"",
 		".include \"../../mk/bsd.prefs.mk\"",
@@ -242,7 +242,7 @@ func (s *Suite) Test_MkLines_Check__absolute_pathname_depending_on_OPSYS(c *chec
 	t.SetUpPkgsrc()
 	t.Chdir(".")
 	t.FinishSetUp()
-	mklines := t.NewMkLines("games/heretic2-demo/Makefile",
+	mklines := t.SetUpFileMkLines("games/heretic2-demo/Makefile",
 		MkCvsID,
 		"",
 		".include \"../../mk/bsd.prefs.mk\"",

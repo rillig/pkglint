@@ -149,7 +149,7 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCond__comparison_with_shell_com
 	t.SetUpPkgsrc()
 	t.Chdir(".")
 	t.FinishSetUp()
-	mklines := t.NewMkLines("security/openssl/Makefile",
+	mklines := t.SetUpFileMkLines("security/openssl/Makefile",
 		MkCvsID,
 		"",
 		".include \"../../mk/bsd.prefs.mk\"",
