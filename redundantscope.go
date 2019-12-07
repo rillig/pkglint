@@ -86,11 +86,6 @@ func (s *RedundantScope) handleVarassign(mkline *MkLine, ind *Indentation) {
 	effOp := mkline.Op()
 	value := mkline.Value()
 
-	// FIXME: Skip the whole redundancy check if the value is not known to be constant.
-	if effOp == opAssign && info.vari.Value() == value {
-		effOp = opAssignDefault
-	}
-
 	if effOp == opAssignEval && value == mkline.WithoutMakeVariables(value) {
 		// Maybe add support for VAR:= ${OTHER} later. This involves evaluating
 		// the OTHER variable though using the appropriate scope. Oh, wait,
@@ -99,6 +94,11 @@ func (s *RedundantScope) handleVarassign(mkline *MkLine, ind *Indentation) {
 		//
 		// TODO: The above idea seems possible and useful.
 		effOp = opAssign
+	}
+
+	// FIXME: Skip the whole redundancy check if the value is not known to be constant.
+	if effOp == opAssign && info.vari.Value() == value {
+		effOp = opAssignDefault
 	}
 
 	switch effOp {

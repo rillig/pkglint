@@ -25,7 +25,7 @@ func (s *Suite) Test_RedundantScope__single_file_default(c *check.C) {
 	t.CheckOutputLines(
 		"NOTE: file.mk:7: Default assignment of VAR.def has no effect because of line 1.",
 		"NOTE: file.mk:8: Definition of VAR.asg is redundant because of line 2.",
-		"WARN: file.mk:4: Variable VAR.evl is overwritten in line 10.")
+		"NOTE: file.mk:10: Definition of VAR.evl is redundant because of line 4.")
 	// TODO: "VAR.shl: is overwritten later"
 }
 
@@ -52,7 +52,7 @@ func (s *Suite) Test_RedundantScope__single_file_assign(c *check.C) {
 	t.CheckOutputLines(
 		"NOTE: file.mk:7: Default assignment of VAR.def has no effect because of line 1.",
 		"NOTE: file.mk:8: Definition of VAR.asg is redundant because of line 2.",
-		"WARN: file.mk:4: Variable VAR.evl is overwritten in line 10.")
+		"NOTE: file.mk:10: Definition of VAR.evl is redundant because of line 4.")
 	// TODO: "VAR.shl: is overwritten later"
 }
 
@@ -107,7 +107,7 @@ func (s *Suite) Test_RedundantScope__single_file_eval(c *check.C) {
 	t.CheckOutputLines(
 		"NOTE: file.mk:7: Default assignment of VAR.def has no effect because of line 1.",
 		"NOTE: file.mk:8: Definition of VAR.asg is redundant because of line 2.",
-		"WARN: file.mk:4: Variable VAR.evl is overwritten in line 10.")
+		"NOTE: file.mk:10: Definition of VAR.evl is redundant because of line 4.")
 	// TODO: "VAR.shl: is overwritten later"
 }
 
@@ -1332,7 +1332,7 @@ func (s *Suite) Test_RedundantScope__eval_then_eval(c *check.C) {
 	NewRedundantScope().Check(mklines)
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:1: Variable VAR is overwritten in line 2.",
+		"NOTE: filename.mk:2: Definition of VAR is redundant because of line 1.",
 		"WARN: filename.mk:2: Variable VAR is overwritten in line 3.")
 }
 
@@ -1532,9 +1532,9 @@ func (s *Suite) Test_RedundantScope_handleVarassign__assign_then_eval(c *check.C
 	scope := NewRedundantScope()
 	scope.Check(mklines)
 
-	// TODO: Should be just a "redundant" note.
 	t.CheckOutputLines(
-		"WARN: mk/bsd.options.mk:1: Variable PKG_OPTIONS is overwritten in line 2.")
+		"NOTE: mk/bsd.options.mk:2: " +
+			"Definition of PKG_OPTIONS is redundant because of line 1.")
 }
 
 func (s *Suite) Test_includePath_includes(c *check.C) {
