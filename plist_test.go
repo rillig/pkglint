@@ -615,14 +615,24 @@ func (s *Suite) Test_PlistChecker_checkPath__unwanted_entries(c *check.C) {
 		PlistCvsID,
 		"share/perllocal.pod",
 		"share/pkgbase/CVS/Entries",
-		"share/pkgbase/Makefile.orig")
+		"share/pkgbase/Makefile.orig",
+		"../breakout",
+		// FIXME
+		"t/../../breakout",
+		// FIXME
+		"t/./non-canonical",
+		// FIXME
+		"t///non-canonical",
+		// FIXME
+		"t/non-canonical/")
 
 	CheckLinesPlist(nil, lines)
 
 	t.CheckOutputLines(
 		"WARN: ~/PLIST:2: The perllocal.pod file should not be in the PLIST.",
 		"WARN: ~/PLIST:3: CVS files should not be in the PLIST.",
-		"WARN: ~/PLIST:4: .orig files should not be in the PLIST.")
+		"WARN: ~/PLIST:4: .orig files should not be in the PLIST.",
+		"ERROR: ~/PLIST:5: Invalid line type: ../breakout")
 }
 
 func (s *Suite) Test_PlistChecker_checkPathNonAscii(c *check.C) {
