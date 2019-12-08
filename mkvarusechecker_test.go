@@ -430,33 +430,6 @@ func (s *Suite) Test_MkVarUseChecker_checkPermissions__explain(c *check.C) {
 		"\ttech-pkg@NetBSD.org mailing list.", "")
 }
 
-func (s *Suite) Test_MkVarUseChecker_checkPermissions__load_time(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpPkgsrc()
-	t.Chdir("category/package")
-	t.FinishSetUp()
-	mklines := t.NewMkLines("options.mk",
-		MkCvsID,
-		"",
-		"# don't include bsd.prefs.mk here",
-		"",
-		"WRKSRC:=\t${.CURDIR}",
-		".if ${PKG_SYSCONFDIR.gdm} != \"etc\"",
-		".endif")
-
-	mklines.Check()
-
-	// The PKG_SYSCONFDIR.* depend on the directory layout that is
-	// specified in mk.conf, therefore bsd.prefs.mk must be included first.
-	//
-	// Evaluating .CURDIR at load time is definitely ok since it is defined
-	// internally by bmake to be AlwaysInScope.
-	t.CheckOutputLines(
-		"WARN: options.mk:6: To use PKG_SYSCONFDIR.gdm at load time, " +
-			".include \"../../mk/bsd.prefs.mk\" first.")
-}
-
 func (s *Suite) Test_MkVarUseChecker_checkPermissions__load_time_in_condition(c *check.C) {
 	t := s.Init(c)
 
@@ -860,6 +833,24 @@ func (s *Suite) Test_MkVarUseChecker_checkUseAtLoadTime__other_mk(c *check.C) {
 			".include \"../../mk/bsd.prefs.mk\" first.")
 }
 
+func (s *Suite) Test_MkVarUseChecker_checkUseAtLoadTime__PKG_SYSCONFDIR(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	t.Chdir("category/package")
+	mklines := t.NewMkLines("options.mk",
+		MkCvsID,
+		".if ${PKG_SYSCONFDIR.gdm} != \"etc\"",
+		".endif")
+
+	mklines.Check()
+
+	// The PKG_SYSCONFDIR.* directories typically start with ${PREFIX}.
+	// Since PREFIX is not defined until bsd.pkg.mk, including bsd.prefs.mk
+	// wouldn't help, therefore pkglint doesn't suggest it.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_MkVarUseChecker_checkUseAtLoadTime__package_settable(c *check.C) {
 	t := s.Init(c)
 
@@ -879,12 +870,10 @@ func (s *Suite) Test_MkVarUseChecker_checkUseAtLoadTime__package_settable(c *che
 	}
 
 	test("Makefile",
-		"WARN: Makefile:2: To use PKG at load time, "+
-			".include \"../../mk/bsd.prefs.mk\" first.")
+		nil...)
 
 	test("options.mk",
-		"WARN: options.mk:2: To use PKG at load time, "+
-			".include \"../../mk/bsd.prefs.mk\" first.")
+		nil...)
 
 	test("other.mk",
 		nil...)
