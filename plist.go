@@ -36,7 +36,7 @@ type PlistChecker struct {
 	pkg             *Package
 	allFiles        map[RelPath]*PlistLine
 	allDirs         map[RelPath]*PlistLine
-	lastFname       string
+	lastFname       RelPath
 	once            Once
 	nonAsciiAllowed bool
 }
@@ -267,16 +267,16 @@ func (ck *PlistChecker) checkSorted(pline *PlistLine) {
 		return
 	}
 
-	text := pline.text
+	rel := pline.Path()
 	if ck.lastFname != "" {
-		if ck.lastFname > text && !G.Logger.Opts.Autofix {
-			pline.Warnf("%q should be sorted before %q.", text, ck.lastFname)
+		if ck.lastFname > rel && !G.Logger.Opts.Autofix {
+			pline.Warnf("%q should be sorted before %q.", rel.String(), ck.lastFname.String())
 			pline.Explain(
 				"The files in the PLIST should be sorted alphabetically.",
 				"This allows human readers to quickly see whether a file is included or not.")
 		}
 	}
-	ck.lastFname = text
+	ck.lastFname = rel
 }
 
 func (ck *PlistChecker) checkDuplicate(pline *PlistLine) {
