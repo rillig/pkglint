@@ -758,6 +758,51 @@ func (s *Suite) Test_CheckLinesDescr(c *check.C) {
 		"WARN: DESCR:25: File too long (should be no more than 24 lines).")
 }
 
+// The package author may think that variables like ${PREFIX}
+// are expanded in DESCR files too, but that doesn't happen.
+func (s *Suite) Test_CheckLinesDescr__variables(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+
+	test := func(text string, diagnostics ...string) {
+		lines := t.NewLines("DESCR",
+			text)
+
+		CheckLinesDescr(lines)
+
+		t.CheckOutput(diagnostics)
+	}
+
+	test(
+		"${PREFIX}",
+		"NOTE: DESCR:1: Variables are not expanded in the DESCR file.")
+
+	// Variables in parentheses are unusual in pkgsrc.
+	// Therefore they are not worth being mentioned.
+	test(
+		"$(PREFIX)",
+		// TODO: Remove this note.
+		"NOTE: DESCR:1: Variables are not expanded in the DESCR file.")
+
+	// Variables that are not well-known in pkgsrc are not warned
+	// about since these are probably legitimate examples, as seen
+	// in devel/go-properties/DESCR.
+	test(
+		"${UNDEFINED}",
+		nil...)
+
+	test(
+		"$<",
+		nil...)
+
+	// This one occurs in a few Perl packages.
+	test(
+		"$@",
+		// TODO: Remove this note.
+		"NOTE: DESCR:1: Variables are not expanded in the DESCR file.")
+}
+
 func (s *Suite) Test_CheckLinesMessage__one_line_of_text(c *check.C) {
 	t := s.Init(c)
 
