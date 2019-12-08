@@ -429,20 +429,21 @@ func CheckLinesDescr(lines *Lines) {
 		defer trace.Call(lines.Filename)()
 	}
 
+	checkVarRefs := func(line *Line) {
+		tokens, _ := NewMkLexer(line.Text, nil).MkTokens()
+		for _, token := range tokens {
+			if token.Varuse != nil && G.Pkgsrc.VariableType(nil, token.Varuse.varname) != nil {
+				line.Notef("Variables are not expanded in the DESCR file.")
+			}
+		}
+	}
+
 	for _, line := range lines.Lines {
 		ck := LineChecker{line}
 		ck.CheckLength(80)
 		ck.CheckTrailingWhitespace()
 		ck.CheckValidCharacters()
-
-		if containsVarRef(line.Text) {
-			tokens, _ := NewMkLexer(line.Text, nil).MkTokens()
-			for _, token := range tokens {
-				if token.Varuse != nil && G.Pkgsrc.VariableType(nil, token.Varuse.varname) != nil {
-					line.Notef("Variables are not expanded in the DESCR file.")
-				}
-			}
-		}
+		checkVarRefs(line)
 	}
 
 	CheckLinesTrailingEmptyLines(lines)
