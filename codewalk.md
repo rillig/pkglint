@@ -231,7 +231,7 @@ but that doesn't happen in this simple example run.
 
 The main work is done in `Pkglint.Check`:
 
-> from [pkglint.go](pkglint.go#L332):
+> from [pkglint.go](pkglint.go#L333):
 
 ```go
 	if isReg {
@@ -245,7 +245,7 @@ Since `DESCR` is a regular file, the next function to call is `checkReg`.
 For directories, the next function would depend on the depth from the
 pkgsrc root directory.
 
-> from [pkglint.go](pkglint.go#L544):
+> from [pkglint.go](pkglint.go#L542):
 
 ```go
 func (pkglint *Pkglint) checkReg(filename CurrPath, basename string, depth int) {
@@ -253,7 +253,7 @@ func (pkglint *Pkglint) checkReg(filename CurrPath, basename string, depth int) 
 
 The relevant part of `Pkglint.checkReg` is:
 
-> from [pkglint.go](pkglint.go#L571):
+> from [pkglint.go](pkglint.go#L569):
 
 ```go
 	case basename == "buildlink3.mk":
@@ -284,7 +284,7 @@ The actual checks usually work on `Line` objects instead of files
 because the lines offer nice methods for logging the diagnostics
 and for automatically fixing the text (in pkglint's `--autofix` mode).
 
-> from [pkglint.go](pkglint.go#L430):
+> from [pkglint.go](pkglint.go#L428):
 
 ```go
 func CheckLinesDescr(lines *Lines) {
@@ -360,10 +360,11 @@ This code is a typical example for using the autofix feature.
 Some more possibilities are described at the `Autofix` type itself
 and at its typical call site `Line.Autofix()`:
 
-> from [autofix.go](autofix.go#L10):
+> from [autofix.go](autofix.go#L15):
 
 ```go
 // Autofix handles all modifications to a single line,
+// possibly spanning multiple physical lines in case of Makefile lines,
 // describes them in a human-readable form and formats the output.
 // The modifications are kept in memory only,
 // until they are written to disk by SaveAutofixChanges.
@@ -635,7 +636,7 @@ The instructions for building and installing packages are written in shell comma
 which are embedded in Makefile fragments.
 The `ShellLineChecker` type provides methods for checking shell commands and their individual parts.
 
-> from [shell.go](shell.go#L320):
+> from [shell.go](shell.go#L321):
 
 ```go
 // ShellLineChecker checks either a line from a Makefile starting with a tab,
@@ -675,7 +676,7 @@ The `t` variable is the center of most tests.
 It is of type `Tester` and provides a high-level interface
 for setting up tests and checking the results.
 
-> from [check_test.go](check_test.go#L122):
+> from [check_test.go](check_test.go#L178):
 
 ```go
 // Tester provides utility methods for testing pkglint.
