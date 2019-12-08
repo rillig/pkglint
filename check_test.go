@@ -924,12 +924,12 @@ func (t *Tester) ExpectAssert(action func()) {
 
 // ExpectDiagnosticsAutofix first runs the given action with -Wall, and
 // then another time with -Wall --autofix.
-func (t *Tester) ExpectDiagnosticsAutofix(action func(), diagnostics ...string) {
+func (t *Tester) ExpectDiagnosticsAutofix(action func(autofix bool), diagnostics ...string) {
 	t.SetUpCommandLine("-Wall")
-	action()
+	action(false)
 
 	t.SetUpCommandLine("-Wall", "--autofix")
-	action()
+	action(true)
 
 	t.CheckOutput(diagnostics)
 }

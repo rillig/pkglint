@@ -557,7 +557,7 @@ func (s *Suite) Test_Autofix_ReplaceAt(c *check.C) {
 	lines := func(lines ...string) []string { return lines }
 	test := func(texts []string, rawIndex int, column int, from, to string, diagnostics ...string) {
 
-		mainPart := func() {
+		mainPart := func(autofix bool) {
 			mklines := t.NewMkLines("filename.mk", texts...)
 			assert(len(mklines.mklines) == 1)
 			mkline := mklines.mklines[0]

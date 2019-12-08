@@ -1075,7 +1075,7 @@ func (s *Suite) Test_MkVarUseChecker_fixQuotingModifiers(c *check.C) {
 
 	t.SetUpVartypes()
 
-	test := func() {
+	test := func(autofix bool) {
 		mklines := t.SetUpFileMkLines("filename.mk",
 			MkCvsID,
 			"",

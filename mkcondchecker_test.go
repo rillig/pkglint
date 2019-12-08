@@ -236,7 +236,7 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCondEmpty(c *check.C) {
 			".endif")
 
 		t.ExpectDiagnosticsAutofix(
-			mklines.Check,
+			func(autofix bool) { mklines.Check() },
 			diagnostics...)
 
 		afterMklines := LoadMk(t.File("filename.mk"), MustSucceed)
@@ -388,7 +388,7 @@ func (s *Suite) Test_MkCondChecker_simplifyCondition(c *check.C) {
 		// TODO: Replace MkLines.Check this with a more specific method.
 
 		t.ExpectDiagnosticsAutofix(
-			mklines.Check,
+			func(autofix bool) { mklines.Check() },
 			diagnostics...)
 
 		// TODO: Move this assertion above the assertion about the diagnostics.
@@ -894,7 +894,7 @@ func (s *Suite) Test_MkCondChecker_simplifyCondition__defined_in_same_file(c *ch
 		// TODO: Replace MkLines.Check this with a more specific method.
 
 		t.ExpectDiagnosticsAutofix(
-			mklines.Check,
+			func(autofix bool) { mklines.Check() },
 			diagnostics...)
 
 		// TODO: Move this assertion above the assertion about the diagnostics.
