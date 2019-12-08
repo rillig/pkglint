@@ -374,7 +374,7 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 	// prefs: whether to include bsd.prefs.mk before
 	// before: the directive before the condition is simplified
 	// after: the directive after the condition is simplified
-	test := func(prefs bool, before, after string, diagnostics ...string) {
+	doTest := func(prefs bool, before, after string, diagnostics ...string) {
 		mklines := t.SetUpFileMkLines("filename.mk",
 			MkCvsID,
 			condStr(prefs, ".include \"../../mk/bsd.prefs.mk\"", ""),
@@ -403,12 +403,14 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		t.ExpectDiagnosticsAutofix(action, diagnostics...)
 	}
 
+	testBeforePrefs := func(before, after string, diagnostics ...string) {
+		doTest(false, before, after, diagnostics...)
+	}
 	testAfterPrefs := func(before, after string, diagnostics ...string) {
-		test(true, before, after, diagnostics...)
+		doTest(true, before, after, diagnostics...)
 	}
 
-	test(
-		false,
+	testBeforePrefs(
 		".if ${PKGPATH:Mpattern}",
 		".if ${PKGPATH:U} == pattern",
 
@@ -617,15 +619,13 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 	// Since UNKNOWN is not a well-known system-provided variable that is
 	// guaranteed to be non-empty (see the previous example), it is not
 	// transformed at all.
-	test(
-		false,
+	testBeforePrefs(
 		".if ${UNKNOWN:Nnegative-pattern}",
 		".if ${UNKNOWN:Nnegative-pattern}",
 
 		"WARN: filename.mk:3: UNKNOWN is used but not defined.")
 
-	test(
-		true,
+	testAfterPrefs(
 		".if ${UNKNOWN:Nnegative-pattern}",
 		".if ${UNKNOWN:Nnegative-pattern}",
 
@@ -658,8 +658,7 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 
 	// MACHINE_ARCH is built-in into bmake and is always available.
 	// Therefore it doesn't matter whether bsd.prefs.mk is included or not.
-	test(
-		false,
+	testBeforePrefs(
 		".if ${MACHINE_ARCH:Mx86_64}",
 		".if ${MACHINE_ARCH} == x86_64",
 
@@ -671,8 +670,7 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 
 	// MACHINE_ARCH is built-in into bmake and is always available.
 	// Therefore it doesn't matter whether bsd.prefs.mk is included or not.
-	test(
-		true,
+	testAfterPrefs(
 		".if ${MACHINE_ARCH:Mx86_64}",
 		".if ${MACHINE_ARCH} == x86_64",
 
@@ -682,8 +680,7 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		"AUTOFIX: filename.mk:3: Replacing \"${MACHINE_ARCH:Mx86_64}\" "+
 			"with \"${MACHINE_ARCH} == x86_64\".")
 
-	test(
-		false,
+	testBeforePrefs(
 		".if !empty(OPSYS:MUnknown)",
 		".if ${OPSYS:U} == Unknown",
 
