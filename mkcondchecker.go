@@ -218,7 +218,8 @@ func (ck *MkCondChecker) simplify(varuse *MkVarUse, fromEmpty bool, neg bool) {
 	}
 
 	fix := ck.MkLine.Autofix()
-	fix.Notef("%s should be compared using \"%s\" instead of matching against %q.",
+	fix.Notef("%s can be compared using the simpler \"%s\" "+
+		"instead of matching against %q.",
 		varname, to, ":"+modifier.Text)
 	fix.Explain(
 		"This variable has a single value, not a list of values.",

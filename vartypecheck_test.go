@@ -636,8 +636,8 @@ func (s *Suite) Test_VartypeCheck_Enum__use_match(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"NOTE: module.mk:5: MACHINE_ARCH "+
-			"should be compared using \"${MACHINE_ARCH} == i386\" "+
+		"NOTE: module.mk:5: MACHINE_ARCH can be "+
+			"compared using the simpler \"${MACHINE_ARCH} == i386\" "+
 			"instead of matching against \":Mi386\".",
 		"",
 		"\tThis variable has a single value, not a list of values. Therefore it",
