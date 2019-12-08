@@ -24,7 +24,8 @@ func (s *Suite) Test_CheckLinesPlist(c *check.C) {
 		"share/icons/hicolor/icon1.png",
 		"share/icons/hicolor/icon2.png", // No additional error for hicolor-icon-theme.
 		"share/tzinfo",
-		"share/tzinfo")
+		"share/tzinfo",
+		"/absolute")
 
 	CheckLinesPlist(G.Pkg, lines)
 
@@ -45,7 +46,8 @@ func (s *Suite) Test_CheckLinesPlist(c *check.C) {
 		"WARN: PLIST:14: Packages that install icon theme files should set ICON_THEMES.",
 		"ERROR: PLIST:15: Packages that install hicolor icons "+
 			"must include \"../../graphics/hicolor-icon-theme/buildlink3.mk\" in the Makefile.",
-		"ERROR: PLIST:18: Duplicate filename \"share/tzinfo\", already appeared in line 17.")
+		"ERROR: PLIST:18: Duplicate filename \"share/tzinfo\", already appeared in line 17.",
+		"WARN: PLIST:19: Invalid line type: /absolute")
 }
 
 func (s *Suite) Test_CheckLinesPlist__single_file_no_comment(c *check.C) {
@@ -400,6 +402,116 @@ func (s *Suite) Test_PlistChecker__PKGLOCALEDIR_without_package(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_NewPlistChecker(c *check.C) {
+	t := s.Init(c)
+
+	pkg := NewPackage(t.File("category/package"))
+
+	ck := NewPlistChecker(pkg)
+
+	t.CheckEquals(ck.pkg, pkg)
+	t.Check(ck.allDirs, check.NotNil)
+	t.Check(ck.allFiles, check.NotNil)
+}
+
+func (s *Suite) Test_PlistChecker_Load__common_end(c *check.C) {
+	t := s.Init(c)
+
+	t.Chdir(".")
+	t.CreateFileLines("PLIST",
+		PlistCvsID,
+		"bin/plist")
+	t.CreateFileLines("PLIST.common",
+		PlistCvsID,
+		"bin/plist_common")
+	t.CreateFileLines("PLIST.common_end",
+		PlistCvsID,
+		"bin/plist_common_end")
+
+	ck := NewPlistChecker(nil)
+
+	plistLines := ck.Load(Load(t.File("PLIST.common_end"), MustSucceed))
+
+	// The corresponding PLIST.common is loaded if possible.
+	// Its lines are not appended to plistLines since they
+	// are checked separately.
+	t.Check(plistLines, check.HasLen, 2)
+
+	// But the files and directories from PLIST.common are registered,
+	// to check for duplicates and to make these lists available to
+	// the package being checked, for cross-validation.
+	t.Check(ck.allFiles["bin/plist"], check.IsNil)
+	t.CheckEquals(
+		ck.allFiles["bin/plist_common"].String(),
+		"PLIST.common:2: bin/plist_common")
+	t.CheckEquals(
+		ck.allFiles["bin/plist_common_end"].String(),
+		"PLIST.common_end:2: bin/plist_common_end")
+}
+
+func (s *Suite) Test_PlistChecker_Check(c *check.C) {
+	t := s.Init(c)
+
+	lines := t.NewLines("PLIST",
+		"bin/subdir/program")
+	ck := NewPlistChecker(nil)
+	ck.Load(lines)
+
+	ck.Check(lines)
+
+	t.CheckOutputLines(
+		// FIXME: That's wrong. There is no duplicate.
+		"ERROR: PLIST:1: Duplicate filename \"bin/subdir/program\", already appeared in line 1.",
+		"WARN: PLIST:1: The bin/ directory should not have subdirectories.")
+}
+
+func (s *Suite) Test_PlistChecker_NewLines(c *check.C) {
+	t := s.Init(c)
+
+	lines := t.NewLines("PLIST",
+		"bin/program",
+		"${PLIST.cond}bin/conditional",
+		"${PLIST.abs}${PLIST.abs2}/bin/conditional-absolute",
+		"${PLIST.mod:Q}invalid")
+
+	plistLines := (*PlistChecker)(nil).NewLines(lines)
+
+	// The invalid condition in line 4 is silently skipped when the
+	// lines are parsed. The actual check happens later.
+
+	t.Check(plistLines, check.HasLen, 4)
+	t.CheckEquals(plistLines[0].text, "bin/program")
+	t.CheckEquals(plistLines[1].text, "bin/conditional")
+	t.CheckEquals(plistLines[2].text, "/bin/conditional-absolute")
+	t.CheckEquals(plistLines[3].text, "${PLIST.mod:Q}invalid")
+
+	t.Check(plistLines[0].conditions, check.HasLen, 0)
+	t.CheckDeepEquals(plistLines[1].conditions, []string{"PLIST.cond"})
+	t.CheckDeepEquals(plistLines[2].conditions, []string{"PLIST.abs", "PLIST.abs2"})
+	t.Check(plistLines[3].conditions, check.HasLen, 0)
+}
+
+func (s *Suite) Test_PlistChecker_collectFilesAndDirs(c *check.C) {
+	t := s.Init(c)
+
+	lines := t.NewLines("PLIST",
+		PlistCvsID,
+		"bin/program",
+		"man/man1/program.1",
+		"/absolute",
+		"${PLIST.cond}/absolute",
+		"@exec ${MKDIR} %D//absolute")
+	ck := NewPlistChecker(nil)
+	plistLines := ck.NewLines(lines)
+
+	ck.collectFilesAndDirs(plistLines)
+
+	t.CheckDeepEquals(keys(ck.allDirs),
+		[]string{"bin", "man", "man/man1"})
+	t.CheckDeepEquals(keys(ck.allFiles),
+		[]string{"bin/program", "man/man1/program.1"})
+}
+
 func (s *Suite) Test_PlistChecker_checkLine(c *check.C) {
 	t := s.Init(c)
 
@@ -527,6 +639,62 @@ func (s *Suite) Test_PlistChecker_checkPathNonAscii(c *check.C) {
 		"",
 		"WARN: PLIST:5: Non-ASCII filename \"dir2/<U+0633><U+0644><U+0627><U+0645>\".",
 		"WARN: PLIST:11: Non-ASCII filename \"sbin/<U+1F603>\".")
+}
+
+func (s *Suite) Test_PlistChecker_checkSorted(c *check.C) {
+	t := s.Init(c)
+
+	lines := t.NewLines("PLIST",
+		PlistCvsID,
+		"bin/program2",
+		"bin/program1")
+
+	CheckLinesPlist(nil, lines)
+
+	t.CheckOutputLines(
+		"WARN: PLIST:3: \"bin/program1\" should be " +
+			"sorted before \"bin/program2\".")
+}
+
+func (s *Suite) Test_PlistChecker_checkDuplicate(c *check.C) {
+	t := s.Init(c)
+
+	lines := t.NewLines("PLIST",
+		PlistCvsID,
+		"bin/program",
+		"bin/program")
+
+	CheckLinesPlist(nil, lines)
+
+	t.CheckOutputLines(
+		"ERROR: PLIST:3: Duplicate filename \"bin/program\", " +
+			"already appeared in line 2.")
+}
+
+func (s *Suite) Test_PlistChecker_checkPathBin(c *check.C) {
+	t := s.Init(c)
+
+	lines := t.NewLines("PLIST",
+		PlistCvsID,
+		"bin/subdir/program")
+
+	CheckLinesPlist(nil, lines)
+
+	t.CheckOutputLines(
+		"WARN: PLIST:2: The bin/ directory should not have subdirectories.")
+}
+
+func (s *Suite) Test_PlistChecker_checkPathEtc(c *check.C) {
+	t := s.Init(c)
+
+	lines := t.NewLines("PLIST",
+		PlistCvsID,
+		"etc/config")
+
+	CheckLinesPlist(nil, lines)
+
+	t.CheckOutputLines(
+		"ERROR: PLIST:2: Configuration files must not be registered in the PLIST.")
 }
 
 func (s *Suite) Test_PlistChecker_checkPathInfo(c *check.C) {
@@ -773,6 +941,17 @@ func (s *Suite) Test_PlistChecker_checkPathShareIcons__hicolor_ok(c *check.C) {
 	G.Check(t.File("category/package"))
 
 	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_PlistLine_Path(c *check.C) {
+	t := s.Init(c)
+
+	t.CheckEquals(
+		(&PlistLine{text: "relative"}).Path(),
+		NewRelPathString("relative"))
+
+	t.ExpectAssert(
+		func() { (&PlistLine{text: "/absolute"}).Path() })
 }
 
 func (s *Suite) Test_PlistLine_CheckTrailingWhitespace(c *check.C) {

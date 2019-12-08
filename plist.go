@@ -29,13 +29,7 @@ func CheckLinesPlist(pkg *Package, lines *Lines) {
 		return
 	}
 
-	ck := PlistChecker{
-		pkg,
-		make(map[RelPath]*PlistLine),
-		make(map[RelPath]*PlistLine),
-		"",
-		Once{},
-		false}
+	ck := NewPlistChecker(pkg)
 	ck.Check(lines)
 }
 
@@ -46,6 +40,16 @@ type PlistChecker struct {
 	lastFname       string
 	once            Once
 	nonAsciiAllowed bool
+}
+
+func NewPlistChecker(pkg *Package) *PlistChecker {
+	return &PlistChecker{
+		pkg,
+		make(map[RelPath]*PlistLine),
+		make(map[RelPath]*PlistLine),
+		"",
+		Once{},
+		false}
 }
 
 func (ck *PlistChecker) Load(lines *Lines) []*PlistLine {
@@ -78,7 +82,8 @@ func (ck *PlistChecker) Check(plainLines *Lines) {
 	}
 }
 
-func (ck *PlistChecker) NewLines(lines *Lines) []*PlistLine {
+// TODO: unexport
+func (*PlistChecker) NewLines(lines *Lines) []*PlistLine {
 	plines := make([]*PlistLine, lines.Len())
 	for i, line := range lines.Lines {
 		var conditions []string
@@ -103,11 +108,11 @@ var plistLineStart = textproc.NewByteSet("$0-9A-Za-z")
 func (ck *PlistChecker) collectFilesAndDirs(plines []*PlistLine) {
 
 	for _, pline := range plines {
+		// TODO: flatten
 		if text := pline.text; len(text) > 0 {
 			first := text[0]
 			switch {
 			case plistLineStart.Contains(first):
-				// FIXME: Add test for absolute path.
 				path := NewRelPathString(text)
 				if prev := ck.allFiles[path]; prev == nil || stringSliceLess(pline.conditions, prev.conditions) {
 					ck.allFiles[path] = pline
@@ -118,7 +123,9 @@ func (ck *PlistChecker) collectFilesAndDirs(plines []*PlistLine) {
 				}
 			case first == '@':
 				if m, dirname := match1(text, `^@exec \$\{MKDIR\} %D/(.*)$`); m {
-					// FIXME: Add test for absolute path.
+					if NewPath(dirname).IsAbs() {
+						continue
+					}
 					for dir := NewRelPathString(dirname); dir != "."; dir = dir.DirNoClean() {
 						ck.allDirs[dir] = pline
 					}
@@ -137,6 +144,7 @@ func (ck *PlistChecker) checkLine(pline *PlistLine) {
 		fix.Delete()
 		fix.Apply()
 
+		// TODO: replace with plistLineStart
 	} else if textproc.AlnumU.Contains(text[0]) || text[0] == '$' {
 		ck.checkPath(pline)
 
@@ -149,6 +157,7 @@ func (ck *PlistChecker) checkLine(pline *PlistLine) {
 	}
 }
 
+// TODO: pass the actual path as RelPath, to ensure proper typing.
 func (ck *PlistChecker) checkPath(pline *PlistLine) {
 	text := pline.text
 	dirSlash, basename := path.Split(text)
@@ -259,11 +268,12 @@ func (ck *PlistChecker) checkSorted(pline *PlistLine) {
 
 func (ck *PlistChecker) checkDuplicate(pline *PlistLine) {
 	text := pline.text
+	// TODO: replace hasAlnumPrefix with plistLineStart.
 	if !hasAlnumPrefix(text) || containsVarRef(text) {
 		return
 	}
 
-	prev := ck.allFiles[NewRelPathString(text)]
+	prev := ck.allFiles[pline.Path()]
 	if prev == pline || len(prev.conditions) > 0 {
 		return
 	}
@@ -442,6 +452,8 @@ type PlistLine struct {
 	conditions []string // e.g. PLIST.docs
 	text       string   // Line.Text without any conditions of the form ${PLIST.cond}
 }
+
+func (pline *PlistLine) Path() RelPath { return NewRelPathString(pline.text) }
 
 func (pline *PlistLine) CheckTrailingWhitespace() {
 	if hasSuffix(pline.text, " ") || hasSuffix(pline.text, "\t") {
