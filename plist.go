@@ -219,7 +219,7 @@ func (ck *PlistChecker) checkPathMisc(rel RelPath, pline *PlistLine) {
 	if rel.HasSuffixText(".orig") {
 		pline.Warnf(".orig files should not be in the PLIST.")
 	}
-	if rel.HasSuffixText("/perllocal.pod") {
+	if rel.HasBase("perllocal.pod") {
 		pline.Warnf("The perllocal.pod file should not be in the PLIST.")
 		pline.Explain(
 			"This file is handled automatically by the INSTALL/DEINSTALL scripts",
