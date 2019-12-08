@@ -595,7 +595,7 @@ func (s *Suite) Test_PlistChecker_checkPath__PKGMANDIR(c *check.C) {
 		"NOTE: PLIST:2: PLIST files should use \"man/\" instead of \"${PKGMANDIR}\".")
 }
 
-func (s *Suite) Test_PlistChecker_checkPath__python_egg(c *check.C) {
+func (s *Suite) Test_PlistChecker_checkPathMisc__python_egg(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("PLIST",
@@ -608,7 +608,7 @@ func (s *Suite) Test_PlistChecker_checkPath__python_egg(c *check.C) {
 		"WARN: PLIST:2: Include \"../../lang/python/egg.mk\" instead of listing .egg-info files directly.")
 }
 
-func (s *Suite) Test_PlistChecker_checkPath__unwanted_entries(c *check.C) {
+func (s *Suite) Test_PlistChecker_checkPathMisc__unwanted_entries(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("PLIST",

@@ -211,6 +211,10 @@ func (ck *PlistChecker) checkPath(pline *PlistLine) {
 		ck.checkPathShare(pline)
 	}
 
+	ck.checkPathMisc(text, pline)
+}
+
+func (ck *PlistChecker) checkPathMisc(text string, pline *PlistLine) {
 	if contains(text, "${PKGLOCALEDIR}") && ck.pkg != nil && !ck.pkg.vars.IsDefined("USE_PKGLOCALEDIR") {
 		pline.Warnf("PLIST contains ${PKGLOCALEDIR}, but USE_PKGLOCALEDIR is not set in the package Makefile.")
 	}
