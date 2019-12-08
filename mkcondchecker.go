@@ -244,7 +244,12 @@ func (ck *MkCondChecker) checkDirectiveCondCompareVarStr(varuse *MkVarUse, op st
 	varmods := varuse.modifiers
 	switch len(varmods) {
 	case 0:
-		ck.checkCompareVarStr(varname, op, str)
+		mkLineChecker := NewMkLineChecker(ck.MkLines, ck.MkLine)
+		mkLineChecker.checkVartype(varname, opUseCompare, str, "")
+
+		if varname == "PKGSRC_COMPILER" {
+			ck.checkCompareVarStrCompiler(op, str)
+		}
 
 	case 1:
 		if m, _, pattern, _ := varmods[0].MatchMatch(); m {
@@ -269,15 +274,6 @@ func (ck *MkCondChecker) checkDirectiveCondCompareVarStr(varuse *MkVarUse, op st
 			trace.Stepf("checkCompareVarStr ${%s%s} %s %s",
 				varuse.varname, varuse.Mod(), op, str)
 		}
-	}
-}
-
-func (ck *MkCondChecker) checkCompareVarStr(varname, op, value string) {
-	mkLineChecker := NewMkLineChecker(ck.MkLines, ck.MkLine)
-	mkLineChecker.checkVartype(varname, opUseCompare, value, "")
-
-	if varname == "PKGSRC_COMPILER" {
-		ck.checkCompareVarStrCompiler(op, value)
 	}
 }
 

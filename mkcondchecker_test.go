@@ -1020,17 +1020,6 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCondCompareVarStr__no_tracing(c
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkCondChecker_checkCompareVarStr(c *check.C) {
-	t := s.Init(c)
-
-	test := func() {
-		// FIXME
-		t.CheckEquals(true, true)
-	}
-
-	test()
-}
-
 func (s *Suite) Test_MkCondChecker_checkCompareVarStrCompiler(c *check.C) {
 	t := s.Init(c)
 
