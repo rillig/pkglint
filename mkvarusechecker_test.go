@@ -860,6 +860,36 @@ func (s *Suite) Test_MkVarUseChecker_checkUseAtLoadTime__other_mk(c *check.C) {
 			".include \"../../mk/bsd.prefs.mk\" first.")
 }
 
+func (s *Suite) Test_MkVarUseChecker_checkUseAtLoadTime__package_settable(c *check.C) {
+	t := s.Init(c)
+
+	btAnything := &BasicType{"Anything", func(cv *VartypeCheck) {}}
+	t.SetUpType("PKG", btAnything, PackageSettable)
+	t.Chdir("category/package")
+
+	test := func(filename CurrPath, diagnostics ...string) {
+		mklines := t.NewMkLines(filename,
+			MkCvsID,
+			".if ${PKG} != \"etc\"",
+			".endif")
+
+		mklines.Check()
+
+		t.CheckOutput(diagnostics)
+	}
+
+	test("Makefile",
+		"WARN: Makefile:2: To use PKG at load time, "+
+			".include \"../../mk/bsd.prefs.mk\" first.")
+
+	test("options.mk",
+		"WARN: options.mk:2: To use PKG at load time, "+
+			".include \"../../mk/bsd.prefs.mk\" first.")
+
+	test("other.mk",
+		nil...)
+}
+
 func (s *Suite) Test_MkVarUseChecker_warnToolLoadTime(c *check.C) {
 	t := s.Init(c)
 
