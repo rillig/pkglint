@@ -47,7 +47,7 @@ func (s *Suite) Test_CheckLinesPlist(c *check.C) {
 		"ERROR: PLIST:15: Packages that install hicolor icons "+
 			"must include \"../../graphics/hicolor-icon-theme/buildlink3.mk\" in the Makefile.",
 		"ERROR: PLIST:18: Duplicate filename \"share/tzinfo\", already appeared in line 17.",
-		"WARN: PLIST:19: Invalid line type: /absolute")
+		"ERROR: PLIST:19: Invalid line type: /absolute")
 }
 
 func (s *Suite) Test_CheckLinesPlist__single_file_no_comment(c *check.C) {
@@ -338,11 +338,11 @@ func (s *Suite) Test_PlistChecker__invalid_line_type(c *check.C) {
 	CheckLinesPlist(nil, lines)
 
 	t.CheckOutputLines(
-		"WARN: ~/PLIST:2: Invalid line type: ---invalid",
-		"WARN: ~/PLIST:3: Invalid line type: +++invalid",
-		"WARN: ~/PLIST:4: Invalid line type: <<<<<<<< merge conflict",
-		"WARN: ~/PLIST:5: Invalid line type: ======== merge conflict",
-		"WARN: ~/PLIST:6: Invalid line type: >>>>>>>> merge conflict")
+		"ERROR: ~/PLIST:2: Invalid line type: ---invalid",
+		"ERROR: ~/PLIST:3: Invalid line type: +++invalid",
+		"ERROR: ~/PLIST:4: Invalid line type: <<<<<<<< merge conflict",
+		"ERROR: ~/PLIST:5: Invalid line type: ======== merge conflict",
+		"ERROR: ~/PLIST:6: Invalid line type: >>>>>>>> merge conflict")
 }
 
 func (s *Suite) Test_PlistChecker__doc(c *check.C) {
@@ -579,7 +579,7 @@ func (s *Suite) Test_PlistChecker_checkLine(c *check.C) {
 		"WARN: PLIST:4: \"bin/arm-linux-only\" should be sorted before \"bin/conditional-program\".",
 		"WARN: PLIST:10: PLISTs should not contain empty lines.",
 		"WARN: PLIST:11: PLISTs should not contain empty lines.",
-		"WARN: PLIST:14: Invalid line type: <<<<<<<<< merge conflict")
+		"ERROR: PLIST:14: Invalid line type: <<<<<<<<< merge conflict")
 }
 
 func (s *Suite) Test_PlistChecker_checkPath__PKGMANDIR(c *check.C) {

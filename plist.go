@@ -157,7 +157,7 @@ func (ck *PlistChecker) checkLine(pline *PlistLine) {
 		ck.nonAsciiAllowed = pline.firstLine > 1
 
 	} else {
-		pline.Warnf("Invalid line type: %s", pline.Line.Text)
+		pline.Errorf("Invalid line type: %s", pline.Line.Text)
 	}
 }
 
