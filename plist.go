@@ -192,15 +192,15 @@ func (ck *PlistChecker) checkPath(pline *PlistLine) {
 
 	switch topdir {
 	case "bin":
-		ck.checkPathBin(pline, dirname, basename)
+		ck.checkPathBin(pline, dirname)
 	case "doc":
 		pline.Errorf("Documentation must be installed under share/doc, not doc.")
 	case "etc":
-		ck.checkPathEtc(pline, dirname, basename)
+		ck.checkPathEtc(pline)
 	case "info":
-		ck.checkPathInfo(pline, dirname, basename)
+		ck.checkPathInfo(pline)
 	case "lib":
-		ck.checkPathLib(pline, dirname, basename)
+		ck.checkPathLib(pline, basename)
 	case "man":
 		ck.checkPathMan(pline)
 	case "share":
@@ -288,7 +288,7 @@ func (ck *PlistChecker) checkDuplicate(pline *PlistLine) {
 	fix.Apply()
 }
 
-func (ck *PlistChecker) checkPathBin(pline *PlistLine, dirname, basename string) {
+func (ck *PlistChecker) checkPathBin(pline *PlistLine, dirname string) {
 	if contains(dirname, "/") {
 		pline.Warnf("The bin/ directory should not have subdirectories.")
 		pline.Explain(
@@ -300,7 +300,7 @@ func (ck *PlistChecker) checkPathBin(pline *PlistLine, dirname, basename string)
 	}
 }
 
-func (ck *PlistChecker) checkPathEtc(pline *PlistLine, dirname, basename string) {
+func (ck *PlistChecker) checkPathEtc(pline *PlistLine) {
 	if hasPrefix(pline.text, "etc/rc.d/") {
 		pline.Errorf("RCD_SCRIPTS must not be registered in the PLIST.")
 		pline.Explain(
@@ -313,7 +313,7 @@ func (ck *PlistChecker) checkPathEtc(pline *PlistLine, dirname, basename string)
 		"Please use the CONF_FILES framework, which is described in mk/pkginstall/bsd.pkginstall.mk.")
 }
 
-func (ck *PlistChecker) checkPathInfo(pline *PlistLine, dirname, basename string) {
+func (ck *PlistChecker) checkPathInfo(pline *PlistLine) {
 	if pline.text == "info/dir" {
 		pline.Errorf("\"info/dir\" must not be listed. Use install-info to add/remove an entry.")
 		return
@@ -324,7 +324,7 @@ func (ck *PlistChecker) checkPathInfo(pline *PlistLine, dirname, basename string
 	}
 }
 
-func (ck *PlistChecker) checkPathLib(pline *PlistLine, dirname, basename string) {
+func (ck *PlistChecker) checkPathLib(pline *PlistLine, basename string) {
 
 	switch {
 
@@ -563,6 +563,7 @@ func NewPlistLineSorter(plines []*PlistLine) *plistLineSorter {
 func (s *plistLineSorter) Sort() {
 	if line := s.unsortable; line != nil {
 		if G.Logger.IsAutofix() {
+			// FIXME: Missing trace.Enabled
 			trace.Stepf("%s: This line prevents pkglint from sorting the PLIST automatically.", line)
 		}
 		return
