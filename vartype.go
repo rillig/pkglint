@@ -199,7 +199,7 @@ func (vt *Vartype) NeedsRationale() bool        { return vt.options&NeedsRationa
 func (vt *Vartype) IsOnePerLine() bool          { return vt.options&OnePerLine != 0 }
 func (vt *Vartype) IsAlwaysInScope() bool       { return vt.options&AlwaysInScope != 0 }
 func (vt *Vartype) IsDefinedIfInScope() bool    { return vt.options&DefinedIfInScope != 0 }
-func (vt *Vartype) IsNonemptyIfInScope() bool   { return vt.options&NonemptyIfDefined != 0 }
+func (vt *Vartype) IsNonemptyIfDefined() bool   { return vt.options&NonemptyIfDefined != 0 }
 
 func (vt *Vartype) EffectivePermissions(basename string) ACLPermissions {
 	for _, aclEntry := range vt.aclEntries {
