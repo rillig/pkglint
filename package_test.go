@@ -316,7 +316,7 @@ func (s *Suite) Test_Package__case_insensitive(c *check.C) {
 
 	G.Check(t.File("category/package"))
 
-	// FIXME: On a case-sensitive filesystem, p5-net-dns would not be found.
+	// TODO: On a case-sensitive filesystem, p5-net-dns would not be found.
 	t.CheckOutputEmpty()
 }
 

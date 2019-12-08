@@ -150,8 +150,8 @@ func (src *Pkgsrc) loadDocChanges() {
 	var filenames []RelPath
 	for _, file := range files {
 		filename := file.Name()
-		if matches(filename, `^CHANGES-20\d\d$`) && filename >= "CHANGES-2011" { // TODO: Why 2011?
-			filenames = append(filenames, NewRelPathString(filename)) // FIXME: low-level API
+		if matches(filename, `^CHANGES-20\d\d$`) && filename >= "CHANGES-2011" { // XXX: Why 2011?
+			filenames = append(filenames, NewRelPathString(filename)) // XXX: low-level API
 		}
 	}
 
@@ -688,7 +688,7 @@ func (src *Pkgsrc) loadUntypedVars() {
 		assertNil(err, "handleFile %q", pathName)
 		baseName := info.Name()
 		if info.Mode().IsRegular() && (hasSuffix(baseName, ".mk") || baseName == "mk.conf") {
-			handleMkFile(NewCurrPathSlash(pathName)) // FIXME: This is too deep to handle os-specific paths
+			handleMkFile(NewCurrPathSlash(pathName)) // XXX: This is too deep to handle os-specific paths
 		}
 		return nil
 	}

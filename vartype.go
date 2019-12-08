@@ -45,7 +45,7 @@ const (
 	// This variable is provided by either the pkgsrc infrastructure in
 	// mk/*, or by <sys.mk>, which is included at the very beginning.
 	//
-	// FIXME: Clearly distinguish between:
+	// TODO: Clearly distinguish between:
 	//  * sys.mk
 	//  * bsd.prefs.mk
 	//  * bsd.pkg.mk

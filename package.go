@@ -387,7 +387,7 @@ func (pkg *Package) loadIncluded(mkline *MkLine, includingFile CurrPath) (includ
 // their actual values.
 func (pkg *Package) resolveIncludedFile(mkline *MkLine, includingFilename CurrPath) RelPath {
 
-	// FIXME: resolveVariableRefs uses G.Pkg implicitly. It should be made explicit.
+	// XXX: resolveVariableRefs uses G.Pkg implicitly. It should be made explicit.
 	// TODO: Try to combine resolveVariableRefs and ResolveVarsInRelativePath.
 	resolved := mkline.ResolveVarsInRelativePath(mkline.IncludedFile())
 	includedText := resolveVariableRefs(nil /* XXX: or maybe some mklines? */, resolved.String())
@@ -939,7 +939,7 @@ func (pkg *Package) checkCategories() {
 		return
 	}
 
-	// FIXME: Decide what exactly this map means.
+	// XXX: Decide what exactly this map means.
 	//  Is it "this category has been seen somewhere",
 	//  or is it "this category has definitely been added"?
 	seen := map[string]*MkLine{}
@@ -947,7 +947,7 @@ func (pkg *Package) checkCategories() {
 		switch mkline.Op() {
 		case opAssignDefault:
 			for _, category := range mkline.ValueFields(mkline.Value()) {
-				// FIXME: This looks wrong. It should probably be replaced by
+				// XXX: This looks wrong. It should probably be replaced by
 				//  an "if len(seen) == 0" outside the for loop.
 				if seen[category] == nil {
 					seen[category] = mkline
