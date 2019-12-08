@@ -546,8 +546,7 @@ func CheckFileMk(filename CurrPath) {
 func (pkglint *Pkglint) checkReg(filename CurrPath, basename string, depth int) {
 
 	if depth == 3 && !pkglint.Wip {
-		// FIXME: There's no good reason for prohibiting a README file.
-		if contains(basename, "README") || contains(basename, "TODO") {
+		if contains(basename, "TODO") {
 			NewLineWhole(filename).Errorf("Packages in main pkgsrc must not have a %s file.", basename)
 			// TODO: Add a convincing explanation.
 			return
@@ -558,7 +557,6 @@ func (pkglint *Pkglint) checkReg(filename CurrPath, basename string, depth int) 
 	case hasSuffix(basename, "~"),
 		hasSuffix(basename, ".orig"),
 		hasSuffix(basename, ".rej"),
-		contains(basename, "README") && depth == 3,
 		contains(basename, "TODO") && depth == 3:
 		if pkglint.Opts.Import {
 			NewLineWhole(filename).Errorf("Must be cleaned up before committing the package.")
@@ -620,6 +618,9 @@ func (pkglint *Pkglint) checkReg(filename CurrPath, basename string, depth int) 
 		if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
 			CheckLinesPlist(G.Pkg, lines)
 		}
+
+	case contains(basename, "README"):
+		break
 
 	case hasPrefix(basename, "CHANGES-"):
 		// This only checks the file but doesn't register the changes globally.

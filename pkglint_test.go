@@ -237,13 +237,12 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		"WARN: ~/sysutils/checkperms/Makefile:3: "+
 			"This package should be updated to 1.13 (supports more file formats; see ../../doc/TODO:5).",
 		"ERROR: ~/sysutils/checkperms/Makefile:4: Invalid category \"tools\".",
-		"ERROR: ~/sysutils/checkperms/README: Packages in main pkgsrc must not have a README file.",
 		"ERROR: ~/sysutils/checkperms/TODO: Packages in main pkgsrc must not have a TODO file.",
 		"ERROR: ~/sysutils/checkperms/distinfo:7: SHA1 hash of patches/patch-checkperms.c differs "+
 			"(distinfo has asdfasdf, patch file has e775969de639ec703866c0336c4c8e0fdd96309c).",
 		"WARN: ~/sysutils/checkperms/patches/patch-checkperms.c:12: Premature end of patch hunk "+
 			"(expected 1 lines to be deleted and 0 lines to be added).",
-		"4 errors, 2 warnings and 1 note found.",
+		"3 errors, 2 warnings and 1 note found.",
 		t.Shquote("(Run \"pkglint -e -Wall -Call %s\" to show explanations.)", "sysutils/checkperms"),
 		t.Shquote("(Run \"pkglint -fs -Wall -Call %s\" to show what can be fixed automatically.)", "sysutils/checkperms"),
 		t.Shquote("(Run \"pkglint -F -Wall -Call %s\" to automatically fix some issues.)", "sysutils/checkperms"))
@@ -1025,18 +1024,15 @@ func (s *Suite) Test_Pkglint_checkReg__readme_and_todo(c *check.C) {
 	t.Main("category/package", "wip/package")
 
 	t.CheckOutputLines(
-		"ERROR: category/package/README: Packages in main pkgsrc must not have a README file.",
 		"ERROR: category/package/TODO: Packages in main pkgsrc must not have a TODO file.",
-		"2 errors found.")
+		"1 error found.")
 
 	t.Main("--import", "category/package", "wip/package")
 
 	t.CheckOutputLines(
-		"ERROR: category/package/README: Packages in main pkgsrc must not have a README file.",
 		"ERROR: category/package/TODO: Packages in main pkgsrc must not have a TODO file.",
-		"ERROR: wip/package/README: Must be cleaned up before committing the package.",
 		"ERROR: wip/package/TODO: Must be cleaned up before committing the package.",
-		"4 errors found.")
+		"2 errors found.")
 }
 
 func (s *Suite) Test_Pkglint_checkReg__unknown_file_in_patches(c *check.C) {
