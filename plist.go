@@ -53,13 +53,13 @@ func NewPlistChecker(pkg *Package) *PlistChecker {
 }
 
 func (ck *PlistChecker) Load(lines *Lines) []*PlistLine {
-	plines := ck.NewLines(lines)
+	plines := ck.newLines(lines)
 	ck.collectFilesAndDirs(plines)
 
 	if lines.BaseName == "PLIST.common_end" {
 		commonLines := Load(lines.Filename.TrimSuffix("_end"), NotEmpty)
 		if commonLines != nil {
-			ck.collectFilesAndDirs(ck.NewLines(commonLines))
+			ck.collectFilesAndDirs(ck.newLines(commonLines))
 		}
 	}
 
@@ -82,8 +82,7 @@ func (ck *PlistChecker) Check(plainLines *Lines) {
 	}
 }
 
-// TODO: unexport
-func (*PlistChecker) NewLines(lines *Lines) []*PlistLine {
+func (*PlistChecker) newLines(lines *Lines) []*PlistLine {
 	plines := make([]*PlistLine, lines.Len())
 	for i, line := range lines.Lines {
 		var conditions []string

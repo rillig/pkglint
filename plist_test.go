@@ -462,7 +462,7 @@ func (s *Suite) Test_PlistChecker_Check(c *check.C) {
 		"WARN: PLIST:1: The bin/ directory should not have subdirectories.")
 }
 
-func (s *Suite) Test_PlistChecker_NewLines(c *check.C) {
+func (s *Suite) Test_PlistChecker_newLines(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("PLIST",
@@ -471,7 +471,7 @@ func (s *Suite) Test_PlistChecker_NewLines(c *check.C) {
 		"${PLIST.abs}${PLIST.abs2}/bin/conditional-absolute",
 		"${PLIST.mod:Q}invalid")
 
-	plistLines := (*PlistChecker)(nil).NewLines(lines)
+	plistLines := (*PlistChecker)(nil).newLines(lines)
 
 	// The invalid condition in line 4 is silently skipped when the
 	// lines are parsed. The actual check happens later.
@@ -499,7 +499,7 @@ func (s *Suite) Test_PlistChecker_collectFilesAndDirs(c *check.C) {
 		"${PLIST.cond}/absolute",
 		"@exec ${MKDIR} %D//absolute")
 	ck := NewPlistChecker(nil)
-	plistLines := ck.NewLines(lines)
+	plistLines := ck.newLines(lines)
 
 	ck.collectFilesAndDirs(plistLines)
 
@@ -1056,7 +1056,7 @@ func (s *Suite) Test_plistLineSorter_Sort(c *check.C) {
 		"lib/after.la",
 		"@exec echo \"after lib/after.la\"")
 	ck := PlistChecker{nil, nil, nil, "", Once{}, false}
-	plines := ck.NewLines(lines)
+	plines := ck.newLines(lines)
 
 	sorter1 := NewPlistLineSorter(plines)
 	t.CheckEquals(sorter1.unsortable, lines.Lines[5])
@@ -1064,7 +1064,7 @@ func (s *Suite) Test_plistLineSorter_Sort(c *check.C) {
 	cleanedLines := append(append(lines.Lines[0:5], lines.Lines[6:8]...), lines.Lines[9:]...) // Remove ${UNKNOWN} and @exec
 
 	sorter2 := NewPlistLineSorter((&PlistChecker{nil, nil, nil, "", Once{}, false}).
-		NewLines(NewLines(lines.Filename, cleanedLines)))
+		newLines(NewLines(lines.Filename, cleanedLines)))
 
 	c.Check(sorter2.unsortable, check.IsNil)
 
