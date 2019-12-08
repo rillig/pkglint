@@ -341,9 +341,12 @@ func (ck *PlistChecker) checkPathLib(pline *PlistLine, basename string) {
 	}
 
 	if contains(basename, ".a") || contains(basename, ".so") {
-		if m, noext := match1(pline.text, `^(.*)(?:\.a|\.so[0-9.]*)$`); m {
-			if laLine := ck.allFiles[NewRelPathString(noext+".la")]; laLine != nil {
-				pline.Warnf("Redundant library found. The libtool library is in %s.", pline.RelLine(laLine.Line))
+		la := replaceAll(pline.text, `(\.a|\.so[0-9.]*)$`, ".la")
+		if la != pline.text {
+			laLine := ck.allFiles[NewRelPathString(la)]
+			if laLine != nil {
+				pline.Warnf("Redundant library found. The libtool library is in %s.",
+					pline.RelLine(laLine.Line))
 			}
 		}
 	}
