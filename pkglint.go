@@ -727,7 +727,6 @@ func (pkglint *Pkglint) tools(mklines *MkLines) *Tools {
 }
 
 func (pkglint *Pkglint) loadCvsEntries(filename CurrPath) map[string]CvsEntry {
-	// FIXME: consider DirNoClean
 	dir := filename.DirClean()
 	if dir == pkglint.cvsEntriesDir {
 		return pkglint.cvsEntries
