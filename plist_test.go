@@ -620,7 +620,8 @@ func (s *Suite) Test_PlistChecker_checkPathMisc__unwanted_entries(c *check.C) {
 		"t/../../breakout",
 		"t/./non-canonical",
 		"t///non-canonical",
-		"t/non-canonical/")
+		"t/non-canonical/",
+		"t/ok/${VAR}")
 
 	CheckLinesPlist(nil, lines)
 
