@@ -399,11 +399,11 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		"*.mk: use, use-loadtime")
 	t.SetUpType("PREFS_DEFINED", btAnything, DefinedIfInScope,
 		"*.mk: use, use-loadtime")
-	t.SetUpType("PREFS", btAnything, DefinedIfInScope,
+	t.SetUpType("PREFS", btAnything, NoVartypeOptions,
 		"*.mk: use, use-loadtime")
 	t.SetUpType("LATER_DEFINED", btAnything, DefinedIfInScope,
 		"*.mk: use")
-	t.SetUpType("LATER", btAnything, DefinedIfInScope,
+	t.SetUpType("LATER", btAnything, NoVartypeOptions,
 		"*.mk: use")
 	// UNDEFINED is also used in the following tests, but is obviously
 	// not defined here.
@@ -515,16 +515,13 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 	// even when they are in scope.
 	testAfterPrefs(
 		".if ${PREFS:Mpattern}",
-		// FIXME: The :U is missing.
-		".if ${PREFS} == pattern",
+		".if ${PREFS:U} == pattern",
 
 		"NOTE: filename.mk:3: PREFS "+
-			// FIXME: The :U is missing.
-			"should be compared using \"${PREFS} == pattern\" "+
+			"should be compared using \"${PREFS:U} == pattern\" "+
 			"instead of matching against \":Mpattern\".",
 		"AUTOFIX: filename.mk:3: Replacing \"${PREFS:Mpattern}\" "+
-			// FIXME: The :U is missing.
-			"with \"${PREFS} == pattern\".")
+			"with \"${PREFS:U} == pattern\".")
 
 	// Variables that are defined later always need the :U modifier.
 	// It is probably a mistake to use them in conditions at all.
