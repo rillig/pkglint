@@ -429,6 +429,7 @@ func (s *Suite) Test_Path_CleanDot(c *check.C) {
 	test("", "")
 	test(".", ".")
 	test("./././", ".")
+	test("dir/", "dir/") // TODO: Or maybe "dir/."?
 	test("a/bb///../c", "a/bb/../c")
 	test("./filename", "filename")
 	test("/absolute", "/absolute")
