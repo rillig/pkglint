@@ -201,8 +201,7 @@ func (pkglint *Pkglint) setUpProfiling() func() {
 func (pkglint *Pkglint) prepareMainLoop() {
 	firstDir := pkglint.Todo.Front()
 	if firstDir.IsFile() {
-		// FIXME: consider DirNoClean
-		firstDir = firstDir.DirClean()
+		firstDir = firstDir.DirNoClean()
 	}
 
 	relTopdir := findPkgsrcTopdir(firstDir)
