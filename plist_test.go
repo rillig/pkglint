@@ -618,8 +618,11 @@ func (s *Suite) Test_PlistChecker_checkPathMisc__unwanted_entries(c *check.C) {
 		"share/pkgbase/Makefile.orig",
 		"../breakout",
 		"t/../../breakout",
+		"t/../../breakout/${VAR}",
 		"t/./non-canonical",
 		"t///non-canonical",
+		"t///non-canonical/${VAR}",
+		"t///non-canonical${VAR}",
 		"t/non-canonical/",
 		"t/ok/${VAR}")
 
@@ -631,9 +634,12 @@ func (s *Suite) Test_PlistChecker_checkPathMisc__unwanted_entries(c *check.C) {
 		"WARN: ~/PLIST:4: .orig files should not be in the PLIST.",
 		"ERROR: ~/PLIST:5: Invalid line type: ../breakout",
 		"ERROR: ~/PLIST:6: Paths in PLIST files must not contain \"..\".",
-		"ERROR: ~/PLIST:7: Paths in PLIST files must be canonical (t/non-canonical).",
+		"ERROR: ~/PLIST:7: Paths in PLIST files must not contain \"..\".",
 		"ERROR: ~/PLIST:8: Paths in PLIST files must be canonical (t/non-canonical).",
-		"ERROR: ~/PLIST:9: Paths in PLIST files must be canonical (t/non-canonical).")
+		"ERROR: ~/PLIST:9: Paths in PLIST files must be canonical (t/non-canonical).",
+		"ERROR: ~/PLIST:10: Paths in PLIST files must be canonical (t/non-canonical/${VAR}).",
+		"ERROR: ~/PLIST:11: Paths in PLIST files must be canonical (t/non-canonical${VAR}).",
+		"ERROR: ~/PLIST:12: Paths in PLIST files must be canonical (t/non-canonical).")
 }
 
 func (s *Suite) Test_PlistChecker_checkPathNonAscii(c *check.C) {
