@@ -591,10 +591,13 @@ func (pkg *Package) checkfilePackageMakefile(filename CurrPath, mklines *MkLines
 
 	pkg.redundant = NewRedundantScope()
 	pkg.redundant.IsRelevant = func(mkline *MkLine) bool {
-		if !G.Infrastructure && !G.Opts.CheckGlobal {
-			return !G.Pkgsrc.IsInfra(mkline.Filename)
-		}
-		return true
+		// As of December 2019, the RedundantScope is only used for
+		// checking a whole package. Therefore, G.Infrastructure can
+		// never be true and there is no point testing it.
+		//
+		// If the RedundantScope is applied also to individual files,
+		// it would have to be added here.
+		return G.Opts.CheckGlobal || !G.Pkgsrc.IsInfra(mkline.Filename)
 	}
 	pkg.redundant.Check(allLines) // Updates the variables in the scope
 	pkg.checkCategories()

@@ -1503,6 +1503,38 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__prefs_indirect(c *check.C
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_Package_checkfilePackageMakefile__redundancy_in_infra(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".include \"../../mk/redundant.mk\"",
+		".include \"redundant.mk\"")
+	t.CreateFileLines("mk/redundant.mk",
+		MkCvsID,
+		"INFRA_REDUNDANT:=\t# empty",
+		"INFRA_REDUNDANT=\t# empty")
+	t.CreateFileLines("category/package/redundant.mk",
+		MkCvsID,
+		"PKG_REDUNDANT:=\t# empty",
+		"PKG_REDUNDANT=\t# empty")
+	t.Chdir(".")
+	t.FinishSetUp()
+
+	G.checkdirPackage("category/package")
+
+	t.CheckOutputLines(
+		"NOTE: category/package/redundant.mk:3: "+
+			"Definition of PKG_REDUNDANT is redundant because of line 2.",
+		"WARN: category/package/redundant.mk:2: "+
+			"PKG_REDUNDANT is defined but not used.")
+
+	G.Check("mk/redundant.mk")
+
+	// The redundancy check is only performed when a whole package
+	// is checked. Therefore nothing is reported here.
+	t.CheckOutputEmpty()
+}
+
 // When a package defines PLIST_SRC, it may or may not use the
 // PLIST file from the package directory. Therefore the check
 // is skipped completely.
