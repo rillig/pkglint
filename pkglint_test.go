@@ -780,27 +780,17 @@ func (s *Suite) Test_CheckLinesDescr__variables(c *check.C) {
 
 	// Variables in parentheses are unusual in pkgsrc.
 	// Therefore they are not worth being mentioned.
-	test(
-		"$(PREFIX)",
-		// TODO: Remove this note.
-		"NOTE: DESCR:1: Variables are not expanded in the DESCR file.")
+	test("$(PREFIX)", nil...)
 
 	// Variables that are not well-known in pkgsrc are not warned
 	// about since these are probably legitimate examples, as seen
 	// in devel/go-properties/DESCR.
-	test(
-		"${UNDEFINED}",
-		nil...)
+	test("${UNDEFINED}", nil...)
 
-	test(
-		"$<",
-		nil...)
+	test("$<", nil...)
 
 	// This one occurs in a few Perl packages.
-	test(
-		"$@",
-		// TODO: Remove this note.
-		"NOTE: DESCR:1: Variables are not expanded in the DESCR file.")
+	test("$@", nil...)
 }
 
 func (s *Suite) Test_CheckLinesMessage__one_line_of_text(c *check.C) {

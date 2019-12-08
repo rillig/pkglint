@@ -432,7 +432,11 @@ func CheckLinesDescr(lines *Lines) {
 	checkVarRefs := func(line *Line) {
 		tokens, _ := NewMkLexer(line.Text, nil).MkTokens()
 		for _, token := range tokens {
-			if token.Varuse != nil && G.Pkgsrc.VariableType(nil, token.Varuse.varname) != nil {
+			switch {
+			case token.Varuse == nil,
+				!hasPrefix(token.Text, "${"),
+				G.Pkgsrc.VariableType(nil, token.Varuse.varname) == nil:
+			default:
 				line.Notef("Variables are not expanded in the DESCR file.")
 			}
 		}
