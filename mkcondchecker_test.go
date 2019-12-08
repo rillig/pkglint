@@ -367,6 +367,10 @@ func (s *Suite) Test_MkCondChecker_checkEmptyType(c *check.C) {
 func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 	t := s.Init(c)
 
+	// TODO: Replace the next paragraph with:
+	//  t.CreateFileLines("mk/bsd.prefs.mk")
+	//  t.Chdir("category/package")
+
 	t.SetUpPackage("category/package")
 	t.Chdir("category/package")
 	t.FinishSetUp()
@@ -413,6 +417,9 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 	// before: the directive before the condition is simplified
 	// after: the directive after the condition is simplified
 	doTest := func(prefs bool, before, after string, diagnostics ...string) {
+		if !matches(before, `IN_SCOPE|PREFS|LATER|UNDEFINED`) {
+			// c.Errorf("Condition %q must include one of the above variable names.", before)
+		}
 		mklines := t.SetUpFileMkLines("filename.mk",
 			MkCvsID,
 			condStr(prefs, ".include \"../../mk/bsd.prefs.mk\"", ""),
@@ -558,28 +565,6 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 
 		"WARN: filename.mk:3: UNDEFINED is used but not defined.")
 
-	testBeforePrefs(
-		".if ${PKGPATH:Mpattern}",
-		".if ${PKGPATH:U} == pattern",
-
-		"NOTE: filename.mk:3: PKGPATH "+
-			"should be compared using \"${PKGPATH:U} == pattern\" "+
-			"instead of matching against \":Mpattern\".",
-		"WARN: filename.mk:3: To use PKGPATH at load time, "+
-			".include \"../../mk/bsd.prefs.mk\" first.",
-		"AUTOFIX: filename.mk:3: Replacing \"${PKGPATH:Mpattern}\" "+
-			"with \"${PKGPATH:U} == pattern\".")
-
-	testAfterPrefs(
-		".if ${PKGPATH:Mpattern}",
-		".if ${PKGPATH} == pattern",
-
-		"NOTE: filename.mk:3: PKGPATH "+
-			"should be compared using \"${PKGPATH} == pattern\" "+
-			"instead of matching against \":Mpattern\".",
-		"AUTOFIX: filename.mk:3: Replacing \"${PKGPATH:Mpattern}\" "+
-			"with \"${PKGPATH} == pattern\".")
-
 	// When the pattern contains placeholders, it cannot be converted to == or !=.
 	testAfterPrefs(
 		".if ${PKGPATH:Mpa*n}",
@@ -632,16 +617,8 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		"AUTOFIX: filename.mk:3: Replacing \"${PKGPATH:Mone:Mtwo}\" "+
 			"with \"${PKGPATH:Mone} == two\".")
 
-	testAfterPrefs(
-		".if !empty(PKGPATH:Mpattern)",
-		".if ${PKGPATH} == pattern",
-
-		"NOTE: filename.mk:3: PKGPATH "+
-			"should be compared using \"${PKGPATH} == pattern\" "+
-			"instead of matching against \":Mpattern\".",
-		"AUTOFIX: filename.mk:3: Replacing \"!empty(PKGPATH:Mpattern)\" "+
-			"with \"${PKGPATH} == pattern\".")
-
+	// There is no ! before the empty, which is easy to miss.
+	// Because of this missing negation, the comparison operator is !=.
 	testAfterPrefs(
 		".if empty(PKGPATH:Mpattern)",
 		".if ${PKGPATH} != pattern",
@@ -667,6 +644,7 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		"AUTOFIX: filename.mk:3: Replacing \"!empty(PKGPATH:Mpattern)\" "+
 			"with \"${PKGPATH} == pattern\".")
 
+	// Simplifying the condition also works in complex expressions.
 	testAfterPrefs(".if empty(PKGPATH:Mpattern) || 0",
 		".if ${PKGPATH} != pattern || 0",
 
@@ -677,12 +655,15 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 			"with \"${PKGPATH} != pattern\".")
 
 	// No note in this case since there is no implicit !empty around the varUse.
+	// There is no obvious way of writing this expression in a simpler form.
 	testAfterPrefs(
 		".if ${PKGPATH:Mpattern} != ${OTHER}",
 		".if ${PKGPATH:Mpattern} != ${OTHER}",
 
 		"WARN: filename.mk:3: OTHER is used but not defined.")
 
+	// The condition is also simplified if it doesn't use the !empty
+	// form but the implicit conversion to boolean.
 	testAfterPrefs(
 		".if ${PKGPATH:Mpattern}",
 		".if ${PKGPATH} == pattern",
@@ -693,6 +674,8 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		"AUTOFIX: filename.mk:3: Replacing \"${PKGPATH:Mpattern}\" "+
 			"with \"${PKGPATH} == pattern\".")
 
+	// A single negation outside the implicit conversion is taken into
+	// account when simplifying the condition.
 	testAfterPrefs(
 		".if !${PKGPATH:Mpattern}",
 		".if ${PKGPATH} != pattern",
@@ -717,31 +700,33 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 	// This pattern with spaces doesn't make sense at all in the :M
 	// modifier since it can never match.
 	// Or can it, if the PKGPATH contains quotes?
-	// How exactly does bmake apply the matching here, are both values unquoted?
-	testAfterPrefs(
-		".if ${PKGPATH:Mpattern with spaces}",
-		".if ${PKGPATH:Mpattern with spaces}",
+	// TODO: How exactly does bmake apply the matching here,
+	//  are both values unquoted first? Probably not, but who knows.
+	testBeforeAndAfterPrefs(
+		".if ${IN_SCOPE_DEFINED:Mpattern with spaces}",
+		".if ${IN_SCOPE_DEFINED:Mpattern with spaces}",
 
-		"WARN: filename.mk:3: The pathname pattern \"pattern with spaces\" "+
-			"contains the invalid characters \"  \".")
+		nil...)
 	// TODO: ".if ${PKGPATH} == \"pattern with spaces\"")
 
-	testAfterPrefs(
-		".if ${PKGPATH:M'pattern with spaces'}",
-		".if ${PKGPATH:M'pattern with spaces'}",
+	testBeforeAndAfterPrefs(
+		".if ${IN_SCOPE_DEFINED:M'pattern with spaces'}",
+		".if ${IN_SCOPE_DEFINED:M'pattern with spaces'}",
 
-		"WARN: filename.mk:3: The pathname pattern \"'pattern with spaces'\" "+
-			"contains the invalid characters \"'  '\".")
+		nil...)
 	// TODO: ".if ${PKGPATH} == 'pattern with spaces'")
 
-	testAfterPrefs(
-		".if ${PKGPATH:M&&}",
-		".if ${PKGPATH:M&&}",
+	testBeforeAndAfterPrefs(
+		".if ${IN_SCOPE_DEFINED:M&&}",
+		".if ${IN_SCOPE_DEFINED:M&&}",
 
-		"WARN: filename.mk:3: The pathname pattern \"&&\" "+
-			"contains the invalid characters \"&&\".")
+		nil...)
 	// TODO: ".if ${PKGPATH} == '&&'")
 
+	// The :N modifier involves another negation and is therefore more
+	// difficult to understand. That's even more reason to use the
+	// well-known == and != comparison operators instead.
+	//
 	// If PKGPATH is "", the condition is false.
 	// If PKGPATH is "negative-pattern", the condition is false.
 	// In all other cases, the condition is true.
@@ -754,6 +739,8 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 	// such as OPSYS or PKGPATH, this replacement is valid.
 	// These variables are only guaranteed to be defined after bsd.prefs.mk
 	// has been included, like everywhere else.
+	//
+	// TODO: This is where NonemptyIfDefined comes into play.
 	testAfterPrefs(
 		".if ${PKGPATH:Nnegative-pattern}",
 		".if ${PKGPATH} != negative-pattern",
@@ -764,7 +751,7 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		"AUTOFIX: filename.mk:3: Replacing \"${PKGPATH:Nnegative-pattern}\" "+
 			"with \"${PKGPATH} != negative-pattern\".")
 
-	// Since UNKNOWN is not a well-known system-provided variable that is
+	// Since UNKNOWN is not a well-known variable that is
 	// guaranteed to be non-empty (see the previous example), it is not
 	// transformed at all.
 	testBeforePrefs(
@@ -779,6 +766,8 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 
 		"WARN: filename.mk:3: UNKNOWN is used but not defined.")
 
+	// A complex condition may contain several simple conditions
+	// that are each simplified independently, in the same go.
 	testAfterPrefs(
 		".if ${PKGPATH:Mpath1} || ${PKGPATH:Mpath2}",
 		".if ${PKGPATH} == path1 || ${PKGPATH} == path2",
@@ -794,6 +783,9 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		"AUTOFIX: filename.mk:3: Replacing \"${PKGPATH:Mpath2}\" "+
 			"with \"${PKGPATH} == path2\".")
 
+	// Removing redundant parentheses may be useful one day but is
+	// not urgent.
+	// Simplifying the inner expression keeps all parentheses as-is.
 	testAfterPrefs(
 		".if (((((${PKGPATH:Mpath})))))",
 		".if (((((${PKGPATH} == path)))))",
@@ -804,46 +796,9 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		"AUTOFIX: filename.mk:3: Replacing \"${PKGPATH:Mpath}\" "+
 			"with \"${PKGPATH} == path\".")
 
-	// MACHINE_ARCH is built-in into bmake and is always available.
-	// Therefore it doesn't matter whether bsd.prefs.mk is included or not.
-	testBeforePrefs(
-		".if ${MACHINE_ARCH:Mx86_64}",
-		".if ${MACHINE_ARCH} == x86_64",
-
-		"NOTE: filename.mk:3: MACHINE_ARCH "+
-			"should be compared using \"${MACHINE_ARCH} == x86_64\" "+
-			"instead of matching against \":Mx86_64\".",
-		"AUTOFIX: filename.mk:3: Replacing \"${MACHINE_ARCH:Mx86_64}\" "+
-			"with \"${MACHINE_ARCH} == x86_64\".")
-
-	// MACHINE_ARCH is built-in into bmake and is always available.
-	// Therefore it doesn't matter whether bsd.prefs.mk is included or not.
-	testAfterPrefs(
-		".if ${MACHINE_ARCH:Mx86_64}",
-		".if ${MACHINE_ARCH} == x86_64",
-
-		"NOTE: filename.mk:3: MACHINE_ARCH "+
-			"should be compared using \"${MACHINE_ARCH} == x86_64\" "+
-			"instead of matching against \":Mx86_64\".",
-		"AUTOFIX: filename.mk:3: Replacing \"${MACHINE_ARCH:Mx86_64}\" "+
-			"with \"${MACHINE_ARCH} == x86_64\".")
-
-	testBeforePrefs(
-		".if !empty(OPSYS:MUnknown)",
-		".if ${OPSYS:U} == Unknown",
-
-		// FIXME: This warning is not the job of simplify.
-		//  Therefore don't test it here.
-		"WARN: filename.mk:3: The pattern \"Unknown\" cannot match any of "+
-			"{ Cygwin DragonFly FreeBSD Linux NetBSD SunOS } for OPSYS.",
-		"NOTE: filename.mk:3: OPSYS should be "+
-			"compared using \"${OPSYS:U} == Unknown\" "+
-			"instead of matching against \":MUnknown\".",
-		"WARN: filename.mk:3: To use OPSYS at load time, "+
-			".include \"../../mk/bsd.prefs.mk\" first.",
-		"AUTOFIX: filename.mk:3: Replacing \"!empty(OPSYS:MUnknown)\" "+
-			"with \"${OPSYS:U} == Unknown\".")
-
+	// Several modifiers like :S and :C may change the variable value.
+	// Whether the condition can be simplified or not only depends on the
+	// last modifier in the chain.
 	testAfterPrefs(
 		".if !empty(OPSYS:S,NetBSD,ok,:Mok)",
 		".if ${OPSYS:S,NetBSD,ok,} == ok",
@@ -871,8 +826,8 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		"WARN: filename.mk:3: The pattern \"Unknown\" cannot match any of "+
 			"{ Cygwin DragonFly FreeBSD Linux NetBSD SunOS } for OPSYS.")
 
-	// The dot is just an ordinary character.
-	// It's only special when used in number literals.
+	// The dot is just an ordinary character in a pattern.
+	// In comparisons, an unquoted 1.2 is interpreted as a number though.
 	testAfterPrefs(
 		".if !empty(PKGPATH:Mcategory/package1.2)",
 		".if ${PKGPATH} == category/package1.2",
@@ -884,8 +839,8 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 			"with \"${PKGPATH} == category/package1.2\".")
 
 	// Numbers must be enclosed in quotes, otherwise they are compared
-	// as numbers, not as strings. The :M and :N modifiers always compare
-	// strings.
+	// as numbers, not as strings.
+	// The :M and :N modifiers always compare strings.
 	testAfterPrefs(
 		".if empty(ABI:U:M64)",
 		".if ${ABI:U} != \"64\"",
@@ -908,61 +863,29 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 			"with \"${PKGVERSION_NOREV:U} != \\\"19.12\\\"\".")
 
 	testAfterPrefs(
-		".if !empty(PKG_INFO:Mpkg_info)",
-		".if ${PKG_INFO} == pkg_info",
-
-		"NOTE: filename.mk:3: PKG_INFO should be "+
-			"compared using \"${PKG_INFO} == pkg_info\" "+
-			"instead of matching against \":Mpkg_info\".",
-		"AUTOFIX: filename.mk:3: "+
-			"Replacing \"!empty(PKG_INFO:Mpkg_info)\" "+
-			"with \"${PKG_INFO} == pkg_info\".")
-
-	t.CheckEquals(
-		G.Pkgsrc.VariableType(nil, "PKG_LIBTOOL").
-			Union().Contains(aclpUseLoadtime),
-		false)
-	testAfterPrefs(
-		".if !empty(PKG_LIBTOOL:Npattern)",
-		".if !empty(PKG_LIBTOOL:Npattern)",
+		".if !empty(LATER:Npattern)",
+		".if !empty(LATER:Npattern)",
 
 		// No diagnostics about the :N modifier yet,
 		// see MkCondChecker.simplify.replace.
-		"WARN: filename.mk:3: PKG_LIBTOOL should not be used "+
+		"WARN: filename.mk:3: LATER should not be used "+
 			"at load time in any file.")
 
 	// TODO: Add a note that the :U is unnecessary, and explain why.
 	testAfterPrefs(
-		".if ${PKGPATH:U:Mcategory/package}",
-		".if ${PKGPATH:U} == category/package",
+		".if ${PREFS_DEFINED:U:Mpattern}",
+		".if ${PREFS_DEFINED:U} == pattern",
 
-		"NOTE: filename.mk:3: PKGPATH should be "+
-			"compared using \"${PKGPATH:U} == category/package\" "+
-			"instead of matching against \":Mcategory/package\".",
-		"AUTOFIX: filename.mk:3: "+
-			"Replacing \"${PKGPATH:U:Mcategory/package}\" "+
-			"with \"${PKGPATH:U} == category/package\".")
-
-	testAfterPrefs(
-		".if ${UNKNOWN:Mpattern}",
-		".if ${UNKNOWN:Mpattern}",
-
-		"WARN: filename.mk:3: UNKNOWN is used but not defined.")
-
-	// MAKE is AlwaysInScope and DefinedIfInScope and NonemptyIfDefined.
-	testAfterPrefs(
-		".if ${MAKE:Mpattern}",
-		".if ${MAKE} == pattern",
-
-		"NOTE: filename.mk:3: MAKE should be "+
-			"compared using \"${MAKE} == pattern\" "+
+		"NOTE: filename.mk:3: PREFS_DEFINED should be "+
+			"compared using \"${PREFS_DEFINED:U} == pattern\" "+
 			"instead of matching against \":Mpattern\".",
 		"AUTOFIX: filename.mk:3: "+
-			"Replacing \"${MAKE:Mpattern}\" "+
-			"with \"${MAKE} == pattern\".")
+			"Replacing \"${PREFS_DEFINED:U:Mpattern}\" "+
+			"with \"${PREFS_DEFINED:U} == pattern\".")
 
-	// VarUse without any modifiers is skipped.
-	testAfterPrefs(
+	// Conditions without any modifiers cannot be simplified
+	// and are therefore skipped.
+	testBeforeAndAfterPrefs(
 		".if ${MAKE}",
 		".if ${MAKE}",
 
@@ -974,14 +897,21 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 	// replaced automatically, see mkCondLiteralChars.
 	// TODO: Add tests for all characters that are special in string literals or patterns.
 	// TODO: Then, extend the set of characters for which the expressions are simplified.
-	testAfterPrefs(
-		".if ${FETCH_CMD:M&&}",
-		".if ${FETCH_CMD:M&&}",
+	testBeforeAndAfterPrefs(
+		".if ${PREFS_DEFINED:M&&}",
+		".if ${PREFS_DEFINED:M&&}",
 
 		nil...)
 
-	// The + is contained in mkCondStringLiteralUnquoted.
-	// The + is contained in mkCondModifierPatternLiteral.
+	testBeforeAndAfterPrefs(
+		".if ${PREFS:M&&}",
+		".if ${PREFS:M&&}",
+
+		// TODO: Warn that the :U is missing.
+		nil...)
+
+	// The + is contained in both mkCondStringLiteralUnquoted and
+	// mkCondModifierPatternLiteral, therefore it is copied verbatim.
 	testAfterPrefs(
 		".if ${PKGPATH:Mcategory/gtk+}",
 		".if ${PKGPATH} == category/gtk+",
@@ -995,7 +925,7 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 
 	// The characters <=> may be used unescaped in :M and :N patterns
 	// but not in .if conditions. There they must be enclosed in quotes.
-	testAfterPrefs(
+	testBeforeAndAfterPrefs(
 		".if ${PKGPATH:M<=>}",
 		".if ${PKGPATH} == \"<=>\"",
 
@@ -1010,14 +940,11 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 
 	// If pkglint replaces this particular pattern, the resulting string
 	// literal must be escaped properly.
-	testAfterPrefs(
-		".if ${PKGPATH:M\"}",
-		".if ${PKGPATH:M\"}",
+	testBeforeAndAfterPrefs(
+		".if ${IN_SCOPE_DEFINED:M\"}",
+		".if ${IN_SCOPE_DEFINED:M\"}",
 
-		// TODO: Find a better variable than PKGPATH,
-		//  to get rid of this unrelated warning.
-		"WARN: filename.mk:3: The pathname pattern \"\\\"\" "+
-			"contains the invalid character \"\\\"\".")
+		nil...)
 }
 
 func (s *Suite) Test_MkCondChecker_simplify__defined_in_same_file(c *check.C) {
