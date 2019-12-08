@@ -452,9 +452,6 @@ func containsVarRef(s string) bool {
 	if !contains(s, "$") {
 		return false
 	}
-	if contains(s, "${") || contains(s, "$(") {
-		return true
-	}
 	lex := NewMkLexer(s, nil)
 	tokens, _ := lex.MkTokens()
 	for _, token := range tokens {
