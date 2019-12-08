@@ -2,7 +2,6 @@ package pkglint
 
 import (
 	"netbsd.org/pkglint/textproc"
-	"path"
 	"sort"
 	"strings"
 )
@@ -154,7 +153,7 @@ func (ck *PlistChecker) checkLine(pline *PlistLine) {
 
 		// TODO: replace with plistLineStart
 	} else if textproc.AlnumU.Contains(text[0]) || text[0] == '$' {
-		ck.checkPath(pline)
+		ck.checkPath(pline, pline.Path())
 
 	} else if m, cmd, arg := match2(text, `^@([a-z-]+)[\t ]*(.*)`); m {
 		pline.CheckDirective(cmd, arg)
@@ -166,10 +165,9 @@ func (ck *PlistChecker) checkLine(pline *PlistLine) {
 }
 
 // TODO: pass the actual path as RelPath, to ensure proper typing.
-func (ck *PlistChecker) checkPath(pline *PlistLine) {
-	text := pline.text
-	dirSlash, basename := path.Split(text)
-	dirname := strings.TrimSuffix(dirSlash, "/")
+func (ck *PlistChecker) checkPath(pline *PlistLine, rel RelPath) {
+	dirSlash, basename := rel.Split()
+	dir := NewRelPathString(strings.TrimSuffix(dirSlash.String(), "/"))
 
 	ck.checkPathNonAscii(pline)
 	ck.checkSorted(pline)
@@ -179,7 +177,7 @@ func (ck *PlistChecker) checkPath(pline *PlistLine) {
 		pline.warnImakeMannewsuffix()
 	}
 
-	if hasPrefix(text, "${PKGMANDIR}/") {
+	if rel.HasPrefixPath("${PKGMANDIR}") {
 		fix := pline.Autofix()
 		fix.Notef("PLIST files should use \"man/\" instead of \"${PKGMANDIR}\".")
 		fix.Explain(
@@ -192,11 +190,11 @@ func (ck *PlistChecker) checkPath(pline *PlistLine) {
 		pline.text = strings.Replace(pline.text, "${PKGMANDIR}/", "man/", 1)
 	}
 
-	topdir := strings.SplitN(text, "/", 2)[0]
+	topdir := rel.Parts()[0]
 
 	switch topdir {
 	case "bin":
-		ck.checkPathBin(pline, dirname)
+		ck.checkPathBin(pline, dir)
 	case "doc":
 		pline.Errorf("Documentation must be installed under share/doc, not doc.")
 	case "etc":
@@ -211,27 +209,27 @@ func (ck *PlistChecker) checkPath(pline *PlistLine) {
 		ck.checkPathShare(pline)
 	}
 
-	ck.checkPathMisc(text, pline)
+	ck.checkPathMisc(rel, pline)
 }
 
-func (ck *PlistChecker) checkPathMisc(text string, pline *PlistLine) {
-	if contains(text, "${PKGLOCALEDIR}") && ck.pkg != nil && !ck.pkg.vars.IsDefined("USE_PKGLOCALEDIR") {
+func (ck *PlistChecker) checkPathMisc(rel RelPath, pline *PlistLine) {
+	if rel.ContainsText("${PKGLOCALEDIR}") && ck.pkg != nil && !ck.pkg.vars.IsDefined("USE_PKGLOCALEDIR") {
 		pline.Warnf("PLIST contains ${PKGLOCALEDIR}, but USE_PKGLOCALEDIR is not set in the package Makefile.")
 	}
 
-	if contains(text, "/CVS/") {
+	if rel.ContainsPath("CVS") {
 		pline.Warnf("CVS files should not be in the PLIST.")
 	}
-	if hasSuffix(text, ".orig") {
+	if rel.HasSuffixText(".orig") {
 		pline.Warnf(".orig files should not be in the PLIST.")
 	}
-	if hasSuffix(text, "/perllocal.pod") {
+	if rel.HasSuffixText("/perllocal.pod") {
 		pline.Warnf("The perllocal.pod file should not be in the PLIST.")
 		pline.Explain(
 			"This file is handled automatically by the INSTALL/DEINSTALL scripts",
 			"since its contents depends on more than one package.")
 	}
-	if contains(text, ".egg-info/") {
+	if rel.ContainsText(".egg-info/") {
 		pline.Warnf("Include \"../../lang/python/egg.mk\" instead of listing .egg-info files directly.")
 	}
 }
@@ -297,8 +295,8 @@ func (ck *PlistChecker) checkDuplicate(pline *PlistLine) {
 	fix.Apply()
 }
 
-func (ck *PlistChecker) checkPathBin(pline *PlistLine, dirname string) {
-	if contains(dirname, "/") {
+func (ck *PlistChecker) checkPathBin(pline *PlistLine, dir RelPath) {
+	if dir != "bin" {
 		pline.Warnf("The bin/ directory should not have subdirectories.")
 		pline.Explain(
 			"The programs in bin/ are collected there to be executable by the",
