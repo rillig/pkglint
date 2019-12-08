@@ -455,13 +455,10 @@ func (s *Suite) Test_PlistChecker_Check(c *check.C) {
 	lines := t.NewLines("PLIST",
 		"bin/subdir/program")
 	ck := NewPlistChecker(nil)
-	ck.Load(lines)
 
 	ck.Check(lines)
 
 	t.CheckOutputLines(
-		// FIXME: That's wrong. There is no duplicate.
-		"ERROR: PLIST:1: Duplicate filename \"bin/subdir/program\", already appeared in line 1.",
 		"WARN: PLIST:1: The bin/ directory should not have subdirectories.")
 }
 
