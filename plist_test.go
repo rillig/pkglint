@@ -617,13 +617,9 @@ func (s *Suite) Test_PlistChecker_checkPathMisc__unwanted_entries(c *check.C) {
 		"share/pkgbase/CVS/Entries",
 		"share/pkgbase/Makefile.orig",
 		"../breakout",
-		// FIXME
 		"t/../../breakout",
-		// FIXME
 		"t/./non-canonical",
-		// FIXME
 		"t///non-canonical",
-		// FIXME
 		"t/non-canonical/")
 
 	CheckLinesPlist(nil, lines)
@@ -632,7 +628,11 @@ func (s *Suite) Test_PlistChecker_checkPathMisc__unwanted_entries(c *check.C) {
 		"WARN: ~/PLIST:2: The perllocal.pod file should not be in the PLIST.",
 		"WARN: ~/PLIST:3: CVS files should not be in the PLIST.",
 		"WARN: ~/PLIST:4: .orig files should not be in the PLIST.",
-		"ERROR: ~/PLIST:5: Invalid line type: ../breakout")
+		"ERROR: ~/PLIST:5: Invalid line type: ../breakout",
+		"ERROR: ~/PLIST:6: Paths in PLIST files must not contain \"..\".",
+		"ERROR: ~/PLIST:7: Paths in PLIST files must be canonical (t/non-canonical).",
+		"ERROR: ~/PLIST:8: Paths in PLIST files must be canonical (t/non-canonical).",
+		"ERROR: ~/PLIST:9: Paths in PLIST files must be canonical (t/non-canonical).")
 }
 
 func (s *Suite) Test_PlistChecker_checkPathNonAscii(c *check.C) {

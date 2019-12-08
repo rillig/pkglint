@@ -232,6 +232,11 @@ func (ck *PlistChecker) checkPathMisc(rel RelPath, pline *PlistLine) {
 	if rel.ContainsText(".egg-info/") {
 		pline.Warnf("Include \"../../lang/python/egg.mk\" instead of listing .egg-info files directly.")
 	}
+	if rel.ContainsPath("..") {
+		pline.Errorf("Paths in PLIST files must not contain \"..\".")
+	} else if canonical := rel.Clean(); canonical != rel {
+		pline.Errorf("Paths in PLIST files must be canonical (%s).", canonical)
+	}
 }
 
 func (ck *PlistChecker) checkPathNonAscii(pline *PlistLine) {
