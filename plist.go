@@ -126,7 +126,6 @@ func (ck *PlistChecker) collectPath(rel RelPath, pline *PlistLine) {
 	if prev := ck.allFiles[rel]; prev == nil || stringSliceLess(pline.conditions, prev.conditions) {
 		ck.allFiles[rel] = pline
 	}
-	// TODO: Add check for canonical paths in PLIST.
 	for dir := rel.DirNoClean(); dir != "."; dir = dir.DirNoClean() {
 		ck.allDirs[dir] = pline
 	}
@@ -164,7 +163,6 @@ func (ck *PlistChecker) checkLine(pline *PlistLine) {
 	}
 }
 
-// TODO: pass the actual path as RelPath, to ensure proper typing.
 func (ck *PlistChecker) checkPath(pline *PlistLine, rel RelPath) {
 	dirSlash, basename := rel.Split()
 	dir := NewRelPathString(strings.TrimSuffix(dirSlash.String(), "/"))
