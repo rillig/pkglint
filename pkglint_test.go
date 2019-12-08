@@ -753,7 +753,7 @@ func (s *Suite) Test_CheckLinesDescr(c *check.C) {
 	// in devel/go-properties/DESCR.
 	t.CheckOutputLines(
 		"WARN: DESCR:1: Line too long (should be no more than 80 characters).",
-		"NOTE: DESCR:11: Variables are not expanded in the DESCR file.",
+		"NOTE: DESCR:11: Variables like \"${PREFIX}\" are not expanded in the DESCR file.",
 		"WARN: DESCR:25: File too long (should be no more than 24 lines).")
 }
 
@@ -773,9 +773,10 @@ func (s *Suite) Test_CheckLinesDescr__variables(c *check.C) {
 		t.CheckOutput(diagnostics)
 	}
 
-	test(
-		"${PREFIX}",
-		"NOTE: DESCR:1: Variables are not expanded in the DESCR file.")
+	test("${PREFIX}",
+
+		"NOTE: DESCR:1: Variables like \"${PREFIX}\" "+
+			"are not expanded in the DESCR file.")
 
 	// Variables in parentheses are unusual in pkgsrc.
 	// Therefore they are not worth being mentioned.

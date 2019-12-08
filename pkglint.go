@@ -437,7 +437,8 @@ func CheckLinesDescr(lines *Lines) {
 				!hasPrefix(token.Text, "${"),
 				G.Pkgsrc.VariableType(nil, token.Varuse.varname) == nil:
 			default:
-				line.Notef("Variables are not expanded in the DESCR file.")
+				line.Notef("Variables like %q are not expanded in the DESCR file.",
+					token.Text)
 			}
 		}
 	}
