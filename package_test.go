@@ -1005,7 +1005,7 @@ func (s *Suite) Test_Package_parse__fallback_lookup_in_package_directory(c *chec
 	G.Check(t.File("category/package"))
 
 	t.CheckOutputLines(
-		"NOTE: ~/mk/pthread.buildlink3.mk:2: " +
+		"WARN: ~/mk/pthread.buildlink3.mk:2: " +
 			"The path to the included file should be \"pthread.builtin.mk\".")
 }
 

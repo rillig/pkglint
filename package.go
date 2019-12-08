@@ -370,7 +370,7 @@ func (pkg *Package) loadIncluded(mkline *MkLine, includingFile CurrPath) (includ
 		return nil, false
 	}
 
-	mkline.Notef("The path to the included file should be %q.",
+	mkline.Warnf("The path to the included file should be %q.",
 		mkline.Rel(fullIncludedFallback))
 	mkline.Explain(
 		"The .include directive first searches the file relative to the including file.",

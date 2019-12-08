@@ -1456,7 +1456,7 @@ func (s *Suite) Test_VartypeCheck_Pkgrevision(c *check.C) {
 		"3a")
 
 	vt.Output(
-		"WARN: filename.mk:1: PKGREVISION must be a positive integer number.",
+		"ERROR: filename.mk:1: PKGREVISION must be a positive integer number.",
 		"ERROR: filename.mk:1: PKGREVISION only makes sense directly in the package Makefile.")
 
 	vt.File("Makefile")
@@ -1617,7 +1617,7 @@ func (s *Suite) Test_VartypeCheck_SedCommands(c *check.C) {
 
 	vt.Output(
 		"NOTE: filename.mk:1: Please always use \"-e\" in sed commands, even if there is only one substitution.",
-		"NOTE: filename.mk:2: Each sed command should appear in an assignment of its own.",
+		"WARN: filename.mk:2: Each sed command should appear in an assignment of its own.",
 		"WARN: filename.mk:3: The # character starts a Makefile comment.",
 		"ERROR: filename.mk:3: Invalid shell words \"\\\"s,\" in sed commands.",
 		"WARN: filename.mk:8: Unknown sed command \"1d\".",

@@ -172,11 +172,11 @@ func (s *Suite) Test_Logger_Diag__duplicates(c *check.C) {
 	logger := Logger{out: NewSeparatorWriter(&sw)}
 	line := t.NewLine("filename", 3, "Text")
 
-	logger.Diag(line, Error, "Blue should be %s.", "orange")
-	logger.Diag(line, Error, "Blue should be %s.", "orange")
+	logger.Diag(line, Error, "Blue must be %s.", "orange")
+	logger.Diag(line, Error, "Blue must be %s.", "orange")
 
 	t.CheckEquals(sw.String(), ""+
-		"ERROR: filename:3: Blue should be orange.\n")
+		"ERROR: filename:3: Blue must be orange.\n")
 }
 
 // Explanations are associated with their diagnostics. Therefore, when one
@@ -189,22 +189,22 @@ func (s *Suite) Test_Logger_Diag__explanation(c *check.C) {
 	logger.Opts.Explain = true
 	line := t.NewLine("filename", 3, "Text")
 
-	logger.Diag(line, Error, "Blue should be %s.", "orange")
+	logger.Diag(line, Error, "Blue must be %s.", "orange")
 	logger.Explain(
 		"The colors have changed.")
 
-	logger.Diag(line, Error, "Blue should be %s.", "orange")
+	logger.Diag(line, Error, "Blue must be %s.", "orange")
 	logger.Explain(
 		"The colors have changed.")
 
 	// Even when the text of the explanation is not the same, it is still
 	// suppressed since it belongs to the diagnostic.
-	logger.Diag(line, Error, "Blue should be %s.", "orange")
+	logger.Diag(line, Error, "Blue must be %s.", "orange")
 	logger.Explain(
 		"The colors have further changed.")
 
 	t.CheckEquals(sw.String(), ""+
-		"ERROR: filename:3: Blue should be orange.\n"+
+		"ERROR: filename:3: Blue must be orange.\n"+
 		"\n"+
 		"\tThe colors have changed.\n"+
 		"\n")

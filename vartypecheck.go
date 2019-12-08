@@ -1043,7 +1043,7 @@ func (cv *VartypeCheck) Pkgpath() {
 
 func (cv *VartypeCheck) Pkgrevision() {
 	if !matches(cv.Value, `^[1-9]\d*$`) {
-		cv.Warnf("%s must be a positive integer number.", cv.Varname)
+		cv.Errorf("%s must be a positive integer number.", cv.Varname)
 	}
 	if cv.MkLine.Basename != "Makefile" {
 		cv.Errorf("%s only makes sense directly in the package Makefile.", cv.Varname)
@@ -1197,7 +1197,7 @@ func (cv *VartypeCheck) SedCommands() {
 			i++
 			ncommands++
 			if ncommands > 1 {
-				cv.Notef("Each sed command should appear in an assignment of its own.")
+				cv.Warnf("Each sed command should appear in an assignment of its own.")
 				cv.Explain(
 					"For example, instead of",
 					"    SUBST_SED.foo+=        -e s,command1,, -e s,command2,,",
