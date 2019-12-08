@@ -626,15 +626,17 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 
 	vt.Values(
 		"https://example.org/pub",
-		"https://example.org/$@", // Doesn't make sense at all.
+		"https://example.org/$@",
 		"https://example.org/?f=",
 		"https://example.org/download:",
-		"https://example.org/download?")
+		"https://example.org/download?",
+		"https://example.org/$$")
 
 	vt.Output(
 		"WARN: filename.mk:71: The fetch URL \"https://example.org/pub\" should end with a slash.",
-		"WARN: filename.mk:72: \"https://example.org/$@\" is not a valid URL.",
-		"WARN: filename.mk:75: The fetch URL \"https://example.org/download?\" should end with a slash.")
+		"WARN: filename.mk:75: The fetch URL \"https://example.org/download?\" should end with a slash.",
+		"WARN: filename.mk:76: \"https://example.org/$$\" is not a valid URL.",
+		"WARN: filename.mk:76: The fetch URL \"https://example.org/$$\" should end with a slash.")
 
 	// The transport protocol doesn't matter for matching the MASTER_SITEs.
 	// See url2pkg.py, function adjust_site_from_sites_mk.
@@ -659,6 +661,15 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 			"instead of \"-ftp://ftp.gnu.org/pub/gnu/bash/bash-5.0.tar.gz\".",
 		"WARN: filename.mk:86: Please use ${MASTER_SITE_GNU:S,^,-,:=bash/bash-5.0.tar.gz} "+
 			"instead of \"-https://ftp.gnu.org/pub/gnu/bash/bash-5.0.tar.gz\".")
+
+	// The ${.TARGET} variable doesn't make sense at all in a URL.
+	// Other variables might, and there could be checks for them.
+	// As of December 2019 these are skipped completely,
+	// see containsVarRef in VartypeCheck.URL.
+	vt.Values(
+		"https://example.org/$@")
+
+	vt.OutputEmpty()
 }
 
 func (s *Suite) Test_VartypeCheck_FetchURL__without_package(c *check.C) {

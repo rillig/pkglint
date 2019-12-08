@@ -438,14 +438,14 @@ func (s *Suite) Test_containsVarRef(c *check.C) {
 	// See the bmake manual page.
 	test("$>", false) // FIXME: true; .ALLSRC
 	test("$!", false) // FIXME: true; .ARCHIVE
-	test("$<", false) // FIXME: true; .IMPSRC
+	test("$<", true)  // .IMPSRC
 	test("$%", false) // FIXME: true; .MEMBER
 	test("$?", false) // FIXME: true; .OODATE
 	test("$*", false) // FIXME: true; .PREFIX
-	test("$@", false) // FIXME: true; .TARGET
+	test("$@", true)  // .TARGET
 
-	test("$V", false) // FIXME: true
-	test("$v", false) // FIXME: true
+	test("$V", true)
+	test("$v", true)
 	test("${Var}", true)
 	test("${VAR.${param}}", true)
 	test("$(VAR)", true)
