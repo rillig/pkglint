@@ -150,8 +150,7 @@ func (ck *PlistChecker) checkLine(pline *PlistLine) {
 		fix.Delete()
 		fix.Apply()
 
-		// TODO: replace with plistLineStart
-	} else if textproc.AlnumU.Contains(text[0]) || text[0] == '$' {
+	} else if plistLineStart.Contains(text[0]) {
 		ck.checkPath(pline, pline.Path())
 
 	} else if m, cmd, arg := match2(text, `^@([a-z-]+)[\t ]*(.*)`); m {
