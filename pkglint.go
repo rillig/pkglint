@@ -392,7 +392,8 @@ func resolveVariableRefs(mklines *MkLines, text string) (resolved string) {
 				}
 			}
 			if mklines != nil {
-				if value, ok := mklines.vars.LastValueFound(varname); ok {
+				// TODO: At load time, use mklines.loadVars instead.
+				if value, ok := mklines.allVars.LastValueFound(varname); ok {
 					return value
 				}
 			}

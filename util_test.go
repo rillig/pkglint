@@ -645,7 +645,8 @@ func (s *Suite) Test_Scope_LastValue(c *check.C) {
 
 	mklines.Check()
 
-	t.CheckEquals(mklines.vars.LastValue("VAR"), "third (conditional)")
+	// TODO: At load time, use loadVars instead of allVars.
+	t.CheckEquals(mklines.allVars.LastValue("VAR"), "third (conditional)")
 
 	t.CheckOutputLines(
 		"WARN: file.mk:2: VAR is defined but not used.")

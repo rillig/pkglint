@@ -56,7 +56,7 @@ func (ck *MkAssignChecker) checkVarassignLeftNotUsed() {
 		return
 	}
 
-	if ck.MkLines.vars.IsUsedSimilar(varname) {
+	if ck.MkLines.allVars.IsUsedSimilar(varname) {
 		return
 	}
 

@@ -676,10 +676,10 @@ func (src *Pkgsrc) loadUntypedVars() {
 		mklines := LoadMk(path, MustSucceed)
 		mklines.collectVariables()
 		mklines.collectUsedVariables()
-		for varname, mkline := range mklines.vars.firstDef {
+		for varname, mkline := range mklines.allVars.firstDef {
 			define(varnameCanon(varname), mkline)
 		}
-		for varname, mkline := range mklines.vars.used {
+		for varname, mkline := range mklines.allVars.used {
 			define(varnameCanon(varname), mkline)
 		}
 	}

@@ -147,7 +147,8 @@ func (ck *MkCondChecker) simplify(varuse *MkVarUse, fromEmpty bool, neg bool) {
 			return true
 		}
 
-		if ck.MkLines.vars.IsDefined(varname) {
+		// TODO: Use ck.MkLines.loadVars instead.
+		if ck.MkLines.allVars.IsDefined(varname) {
 			return true
 		}
 

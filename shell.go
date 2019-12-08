@@ -128,7 +128,7 @@ func (scc *SimpleCommandChecker) handleCommandVariable() bool {
 
 	// When the package author has explicitly defined a command
 	// variable, assume it to be valid.
-	if scc.MkLines.vars.IsDefinedSimilar(varname) {
+	if scc.MkLines.allVars.IsDefinedSimilar(varname) {
 		return true
 	}
 
