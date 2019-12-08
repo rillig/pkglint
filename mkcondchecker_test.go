@@ -381,20 +381,23 @@ func (s *Suite) Test_MkCondChecker_simplifyCondition(c *check.C) {
 			before,
 			".endif")
 
-		// The high-level call MkLines.Check is used here to
-		// get MkLines.Tools.SeenPrefs correct, which decides
-		// whether the :U modifier is necessary.
-		//
-		// TODO: Replace MkLines.Check this with a more specific method.
+		action := func(autofix bool) {
+			// The high-level call MkLines.Check is used here to
+			// get MkLines.Tools.SeenPrefs correct, which decides
+			// whether the :U modifier is necessary.
+			//
+			// TODO: Replace MkLines.Check this with a more specific method.
+			mklines.Check()
 
-		t.ExpectDiagnosticsAutofix(
-			func(autofix bool) { mklines.Check() },
-			diagnostics...)
+			if autofix {
+				afterMklines := LoadMk(t.File("filename.mk"), MustSucceed)
+				t.CheckEquals(afterMklines.mklines[2].Text, after)
+			}
+		}
 
-		// TODO: Move this assertion above the assertion about the diagnostics.
-		afterMklines := LoadMk(t.File("filename.mk"), MustSucceed)
-		t.CheckEquals(afterMklines.mklines[2].Text, after)
+		t.ExpectDiagnosticsAutofix(action, diagnostics...)
 	}
+
 	testAfterPrefs := func(before, after string, diagnostics ...string) {
 		test(true, before, after, diagnostics...)
 	}
