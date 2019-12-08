@@ -171,7 +171,7 @@ and that is saved in `pkglint.Todo`, which contains all items that still need to
 The default use case for pkglint is to check the package from the
 current working directory, therefore this is done if no arguments are given.
 
-> from [pkglint.go](pkglint.go#L275):
+> from [pkglint.go](pkglint.go#L274):
 
 ```go
 	for _, arg := range pkglint.Opts.args {
@@ -197,8 +197,7 @@ and this is what pkglint tries.
 ```go
 	firstDir := pkglint.Todo.Front()
 	if firstDir.IsFile() {
-		// FIXME: consider DirNoClean
-		firstDir = firstDir.DirClean()
+		firstDir = firstDir.DirNoClean()
 	}
 
 	relTopdir := findPkgsrcTopdir(firstDir)
@@ -231,7 +230,7 @@ but that doesn't happen in this simple example run.
 
 The main work is done in `Pkglint.Check`:
 
-> from [pkglint.go](pkglint.go#L333):
+> from [pkglint.go](pkglint.go#L332):
 
 ```go
 	if isReg {
@@ -245,7 +244,7 @@ Since `DESCR` is a regular file, the next function to call is `checkReg`.
 For directories, the next function would depend on the depth from the
 pkgsrc root directory.
 
-> from [pkglint.go](pkglint.go#L542):
+> from [pkglint.go](pkglint.go#L547):
 
 ```go
 func (pkglint *Pkglint) checkReg(filename CurrPath, basename string, depth int) {
@@ -253,7 +252,7 @@ func (pkglint *Pkglint) checkReg(filename CurrPath, basename string, depth int) 
 
 The relevant part of `Pkglint.checkReg` is:
 
-> from [pkglint.go](pkglint.go#L569):
+> from [pkglint.go](pkglint.go#L572):
 
 ```go
 	case basename == "buildlink3.mk":
@@ -284,7 +283,7 @@ The actual checks usually work on `Line` objects instead of files
 because the lines offer nice methods for logging the diagnostics
 and for automatically fixing the text (in pkglint's `--autofix` mode).
 
-> from [pkglint.go](pkglint.go#L428):
+> from [pkglint.go](pkglint.go#L427):
 
 ```go
 func CheckLinesDescr(lines *Lines) {
@@ -292,20 +291,26 @@ func CheckLinesDescr(lines *Lines) {
 		defer trace.Call(lines.Filename)()
 	}
 
+	checkVarRefs := func(line *Line) {
+		tokens, _ := NewMkLexer(line.Text, nil).MkTokens()
+		for _, token := range tokens {
+			switch {
+			case token.Varuse == nil,
+				!hasPrefix(token.Text, "${"),
+				G.Pkgsrc.VariableType(nil, token.Varuse.varname) == nil:
+			default:
+				line.Notef("Variables like %q are not expanded in the DESCR file.",
+					token.Text)
+			}
+		}
+	}
+
 	for _, line := range lines.Lines {
 		ck := LineChecker{line}
 		ck.CheckLength(80)
 		ck.CheckTrailingWhitespace()
 		ck.CheckValidCharacters()
-
-		if containsVarRef(line.Text) {
-			tokens, _ := NewMkLexer(line.Text, nil).MkTokens()
-			for _, token := range tokens {
-				if token.Varuse != nil && G.Pkgsrc.VariableType(nil, token.Varuse.varname) != nil {
-					line.Notef("Variables are not expanded in the DESCR file.")
-				}
-			}
-		}
+		checkVarRefs(line)
 	}
 
 	CheckLinesTrailingEmptyLines(lines)
@@ -862,13 +867,12 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		"WARN: ~/sysutils/checkperms/Makefile:3: "+
 			"This package should be updated to 1.13 (supports more file formats; see ../../doc/TODO:5).",
 		"ERROR: ~/sysutils/checkperms/Makefile:4: Invalid category \"tools\".",
-		"ERROR: ~/sysutils/checkperms/README: Packages in main pkgsrc must not have a README file.",
 		"ERROR: ~/sysutils/checkperms/TODO: Packages in main pkgsrc must not have a TODO file.",
 		"ERROR: ~/sysutils/checkperms/distinfo:7: SHA1 hash of patches/patch-checkperms.c differs "+
 			"(distinfo has asdfasdf, patch file has e775969de639ec703866c0336c4c8e0fdd96309c).",
 		"WARN: ~/sysutils/checkperms/patches/patch-checkperms.c:12: Premature end of patch hunk "+
 			"(expected 1 lines to be deleted and 0 lines to be added).",
-		"4 errors, 2 warnings and 1 note found.",
+		"3 errors, 2 warnings and 1 note found.",
 		t.Shquote("(Run \"pkglint -e -Wall -Call %s\" to show explanations.)", "sysutils/checkperms"),
 		t.Shquote("(Run \"pkglint -fs -Wall -Call %s\" to show what can be fixed automatically.)", "sysutils/checkperms"),
 		t.Shquote("(Run \"pkglint -F -Wall -Call %s\" to automatically fix some issues.)", "sysutils/checkperms"))
