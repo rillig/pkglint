@@ -81,7 +81,7 @@ func (cv *VartypeCheck) WithVarnameValue(varname, value string) *VartypeCheck {
 // and the value.
 //
 // This is typically used when checking parts of composite types,
-// especially patterns.
+// such as the patterns from ONLY_FOR_PLATFORM.
 func (cv *VartypeCheck) WithVarnameValueMatch(varname, value string) *VartypeCheck {
 	newVc := *cv
 	newVc.Varname = varname
@@ -91,6 +91,8 @@ func (cv *VartypeCheck) WithVarnameValueMatch(varname, value string) *VartypeChe
 	return &newVc
 }
 
+// TODO: Move these values to VarTypeRegistry.Init and read them from the
+//  pkgsrc infrastructure files, as far as possible.
 const (
 	machineOpsysValues = "" + // See mk/platform
 		"AIX BSDOS Bitrig Cygwin Darwin DragonFly FreeBSD FreeMiNT GNUkFreeBSD " +
