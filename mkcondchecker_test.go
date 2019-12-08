@@ -382,12 +382,17 @@ func (s *Suite) Test_MkCondChecker_simplifyCondition(c *check.C) {
 			".endif")
 
 		action := func(autofix bool) {
-			// The high-level call MkLines.Check is used here to
-			// get MkLines.Tools.SeenPrefs correct, which decides
-			// whether the :U modifier is necessary.
-			//
-			// TODO: Replace MkLines.Check this with a more specific method.
-			mklines.Check()
+			mklines.ForEach(func(mkline *MkLine) {
+				// Sets mklines.Tools.SeenPrefs, which decides whether the :U modifier
+				// is necessary; see MkLines.checkLine.
+				mklines.Tools.ParseToolLine(mklines, mkline, false, false)
+
+				if mkline.IsDirective() && mkline.Directive() != "endif" {
+					// TODO: Replace checkDirectiveCond with a more
+					//  specific method that does not do the type checks.
+					NewMkCondChecker(mkline, mklines).checkDirectiveCond()
+				}
+			})
 
 			if autofix {
 				afterMklines := LoadMk(t.File("filename.mk"), MustSucceed)
