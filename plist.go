@@ -163,14 +163,11 @@ func (ck *PlistChecker) checkLine(pline *PlistLine) {
 }
 
 func (ck *PlistChecker) checkPath(pline *PlistLine, rel RelPath) {
-	dirSlash, basename := rel.Split()
-	dir := NewRelPathString(strings.TrimSuffix(dirSlash.String(), "/"))
-
 	ck.checkPathNonAscii(pline)
 	ck.checkSorted(pline)
 	ck.checkDuplicate(pline)
 
-	if contains(basename, "${IMAKE_MANNEWSUFFIX}") {
+	if contains(rel.Base(), "${IMAKE_MANNEWSUFFIX}") {
 		pline.warnImakeMannewsuffix()
 	}
 
@@ -191,7 +188,7 @@ func (ck *PlistChecker) checkPath(pline *PlistLine, rel RelPath) {
 
 	switch topdir {
 	case "bin":
-		ck.checkPathBin(pline, dir)
+		ck.checkPathBin(pline, rel)
 	case "doc":
 		pline.Errorf("Documentation must be installed under share/doc, not doc.")
 	case "etc":
@@ -199,7 +196,7 @@ func (ck *PlistChecker) checkPath(pline *PlistLine, rel RelPath) {
 	case "info":
 		ck.checkPathInfo(pline)
 	case "lib":
-		ck.checkPathLib(pline, basename)
+		ck.checkPathLib(pline, rel)
 	case "man":
 		ck.checkPathMan(pline)
 	case "share":
@@ -295,8 +292,8 @@ func (ck *PlistChecker) checkDuplicate(pline *PlistLine) {
 	fix.Apply()
 }
 
-func (ck *PlistChecker) checkPathBin(pline *PlistLine, dir RelPath) {
-	if dir != "bin" {
+func (ck *PlistChecker) checkPathBin(pline *PlistLine, rel RelPath) {
+	if rel.DirNoClean() != "bin" {
 		pline.Warnf("The bin/ directory should not have subdirectories.")
 		pline.Explain(
 			"The programs in bin/ are collected there to be executable by the",
@@ -331,15 +328,16 @@ func (ck *PlistChecker) checkPathInfo(pline *PlistLine) {
 	}
 }
 
-func (ck *PlistChecker) checkPathLib(pline *PlistLine, basename string) {
+func (ck *PlistChecker) checkPathLib(pline *PlistLine, rel RelPath) {
 
 	switch {
 
-	case hasPrefix(pline.text, "lib/locale/"):
+	case rel.HasPrefixPath("lib/locale"):
 		pline.Errorf("\"lib/locale\" must not be listed. Use ${PKGLOCALEDIR}/locale and set USE_PKGLOCALEDIR instead.")
 		return
 	}
 
+	basename := rel.Base()
 	if contains(basename, ".a") || contains(basename, ".so") {
 		la := replaceAll(pline.text, `(\.a|\.so[0-9.]*)$`, ".la")
 		if la != pline.text {
