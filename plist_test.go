@@ -730,12 +730,14 @@ func (s *Suite) Test_PlistChecker_checkPathBin(c *check.C) {
 
 	lines := t.NewLines("PLIST",
 		PlistCvsID,
+		"bin",
 		"bin/subdir/program")
 
 	CheckLinesPlist(nil, lines)
 
 	t.CheckOutputLines(
-		"WARN: PLIST:2: The bin/ directory should not have subdirectories.")
+		"WARN: PLIST:2: The bin/ directory should not have subdirectories.",
+		"WARN: PLIST:3: The bin/ directory should not have subdirectories.")
 }
 
 func (s *Suite) Test_PlistChecker_checkPathEtc(c *check.C) {
