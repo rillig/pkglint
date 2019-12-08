@@ -447,8 +447,11 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 	testAfterPrefs := func(before, after string, diagnostics ...string) {
 		doTest(true, before, after, diagnostics...)
 	}
+	testBeforeAndAfterPrefs := func(before, after string, diagnostics ...string) {
+		doTest(true, before, after, diagnostics...)
+	}
 
-	testBeforePrefs(
+	testBeforeAndAfterPrefs(
 		".if ${IN_SCOPE_DEFINED:Mpattern}",
 		".if ${IN_SCOPE_DEFINED} == pattern",
 
@@ -458,27 +461,7 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		"AUTOFIX: filename.mk:3: Replacing \"${IN_SCOPE_DEFINED:Mpattern}\" "+
 			"with \"${IN_SCOPE_DEFINED} == pattern\".")
 
-	testAfterPrefs(
-		".if ${IN_SCOPE_DEFINED:Mpattern}",
-		".if ${IN_SCOPE_DEFINED} == pattern",
-
-		"NOTE: filename.mk:3: IN_SCOPE_DEFINED "+
-			"should be compared using \"${IN_SCOPE_DEFINED} == pattern\" "+
-			"instead of matching against \":Mpattern\".",
-		"AUTOFIX: filename.mk:3: Replacing \"${IN_SCOPE_DEFINED:Mpattern}\" "+
-			"with \"${IN_SCOPE_DEFINED} == pattern\".")
-
-	testBeforePrefs(
-		".if ${IN_SCOPE:Mpattern}",
-		".if ${IN_SCOPE:U} == pattern",
-
-		"NOTE: filename.mk:3: IN_SCOPE "+
-			"should be compared using \"${IN_SCOPE:U} == pattern\" "+
-			"instead of matching against \":Mpattern\".",
-		"AUTOFIX: filename.mk:3: Replacing \"${IN_SCOPE:Mpattern}\" "+
-			"with \"${IN_SCOPE:U} == pattern\".")
-
-	testAfterPrefs(
+	testBeforeAndAfterPrefs(
 		".if ${IN_SCOPE:Mpattern}",
 		".if ${IN_SCOPE:U} == pattern",
 
@@ -543,19 +526,7 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 
 	// Variables that are defined later always need the :U modifier.
 	// It is probably a mistake to use them in conditions at all.
-	testBeforePrefs(
-		".if ${LATER_DEFINED:Mpattern}",
-		".if ${LATER_DEFINED:U} == pattern",
-
-		"NOTE: filename.mk:3: LATER_DEFINED "+
-			"should be compared using \"${LATER_DEFINED:U} == pattern\" "+
-			"instead of matching against \":Mpattern\".",
-		"WARN: filename.mk:3: "+
-			"LATER_DEFINED should not be used at load time in any file.",
-		"AUTOFIX: filename.mk:3: Replacing \"${LATER_DEFINED:Mpattern}\" "+
-			"with \"${LATER_DEFINED:U} == pattern\".")
-
-	testAfterPrefs(
+	testBeforeAndAfterPrefs(
 		".if ${LATER_DEFINED:Mpattern}",
 		".if ${LATER_DEFINED:U} == pattern",
 
@@ -569,7 +540,7 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 
 	// Variables that are defined later always need the :U modifier.
 	// It is probably a mistake to use them in conditions at all.
-	testBeforePrefs(
+	testBeforeAndAfterPrefs(
 		".if ${LATER:Mpattern}",
 		".if ${LATER:U} == pattern",
 
@@ -581,25 +552,7 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		"AUTOFIX: filename.mk:3: Replacing \"${LATER:Mpattern}\" "+
 			"with \"${LATER:U} == pattern\".")
 
-	testAfterPrefs(
-		".if ${LATER:Mpattern}",
-		".if ${LATER:U} == pattern",
-
-		"NOTE: filename.mk:3: LATER "+
-			"should be compared using \"${LATER:U} == pattern\" "+
-			"instead of matching against \":Mpattern\".",
-		"WARN: filename.mk:3: "+
-			"LATER should not be used at load time in any file.",
-		"AUTOFIX: filename.mk:3: Replacing \"${LATER:Mpattern}\" "+
-			"with \"${LATER:U} == pattern\".")
-
-	testBeforePrefs(
-		".if ${UNDEFINED:Mpattern}",
-		".if ${UNDEFINED:Mpattern}",
-
-		"WARN: filename.mk:3: UNDEFINED is used but not defined.")
-
-	testAfterPrefs(
+	testBeforeAndAfterPrefs(
 		".if ${UNDEFINED:Mpattern}",
 		".if ${UNDEFINED:Mpattern}",
 
