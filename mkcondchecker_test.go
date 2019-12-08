@@ -367,13 +367,8 @@ func (s *Suite) Test_MkCondChecker_checkEmptyType(c *check.C) {
 func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 	t := s.Init(c)
 
-	// TODO: Replace the next paragraph with:
-	//  t.CreateFileLines("mk/bsd.prefs.mk")
-	//  t.Chdir("category/package")
-
-	t.SetUpPackage("category/package")
+	t.CreateFileLines("mk/bsd.prefs.mk")
 	t.Chdir("category/package")
-	t.FinishSetUp()
 
 	// The Anything type suppresses the warnings from type checking.
 	// BtUnknown would not work, see Pkgsrc.VariableType.
