@@ -295,7 +295,7 @@ func (ck *PlistChecker) checkDuplicate(pline *PlistLine) {
 }
 
 func (ck *PlistChecker) checkPathBin(pline *PlistLine, rel RelPath) {
-	if rel.DirNoClean() != "bin" {
+	if rel.Count() > 2 {
 		pline.Warnf("The bin/ directory should not have subdirectories.")
 		pline.Explain(
 			"The programs in bin/ are collected there to be executable by the",
