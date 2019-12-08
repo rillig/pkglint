@@ -144,7 +144,6 @@ func Test__qa(t *testing.T) {
 	ck.Configure("vardefs.go", "*", "*", -intqa.EMissingTest)        // TODO
 	ck.Configure("vargroups.go", "*", "*", -intqa.EMissingTest)      // TODO
 	ck.Configure("vartype.go", "*", "*", -intqa.EMissingTest)        // TODO
-	ck.Configure("vartypecheck.go", "*", "*", -intqa.EMissingTest)   // TODO
 
 	// For now, don't require tests for all the test code.
 	// Having good coverage for the main code is more important.

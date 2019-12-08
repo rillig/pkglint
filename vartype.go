@@ -2,6 +2,7 @@ package pkglint
 
 import (
 	"path"
+	"sort"
 	"strings"
 )
 
@@ -464,6 +465,13 @@ var (
 	BtYesNo                  = &BasicType{"YesNo", (*VartypeCheck).YesNo}
 	BtYesNoIndirectly        = &BasicType{"YesNoIndirectly", (*VartypeCheck).YesNoIndirectly}
 
+	BtMachineOpsys            = enumFromValues(machineOpsysValues)
+	BtMachineArch             = enumFromValues(machineArchValues)
+	BtMachineGnuArch          = enumFromValues(machineGnuArchValues)
+	BtEmulOpsys               = enumFromValues(emulOpsysValues)
+	BtEmulArch                = enumFromValues(machineArchValues) // Just a wild guess.
+	BtMachineGnuPlatformOpsys = BtEmulOpsys
+
 	btCond    = &BasicType{".if condition", nil /* never called */}
 	btForLoop = &BasicType{".for loop", nil /* never called */}
 )
@@ -476,4 +484,52 @@ func init() {
 	BtShellCommand.checker = (*VartypeCheck).ShellCommand
 	BtShellCommands.checker = (*VartypeCheck).ShellCommands
 	BtShellWord.checker = (*VartypeCheck).ShellWord
+}
+
+// TODO: Move these values to VarTypeRegistry.Init and read them from the
+//  pkgsrc infrastructure files, as far as possible.
+const (
+	machineOpsysValues = "" + // See mk/platform
+		"AIX BSDOS Bitrig Cygwin Darwin DragonFly FreeBSD FreeMiNT GNUkFreeBSD " +
+		"HPUX Haiku IRIX Interix Linux Minix MirBSD NetBSD OSF1 OpenBSD QNX SCO_SV SunOS UnixWare"
+
+	// See mk/emulator/emulator-vars.mk.
+	emulOpsysValues = "" +
+		"bitrig bsdos cygwin darwin dragonfly freebsd " +
+		"haiku hpux interix irix linux mirbsd netbsd openbsd osf1 solaris sunos"
+
+	// Hardware architectures having the same name in bsd.own.mk and the GNU world.
+	// These are best-effort guesses, since they depend on the operating system.
+	archValues = "" +
+		"aarch64 alpha amd64 arc arm cobalt convex dreamcast i386 " +
+		"hpcmips hpcsh hppa hppa64 ia64 " +
+		"m68k m88k mips mips64 mips64el mipseb mipsel mipsn32 mlrisc " +
+		"ns32k pc532 pmax powerpc powerpc64 rs6000 s390 sparc sparc64 vax x86_64"
+
+	// See mk/bsd.prefs.mk:/^GNU_ARCH\./
+	machineArchValues = "" +
+		archValues + " " +
+		"aarch64eb amd64 arm26 arm32 coldfire earm earmeb earmhf earmhfeb earmv4 earmv4eb earmv5 " +
+		"earmv5eb earmv6 earmv6eb earmv6hf earmv6hfeb earmv7 earmv7eb earmv7hf earmv7hfeb evbarm " +
+		"i386 i586 i686 m68000 mips mips64eb sh3eb sh3el"
+
+	// See mk/bsd.prefs.mk:/^GNU_ARCH\./
+	machineGnuArchValues = "" +
+		archValues + " " +
+		"aarch64_be arm armeb armv4 armv4eb armv6 armv6eb armv7 armv7eb " +
+		"i486 m5407 m68010 mips64 mipsel sh shle x86_64"
+)
+
+func enumFromValues(spaceSeparated string) *BasicType {
+	values := strings.Fields(spaceSeparated)
+	sort.Strings(values)
+	seen := make(map[string]bool)
+	var unique []string
+	for _, value := range values {
+		if !seen[value] {
+			seen[value] = true
+			unique = append(unique, value)
+		}
+	}
+	return enum(strings.Join(unique, " "))
 }
