@@ -102,8 +102,8 @@ func (s *Suite) TearDownTest(c *check.C) {
 // Ensures that all test names follow a common naming scheme:
 //
 //  Test_${Type}_${Method}__${description_using_underscores}
-func (s *Suite) Test__qa(c *check.C) {
-	ck := intqa.NewQAChecker(c.Errorf)
+func Test__qa(t *testing.T) {
+	ck := intqa.NewQAChecker(t.Errorf)
 
 	ck.Configure("autofix.go", "*", "*", -intqa.EMissingTest)        // TODO
 	ck.Configure("buildlink3.go", "*", "*", -intqa.EMissingTest)     // TODO
