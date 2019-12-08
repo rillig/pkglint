@@ -418,7 +418,7 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 	// after: the directive after the condition is simplified
 	doTest := func(prefs bool, before, after string, diagnostics ...string) {
 		if !matches(before, `IN_SCOPE|PREFS|LATER|UNDEFINED`) {
-			// c.Errorf("Condition %q must include one of the above variable names.", before)
+			c.Errorf("Condition %q must include one of the above variable names.", before)
 		}
 		mklines := t.SetUpFileMkLines("filename.mk",
 			MkCvsID,
@@ -567,135 +567,140 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 
 	// When the pattern contains placeholders, it cannot be converted to == or !=.
 	testAfterPrefs(
-		".if ${PKGPATH:Mpa*n}",
-		".if ${PKGPATH:Mpa*n}",
+		".if ${PREFS_DEFINED:Mpa*n}",
+		".if ${PREFS_DEFINED:Mpa*n}",
 
 		nil...)
 
 	// When deciding whether to replace the expression, only the
 	// last modifier is inspected. All the others are copied.
 	testAfterPrefs(
-		".if ${PKGPATH:tl:Mpattern}",
-		".if ${PKGPATH:tl} == pattern",
+		".if ${PREFS_DEFINED:tl:Mpattern}",
+		".if ${PREFS_DEFINED:tl} == pattern",
 
-		"NOTE: filename.mk:3: PKGPATH "+
-			"should be compared using \"${PKGPATH:tl} == pattern\" "+
+		"NOTE: filename.mk:3: PREFS_DEFINED "+
+			"should be compared using \"${PREFS_DEFINED:tl} == pattern\" "+
 			"instead of matching against \":Mpattern\".",
-		"AUTOFIX: filename.mk:3: Replacing \"${PKGPATH:tl:Mpattern}\" "+
-			"with \"${PKGPATH:tl} == pattern\".")
+		"AUTOFIX: filename.mk:3: Replacing \"${PREFS_DEFINED:tl:Mpattern}\" "+
+			"with \"${PREFS_DEFINED:tl} == pattern\".")
 
 	// Negated pattern matches are supported as well,
 	// as long as the variable is guaranteed to be nonempty.
+	// TODO: Actually implement this.
+	//  As of December 2019, IsNonemptyIfDefined is not used anywhere.
 	testAfterPrefs(
-		".if ${PKGPATH:Ncategory/package}",
-		".if ${PKGPATH} != category/package",
+		".if ${PREFS_DEFINED:Npattern}",
+		".if ${PREFS_DEFINED} != pattern",
 
-		"NOTE: filename.mk:3: PKGPATH "+
-			"should be compared using \"${PKGPATH} != category/package\" "+
-			"instead of matching against \":Ncategory/package\".",
-		"AUTOFIX: filename.mk:3: Replacing \"${PKGPATH:Ncategory/package}\" "+
-			"with \"${PKGPATH} != category/package\".")
+		"NOTE: filename.mk:3: PREFS_DEFINED "+
+			"should be compared using \"${PREFS_DEFINED} != pattern\" "+
+			"instead of matching against \":Npattern\".",
+		"AUTOFIX: filename.mk:3: Replacing \"${PREFS_DEFINED:Npattern}\" "+
+			"with \"${PREFS_DEFINED} != pattern\".")
 
-	// ${PKGPATH:None:Ntwo} is a short variant of ${PKGPATH} != "one" &&
-	// ${PKGPATH} != "two". Applying the transformation would make the
-	// condition longer than before, therefore nothing is done here.
+	// ${PREFS_DEFINED:None:Ntwo} is a short variant of
+	// ${PREFS_DEFINED} != "one" && ${PREFS_DEFINED} != "two".
+	// Applying the transformation would make the condition longer
+	// than before, therefore nothing can be simplified here,
+	// even though all patterns are exact matches.
 	testAfterPrefs(
-		".if ${PKGPATH:None:Ntwo}",
-		".if ${PKGPATH:None:Ntwo}",
+		".if ${PREFS_DEFINED:None:Ntwo}",
+		".if ${PREFS_DEFINED:None:Ntwo}",
 
 		nil...)
 
 	// Note: this combination doesn't make sense since the patterns
 	// "one" and "two" don't overlap.
+	// Nevertheless it is possible and valid to simplify the condition.
 	testAfterPrefs(
-		".if ${PKGPATH:Mone:Mtwo}",
-		".if ${PKGPATH:Mone} == two",
+		".if ${PREFS_DEFINED:Mone:Mtwo}",
+		".if ${PREFS_DEFINED:Mone} == two",
 
-		"NOTE: filename.mk:3: PKGPATH "+
-			"should be compared using \"${PKGPATH:Mone} == two\" "+
+		"NOTE: filename.mk:3: PREFS_DEFINED "+
+			"should be compared using \"${PREFS_DEFINED:Mone} == two\" "+
 			"instead of matching against \":Mtwo\".",
-		"AUTOFIX: filename.mk:3: Replacing \"${PKGPATH:Mone:Mtwo}\" "+
-			"with \"${PKGPATH:Mone} == two\".")
+		"AUTOFIX: filename.mk:3: Replacing \"${PREFS_DEFINED:Mone:Mtwo}\" "+
+			"with \"${PREFS_DEFINED:Mone} == two\".")
 
 	// There is no ! before the empty, which is easy to miss.
 	// Because of this missing negation, the comparison operator is !=.
 	testAfterPrefs(
-		".if empty(PKGPATH:Mpattern)",
-		".if ${PKGPATH} != pattern",
+		".if empty(PREFS_DEFINED:Mpattern)",
+		".if ${PREFS_DEFINED} != pattern",
 
-		"NOTE: filename.mk:3: PKGPATH "+
-			"should be compared using \"${PKGPATH} != pattern\" "+
+		"NOTE: filename.mk:3: PREFS_DEFINED "+
+			"should be compared using \"${PREFS_DEFINED} != pattern\" "+
 			"instead of matching against \":Mpattern\".",
-		"AUTOFIX: filename.mk:3: Replacing \"empty(PKGPATH:Mpattern)\" "+
-			"with \"${PKGPATH} != pattern\".")
+		"AUTOFIX: filename.mk:3: Replacing \"empty(PREFS_DEFINED:Mpattern)\" "+
+			"with \"${PREFS_DEFINED} != pattern\".")
 
 	testAfterPrefs(
-		".if !!empty(PKGPATH:Mpattern)",
+		".if !!empty(PREFS_DEFINED:Mpattern)",
 		// TODO: The ! and == could be combined into a !=.
 		//  Luckily the !! pattern doesn't occur in practice.
-		".if !${PKGPATH} == pattern",
+		".if !${PREFS_DEFINED} == pattern",
 
 		// TODO: When taking all the ! into account, this is actually a
 		//  test for emptiness, therefore the diagnostics should suggest
 		//  the != operator instead of ==.
-		"NOTE: filename.mk:3: PKGPATH "+
-			"should be compared using \"${PKGPATH} == pattern\" "+
+		"NOTE: filename.mk:3: PREFS_DEFINED "+
+			"should be compared using \"${PREFS_DEFINED} == pattern\" "+
 			"instead of matching against \":Mpattern\".",
-		"AUTOFIX: filename.mk:3: Replacing \"!empty(PKGPATH:Mpattern)\" "+
-			"with \"${PKGPATH} == pattern\".")
+		"AUTOFIX: filename.mk:3: Replacing \"!empty(PREFS_DEFINED:Mpattern)\" "+
+			"with \"${PREFS_DEFINED} == pattern\".")
 
 	// Simplifying the condition also works in complex expressions.
-	testAfterPrefs(".if empty(PKGPATH:Mpattern) || 0",
-		".if ${PKGPATH} != pattern || 0",
+	testAfterPrefs(".if empty(PREFS_DEFINED:Mpattern) || 0",
+		".if ${PREFS_DEFINED} != pattern || 0",
 
-		"NOTE: filename.mk:3: PKGPATH "+
-			"should be compared using \"${PKGPATH} != pattern\" "+
+		"NOTE: filename.mk:3: PREFS_DEFINED "+
+			"should be compared using \"${PREFS_DEFINED} != pattern\" "+
 			"instead of matching against \":Mpattern\".",
-		"AUTOFIX: filename.mk:3: Replacing \"empty(PKGPATH:Mpattern)\" "+
-			"with \"${PKGPATH} != pattern\".")
+		"AUTOFIX: filename.mk:3: Replacing \"empty(PREFS_DEFINED:Mpattern)\" "+
+			"with \"${PREFS_DEFINED} != pattern\".")
 
 	// No note in this case since there is no implicit !empty around the varUse.
 	// There is no obvious way of writing this expression in a simpler form.
 	testAfterPrefs(
-		".if ${PKGPATH:Mpattern} != ${OTHER}",
-		".if ${PKGPATH:Mpattern} != ${OTHER}",
+		".if ${PREFS_DEFINED:Mpattern} != ${OTHER}",
+		".if ${PREFS_DEFINED:Mpattern} != ${OTHER}",
 
 		"WARN: filename.mk:3: OTHER is used but not defined.")
 
 	// The condition is also simplified if it doesn't use the !empty
 	// form but the implicit conversion to boolean.
 	testAfterPrefs(
-		".if ${PKGPATH:Mpattern}",
-		".if ${PKGPATH} == pattern",
+		".if ${PREFS_DEFINED:Mpattern}",
+		".if ${PREFS_DEFINED} == pattern",
 
-		"NOTE: filename.mk:3: PKGPATH "+
-			"should be compared using \"${PKGPATH} == pattern\" "+
+		"NOTE: filename.mk:3: PREFS_DEFINED "+
+			"should be compared using \"${PREFS_DEFINED} == pattern\" "+
 			"instead of matching against \":Mpattern\".",
-		"AUTOFIX: filename.mk:3: Replacing \"${PKGPATH:Mpattern}\" "+
-			"with \"${PKGPATH} == pattern\".")
+		"AUTOFIX: filename.mk:3: Replacing \"${PREFS_DEFINED:Mpattern}\" "+
+			"with \"${PREFS_DEFINED} == pattern\".")
 
 	// A single negation outside the implicit conversion is taken into
 	// account when simplifying the condition.
 	testAfterPrefs(
-		".if !${PKGPATH:Mpattern}",
-		".if ${PKGPATH} != pattern",
+		".if !${PREFS_DEFINED:Mpattern}",
+		".if ${PREFS_DEFINED} != pattern",
 
-		"NOTE: filename.mk:3: PKGPATH "+
-			"should be compared using \"${PKGPATH} != pattern\" "+
+		"NOTE: filename.mk:3: PREFS_DEFINED "+
+			"should be compared using \"${PREFS_DEFINED} != pattern\" "+
 			"instead of matching against \":Mpattern\".",
-		"AUTOFIX: filename.mk:3: Replacing \"!${PKGPATH:Mpattern}\" "+
-			"with \"${PKGPATH} != pattern\".")
+		"AUTOFIX: filename.mk:3: Replacing \"!${PREFS_DEFINED:Mpattern}\" "+
+			"with \"${PREFS_DEFINED} != pattern\".")
 
 	// TODO: Merge the double negation into the comparison operator.
 	testAfterPrefs(
-		".if !!${PKGPATH:Mpattern}",
-		".if !${PKGPATH} != pattern",
+		".if !!${PREFS_DEFINED:Mpattern}",
+		".if !${PREFS_DEFINED} != pattern",
 
-		"NOTE: filename.mk:3: PKGPATH "+
-			"should be compared using \"${PKGPATH} != pattern\" "+
+		"NOTE: filename.mk:3: PREFS_DEFINED "+
+			"should be compared using \"${PREFS_DEFINED} != pattern\" "+
 			"instead of matching against \":Mpattern\".",
-		"AUTOFIX: filename.mk:3: Replacing \"!${PKGPATH:Mpattern}\" "+
-			"with \"${PKGPATH} != pattern\".")
+		"AUTOFIX: filename.mk:3: Replacing \"!${PREFS_DEFINED:Mpattern}\" "+
+			"with \"${PREFS_DEFINED} != pattern\".")
 
 	// This pattern with spaces doesn't make sense at all in the :M
 	// modifier since it can never match.
@@ -742,125 +747,125 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 	//
 	// TODO: This is where NonemptyIfDefined comes into play.
 	testAfterPrefs(
-		".if ${PKGPATH:Nnegative-pattern}",
-		".if ${PKGPATH} != negative-pattern",
+		".if ${PREFS_DEFINED:Nnegative-pattern}",
+		".if ${PREFS_DEFINED} != negative-pattern",
 
-		"NOTE: filename.mk:3: PKGPATH "+
-			"should be compared using \"${PKGPATH} != negative-pattern\" "+
+		"NOTE: filename.mk:3: PREFS_DEFINED "+
+			"should be compared using \"${PREFS_DEFINED} != negative-pattern\" "+
 			"instead of matching against \":Nnegative-pattern\".",
-		"AUTOFIX: filename.mk:3: Replacing \"${PKGPATH:Nnegative-pattern}\" "+
-			"with \"${PKGPATH} != negative-pattern\".")
+		"AUTOFIX: filename.mk:3: Replacing \"${PREFS_DEFINED:Nnegative-pattern}\" "+
+			"with \"${PREFS_DEFINED} != negative-pattern\".")
 
-	// Since UNKNOWN is not a well-known variable that is
+	// Since UNDEFINED is not a well-known variable that is
 	// guaranteed to be non-empty (see the previous example), it is not
 	// transformed at all.
 	testBeforePrefs(
-		".if ${UNKNOWN:Nnegative-pattern}",
-		".if ${UNKNOWN:Nnegative-pattern}",
+		".if ${UNDEFINED:Nnegative-pattern}",
+		".if ${UNDEFINED:Nnegative-pattern}",
 
-		"WARN: filename.mk:3: UNKNOWN is used but not defined.")
+		"WARN: filename.mk:3: UNDEFINED is used but not defined.")
 
 	testAfterPrefs(
-		".if ${UNKNOWN:Nnegative-pattern}",
-		".if ${UNKNOWN:Nnegative-pattern}",
+		".if ${UNDEFINED:Nnegative-pattern}",
+		".if ${UNDEFINED:Nnegative-pattern}",
 
-		"WARN: filename.mk:3: UNKNOWN is used but not defined.")
+		"WARN: filename.mk:3: UNDEFINED is used but not defined.")
 
 	// A complex condition may contain several simple conditions
 	// that are each simplified independently, in the same go.
 	testAfterPrefs(
-		".if ${PKGPATH:Mpath1} || ${PKGPATH:Mpath2}",
-		".if ${PKGPATH} == path1 || ${PKGPATH} == path2",
+		".if ${PREFS_DEFINED:Mpath1} || ${PREFS_DEFINED:Mpath2}",
+		".if ${PREFS_DEFINED} == path1 || ${PREFS_DEFINED} == path2",
 
-		"NOTE: filename.mk:3: PKGPATH "+
-			"should be compared using \"${PKGPATH} == path1\" "+
+		"NOTE: filename.mk:3: PREFS_DEFINED "+
+			"should be compared using \"${PREFS_DEFINED} == path1\" "+
 			"instead of matching against \":Mpath1\".",
-		"NOTE: filename.mk:3: PKGPATH "+
-			"should be compared using \"${PKGPATH} == path2\" "+
+		"NOTE: filename.mk:3: PREFS_DEFINED "+
+			"should be compared using \"${PREFS_DEFINED} == path2\" "+
 			"instead of matching against \":Mpath2\".",
-		"AUTOFIX: filename.mk:3: Replacing \"${PKGPATH:Mpath1}\" "+
-			"with \"${PKGPATH} == path1\".",
-		"AUTOFIX: filename.mk:3: Replacing \"${PKGPATH:Mpath2}\" "+
-			"with \"${PKGPATH} == path2\".")
+		"AUTOFIX: filename.mk:3: Replacing \"${PREFS_DEFINED:Mpath1}\" "+
+			"with \"${PREFS_DEFINED} == path1\".",
+		"AUTOFIX: filename.mk:3: Replacing \"${PREFS_DEFINED:Mpath2}\" "+
+			"with \"${PREFS_DEFINED} == path2\".")
 
 	// Removing redundant parentheses may be useful one day but is
 	// not urgent.
 	// Simplifying the inner expression keeps all parentheses as-is.
 	testAfterPrefs(
-		".if (((((${PKGPATH:Mpath})))))",
-		".if (((((${PKGPATH} == path)))))",
+		".if (((((${PREFS_DEFINED:Mpath})))))",
+		".if (((((${PREFS_DEFINED} == path)))))",
 
-		"NOTE: filename.mk:3: PKGPATH "+
-			"should be compared using \"${PKGPATH} == path\" "+
+		"NOTE: filename.mk:3: PREFS_DEFINED "+
+			"should be compared using \"${PREFS_DEFINED} == path\" "+
 			"instead of matching against \":Mpath\".",
-		"AUTOFIX: filename.mk:3: Replacing \"${PKGPATH:Mpath}\" "+
-			"with \"${PKGPATH} == path\".")
+		"AUTOFIX: filename.mk:3: Replacing \"${PREFS_DEFINED:Mpath}\" "+
+			"with \"${PREFS_DEFINED} == path\".")
 
 	// Several modifiers like :S and :C may change the variable value.
 	// Whether the condition can be simplified or not only depends on the
 	// last modifier in the chain.
 	testAfterPrefs(
-		".if !empty(OPSYS:S,NetBSD,ok,:Mok)",
-		".if ${OPSYS:S,NetBSD,ok,} == ok",
+		".if !empty(PREFS_DEFINED:S,NetBSD,ok,:Mok)",
+		".if ${PREFS_DEFINED:S,NetBSD,ok,} == ok",
 
-		"NOTE: filename.mk:3: OPSYS should be "+
-			"compared using \"${OPSYS:S,NetBSD,ok,} == ok\" "+
+		"NOTE: filename.mk:3: PREFS_DEFINED should be "+
+			"compared using \"${PREFS_DEFINED:S,NetBSD,ok,} == ok\" "+
 			"instead of matching against \":Mok\".",
-		"AUTOFIX: filename.mk:3: Replacing \"!empty(OPSYS:S,NetBSD,ok,:Mok)\" "+
-			"with \"${OPSYS:S,NetBSD,ok,} == ok\".")
+		"AUTOFIX: filename.mk:3: Replacing \"!empty(PREFS_DEFINED:S,NetBSD,ok,:Mok)\" "+
+			"with \"${PREFS_DEFINED:S,NetBSD,ok,} == ok\".")
 
 	testAfterPrefs(
-		".if empty(OPSYS:tl:Msunos)",
-		".if ${OPSYS:tl} != sunos",
+		".if empty(PREFS_DEFINED:tl:Msunos)",
+		".if ${PREFS_DEFINED:tl} != sunos",
 
-		"NOTE: filename.mk:3: OPSYS should be "+
-			"compared using \"${OPSYS:tl} != sunos\" "+
+		"NOTE: filename.mk:3: PREFS_DEFINED should be "+
+			"compared using \"${PREFS_DEFINED:tl} != sunos\" "+
 			"instead of matching against \":Msunos\".",
-		"AUTOFIX: filename.mk:3: Replacing \"empty(OPSYS:tl:Msunos)\" "+
-			"with \"${OPSYS:tl} != sunos\".")
+		"AUTOFIX: filename.mk:3: Replacing \"empty(PREFS_DEFINED:tl:Msunos)\" "+
+			"with \"${PREFS_DEFINED:tl} != sunos\".")
 
+	// The condition can only be simplified if the :M or :N modifier
+	// appears at the end of the chain.
 	testAfterPrefs(
-		".if !empty(OPSYS:O:MUnknown:S,a,b,)",
-		".if !empty(OPSYS:O:MUnknown:S,a,b,)",
+		".if !empty(PREFS_DEFINED:O:MUnknown:S,a,b,)",
+		".if !empty(PREFS_DEFINED:O:MUnknown:S,a,b,)",
 
-		"WARN: filename.mk:3: The pattern \"Unknown\" cannot match any of "+
-			"{ Cygwin DragonFly FreeBSD Linux NetBSD SunOS } for OPSYS.")
+		nil...)
 
 	// The dot is just an ordinary character in a pattern.
 	// In comparisons, an unquoted 1.2 is interpreted as a number though.
 	testAfterPrefs(
-		".if !empty(PKGPATH:Mcategory/package1.2)",
-		".if ${PKGPATH} == category/package1.2",
+		".if !empty(PREFS_DEFINED:Mpackage1.2)",
+		".if ${PREFS_DEFINED} == package1.2",
 
-		"NOTE: filename.mk:3: PKGPATH should be "+
-			"compared using \"${PKGPATH} == category/package1.2\" "+
-			"instead of matching against \":Mcategory/package1.2\".",
-		"AUTOFIX: filename.mk:3: Replacing \"!empty(PKGPATH:Mcategory/package1.2)\" "+
-			"with \"${PKGPATH} == category/package1.2\".")
+		"NOTE: filename.mk:3: PREFS_DEFINED should be "+
+			"compared using \"${PREFS_DEFINED} == package1.2\" "+
+			"instead of matching against \":Mpackage1.2\".",
+		"AUTOFIX: filename.mk:3: Replacing \"!empty(PREFS_DEFINED:Mpackage1.2)\" "+
+			"with \"${PREFS_DEFINED} == package1.2\".")
 
 	// Numbers must be enclosed in quotes, otherwise they are compared
 	// as numbers, not as strings.
 	// The :M and :N modifiers always compare strings.
 	testAfterPrefs(
-		".if empty(ABI:U:M64)",
-		".if ${ABI:U} != \"64\"",
+		".if empty(PREFS:U:M64)",
+		".if ${PREFS:U} != \"64\"",
 
-		"NOTE: filename.mk:3: ABI should be compared using \"${ABI:U} != \"64\"\" "+
+		"NOTE: filename.mk:3: PREFS should be compared using \"${PREFS:U} != \"64\"\" "+
 			"instead of matching against \":M64\".",
-		"AUTOFIX: filename.mk:3: Replacing \"empty(ABI:U:M64)\" "+
-			"with \"${ABI:U} != \\\"64\\\"\".")
+		"AUTOFIX: filename.mk:3: Replacing \"empty(PREFS:U:M64)\" "+
+			"with \"${PREFS:U} != \\\"64\\\"\".")
 
 	// Fractional numbers must also be enclosed in quotes.
 	testAfterPrefs(
-		".if empty(PKGVERSION_NOREV:U:M19.12)",
-		".if ${PKGVERSION_NOREV:U} != \"19.12\"",
+		".if empty(PREFS:U:M19.12)",
+		".if ${PREFS:U} != \"19.12\"",
 
-		"NOTE: filename.mk:3: PKGVERSION_NOREV should be "+
-			"compared using \"${PKGVERSION_NOREV:U} != \"19.12\"\" "+
+		"NOTE: filename.mk:3: PREFS should be "+
+			"compared using \"${PREFS:U} != \"19.12\"\" "+
 			"instead of matching against \":M19.12\".",
-		"WARN: filename.mk:3: PKGVERSION_NOREV should not be used at load time in any file.",
-		"AUTOFIX: filename.mk:3: Replacing \"empty(PKGVERSION_NOREV:U:M19.12)\" "+
-			"with \"${PKGVERSION_NOREV:U} != \\\"19.12\\\"\".")
+		"AUTOFIX: filename.mk:3: Replacing \"empty(PREFS:U:M19.12)\" "+
+			"with \"${PREFS:U} != \\\"19.12\\\"\".")
 
 	testAfterPrefs(
 		".if !empty(LATER:Npattern)",
@@ -886,8 +891,8 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 	// Conditions without any modifiers cannot be simplified
 	// and are therefore skipped.
 	testBeforeAndAfterPrefs(
-		".if ${MAKE}",
-		".if ${MAKE}",
+		".if ${IN_SCOPE_DEFINED}",
+		".if ${IN_SCOPE_DEFINED}",
 
 		nil...)
 
@@ -913,30 +918,28 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 	// The + is contained in both mkCondStringLiteralUnquoted and
 	// mkCondModifierPatternLiteral, therefore it is copied verbatim.
 	testAfterPrefs(
-		".if ${PKGPATH:Mcategory/gtk+}",
-		".if ${PKGPATH} == category/gtk+",
+		".if ${PREFS_DEFINED:Mcategory/gtk+}",
+		".if ${PREFS_DEFINED} == category/gtk+",
 
-		"NOTE: filename.mk:3: PKGPATH should be "+
-			"compared using \"${PKGPATH} == category/gtk+\" "+
+		"NOTE: filename.mk:3: PREFS_DEFINED should be "+
+			"compared using \"${PREFS_DEFINED} == category/gtk+\" "+
 			"instead of matching against \":Mcategory/gtk+\".",
 		"AUTOFIX: filename.mk:3: "+
-			"Replacing \"${PKGPATH:Mcategory/gtk+}\" "+
-			"with \"${PKGPATH} == category/gtk+\".")
+			"Replacing \"${PREFS_DEFINED:Mcategory/gtk+}\" "+
+			"with \"${PREFS_DEFINED} == category/gtk+\".")
 
 	// The characters <=> may be used unescaped in :M and :N patterns
 	// but not in .if conditions. There they must be enclosed in quotes.
 	testBeforeAndAfterPrefs(
-		".if ${PKGPATH:M<=>}",
-		".if ${PKGPATH} == \"<=>\"",
+		".if ${PREFS_DEFINED:M<=>}",
+		".if ${PREFS_DEFINED} == \"<=>\"",
 
-		"WARN: filename.mk:3: The pathname pattern \"<=>\" "+
-			"contains the invalid characters \"<=>\".",
-		"NOTE: filename.mk:3: PKGPATH should be "+
-			"compared using \"${PKGPATH} == \"<=>\"\" "+
+		"NOTE: filename.mk:3: PREFS_DEFINED should be "+
+			"compared using \"${PREFS_DEFINED} == \"<=>\"\" "+
 			"instead of matching against \":M<=>\".",
 		"AUTOFIX: filename.mk:3: "+
-			"Replacing \"${PKGPATH:M<=>}\" "+
-			"with \"${PKGPATH} == \\\"<=>\\\"\".")
+			"Replacing \"${PREFS_DEFINED:M<=>}\" "+
+			"with \"${PREFS_DEFINED} == \\\"<=>\\\"\".")
 
 	// If pkglint replaces this particular pattern, the resulting string
 	// literal must be escaped properly.
