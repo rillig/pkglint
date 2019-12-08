@@ -599,20 +599,17 @@ func (pkglint *Pkglint) checkReg(filename CurrPath, basename string, depth int) 
 			CheckLinesPatch(lines)
 		}
 
-		// FIXME: consider DirNoClean
-	case filename.DirClean().Base() == "patches" && matches(filename.Base(), `^manual[^/]*$`):
+	case filename.DirNoClean().Base() == "patches" && matches(filename.Base(), `^manual[^/]*$`):
 		if trace.Tracing {
 			trace.Stepf("Unchecked file %q.", filename)
 		}
 
-		// FIXME: consider DirNoClean
-	case filename.DirClean().Base() == "patches":
+	case filename.DirNoClean().Base() == "patches":
 		NewLineWhole(filename).Warnf("Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
 
 	case (hasPrefix(basename, "Makefile") || hasSuffix(basename, ".mk")) &&
-		// FIXME: consider DirNoClean
 		// FIXME: G.Pkgsrc.Rel(filename) instead of filename
-		!filename.DirClean().ContainsPath("files"):
+		!filename.DirNoClean().ContainsPath("files"):
 		CheckFileMk(filename)
 
 	case hasPrefix(basename, "PLIST"):
@@ -624,8 +621,7 @@ func (pkglint *Pkglint) checkReg(filename CurrPath, basename string, depth int) 
 		// This only checks the file but doesn't register the changes globally.
 		_ = pkglint.Pkgsrc.loadDocChangesFromFile(filename)
 
-		// FIXME: consider DirNoClean
-	case filename.DirClean().Base() == "files":
+	case filename.DirNoClean().Base() == "files":
 		// Skip files directly in the files/ directory, but not those further down.
 
 	case basename == "spec":

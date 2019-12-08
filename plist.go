@@ -112,16 +112,14 @@ func (ck *PlistChecker) collectFilesAndDirs(plines []*PlistLine) {
 				if prev := ck.allFiles[path]; prev == nil || stringSliceLess(pline.conditions, prev.conditions) {
 					ck.allFiles[path] = pline
 				}
-				// FIXME: consider DirNoClean
-				// FIXME: consider DirNoClean
-				for dir := path.DirClean(); dir != "."; dir = dir.DirClean() {
+				// TODO: Add check for canonical paths in PLIST.
+				for dir := path.DirNoClean(); dir != "."; dir = dir.DirNoClean() {
 					ck.allDirs[dir] = pline
 				}
 			case first == '@':
 				if m, dirname := match1(text, `^@exec \$\{MKDIR\} %D/(.*)$`); m {
-					// FIXME: consider DirNoClean
 					// FIXME: Add test for absolute path.
-					for dir := NewRelPathString(dirname); dir != "."; dir = dir.DirClean() {
+					for dir := NewRelPathString(dirname); dir != "."; dir = dir.DirNoClean() {
 						ck.allDirs[dir] = pline
 					}
 				}

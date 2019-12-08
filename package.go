@@ -143,8 +143,7 @@ func (pkg *Package) load() ([]CurrPath, *MkLines, *MkLines) {
 		if !hasPrefix(basename, "Makefile.") && !filename.HasSuffixText(".mk") {
 			return false
 		}
-		// FIXME: consider DirNoClean
-		if filename.DirClean().Base() == "patches" {
+		if filename.DirNoClean().Base() == "patches" {
 			return false
 		}
 		if pkg.Pkgdir == "." {
@@ -1279,8 +1278,7 @@ func (pkg *Package) checkDirent(dirent CurrPath, mode os.FileMode) {
 		switch {
 		case basename == "files",
 			basename == "patches",
-			// FIXME: consider DirNoClean
-			dirent.DirClean().Base() == "files",
+			dirent.DirNoClean().Base() == "files",
 			isEmptyDir(dirent):
 			break
 
