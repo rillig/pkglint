@@ -284,6 +284,9 @@ func (mklines *MkLines) ForEachEnd(action func(mkline *MkLine) bool, atEnd func(
 	// Multiple of these line checkers could be run in parallel, so that
 	// the diagnostics appear in the correct order, from top to bottom.
 
+	// ForEachEnd must not be called within itself.
+	assert(mklines.indentation == nil)
+
 	mklines.indentation = NewIndentation()
 	mklines.Tools.SeenPrefs = false
 
