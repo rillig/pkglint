@@ -105,12 +105,6 @@ func (l *Logger) Explain(explanation ...string) {
 // See Logf for logging arbitrary messages.
 func (l *Logger) Diag(line *Line, level *LogLevel, format string, args ...interface{}) {
 	if G.Testing {
-		if level != Error {
-			assertf(!contains(format, "must"), "Must must only appear in errors: %s", format)
-		}
-		if level != Warn {
-			assertf(!contains(format, "should"), "Should must only appear in warnings: %s", format)
-		}
 		for _, arg := range args {
 			switch arg.(type) {
 			case int, string, error:
@@ -259,6 +253,15 @@ func (l *Logger) Logf(level *LogLevel, filename CurrPath, lineno, format, msg st
 	if l.suppressDiag {
 		l.suppressDiag = false
 		return
+	}
+
+	if G.Testing {
+		if level != Error {
+			assertf(!contains(format, "must"), "Must must only appear in errors: %s", format)
+		}
+		if level != Warn && level != Note {
+			assertf(!contains(format, "should"), "Should must only appear in warnings: %s", format)
+		}
 	}
 
 	if G.Testing && format != AutofixFormat {

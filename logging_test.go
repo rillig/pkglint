@@ -571,10 +571,10 @@ func (s *Suite) Test_Logger_Logf(c *check.C) {
 	var sw strings.Builder
 	logger := Logger{out: NewSeparatorWriter(&sw)}
 
-	logger.Logf(Error, "filename", "3", "Blue should be %s.", "Blue should be orange.")
+	logger.Logf(Error, "filename", "3", "Blue must be %s.", "Blue must be orange.")
 
 	t.CheckEquals(sw.String(), ""+
-		"ERROR: filename:3: Blue should be orange.\n")
+		"ERROR: filename:3: Blue must be orange.\n")
 }
 
 // Logf doesn't filter duplicates, but Diag does.
@@ -584,12 +584,12 @@ func (s *Suite) Test_Logger_Logf__duplicates(c *check.C) {
 	var sw strings.Builder
 	logger := Logger{out: NewSeparatorWriter(&sw)}
 
-	logger.Logf(Error, "filename", "3", "Blue should be %s.", "Blue should be orange.")
-	logger.Logf(Error, "filename", "3", "Blue should be %s.", "Blue should be orange.")
+	logger.Logf(Error, "filename", "3", "Blue must be %s.", "Blue must be orange.")
+	logger.Logf(Error, "filename", "3", "Blue must be %s.", "Blue must be orange.")
 
 	t.CheckEquals(sw.String(), ""+
-		"ERROR: filename:3: Blue should be orange.\n"+
-		"ERROR: filename:3: Blue should be orange.\n")
+		"ERROR: filename:3: Blue must be orange.\n"+
+		"ERROR: filename:3: Blue must be orange.\n")
 }
 
 // Ensure that suppressing a diagnostic doesn't influence later calls to Logf.
