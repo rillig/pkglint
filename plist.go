@@ -155,7 +155,9 @@ func (ck *PlistChecker) checkLine(pline *PlistLine) {
 
 	} else if m, cmd, arg := match2(text, `^@([a-z-]+)[\t ]*(.*)`); m {
 		pline.CheckDirective(cmd, arg)
-		ck.nonAsciiAllowed = pline.firstLine > 1
+		if cmd == "comment" && pline.firstLine > 1 {
+			ck.nonAsciiAllowed = true
+		}
 
 	} else {
 		pline.Errorf("Invalid line type: %s", pline.Line.Text)

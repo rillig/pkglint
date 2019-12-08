@@ -670,9 +670,9 @@ func (s *Suite) Test_PlistChecker_checkPathNonAscii(c *check.C) {
 		"sbin/\U0001F603", // Smiling face with open mouth
 
 		// Directives other than comments do not allow non-ASCII.
+		"unicode/00FC/reset",
 		"@exec true",
-		// FIXME
-		"unicode/\u00FC", // u-umlaut
+		"unicode/00FC/\u00FC", // u-umlaut
 	)
 
 	CheckLinesPlist(nil, lines)
@@ -691,7 +691,8 @@ func (s *Suite) Test_PlistChecker_checkPathNonAscii(c *check.C) {
 		"\tcontain non-ASCII filenames.",
 		"",
 		"WARN: PLIST:5: Non-ASCII filename \"dir2/<U+0633><U+0644><U+0627><U+0645>\".",
-		"WARN: PLIST:11: Non-ASCII filename \"sbin/<U+1F603>\".")
+		"WARN: PLIST:11: Non-ASCII filename \"sbin/<U+1F603>\".",
+		"WARN: PLIST:14: Non-ASCII filename \"unicode/00FC/<U+00FC>\".")
 }
 
 func (s *Suite) Test_PlistChecker_checkSorted(c *check.C) {
