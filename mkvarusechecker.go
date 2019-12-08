@@ -61,9 +61,7 @@ func (ck *MkVarUseChecker) checkUndefined() {
 }
 
 func (ck *MkVarUseChecker) checkModifiers() {
-	varuse := ck.use
-	mods := varuse.modifiers
-	if len(mods) == 0 {
+	if len(ck.use.modifiers) == 0 {
 		return
 	}
 
