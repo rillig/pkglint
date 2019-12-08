@@ -107,30 +107,35 @@ var plistLineStart = textproc.NewByteSet("$0-9A-Za-z")
 func (ck *PlistChecker) collectFilesAndDirs(plines []*PlistLine) {
 
 	for _, pline := range plines {
-		// TODO: flatten
-		if text := pline.text; len(text) > 0 {
-			first := text[0]
-			switch {
-			case plistLineStart.Contains(first):
-				path := NewRelPathString(text)
-				if prev := ck.allFiles[path]; prev == nil || stringSliceLess(pline.conditions, prev.conditions) {
-					ck.allFiles[path] = pline
-				}
-				// TODO: Add check for canonical paths in PLIST.
-				for dir := path.DirNoClean(); dir != "."; dir = dir.DirNoClean() {
-					ck.allDirs[dir] = pline
-				}
-			case first == '@':
-				if m, dirname := match1(text, `^@exec \$\{MKDIR\} %D/(.*)$`); m {
-					if NewPath(dirname).IsAbs() {
-						continue
-					}
-					for dir := NewRelPathString(dirname); dir != "."; dir = dir.DirNoClean() {
-						ck.allDirs[dir] = pline
-					}
-				}
-			}
+		text := pline.text
+		switch {
+		case text == "":
+			break
+		case plistLineStart.Contains(text[0]):
+			ck.collectPath(NewRelPathString(text), pline)
+		case text[0] == '@':
+			ck.collectDirective(pline)
 		}
+	}
+}
+
+func (ck *PlistChecker) collectPath(rel RelPath, pline *PlistLine) {
+	if prev := ck.allFiles[rel]; prev == nil || stringSliceLess(pline.conditions, prev.conditions) {
+		ck.allFiles[rel] = pline
+	}
+	// TODO: Add check for canonical paths in PLIST.
+	for dir := rel.DirNoClean(); dir != "."; dir = dir.DirNoClean() {
+		ck.allDirs[dir] = pline
+	}
+}
+
+func (ck *PlistChecker) collectDirective(pline *PlistLine) {
+	m, dirname := match1(pline.text, `^@exec \$\{MKDIR\} %D/(.*)$`)
+	if !m || NewPath(dirname).IsAbs() {
+		return
+	}
+	for dir := NewRelPathString(dirname); dir != "."; dir = dir.DirNoClean() {
+		ck.allDirs[dir] = pline
 	}
 }
 

@@ -509,6 +509,46 @@ func (s *Suite) Test_PlistChecker_collectFilesAndDirs(c *check.C) {
 		[]string{"bin/program", "man/man1/program.1"})
 }
 
+func (s *Suite) Test_PlistChecker_collectPath(c *check.C) {
+	t := s.Init(c)
+
+	line := t.NewLine("PLIST", 1, "a/b/c/program")
+	ck := NewPlistChecker(nil)
+
+	ck.collectPath("a/b/c/program", &PlistLine{line, nil, line.Text})
+
+	t.CheckDeepEquals(keys(ck.allDirs),
+		[]string{"a", "a/b", "a/b/c"})
+	t.CheckDeepEquals(keys(ck.allFiles),
+		[]string{"a/b/c/program"})
+}
+
+func (s *Suite) Test_PlistChecker_collectDirective(c *check.C) {
+	t := s.Init(c)
+
+	test := func(directive string, dirs ...string) {
+		line := t.NewLine("PLIST", 1, directive)
+		ck := NewPlistChecker(nil)
+
+		ck.collectDirective(&PlistLine{line, nil, line.Text})
+
+		t.CheckDeepEquals(keys(ck.allDirs), dirs)
+		t.Check(keys(ck.allFiles), check.HasLen, 0)
+	}
+
+	test("@exec ${MKDIR} %D/a/b/c",
+		"a", "a/b", "a/b/c")
+
+	test("@exec echo hello",
+		nil...)
+
+	test("@exec ${MKDIR} %D//absolute",
+		nil...)
+
+	test("@exec ${MKDIR} %D/a/../../../breakout",
+		"a", "a/..", "a/../..", "a/../../..", "a/../../../breakout")
+}
+
 func (s *Suite) Test_PlistChecker_checkLine(c *check.C) {
 	t := s.Init(c)
 
