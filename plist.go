@@ -120,6 +120,10 @@ func (ck *PlistChecker) collectFilesAndDirs(plines []*PlistLine) {
 }
 
 func (ck *PlistChecker) collectPath(rel RelPath, pline *PlistLine) {
+
+	// TODO: What about paths containing variables?
+	//  Are they intended to be collected as well?
+
 	if prev := ck.allFiles[rel]; prev == nil || stringSliceLess(pline.conditions, prev.conditions) {
 		ck.allFiles[rel] = pline
 	}
@@ -257,23 +261,24 @@ func (ck *PlistChecker) checkPathNonAscii(pline *PlistLine) {
 }
 
 func (ck *PlistChecker) checkSorted(pline *PlistLine) {
-	if text := pline.text; hasAlnumPrefix(text) && !containsVarRef(text) {
-		if ck.lastFname != "" {
-			if ck.lastFname > text && !G.Logger.Opts.Autofix {
-				pline.Warnf("%q should be sorted before %q.", text, ck.lastFname)
-				pline.Explain(
-					"The files in the PLIST should be sorted alphabetically.",
-					"This allows human readers to quickly see whether a file is included or not.")
-			}
-		}
-		ck.lastFname = text
+	if !pline.HasPlainPath() {
+		return
 	}
+
+	text := pline.text
+	if ck.lastFname != "" {
+		if ck.lastFname > text && !G.Logger.Opts.Autofix {
+			pline.Warnf("%q should be sorted before %q.", text, ck.lastFname)
+			pline.Explain(
+				"The files in the PLIST should be sorted alphabetically.",
+				"This allows human readers to quickly see whether a file is included or not.")
+		}
+	}
+	ck.lastFname = text
 }
 
 func (ck *PlistChecker) checkDuplicate(pline *PlistLine) {
-	text := pline.text
-	// TODO: replace hasAlnumPrefix with plistLineStart.
-	if !hasAlnumPrefix(text) || containsVarRef(text) {
+	if !pline.HasPlainPath() {
 		return
 	}
 
@@ -283,7 +288,7 @@ func (ck *PlistChecker) checkDuplicate(pline *PlistLine) {
 	}
 
 	fix := pline.Autofix()
-	fix.Errorf("Duplicate filename %q, already appeared in %s.", text, pline.RelLine(prev.Line))
+	fix.Errorf("Duplicate filename %q, already appeared in %s.", pline.text, pline.RelLine(prev.Line))
 	fix.Delete()
 	fix.Apply()
 }
@@ -458,6 +463,13 @@ type PlistLine struct {
 }
 
 func (pline *PlistLine) Path() RelPath { return NewRelPathString(pline.text) }
+
+func (pline *PlistLine) HasPlainPath() bool {
+	text := pline.text
+	return text != "" &&
+		plistLineStart.Contains(text[0]) &&
+		!containsVarRef(text)
+}
 
 func (pline *PlistLine) CheckTrailingWhitespace() {
 	if hasSuffix(pline.text, " ") || hasSuffix(pline.text, "\t") {

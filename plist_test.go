@@ -991,6 +991,27 @@ func (s *Suite) Test_PlistLine_Path(c *check.C) {
 		func() { (&PlistLine{text: "/absolute"}).Path() })
 }
 
+func (s *Suite) Test_PlistLine_HasPlainPath(c *check.C) {
+	t := s.Init(c)
+
+	test := func(text string, hasPlainPath bool) {
+		t.CheckEquals((&PlistLine{text: text}).HasPlainPath(), hasPlainPath)
+	}
+
+	test("abc", true)
+	test("9plan", true)
+	test("bin/program", true)
+
+	test("", false)
+	test("@", false)
+	test(":", false)
+	test("/absolute", false)
+	test("-rf", false)
+	test("\\", false)
+	test("bin/$<", false)
+	test("bin/${VAR}", false)
+}
+
 func (s *Suite) Test_PlistLine_CheckTrailingWhitespace(c *check.C) {
 	t := s.Init(c)
 
