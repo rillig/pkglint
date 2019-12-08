@@ -14,7 +14,7 @@ func (s *Suite) Test_NewMkCondChecker(c *check.C) {
 	t.CheckEquals(ck.MkLines, mklines)
 }
 
-func (s *Suite) Test_MkCondChecker_checkDirectiveCond(c *check.C) {
+func (s *Suite) Test_MkCondChecker_Check(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPkgsrc()
@@ -127,7 +127,7 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCond(c *check.C) {
 		"WARN: filename.mk:4: MASTER_SITES should not be used at load time in any file.")
 }
 
-func (s *Suite) Test_MkCondChecker_checkDirectiveCond__tracing(c *check.C) {
+func (s *Suite) Test_MkCondChecker_Check__tracing(c *check.C) {
 	t := s.Init(c)
 
 	t.EnableTracingToLog()
@@ -143,7 +143,7 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCond__tracing(c *check.C) {
 		"WARN: filename.mk:2: VAR is used but not defined.")
 }
 
-func (s *Suite) Test_MkCondChecker_checkDirectiveCond__comparison_with_shell_command(c *check.C) {
+func (s *Suite) Test_MkCondChecker_Check__comparison_with_shell_command(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPkgsrc()
@@ -167,7 +167,7 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCond__comparison_with_shell_com
 // The :N modifier filters unwanted values. After this filter, any variable value
 // may be compared with the empty string, regardless of the variable type.
 // Effectively, the :N modifier changes the type from T to Option(T).
-func (s *Suite) Test_MkCondChecker_checkDirectiveCond__compare_pattern_with_empty(c *check.C) {
+func (s *Suite) Test_MkCondChecker_Check__compare_pattern_with_empty(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPkgsrc()
@@ -196,7 +196,7 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCond__compare_pattern_with_empt
 		"WARN: filename.mk:8: The pathname \"*\" contains the invalid character \"*\".")
 }
 
-func (s *Suite) Test_MkCondChecker_checkDirectiveCond__comparing_PKGSRC_COMPILER_with_eqeq(c *check.C) {
+func (s *Suite) Test_MkCondChecker_Check__comparing_PKGSRC_COMPILER_with_eqeq(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPkgsrc()
@@ -218,7 +218,7 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCond__comparing_PKGSRC_COMPILER
 		"ERROR: Makefile:6: Use ${PKGSRC_COMPILER:Ngcc} instead of the != operator.")
 }
 
-func (s *Suite) Test_MkCondChecker_checkDirectiveCondEmpty(c *check.C) {
+func (s *Suite) Test_MkCondChecker_checkEmpty(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
@@ -271,7 +271,7 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCondEmpty(c *check.C) {
 			".include \"../../mk/bsd.prefs.mk\" first.")
 }
 
-func (s *Suite) Test_MkCondChecker_checkDirectiveCondEmptyExpr(c *check.C) {
+func (s *Suite) Test_MkCondChecker_checkEmptyExpr(c *check.C) {
 	t := s.Init(c)
 
 	test := func(use *MkVarUse, diagnostics ...string) {
@@ -279,7 +279,7 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCondEmptyExpr(c *check.C) {
 			"# dummy")
 		ck := NewMkCondChecker(mklines.mklines[0], mklines)
 
-		ck.checkDirectiveCondEmptyExpr(use)
+		ck.checkEmptyExpr(use)
 
 		t.CheckOutput(diagnostics)
 	}
@@ -305,7 +305,7 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCondEmptyExpr(c *check.C) {
 			"name as parameter, not a variable expression.")
 }
 
-func (s *Suite) Test_MkCondChecker_checkDirectiveCondEmptyType(c *check.C) {
+func (s *Suite) Test_MkCondChecker_checkEmptyType(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
@@ -322,7 +322,7 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCondEmptyType(c *check.C) {
 		mklines.ForEach(func(mkline *MkLine) {
 			ck := NewMkCondChecker(mkline, mklines)
 			mkline.ForEachUsed(func(varUse *MkVarUse, time VucTime) {
-				ck.checkDirectiveCondEmptyType(varUse)
+				ck.checkEmptyType(varUse)
 			})
 		})
 
@@ -364,7 +364,7 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCondEmptyType(c *check.C) {
 		nil...)
 }
 
-func (s *Suite) Test_MkCondChecker_simplifyCondition(c *check.C) {
+func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
@@ -388,9 +388,9 @@ func (s *Suite) Test_MkCondChecker_simplifyCondition(c *check.C) {
 				mklines.Tools.ParseToolLine(mklines, mkline, false, false)
 
 				if mkline.IsDirective() && mkline.Directive() != "endif" {
-					// TODO: Replace checkDirectiveCond with a more
+					// TODO: Replace Check with a more
 					//  specific method that does not do the type checks.
-					NewMkCondChecker(mkline, mklines).checkDirectiveCond()
+					NewMkCondChecker(mkline, mklines).Check()
 				}
 			})
 
@@ -687,7 +687,7 @@ func (s *Suite) Test_MkCondChecker_simplifyCondition(c *check.C) {
 		".if !empty(OPSYS:MUnknown)",
 		".if ${OPSYS:U} == Unknown",
 
-		// FIXME: This warning is not the job of simplifyCondition.
+		// FIXME: This warning is not the job of simplify.
 		//  Therefore don't test it here.
 		"WARN: filename.mk:3: The pattern \"Unknown\" cannot match any of "+
 			"{ Cygwin DragonFly FreeBSD Linux NetBSD SunOS } for OPSYS.",
@@ -782,7 +782,7 @@ func (s *Suite) Test_MkCondChecker_simplifyCondition(c *check.C) {
 		".if !empty(PKG_LIBTOOL:Npattern)",
 
 		// No diagnostics about the :N modifier yet,
-		// see MkLineChecker.simplifyCondition.replace.
+		// see MkCondChecker.simplify.replace.
 		"WARN: filename.mk:3: PKG_LIBTOOL should not be used "+
 			"at load time in any file.")
 
@@ -875,7 +875,7 @@ func (s *Suite) Test_MkCondChecker_simplifyCondition(c *check.C) {
 			"contains the invalid character \"\\\"\".")
 }
 
-func (s *Suite) Test_MkCondChecker_simplifyCondition__defined_in_same_file(c *check.C) {
+func (s *Suite) Test_MkCondChecker_simplify__defined_in_same_file(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
@@ -955,7 +955,7 @@ func (s *Suite) Test_MkCondChecker_simplifyCondition__defined_in_same_file(c *ch
 			"with \"${LATER_DIR} == pattern\".")
 }
 
-func (s *Suite) Test_MkCondChecker_checkDirectiveCondCompare(c *check.C) {
+func (s *Suite) Test_MkCondChecker_checkCompare(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
@@ -964,7 +964,7 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCondCompare(c *check.C) {
 		mklines := t.NewMkLines("filename.mk",
 			cond)
 		mklines.ForEach(func(mkline *MkLine) {
-			NewMkCondChecker(mkline, mklines).checkDirectiveCond()
+			NewMkCondChecker(mkline, mklines).Check()
 		})
 		t.CheckOutput(output)
 	}
@@ -1003,7 +1003,7 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCondCompare(c *check.C) {
 		"WARN: filename.mk:1: Invalid condition, unrecognized part: \"empty{VAR}\".")
 }
 
-func (s *Suite) Test_MkCondChecker_checkDirectiveCondCompareVarStr__no_tracing(c *check.C) {
+func (s *Suite) Test_MkCondChecker_checkCompareVarStr__no_tracing(c *check.C) {
 	t := s.Init(c)
 	b := NewMkTokenBuilder()
 
@@ -1015,7 +1015,7 @@ func (s *Suite) Test_MkCondChecker_checkDirectiveCondCompareVarStr__no_tracing(c
 	ck := NewMkCondChecker(mklines.mklines[0], mklines)
 	varUse := b.VarUse("DISTFILES", "Mpattern", "O", "u")
 	// TODO: mklines.ForEach
-	ck.checkDirectiveCondCompareVarStr(varUse, "==", "distfile-1.0.tar.gz")
+	ck.checkCompareVarStr(varUse, "==", "distfile-1.0.tar.gz")
 
 	t.CheckOutputEmpty()
 }

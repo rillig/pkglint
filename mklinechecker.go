@@ -406,7 +406,7 @@ func (ck MkLineChecker) checkDirective(forVars map[string]bool, ind *Indentation
 
 	case directive == "if" || directive == "elif":
 		mkCondChecker := NewMkCondChecker(mkline, ck.MkLines)
-		mkCondChecker.checkDirectiveCond()
+		mkCondChecker.Check()
 
 	case directive == "ifdef" || directive == "ifndef":
 		mkline.Warnf("The \".%s\" directive is deprecated. Please use \".if %sdefined(%s)\" instead.",
