@@ -1117,29 +1117,28 @@ func (src *Pkgsrc) File(relativeName PkgsrcPath) CurrPath {
 	return src.topdir.JoinNoClean(cleaned).CleanDot()
 }
 
-// ToRel returns the path of `filename`, relative to the pkgsrc top directory.
+// Rel returns the path of `filename`, relative to the pkgsrc top directory.
 //
 // Example:
-//  NewPkgsrc("/usr/pkgsrc").ToRel("/usr/pkgsrc/distfiles") => "distfiles"
-// FIXME: Rename to Rel.
-func (src *Pkgsrc) ToRel(filename CurrPath) PkgsrcPath {
+//  NewPkgsrc("/usr/pkgsrc").Rel("/usr/pkgsrc/distfiles") => "distfiles"
+func (src *Pkgsrc) Rel(filename CurrPath) PkgsrcPath {
 	return NewPkgsrcPath(src.Relpath(src.topdir, filename).AsPath())
 }
 
 // IsInfra returns whether the given filename is part of the pkgsrc
 // infrastructure.
 func (src *Pkgsrc) IsInfra(filename CurrPath) bool {
-	rel := src.ToRel(filename)
+	rel := src.Rel(filename)
 	return rel.HasPrefixPath("mk") || rel.HasPrefixPath("wip/mk")
 }
 
 func (src *Pkgsrc) IsInfraMain(filename CurrPath) bool {
-	rel := src.ToRel(filename)
+	rel := src.Rel(filename)
 	return rel.HasPrefixPath("mk")
 }
 
 func (src *Pkgsrc) IsWip(filename CurrPath) bool {
-	rel := src.ToRel(filename)
+	rel := src.Rel(filename)
 	return rel.HasPrefixPath("wip")
 }
 

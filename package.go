@@ -78,7 +78,7 @@ type Package struct {
 }
 
 func NewPackage(dir CurrPath) *Package {
-	pkgpath := G.Pkgsrc.ToRel(dir)
+	pkgpath := G.Pkgsrc.Rel(dir)
 
 	// Package directory must be two subdirectories below the pkgsrc root.
 	// As of November 2019, it is technically possible to create packages
@@ -246,7 +246,7 @@ func (pkg *Package) parse(mklines *MkLines, allLines *MkLines, includingFileForU
 		func(mkline *MkLine) {})
 
 	if includingFileForUsedCheck != "" {
-		mklines.CheckUsedBy(G.Pkgsrc.ToRel(includingFileForUsedCheck))
+		mklines.CheckUsedBy(G.Pkgsrc.Rel(includingFileForUsedCheck))
 	}
 
 	// For every included buildlink3.mk, include the corresponding builtin.mk
@@ -274,7 +274,7 @@ func (pkg *Package) parseLine(mklines *MkLines, mkline *MkLine, allLines *MkLine
 		includedMkLines, skip := pkg.loadIncluded(mkline, includingFile)
 
 		if includedMkLines == nil {
-			pkgsrcPath := G.Pkgsrc.ToRel(mkline.File(includedFile))
+			pkgsrcPath := G.Pkgsrc.Rel(mkline.File(includedFile))
 			if skip || mklines.indentation.HasExists(pkgsrcPath) {
 				return true // See https://github.com/rillig/pkglint/issues/1
 			}
@@ -513,7 +513,7 @@ func (pkg *Package) check(filenames []CurrPath, mklines, allLines *MkLines) {
 			// since all those files come from calls to dirglob.
 			break
 
-		case filename.HasBase("Makefile") && G.Pkgsrc.ToRel(filename).Count() == 3:
+		case filename.HasBase("Makefile") && G.Pkgsrc.Rel(filename).Count() == 3:
 			G.checkExecutable(filename, st.Mode())
 			pkg.checkfilePackageMakefile(filename, mklines, allLines)
 
@@ -1265,7 +1265,7 @@ func (pkg *Package) checkDirent(dirent CurrPath, mode os.FileMode) {
 	switch {
 
 	case mode.IsRegular():
-		G.checkReg(dirent, basename, G.Pkgsrc.ToRel(dirent).Count())
+		G.checkReg(dirent, basename, G.Pkgsrc.Rel(dirent).Count())
 
 	case hasPrefix(basename, "work"):
 		if G.Opts.Import {

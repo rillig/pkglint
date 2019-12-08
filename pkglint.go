@@ -317,7 +317,7 @@ func (pkglint *Pkglint) checkMode(dirent CurrPath, mode os.FileMode) {
 	}
 
 	basename := dirent.Base()
-	pkgsrcRel := pkglint.Pkgsrc.ToRel(dirent)
+	pkgsrcRel := pkglint.Pkgsrc.Rel(dirent)
 
 	pkglint.Wip = pkgsrcRel.HasPrefixPath("wip")
 	pkglint.Infrastructure = pkgsrcRel.HasPrefixPath("mk")
@@ -610,7 +610,7 @@ func (pkglint *Pkglint) checkReg(filename CurrPath, basename string, depth int) 
 		NewLineWhole(filename).Warnf("Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
 
 	case (hasPrefix(basename, "Makefile") || hasSuffix(basename, ".mk")) &&
-		!G.Pkgsrc.ToRel(filename).AsPath().ContainsPath("files"):
+		!G.Pkgsrc.Rel(filename).AsPath().ContainsPath("files"):
 		CheckFileMk(filename)
 
 	case hasPrefix(basename, "PLIST"):
@@ -629,7 +629,7 @@ func (pkglint *Pkglint) checkReg(filename CurrPath, basename string, depth int) 
 		// Skip files directly in the files/ directory, but not those further down.
 
 	case basename == "spec":
-		if !pkglint.Pkgsrc.ToRel(filename).HasPrefixPath("regress") {
+		if !pkglint.Pkgsrc.Rel(filename).HasPrefixPath("regress") {
 			NewLineWhole(filename).Warnf("Only packages in regress/ may have spec files.")
 		}
 
