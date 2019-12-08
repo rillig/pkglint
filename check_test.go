@@ -262,6 +262,27 @@ func (t *Tester) SetUpTool(name, varname string, validity Validity) *Tool {
 	return G.Pkgsrc.Tools.def(name, varname, false, validity, nil)
 }
 
+// SetUpType defines a variable to have a certain type and access permissions,
+// like in the type definitions in vardefs.go.
+//
+// Example:
+//  SetUpType("PKGPATH", BtPkgpath, DefinedIfInScope|NonemptyIfDefined,
+//      "Makefile, *.mk: default, set, append, use, use-loadtime")
+func (t *Tester) SetUpType(varname string, basicType *BasicType,
+	options vartypeOptions, aclEntries ...string) {
+
+	if len(aclEntries) == 0 {
+		aclEntries = []string{"Makefile, *.mk: default, set, append, use, use-loadtime"}
+	}
+
+	G.Pkgsrc.vartypes.acl(varname, basicType, options, aclEntries...)
+
+	// Make sure that registering the type succeeds.
+	// This is necessary for BtUnknown and guessed types.
+	vartype := G.Pkgsrc.VariableType(nil, varname)
+	t.c.Assert(vartype.basicType, check.Equals, basicType)
+}
+
 // SetUpFileLines creates a temporary file and writes the given lines to it.
 // The file is then read in, without interpreting line continuations.
 //

@@ -371,6 +371,44 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 	t.Chdir("category/package")
 	t.FinishSetUp()
 
+	// The Anything type suppresses the warnings from type checking.
+	// BtUnknown would not work, see Pkgsrc.VariableType.
+	btAnything := &BasicType{"Anything", func(cv *VartypeCheck) {}}
+
+	// For simplifying the expressions, it is necessary to know whether
+	// a variable can be undefined. Undefined variables need the
+	// :U modifier, otherwise bmake will complain about "malformed
+	// conditions", which is not entirely precise since the expression
+	// is syntactically valid, it's just the evaluation that fails.
+	//
+	// Some variables such as MACHINE_ARCH are in scope from the very
+	// beginning.
+	//
+	// Some variables such as PKGPATH are in scope after bsd.prefs.mk
+	// has been included.
+	//
+	// Some variables such as PREFIX (as of December 2019) are only in
+	// scope after bsd.pkg.mk has been included. These cannot be used
+	// in .if conditions at all.
+	//
+	// Even when they are in scope, some variables such as PKGREVISION
+	// or MAKE_JOBS may be undefined.
+
+	t.SetUpType("IN_SCOPE_DEFINED", btAnything, AlwaysInScope|DefinedIfInScope,
+		"*.mk: use, use-loadtime")
+	t.SetUpType("IN_SCOPE", btAnything, AlwaysInScope,
+		"*.mk: use, use-loadtime")
+	t.SetUpType("PREFS_DEFINED", btAnything, DefinedIfInScope,
+		"*.mk: use, use-loadtime")
+	t.SetUpType("PREFS", btAnything, DefinedIfInScope,
+		"*.mk: use, use-loadtime")
+	t.SetUpType("LATER_DEFINED", btAnything, DefinedIfInScope,
+		"*.mk: use")
+	t.SetUpType("LATER", btAnything, DefinedIfInScope,
+		"*.mk: use")
+	// UNDEFINED is also used in the following tests, but is obviously
+	// not defined here.
+
 	// prefs: whether to include bsd.prefs.mk before
 	// before: the directive before the condition is simplified
 	// after: the directive after the condition is simplified
@@ -409,6 +447,163 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 	testAfterPrefs := func(before, after string, diagnostics ...string) {
 		doTest(true, before, after, diagnostics...)
 	}
+
+	testBeforePrefs(
+		".if ${IN_SCOPE_DEFINED:Mpattern}",
+		".if ${IN_SCOPE_DEFINED} == pattern",
+
+		"NOTE: filename.mk:3: IN_SCOPE_DEFINED "+
+			"should be compared using \"${IN_SCOPE_DEFINED} == pattern\" "+
+			"instead of matching against \":Mpattern\".",
+		"AUTOFIX: filename.mk:3: Replacing \"${IN_SCOPE_DEFINED:Mpattern}\" "+
+			"with \"${IN_SCOPE_DEFINED} == pattern\".")
+
+	testAfterPrefs(
+		".if ${IN_SCOPE_DEFINED:Mpattern}",
+		".if ${IN_SCOPE_DEFINED} == pattern",
+
+		"NOTE: filename.mk:3: IN_SCOPE_DEFINED "+
+			"should be compared using \"${IN_SCOPE_DEFINED} == pattern\" "+
+			"instead of matching against \":Mpattern\".",
+		"AUTOFIX: filename.mk:3: Replacing \"${IN_SCOPE_DEFINED:Mpattern}\" "+
+			"with \"${IN_SCOPE_DEFINED} == pattern\".")
+
+	testBeforePrefs(
+		".if ${IN_SCOPE:Mpattern}",
+		".if ${IN_SCOPE:U} == pattern",
+
+		"NOTE: filename.mk:3: IN_SCOPE "+
+			"should be compared using \"${IN_SCOPE:U} == pattern\" "+
+			"instead of matching against \":Mpattern\".",
+		"AUTOFIX: filename.mk:3: Replacing \"${IN_SCOPE:Mpattern}\" "+
+			"with \"${IN_SCOPE:U} == pattern\".")
+
+	testAfterPrefs(
+		".if ${IN_SCOPE:Mpattern}",
+		".if ${IN_SCOPE:U} == pattern",
+
+		"NOTE: filename.mk:3: IN_SCOPE "+
+			"should be compared using \"${IN_SCOPE:U} == pattern\" "+
+			"instead of matching against \":Mpattern\".",
+		"AUTOFIX: filename.mk:3: Replacing \"${IN_SCOPE:Mpattern}\" "+
+			"with \"${IN_SCOPE:U} == pattern\".")
+
+	// Even though PREFS_DEFINED is declared as DefinedIfInScope,
+	// it is not in scope yet. Therefore it needs the :U modifier.
+	// The warning that this variable is not yet in scope comes from
+	// a different part of pkglint.
+	testBeforePrefs(
+		".if ${PREFS_DEFINED:Mpattern}",
+		".if ${PREFS_DEFINED:U} == pattern",
+
+		"NOTE: filename.mk:3: PREFS_DEFINED "+
+			"should be compared using \"${PREFS_DEFINED:U} == pattern\" "+
+			"instead of matching against \":Mpattern\".",
+		"WARN: filename.mk:3: To use PREFS_DEFINED at load time, "+
+			".include \"../../mk/bsd.prefs.mk\" first.",
+		"AUTOFIX: filename.mk:3: Replacing \"${PREFS_DEFINED:Mpattern}\" "+
+			"with \"${PREFS_DEFINED:U} == pattern\".")
+
+	testAfterPrefs(
+		".if ${PREFS_DEFINED:Mpattern}",
+		".if ${PREFS_DEFINED} == pattern",
+
+		"NOTE: filename.mk:3: PREFS_DEFINED "+
+			"should be compared using \"${PREFS_DEFINED} == pattern\" "+
+			"instead of matching against \":Mpattern\".",
+		"AUTOFIX: filename.mk:3: Replacing \"${PREFS_DEFINED:Mpattern}\" "+
+			"with \"${PREFS_DEFINED} == pattern\".")
+
+	testBeforePrefs(
+		".if ${PREFS:Mpattern}",
+		".if ${PREFS:U} == pattern",
+
+		"NOTE: filename.mk:3: PREFS "+
+			"should be compared using \"${PREFS:U} == pattern\" "+
+			"instead of matching against \":Mpattern\".",
+		"WARN: filename.mk:3: To use PREFS at load time, "+
+			".include \"../../mk/bsd.prefs.mk\" first.",
+		"AUTOFIX: filename.mk:3: Replacing \"${PREFS:Mpattern}\" "+
+			"with \"${PREFS:U} == pattern\".")
+
+	// Preferences that may be undefined always need the :U modifier,
+	// even when they are in scope.
+	testAfterPrefs(
+		".if ${PREFS:Mpattern}",
+		// FIXME: The :U is missing.
+		".if ${PREFS} == pattern",
+
+		"NOTE: filename.mk:3: PREFS "+
+			// FIXME: The :U is missing.
+			"should be compared using \"${PREFS} == pattern\" "+
+			"instead of matching against \":Mpattern\".",
+		"AUTOFIX: filename.mk:3: Replacing \"${PREFS:Mpattern}\" "+
+			// FIXME: The :U is missing.
+			"with \"${PREFS} == pattern\".")
+
+	// Variables that are defined later always need the :U modifier.
+	// It is probably a mistake to use them in conditions at all.
+	testBeforePrefs(
+		".if ${LATER_DEFINED:Mpattern}",
+		".if ${LATER_DEFINED:U} == pattern",
+
+		"NOTE: filename.mk:3: LATER_DEFINED "+
+			"should be compared using \"${LATER_DEFINED:U} == pattern\" "+
+			"instead of matching against \":Mpattern\".",
+		"WARN: filename.mk:3: "+
+			"LATER_DEFINED should not be used at load time in any file.",
+		"AUTOFIX: filename.mk:3: Replacing \"${LATER_DEFINED:Mpattern}\" "+
+			"with \"${LATER_DEFINED:U} == pattern\".")
+
+	testAfterPrefs(
+		".if ${LATER_DEFINED:Mpattern}",
+		".if ${LATER_DEFINED:U} == pattern",
+
+		"NOTE: filename.mk:3: LATER_DEFINED "+
+			"should be compared using \"${LATER_DEFINED:U} == pattern\" "+
+			"instead of matching against \":Mpattern\".",
+		"WARN: filename.mk:3: "+
+			"LATER_DEFINED should not be used at load time in any file.",
+		"AUTOFIX: filename.mk:3: Replacing \"${LATER_DEFINED:Mpattern}\" "+
+			"with \"${LATER_DEFINED:U} == pattern\".")
+
+	// Variables that are defined later always need the :U modifier.
+	// It is probably a mistake to use them in conditions at all.
+	testBeforePrefs(
+		".if ${LATER:Mpattern}",
+		".if ${LATER:U} == pattern",
+
+		"NOTE: filename.mk:3: LATER "+
+			"should be compared using \"${LATER:U} == pattern\" "+
+			"instead of matching against \":Mpattern\".",
+		"WARN: filename.mk:3: "+
+			"LATER should not be used at load time in any file.",
+		"AUTOFIX: filename.mk:3: Replacing \"${LATER:Mpattern}\" "+
+			"with \"${LATER:U} == pattern\".")
+
+	testAfterPrefs(
+		".if ${LATER:Mpattern}",
+		".if ${LATER:U} == pattern",
+
+		"NOTE: filename.mk:3: LATER "+
+			"should be compared using \"${LATER:U} == pattern\" "+
+			"instead of matching against \":Mpattern\".",
+		"WARN: filename.mk:3: "+
+			"LATER should not be used at load time in any file.",
+		"AUTOFIX: filename.mk:3: Replacing \"${LATER:Mpattern}\" "+
+			"with \"${LATER:U} == pattern\".")
+
+	testBeforePrefs(
+		".if ${UNDEFINED:Mpattern}",
+		".if ${UNDEFINED:Mpattern}",
+
+		"WARN: filename.mk:3: UNDEFINED is used but not defined.")
+
+	testAfterPrefs(
+		".if ${UNDEFINED:Mpattern}",
+		".if ${UNDEFINED:Mpattern}",
+
+		"WARN: filename.mk:3: UNDEFINED is used but not defined.")
 
 	testBeforePrefs(
 		".if ${PKGPATH:Mpattern}",
