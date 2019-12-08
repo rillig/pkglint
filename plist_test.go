@@ -667,6 +667,11 @@ func (s *Suite) Test_PlistChecker_checkPathNonAscii(c *check.C) {
 		"sbin/iconv",
 
 		"sbin/\U0001F603", // Smiling face with open mouth
+
+		// Directives other than comments do not allow non-ASCII.
+		"@exec true",
+		// FIXME
+		"unicode/\u00FC", // u-umlaut
 	)
 
 	CheckLinesPlist(nil, lines)
