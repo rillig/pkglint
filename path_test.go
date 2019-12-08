@@ -87,6 +87,8 @@ func (s *Suite) Test_Path_DirNoClean(c *check.C) {
 	test("filename", ".")
 	test("dir/filename", "dir")
 	test("dir/filename\\with\\backslash", "dir")
+	test("dir/./file", "dir")
+	test("./file", ".")
 }
 
 func (s *Suite) Test_Path_Base(c *check.C) {
