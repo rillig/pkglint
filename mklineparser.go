@@ -168,12 +168,16 @@ func (p MkLineParser) fixSpaceAfterVarname(line *Line, a *mkLineAssign) {
 		break
 	case matches(varname, `^[a-z]`) && op == opAssignEval:
 		break
+
 	default:
+		before := varname + a.spaceAfterVarname + op.String()
+		// FIXME: Where is the appendIndent function, or indentAfter?
+		after := varname + op.String() + a.spaceAfterVarname
+
 		fix := line.Autofix()
 		fix.Notef("Unnecessary space after variable name %q.", varname)
-		fix.Replace(varname+a.spaceAfterVarname+op.String(), varname+op.String())
+		fix.Replace(before, after)
 		fix.Apply()
-		// FIXME: Preserve the alignment of the variable value.
 	}
 }
 
