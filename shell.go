@@ -205,8 +205,22 @@ func (scc *SimpleCommandChecker) checkAutoMkdirs() {
 		return
 	}
 
+	// Ignore:
+	// * internal variables (starting with an underscore)
+	// * variables from the :@ modifier (starting with a dot)
+	// * variables containing any lowercase character (from .for loops)
+	// XXX: What about variables like DIR.asdf?
+	containsIgnoredVar := func(arg string) bool {
+		for _, token := range scc.mkline.Tokenize(arg, false) {
+			if token.Varuse != nil && matches(token.Varuse.varname, `^[_.]*[a-z]`) {
+				return true
+			}
+		}
+		return false
+	}
+
 	for _, arg := range scc.strcmd.Args {
-		if contains(arg, "$$") || matches(arg, `\$\{[_.]*[a-z]`) {
+		if contains(arg, "$$") || containsIgnoredVar(arg) {
 			continue
 		}
 
