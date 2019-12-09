@@ -1303,13 +1303,8 @@ func MatchMkInclude(text string) (m bool, indentation, directive string, filenam
 	}
 
 	mark := lexer.Mark()
-	for {
-		if lexer.NextBytesFunc(func(c byte) bool { return c != '"' && c != '$' }) != "" {
-			continue
-		}
-		if lexer.NextVarUse() == nil {
-			break
-		}
+	for lexer.NextBytesFunc(func(c byte) bool { return c != '"' && c != '$' }) != "" ||
+		lexer.NextVarUse() != nil {
 	}
 	enclosed := NewPath(lexer.Since(mark))
 
