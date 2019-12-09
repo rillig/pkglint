@@ -1473,7 +1473,7 @@ func (cv *VartypeCheck) Yes() {
 			"but using \".if defined(VARNAME)\" alone.")
 
 	default:
-		if !matches(cv.Value, `^(?:YES|yes)(?:[\t ]+#.*)?$`) {
+		if cv.Value != "YES" && cv.Value != "yes" {
 			cv.Warnf("%s should be set to YES or yes.", cv.Varname)
 			cv.Explain(
 				"This variable means \"yes\" if it is defined, and \"no\" if it is undefined.",

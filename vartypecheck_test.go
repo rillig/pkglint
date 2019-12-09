@@ -2053,6 +2053,14 @@ func (s *Suite) Test_VartypeCheck_Yes(c *check.C) {
 		"WARN: filename.mk:11: BUILD_USES_MSGFMT should only be used in a \".if defined(...)\" condition.",
 		"WARN: filename.mk:12: BUILD_USES_MSGFMT should only be used in a \".if defined(...)\" condition.",
 		"WARN: filename.mk:13: BUILD_USES_MSGFMT should only be used in a \".if defined(...)\" condition.")
+
+	vt.Op(opAssign)
+	vt.Values(
+		// This was accidentally accepted until 2019-12-09.
+		"yes \\# this is not a comment")
+
+	vt.Output(
+		"WARN: filename.mk:21: BUILD_USES_MSGFMT should be set to YES or yes.")
 }
 
 func (s *Suite) Test_VartypeCheck_YesNo(c *check.C) {
@@ -2093,7 +2101,7 @@ func (s *Suite) Test_VartypeCheck_YesNo(c *check.C) {
 
 	vt.Op(opAssign)
 	vt.Values(
-		// This was accidentally accepted until December 2019.
+		// This was accidentally accepted until 2019-12-09.
 		"yes \\# this is not a comment")
 
 	vt.Output(
