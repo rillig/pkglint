@@ -156,17 +156,19 @@ qa_pkgsrc() {
 qa_cover_pkgsrc() {
   qa_genrunid
   step_msg "Running code coverage on the pkgsrc tree"
-  env \
+  (
+    cd "$srcdir" \
+    && env \
       PKGLINT_TESTDIR="$pkgsrcdir" \
       PKGLINT_TESTCMDLINE="-r -Wall -Call -p -s -e" \
-  gobco \
+    gobco \
       -test=-test.covermode=count \
       -test=-test.coverprofile="$archivedir/$runid.cover.txt" \
       -test=-timeout=1000s \
       -test=-check.f="^Test_Pkglint_Main__realistic" \
       -stats="$archivedir/$runid.cover.gobco.json" \
-      "$srcdir" \
       > "$archivedir/$runid.cover.out"
+  )
 }
 
 qa_diffs() {
