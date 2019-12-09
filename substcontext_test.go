@@ -1,7 +1,6 @@
 package pkglint
 
 import (
-	"fmt"
 	"gopkg.in/check.v1"
 )
 
@@ -101,18 +100,21 @@ func (s *Suite) Test_SubstContext__multiple_classes_in_one_line(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("-Wextra")
+	mklines := t.NewMkLines("filename.mk",
+		"SUBST_CLASSES+=         one two",
+		"SUBST_STAGE.one=        post-configure",
+		"SUBST_FILES.one=        one.txt",
+		"SUBST_SED.one=          s,one,1,g",
+		"SUBST_STAGE.two=        post-configure",
+		"SUBST_FILES.two=        two.txt",
+		"")
+	ctx := NewSubstContext()
 
-	simulateSubstLines(t,
-		"10: SUBST_CLASSES+=         one two",
-		"11: SUBST_STAGE.one=        post-configure",
-		"12: SUBST_FILES.one=        one.txt",
-		"13: SUBST_SED.one=          s,one,1,g",
-		"14: SUBST_STAGE.two=        post-configure",
-		"15: SUBST_FILES.two=        two.txt")
+	mklines.ForEach(ctx.Process)
 
 	t.CheckOutputLines(
-		"WARN: Makefile:10: Please add only one class at a time to SUBST_CLASSES.",
-		"WARN: Makefile:16: Incomplete SUBST block: SUBST_SED.two, SUBST_VARS.two or SUBST_FILTER_CMD.two missing.")
+		"WARN: filename.mk:1: Please add only one class at a time to SUBST_CLASSES.",
+		"WARN: filename.mk:7: Incomplete SUBST block: SUBST_SED.two, SUBST_VARS.two or SUBST_FILTER_CMD.two missing.")
 }
 
 func (s *Suite) Test_SubstContext__multiple_classes_in_one_block(c *check.C) {
@@ -120,40 +122,48 @@ func (s *Suite) Test_SubstContext__multiple_classes_in_one_block(c *check.C) {
 
 	t.SetUpCommandLine("-Wextra")
 
-	simulateSubstLines(t,
-		"10: SUBST_CLASSES+=         one",
-		"11: SUBST_STAGE.one=        post-configure",
-		"12: SUBST_STAGE.one=        post-configure",
-		"13: SUBST_FILES.one=        one.txt",
-		"14: SUBST_CLASSES+=         two", // The block "one" is not finished yet.
-		"15: SUBST_SED.one=          s,one,1,g",
-		"16: SUBST_STAGE.two=        post-configure",
-		"17: SUBST_FILES.two=        two.txt",
-		"18: SUBST_SED.two=          s,two,2,g")
+	mklines := t.NewMkLines("filename.mk",
+		"SUBST_CLASSES+=         one",
+		"SUBST_STAGE.one=        post-configure",
+		"SUBST_STAGE.one=        post-configure",
+		"SUBST_FILES.one=        one.txt",
+		"SUBST_CLASSES+=         two", // The block "one" is not finished yet.
+		"SUBST_SED.one=          s,one,1,g",
+		"SUBST_STAGE.two=        post-configure",
+		"SUBST_FILES.two=        two.txt",
+		"SUBST_SED.two=          s,two,2,g",
+		"")
+	ctx := NewSubstContext()
+
+	mklines.ForEach(ctx.Process)
 
 	t.CheckOutputLines(
-		"WARN: Makefile:12: Duplicate definition of \"SUBST_STAGE.one\".",
-		"WARN: Makefile:14: Incomplete SUBST block: SUBST_SED.one, SUBST_VARS.one or SUBST_FILTER_CMD.one missing.",
-		"WARN: Makefile:14: Subst block \"one\" should be finished before adding the next class to SUBST_CLASSES.",
-		"WARN: Makefile:15: Variable \"SUBST_SED.one\" does not match SUBST class \"two\".")
+		"WARN: filename.mk:3: Duplicate definition of \"SUBST_STAGE.one\".",
+		"WARN: filename.mk:5: Incomplete SUBST block: SUBST_SED.one, SUBST_VARS.one or SUBST_FILTER_CMD.one missing.",
+		"WARN: filename.mk:5: Subst block \"one\" should be finished before adding the next class to SUBST_CLASSES.",
+		"WARN: filename.mk:6: Variable \"SUBST_SED.one\" does not match SUBST class \"two\".")
 }
 
 func (s *Suite) Test_SubstContext__files_missing(c *check.C) {
 	t := s.Init(c)
 
-	simulateSubstLines(t,
-		"10: SUBST_CLASSES+=         one",
-		"11: SUBST_STAGE.one=        pre-configure",
-		"12: SUBST_CLASSES+=         two",
-		"13: SUBST_STAGE.two=        pre-configure",
-		"14: SUBST_FILES.two=        two.txt",
-		"15: SUBST_SED.two=          s,two,2,g")
+	mklines := t.NewMkLines("filename.mk",
+		"SUBST_CLASSES+=         one",
+		"SUBST_STAGE.one=        pre-configure",
+		"SUBST_CLASSES+=         two",
+		"SUBST_STAGE.two=        pre-configure",
+		"SUBST_FILES.two=        two.txt",
+		"SUBST_SED.two=          s,two,2,g",
+		"")
+	ctx := NewSubstContext()
+
+	mklines.ForEach(ctx.Process)
 
 	t.CheckOutputLines(
-		"WARN: Makefile:12: Incomplete SUBST block: SUBST_FILES.one missing.",
-		"WARN: Makefile:12: Incomplete SUBST block: "+
+		"WARN: filename.mk:3: Incomplete SUBST block: SUBST_FILES.one missing.",
+		"WARN: filename.mk:3: Incomplete SUBST block: "+
 			"SUBST_SED.one, SUBST_VARS.one or SUBST_FILTER_CMD.one missing.",
-		"WARN: Makefile:12: Subst block \"one\" should be finished "+
+		"WARN: filename.mk:3: Subst block \"one\" should be finished "+
 			"before adding the next class to SUBST_CLASSES.")
 }
 
@@ -162,27 +172,32 @@ func (s *Suite) Test_SubstContext__directives(c *check.C) {
 
 	t.SetUpCommandLine("-Wextra")
 
-	simulateSubstLines(t,
-		"10: SUBST_CLASSES+=         os",
-		"11: SUBST_STAGE.os=         post-configure",
-		"12: SUBST_MESSAGE.os=       Guessing operating system",
-		"13: SUBST_FILES.os=         guess-os.h",
-		"14: .if ${OPSYS} == NetBSD",
-		"15: SUBST_FILTER_CMD.os=    ${SED} -e s,@OPSYS@,NetBSD,",
-		"16: .elif ${OPSYS} == Darwin",
-		"17: SUBST_SED.os=           -e s,@OPSYS@,Darwin1,",
-		"18: SUBST_SED.os=           -e s,@OPSYS@,Darwin2,",
-		"19: .elif ${OPSYS} == Linux",
-		"20: SUBST_SED.os=           -e s,@OPSYS@,Linux,",
-		"21: .else",
-		"22: SUBST_VARS.os=           OPSYS",
-		"23: .endif")
+	mklines := t.NewMkLines("filename.mk",
+		"SUBST_CLASSES+=         os",
+		"SUBST_STAGE.os=         post-configure",
+		"SUBST_MESSAGE.os=       Guessing operating system",
+		"SUBST_FILES.os=         guess-os.h",
+		".if ${OPSYS} == NetBSD",
+		"SUBST_FILTER_CMD.os=    ${SED} -e s,@OPSYS@,NetBSD,",
+		".elif ${OPSYS} == Darwin",
+		"SUBST_SED.os=           -e s,@OPSYS@,Darwin1,",
+		"SUBST_SED.os=           -e s,@OPSYS@,Darwin2,",
+		".elif ${OPSYS} == Linux",
+		"SUBST_SED.os=           -e s,@OPSYS@,Linux,",
+		".else",
+		"SUBST_VARS.os=           OPSYS",
+		".endif",
+		"")
+	ctx := NewSubstContext()
+
+	mklines.ForEach(ctx.Process)
 
 	// All the other lines are correctly determined as being alternatives
 	// to each other. And since every branch contains some transformation
 	// (SED, VARS, FILTER_CMD), everything is fine.
 	t.CheckOutputLines(
-		"WARN: Makefile:18: All but the first \"SUBST_SED.os\" lines should use the \"+=\" operator.")
+		"WARN: filename.mk:9: All but the first \"SUBST_SED.os\" lines " +
+			"should use the \"+=\" operator.")
 }
 
 func (s *Suite) Test_SubstContext__directives_around_everything_then(c *check.C) {
@@ -190,15 +205,19 @@ func (s *Suite) Test_SubstContext__directives_around_everything_then(c *check.C)
 
 	t.SetUpCommandLine("-Wextra")
 
-	simulateSubstLines(t,
-		"10: SUBST_CLASSES+=         os",
-		"11: .if ${OPSYS} == NetBSD",
-		"12: SUBST_VARS.os=          OPSYS",
-		"13: SUBST_SED.os=           -e s,@OPSYS@,NetBSD,",
-		"14: SUBST_STAGE.os=         post-configure",
-		"15: SUBST_MESSAGE.os=       Guessing operating system",
-		"16: SUBST_FILES.os=         guess-os.h",
-		"17: .endif")
+	mklines := t.NewMkLines("filename.mk",
+		"SUBST_CLASSES+=         os",
+		".if ${OPSYS} == NetBSD",
+		"SUBST_VARS.os=          OPSYS",
+		"SUBST_SED.os=           -e s,@OPSYS@,NetBSD,",
+		"SUBST_STAGE.os=         post-configure",
+		"SUBST_MESSAGE.os=       Guessing operating system",
+		"SUBST_FILES.os=         guess-os.h",
+		".endif",
+		"")
+	ctx := NewSubstContext()
+
+	mklines.ForEach(ctx.Process)
 
 	// TODO: The SUBST variables are not guaranteed to be defined in all cases.
 	t.CheckOutputEmpty()
@@ -209,22 +228,26 @@ func (s *Suite) Test_SubstContext__directives_around_everything_else(c *check.C)
 
 	t.SetUpCommandLine("-Wextra")
 
-	simulateSubstLines(t,
-		"10: SUBST_CLASSES+=         os",
-		"11: .if ${OPSYS} == NetBSD",
-		"12: .else",
-		"13: SUBST_VARS.os=          OPSYS",
-		"14: SUBST_SED.os=           -e s,@OPSYS@,NetBSD,",
-		"15: SUBST_STAGE.os=         post-configure",
-		"16: SUBST_MESSAGE.os=       Guessing operating system",
-		"17: SUBST_FILES.os=         guess-os.h",
-		"18: .endif")
+	mklines := t.NewMkLines("filename.mk",
+		"SUBST_CLASSES+=         os",
+		".if ${OPSYS} == NetBSD",
+		".else",
+		"SUBST_VARS.os=          OPSYS",
+		"SUBST_SED.os=           -e s,@OPSYS@,NetBSD,",
+		"SUBST_STAGE.os=         post-configure",
+		"SUBST_MESSAGE.os=       Guessing operating system",
+		"SUBST_FILES.os=         guess-os.h",
+		".endif",
+		"")
+	ctx := NewSubstContext()
+
+	mklines.ForEach(ctx.Process)
 
 	// FIXME: The warnings must be the same as in the "then" test case.
 	t.CheckOutputLines(
-		"WARN: Makefile:19: Incomplete SUBST block: SUBST_FILES.os missing.",
-		"WARN: Makefile:19: Incomplete SUBST block: SUBST_SED.os, SUBST_VARS.os or "+
-			"SUBST_FILTER_CMD.os missing.")
+		"WARN: filename.mk:10: Incomplete SUBST block: SUBST_FILES.os missing.",
+		"WARN: filename.mk:10: Incomplete SUBST block: "+
+			"SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
 }
 
 func (s *Suite) Test_SubstContext__empty_directive(c *check.C) {
@@ -232,16 +255,20 @@ func (s *Suite) Test_SubstContext__empty_directive(c *check.C) {
 
 	t.SetUpCommandLine("-Wextra")
 
-	simulateSubstLines(t,
-		"10: SUBST_CLASSES+=         os",
-		"11: SUBST_VARS.os=          OPSYS",
-		"12: SUBST_SED.os=           -e s,@OPSYS@,NetBSD,",
-		"13: SUBST_STAGE.os=         post-configure",
-		"14: SUBST_MESSAGE.os=       Guessing operating system",
-		"15: SUBST_FILES.os=         guess-os.h",
-		"16: .if ${OPSYS} == NetBSD",
-		"17: .else",
-		"18: .endif")
+	mklines := t.NewMkLines("filename.mk",
+		"SUBST_CLASSES+=         os",
+		"SUBST_VARS.os=          OPSYS",
+		"SUBST_SED.os=           -e s,@OPSYS@,NetBSD,",
+		"SUBST_STAGE.os=         post-configure",
+		"SUBST_MESSAGE.os=       Guessing operating system",
+		"SUBST_FILES.os=         guess-os.h",
+		".if ${OPSYS} == NetBSD",
+		".else",
+		".endif",
+		"")
+	ctx := NewSubstContext()
+
+	mklines.ForEach(ctx.Process)
 
 	t.CheckOutputEmpty()
 }
@@ -251,24 +278,28 @@ func (s *Suite) Test_SubstContext__missing_transformation_in_one_branch(c *check
 
 	t.SetUpCommandLine("-Wextra")
 
-	simulateSubstLines(t,
-		"10: SUBST_CLASSES+=         os",
-		"11: SUBST_STAGE.os=         post-configure",
-		"12: SUBST_MESSAGE.os=       Guessing operating system",
-		"13: SUBST_FILES.os=         guess-os.h",
-		"14: .if ${OPSYS} == NetBSD",
-		"15: SUBST_FILES.os=         -e s,@OpSYS@,NetBSD,", // A simple typo, this should be SUBST_SED.
-		"16: .elif ${OPSYS} == Darwin",
-		"17: SUBST_SED.os=           -e s,@OPSYS@,Darwin1,",
-		"18: SUBST_SED.os=           -e s,@OPSYS@,Darwin2,",
-		"19: .else",
-		"20: SUBST_VARS.os=           OPSYS",
-		"21: .endif")
+	mklines := t.NewMkLines("filename.mk",
+		"SUBST_CLASSES+=         os",
+		"SUBST_STAGE.os=         post-configure",
+		"SUBST_MESSAGE.os=       Guessing operating system",
+		"SUBST_FILES.os=         guess-os.h",
+		".if ${OPSYS} == NetBSD",
+		"SUBST_FILES.os=         -e s,@OpSYS@,NetBSD,", // A simple typo, this should be SUBST_SED.
+		".elif ${OPSYS} == Darwin",
+		"SUBST_SED.os=           -e s,@OPSYS@,Darwin1,",
+		"SUBST_SED.os=           -e s,@OPSYS@,Darwin2,",
+		".else",
+		"SUBST_VARS.os=           OPSYS",
+		".endif",
+		"")
+	ctx := NewSubstContext()
+
+	mklines.ForEach(ctx.Process)
 
 	t.CheckOutputLines(
-		"WARN: Makefile:15: All but the first \"SUBST_FILES.os\" lines should use the \"+=\" operator.",
-		"WARN: Makefile:18: All but the first \"SUBST_SED.os\" lines should use the \"+=\" operator.",
-		"WARN: Makefile:22: Incomplete SUBST block: SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
+		"WARN: filename.mk:6: All but the first \"SUBST_FILES.os\" lines should use the \"+=\" operator.",
+		"WARN: filename.mk:9: All but the first \"SUBST_SED.os\" lines should use the \"+=\" operator.",
+		"WARN: filename.mk:13: Incomplete SUBST block: SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
 }
 
 func (s *Suite) Test_SubstContext__nested_conditionals(c *check.C) {
@@ -276,26 +307,30 @@ func (s *Suite) Test_SubstContext__nested_conditionals(c *check.C) {
 
 	t.SetUpCommandLine("-Wextra")
 
-	simulateSubstLines(t,
-		"10: SUBST_CLASSES+=         os",
-		"11: SUBST_STAGE.os=         post-configure",
-		"12: SUBST_MESSAGE.os=       Guessing operating system",
-		"13: .if ${OPSYS} == NetBSD",
-		"14: SUBST_FILES.os=         guess-netbsd.h",
-		"15: .  if ${ARCH} == i386",
-		"16: SUBST_FILTER_CMD.os=    ${SED} -e s,@OPSYS,NetBSD-i386,",
-		"17: .  elif ${ARCH} == x86_64",
-		"18: SUBST_VARS.os=          OPSYS",
-		"19: .  else",
-		"20: SUBST_SED.os=           -e s,@OPSYS,NetBSD-unknown",
-		"21: .  endif",
-		"22: .else",
-		"23: SUBST_SED.os=           -e s,@OPSYS@,unknown,",
-		"24: .endif")
+	mklines := t.NewMkLines("filename.mk",
+		"SUBST_CLASSES+=         os",
+		"SUBST_STAGE.os=         post-configure",
+		"SUBST_MESSAGE.os=       Guessing operating system",
+		".if ${OPSYS} == NetBSD",
+		"SUBST_FILES.os=         guess-netbsd.h",
+		".  if ${ARCH} == i386",
+		"SUBST_FILTER_CMD.os=    ${SED} -e s,@OPSYS,NetBSD-i386,",
+		".  elif ${ARCH} == x86_64",
+		"SUBST_VARS.os=          OPSYS",
+		".  else",
+		"SUBST_SED.os=           -e s,@OPSYS,NetBSD-unknown",
+		".  endif",
+		".else",
+		// This branch omits SUBST_FILES.
+		"SUBST_SED.os=           -e s,@OPSYS@,unknown,",
+		".endif",
+		"")
+	ctx := NewSubstContext()
 
-	// The branch in line 23 omits SUBST_FILES.
+	mklines.ForEach(ctx.Process)
+
 	t.CheckOutputLines(
-		"WARN: Makefile:25: Incomplete SUBST block: SUBST_FILES.os missing.")
+		"WARN: filename.mk:16: Incomplete SUBST block: SUBST_FILES.os missing.")
 }
 
 func (s *Suite) Test_SubstContext__pre_patch(c *check.C) {
@@ -427,7 +462,7 @@ func (s *Suite) Test_SubstContext__do_patch(c *check.C) {
 	mklines.Check()
 
 	// No warning, since there is nothing to fix automatically.
-	// This case also doesn't occur in practice.
+	// This case doesn't occur in practice anyway.
 	t.CheckOutputEmpty()
 }
 
@@ -871,31 +906,4 @@ func (s *Suite) Test_SubstContext_extractVarname(c *check.C) {
 
 	// The replacement must be a plain variable expression, without suffix.
 	test("s,@VAR@,${VAR}suffix,", "")
-}
-
-// simulateSubstLines only tests some of the inner workings of SubstContext.
-// It is not realistic for all cases. If in doubt, use MkLines.Check.
-func simulateSubstLines(t *Tester, texts ...string) {
-	var lineTexts []string
-
-	for i := 0; i < 9; i++ {
-		lineTexts = append(lineTexts, "")
-	}
-
-	for i, lineText := range texts {
-		var curr int
-		_, err := fmt.Sscanf(lineText[0:4], "%d: ", &curr)
-		assertNil(err, "")
-		t.CheckEquals(curr, 10+i)
-		lineTexts = append(lineTexts, lineText[4:])
-	}
-
-	// Finish the paragraph.
-	lineTexts = append(lineTexts, "")
-
-	mklines := t.NewMkLines("Makefile",
-		lineTexts...)
-
-	ctx := NewSubstContext()
-	mklines.ForEach(ctx.Process)
 }
