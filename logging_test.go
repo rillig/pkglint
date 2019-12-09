@@ -810,11 +810,11 @@ func (s *Suite) Test_Logger_Logf__wording(c *check.C) {
 
 	t.ExpectPanic(
 		func() { G.Logger.Logf(Error, "filename", "13", "This should.", "This should.") },
-		"Pkglint internal error: Should must only appear in warnings: This should.")
+		"Pkglint internal error: The word \"should\" must only appear in warnings: This should.")
 
 	t.ExpectPanic(
 		func() { G.Logger.Logf(Warn, "filename", "13", "This must.", "This must.") },
-		"Pkglint internal error: Must must only appear in errors: This must.")
+		"Pkglint internal error: The word \"must\" must only appear in errors: This must.")
 
 	G.Logger.Logf(Note, "filename", "13", "This should.", "This should.")
 
