@@ -1493,7 +1493,7 @@ func (s *Suite) Test_ShellLineChecker_CheckWord__squot_dollar(c *check.C) {
 
 	ck.CheckWord(ck.mkline.ShellCommand(), false, RunTime)
 
-	// FIXME: Should be parsed correctly. Make passes the dollar through (probably),
+	// XXX: Should be parsed correctly. Make passes the dollar through (probably),
 	//  and the shell parser should complain about the unfinished string literal.
 	t.CheckOutputLines(
 		"WARN: filename.mk:1: Internal pkglint error in ShTokenizer.ShAtom at \"$\" (quoting=s).",
