@@ -1,6 +1,10 @@
 package pkglint
 
-import "strings"
+import (
+	"netbsd.org/pkglint/regex"
+	"regexp"
+	"strings"
+)
 
 // MkToken represents a contiguous string from a Makefile.
 // It is either a literal string or a variable use.
@@ -84,11 +88,28 @@ func (m MkVarUseModifier) Subst(str string) (string, bool) {
 		return "", false
 	}
 
-	result := mkopSubst(str, leftAnchor, from, rightAnchor, to, options)
+	result := m.EvalSubst(str, leftAnchor, from, rightAnchor, to, options)
 	if trace.Tracing && result != str {
 		trace.Stepf("Subst: %q %q => %q", str, m.Text, result)
 	}
 	return result, true
+}
+
+// mkopSubst evaluates make(1)'s :S substitution operator.
+// It does not resolve any variables.
+// FIXME: Clearly signal that substituting is not reliable if either
+//  of the strings contains a variable reference.
+func (MkVarUseModifier) EvalSubst(s string, left bool, from string, right bool, to string, flags string) string {
+	re := regex.Pattern(condStr(left, "^", "") + regexp.QuoteMeta(from) + condStr(right, "$", ""))
+	done := false
+	gflag := contains(flags, "g")
+	return replaceAllFunc(s, re, func(match string) string {
+		if gflag || !done {
+			done = !gflag
+			return to
+		}
+		return match
+	})
 }
 
 // MatchMatch tries to match the modifier to a :M or a :N pattern matching.

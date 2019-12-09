@@ -312,44 +312,6 @@ func (s *Suite) Test_varnameParam(c *check.C) {
 	t.CheckEquals(varnameParam(".CURDIR"), "")
 }
 
-func (s *Suite) Test_mkopSubst__middle(c *check.C) {
-	t := s.Init(c)
-
-	t.CheckEquals(mkopSubst("pkgname", false, "kgna", false, "ri", ""), "prime")
-	t.CheckEquals(mkopSubst("pkgname", false, "pkgname", false, "replacement", ""), "replacement")
-	t.CheckEquals(mkopSubst("aaaaaaa", false, "a", false, "b", ""), "baaaaaa")
-}
-
-func (s *Suite) Test_mkopSubst__left(c *check.C) {
-	t := s.Init(c)
-
-	t.CheckEquals(mkopSubst("pkgname", true, "kgna", false, "ri", ""), "pkgname")
-	t.CheckEquals(mkopSubst("pkgname", true, "pkgname", false, "replacement", ""), "replacement")
-}
-
-func (s *Suite) Test_mkopSubst__right(c *check.C) {
-	t := s.Init(c)
-
-	t.CheckEquals(mkopSubst("pkgname", false, "kgna", true, "ri", ""), "pkgname")
-	t.CheckEquals(mkopSubst("pkgname", false, "pkgname", true, "replacement", ""), "replacement")
-}
-
-func (s *Suite) Test_mkopSubst__left_and_right(c *check.C) {
-	t := s.Init(c)
-
-	t.CheckEquals(mkopSubst("pkgname", true, "kgna", true, "ri", ""), "pkgname")
-	t.CheckEquals(mkopSubst("pkgname", false, "pkgname", false, "replacement", ""), "replacement")
-}
-
-func (s *Suite) Test_mkopSubst__gflag(c *check.C) {
-	t := s.Init(c)
-
-	t.CheckEquals(mkopSubst("aaaaa", false, "a", false, "b", "g"), "bbbbb")
-	t.CheckEquals(mkopSubst("aaaaa", true, "a", false, "b", "g"), "baaaa")
-	t.CheckEquals(mkopSubst("aaaaa", false, "a", true, "b", "g"), "aaaab")
-	t.CheckEquals(mkopSubst("aaaaa", true, "a", true, "b", "g"), "aaaaa")
-}
-
 func (s *Suite) Test__regex_ReplaceFirst(c *check.C) {
 	t := s.Init(c)
 

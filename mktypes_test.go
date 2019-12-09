@@ -155,6 +155,41 @@ func (s *Suite) Test_MkVarUseModifier_Subst__S_dollar_at(c *check.C) {
 	t.CheckEquals(result, "The target")
 }
 
+func (s *Suite) Test_MkVarUseModifier_EvalSubst(c *check.C) {
+	t := s.Init(c)
+
+	test := func(s string, left bool, from string, right bool, to string, flags string, result string) {
+		mod := MkVarUseModifier{}
+
+		actual := mod.EvalSubst(s, left, from, right, to, flags)
+
+		t.CheckEquals(actual, result)
+	}
+
+	// Replace anywhere
+	test("pkgname", false, "kgna", false, "ri", "", "prime")
+	test("pkgname", false, "pkgname", false, "replacement", "", "replacement")
+	test("aaaaaaa", false, "a", false, "b", "", "baaaaaa")
+
+	// Anchored at the beginning
+	test("pkgname", true, "kgna", false, "ri", "", "pkgname")
+	test("pkgname", true, "pkgname", false, "replacement", "", "replacement")
+
+	// Anchored at the end
+	test("pkgname", false, "kgna", true, "ri", "", "pkgname")
+	test("pkgname", false, "pkgname", true, "replacement", "", "replacement")
+
+	// Anchored at both sides
+	test("pkgname", true, "kgna", true, "ri", "", "pkgname")
+	test("pkgname", false, "pkgname", false, "replacement", "", "replacement")
+
+	// Replace all
+	test("aaaaa", false, "a", false, "b", "g", "bbbbb")
+	test("aaaaa", true, "a", false, "b", "g", "baaaa")
+	test("aaaaa", false, "a", true, "b", "g", "aaaab")
+	test("aaaaa", true, "a", true, "b", "g", "aaaaa")
+}
+
 func (s *Suite) Test_MkVarUseModifier_MatchMatch(c *check.C) {
 	t := s.Init(c)
 
