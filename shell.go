@@ -71,6 +71,51 @@ func (scc *SimpleCommandChecker) checkCommandStart() {
 	}
 }
 
+// Some shell commands should not be used in the install phase.
+func (scc *SimpleCommandChecker) checkInstallCommand(shellcmd string) {
+	if trace.Tracing {
+		defer trace.Call0()()
+	}
+
+	if !matches(scc.mklines.target, `^(?:pre|do|post)-install$`) {
+		return
+	}
+
+	line := scc.mkline.Line
+	switch shellcmd {
+	case "${INSTALL}",
+		"${INSTALL_DATA}", "${INSTALL_DATA_DIR}",
+		"${INSTALL_LIB}", "${INSTALL_LIB_DIR}",
+		"${INSTALL_MAN}", "${INSTALL_MAN_DIR}",
+		"${INSTALL_PROGRAM}", "${INSTALL_PROGRAM_DIR}",
+		"${INSTALL_SCRIPT}",
+		"${LIBTOOL}",
+		"${LN}",
+		"${PAX}":
+		return
+
+	case "sed", "${SED}",
+		"tr", "${TR}":
+		// TODO: Pkglint should not complain when sed and tr are used to transform filenames.
+		line.Warnf("The shell command %q should not be used in the install phase.", shellcmd)
+		line.Explain(
+			"In the install phase, the only thing that should be done is to",
+			"install the prepared files to their final location.",
+			"The file's contents should not be changed anymore.")
+
+	case "cp", "${CP}":
+		line.Warnf("${CP} should not be used to install files.")
+		line.Explain(
+			"The ${CP} command is highly platform dependent and cannot overwrite read-only files.",
+			"Please use ${PAX} instead.",
+			"",
+			"For example, instead of:",
+			"\t${CP} -R ${WRKSRC}/* ${PREFIX}/foodir",
+			"use:",
+			"\tcd ${WRKSRC} && ${PAX} -wr * ${PREFIX}/foodir")
+	}
+}
+
 func (scc *SimpleCommandChecker) handleForbiddenCommand() bool {
 	if trace.Tracing {
 		defer trace.Call0()()
@@ -970,51 +1015,6 @@ func (ck *ShellLineChecker) checkVaruseToken(atoms *[]*ShAtom, quoting ShQuoting
 	}
 
 	return true
-}
-
-// Some shell commands should not be used in the install phase.
-func (scc *SimpleCommandChecker) checkInstallCommand(shellcmd string) {
-	if trace.Tracing {
-		defer trace.Call0()()
-	}
-
-	if !matches(scc.mklines.target, `^(?:pre|do|post)-install$`) {
-		return
-	}
-
-	line := scc.mkline.Line
-	switch shellcmd {
-	case "${INSTALL}",
-		"${INSTALL_DATA}", "${INSTALL_DATA_DIR}",
-		"${INSTALL_LIB}", "${INSTALL_LIB_DIR}",
-		"${INSTALL_MAN}", "${INSTALL_MAN_DIR}",
-		"${INSTALL_PROGRAM}", "${INSTALL_PROGRAM_DIR}",
-		"${INSTALL_SCRIPT}",
-		"${LIBTOOL}",
-		"${LN}",
-		"${PAX}":
-		return
-
-	case "sed", "${SED}",
-		"tr", "${TR}":
-		// TODO: Pkglint should not complain when sed and tr are used to transform filenames.
-		line.Warnf("The shell command %q should not be used in the install phase.", shellcmd)
-		line.Explain(
-			"In the install phase, the only thing that should be done is to",
-			"install the prepared files to their final location.",
-			"The file's contents should not be changed anymore.")
-
-	case "cp", "${CP}":
-		line.Warnf("${CP} should not be used to install files.")
-		line.Explain(
-			"The ${CP} command is highly platform dependent and cannot overwrite read-only files.",
-			"Please use ${PAX} instead.",
-			"",
-			"For example, instead of:",
-			"\t${CP} -R ${WRKSRC}/* ${PREFIX}/foodir",
-			"use:",
-			"\tcd ${WRKSRC} && ${PAX} -wr * ${PREFIX}/foodir")
-	}
 }
 
 func (ck *ShellLineChecker) checkMultiLineComment() {

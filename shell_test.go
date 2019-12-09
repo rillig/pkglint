@@ -44,6 +44,74 @@ func (s *Suite) Test_SimpleCommandChecker_checkCommandStart__unknown_default(c *
 		"WARN: Makefile:8: UNKNOWN_TOOL is used but not defined.")
 }
 
+func (s *Suite) Test_SimpleCommandChecker_checkInstallCommand(c *check.C) {
+	t := s.Init(c)
+
+	lines := func(lines ...string) []string { return lines }
+
+	test := func(lines []string, diagnostics ...string) {
+		mklines := t.NewMkLines("filename.mk",
+			mapStr(lines, func(s string) string { return "\t" + s })...)
+		mklines.target = "do-install"
+
+		mklines.ForEach(func(mkline *MkLine) {
+			program, err := parseShellProgram(nil, mkline.ShellCommand())
+			assertNil(err, "")
+
+			walker := NewMkShWalker()
+			walker.Callback.SimpleCommand = func(command *MkShSimpleCommand) {
+				scc := NewSimpleCommandChecker(command, RunTime, mkline, mklines)
+				scc.checkInstallCommand(command.Name.MkText)
+			}
+			walker.Walk(program)
+		})
+
+		t.CheckOutput(diagnostics)
+	}
+
+	test(
+		lines(
+			"sed",
+			"${SED}"),
+		"WARN: filename.mk:1: The shell command \"sed\" "+
+			"should not be used in the install phase.",
+		"WARN: filename.mk:2: The shell command \"${SED}\" "+
+			"should not be used in the install phase.")
+
+	test(
+		lines(
+			"tr",
+			"${TR}"),
+		"WARN: filename.mk:1: The shell command \"tr\" "+
+			"should not be used in the install phase.",
+		"WARN: filename.mk:2: The shell command \"${TR}\" "+
+			"should not be used in the install phase.")
+
+	test(
+		lines(
+			"cp",
+			"${CP}"),
+		"WARN: filename.mk:1: ${CP} should not be used to install files.",
+		"WARN: filename.mk:2: ${CP} should not be used to install files.")
+
+	test(
+		lines(
+			"${INSTALL}",
+			"${INSTALL_DATA}",
+			"${INSTALL_DATA_DIR}",
+			"${INSTALL_LIB}",
+			"${INSTALL_LIB_DIR}",
+			"${INSTALL_MAN}",
+			"${INSTALL_MAN_DIR}",
+			"${INSTALL_PROGRAM}",
+			"${INSTALL_PROGRAM_DIR}",
+			"${INSTALL_SCRIPT}",
+			"${LIBTOOL}",
+			"${LN}",
+			"${PAX}"),
+		nil...)
+}
+
 func (s *Suite) Test_SimpleCommandChecker_handleForbiddenCommand(c *check.C) {
 	t := s.Init(c)
 
@@ -1756,74 +1824,6 @@ func (s *Suite) Test_ShellLineChecker_variableNeedsQuoting__integration(c *check
 	// See ShellLine.CheckShellCommand, spc.checkWord.
 	t.CheckOutputLines(
 		"WARN: filename.mk:3: Unquoted shell variable \"target\".")
-}
-
-func (s *Suite) Test_SimpleCommandChecker_checkInstallCommand(c *check.C) {
-	t := s.Init(c)
-
-	lines := func(lines ...string) []string { return lines }
-
-	test := func(lines []string, diagnostics ...string) {
-		mklines := t.NewMkLines("filename.mk",
-			mapStr(lines, func(s string) string { return "\t" + s })...)
-		mklines.target = "do-install"
-
-		mklines.ForEach(func(mkline *MkLine) {
-			program, err := parseShellProgram(nil, mkline.ShellCommand())
-			assertNil(err, "")
-
-			walker := NewMkShWalker()
-			walker.Callback.SimpleCommand = func(command *MkShSimpleCommand) {
-				scc := NewSimpleCommandChecker(command, RunTime, mkline, mklines)
-				scc.checkInstallCommand(command.Name.MkText)
-			}
-			walker.Walk(program)
-		})
-
-		t.CheckOutput(diagnostics)
-	}
-
-	test(
-		lines(
-			"sed",
-			"${SED}"),
-		"WARN: filename.mk:1: The shell command \"sed\" "+
-			"should not be used in the install phase.",
-		"WARN: filename.mk:2: The shell command \"${SED}\" "+
-			"should not be used in the install phase.")
-
-	test(
-		lines(
-			"tr",
-			"${TR}"),
-		"WARN: filename.mk:1: The shell command \"tr\" "+
-			"should not be used in the install phase.",
-		"WARN: filename.mk:2: The shell command \"${TR}\" "+
-			"should not be used in the install phase.")
-
-	test(
-		lines(
-			"cp",
-			"${CP}"),
-		"WARN: filename.mk:1: ${CP} should not be used to install files.",
-		"WARN: filename.mk:2: ${CP} should not be used to install files.")
-
-	test(
-		lines(
-			"${INSTALL}",
-			"${INSTALL_DATA}",
-			"${INSTALL_DATA_DIR}",
-			"${INSTALL_LIB}",
-			"${INSTALL_LIB_DIR}",
-			"${INSTALL_MAN}",
-			"${INSTALL_MAN_DIR}",
-			"${INSTALL_PROGRAM}",
-			"${INSTALL_PROGRAM_DIR}",
-			"${INSTALL_SCRIPT}",
-			"${LIBTOOL}",
-			"${LN}",
-			"${PAX}"),
-		nil...)
 }
 
 func (s *Suite) Test_ShellLineChecker_checkMultiLineComment(c *check.C) {
