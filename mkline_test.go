@@ -1570,8 +1570,6 @@ func (s *Suite) Test_MatchMkInclude(c *check.C) {
 	test(".  include \"${DIR}/file.mk\"",
 		"  ", "include", "${DIR}/file.mk", "")
 
-	// XXX
-	testFail(".  include \"${DIR:S,\",',g}/file.mk\"")
-
-	t.CheckOutputEmpty()
+	test(".  include \"${DIR:S,\",',g}/file.mk\"",
+		"  ", "include", "${DIR:S,\",',g}/file.mk", "")
 }
