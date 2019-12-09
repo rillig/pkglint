@@ -475,11 +475,18 @@ func (s *Suite) Test_MkLineParser_fixSpaceAfterVarname__preserve_alignment(c *ch
 
 	test(
 		"V    +=         ${VARNAME}",
-		// FIXME: normalize the alignment
-		"V+=             ${VARNAME}",
+		"V+=\t\t${VARNAME}",
 
 		"NOTE: filename.mk:123: Unnecessary space after variable name \"V\".",
-		"AUTOFIX: filename.mk:123: Replacing \"V    +=\" with \"V+=    \".")
+		"AUTOFIX: filename.mk:123: Replacing \"V    +=         \" with \"V+=\\t\\t\".")
+
+	test(
+		"V    +=     ${VARNAME}",
+		// FIXME: tab space space space space
+		"V+=\t\t${VARNAME}",
+
+		"NOTE: filename.mk:123: Unnecessary space after variable name \"V\".",
+		"AUTOFIX: filename.mk:123: Replacing \"V    +=     \" with \"V+=\\t\\t\".")
 }
 
 func (s *Suite) Test_MkLineParser_parseShellcmd(c *check.C) {

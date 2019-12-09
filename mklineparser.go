@@ -170,9 +170,8 @@ func (p MkLineParser) fixSpaceAfterVarname(line *Line, a *mkLineAssign) {
 		break
 
 	default:
-		before := varname + a.spaceAfterVarname + op.String()
-		// FIXME: Where is the appendIndent function, or indentAfter?
-		after := varname + op.String() + a.spaceAfterVarname
+		before := a.valueAlign
+		after := alignWith(varname+op.String(), before)
 
 		fix := line.Autofix()
 		fix.Notef("Unnecessary space after variable name %q.", varname)
