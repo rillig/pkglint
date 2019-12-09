@@ -458,6 +458,30 @@ func (s *Suite) Test_MkLineParser_fixSpaceAfterVarname__autofix(c *check.C) {
 		"pkgbase := pkglint")
 }
 
+func (s *Suite) Test_MkLineParser_fixSpaceAfterVarname__preserve_alignment(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--show-autofix")
+
+	test := func(before, after string, diagnostics ...string) {
+
+		doTest := func(autofix bool) {
+			mkline := t.NewMkLine("filename.mk", 123, before)
+			t.CheckEquals(mkline.Text, condStr(autofix, after, before))
+		}
+
+		t.ExpectDiagnosticsAutofix(doTest, diagnostics...)
+	}
+
+	test(
+		"V    +=         ${VARNAME}",
+		// FIXME: preserve the alignment
+		"V+=         ${VARNAME}",
+
+		"NOTE: filename.mk:123: Unnecessary space after variable name \"V\".",
+		"AUTOFIX: filename.mk:123: Replacing \"V    +=\" with \"V+=\".")
+}
+
 func (s *Suite) Test_MkLineParser_parseShellcmd(c *check.C) {
 	t := s.Init(c)
 
