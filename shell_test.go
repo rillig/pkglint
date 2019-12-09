@@ -1773,7 +1773,7 @@ func (s *Suite) Test_ShellLineChecker_checkShVarUsePlain__Wall(c *check.C) {
 
 	mklines.Check()
 
-	// FIXME: It is inconsistent that the check for unquoted shell
+	// XXX: It is inconsistent that the check for unquoted shell
 	//  variables is enabled for CONFIGURE_ARGS (where shell variables
 	//  don't make sense at all) but not for real shell commands.
 	t.CheckOutputLines(
