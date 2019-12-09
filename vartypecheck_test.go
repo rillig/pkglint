@@ -2063,11 +2063,17 @@ func (s *Suite) Test_VartypeCheck_YesNo(c *check.C) {
 		"yes",
 		"no",
 		"ja",
-		"${YESVAR}")
+		"${YESVAR}",
+		// FIXME
+		"yes \\# this is not a comment",
+		"yes # comment",
+		"no # comment",
+		"Yes indeed")
 
 	vt.Output(
 		"WARN: filename.mk:3: PKG_DEVELOPER should be set to YES, yes, NO, or no.",
-		"WARN: filename.mk:4: PKG_DEVELOPER should be set to YES, yes, NO, or no.")
+		"WARN: filename.mk:4: PKG_DEVELOPER should be set to YES, yes, NO, or no.",
+		"WARN: filename.mk:8: PKG_DEVELOPER should be set to YES, yes, NO, or no.")
 
 	vt.Op(opUseMatch)
 	vt.Values(
