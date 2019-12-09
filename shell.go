@@ -285,7 +285,8 @@ func (scc *SimpleCommandChecker) checkAutoMkdirs() {
 		}
 
 		if autoMkdirs {
-			scc.Notef("You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= %s\" instead of %q.", dirname, cmdname)
+			scc.Notef("You can use AUTO_MKDIRS=yes or \"INSTALLATION_DIRS+= %s\" instead of %q.",
+				prefixRel.String(), cmdname)
 			scc.Explain(
 				"Many packages include a list of all needed directories in their",
 				"PLIST file.",
@@ -299,7 +300,8 @@ func (scc *SimpleCommandChecker) checkAutoMkdirs() {
 				"of the many INSTALL_*_DIR variables is appropriate, since",
 				"INSTALLATION_DIRS takes care of that.")
 		} else {
-			scc.Notef("You can use \"INSTALLATION_DIRS+= %s\" instead of %q.", dirname, cmdname)
+			scc.Notef("You can use \"INSTALLATION_DIRS+= %s\" instead of %q.",
+				prefixRel.String(), cmdname)
 			scc.Explain(
 				"To create directories during installation, it is easier to just",
 				"list them in INSTALLATION_DIRS than to execute the commands",
