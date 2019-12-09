@@ -352,18 +352,33 @@ func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs__conditional_PLIST(c *
 			"instead of \"${INSTALL_DATA_DIR}\".")
 }
 
-func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs__absolute_path(c *check.C) {
+func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs__strange_paths(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package",
 		"do-install:",
+		"\t${RUN} ${INSTALL_DATA_DIR} ${PREFIX}",
+		"\t${RUN} ${INSTALL_DATA_DIR} ${PREFIX}/",
+		"\t${RUN} ${INSTALL_DATA_DIR} ${PREFIX}//",
+		"\t${RUN} ${INSTALL_DATA_DIR} ${PREFIX}/.",
 		"\t${RUN} ${INSTALL_DATA_DIR} ${PREFIX}//non-canonical")
 	t.Chdir("category/package")
 	t.FinishSetUp()
 
-	// FIXME
-	t.ExpectAssert(
-		func() { G.checkdirPackage(".") })
+	G.checkdirPackage(".")
+
+	t.CheckOutputLines(
+		"NOTE: Makefile:22: You can use "+
+			// FIXME
+			"\"INSTALLATION_DIRS+= \" instead of \"${INSTALL_DATA_DIR}\".",
+		"NOTE: Makefile:23: You can use "+
+			// FIXME
+			"\"INSTALLATION_DIRS+= \" instead of \"${INSTALL_DATA_DIR}\".",
+		"NOTE: Makefile:24: You can use "+
+			// FIXME
+			"\"INSTALLATION_DIRS+= .\" instead of \"${INSTALL_DATA_DIR}\".",
+		"NOTE: Makefile:25: You can use "+
+			"\"INSTALLATION_DIRS+= non-canonical\" instead of \"${INSTALL_DATA_DIR}\".")
 }
 
 // This test ensures that the command line options to INSTALL_*_DIR are properly
