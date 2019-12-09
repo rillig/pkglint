@@ -1511,7 +1511,7 @@ func (cv *VartypeCheck) YesNo() {
 			"both forms are actually used.",
 			"As long as this is the case, when checking the variable value,",
 			"both must be accepted.")
-	} else if !matches(cv.Value, `^(?:YES|yes|NO|no)(?:[\t ]+#.*)?$`) {
+	} else if !matches(cv.Value, `^(?:YES|yes|NO|no)$`) {
 		cv.Warnf("%s should be set to YES, yes, NO, or no.", cv.Varname)
 	}
 }

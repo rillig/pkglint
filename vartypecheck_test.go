@@ -2064,8 +2064,6 @@ func (s *Suite) Test_VartypeCheck_YesNo(c *check.C) {
 		"no",
 		"ja",
 		"${YESVAR}",
-		// FIXME
-		"yes \\# this is not a comment",
 		"yes # comment",
 		"no # comment",
 		"Yes indeed")
@@ -2073,7 +2071,7 @@ func (s *Suite) Test_VartypeCheck_YesNo(c *check.C) {
 	vt.Output(
 		"WARN: filename.mk:3: PKG_DEVELOPER should be set to YES, yes, NO, or no.",
 		"WARN: filename.mk:4: PKG_DEVELOPER should be set to YES, yes, NO, or no.",
-		"WARN: filename.mk:8: PKG_DEVELOPER should be set to YES, yes, NO, or no.")
+		"WARN: filename.mk:7: PKG_DEVELOPER should be set to YES, yes, NO, or no.")
 
 	vt.Op(opUseMatch)
 	vt.Values(
@@ -2092,6 +2090,14 @@ func (s *Suite) Test_VartypeCheck_YesNo(c *check.C) {
 			"\"[yY][eE][sS]\" or \"[nN][oO]\", not \"[Yy]es\".",
 		"WARN: filename.mk:15: PKG_DEVELOPER should be matched against "+
 			"\"[yY][eE][sS]\" or \"[nN][oO]\", not \"[Nn]o\".")
+
+	vt.Op(opAssign)
+	vt.Values(
+		// This was accidentally accepted until December 2019.
+		"yes \\# this is not a comment")
+
+	vt.Output(
+		"WARN: filename.mk:21: PKG_DEVELOPER should be set to YES, yes, NO, or no.")
 }
 
 func (s *Suite) Test_VartypeCheck_YesNoIndirectly(c *check.C) {
