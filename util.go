@@ -383,13 +383,19 @@ func detab(s string) string {
 	return detabbed.String()
 }
 
-// alignWith extends str with as many tabs as needed to reach
+// alignWith extends str with as many tabs and spaces as needed to reach
 // the same screen width as the other string.
 func alignWith(str, other string) string {
-	alignBefore := (tabWidth(other) + 7) & -8
-	alignAfter := tabWidth(str) & -8
-	tabsNeeded := imax((alignBefore-alignAfter)/8, 1)
-	return str + strings.Repeat("\t", tabsNeeded)
+	strWidth := tabWidth(str)
+	otherWidth := tabWidth(other)
+	if otherWidth <= strWidth {
+		return str + "\t"
+	}
+	if strWidth&-8 != otherWidth&-8 {
+		strWidth &= -8
+	}
+	alignment := indent(otherWidth - strWidth)
+	return str + alignment
 }
 
 func indent(width int) string {

@@ -415,9 +415,9 @@ func (s *Suite) Test_MkLineParser_fixSpaceAfterVarname__show_autofix(c *check.C)
 
 	t.CheckOutputLines(
 		"NOTE: test.mk:101: Unnecessary space after variable name \"pkgbase\".",
-		"AUTOFIX: test.mk:101: Replacing \"pkgbase =\" with \"pkgbase=\".",
+		"AUTOFIX: test.mk:101: Replacing \"pkgbase = \" with \"pkgbase=  \".",
 		"-\tpkgbase = package",
-		"+\tpkgbase= package")
+		"+\tpkgbase=  package")
 }
 
 func (s *Suite) Test_MkLineParser_fixSpaceAfterVarname__autofix(c *check.C) {
@@ -447,8 +447,8 @@ func (s *Suite) Test_MkLineParser_fixSpaceAfterVarname__autofix(c *check.C) {
 	CheckFileMk(filename)
 
 	t.CheckOutputLines(
-		"AUTOFIX: ~/Makefile:2: Replacing \"VARNAME +=\" with \"VARNAME+=\".",
-		"AUTOFIX: ~/Makefile:5: Replacing \"VARNAME+ ?=\" with \"VARNAME+?=\".")
+		"AUTOFIX: ~/Makefile:2: Replacing \"VARNAME +=\\t\" with \"VARNAME+=\\t\".",
+		"AUTOFIX: ~/Makefile:5: Replacing \"VARNAME+ ?=\\t\" with \"VARNAME+?=\\t\".")
 	t.CheckFileLines("Makefile",
 		MkCvsID+"",
 		"VARNAME+=\t${VARNAME}",
@@ -482,11 +482,10 @@ func (s *Suite) Test_MkLineParser_fixSpaceAfterVarname__preserve_alignment(c *ch
 
 	test(
 		"V    +=     ${VARNAME}",
-		// FIXME: tab space space space space
-		"V+=\t\t${VARNAME}",
+		"V+=\t    ${VARNAME}",
 
 		"NOTE: filename.mk:123: Unnecessary space after variable name \"V\".",
-		"AUTOFIX: filename.mk:123: Replacing \"V    +=     \" with \"V+=\\t\\t\".")
+		"AUTOFIX: filename.mk:123: Replacing \"V    +=     \" with \"V+=\\t    \".")
 }
 
 func (s *Suite) Test_MkLineParser_parseShellcmd(c *check.C) {
