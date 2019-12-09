@@ -352,6 +352,20 @@ func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs__conditional_PLIST(c *
 			"instead of \"${INSTALL_DATA_DIR}\".")
 }
 
+func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs__absolute_path(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"do-install:",
+		"\t${RUN} ${INSTALL_DATA_DIR} ${PREFIX}//non-canonical")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	// FIXME
+	t.ExpectAssert(
+		func() { G.checkdirPackage(".") })
+}
+
 // This test ensures that the command line options to INSTALL_*_DIR are properly
 // parsed and do not lead to "can only handle one directory at a time" warnings.
 func (s *Suite) Test_SimpleCommandChecker_checkInstallMulti(c *check.C) {
