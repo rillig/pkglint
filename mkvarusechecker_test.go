@@ -355,7 +355,25 @@ func (s *Suite) Test_MkVarUseChecker_checkModifiersRange(c *check.C) {
 }
 
 func (s *Suite) Test_MkVarUseChecker_checkVarname(c *check.C) {
-	// FIXME
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("filename.mk",
+		"\t: $@",
+		".if ${LOCALBASE} == /usr/pkg", // Use at load time
+		"\t: ${LOCALBASE}",             // Use at run time
+		".endif")
+
+	mklines.ForEach(func(mkline *MkLine) {
+		mkline.ForEachUsed(func(varUse *MkVarUse, time VucTime) {
+			NewMkVarUseChecker(varUse, mklines, mkline).checkVarname()
+		})
+	})
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:1: Please use \"${.TARGET}\" instead of \"$@\".",
+		// FIXME: PREFIX is not available at load time.
+		"WARN: filename.mk:2: Please use PREFIX instead of LOCALBASE.",
+		"WARN: filename.mk:3: Please use PREFIX instead of LOCALBASE.")
 }
 
 func (s *Suite) Test_MkVarUseChecker_checkPermissions(c *check.C) {
