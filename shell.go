@@ -9,15 +9,17 @@ import (
 // Parsing and checking shell commands embedded in Makefiles
 
 type SimpleCommandChecker struct {
-	*ShellLineChecker
 	cmd    *MkShSimpleCommand
 	strcmd *StrCommand
 	time   ToolTime
+
+	mkline  *MkLine
+	mklines *MkLines
 }
 
 func NewSimpleCommandChecker(ck *ShellLineChecker, cmd *MkShSimpleCommand, time ToolTime) *SimpleCommandChecker {
 	strcmd := NewStrCommand(cmd)
-	return &SimpleCommandChecker{ck, cmd, strcmd, time}
+	return &SimpleCommandChecker{cmd, strcmd, time, ck.mkline, ck.MkLines}
 
 }
 
@@ -58,7 +60,7 @@ func (scc *SimpleCommandChecker) checkCommandStart() {
 	case matches(shellword, `\$\{(PKGSRCDIR|PREFIX)(:Q)?\}`):
 		break
 	default:
-		if G.Opts.WarnExtra && !scc.MkLines.indentation.DependsOn("OPSYS") {
+		if G.Opts.WarnExtra && !scc.mklines.indentation.DependsOn("OPSYS") {
 			scc.mkline.Warnf("Unknown shell command %q.", shellword)
 			scc.mkline.Explain(
 				"To make the package portable to all platforms that pkgsrc supports,",
@@ -95,7 +97,7 @@ func (scc *SimpleCommandChecker) handleTool() bool {
 
 	command := scc.strcmd.Name
 
-	tool, usable := G.Tool(scc.MkLines, command, scc.time)
+	tool, usable := G.Tool(scc.mklines, command, scc.time)
 
 	if tool != nil && !usable {
 		scc.mkline.Warnf("The %q tool is used but not added to USE_TOOLS.", command)
@@ -121,14 +123,14 @@ func (scc *SimpleCommandChecker) handleCommandVariable() bool {
 
 	varname := varuse.varname
 
-	if vartype := G.Pkgsrc.VariableType(scc.MkLines, varname); vartype != nil && vartype.basicType.name == "ShellCommand" {
+	if vartype := G.Pkgsrc.VariableType(scc.mklines, varname); vartype != nil && vartype.basicType.name == "ShellCommand" {
 		scc.checkInstallCommand(shellword)
 		return true
 	}
 
 	// When the package author has explicitly defined a command
 	// variable, assume it to be valid.
-	if scc.MkLines.allVars.IsDefinedSimilar(varname) {
+	if scc.mklines.allVars.IsDefinedSimilar(varname) {
 		return true
 	}
 
@@ -300,7 +302,7 @@ func (scc *SimpleCommandChecker) checkPaxPe() {
 
 	if (scc.strcmd.Name == "${PAX}" || scc.strcmd.Name == "pax") && scc.strcmd.HasOption("-pe") {
 		scc.Warnf("Please use the -pp option to pax(1) instead of -pe.")
-		scc.mkline.Explain(
+		scc.Explain(
 			"The -pe option tells pax to preserve the ownership of the files.",
 			"",
 			"When extracting distfiles as root user, this means that whatever numeric uid was",
@@ -318,7 +320,7 @@ func (scc *SimpleCommandChecker) checkEchoN() {
 	}
 
 	if scc.strcmd.Name == "${ECHO}" && scc.strcmd.HasOption("-n") {
-		scc.mkline.Warnf("Please use ${ECHO_N} instead of \"echo -n\".")
+		scc.Warnf("Please use ${ECHO_N} instead of \"echo -n\".")
 	}
 }
 
@@ -976,7 +978,7 @@ func (scc *SimpleCommandChecker) checkInstallCommand(shellcmd string) {
 		defer trace.Call0()()
 	}
 
-	if !matches(scc.MkLines.target, `^(?:pre|do|post)-install$`) {
+	if !matches(scc.mklines.target, `^(?:pre|do|post)-install$`) {
 		return
 	}
 

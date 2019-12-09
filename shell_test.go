@@ -155,10 +155,14 @@ func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable__from_package(c 
 func (s *Suite) Test_SimpleCommandChecker_handleShellBuiltin(c *check.C) {
 	t := s.Init(c)
 
+	mklines := t.NewMkLines("filename.mk",
+		"\t:")
+	mkline := mklines.mklines[0]
+
 	test := func(command string, isBuiltin bool) {
 		token := NewShToken(command, NewShAtom(shtText, command, shqPlain))
 		simpleCommand := &MkShSimpleCommand{Name: token}
-		scc := NewSimpleCommandChecker(nil, simpleCommand, RunTime)
+		scc := NewSimpleCommandChecker(NewShellLineChecker(mklines, mkline), simpleCommand, RunTime)
 		t.CheckEquals(scc.handleShellBuiltin(), isBuiltin)
 	}
 
