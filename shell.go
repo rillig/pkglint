@@ -971,16 +971,16 @@ func (ck *ShellLineChecker) checkVaruseToken(atoms *[]*ShAtom, quoting ShQuoting
 }
 
 // Some shell commands should not be used in the install phase.
-func (ck *ShellLineChecker) checkInstallCommand(shellcmd string) {
+func (scc *SimpleCommandChecker) checkInstallCommand(shellcmd string) {
 	if trace.Tracing {
 		defer trace.Call0()()
 	}
 
-	if !matches(ck.MkLines.target, `^(?:pre|do|post)-install$`) {
+	if !matches(scc.MkLines.target, `^(?:pre|do|post)-install$`) {
 		return
 	}
 
-	line := ck.mkline.Line
+	line := scc.mkline.Line
 	switch shellcmd {
 	case "${INSTALL}",
 		"${INSTALL_DATA}", "${INSTALL_DATA_DIR}",
