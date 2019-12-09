@@ -576,7 +576,7 @@ func (s *Scope) Define(varname string, mkline *MkLine) {
 			case opAssignDefault:
 				// No change to the value.
 			case opAssignShell:
-				s.value[name] = mkline.Value() // FIXME: Really?
+				delete(s.value, name)
 			default:
 				s.value[name] = mkline.Value()
 			}
@@ -741,7 +741,8 @@ func (s *Scope) FirstUse(varname string) *MkLine {
 //
 // If an empty string is returned this can mean either that the
 // variable value is indeed the empty string or that the variable
-// was not found. To distinguish these cases, call LastValueFound instead.
+// was not found, or that the variable value cannot be determined
+// reliably. To distinguish these cases, call LastValueFound instead.
 func (s *Scope) LastValue(varname string) string {
 	value, _ := s.LastValueFound(varname)
 	return value
@@ -754,7 +755,7 @@ func (s *Scope) LastValueFound(varname string) (value string, found bool) {
 	}
 
 	mkline := s.LastDefinition(varname)
-	if mkline != nil {
+	if mkline != nil && mkline.Op() != opAssignShell {
 		return mkline.Value(), true
 	}
 	if fallback, ok := s.fallback[varname]; ok {

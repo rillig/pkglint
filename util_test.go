@@ -482,23 +482,30 @@ func (s *Suite) Test_Scope_Define(c *check.C) {
 	t := s.Init(c)
 
 	scope := NewScope()
-	scope.Define("BUILD_DIRS", t.NewMkLine("file.mk", 121, "BUILD_DIRS=\tone two three"))
 
-	t.CheckEquals(scope.LastValue("BUILD_DIRS"), "one two three")
+	test := func(line string, ok bool, value string) {
+		scope.Define("BUILD_DIRS", t.NewMkLine("file.mk", 123, line))
 
-	scope.Define("BUILD_DIRS", t.NewMkLine("file.mk", 123, "BUILD_DIRS+=\tfour"))
+		actualValue, actualFound := scope.LastValueFound("BUILD_DIRS")
 
-	t.CheckEquals(scope.LastValue("BUILD_DIRS"), "one two three four")
+		t.CheckEquals(actualValue, value)
+		t.CheckEquals(actualFound, ok)
+	}
+
+	test(
+		"BUILD_DIRS=\tone two three",
+		true, "one two three")
+
+	test(
+		"BUILD_DIRS+=\tfour",
+		true, "one two three four")
 
 	// Later default assignments do not have an effect.
-	scope.Define("BUILD_DIRS", t.NewMkLine("file.mk", 123, "BUILD_DIRS?=\tdefault"))
+	test("BUILD_DIRS?=\tdefault",
+		true, "one two three four")
 
-	t.CheckEquals(scope.LastValue("BUILD_DIRS"), "one two three four")
-
-	scope.Define("BUILD_DIRS", t.NewMkLine("file.mk", 123, "BUILD_DIRS!=\techo dynamic"))
-
-	// FIXME: That's not the value, that's the shell command.
-	t.CheckEquals(scope.LastValue("BUILD_DIRS"), "echo dynamic")
+	test("BUILD_DIRS!=\techo dynamic",
+		false, "")
 }
 
 func (s *Suite) Test_Scope_Mentioned(c *check.C) {
