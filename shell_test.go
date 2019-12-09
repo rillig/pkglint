@@ -462,6 +462,11 @@ func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs__strange_paths(c *chec
 		"NOTE: filename.mk:1: You can use \"INSTALLATION_DIRS+= non-canonical\" "+
 			"instead of \"${INSTALL_DATA_DIR}\".")
 
+	test("${PREFIX}/non-canonical/////",
+		// FIXME
+		"NOTE: filename.mk:1: You can use \"INSTALLATION_DIRS+= non-canonical/////\" "+
+			"instead of \"${INSTALL_DATA_DIR}\".")
+
 	test("${PREFIX}/${VAR}",
 		"NOTE: filename.mk:1: You can use \"INSTALLATION_DIRS+= ${VAR}\" "+
 			"instead of \"${INSTALL_DATA_DIR}\".")
