@@ -4,24 +4,11 @@ set -eu
 srcdir="$HOME/go/src/netbsd.org/pkglint"
 archivedir="$srcdir/archive"
 pkgsrcdir="$HOME/git/pkgsrc"
-: "${GOPATH:="$HOME/go"}"
+gopath="${GOPATH:-"$HOME/go"}"
 
-to_native_path() {
-  local cygdir nativedir
-  case "$(uname -s)" in
-  (CYGWIN*)
-    eval "cygdir=\$$1"
-    # shellcheck disable=SC2034
-    # shellcheck disable=SC2154
-    nativedir="$(cygpath -w "$cygdir")"
-    eval "$1=\$nativedir"
-  esac
+native_path() {
+  case "$(uname -s)" in (CYGWIN*) cygpath -w -- "$1" ;; (*) printf '%s\n' "$1" ;; esac
 }
-
-to_native_path srcdir
-to_native_path archivedir
-to_native_path pkgsrcdir
-to_native_path GOPATH
 
 run_tests=yes
 
@@ -64,7 +51,7 @@ qa_install() {
   qa_test
   step_msg "Installing pkglint"
   go install netbsd.org/pkglint/...
-  cp "$GOPATH/bin/pkglint.exe" "$archivedir/$runid.exe"
+  cp "$gopath/bin/pkglint.exe" "$archivedir/$runid.exe"
 }
 
 qa_analyze() {
@@ -157,17 +144,19 @@ qa_cover_pkgsrc() {
   qa_genrunid
   step_msg "Running code coverage on the pkgsrc tree"
   (
+    native_pkgsrcdir="$(native_path "$pkgsrcdir")"
+    native_archivedir="$(native_path "$archivedir")"
     cd "$srcdir" \
     && env \
-      PKGLINT_TESTDIR="$pkgsrcdir" \
+      PKGLINT_TESTDIR="$native_pkgsrcdir" \
       PKGLINT_TESTCMDLINE="-r -Wall -Call -p -s -e" \
     gobco \
       -test=-test.covermode=count \
-      -test=-test.coverprofile="$archivedir/$runid.cover.txt" \
+      -test=-test.coverprofile="$native_archivedir/$runid.cover.txt" \
       -test=-timeout=1000s \
       -test=-check.f="^Test_Pkglint_Main__realistic" \
-      -stats="$archivedir/$runid.cover.gobco.json" \
-      > "$archivedir/$runid.cover.out"
+      -stats="$native_archivedir/$runid.cover.gobco.json" \
+      > "$native_archivedir/$runid.cover.out"
   )
 }
 
