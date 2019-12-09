@@ -162,7 +162,7 @@ func (s *Suite) Test_SimpleCommandChecker_handleShellBuiltin(c *check.C) {
 	test := func(command string, isBuiltin bool) {
 		token := NewShToken(command, NewShAtom(shtText, command, shqPlain))
 		simpleCommand := &MkShSimpleCommand{Name: token}
-		scc := NewSimpleCommandChecker(NewShellLineChecker(mklines, mkline), simpleCommand, RunTime)
+		scc := NewSimpleCommandChecker(simpleCommand, RunTime, mkline, mklines)
 		t.CheckEquals(scc.handleShellBuiltin(), isBuiltin)
 	}
 
@@ -368,8 +368,7 @@ func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs__strange_paths(c *chec
 
 			walker := NewMkShWalker()
 			walker.Callback.SimpleCommand = func(command *MkShSimpleCommand) {
-				ck := NewShellLineChecker(mklines, mkline)
-				scc := NewSimpleCommandChecker(ck, command, RunTime)
+				scc := NewSimpleCommandChecker(command, RunTime, mkline, mklines)
 				scc.checkAutoMkdirs()
 			}
 			walker.Walk(program)
@@ -1775,8 +1774,7 @@ func (s *Suite) Test_SimpleCommandChecker_checkInstallCommand(c *check.C) {
 
 			walker := NewMkShWalker()
 			walker.Callback.SimpleCommand = func(command *MkShSimpleCommand) {
-				ck := NewShellLineChecker(mklines, mkline)
-				scc := NewSimpleCommandChecker(ck, command, RunTime)
+				scc := NewSimpleCommandChecker(command, RunTime, mkline, mklines)
 				scc.checkInstallCommand(command.Name.MkText)
 			}
 			walker.Walk(program)

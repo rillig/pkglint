@@ -17,9 +17,9 @@ type SimpleCommandChecker struct {
 	mklines *MkLines
 }
 
-func NewSimpleCommandChecker(ck *ShellLineChecker, cmd *MkShSimpleCommand, time ToolTime) *SimpleCommandChecker {
+func NewSimpleCommandChecker(cmd *MkShSimpleCommand, time ToolTime, mkline *MkLine, mklines *MkLines) *SimpleCommandChecker {
 	strcmd := NewStrCommand(cmd)
-	return &SimpleCommandChecker{cmd, strcmd, time, ck.mkline, ck.MkLines}
+	return &SimpleCommandChecker{cmd, strcmd, time, mkline, mklines}
 
 }
 
@@ -690,7 +690,7 @@ func (ck *ShellLineChecker) CheckShellCommand(shellcmd string, pSetE *bool, time
 
 	walker := NewMkShWalker()
 	walker.Callback.SimpleCommand = func(command *MkShSimpleCommand) {
-		scc := NewSimpleCommandChecker(ck, command, time)
+		scc := NewSimpleCommandChecker(command, time, ck.mkline, ck.MkLines)
 		scc.Check()
 		// TODO: Implement getopt parsing for StrCommand.
 		if scc.strcmd.Name == "set" && scc.strcmd.AnyArgMatches(`^-.*e`) {
