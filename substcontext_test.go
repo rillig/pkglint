@@ -876,31 +876,26 @@ func (s *Suite) Test_SubstContext_extractVarname(c *check.C) {
 // simulateSubstLines only tests some of the inner workings of SubstContext.
 // It is not realistic for all cases. If in doubt, use MkLines.Check.
 func simulateSubstLines(t *Tester, texts ...string) {
-	ctx := NewSubstContext()
-	lineno := 0
-	for _, lineText := range texts {
+	var lineTexts []string
+
+	for i := 0; i < 9; i++ {
+		lineTexts = append(lineTexts, "")
+	}
+
+	for i, lineText := range texts {
 		var curr int
 		_, err := fmt.Sscanf(lineText[0:4], "%d: ", &curr)
 		assertNil(err, "")
-
-		if lineno != 0 {
-			t.CheckEquals(curr, lineno)
-		}
-
-		text := lineText[4:]
-		line := t.NewMkLine("Makefile", curr, text)
-
-		switch {
-		case text == "":
-			ctx.Finish(line)
-		case hasPrefix(text, "."):
-			ctx.Directive(line)
-		default:
-			ctx.Varassign(line)
-		}
-
-		lineno = curr + 1
+		t.CheckEquals(curr, 10+i)
+		lineTexts = append(lineTexts, lineText[4:])
 	}
 
-	ctx.Finish(t.NewMkLine("Makefile", lineno, ""))
+	// Finish the paragraph.
+	lineTexts = append(lineTexts, "")
+
+	mklines := t.NewMkLines("Makefile",
+		lineTexts...)
+
+	ctx := NewSubstContext()
+	mklines.ForEach(ctx.Process)
 }
