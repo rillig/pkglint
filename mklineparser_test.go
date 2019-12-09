@@ -146,58 +146,6 @@ func (s *Suite) Test_MkLineParser_parseVarassign__leading_space(c *check.C) {
 		"WARN: rubyversion.mk:427: Makefile lines should not start with space characters.")
 }
 
-func (s *Suite) Test_MkLineParser_parseVarassign__space_around_operator(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpCommandLine("--show-autofix", "--source")
-	t.NewMkLine("test.mk", 101,
-		"pkgbase = package")
-
-	t.CheckOutputLines(
-		"NOTE: test.mk:101: Unnecessary space after variable name \"pkgbase\".",
-		"AUTOFIX: test.mk:101: Replacing \"pkgbase =\" with \"pkgbase=\".",
-		"-\tpkgbase = package",
-		"+\tpkgbase= package")
-}
-
-func (s *Suite) Test_MkLineParser_parseVarassign__autofix_space_after_varname(c *check.C) {
-	t := s.Init(c)
-
-	filename := t.CreateFileLines("Makefile",
-		MkCvsID,
-		"VARNAME +=\t${VARNAME}",
-		"VARNAME+ =\t${VARNAME+}",
-		"VARNAME+ +=\t${VARNAME+}",
-		"VARNAME+ ?=\t${VARNAME}",
-		"pkgbase := pkglint")
-
-	CheckFileMk(filename)
-
-	t.CheckOutputLines(
-		"NOTE: ~/Makefile:2: Unnecessary space after variable name \"VARNAME\".",
-
-		// The assignment operators other than = and += cannot lead to ambiguities.
-		"NOTE: ~/Makefile:5: Unnecessary space after variable name \"VARNAME+\".",
-
-		"WARN: ~/Makefile:5: "+
-			"Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
-
-	t.SetUpCommandLine("-Wall", "--autofix")
-
-	CheckFileMk(filename)
-
-	t.CheckOutputLines(
-		"AUTOFIX: ~/Makefile:2: Replacing \"VARNAME +=\" with \"VARNAME+=\".",
-		"AUTOFIX: ~/Makefile:5: Replacing \"VARNAME+ ?=\" with \"VARNAME+?=\".")
-	t.CheckFileLines("Makefile",
-		MkCvsID+"",
-		"VARNAME+=\t${VARNAME}",
-		"VARNAME+ =\t${VARNAME+}",
-		"VARNAME+ +=\t${VARNAME+}",
-		"VARNAME+?=\t${VARNAME}",
-		"pkgbase := pkglint")
-}
-
 func (s *Suite) Test_MkLineParser_parseVarassign__append(c *check.C) {
 	t := s.Init(c)
 
@@ -456,6 +404,58 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 		"value",
 		"",
 		"")
+}
+
+func (s *Suite) Test_MkLineParser_fixSpaceAfterVarname__show_autofix(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--show-autofix", "--source")
+	t.NewMkLine("test.mk", 101,
+		"pkgbase = package")
+
+	t.CheckOutputLines(
+		"NOTE: test.mk:101: Unnecessary space after variable name \"pkgbase\".",
+		"AUTOFIX: test.mk:101: Replacing \"pkgbase =\" with \"pkgbase=\".",
+		"-\tpkgbase = package",
+		"+\tpkgbase= package")
+}
+
+func (s *Suite) Test_MkLineParser_fixSpaceAfterVarname__autofix(c *check.C) {
+	t := s.Init(c)
+
+	filename := t.CreateFileLines("Makefile",
+		MkCvsID,
+		"VARNAME +=\t${VARNAME}",
+		"VARNAME+ =\t${VARNAME+}",
+		"VARNAME+ +=\t${VARNAME+}",
+		"VARNAME+ ?=\t${VARNAME}",
+		"pkgbase := pkglint")
+
+	CheckFileMk(filename)
+
+	t.CheckOutputLines(
+		"NOTE: ~/Makefile:2: Unnecessary space after variable name \"VARNAME\".",
+
+		// The assignment operators other than = and += cannot lead to ambiguities.
+		"NOTE: ~/Makefile:5: Unnecessary space after variable name \"VARNAME+\".",
+
+		"WARN: ~/Makefile:5: "+
+			"Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
+
+	t.SetUpCommandLine("-Wall", "--autofix")
+
+	CheckFileMk(filename)
+
+	t.CheckOutputLines(
+		"AUTOFIX: ~/Makefile:2: Replacing \"VARNAME +=\" with \"VARNAME+=\".",
+		"AUTOFIX: ~/Makefile:5: Replacing \"VARNAME+ ?=\" with \"VARNAME+?=\".")
+	t.CheckFileLines("Makefile",
+		MkCvsID+"",
+		"VARNAME+=\t${VARNAME}",
+		"VARNAME+ =\t${VARNAME+}",
+		"VARNAME+ +=\t${VARNAME+}",
+		"VARNAME+?=\t${VARNAME}",
+		"pkgbase := pkglint")
 }
 
 func (s *Suite) Test_MkLineParser_parseShellcmd(c *check.C) {
