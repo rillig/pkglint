@@ -492,6 +492,9 @@ func (s *Suite) Test_Scope_Define(c *check.C) {
 		t.CheckEquals(actualFound, ok)
 	}
 
+	test("BUILD_DIRS?=\tdefault",
+		true, "default")
+
 	test(
 		"BUILD_DIRS=\tone two three",
 		true, "one two three")
