@@ -1578,4 +1578,6 @@ func (s *Suite) Test_MatchMkInclude(c *check.C) {
 	testFail(".include \"other.mk")
 	testFail(".include \"other.mk\" \"")
 	testFail(".include \"/absolute\"")
+	testFail(".include \"/absolute\"rest")
+	testFail(".include \"/absolute\" rest")
 }
