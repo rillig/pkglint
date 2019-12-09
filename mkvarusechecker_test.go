@@ -365,14 +365,13 @@ func (s *Suite) Test_MkVarUseChecker_checkVarname(c *check.C) {
 
 	mklines.ForEach(func(mkline *MkLine) {
 		mkline.ForEachUsed(func(varUse *MkVarUse, time VucTime) {
-			NewMkVarUseChecker(varUse, mklines, mkline).checkVarname()
+			ck := NewMkVarUseChecker(varUse, mklines, mkline)
+			ck.checkVarname(time)
 		})
 	})
 
 	t.CheckOutputLines(
 		"WARN: filename.mk:1: Please use \"${.TARGET}\" instead of \"$@\".",
-		// FIXME: PREFIX is not available at load time.
-		"WARN: filename.mk:2: Please use PREFIX instead of LOCALBASE.",
 		"WARN: filename.mk:3: Please use PREFIX instead of LOCALBASE.")
 }
 

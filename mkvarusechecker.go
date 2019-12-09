@@ -25,7 +25,7 @@ func (ck *MkVarUseChecker) Check(vuc *VarUseContext) {
 	ck.checkUndefined()
 	ck.checkPermissions(vuc)
 
-	ck.checkVarname()
+	ck.checkVarname(vuc.time)
 	ck.checkModifiers()
 	ck.checkQuoting(vuc)
 
@@ -130,7 +130,7 @@ func (ck *MkVarUseChecker) checkModifiersRange() {
 	fix.Apply()
 }
 
-func (ck *MkVarUseChecker) checkVarname() {
+func (ck *MkVarUseChecker) checkVarname(time VucTime) {
 	varname := ck.use.varname
 	if varname == "@" {
 		ck.MkLine.Warnf("Please use %q instead of %q.", "${.TARGET}", "$@")
@@ -139,7 +139,7 @@ func (ck *MkVarUseChecker) checkVarname() {
 			"of the same name.")
 	}
 
-	if varname == "LOCALBASE" && !G.Infrastructure {
+	if varname == "LOCALBASE" && !G.Infrastructure && time == VucRunTime {
 		fix := ck.MkLine.Autofix()
 		fix.Warnf("Please use PREFIX instead of LOCALBASE.")
 		fix.ReplaceRegex(`\$\{LOCALBASE\b`, "${PREFIX", 1)
