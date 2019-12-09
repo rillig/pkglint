@@ -269,6 +269,62 @@ file     shell.go
 go:type  ShellLineChecker
 ```
 
+### Paths
+
+Pkglint deals with all kinds of paths.
+To avoid confusing these paths (which was more than easy as long as they
+were all represented by simple strings), pkglint distinguishes these types
+of paths:
+
+*   `CurrPath` is for paths given on the command line
+    *   these are used at the beginning of the diagnostics
+*   `PkgsrcPath` is for paths relative to the pkgsrc directory
+    *   `PKGPATH`
+*   `PackagePath` is for paths relative to the package directory
+    *   `PATCHDIR`
+    *   `DEPENDS`
+*   `RelPath` is for all other relative paths
+    *   paths that appear in the text of a diagnostic,
+        these are relative to the line of a diagnostic
+    *   paths relative to the `PREFIX`
+        *   paths in `PLIST` files
+        *   paths in `ALTERNATIVES` files
+
+All these path types are defined in `path.go`:
+
+```codewalk
+file     path.go
+go:type  Path
+```
+
+```codewalk
+file     path.go
+go:type  CurrPath
+```
+
+```codewalk
+file     path.go
+go:type  RelPath
+```
+
+```codewalk
+file     path.go
+go:type  PkgsrcPath
+```
+
+```codewalk
+file     path.go
+go:type  PackagePath
+```
+
+To convert between these paths, several of the pkglint types provide methods
+called `File` and `Rel`:
+
+* `File` converts a relative path to a `CurrPath`
+* `Rel` converts a path to a relative path
+
+Some types that provide these methods are `Pkgsrc`, `Package`, `Line`.
+
 ## Testing pkglint
 
 ### Standard shape of a test

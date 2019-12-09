@@ -244,7 +244,7 @@ Since `DESCR` is a regular file, the next function to call is `checkReg`.
 For directories, the next function would depend on the depth from the
 pkgsrc root directory.
 
-> from [pkglint.go](pkglint.go#L547):
+> from [pkglint.go](pkglint.go#L548):
 
 ```go
 func (pkglint *Pkglint) checkReg(filename CurrPath, basename string, depth int) {
@@ -252,7 +252,7 @@ func (pkglint *Pkglint) checkReg(filename CurrPath, basename string, depth int) 
 
 The relevant part of `Pkglint.checkReg` is:
 
-> from [pkglint.go](pkglint.go#L572):
+> from [pkglint.go](pkglint.go#L573):
 
 ```go
 	case basename == "buildlink3.mk":
@@ -283,7 +283,7 @@ The actual checks usually work on `Line` objects instead of files
 because the lines offer nice methods for logging the diagnostics
 and for automatically fixing the text (in pkglint's `--autofix` mode).
 
-> from [pkglint.go](pkglint.go#L427):
+> from [pkglint.go](pkglint.go#L428):
 
 ```go
 func CheckLinesDescr(lines *Lines) {
@@ -659,6 +659,81 @@ type ShellLineChecker struct {
 }
 ```
 
+### Paths
+
+Pkglint deals with all kinds of paths.
+To avoid confusing these paths (which was more than easy as long as they
+were all represented by simple strings), pkglint distinguishes these types
+of paths:
+
+*   `CurrPath` is for paths given on the command line
+    *   these are used at the beginning of the diagnostics
+*   `PkgsrcPath` is for paths relative to the pkgsrc directory
+    *   `PKGPATH`
+*   `PackagePath` is for paths relative to the package directory
+    *   `PATCHDIR`
+    *   `DEPENDS`
+*   `RelPath` is for all other relative paths
+    *   paths that appear in the text of a diagnostic,
+        these are relative to the line of a diagnostic
+    *   paths relative to the `PREFIX`
+        *   paths in `PLIST` files
+        *   paths in `ALTERNATIVES` files
+
+All these path types are defined in `path.go`:
+
+> from [path.go](path.go#L11):
+
+```go
+// Path is a slash-separated path.
+// It may or may not resolve to an existing file.
+// It may be absolute or relative.
+// Some paths may contain placeholders like @VAR@ or ${VAR}.
+// The base directory of relative paths is unspecified.
+type Path string
+```
+
+> from [path.go](path.go#L214):
+
+```go
+// CurrPath is a path that is either absolute or relative to the current
+// working directory. It is used in command line arguments and for
+// loading files from the file system, and later in the diagnostics.
+type CurrPath string
+```
+
+> from [path.go](path.go#L426):
+
+```go
+// RelPath is a path that is relative to some base directory that is not
+// further specified.
+type RelPath string
+```
+
+> from [path.go](path.go#L367):
+
+```go
+// PkgsrcPath is a path relative to the pkgsrc root.
+type PkgsrcPath string
+```
+
+> from [path.go](path.go#L401):
+
+```go
+// PackagePath is a path relative to the package directory. It is used
+// for the PATCHDIR and PKGDIR variables, as well as dependencies and
+// conflicts on other packages.
+type PackagePath string
+```
+
+To convert between these paths, several of the pkglint types provide methods
+called `File` and `Rel`:
+
+* `File` converts a relative path to a `CurrPath`
+* `Rel` converts a path to a relative path
+
+Some types that provide these methods are `Pkgsrc`, `Package`, `Line`.
+
 ## Testing pkglint
 
 ### Standard shape of a test
@@ -681,7 +756,7 @@ The `t` variable is the center of most tests.
 It is of type `Tester` and provides a high-level interface
 for setting up tests and checking the results.
 
-> from [check_test.go](check_test.go#L178):
+> from [check_test.go](check_test.go#L176):
 
 ```go
 // Tester provides utility methods for testing pkglint.
