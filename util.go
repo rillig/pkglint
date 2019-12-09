@@ -484,8 +484,6 @@ func containsVarRef(s string) bool {
 	return false
 }
 
-func hasAlnumPrefix(s string) bool { return s != "" && textproc.AlnumU.Contains(s[0]) }
-
 // Once remembers with which arguments its FirstTime method has been called
 // and only returns true on each first call.
 type Once struct {

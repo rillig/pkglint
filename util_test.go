@@ -456,14 +456,6 @@ func (s *Suite) Test_containsVarRef(c *check.C) {
 	test("$$VAR", false)   // An escaped dollar character.
 }
 
-func (s *Suite) Test_hasAlnumPrefix(c *check.C) {
-	t := s.Init(c)
-
-	t.CheckEquals(hasAlnumPrefix(""), false)
-	t.CheckEquals(hasAlnumPrefix("A"), true)
-	t.CheckEquals(hasAlnumPrefix(","), false)
-}
-
 func (s *Suite) Test_Once(c *check.C) {
 	t := s.Init(c)
 
