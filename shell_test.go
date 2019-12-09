@@ -368,16 +368,7 @@ func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs__strange_paths(c *chec
 	G.checkdirPackage(".")
 
 	t.CheckOutputLines(
-		"NOTE: Makefile:22: You can use "+
-			// FIXME
-			"\"INSTALLATION_DIRS+= \" instead of \"${INSTALL_DATA_DIR}\".",
-		"NOTE: Makefile:23: You can use "+
-			// FIXME
-			"\"INSTALLATION_DIRS+= \" instead of \"${INSTALL_DATA_DIR}\".",
-		"NOTE: Makefile:24: You can use "+
-			// FIXME
-			"\"INSTALLATION_DIRS+= .\" instead of \"${INSTALL_DATA_DIR}\".",
-		"NOTE: Makefile:25: You can use "+
+		"NOTE: Makefile:25: You can use " +
 			"\"INSTALLATION_DIRS+= non-canonical\" instead of \"${INSTALL_DATA_DIR}\".")
 }
 

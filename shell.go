@@ -208,10 +208,15 @@ func (scc *SimpleCommandChecker) checkAutoMkdirs() {
 	for _, arg := range scc.strcmd.Args {
 		// TODO: Replace regex with proper VarUse.
 		if !contains(arg, "$$") && !matches(arg, `\$\{[_.]*[a-z]`) {
-			if m, dirname := match1(arg, `^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/+(.*)`); m {
+			if m, dirname := match1(arg, `^(?:\$\{DESTDIR\})?\$\{PREFIX(?:|:Q)\}/+([^/]\S*)$`); m {
+				prefixRel := NewRelPathString(dirname).Clean()
+				if prefixRel == "." {
+					continue
+				}
+
 				autoMkdirs := false
-				if G.Pkg != nil {
-					plistLine := G.Pkg.Plist.Dirs[NewRelPathString(dirname)]
+				if G.Pkg != nil && prefixRel != "." {
+					plistLine := G.Pkg.Plist.Dirs[prefixRel]
 					if plistLine != nil && !containsVarRef(plistLine.Text) {
 						autoMkdirs = true
 					}
