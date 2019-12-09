@@ -1566,5 +1566,8 @@ func (s *Suite) Test_MatchMkInclude(c *check.C) {
 	test(".include \"other.mk\"\t# comment",
 		"", "include", "other.mk", "# comment")
 
+	t.ExpectAssert(
+		func() { MatchMkInclude(".include \"/absolute\"") })
+
 	t.CheckOutputEmpty()
 }
