@@ -1875,11 +1875,14 @@ func (s *Suite) Test_VartypeCheck_UserGroupName(c *check.C) {
 		"typical_username",
 		"user123",
 		"domain\\user",
-		"${OTHER_VAR}")
+		"${OTHER_VAR}",
+		"r")
 
 	vt.Output(
 		"WARN: filename.mk:1: Invalid user or group name \"user with spaces\".",
-		"WARN: filename.mk:4: Invalid user or group name \"domain\\\\user\".")
+		"WARN: filename.mk:4: Invalid user or group name \"domain\\\\user\".",
+		// FIXME
+		"WARN: filename.mk:6: Invalid user or group name \"r\".")
 }
 
 func (s *Suite) Test_VartypeCheck_VariableName(c *check.C) {
