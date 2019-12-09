@@ -1327,8 +1327,22 @@ func (cv *VartypeCheck) URL() {
 }
 
 func (cv *VartypeCheck) UserGroupName() {
-	if cv.Value == cv.ValueNoVar && !matches(cv.Value, `^[0-9_a-z][0-9_a-z-]*[0-9_a-z]$`) {
-		cv.Warnf("Invalid user or group name %q.", cv.Value)
+	value := cv.Value
+	if value != cv.ValueNoVar {
+		return
+	}
+	invalid := invalidCharacters(value, textproc.NewByteSet("---0-9_a-z"))
+	if invalid != "" {
+		cv.Warnf("User or group name %q contains invalid characters: %s",
+			value, invalid)
+		return
+	}
+
+	if hasPrefix(value, "-") {
+		cv.Errorf("User or group name %q must not start with a hyphen.", value)
+	}
+	if hasSuffix(value, "-") {
+		cv.Errorf("User or group name %q must not end with a hyphen.", value)
 	}
 }
 

@@ -88,6 +88,22 @@ func mapStr(slice []string, fn func(s string) string) []string {
 	return result
 }
 
+func invalidCharacters(s string, valid *textproc.ByteSet) string {
+	var unis strings.Builder
+
+	for _, r := range s {
+		if r == rune(byte(r)) && valid.Contains(byte(r)) {
+			continue
+		}
+		_, _ = fmt.Fprintf(&unis, " %U", r)
+	}
+
+	if unis.Len() == 0 {
+		return ""
+	}
+	return unis.String()[1:]
+}
+
 // intern returns an independent copy of the given string.
 //
 // It should be called when only a small substring of a large string
