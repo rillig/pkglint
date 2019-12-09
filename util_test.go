@@ -494,6 +494,11 @@ func (s *Suite) Test_Scope_Define(c *check.C) {
 	scope.Define("BUILD_DIRS", t.NewMkLine("file.mk", 123, "BUILD_DIRS?=\tdefault"))
 
 	t.CheckEquals(scope.LastValue("BUILD_DIRS"), "one two three four")
+
+	scope.Define("BUILD_DIRS", t.NewMkLine("file.mk", 123, "BUILD_DIRS!=\techo dynamic"))
+
+	// FIXME: That's not the value, that's the shell command.
+	t.CheckEquals(scope.LastValue("BUILD_DIRS"), "echo dynamic")
 }
 
 func (s *Suite) Test_Scope_Mentioned(c *check.C) {
