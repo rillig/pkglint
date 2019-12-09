@@ -1297,7 +1297,7 @@ func MatchMkInclude(text string) (m bool, indentation, directive string, filenam
 		return false, "", "", ""
 	}
 
-	lexer.NextHspace()
+	lexer.SkipHspace()
 	if !lexer.SkipByte('"') {
 		return false, "", "", ""
 	}
