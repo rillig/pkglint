@@ -355,21 +355,75 @@ func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs__conditional_PLIST(c *
 func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs__strange_paths(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpPackage("category/package",
-		"do-install:",
-		"\t${RUN} ${INSTALL_DATA_DIR} ${PREFIX}",
-		"\t${RUN} ${INSTALL_DATA_DIR} ${PREFIX}/",
-		"\t${RUN} ${INSTALL_DATA_DIR} ${PREFIX}//",
-		"\t${RUN} ${INSTALL_DATA_DIR} ${PREFIX}/.",
-		"\t${RUN} ${INSTALL_DATA_DIR} ${PREFIX}//non-canonical")
+	test := func(path string, diagnostics ...string) {
+		mklines := t.NewMkLines("filename.mk",
+			"\t${INSTALL_DATA_DIR} "+path)
+		mklines.ForEach(func(mkline *MkLine) {
+			program, err := parseShellProgram(nil, mkline.ShellCommand())
+			assertNil(err, "")
+
+			walker := NewMkShWalker()
+			walker.Callback.SimpleCommand = func(command *MkShSimpleCommand) {
+				ck := NewShellLineChecker(mklines, mkline)
+				scc := NewSimpleCommandChecker(ck, command, RunTime)
+				scc.checkAutoMkdirs()
+			}
+			walker.Walk(program)
+		})
+		t.CheckOutput(diagnostics)
+	}
+
 	t.Chdir("category/package")
-	t.FinishSetUp()
 
-	G.checkdirPackage(".")
+	test("${PREFIX}",
+		nil...)
 
-	t.CheckOutputLines(
-		"NOTE: Makefile:25: You can use " +
-			"\"INSTALLATION_DIRS+= non-canonical\" instead of \"${INSTALL_DATA_DIR}\".")
+	test("${PREFIX}/",
+		nil...)
+
+	test("${PREFIX}//",
+		nil...)
+
+	test("${PREFIX}/.",
+		nil...)
+
+	test("${PREFIX}//non-canonical",
+		"NOTE: filename.mk:1: You can use \"INSTALLATION_DIRS+= non-canonical\" "+
+			"instead of \"${INSTALL_DATA_DIR}\".")
+
+	test("${PREFIX}/${VAR}",
+		"NOTE: filename.mk:1: You can use \"INSTALLATION_DIRS+= ${VAR}\" "+
+			"instead of \"${INSTALL_DATA_DIR}\".")
+
+	test("${PREFIX}/${VAR.param}",
+		"NOTE: filename.mk:1: You can use \"INSTALLATION_DIRS+= ${VAR.param}\" "+
+			"instead of \"${INSTALL_DATA_DIR}\".")
+
+	test("${PREFIX}/${.CURDIR}",
+		"NOTE: filename.mk:1: You can use \"INSTALLATION_DIRS+= ${.CURDIR}\" "+
+			"instead of \"${INSTALL_DATA_DIR}\".")
+
+	// Internal variables are ok.
+	test("${PREFIX}/${_INTERNAL}",
+		"NOTE: filename.mk:1: You can use \"INSTALLATION_DIRS+= ${_INTERNAL}\" "+
+			"instead of \"${INSTALL_DATA_DIR}\".")
+
+	// Ignore variables from a :@ modifier.
+	test("${PREFIX}/${.f.}",
+		nil...)
+
+	// Ignore variables from a .for loop.
+	test("${PREFIX}/${f}",
+		nil...)
+
+	// Ignore variables from a .for loop.
+	test("${PREFIX}/${_f_}",
+		nil...)
+
+	// Ignore paths containing shell variables as it is hard to
+	// predict their values using static analysis.
+	test("${PREFIX}/$$f",
+		nil...)
 }
 
 // This test ensures that the command line options to INSTALL_*_DIR are properly
