@@ -14,22 +14,13 @@ type SubstContext struct {
 }
 
 func NewSubstContext() *SubstContext {
-	return &SubstContext{conds: []*SubstCond{{InElse: true}}}
+	return &SubstContext{conds: []*SubstCond{{SeenElse: true}}}
 }
 
 type SubstCond struct {
-	Total SubstContextStats
-	Then  SubstContextStats
-	Else  SubstContextStats
-	// TODO: Rename to SeenElse. Then remove the Else.
-	InElse bool
-}
-
-func (sc *SubstCond) Curr() *SubstContextStats {
-	if !sc.InElse {
-		return &sc.Then
-	}
-	return &sc.Else
+	Total    SubstContextStats
+	Curr     SubstContextStats
+	SeenElse bool
 }
 
 type SubstContextStats struct {
@@ -212,22 +203,18 @@ func (ctx *SubstContext) Directive(mkline *MkLine) {
 		top := SubstCond{Total: SubstContextStats{true, true, true, true}}
 		ctx.conds = append(ctx.conds, &top)
 
-	case "elif":
+	case "elif", "else":
 		top := ctx.conds[len(ctx.conds)-1]
-		top.Total.And(top.Then)
-		top.Then = SubstContextStats{}
-
-	case "else":
-		top := ctx.conds[len(ctx.conds)-1]
-		top.Total.And(top.Then)
-		top.InElse = true
+		top.Total.And(top.Curr)
+		top.Curr = SubstContextStats{}
+		top.SeenElse = dir == "else"
 
 	case "endif":
 		top := ctx.conds[len(ctx.conds)-1]
-		if !top.InElse {
-			top.Total.And(top.Then)
+		top.Total.And(top.Curr)
+		if !top.SeenElse {
+			top.Total = SubstContextStats{}
 		}
-		top.Total.And(top.Else)
 		if len(ctx.conds) > 1 {
 			ctx.conds = ctx.conds[:len(ctx.conds)-1]
 		}
@@ -274,7 +261,7 @@ func (ctx *SubstContext) dupBool(mkline *MkLine, flag func(stats *SubstContextSt
 
 	seen := false
 	for _, cond := range ctx.conds {
-		seen = seen || *flag(cond.Curr())
+		seen = seen || *flag(&cond.Curr)
 	}
 
 	if seen && op != opAssignAppend {
@@ -355,5 +342,5 @@ func (*SubstContext) extractVarname(token string) string {
 }
 
 func (ctx *SubstContext) top() *SubstContextStats {
-	return ctx.conds[len(ctx.conds)-1].Curr()
+	return &ctx.conds[len(ctx.conds)-1].Curr
 }
