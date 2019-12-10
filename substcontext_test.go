@@ -866,8 +866,12 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_vars(c *check.C
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"AUTOFIX: subst.mk:6: Replacing \"SUBST_SED.id=\\t-e s,@PREFIX@,${PREFIX},g\" " +
-			"with \"SUBST_VARS.id=\\tPREFIX\".")
+		"AUTOFIX: subst.mk:6: "+
+			"Replacing \"SUBST_SED.id=\\t-e s,@PREFIX@,${PREFIX},g\" "+
+			"with \"SUBST_VARS.id=\\tPREFIX\".",
+		"AUTOFIX: subst.mk:7: "+
+			"Replacing \"SUBST_VARS.id=\\t\" "+
+			"with \"SUBST_VARS.id+=\\t\".")
 
 	t.CheckFileLinesDetab("subst.mk",
 		MkCvsID,
@@ -876,9 +880,7 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_vars(c *check.C
 		"SUBST_STAGE.id= pre-configure",
 		"SUBST_FILES.id= filename",
 		"SUBST_VARS.id=  PREFIX",
-		// FIXME: This must be += instead of = since the previous line already uses =.
-		//  Luckily the check for redundant assignments catches this already.
-		"SUBST_VARS.id=  PKGMANDIR")
+		"SUBST_VARS.id+= PKGMANDIR")
 }
 
 func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_indentation(c *check.C) {

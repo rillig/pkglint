@@ -175,6 +175,7 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 
 	case "SUBST_VARS.*":
 		seen := func(s *substSeen) *bool { return &s.vars }
+		prev := ctx.seen(seen)
 		ctx.dupBool(mkline, seen, varname, op)
 		ctx.top().transform = true
 		for _, substVar := range mkline.Fields() {
@@ -182,6 +183,15 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 				ctx.vars = make(map[string]bool)
 			}
 			ctx.vars[substVar] = true
+		}
+
+		if prev && mkline.Op() == opAssign {
+			before := mkline.ValueAlign()
+			after := alignWith(mkline.Varname()+"+=", before)
+			fix := mkline.Autofix()
+			fix.Notef("Adjust.")
+			fix.Replace(before, after)
+			fix.Apply()
 		}
 
 	case "SUBST_FILTER_CMD.*":
