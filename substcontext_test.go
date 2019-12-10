@@ -557,7 +557,7 @@ func (s *Suite) Test_SubstContext__unusual_variable_order(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_SubstContext__completely_conditional(c *check.C) {
+func (s *Suite) Test_SubstContext__completely_conditional_then(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPkgsrc()
@@ -571,7 +571,6 @@ func (s *Suite) Test_SubstContext__completely_conditional(c *check.C) {
 		".if ${OPSYS} == Linux",
 		"SUBST_CLASSES+=\tid",
 		"SUBST_STAGE.id=\tpre-configure",
-		"SUBST_FILES.id=\tfile",
 		"SUBST_SED.id=\t-e sahara",
 		".else",
 		".endif")
@@ -584,7 +583,34 @@ func (s *Suite) Test_SubstContext__completely_conditional(c *check.C) {
 		"WARN: subst.mk:EOF: Incomplete SUBST block: SUBST_FILES.id missing.",
 		"WARN: subst.mk:EOF: Incomplete SUBST block: "+
 			"SUBST_SED.id, SUBST_VARS.id or SUBST_FILTER_CMD.id missing.")
+}
 
+func (s *Suite) Test_SubstContext__completely_conditional_else(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.Chdir(".")
+	t.FinishSetUp()
+	mklines := t.NewMkLines("subst.mk",
+		MkCvsID,
+		"",
+		".include \"mk/bsd.prefs.mk\"",
+		"",
+		".if ${OPSYS} == Linux",
+		".else",
+		"SUBST_CLASSES+=\tid",
+		"SUBST_STAGE.id=\tpre-configure",
+		"SUBST_SED.id=\t-e sahara",
+		".endif")
+
+	mklines.Check()
+
+	// The block already ends at the .endif, not at the end of the file,
+	// since that is the scope where the SUBST id is defined.
+	//
+	// FIXME
+	t.CheckOutputLines(
+		"WARN: subst.mk:EOF: Incomplete SUBST block: SUBST_FILES.id missing.")
 }
 
 // Since the SUBST_CLASSES definition starts the SUBST block, all
