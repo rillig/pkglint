@@ -101,6 +101,35 @@ func (s *Suite) Test_MkLexer_MkTokens(c *check.C) {
 		"")
 }
 
+func (s *Suite) Test_MkLexer_MkToken(c *check.C) {
+	t := s.Init(c)
+
+	test := func(input string, expectedToken *MkToken, expectedRest string, diagnostics ...string) {
+		lexer := NewMkLexer(input, t.NewLine("Test_MkLexer_VarUse.mk", 1, ""))
+		actualToken := lexer.MkToken()
+		rest := lexer.Rest()
+
+		t.CheckDeepEquals(actualToken, expectedToken)
+		t.CheckEquals(rest, expectedRest)
+		t.CheckOutput(diagnostics)
+	}
+
+	test("${VARIABLE}rest",
+		&MkToken{"${VARIABLE}", NewMkVarUse("VARIABLE")}, "rest")
+
+	test("$@rest",
+		&MkToken{"$@", NewMkVarUse("@")}, "rest")
+
+	test("text$$",
+		&MkToken{"text$$", nil}, "")
+
+	test("text$$${REST}",
+		&MkToken{"text$$", nil}, "${REST}")
+
+	test("",
+		nil, "")
+}
+
 func (s *Suite) Test_MkLexer_VarUse(c *check.C) {
 	t := s.Init(c)
 	b := NewMkTokenBuilder()
