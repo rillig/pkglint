@@ -466,6 +466,20 @@ func containsVarRef(s string) bool {
 	return false
 }
 
+func containsVarRefLong(s string) bool {
+	if !contains(s, "$") {
+		return false
+	}
+	lex := NewMkLexer(s, nil)
+	tokens, _ := lex.MkTokens()
+	for _, token := range tokens {
+		if token.Varuse != nil && len(token.Text) > 2 {
+			return true
+		}
+	}
+	return false
+}
+
 // Once remembers with which arguments its FirstTime method has been called
 // and only returns true on each first call.
 type Once struct {

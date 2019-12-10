@@ -88,22 +88,25 @@ func (m MkVarUseModifier) Subst(str string) (string, bool) {
 		return "", false
 	}
 
-	result := m.EvalSubst(str, leftAnchor, from, rightAnchor, to, options)
-	if trace.Tracing && result != str {
+	ok, result := m.EvalSubst(str, leftAnchor, from, rightAnchor, to, options)
+	if trace.Tracing && ok && result != str {
 		trace.Stepf("Subst: %q %q => %q", str, m.Text, result)
 	}
-	return result, true
+	return result, ok
 }
 
 // mkopSubst evaluates make(1)'s :S substitution operator.
 // It does not resolve any variables.
-// FIXME: Clearly signal that substituting is not reliable if either
-//  of the strings contains a variable reference.
-func (MkVarUseModifier) EvalSubst(s string, left bool, from string, right bool, to string, flags string) string {
+func (MkVarUseModifier) EvalSubst(s string, left bool, from string, right bool, to string, flags string) (ok bool, result string) {
+
+	if containsVarRefLong(from) || containsVarRefLong(to) {
+		return false, ""
+	}
+
 	re := regex.Pattern(condStr(left, "^", "") + regexp.QuoteMeta(from) + condStr(right, "$", ""))
 	done := false
 	gflag := contains(flags, "g")
-	return replaceAllFunc(s, re, func(match string) string {
+	return true, replaceAllFunc(s, re, func(match string) string {
 		if gflag || !done {
 			done = !gflag
 			return to
