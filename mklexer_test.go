@@ -136,25 +136,17 @@ func (s *Suite) Test_MkLexer_VarUse(c *check.C) {
 	varuse := b.VaruseToken
 	varuseText := b.VaruseTextToken
 
-	// FIXME: This function does much more than necessary to test VarUse.
-	testRest := func(input string, expectedTokens []*MkToken, expectedRest string, diagnostics ...string) {
-		line := t.NewLines("Test_MkLexer_VarUse.mk", input).Lines[0]
-		p := NewMkLexer(input, line)
+	testRest := func(input string, expectedToken *MkToken, expectedRest string, diagnostics ...string) {
+		lexer := NewMkLexer(input, t.NewLine("Test_MkLexer_VarUse.mk", 1, ""))
+		actualToken := lexer.MkToken()
+		rest := lexer.Rest()
 
-		actualTokens, rest := p.MkTokens()
-
-		t.CheckDeepEquals(actualTokens, expectedTokens)
-		for i, expectedToken := range expectedTokens {
-			if i < len(actualTokens) {
-				t.CheckDeepEquals(*actualTokens[i], *expectedToken)
-				t.CheckDeepEquals(actualTokens[i].Varuse, expectedToken.Varuse)
-			}
-		}
+		t.CheckDeepEquals(actualToken, expectedToken)
 		t.CheckEquals(rest, expectedRest)
 		t.CheckOutput(diagnostics)
 	}
 	test := func(input string, expectedToken *MkToken, diagnostics ...string) {
-		testRest(input, b.Tokens(expectedToken), "", diagnostics...)
+		testRest(input, expectedToken, "", diagnostics...)
 	}
 
 	t.Use(testRest, test, varuse, varuseText)
