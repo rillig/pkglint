@@ -308,16 +308,19 @@ func (*VaralignBlock) rightMargin(infos []*varalignLine) int {
 // paragraph to be indented too far to the right.
 func (*VaralignBlock) optimalWidth(infos []*varalignLine) int {
 
-	var widths mklineInts
+	var widths bag
 	for _, info := range infos {
 		if !info.multiEmpty && info.rawIndex == 0 {
-			widths.append(info.mkline, info.varnameOpWidth())
+			widths.Add(info.mkline, info.varnameOpWidth())
 		}
 	}
 	widths.sortDesc()
 
 	longest := widths.opt(0)
-	longestLine := widths.optLine(0)
+	var longestLine *MkLine
+	if len(widths.slice) > 0 {
+		longestLine = widths.key(0).(*MkLine)
+	}
 	secondLongest := widths.opt(1)
 
 	haveOutlier := secondLongest != 0 &&
@@ -329,12 +332,12 @@ func (*VaralignBlock) optimalWidth(infos []*varalignLine) int {
 	outlier := condInt(haveOutlier, longest, 0)
 
 	// Widths of the current indentation (including whitespace)
-	var spaceWidths mklineInts
+	var spaceWidths bag
 	for _, info := range infos {
 		if info.multiEmpty || info.rawIndex > 0 || outlier > 0 && info.varnameOpWidth() == outlier {
 			continue
 		}
-		spaceWidths.append(info.mkline, info.varnameOpSpaceWidth())
+		spaceWidths.Add(info.mkline, info.varnameOpSpaceWidth())
 	}
 	spaceWidths.sortDesc()
 
@@ -826,39 +829,36 @@ func (p *varalignParts) widthAlignedAt(valueAlign int) int {
 		p.value+p.spaceAfterValue+p.continuation)
 }
 
-type mklineInts struct {
+type bag struct {
 	slice []struct {
-		mkline *MkLine
-		value  int
+		key   interface{}
+		value int
 	}
 }
 
-func (mi mklineInts) sortDesc() {
+func (mi *bag) sortDesc() {
 	less := func(i, j int) bool { return mi.slice[j].value < mi.slice[i].value }
 	sort.SliceStable(mi.slice, less)
 }
 
-func (mi mklineInts) opt(index int) int {
+func (mi *bag) opt(index int) int {
 	if uint(index) < uint(len(mi.slice)) {
 		return mi.slice[index].value
 	}
 	return 0
 }
 
-func (mi mklineInts) optLine(index int) *MkLine {
-	if uint(index) < uint(len(mi.slice)) {
-		return mi.slice[index].mkline
-	}
-	return nil
+func (mi *bag) key(index int) interface{} {
+	return mi.slice[index].key
 }
 
-func (mi *mklineInts) append(mkline *MkLine, value int) {
+func (mi *bag) Add(key interface{}, value int) {
 	mi.slice = append(mi.slice, struct {
-		mkline *MkLine
-		value  int
-	}{mkline, value})
+		key   interface{}
+		value int
+	}{key, value})
 }
 
-func (mi mklineInts) min() int { return mi.opt(0) }
+func (mi *bag) min() int { return mi.opt(0) }
 
-func (mi mklineInts) max() int { return mi.opt(len(mi.slice) - 1) }
+func (mi *bag) max() int { return mi.opt(len(mi.slice) - 1) }
