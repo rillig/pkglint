@@ -24,6 +24,7 @@ type substCond struct {
 }
 
 type substSeen struct {
+	id        bool
 	files     bool
 	sed       bool
 	vars      bool
@@ -36,6 +37,7 @@ func (st *substSeen) seenVars() *bool      { return &st.vars }
 func (st *substSeen) seenTransform() *bool { return &st.transform }
 
 func (st *substSeen) And(other substSeen) {
+	st.id = st.id && other.id
 	st.files = st.files && other.files
 	st.sed = st.sed && other.sed
 	st.vars = st.vars && other.vars
@@ -43,6 +45,7 @@ func (st *substSeen) And(other substSeen) {
 }
 
 func (st *substSeen) Or(other substSeen) {
+	st.id = st.id || other.id
 	st.files = st.files || other.files
 	st.sed = st.sed || other.sed
 	st.vars = st.vars || other.vars
@@ -85,6 +88,7 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 			}
 		}
 		ctx.id = classes[0]
+		ctx.top().id = true
 		return
 	}
 
@@ -189,10 +193,6 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 }
 
 func (ctx *SubstContext) Directive(mkline *MkLine) {
-	if ctx.id == "" {
-		return
-	}
-
 	if trace.Tracing {
 		trace.Stepf("+ SubstContext.Directive %v", *ctx.top())
 	}
@@ -200,18 +200,24 @@ func (ctx *SubstContext) Directive(mkline *MkLine) {
 	dir := mkline.Directive()
 	switch dir {
 	case "if":
-		top := substCond{total: substSeen{true, true, true, true}}
+		top := substCond{total: substSeen{true, true, true, true, true}}
 		ctx.conds = append(ctx.conds, &top)
 
 	case "elif", "else":
 		top := ctx.conds[len(ctx.conds)-1]
 		top.total.And(top.curr)
+		if top.curr.id {
+			ctx.Finish(mkline)
+		}
 		top.curr = substSeen{}
 		top.seenElse = dir == "else"
 
 	case "endif":
 		top := ctx.conds[len(ctx.conds)-1]
 		top.total.And(top.curr)
+		if top.curr.id {
+			ctx.Finish(mkline)
+		}
 		if !top.seenElse {
 			top.total = substSeen{}
 		}
@@ -259,15 +265,19 @@ func (*SubstContext) dupString(mkline *MkLine, pstr *string, varname, value stri
 func (ctx *SubstContext) dupBool(mkline *MkLine, flag func(stats *substSeen) *bool,
 	varname string, op MkOperator) {
 
-	seen := false
-	for _, cond := range ctx.conds {
-		seen = seen || *flag(&cond.curr)
-	}
-
-	if seen && op != opAssignAppend {
+	if ctx.seen(flag) && op != opAssignAppend {
 		mkline.Warnf("All but the first %q lines should use the \"+=\" operator.", varname)
 	}
 	*flag(ctx.top()) = true
+}
+
+func (ctx *SubstContext) seen(flag func(seen *substSeen) *bool) bool {
+	for _, cond := range ctx.conds {
+		if *flag(&cond.curr) {
+			return true
+		}
+	}
+	return false
 }
 
 func (ctx *SubstContext) suggestSubstVars(mkline *MkLine) {

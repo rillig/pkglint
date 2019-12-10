@@ -577,12 +577,10 @@ func (s *Suite) Test_SubstContext__completely_conditional_then(c *check.C) {
 
 	mklines.Check()
 
-	// FIXME: That's wrong. The whole SUBST block is defined at the same
-	//  conditional level.
+	// The block already ends at the .else, not at the end of the file,
+	// since that is the scope where the SUBST id is defined.
 	t.CheckOutputLines(
-		"WARN: subst.mk:EOF: Incomplete SUBST block: SUBST_FILES.id missing.",
-		"WARN: subst.mk:EOF: Incomplete SUBST block: "+
-			"SUBST_SED.id, SUBST_VARS.id or SUBST_FILTER_CMD.id missing.")
+		"WARN: subst.mk:9: Incomplete SUBST block: SUBST_FILES.id missing.")
 }
 
 func (s *Suite) Test_SubstContext__completely_conditional_else(c *check.C) {
@@ -607,14 +605,10 @@ func (s *Suite) Test_SubstContext__completely_conditional_else(c *check.C) {
 
 	// The block already ends at the .endif, not at the end of the file,
 	// since that is the scope where the SUBST id is defined.
-	//
-	// FIXME
 	t.CheckOutputLines(
-		"WARN: subst.mk:EOF: Incomplete SUBST block: SUBST_FILES.id missing.")
+		"WARN: subst.mk:10: Incomplete SUBST block: SUBST_FILES.id missing.")
 }
 
-// Since the SUBST_CLASSES definition starts the SUBST block, all
-// directives above it are ignored by the SUBST context.
 func (s *Suite) Test_SubstContext_Directive__before_SUBST_CLASSES(c *check.C) {
 	t := s.Init(c)
 
@@ -632,9 +626,9 @@ func (s *Suite) Test_SubstContext_Directive__before_SUBST_CLASSES(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: os.mk:EOF: Incomplete SUBST block: SUBST_STAGE.os missing.",
-		"WARN: os.mk:EOF: Incomplete SUBST block: SUBST_FILES.os missing.",
-		"WARN: os.mk:EOF: Incomplete SUBST block: "+
+		"WARN: os.mk:6: Incomplete SUBST block: SUBST_STAGE.os missing.",
+		"WARN: os.mk:6: Incomplete SUBST block: SUBST_FILES.os missing.",
+		"WARN: os.mk:6: Incomplete SUBST block: "+
 			"SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
 }
 
