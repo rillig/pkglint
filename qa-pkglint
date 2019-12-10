@@ -64,7 +64,7 @@ qa_gobco() {
   step_msg "Running gobco to measure code coverage"
   # see https://github.com/rillig/gobco
   (cd "$srcdir" \
-   && command gobco > "$archivedir/gobco.txt.tmp" || true \
+   && gobco > "$archivedir/gobco.txt.tmp" || true \
    && mv -f "$archivedir/gobco.txt.tmp" "$archivedir/gobco.txt")
 }
 
