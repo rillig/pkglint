@@ -56,6 +56,7 @@ qa_install() {
 
 qa_analyze() {
   step_msg "Analyzing code style"
+  # see https://github.com/golangci/golangci-lint
   (cd "$srcdir" && golangci-lint run)
 }
 
