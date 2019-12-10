@@ -262,7 +262,7 @@ func (*VaralignBlock) rightMargin(infos []*varalignLine) (common bool, margin in
 
 	for i := len(columns) - 2; i >= 0; i-- {
 		if columns[i] == columns[i+1] {
-			return true, columns[i]
+			return columns[0] == columns[len(columns)-1], columns[i]
 		}
 	}
 

@@ -3533,8 +3533,7 @@ func (s *Suite) Test__varalignMkLine_rightMargin(c *check.C) {
 	// The common right margin is determined by starting from the right
 	// and searching until there are at least 2 lines having the same
 	// right margin.
-	// FIXME: false
-	test(true, 40,
+	test(false, 40,
 		"VAR=\t\\",          // column 16
 		"\tv\t\t\t\t\t\\",   // column 48
 		"\tv\t\t\t\\",       // column 32
