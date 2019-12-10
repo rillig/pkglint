@@ -1657,7 +1657,7 @@ func (s *Suite) Test_ShellLineChecker_unescapeBackticks(c *check.C) {
 	test := func(input string, expectedOutput string, expectedRest string, diagnostics ...string) {
 		ck := t.NewShellLineChecker("# dummy")
 
-		tok := NewShTokenizer(nil, input, false)
+		tok := NewShTokenizer(nil, input)
 		atoms := tok.ShAtoms()
 
 		// Set up the correct quoting mode for the test by skipping

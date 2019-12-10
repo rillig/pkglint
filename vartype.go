@@ -472,7 +472,6 @@ var (
 	BtEmulArch                = enumFromValues(machineArchValues) // Just a wild guess.
 	BtMachineGnuPlatformOpsys = BtEmulOpsys
 
-	btCond    = &BasicType{".if condition", nil /* never called */}
 	btForLoop = &BasicType{".for loop", nil /* never called */}
 )
 

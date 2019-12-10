@@ -1097,7 +1097,6 @@ func (t *Tester) CheckOutputLines(expectedLines ...string) {
 func (t *Tester) CheckOutputLinesMatching(pattern regex.Pattern, expectedLines ...string) {
 	output := t.Output()
 	var actualLines []string
-	actualLines = append(actualLines)
 	for _, line := range strings.Split(strings.TrimSuffix(output, "\n"), "\n") {
 		if matches(line, pattern) {
 			actualLines = append(actualLines, line)
