@@ -207,6 +207,13 @@ func imax(a, b int) int {
 	return b
 }
 
+func imin(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
 // assertNil ensures that the given error is nil.
 //
 // Contrary to other diagnostics, the format should not end in a period

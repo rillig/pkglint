@@ -673,7 +673,9 @@ type varalignMkLine struct {
 
 // rightMargin calculates the column in which the continuation backslashes
 // should be placed.
-func (l *varalignMkLine) rightMargin() (common bool, margin int) {
+// In addition it returns whether the right margin is already in its
+// canonical form.
+func (l *varalignMkLine) rightMargin() (ok bool, margin int) {
 	restIndex := condInt(l.infos[0].value == "", 1, 0)
 	infos := l.infos[restIndex:]
 
@@ -687,16 +689,18 @@ func (l *varalignMkLine) rightMargin() (common bool, margin int) {
 		}
 	}
 
+	if len(columns) <= 1 {
+		return false, 0
+	}
+
 	sort.Ints(columns)
 
 	for i := len(columns) - 2; i >= 0; i-- {
-		if columns[i] == columns[i+1] {
-			return columns[0] == columns[len(columns)-1], columns[i]
+		col := columns[i]
+		if col == columns[i+1] {
+			ok := columns[0] == columns[len(columns)-1] && col <= 72
+			return ok, imin(col, 72)
 		}
-	}
-
-	if len(columns) <= 1 {
-		return false, 0
 	}
 
 	var min int

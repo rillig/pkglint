@@ -2820,14 +2820,18 @@ func (s *Suite) Test_VaralignBlock__long_lines_2(c *check.C) {
 		"   24 104",
 		"   24")
 	vt.Diagnostics(
-		"NOTE: Makefile:1: The continuation backslash should be preceded by a single space or tab.")
+		"NOTE: Makefile:1: The continuation backslash should be preceded by a single space or tab.",
+		"NOTE: Makefile:2: The continuation backslash should be preceded by a single space or tab.",
+		"NOTE: Makefile:3: The continuation backslash should be preceded by a single space or tab.")
 	vt.Autofixes(
-		"AUTOFIX: Makefile:1: Replacing \"\\t\\t \" with \" \".")
+		"AUTOFIX: Makefile:1: Replacing \"\\t\\t \" with \" \".",
+		"AUTOFIX: Makefile:2: Replacing \"\\t\\t       \\t\" with \" \".",
+		"AUTOFIX: Makefile:3: Replacing \"\\t\\t       \\t\" with \" \".")
 	vt.Fixed(
 		"INSTALLATION_DIRS=      _____________________________________________________________________   \\"+
 			"                                __________________________________________________________ \\",
-		"                        __________________________________________________________                      \\",
-		"                        __________________________________________________________                      \\",
+		"                        __________________________________________________________ \\",
+		"                        __________________________________________________________ \\",
 		"                        _________________________")
 	vt.Run()
 }
@@ -3191,9 +3195,12 @@ func (s *Suite) Test_VaralignBlock_realignMultiFollow__unindent_long_lines(c *ch
 	vt.Diagnostics(
 		"NOTE: Makefile:1: This variable value should be aligned to column 17.",
 		"NOTE: Makefile:2: This variable value should be aligned to column 17.",
+		// XXX: Wrong order; should be strictly from left to right.
+		"NOTE: Makefile:3: The continuation backslash should be preceded by a single space or tab.",
 		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".",
+		"NOTE: Makefile:4: The continuation backslash should be preceded by a single space or tab.",
 		"NOTE: Makefile:4: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".",
-		"NOTE: Makefile:5: The continuation backslash should be preceded by a single space or tab, or be in column 90, not 99.",
+		"NOTE: Makefile:5: The continuation backslash should be preceded by a single space or tab.",
 		"NOTE: Makefile:5: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".",
 		"NOTE: Makefile:6: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".",
 		"NOTE: Makefile:7: This continuation line should be indented with \"\\t\\t\\t\\t\\t\".",
@@ -3201,9 +3208,11 @@ func (s *Suite) Test_VaralignBlock_realignMultiFollow__unindent_long_lines(c *ch
 	vt.Autofixes(
 		"AUTOFIX: Makefile:1: Replacing \"\\t\" with \"\\t\\t\".",
 		"AUTOFIX: Makefile:2: Replacing \"\\t\\t\\t\\t\" with \"\\t\".",
+		"AUTOFIX: Makefile:3: Replacing \"                \" with \" \".",
 		"AUTOFIX: Makefile:3: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\\t\".",
+		"AUTOFIX: Makefile:4: Replacing \"               \" with \" \".",
 		"AUTOFIX: Makefile:4: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\\t\".",
-		"AUTOFIX: Makefile:5: Replacing \"  \\t\\t\\t  \" with \"\\t\\t \".",
+		"AUTOFIX: Makefile:5: Replacing \"  \\t\\t\\t  \" with \" \".",
 		"AUTOFIX: Makefile:5: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\\t\".",
 		"AUTOFIX: Makefile:6: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\\t\".",
 		"AUTOFIX: Makefile:7: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\".",
@@ -3214,12 +3223,9 @@ func (s *Suite) Test_VaralignBlock_realignMultiFollow__unindent_long_lines(c *ch
 		// kept in column 72. Nevertheless they look unorganized right now.
 		"SHORT=          value",
 		"PROGRAM_AWK=    --------50--------60--------70 \\",
-		// FIXME: only use a single space before the backslash.
-		"                                                3                \\",
-		// FIXME: only use a single space before the backslash.
-		"                                                74               \\",
-		// FIXME: only use a single space before the backslash.
-		"                                                -75              \\",
+		"                                                3 \\",
+		"                                                74 \\",
+		"                                                -75 \\",
 		"                                                --76 \\",
 		"                                        66 \\",
 		"                                        1")
@@ -3652,8 +3658,7 @@ func (s *Suite) Test_varalignMkLine_rightMargin(c *check.C) {
 
 	// The reasonable maximum value for the right margin is 72 since
 	// that column is the last that is still visible on an 80x25 display.
-	// TODO: Fix this to 72.
-	test(false, 96,
+	test(false, 72,
 		"VAR=\t\\",                    // column 16
 		"\tv\t\t\t\t\t\t\t\t\t\t\t\\", // column 96
 		"\tv\t\t\t\t\t\t\t\t\t\t\t\\", // column 96
