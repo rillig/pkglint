@@ -3494,7 +3494,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 		func() { test("VAR=\tvalue\n", true, varalignParts{}) })
 }
 
-func (s *Suite) Test__varalignMkLine_rightMargin(c *check.C) {
+func (s *Suite) Test_varalignMkLine_rightMargin(c *check.C) {
 	t := s.Init(c)
 
 	test := func(common bool, margin int, lines ...string) {
@@ -3508,7 +3508,7 @@ func (s *Suite) Test__varalignMkLine_rightMargin(c *check.C) {
 
 		t.Check(block.mkinfos, check.HasLen, 1)
 		for _, mkinfo := range block.mkinfos {
-			actualCommon, actualMargin := block.rightMargin(mkinfo.infos)
+			actualCommon, actualMargin := mkinfo.rightMargin(mkinfo.infos)
 			t.CheckDeepEquals(
 				[]interface{}{actualCommon, actualMargin},
 				[]interface{}{common, margin})

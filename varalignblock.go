@@ -233,7 +233,7 @@ func (va *VaralignBlock) Finish() {
 				indentDiffSet = false
 				indentDiff = 0
 				restIndex := i + condInt(info.value != "", 0, 1)
-				_, rightMargin = va.rightMargin(mkinfo.infos[restIndex:])
+				_, rightMargin = mkinfo.rightMargin(mkinfo.infos[restIndex:])
 			}
 
 			va.checkRightMargin(info, newWidth, rightMargin)
@@ -243,43 +243,6 @@ func (va *VaralignBlock) Finish() {
 			}
 		}
 	}
-}
-
-// rightMargin calculates the column in which the continuation backslashes
-// should be placed.
-func (*VaralignBlock) rightMargin(infos []*varalignLine) (common bool, margin int) {
-	var columns []int
-	for _, info := range infos {
-		if info.isContinuation() {
-			space := info.spaceBeforeContinuation()
-			if space != "" && space != " " {
-				columns = append(columns, info.continuationColumn())
-			}
-		}
-	}
-
-	sort.Ints(columns)
-
-	for i := len(columns) - 2; i >= 0; i-- {
-		if columns[i] == columns[i+1] {
-			return columns[0] == columns[len(columns)-1], columns[i]
-		}
-	}
-
-	if len(columns) <= 1 {
-		return false, 0
-	}
-
-	var min int
-	for _, info := range infos {
-		if info.isContinuation() {
-			mainWidth := info.uptoCommentWidth()
-			if mainWidth > min {
-				min = mainWidth
-			}
-		}
-	}
-	return false, min&-8 + 8
 }
 
 // optimalWidth computes the desired screen width for the variable assignment
@@ -707,6 +670,43 @@ func (VaralignSplitter) parseValue(lexer *textproc.Lexer) (string, string, strin
 
 type varalignMkLine struct {
 	infos []*varalignLine
+}
+
+// rightMargin calculates the column in which the continuation backslashes
+// should be placed.
+func (*varalignMkLine) rightMargin(infos []*varalignLine) (common bool, margin int) {
+	var columns []int
+	for _, info := range infos {
+		if info.isContinuation() {
+			space := info.spaceBeforeContinuation()
+			if space != "" && space != " " {
+				columns = append(columns, info.continuationColumn())
+			}
+		}
+	}
+
+	sort.Ints(columns)
+
+	for i := len(columns) - 2; i >= 0; i-- {
+		if columns[i] == columns[i+1] {
+			return columns[0] == columns[len(columns)-1], columns[i]
+		}
+	}
+
+	if len(columns) <= 1 {
+		return false, 0
+	}
+
+	var min int
+	for _, info := range infos {
+		if info.isContinuation() {
+			mainWidth := info.uptoCommentWidth()
+			if mainWidth > min {
+				min = mainWidth
+			}
+		}
+	}
+	return false, min&-8 + 8
 }
 
 type varalignLine struct {
