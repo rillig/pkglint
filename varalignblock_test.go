@@ -3554,6 +3554,36 @@ func (s *Suite) Test__varalignMkLine_rightMargin(c *check.C) {
 		"\tv\t\t\t\t\t\t\\", // column 56
 		"\tv\t\t\\",         // column 24
 		"\tv")
+
+	// The decision of choosing column 24 may feel somewhat arbitrary,
+	// but this whole situation is artificially constructed anyway.
+	//
+	// The intention of choosing the largest column with at least two
+	// backslashes is simply that this will fix most practical occurrences
+	// where most of the backslashes are already aligned in that column,
+	// and only a few are in column 64.
+	test(false, 24,
+		"VAR=\t\\",                         // column 16
+		"\tv\t\t\t\\",                      // column 32
+		"\tv\t\t\t\t\\",                    // column 40
+		"\t......16......24......32\t\t\\", // column 48
+		"\tv\t\t\\",                        // column 24
+		"\tv\t\t\\",                        // column 24, appears twice
+		"\tv")
+
+	// The reasonable maximum value for the right margin is 72 since
+	// that column is the last that is still visible on an 80x25 display.
+	// TODO: Fix this to 72.
+	test(false, 96,
+		"VAR=\t\\",                    // column 16
+		"\tv\t\t\t\t\t\t\t\t\t\t\t\\", // column 96
+		"\tv\t\t\t\t\t\t\t\t\t\t\t\\", // column 96
+		"\tv\t\t\t\t\t\t\t\t\t\t\t\\", // column 96
+		"\tv\t\t\t\t\t\t\t\t\t\t\t\\", // column 96
+		"\tv\t\t\t\t\\",               // column 40
+		"\tv\t\t\\",                   // column 24
+		"\tv\t\t\\",                   // column 24, appears twice
+		"\tv")
 }
 
 // This constellation doesn't occur in practice because the code in
