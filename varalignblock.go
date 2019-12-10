@@ -141,8 +141,12 @@ import (
 //      dürfen die weiteren Fortsetzungszeilen weiter eingerückt sein als die erste.
 //      Ihre Einrückung besteht aus Tabs, gefolgt von 0 bis 7 Leerzeichen.
 type VaralignBlock struct {
+	mkinfos []*varalignMkLine
+	skip    bool
+}
+
+type varalignMkLine struct {
 	infos []*varalignLine
-	skip  bool
 }
 
 type varalignLine struct {
@@ -206,6 +210,7 @@ func (va *VaralignBlock) processVarassign(mkline *MkLine) {
 	}
 
 	follow := false
+	var infos []*varalignLine
 	for i, raw := range mkline.raw {
 		parts := NewVaralignSplitter().split(strings.TrimSuffix(raw.textnl, "\n"), i == 0)
 		info := varalignLine{mkline, i, follow, false, parts}
@@ -215,16 +220,17 @@ func (va *VaralignBlock) processVarassign(mkline *MkLine) {
 			info.multiEmpty = true
 		}
 
-		va.infos = append(va.infos, &info)
+		infos = append(infos, &info)
 	}
+	va.mkinfos = append(va.mkinfos, &varalignMkLine{infos})
 }
 
 func (va *VaralignBlock) Finish() {
-	infos := va.infos
+	mkinfos := va.mkinfos
 	skip := va.skip
 	*va = VaralignBlock{} // overwrites infos and skip
 
-	if len(infos) == 0 || skip {
+	if len(mkinfos) == 0 || skip {
 		return
 	}
 
@@ -232,8 +238,8 @@ func (va *VaralignBlock) Finish() {
 		defer trace.Call()()
 	}
 
-	newWidth := va.optimalWidth(infos)
-	va.adjustLong(newWidth, infos)
+	newWidth := va.optimalWidth(mkinfos)
+	va.adjustLong(newWidth, mkinfos)
 	rightMargin := 0
 
 	// When the indentation of the initial line of a multiline is
@@ -247,18 +253,20 @@ func (va *VaralignBlock) Finish() {
 	// mean shifting to the left.
 	indentDiff := 0
 
-	for i, info := range infos {
-		if info.rawIndex == 0 {
-			indentDiffSet = false
-			indentDiff = 0
-			restIndex := i + condInt(info.value != "", 0, 1)
-			rightMargin = va.rightMargin(infos[restIndex:])
-		}
+	for _, mkinfo := range mkinfos {
+		for i, info := range mkinfo.infos {
+			if info.rawIndex == 0 {
+				indentDiffSet = false
+				indentDiff = 0
+				restIndex := i + condInt(info.value != "", 0, 1)
+				rightMargin = va.rightMargin(mkinfo.infos[restIndex:])
+			}
 
-		va.checkRightMargin(info, newWidth, rightMargin)
+			va.checkRightMargin(info, newWidth, rightMargin)
 
-		if newWidth > 0 || info.rawIndex > 0 {
-			va.realign(info, newWidth, &indentDiffSet, &indentDiff)
+			if newWidth > 0 || info.rawIndex > 0 {
+				va.realign(info, newWidth, &indentDiffSet, &indentDiff)
+			}
 		}
 	}
 }
@@ -306,12 +314,14 @@ func (*VaralignBlock) rightMargin(infos []*varalignLine) int {
 // There may be a single line sticking out from the others (called outlier).
 // This is to prevent a single SITES.* variable from forcing the rest of the
 // paragraph to be indented too far to the right.
-func (*VaralignBlock) optimalWidth(infos []*varalignLine) int {
+func (*VaralignBlock) optimalWidth(mkinfos []*varalignMkLine) int {
 
 	var widths bag
-	for _, info := range infos {
-		if !info.multiEmpty && info.rawIndex == 0 {
-			widths.Add(info.fixer, info.varnameOpWidth())
+	for _, mkinfo := range mkinfos {
+		for _, info := range mkinfo.infos {
+			if !info.multiEmpty && info.rawIndex == 0 {
+				widths.Add(info.fixer, info.varnameOpWidth())
+			}
 		}
 	}
 	widths.sortDesc()
@@ -333,11 +343,13 @@ func (*VaralignBlock) optimalWidth(infos []*varalignLine) int {
 
 	// Widths of the current indentation (including whitespace)
 	var spaceWidths bag
-	for _, info := range infos {
-		if info.multiEmpty || info.rawIndex > 0 || outlier > 0 && info.varnameOpWidth() == outlier {
-			continue
+	for _, mkinfo := range mkinfos {
+		for _, info := range mkinfo.infos {
+			if info.multiEmpty || info.rawIndex > 0 || outlier > 0 && info.varnameOpWidth() == outlier {
+				continue
+			}
+			spaceWidths.Add(info.fixer, info.varnameOpSpaceWidth())
 		}
-		spaceWidths.Add(info.fixer, info.varnameOpSpaceWidth())
 	}
 	spaceWidths.sortDesc()
 
@@ -369,23 +381,26 @@ func (*VaralignBlock) optimalWidth(infos []*varalignLine) int {
 // adjustLong allows any follow-up line to start either in column 8 or at
 // least in column newWidth. But only if there is at least one continuation
 // line that starts in column 8 and needs the full width up to column 72.
-func (va *VaralignBlock) adjustLong(newWidth int, infos []*varalignLine) {
+func (va *VaralignBlock) adjustLong(newWidth int, mkinfos []*varalignMkLine) {
 	anyLong := false
-	for i, info := range infos {
-		if info.rawIndex == 0 {
-			anyLong = false
-			for _, follow := range infos[i+1:] {
-				if follow.rawIndex == 0 {
-					break
-				}
-				if !follow.multiEmpty && follow.spaceBeforeValue == "\t" && follow.varnameOpSpaceWidth() < newWidth && follow.widthAlignedAt(newWidth) > 72 {
-					anyLong = true
-					break
+	for _, mkinfo := range mkinfos {
+		infos := mkinfo.infos
+		for i, info := range infos {
+			if info.rawIndex == 0 {
+				anyLong = false
+				for _, follow := range infos[i+1:] {
+					if follow.rawIndex == 0 {
+						break
+					}
+					if !follow.multiEmpty && follow.spaceBeforeValue == "\t" && follow.varnameOpSpaceWidth() < newWidth && follow.widthAlignedAt(newWidth) > 72 {
+						anyLong = true
+						break
+					}
 				}
 			}
-		}
 
-		info.long = anyLong && info.varnameOpSpaceWidth() == 8
+			info.long = anyLong && info.varnameOpSpaceWidth() == 8
+		}
 	}
 }
 

@@ -92,19 +92,21 @@ func (vt *VaralignTester) run(autofix bool) {
 
 		varalign.Process(mkline)
 	}
-	infos := varalign.infos // since they are overwritten by Finish
+	mkinfos := varalign.mkinfos // since they are overwritten by Finish
 	varalign.Finish()
 
 	if len(vt.internals) > 0 {
 		var actual []string
-		for _, info := range infos {
-			var minWidth, curWidth, continuation string
-			minWidth = condStr(info.rawIndex == 0, sprintf("%02d", info.varnameOpWidth()), "  ")
-			curWidth = sprintf(" %02d", info.varnameOpSpaceWidth())
-			if info.isContinuation() {
-				continuation = sprintf(" %02d", info.continuationColumn())
+		for _, mkinfo := range mkinfos {
+			for _, info := range mkinfo.infos {
+				var minWidth, curWidth, continuation string
+				minWidth = condStr(info.rawIndex == 0, sprintf("%02d", info.varnameOpWidth()), "  ")
+				curWidth = sprintf(" %02d", info.varnameOpSpaceWidth())
+				if info.isContinuation() {
+					continuation = sprintf(" %02d", info.continuationColumn())
+				}
+				actual = append(actual, minWidth+curWidth+continuation)
 			}
-			actual = append(actual, minWidth+curWidth+continuation)
 		}
 		t.CheckDeepEquals(actual, vt.internals)
 	}
