@@ -219,8 +219,11 @@ func (s *Suite) Test_SubstContext__directives_around_everything_then(c *check.C)
 
 	mklines.ForEach(ctx.Process)
 
-	// TODO: The SUBST variables are not guaranteed to be defined in all cases.
-	t.CheckOutputEmpty()
+	// TODO: Warn about missing SUBST_STAGE.
+	t.CheckOutputLines(
+		"WARN: filename.mk:9: Incomplete SUBST block: SUBST_FILES.os missing.",
+		"WARN: filename.mk:9: Incomplete SUBST block: "+
+			"SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
 }
 
 func (s *Suite) Test_SubstContext__directives_around_everything_else(c *check.C) {
@@ -243,7 +246,6 @@ func (s *Suite) Test_SubstContext__directives_around_everything_else(c *check.C)
 
 	mklines.ForEach(ctx.Process)
 
-	// FIXME: The warnings must be the same as in the "then" test case.
 	t.CheckOutputLines(
 		"WARN: filename.mk:10: Incomplete SUBST block: SUBST_FILES.os missing.",
 		"WARN: filename.mk:10: Incomplete SUBST block: "+

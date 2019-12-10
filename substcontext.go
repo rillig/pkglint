@@ -5,17 +5,31 @@ import "netbsd.org/pkglint/textproc"
 // SubstContext records the state of a block of variable assignments
 // that make up a SUBST class (see `mk/subst.mk`).
 type SubstContext struct {
-	id            string
-	stage         string
-	message       string
-	curr          *SubstContextStats
-	inAllBranches SubstContextStats
-	filterCmd     string
-	vars          map[string]bool
+	id        string
+	stage     string
+	message   string
+	filterCmd string
+	vars      map[string]bool
+	conds     []*SubstCond
 }
 
 func NewSubstContext() *SubstContext {
-	return &SubstContext{curr: &SubstContextStats{}}
+	return &SubstContext{conds: []*SubstCond{{InElse: true}}}
+}
+
+type SubstCond struct {
+	Total SubstContextStats
+	Then  SubstContextStats
+	Else  SubstContextStats
+	// TODO: Rename to SeenElse. Then remove the Else.
+	InElse bool
+}
+
+func (sc *SubstCond) Curr() *SubstContextStats {
+	if !sc.InElse {
+		return &sc.Then
+	}
+	return &sc.Else
 }
 
 type SubstContextStats struct {
@@ -23,14 +37,14 @@ type SubstContextStats struct {
 	seenSed       bool
 	seenVars      bool
 	seenTransform bool
-	prev          *SubstContextStats
 }
 
-func (st *SubstContextStats) Copy() *SubstContextStats {
-	return &SubstContextStats{st.seenFiles, st.seenSed, st.seenVars, st.seenTransform, st}
-}
+func (st *SubstContextStats) SeenFiles() *bool     { return &st.seenFiles }
+func (st *SubstContextStats) SeenSed() *bool       { return &st.seenSed }
+func (st *SubstContextStats) SeenVars() *bool      { return &st.seenVars }
+func (st *SubstContextStats) SeenTransform() *bool { return &st.seenTransform }
 
-func (st *SubstContextStats) And(other *SubstContextStats) {
+func (st *SubstContextStats) And(other SubstContextStats) {
 	st.seenFiles = st.seenFiles && other.seenFiles
 	st.seenSed = st.seenSed && other.seenSed
 	st.seenVars = st.seenVars && other.seenVars
@@ -57,7 +71,7 @@ func (ctx *SubstContext) Process(mkline *MkLine) {
 
 func (ctx *SubstContext) Varassign(mkline *MkLine) {
 	if trace.Tracing {
-		trace.Stepf("SubstContext.Varassign curr=%v all=%v", ctx.curr, ctx.inAllBranches)
+		trace.Stepf("SubstContext.Varassign curr=%v", *ctx.top())
 	}
 
 	varname := mkline.Varname()
@@ -65,6 +79,7 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 	varparam := mkline.Varparam()
 	op := mkline.Op()
 	value := mkline.Value()
+
 	if varcanon == "SUBST_CLASSES" || varcanon == "SUBST_CLASSES.*" {
 		classes := mkline.ValueFields(value)
 		if len(classes) > 1 {
@@ -127,7 +142,7 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 
 	switch varcanon {
 	case "SUBST_STAGE.*":
-		ctx.dupString(mkline, &ctx.stage, varname, value)
+		ctx.dupString(mkline, &ctx.stage, varname, value) // TODO: Make stage conditional as well.
 		if value == "pre-patch" || value == "post-patch" {
 			fix := mkline.Autofix()
 			fix.Warnf("Substitutions should not happen in the patch phase.")
@@ -158,17 +173,17 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 		ctx.dupString(mkline, &ctx.message, varname, value)
 
 	case "SUBST_FILES.*":
-		ctx.dupBool(mkline, &ctx.curr.seenFiles, varname, op, value)
+		ctx.dupBool(mkline, (*SubstContextStats).SeenFiles, varname, op)
 
 	case "SUBST_SED.*":
-		ctx.dupBool(mkline, &ctx.curr.seenSed, varname, op, value)
-		ctx.curr.seenTransform = true
+		ctx.dupBool(mkline, (*SubstContextStats).SeenSed, varname, op)
+		ctx.top().seenTransform = true
 
 		ctx.suggestSubstVars(mkline)
 
 	case "SUBST_VARS.*":
-		ctx.dupBool(mkline, &ctx.curr.seenVars, varname, op, value)
-		ctx.curr.seenTransform = true
+		ctx.dupBool(mkline, (*SubstContextStats).SeenVars, varname, op)
+		ctx.top().seenTransform = true
 		for _, substVar := range mkline.Fields() {
 			if ctx.vars == nil {
 				ctx.vars = make(map[string]bool)
@@ -178,7 +193,7 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 
 	case "SUBST_FILTER_CMD.*":
 		ctx.dupString(mkline, &ctx.filterCmd, varname, value)
-		ctx.curr.seenTransform = true
+		ctx.top().seenTransform = true
 	}
 }
 
@@ -188,31 +203,44 @@ func (ctx *SubstContext) Directive(mkline *MkLine) {
 	}
 
 	if trace.Tracing {
-		trace.Stepf("+ SubstContext.Directive %v %v", ctx.curr, ctx.inAllBranches)
+		trace.Stepf("+ SubstContext.Directive %v", *ctx.top())
 	}
+
 	dir := mkline.Directive()
-	if dir == "if" {
-		ctx.inAllBranches = SubstContextStats{true, true, true, true, nil}
-	}
-	if dir == "elif" || dir == "else" || dir == "endif" {
-		if ctx.curr.prev != nil { // Don't crash on malformed input
-			ctx.inAllBranches.And(ctx.curr)
-			ctx.curr = ctx.curr.prev
+	switch dir {
+	case "if":
+		top := SubstCond{Total: SubstContextStats{true, true, true, true}}
+		ctx.conds = append(ctx.conds, &top)
+
+	case "elif":
+		top := ctx.conds[len(ctx.conds)-1]
+		top.Total.And(top.Then)
+		top.Then = SubstContextStats{}
+
+	case "else":
+		top := ctx.conds[len(ctx.conds)-1]
+		top.Total.And(top.Then)
+		top.InElse = true
+
+	case "endif":
+		top := ctx.conds[len(ctx.conds)-1]
+		if !top.InElse {
+			top.Total.And(top.Then)
 		}
+		top.Total.And(top.Else)
+		if len(ctx.conds) > 1 {
+			ctx.conds = ctx.conds[:len(ctx.conds)-1]
+		}
+		ctx.top().Or(top.Total)
 	}
-	if dir == "if" || dir == "elif" || dir == "else" {
-		ctx.curr = ctx.curr.Copy()
-	}
-	if dir == "endif" {
-		ctx.curr.Or(ctx.inAllBranches)
-	}
+
 	if trace.Tracing {
-		trace.Stepf("- SubstContext.Directive %v %v", ctx.curr, ctx.inAllBranches)
+		trace.Stepf("- SubstContext.Directive %v", *ctx.top())
 	}
 }
 
 func (ctx *SubstContext) IsComplete() bool {
-	return ctx.stage != "" && ctx.curr.seenFiles && ctx.curr.seenTransform
+	return ctx.stage != "" && ctx.top().seenFiles && ctx.top().seenTransform
 }
 
 func (ctx *SubstContext) Finish(mkline *MkLine) {
@@ -224,10 +252,10 @@ func (ctx *SubstContext) Finish(mkline *MkLine) {
 	if ctx.stage == "" {
 		mkline.Warnf("Incomplete SUBST block: SUBST_STAGE.%s missing.", id)
 	}
-	if !ctx.curr.seenFiles {
+	if !ctx.top().seenFiles {
 		mkline.Warnf("Incomplete SUBST block: SUBST_FILES.%s missing.", id)
 	}
-	if !ctx.curr.seenTransform {
+	if !ctx.top().seenTransform {
 		mkline.Warnf("Incomplete SUBST block: SUBST_SED.%[1]s, SUBST_VARS.%[1]s or SUBST_FILTER_CMD.%[1]s missing.", id)
 	}
 
@@ -241,11 +269,18 @@ func (*SubstContext) dupString(mkline *MkLine, pstr *string, varname, value stri
 	*pstr = value
 }
 
-func (*SubstContext) dupBool(mkline *MkLine, flag *bool, varname string, op MkOperator, value string) {
-	if *flag && op != opAssignAppend {
+func (ctx *SubstContext) dupBool(mkline *MkLine, flag func(stats *SubstContextStats) *bool,
+	varname string, op MkOperator) {
+
+	seen := false
+	for _, cond := range ctx.conds {
+		seen = seen || *flag(cond.Curr())
+	}
+
+	if seen && op != opAssignAppend {
 		mkline.Warnf("All but the first %q lines should use the \"+=\" operator.", varname)
 	}
-	*flag = true
+	*flag(ctx.top()) = true
 }
 
 func (ctx *SubstContext) suggestSubstVars(mkline *MkLine) {
@@ -260,7 +295,7 @@ func (ctx *SubstContext) suggestSubstVars(mkline *MkLine) {
 		varop := sprintf("SUBST_VARS.%s%s%s",
 			ctx.id,
 			condStr(hasSuffix(ctx.id, "+"), " ", ""),
-			condStr(ctx.curr.seenVars, "+=", "="))
+			condStr(ctx.top().seenVars, "+=", "="))
 
 		fix := mkline.Autofix()
 		fix.Notef("The substitution command %q can be replaced with \"%s %s\".",
@@ -273,7 +308,7 @@ func (ctx *SubstContext) suggestSubstVars(mkline *MkLine) {
 		}
 		fix.Apply()
 
-		ctx.curr.seenVars = true
+		ctx.top().seenVars = true
 	}
 }
 
@@ -317,4 +352,8 @@ func (*SubstContext) extractVarname(token string) string {
 	}
 
 	return varname
+}
+
+func (ctx *SubstContext) top() *SubstContextStats {
+	return ctx.conds[len(ctx.conds)-1].Curr()
 }
