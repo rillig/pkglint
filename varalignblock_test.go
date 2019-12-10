@@ -2832,6 +2832,53 @@ func (s *Suite) Test_VaralignBlock__long_lines_2(c *check.C) {
 	vt.Run()
 }
 
+// Each MkLine has its own right margin.
+// As of December 2019, it is ok when these are not aligned per paragraph.
+func (s *Suite) Test_VaralignBlock__right_margin_in_adjacent_lines(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR1=\t\\",
+		"\t......16\t\t\\",
+		"\t......16\t\t\\",
+		"\t......16",
+		"VAR2=\t\\",
+		"\t......16\t\t\t\\",
+		"\t......16\t\t\t\\",
+		"\t......16")
+	vt.InputDetab(
+		"VAR1=   \\",
+		"        ......16                \\",
+		"        ......16                \\",
+		"        ......16",
+		"VAR2=   \\",
+		"        ......16                        \\",
+		"        ......16                        \\",
+		"        ......16")
+	vt.Internals(
+		"05 08 08",
+		"   08 32",
+		"   08 32",
+		"   08",
+		"05 08 08",
+		"   08 40",
+		"   08 40",
+		"   08")
+	vt.Diagnostics(
+		nil...)
+	vt.Autofixes(
+		nil...)
+	vt.Fixed(
+		"VAR1=   \\",
+		"        ......16                \\",
+		"        ......16                \\",
+		"        ......16",
+		"VAR2=   \\",
+		"        ......16                        \\",
+		"        ......16                        \\",
+		"        ......16")
+	vt.Run()
+}
+
 func (s *Suite) Test_VaralignBlock_Process__var_spaces7_value(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
