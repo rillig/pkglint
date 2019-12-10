@@ -145,32 +145,6 @@ type VaralignBlock struct {
 	skip    bool
 }
 
-type varalignMkLine struct {
-	infos []*varalignLine
-}
-
-type varalignLine struct {
-	fixer    Autofixer
-	rawIndex int
-
-	// Is true for multilines that don't have a value in their first
-	// physical line.
-	//
-	// The follow-up lines of these lines may be indented with as few
-	// as a single tab. Example:
-	//  VAR= \
-	//          value1 \
-	//          value2
-	// In all other lines, the indentation must be at least the indentation
-	// of the first value found.
-	multiEmpty bool
-
-	// Whether the line is so long that it may use a single tab as indentation.
-	long bool
-
-	varalignParts
-}
-
 func (va *VaralignBlock) Process(mkline *MkLine) {
 	switch {
 	case mkline.IsEmpty():
@@ -729,6 +703,32 @@ func (VaralignSplitter) parseValue(lexer *textproc.Lexer) (string, string, strin
 	value := rtrimHspace(valueAndSpace)
 	space := valueAndSpace[len(value):]
 	return value, space, continuation
+}
+
+type varalignMkLine struct {
+	infos []*varalignLine
+}
+
+type varalignLine struct {
+	fixer    Autofixer
+	rawIndex int
+
+	// Is true for multilines that don't have a value in their first
+	// physical line.
+	//
+	// The follow-up lines of these lines may be indented with as few
+	// as a single tab. Example:
+	//  VAR= \
+	//          value1 \
+	//          value2
+	// In all other lines, the indentation must be at least the indentation
+	// of the first value found.
+	multiEmpty bool
+
+	// Whether the line is so long that it may use a single tab as indentation.
+	long bool
+
+	varalignParts
 }
 
 type varalignParts struct {
