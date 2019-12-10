@@ -557,6 +557,36 @@ func (s *Suite) Test_SubstContext__unusual_variable_order(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_SubstContext__completely_conditional(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.Chdir(".")
+	t.FinishSetUp()
+	mklines := t.NewMkLines("subst.mk",
+		MkCvsID,
+		"",
+		".include \"mk/bsd.prefs.mk\"",
+		"",
+		".if ${OPSYS} == Linux",
+		"SUBST_CLASSES+=\tid",
+		"SUBST_STAGE.id=\tpre-configure",
+		"SUBST_FILES.id=\tfile",
+		"SUBST_SED.id=\t-e sahara",
+		".else",
+		".endif")
+
+	mklines.Check()
+
+	// FIXME: That's wrong. The whole SUBST block is defined at the same
+	//  conditional level.
+	t.CheckOutputLines(
+		"WARN: subst.mk:EOF: Incomplete SUBST block: SUBST_FILES.id missing.",
+		"WARN: subst.mk:EOF: Incomplete SUBST block: "+
+			"SUBST_SED.id, SUBST_VARS.id or SUBST_FILTER_CMD.id missing.")
+
+}
+
 // Since the SUBST_CLASSES definition starts the SUBST block, all
 // directives above it are ignored by the SUBST context.
 func (s *Suite) Test_SubstContext_Directive__before_SUBST_CLASSES(c *check.C) {
