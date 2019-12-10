@@ -31,11 +31,6 @@ type substSeen struct {
 	transform bool
 }
 
-func (st *substSeen) seenFiles() *bool     { return &st.files }
-func (st *substSeen) seenSed() *bool       { return &st.sed }
-func (st *substSeen) seenVars() *bool      { return &st.vars }
-func (st *substSeen) seenTransform() *bool { return &st.transform }
-
 func (st *substSeen) And(other substSeen) {
 	st.id = st.id && other.id
 	st.files = st.files && other.files
@@ -168,16 +163,19 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 		ctx.dupString(mkline, &ctx.message, varname, value)
 
 	case "SUBST_FILES.*":
-		ctx.dupBool(mkline, (*substSeen).seenFiles, varname, op)
+		seen := func(s *substSeen) *bool { return &s.files }
+		ctx.dupBool(mkline, seen, varname, op)
 
 	case "SUBST_SED.*":
-		ctx.dupBool(mkline, (*substSeen).seenSed, varname, op)
+		seen := func(s *substSeen) *bool { return &s.sed }
+		ctx.dupBool(mkline, seen, varname, op)
 		ctx.top().transform = true
 
 		ctx.suggestSubstVars(mkline)
 
 	case "SUBST_VARS.*":
-		ctx.dupBool(mkline, (*substSeen).seenVars, varname, op)
+		seen := func(s *substSeen) *bool { return &s.vars }
+		ctx.dupBool(mkline, seen, varname, op)
 		ctx.top().transform = true
 		for _, substVar := range mkline.Fields() {
 			if ctx.vars == nil {
