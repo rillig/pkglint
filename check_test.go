@@ -115,7 +115,6 @@ func Test__qa(t *testing.T) {
 	ck.Configure("lineslexer.go", "*", "*", -intqa.EMissingTest)     // TODO
 	ck.Configure("lines.go", "*", "*", -intqa.EMissingTest)          // TODO
 	ck.Configure("logging.go", "*", "*", -intqa.EMissingTest)        // TODO
-	ck.Configure("mkalign.go", "*", "*", -intqa.EMissingTest)        // TODO
 	ck.Configure("mkline.go", "*", "*", -intqa.EMissingTest)         // TODO
 	ck.Configure("mklineparser.go", "*", "*", -intqa.EMissingTest)   // TODO
 	ck.Configure("mklinechecker.go", "*", "*", -intqa.EMissingTest)  // TODO
