@@ -3533,6 +3533,7 @@ func (s *Suite) Test__varalignMkLine_rightMargin(c *check.C) {
 	// The common right margin is determined by starting from the right
 	// and searching until there are at least 2 lines having the same
 	// right margin.
+	// FIXME: false
 	test(true, 40,
 		"VAR=\t\\",          // column 16
 		"\tv\t\t\t\t\t\\",   // column 48
@@ -3540,6 +3541,17 @@ func (s *Suite) Test__varalignMkLine_rightMargin(c *check.C) {
 		"\tv\t\t\t\t\\",     // column 40
 		"\tv\t\t\t\t\t\t\\", // column 56
 		"\tv\t\t\t\t\\",     // column 40, for the second time
+		"\tv\t\t\\",         // column 24
+		"\tv")
+
+	// All backslashes are in different columns.
+	// Therefore, suggest the minimum possible column for the backslashes.
+	test(false, 16,
+		"VAR=\t\\",          // column 16
+		"\tv\t\t\t\t\t\\",   // column 48
+		"\tv\t\t\t\\",       // column 32
+		"\tv\t\t\t\t\\",     // column 40
+		"\tv\t\t\t\t\t\t\\", // column 56
 		"\tv\t\t\\",         // column 24
 		"\tv")
 }
