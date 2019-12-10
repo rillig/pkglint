@@ -3447,6 +3447,103 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 		func() { test("VAR=\tvalue\n", true, varalignParts{}) })
 }
 
+func (s *Suite) Test__varalignMkLine_rightMargin(c *check.C) {
+	t := s.Init(c)
+
+	test := func(common bool, margin int, lines ...string) {
+		mklines := t.NewMkLines("filename.mk",
+			lines...)
+
+		var block VaralignBlock
+		mklines.ForEach(func(mkline *MkLine) {
+			block.Process(mkline)
+		})
+
+		t.Check(block.mkinfos, check.HasLen, 1)
+		for _, mkinfo := range block.mkinfos {
+			actualCommon, actualMargin := block.rightMargin(mkinfo.infos)
+			t.CheckEquals(actualCommon, common)
+			t.CheckEquals(actualMargin, margin)
+		}
+	}
+
+	// Lines without continuation don't have a right margin.
+	test(false, 0,
+		"VAR=\t...13")
+
+	// Single spaces are ignored since they do not explicitly express
+	// the intention to draw a common right margin.
+	test(false, 0,
+		"VAR= \\",
+		"\t......16......2426 \\",
+		"\tvalue")
+
+	// Single tabs take part in the right margin since they are already
+	// aligned at a multiple of 8. Therefore it is probable that there
+	// is an intention to have a common right margin.
+	//
+	// There is no common margin, and the minimum necessary margin is 32.
+	test(false, 32,
+		"VAR=\t\\",
+		"\t......16......2426\t\\",
+		"\tvalue")
+
+	// In long lines, the backslash is usually separated by a single
+	// space and is therefore ignored.
+	// All remaining backslashes (there is only 1) are aligned in the
+	// same column.
+	//
+	// XXX: Why is 1 relevant backslash not enough?
+	test(false, 0,
+		"VAR=\t\t\\",
+		"\t......16......24......32......40 \\",
+		"\tvalue")
+
+	// When there are at least 2 relevant backslashes, they produce a
+	// right margin.
+	test(true, 16,
+		"VAR=\t\t\\",
+		"\t\t\\",
+		"\t......16......24......32......40 \\",
+		"\tvalue")
+
+	// If a long line uses a tab (and thereby becomes longer than
+	// strictly necessary), that is a sign that the line is not
+	// thought to be overly long, therefore it is probably desired
+	// to align all lines in that column.
+	test(false, 48,
+		"VAR=\t\t\\",
+		"\t......16......24......32......40\t\\",
+		"\t...13")
+
+	// If the relevant backslashes are in different columns, there is
+	// no common right margin.
+	test(false, 16,
+		"VAR=\t\t\\",        // column 16
+		"\t...13\t\t\t\t\\", // column 40
+		"\t...13")
+
+	// It doesn't matter whether the backslash is aligned using spaces
+	// or tabs, as they are visually the same.
+	test(false, 16,
+		"VAR=            \\", // column 16
+		"\t...13\t\t\t\t\\",  // column 40
+		"\t...13")
+
+	// The common right margin is determined by starting from the right
+	// and searching until there are at least 2 lines having the same
+	// right margin.
+	test(true, 40,
+		"VAR=\t\\",          // column 16
+		"\tv\t\t\t\t\t\\",   // column 48
+		"\tv\t\t\t\\",       // column 32
+		"\tv\t\t\t\t\\",     // column 40
+		"\tv\t\t\t\t\t\t\\", // column 56
+		"\tv\t\t\t\t\\",     // column 40, for the second time
+		"\tv\t\t\\",         // column 24
+		"\tv")
+}
+
 // This constellation doesn't occur in practice because the code in
 // VaralignBlock.processVarassign skips it, see INCLUSION_GUARD_MK.
 func (s *Suite) Test_varalignParts_isEmptyContinuation__edge_case(c *check.C) {
