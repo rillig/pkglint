@@ -10,43 +10,43 @@ type SubstContext struct {
 	message   string
 	filterCmd string
 	vars      map[string]bool
-	conds     []*SubstCond
+	conds     []*substCond
 }
 
 func NewSubstContext() *SubstContext {
-	return &SubstContext{conds: []*SubstCond{{SeenElse: true}}}
+	return &SubstContext{conds: []*substCond{{seenElse: true}}}
 }
 
-type SubstCond struct {
-	Total    SubstContextStats
-	Curr     SubstContextStats
-	SeenElse bool
+type substCond struct {
+	total    substSeen
+	curr     substSeen
+	seenElse bool
 }
 
-type SubstContextStats struct {
-	seenFiles     bool
-	seenSed       bool
-	seenVars      bool
-	seenTransform bool
+type substSeen struct {
+	files     bool
+	sed       bool
+	vars      bool
+	transform bool
 }
 
-func (st *SubstContextStats) SeenFiles() *bool     { return &st.seenFiles }
-func (st *SubstContextStats) SeenSed() *bool       { return &st.seenSed }
-func (st *SubstContextStats) SeenVars() *bool      { return &st.seenVars }
-func (st *SubstContextStats) SeenTransform() *bool { return &st.seenTransform }
+func (st *substSeen) seenFiles() *bool     { return &st.files }
+func (st *substSeen) seenSed() *bool       { return &st.sed }
+func (st *substSeen) seenVars() *bool      { return &st.vars }
+func (st *substSeen) seenTransform() *bool { return &st.transform }
 
-func (st *SubstContextStats) And(other SubstContextStats) {
-	st.seenFiles = st.seenFiles && other.seenFiles
-	st.seenSed = st.seenSed && other.seenSed
-	st.seenVars = st.seenVars && other.seenVars
-	st.seenTransform = st.seenTransform && other.seenTransform
+func (st *substSeen) And(other substSeen) {
+	st.files = st.files && other.files
+	st.sed = st.sed && other.sed
+	st.vars = st.vars && other.vars
+	st.transform = st.transform && other.transform
 }
 
-func (st *SubstContextStats) Or(other SubstContextStats) {
-	st.seenFiles = st.seenFiles || other.seenFiles
-	st.seenSed = st.seenSed || other.seenSed
-	st.seenVars = st.seenVars || other.seenVars
-	st.seenTransform = st.seenTransform || other.seenTransform
+func (st *substSeen) Or(other substSeen) {
+	st.files = st.files || other.files
+	st.sed = st.sed || other.sed
+	st.vars = st.vars || other.vars
+	st.transform = st.transform || other.transform
 }
 
 func (ctx *SubstContext) Process(mkline *MkLine) {
@@ -164,17 +164,17 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 		ctx.dupString(mkline, &ctx.message, varname, value)
 
 	case "SUBST_FILES.*":
-		ctx.dupBool(mkline, (*SubstContextStats).SeenFiles, varname, op)
+		ctx.dupBool(mkline, (*substSeen).seenFiles, varname, op)
 
 	case "SUBST_SED.*":
-		ctx.dupBool(mkline, (*SubstContextStats).SeenSed, varname, op)
-		ctx.top().seenTransform = true
+		ctx.dupBool(mkline, (*substSeen).seenSed, varname, op)
+		ctx.top().transform = true
 
 		ctx.suggestSubstVars(mkline)
 
 	case "SUBST_VARS.*":
-		ctx.dupBool(mkline, (*SubstContextStats).SeenVars, varname, op)
-		ctx.top().seenTransform = true
+		ctx.dupBool(mkline, (*substSeen).seenVars, varname, op)
+		ctx.top().transform = true
 		for _, substVar := range mkline.Fields() {
 			if ctx.vars == nil {
 				ctx.vars = make(map[string]bool)
@@ -184,7 +184,7 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 
 	case "SUBST_FILTER_CMD.*":
 		ctx.dupString(mkline, &ctx.filterCmd, varname, value)
-		ctx.top().seenTransform = true
+		ctx.top().transform = true
 	}
 }
 
@@ -200,25 +200,25 @@ func (ctx *SubstContext) Directive(mkline *MkLine) {
 	dir := mkline.Directive()
 	switch dir {
 	case "if":
-		top := SubstCond{Total: SubstContextStats{true, true, true, true}}
+		top := substCond{total: substSeen{true, true, true, true}}
 		ctx.conds = append(ctx.conds, &top)
 
 	case "elif", "else":
 		top := ctx.conds[len(ctx.conds)-1]
-		top.Total.And(top.Curr)
-		top.Curr = SubstContextStats{}
-		top.SeenElse = dir == "else"
+		top.total.And(top.curr)
+		top.curr = substSeen{}
+		top.seenElse = dir == "else"
 
 	case "endif":
 		top := ctx.conds[len(ctx.conds)-1]
-		top.Total.And(top.Curr)
-		if !top.SeenElse {
-			top.Total = SubstContextStats{}
+		top.total.And(top.curr)
+		if !top.seenElse {
+			top.total = substSeen{}
 		}
 		if len(ctx.conds) > 1 {
 			ctx.conds = ctx.conds[:len(ctx.conds)-1]
 		}
-		ctx.top().Or(top.Total)
+		ctx.top().Or(top.total)
 	}
 
 	if trace.Tracing {
@@ -227,7 +227,7 @@ func (ctx *SubstContext) Directive(mkline *MkLine) {
 }
 
 func (ctx *SubstContext) IsComplete() bool {
-	return ctx.stage != "" && ctx.top().seenFiles && ctx.top().seenTransform
+	return ctx.stage != "" && ctx.top().files && ctx.top().transform
 }
 
 func (ctx *SubstContext) Finish(mkline *MkLine) {
@@ -239,10 +239,10 @@ func (ctx *SubstContext) Finish(mkline *MkLine) {
 	if ctx.stage == "" {
 		mkline.Warnf("Incomplete SUBST block: SUBST_STAGE.%s missing.", id)
 	}
-	if !ctx.top().seenFiles {
+	if !ctx.top().files {
 		mkline.Warnf("Incomplete SUBST block: SUBST_FILES.%s missing.", id)
 	}
-	if !ctx.top().seenTransform {
+	if !ctx.top().transform {
 		mkline.Warnf("Incomplete SUBST block: SUBST_SED.%[1]s, SUBST_VARS.%[1]s or SUBST_FILTER_CMD.%[1]s missing.", id)
 	}
 
@@ -256,12 +256,12 @@ func (*SubstContext) dupString(mkline *MkLine, pstr *string, varname, value stri
 	*pstr = value
 }
 
-func (ctx *SubstContext) dupBool(mkline *MkLine, flag func(stats *SubstContextStats) *bool,
+func (ctx *SubstContext) dupBool(mkline *MkLine, flag func(stats *substSeen) *bool,
 	varname string, op MkOperator) {
 
 	seen := false
 	for _, cond := range ctx.conds {
-		seen = seen || *flag(&cond.Curr)
+		seen = seen || *flag(&cond.curr)
 	}
 
 	if seen && op != opAssignAppend {
@@ -282,7 +282,7 @@ func (ctx *SubstContext) suggestSubstVars(mkline *MkLine) {
 		varop := sprintf("SUBST_VARS.%s%s%s",
 			ctx.id,
 			condStr(hasSuffix(ctx.id, "+"), " ", ""),
-			condStr(ctx.top().seenVars, "+=", "="))
+			condStr(ctx.top().vars, "+=", "="))
 
 		fix := mkline.Autofix()
 		fix.Notef("The substitution command %q can be replaced with \"%s %s\".",
@@ -295,7 +295,7 @@ func (ctx *SubstContext) suggestSubstVars(mkline *MkLine) {
 		}
 		fix.Apply()
 
-		ctx.top().seenVars = true
+		ctx.top().vars = true
 	}
 }
 
@@ -341,6 +341,6 @@ func (*SubstContext) extractVarname(token string) string {
 	return varname
 }
 
-func (ctx *SubstContext) top() *SubstContextStats {
-	return &ctx.conds[len(ctx.conds)-1].Curr
+func (ctx *SubstContext) top() *substSeen {
+	return &ctx.conds[len(ctx.conds)-1].curr
 }
