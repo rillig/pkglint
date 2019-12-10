@@ -146,7 +146,7 @@ type VaralignBlock struct {
 }
 
 type varalignLine struct {
-	mkline   *MkLine
+	fixer    Autofixer
 	rawIndex int
 
 	// Is true for multilines that don't have a value in their first
@@ -229,7 +229,7 @@ func (va *VaralignBlock) Finish() {
 	}
 
 	if trace.Tracing {
-		defer trace.Call(infos[0].mkline.Line)()
+		defer trace.Call()()
 	}
 
 	newWidth := va.optimalWidth(infos)
@@ -311,7 +311,7 @@ func (*VaralignBlock) optimalWidth(infos []*varalignLine) int {
 	var widths bag
 	for _, info := range infos {
 		if !info.multiEmpty && info.rawIndex == 0 {
-			widths.Add(info.mkline, info.varnameOpWidth())
+			widths.Add(info.fixer, info.varnameOpWidth())
 		}
 	}
 	widths.sortDesc()
@@ -337,7 +337,7 @@ func (*VaralignBlock) optimalWidth(infos []*varalignLine) int {
 		if info.multiEmpty || info.rawIndex > 0 || outlier > 0 && info.varnameOpWidth() == outlier {
 			continue
 		}
-		spaceWidths.Add(info.mkline, info.varnameOpSpaceWidth())
+		spaceWidths.Add(info.fixer, info.varnameOpSpaceWidth())
 	}
 	spaceWidths.sortDesc()
 
@@ -405,7 +405,7 @@ func (va *VaralignBlock) checkRightMargin(info *varalignLine, newWidth int, righ
 	}
 
 	newSpace := " "
-	fix := info.mkline.Autofix()
+	fix := info.fixer.Autofix()
 	if oldSpace == "" || rightMargin == 0 || info.uptoCommentWidth() >= rightMargin {
 		fix.Notef("The continuation backslash should be preceded by a single space or tab.")
 	} else {
@@ -460,7 +460,7 @@ func (*VaralignBlock) realignMultiEmptyInitial(info *varalignLine, newWidth int)
 	oldColumn := info.varnameOpSpaceWidth()
 	column := tabWidthSlice(leadingComment, varnameOp, newSpace)
 
-	fix := info.mkline.Autofix()
+	fix := info.fixer.Autofix()
 	if hasSpace && column != oldColumn {
 		fix.Notef("This variable value should be aligned with tabs, not spaces, to column %d.", column+1)
 	} else if column != oldColumn {
@@ -495,7 +495,7 @@ func (va *VaralignBlock) realignMultiEmptyFollow(info *varalignLine, newWidth in
 		return
 	}
 
-	fix := info.mkline.Autofix()
+	fix := info.fixer.Autofix()
 	fix.Notef("This continuation line should be indented with %q.", newSpace)
 	fix.ReplaceAt(info.rawIndex, info.spaceBeforeValueIndex(), oldSpace, newSpace)
 	fix.Apply()
@@ -518,7 +518,7 @@ func (va *VaralignBlock) realignMultiInitial(info *varalignLine, newWidth int, i
 	hasSpace := strings.IndexByte(oldSpace, ' ') != -1
 	width := tabWidthSlice(leadingComment, varnameOp, newSpace)
 
-	fix := info.mkline.Autofix()
+	fix := info.fixer.Autofix()
 	if hasSpace && width != oldWidth {
 		fix.Notef("This variable value should be aligned with tabs, not spaces, to column %d.", width+1)
 	} else if width != oldWidth {
@@ -540,7 +540,7 @@ func (va *VaralignBlock) realignMultiFollow(info *varalignLine, newWidth int, in
 		return
 	}
 
-	fix := info.mkline.Autofix()
+	fix := info.fixer.Autofix()
 	fix.Notef("This continuation line should be indented with %q.", newSpace)
 	modified, replaced := fix.ReplaceAt(info.rawIndex, info.spaceBeforeValueIndex(), oldSpace, newSpace)
 	assert(modified)
@@ -586,7 +586,7 @@ func (va *VaralignBlock) realignSingle(info *varalignLine, newWidth int) {
 	oldColumn := tabWidthSlice(leadingComment, varnameOp, oldSpace)
 	column := tabWidthSlice(leadingComment, varnameOp, newSpace)
 
-	fix := info.mkline.Autofix()
+	fix := info.fixer.Autofix()
 	if newSpace == " " {
 		fix.Notef("This outlier variable value should be aligned with a single space.")
 		va.explainWrongColumn(fix)
