@@ -618,7 +618,7 @@ func (s *Suite) Test_MkLexer_varUseModifier__S_parse_error(c *check.C) {
 	mod := p.varUseModifier("VAR", '}')
 
 	t.CheckEquals(mod, "")
-	// FIXME: The "S," has just disappeared.
+	// XXX: The "S," has just disappeared.
 	t.CheckEquals(p.Rest(), "}")
 
 	t.CheckOutputLines(
