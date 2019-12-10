@@ -1448,7 +1448,7 @@ func (s *Suite) Test_VaralignBlock__continuation_mixed_indentation_in_first_line
 	vt.Diagnostics(
 		"NOTE: Makefile:1: This variable value should be aligned to column 17.",
 		"NOTE: Makefile:3: This variable value should be aligned with tabs, not spaces, to column 17.",
-		"NOTE: Makefile:4: This continuation line should be indented with \"\\t\\t\".",
+		"NOTE: Makefile:4: This continuation line should be indented with \"\\t\\t  \".",
 		"NOTE: Makefile:5: This continuation line should be indented with \"\\t\\t\".")
 	vt.Autofixes(
 		"AUTOFIX: Makefile:1: Replacing \"\\t\" with \"\\t\\t\".",
@@ -2250,8 +2250,7 @@ func (s *Suite) Test_VaralignBlock__mixed_indentation(c *check.C) {
 		"05 08 15",
 		"   17")
 	vt.Diagnostics(
-		// FIXME: This diagnostic doesn't match the autofix.
-		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\".")
+		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\\t \".")
 	vt.Autofixes(
 		"AUTOFIX: Makefile:3: Replacing \" \\t \\t \" with \"\\t\\t \".")
 	vt.Fixed(
@@ -3143,13 +3142,13 @@ func (s *Suite) Test_VaralignBlock_realignMultiFollow__unindent_long_lines(c *ch
 	vt.Diagnostics(
 		"NOTE: Makefile:1: This variable value should be aligned to column 17.",
 		"NOTE: Makefile:2: This variable value should be aligned to column 17.",
-		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\\t\".",
-		"NOTE: Makefile:4: This continuation line should be indented with \"\\t\\t\".",
+		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".",
+		"NOTE: Makefile:4: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".",
 		"NOTE: Makefile:5: The continuation backslash should be preceded by a single space or tab, or be in column 90, not 99.",
-		"NOTE: Makefile:5: This continuation line should be indented with \"\\t\\t\".",
-		"NOTE: Makefile:6: This continuation line should be indented with \"\\t\\t\".",
-		"NOTE: Makefile:7: This continuation line should be indented with \"\\t\\t\".",
-		"NOTE: Makefile:8: This continuation line should be indented with \"\\t\\t\".")
+		"NOTE: Makefile:5: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".",
+		"NOTE: Makefile:6: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".",
+		"NOTE: Makefile:7: This continuation line should be indented with \"\\t\\t\\t\\t\\t\".",
+		"NOTE: Makefile:8: This continuation line should be indented with \"\\t\\t\\t\\t\\t\".")
 	vt.Autofixes(
 		"AUTOFIX: Makefile:1: Replacing \"\\t\" with \"\\t\\t\".",
 		"AUTOFIX: Makefile:2: Replacing \"\\t\\t\\t\\t\" with \"\\t\".",

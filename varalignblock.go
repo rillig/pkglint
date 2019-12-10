@@ -538,7 +538,7 @@ func (va *VaralignBlock) realignMultiFollow(info *varalignLine, newWidth int, in
 	}
 
 	fix := info.mkline.Autofix()
-	fix.Notef("This continuation line should be indented with %q.", indent(newWidth))
+	fix.Notef("This continuation line should be indented with %q.", newSpace)
 	modified, replaced := fix.ReplaceAt(info.rawIndex, info.spaceBeforeValueIndex(), oldSpace, newSpace)
 	assert(modified)
 	if info.continuation != "" && info.continuationColumn() == 72 {
