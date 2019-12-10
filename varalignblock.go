@@ -228,12 +228,11 @@ func (va *VaralignBlock) Finish() {
 	indentDiff := 0
 
 	for _, mkinfo := range mkinfos {
-		for i, info := range mkinfo.infos {
+		for _, info := range mkinfo.infos {
 			if info.rawIndex == 0 {
 				indentDiffSet = false
 				indentDiff = 0
-				restIndex := i + condInt(info.value != "", 0, 1)
-				_, rightMargin = mkinfo.rightMargin(mkinfo.infos[restIndex:])
+				_, rightMargin = mkinfo.rightMargin()
 			}
 
 			va.checkRightMargin(info, newWidth, rightMargin)
@@ -674,7 +673,10 @@ type varalignMkLine struct {
 
 // rightMargin calculates the column in which the continuation backslashes
 // should be placed.
-func (*varalignMkLine) rightMargin(infos []*varalignLine) (common bool, margin int) {
+func (l *varalignMkLine) rightMargin() (common bool, margin int) {
+	restIndex := condInt(l.infos[0].value == "", 1, 0)
+	infos := l.infos[restIndex:]
+
 	var columns []int
 	for _, info := range infos {
 		if info.isContinuation() {

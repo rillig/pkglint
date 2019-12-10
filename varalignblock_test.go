@@ -3508,7 +3508,7 @@ func (s *Suite) Test_varalignMkLine_rightMargin(c *check.C) {
 
 		t.Check(block.mkinfos, check.HasLen, 1)
 		for _, mkinfo := range block.mkinfos {
-			actualCommon, actualMargin := mkinfo.rightMargin(mkinfo.infos)
+			actualCommon, actualMargin := mkinfo.rightMargin()
 			t.CheckDeepEquals(
 				[]interface{}{actualCommon, actualMargin},
 				[]interface{}{common, margin})
@@ -3519,6 +3519,19 @@ func (s *Suite) Test_varalignMkLine_rightMargin(c *check.C) {
 	test(false, 0,
 		"VAR=\t...13")
 
+	// Lines with a needless continuation also don't have a right margin.
+	// The backslash in the first line is ignored completely since it
+	// is commonly aligned at a different position than the other
+	// backslashes. Either with a single space (which wouldn't matter
+	// anyway) or with some tabs to the column of the variable value.
+	test(false, 0,
+		"VAR=\t\\",
+		"\tvalue")
+
+	test(false, 0,
+		"VAR=\t\t\t\\",
+		"\tvalue")
+
 	// Single spaces are ignored since they do not explicitly express
 	// the intention to draw a common right margin.
 	test(false, 0,
@@ -3527,11 +3540,21 @@ func (s *Suite) Test_varalignMkLine_rightMargin(c *check.C) {
 		"\tvalue")
 
 	// Single tabs take part in the right margin since they are already
-	// aligned at a multiple of 8. Therefore it is probable that there
-	// is an intention to have a common right margin.
+	// aligned at a multiple of 8. Pkglint therefore assumes that it is
+	// intended to have a common right margin.
 	//
 	// There is no common margin, and the minimum necessary margin is 32.
 	test(false, 32,
+		"VAR=\t\\",
+		"\t\\",
+		"\t......16......2426\t\\",
+		"\tvalue")
+
+	// The first line is ignored since it is empty, which leaves only
+	// a single remaining line. That is not enough to decide whether
+	// a right margin is really intended (or is it?), therefore no
+	// right margin is assumed.
+	test(false, 0,
 		"VAR=\t\\",
 		"\t......16......2426\t\\",
 		"\tvalue")
@@ -3547,10 +3570,19 @@ func (s *Suite) Test_varalignMkLine_rightMargin(c *check.C) {
 		"\t......16......24......32......40 \\",
 		"\tvalue")
 
+	// Again, the first line is ignored, and each remaining line has
+	// the backslash in a different position. This means no common
+	// margin.
+	test(false, 0,
+		"VAR=\t\t\\",
+		"\t\t\\",
+		"\t......16......24......32......40 \\",
+		"\tvalue")
+
 	// When there are at least 2 relevant backslashes, they produce a
 	// right margin.
 	test(true, 16,
-		"VAR=\t\t\\",
+		"VAR=\t...13\t\\",
 		"\t\t\\",
 		"\t......16......24......32......40 \\",
 		"\tvalue")
@@ -3560,21 +3592,21 @@ func (s *Suite) Test_varalignMkLine_rightMargin(c *check.C) {
 	// thought to be overly long, therefore it is probably desired
 	// to align all lines in that column.
 	test(false, 48,
-		"VAR=\t\t\\",
+		"VAR=\t...13\t\\",
 		"\t......16......24......32......40\t\\",
 		"\t...13")
 
 	// If the relevant backslashes are in different columns, there is
 	// no common right margin.
 	test(false, 16,
-		"VAR=\t\t\\",        // column 16
+		"VAR=\t...13\t\\",   // column 16
 		"\t...13\t\t\t\t\\", // column 40
 		"\t...13")
 
 	// It doesn't matter whether the backslash is aligned using spaces
 	// or tabs, as they are visually the same.
 	test(false, 16,
-		"VAR=            \\", // column 16
+		"VAR=    ...13   \\", // column 16
 		"\t...13\t\t\t\t\\",  // column 40
 		"\t...13")
 
