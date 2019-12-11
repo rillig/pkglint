@@ -3058,26 +3058,33 @@ func (s *Suite) Test_VaralignBlock_processVarassign__comment_with_continuation(c
 }
 
 func (s *Suite) Test_VaralignBlock_Finish__continuation_beyond_right_margin(c *check.C) {
-	t := s.Init(c)
+	vt := NewVaralignTester(s, c)
 
-	mklines := t.NewMkLines("filename.mk",
+	vt.Input(
 		"VAR....8......16..=\t\t......40......48.\t\t\t\t\\",   // column 80
 		"\t\t\t......32......40......48......56......64..\t\\", // column 72
-		"\t\t\t...13",
-		"")
-
-	var block VaralignBlock
-	mklines.ForEach(block.Process)
-
-	t.CheckOutputLines(
+		"\t\t\t...29")
+	vt.InputDetab(
+		"VAR....8......16..=             ......40......48.                               \\",
+		"                        ......32......40......48......56......64..      \\",
+		"                        ...29")
+	vt.Diagnostics(
 		// XXX: In this case, it would also help to reduce the indentation
 		//  of the variable value.
-		"NOTE: filename.mk:1: The continuation backslash should be "+
+		"NOTE: Makefile:1: The continuation backslash should be "+
 			"in column 73, not 81.",
 		// Line 2 is not indented to column 32
 		// since that would make the line longer than 72 columns.
-		"NOTE: filename.mk:3: This continuation line should be "+
+		"NOTE: Makefile:3: This continuation line should be "+
 			"indented with \"\\t\\t\\t\\t\".")
+	vt.Autofixes(
+		"AUTOFIX: Makefile:1: Replacing \"\\t\\t\\t\\t\" with \"\\t\\t\\t\".",
+		"AUTOFIX: Makefile:3: Replacing \"\\t\\t\\t\" with \"\\t\\t\\t\\t\".")
+	vt.Fixed(
+		"VAR....8......16..=             ......40......48.                       \\",
+		"                        ......32......40......48......56......64..      \\",
+		"                                ...29")
+	vt.Run()
 }
 
 // This example is quite unrealistic since typically the first line is
