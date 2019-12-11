@@ -118,6 +118,45 @@ func (s *Suite) Test_SubstContext__multiple_classes_in_one_line(c *check.C) {
 		"WARN: filename.mk:7: Incomplete SUBST block: SUBST_SED.two, SUBST_VARS.two or SUBST_FILTER_CMD.two missing.")
 }
 
+func (s *Suite) Test_SubstContext__multiple_classes_in_one_line_multiple_blocks(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wextra")
+	mklines := t.NewMkLines("filename.mk",
+		"SUBST_CLASSES+=         one two",
+		"SUBST_STAGE.one=        post-configure",
+		"SUBST_FILES.one=        one.txt",
+		"SUBST_SED.one=          s,one,1,g",
+		"",
+		"SUBST_STAGE.two=        post-configure",
+		"SUBST_FILES.two=        two.txt",
+		"",
+		"SUBST_STAGE.three=      post-configure",
+		"",
+		"SUBST_VARS.four=        PREFIX",
+		"",
+		"SUBST_VARS.three=       PREFIX",
+		"")
+	ctx := NewSubstContext()
+
+	mklines.ForEach(ctx.Process)
+
+	t.CheckOutputLines(
+		// FIXME
+		"WARN: filename.mk:1: Please add only one class at a time to SUBST_CLASSES.",
+		// FIXME
+		"WARN: filename.mk:6: Before defining SUBST_STAGE.two, "+
+			"the SUBST class should be declared using \"SUBST_CLASSES+= two\".",
+		// FIXME
+		"WARN: filename.mk:7: Late additions to a SUBST variable should use the += operator.",
+		"WARN: filename.mk:9: Before defining SUBST_STAGE.three, "+
+			"the SUBST class should be declared using \"SUBST_CLASSES+= three\".",
+		"WARN: filename.mk:11: Before defining SUBST_VARS.four, "+
+			"the SUBST class should be declared using \"SUBST_CLASSES+= four\".",
+		"WARN: filename.mk:13: Late additions to a SUBST variable "+
+			"should use the += operator.")
+}
+
 func (s *Suite) Test_SubstContext__multiple_classes_in_one_block(c *check.C) {
 	t := s.Init(c)
 

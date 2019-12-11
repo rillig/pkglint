@@ -153,6 +153,8 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 
 			// The following assignment prevents an additional warning,
 			// but from a technically viewpoint, it is incorrect.
+			// Silent change of the subst class.
+			// It had probably been added with multiple classes per line.
 			ctx.id = varparam
 		} else {
 			mkline.Warnf("Variable %q does not match SUBST class %q.", varname, ctx.id)
