@@ -30,7 +30,10 @@ func NewVaralignTester(s *Suite, c *check.C) *VaralignTester {
 }
 
 // Input remembers the input lines that are checked and possibly realigned.
-func (vt *VaralignTester) Input(lines ...string) { vt.input = lines }
+func (vt *VaralignTester) Input(lines ...string) {
+	vt.tester.CheckDotColumns(lines...)
+	vt.input = lines
+}
 
 // InputDetab validates the input lines after replacing tabs with spaces.
 //
@@ -2472,14 +2475,11 @@ func (s *Suite) Test_VaralignBlock__aligned(c *check.C) {
 	t := s.Init(c)
 
 	test := func(data ...interface{}) {
-		var lineTexts []string
-		for _, text := range data[:len(data)-1] {
-			lineTexts = append(lineTexts, text.(string))
-		}
-		expected := data[len(data)-1].(bool)
+		lines, expected := t.SplitStringsBool(data)
+		t.CheckDotColumns(lines...)
 
 		mklines := t.NewMkLines("filename.mk",
-			lineTexts...)
+			lines...)
 		assert(len(mklines.mklines) == 1)
 
 		var varalign VaralignBlock
@@ -2536,7 +2536,7 @@ func (s *Suite) Test_VaralignBlock__aligned(c *check.C) {
 	// appear in a rectangular shape in the source code.
 	test(
 		"VAR.param=\tvalue \\",
-		"\t10........20........30........40........50........60...4",
+		"\t10........20........30........40........50........60..64",
 		false)
 
 	// The second line is indented with a single tab because otherwise
@@ -2544,7 +2544,7 @@ func (s *Suite) Test_VaralignBlock__aligned(c *check.C) {
 	// use the smaller indentation.
 	test(
 		"VAR.param=\tvalue \\",
-		"\t10........20........30........40........50........60....5",
+		"\t10........20........30........40........50........60...65",
 		true)
 
 	// Having the continuation line in column 0 looks even more confusing.
@@ -3374,6 +3374,7 @@ func (s *Suite) Test_varalignMkLine_rightMargin(c *check.C) {
 	t := s.Init(c)
 
 	test := func(common bool, margin int, lines ...string) {
+		t.CheckDotColumns(lines...)
 		mklines := t.NewMkLines("filename.mk",
 			lines...)
 
@@ -3412,7 +3413,7 @@ func (s *Suite) Test_varalignMkLine_rightMargin(c *check.C) {
 	// the intention to draw a common right margin.
 	test(false, 0,
 		"VAR= \\",
-		"\t......16......2426 \\",
+		"\t......16........26 \\",
 		"\tvalue")
 
 	// Single tabs take part in the right margin since they are already
@@ -3423,7 +3424,7 @@ func (s *Suite) Test_varalignMkLine_rightMargin(c *check.C) {
 	test(false, 32,
 		"VAR=\t\\",
 		"\t\\",
-		"\t......16......2426\t\\",
+		"\t......16........26\t\\",
 		"\tvalue")
 
 	// The first line is ignored since it is empty, which leaves only
@@ -3432,7 +3433,7 @@ func (s *Suite) Test_varalignMkLine_rightMargin(c *check.C) {
 	// right margin is assumed.
 	test(false, 0,
 		"VAR=\t\\",
-		"\t......16......2426\t\\",
+		"\t......16........26\t\\",
 		"\tvalue")
 
 	// In long lines, the backslash is usually separated by a single
@@ -3543,7 +3544,7 @@ func (s *Suite) Test_varalignMkLine_rightMargin(c *check.C) {
 	test(false, 72,
 		"VAR....8......16..=\t\t......40......48.\t\t\t\t\\",   // column 80
 		"\t\t\t......32......40......48......56......64..\t\\", // column 72
-		"\t\t\t...13")
+		"\t\t\t...29")
 }
 
 func (s *Suite) Test_varalignLine_alignValueSingle(c *check.C) {
@@ -3552,6 +3553,7 @@ func (s *Suite) Test_varalignLine_alignValueSingle(c *check.C) {
 	test := func(before string, column int, after string, diagnostics ...string) {
 
 		doTest := func(autofix bool) {
+			t.CheckDotColumns(before)
 			mkline := t.NewMkLine("filename.mk", 123, before)
 			parts := NewVaralignSplitter().split(before, true)
 			info := &varalignLine{mkline, 0, false, false, parts}
@@ -3689,6 +3691,7 @@ func (s *Suite) Test_varalignLine_alignValueMultiInitial(c *check.C) {
 	t := s.Init(c)
 
 	test := func(before string, column int, after string, diagnostics ...string) {
+		t.CheckDotColumns(before)
 
 		doTest := func(autofix bool) {
 			mklines := t.NewMkLines("filename.mk",
@@ -3883,6 +3886,7 @@ func (s *Suite) Test_varalignLine_alignContinuation(c *check.C) {
 
 	lines := func(lines ...string) []string { return lines }
 	test := func(before []string, rawIndex, valueColumn, rightMarginColumn int, after string, diagnostics ...string) {
+		t.CheckDotColumns(before...)
 
 		doTest := func(autofix bool) {
 			mklines := t.NewMkLines("filename.mk", before...)
@@ -3999,22 +4003,22 @@ func (s *Suite) Test_varalignLine_alignContinuation(c *check.C) {
 	// Column 48 is already at the right margin, thus nothing to align.
 	test(
 		lines(
-			"VAR=\t...13......24......32\t\t\t\\",
+			"VAR=\t......16......24......32\t\t\\",
 			"\t...13"),
 		0, 32, 48,
 
-		"VAR=\t...13......24......32\t\t\t\\",
+		"VAR=\t......16......24......32\t\t\\",
 		nil...)
 
 	// Column 56 is right of the right margin.
 	// It is reduced to the right margin.
 	test(
 		lines(
-			"VAR=\t...13......24......32\t\t\t\t\\",
+			"VAR=\t......16......24\t\t\t\t\\",
 			"\t...13"),
 		0, 32, 48,
 
-		"VAR=\t...13......24......32\t\t\t\\",
+		"VAR=\t......16......24\t\t\t\\",
 		"NOTE: filename.mk:1: "+
 			"The continuation backslash should be in column 49, not 57.",
 		"AUTOFIX: filename.mk:1: Replacing \"\\t\\t\\t\\t\" "+
@@ -4036,11 +4040,11 @@ func (s *Suite) Test_varalignLine_alignContinuation(c *check.C) {
 	// a single space, to keep it as close to the text as possible.
 	test(
 		lines(
-			"VAR=\t...13\t\t\t\t\t\t\t\t...75\t\t\t\\",
+			"VAR=\t...13\t\t\t\t\t\t\t\t...77\t\t\t\\",
 			"\t...13"),
 		0, 32, 48,
 
-		"VAR=\t...13\t\t\t\t\t\t\t\t...75 \\",
+		"VAR=\t...13\t\t\t\t\t\t\t\t...77 \\",
 		"NOTE: filename.mk:1: The continuation backslash should be "+
 			"preceded by a single space.",
 		"AUTOFIX: filename.mk:1: Replacing \"\\t\\t\\t\" with \" \".")
@@ -4157,6 +4161,8 @@ func (s *Suite) Test_varalignParts_isTooLongFor(c *check.C) {
 	t := s.Init(c)
 
 	test := func(valueColumn int, value, continuation string, tooLong bool) {
+		t.CheckDotColumns(indent(valueColumn) + value)
+
 		parts := varalignParts{value: value, continuation: continuation}
 		t.CheckEquals(parts.isTooLongFor(valueColumn), tooLong)
 	}

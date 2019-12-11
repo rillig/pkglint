@@ -193,6 +193,7 @@ func (s *Suite) Test_MkAlignLine_IsCanonicalFollow(c *check.C) {
 	t := s.Init(c)
 
 	test := func(line string, minAlign int, isCanonical bool) {
+		t.CheckDotColumns(line)
 		// TODO
 		t.CheckEquals(true, true)
 	}

@@ -9,6 +9,7 @@ import (
 	"netbsd.org/pkglint/regex"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -1314,6 +1315,22 @@ func (t *Tester) CheckFileLinesDetab(filename RelPath, lines ...string) {
 	t.CheckDeepEquals(detabbedLines, lines)
 }
 
+// CheckDotColumns verifies that each appearance of "..34" is indeed
+// right-aligned at column 34, taking tabs into account.
+// Columns are zero-based.
+func (t *Tester) CheckDotColumns(lines ...string) {
+	for index, line := range lines {
+		ms := regcomp(`\.\.(\d+)`).FindAllStringSubmatchIndex(line, -1)
+		for _, m := range ms {
+			prefix := line[:m[1]]
+			width := tabWidth(prefix)
+			num, err := strconv.Atoi(line[m[2]:m[3]])
+			assertNil(err, "")
+			t.CheckEqualsf(num, width, "lines[%d]", index)
+		}
+	}
+}
+
 // Use marks all passed functions as used for the Go compiler.
 //
 // This means that the test cases that follow do not have to use each of them,
@@ -1352,4 +1369,13 @@ func (t *Tester) ReportUncheckedOutput() {
 	}
 	_, _ = fmt.Fprintf(&msg, "\n")
 	_, _ = os.Stderr.WriteString(msg.String())
+}
+
+// SplitStringsBool unpacks the given varargs into a string slice and a bool.
+func (t *Tester) SplitStringsBool(data []interface{}) ([]string, bool) {
+	var strs []string
+	for _, text := range data[:len(data)-1] {
+		strs = append(strs, text.(string))
+	}
+	return strs, data[len(data)-1].(bool)
 }
