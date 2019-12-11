@@ -107,23 +107,7 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 		return
 	}
 
-	foreign := true
-	switch varcanon {
-	case
-		"SUBST_STAGE.*",
-		"SUBST_MESSAGE.*",
-		"SUBST_FILES.*",
-		"SUBST_SED.*",
-		"SUBST_VARS.*",
-		"SUBST_FILTER_CMD.*":
-		foreign = false
-	}
-
-	if foreign && ctx.vars[varname] {
-		foreign = false
-	}
-
-	if foreign {
+	if ctx.isForeignCanon(varcanon) && !ctx.vars[varname] {
 		if ctx.id != "" {
 			mkline.Warnf("Foreign variable %q in SUBST block.", varname)
 		}
@@ -221,6 +205,20 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 		ctx.dupString(mkline, seen, varname)
 		ctx.top().transform = true
 	}
+}
+
+func (ctx *SubstContext) isForeignCanon(varcanon string) bool {
+	switch varcanon {
+	case
+		"SUBST_STAGE.*",
+		"SUBST_MESSAGE.*",
+		"SUBST_FILES.*",
+		"SUBST_SED.*",
+		"SUBST_VARS.*",
+		"SUBST_FILTER_CMD.*":
+		return false
+	}
+	return true
 }
 
 func (ctx *SubstContext) Directive(mkline *MkLine) {
