@@ -415,6 +415,13 @@ func alignmentToWidths(strWidth, otherWidth int) string {
 }
 
 func indent(width int) string {
+	const tabsAndSpaces = "\t\t\t\t\t\t\t\t\t       "
+	middle := len(tabsAndSpaces) - 7
+	if width <= 8*middle+7 {
+		start := middle - width>>3
+		end := middle + width&7
+		return tabsAndSpaces[start:end]
+	}
 	return strings.Repeat("\t", width>>3) + "       "[:width&7]
 }
 

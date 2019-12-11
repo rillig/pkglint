@@ -259,6 +259,9 @@ func (s *Suite) Test_indent(c *check.C) {
 	test(15, "\t       ")
 	test(16, "\t\t")
 	test(72, "\t\t\t\t\t\t\t\t\t")
+	test(79, "\t\t\t\t\t\t\t\t\t       ")
+	test(80, "\t\t\t\t\t\t\t\t\t\t")
+	test(87, "\t\t\t\t\t\t\t\t\t\t       ")
 }
 
 func (s *Suite) Test_alignmentAfter(c *check.C) {
