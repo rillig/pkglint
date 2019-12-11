@@ -612,6 +612,36 @@ func (s *Suite) Test_SubstContext__completely_conditional_else(c *check.C) {
 		"WARN: subst.mk:10: Incomplete SUBST block: SUBST_FILES.id missing.")
 }
 
+func (s *Suite) Test_SubstContext_Varassign__late_addition(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("filename.mk",
+		"SUBST_CLASSES+=\tid",
+		"SUBST_STAGE.id=\tpost-configure",
+		"SUBST_FILES.id=\tfiles",
+		"SUBST_VARS.id=\tPREFIX",
+		"",
+		".if ${OPSYS} == NetBSD",
+		"SUBST_VARS.id=\tOPSYS",
+		".endif",
+		"")
+	ctx := NewSubstContext()
+
+	mklines.ForEach(ctx.Process)
+
+	t.CheckOutputLines(
+		// FIXME: The class "id" has already been seen.
+		// This late addition should be possible without warning.
+		"WARN: filename.mk:7: Before defining SUBST_VARS.id, "+
+			"the SUBST class should be declared using \"SUBST_CLASSES+= id\".",
+
+		// FIXME: These warnings miss the actual intention of the SUBST_VARS line.
+		"WARN: filename.mk:9: Incomplete SUBST block: SUBST_STAGE.id missing.",
+		"WARN: filename.mk:9: Incomplete SUBST block: SUBST_FILES.id missing.",
+		"WARN: filename.mk:9: Incomplete SUBST block: "+
+			"SUBST_SED.id, SUBST_VARS.id or SUBST_FILTER_CMD.id missing.")
+}
+
 func (s *Suite) Test_SubstContext_Directive__before_SUBST_CLASSES(c *check.C) {
 	t := s.Init(c)
 
