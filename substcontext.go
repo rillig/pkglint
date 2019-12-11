@@ -20,8 +20,15 @@ type substCond struct {
 	seenElse bool
 }
 
+// substSeen contains all variables that depend on a particular SUBST
+// class ID. These variables can be set in conditional branches, and
+// pkglint keeps track whether they are set in all branches or only
+// in some of them.
 type substSeen struct {
-	id        bool
+	// The ID of the SUBST class is included here to track nested SUBST blocks.
+	// It marks the conditional level at which a block has started.
+	id bool
+
 	stage     bool
 	message   bool
 	files     bool
