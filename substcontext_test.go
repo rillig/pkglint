@@ -692,13 +692,19 @@ func (s *Suite) Test_SubstContext_Directive__conditional_complete(c *check.C) {
 	mklines := t.NewMkLines("filename.mk",
 		"SUBST_CLASSES+= id",
 		".if ${OPSYS} == NetBSD",
-		"SUBST_STAGE.id= post-configure",
-		"SUBST_FILES.id= guess-netbsd.h",
-		"SUBST_VARS.id=  HAVE_NETBSD",
+		"SUBST_STAGE.id=\t\tpost-configure",
+		"SUBST_MESSAGE.id=\tpost-configure",
+		"SUBST_FILES.id=\t\tguess-netbsd.h",
+		"SUBST_SED.id=\t\t-e s,from,to,",
+		"SUBST_VARS.id=\t\tHAVE_OTHER",
+		"SUBST_FILTER_CMD.id=\tHAVE_OTHER",
 		".else",
-		"SUBST_STAGE.id= post-configure",
-		"SUBST_FILES.id= guess-netbsd.h",
-		"SUBST_VARS.id=  HAVE_OTHER",
+		"SUBST_STAGE.id=\t\tpost-configure",
+		"SUBST_MESSAGE.id=\tpost-configure",
+		"SUBST_FILES.id=\t\tguess-netbsd.h",
+		"SUBST_SED.id=\t\t-e s,from,to,",
+		"SUBST_VARS.id=\t\tHAVE_OTHER",
+		"SUBST_FILTER_CMD.id=\tHAVE_OTHER",
 		".endif",
 		"")
 	ctx := NewSubstContext()
@@ -709,6 +715,29 @@ func (s *Suite) Test_SubstContext_Directive__conditional_complete(c *check.C) {
 	//  should not be defined conditionally. There's no practical use
 	//  case for that.
 	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_SubstContext_Directive__conditionally_overwritten_filter(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wextra")
+
+	mklines := t.NewMkLines("filename.mk",
+		"SUBST_CLASSES+= id",
+		"SUBST_STAGE.id=\t\tpost-configure",
+		"SUBST_MESSAGE.id=\tpost-configure",
+		"SUBST_FILES.id=\t\tguess-netbsd.h",
+		"SUBST_FILTER_CMD.id=\tHAVE_OTHER",
+		".if ${OPSYS} == NetBSD",
+		"SUBST_FILTER_CMD.id=\tHAVE_OTHER",
+		".endif",
+		"")
+	ctx := NewSubstContext()
+
+	mklines.ForEach(ctx.Process)
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:7: Duplicate definition of \"SUBST_FILTER_CMD.id\".")
 }
 
 func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {
