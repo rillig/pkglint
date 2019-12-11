@@ -3858,6 +3858,20 @@ func (s *Suite) Test_varalignLine_alignContinuation(c *check.C) {
 
 		"VAR=\t...13\t\t\t\t\t\t\t\t\\",
 		nil...)
+
+	// If the value itself forces the continuation backslash to be beyond
+	// column 72, the continuation backslash should only be separated by
+	// a single space, to keep it as close to the text as possible.
+	test(
+		lines(
+			"VAR=\t...13\t\t\t\t\t\t\t\t...75\t\t\t\\",
+			"\t...13"),
+		0, 32, 48,
+
+		"VAR=\t...13\t\t\t\t\t\t\t\t...75 \\",
+		"NOTE: filename.mk:1: The continuation backslash should be "+
+			"preceded by a single space or tab.",
+		"AUTOFIX: filename.mk:1: Replacing \"\\t\\t\\t\" with \" \".")
 }
 
 func (s *Suite) Test_varalignLine_explainWrongColumn(c *check.C) {
