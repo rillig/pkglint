@@ -435,21 +435,7 @@ func (va *VaralignBlock) realignMultiEmptyFollow(info *varalignLine, newWidth in
 		}
 	}
 
-	newSpace := indent(imax(oldWidth+*indentDiff, 8))
-	if newSpace == oldSpace {
-		return
-	}
-
-	// Below a continuation marker, there may be a completely empty line.
-	// This is confusing to the human readers, but technically allowed.
-	if info.varalignParts.isEmpty() {
-		return
-	}
-
-	fix := info.fixer.Autofix()
-	fix.Notef("This continuation line should be indented with %q.", newSpace)
-	fix.ReplaceAt(info.rawIndex, info.spaceBeforeValueIndex(), oldSpace, newSpace)
-	fix.Apply()
+	info.fixIndentCont(imax(oldWidth+*indentDiff, 8))
 }
 
 func (va *VaralignBlock) realignMultiInitial(info *varalignLine, newWidth int, indentDiffSet *bool, indentDiff *int) {
@@ -736,6 +722,25 @@ func (info *varalignLine) fixAlignMultiInitial(column int) {
 	} else {
 		fix.Notef("Variable values should be aligned with tabs, not spaces.")
 	}
+	fix.ReplaceAt(info.rawIndex, info.spaceBeforeValueIndex(), oldSpace, newSpace)
+	fix.Apply()
+}
+
+func (info *varalignLine) fixIndentCont(column int) {
+	oldSpace := info.spaceBeforeValue
+	newSpace := indent(column)
+	if newSpace == oldSpace {
+		return
+	}
+
+	// Below a continuation marker, there may be a completely empty line.
+	// This is confusing to the human readers, but technically allowed.
+	if info.varalignParts.isEmpty() {
+		return
+	}
+
+	fix := info.fixer.Autofix()
+	fix.Notef("This continuation line should be indented with %q.", newSpace)
 	fix.ReplaceAt(info.rawIndex, info.spaceBeforeValueIndex(), oldSpace, newSpace)
 	fix.Apply()
 }
