@@ -683,35 +683,48 @@ func (s *Suite) Test_SubstContext_Varassign__late_addition_to_unknown_class(c *c
 			"the SUBST class should be declared using \"SUBST_CLASSES+= id\".")
 }
 
-func (s *Suite) Test_SubstContext_Varassign__late_addition_to_unknown_class_with_rationale(c *check.C) {
-	t := s.Init(c)
-
-	mklines := t.NewMkLines("filename.mk",
-		"# I know what I'm doing.",
-		"SUBST_VARS.id=\tOPSYS",
-		"")
-	ctx := NewSubstContext()
-
-	mklines.collectRationale()
-	mklines.ForEach(ctx.Process)
-
-	t.CheckOutputEmpty()
-}
-
+// The rationale for the stray SUBST variables has to be specific.
+//
+// For example, in the following snippet from mail/dkim-milter/options.mk
+// revision 1.9, there is a comment, but that is not a rationale and also
+// not related to the SUBST_CLASS variable at all:
+//  ### IPv6 support.
+//  .if !empty(PKG_OPTIONS:Minet6)
+//  SUBST_SED.libs+=        -e 's|@INET6@||g'
+//  .endif
 func (s *Suite) Test_SubstContext_varassignMissingId__rationale(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("filename.mk",
+		// The rationale is too unspecific since it doesn't refer to the
+		// "one" class.
+		"# I know what I'm doing.",
+		"SUBST_VARS.one=\tOPSYS",
+		"",
+		// The subst class "two" appears in the rationale.
+		"# The two class is defined somewhere else.",
+		"SUBST_VARS.two=\tOPSYS",
+		"",
+		// The word "defined" doesn't match the subst class "def".
+		"# This subst class is defined somewhere else.",
+		"SUBST_VARS.def=\tOPSYS",
+		"",
 		"# Rationale that is completely irrelevant.",
 		"SUBST_SED.libs+=\t-e sahara",
 		"")
-
 	ctx := NewSubstContext()
+
 	mklines.collectRationale()
 	mklines.ForEach(ctx.Process)
 
-	// FIXME: Validate that the rationale contains the SUBST class.
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: filename.mk:2: Before defining SUBST_VARS.one, "+
+			"the SUBST class should be declared using \"SUBST_CLASSES+= one\".",
+		// In filename.mk:5 there is a proper rationale, thus no warning.
+		"WARN: filename.mk:8: Before defining SUBST_VARS.def, "+
+			"the SUBST class should be declared using \"SUBST_CLASSES+= def\".",
+		"WARN: filename.mk:11: Before defining SUBST_SED.libs, "+
+			"the SUBST class should be declared using \"SUBST_CLASSES+= libs\".")
 }
 
 func (s *Suite) Test_SubstContext_Directive__before_SUBST_CLASSES(c *check.C) {

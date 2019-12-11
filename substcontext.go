@@ -176,7 +176,7 @@ func (ctx *SubstContext) varassignMissingId(varcanon string, varparam string, mk
 		}
 		return
 	}
-	if mkline.HasRationale() {
+	if containsWord(mkline.Rationale(), varparam) {
 		return
 	}
 	if ctx.queuedIds[varparam] {
