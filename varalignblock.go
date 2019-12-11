@@ -285,7 +285,7 @@ func (*VaralignBlock) optimalWidth(mkinfos []*varalignMkLine) int {
 			if info.multiEmpty || info.rawIndex > 0 || outlier > 0 && info.varnameOpWidth() == outlier {
 				continue
 			}
-			spaceWidths.Add(info.fixer, info.varnameOpSpaceWidth())
+			spaceWidths.Add(nil, info.varnameOpSpaceWidth())
 		}
 	}
 	spaceWidths.sortDesc()
