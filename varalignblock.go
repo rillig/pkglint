@@ -373,7 +373,7 @@ func (va *VaralignBlock) checkRightMargin(info *varalignLine, newWidth int, righ
 func (va *VaralignBlock) realign(info *varalignLine, newWidth int, indentDiffSet *bool, indentDiff *int) {
 	if info.multiEmpty {
 		if info.rawIndex == 0 {
-			va.realignMultiEmptyInitial(info, newWidth)
+			info.fixAlignMultiEmptyInitial(newWidth)
 		} else {
 			va.realignMultiEmptyFollow(info, newWidth, indentDiffSet, indentDiff)
 		}
@@ -385,42 +385,6 @@ func (va *VaralignBlock) realign(info *varalignLine, newWidth int, indentDiffSet
 	} else {
 		va.realignSingle(info, newWidth)
 	}
-}
-
-func (*VaralignBlock) realignMultiEmptyInitial(info *varalignLine, newWidth int) {
-	leadingComment := info.leadingComment
-	varnameOp := info.varnameOp
-	oldSpace := info.spaceBeforeValue
-
-	// Indent the outlier and any other lines that stick out
-	// with a space instead of a tab to keep the line short.
-	newSpace := " "
-	if info.varnameOpSpaceWidth() <= newWidth {
-		newSpace = alignmentAfter(leadingComment+varnameOp, newWidth)
-	}
-
-	if newSpace == oldSpace {
-		return
-	}
-
-	if newSpace == " " {
-		return // This case is handled by checkRightMargin.
-	}
-
-	hasSpace := strings.IndexByte(oldSpace, ' ') != -1
-	oldColumn := info.varnameOpSpaceWidth()
-	column := tabWidthSlice(leadingComment, varnameOp, newSpace)
-
-	fix := info.fixer.Autofix()
-	if hasSpace && column != oldColumn {
-		fix.Notef("This variable value should be aligned with tabs, not spaces, to column %d.", column+1)
-	} else if column != oldColumn {
-		fix.Notef("This variable value should be aligned to column %d.", column+1) // TODO: to column %d instead of %d.
-	} else {
-		fix.Notef("Variable values should be aligned with tabs, not spaces.")
-	}
-	fix.ReplaceAt(info.rawIndex, info.spaceBeforeValueIndex(), oldSpace, newSpace)
-	fix.Apply()
 }
 
 func (va *VaralignBlock) realignMultiEmptyFollow(info *varalignLine, newWidth int, indentDiffSet *bool, indentDiff *int) {
@@ -673,6 +637,42 @@ type varalignLine struct {
 	long bool
 
 	varalignParts
+}
+
+func (info *varalignLine) fixAlignMultiEmptyInitial(newWidth int) {
+	leadingComment := info.leadingComment
+	varnameOp := info.varnameOp
+	oldSpace := info.spaceBeforeValue
+
+	// Indent the outlier and any other lines that stick out
+	// with a space instead of a tab to keep the line short.
+	newSpace := " "
+	if info.varnameOpSpaceWidth() <= newWidth {
+		newSpace = alignmentAfter(leadingComment+varnameOp, newWidth)
+	}
+
+	if newSpace == oldSpace {
+		return
+	}
+
+	if newSpace == " " {
+		return // This case is handled by checkRightMargin.
+	}
+
+	hasSpace := strings.IndexByte(oldSpace, ' ') != -1
+	oldColumn := info.varnameOpSpaceWidth()
+	column := tabWidthSlice(leadingComment, varnameOp, newSpace)
+
+	fix := info.fixer.Autofix()
+	if hasSpace && column != oldColumn {
+		fix.Notef("This variable value should be aligned with tabs, not spaces, to column %d.", column+1)
+	} else if column != oldColumn {
+		fix.Notef("This variable value should be aligned to column %d.", column+1) // TODO: to column %d instead of %d.
+	} else {
+		fix.Notef("Variable values should be aligned with tabs, not spaces.")
+	}
+	fix.ReplaceAt(info.rawIndex, info.spaceBeforeValueIndex(), oldSpace, newSpace)
+	fix.Apply()
 }
 
 func (info *varalignLine) fixAlignMultiInitial(column int) {

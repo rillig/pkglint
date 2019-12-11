@@ -3057,45 +3057,6 @@ func (s *Suite) Test_VaralignBlock_processVarassign__comment_with_continuation(c
 	vt.Run()
 }
 
-func (s *Suite) Test_VaralignBlock_realignMultiEmptyInitial(c *check.C) {
-	t := s.Init(c)
-
-	mklines := t.NewMkLines("filename.mk",
-		MkCvsID,
-		"VAR=\t${VAR}",
-		"LONG_VARIABLE_NAME=    \t        \\",
-		"\t${LONG_VARIABLE_NAME}")
-
-	mklines.Check()
-
-	t.CheckOutputLines(
-		"NOTE: filename.mk:3: The continuation backslash should be preceded by a single space or tab.")
-}
-
-func (s *Suite) Test_VaralignBlock_realignMultiEmptyInitial__spaces(c *check.C) {
-	vt := NewVaralignTester(s, c)
-	vt.Input(
-		"VAR=    \\",
-		"\tvalue",
-		// This line is necessary to trigger the realignment; see VaralignBlock.Finish.
-		"VAR= value")
-	vt.Internals(
-		"04 08 08",
-		"   08",
-		"04 05")
-	vt.Diagnostics(
-		"NOTE: Makefile:1: Variable values should be aligned with tabs, not spaces.",
-		"NOTE: Makefile:3: This variable value should be aligned with tabs, not spaces, to column 9.")
-	vt.Autofixes(
-		"AUTOFIX: Makefile:1: Replacing \"    \" with \"\\t\".",
-		"AUTOFIX: Makefile:3: Replacing \" \" with \"\\t\".")
-	vt.Fixed(
-		"VAR=    \\",
-		"        value",
-		"VAR=    value")
-	vt.Run()
-}
-
 // This example is quite unrealistic since typically the first line is
 // the least indented.
 //
@@ -3669,6 +3630,45 @@ func (s *Suite) Test_varalignMkLine_rightMargin(c *check.C) {
 		"\tv\t\t\\",                   // column 24
 		"\tv\t\t\\",                   // column 24, appears twice
 		"\tv")
+}
+
+func (s *Suite) Test_varalignLine_fixAlignMultiEmptyInitial(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"VAR=\t${VAR}",
+		"LONG_VARIABLE_NAME=    \t        \\",
+		"\t${LONG_VARIABLE_NAME}")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"NOTE: filename.mk:3: The continuation backslash should be preceded by a single space or tab.")
+}
+
+func (s *Suite) Test_varalignLine_fixAlignMultiEmptyInitial__spaces(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR=    \\",
+		"\tvalue",
+		// This line is necessary to trigger the realignment; see VaralignBlock.Finish.
+		"VAR= value")
+	vt.Internals(
+		"04 08 08",
+		"   08",
+		"04 05")
+	vt.Diagnostics(
+		"NOTE: Makefile:1: Variable values should be aligned with tabs, not spaces.",
+		"NOTE: Makefile:3: This variable value should be aligned with tabs, not spaces, to column 9.")
+	vt.Autofixes(
+		"AUTOFIX: Makefile:1: Replacing \"    \" with \"\\t\".",
+		"AUTOFIX: Makefile:3: Replacing \" \" with \"\\t\".")
+	vt.Fixed(
+		"VAR=    \\",
+		"        value",
+		"VAR=    value")
+	vt.Run()
 }
 
 // This constellation doesn't occur in practice because the code in
