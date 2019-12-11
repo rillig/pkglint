@@ -2794,7 +2794,7 @@ func (s *Suite) Test_VaralignBlock__long_lines(c *check.C) {
 	vt.Fixed(
 		"VAR=                                            value   \\",
 		// FIXME: The backslash should be aligned properly.
-		//  It is not replaced because fixRightMargin is called before fixAlign,
+		//  It is not replaced because alignContinuation is called before fixAlign,
 		//  which is the wrong order.
 		"                                                value    \\",
 		"                                                value")
@@ -3519,7 +3519,7 @@ func (s *Suite) Test_varalignMkLine_rightMargin(c *check.C) {
 		"\tv")
 }
 
-func (s *Suite) Test_varalignLine_fixAlignMultiEmptyInitial(c *check.C) {
+func (s *Suite) Test_varalignLine_alignValueMultiEmptyInitial(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("filename.mk",
@@ -3534,7 +3534,7 @@ func (s *Suite) Test_varalignLine_fixAlignMultiEmptyInitial(c *check.C) {
 		"NOTE: filename.mk:3: The continuation backslash should be preceded by a single space or tab.")
 }
 
-func (s *Suite) Test_varalignLine_fixAlignMultiEmptyInitial__spaces(c *check.C) {
+func (s *Suite) Test_varalignLine_alignValueMultiEmptyInitial__spaces(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"VAR=    \\",
@@ -3558,7 +3558,7 @@ func (s *Suite) Test_varalignLine_fixAlignMultiEmptyInitial__spaces(c *check.C) 
 	vt.Run()
 }
 
-func (s *Suite) Test_varalignLine_fixIndentMultiFollow__unindent_long_lines(c *check.C) {
+func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_lines(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"SHORT=\tvalue",
@@ -3627,7 +3627,7 @@ func (s *Suite) Test_varalignLine_fixIndentMultiFollow__unindent_long_lines(c *c
 	vt.Run()
 }
 
-func (s *Suite) Test_varalignLine_fixIndentMultiFollow__unindent_long_initial_line(c *check.C) {
+func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_initial_line(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"VAR-----10!=\t\t----30--------40--------50-----6\t\t\t\\",

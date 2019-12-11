@@ -233,7 +233,7 @@ func (va *VaralignBlock) Finish() {
 		for _, info := range mkinfo.infos {
 
 			// TODO: move below va.realign
-			info.fixRightMargin(newWidth, rightMargin)
+			info.alignContinuation(newWidth, rightMargin)
 
 			if newWidth > 0 || info.rawIndex > 0 {
 				va.realign(info, newWidth, &indentDiffSet, &indentDiff)
@@ -341,7 +341,7 @@ func (va *VaralignBlock) adjustLong(newWidth int, mkinfos []*varalignMkLine) {
 func (va *VaralignBlock) realign(info *varalignLine, newWidth int, indentDiffSet *bool, indentDiff *int) {
 	if info.multiEmpty {
 		if info.rawIndex == 0 {
-			info.fixAlignMultiEmptyInitial(newWidth)
+			info.alignValueMultiEmptyInitial(newWidth)
 		} else {
 			va.realignMultiEmptyFollow(info, newWidth, indentDiffSet, indentDiff)
 		}
@@ -349,9 +349,9 @@ func (va *VaralignBlock) realign(info *varalignLine, newWidth int, indentDiffSet
 		va.realignMultiInitial(info, newWidth, indentDiffSet, indentDiff)
 	} else if info.rawIndex > 0 {
 		assert(*indentDiffSet)
-		info.fixIndentMultiFollow(newWidth, *indentDiff)
+		info.alignValueMultiFollow(newWidth, *indentDiff)
 	} else {
-		info.fixSingle(newWidth)
+		info.alignValueSingle(newWidth)
 	}
 }
 
@@ -367,14 +367,14 @@ func (va *VaralignBlock) realignMultiEmptyFollow(info *varalignLine, newWidth in
 		}
 	}
 
-	info.fixIndentCont(imax(oldWidth+*indentDiff, 8))
+	info.alignValueMultiEmptyFollow(imax(oldWidth+*indentDiff, 8))
 }
 
 func (va *VaralignBlock) realignMultiInitial(info *varalignLine, newWidth int, indentDiffSet *bool, indentDiff *int) {
 	*indentDiffSet = true
 	*indentDiff = newWidth - info.varnameOpSpaceWidth()
 
-	info.fixAlignMultiInitial(newWidth)
+	info.alignValueMultiInitial(newWidth)
 }
 
 // VaralignSplitter parses the text of a raw line into those parts that
@@ -542,7 +542,7 @@ type varalignLine struct {
 	varalignParts
 }
 
-func (info *varalignLine) fixSingle(newWidth int) {
+func (info *varalignLine) alignValueSingle(newWidth int) {
 	leadingComment := info.leadingComment
 	varnameOp := info.varnameOp
 
@@ -582,7 +582,7 @@ func (info *varalignLine) fixSingle(newWidth int) {
 	fix.Apply()
 }
 
-func (info *varalignLine) fixAlignMultiEmptyInitial(newWidth int) {
+func (info *varalignLine) alignValueMultiEmptyInitial(newWidth int) {
 	leadingComment := info.leadingComment
 	varnameOp := info.varnameOp
 	oldSpace := info.spaceBeforeValue
@@ -618,7 +618,7 @@ func (info *varalignLine) fixAlignMultiEmptyInitial(newWidth int) {
 	fix.Apply()
 }
 
-func (info *varalignLine) fixAlignMultiInitial(column int) {
+func (info *varalignLine) alignValueMultiInitial(column int) {
 	leadingComment := info.leadingComment
 	varnameOp := info.varnameOp
 	oldSpace := info.spaceBeforeValue
@@ -643,7 +643,7 @@ func (info *varalignLine) fixAlignMultiInitial(column int) {
 	fix.Apply()
 }
 
-func (info *varalignLine) fixIndentCont(column int) {
+func (info *varalignLine) alignValueMultiEmptyFollow(column int) {
 	oldSpace := info.spaceBeforeValue
 	newSpace := indent(column)
 	if newSpace == oldSpace {
@@ -661,10 +661,10 @@ func (info *varalignLine) fixIndentCont(column int) {
 	fix.ReplaceAt(info.rawIndex, info.spaceBeforeValueIndex(), oldSpace, newSpace)
 	fix.Apply()
 
-	// TODO: Merge with fixIndentMultiFollow
+	// TODO: Merge with alignValueMultiFollow
 }
 
-func (info *varalignLine) fixIndentMultiFollow(column, indentDiff int) {
+func (info *varalignLine) alignValueMultiFollow(column, indentDiff int) {
 	oldSpace := info.spaceBeforeValue
 	newWidth := tabWidth(oldSpace) + indentDiff
 	newSpace := indent(imax(column, newWidth))
@@ -692,7 +692,7 @@ func (info *varalignLine) fixIndentMultiFollow(column, indentDiff int) {
 	fix.Apply()
 }
 
-func (info *varalignLine) fixRightMargin(newWidth, rightMargin int) {
+func (info *varalignLine) alignContinuation(newWidth, rightMargin int) {
 	if !info.isContinuation() {
 		return
 	}
