@@ -698,6 +698,22 @@ func (s *Suite) Test_SubstContext_Varassign__late_addition_to_unknown_class_with
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_SubstContext_varassignMissingId__rationale(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("filename.mk",
+		"# Rationale that is completely irrelevant.",
+		"SUBST_SED.libs+=\t-e sahara",
+		"")
+
+	ctx := NewSubstContext()
+	mklines.collectRationale()
+	mklines.ForEach(ctx.Process)
+
+	// FIXME: Validate that the rationale contains the SUBST class.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_SubstContext_Directive__before_SUBST_CLASSES(c *check.C) {
 	t := s.Init(c)
 
