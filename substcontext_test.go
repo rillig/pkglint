@@ -114,7 +114,7 @@ func (s *Suite) Test_SubstContext__multiple_classes_in_one_line(c *check.C) {
 	mklines.ForEach(ctx.Process)
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:1: Please add only one class at a time to SUBST_CLASSES.",
+		"NOTE: filename.mk:1: Please add only one class at a time to SUBST_CLASSES.",
 		"WARN: filename.mk:7: Incomplete SUBST block: SUBST_SED.two, SUBST_VARS.two or SUBST_FILTER_CMD.two missing.")
 }
 
@@ -142,19 +142,14 @@ func (s *Suite) Test_SubstContext__multiple_classes_in_one_line_multiple_blocks(
 	mklines.ForEach(ctx.Process)
 
 	t.CheckOutputLines(
-		// FIXME
-		"WARN: filename.mk:1: Please add only one class at a time to SUBST_CLASSES.",
-		// FIXME
-		"WARN: filename.mk:6: Before defining SUBST_STAGE.two, "+
-			"the SUBST class should be declared using \"SUBST_CLASSES+= two\".",
-		// FIXME
-		"WARN: filename.mk:7: Late additions to a SUBST variable should use the += operator.",
+		"NOTE: filename.mk:1: Please add only one class at a time to SUBST_CLASSES.",
+		"WARN: filename.mk:8: Incomplete SUBST block: SUBST_STAGE.two missing.",
+		"WARN: filename.mk:8: Incomplete SUBST block: "+
+			"SUBST_SED.two, SUBST_VARS.two or SUBST_FILTER_CMD.two missing.",
 		"WARN: filename.mk:9: Before defining SUBST_STAGE.three, "+
 			"the SUBST class should be declared using \"SUBST_CLASSES+= three\".",
 		"WARN: filename.mk:11: Before defining SUBST_VARS.four, "+
-			"the SUBST class should be declared using \"SUBST_CLASSES+= four\".",
-		"WARN: filename.mk:13: Late additions to a SUBST variable "+
-			"should use the += operator.")
+			"the SUBST class should be declared using \"SUBST_CLASSES+= four\".")
 }
 
 func (s *Suite) Test_SubstContext__multiple_classes_in_one_block(c *check.C) {

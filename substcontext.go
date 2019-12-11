@@ -5,10 +5,12 @@ import "netbsd.org/pkglint/textproc"
 // SubstContext records the state of a block of variable assignments
 // that make up a SUBST class (see `mk/subst.mk`).
 type SubstContext struct {
-	seenIds map[string]bool
-	id      string
-	vars    map[string]bool
-	conds   []*substCond
+	queuedIds map[string]bool
+	doneIds   map[string]bool
+	id        string
+	vars      map[string]bool
+	conds     []*substCond
+	once      Once
 }
 
 func NewSubstContext() *SubstContext {
@@ -94,9 +96,17 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 
 	if varcanon == "SUBST_CLASSES" || varcanon == "SUBST_CLASSES.*" {
 		classes := mkline.ValueFields(value)
+
 		if len(classes) > 1 {
-			mkline.Warnf("Please add only one class at a time to SUBST_CLASSES.")
+			mkline.Notef("Please add only one class at a time to SUBST_CLASSES.")
+			mkline.Explain(
+				"This way, each substitution class forms a block in the package Makefile,",
+				"and to delete this block, it is not necessary to look anywhere else.")
+			for _, class := range classes {
+				ctx.queue(class)
+			}
 		}
+
 		id := classes[0]
 		if ctx.id != "" && ctx.id != id {
 			id := ctx.id // since ctx.directiveEndif overwrites ctx.id
@@ -115,7 +125,7 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 		ctx.id = id
 		ctx.top().id = true
 
-		ctx.seeId(id)
+		ctx.doneId(id)
 
 		return
 	}
@@ -128,7 +138,7 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 	}
 
 	if ctx.id == "" {
-		if ctx.isListCanon(varcanon) && ctx.seenIds[varparam] {
+		if ctx.isListCanon(varcanon) && ctx.doneIds[varparam] {
 			if mkline.Op() != opAssignAppend {
 				mkline.Warnf("Late additions to a SUBST variable should use the += operator.")
 			}
@@ -137,11 +147,17 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 		if mkline.HasRationale() {
 			return
 		}
+		if ctx.queuedIds[varparam] {
+			ctx.queuedIds[varparam] = false
+			ctx.id = varparam
+			return
+		}
 
-		mkline.Warnf("Before defining %s, the SUBST class "+
-			"should be declared using \"SUBST_CLASSES+= %s\".",
-			varname, varparam)
-		ctx.seeId(varparam)
+		if ctx.once.FirstTimeSlice("SubstContext.Varassign", varparam) {
+			mkline.Warnf("Before defining %s, the SUBST class "+
+				"should be declared using \"SUBST_CLASSES+= %s\".",
+				varname, varparam)
+		}
 		return
 	}
 
@@ -151,11 +167,9 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 			// meta-pkgs/xorg/Makefile.common 1.41 for an example.
 			ctx.Finish(mkline)
 
-			// The following assignment prevents an additional warning,
-			// but from a technically viewpoint, it is incorrect.
-			// Silent change of the subst class.
-			// It had probably been added with multiple classes per line.
-			ctx.id = varparam
+			if ctx.queuedIds[varparam] {
+				ctx.id = varparam
+			}
 		} else {
 			mkline.Warnf("Variable %q does not match SUBST class %q.", varname, ctx.id)
 			return
@@ -235,11 +249,18 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 	}
 }
 
-func (ctx *SubstContext) seeId(id string) {
-	if ctx.seenIds == nil {
-		ctx.seenIds = map[string]bool{}
+func (ctx *SubstContext) queue(id string) {
+	if ctx.queuedIds == nil {
+		ctx.queuedIds = map[string]bool{}
 	}
-	ctx.seenIds[id] = true
+	ctx.queuedIds[id] = true
+}
+
+func (ctx *SubstContext) doneId(id string) {
+	if ctx.doneIds == nil {
+		ctx.doneIds = map[string]bool{}
+	}
+	ctx.doneIds[id] = true
 }
 
 func (ctx *SubstContext) isForeignCanon(varcanon string) bool {
