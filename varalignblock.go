@@ -381,7 +381,7 @@ func (va *VaralignBlock) realign(info *varalignLine, newWidth int, indentDiffSet
 		va.realignMultiInitial(info, newWidth, indentDiffSet, indentDiff)
 	} else if info.rawIndex > 0 {
 		assert(*indentDiffSet)
-		va.realignMultiFollow(info, newWidth, *indentDiff)
+		info.fixIndentMultiFollow(newWidth, *indentDiff)
 	} else {
 		va.realignSingle(info, newWidth)
 	}
@@ -407,10 +407,6 @@ func (va *VaralignBlock) realignMultiInitial(info *varalignLine, newWidth int, i
 	*indentDiff = newWidth - info.varnameOpSpaceWidth()
 
 	info.fixAlignMultiInitial(newWidth)
-}
-
-func (va *VaralignBlock) realignMultiFollow(info *varalignLine, newWidth int, indentDiff int) {
-	info.fixIndentMultiFollow(newWidth, indentDiff)
 }
 
 func (va *VaralignBlock) realignSingle(info *varalignLine, newWidth int) {
