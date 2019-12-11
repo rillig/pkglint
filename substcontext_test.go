@@ -7,7 +7,6 @@ import (
 func (s *Suite) Test_SubstContext__incomplete(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Wextra")
 	ctx := NewSubstContext()
 
 	ctx.Varassign(t.NewMkLine("Makefile", 10, "PKGNAME=pkgname-1.0"))
@@ -37,7 +36,6 @@ func (s *Suite) Test_SubstContext__incomplete(c *check.C) {
 func (s *Suite) Test_SubstContext__complete(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Wextra")
 	ctx := NewSubstContext()
 
 	ctx.Varassign(t.NewMkLine("Makefile", 10, "PKGNAME=pkgname-1.0"))
@@ -100,7 +98,6 @@ func (s *Suite) Test_SubstContext__no_class(c *check.C) {
 func (s *Suite) Test_SubstContext__multiple_classes_in_one_line(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Wextra")
 	mklines := t.NewMkLines("filename.mk",
 		"SUBST_CLASSES+=         one two",
 		"SUBST_STAGE.one=        post-configure",
@@ -121,7 +118,6 @@ func (s *Suite) Test_SubstContext__multiple_classes_in_one_line(c *check.C) {
 func (s *Suite) Test_SubstContext__multiple_classes_in_one_line_multiple_blocks(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Wextra")
 	mklines := t.NewMkLines("filename.mk",
 		"SUBST_CLASSES+=         one two",
 		"SUBST_STAGE.one=        post-configure",
@@ -154,8 +150,6 @@ func (s *Suite) Test_SubstContext__multiple_classes_in_one_line_multiple_blocks(
 
 func (s *Suite) Test_SubstContext__multiple_classes_in_one_block(c *check.C) {
 	t := s.Init(c)
-
-	t.SetUpCommandLine("-Wextra")
 
 	mklines := t.NewMkLines("filename.mk",
 		"SUBST_CLASSES+=         one",
@@ -205,8 +199,6 @@ func (s *Suite) Test_SubstContext__files_missing(c *check.C) {
 func (s *Suite) Test_SubstContext__directives(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Wextra")
-
 	mklines := t.NewMkLines("filename.mk",
 		"SUBST_CLASSES+=         os",
 		"SUBST_STAGE.os=         post-configure",
@@ -238,7 +230,6 @@ func (s *Suite) Test_SubstContext__directives(c *check.C) {
 func (s *Suite) Test_SubstContext__adjacent(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Wextra")
 	t.SetUpVartypes()
 
 	mklines := t.NewMkLines("os.mk",
@@ -331,7 +322,6 @@ func (s *Suite) Test_SubstContext__SUBST_VARS_in_next_paragraph(c *check.C) {
 func (s *Suite) Test_SubstContext__multiple_SUBST_VARS(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Wextra")
 	t.SetUpVartypes()
 
 	mklines := t.NewMkLines("os.mk",
@@ -423,8 +413,6 @@ func (s *Suite) Test_SubstContext__completely_conditional_else(c *check.C) {
 
 func (s *Suite) Test_SubstContext__SUBST_CLASSES_in_separate_paragraph(c *check.C) {
 	t := s.Init(c)
-
-	t.SetUpCommandLine("-Wextra")
 
 	mklines := t.NewMkLines("filename.mk",
 		"SUBST_CLASSES+= 1 2 3 4",
@@ -540,7 +528,7 @@ func (s *Suite) Test_SubstContext_varassignMissingId__rationale(c *check.C) {
 func (s *Suite) Test_SubstContext_varassignStage__pre_patch(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Wextra", "--show-autofix")
+	t.SetUpCommandLine("-Wall", "--show-autofix")
 	t.SetUpVartypes()
 
 	mklines := t.NewMkLines("os.mk",
@@ -561,7 +549,7 @@ func (s *Suite) Test_SubstContext_varassignStage__pre_patch(c *check.C) {
 func (s *Suite) Test_SubstContext_varassignStage__post_patch(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Wextra", "--show-autofix")
+	t.SetUpCommandLine("-Wall", "--show-autofix")
 	t.SetUpVartypes()
 
 	mklines := t.NewMkLines("os.mk",
@@ -651,8 +639,6 @@ func (s *Suite) Test_SubstContext_Directive__before_SUBST_CLASSES(c *check.C) {
 func (s *Suite) Test_SubstContext_Directive__conditional_blocks_complete(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Wextra")
-
 	mklines := t.NewMkLines("filename.mk",
 		".if ${OPSYS} == NetBSD",
 		"SUBST_CLASSES+= nb",
@@ -675,8 +661,6 @@ func (s *Suite) Test_SubstContext_Directive__conditional_blocks_complete(c *chec
 
 func (s *Suite) Test_SubstContext_Directive__conditional_blocks_incomplete(c *check.C) {
 	t := s.Init(c)
-
-	t.SetUpCommandLine("-Wextra")
 
 	mklines := t.NewMkLines("filename.mk",
 		".if ${OPSYS} == NetBSD",
@@ -701,8 +685,6 @@ func (s *Suite) Test_SubstContext_Directive__conditional_blocks_incomplete(c *ch
 
 func (s *Suite) Test_SubstContext_Directive__conditional_complete(c *check.C) {
 	t := s.Init(c)
-
-	t.SetUpCommandLine("-Wextra")
 
 	mklines := t.NewMkLines("filename.mk",
 		"SUBST_CLASSES+= id",
@@ -735,8 +717,6 @@ func (s *Suite) Test_SubstContext_Directive__conditional_complete(c *check.C) {
 func (s *Suite) Test_SubstContext_Directive__conditionally_overwritten_filter(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Wextra")
-
 	mklines := t.NewMkLines("filename.mk",
 		"SUBST_CLASSES+= id",
 		"SUBST_STAGE.id=\t\tpost-configure",
@@ -761,8 +741,6 @@ func (s *Suite) Test_SubstContext_Directive__conditionally_overwritten_filter(c 
 // That's why pkglint doesn't cover this case correctly.
 func (s *Suite) Test_SubstContext_Directive__conditionally_nested_block(c *check.C) {
 	t := s.Init(c)
-
-	t.SetUpCommandLine("-Wextra")
 
 	mklines := t.NewMkLines("filename.mk",
 		"SUBST_CLASSES+=         outer",
@@ -795,8 +773,6 @@ func (s *Suite) Test_SubstContext_Directive__conditionally_nested_block(c *check
 func (s *Suite) Test_SubstContext_Directive__conditionally_following_block(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Wextra")
-
 	mklines := t.NewMkLines("filename.mk",
 		"SUBST_CLASSES+=         outer",
 		"SUBST_STAGE.outer=      post-configure",
@@ -825,8 +801,6 @@ func (s *Suite) Test_SubstContext_Directive__conditionally_following_block(c *ch
 func (s *Suite) Test_SubstContext_Directive__two_blocks_in_condition(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Wextra")
-
 	mklines := t.NewMkLines("filename.mk",
 		".if ${OPSYS} == NetBSD",
 		"SUBST_CLASSES+= a",
@@ -850,8 +824,6 @@ func (s *Suite) Test_SubstContext_Directive__two_blocks_in_condition(c *check.C)
 
 func (s *Suite) Test_SubstContext_Directive__nested_conditional_incomplete_block(c *check.C) {
 	t := s.Init(c)
-
-	t.SetUpCommandLine("-Wextra")
 
 	mklines := t.NewMkLines("filename.mk",
 		"SUBST_CLASSES+=         outer",
@@ -881,8 +853,6 @@ func (s *Suite) Test_SubstContext_Directive__nested_conditional_incomplete_block
 func (s *Suite) Test_SubstContext_Finish__details_in_then_branch(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Wextra")
-
 	mklines := t.NewMkLines("filename.mk",
 		"SUBST_CLASSES+=         os",
 		".if ${OPSYS} == NetBSD",
@@ -906,8 +876,6 @@ func (s *Suite) Test_SubstContext_Finish__details_in_then_branch(c *check.C) {
 
 func (s *Suite) Test_SubstContext_Finish__details_in_else_branch(c *check.C) {
 	t := s.Init(c)
-
-	t.SetUpCommandLine("-Wextra")
 
 	mklines := t.NewMkLines("filename.mk",
 		"SUBST_CLASSES+=         os",
@@ -934,8 +902,6 @@ func (s *Suite) Test_SubstContext_Finish__details_in_else_branch(c *check.C) {
 func (s *Suite) Test_SubstContext_Finish__empty_conditional_at_end(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Wextra")
-
 	mklines := t.NewMkLines("filename.mk",
 		"SUBST_CLASSES+=         os",
 		"SUBST_VARS.os=          OPSYS",
@@ -956,8 +922,6 @@ func (s *Suite) Test_SubstContext_Finish__empty_conditional_at_end(c *check.C) {
 
 func (s *Suite) Test_SubstContext_Finish__missing_transformation_in_one_branch(c *check.C) {
 	t := s.Init(c)
-
-	t.SetUpCommandLine("-Wextra")
 
 	mklines := t.NewMkLines("filename.mk",
 		"SUBST_CLASSES+=         os",
@@ -985,8 +949,6 @@ func (s *Suite) Test_SubstContext_Finish__missing_transformation_in_one_branch(c
 
 func (s *Suite) Test_SubstContext_Finish__nested_conditionals(c *check.C) {
 	t := s.Init(c)
-
-	t.SetUpCommandLine("-Wextra")
 
 	mklines := t.NewMkLines("filename.mk",
 		"SUBST_CLASSES+=         os",
