@@ -511,7 +511,7 @@ func (l *varalignMkLine) rightMargin() (ok bool, margin int) {
 	var min int
 	for _, info := range infos {
 		if info.isContinuation() {
-			mainWidth := info.uptoCommentWidth()
+			mainWidth := info.uptoValueWidth()
 			if mainWidth > min {
 				min = mainWidth
 			}
@@ -709,10 +709,10 @@ func (info *varalignLine) alignContinuation(newWidth, rightMargin int) {
 
 	newSpace := " "
 	fix := info.fixer.Autofix()
-	if oldSpace == "" || rightMargin == 0 || info.uptoCommentWidth() >= rightMargin {
+	if oldSpace == "" || rightMargin == 0 || info.uptoValueWidth() >= rightMargin {
 		fix.Notef("The continuation backslash should be preceded by a single space or tab.")
 	} else {
-		newSpace = alignmentAfter(info.uptoComment(), rightMargin)
+		newSpace = alignmentAfter(info.uptoValue(), rightMargin)
 		fix.Notef(
 			"The continuation backslash should be preceded by a single space or tab, "+
 				"or be in column %d, not %d.",
@@ -785,13 +785,13 @@ func (p *varalignParts) spaceBeforeContinuation() string {
 	return p.spaceAfterValue
 }
 
-func (p *varalignParts) uptoCommentWidth() int {
+func (p *varalignParts) uptoValueWidth() int {
 	return tabWidth(rtrimHspace(p.leadingComment +
 		p.varnameOp + p.spaceBeforeValue +
 		p.value))
 }
 
-func (p *varalignParts) uptoComment() string {
+func (p *varalignParts) uptoValue() string {
 	return rtrimHspace(p.leadingComment +
 		p.varnameOp + p.spaceBeforeValue +
 		p.value)
