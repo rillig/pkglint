@@ -219,8 +219,8 @@ func (s *Suite) Test_SubstContext__directives_around_everything_then(c *check.C)
 
 	mklines.ForEach(ctx.Process)
 
-	// TODO: Warn about missing SUBST_STAGE.
 	t.CheckOutputLines(
+		"WARN: filename.mk:9: Incomplete SUBST block: SUBST_STAGE.os missing.",
 		"WARN: filename.mk:9: Incomplete SUBST block: SUBST_FILES.os missing.",
 		"WARN: filename.mk:9: Incomplete SUBST block: "+
 			"SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
@@ -247,6 +247,7 @@ func (s *Suite) Test_SubstContext__directives_around_everything_else(c *check.C)
 	mklines.ForEach(ctx.Process)
 
 	t.CheckOutputLines(
+		"WARN: filename.mk:10: Incomplete SUBST block: SUBST_STAGE.os missing.",
 		"WARN: filename.mk:10: Incomplete SUBST block: SUBST_FILES.os missing.",
 		"WARN: filename.mk:10: Incomplete SUBST block: "+
 			"SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
@@ -704,9 +705,10 @@ func (s *Suite) Test_SubstContext_Directive__conditional_complete(c *check.C) {
 
 	mklines.ForEach(ctx.Process)
 
-	t.CheckOutputLines(
-		// FIXME
-		"WARN: filename.mk:7: Duplicate definition of \"SUBST_STAGE.id\".")
+	// XXX: Maybe add a warning that SUBST_STAGE.id and SUBST_MESSAGE.id
+	//  should not be defined conditionally. There's no practical use
+	//  case for that.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {

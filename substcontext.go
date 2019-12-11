@@ -5,12 +5,9 @@ import "netbsd.org/pkglint/textproc"
 // SubstContext records the state of a block of variable assignments
 // that make up a SUBST class (see `mk/subst.mk`).
 type SubstContext struct {
-	id        string
-	stage     string
-	message   string
-	filterCmd string
-	vars      map[string]bool
-	conds     []*substCond
+	id    string
+	vars  map[string]bool
+	conds []*substCond
 }
 
 func NewSubstContext() *SubstContext {
@@ -25,25 +22,34 @@ type substCond struct {
 
 type substSeen struct {
 	id        bool
+	stage     bool
+	message   bool
 	files     bool
 	sed       bool
 	vars      bool
+	cmd       bool
 	transform bool
 }
 
 func (st *substSeen) And(other substSeen) {
 	st.id = st.id && other.id
+	st.stage = st.stage && other.stage
+	st.message = st.message && other.message
 	st.files = st.files && other.files
 	st.sed = st.sed && other.sed
 	st.vars = st.vars && other.vars
+	st.cmd = st.cmd && other.cmd
 	st.transform = st.transform && other.transform
 }
 
 func (st *substSeen) Or(other substSeen) {
 	st.id = st.id || other.id
+	st.stage = st.stage || other.stage
+	st.message = st.message || other.message
 	st.files = st.files || other.files
 	st.sed = st.sed || other.sed
 	st.vars = st.vars || other.vars
+	st.cmd = st.cmd || other.cmd
 	st.transform = st.transform || other.transform
 }
 
@@ -132,7 +138,8 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 
 	switch varcanon {
 	case "SUBST_STAGE.*":
-		ctx.dupString(mkline, &ctx.stage, varname, value) // TODO: Make stage conditional as well.
+		seen := func(s *substSeen) *bool { return &s.stage }
+		ctx.dupString(mkline, seen, varname)
 		if value == "pre-patch" || value == "post-patch" {
 			fix := mkline.Autofix()
 			fix.Warnf("Substitutions should not happen in the patch phase.")
@@ -160,15 +167,16 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 		}
 
 	case "SUBST_MESSAGE.*":
-		ctx.dupString(mkline, &ctx.message, varname, value)
+		seen := func(s *substSeen) *bool { return &s.message }
+		ctx.dupString(mkline, seen, varname)
 
 	case "SUBST_FILES.*":
 		seen := func(s *substSeen) *bool { return &s.files }
-		ctx.dupBool(mkline, seen, varname, op)
+		ctx.dupList(mkline, seen, varname, op)
 
 	case "SUBST_SED.*":
 		seen := func(s *substSeen) *bool { return &s.sed }
-		ctx.dupBool(mkline, seen, varname, op)
+		ctx.dupList(mkline, seen, varname, op)
 		ctx.top().transform = true
 
 		ctx.suggestSubstVars(mkline)
@@ -176,7 +184,7 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 	case "SUBST_VARS.*":
 		seen := func(s *substSeen) *bool { return &s.vars }
 		prev := ctx.seen(seen)
-		ctx.dupBool(mkline, seen, varname, op)
+		ctx.dupList(mkline, seen, varname, op)
 		ctx.top().transform = true
 		for _, substVar := range mkline.Fields() {
 			if ctx.vars == nil {
@@ -195,7 +203,8 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 		}
 
 	case "SUBST_FILTER_CMD.*":
-		ctx.dupString(mkline, &ctx.filterCmd, varname, value)
+		seen := func(s *substSeen) *bool { return &s.cmd }
+		ctx.dupString(mkline, seen, varname)
 		ctx.top().transform = true
 	}
 }
@@ -208,7 +217,7 @@ func (ctx *SubstContext) Directive(mkline *MkLine) {
 	dir := mkline.Directive()
 	switch dir {
 	case "if":
-		top := substCond{total: substSeen{true, true, true, true, true}}
+		top := substCond{total: substSeen{true, true, true, true, true, true, true, true}}
 		ctx.conds = append(ctx.conds, &top)
 
 	case "elif", "else":
@@ -241,7 +250,8 @@ func (ctx *SubstContext) Directive(mkline *MkLine) {
 }
 
 func (ctx *SubstContext) IsComplete() bool {
-	return ctx.stage != "" && ctx.top().files && ctx.top().transform
+	top := ctx.top()
+	return top.stage && top.files && top.transform
 }
 
 func (ctx *SubstContext) Finish(mkline *MkLine) {
@@ -250,27 +260,28 @@ func (ctx *SubstContext) Finish(mkline *MkLine) {
 	}
 
 	id := ctx.id
-	if ctx.stage == "" {
+	top := ctx.top()
+	if !top.stage {
 		mkline.Warnf("Incomplete SUBST block: SUBST_STAGE.%s missing.", id)
 	}
-	if !ctx.top().files {
+	if !top.files {
 		mkline.Warnf("Incomplete SUBST block: SUBST_FILES.%s missing.", id)
 	}
-	if !ctx.top().transform {
+	if !top.transform {
 		mkline.Warnf("Incomplete SUBST block: SUBST_SED.%[1]s, SUBST_VARS.%[1]s or SUBST_FILTER_CMD.%[1]s missing.", id)
 	}
 
 	*ctx = *NewSubstContext()
 }
 
-func (*SubstContext) dupString(mkline *MkLine, pstr *string, varname, value string) {
-	if *pstr != "" {
+func (ctx *SubstContext) dupString(mkline *MkLine, flag func(stats *substSeen) *bool, varname string) {
+	if ctx.seen(flag) {
 		mkline.Warnf("Duplicate definition of %q.", varname)
 	}
-	*pstr = value
+	*flag(ctx.top()) = true
 }
 
-func (ctx *SubstContext) dupBool(mkline *MkLine, flag func(stats *substSeen) *bool,
+func (ctx *SubstContext) dupList(mkline *MkLine, flag func(stats *substSeen) *bool,
 	varname string, op MkOperator) {
 
 	if ctx.seen(flag) && op != opAssignAppend {
