@@ -93,9 +93,8 @@ func (s *Suite) Test_SubstContext__no_class(c *check.C) {
 	mklines.ForEach(ctx.Process)
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:2: Before defining SUBST_FILES.repl, "+
-			"the SUBST class should be declared using \"SUBST_CLASSES+= repl\".",
-		"WARN: filename.mk:4: Incomplete SUBST block: SUBST_STAGE.repl missing.")
+		"WARN: filename.mk:2: Before defining SUBST_FILES.repl, " +
+			"the SUBST class should be declared using \"SUBST_CLASSES+= repl\".")
 }
 
 func (s *Suite) Test_SubstContext__multiple_classes_in_one_line(c *check.C) {
@@ -630,16 +629,39 @@ func (s *Suite) Test_SubstContext_Varassign__late_addition(c *check.C) {
 	mklines.ForEach(ctx.Process)
 
 	t.CheckOutputLines(
-		// FIXME: The class "id" has already been seen.
-		// This late addition should be possible without warning.
-		"WARN: filename.mk:7: Before defining SUBST_VARS.id, "+
-			"the SUBST class should be declared using \"SUBST_CLASSES+= id\".",
+		"WARN: filename.mk:7: Late additions to a SUBST variable " +
+			"should use the += operator.")
+}
 
-		// FIXME: These warnings miss the actual intention of the SUBST_VARS line.
-		"WARN: filename.mk:9: Incomplete SUBST block: SUBST_STAGE.id missing.",
-		"WARN: filename.mk:9: Incomplete SUBST block: SUBST_FILES.id missing.",
-		"WARN: filename.mk:9: Incomplete SUBST block: "+
-			"SUBST_SED.id, SUBST_VARS.id or SUBST_FILTER_CMD.id missing.")
+func (s *Suite) Test_SubstContext_Varassign__late_addition_to_unknown_class(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("filename.mk",
+		"SUBST_VARS.id=\tOPSYS",
+		"")
+	ctx := NewSubstContext()
+
+	mklines.collectRationale()
+	mklines.ForEach(ctx.Process)
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:1: Before defining SUBST_VARS.id, " +
+			"the SUBST class should be declared using \"SUBST_CLASSES+= id\".")
+}
+
+func (s *Suite) Test_SubstContext_Varassign__late_addition_to_unknown_class_with_rationale(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("filename.mk",
+		"# I know what I'm doing.",
+		"SUBST_VARS.id=\tOPSYS",
+		"")
+	ctx := NewSubstContext()
+
+	mklines.collectRationale()
+	mklines.ForEach(ctx.Process)
+
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_SubstContext_Directive__before_SUBST_CLASSES(c *check.C) {
@@ -802,10 +824,8 @@ func (s *Suite) Test_SubstContext_Directive__conditionally_nested_block(c *check
 			"SUBST_SED.outer, SUBST_VARS.outer or SUBST_FILTER_CMD.outer missing.",
 		"WARN: filename.mk:5: Subst block \"outer\" should be finished "+
 			"before adding the next class to SUBST_CLASSES.",
-		"WARN: filename.mk:10: Before defining SUBST_VARS.outer, "+
-			"the SUBST class should be declared using \"SUBST_CLASSES+= outer\".",
-		"WARN: filename.mk:11: Incomplete SUBST block: SUBST_STAGE.outer missing.",
-		"WARN: filename.mk:11: Incomplete SUBST block: SUBST_FILES.outer missing.")
+		"WARN: filename.mk:10: "+
+			"Late additions to a SUBST variable should use the += operator.")
 }
 
 // It's completely valid to have several SUBST blocks in a single paragraph.

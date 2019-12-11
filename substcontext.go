@@ -5,13 +5,22 @@ import "netbsd.org/pkglint/textproc"
 // SubstContext records the state of a block of variable assignments
 // that make up a SUBST class (see `mk/subst.mk`).
 type SubstContext struct {
-	id    string
-	vars  map[string]bool
-	conds []*substCond
+	seenIds map[string]bool
+	id      string
+	vars    map[string]bool
+	conds   []*substCond
 }
 
 func NewSubstContext() *SubstContext {
-	return &SubstContext{conds: []*substCond{{seenElse: true}}}
+	ctx := SubstContext{}
+	ctx.reset()
+	return &ctx
+}
+
+func (ctx *SubstContext) reset() {
+	ctx.id = ""
+	ctx.vars = nil
+	ctx.conds = []*substCond{{seenElse: true}}
 }
 
 type substCond struct {
@@ -88,7 +97,8 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 		if len(classes) > 1 {
 			mkline.Warnf("Please add only one class at a time to SUBST_CLASSES.")
 		}
-		if ctx.id != "" && ctx.id != classes[0] {
+		id := classes[0]
+		if ctx.id != "" && ctx.id != id {
 			id := ctx.id // since ctx.directiveEndif overwrites ctx.id
 			for len(ctx.conds) > 1 {
 				// This will be confusing for the outer SUBST block,
@@ -102,8 +112,11 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 				mkline.Warnf("Subst block %q should be finished before adding the next class to SUBST_CLASSES.", id)
 			}
 		}
-		ctx.id = classes[0]
+		ctx.id = id
 		ctx.top().id = true
+
+		ctx.seeId(id)
+
 		return
 	}
 
@@ -115,10 +128,21 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 	}
 
 	if ctx.id == "" {
+		if ctx.isListCanon(varcanon) && ctx.seenIds[varparam] {
+			if mkline.Op() != opAssignAppend {
+				mkline.Warnf("Late additions to a SUBST variable should use the += operator.")
+			}
+			return
+		}
+		if mkline.HasRationale() {
+			return
+		}
+
 		mkline.Warnf("Before defining %s, the SUBST class "+
 			"should be declared using \"SUBST_CLASSES+= %s\".",
 			varname, varparam)
-		ctx.id = varparam
+		ctx.seeId(varparam)
+		return
 	}
 
 	if hasPrefix(varname, "SUBST_") && varparam != ctx.id {
@@ -209,6 +233,13 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 	}
 }
 
+func (ctx *SubstContext) seeId(id string) {
+	if ctx.seenIds == nil {
+		ctx.seenIds = map[string]bool{}
+	}
+	ctx.seenIds[id] = true
+}
+
 func (ctx *SubstContext) isForeignCanon(varcanon string) bool {
 	switch varcanon {
 	case
@@ -221,6 +252,17 @@ func (ctx *SubstContext) isForeignCanon(varcanon string) bool {
 		return false
 	}
 	return true
+}
+
+func (ctx *SubstContext) isListCanon(varcanon string) bool {
+	switch varcanon {
+	case
+		"SUBST_FILES.*",
+		"SUBST_SED.*",
+		"SUBST_VARS.*":
+		return true
+	}
+	return false
 }
 
 func (ctx *SubstContext) Directive(mkline *MkLine) {
@@ -289,7 +331,7 @@ func (ctx *SubstContext) Finish(diag Diagnoser) {
 		diag.Warnf("Incomplete SUBST block: SUBST_SED.%[1]s, SUBST_VARS.%[1]s or SUBST_FILTER_CMD.%[1]s missing.", id)
 	}
 
-	*ctx = *NewSubstContext()
+	ctx.reset()
 }
 
 func (ctx *SubstContext) dupString(mkline *MkLine, flag func(stats *substSeen) *bool, varname string) {
