@@ -548,12 +548,9 @@ type varalignLine struct {
 func (info *varalignLine) fixSingle(newWidth int) {
 	leadingComment := info.leadingComment
 	varnameOp := info.varnameOp
-	oldSpace := info.spaceBeforeValue
 
-	newSpace := ""
-	for tabWidthSlice(leadingComment, varnameOp, newSpace) < newWidth {
-		newSpace += "\t"
-	}
+	oldSpace := info.spaceBeforeValue
+	newSpace := alignmentToWidths(tabWidthSlice(leadingComment, varnameOp), newWidth)
 
 	// Indent the outlier with a space instead of a tab to keep the line short.
 	if newSpace == "" && info.isCanonicalInitial(newWidth) {

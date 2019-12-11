@@ -401,6 +401,10 @@ func alignWith(str, other string) string {
 func alignmentTo(str, other string) string {
 	strWidth := tabWidth(str)
 	otherWidth := tabWidth(other)
+	return alignmentToWidths(strWidth, otherWidth)
+}
+
+func alignmentToWidths(strWidth, otherWidth int) string {
 	if otherWidth <= strWidth {
 		return ""
 	}
