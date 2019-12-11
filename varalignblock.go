@@ -446,33 +446,7 @@ func (va *VaralignBlock) realignMultiInitial(info *varalignLine, newWidth int, i
 }
 
 func (va *VaralignBlock) realignMultiFollow(info *varalignLine, newWidth int, indentDiff int) {
-	oldSpace := info.spaceBeforeValue
-	newSpace := indent(tabWidth(oldSpace) + indentDiff)
-	if tabWidth(newSpace) < newWidth {
-		newSpace = indent(newWidth)
-	}
-	if newSpace == oldSpace || info.long {
-		return
-	}
-
-	fix := info.fixer.Autofix()
-	fix.Notef("This continuation line should be indented with %q.", newSpace)
-	modified, replaced := fix.ReplaceAt(info.rawIndex, info.spaceBeforeValueIndex(), oldSpace, newSpace)
-	assert(modified)
-	if info.continuation != "" && info.continuationColumn() == 72 {
-		orig := strings.TrimSuffix(replaced, "\n")
-		base := rtrimHspace(strings.TrimSuffix(orig, "\\"))
-		spaceIndex := len(base)
-		oldSuffix := orig[spaceIndex:]
-		newSuffix := " \\"
-		if tabWidth(base) < 72 {
-			newSuffix = alignmentAfter(base, 72) + "\\"
-		}
-		if newSuffix != oldSuffix {
-			fix.ReplaceAt(info.rawIndex, spaceIndex, oldSuffix, newSuffix)
-		}
-	}
-	fix.Apply()
+	info.fixIndentMultiFollow(newWidth, indentDiff)
 }
 
 func (va *VaralignBlock) realignSingle(info *varalignLine, newWidth int) {
@@ -742,6 +716,38 @@ func (info *varalignLine) fixIndentCont(column int) {
 	fix := info.fixer.Autofix()
 	fix.Notef("This continuation line should be indented with %q.", newSpace)
 	fix.ReplaceAt(info.rawIndex, info.spaceBeforeValueIndex(), oldSpace, newSpace)
+	fix.Apply()
+
+	// TODO: Merge with fixIndentMultiFollow
+}
+
+func (info *varalignLine) fixIndentMultiFollow(column, indentDiff int) {
+	oldSpace := info.spaceBeforeValue
+	newSpace := indent(tabWidth(oldSpace) + indentDiff)
+	if tabWidth(newSpace) < column {
+		newSpace = indent(column)
+	}
+	if newSpace == oldSpace || info.long {
+		return
+	}
+
+	fix := info.fixer.Autofix()
+	fix.Notef("This continuation line should be indented with %q.", newSpace)
+	modified, replaced := fix.ReplaceAt(info.rawIndex, info.spaceBeforeValueIndex(), oldSpace, newSpace)
+	assert(modified)
+	if info.continuation != "" && info.continuationColumn() == 72 {
+		orig := strings.TrimSuffix(replaced, "\n")
+		base := rtrimHspace(strings.TrimSuffix(orig, "\\"))
+		spaceIndex := len(base)
+		oldSuffix := orig[spaceIndex:]
+		newSuffix := " \\"
+		if tabWidth(base) < 72 {
+			newSuffix = alignmentAfter(base, 72) + "\\"
+		}
+		if newSuffix != oldSuffix {
+			fix.ReplaceAt(info.rawIndex, spaceIndex, oldSuffix, newSuffix)
+		}
+	}
 	fix.Apply()
 }
 
