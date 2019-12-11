@@ -718,8 +718,7 @@ func (info *varalignLine) alignContinuation(valueColumn, rightMarginColumn int) 
 	} else {
 		newSpace = alignmentAfter(info.uptoValue(), rightMarginColumn)
 		fix.Notef(
-			"The continuation backslash should be preceded by a single space or tab, "+
-				"or be in column %d, not %d.",
+			"The continuation backslash should be in column %d, not %d.",
 			rightMarginColumn+1, column+1)
 	}
 	index := info.continuationIndex() - len(oldSpace)

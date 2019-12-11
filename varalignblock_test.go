@@ -2760,8 +2760,7 @@ func (s *Suite) Test_VaralignBlock__initial_value_tab80(c *check.C) {
 		"   24 72",
 		"   24")
 	vt.Diagnostics(
-		"NOTE: Makefile:1: The continuation backslash should be preceded " +
-			"by a single space or tab, or be in column 73, not 81.")
+		"NOTE: Makefile:1: The continuation backslash should be in column 73, not 81.")
 	vt.Autofixes(
 		"AUTOFIX: Makefile:1: Replacing \"\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\\t\".")
 	vt.Fixed(
@@ -2783,8 +2782,7 @@ func (s *Suite) Test_VaralignBlock__long_lines(c *check.C) {
 		"   08 17",
 		"   08")
 	vt.Diagnostics(
-		"NOTE: Makefile:1: The continuation backslash should be preceded "+
-			"by a single space or tab, or be in column 57, not 66.",
+		"NOTE: Makefile:1: The continuation backslash should be in column 57, not 66.",
 		"NOTE: Makefile:2: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".",
 		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".")
 	vt.Autofixes(
@@ -3072,12 +3070,10 @@ func (s *Suite) Test_VaralignBlock_Finish__continuation_beyond_right_margin(c *c
 	mklines.ForEach(block.Process)
 
 	t.CheckOutputLines(
-		// XXX: Just mention the column here, since it 81 is greater
-		//  than the right margin.
 		// XXX: In this case, it would also help to reduce the indentation
 		//  of the variable value.
 		"NOTE: filename.mk:1: The continuation backslash should be "+
-			"preceded by a single space or tab, or be in column 73, not 81.",
+			"in column 73, not 81.",
 		// Line 2 is not indented to column 32
 		// since that would make the line longer than 72 columns.
 		"NOTE: filename.mk:3: This continuation line should be "+
@@ -3860,7 +3856,7 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_initial_l
 		"   20 72",
 		"   16")
 	vt.Diagnostics(
-		"NOTE: Makefile:1: The continuation backslash should be preceded by a single space or tab, or be in column 73, not 81.",
+		"NOTE: Makefile:1: The continuation backslash should be in column 73, not 81.",
 		"NOTE: Makefile:2: This continuation line should be indented with \"\\t\\t\\t\".",
 		"NOTE: Makefile:4: This continuation line should be indented with \"\\t\\t\\t\".",
 		"NOTE: Makefile:5: This continuation line should be indented with \"\\t\\t\\t\".")
@@ -3962,7 +3958,7 @@ func (s *Suite) Test_varalignLine_alignContinuation(c *check.C) {
 		"VAR=\t...13\t\\",
 		nil...)
 
-	// Colum 24 is left of the valueAlign,
+	// Column 24 is left of the valueAlign,
 	// therefore there is nothing to align.
 	//
 	// XXX: Why? It would be better to force the tab to the valueColumn.
@@ -3975,7 +3971,7 @@ func (s *Suite) Test_varalignLine_alignContinuation(c *check.C) {
 		"VAR=\t...13\t\t\\",
 		nil...)
 
-	// Colum 32 is the valueColumn, therefore there is nothing to align.
+	// Column 32 is the valueColumn, therefore there is nothing to align.
 	test(
 		lines(
 			"VAR=\t...13\t\t\t\\",
@@ -3985,7 +3981,7 @@ func (s *Suite) Test_varalignLine_alignContinuation(c *check.C) {
 		"VAR=\t...13\t\t\t\\",
 		nil...)
 
-	// Colum 40 is somewhere between the valueColumn and the right margin
+	// Column 40 is somewhere between the valueColumn and the right margin
 	// of the MkLine and is thus arbitrary.
 	// It is aligned to the right margin.
 	test(
@@ -3995,12 +3991,12 @@ func (s *Suite) Test_varalignLine_alignContinuation(c *check.C) {
 		0, 32, 48,
 
 		"VAR=\t...13\t\t\t\t\t\\",
-		"NOTE: filename.mk:1: The continuation backslash should be "+
-			"preceded by a single space or tab, or be in column 49, not 41.",
+		"NOTE: filename.mk:1: "+
+			"The continuation backslash should be in column 49, not 41.",
 		"AUTOFIX: filename.mk:1: Replacing \"\\t\\t\\t\\t\" "+
 			"with \"\\t\\t\\t\\t\\t\".")
 
-	// Colum 48 is already at the right margin, thus nothing to align.
+	// Column 48 is already at the right margin, thus nothing to align.
 	test(
 		lines(
 			"VAR=\t...13......24......32\t\t\t\\",
@@ -4010,7 +4006,7 @@ func (s *Suite) Test_varalignLine_alignContinuation(c *check.C) {
 		"VAR=\t...13......24......32\t\t\t\\",
 		nil...)
 
-	// Colum 56 is right of the right margin.
+	// Column 56 is right of the right margin.
 	// It is reduced to the right margin.
 	test(
 		lines(
@@ -4019,12 +4015,12 @@ func (s *Suite) Test_varalignLine_alignContinuation(c *check.C) {
 		0, 32, 48,
 
 		"VAR=\t...13......24......32\t\t\t\\",
-		"NOTE: filename.mk:1: The continuation backslash should be "+
-			"preceded by a single space or tab, or be in column 49, not 57.",
+		"NOTE: filename.mk:1: "+
+			"The continuation backslash should be in column 49, not 57.",
 		"AUTOFIX: filename.mk:1: Replacing \"\\t\\t\\t\\t\" "+
 			"with \"\\t\\t\\t\".")
 
-	// Colum 72 is the "natural" column for continuation backslashes,
+	// Column 72 is the "natural" column for continuation backslashes,
 	// therefore there is nothing to align.
 	test(
 		lines(
