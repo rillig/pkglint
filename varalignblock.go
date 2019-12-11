@@ -669,10 +669,8 @@ func (info *varalignLine) fixIndentCont(column int) {
 
 func (info *varalignLine) fixIndentMultiFollow(column, indentDiff int) {
 	oldSpace := info.spaceBeforeValue
-	newSpace := indent(tabWidth(oldSpace) + indentDiff)
-	if tabWidth(newSpace) < column {
-		newSpace = indent(column)
-	}
+	newWidth := tabWidth(oldSpace) + indentDiff
+	newSpace := indent(imax(column, newWidth))
 	if newSpace == oldSpace || info.long {
 		return
 	}
