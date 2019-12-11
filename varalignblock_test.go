@@ -2823,9 +2823,9 @@ func (s *Suite) Test_VaralignBlock__long_lines_2(c *check.C) {
 		"   24 104",
 		"   24")
 	vt.Diagnostics(
-		"NOTE: Makefile:1: The continuation backslash should be preceded by a single space or tab.",
-		"NOTE: Makefile:2: The continuation backslash should be preceded by a single space or tab.",
-		"NOTE: Makefile:3: The continuation backslash should be preceded by a single space or tab.")
+		"NOTE: Makefile:1: The continuation backslash should be preceded by a single space.",
+		"NOTE: Makefile:2: The continuation backslash should be preceded by a single space.",
+		"NOTE: Makefile:3: The continuation backslash should be preceded by a single space.")
 	vt.Autofixes(
 		"AUTOFIX: Makefile:1: Replacing \"\\t\\t \" with \" \".",
 		"AUTOFIX: Makefile:2: Replacing \"\\t\\t       \\t\" with \" \".",
@@ -4046,7 +4046,7 @@ func (s *Suite) Test_varalignLine_alignContinuation(c *check.C) {
 
 		"VAR=\t...13\t\t\t\t\t\t\t\t...75 \\",
 		"NOTE: filename.mk:1: The continuation backslash should be "+
-			"preceded by a single space or tab.",
+			"preceded by a single space.",
 		"AUTOFIX: filename.mk:1: Replacing \"\\t\\t\\t\" with \" \".")
 }
 

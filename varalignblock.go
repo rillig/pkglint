@@ -709,7 +709,11 @@ func (info *varalignLine) alignContinuation(valueColumn, rightMarginColumn int) 
 
 	newSpace := " "
 	fix := info.fixer.Autofix()
-	if oldSpace == "" || rightMarginColumn == 0 || info.uptoValueWidth() >= rightMarginColumn {
+	if oldSpace == "" || rightMarginColumn == 0 {
+		fix.Notef("The continuation backslash should be preceded by a single space or tab.")
+	} else if info.isTooLongFor(valueColumn) {
+		fix.Notef("The continuation backslash should be preceded by a single space.")
+	} else if info.uptoValueWidth() >= rightMarginColumn {
 		fix.Notef("The continuation backslash should be preceded by a single space or tab.")
 	} else {
 		newSpace = alignmentAfter(info.uptoValue(), rightMarginColumn)
