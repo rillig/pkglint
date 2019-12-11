@@ -95,38 +95,7 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 	value := mkline.Value()
 
 	if varcanon == "SUBST_CLASSES" || varcanon == "SUBST_CLASSES.*" {
-		classes := mkline.ValueFields(value)
-
-		if len(classes) > 1 {
-			mkline.Notef("Please add only one class at a time to SUBST_CLASSES.")
-			mkline.Explain(
-				"This way, each substitution class forms a block in the package Makefile,",
-				"and to delete this block, it is not necessary to look anywhere else.")
-			for _, class := range classes {
-				ctx.queue(class)
-			}
-		}
-
-		id := classes[0]
-		if ctx.id != "" && ctx.id != id {
-			id := ctx.id // since ctx.directiveEndif overwrites ctx.id
-			for len(ctx.conds) > 1 {
-				// This will be confusing for the outer SUBST block,
-				// but since that block is assumed to be finished,
-				// this doesn't matter.
-				ctx.directiveEndif(mkline)
-			}
-			complete := ctx.IsComplete()
-			ctx.Finish(mkline)
-			if !complete {
-				mkline.Warnf("Subst block %q should be finished before adding the next class to SUBST_CLASSES.", id)
-			}
-		}
-		ctx.id = id
-		ctx.top().id = true
-
-		ctx.doneId(id)
-
+		ctx.varassignClasses(mkline, value)
 		return
 	}
 
@@ -138,115 +107,182 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 	}
 
 	if ctx.id == "" {
-		if ctx.isListCanon(varcanon) && ctx.doneIds[varparam] {
-			if mkline.Op() != opAssignAppend {
-				mkline.Warnf("Late additions to a SUBST variable should use the += operator.")
-			}
-			return
-		}
-		if mkline.HasRationale() {
-			return
-		}
-		if ctx.queuedIds[varparam] {
-			ctx.queuedIds[varparam] = false
-			ctx.id = varparam
-			return
-		}
-
-		if ctx.once.FirstTimeSlice("SubstContext.Varassign", varparam) {
-			mkline.Warnf("Before defining %s, the SUBST class "+
-				"should be declared using \"SUBST_CLASSES+= %s\".",
-				varname, varparam)
-		}
+		ctx.varassignMissingId(varcanon, varparam, mkline, varname)
 		return
 	}
 
 	if hasPrefix(varname, "SUBST_") && varparam != ctx.id {
-		if ctx.IsComplete() {
-			// XXX: This code sometimes produces weird warnings. See
-			// meta-pkgs/xorg/Makefile.common 1.41 for an example.
-			ctx.Finish(mkline)
-
-			if ctx.queuedIds[varparam] {
-				ctx.id = varparam
-			}
-		} else {
-			mkline.Warnf("Variable %q does not match SUBST class %q.", varname, ctx.id)
+		if !ctx.varassignDifferentClass(mkline, varparam, varname) {
 			return
 		}
 	}
 
 	switch varcanon {
 	case "SUBST_STAGE.*":
-		seen := func(s *substSeen) *bool { return &s.stage }
-		ctx.dupString(mkline, seen, varname)
-		if value == "pre-patch" || value == "post-patch" {
-			fix := mkline.Autofix()
-			fix.Warnf("Substitutions should not happen in the patch phase.")
-			fix.Explain(
-				"Performing substitutions during post-patch breaks tools such as",
-				"mkpatches, making it very difficult to regenerate correct patches",
-				"after making changes, and often leading to substituted string",
-				"replacements being committed.",
-				"",
-				"Instead of pre-patch, use post-extract.",
-				"Instead of post-patch, use pre-configure.")
-			fix.Replace("pre-patch", "post-extract")
-			fix.Replace("post-patch", "pre-configure")
-			fix.Apply()
-			// XXX: Add test that has "SUBST_STAGE.id=pre-patch # or rather post-patch?"
-		}
-
-		if G.Pkg != nil && (value == "pre-configure" || value == "post-configure") {
-			if noConfigureLine := G.Pkg.vars.FirstDefinition("NO_CONFIGURE"); noConfigureLine != nil {
-				mkline.Warnf("SUBST_STAGE %s has no effect when NO_CONFIGURE is set (in %s).",
-					value, mkline.RelMkLine(noConfigureLine))
-				mkline.Explain(
-					"To fix this properly, remove the definition of NO_CONFIGURE.")
-			}
-		}
-
+		ctx.varassignStage(mkline, varname, value)
 	case "SUBST_MESSAGE.*":
-		seen := func(s *substSeen) *bool { return &s.message }
-		ctx.dupString(mkline, seen, varname)
-
+		ctx.varassignMessages(mkline, varname)
 	case "SUBST_FILES.*":
-		seen := func(s *substSeen) *bool { return &s.files }
-		ctx.dupList(mkline, seen, varname, op)
-
+		ctx.varassignFiles(mkline, varname, op)
 	case "SUBST_SED.*":
-		seen := func(s *substSeen) *bool { return &s.sed }
-		ctx.dupList(mkline, seen, varname, op)
-		ctx.top().transform = true
-
-		ctx.suggestSubstVars(mkline)
-
+		ctx.varassignSed(mkline, varname, op)
 	case "SUBST_VARS.*":
-		seen := func(s *substSeen) *bool { return &s.vars }
-		prev := ctx.seen(seen)
-		ctx.dupList(mkline, seen, varname, op)
-		ctx.top().transform = true
-		for _, substVar := range mkline.Fields() {
-			if ctx.vars == nil {
-				ctx.vars = make(map[string]bool)
-			}
-			ctx.vars[substVar] = true
-		}
-
-		if prev && mkline.Op() == opAssign {
-			before := mkline.ValueAlign()
-			after := alignWith(mkline.Varname()+"+=", before)
-			fix := mkline.Autofix()
-			fix.Notef("Adjust.")
-			fix.Replace(before, after)
-			fix.Apply()
-		}
-
+		ctx.varassignVars(mkline, varname, op)
 	case "SUBST_FILTER_CMD.*":
-		seen := func(s *substSeen) *bool { return &s.cmd }
-		ctx.dupString(mkline, seen, varname)
-		ctx.top().transform = true
+		ctx.varassignFilterCmd(mkline, varname)
 	}
+}
+
+func (ctx *SubstContext) varassignClasses(mkline *MkLine, value string) {
+	classes := mkline.ValueFields(value)
+
+	if len(classes) > 1 {
+		mkline.Notef("Please add only one class at a time to SUBST_CLASSES.")
+		mkline.Explain(
+			"This way, each substitution class forms a block in the package Makefile,",
+			"and to delete this block, it is not necessary to look anywhere else.")
+		for _, class := range classes {
+			ctx.queue(class)
+		}
+	}
+
+	id := classes[0]
+	if ctx.id != "" && ctx.id != id {
+		id := ctx.id // since ctx.directiveEndif overwrites ctx.id
+		for len(ctx.conds) > 1 {
+			// This will be confusing for the outer SUBST block,
+			// but since that block is assumed to be finished,
+			// this doesn't matter.
+			ctx.directiveEndif(mkline)
+		}
+		complete := ctx.IsComplete()
+		ctx.Finish(mkline)
+		if !complete {
+			mkline.Warnf("Subst block %q should be finished before adding the next class to SUBST_CLASSES.", id)
+		}
+	}
+	ctx.id = id
+	ctx.top().id = true
+
+	ctx.doneId(id)
+
+	return
+}
+
+func (ctx *SubstContext) varassignMissingId(varcanon string, varparam string, mkline *MkLine, varname string) {
+	if ctx.isListCanon(varcanon) && ctx.doneIds[varparam] {
+		if mkline.Op() != opAssignAppend {
+			mkline.Warnf("Late additions to a SUBST variable should use the += operator.")
+		}
+		return
+	}
+	if mkline.HasRationale() {
+		return
+	}
+	if ctx.queuedIds[varparam] {
+		ctx.queuedIds[varparam] = false
+		ctx.id = varparam
+		return
+	}
+
+	if ctx.once.FirstTimeSlice("SubstContext.Varassign", varparam) {
+		mkline.Warnf("Before defining %s, the SUBST class "+
+			"should be declared using \"SUBST_CLASSES+= %s\".",
+			varname, varparam)
+	}
+	return
+}
+
+func (ctx *SubstContext) varassignDifferentClass(mkline *MkLine, varparam string, varname string) (ok bool) {
+	if !ctx.IsComplete() {
+		mkline.Warnf("Variable %q does not match SUBST class %q.", varname, ctx.id)
+		return false
+	}
+
+	// XXX: This code sometimes produces weird warnings. See
+	// meta-pkgs/xorg/Makefile.common 1.41 for an example.
+	ctx.Finish(mkline)
+
+	if ctx.queuedIds[varparam] {
+		ctx.id = varparam
+	}
+	return true
+}
+
+func (ctx *SubstContext) varassignStage(mkline *MkLine, varname string, value string) {
+	seen := func(s *substSeen) *bool { return &s.stage }
+	ctx.dupString(mkline, seen, varname)
+	if value == "pre-patch" || value == "post-patch" {
+		fix := mkline.Autofix()
+		fix.Warnf("Substitutions should not happen in the patch phase.")
+		fix.Explain(
+			"Performing substitutions during post-patch breaks tools such as",
+			"mkpatches, making it very difficult to regenerate correct patches",
+			"after making changes, and often leading to substituted string",
+			"replacements being committed.",
+			"",
+			"Instead of pre-patch, use post-extract.",
+			"Instead of post-patch, use pre-configure.")
+		fix.Replace("pre-patch", "post-extract")
+		fix.Replace("post-patch", "pre-configure")
+		fix.Apply()
+		// XXX: Add test that has "SUBST_STAGE.id=pre-patch # or rather post-patch?"
+	}
+
+	if G.Pkg != nil && (value == "pre-configure" || value == "post-configure") {
+		if noConfigureLine := G.Pkg.vars.FirstDefinition("NO_CONFIGURE"); noConfigureLine != nil {
+			mkline.Warnf("SUBST_STAGE %s has no effect when NO_CONFIGURE is set (in %s).",
+				value, mkline.RelMkLine(noConfigureLine))
+			mkline.Explain(
+				"To fix this properly, remove the definition of NO_CONFIGURE.")
+		}
+	}
+}
+
+func (ctx *SubstContext) varassignMessages(mkline *MkLine, varname string) {
+	seen := func(s *substSeen) *bool { return &s.message }
+	ctx.dupString(mkline, seen, varname)
+}
+
+func (ctx *SubstContext) varassignFiles(mkline *MkLine, varname string, op MkOperator) {
+	seen := func(s *substSeen) *bool { return &s.files }
+	ctx.dupList(mkline, seen, varname, op)
+}
+
+func (ctx *SubstContext) varassignSed(mkline *MkLine, varname string, op MkOperator) {
+	seen := func(s *substSeen) *bool { return &s.sed }
+	ctx.dupList(mkline, seen, varname, op)
+	ctx.top().transform = true
+
+	ctx.suggestSubstVars(mkline)
+}
+
+func (ctx *SubstContext) varassignVars(mkline *MkLine, varname string, op MkOperator) {
+	seen := func(s *substSeen) *bool { return &s.vars }
+	prev := ctx.seen(seen)
+	ctx.dupList(mkline, seen, varname, op)
+	ctx.top().transform = true
+	for _, substVar := range mkline.Fields() {
+		if ctx.vars == nil {
+			ctx.vars = make(map[string]bool)
+		}
+		ctx.vars[substVar] = true
+	}
+
+	if prev && mkline.Op() == opAssign {
+		before := mkline.ValueAlign()
+		after := alignWith(mkline.Varname()+"+=", before)
+		fix := mkline.Autofix()
+		fix.Notef("Adjust.")
+		fix.Replace(before, after)
+		fix.Apply()
+	}
+}
+
+func (ctx *SubstContext) varassignFilterCmd(mkline *MkLine, varname string) {
+	seen := func(s *substSeen) *bool { return &s.cmd }
+	ctx.dupString(mkline, seen, varname)
+	ctx.top().transform = true
 }
 
 func (ctx *SubstContext) queue(id string) {
