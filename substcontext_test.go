@@ -766,16 +766,14 @@ func (s *Suite) Test_SubstContext_Directive__conditionally_nested_block(c *check
 	mklines.ForEach(ctx.Process)
 
 	t.CheckOutputLines(
-		// FIXME: Even though the situation is weird, the warnings
-		//  must still be somehow explicable.
-		//  STAGE.outer and FILES.outer are defined, so where does the warning come from?
-		"WARN: filename.mk:5: Incomplete SUBST block: SUBST_STAGE.outer missing.",
-		"WARN: filename.mk:5: Incomplete SUBST block: SUBST_FILES.outer missing.",
-		"WARN: filename.mk:5: Incomplete SUBST block: SUBST_SED.outer, SUBST_VARS.outer or SUBST_FILTER_CMD.outer missing.",
-		"WARN: filename.mk:5: Subst block \"outer\" should be finished before adding the next class to SUBST_CLASSES.",
+		"WARN: filename.mk:5: Incomplete SUBST block: "+
+			"SUBST_SED.outer, SUBST_VARS.outer or SUBST_FILTER_CMD.outer missing.",
+		"WARN: filename.mk:5: Subst block \"outer\" should be finished "+
+			"before adding the next class to SUBST_CLASSES.",
 		// XXX: The wording of this warning should be improved.
 		//  Mention SUBST_VARS.outer first, to provide some context.
-		"WARN: filename.mk:10: SUBST_CLASSES should come before the definition of \"SUBST_VARS.outer\".",
+		"WARN: filename.mk:10: SUBST_CLASSES should come "+
+			"before the definition of \"SUBST_VARS.outer\".",
 		"WARN: filename.mk:11: Incomplete SUBST block: SUBST_STAGE.outer missing.",
 		"WARN: filename.mk:11: Incomplete SUBST block: SUBST_FILES.outer missing.")
 }
@@ -804,12 +802,7 @@ func (s *Suite) Test_SubstContext_Directive__conditionally_following_block(c *ch
 
 	mklines.ForEach(ctx.Process)
 
-	t.CheckOutputLines(
-		// FIXME: All these warnings are wrong and look inexplicable.
-		"WARN: filename.mk:6: Incomplete SUBST block: SUBST_STAGE.outer missing.",
-		"WARN: filename.mk:6: Incomplete SUBST block: SUBST_FILES.outer missing.",
-		"WARN: filename.mk:6: Incomplete SUBST block: SUBST_SED.outer, SUBST_VARS.outer or SUBST_FILTER_CMD.outer missing.",
-		"WARN: filename.mk:6: Subst block \"outer\" should be finished before adding the next class to SUBST_CLASSES.")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {

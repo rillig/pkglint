@@ -81,6 +81,12 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 			mkline.Warnf("Please add only one class at a time to SUBST_CLASSES.")
 		}
 		if ctx.id != "" && ctx.id != classes[0] {
+			for len(ctx.conds) > 1 && !ctx.top().id {
+				// This will be confusing for the outer SUBST block,
+				// but since that block is assumed to be finished,
+				// this doesn't matter.
+				ctx.directiveEndif(mkline)
+			}
 			complete := ctx.IsComplete()
 			id := ctx.id
 			ctx.Finish(mkline)
@@ -230,18 +236,7 @@ func (ctx *SubstContext) Directive(mkline *MkLine) {
 		top.seenElse = dir == "else"
 
 	case "endif":
-		top := ctx.conds[len(ctx.conds)-1]
-		top.total.And(top.curr)
-		if top.curr.id {
-			ctx.Finish(mkline)
-		}
-		if !top.seenElse {
-			top.total = substSeen{}
-		}
-		if len(ctx.conds) > 1 {
-			ctx.conds = ctx.conds[:len(ctx.conds)-1]
-		}
-		ctx.top().Or(top.total)
+		ctx.directiveEndif(mkline)
 	}
 
 	if trace.Tracing {
@@ -249,12 +244,27 @@ func (ctx *SubstContext) Directive(mkline *MkLine) {
 	}
 }
 
+func (ctx *SubstContext) directiveEndif(diag Diagnoser) {
+	top := ctx.conds[len(ctx.conds)-1]
+	top.total.And(top.curr)
+	if top.curr.id {
+		ctx.Finish(diag)
+	}
+	if !top.seenElse {
+		top.total = substSeen{}
+	}
+	if len(ctx.conds) > 1 {
+		ctx.conds = ctx.conds[:len(ctx.conds)-1]
+	}
+	ctx.top().Or(top.total)
+}
+
 func (ctx *SubstContext) IsComplete() bool {
 	top := ctx.top()
 	return top.stage && top.files && top.transform
 }
 
-func (ctx *SubstContext) Finish(mkline *MkLine) {
+func (ctx *SubstContext) Finish(diag Diagnoser) {
 	if ctx.id == "" {
 		return
 	}
@@ -262,13 +272,13 @@ func (ctx *SubstContext) Finish(mkline *MkLine) {
 	id := ctx.id
 	top := ctx.top()
 	if !top.stage {
-		mkline.Warnf("Incomplete SUBST block: SUBST_STAGE.%s missing.", id)
+		diag.Warnf("Incomplete SUBST block: SUBST_STAGE.%s missing.", id)
 	}
 	if !top.files {
-		mkline.Warnf("Incomplete SUBST block: SUBST_FILES.%s missing.", id)
+		diag.Warnf("Incomplete SUBST block: SUBST_FILES.%s missing.", id)
 	}
 	if !top.transform {
-		mkline.Warnf("Incomplete SUBST block: SUBST_SED.%[1]s, SUBST_VARS.%[1]s or SUBST_FILTER_CMD.%[1]s missing.", id)
+		diag.Warnf("Incomplete SUBST block: SUBST_SED.%[1]s, SUBST_VARS.%[1]s or SUBST_FILTER_CMD.%[1]s missing.", id)
 	}
 
 	*ctx = *NewSubstContext()
