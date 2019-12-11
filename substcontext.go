@@ -39,6 +39,7 @@ type substSeen struct {
 }
 
 func (st *substSeen) And(other substSeen) {
+	// TODO: Add test to show that "&& other.id" makes any difference.
 	st.id = st.id && other.id
 	st.stage = st.stage && other.stage
 	st.message = st.message && other.message
@@ -50,7 +51,7 @@ func (st *substSeen) And(other substSeen) {
 }
 
 func (st *substSeen) Or(other substSeen) {
-	st.id = st.id || other.id
+	// nothing to do for st.id, since it can only be defined at the top level.
 	st.stage = st.stage || other.stage
 	st.message = st.message || other.message
 	st.files = st.files || other.files
