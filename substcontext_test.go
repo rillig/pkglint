@@ -740,6 +740,78 @@ func (s *Suite) Test_SubstContext_Directive__conditionally_overwritten_filter(c 
 		"WARN: filename.mk:7: Duplicate definition of \"SUBST_FILTER_CMD.id\".")
 }
 
+// Hopefully nobody will ever trigger this case in real pkgsrc.
+// It's plain confusing to a casual reader to nest a complete
+// SUBST block into another SUBST block.
+// That's why pkglint doesn't cover this case correctly.
+func (s *Suite) Test_SubstContext_Directive__conditionally_nested_block(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wextra")
+
+	mklines := t.NewMkLines("filename.mk",
+		"SUBST_CLASSES+=         outer",
+		"SUBST_STAGE.outer=      post-configure",
+		"SUBST_FILES.outer=      outer.txt",
+		".if ${OPSYS} == NetBSD",
+		"SUBST_CLASSES+=         inner",
+		"SUBST_STAGE.inner=      post-configure",
+		"SUBST_FILES.inner=      inner.txt",
+		"SUBST_VARS.inner=       INNER",
+		".endif",
+		"SUBST_VARS.outer=       OUTER",
+		"")
+	ctx := NewSubstContext()
+
+	mklines.ForEach(ctx.Process)
+
+	t.CheckOutputLines(
+		// FIXME: Even though the situation is weird, the warnings
+		//  must still be somehow explicable.
+		//  STAGE.outer and FILES.outer are defined, so where does the warning come from?
+		"WARN: filename.mk:5: Incomplete SUBST block: SUBST_STAGE.outer missing.",
+		"WARN: filename.mk:5: Incomplete SUBST block: SUBST_FILES.outer missing.",
+		"WARN: filename.mk:5: Incomplete SUBST block: SUBST_SED.outer, SUBST_VARS.outer or SUBST_FILTER_CMD.outer missing.",
+		"WARN: filename.mk:5: Subst block \"outer\" should be finished before adding the next class to SUBST_CLASSES.",
+		// XXX: The wording of this warning should be improved.
+		//  Mention SUBST_VARS.outer first, to provide some context.
+		"WARN: filename.mk:10: SUBST_CLASSES should come before the definition of \"SUBST_VARS.outer\".",
+		"WARN: filename.mk:11: Incomplete SUBST block: SUBST_STAGE.outer missing.",
+		"WARN: filename.mk:11: Incomplete SUBST block: SUBST_FILES.outer missing.")
+}
+
+// It's completely valid to have several SUBST blocks in a single paragraph.
+// As soon as a SUBST_CLASSES line appears, pkglint assumes that all previous
+// SUBST blocks are finished. That's exactly the case here.
+func (s *Suite) Test_SubstContext_Directive__conditionally_following_block(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wextra")
+
+	mklines := t.NewMkLines("filename.mk",
+		"SUBST_CLASSES+=         outer",
+		"SUBST_STAGE.outer=      post-configure",
+		"SUBST_FILES.outer=      outer.txt",
+		"SUBST_VARS.outer=       OUTER",
+		".if ${OPSYS} == NetBSD",
+		"SUBST_CLASSES+=         inner",
+		"SUBST_STAGE.inner=      post-configure",
+		"SUBST_FILES.inner=      inner.txt",
+		"SUBST_VARS.inner=       INNER",
+		".endif",
+		"")
+	ctx := NewSubstContext()
+
+	mklines.ForEach(ctx.Process)
+
+	t.CheckOutputLines(
+		// FIXME: All these warnings are wrong and look inexplicable.
+		"WARN: filename.mk:6: Incomplete SUBST block: SUBST_STAGE.outer missing.",
+		"WARN: filename.mk:6: Incomplete SUBST block: SUBST_FILES.outer missing.",
+		"WARN: filename.mk:6: Incomplete SUBST block: SUBST_SED.outer, SUBST_VARS.outer or SUBST_FILTER_CMD.outer missing.",
+		"WARN: filename.mk:6: Subst block \"outer\" should be finished before adding the next class to SUBST_CLASSES.")
+}
+
 func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {
 	t := s.Init(c)
 
