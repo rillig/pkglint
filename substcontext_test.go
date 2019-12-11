@@ -93,7 +93,8 @@ func (s *Suite) Test_SubstContext__no_class(c *check.C) {
 	mklines.ForEach(ctx.Process)
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:2: SUBST_CLASSES should come before the definition of \"SUBST_FILES.repl\".",
+		"WARN: filename.mk:2: Before defining SUBST_FILES.repl, "+
+			"the SUBST class should be declared using \"SUBST_CLASSES+= repl\".",
 		"WARN: filename.mk:4: Incomplete SUBST block: SUBST_STAGE.repl missing.")
 }
 
@@ -771,10 +772,8 @@ func (s *Suite) Test_SubstContext_Directive__conditionally_nested_block(c *check
 			"SUBST_SED.outer, SUBST_VARS.outer or SUBST_FILTER_CMD.outer missing.",
 		"WARN: filename.mk:5: Subst block \"outer\" should be finished "+
 			"before adding the next class to SUBST_CLASSES.",
-		// XXX: The wording of this warning should be improved.
-		//  Mention SUBST_VARS.outer first, to provide some context.
-		"WARN: filename.mk:10: SUBST_CLASSES should come "+
-			"before the definition of \"SUBST_VARS.outer\".",
+		"WARN: filename.mk:10: Before defining SUBST_VARS.outer, "+
+			"the SUBST class should be declared using \"SUBST_CLASSES+= outer\".",
 		"WARN: filename.mk:11: Incomplete SUBST block: SUBST_STAGE.outer missing.",
 		"WARN: filename.mk:11: Incomplete SUBST block: SUBST_FILES.outer missing.")
 }

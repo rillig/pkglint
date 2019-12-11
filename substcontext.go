@@ -115,7 +115,9 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 	}
 
 	if ctx.id == "" {
-		mkline.Warnf("SUBST_CLASSES should come before the definition of %q.", varname)
+		mkline.Warnf("Before defining %s, the SUBST class "+
+			"should be declared using \"SUBST_CLASSES+= %s\".",
+			varname, varparam)
 		ctx.id = varparam
 	}
 
