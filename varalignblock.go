@@ -453,32 +453,10 @@ func (va *VaralignBlock) realignMultiEmptyFollow(info *varalignLine, newWidth in
 }
 
 func (va *VaralignBlock) realignMultiInitial(info *varalignLine, newWidth int, indentDiffSet *bool, indentDiff *int) {
-	leadingComment := info.leadingComment
-	varnameOp := info.varnameOp
-	oldSpace := info.spaceBeforeValue
-
 	*indentDiffSet = true
-	oldWidth := info.varnameOpSpaceWidth()
-	*indentDiff = newWidth - oldWidth
+	*indentDiff = newWidth - info.varnameOpSpaceWidth()
 
-	newSpace := alignmentAfter(leadingComment+varnameOp, newWidth)
-	if newSpace == oldSpace {
-		return
-	}
-
-	hasSpace := strings.IndexByte(oldSpace, ' ') != -1
-	width := tabWidthSlice(leadingComment, varnameOp, newSpace)
-
-	fix := info.fixer.Autofix()
-	if hasSpace && width != oldWidth {
-		fix.Notef("This variable value should be aligned with tabs, not spaces, to column %d.", width+1)
-	} else if width != oldWidth {
-		fix.Notef("This variable value should be aligned to column %d.", width+1)
-	} else {
-		fix.Notef("Variable values should be aligned with tabs, not spaces.")
-	}
-	fix.ReplaceAt(info.rawIndex, info.spaceBeforeValueIndex(), oldSpace, newSpace)
-	fix.Apply()
+	info.fixAlignMultiInitial(newWidth)
 }
 
 func (va *VaralignBlock) realignMultiFollow(info *varalignLine, newWidth int, indentDiff int) {
@@ -735,6 +713,31 @@ type varalignLine struct {
 	long bool
 
 	varalignParts
+}
+
+func (info *varalignLine) fixAlignMultiInitial(column int) {
+	leadingComment := info.leadingComment
+	varnameOp := info.varnameOp
+	oldSpace := info.spaceBeforeValue
+
+	newSpace := alignmentAfter(leadingComment+varnameOp, column)
+	if newSpace == oldSpace {
+		return
+	}
+
+	oldWidth := info.varnameOpSpaceWidth()
+	width := tabWidthSlice(leadingComment, varnameOp, newSpace)
+
+	fix := info.fixer.Autofix()
+	if width != oldWidth && contains(oldSpace, " ") {
+		fix.Notef("This variable value should be aligned with tabs, not spaces, to column %d.", width+1)
+	} else if width != oldWidth {
+		fix.Notef("This variable value should be aligned to column %d.", width+1)
+	} else {
+		fix.Notef("Variable values should be aligned with tabs, not spaces.")
+	}
+	fix.ReplaceAt(info.rawIndex, info.spaceBeforeValueIndex(), oldSpace, newSpace)
+	fix.Apply()
 }
 
 type varalignParts struct {
