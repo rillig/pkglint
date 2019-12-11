@@ -235,94 +235,6 @@ func (s *Suite) Test_SubstContext__directives(c *check.C) {
 			"should use the \"+=\" operator.")
 }
 
-func (s *Suite) Test_SubstContext__pre_patch(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpCommandLine("-Wextra", "--show-autofix")
-	t.SetUpVartypes()
-
-	mklines := t.NewMkLines("os.mk",
-		MkCvsID,
-		"",
-		"SUBST_CLASSES+=\tos",
-		"SUBST_STAGE.os=\tpre-patch",
-		"SUBST_FILES.os=\tguess-os.h",
-		"SUBST_SED.os=\t-e s,@OPSYS@,Darwin,")
-
-	mklines.Check()
-
-	t.CheckOutputLines(
-		"WARN: os.mk:4: Substitutions should not happen in the patch phase.",
-		"AUTOFIX: os.mk:4: Replacing \"pre-patch\" with \"post-extract\".")
-}
-
-func (s *Suite) Test_SubstContext__post_patch(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpCommandLine("-Wextra", "--show-autofix")
-	t.SetUpVartypes()
-
-	mklines := t.NewMkLines("os.mk",
-		MkCvsID,
-		"",
-		"SUBST_CLASSES+=\tos",
-		"SUBST_STAGE.os=\tpost-patch",
-		"SUBST_FILES.os=\tguess-os.h",
-		"SUBST_SED.os=\t-e s,@OPSYS@,Darwin,")
-
-	mklines.Check()
-
-	t.CheckOutputLines(
-		"WARN: os.mk:4: Substitutions should not happen in the patch phase.",
-		"AUTOFIX: os.mk:4: Replacing \"post-patch\" with \"pre-configure\".")
-}
-
-func (s *Suite) Test_SubstContext__with_NO_CONFIGURE(c *check.C) {
-	t := s.Init(c)
-
-	pkg := t.SetUpPackage("category/package",
-		"SUBST_CLASSES+=\t\tpre",
-		"SUBST_STAGE.pre=\tpre-configure",
-		"SUBST_FILES.pre=\tguess-os.h",
-		"SUBST_SED.pre=\t\t-e s,@OPSYS@,Darwin,",
-		"",
-		"SUBST_CLASSES+=\t\tpost",
-		"SUBST_STAGE.post=\tpost-configure",
-		"SUBST_FILES.post=\tguess-os.h",
-		"SUBST_SED.post=\t\t-e s,@OPSYS@,Darwin,",
-		"",
-		"SUBST_CLASSES+=\te",
-		"SUBST_STAGE.e=\tpost-extract",
-		"SUBST_FILES.e=\tguess-os.h",
-		"SUBST_SED.e=\t-e s,@OPSYS@,Darwin,",
-		"",
-		"NO_CONFIGURE=\tyes")
-	t.FinishSetUp()
-
-	G.Check(pkg)
-
-	t.CheckOutputLines(
-		"WARN: ~/category/package/Makefile:21: SUBST_STAGE pre-configure has no effect "+
-			"when NO_CONFIGURE is set (in line 35).",
-		"WARN: ~/category/package/Makefile:26: SUBST_STAGE post-configure has no effect "+
-			"when NO_CONFIGURE is set (in line 35).")
-}
-
-func (s *Suite) Test_SubstContext__without_NO_CONFIGURE(c *check.C) {
-	t := s.Init(c)
-
-	pkg := t.SetUpPackage("category/package",
-		"SUBST_CLASSES+=\t\tpre",
-		"SUBST_STAGE.pre=\tpre-configure",
-		"SUBST_FILES.pre=\tguess-os.h",
-		"SUBST_SED.pre=\t\t-e s,@OPSYS@,Darwin,")
-	t.FinishSetUp()
-
-	G.Check(pkg)
-
-	t.CheckOutputEmpty()
-}
-
 func (s *Suite) Test_SubstContext__adjacent(c *check.C) {
 	t := s.Init(c)
 
@@ -623,6 +535,94 @@ func (s *Suite) Test_SubstContext_varassignMissingId__rationale(c *check.C) {
 			"the SUBST class should be declared using \"SUBST_CLASSES+= def\".",
 		"WARN: filename.mk:11: Before defining SUBST_SED.libs, "+
 			"the SUBST class should be declared using \"SUBST_CLASSES+= libs\".")
+}
+
+func (s *Suite) Test_SubstContext_varassignStage__pre_patch(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wextra", "--show-autofix")
+	t.SetUpVartypes()
+
+	mklines := t.NewMkLines("os.mk",
+		MkCvsID,
+		"",
+		"SUBST_CLASSES+=\tos",
+		"SUBST_STAGE.os=\tpre-patch",
+		"SUBST_FILES.os=\tguess-os.h",
+		"SUBST_SED.os=\t-e s,@OPSYS@,Darwin,")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: os.mk:4: Substitutions should not happen in the patch phase.",
+		"AUTOFIX: os.mk:4: Replacing \"pre-patch\" with \"post-extract\".")
+}
+
+func (s *Suite) Test_SubstContext_varassignStage__post_patch(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wextra", "--show-autofix")
+	t.SetUpVartypes()
+
+	mklines := t.NewMkLines("os.mk",
+		MkCvsID,
+		"",
+		"SUBST_CLASSES+=\tos",
+		"SUBST_STAGE.os=\tpost-patch",
+		"SUBST_FILES.os=\tguess-os.h",
+		"SUBST_SED.os=\t-e s,@OPSYS@,Darwin,")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: os.mk:4: Substitutions should not happen in the patch phase.",
+		"AUTOFIX: os.mk:4: Replacing \"post-patch\" with \"pre-configure\".")
+}
+
+func (s *Suite) Test_SubstContext_varassignStage__with_NO_CONFIGURE(c *check.C) {
+	t := s.Init(c)
+
+	pkg := t.SetUpPackage("category/package",
+		"SUBST_CLASSES+=\t\tpre",
+		"SUBST_STAGE.pre=\tpre-configure",
+		"SUBST_FILES.pre=\tguess-os.h",
+		"SUBST_SED.pre=\t\t-e s,@OPSYS@,Darwin,",
+		"",
+		"SUBST_CLASSES+=\t\tpost",
+		"SUBST_STAGE.post=\tpost-configure",
+		"SUBST_FILES.post=\tguess-os.h",
+		"SUBST_SED.post=\t\t-e s,@OPSYS@,Darwin,",
+		"",
+		"SUBST_CLASSES+=\te",
+		"SUBST_STAGE.e=\tpost-extract",
+		"SUBST_FILES.e=\tguess-os.h",
+		"SUBST_SED.e=\t-e s,@OPSYS@,Darwin,",
+		"",
+		"NO_CONFIGURE=\tyes")
+	t.FinishSetUp()
+
+	G.Check(pkg)
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile:21: SUBST_STAGE pre-configure has no effect "+
+			"when NO_CONFIGURE is set (in line 35).",
+		"WARN: ~/category/package/Makefile:26: SUBST_STAGE post-configure has no effect "+
+			"when NO_CONFIGURE is set (in line 35).")
+}
+
+func (s *Suite) Test_SubstContext_varassignStage__without_NO_CONFIGURE(c *check.C) {
+	t := s.Init(c)
+
+	pkg := t.SetUpPackage("category/package",
+		"SUBST_CLASSES+=\t\tpre",
+		"SUBST_STAGE.pre=\tpre-configure",
+		"SUBST_FILES.pre=\tguess-os.h",
+		"SUBST_SED.pre=\t\t-e s,@OPSYS@,Darwin,")
+	t.FinishSetUp()
+
+	G.Check(pkg)
+
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_SubstContext_Directive__before_SUBST_CLASSES(c *check.C) {
