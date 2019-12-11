@@ -921,7 +921,7 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_sed(c *check.C)
 		"SUBST_STAGE.pfx=        pre-configure",
 		"SUBST_FILES.pfx=        filename",
 		"SUBST_VARS.pfx=         PREFIX",
-		// TODO: If this subst class is used nowhere else, pkglint could
+		// XXX: If this subst class is used nowhere else, pkglint could
 		//  replace this += with a simple =.
 		"SUBST_SED.pfx+=         -e s,@PREFIX@,other,g")
 }
