@@ -832,9 +832,8 @@ func (s *Suite) Test_SubstContext_Directive__two_blocks_in_condition(c *check.C)
 
 	mklines.ForEach(ctx.Process)
 
-	// FIXME
 	t.CheckOutputLines(
-		"WARN: filename.mk:6: Subst block \"\" should be finished " +
+		"WARN: filename.mk:6: Subst block \"a\" should be finished " +
 			"before adding the next class to SUBST_CLASSES.")
 }
 

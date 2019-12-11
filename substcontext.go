@@ -89,6 +89,7 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 			mkline.Warnf("Please add only one class at a time to SUBST_CLASSES.")
 		}
 		if ctx.id != "" && ctx.id != classes[0] {
+			id := ctx.id // since ctx.directiveEndif overwrites ctx.id
 			for len(ctx.conds) > 1 {
 				// This will be confusing for the outer SUBST block,
 				// but since that block is assumed to be finished,
@@ -96,7 +97,6 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 				ctx.directiveEndif(mkline)
 			}
 			complete := ctx.IsComplete()
-			id := ctx.id
 			ctx.Finish(mkline)
 			if !complete {
 				mkline.Warnf("Subst block %q should be finished before adding the next class to SUBST_CLASSES.", id)
