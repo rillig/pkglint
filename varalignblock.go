@@ -666,9 +666,9 @@ func (info *varalignLine) alignValueMultiEmptyFollow(column int) {
 
 func (info *varalignLine) alignValueMultiFollow(column, indentDiff int) {
 	oldSpace := info.spaceBeforeValue
-	newWidth := tabWidth(oldSpace) + indentDiff
-	newSpace := indent(imax(column, newWidth))
-	if newSpace == oldSpace || info.long {
+	newWidth := imax(column, tabWidth(oldSpace)+indentDiff)
+	newSpace := indent(newWidth)
+	if newSpace == oldSpace || info.long || info.isTooLongFor(newWidth) {
 		return
 	}
 
@@ -859,6 +859,14 @@ func (p *varalignParts) widthAlignedAt(valueAlign int) int {
 	return tabWidthAppend(
 		valueAlign,
 		p.value+p.spaceAfterValue+p.continuation)
+}
+
+func (p *varalignParts) isTooLongFor(valueColumn int) bool {
+	column := tabWidthAppend(valueColumn, p.value)
+	if p.isContinuation() {
+		column += 2
+	}
+	return column > 73
 }
 
 type bag struct {

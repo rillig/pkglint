@@ -2490,7 +2490,7 @@ func (s *Suite) Test_VaralignBlock__aligned(c *check.C) {
 		if expected {
 			t.CheckEquals(output, "")
 		} else if output == "" {
-			t.Check(output, check.Not(check.Equals), "")
+			t.Check(output, check.Not(check.Equals), "output should not be empty")
 		}
 	}
 
@@ -3078,9 +3078,8 @@ func (s *Suite) Test_VaralignBlock_Finish__continuation_beyond_right_margin(c *c
 		//  of the variable value.
 		"NOTE: filename.mk:1: The continuation backslash should be "+
 			"preceded by a single space or tab, or be in column 73, not 81.",
-		// TODO: Not really, as that would make the line too long.
-		"NOTE: filename.mk:2: This continuation line should be "+
-			"indented with \"\\t\\t\\t\\t\".",
+		// Line 2 is not indented to column 32
+		// since that would make the line longer than 72 columns.
 		"NOTE: filename.mk:3: This continuation line should be "+
 			"indented with \"\\t\\t\\t\\t\".")
 }
@@ -3863,15 +3862,12 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_initial_l
 	vt.Diagnostics(
 		"NOTE: Makefile:1: The continuation backslash should be preceded by a single space or tab, or be in column 73, not 81.",
 		"NOTE: Makefile:2: This continuation line should be indented with \"\\t\\t\\t\".",
-		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\\t\\t\".",
 		"NOTE: Makefile:4: This continuation line should be indented with \"\\t\\t\\t\".",
 		"NOTE: Makefile:5: This continuation line should be indented with \"\\t\\t\\t\".")
 	vt.Autofixes(
 		// FIXME: Mention the continuation backslash in the replacement.
 		"AUTOFIX: Makefile:1: Replacing \"\\t\\t\\t\" with \"\\t\\t\".",
 		"AUTOFIX: Makefile:2: Replacing \"\\t\\t    \" with \"\\t\\t\\t\".",
-		"AUTOFIX: Makefile:3: Replacing \"\\t\\t    \" with \"\\t\\t\\t\".",
-		"AUTOFIX: Makefile:3: Replacing \"\\t\\\\\" with \" \\\\\".",
 		"AUTOFIX: Makefile:4: Replacing \"\\t\\t    \" with \"\\t\\t\\t\".",
 		"AUTOFIX: Makefile:5: Replacing \"\\t\\t\" with \"\\t\\t\\t\".")
 	vt.Fixed(
@@ -3879,7 +3875,7 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_initial_l
 		// FIXME: Preserve the original relative indentation.
 		"                        --------30--------40-                           \\",
 		// FIXME: Preserve the original relative indentation.
-		"                        --------30--------40--------50--------60-------8 \\",
+		"                    --------30--------40--------50--------60-------8    \\",
 		// FIXME: Preserve the original relative indentation.
 		"                        ----5                                           \\",
 		"                        -7")
@@ -4159,4 +4155,24 @@ func (s *Suite) Test_varalignParts_isCanonicalFollow(c *check.C) {
 	test("#", "", false)
 	test("#", " ", false)
 	test("#", "\t", true)
+}
+
+func (s *Suite) Test_varalignParts_isTooLongFor(c *check.C) {
+	t := s.Init(c)
+
+	test := func(valueColumn int, value, continuation string, tooLong bool) {
+		parts := varalignParts{value: value, continuation: continuation}
+		t.CheckEquals(parts.isTooLongFor(valueColumn), tooLong)
+	}
+
+	// In lines without continuation backslash,
+	// the value may go up to the continuation backslash.
+	test(64, ".......73", "", false)
+	test(64, "........74", "", true)
+
+	// In lines with continuation backslash,
+	// the value including a space and the continuation backslash
+	// may go up to column 73.
+	test(64, ".....71", "\\", false)
+	test(64, "......72", "\\", true)
 }
