@@ -2794,6 +2794,8 @@ func (s *Suite) Test_VaralignBlock__long_lines(c *check.C) {
 	vt.Fixed(
 		"VAR=                                            value   \\",
 		// FIXME: The backslash should be aligned properly.
+		//  It is not replaced because fixRightMargin is called before fixAlign,
+		//  which is the wrong order.
 		"                                                value    \\",
 		"                                                value")
 	vt.Run()
