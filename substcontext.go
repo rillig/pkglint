@@ -81,7 +81,7 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 			mkline.Warnf("Please add only one class at a time to SUBST_CLASSES.")
 		}
 		if ctx.id != "" && ctx.id != classes[0] {
-			for len(ctx.conds) > 1 && !ctx.top().id {
+			for len(ctx.conds) > 1 {
 				// This will be confusing for the outer SUBST block,
 				// but since that block is assumed to be finished,
 				// this doesn't matter.
