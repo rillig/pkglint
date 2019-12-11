@@ -632,6 +632,83 @@ func (s *Suite) Test_SubstContext_Directive__before_SUBST_CLASSES(c *check.C) {
 			"SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
 }
 
+func (s *Suite) Test_SubstContext_Directive__conditional_blocks_complete(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wextra")
+
+	mklines := t.NewMkLines("filename.mk",
+		".if ${OPSYS} == NetBSD",
+		"SUBST_CLASSES+= nb",
+		"SUBST_STAGE.nb= post-configure",
+		"SUBST_FILES.nb= guess-netbsd.h",
+		"SUBST_VARS.nb=  HAVE_NETBSD",
+		".else",
+		"SUBST_CLASSES+= os",
+		"SUBST_STAGE.os= post-configure",
+		"SUBST_FILES.os= guess-netbsd.h",
+		"SUBST_VARS.os=  HAVE_OTHER",
+		".endif",
+		"")
+	ctx := NewSubstContext()
+
+	mklines.ForEach(ctx.Process)
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_SubstContext_Directive__conditional_blocks_incomplete(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wextra")
+
+	mklines := t.NewMkLines("filename.mk",
+		".if ${OPSYS} == NetBSD",
+		"SUBST_CLASSES+= nb",
+		"SUBST_STAGE.nb= post-configure",
+		"SUBST_VARS.nb=  HAVE_NETBSD",
+		".else",
+		"SUBST_CLASSES+= os",
+		"SUBST_STAGE.os= post-configure",
+		"SUBST_FILES.os= guess-netbsd.h",
+		".endif",
+		"")
+	ctx := NewSubstContext()
+
+	mklines.ForEach(ctx.Process)
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:5: Incomplete SUBST block: SUBST_FILES.nb missing.",
+		"WARN: filename.mk:9: Incomplete SUBST block: "+
+			"SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
+}
+
+func (s *Suite) Test_SubstContext_Directive__conditional_complete(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wextra")
+
+	mklines := t.NewMkLines("filename.mk",
+		"SUBST_CLASSES+= id",
+		".if ${OPSYS} == NetBSD",
+		"SUBST_STAGE.id= post-configure",
+		"SUBST_FILES.id= guess-netbsd.h",
+		"SUBST_VARS.id=  HAVE_NETBSD",
+		".else",
+		"SUBST_STAGE.id= post-configure",
+		"SUBST_FILES.id= guess-netbsd.h",
+		"SUBST_VARS.id=  HAVE_OTHER",
+		".endif",
+		"")
+	ctx := NewSubstContext()
+
+	mklines.ForEach(ctx.Process)
+
+	t.CheckOutputLines(
+		// FIXME
+		"WARN: filename.mk:7: Duplicate definition of \"SUBST_STAGE.id\".")
+}
+
 func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {
 	t := s.Init(c)
 
