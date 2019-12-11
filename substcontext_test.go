@@ -528,20 +528,23 @@ func (s *Suite) Test_SubstContext_varassignMissingId__rationale(c *check.C) {
 func (s *Suite) Test_SubstContext_varassignStage__pre_patch(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Wall", "--show-autofix")
 	t.SetUpVartypes()
+	t.Chdir(".")
 
-	mklines := t.NewMkLines("os.mk",
-		MkCvsID,
-		"",
-		"SUBST_CLASSES+=\tos",
-		"SUBST_STAGE.os=\tpre-patch",
-		"SUBST_FILES.os=\tguess-os.h",
-		"SUBST_SED.os=\t-e s,@OPSYS@,Darwin,")
+	test := func(autofix bool) {
+		mklines := t.NewMkLines("os.mk",
+			MkCvsID,
+			"",
+			"SUBST_CLASSES+=\tos",
+			"SUBST_STAGE.os=\tpre-patch",
+			"SUBST_FILES.os=\tguess-os.h",
+			"SUBST_SED.os=\t-e s,@OPSYS@,Darwin,")
 
-	mklines.Check()
+		mklines.Check()
+	}
 
-	t.CheckOutputLines(
+	t.ExpectDiagnosticsAutofix(
+		test,
 		"WARN: os.mk:4: Substitutions should not happen in the patch phase.",
 		"AUTOFIX: os.mk:4: Replacing \"pre-patch\" with \"post-extract\".")
 }
@@ -549,20 +552,23 @@ func (s *Suite) Test_SubstContext_varassignStage__pre_patch(c *check.C) {
 func (s *Suite) Test_SubstContext_varassignStage__post_patch(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Wall", "--show-autofix")
 	t.SetUpVartypes()
+	t.Chdir(".")
 
-	mklines := t.NewMkLines("os.mk",
-		MkCvsID,
-		"",
-		"SUBST_CLASSES+=\tos",
-		"SUBST_STAGE.os=\tpost-patch",
-		"SUBST_FILES.os=\tguess-os.h",
-		"SUBST_SED.os=\t-e s,@OPSYS@,Darwin,")
+	test := func(autofix bool) {
+		mklines := t.NewMkLines("os.mk",
+			MkCvsID,
+			"",
+			"SUBST_CLASSES+=\tos",
+			"SUBST_STAGE.os=\tpost-patch",
+			"SUBST_FILES.os=\tguess-os.h",
+			"SUBST_SED.os=\t-e s,@OPSYS@,Darwin,")
 
-	mklines.Check()
+		mklines.Check()
+	}
 
-	t.CheckOutputLines(
+	t.ExpectDiagnosticsAutofix(
+		test,
 		"WARN: os.mk:4: Substitutions should not happen in the patch phase.",
 		"AUTOFIX: os.mk:4: Replacing \"post-patch\" with \"pre-configure\".")
 }
@@ -981,87 +987,141 @@ func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {
 
 	t.SetUpVartypes()
 	t.SetUpTool("sh", "SH", AtRunTime)
+	t.Chdir(".")
 
-	mklines := t.NewMkLines("subst.mk",
-		MkCvsID,
-		"",
-		"SUBST_CLASSES+=\t\ttest",
-		"SUBST_STAGE.test=\tpre-configure",
-		"SUBST_FILES.test=\tfilename",
-		"SUBST_SED.test+=\t-e s,@SH@,${SH},g",            // Can be replaced.
-		"SUBST_SED.test+=\t-e s,@SH@,${SH:Q},g",          // Can be replaced, with or without the :Q modifier.
-		"SUBST_SED.test+=\t-e s,@SH@,${SH:T},g",          // Cannot be replaced because of the :T modifier.
-		"SUBST_SED.test+=\t-e s,@SH@,${SH},",             // Can be replaced, even without the g option.
-		"SUBST_SED.test+=\t-e 's,@SH@,${SH},'",           // Can be replaced, whether in single quotes or not.
-		"SUBST_SED.test+=\t-e \"s,@SH@,${SH},\"",         // Can be replaced, whether in double quotes or not.
-		"SUBST_SED.test+=\t-e s,'@SH@','${SH}',",         // Can be replaced, even when the quoting changes midways.
-		"SUBST_SED.test+=\ts,'@SH@','${SH}',",            // Can be replaced manually, even when the -e is missing.
-		"SUBST_SED.test+=\t-e s,@SH@,${PKGNAME},",        // Cannot be replaced since the variable name differs.
-		"SUBST_SED.test+=\t-e s,@SH@,'\"'${SH:Q}'\"',g",  // Cannot be replaced since the double quotes are added.
-		"SUBST_SED.test+=\t-e s",                         // Just to get 100% code coverage.
-		"SUBST_SED.test+=\t-e s,@SH@,${SH:Q}",            // Just to get 100% code coverage.
-		"SUBST_SED.test+=\t-e s,@SH@,${SH:Q}, # comment", // Just a note; not fixed because of the comment.
-		"SUBST_SED.test+=\t-n s,@SH@,${SH:Q},",           // Just a note; not fixed because of the -n.
-		"# end")
+	test := func(line string, diagnostics ...string) {
+		doTest := func(autofix bool) {
+			if autofix {
+				// Without the -Wall, to prevent fixing the :Q modifiers.
+				t.SetUpCommandLine("--autofix")
+			}
 
-	mklines.Check()
+			mklines := t.NewMkLines("filename.mk",
+				MkCvsID,
+				"",
+				"SUBST_CLASSES+=\t\ttest",
+				"SUBST_STAGE.test=\tpre-configure",
+				"SUBST_FILES.test=\tfilename",
+				line)
 
-	t.CheckOutputLines(
-		"WARN: subst.mk:6: Please use ${SH:Q} instead of ${SH}.",
-		"NOTE: subst.mk:6: The substitution command \"s,@SH@,${SH},g\" "+
+			// TODO: replace with ctx.Process
+			mklines.Check()
+		}
+
+		t.ExpectDiagnosticsAutofix(
+			doTest,
+			diagnostics...)
+	}
+
+	// Can be replaced.
+	test(
+		"SUBST_SED.test+=\t-e s,@SH@,${SH},g",
+
+		"WARN: filename.mk:6: Please use ${SH:Q} instead of ${SH}.",
+		"NOTE: filename.mk:6: The substitution command \"s,@SH@,${SH},g\" "+
 			"can be replaced with \"SUBST_VARS.test= SH\".",
-		"NOTE: subst.mk:7: The substitution command \"s,@SH@,${SH:Q},g\" "+
-			"can be replaced with \"SUBST_VARS.test+= SH\".",
-		"WARN: subst.mk:8: Please use ${SH:T:Q} instead of ${SH:T}.",
-		"WARN: subst.mk:9: Please use ${SH:Q} instead of ${SH}.",
-		"NOTE: subst.mk:9: The substitution command \"s,@SH@,${SH},\" "+
-			"can be replaced with \"SUBST_VARS.test+= SH\".",
-		"NOTE: subst.mk:10: The substitution command \"'s,@SH@,${SH},'\" "+
-			"can be replaced with \"SUBST_VARS.test+= SH\".",
-		"NOTE: subst.mk:11: The substitution command \"\\\"s,@SH@,${SH},\\\"\" "+
-			"can be replaced with \"SUBST_VARS.test+= SH\".",
-		"NOTE: subst.mk:12: The substitution command \"s,'@SH@','${SH}',\" "+
-			"can be replaced with \"SUBST_VARS.test+= SH\".",
-		"NOTE: subst.mk:13: Please always use \"-e\" in sed commands, "+
-			"even if there is only one substitution.",
-		"NOTE: subst.mk:13: The substitution command \"s,'@SH@','${SH}',\" "+
-			"can be replaced with \"SUBST_VARS.test+= SH\".",
-		"NOTE: subst.mk:18: The substitution command \"s,@SH@,${SH:Q},\" "+
-			"can be replaced with \"SUBST_VARS.test+= SH\".",
-		"NOTE: subst.mk:19: Please always use \"-e\" in sed commands, "+
-			"even if there is only one substitution.",
-		"NOTE: subst.mk:19: The substitution command \"s,@SH@,${SH:Q},\" "+
-			"can be replaced with \"SUBST_VARS.test+= SH\".")
+		"AUTOFIX: filename.mk:6: Replacing \"SUBST_SED.test+=\\t-e s,@SH@,${SH},g\" "+
+			"with \"SUBST_VARS.test=\\tSH\".")
 
-	t.SetUpCommandLine("--show-autofix")
+	// Can be replaced, with or without the :Q modifier.
+	test(
+		"SUBST_SED.test+=\t-e s,@SH@,${SH:Q},g",
 
-	mklines.Check()
-
-	t.CheckOutputLines(
-		"NOTE: subst.mk:6: The substitution command \"s,@SH@,${SH},g\" "+
+		"NOTE: filename.mk:6: The substitution command \"s,@SH@,${SH:Q},g\" "+
 			"can be replaced with \"SUBST_VARS.test= SH\".",
-		"AUTOFIX: subst.mk:6: Replacing \"SUBST_SED.test+=\\t-e s,@SH@,${SH},g\" "+
-			"with \"SUBST_VARS.test=\\tSH\".",
-		"NOTE: subst.mk:7: The substitution command \"s,@SH@,${SH:Q},g\" "+
-			"can be replaced with \"SUBST_VARS.test+= SH\".",
-		"AUTOFIX: subst.mk:7: Replacing \"SUBST_SED.test+=\\t-e s,@SH@,${SH:Q},g\" "+
-			"with \"SUBST_VARS.test+=\\tSH\".",
-		"NOTE: subst.mk:9: The substitution command \"s,@SH@,${SH},\" "+
-			"can be replaced with \"SUBST_VARS.test+= SH\".",
-		"AUTOFIX: subst.mk:9: Replacing \"SUBST_SED.test+=\\t-e s,@SH@,${SH},\" "+
-			"with \"SUBST_VARS.test+=\\tSH\".",
-		"NOTE: subst.mk:10: The substitution command \"'s,@SH@,${SH},'\" "+
-			"can be replaced with \"SUBST_VARS.test+= SH\".",
-		"AUTOFIX: subst.mk:10: Replacing \"SUBST_SED.test+=\\t-e 's,@SH@,${SH},'\" "+
-			"with \"SUBST_VARS.test+=\\tSH\".",
-		"NOTE: subst.mk:11: The substitution command \"\\\"s,@SH@,${SH},\\\"\" "+
-			"can be replaced with \"SUBST_VARS.test+= SH\".",
-		"AUTOFIX: subst.mk:11: Replacing \"SUBST_SED.test+=\\t-e \\\"s,@SH@,${SH},\\\"\" "+
-			"with \"SUBST_VARS.test+=\\tSH\".",
-		"NOTE: subst.mk:12: The substitution command \"s,'@SH@','${SH}',\" "+
-			"can be replaced with \"SUBST_VARS.test+= SH\".",
-		"AUTOFIX: subst.mk:12: Replacing \"SUBST_SED.test+=\\t-e s,'@SH@','${SH}',\" "+
-			"with \"SUBST_VARS.test+=\\tSH\".")
+		"AUTOFIX: filename.mk:6: Replacing \"SUBST_SED.test+=\\t-e s,@SH@,${SH:Q},g\" "+
+			"with \"SUBST_VARS.test=\\tSH\".")
+
+	// Cannot be replaced because of the :T modifier.
+	test(
+		"SUBST_SED.test+=\t-e s,@SH@,${SH:T},g",
+
+		"WARN: filename.mk:6: Please use ${SH:T:Q} instead of ${SH:T}.")
+
+	// Can be replaced, even without the g option.
+	test(
+		"SUBST_SED.test+=\t-e s,@SH@,${SH},",
+
+		"WARN: filename.mk:6: Please use ${SH:Q} instead of ${SH}.",
+		"NOTE: filename.mk:6: The substitution command \"s,@SH@,${SH},\" "+
+			"can be replaced with \"SUBST_VARS.test= SH\".",
+		"AUTOFIX: filename.mk:6: Replacing \"SUBST_SED.test+=\\t-e s,@SH@,${SH},\" "+
+			"with \"SUBST_VARS.test=\\tSH\".")
+
+	// Can be replaced, whether in single quotes or not.
+	test(
+		"SUBST_SED.test+=\t-e 's,@SH@,${SH},'",
+
+		"NOTE: filename.mk:6: The substitution command \"'s,@SH@,${SH},'\" "+
+			"can be replaced with \"SUBST_VARS.test= SH\".",
+		"AUTOFIX: filename.mk:6: Replacing \"SUBST_SED.test+=\\t-e 's,@SH@,${SH},'\" "+
+			"with \"SUBST_VARS.test=\\tSH\".")
+
+	// Can be replaced, whether in double quotes or not.
+	test(
+		"SUBST_SED.test+=\t-e \"s,@SH@,${SH},\"",
+
+		"NOTE: filename.mk:6: The substitution command \"\\\"s,@SH@,${SH},\\\"\" "+
+			"can be replaced with \"SUBST_VARS.test= SH\".",
+		"AUTOFIX: filename.mk:6: Replacing \"SUBST_SED.test+=\\t-e \\\"s,@SH@,${SH},\\\"\" "+
+			"with \"SUBST_VARS.test=\\tSH\".")
+
+	// Can be replaced, even when the quoting changes midways.
+	test(
+		"SUBST_SED.test+=\t-e s,'@SH@','${SH}',",
+
+		"NOTE: filename.mk:6: The substitution command \"s,'@SH@','${SH}',\" "+
+			"can be replaced with \"SUBST_VARS.test= SH\".",
+		"AUTOFIX: filename.mk:6: Replacing \"SUBST_SED.test+=\\t-e s,'@SH@','${SH}',\" "+
+			"with \"SUBST_VARS.test=\\tSH\".")
+
+	// Can be replaced manually, even when the -e is missing.
+	test(
+		"SUBST_SED.test+=\ts,'@SH@','${SH}',",
+		"NOTE: filename.mk:6: Please always use \"-e\" in sed commands, "+
+			"even if there is only one substitution.",
+		"NOTE: filename.mk:6: The substitution command \"s,'@SH@','${SH}',\" "+
+			"can be replaced with \"SUBST_VARS.test= SH\".")
+
+	// Cannot be replaced since the variable name differs.
+	test(
+		"SUBST_SED.test+=\t-e s,@SH@,${PKGNAME},",
+
+		nil...)
+
+	// Cannot be replaced since the double quotes are added.
+	test(
+		"SUBST_SED.test+=\t-e s,@SH@,'\"'${SH:Q}'\"',g",
+
+		nil...)
+
+	// Just to get 100% code coverage.
+	test(
+		"SUBST_SED.test+=\t-e s",
+
+		nil...)
+
+	// Just to get 100% code coverage.
+	test(
+		"SUBST_SED.test+=\t-e s,@SH@,${SH:Q}",
+
+		nil...)
+
+	// Just a note; not fixed because of the comment.
+	test(
+		"SUBST_SED.test+=\t-e s,@SH@,${SH:Q}, # comment",
+
+		"NOTE: filename.mk:6: The substitution command \"s,@SH@,${SH:Q},\" "+
+			"can be replaced with \"SUBST_VARS.test= SH\".")
+
+	// Just a note; not fixed because of the -n.
+	test(
+		"SUBST_SED.test+=\t-n s,@SH@,${SH:Q},",
+
+		"NOTE: filename.mk:6: Please always use \"-e\" in sed commands, "+
+			"even if there is only one substitution.",
+		"NOTE: filename.mk:6: The substitution command \"s,@SH@,${SH:Q},\" "+
+			"can be replaced with \"SUBST_VARS.test= SH\".")
 }
 
 // If the SUBST_CLASS identifier ends with a plus, the generated code must
