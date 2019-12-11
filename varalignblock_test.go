@@ -3572,12 +3572,71 @@ func (s *Suite) Test_varalignLine_alignValueMultiEmptyInitial__spaces(c *check.C
 func (s *Suite) Test_varalignLine_alignValueMultiInitial(c *check.C) {
 	t := s.Init(c)
 
-	test := func(diagnostics ...string) {
-		// FIXME
-		t.CheckOutput(diagnostics)
+	test := func(before string, column int, after string, diagnostics ...string) {
+
+		doTest := func(autofix bool) {
+			mklines := t.NewMkLines("filename.mk",
+				before,
+				"\t...13")
+			assert(len(mklines.mklines) == 1)
+			mkline := mklines.mklines[0]
+
+			text := mkline.raw[0].text()
+			parts := NewVaralignSplitter().split(text, true)
+			info := &varalignLine{mkline, 0, false, false, parts}
+
+			info.alignValueMultiInitial(column)
+
+			t.CheckEqualsf(
+				mkline.raw[0].text(),
+				condStr(autofix, after, before),
+				"Line.raw.text, autofix=%v", autofix)
+
+			// As of 2019-12-11, the info fields are not updated
+			// accordingly, but they should.
+			// TODO: update info accordingly
+			t.CheckEqualsf(info.String(), before,
+				"info.String, autofix=%v", autofix)
+		}
+
+		t.ExpectDiagnosticsAutofix(doTest, diagnostics...)
 	}
 
-	test()
+	// The value is already in column 8, thus nothing to do.
+	test(
+		"VAR=\tvalue \\",
+		8,
+
+		"VAR=\tvalue \\",
+		nil...)
+
+	test(
+		"VAR=\tvalue \\",
+		16,
+
+		"VAR=\t\tvalue \\",
+		"NOTE: filename.mk:1: This variable value should be aligned to column 17.",
+		"AUTOFIX: filename.mk:1: Replacing \"\\t\" with \"\\t\\t\".")
+
+	// The column is already correct,
+	// but the alignment should be done with tabs, not spaces.
+	test(
+		"VAR=  \t  \tvalue \\",
+		16,
+
+		"VAR=\t\tvalue \\",
+		"NOTE: filename.mk:1: Variable values should be aligned with tabs, not spaces.",
+		"AUTOFIX: filename.mk:1: Replacing \"  \\t  \\t\" with \"\\t\\t\".")
+
+	// Both the column and the use of spaces in the alignment
+	// need to be fixed.
+	test(
+		"VAR=  \t    value \\",
+		16,
+
+		"VAR=\t\tvalue \\",
+		"NOTE: filename.mk:1: This variable value should be aligned with tabs, not spaces, to column 17.",
+		"AUTOFIX: filename.mk:1: Replacing \"  \\t    \" with \"\\t\\t\".")
 }
 
 func (s *Suite) Test_varalignLine_alignValueMultiEmptyFollow(c *check.C) {
