@@ -811,6 +811,36 @@ func (s *Suite) Test_SubstContext_Directive__conditionally_following_block(c *ch
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_SubstContext_Directive__nested_conditional_incomplete_block(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wextra")
+
+	mklines := t.NewMkLines("filename.mk",
+		"SUBST_CLASSES+=         outer",
+		"SUBST_STAGE.outer=      post-configure",
+		"SUBST_FILES.outer=      outer.txt",
+		"SUBST_VARS.outer=       OUTER",
+		".if ${OPSYS} == NetBSD",
+		"SUBST_CLASSES+=         inner1",
+		"SUBST_STAGE.inner1=     post-configure",
+		"SUBST_VARS.inner1=      INNER",
+		"SUBST_CLASSES+=         inner2",
+		"SUBST_STAGE.inner2=     post-configure",
+		"SUBST_FILES.inner2=     inner.txt",
+		"SUBST_VARS.inner2=      INNER",
+		".endif",
+		"")
+	ctx := NewSubstContext()
+
+	mklines.ForEach(ctx.Process)
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:9: Incomplete SUBST block: SUBST_FILES.inner1 missing.",
+		"WARN: filename.mk:9: Subst block \"inner1\" should be finished "+
+			"before adding the next class to SUBST_CLASSES.")
+}
+
 func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {
 	t := s.Init(c)
 
