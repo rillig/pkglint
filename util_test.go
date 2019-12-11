@@ -224,16 +224,17 @@ func (s *Suite) Test_alignWith(c *check.C) {
 		t.CheckEquals(alignWith(str, other), expected)
 	}
 
-	// At least one tab is _always_ added.
-	test("", "", "\t")
+	// The needed alignment may be empty.
+	// In some contexts like the value of a variable assignment, this
+	// should not happen. In other contexts it's ok.
+	test("", "", "")
 
 	test("VAR=", "1234567", "VAR=   ")
 	test("VAR=", "12345678", "VAR=\t")
 	test("VAR=", "123456789", "VAR=\t ")
 
-	// At least one tab is added in any case,
-	// even if the other string is shorter.
-	test("1234567890=", "V=", "1234567890=\t")
+	// If the other string is shorter, no extra tab is added.
+	test("1234567890=", "V=", "1234567890=")
 }
 
 func (s *Suite) Test_indent(c *check.C) {

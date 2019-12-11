@@ -396,7 +396,7 @@ func alignWith(str, other string) string {
 	strWidth := tabWidth(str)
 	otherWidth := tabWidth(other)
 	if otherWidth <= strWidth {
-		return str + "\t"
+		return str
 	}
 	if strWidth&-8 != otherWidth&-8 {
 		strWidth &= -8
