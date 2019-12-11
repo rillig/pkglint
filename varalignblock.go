@@ -214,26 +214,23 @@ func (va *VaralignBlock) Finish() {
 
 	newWidth := va.optimalWidth(mkinfos)
 	va.adjustLong(newWidth, mkinfos)
-	rightMargin := 0
-
-	// When the indentation of the initial line of a multiline is
-	// changed, all its follow-up lines are shifted by the same
-	// amount and in the same direction. Typical examples are
-	// SUBST_SED, shell programs and AWK programs like in
-	// GENERATE_PLIST.
-	indentDiffSet := false
-	// The amount by which the follow-up lines are shifted.
-	// Positive values mean shifting to the right, negative values
-	// mean shifting to the left.
-	indentDiff := 0
 
 	for _, mkinfo := range mkinfos {
+
+		// When the indentation of the initial line of a multiline is
+		// changed, all its follow-up lines are shifted by the same
+		// amount and in the same direction. Typical examples are
+		// SUBST_SED, shell programs and AWK programs like in
+		// GENERATE_PLIST.
+		indentDiffSet := false
+
+		// The amount by which the follow-up lines are shifted.
+		// Positive values mean shifting to the right, negative values
+		// mean shifting to the left.
+		indentDiff := 0
+
+		_, rightMargin := mkinfo.rightMargin()
 		for _, info := range mkinfo.infos {
-			if info.rawIndex == 0 {
-				indentDiffSet = false
-				indentDiff = 0
-				_, rightMargin = mkinfo.rightMargin()
-			}
 
 			// TODO: move below va.realign
 			info.fixRightMargin(newWidth, rightMargin)
