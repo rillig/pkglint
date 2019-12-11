@@ -393,16 +393,21 @@ func detab(s string) string {
 // alignWith extends str with as many tabs and spaces as needed to reach
 // the same screen width as the other string.
 func alignWith(str, other string) string {
+	return str + alignmentTo(str, other)
+}
+
+// alignmentTo returns the whitespace that is necessary to
+// bring str to the same width as other.
+func alignmentTo(str, other string) string {
 	strWidth := tabWidth(str)
 	otherWidth := tabWidth(other)
 	if otherWidth <= strWidth {
-		return str
+		return ""
 	}
 	if strWidth&-8 != otherWidth&-8 {
 		strWidth &= -8
 	}
-	alignment := indent(otherWidth - strWidth)
-	return str + alignment
+	return indent(otherWidth - strWidth)
 }
 
 func indent(width int) string {

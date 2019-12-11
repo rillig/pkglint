@@ -221,7 +221,13 @@ func (s *Suite) Test_alignWith(c *check.C) {
 	t := s.Init(c)
 
 	test := func(str, other, expected string) {
-		t.CheckEquals(alignWith(str, other), expected)
+		aligned := alignWith(str, other)
+		t.CheckEquals(aligned, expected)
+		t.CheckEquals(hasPrefix(aligned, str), true)
+
+		// It would be unusual to call this function with a string
+		// that itself ends with space.
+		t.CheckEquals(rtrimHspace(aligned), str)
 	}
 
 	// The needed alignment may be empty.
