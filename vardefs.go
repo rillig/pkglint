@@ -1490,7 +1490,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		"*: none")
 	reg.sysload("PKG_INFO", BtShellCommand, DefinedIfInScope|NonemptyIfDefined)
 	reg.sys("PKG_JAVA_HOME", BtPathname)
-	reg.sys("PKG_JVM", jvms)
+	reg.sysload("PKG_JVM", jvms)
 	reg.pkglistrat("PKG_JVMS_ACCEPTED", jvms)
 	reg.sys("PKG_LIBTOOL", BtPathname)
 
