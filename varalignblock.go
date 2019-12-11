@@ -235,7 +235,8 @@ func (va *VaralignBlock) Finish() {
 				_, rightMargin = mkinfo.rightMargin()
 			}
 
-			va.checkRightMargin(info, newWidth, rightMargin)
+			// TODO: move below va.realign
+			info.fixRightMargin(newWidth, rightMargin)
 
 			if newWidth > 0 || info.rawIndex > 0 {
 				va.realign(info, newWidth, &indentDiffSet, &indentDiff)
@@ -338,36 +339,6 @@ func (va *VaralignBlock) adjustLong(newWidth int, mkinfos []*varalignMkLine) {
 			info.long = anyLong && info.varnameOpSpaceWidth() == 8
 		}
 	}
-}
-
-func (va *VaralignBlock) checkRightMargin(info *varalignLine, newWidth int, rightMargin int) {
-	if !info.isContinuation() {
-		return
-	}
-
-	oldSpace := info.spaceBeforeContinuation()
-	if oldSpace == " " || oldSpace == "\t" {
-		return
-	}
-
-	column := info.continuationColumn()
-	if column == 72 || column == rightMargin || column <= newWidth {
-		return
-	}
-
-	newSpace := " "
-	fix := info.fixer.Autofix()
-	if oldSpace == "" || rightMargin == 0 || info.uptoCommentWidth() >= rightMargin {
-		fix.Notef("The continuation backslash should be preceded by a single space or tab.")
-	} else {
-		newSpace = alignmentAfter(info.uptoComment(), rightMargin)
-		fix.Notef(
-			"The continuation backslash should be preceded by a single space or tab, "+
-				"or be in column %d, not %d.",
-			rightMargin+1, column+1)
-	}
-	fix.ReplaceAt(info.rawIndex, info.continuationIndex()-len(oldSpace), oldSpace, newSpace)
-	fix.Apply()
 }
 
 func (va *VaralignBlock) realign(info *varalignLine, newWidth int, indentDiffSet *bool, indentDiff *int) {
@@ -744,6 +715,36 @@ func (info *varalignLine) fixIndentMultiFollow(column, indentDiff int) {
 			fix.ReplaceAt(info.rawIndex, spaceIndex, oldSuffix, newSuffix)
 		}
 	}
+	fix.Apply()
+}
+
+func (info *varalignLine) fixRightMargin(newWidth, rightMargin int) {
+	if !info.isContinuation() {
+		return
+	}
+
+	oldSpace := info.spaceBeforeContinuation()
+	if oldSpace == " " || oldSpace == "\t" {
+		return
+	}
+
+	column := info.continuationColumn()
+	if column == 72 || column == rightMargin || column <= newWidth {
+		return
+	}
+
+	newSpace := " "
+	fix := info.fixer.Autofix()
+	if oldSpace == "" || rightMargin == 0 || info.uptoCommentWidth() >= rightMargin {
+		fix.Notef("The continuation backslash should be preceded by a single space or tab.")
+	} else {
+		newSpace = alignmentAfter(info.uptoComment(), rightMargin)
+		fix.Notef(
+			"The continuation backslash should be preceded by a single space or tab, "+
+				"or be in column %d, not %d.",
+			rightMargin+1, column+1)
+	}
+	fix.ReplaceAt(info.rawIndex, info.continuationIndex()-len(oldSpace), oldSpace, newSpace)
 	fix.Apply()
 }
 
