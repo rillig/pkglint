@@ -792,10 +792,16 @@ func (s *Suite) Test_SubstContext_Directive__conditionally_following_block(c *ch
 		"SUBST_FILES.outer=      outer.txt",
 		"SUBST_VARS.outer=       OUTER",
 		".if ${OPSYS} == NetBSD",
+		"SUBST_CLASSES+=         middle",
+		"SUBST_STAGE.middle=     post-configure",
+		"SUBST_FILES.middle=     inner.txt",
+		"SUBST_VARS.middle=      INNER",
+		".  if ${MACHINE_ARCH} == amd64",
 		"SUBST_CLASSES+=         inner",
 		"SUBST_STAGE.inner=      post-configure",
 		"SUBST_FILES.inner=      inner.txt",
 		"SUBST_VARS.inner=       INNER",
+		".  endif",
 		".endif",
 		"")
 	ctx := NewSubstContext()
