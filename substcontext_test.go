@@ -645,6 +645,40 @@ func (s *Suite) Test_SubstContext__completely_conditional_else(c *check.C) {
 		"WARN: subst.mk:10: Incomplete SUBST block: SUBST_FILES.id missing.")
 }
 
+func (s *Suite) Test_SubstContext__SUBST_CLASSES_in_separate_paragraph(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wextra")
+
+	mklines := t.NewMkLines("filename.mk",
+		"SUBST_CLASSES+= 1 2 3 4",
+		"",
+		"SUBST_STAGE.1=  post-configure",
+		"SUBST_FILES.1=  files",
+		"SUBST_VARS.1=   VAR1",
+		"",
+		"SUBST_STAGE.2=  post-configure",
+		"SUBST_FILES.2=  files",
+		"SUBST_VARS.2=   VAR1",
+		"",
+		"SUBST_STAGE.3=  post-configure",
+		"SUBST_FILES.3=  files",
+		"SUBST_VARS.3=   VAR1",
+		"")
+	ctx := NewSubstContext()
+
+	mklines.ForEach(ctx.Process)
+
+	t.CheckOutputLines(
+		"NOTE: filename.mk:1: Please add only one class at a time to SUBST_CLASSES.",
+		"WARN: filename.mk:2: Incomplete SUBST block: SUBST_STAGE.1 missing.",
+		"WARN: filename.mk:2: Incomplete SUBST block: SUBST_FILES.1 missing.",
+		"WARN: filename.mk:2: Incomplete SUBST block: SUBST_SED.1, SUBST_VARS.1 or SUBST_FILTER_CMD.1 missing.",
+		"WARN: filename.mk:6: Incomplete SUBST block: SUBST_STAGE.1 missing.",
+		"WARN: filename.mk:10: Incomplete SUBST block: SUBST_STAGE.2 missing.",
+		"WARN: filename.mk:14: Incomplete SUBST block: SUBST_STAGE.3 missing.")
+}
+
 func (s *Suite) Test_SubstContext_Varassign__late_addition(c *check.C) {
 	t := s.Init(c)
 
