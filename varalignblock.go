@@ -354,7 +354,7 @@ func (va *VaralignBlock) realign(info *varalignLine, newWidth int, indentDiffSet
 		assert(*indentDiffSet)
 		info.fixIndentMultiFollow(newWidth, *indentDiff)
 	} else {
-		va.realignSingle(info, newWidth)
+		info.fixSingle(newWidth)
 	}
 }
 
@@ -378,67 +378,6 @@ func (va *VaralignBlock) realignMultiInitial(info *varalignLine, newWidth int, i
 	*indentDiff = newWidth - info.varnameOpSpaceWidth()
 
 	info.fixAlignMultiInitial(newWidth)
-}
-
-func (va *VaralignBlock) realignSingle(info *varalignLine, newWidth int) {
-	leadingComment := info.leadingComment
-	varnameOp := info.varnameOp
-	oldSpace := info.spaceBeforeValue
-
-	newSpace := ""
-	for tabWidthSlice(leadingComment, varnameOp, newSpace) < newWidth {
-		newSpace += "\t"
-	}
-
-	// Indent the outlier with a space instead of a tab to keep the line short.
-	if newSpace == "" && info.isCanonicalInitial(newWidth) {
-		return
-	}
-	if newSpace == "" {
-		newSpace = " "
-	}
-
-	if newSpace == oldSpace {
-		return
-	}
-
-	hasSpace := strings.IndexByte(oldSpace, ' ') != -1
-	oldColumn := tabWidthSlice(leadingComment, varnameOp, oldSpace)
-	column := tabWidthSlice(leadingComment, varnameOp, newSpace)
-
-	fix := info.fixer.Autofix()
-	if newSpace == " " {
-		fix.Notef("This outlier variable value should be aligned with a single space.")
-		va.explainWrongColumn(fix)
-	} else if hasSpace && column != oldColumn {
-		fix.Notef("This variable value should be aligned with tabs, not spaces, to column %d.", column+1)
-		va.explainWrongColumn(fix)
-	} else if column != oldColumn {
-		fix.Notef("This variable value should be aligned to column %d.", column+1)
-		va.explainWrongColumn(fix)
-	} else {
-		fix.Notef("Variable values should be aligned with tabs, not spaces.")
-	}
-	fix.ReplaceAt(info.rawIndex, info.spaceBeforeValueIndex(), oldSpace, newSpace)
-	fix.Apply()
-}
-
-func (va *VaralignBlock) explainWrongColumn(fix *Autofix) {
-	fix.Explain(
-		"Normally, all variable values in a block should start at the same column.",
-		"This provides orientation, especially for sequences",
-		"of variables that often appear in the same order.",
-		"For these it suffices to look at the variable values only.",
-		"",
-		"There are some exceptions to this rule:",
-		"",
-		"Definitions for long variable names may be indented with a single space instead of tabs,",
-		"but only if they appear in a block that is otherwise indented with tabs.",
-		"",
-		"Variable definitions that span multiple lines are not checked for alignment at all.",
-		"",
-		"When the block contains something else than variable definitions",
-		"and directives like .if or .for, it is not checked at all.")
 }
 
 // VaralignSplitter parses the text of a raw line into those parts that
@@ -606,6 +545,49 @@ type varalignLine struct {
 	varalignParts
 }
 
+func (info *varalignLine) fixSingle(newWidth int) {
+	leadingComment := info.leadingComment
+	varnameOp := info.varnameOp
+	oldSpace := info.spaceBeforeValue
+
+	newSpace := ""
+	for tabWidthSlice(leadingComment, varnameOp, newSpace) < newWidth {
+		newSpace += "\t"
+	}
+
+	// Indent the outlier with a space instead of a tab to keep the line short.
+	if newSpace == "" && info.isCanonicalInitial(newWidth) {
+		return
+	}
+	if newSpace == "" {
+		newSpace = " "
+	}
+
+	if newSpace == oldSpace {
+		return
+	}
+
+	hasSpace := strings.IndexByte(oldSpace, ' ') != -1
+	oldColumn := tabWidthSlice(leadingComment, varnameOp, oldSpace)
+	column := tabWidthSlice(leadingComment, varnameOp, newSpace)
+
+	fix := info.fixer.Autofix()
+	if newSpace == " " {
+		fix.Notef("This outlier variable value should be aligned with a single space.")
+		info.explainWrongColumn(fix)
+	} else if hasSpace && column != oldColumn {
+		fix.Notef("This variable value should be aligned with tabs, not spaces, to column %d.", column+1)
+		info.explainWrongColumn(fix)
+	} else if column != oldColumn {
+		fix.Notef("This variable value should be aligned to column %d.", column+1)
+		info.explainWrongColumn(fix)
+	} else {
+		fix.Notef("Variable values should be aligned with tabs, not spaces.")
+	}
+	fix.ReplaceAt(info.rawIndex, info.spaceBeforeValueIndex(), oldSpace, newSpace)
+	fix.Apply()
+}
+
 func (info *varalignLine) fixAlignMultiEmptyInitial(newWidth int) {
 	leadingComment := info.leadingComment
 	varnameOp := info.varnameOp
@@ -746,6 +728,24 @@ func (info *varalignLine) fixRightMargin(newWidth, rightMargin int) {
 	}
 	fix.ReplaceAt(info.rawIndex, info.continuationIndex()-len(oldSpace), oldSpace, newSpace)
 	fix.Apply()
+}
+
+func (*varalignLine) explainWrongColumn(fix *Autofix) {
+	fix.Explain(
+		"Normally, all variable values in a block should start at the same column.",
+		"This provides orientation, especially for sequences",
+		"of variables that often appear in the same order.",
+		"For these it suffices to look at the variable values only.",
+		"",
+		"There are some exceptions to this rule:",
+		"",
+		"Definitions for long variable names may be indented with a single space instead of tabs,",
+		"but only if they appear in a block that is otherwise indented with tabs.",
+		"",
+		"Variable definitions that span multiple lines are not checked for alignment at all.",
+		"",
+		"When the block contains something else than variable definitions",
+		"and directives like .if or .for, it is not checked at all.")
 }
 
 type varalignParts struct {
