@@ -83,17 +83,18 @@ func (s *Suite) Test_SubstContext__OPSYSVARS(c *check.C) {
 func (s *Suite) Test_SubstContext__no_class(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Wextra")
+	mklines := t.NewMkLines("filename.mk",
+		"UNRELATED=anything",
+		"SUBST_FILES.repl+=Makefile.in",
+		"SUBST_SED.repl+=-e s,from,to,g",
+		"")
 	ctx := NewSubstContext()
 
-	ctx.Varassign(t.NewMkLine("Makefile", 10, "UNRELATED=anything"))
-	ctx.Varassign(t.NewMkLine("Makefile", 11, "SUBST_FILES.repl+=Makefile.in"))
-	ctx.Varassign(t.NewMkLine("Makefile", 12, "SUBST_SED.repl+=-e s,from,to,g"))
-	ctx.Finish(t.NewMkLine("Makefile", 13, ""))
+	mklines.ForEach(ctx.Process)
 
 	t.CheckOutputLines(
-		"WARN: Makefile:11: SUBST_CLASSES should come before the definition of \"SUBST_FILES.repl\".",
-		"WARN: Makefile:13: Incomplete SUBST block: SUBST_STAGE.repl missing.")
+		"WARN: filename.mk:2: SUBST_CLASSES should come before the definition of \"SUBST_FILES.repl\".",
+		"WARN: filename.mk:4: Incomplete SUBST block: SUBST_STAGE.repl missing.")
 }
 
 func (s *Suite) Test_SubstContext__multiple_classes_in_one_line(c *check.C) {
