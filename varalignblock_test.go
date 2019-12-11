@@ -3522,12 +3522,101 @@ func (s *Suite) Test_varalignMkLine_rightMargin(c *check.C) {
 func (s *Suite) Test_varalignLine_alignValueSingle(c *check.C) {
 	t := s.Init(c)
 
-	test := func(diagnostics ...string) {
-		// FIXME
-		t.CheckOutput(diagnostics)
+	test := func(before string, column int, after string, diagnostics ...string) {
+
+		doTest := func(autofix bool) {
+			mkline := t.NewMkLine("filename.mk", 123, before)
+			parts := NewVaralignSplitter().split(before, true)
+			info := &varalignLine{mkline, 0, false, false, parts}
+
+			info.alignValueSingle(column)
+
+			t.CheckEqualsf(
+				mkline.raw[0].text(),
+				condStr(autofix, after, before),
+				"Line.raw.text, autofix=%v", autofix)
+
+			// As of 2019-12-11, the info fields are not updated
+			// accordingly, but they should.
+			// TODO: update info accordingly
+			t.CheckEqualsf(info.String(), before,
+				"info.String, autofix=%v", autofix)
+		}
+
+		t.ExpectDiagnosticsAutofix(doTest, diagnostics...)
 	}
 
-	test()
+	// The variable value is already in column 8, thus nothing to fix.
+	test(
+		"VAR=\tvalue",
+		8,
+
+		"VAR=\tvalue",
+		nil...)
+
+	// Aligned to the wrong column, using only tabs.
+	test(
+		"VAR=\tvalue",
+		16,
+
+		"VAR=\t\tvalue",
+		"NOTE: filename.mk:123: This variable value "+
+			"should be aligned to column 17.",
+		"AUTOFIX: filename.mk:123: Replacing \"\\t\" with \"\\t\\t\".")
+
+	// Aligned to the wrong column, using a mixture of tabs and spaces.
+	test(
+		"VAR=\t    value",
+		16,
+
+		"VAR=\t\tvalue",
+		"NOTE: filename.mk:123: This variable value "+
+			"should be aligned with tabs, not spaces, to column 17.",
+		"AUTOFIX: filename.mk:123: Replacing \"\\t    \" with \"\\t\\t\".")
+
+	// Correct column, but using spaces for indentation.
+	test(
+		"VAR=  \t    \tvalue",
+		16,
+
+		"VAR=\t\tvalue",
+		"NOTE: filename.mk:123: Variable values "+
+			"should be aligned with tabs, not spaces.",
+		"AUTOFIX: filename.mk:123: Replacing \"  \\t    \\t\" with \"\\t\\t\".")
+
+	// If the value is indented more than necessary, the redundant
+	// indentation is dropped.
+	test(
+		"VAR=\t\t\t\t\tvalue",
+		8,
+
+		"VAR=\tvalue",
+		"NOTE: filename.mk:123: "+
+			"This variable value should be aligned to column 9.",
+		"AUTOFIX: filename.mk:123: Replacing \"\\t\\t\\t\\t\\t\" with \"\\t\".")
+
+	// An outlier should use a single space, to be as far to the
+	// left as possible.
+	//
+	// XXX: Why is this line not considered an outlier?
+	//  info.isCanonicalInitial returns true for it.
+	test(
+		"VAR....8......16......24......32=\t\t\t\t\tvalue",
+		8,
+
+		"VAR....8......16......24......32=\t\t\t\t\tvalue",
+		nil...)
+
+	// An outlier should use a single space, to be as far to the
+	// left as possible.
+	test(
+		"VAR....8......16......24......32=\t\t\t \t\tvalue",
+		8,
+
+		"VAR....8......16......24......32= value",
+		"NOTE: filename.mk:123: This outlier variable value "+
+			"should be aligned with a single space.",
+		"AUTOFIX: filename.mk:123: Replacing \"\\t\\t\\t \\t\\t\" with \" \".")
 }
 
 func (s *Suite) Test_varalignLine_alignValueMultiEmptyInitial(c *check.C) {
