@@ -3059,6 +3059,32 @@ func (s *Suite) Test_VaralignBlock_processVarassign__comment_with_continuation(c
 	vt.Run()
 }
 
+func (s *Suite) Test_VaralignBlock_Finish__continuation_beyond_right_margin(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("filename.mk",
+		"VAR....8......16..=\t\t......40......48.\t\t\t\t\\",   // column 80
+		"\t\t\t......32......40......48......56......64..\t\\", // column 72
+		"\t\t\t...13",
+		"")
+
+	var block VaralignBlock
+	mklines.ForEach(block.Process)
+
+	t.CheckOutputLines(
+		// XXX: Just mention the column here, since it 81 is greater
+		//  than the right margin.
+		// XXX: In this case, it would also help to reduce the indentation
+		//  of the variable value.
+		"NOTE: filename.mk:1: The continuation backslash should be "+
+			"preceded by a single space or tab, or be in column 73, not 81.",
+		// TODO: Not really, as that would make the line too long.
+		"NOTE: filename.mk:2: This continuation line should be "+
+			"indented with \"\\t\\t\\t\\t\".",
+		"NOTE: filename.mk:3: This continuation line should be "+
+			"indented with \"\\t\\t\\t\\t\".")
+}
+
 // This example is quite unrealistic since typically the first line is
 // the least indented.
 //
@@ -3517,6 +3543,12 @@ func (s *Suite) Test_varalignMkLine_rightMargin(c *check.C) {
 		"\tv\t\t\\",                   // column 24
 		"\tv\t\t\\",                   // column 24, appears twice
 		"\tv")
+
+	// The continuation backslash in the first line is too far to the right.
+	test(false, 72,
+		"VAR....8......16..=\t\t......40......48.\t\t\t\t\\",   // column 80
+		"\t\t\t......32......40......48......56......64..\t\\", // column 72
+		"\t\t\t...13")
 }
 
 func (s *Suite) Test_varalignLine_alignValueSingle(c *check.C) {
