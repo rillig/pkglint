@@ -692,7 +692,7 @@ func (info *varalignLine) alignValueMultiFollow(column, indentDiff int) {
 	fix.Apply()
 }
 
-func (info *varalignLine) alignContinuation(newWidth, rightMargin int) {
+func (info *varalignLine) alignContinuation(valueColumn, rightMarginColumn int) {
 	if !info.isContinuation() {
 		return
 	}
@@ -703,22 +703,23 @@ func (info *varalignLine) alignContinuation(newWidth, rightMargin int) {
 	}
 
 	column := info.continuationColumn()
-	if column == 72 || column == rightMargin || column <= newWidth {
+	if column == 72 || column == rightMarginColumn || column <= valueColumn {
 		return
 	}
 
 	newSpace := " "
 	fix := info.fixer.Autofix()
-	if oldSpace == "" || rightMargin == 0 || info.uptoValueWidth() >= rightMargin {
+	if oldSpace == "" || rightMarginColumn == 0 || info.uptoValueWidth() >= rightMarginColumn {
 		fix.Notef("The continuation backslash should be preceded by a single space or tab.")
 	} else {
-		newSpace = alignmentAfter(info.uptoValue(), rightMargin)
+		newSpace = alignmentAfter(info.uptoValue(), rightMarginColumn)
 		fix.Notef(
 			"The continuation backslash should be preceded by a single space or tab, "+
 				"or be in column %d, not %d.",
-			rightMargin+1, column+1)
+			rightMarginColumn+1, column+1)
 	}
-	fix.ReplaceAt(info.rawIndex, info.continuationIndex()-len(oldSpace), oldSpace, newSpace)
+	index := info.continuationIndex() - len(oldSpace)
+	fix.ReplaceAt(info.rawIndex, index, oldSpace, newSpace)
 	fix.Apply()
 }
 
@@ -747,6 +748,13 @@ type varalignParts struct {
 	value            string // including any trailing comment
 	spaceAfterValue  string
 	continuation     string // either a single backslash or empty
+}
+
+func (p *varalignParts) String() string {
+	return p.leadingComment +
+		p.varnameOp + p.spaceBeforeValue +
+		p.value + p.spaceAfterValue +
+		p.continuation
 }
 
 // continuation returns whether this line ends with a backslash.

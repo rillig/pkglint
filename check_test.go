@@ -139,10 +139,13 @@ func Test__qa(t *testing.T) {
 	ck.Configure("tools.go", "*", "*", -intqa.EMissingTest)          // TODO
 	ck.Configure("util.go", "*", "*", -intqa.EMissingTest)           // TODO
 	ck.Configure("var.go", "*", "*", -intqa.EMissingTest)            // TODO
-	ck.Configure("varalignblock.go", "*", "*", -intqa.EMissingTest)  // TODO
-	ck.Configure("vardefs.go", "*", "*", -intqa.EMissingTest)        // TODO
-	ck.Configure("vargroups.go", "*", "*", -intqa.EMissingTest)      // TODO
-	ck.Configure("vartype.go", "*", "*", -intqa.EMissingTest)        // TODO
+
+	ck.Configure("varalignblock.go", "*", "*", -intqa.EMissingTest)            // TODO
+	ck.Configure("varalignblock.go", "varalignLine", "*", +intqa.EMissingTest) // TODO: remove as redundant
+
+	ck.Configure("vardefs.go", "*", "*", -intqa.EMissingTest)   // TODO
+	ck.Configure("vargroups.go", "*", "*", -intqa.EMissingTest) // TODO
+	ck.Configure("vartype.go", "*", "*", -intqa.EMissingTest)   // TODO
 
 	// For now, don't require tests for all the test code.
 	// Having good coverage for the main code is more important.
@@ -858,8 +861,18 @@ func (t *Tester) CheckEquals(actual interface{}, expected interface{}) bool {
 	return t.c.Check(actual, check.Equals, expected)
 }
 
+func (t *Tester) CheckEqualsf(actual interface{}, expected interface{}, format string, args ...interface{}) bool {
+	return t.c.Check(actual, check.Equals, expected,
+		check.Commentf(format, args...))
+}
+
 func (t *Tester) CheckDeepEquals(actual interface{}, expected interface{}) bool {
 	return t.c.Check(actual, check.DeepEquals, expected)
+}
+
+func (t *Tester) CheckDeepEqualsf(actual interface{}, expected interface{}, format string, args ...interface{}) bool {
+	return t.c.Check(actual, check.DeepEquals, expected,
+		check.Commentf(format, args...))
 }
 
 // InternalErrorf reports a consistency error in the tests.

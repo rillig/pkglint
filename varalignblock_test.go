@@ -3519,6 +3519,17 @@ func (s *Suite) Test_varalignMkLine_rightMargin(c *check.C) {
 		"\tv")
 }
 
+func (s *Suite) Test_varalignLine_alignValueSingle(c *check.C) {
+	t := s.Init(c)
+
+	test := func(diagnostics ...string) {
+		// FIXME
+		t.CheckOutput(diagnostics)
+	}
+
+	test()
+}
+
 func (s *Suite) Test_varalignLine_alignValueMultiEmptyInitial(c *check.C) {
 	t := s.Init(c)
 
@@ -3556,6 +3567,28 @@ func (s *Suite) Test_varalignLine_alignValueMultiEmptyInitial__spaces(c *check.C
 		"        value",
 		"VAR=    value")
 	vt.Run()
+}
+
+func (s *Suite) Test_varalignLine_alignValueMultiInitial(c *check.C) {
+	t := s.Init(c)
+
+	test := func(diagnostics ...string) {
+		// FIXME
+		t.CheckOutput(diagnostics)
+	}
+
+	test()
+}
+
+func (s *Suite) Test_varalignLine_alignValueMultiEmptyFollow(c *check.C) {
+	t := s.Init(c)
+
+	test := func(diagnostics ...string) {
+		// FIXME
+		t.CheckOutput(diagnostics)
+	}
+
+	test()
 }
 
 func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_lines(c *check.C) {
@@ -3671,6 +3704,174 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_initial_l
 		"                        ----5                                           \\",
 		"                        -7")
 	vt.Run()
+}
+
+func (s *Suite) Test_varalignLine_alignContinuation(c *check.C) {
+	t := s.Init(c)
+
+	lines := func(lines ...string) []string { return lines }
+	test := func(before []string, rawIndex, valueColumn, rightMarginColumn int, after string, diagnostics ...string) {
+
+		doTest := func(autofix bool) {
+			mklines := t.NewMkLines("filename.mk", before...)
+			assert(len(mklines.mklines) == 1)
+			mkline := mklines.mklines[0]
+
+			text := mkline.raw[rawIndex].text()
+			parts := NewVaralignSplitter().split(text, rawIndex == 0)
+			info := &varalignLine{mkline, rawIndex, false, false, parts}
+
+			info.alignContinuation(valueColumn, rightMarginColumn)
+
+			t.CheckEqualsf(
+				mkline.raw[rawIndex].text(),
+				condStr(autofix, after, before[rawIndex]),
+				"Line.raw.text, autofix=%v", autofix)
+
+			// As of 2019-12-11, the info fields are not updated
+			// accordingly, but they should.
+			// TODO: update info accordingly
+			t.CheckEqualsf(info.String(), before[rawIndex],
+				"info.String, autofix=%v", autofix)
+		}
+
+		t.ExpectDiagnosticsAutofix(doTest, diagnostics...)
+	}
+
+	// In this line, there is no continuation backslash,
+	// thus nothing to align.
+	test(
+		lines(
+			"VAR=\t...13"),
+		0, 32, 48,
+
+		"VAR=\t...13",
+		nil...)
+
+	// The continuation backslash in line 1 is already canonical,
+	// independently of the alignment column for the variable values.
+	//
+	// XXX: Maybe later enforce the continuation backslash to be
+	//  aligned at newWidth.
+	test(
+		lines(
+			"VAR=\t...13 \\",
+			"\t...13"),
+		0, 32, 48,
+
+		"VAR=\t...13 \\",
+		nil...)
+
+	// In line 2, there is no continuation backslash,
+	// thus nothing to align.
+	test(
+		lines(
+			"VAR=\t...13 \\",
+			"\t...13"),
+		1, 32, 48,
+
+		"\t...13",
+		nil...)
+
+	// A single tab before the continuation backslash is always
+	// considered canonical, thus nothing to align.
+	//
+	// XXX: Why? It would be better to force the tab to the valueColumn.
+	test(
+		lines(
+			"VAR=\t...13\t\\",
+			"\t...13"),
+		0, 32, 48,
+
+		"VAR=\t...13\t\\",
+		nil...)
+
+	// Colum 24 is left of the valueAlign,
+	// therefore there is nothing to align.
+	//
+	// XXX: Why? It would be better to force the tab to the valueColumn.
+	test(
+		lines(
+			"VAR=\t...13\t\t\\",
+			"\t...13"),
+		0, 32, 48,
+
+		"VAR=\t...13\t\t\\",
+		nil...)
+
+	// Colum 32 is the valueColumn, therefore there is nothing to align.
+	test(
+		lines(
+			"VAR=\t...13\t\t\t\\",
+			"\t...13"),
+		0, 32, 48,
+
+		"VAR=\t...13\t\t\t\\",
+		nil...)
+
+	// Colum 40 is somewhere between the valueColumn and the right margin
+	// of the MkLine and is thus arbitrary.
+	// It is aligned to the right margin.
+	test(
+		lines(
+			"VAR=\t...13\t\t\t\t\\",
+			"\t...13"),
+		0, 32, 48,
+
+		"VAR=\t...13\t\t\t\t\t\\",
+		"NOTE: filename.mk:1: The continuation backslash should be "+
+			"preceded by a single space or tab, or be in column 49, not 41.",
+		"AUTOFIX: filename.mk:1: Replacing \"\\t\\t\\t\\t\" "+
+			"with \"\\t\\t\\t\\t\\t\".")
+
+	// Colum 48 is already at the right margin, thus nothing to align.
+	test(
+		lines(
+			"VAR=\t...13......24......32\t\t\t\\",
+			"\t...13"),
+		0, 32, 48,
+
+		"VAR=\t...13......24......32\t\t\t\\",
+		nil...)
+
+	// Colum 56 is right of the right margin.
+	// It is reduced to the right margin.
+	test(
+		lines(
+			"VAR=\t...13......24......32\t\t\t\t\\",
+			"\t...13"),
+		0, 32, 48,
+
+		"VAR=\t...13......24......32\t\t\t\\",
+		"NOTE: filename.mk:1: The continuation backslash should be "+
+			"preceded by a single space or tab, or be in column 49, not 57.",
+		"AUTOFIX: filename.mk:1: Replacing \"\\t\\t\\t\\t\" "+
+			"with \"\\t\\t\\t\".")
+
+	// Colum 72 is the "natural" column for continuation backslashes,
+	// therefore there is nothing to align.
+	test(
+		lines(
+			"VAR=\t...13\t\t\t\t\t\t\t\t\\",
+			"\t...13"),
+		0, 32, 48,
+
+		"VAR=\t...13\t\t\t\t\t\t\t\t\\",
+		nil...)
+}
+
+func (s *Suite) Test_varalignLine_explainWrongColumn(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("filename.mk", 123, "")
+	fix := mkline.Autofix()
+	fix.Notef("Note.")
+	(*varalignLine)(nil).explainWrongColumn(fix)
+	fix.Apply()
+
+	t.CheckOutputLines(
+		"NOTE: filename.mk:123: Note.")
+	t.CheckEquals(G.Logger.explanationsAvailable, true)
 }
 
 // This constellation doesn't occur in practice because the code in
