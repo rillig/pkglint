@@ -276,7 +276,7 @@ func (ctx *SubstContext) varassignSed(mkline *MkLine) {
 
 func (ctx *SubstContext) varassignVars(mkline *MkLine) {
 	seen := func(s *substSeen) *bool { return &s.vars }
-	prev := ctx.seen(seen)
+	prev := ctx.seenInBranch(seen)
 	ctx.dupList(mkline, seen)
 	ctx.top().transform = true
 	for _, substVar := range mkline.Fields() {
@@ -375,7 +375,7 @@ func (ctx *SubstContext) Finish(diag Diagnoser) {
 }
 
 func (ctx *SubstContext) dupString(mkline *MkLine, flag func(stats *substSeen) *bool) {
-	if ctx.seen(flag) {
+	if ctx.seenInBranch(flag) {
 		mkline.Warnf("Duplicate definition of %q.", mkline.Varname())
 	}
 	*flag(ctx.top()) = true
@@ -383,7 +383,7 @@ func (ctx *SubstContext) dupString(mkline *MkLine, flag func(stats *substSeen) *
 
 func (ctx *SubstContext) dupList(mkline *MkLine, flag func(stats *substSeen) *bool) {
 
-	if ctx.seen(flag) && mkline.Op() != opAssignAppend {
+	if ctx.seenInBranch(flag) && mkline.Op() != opAssignAppend {
 		mkline.Warnf("All but the first %q lines should use the \"+=\" operator.", mkline.Varname())
 	}
 	*flag(ctx.top()) = true
@@ -560,8 +560,9 @@ func (ctx *SubstContext) condEndif(diag Diagnoser) {
 	ctx.top().Or(top.total)
 }
 
-// TODO: rename to seenInCurrentBranch
-func (ctx *SubstContext) seen(flag func(seen *substSeen) *bool) bool {
+// Returns true if the given flag from substSeen has been seen
+// somewhere in the conditional path of the current line.
+func (ctx *SubstContext) seenInBranch(flag func(seen *substSeen) *bool) bool {
 	for _, cond := range ctx.conds {
 		if *flag(&cond.curr) {
 			return true
