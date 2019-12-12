@@ -578,6 +578,38 @@ func (s *Suite) Test_SubstContext_varassignStage__post_patch(c *check.C) {
 		"SUBST_SED.os=   -e s,@OPSYS@,Darwin,")
 }
 
+// As of December 2019, pkglint does not use token positions internally.
+// Instead it only does simple string replacement when autofixing things.
+// To avoid damaging anything, replacements are only done if they are
+// unambiguous. This is not the case here, since line 4 contains the
+// string "pre-patch" twice.
+func (s *Suite) Test_SubstContext_varassignStage__ambiguous_replacement(c *check.C) {
+	t := s.Init(c)
+
+	t.Chdir(".")
+
+	test := func(autofix bool) {
+		mklines := t.NewMkLines("filename.mk",
+			MkCvsID,
+			"",
+			"SUBST_CLASSES+=         pre-patch",
+			"SUBST_STAGE.pre-patch=  pre-patch",
+			"SUBST_FILES.pre-patch=  files",
+			"SUBST_VARS.pre-patch=   VARNAME")
+		ctx := NewSubstContext()
+
+		mklines.ForEach(ctx.Process)
+
+		mklines.SaveAutofixChanges()
+	}
+
+	t.ExpectDiagnosticsAutofix(
+		test,
+		"WARN: filename.mk:4: Substitutions should not happen in the patch phase.")
+
+	t.CheckEquals(t.File("filename.mk").IsFile(), false)
+}
+
 func (s *Suite) Test_SubstContext_varassignStage__with_NO_CONFIGURE(c *check.C) {
 	t := s.Init(c)
 
