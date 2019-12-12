@@ -10,7 +10,8 @@ type SubstContext struct {
 	id        string
 	vars      map[string]bool
 	conds     []*substCond
-	once      Once
+
+	once Once
 }
 
 func NewSubstContext() *SubstContext {
@@ -38,6 +39,9 @@ type substCond struct {
 type substSeen struct {
 	// The ID of the SUBST class is included here to track nested SUBST blocks.
 	// It marks the conditional level at which a block has started.
+	//
+	// XXX: All the other fields are dependent on the ID. Therefore having the
+	//  ID here doesn't really make sense. Try to remove it, once more.
 	id bool
 
 	stage     bool
@@ -93,20 +97,20 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 		return
 	}
 
-	varname := mkline.Varname()
-	if ctx.isForeignCanon(varcanon) && !ctx.vars[varname] {
-		if ctx.id != "" {
-			mkline.Warnf("Foreign variable %q in SUBST block.", varname)
+	if ctx.isForeign(mkline.Varcanon()) && !ctx.isSubstVar(mkline.Varname()) {
+		if ctx.isActive() {
+			mkline.Warnf("Foreign variable %q in SUBST block.", mkline.Varname())
 		}
 		return
 	}
 
-	if ctx.id == "" {
-		ctx.varassignMissingId(mkline)
+	// TODO: Move before the previous if clause.
+	if !ctx.isActive() {
+		ctx.varassignOutOfScope(mkline)
 		return
 	}
 
-	if hasPrefix(varname, "SUBST_") && mkline.Varparam() != ctx.id {
+	if hasPrefix(mkline.Varname(), "SUBST_") && !ctx.isActiveId(mkline.Varparam()) {
 		if !ctx.varassignDifferentClass(mkline) {
 			return
 		}
@@ -142,32 +146,32 @@ func (ctx *SubstContext) varassignClasses(mkline *MkLine) {
 	}
 
 	id := classes[0]
-	if ctx.id != "" && ctx.id != id {
-		id := ctx.id // since ctx.directiveEndif overwrites ctx.id
-		for len(ctx.conds) > 1 {
+	if ctx.isActive() && !ctx.isActiveId(id) {
+		id := ctx.activeId() // since ctx.condEndif may reset it
+
+		for ctx.isConditional() {
 			// This will be confusing for the outer SUBST block,
 			// but since that block is assumed to be finished,
 			// this doesn't matter.
-			ctx.directiveEndif(mkline)
+			ctx.condEndif(mkline)
 		}
-		complete := ctx.IsComplete()
+
+		complete := ctx.IsComplete() // since ctx.Finish will reset it
 		ctx.Finish(mkline)
 		if !complete {
 			mkline.Warnf("Subst block %q should be finished before adding the next class to SUBST_CLASSES.", id)
 		}
 	}
-	ctx.id = id
-	ctx.top().id = true
 
-	ctx.doneId(id)
+	ctx.setActiveId(id)
 
 	return
 }
 
-func (ctx *SubstContext) varassignMissingId(mkline *MkLine) {
+func (ctx *SubstContext) varassignOutOfScope(mkline *MkLine) {
 	varparam := mkline.Varparam()
 
-	if ctx.isListCanon(mkline.Varcanon()) && ctx.doneIds[varparam] {
+	if ctx.isListCanon(mkline.Varcanon()) && ctx.isDone(varparam) {
 		if mkline.Op() != opAssignAppend {
 			mkline.Warnf("Late additions to a SUBST variable should use the += operator.")
 		}
@@ -194,7 +198,7 @@ func (ctx *SubstContext) varassignDifferentClass(mkline *MkLine) (ok bool) {
 	varparam := mkline.Varparam()
 
 	if !ctx.IsComplete() {
-		mkline.Warnf("Variable %q does not match SUBST class %q.", varname, ctx.id)
+		mkline.Warnf("Variable %q does not match SUBST class %q.", varname, ctx.activeId())
 		return false
 	}
 
@@ -207,8 +211,9 @@ func (ctx *SubstContext) varassignDifferentClass(mkline *MkLine) (ok bool) {
 func (ctx *SubstContext) varassignStage(mkline *MkLine) {
 	varname := mkline.Varname()
 	value := mkline.Value()
+	// TODO: move further down
 
-	if !ctx.top().id {
+	if ctx.isConditionalWithoutId() {
 		mkline.Warnf("%s should not be defined conditionally.", varname)
 	}
 
@@ -271,10 +276,8 @@ func (ctx *SubstContext) varassignVars(mkline *MkLine) {
 	ctx.dupList(mkline, seen)
 	ctx.top().transform = true
 	for _, substVar := range mkline.Fields() {
-		if ctx.vars == nil {
-			ctx.vars = make(map[string]bool)
-		}
-		ctx.vars[substVar] = true
+		// TODO: What about variables that are defined before the SUBST_VARS line?
+		ctx.allowVar(substVar)
 	}
 
 	if prev && mkline.Op() == opAssign {
@@ -293,21 +296,7 @@ func (ctx *SubstContext) varassignFilterCmd(mkline *MkLine) {
 	ctx.top().transform = true
 }
 
-func (ctx *SubstContext) queue(id string) {
-	if ctx.queuedIds == nil {
-		ctx.queuedIds = map[string]bool{}
-	}
-	ctx.queuedIds[id] = true
-}
-
-func (ctx *SubstContext) doneId(id string) {
-	if ctx.doneIds == nil {
-		ctx.doneIds = map[string]bool{}
-	}
-	ctx.doneIds[id] = true
-}
-
-func (ctx *SubstContext) isForeignCanon(varcanon string) bool {
+func (ctx *SubstContext) isForeign(varcanon string) bool {
 	switch varcanon {
 	case
 		"SUBST_STAGE.*",
@@ -340,40 +329,18 @@ func (ctx *SubstContext) Directive(mkline *MkLine) {
 	dir := mkline.Directive()
 	switch dir {
 	case "if":
-		top := substCond{total: substSeen{true, true, true, true, true, true, true, true}}
-		ctx.conds = append(ctx.conds, &top)
+		ctx.condIf()
 
 	case "elif", "else":
-		top := ctx.conds[len(ctx.conds)-1]
-		top.total.And(top.curr)
-		if top.curr.id {
-			ctx.Finish(mkline)
-		}
-		top.curr = substSeen{}
-		top.seenElse = dir == "else"
+		ctx.condElse(mkline, dir)
 
 	case "endif":
-		ctx.directiveEndif(mkline)
+		ctx.condEndif(mkline)
 	}
 
 	if trace.Tracing {
 		trace.Stepf("- SubstContext.Directive %v", *ctx.top())
 	}
-}
-
-func (ctx *SubstContext) directiveEndif(diag Diagnoser) {
-	top := ctx.conds[len(ctx.conds)-1]
-	top.total.And(top.curr)
-	if top.curr.id {
-		ctx.Finish(diag)
-	}
-	if !top.seenElse {
-		top.total = substSeen{}
-	}
-	if len(ctx.conds) > 1 {
-		ctx.conds = ctx.conds[:len(ctx.conds)-1]
-	}
-	ctx.top().Or(top.total)
 }
 
 func (ctx *SubstContext) IsComplete() bool {
@@ -382,11 +349,13 @@ func (ctx *SubstContext) IsComplete() bool {
 }
 
 func (ctx *SubstContext) Finish(diag Diagnoser) {
-	if ctx.id == "" {
+	if !ctx.isActive() {
 		return
 	}
 
-	id := ctx.id
+	// TODO: Extract these warnings into a separate method,
+	//  to decouple them from the state manipulation.
+	id := ctx.activeId()
 	top := ctx.top()
 	if !top.stage {
 		diag.Warnf("Incomplete SUBST block: SUBST_STAGE.%s missing.", id)
@@ -416,15 +385,6 @@ func (ctx *SubstContext) dupList(mkline *MkLine, flag func(stats *substSeen) *bo
 	*flag(ctx.top()) = true
 }
 
-func (ctx *SubstContext) seen(flag func(seen *substSeen) *bool) bool {
-	for _, cond := range ctx.conds {
-		if *flag(&cond.curr) {
-			return true
-		}
-	}
-	return false
-}
-
 func (ctx *SubstContext) suggestSubstVars(mkline *MkLine) {
 
 	tokens, _ := splitIntoShellTokens(mkline.Line, mkline.Value())
@@ -434,9 +394,11 @@ func (ctx *SubstContext) suggestSubstVars(mkline *MkLine) {
 			continue
 		}
 
+		id := ctx.activeId()
 		varop := sprintf("SUBST_VARS.%s%s%s",
-			ctx.id,
-			condStr(hasSuffix(ctx.id, "+"), " ", ""),
+			id,
+			condStr(hasSuffix(id, "+"), " ", ""),
+			// FIXME: ctx.anyVars sounds more correct.
 			condStr(ctx.top().vars, "+=", "="))
 
 		fix := mkline.Autofix()
@@ -496,8 +458,26 @@ func (*SubstContext) extractVarname(token string) string {
 	return varname
 }
 
-func (ctx *SubstContext) top() *substSeen {
-	return &ctx.conds[len(ctx.conds)-1].curr
+func (ctx *SubstContext) isActive() bool { return ctx.id != "" }
+
+func (ctx *SubstContext) isActiveId(id string) bool { return ctx.id == id }
+
+func (ctx *SubstContext) activeId() string {
+	assert(ctx.isActive())
+	return ctx.id
+}
+
+func (ctx *SubstContext) setActiveId(id string) {
+	ctx.id = id
+	ctx.top().id = true
+	ctx.markAsDone(id)
+}
+
+func (ctx *SubstContext) queue(id string) {
+	if ctx.queuedIds == nil {
+		ctx.queuedIds = map[string]bool{}
+	}
+	ctx.queuedIds[id] = true
 }
 
 func (ctx *SubstContext) start(id string) bool {
@@ -505,6 +485,80 @@ func (ctx *SubstContext) start(id string) bool {
 		ctx.queuedIds[id] = false
 		ctx.id = id
 		return true
+	}
+	return false
+}
+
+func (ctx *SubstContext) markAsDone(id string) {
+	if ctx.doneIds == nil {
+		ctx.doneIds = map[string]bool{}
+	}
+	ctx.doneIds[id] = true
+}
+
+func (ctx *SubstContext) isDone(varparam string) bool {
+	return ctx.doneIds[varparam]
+}
+
+func (ctx *SubstContext) allowVar(substVar string) {
+	if ctx.vars == nil {
+		ctx.vars = make(map[string]bool)
+	}
+	ctx.vars[substVar] = true
+}
+
+func (ctx *SubstContext) isSubstVar(varname string) bool {
+	return ctx.vars[varname]
+}
+
+func (ctx *SubstContext) isConditional() bool { return len(ctx.conds) > 1 }
+
+// XXX: Can this be merged with isConditional?
+func (ctx *SubstContext) isConditionalWithoutId() bool {
+	return !ctx.top().id
+}
+
+func (ctx *SubstContext) top() *substSeen {
+	return &ctx.conds[len(ctx.conds)-1].curr
+}
+
+func (ctx *SubstContext) condIf() {
+	top := substCond{total: substSeen{true, true, true, true, true, true, true, true}}
+	ctx.conds = append(ctx.conds, &top)
+}
+
+func (ctx *SubstContext) condElse(mkline *MkLine, dir string) {
+	top := ctx.conds[len(ctx.conds)-1]
+	top.total.And(top.curr)
+	if top.curr.id {
+		// XXX: This is a higher-level method
+		ctx.Finish(mkline)
+	}
+	top.curr = substSeen{}
+	top.seenElse = dir == "else"
+}
+
+func (ctx *SubstContext) condEndif(diag Diagnoser) {
+	top := ctx.conds[len(ctx.conds)-1]
+	top.total.And(top.curr)
+	if top.curr.id {
+		// XXX: This is a higher-level method
+		ctx.Finish(diag)
+	}
+	if !top.seenElse {
+		top.total = substSeen{}
+	}
+	if len(ctx.conds) > 1 {
+		ctx.conds = ctx.conds[:len(ctx.conds)-1]
+	}
+	ctx.top().Or(top.total)
+}
+
+func (ctx *SubstContext) seen(flag func(seen *substSeen) *bool) bool {
+	for _, cond := range ctx.conds {
+		if *flag(&cond.curr) {
+			return true
+		}
 	}
 	return false
 }
