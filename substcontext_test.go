@@ -4,62 +4,9 @@ import (
 	"gopkg.in/check.v1"
 )
 
-func (s *Suite) Test_SubstContext__incomplete(c *check.C) {
-	t := s.Init(c)
-
-	ctx := NewSubstContext()
-
-	ctx.Varassign(t.NewMkLine("filename.mk", 10, "PKGNAME=pkgname-1.0"))
-
-	t.CheckEquals(ctx.id, "")
-
-	ctx.Varassign(t.NewMkLine("filename.mk", 11, "SUBST_CLASSES+=interp"))
-
-	t.CheckEquals(ctx.id, "interp")
-
-	ctx.Varassign(t.NewMkLine("filename.mk", 12, "SUBST_FILES.interp=Makefile"))
-
-	t.CheckEquals(ctx.IsComplete(), false)
-
-	ctx.Varassign(t.NewMkLine("filename.mk", 13, "SUBST_SED.interp=s,@PREFIX@,${PREFIX},g"))
-
-	t.CheckEquals(ctx.IsComplete(), false)
-
-	ctx.Finish(t.NewMkLine("filename.mk", 14, ""))
-
-	t.CheckOutputLines(
-		"NOTE: filename.mk:13: The substitution command \"s,@PREFIX@,${PREFIX},g\" "+
-			"can be replaced with \"SUBST_VARS.interp= PREFIX\".",
-		"WARN: filename.mk:14: Incomplete SUBST block: SUBST_STAGE.interp missing.")
-}
-
-func (s *Suite) Test_SubstContext__complete(c *check.C) {
-	t := s.Init(c)
-
-	ctx := NewSubstContext()
-
-	ctx.Varassign(t.NewMkLine("filename.mk", 10, "PKGNAME=pkgname-1.0"))
-	ctx.Varassign(t.NewMkLine("filename.mk", 11, "SUBST_CLASSES+=p"))
-	ctx.Varassign(t.NewMkLine("filename.mk", 12, "SUBST_FILES.p=Makefile"))
-	ctx.Varassign(t.NewMkLine("filename.mk", 13, "SUBST_SED.p=s,@PREFIX@,${PREFIX},g"))
-
-	t.CheckEquals(ctx.IsComplete(), false)
-
-	ctx.Varassign(t.NewMkLine("filename.mk", 14, "SUBST_STAGE.p=post-configure"))
-
-	t.CheckEquals(ctx.IsComplete(), true)
-
-	ctx.Finish(t.NewMkLine("filename.mk", 15, ""))
-
-	t.CheckOutputLines(
-		"NOTE: filename.mk:13: The substitution command \"s,@PREFIX@,${PREFIX},g\" " +
-			"can be replaced with \"SUBST_VARS.p= PREFIX\".")
-}
-
 func (s *Suite) Test_SubstContext__OPSYSVARS(c *check.C) {
 	t := s.Init(c)
 
-	G.Opts.WarnExtra = true
 	ctx := NewSubstContext()
 
 	// SUBST_CLASSES is added to OPSYSVARS in mk/bsd.pkg.mk.
@@ -69,7 +16,7 @@ func (s *Suite) Test_SubstContext__OPSYSVARS(c *check.C) {
 	ctx.Varassign(t.NewMkLine("filename.mk", 14, "SUBST_SED.prefix=s,@PREFIX@,${PREFIX},g"))
 	ctx.Varassign(t.NewMkLine("filename.mk", 15, "SUBST_STAGE.prefix=post-configure"))
 
-	t.CheckEquals(ctx.IsComplete(), true)
+	t.CheckEquals(ctx.isComplete(), true)
 
 	ctx.Finish(t.NewMkLine("filename.mk", 15, ""))
 
@@ -1487,4 +1434,56 @@ func (s *Suite) Test_SubstContext_extractVarname(c *check.C) {
 
 	// The replacement must be a plain variable expression, without suffix.
 	test("s,@VAR@,${VAR}suffix,", "")
+}
+
+func (s *Suite) Test_SubstContext_isComplete__incomplete(c *check.C) {
+	t := s.Init(c)
+
+	ctx := NewSubstContext()
+
+	ctx.Varassign(t.NewMkLine("filename.mk", 10, "PKGNAME=pkgname-1.0"))
+
+	t.CheckEquals(ctx.id, "")
+
+	ctx.Varassign(t.NewMkLine("filename.mk", 11, "SUBST_CLASSES+=interp"))
+
+	t.CheckEquals(ctx.id, "interp")
+
+	ctx.Varassign(t.NewMkLine("filename.mk", 12, "SUBST_FILES.interp=Makefile"))
+
+	t.CheckEquals(ctx.isComplete(), false)
+
+	ctx.Varassign(t.NewMkLine("filename.mk", 13, "SUBST_SED.interp=s,@PREFIX@,${PREFIX},g"))
+
+	t.CheckEquals(ctx.isComplete(), false)
+
+	ctx.Finish(t.NewMkLine("filename.mk", 14, ""))
+
+	t.CheckOutputLines(
+		"NOTE: filename.mk:13: The substitution command \"s,@PREFIX@,${PREFIX},g\" "+
+			"can be replaced with \"SUBST_VARS.interp= PREFIX\".",
+		"WARN: filename.mk:14: Incomplete SUBST block: SUBST_STAGE.interp missing.")
+}
+
+func (s *Suite) Test_SubstContext_isComplete__complete(c *check.C) {
+	t := s.Init(c)
+
+	ctx := NewSubstContext()
+
+	ctx.Varassign(t.NewMkLine("filename.mk", 10, "PKGNAME=pkgname-1.0"))
+	ctx.Varassign(t.NewMkLine("filename.mk", 11, "SUBST_CLASSES+=p"))
+	ctx.Varassign(t.NewMkLine("filename.mk", 12, "SUBST_FILES.p=Makefile"))
+	ctx.Varassign(t.NewMkLine("filename.mk", 13, "SUBST_SED.p=s,@PREFIX@,${PREFIX},g"))
+
+	t.CheckEquals(ctx.isComplete(), false)
+
+	ctx.Varassign(t.NewMkLine("filename.mk", 14, "SUBST_STAGE.p=post-configure"))
+
+	t.CheckEquals(ctx.isComplete(), true)
+
+	ctx.Finish(t.NewMkLine("filename.mk", 15, ""))
+
+	t.CheckOutputLines(
+		"NOTE: filename.mk:13: The substitution command \"s,@PREFIX@,${PREFIX},g\" " +
+			"can be replaced with \"SUBST_VARS.p= PREFIX\".")
 }

@@ -155,7 +155,7 @@ func (ctx *SubstContext) varassignClasses(mkline *MkLine) {
 			ctx.condEndif(mkline)
 		}
 
-		complete := ctx.IsComplete() // since ctx.Finish will reset it
+		complete := ctx.isComplete() // since ctx.Finish will reset it
 		ctx.Finish(mkline)
 		if !complete {
 			mkline.Warnf("Subst block %q should be finished before adding the next class to SUBST_CLASSES.", id)
@@ -198,7 +198,7 @@ func (ctx *SubstContext) varassignDifferentClass(mkline *MkLine) (ok bool) {
 	varname := mkline.Varname()
 	varparam := mkline.Varparam()
 
-	if !ctx.IsComplete() {
+	if !ctx.isComplete() {
 		mkline.Warnf("Variable %q does not match SUBST class %q.", varname, ctx.activeId())
 		return false
 	}
@@ -335,12 +335,6 @@ func (ctx *SubstContext) Directive(mkline *MkLine) {
 	if trace.Tracing {
 		trace.Stepf("- SubstContext.Directive %v", *ctx.seen())
 	}
-}
-
-// TODO: unexport
-func (ctx *SubstContext) IsComplete() bool {
-	seen := ctx.seen()
-	return seen.get(ssStage) && seen.get(ssFiles) && seen.get(ssTransform)
 }
 
 func (ctx *SubstContext) Finish(diag Diagnoser) {
@@ -590,6 +584,11 @@ func (ctx *SubstContext) condEndif(diag Diagnoser) {
 		ctx.conds = ctx.conds[:len(ctx.conds)-1]
 	}
 	ctx.seen().union(top.total)
+}
+
+func (ctx *SubstContext) isComplete() bool {
+	seen := ctx.seen()
+	return seen.get(ssStage) && seen.get(ssFiles) && seen.get(ssTransform)
 }
 
 // Returns true if the given flag from substSeen has been seen
