@@ -249,7 +249,7 @@ func (ctx *SubstContext) varassignStage(mkline *MkLine) {
 func (ctx *SubstContext) varassignMessages(mkline *MkLine) {
 	varname := mkline.Varname()
 
-	if !ctx.top().id {
+	if ctx.isConditionalWithoutId() {
 		mkline.Warnf("%s should not be defined conditionally.", varname)
 	}
 
