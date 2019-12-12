@@ -230,8 +230,6 @@ func (s *Suite) Test_SubstContext__directives(c *check.C) {
 func (s *Suite) Test_SubstContext__adjacent(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
-
 	mklines := t.NewMkLines("os.mk",
 		MkCvsID,
 		"",
@@ -244,8 +242,9 @@ func (s *Suite) Test_SubstContext__adjacent(c *check.C) {
 		"SUBST_STAGE.2=\tpre-configure",
 		"SUBST_FILES.2=\tfile2",
 		"SUBST_SED.2=\t-e s,subst2,repl2,")
+	ctx := NewSubstContext()
 
-	mklines.Check()
+	mklines.ForEach(ctx.Process)
 
 	t.CheckOutputLines(
 		"WARN: os.mk:8: Variable \"SUBST_SED.1\" does not match SUBST class \"2\".")
@@ -254,8 +253,6 @@ func (s *Suite) Test_SubstContext__adjacent(c *check.C) {
 func (s *Suite) Test_SubstContext__do_patch(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
-
 	mklines := t.NewMkLines("os.mk",
 		MkCvsID,
 		"",
@@ -263,8 +260,9 @@ func (s *Suite) Test_SubstContext__do_patch(c *check.C) {
 		"SUBST_STAGE.os=\tdo-patch",
 		"SUBST_FILES.os=\tguess-os.h",
 		"SUBST_SED.os=\t-e s,@OPSYS@,Darwin,")
+	ctx := NewSubstContext()
 
-	mklines.Check()
+	mklines.ForEach(ctx.Process)
 
 	// No warning, since there is nothing to fix automatically.
 	// This case doesn't occur in practice anyway.
@@ -276,8 +274,6 @@ func (s *Suite) Test_SubstContext__do_patch(c *check.C) {
 func (s *Suite) Test_SubstContext__SUBST_VARS_defined_in_block(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
-
 	mklines := t.NewMkLines("os.mk",
 		MkCvsID,
 		"",
@@ -287,11 +283,11 @@ func (s *Suite) Test_SubstContext__SUBST_VARS_defined_in_block(c *check.C) {
 		"SUBST_VARS.os=\tTODAY1",
 		"TODAY1!=\tdate",
 		"TODAY2!=\tdate")
+	ctx := NewSubstContext()
 
-	mklines.Check()
+	mklines.ForEach(ctx.Process)
 
 	t.CheckOutputLines(
-		"WARN: os.mk:8: TODAY2 is defined but not used.",
 		"WARN: os.mk:8: Foreign variable \"TODAY2\" in SUBST block.")
 }
 
@@ -300,8 +296,6 @@ func (s *Suite) Test_SubstContext__SUBST_VARS_defined_in_block(c *check.C) {
 func (s *Suite) Test_SubstContext__SUBST_VARS_in_next_paragraph(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
-
 	mklines := t.NewMkLines("os.mk",
 		MkCvsID,
 		"",
@@ -312,17 +306,15 @@ func (s *Suite) Test_SubstContext__SUBST_VARS_in_next_paragraph(c *check.C) {
 		"",
 		"TODAY1!=\tdate",
 		"TODAY2!=\tdate")
+	ctx := NewSubstContext()
 
-	mklines.Check()
+	mklines.ForEach(ctx.Process)
 
-	t.CheckOutputLines(
-		"WARN: os.mk:9: TODAY2 is defined but not used.")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_SubstContext__multiple_SUBST_VARS(c *check.C) {
 	t := s.Init(c)
-
-	t.SetUpVartypes()
 
 	mklines := t.NewMkLines("os.mk",
 		MkCvsID,
@@ -331,8 +323,9 @@ func (s *Suite) Test_SubstContext__multiple_SUBST_VARS(c *check.C) {
 		"SUBST_STAGE.os=\tpre-configure",
 		"SUBST_FILES.os=\tguess-os.h",
 		"SUBST_VARS.os=\tPREFIX VARBASE")
+	ctx := NewSubstContext()
 
-	mklines.Check()
+	mklines.ForEach(ctx.Process)
 
 	t.CheckOutputEmpty()
 }
@@ -343,8 +336,6 @@ func (s *Suite) Test_SubstContext__multiple_SUBST_VARS(c *check.C) {
 func (s *Suite) Test_SubstContext__unusual_variable_order(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
-
 	mklines := t.NewMkLines("subst.mk",
 		MkCvsID,
 		"",
@@ -353,8 +344,9 @@ func (s *Suite) Test_SubstContext__unusual_variable_order(c *check.C) {
 		"SUBST_FILES.id=\t\tfile",
 		"SUBST_MESSAGE.id=\tMessage",
 		"SUBST_STAGE.id=\t\tpre-configure")
+	ctx := NewSubstContext()
 
-	mklines.Check()
+	mklines.ForEach(ctx.Process)
 
 	t.CheckOutputEmpty()
 }
@@ -362,13 +354,8 @@ func (s *Suite) Test_SubstContext__unusual_variable_order(c *check.C) {
 func (s *Suite) Test_SubstContext__completely_conditional_then(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpPkgsrc()
-	t.Chdir(".")
-	t.FinishSetUp()
 	mklines := t.NewMkLines("subst.mk",
 		MkCvsID,
-		"",
-		".include \"mk/bsd.prefs.mk\"",
 		"",
 		".if ${OPSYS} == Linux",
 		"SUBST_CLASSES+=\tid",
@@ -376,25 +363,21 @@ func (s *Suite) Test_SubstContext__completely_conditional_then(c *check.C) {
 		"SUBST_SED.id=\t-e sahara",
 		".else",
 		".endif")
+	ctx := NewSubstContext()
 
-	mklines.Check()
+	mklines.ForEach(ctx.Process)
 
 	// The block already ends at the .else, not at the end of the file,
 	// since that is the scope where the SUBST id is defined.
 	t.CheckOutputLines(
-		"WARN: subst.mk:9: Incomplete SUBST block: SUBST_FILES.id missing.")
+		"WARN: subst.mk:7: Incomplete SUBST block: SUBST_FILES.id missing.")
 }
 
 func (s *Suite) Test_SubstContext__completely_conditional_else(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpPkgsrc()
-	t.Chdir(".")
-	t.FinishSetUp()
 	mklines := t.NewMkLines("subst.mk",
 		MkCvsID,
-		"",
-		".include \"mk/bsd.prefs.mk\"",
 		"",
 		".if ${OPSYS} == Linux",
 		".else",
@@ -402,13 +385,14 @@ func (s *Suite) Test_SubstContext__completely_conditional_else(c *check.C) {
 		"SUBST_STAGE.id=\tpre-configure",
 		"SUBST_SED.id=\t-e sahara",
 		".endif")
+	ctx := NewSubstContext()
 
-	mklines.Check()
+	mklines.ForEach(ctx.Process)
 
 	// The block already ends at the .endif, not at the end of the file,
 	// since that is the scope where the SUBST id is defined.
 	t.CheckOutputLines(
-		"WARN: subst.mk:10: Incomplete SUBST block: SUBST_FILES.id missing.")
+		"WARN: subst.mk:8: Incomplete SUBST block: SUBST_FILES.id missing.")
 }
 
 func (s *Suite) Test_SubstContext__SUBST_CLASSES_in_separate_paragraph(c *check.C) {
@@ -472,8 +456,8 @@ func (s *Suite) Test_SubstContext_Varassign__late_addition_to_unknown_class(c *c
 		"SUBST_VARS.id=\tOPSYS",
 		"")
 	ctx := NewSubstContext()
-
 	mklines.collectRationale()
+
 	mklines.ForEach(ctx.Process)
 
 	t.CheckOutputLines(
@@ -511,8 +495,8 @@ func (s *Suite) Test_SubstContext_varassignMissingId__rationale(c *check.C) {
 		"SUBST_SED.libs+=\t-e sahara",
 		"")
 	ctx := NewSubstContext()
-
 	mklines.collectRationale()
+
 	mklines.ForEach(ctx.Process)
 
 	t.CheckOutputLines(
@@ -528,7 +512,6 @@ func (s *Suite) Test_SubstContext_varassignMissingId__rationale(c *check.C) {
 func (s *Suite) Test_SubstContext_varassignStage__pre_patch(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
 	t.Chdir(".")
 
 	doTest := func(autofix bool) {
@@ -539,8 +522,11 @@ func (s *Suite) Test_SubstContext_varassignStage__pre_patch(c *check.C) {
 			"SUBST_STAGE.os=\tpre-patch",
 			"SUBST_FILES.os=\tguess-os.h",
 			"SUBST_SED.os=\t-e s,@OPSYS@,Darwin,")
+		ctx := NewSubstContext()
 
-		mklines.Check()
+		mklines.ForEach(ctx.Process)
+
+		mklines.SaveAutofixChanges()
 	}
 
 	t.ExpectDiagnosticsAutofix(
@@ -560,7 +546,6 @@ func (s *Suite) Test_SubstContext_varassignStage__pre_patch(c *check.C) {
 func (s *Suite) Test_SubstContext_varassignStage__post_patch(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
 	t.Chdir(".")
 
 	test := func(autofix bool) {
@@ -571,8 +556,11 @@ func (s *Suite) Test_SubstContext_varassignStage__post_patch(c *check.C) {
 			"SUBST_STAGE.os=\tpost-patch",
 			"SUBST_FILES.os=\tguess-os.h",
 			"SUBST_SED.os=\t-e s,@OPSYS@,Darwin,")
+		ctx := NewSubstContext()
 
-		mklines.Check()
+		mklines.ForEach(ctx.Process)
+
+		mklines.SaveAutofixChanges()
 	}
 
 	t.ExpectDiagnosticsAutofix(
@@ -638,9 +626,6 @@ func (s *Suite) Test_SubstContext_varassignStage__without_NO_CONFIGURE(c *check.
 func (s *Suite) Test_SubstContext_Directive__before_SUBST_CLASSES(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
-	t.DisableTracing() // Just for branch coverage.
-
 	mklines := t.NewMkLines("os.mk",
 		MkCvsID,
 		"",
@@ -648,8 +633,9 @@ func (s *Suite) Test_SubstContext_Directive__before_SUBST_CLASSES(c *check.C) {
 		".endif",
 		"SUBST_CLASSES+=\tos",
 		".elif 0") // Just for branch coverage.
+	ctx := NewSubstContext()
 
-	mklines.Check()
+	mklines.ForEach(ctx.Process)
 
 	t.CheckOutputLines(
 		"WARN: os.mk:6: Incomplete SUBST block: SUBST_STAGE.os missing.",
@@ -1001,8 +987,6 @@ func (s *Suite) Test_SubstContext_Finish__nested_conditionals(c *check.C) {
 func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
-	t.SetUpTool("sh", "SH", AtRunTime)
 	t.Chdir(".")
 
 	test := func(line string, diagnostics ...string) {
@@ -1011,7 +995,6 @@ func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {
 				// Without the -Wall, to prevent fixing the :Q modifiers.
 				t.SetUpCommandLine("--autofix")
 			}
-
 			mklines := t.NewMkLines("filename.mk",
 				MkCvsID,
 				"",
@@ -1019,9 +1002,11 @@ func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {
 				"SUBST_STAGE.test=\tpre-configure",
 				"SUBST_FILES.test=\tfilename",
 				line)
+			ctx := NewSubstContext()
 
-			// TODO: replace with ctx.Process
-			mklines.Check()
+			mklines.ForEach(ctx.Process)
+
+			mklines.SaveAutofixChanges()
 		}
 
 		t.ExpectDiagnosticsAutofix(
@@ -1033,7 +1018,6 @@ func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {
 	test(
 		"SUBST_SED.test+=\t-e s,@SH@,${SH},g",
 
-		"WARN: filename.mk:6: Please use ${SH:Q} instead of ${SH}.",
 		"NOTE: filename.mk:6: The substitution command \"s,@SH@,${SH},g\" "+
 			"can be replaced with \"SUBST_VARS.test= SH\".",
 		"AUTOFIX: filename.mk:6: Replacing \"SUBST_SED.test+=\\t-e s,@SH@,${SH},g\" "+
@@ -1052,13 +1036,12 @@ func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {
 	test(
 		"SUBST_SED.test+=\t-e s,@SH@,${SH:T},g",
 
-		"WARN: filename.mk:6: Please use ${SH:T:Q} instead of ${SH:T}.")
+		nil...)
 
 	// Can be replaced, even without the g option.
 	test(
 		"SUBST_SED.test+=\t-e s,@SH@,${SH},",
 
-		"WARN: filename.mk:6: Please use ${SH:Q} instead of ${SH}.",
 		"NOTE: filename.mk:6: The substitution command \"s,@SH@,${SH},\" "+
 			"can be replaced with \"SUBST_VARS.test= SH\".",
 		"AUTOFIX: filename.mk:6: Replacing \"SUBST_SED.test+=\\t-e s,@SH@,${SH},\" "+
@@ -1094,8 +1077,6 @@ func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {
 	// Can be replaced manually, even when the -e is missing.
 	test(
 		"SUBST_SED.test+=\ts,'@SH@','${SH}',",
-		"NOTE: filename.mk:6: Please always use \"-e\" in sed commands, "+
-			"even if there is only one substitution.",
 		"NOTE: filename.mk:6: The substitution command \"s,'@SH@','${SH}',\" "+
 			"can be replaced with \"SUBST_VARS.test= SH\".")
 
@@ -1134,8 +1115,6 @@ func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {
 	test(
 		"SUBST_SED.test+=\t-n s,@SH@,${SH:Q},",
 
-		"NOTE: filename.mk:6: Please always use \"-e\" in sed commands, "+
-			"even if there is only one substitution.",
 		"NOTE: filename.mk:6: The substitution command \"s,@SH@,${SH:Q},\" "+
 			"can be replaced with \"SUBST_VARS.test= SH\".")
 }
@@ -1145,8 +1124,6 @@ func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {
 func (s *Suite) Test_SubstContext_suggestSubstVars__plus(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
-	t.SetUpTool("sh", "SH", AtRunTime)
 	t.Chdir(".")
 
 	doTest := func(autofix bool) {
@@ -1158,9 +1135,11 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__plus(c *check.C) {
 			"SUBST_FILES.gtk+ =\tfilename",
 			"SUBST_SED.gtk+ +=\t-e s,@SH@,${SH:Q},g",
 			"SUBST_SED.gtk+ +=\t-e s,@SH@,${SH:Q},g")
+		ctx := NewSubstContext()
 
-		// TODO: replace with ctx.Process.
-		mklines.Check()
+		mklines.ForEach(ctx.Process)
+
+		mklines.SaveAutofixChanges()
 	}
 
 	t.ExpectDiagnosticsAutofix(
@@ -1190,7 +1169,6 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__plus(c *check.C) {
 func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_realign_paragraph(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
 	t.Chdir(".")
 
 	doTest := func(autofix bool) {
@@ -1202,8 +1180,11 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_realign_paragraph(c 
 			"SUBST_FILES.pfx=\tfilename",
 			"SUBST_SED.pfx=\t\t-e s,@PREFIX@,${PREFIX},g",
 			"SUBST_SED.pfx+=\t\t-e s,@PREFIX@,${PREFIX},g")
+		ctx := NewSubstContext()
 
-		mklines.Check()
+		mklines.ForEach(ctx.Process)
+
+		mklines.SaveAutofixChanges()
 	}
 
 	t.ExpectDiagnosticsAutofix(
@@ -1231,7 +1212,6 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_realign_paragraph(c 
 func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_sed(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
 	t.Chdir(".")
 
 	doTest := func(autofix bool) {
@@ -1243,8 +1223,11 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_sed(c *check.C)
 			"SUBST_FILES.pfx=\tfilename",
 			"SUBST_SED.pfx=\t\t-e s,@PREFIX@,${PREFIX},g",
 			"SUBST_SED.pfx+=\t\t-e s,@PREFIX@,other,g")
+		ctx := NewSubstContext()
 
-		mklines.Check()
+		mklines.ForEach(ctx.Process)
+
+		mklines.SaveAutofixChanges()
 	}
 
 	t.ExpectDiagnosticsAutofix(
@@ -1271,7 +1254,6 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_sed(c *check.C)
 func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_vars(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
 	t.Chdir(".")
 
 	doTest := func(autofix bool) {
@@ -1283,8 +1265,11 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_vars(c *check.C
 			"SUBST_FILES.id=\tfilename",
 			"SUBST_SED.id=\t-e s,@PREFIX@,${PREFIX},g",
 			"SUBST_VARS.id=\tPKGMANDIR")
+		ctx := NewSubstContext()
 
-		mklines.Check()
+		mklines.ForEach(ctx.Process)
+
+		mklines.SaveAutofixChanges()
 	}
 
 	t.ExpectDiagnosticsAutofix(
@@ -1317,7 +1302,6 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_vars(c *check.C
 func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_indentation(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVartypes()
 	t.Chdir(".")
 
 	doTest := func(autofix bool) {
@@ -1329,8 +1313,11 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_indentation(c *check
 			"SUBST_MESSAGE.fix-paths=\tMessage",
 			"SUBST_FILES.fix-paths=\t\tfilename",
 			"SUBST_SED.fix-paths=\t\t-e s,@PREFIX@,${PREFIX},g")
+		ctx := NewSubstContext()
 
-		mklines.Check()
+		mklines.ForEach(ctx.Process)
+
+		mklines.SaveAutofixChanges()
 	}
 
 	t.ExpectDiagnosticsAutofix(
