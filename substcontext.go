@@ -140,9 +140,9 @@ func (ctx *SubstContext) varassignClasses(mkline *MkLine) {
 		mkline.Explain(
 			"This way, each substitution class forms a block in the package Makefile,",
 			"and to delete this block, it is not necessary to look anywhere else.")
-		for _, class := range classes {
-			ctx.queue(class)
-		}
+	}
+	for _, class := range classes {
+		ctx.queue(class)
 	}
 
 	id := classes[0]
