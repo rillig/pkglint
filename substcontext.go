@@ -88,10 +88,6 @@ func (ctx *SubstContext) Process(mkline *MkLine) {
 }
 
 func (ctx *SubstContext) Varassign(mkline *MkLine) {
-	if trace.Tracing {
-		trace.Stepf("SubstContext.Varassign curr=%v", *ctx.seen())
-	}
-
 	varcanon := mkline.Varcanon()
 	if varcanon == "SUBST_CLASSES" || varcanon == "SUBST_CLASSES.*" {
 		ctx.varassignClasses(mkline)
@@ -305,10 +301,6 @@ func (ctx *SubstContext) isListCanon(varcanon string) bool {
 }
 
 func (ctx *SubstContext) Directive(mkline *MkLine) {
-	if trace.Tracing {
-		trace.Stepf("+ SubstContext.Directive %v", *ctx.seen())
-	}
-
 	dir := mkline.Directive()
 	switch dir {
 	case "if":
@@ -319,10 +311,6 @@ func (ctx *SubstContext) Directive(mkline *MkLine) {
 
 	case "endif":
 		ctx.condEndif(mkline)
-	}
-
-	if trace.Tracing {
-		trace.Stepf("- SubstContext.Directive %v", *ctx.seen())
 	}
 }
 
