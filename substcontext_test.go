@@ -304,7 +304,8 @@ func (s *Suite) Test_SubstContext__SUBST_VARS_defined_in_block(c *check.C) {
 		"SUBST_FILES.os=\tguess-os.h",
 		"SUBST_VARS.os=\tTODAY1",
 		"TODAY1!=\tdate",
-		"TODAY2!=\tdate")
+		"TODAY2!=\tdate",
+		"")
 	ctx := NewSubstContext()
 
 	mklines.ForEach(ctx.Process)
@@ -664,6 +665,8 @@ func (s *Suite) Test_SubstContext_varassignStage__without_NO_CONFIGURE(c *check.
 	t.CheckOutputEmpty()
 }
 
+// Before 2019-12-12, pkglint wrongly warned about variables that were
+// not obviously SUBST variables, even if they were used later in SUBST_VARS.
 func (s *Suite) Test_SubstContext_varassignVars__var_before_SUBST_VARS(c *check.C) {
 	t := s.Init(c)
 
@@ -671,16 +674,24 @@ func (s *Suite) Test_SubstContext_varassignVars__var_before_SUBST_VARS(c *check.
 		"SUBST_CLASSES+= id",
 		"SUBST_STAGE.id= post-configure",
 		"SUBST_FILES.id= files",
-		"VAR=            value",
+		"FOREIGN=        not mentioned in SUBST_VARS",
+		"VAR=            ok",
 		"SUBST_VARS.id=  VAR",
+		"",
+		// This second block makes sure that the list of foreign variables
+		// is properly reset at the end of a SUBST block.
+		// If it weren't, there would be additional warnings.
+		"SUBST_CLASSES+= 2",
+		"SUBST_STAGE.2=  post-configure",
+		"SUBST_FILES.2=  files",
+		"SUBST_VARS.2=   OTHER",
 		"")
 	ctx := NewSubstContext()
 
 	mklines.ForEach(ctx.Process)
 
-	// FIXME: VAR is used in SUBST_VARS one line below, therefore it is not foreign.
 	t.CheckOutputLines(
-		"WARN: filename.mk:4: Foreign variable \"VAR\" in SUBST block.")
+		"WARN: filename.mk:4: Foreign variable \"FOREIGN\" in SUBST block.")
 }
 
 func (s *Suite) Test_SubstContext_Directive__before_SUBST_CLASSES(c *check.C) {

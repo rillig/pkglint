@@ -6,10 +6,13 @@ import "netbsd.org/pkglint/textproc"
 // that make up a SUBST class (see `mk/subst.mk`).
 type SubstContext struct {
 	queuedIds map[string]bool
-	doneIds   map[string]bool
 	id        string
-	vars      map[string]bool
-	conds     []*substCond
+	doneIds   map[string]bool
+
+	foreignAllowed map[string]struct{}
+	foreign        []*MkLine
+
+	conds []*substCond
 
 	once Once
 }
@@ -22,7 +25,8 @@ func NewSubstContext() *SubstContext {
 
 func (ctx *SubstContext) reset() {
 	ctx.id = ""
-	ctx.vars = nil
+	ctx.foreignAllowed = nil
+	ctx.foreign = nil
 	ctx.conds = []*substCond{{seenElse: true}}
 }
 
@@ -93,9 +97,9 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 		return
 	}
 
-	if ctx.isForeign(mkline.Varcanon()) && !ctx.isSubstVar(mkline.Varname()) {
+	if ctx.isForeign(mkline.Varcanon()) {
 		if ctx.isActive() {
-			mkline.Warnf("Foreign variable %q in SUBST block.", mkline.Varname())
+			ctx.rememberForeign(mkline)
 		}
 		return
 	}
@@ -345,6 +349,7 @@ func (ctx *SubstContext) Finish(diag Diagnoser) {
 	}
 
 	ctx.checkBlockComplete(diag)
+	ctx.checkForeignVariables()
 
 	ctx.reset()
 }
@@ -361,6 +366,12 @@ func (ctx *SubstContext) checkBlockComplete(diag Diagnoser) {
 	if !seen.get(ssTransform) {
 		diag.Warnf("Incomplete SUBST block: SUBST_SED.%[1]s, SUBST_VARS.%[1]s or SUBST_FILTER_CMD.%[1]s missing.", id)
 	}
+}
+
+func (ctx *SubstContext) checkForeignVariables() {
+	ctx.forEachForeignVar(func(mkline *MkLine) {
+		mkline.Warnf("Foreign variable %q in SUBST block.", mkline.Varname())
+	})
 }
 
 func (ctx *SubstContext) dupString(mkline *MkLine, part substSeen) {
@@ -498,15 +509,31 @@ func (ctx *SubstContext) isDone(varparam string) bool {
 	return ctx.doneIds[varparam]
 }
 
-func (ctx *SubstContext) allowVar(substVar string) {
-	if ctx.vars == nil {
-		ctx.vars = make(map[string]bool)
+// In the paragraph of a SUBST block, there should be only variables
+// that actually belong to the SUBST block.
+//
+// In addition, variables that are mentioned in SUBST_VARS may also
+// be defined there because they closely relate to the SUBST block.
+
+func (ctx *SubstContext) allowVar(varname string) {
+	if ctx.foreignAllowed == nil {
+		ctx.foreignAllowed = make(map[string]struct{})
 	}
-	ctx.vars[substVar] = true
+	ctx.foreignAllowed[varname] = struct{}{}
 }
 
-func (ctx *SubstContext) isSubstVar(varname string) bool {
-	return ctx.vars[varname]
+func (ctx *SubstContext) rememberForeign(mkline *MkLine) {
+	ctx.foreign = append(ctx.foreign, mkline)
+}
+
+// forEachForeignVar performs the given action for each variable that
+// is defined in the SUBST block and is not mentioned in SUBST_VARS.
+func (ctx *SubstContext) forEachForeignVar(action func(*MkLine)) {
+	for _, foreign := range ctx.foreign {
+		if _, ok := ctx.foreignAllowed[foreign.Varname()]; !ok {
+			action(foreign)
+		}
+	}
 }
 
 // isConditional returns whether the current line is at a deeper conditional
