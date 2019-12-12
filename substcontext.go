@@ -27,11 +27,10 @@ func (ctx *SubstContext) reset() {
 }
 
 type substCond struct {
-	// Tells whether a SUBST class has been added to SUBST_CLASSES at this
-	// conditional level.
+	// Tells whether a SUBST block has started at this conditional level.
 	// All variable assignments that belong to this class must happen at
 	// this conditional level or below it.
-	seenId bool
+	top bool
 
 	// Collects the parts of the SUBST block that have been defined in all
 	// branches that have been parsed completely.
@@ -480,7 +479,7 @@ func (ctx *SubstContext) activeId() string {
 
 func (ctx *SubstContext) setActiveId(id string) {
 	ctx.id = id
-	ctx.cond().seenId = true
+	ctx.cond().top = true
 	ctx.markAsDone(id)
 }
 
@@ -532,7 +531,7 @@ func (ctx *SubstContext) isSubstVar(varname string) bool {
 //
 // TODO: Adjust the implementation to this description.
 func (ctx *SubstContext) isConditional() bool {
-	return !ctx.cond().seenId
+	return !ctx.cond().top
 }
 
 // cond returns information about the current branch of conditionals.
