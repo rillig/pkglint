@@ -71,10 +71,11 @@ const (
 	ssNone substSeen = 0
 )
 
-func (s *substSeen) set(part substSeen)      { *s |= part }
-func (s *substSeen) get(part substSeen) bool { return *s&part != 0 }
-func (s *substSeen) union(other substSeen)   { *s |= other }
-func (s *substSeen) retain(other substSeen)  { *s &= other }
+func (s *substSeen) set(part substSeen)          { *s |= part }
+func (s *substSeen) get(part substSeen) bool     { return *s&part != 0 }
+func (s *substSeen) hasAll(other substSeen) bool { return *s&other == other }
+func (s *substSeen) union(other substSeen)       { *s |= other }
+func (s *substSeen) retain(other substSeen)      { *s &= other }
 
 func (ctx *SubstContext) Process(mkline *MkLine) {
 	switch {
@@ -577,8 +578,7 @@ func (ctx *SubstContext) condEndif(diag Diagnoser) {
 }
 
 func (ctx *SubstContext) isComplete() bool {
-	seen := ctx.seen()
-	return seen.get(ssStage) && seen.get(ssFiles) && seen.get(ssTransform)
+	return ctx.seen().hasAll(ssStage | ssFiles | ssTransform)
 }
 
 // Returns true if the given flag from substSeen has been seen
