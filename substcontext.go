@@ -213,7 +213,7 @@ func (ctx *SubstContext) varassignStage(mkline *MkLine) {
 	value := mkline.Value()
 	// TODO: move further down
 
-	if ctx.isConditionalWithoutId() {
+	if ctx.isConditional() {
 		mkline.Warnf("%s should not be defined conditionally.", varname)
 	}
 
@@ -249,7 +249,7 @@ func (ctx *SubstContext) varassignStage(mkline *MkLine) {
 func (ctx *SubstContext) varassignMessages(mkline *MkLine) {
 	varname := mkline.Varname()
 
-	if ctx.isConditionalWithoutId() {
+	if ctx.isConditional() {
 		mkline.Warnf("%s should not be defined conditionally.", varname)
 	}
 
@@ -511,10 +511,7 @@ func (ctx *SubstContext) isSubstVar(varname string) bool {
 	return ctx.vars[varname]
 }
 
-func (ctx *SubstContext) isConditional() bool { return len(ctx.conds) > 1 }
-
-// XXX: Can this be merged with isConditional?
-func (ctx *SubstContext) isConditionalWithoutId() bool {
+func (ctx *SubstContext) isConditional() bool {
 	return !ctx.top().id
 }
 

@@ -866,9 +866,13 @@ func (s *Suite) Test_SubstContext_Directive__two_blocks_in_condition(c *check.C)
 
 	mklines.ForEach(ctx.Process)
 
-	t.CheckOutputLines(
-		"WARN: filename.mk:6: Subst block \"a\" should be finished " +
-			"before adding the next class to SUBST_CLASSES.")
+	// Up to 2019-12-12, pkglint wrongly warned in filename.mk:6:
+	//  Subst block "a" should be finished before adding
+	//  the next class to SUBST_CLASSES.
+	// The warning was wrong since block "a" has all required fields set.
+	// The warning was caused by an inconsistent check whether the current
+	// block had any conditional variables.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_SubstContext_Directive__nested_conditional_incomplete_block(c *check.C) {
