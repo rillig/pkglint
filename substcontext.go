@@ -270,7 +270,6 @@ func (ctx *SubstContext) varassignVars(mkline *MkLine) {
 	ctx.seen().set(ssTransform)
 
 	for _, substVar := range mkline.Fields() {
-		// TODO: What about variables that are defined before the SUBST_VARS line?
 		ctx.allowVar(substVar)
 	}
 
