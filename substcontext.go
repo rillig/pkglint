@@ -95,7 +95,7 @@ func (ctx *SubstContext) Process(mkline *MkLine) {
 
 func (ctx *SubstContext) Varassign(mkline *MkLine) {
 	if trace.Tracing {
-		trace.Stepf("SubstContext.Varassign curr=%v", *ctx.top())
+		trace.Stepf("SubstContext.Varassign curr=%v", *ctx.seen())
 	}
 
 	varcanon := mkline.Varcanon()
@@ -269,7 +269,7 @@ func (ctx *SubstContext) varassignFiles(mkline *MkLine) {
 func (ctx *SubstContext) varassignSed(mkline *MkLine) {
 	accessor := func(s *substSeen) *bool { return &s.sed }
 	ctx.dupList(mkline, accessor)
-	ctx.top().transform = true
+	ctx.seen().transform = true
 
 	ctx.suggestSubstVars(mkline)
 }
@@ -278,7 +278,7 @@ func (ctx *SubstContext) varassignVars(mkline *MkLine) {
 	accessor := func(s *substSeen) *bool { return &s.vars }
 	seen := ctx.seenInBranch(accessor) // since ctx.dupList modifies it
 	ctx.dupList(mkline, accessor)
-	ctx.top().transform = true
+	ctx.seen().transform = true
 
 	for _, substVar := range mkline.Fields() {
 		// TODO: What about variables that are defined before the SUBST_VARS line?
@@ -299,7 +299,7 @@ func (ctx *SubstContext) varassignVars(mkline *MkLine) {
 func (ctx *SubstContext) varassignFilterCmd(mkline *MkLine) {
 	accessor := func(s *substSeen) *bool { return &s.cmd }
 	ctx.dupString(mkline, accessor)
-	ctx.top().transform = true
+	ctx.seen().transform = true
 }
 
 func (ctx *SubstContext) isForeign(varcanon string) bool {
@@ -329,7 +329,7 @@ func (ctx *SubstContext) isListCanon(varcanon string) bool {
 
 func (ctx *SubstContext) Directive(mkline *MkLine) {
 	if trace.Tracing {
-		trace.Stepf("+ SubstContext.Directive %v", *ctx.top())
+		trace.Stepf("+ SubstContext.Directive %v", *ctx.seen())
 	}
 
 	dir := mkline.Directive()
@@ -345,13 +345,13 @@ func (ctx *SubstContext) Directive(mkline *MkLine) {
 	}
 
 	if trace.Tracing {
-		trace.Stepf("- SubstContext.Directive %v", *ctx.top())
+		trace.Stepf("- SubstContext.Directive %v", *ctx.seen())
 	}
 }
 
 func (ctx *SubstContext) IsComplete() bool {
-	top := ctx.top()
-	return top.stage && top.files && top.transform
+	seen := ctx.seen()
+	return seen.stage && seen.files && seen.transform
 }
 
 func (ctx *SubstContext) Finish(diag Diagnoser) {
@@ -362,14 +362,14 @@ func (ctx *SubstContext) Finish(diag Diagnoser) {
 	// TODO: Extract these warnings into a separate method,
 	//  to decouple them from the state manipulation.
 	id := ctx.activeId()
-	top := ctx.top()
-	if !top.stage {
+	seen := ctx.seen()
+	if !seen.stage {
 		diag.Warnf("Incomplete SUBST block: SUBST_STAGE.%s missing.", id)
 	}
-	if !top.files {
+	if !seen.files {
 		diag.Warnf("Incomplete SUBST block: SUBST_FILES.%s missing.", id)
 	}
-	if !top.transform {
+	if !seen.transform {
 		diag.Warnf("Incomplete SUBST block: SUBST_SED.%[1]s, SUBST_VARS.%[1]s or SUBST_FILTER_CMD.%[1]s missing.", id)
 	}
 
@@ -380,7 +380,7 @@ func (ctx *SubstContext) dupString(mkline *MkLine, flag func(stats *substSeen) *
 	if ctx.seenInBranch(flag) {
 		mkline.Warnf("Duplicate definition of %q.", mkline.Varname())
 	}
-	*flag(ctx.top()) = true
+	*flag(ctx.seen()) = true
 }
 
 func (ctx *SubstContext) dupList(mkline *MkLine, flag func(stats *substSeen) *bool) {
@@ -388,7 +388,7 @@ func (ctx *SubstContext) dupList(mkline *MkLine, flag func(stats *substSeen) *bo
 	if ctx.seenInBranch(flag) && mkline.Op() != opAssignAppend {
 		mkline.Warnf("All but the first %q lines should use the \"+=\" operator.", mkline.Varname())
 	}
-	*flag(ctx.top()) = true
+	*flag(ctx.seen()) = true
 }
 
 func (ctx *SubstContext) suggestSubstVars(mkline *MkLine) {
@@ -405,7 +405,7 @@ func (ctx *SubstContext) suggestSubstVars(mkline *MkLine) {
 			id,
 			condStr(hasSuffix(id, "+"), " ", ""),
 			// FIXME: ctx.anyVars sounds more correct.
-			condStr(ctx.top().vars, "+=", "="))
+			condStr(ctx.seen().vars, "+=", "="))
 
 		fix := mkline.Autofix()
 		fix.Notef("The substitution command %q can be replaced with \"%s %s\".",
@@ -418,7 +418,12 @@ func (ctx *SubstContext) suggestSubstVars(mkline *MkLine) {
 		}
 		fix.Apply()
 
-		ctx.top().vars = true
+		// At this point the number of SUBST_SED assignments is one
+		// less than before. Therefore it is possible to adjust the
+		// assignment operators on them. It's probably not worth the
+		// effort, though.
+
+		ctx.seen().vars = true
 	}
 }
 
@@ -475,7 +480,7 @@ func (ctx *SubstContext) activeId() string {
 
 func (ctx *SubstContext) setActiveId(id string) {
 	ctx.id = id
-	ctx.topCond().seenId = true
+	ctx.cond().seenId = true
 	ctx.markAsDone(id)
 }
 
@@ -517,17 +522,28 @@ func (ctx *SubstContext) isSubstVar(varname string) bool {
 	return ctx.vars[varname]
 }
 
+// isConditional returns whether the current line is at a deeper conditional
+// level than the corresponding start of the SUBST block.
+//
+// The start of the block is most often the SUBST_CLASSES line.
+// When more than one class is added to SUBST_CLASSES in a single line,
+// the start of the block is the first variable assignment that uses the
+// corresponding class ID.
+//
+// TODO: Adjust the implementation to this description.
 func (ctx *SubstContext) isConditional() bool {
-	return !ctx.topCond().seenId
+	return !ctx.cond().seenId
 }
 
-func (ctx *SubstContext) topCond() *substCond {
+// cond returns information about the current branch of conditionals.
+func (ctx *SubstContext) cond() *substCond {
 	return ctx.conds[len(ctx.conds)-1]
 }
 
-// TODO: rename to topSeen
-func (ctx *SubstContext) top() *substSeen {
-	return &ctx.topCond().curr
+// cond returns information about the parts of the SUBST block that
+// have already been seen in the current leaf branch of the conditionals.
+func (ctx *SubstContext) seen() *substSeen {
+	return &ctx.cond().curr
 }
 
 func (ctx *SubstContext) condIf() {
@@ -536,7 +552,7 @@ func (ctx *SubstContext) condIf() {
 }
 
 func (ctx *SubstContext) condElse(mkline *MkLine, dir string) {
-	top := ctx.topCond()
+	top := ctx.cond()
 	top.total.And(top.curr)
 	if !ctx.isConditional() {
 		// XXX: This is a higher-level method
@@ -547,7 +563,7 @@ func (ctx *SubstContext) condElse(mkline *MkLine, dir string) {
 }
 
 func (ctx *SubstContext) condEndif(diag Diagnoser) {
-	top := ctx.topCond()
+	top := ctx.cond()
 	top.total.And(top.curr)
 	if !ctx.isConditional() {
 		// XXX: This is a higher-level method
@@ -559,7 +575,7 @@ func (ctx *SubstContext) condEndif(diag Diagnoser) {
 	if len(ctx.conds) > 1 {
 		ctx.conds = ctx.conds[:len(ctx.conds)-1]
 	}
-	ctx.top().Or(top.total)
+	ctx.seen().Or(top.total)
 }
 
 // Returns true if the given flag from substSeen has been seen
