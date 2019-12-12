@@ -448,11 +448,18 @@ func (s *Suite) Test_SubstContext__SUBST_CLASSES_in_separate_paragraph(c *check.
 
 	t.CheckOutputLines(
 		"NOTE: filename.mk:1: Please add only one class at a time to SUBST_CLASSES.",
+
+		// FIXME
 		"WARN: filename.mk:2: Incomplete SUBST block: SUBST_STAGE.1 missing.",
+		// FIXME
 		"WARN: filename.mk:2: Incomplete SUBST block: SUBST_FILES.1 missing.",
+		// FIXME
 		"WARN: filename.mk:2: Incomplete SUBST block: SUBST_SED.1, SUBST_VARS.1 or SUBST_FILTER_CMD.1 missing.",
+		// FIXME
 		"WARN: filename.mk:6: Incomplete SUBST block: SUBST_STAGE.1 missing.",
+		// FIXME
 		"WARN: filename.mk:10: Incomplete SUBST block: SUBST_STAGE.2 missing.",
+		// FIXME
 		"WARN: filename.mk:14: Incomplete SUBST block: SUBST_STAGE.3 missing.")
 }
 
