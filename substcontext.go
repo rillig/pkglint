@@ -130,7 +130,10 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 }
 
 func (ctx *SubstContext) varassignClasses(mkline *MkLine) {
-	classes := mkline.ValueFields(mkline.Value())
+	classes := mkline.ValueFields(mkline.WithoutMakeVariables(mkline.Value()))
+	if len(classes) == 0 {
+		return
+	}
 
 	if len(classes) > 1 {
 		mkline.Notef("Please add only one class at a time to SUBST_CLASSES.")

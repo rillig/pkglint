@@ -1,8 +1,6 @@
 package pkglint
 
-import (
-	"gopkg.in/check.v1"
-)
+import "gopkg.in/check.v1"
 
 func (t *Tester) NewSubstAutofixTest(lines ...string) func(bool) {
 	return func(autofix bool) {
@@ -396,13 +394,10 @@ func (s *Suite) Test_SubstContext_Varassign__late_addition_to_unknown_class(c *c
 func (s *Suite) Test_SubstContext_varassignClasses__none(c *check.C) {
 	t := s.Init(c)
 
-	// FIXME: Oops
-	t.ExpectPanicMatches(
-		func() {
-			t.RunSubst(
-				"SUBST_CLASSES+=\t# none")
-		},
-		`^runtime error: index out of range.*`)
+	t.RunSubst(
+		"SUBST_CLASSES+=\t# none")
+
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_SubstContext_varassignClasses__indirect(c *check.C) {
@@ -417,12 +412,7 @@ func (s *Suite) Test_SubstContext_varassignClasses__indirect(c *check.C) {
 
 	t.CheckOutputLines(
 		// TODO: Error that SUBST_CLASSES identifiers must be literals.
-		"WARN: filename.mk:2: VAR is used but not defined.",
-		// FIXME: Ignore these completely.
-		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_STAGE.${VAR} missing.",
-		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_FILES.${VAR} missing.",
-		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_SED.${VAR}, "+
-			"SUBST_VARS.${VAR} or SUBST_FILTER_CMD.${VAR} missing.")
+		"WARN: filename.mk:2: VAR is used but not defined.")
 }
 
 // The rationale for the stray SUBST variables has to be specific.
