@@ -9,28 +9,28 @@ func (s *Suite) Test_SubstContext__incomplete(c *check.C) {
 
 	ctx := NewSubstContext()
 
-	ctx.Varassign(t.NewMkLine("Makefile", 10, "PKGNAME=pkgname-1.0"))
+	ctx.Varassign(t.NewMkLine("filename.mk", 10, "PKGNAME=pkgname-1.0"))
 
 	t.CheckEquals(ctx.id, "")
 
-	ctx.Varassign(t.NewMkLine("Makefile", 11, "SUBST_CLASSES+=interp"))
+	ctx.Varassign(t.NewMkLine("filename.mk", 11, "SUBST_CLASSES+=interp"))
 
 	t.CheckEquals(ctx.id, "interp")
 
-	ctx.Varassign(t.NewMkLine("Makefile", 12, "SUBST_FILES.interp=Makefile"))
+	ctx.Varassign(t.NewMkLine("filename.mk", 12, "SUBST_FILES.interp=Makefile"))
 
 	t.CheckEquals(ctx.IsComplete(), false)
 
-	ctx.Varassign(t.NewMkLine("Makefile", 13, "SUBST_SED.interp=s,@PREFIX@,${PREFIX},g"))
+	ctx.Varassign(t.NewMkLine("filename.mk", 13, "SUBST_SED.interp=s,@PREFIX@,${PREFIX},g"))
 
 	t.CheckEquals(ctx.IsComplete(), false)
 
-	ctx.Finish(t.NewMkLine("Makefile", 14, ""))
+	ctx.Finish(t.NewMkLine("filename.mk", 14, ""))
 
 	t.CheckOutputLines(
-		"NOTE: Makefile:13: The substitution command \"s,@PREFIX@,${PREFIX},g\" "+
+		"NOTE: filename.mk:13: The substitution command \"s,@PREFIX@,${PREFIX},g\" "+
 			"can be replaced with \"SUBST_VARS.interp= PREFIX\".",
-		"WARN: Makefile:14: Incomplete SUBST block: SUBST_STAGE.interp missing.")
+		"WARN: filename.mk:14: Incomplete SUBST block: SUBST_STAGE.interp missing.")
 }
 
 func (s *Suite) Test_SubstContext__complete(c *check.C) {
@@ -38,21 +38,21 @@ func (s *Suite) Test_SubstContext__complete(c *check.C) {
 
 	ctx := NewSubstContext()
 
-	ctx.Varassign(t.NewMkLine("Makefile", 10, "PKGNAME=pkgname-1.0"))
-	ctx.Varassign(t.NewMkLine("Makefile", 11, "SUBST_CLASSES+=p"))
-	ctx.Varassign(t.NewMkLine("Makefile", 12, "SUBST_FILES.p=Makefile"))
-	ctx.Varassign(t.NewMkLine("Makefile", 13, "SUBST_SED.p=s,@PREFIX@,${PREFIX},g"))
+	ctx.Varassign(t.NewMkLine("filename.mk", 10, "PKGNAME=pkgname-1.0"))
+	ctx.Varassign(t.NewMkLine("filename.mk", 11, "SUBST_CLASSES+=p"))
+	ctx.Varassign(t.NewMkLine("filename.mk", 12, "SUBST_FILES.p=Makefile"))
+	ctx.Varassign(t.NewMkLine("filename.mk", 13, "SUBST_SED.p=s,@PREFIX@,${PREFIX},g"))
 
 	t.CheckEquals(ctx.IsComplete(), false)
 
-	ctx.Varassign(t.NewMkLine("Makefile", 14, "SUBST_STAGE.p=post-configure"))
+	ctx.Varassign(t.NewMkLine("filename.mk", 14, "SUBST_STAGE.p=post-configure"))
 
 	t.CheckEquals(ctx.IsComplete(), true)
 
-	ctx.Finish(t.NewMkLine("Makefile", 15, ""))
+	ctx.Finish(t.NewMkLine("filename.mk", 15, ""))
 
 	t.CheckOutputLines(
-		"NOTE: Makefile:13: The substitution command \"s,@PREFIX@,${PREFIX},g\" " +
+		"NOTE: filename.mk:13: The substitution command \"s,@PREFIX@,${PREFIX},g\" " +
 			"can be replaced with \"SUBST_VARS.p= PREFIX\".")
 }
 
@@ -63,18 +63,18 @@ func (s *Suite) Test_SubstContext__OPSYSVARS(c *check.C) {
 	ctx := NewSubstContext()
 
 	// SUBST_CLASSES is added to OPSYSVARS in mk/bsd.pkg.mk.
-	ctx.Varassign(t.NewMkLine("Makefile", 11, "SUBST_CLASSES.SunOS+=prefix"))
-	ctx.Varassign(t.NewMkLine("Makefile", 12, "SUBST_CLASSES.NetBSD+=prefix"))
-	ctx.Varassign(t.NewMkLine("Makefile", 13, "SUBST_FILES.prefix=Makefile"))
-	ctx.Varassign(t.NewMkLine("Makefile", 14, "SUBST_SED.prefix=s,@PREFIX@,${PREFIX},g"))
-	ctx.Varassign(t.NewMkLine("Makefile", 15, "SUBST_STAGE.prefix=post-configure"))
+	ctx.Varassign(t.NewMkLine("filename.mk", 11, "SUBST_CLASSES.SunOS+=prefix"))
+	ctx.Varassign(t.NewMkLine("filename.mk", 12, "SUBST_CLASSES.NetBSD+=prefix"))
+	ctx.Varassign(t.NewMkLine("filename.mk", 13, "SUBST_FILES.prefix=Makefile"))
+	ctx.Varassign(t.NewMkLine("filename.mk", 14, "SUBST_SED.prefix=s,@PREFIX@,${PREFIX},g"))
+	ctx.Varassign(t.NewMkLine("filename.mk", 15, "SUBST_STAGE.prefix=post-configure"))
 
 	t.CheckEquals(ctx.IsComplete(), true)
 
-	ctx.Finish(t.NewMkLine("Makefile", 15, ""))
+	ctx.Finish(t.NewMkLine("filename.mk", 15, ""))
 
 	t.CheckOutputLines(
-		"NOTE: Makefile:14: The substitution command \"s,@PREFIX@,${PREFIX},g\" " +
+		"NOTE: filename.mk:14: The substitution command \"s,@PREFIX@,${PREFIX},g\" " +
 			"can be replaced with \"SUBST_VARS.prefix= PREFIX\".")
 }
 
@@ -259,9 +259,7 @@ func (s *Suite) Test_SubstContext__directives(c *check.C) {
 func (s *Suite) Test_SubstContext__adjacent(c *check.C) {
 	t := s.Init(c)
 
-	mklines := t.NewMkLines("os.mk",
-		MkCvsID,
-		"",
+	mklines := t.NewMkLines("filename.mk",
 		"SUBST_CLASSES+=\t1",
 		"SUBST_STAGE.1=\tpre-configure",
 		"SUBST_FILES.1=\tfile1",
@@ -276,15 +274,13 @@ func (s *Suite) Test_SubstContext__adjacent(c *check.C) {
 	mklines.ForEach(ctx.Process)
 
 	t.CheckOutputLines(
-		"WARN: os.mk:8: Variable \"SUBST_SED.1\" does not match SUBST class \"2\".")
+		"WARN: filename.mk:6: Variable \"SUBST_SED.1\" does not match SUBST class \"2\".")
 }
 
 func (s *Suite) Test_SubstContext__do_patch(c *check.C) {
 	t := s.Init(c)
 
-	mklines := t.NewMkLines("os.mk",
-		MkCvsID,
-		"",
+	mklines := t.NewMkLines("filename.mk",
 		"SUBST_CLASSES+=\tos",
 		"SUBST_STAGE.os=\tdo-patch",
 		"SUBST_FILES.os=\tguess-os.h",
@@ -303,9 +299,7 @@ func (s *Suite) Test_SubstContext__do_patch(c *check.C) {
 func (s *Suite) Test_SubstContext__SUBST_VARS_defined_in_block(c *check.C) {
 	t := s.Init(c)
 
-	mklines := t.NewMkLines("os.mk",
-		MkCvsID,
-		"",
+	mklines := t.NewMkLines("filename.mk",
 		"SUBST_CLASSES+=\tos",
 		"SUBST_STAGE.os=\tpre-configure",
 		"SUBST_FILES.os=\tguess-os.h",
@@ -317,7 +311,7 @@ func (s *Suite) Test_SubstContext__SUBST_VARS_defined_in_block(c *check.C) {
 	mklines.ForEach(ctx.Process)
 
 	t.CheckOutputLines(
-		"WARN: os.mk:8: Foreign variable \"TODAY2\" in SUBST block.")
+		"WARN: filename.mk:6: Foreign variable \"TODAY2\" in SUBST block.")
 }
 
 // Variables mentioned in SUBST_VARS may appear in the same paragraph,
@@ -325,9 +319,7 @@ func (s *Suite) Test_SubstContext__SUBST_VARS_defined_in_block(c *check.C) {
 func (s *Suite) Test_SubstContext__SUBST_VARS_in_next_paragraph(c *check.C) {
 	t := s.Init(c)
 
-	mklines := t.NewMkLines("os.mk",
-		MkCvsID,
-		"",
+	mklines := t.NewMkLines("filename.mk",
 		"SUBST_CLASSES+=\tos",
 		"SUBST_STAGE.os=\tpre-configure",
 		"SUBST_FILES.os=\tguess-os.h",
@@ -345,9 +337,7 @@ func (s *Suite) Test_SubstContext__SUBST_VARS_in_next_paragraph(c *check.C) {
 func (s *Suite) Test_SubstContext__multiple_SUBST_VARS(c *check.C) {
 	t := s.Init(c)
 
-	mklines := t.NewMkLines("os.mk",
-		MkCvsID,
-		"",
+	mklines := t.NewMkLines("filename.mk",
 		"SUBST_CLASSES+=\tos",
 		"SUBST_STAGE.os=\tpre-configure",
 		"SUBST_FILES.os=\tguess-os.h",
@@ -365,9 +355,7 @@ func (s *Suite) Test_SubstContext__multiple_SUBST_VARS(c *check.C) {
 func (s *Suite) Test_SubstContext__unusual_variable_order(c *check.C) {
 	t := s.Init(c)
 
-	mklines := t.NewMkLines("subst.mk",
-		MkCvsID,
-		"",
+	mklines := t.NewMkLines("filename.mk",
 		"SUBST_CLASSES+=\t\tid",
 		"SUBST_SED.id=\t\t-e /deleteme/d",
 		"SUBST_FILES.id=\t\tfile",
@@ -383,9 +371,7 @@ func (s *Suite) Test_SubstContext__unusual_variable_order(c *check.C) {
 func (s *Suite) Test_SubstContext__completely_conditional_then(c *check.C) {
 	t := s.Init(c)
 
-	mklines := t.NewMkLines("subst.mk",
-		MkCvsID,
-		"",
+	mklines := t.NewMkLines("filename.mk",
 		".if ${OPSYS} == Linux",
 		"SUBST_CLASSES+=\tid",
 		"SUBST_STAGE.id=\tpre-configure",
@@ -399,15 +385,13 @@ func (s *Suite) Test_SubstContext__completely_conditional_then(c *check.C) {
 	// The block already ends at the .else, not at the end of the file,
 	// since that is the scope where the SUBST id is defined.
 	t.CheckOutputLines(
-		"WARN: subst.mk:7: Incomplete SUBST block: SUBST_FILES.id missing.")
+		"WARN: filename.mk:5: Incomplete SUBST block: SUBST_FILES.id missing.")
 }
 
 func (s *Suite) Test_SubstContext__completely_conditional_else(c *check.C) {
 	t := s.Init(c)
 
-	mklines := t.NewMkLines("subst.mk",
-		MkCvsID,
-		"",
+	mklines := t.NewMkLines("filename.mk",
 		".if ${OPSYS} == Linux",
 		".else",
 		"SUBST_CLASSES+=\tid",
@@ -421,7 +405,7 @@ func (s *Suite) Test_SubstContext__completely_conditional_else(c *check.C) {
 	// The block already ends at the .endif, not at the end of the file,
 	// since that is the scope where the SUBST id is defined.
 	t.CheckOutputLines(
-		"WARN: subst.mk:8: Incomplete SUBST block: SUBST_FILES.id missing.")
+		"WARN: filename.mk:6: Incomplete SUBST block: SUBST_FILES.id missing.")
 }
 
 func (s *Suite) Test_SubstContext__SUBST_CLASSES_in_separate_paragraph(c *check.C) {
@@ -552,8 +536,6 @@ func (s *Suite) Test_SubstContext_varassignStage__pre_patch(c *check.C) {
 
 	doTest := func(autofix bool) {
 		mklines := t.NewMkLines("filename.mk",
-			MkCvsID,
-			"",
 			"SUBST_CLASSES+=\tos",
 			"SUBST_STAGE.os=\tpre-patch",
 			"SUBST_FILES.os=\tguess-os.h",
@@ -567,12 +549,10 @@ func (s *Suite) Test_SubstContext_varassignStage__pre_patch(c *check.C) {
 
 	t.ExpectDiagnosticsAutofix(
 		doTest,
-		"WARN: filename.mk:4: Substitutions should not happen in the patch phase.",
-		"AUTOFIX: filename.mk:4: Replacing \"pre-patch\" with \"post-extract\".")
+		"WARN: filename.mk:2: Substitutions should not happen in the patch phase.",
+		"AUTOFIX: filename.mk:2: Replacing \"pre-patch\" with \"post-extract\".")
 
 	t.CheckFileLinesDetab("filename.mk",
-		MkCvsID,
-		"",
 		"SUBST_CLASSES+= os",
 		"SUBST_STAGE.os= post-extract",
 		"SUBST_FILES.os= guess-os.h",
@@ -586,8 +566,6 @@ func (s *Suite) Test_SubstContext_varassignStage__post_patch(c *check.C) {
 
 	test := func(autofix bool) {
 		mklines := t.NewMkLines("filename.mk",
-			MkCvsID,
-			"",
 			"SUBST_CLASSES+=\tos",
 			"SUBST_STAGE.os=\tpost-patch",
 			"SUBST_FILES.os=\tguess-os.h",
@@ -601,12 +579,10 @@ func (s *Suite) Test_SubstContext_varassignStage__post_patch(c *check.C) {
 
 	t.ExpectDiagnosticsAutofix(
 		test,
-		"WARN: filename.mk:4: Substitutions should not happen in the patch phase.",
-		"AUTOFIX: filename.mk:4: Replacing \"post-patch\" with \"pre-configure\".")
+		"WARN: filename.mk:2: Substitutions should not happen in the patch phase.",
+		"AUTOFIX: filename.mk:2: Replacing \"post-patch\" with \"pre-configure\".")
 
 	t.CheckFileLinesDetab("filename.mk",
-		MkCvsID,
-		"",
 		"SUBST_CLASSES+= os",
 		"SUBST_STAGE.os= pre-configure",
 		"SUBST_FILES.os= guess-os.h",
@@ -625,8 +601,6 @@ func (s *Suite) Test_SubstContext_varassignStage__ambiguous_replacement(c *check
 
 	test := func(autofix bool) {
 		mklines := t.NewMkLines("filename.mk",
-			MkCvsID,
-			"",
 			"SUBST_CLASSES+=         pre-patch",
 			"SUBST_STAGE.pre-patch=  pre-patch",
 			"SUBST_FILES.pre-patch=  files",
@@ -640,7 +614,7 @@ func (s *Suite) Test_SubstContext_varassignStage__ambiguous_replacement(c *check
 
 	t.ExpectDiagnosticsAutofix(
 		test,
-		"WARN: filename.mk:4: Substitutions should not happen in the patch phase.")
+		"WARN: filename.mk:2: Substitutions should not happen in the patch phase.")
 
 	t.CheckEquals(t.File("filename.mk").IsFile(), false)
 }
@@ -694,9 +668,7 @@ func (s *Suite) Test_SubstContext_varassignStage__without_NO_CONFIGURE(c *check.
 func (s *Suite) Test_SubstContext_Directive__before_SUBST_CLASSES(c *check.C) {
 	t := s.Init(c)
 
-	mklines := t.NewMkLines("os.mk",
-		MkCvsID,
-		"",
+	mklines := t.NewMkLines("filename.mk",
 		".if 0",
 		".endif",
 		"SUBST_CLASSES+=\tos",
@@ -706,9 +678,9 @@ func (s *Suite) Test_SubstContext_Directive__before_SUBST_CLASSES(c *check.C) {
 	mklines.ForEach(ctx.Process)
 
 	t.CheckOutputLines(
-		"WARN: os.mk:6: Incomplete SUBST block: SUBST_STAGE.os missing.",
-		"WARN: os.mk:6: Incomplete SUBST block: SUBST_FILES.os missing.",
-		"WARN: os.mk:6: Incomplete SUBST block: "+
+		"WARN: filename.mk:4: Incomplete SUBST block: SUBST_STAGE.os missing.",
+		"WARN: filename.mk:4: Incomplete SUBST block: SUBST_FILES.os missing.",
+		"WARN: filename.mk:4: Incomplete SUBST block: "+
 			"SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
 }
 
@@ -1069,8 +1041,6 @@ func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {
 				t.SetUpCommandLine("--autofix")
 			}
 			mklines := t.NewMkLines("filename.mk",
-				MkCvsID,
-				"",
 				"SUBST_CLASSES+=\t\ttest",
 				"SUBST_STAGE.test=\tpre-configure",
 				"SUBST_FILES.test=\tfilename",
@@ -1091,18 +1061,18 @@ func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {
 	test(
 		"SUBST_SED.test+=\t-e s,@SH@,${SH},g",
 
-		"NOTE: filename.mk:6: The substitution command \"s,@SH@,${SH},g\" "+
+		"NOTE: filename.mk:4: The substitution command \"s,@SH@,${SH},g\" "+
 			"can be replaced with \"SUBST_VARS.test= SH\".",
-		"AUTOFIX: filename.mk:6: Replacing \"SUBST_SED.test+=\\t-e s,@SH@,${SH},g\" "+
+		"AUTOFIX: filename.mk:4: Replacing \"SUBST_SED.test+=\\t-e s,@SH@,${SH},g\" "+
 			"with \"SUBST_VARS.test=\\tSH\".")
 
 	// Can be replaced, with or without the :Q modifier.
 	test(
 		"SUBST_SED.test+=\t-e s,@SH@,${SH:Q},g",
 
-		"NOTE: filename.mk:6: The substitution command \"s,@SH@,${SH:Q},g\" "+
+		"NOTE: filename.mk:4: The substitution command \"s,@SH@,${SH:Q},g\" "+
 			"can be replaced with \"SUBST_VARS.test= SH\".",
-		"AUTOFIX: filename.mk:6: Replacing \"SUBST_SED.test+=\\t-e s,@SH@,${SH:Q},g\" "+
+		"AUTOFIX: filename.mk:4: Replacing \"SUBST_SED.test+=\\t-e s,@SH@,${SH:Q},g\" "+
 			"with \"SUBST_VARS.test=\\tSH\".")
 
 	// Cannot be replaced because of the :T modifier.
@@ -1115,42 +1085,42 @@ func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {
 	test(
 		"SUBST_SED.test+=\t-e s,@SH@,${SH},",
 
-		"NOTE: filename.mk:6: The substitution command \"s,@SH@,${SH},\" "+
+		"NOTE: filename.mk:4: The substitution command \"s,@SH@,${SH},\" "+
 			"can be replaced with \"SUBST_VARS.test= SH\".",
-		"AUTOFIX: filename.mk:6: Replacing \"SUBST_SED.test+=\\t-e s,@SH@,${SH},\" "+
+		"AUTOFIX: filename.mk:4: Replacing \"SUBST_SED.test+=\\t-e s,@SH@,${SH},\" "+
 			"with \"SUBST_VARS.test=\\tSH\".")
 
 	// Can be replaced, whether in single quotes or not.
 	test(
 		"SUBST_SED.test+=\t-e 's,@SH@,${SH},'",
 
-		"NOTE: filename.mk:6: The substitution command \"'s,@SH@,${SH},'\" "+
+		"NOTE: filename.mk:4: The substitution command \"'s,@SH@,${SH},'\" "+
 			"can be replaced with \"SUBST_VARS.test= SH\".",
-		"AUTOFIX: filename.mk:6: Replacing \"SUBST_SED.test+=\\t-e 's,@SH@,${SH},'\" "+
+		"AUTOFIX: filename.mk:4: Replacing \"SUBST_SED.test+=\\t-e 's,@SH@,${SH},'\" "+
 			"with \"SUBST_VARS.test=\\tSH\".")
 
 	// Can be replaced, whether in double quotes or not.
 	test(
 		"SUBST_SED.test+=\t-e \"s,@SH@,${SH},\"",
 
-		"NOTE: filename.mk:6: The substitution command \"\\\"s,@SH@,${SH},\\\"\" "+
+		"NOTE: filename.mk:4: The substitution command \"\\\"s,@SH@,${SH},\\\"\" "+
 			"can be replaced with \"SUBST_VARS.test= SH\".",
-		"AUTOFIX: filename.mk:6: Replacing \"SUBST_SED.test+=\\t-e \\\"s,@SH@,${SH},\\\"\" "+
+		"AUTOFIX: filename.mk:4: Replacing \"SUBST_SED.test+=\\t-e \\\"s,@SH@,${SH},\\\"\" "+
 			"with \"SUBST_VARS.test=\\tSH\".")
 
 	// Can be replaced, even when the quoting changes midways.
 	test(
 		"SUBST_SED.test+=\t-e s,'@SH@','${SH}',",
 
-		"NOTE: filename.mk:6: The substitution command \"s,'@SH@','${SH}',\" "+
+		"NOTE: filename.mk:4: The substitution command \"s,'@SH@','${SH}',\" "+
 			"can be replaced with \"SUBST_VARS.test= SH\".",
-		"AUTOFIX: filename.mk:6: Replacing \"SUBST_SED.test+=\\t-e s,'@SH@','${SH}',\" "+
+		"AUTOFIX: filename.mk:4: Replacing \"SUBST_SED.test+=\\t-e s,'@SH@','${SH}',\" "+
 			"with \"SUBST_VARS.test=\\tSH\".")
 
 	// Can be replaced manually, even when the -e is missing.
 	test(
 		"SUBST_SED.test+=\ts,'@SH@','${SH}',",
-		"NOTE: filename.mk:6: The substitution command \"s,'@SH@','${SH}',\" "+
+		"NOTE: filename.mk:4: The substitution command \"s,'@SH@','${SH}',\" "+
 			"can be replaced with \"SUBST_VARS.test= SH\".")
 
 	// Cannot be replaced since the variable name differs.
@@ -1181,14 +1151,14 @@ func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {
 	test(
 		"SUBST_SED.test+=\t-e s,@SH@,${SH:Q}, # comment",
 
-		"NOTE: filename.mk:6: The substitution command \"s,@SH@,${SH:Q},\" "+
+		"NOTE: filename.mk:4: The substitution command \"s,@SH@,${SH:Q},\" "+
 			"can be replaced with \"SUBST_VARS.test= SH\".")
 
 	// Just a note; not fixed because of the -n.
 	test(
 		"SUBST_SED.test+=\t-n s,@SH@,${SH:Q},",
 
-		"NOTE: filename.mk:6: The substitution command \"s,@SH@,${SH:Q},\" "+
+		"NOTE: filename.mk:4: The substitution command \"s,@SH@,${SH:Q},\" "+
 			"can be replaced with \"SUBST_VARS.test= SH\".")
 }
 
@@ -1201,8 +1171,6 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__plus(c *check.C) {
 
 	doTest := func(autofix bool) {
 		mklines := t.NewMkLines("filename.mk",
-			MkCvsID,
-			"",
 			"SUBST_CLASSES+=\t\tgtk+",
 			"SUBST_STAGE.gtk+ =\tpre-configure",
 			"SUBST_FILES.gtk+ =\tfilename",
@@ -1217,18 +1185,16 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__plus(c *check.C) {
 
 	t.ExpectDiagnosticsAutofix(
 		doTest,
-		"NOTE: filename.mk:6: The substitution command \"s,@SH@,${SH:Q},g\" "+
+		"NOTE: filename.mk:4: The substitution command \"s,@SH@,${SH:Q},g\" "+
 			"can be replaced with \"SUBST_VARS.gtk+ = SH\".",
-		"NOTE: filename.mk:7: The substitution command \"s,@SH@,${SH:Q},g\" "+
+		"NOTE: filename.mk:5: The substitution command \"s,@SH@,${SH:Q},g\" "+
 			"can be replaced with \"SUBST_VARS.gtk+ += SH\".",
-		"AUTOFIX: filename.mk:6: Replacing \"SUBST_SED.gtk+ +=\\t-e s,@SH@,${SH:Q},g\" "+
+		"AUTOFIX: filename.mk:4: Replacing \"SUBST_SED.gtk+ +=\\t-e s,@SH@,${SH:Q},g\" "+
 			"with \"SUBST_VARS.gtk+ =\\tSH\".",
-		"AUTOFIX: filename.mk:7: Replacing \"SUBST_SED.gtk+ +=\\t-e s,@SH@,${SH:Q},g\" "+
+		"AUTOFIX: filename.mk:5: Replacing \"SUBST_SED.gtk+ +=\\t-e s,@SH@,${SH:Q},g\" "+
 			"with \"SUBST_VARS.gtk+ +=\\tSH\".")
 
 	t.CheckFileLinesDetab("filename.mk",
-		MkCvsID,
-		"",
 		"SUBST_CLASSES+=         gtk+",
 		"SUBST_STAGE.gtk+ =      pre-configure",
 		"SUBST_FILES.gtk+ =      filename",
@@ -1245,9 +1211,7 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_realign_paragraph(c 
 	t.Chdir(".")
 
 	doTest := func(autofix bool) {
-		mklines := t.SetUpFileMkLines("subst.mk",
-			MkCvsID,
-			"",
+		mklines := t.SetUpFileMkLines("filename.mk",
 			"SUBST_CLASSES+=\t\tpfx",
 			"SUBST_STAGE.pfx=\tpre-configure",
 			"SUBST_FILES.pfx=\tfilename",
@@ -1263,18 +1227,16 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_realign_paragraph(c 
 	t.ExpectDiagnosticsAutofix(
 		doTest,
 
-		"NOTE: subst.mk:6: The substitution command \"s,@PREFIX@,${PREFIX},g\" "+
+		"NOTE: filename.mk:4: The substitution command \"s,@PREFIX@,${PREFIX},g\" "+
 			"can be replaced with \"SUBST_VARS.pfx= PREFIX\".",
-		"NOTE: subst.mk:7: The substitution command \"s,@PREFIX@,${PREFIX},g\" "+
+		"NOTE: filename.mk:5: The substitution command \"s,@PREFIX@,${PREFIX},g\" "+
 			"can be replaced with \"SUBST_VARS.pfx+= PREFIX\".",
-		"AUTOFIX: subst.mk:6: Replacing \"SUBST_SED.pfx=\\t\\t-e s,@PREFIX@,${PREFIX},g\" "+
+		"AUTOFIX: filename.mk:4: Replacing \"SUBST_SED.pfx=\\t\\t-e s,@PREFIX@,${PREFIX},g\" "+
 			"with \"SUBST_VARS.pfx=\\t\\tPREFIX\".",
-		"AUTOFIX: subst.mk:7: Replacing \"SUBST_SED.pfx+=\\t\\t-e s,@PREFIX@,${PREFIX},g\" "+
+		"AUTOFIX: filename.mk:5: Replacing \"SUBST_SED.pfx+=\\t\\t-e s,@PREFIX@,${PREFIX},g\" "+
 			"with \"SUBST_VARS.pfx+=\\tPREFIX\".")
 
-	t.CheckFileLinesDetab("subst.mk",
-		MkCvsID,
-		"",
+	t.CheckFileLinesDetab("filename.mk",
 		"SUBST_CLASSES+=         pfx",
 		"SUBST_STAGE.pfx=        pre-configure",
 		"SUBST_FILES.pfx=        filename",
@@ -1288,9 +1250,7 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_sed(c *check.C)
 	t.Chdir(".")
 
 	doTest := func(autofix bool) {
-		mklines := t.SetUpFileMkLines("subst.mk",
-			MkCvsID,
-			"",
+		mklines := t.SetUpFileMkLines("filename.mk",
 			"SUBST_CLASSES+=\t\tpfx",
 			"SUBST_STAGE.pfx=\tpre-configure",
 			"SUBST_FILES.pfx=\tfilename",
@@ -1306,15 +1266,13 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_sed(c *check.C)
 	t.ExpectDiagnosticsAutofix(
 		doTest,
 
-		"NOTE: subst.mk:6: The substitution command \"s,@PREFIX@,${PREFIX},g\" "+
+		"NOTE: filename.mk:4: The substitution command \"s,@PREFIX@,${PREFIX},g\" "+
 			"can be replaced with \"SUBST_VARS.pfx= PREFIX\".",
-		"AUTOFIX: subst.mk:6: "+
+		"AUTOFIX: filename.mk:4: "+
 			"Replacing \"SUBST_SED.pfx=\\t\\t-e s,@PREFIX@,${PREFIX},g\" "+
 			"with \"SUBST_VARS.pfx=\\t\\tPREFIX\".")
 
-	t.CheckFileLinesDetab("subst.mk",
-		MkCvsID,
-		"",
+	t.CheckFileLinesDetab("filename.mk",
 		"SUBST_CLASSES+=         pfx",
 		"SUBST_STAGE.pfx=        pre-configure",
 		"SUBST_FILES.pfx=        filename",
@@ -1330,9 +1288,7 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_vars(c *check.C
 	t.Chdir(".")
 
 	doTest := func(autofix bool) {
-		mklines := t.SetUpFileMkLines("subst.mk",
-			MkCvsID,
-			"",
+		mklines := t.SetUpFileMkLines("filename.mk",
 			"SUBST_CLASSES+=\tid",
 			"SUBST_STAGE.id=\tpre-configure",
 			"SUBST_FILES.id=\tfilename",
@@ -1348,22 +1304,20 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_vars(c *check.C
 	t.ExpectDiagnosticsAutofix(
 		doTest,
 
-		"NOTE: subst.mk:6: The substitution command \"s,@PREFIX@,${PREFIX},g\" "+
+		"NOTE: filename.mk:4: The substitution command \"s,@PREFIX@,${PREFIX},g\" "+
 			"can be replaced with \"SUBST_VARS.id= PREFIX\".",
-		"WARN: subst.mk:7: All but the first \"SUBST_VARS.id\" lines "+
+		"WARN: filename.mk:5: All but the first \"SUBST_VARS.id\" lines "+
 			"should use the \"+=\" operator.",
-		"NOTE: subst.mk:7: All but the first assignments should use the += operator.",
+		"NOTE: filename.mk:5: All but the first assignments should use the += operator.",
 
-		"AUTOFIX: subst.mk:6: "+
+		"AUTOFIX: filename.mk:4: "+
 			"Replacing \"SUBST_SED.id=\\t-e s,@PREFIX@,${PREFIX},g\" "+
 			"with \"SUBST_VARS.id=\\tPREFIX\".",
-		"AUTOFIX: subst.mk:7: "+
+		"AUTOFIX: filename.mk:5: "+
 			"Replacing \"SUBST_VARS.id=\\t\" "+
 			"with \"SUBST_VARS.id+=\\t\".")
 
-	t.CheckFileLinesDetab("subst.mk",
-		MkCvsID,
-		"",
+	t.CheckFileLinesDetab("filename.mk",
 		"SUBST_CLASSES+= id",
 		"SUBST_STAGE.id= pre-configure",
 		"SUBST_FILES.id= filename",
@@ -1377,9 +1331,7 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_indentation(c *check
 	t.Chdir(".")
 
 	doTest := func(autofix bool) {
-		mklines := t.SetUpFileMkLines("subst.mk",
-			MkCvsID,
-			"",
+		mklines := t.SetUpFileMkLines("filename.mk",
 			"SUBST_CLASSES+=\t\t\tfix-paths",
 			"SUBST_STAGE.fix-paths=\t\tpre-configure",
 			"SUBST_MESSAGE.fix-paths=\tMessage",
@@ -1395,16 +1347,14 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_indentation(c *check
 	t.ExpectDiagnosticsAutofix(
 		doTest,
 
-		"NOTE: subst.mk:7: "+
+		"NOTE: filename.mk:5: "+
 			"The substitution command \"s,@PREFIX@,${PREFIX},g\" "+
 			"can be replaced with \"SUBST_VARS.fix-paths= PREFIX\".",
-		"AUTOFIX: subst.mk:7: Replacing "+
+		"AUTOFIX: filename.mk:5: Replacing "+
 			"\"SUBST_SED.fix-paths=\\t\\t-e s,@PREFIX@,${PREFIX},g\" "+
 			"with \"SUBST_VARS.fix-paths=\\t\\tPREFIX\".")
 
-	t.CheckFileLinesDetab("subst.mk",
-		MkCvsID,
-		"",
+	t.CheckFileLinesDetab("filename.mk",
 		"SUBST_CLASSES+=                 fix-paths",
 		"SUBST_STAGE.fix-paths=          pre-configure",
 		"SUBST_MESSAGE.fix-paths=        Message",
