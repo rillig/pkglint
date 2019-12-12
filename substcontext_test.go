@@ -4,6 +4,18 @@ import (
 	"gopkg.in/check.v1"
 )
 
+func (t *Tester) NewSubstAutofixTest(lines ...string) func(bool) {
+	return func(autofix bool) {
+		mklines := t.NewMkLines("filename.mk", lines...)
+		ctx := NewSubstContext()
+
+		mklines.ForEach(ctx.Process)
+		ctx.Finish(mklines.EOFLine())
+
+		mklines.SaveAutofixChanges()
+	}
+}
+
 func (s *Suite) Test_SubstContext__OPSYSVARS(c *check.C) {
 	t := s.Init(c)
 
@@ -488,19 +500,11 @@ func (s *Suite) Test_SubstContext_varassignStage__pre_patch(c *check.C) {
 
 	t.Chdir(".")
 
-	doTest := func(autofix bool) {
-		mklines := t.NewMkLines("filename.mk",
-			"SUBST_CLASSES+=\tos",
-			"SUBST_STAGE.os=\tpre-patch",
-			"SUBST_FILES.os=\tguess-os.h",
-			"SUBST_SED.os=\t-e s,@OPSYS@,Darwin,",
-			"")
-		ctx := NewSubstContext()
-
-		mklines.ForEach(ctx.Process)
-
-		mklines.SaveAutofixChanges()
-	}
+	doTest := t.NewSubstAutofixTest(
+		"SUBST_CLASSES+=\tos",
+		"SUBST_STAGE.os=\tpre-patch",
+		"SUBST_FILES.os=\tguess-os.h",
+		"SUBST_SED.os=\t-e s,@OPSYS@,Darwin,")
 
 	t.ExpectDiagnosticsAutofix(
 		doTest,
@@ -511,8 +515,7 @@ func (s *Suite) Test_SubstContext_varassignStage__pre_patch(c *check.C) {
 		"SUBST_CLASSES+= os",
 		"SUBST_STAGE.os= post-extract",
 		"SUBST_FILES.os= guess-os.h",
-		"SUBST_SED.os=   -e s,@OPSYS@,Darwin,",
-		"")
+		"SUBST_SED.os=   -e s,@OPSYS@,Darwin,")
 }
 
 func (s *Suite) Test_SubstContext_varassignStage__post_patch(c *check.C) {
@@ -520,22 +523,14 @@ func (s *Suite) Test_SubstContext_varassignStage__post_patch(c *check.C) {
 
 	t.Chdir(".")
 
-	test := func(autofix bool) {
-		mklines := t.NewMkLines("filename.mk",
-			"SUBST_CLASSES+=\tos",
-			"SUBST_STAGE.os=\tpost-patch",
-			"SUBST_FILES.os=\tguess-os.h",
-			"SUBST_SED.os=\t-e s,@OPSYS@,Darwin,",
-			"")
-		ctx := NewSubstContext()
-
-		mklines.ForEach(ctx.Process)
-
-		mklines.SaveAutofixChanges()
-	}
+	doTest := t.NewSubstAutofixTest(
+		"SUBST_CLASSES+=\tos",
+		"SUBST_STAGE.os=\tpost-patch",
+		"SUBST_FILES.os=\tguess-os.h",
+		"SUBST_SED.os=\t-e s,@OPSYS@,Darwin,")
 
 	t.ExpectDiagnosticsAutofix(
-		test,
+		doTest,
 		"WARN: filename.mk:2: Substitutions should not happen in the patch phase.",
 		"AUTOFIX: filename.mk:2: Replacing \"post-patch\" with \"pre-configure\".")
 
@@ -543,8 +538,7 @@ func (s *Suite) Test_SubstContext_varassignStage__post_patch(c *check.C) {
 		"SUBST_CLASSES+= os",
 		"SUBST_STAGE.os= pre-configure",
 		"SUBST_FILES.os= guess-os.h",
-		"SUBST_SED.os=   -e s,@OPSYS@,Darwin,",
-		"")
+		"SUBST_SED.os=   -e s,@OPSYS@,Darwin,")
 }
 
 // As of December 2019, pkglint does not use token positions internally.
@@ -557,22 +551,14 @@ func (s *Suite) Test_SubstContext_varassignStage__ambiguous_replacement(c *check
 
 	t.Chdir(".")
 
-	test := func(autofix bool) {
-		mklines := t.NewMkLines("filename.mk",
-			"SUBST_CLASSES+=         pre-patch",
-			"SUBST_STAGE.pre-patch=  pre-patch",
-			"SUBST_FILES.pre-patch=  files",
-			"SUBST_VARS.pre-patch=   VARNAME",
-			"")
-		ctx := NewSubstContext()
-
-		mklines.ForEach(ctx.Process)
-
-		mklines.SaveAutofixChanges()
-	}
+	doTest := t.NewSubstAutofixTest(
+		"SUBST_CLASSES+=         pre-patch",
+		"SUBST_STAGE.pre-patch=  pre-patch",
+		"SUBST_FILES.pre-patch=  files",
+		"SUBST_VARS.pre-patch=   VARNAME")
 
 	t.ExpectDiagnosticsAutofix(
-		test,
+		doTest,
 		"WARN: filename.mk:2: Substitutions should not happen in the patch phase.")
 
 	t.CheckEquals(t.File("filename.mk").IsFile(), false)
@@ -1051,23 +1037,11 @@ func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {
 	t.Chdir(".")
 
 	test := func(line string, diagnostics ...string) {
-		doTest := func(autofix bool) {
-			if autofix {
-				// Without the -Wall, to prevent fixing the :Q modifiers.
-				t.SetUpCommandLine("--autofix")
-			}
-			mklines := t.NewMkLines("filename.mk",
-				"SUBST_CLASSES+=\t\ttest",
-				"SUBST_STAGE.test=\tpre-configure",
-				"SUBST_FILES.test=\tfilename",
-				line,
-				"")
-			ctx := NewSubstContext()
-
-			mklines.ForEach(ctx.Process)
-
-			mklines.SaveAutofixChanges()
-		}
+		doTest := t.NewSubstAutofixTest(
+			"SUBST_CLASSES+=\t\ttest",
+			"SUBST_STAGE.test=\tpre-configure",
+			"SUBST_FILES.test=\tfilename",
+			line)
 
 		t.ExpectDiagnosticsAutofix(
 			doTest,
@@ -1186,20 +1160,12 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__plus(c *check.C) {
 
 	t.Chdir(".")
 
-	doTest := func(autofix bool) {
-		mklines := t.NewMkLines("filename.mk",
-			"SUBST_CLASSES+=\t\tgtk+",
-			"SUBST_STAGE.gtk+ =\tpre-configure",
-			"SUBST_FILES.gtk+ =\tfilename",
-			"SUBST_SED.gtk+ +=\t-e s,@SH@,${SH:Q},g",
-			"SUBST_SED.gtk+ +=\t-e s,@SH@,${SH:Q},g",
-			"")
-		ctx := NewSubstContext()
-
-		mklines.ForEach(ctx.Process)
-
-		mklines.SaveAutofixChanges()
-	}
+	doTest := t.NewSubstAutofixTest(
+		"SUBST_CLASSES+=\t\tgtk+",
+		"SUBST_STAGE.gtk+ =\tpre-configure",
+		"SUBST_FILES.gtk+ =\tfilename",
+		"SUBST_SED.gtk+ +=\t-e s,@SH@,${SH:Q},g",
+		"SUBST_SED.gtk+ +=\t-e s,@SH@,${SH:Q},g")
 
 	t.ExpectDiagnosticsAutofix(
 		doTest,
@@ -1217,8 +1183,7 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__plus(c *check.C) {
 		"SUBST_STAGE.gtk+ =      pre-configure",
 		"SUBST_FILES.gtk+ =      filename",
 		"SUBST_VARS.gtk+ =       SH",
-		"SUBST_VARS.gtk+ +=      SH",
-		"")
+		"SUBST_VARS.gtk+ +=      SH")
 }
 
 // The last of the SUBST_SED variables is 15 characters wide. When SUBST_SED
@@ -1229,20 +1194,12 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_realign_paragraph(c 
 
 	t.Chdir(".")
 
-	doTest := func(autofix bool) {
-		mklines := t.SetUpFileMkLines("filename.mk",
-			"SUBST_CLASSES+=\t\tpfx",
-			"SUBST_STAGE.pfx=\tpre-configure",
-			"SUBST_FILES.pfx=\tfilename",
-			"SUBST_SED.pfx=\t\t-e s,@PREFIX@,${PREFIX},g",
-			"SUBST_SED.pfx+=\t\t-e s,@PREFIX@,${PREFIX},g",
-			"")
-		ctx := NewSubstContext()
-
-		mklines.ForEach(ctx.Process)
-
-		mklines.SaveAutofixChanges()
-	}
+	doTest := t.NewSubstAutofixTest(
+		"SUBST_CLASSES+=\t\tpfx",
+		"SUBST_STAGE.pfx=\tpre-configure",
+		"SUBST_FILES.pfx=\tfilename",
+		"SUBST_SED.pfx=\t\t-e s,@PREFIX@,${PREFIX},g",
+		"SUBST_SED.pfx+=\t\t-e s,@PREFIX@,${PREFIX},g")
 
 	t.ExpectDiagnosticsAutofix(
 		doTest,
@@ -1261,8 +1218,7 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_realign_paragraph(c 
 		"SUBST_STAGE.pfx=        pre-configure",
 		"SUBST_FILES.pfx=        filename",
 		"SUBST_VARS.pfx=         PREFIX",
-		"SUBST_VARS.pfx+=        PREFIX",
-		"")
+		"SUBST_VARS.pfx+=        PREFIX")
 }
 
 func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_sed(c *check.C) {
@@ -1270,20 +1226,12 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_sed(c *check.C)
 
 	t.Chdir(".")
 
-	doTest := func(autofix bool) {
-		mklines := t.SetUpFileMkLines("filename.mk",
-			"SUBST_CLASSES+=\t\tpfx",
-			"SUBST_STAGE.pfx=\tpre-configure",
-			"SUBST_FILES.pfx=\tfilename",
-			"SUBST_SED.pfx=\t\t-e s,@PREFIX@,${PREFIX},g",
-			"SUBST_SED.pfx+=\t\t-e s,@PREFIX@,other,g",
-			"")
-		ctx := NewSubstContext()
-
-		mklines.ForEach(ctx.Process)
-
-		mklines.SaveAutofixChanges()
-	}
+	doTest := t.NewSubstAutofixTest(
+		"SUBST_CLASSES+=\t\tpfx",
+		"SUBST_STAGE.pfx=\tpre-configure",
+		"SUBST_FILES.pfx=\tfilename",
+		"SUBST_SED.pfx=\t\t-e s,@PREFIX@,${PREFIX},g",
+		"SUBST_SED.pfx+=\t\t-e s,@PREFIX@,other,g")
 
 	t.ExpectDiagnosticsAutofix(
 		doTest,
@@ -1301,8 +1249,7 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_sed(c *check.C)
 		"SUBST_VARS.pfx=         PREFIX",
 		// Since the SUBST_SED that was previously here used the = operator,
 		// this += might be replaced with a simple =.
-		"SUBST_SED.pfx+=         -e s,@PREFIX@,other,g",
-		"")
+		"SUBST_SED.pfx+=         -e s,@PREFIX@,other,g")
 }
 
 func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_vars(c *check.C) {
@@ -1310,20 +1257,12 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_vars(c *check.C
 
 	t.Chdir(".")
 
-	doTest := func(autofix bool) {
-		mklines := t.SetUpFileMkLines("filename.mk",
-			"SUBST_CLASSES+=\tid",
-			"SUBST_STAGE.id=\tpre-configure",
-			"SUBST_FILES.id=\tfilename",
-			"SUBST_SED.id=\t-e s,@PREFIX@,${PREFIX},g",
-			"SUBST_VARS.id=\tPKGMANDIR",
-			"")
-		ctx := NewSubstContext()
-
-		mklines.ForEach(ctx.Process)
-
-		mklines.SaveAutofixChanges()
-	}
+	doTest := t.NewSubstAutofixTest(
+		"SUBST_CLASSES+=\tid",
+		"SUBST_STAGE.id=\tpre-configure",
+		"SUBST_FILES.id=\tfilename",
+		"SUBST_SED.id=\t-e s,@PREFIX@,${PREFIX},g",
+		"SUBST_VARS.id=\tPKGMANDIR")
 
 	t.ExpectDiagnosticsAutofix(
 		doTest,
@@ -1342,8 +1281,7 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_vars(c *check.C
 		"SUBST_STAGE.id= pre-configure",
 		"SUBST_FILES.id= filename",
 		"SUBST_VARS.id=  PREFIX",
-		"SUBST_VARS.id+= PKGMANDIR",
-		"")
+		"SUBST_VARS.id+= PKGMANDIR")
 }
 
 func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_indentation(c *check.C) {
@@ -1351,20 +1289,12 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_indentation(c *check
 
 	t.Chdir(".")
 
-	doTest := func(autofix bool) {
-		mklines := t.SetUpFileMkLines("filename.mk",
-			"SUBST_CLASSES+=\t\t\tfix-paths",
-			"SUBST_STAGE.fix-paths=\t\tpre-configure",
-			"SUBST_MESSAGE.fix-paths=\tMessage",
-			"SUBST_FILES.fix-paths=\t\tfilename",
-			"SUBST_SED.fix-paths=\t\t-e s,@PREFIX@,${PREFIX},g",
-			"")
-		ctx := NewSubstContext()
-
-		mklines.ForEach(ctx.Process)
-
-		mklines.SaveAutofixChanges()
-	}
+	doTest := t.NewSubstAutofixTest(
+		"SUBST_CLASSES+=\t\t\tfix-paths",
+		"SUBST_STAGE.fix-paths=\t\tpre-configure",
+		"SUBST_MESSAGE.fix-paths=\tMessage",
+		"SUBST_FILES.fix-paths=\t\tfilename",
+		"SUBST_SED.fix-paths=\t\t-e s,@PREFIX@,${PREFIX},g")
 
 	t.ExpectDiagnosticsAutofix(
 		doTest,
@@ -1381,8 +1311,7 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_indentation(c *check
 		"SUBST_STAGE.fix-paths=          pre-configure",
 		"SUBST_MESSAGE.fix-paths=        Message",
 		"SUBST_FILES.fix-paths=          filename",
-		"SUBST_VARS.fix-paths=           PREFIX",
-		"")
+		"SUBST_VARS.fix-paths=           PREFIX")
 }
 
 func (s *Suite) Test_SubstContext_suggestSubstVars__conditional(c *check.C) {
@@ -1390,22 +1319,14 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__conditional(c *check.C) {
 
 	t.Chdir(".")
 
-	doTest := func(autofix bool) {
-		mklines := t.SetUpFileMkLines("filename.mk",
-			"SUBST_CLASSES+= id",
-			"SUBST_STAGE.id= pre-configure",
-			"SUBST_FILES.id= files",
-			"SUBST_SED.id=   -e s,@VAR@,${VAR},",
-			".if 1",
-			"SUBST_SED.id+=  -e s,@VAR2@,${VAR2},",
-			".endif",
-			"")
-		ctx := NewSubstContext()
-
-		mklines.ForEach(ctx.Process)
-
-		mklines.SaveAutofixChanges()
-	}
+	doTest := t.NewSubstAutofixTest(
+		"SUBST_CLASSES+= id",
+		"SUBST_STAGE.id= pre-configure",
+		"SUBST_FILES.id= files",
+		"SUBST_SED.id=   -e s,@VAR@,${VAR},",
+		".if 1",
+		"SUBST_SED.id+=  -e s,@VAR2@,${VAR2},",
+		".endif")
 
 	t.ExpectDiagnosticsAutofix(
 		doTest,
@@ -1426,8 +1347,7 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__conditional(c *check.C) {
 		"SUBST_VARS.id=  VAR",
 		".if 1",
 		"SUBST_VARS.id+= VAR2",
-		".endif",
-		"")
+		".endif")
 }
 
 func (s *Suite) Test_SubstContext_extractVarname(c *check.C) {
