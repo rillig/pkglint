@@ -63,6 +63,7 @@ const (
 	ssFiles
 	ssSed
 	ssVars
+	ssVarsAutofix
 	ssFilterCmd
 	ssTransform
 
@@ -254,33 +255,22 @@ func (ctx *SubstContext) varassignMessages(mkline *MkLine) {
 }
 
 func (ctx *SubstContext) varassignFiles(mkline *MkLine) {
-	ctx.dupList(mkline, ssFiles)
+	ctx.dupList(mkline, ssFiles, ssNone)
 }
 
 func (ctx *SubstContext) varassignSed(mkline *MkLine) {
-	ctx.dupList(mkline, ssSed)
+	ctx.dupList(mkline, ssSed, ssNone)
 	ctx.seen().set(ssTransform)
 
 	ctx.suggestSubstVars(mkline)
 }
 
 func (ctx *SubstContext) varassignVars(mkline *MkLine) {
-	seen := ctx.seenInBranch(ssVars) // since ctx.dupList modifies it
-	ctx.dupList(mkline, ssVars)
+	ctx.dupList(mkline, ssVars, ssVarsAutofix)
 	ctx.seen().set(ssTransform)
 
 	for _, substVar := range mkline.Fields() {
 		ctx.allowVar(substVar)
-	}
-
-	if seen && mkline.Op() == opAssign {
-		before := mkline.ValueAlign()
-		after := alignWith(mkline.Varname()+"+=", before)
-
-		fix := mkline.Autofix()
-		fix.Notef("All but the first assignment should use the += operator.")
-		fix.Replace(before, after)
-		fix.Apply()
 	}
 }
 
@@ -374,12 +364,26 @@ func (ctx *SubstContext) dupString(mkline *MkLine, part substSeen) {
 	ctx.seen().set(part)
 }
 
-func (ctx *SubstContext) dupList(mkline *MkLine, part substSeen) {
-
+func (ctx *SubstContext) dupList(mkline *MkLine, part substSeen, autofixPart substSeen) {
 	if ctx.seenInBranch(part) && mkline.Op() != opAssignAppend {
-		mkline.Warnf("All but the first %q lines should use the \"+=\" operator.", mkline.Varname())
+		ctx.fixOperatorAppend(mkline, ctx.seenInBranch(autofixPart))
 	}
 	ctx.seen().set(part)
+}
+
+func (ctx *SubstContext) fixOperatorAppend(mkline *MkLine, dueToAutofix bool) {
+	before := mkline.ValueAlign()
+	after := alignWith(mkline.Varname()+"+=", before)
+
+	fix := mkline.Autofix()
+	if dueToAutofix {
+		fix.Notef(SilentAutofixFormat)
+	} else {
+		fix.Warnf("All but the first assignment to %q should use the \"+=\" operator.",
+			mkline.Varname())
+	}
+	fix.Replace(before, after)
+	fix.Apply()
 }
 
 func (ctx *SubstContext) suggestSubstVars(mkline *MkLine) {
@@ -413,7 +417,7 @@ func (ctx *SubstContext) suggestSubstVars(mkline *MkLine) {
 		// assignment operators on them. It's probably not worth the
 		// effort, though.
 
-		ctx.seen().set(ssVars)
+		ctx.seen().set(ssVars | ssVarsAutofix)
 	}
 }
 

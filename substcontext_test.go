@@ -198,8 +198,8 @@ func (s *Suite) Test_SubstContext__directives(c *check.C) {
 	// to each other. And since every branch contains some transformation
 	// (SED, VARS, FILTER_CMD), everything is fine.
 	t.CheckOutputLines(
-		"WARN: filename.mk:9: All but the first \"SUBST_SED.os\" lines " +
-			"should use the \"+=\" operator.")
+		"WARN: filename.mk:9: All but the first assignment " +
+			"to \"SUBST_SED.os\" should use the \"+=\" operator.")
 }
 
 func (s *Suite) Test_SubstContext__adjacent(c *check.C) {
@@ -975,9 +975,12 @@ func (s *Suite) Test_SubstContext_Finish__missing_transformation_in_one_branch(c
 	mklines.ForEach(ctx.Process)
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:6: All but the first \"SUBST_FILES.os\" lines should use the \"+=\" operator.",
-		"WARN: filename.mk:9: All but the first \"SUBST_SED.os\" lines should use the \"+=\" operator.",
-		"WARN: filename.mk:13: Incomplete SUBST block: SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
+		"WARN: filename.mk:6: All but the first assignment "+
+			"to \"SUBST_FILES.os\" should use the \"+=\" operator.",
+		"WARN: filename.mk:9: All but the first assignment "+
+			"to \"SUBST_SED.os\" should use the \"+=\" operator.",
+		"WARN: filename.mk:13: Incomplete SUBST block: SUBST_SED.os, "+
+			"SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
 }
 
 func (s *Suite) Test_SubstContext_Finish__nested_conditionals(c *check.C) {
@@ -1007,6 +1010,26 @@ func (s *Suite) Test_SubstContext_Finish__nested_conditionals(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: filename.mk:16: Incomplete SUBST block: SUBST_FILES.os missing.")
+}
+
+func (s *Suite) Test_SubstContext_dupList__conditional_before_unconditional(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("filename.mk",
+		"SUBST_CLASSES+= os",
+		"SUBST_STAGE.os= post-configure",
+		".if 1",
+		"SUBST_FILES.os= conditional",
+		".endif",
+		"SUBST_FILES.os= unconditional",
+		"SUBST_VARS.os=  OPSYS",
+		"")
+	ctx := NewSubstContext()
+
+	mklines.ForEach(ctx.Process)
+
+	// TODO: Warn that the conditional line is overwritten.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {
@@ -1286,11 +1309,6 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_vars(c *check.C
 
 		"NOTE: filename.mk:4: The substitution command \"s,@PREFIX@,${PREFIX},g\" "+
 			"can be replaced with \"SUBST_VARS.id= PREFIX\".",
-		"WARN: filename.mk:5: All but the first \"SUBST_VARS.id\" lines "+
-			"should use the \"+=\" operator.",
-		// FIXME: This is obviously redundant.
-		"NOTE: filename.mk:5: All but the first assignment should use the += operator.",
-
 		"AUTOFIX: filename.mk:4: "+
 			"Replacing \"SUBST_SED.id=\\t-e s,@PREFIX@,${PREFIX},g\" "+
 			"with \"SUBST_VARS.id=\\tPREFIX\".",
