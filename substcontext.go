@@ -27,8 +27,24 @@ func (ctx *SubstContext) reset() {
 }
 
 type substCond struct {
-	total    substSeen
-	curr     substSeen
+	// Tells whether a SUBST class has been added to SUBST_CLASSES at this
+	// conditional level.
+	// All variable assignments that belong to this class must happen at
+	// this conditional level or below it.
+	seenId bool
+
+	// Collects the parts of the SUBST block that have been defined in all
+	// branches that have been parsed completely.
+	total substSeen
+
+	// Collects the parts of the SUBST block that are defined in the current
+	// branch of the conditional. At the end of the branch, they are merged
+	// into the total.
+	curr substSeen
+
+	// Marks whether the current conditional statement has
+	// an .else branch. If it doesn't, this means that all variables
+	// are potentially unset in that branch.
 	seenElse bool
 }
 
@@ -37,13 +53,6 @@ type substCond struct {
 // pkglint keeps track whether they are set in all branches or only
 // in some of them.
 type substSeen struct {
-	// The ID of the SUBST class is included here to track nested SUBST blocks.
-	// It marks the conditional level at which a block has started.
-	//
-	// XXX: All the other fields are dependent on the ID. Therefore having the
-	//  ID here doesn't really make sense. Try to remove it, once more.
-	id bool
-
 	stage     bool
 	message   bool
 	files     bool
@@ -54,7 +63,6 @@ type substSeen struct {
 }
 
 func (st *substSeen) And(other substSeen) {
-	st.id = st.id && other.id
 	st.stage = st.stage && other.stage
 	st.message = st.message && other.message
 	st.files = st.files && other.files
@@ -65,7 +73,6 @@ func (st *substSeen) And(other substSeen) {
 }
 
 func (st *substSeen) Or(other substSeen) {
-	// nothing to do for st.id, since it can only be defined at the top level.
 	st.stage = st.stage || other.stage
 	st.message = st.message || other.message
 	st.files = st.files || other.files
@@ -466,7 +473,7 @@ func (ctx *SubstContext) activeId() string {
 
 func (ctx *SubstContext) setActiveId(id string) {
 	ctx.id = id
-	ctx.top().id = true
+	ctx.topCond().seenId = true
 	ctx.markAsDone(id)
 }
 
@@ -509,22 +516,27 @@ func (ctx *SubstContext) isSubstVar(varname string) bool {
 }
 
 func (ctx *SubstContext) isConditional() bool {
-	return !ctx.top().id
+	return !ctx.topCond().seenId
 }
 
+func (ctx *SubstContext) topCond() *substCond {
+	return ctx.conds[len(ctx.conds)-1]
+}
+
+// TODO: rename to topSeen
 func (ctx *SubstContext) top() *substSeen {
-	return &ctx.conds[len(ctx.conds)-1].curr
+	return &ctx.topCond().curr
 }
 
 func (ctx *SubstContext) condIf() {
-	top := substCond{total: substSeen{true, true, true, true, true, true, true, true}}
+	top := substCond{total: substSeen{true, true, true, true, true, true, true}}
 	ctx.conds = append(ctx.conds, &top)
 }
 
 func (ctx *SubstContext) condElse(mkline *MkLine, dir string) {
-	top := ctx.conds[len(ctx.conds)-1]
+	top := ctx.topCond()
 	top.total.And(top.curr)
-	if top.curr.id {
+	if !ctx.isConditional() {
 		// XXX: This is a higher-level method
 		ctx.Finish(mkline)
 	}
@@ -533,9 +545,9 @@ func (ctx *SubstContext) condElse(mkline *MkLine, dir string) {
 }
 
 func (ctx *SubstContext) condEndif(diag Diagnoser) {
-	top := ctx.conds[len(ctx.conds)-1]
+	top := ctx.topCond()
 	top.total.And(top.curr)
-	if top.curr.id {
+	if !ctx.isConditional() {
 		// XXX: This is a higher-level method
 		ctx.Finish(diag)
 	}
@@ -548,6 +560,7 @@ func (ctx *SubstContext) condEndif(diag Diagnoser) {
 	ctx.top().Or(top.total)
 }
 
+// TODO: rename to seenInCurrentBranch
 func (ctx *SubstContext) seen(flag func(seen *substSeen) *bool) bool {
 	for _, cond := range ctx.conds {
 		if *flag(&cond.curr) {
