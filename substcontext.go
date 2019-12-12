@@ -51,35 +51,25 @@ type substCond struct {
 // class ID. These variables can be set in conditional branches, and
 // pkglint keeps track whether they are set in all branches or only
 // in some of them.
-type substSeen struct {
-	stage     bool
-	message   bool
-	files     bool
-	sed       bool
-	vars      bool
-	cmd       bool
-	transform bool
-}
+type substSeen uint8
 
-func (st *substSeen) And(other substSeen) {
-	st.stage = st.stage && other.stage
-	st.message = st.message && other.message
-	st.files = st.files && other.files
-	st.sed = st.sed && other.sed
-	st.vars = st.vars && other.vars
-	st.cmd = st.cmd && other.cmd
-	st.transform = st.transform && other.transform
-}
+const (
+	ssStage substSeen = 1 << iota
+	ssMessage
+	ssFiles
+	ssSed
+	ssVars
+	ssFilterCmd
+	ssTransform
 
-func (st *substSeen) Or(other substSeen) {
-	st.stage = st.stage || other.stage
-	st.message = st.message || other.message
-	st.files = st.files || other.files
-	st.sed = st.sed || other.sed
-	st.vars = st.vars || other.vars
-	st.cmd = st.cmd || other.cmd
-	st.transform = st.transform || other.transform
-}
+	ssAll  substSeen = 1<<iota - 1
+	ssNone substSeen = 0
+)
+
+func (s *substSeen) set(part substSeen)      { *s |= part }
+func (s *substSeen) get(part substSeen) bool { return *s&part != 0 }
+func (s *substSeen) union(other substSeen)   { *s |= other }
+func (s *substSeen) retain(other substSeen)  { *s &= other }
 
 func (ctx *SubstContext) Process(mkline *MkLine) {
 	switch {
@@ -219,8 +209,7 @@ func (ctx *SubstContext) varassignStage(mkline *MkLine) {
 		mkline.Warnf("%s should not be defined conditionally.", mkline.Varname())
 	}
 
-	accessor := func(s *substSeen) *bool { return &s.stage }
-	ctx.dupString(mkline, accessor)
+	ctx.dupString(mkline, ssStage)
 
 	value := mkline.Value()
 	if value == "pre-patch" || value == "post-patch" {
@@ -256,28 +245,24 @@ func (ctx *SubstContext) varassignMessages(mkline *MkLine) {
 		mkline.Warnf("%s should not be defined conditionally.", varname)
 	}
 
-	accessor := func(s *substSeen) *bool { return &s.message }
-	ctx.dupString(mkline, accessor)
+	ctx.dupString(mkline, ssMessage)
 }
 
 func (ctx *SubstContext) varassignFiles(mkline *MkLine) {
-	accessor := func(s *substSeen) *bool { return &s.files }
-	ctx.dupList(mkline, accessor)
+	ctx.dupList(mkline, ssFiles)
 }
 
 func (ctx *SubstContext) varassignSed(mkline *MkLine) {
-	accessor := func(s *substSeen) *bool { return &s.sed }
-	ctx.dupList(mkline, accessor)
-	ctx.seen().transform = true
+	ctx.dupList(mkline, ssSed)
+	ctx.seen().set(ssTransform)
 
 	ctx.suggestSubstVars(mkline)
 }
 
 func (ctx *SubstContext) varassignVars(mkline *MkLine) {
-	accessor := func(s *substSeen) *bool { return &s.vars }
-	seen := ctx.seenInBranch(accessor) // since ctx.dupList modifies it
-	ctx.dupList(mkline, accessor)
-	ctx.seen().transform = true
+	seen := ctx.seenInBranch(ssVars) // since ctx.dupList modifies it
+	ctx.dupList(mkline, ssVars)
+	ctx.seen().set(ssTransform)
 
 	for _, substVar := range mkline.Fields() {
 		// TODO: What about variables that are defined before the SUBST_VARS line?
@@ -296,9 +281,8 @@ func (ctx *SubstContext) varassignVars(mkline *MkLine) {
 }
 
 func (ctx *SubstContext) varassignFilterCmd(mkline *MkLine) {
-	accessor := func(s *substSeen) *bool { return &s.cmd }
-	ctx.dupString(mkline, accessor)
-	ctx.seen().transform = true
+	ctx.dupString(mkline, ssFilterCmd)
+	ctx.seen().set(ssTransform)
 }
 
 func (ctx *SubstContext) isForeign(varcanon string) bool {
@@ -350,7 +334,7 @@ func (ctx *SubstContext) Directive(mkline *MkLine) {
 
 func (ctx *SubstContext) IsComplete() bool {
 	seen := ctx.seen()
-	return seen.stage && seen.files && seen.transform
+	return seen.get(ssStage) && seen.get(ssFiles) && seen.get(ssTransform)
 }
 
 func (ctx *SubstContext) Finish(diag Diagnoser) {
@@ -362,32 +346,32 @@ func (ctx *SubstContext) Finish(diag Diagnoser) {
 	//  to decouple them from the state manipulation.
 	id := ctx.activeId()
 	seen := ctx.seen()
-	if !seen.stage {
+	if !seen.get(ssStage) {
 		diag.Warnf("Incomplete SUBST block: SUBST_STAGE.%s missing.", id)
 	}
-	if !seen.files {
+	if !seen.get(ssFiles) {
 		diag.Warnf("Incomplete SUBST block: SUBST_FILES.%s missing.", id)
 	}
-	if !seen.transform {
+	if !seen.get(ssTransform) {
 		diag.Warnf("Incomplete SUBST block: SUBST_SED.%[1]s, SUBST_VARS.%[1]s or SUBST_FILTER_CMD.%[1]s missing.", id)
 	}
 
 	ctx.reset()
 }
 
-func (ctx *SubstContext) dupString(mkline *MkLine, flag func(stats *substSeen) *bool) {
-	if ctx.seenInBranch(flag) {
+func (ctx *SubstContext) dupString(mkline *MkLine, part substSeen) {
+	if ctx.seenInBranch(part) {
 		mkline.Warnf("Duplicate definition of %q.", mkline.Varname())
 	}
-	*flag(ctx.seen()) = true
+	ctx.seen().set(part)
 }
 
-func (ctx *SubstContext) dupList(mkline *MkLine, flag func(stats *substSeen) *bool) {
+func (ctx *SubstContext) dupList(mkline *MkLine, part substSeen) {
 
-	if ctx.seenInBranch(flag) && mkline.Op() != opAssignAppend {
+	if ctx.seenInBranch(part) && mkline.Op() != opAssignAppend {
 		mkline.Warnf("All but the first %q lines should use the \"+=\" operator.", mkline.Varname())
 	}
-	*flag(ctx.seen()) = true
+	ctx.seen().set(part)
 }
 
 func (ctx *SubstContext) suggestSubstVars(mkline *MkLine) {
@@ -404,7 +388,7 @@ func (ctx *SubstContext) suggestSubstVars(mkline *MkLine) {
 			id,
 			condStr(hasSuffix(id, "+"), " ", ""),
 			// FIXME: ctx.anyVars sounds more correct.
-			condStr(ctx.seen().vars, "+=", "="))
+			condStr(ctx.seen().get(ssVars), "+=", "="))
 
 		fix := mkline.Autofix()
 		fix.Notef("The substitution command %q can be replaced with \"%s %s\".",
@@ -422,7 +406,7 @@ func (ctx *SubstContext) suggestSubstVars(mkline *MkLine) {
 		// assignment operators on them. It's probably not worth the
 		// effort, though.
 
-		ctx.seen().vars = true
+		ctx.seen().set(ssVars)
 	}
 }
 
@@ -546,42 +530,42 @@ func (ctx *SubstContext) seen() *substSeen {
 }
 
 func (ctx *SubstContext) condIf() {
-	top := substCond{total: substSeen{true, true, true, true, true, true, true}}
+	top := substCond{total: ssAll}
 	ctx.conds = append(ctx.conds, &top)
 }
 
 func (ctx *SubstContext) condElse(mkline *MkLine, dir string) {
 	top := ctx.cond()
-	top.total.And(top.curr)
+	top.total.retain(top.curr)
 	if !ctx.isConditional() {
 		// XXX: This is a higher-level method
 		ctx.Finish(mkline)
 	}
-	top.curr = substSeen{}
+	top.curr = ssNone
 	top.seenElse = dir == "else"
 }
 
 func (ctx *SubstContext) condEndif(diag Diagnoser) {
 	top := ctx.cond()
-	top.total.And(top.curr)
+	top.total.retain(top.curr)
 	if !ctx.isConditional() {
 		// XXX: This is a higher-level method
 		ctx.Finish(diag)
 	}
 	if !top.seenElse {
-		top.total = substSeen{}
+		top.total = ssNone
 	}
 	if len(ctx.conds) > 1 {
 		ctx.conds = ctx.conds[:len(ctx.conds)-1]
 	}
-	ctx.seen().Or(top.total)
+	ctx.seen().union(top.total)
 }
 
 // Returns true if the given flag from substSeen has been seen
 // somewhere in the conditional path of the current line.
-func (ctx *SubstContext) seenInBranch(flag func(seen *substSeen) *bool) bool {
+func (ctx *SubstContext) seenInBranch(part substSeen) bool {
 	for _, cond := range ctx.conds {
-		if *flag(&cond.curr) {
+		if cond.curr.get(part) {
 			return true
 		}
 	}
