@@ -1371,12 +1371,11 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__conditional(c *check.C) {
 		"NOTE: filename.mk:4: The substitution command \"s,@VAR@,${VAR},\" "+
 			"can be replaced with \"SUBST_VARS.id= VAR\".",
 		"NOTE: filename.mk:6: The substitution command \"s,@VAR2@,${VAR2},\" "+
-			"can be replaced with \"SUBST_VARS.id= VAR2\".",
+			"can be replaced with \"SUBST_VARS.id+= VAR2\".",
 		"AUTOFIX: filename.mk:4: Replacing \"SUBST_SED.id=   -e s,@VAR@,${VAR},\" "+
 			"with \"SUBST_VARS.id=\\tVAR\".",
 		"AUTOFIX: filename.mk:6: Replacing \"SUBST_SED.id+=  -e s,@VAR2@,${VAR2},\" "+
-			// FIXME: += instead of =
-			"with \"SUBST_VARS.id=\\tVAR2\".")
+			"with \"SUBST_VARS.id+=\\tVAR2\".")
 
 	t.CheckFileLinesDetab("filename.mk",
 		"SUBST_CLASSES+= id",
@@ -1384,7 +1383,7 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__conditional(c *check.C) {
 		"SUBST_FILES.id= files",
 		"SUBST_VARS.id=  VAR",
 		".if 1",
-		"SUBST_VARS.id=  VAR2",
+		"SUBST_VARS.id+= VAR2",
 		".endif",
 		"")
 }

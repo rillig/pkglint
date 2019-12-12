@@ -395,8 +395,7 @@ func (ctx *SubstContext) suggestSubstVars(mkline *MkLine) {
 		varop := sprintf("SUBST_VARS.%s%s%s",
 			id,
 			condStr(hasSuffix(id, "+"), " ", ""),
-			// FIXME: ctx.anyVars sounds more correct.
-			condStr(ctx.seen().get(ssVars), "+=", "="))
+			condStr(ctx.seenInBranch(ssVars), "+=", "="))
 
 		fix := mkline.Autofix()
 		fix.Notef("The substitution command %q can be replaced with \"%s %s\".",
