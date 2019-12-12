@@ -664,6 +664,25 @@ func (s *Suite) Test_SubstContext_varassignStage__without_NO_CONFIGURE(c *check.
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_SubstContext_varassignVars__var_before_SUBST_VARS(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("filename.mk",
+		"SUBST_CLASSES+= id",
+		"SUBST_STAGE.id= post-configure",
+		"SUBST_FILES.id= files",
+		"VAR=            value",
+		"SUBST_VARS.id=  VAR",
+		"")
+	ctx := NewSubstContext()
+
+	mklines.ForEach(ctx.Process)
+
+	// FIXME: VAR is used in SUBST_VARS one line below, therefore it is not foreign.
+	t.CheckOutputLines(
+		"WARN: filename.mk:4: Foreign variable \"VAR\" in SUBST block.")
+}
+
 func (s *Suite) Test_SubstContext_Directive__before_SUBST_CLASSES(c *check.C) {
 	t := s.Init(c)
 
