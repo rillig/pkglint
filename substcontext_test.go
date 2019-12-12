@@ -214,7 +214,8 @@ func (s *Suite) Test_SubstContext__adjacent(c *check.C) {
 		"SUBST_SED.1+=\t-e s,subst1b,repl1b,", // Misplaced
 		"SUBST_STAGE.2=\tpre-configure",
 		"SUBST_FILES.2=\tfile2",
-		"SUBST_SED.2=\t-e s,subst2,repl2,")
+		"SUBST_SED.2=\t-e s,subst2,repl2,",
+		"")
 	ctx := NewSubstContext()
 
 	mklines.ForEach(ctx.Process)
@@ -230,7 +231,8 @@ func (s *Suite) Test_SubstContext__do_patch(c *check.C) {
 		"SUBST_CLASSES+=\tos",
 		"SUBST_STAGE.os=\tdo-patch",
 		"SUBST_FILES.os=\tguess-os.h",
-		"SUBST_SED.os=\t-e s,@OPSYS@,Darwin,")
+		"SUBST_SED.os=\t-e s,@OPSYS@,Darwin,",
+		"")
 	ctx := NewSubstContext()
 
 	mklines.ForEach(ctx.Process)
@@ -273,7 +275,8 @@ func (s *Suite) Test_SubstContext__SUBST_VARS_in_next_paragraph(c *check.C) {
 		"SUBST_VARS.os=\tTODAY1",
 		"",
 		"TODAY1!=\tdate",
-		"TODAY2!=\tdate")
+		"TODAY2!=\tdate",
+		"")
 	ctx := NewSubstContext()
 
 	mklines.ForEach(ctx.Process)
@@ -288,7 +291,8 @@ func (s *Suite) Test_SubstContext__multiple_SUBST_VARS(c *check.C) {
 		"SUBST_CLASSES+=\tos",
 		"SUBST_STAGE.os=\tpre-configure",
 		"SUBST_FILES.os=\tguess-os.h",
-		"SUBST_VARS.os=\tPREFIX VARBASE")
+		"SUBST_VARS.os=\tPREFIX VARBASE",
+		"")
 	ctx := NewSubstContext()
 
 	mklines.ForEach(ctx.Process)
@@ -307,7 +311,8 @@ func (s *Suite) Test_SubstContext__unusual_variable_order(c *check.C) {
 		"SUBST_SED.id=\t\t-e /deleteme/d",
 		"SUBST_FILES.id=\t\tfile",
 		"SUBST_MESSAGE.id=\tMessage",
-		"SUBST_STAGE.id=\t\tpre-configure")
+		"SUBST_STAGE.id=\t\tpre-configure",
+		"")
 	ctx := NewSubstContext()
 
 	mklines.ForEach(ctx.Process)
@@ -324,7 +329,8 @@ func (s *Suite) Test_SubstContext__completely_conditional_then(c *check.C) {
 		"SUBST_STAGE.id=\tpre-configure",
 		"SUBST_SED.id=\t-e sahara",
 		".else",
-		".endif")
+		".endif",
+		"")
 	ctx := NewSubstContext()
 
 	mklines.ForEach(ctx.Process)
@@ -344,7 +350,8 @@ func (s *Suite) Test_SubstContext__completely_conditional_else(c *check.C) {
 		"SUBST_CLASSES+=\tid",
 		"SUBST_STAGE.id=\tpre-configure",
 		"SUBST_SED.id=\t-e sahara",
-		".endif")
+		".endif",
+		"")
 	ctx := NewSubstContext()
 
 	mklines.ForEach(ctx.Process)
@@ -486,7 +493,8 @@ func (s *Suite) Test_SubstContext_varassignStage__pre_patch(c *check.C) {
 			"SUBST_CLASSES+=\tos",
 			"SUBST_STAGE.os=\tpre-patch",
 			"SUBST_FILES.os=\tguess-os.h",
-			"SUBST_SED.os=\t-e s,@OPSYS@,Darwin,")
+			"SUBST_SED.os=\t-e s,@OPSYS@,Darwin,",
+			"")
 		ctx := NewSubstContext()
 
 		mklines.ForEach(ctx.Process)
@@ -503,7 +511,8 @@ func (s *Suite) Test_SubstContext_varassignStage__pre_patch(c *check.C) {
 		"SUBST_CLASSES+= os",
 		"SUBST_STAGE.os= post-extract",
 		"SUBST_FILES.os= guess-os.h",
-		"SUBST_SED.os=   -e s,@OPSYS@,Darwin,")
+		"SUBST_SED.os=   -e s,@OPSYS@,Darwin,",
+		"")
 }
 
 func (s *Suite) Test_SubstContext_varassignStage__post_patch(c *check.C) {
@@ -516,7 +525,8 @@ func (s *Suite) Test_SubstContext_varassignStage__post_patch(c *check.C) {
 			"SUBST_CLASSES+=\tos",
 			"SUBST_STAGE.os=\tpost-patch",
 			"SUBST_FILES.os=\tguess-os.h",
-			"SUBST_SED.os=\t-e s,@OPSYS@,Darwin,")
+			"SUBST_SED.os=\t-e s,@OPSYS@,Darwin,",
+			"")
 		ctx := NewSubstContext()
 
 		mklines.ForEach(ctx.Process)
@@ -533,7 +543,8 @@ func (s *Suite) Test_SubstContext_varassignStage__post_patch(c *check.C) {
 		"SUBST_CLASSES+= os",
 		"SUBST_STAGE.os= pre-configure",
 		"SUBST_FILES.os= guess-os.h",
-		"SUBST_SED.os=   -e s,@OPSYS@,Darwin,")
+		"SUBST_SED.os=   -e s,@OPSYS@,Darwin,",
+		"")
 }
 
 // As of December 2019, pkglint does not use token positions internally.
@@ -551,7 +562,8 @@ func (s *Suite) Test_SubstContext_varassignStage__ambiguous_replacement(c *check
 			"SUBST_CLASSES+=         pre-patch",
 			"SUBST_STAGE.pre-patch=  pre-patch",
 			"SUBST_FILES.pre-patch=  files",
-			"SUBST_VARS.pre-patch=   VARNAME")
+			"SUBST_VARS.pre-patch=   VARNAME",
+			"")
 		ctx := NewSubstContext()
 
 		mklines.ForEach(ctx.Process)
@@ -648,7 +660,8 @@ func (s *Suite) Test_SubstContext_Directive__before_SUBST_CLASSES(c *check.C) {
 		".if 0",
 		".endif",
 		"SUBST_CLASSES+=\tos",
-		".elif 0") // Just for branch coverage.
+		".elif 0", // Just for branch coverage.
+		"")
 	ctx := NewSubstContext()
 
 	mklines.ForEach(ctx.Process)
@@ -1047,7 +1060,8 @@ func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {
 				"SUBST_CLASSES+=\t\ttest",
 				"SUBST_STAGE.test=\tpre-configure",
 				"SUBST_FILES.test=\tfilename",
-				line)
+				line,
+				"")
 			ctx := NewSubstContext()
 
 			mklines.ForEach(ctx.Process)
@@ -1178,7 +1192,8 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__plus(c *check.C) {
 			"SUBST_STAGE.gtk+ =\tpre-configure",
 			"SUBST_FILES.gtk+ =\tfilename",
 			"SUBST_SED.gtk+ +=\t-e s,@SH@,${SH:Q},g",
-			"SUBST_SED.gtk+ +=\t-e s,@SH@,${SH:Q},g")
+			"SUBST_SED.gtk+ +=\t-e s,@SH@,${SH:Q},g",
+			"")
 		ctx := NewSubstContext()
 
 		mklines.ForEach(ctx.Process)
@@ -1202,7 +1217,8 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__plus(c *check.C) {
 		"SUBST_STAGE.gtk+ =      pre-configure",
 		"SUBST_FILES.gtk+ =      filename",
 		"SUBST_VARS.gtk+ =       SH",
-		"SUBST_VARS.gtk+ +=      SH")
+		"SUBST_VARS.gtk+ +=      SH",
+		"")
 }
 
 // The last of the SUBST_SED variables is 15 characters wide. When SUBST_SED
@@ -1219,7 +1235,8 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_realign_paragraph(c 
 			"SUBST_STAGE.pfx=\tpre-configure",
 			"SUBST_FILES.pfx=\tfilename",
 			"SUBST_SED.pfx=\t\t-e s,@PREFIX@,${PREFIX},g",
-			"SUBST_SED.pfx+=\t\t-e s,@PREFIX@,${PREFIX},g")
+			"SUBST_SED.pfx+=\t\t-e s,@PREFIX@,${PREFIX},g",
+			"")
 		ctx := NewSubstContext()
 
 		mklines.ForEach(ctx.Process)
@@ -1244,7 +1261,8 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_realign_paragraph(c 
 		"SUBST_STAGE.pfx=        pre-configure",
 		"SUBST_FILES.pfx=        filename",
 		"SUBST_VARS.pfx=         PREFIX",
-		"SUBST_VARS.pfx+=        PREFIX")
+		"SUBST_VARS.pfx+=        PREFIX",
+		"")
 }
 
 func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_sed(c *check.C) {
@@ -1258,7 +1276,8 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_sed(c *check.C)
 			"SUBST_STAGE.pfx=\tpre-configure",
 			"SUBST_FILES.pfx=\tfilename",
 			"SUBST_SED.pfx=\t\t-e s,@PREFIX@,${PREFIX},g",
-			"SUBST_SED.pfx+=\t\t-e s,@PREFIX@,other,g")
+			"SUBST_SED.pfx+=\t\t-e s,@PREFIX@,other,g",
+			"")
 		ctx := NewSubstContext()
 
 		mklines.ForEach(ctx.Process)
@@ -1282,7 +1301,8 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_sed(c *check.C)
 		"SUBST_VARS.pfx=         PREFIX",
 		// Since the SUBST_SED that was previously here used the = operator,
 		// this += might be replaced with a simple =.
-		"SUBST_SED.pfx+=         -e s,@PREFIX@,other,g")
+		"SUBST_SED.pfx+=         -e s,@PREFIX@,other,g",
+		"")
 }
 
 func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_vars(c *check.C) {
@@ -1296,7 +1316,8 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_vars(c *check.C
 			"SUBST_STAGE.id=\tpre-configure",
 			"SUBST_FILES.id=\tfilename",
 			"SUBST_SED.id=\t-e s,@PREFIX@,${PREFIX},g",
-			"SUBST_VARS.id=\tPKGMANDIR")
+			"SUBST_VARS.id=\tPKGMANDIR",
+			"")
 		ctx := NewSubstContext()
 
 		mklines.ForEach(ctx.Process)
@@ -1321,7 +1342,8 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_vars(c *check.C
 		"SUBST_STAGE.id= pre-configure",
 		"SUBST_FILES.id= filename",
 		"SUBST_VARS.id=  PREFIX",
-		"SUBST_VARS.id+= PKGMANDIR")
+		"SUBST_VARS.id+= PKGMANDIR",
+		"")
 }
 
 func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_indentation(c *check.C) {
@@ -1335,7 +1357,8 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_indentation(c *check
 			"SUBST_STAGE.fix-paths=\t\tpre-configure",
 			"SUBST_MESSAGE.fix-paths=\tMessage",
 			"SUBST_FILES.fix-paths=\t\tfilename",
-			"SUBST_SED.fix-paths=\t\t-e s,@PREFIX@,${PREFIX},g")
+			"SUBST_SED.fix-paths=\t\t-e s,@PREFIX@,${PREFIX},g",
+			"")
 		ctx := NewSubstContext()
 
 		mklines.ForEach(ctx.Process)
@@ -1358,7 +1381,8 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_indentation(c *check
 		"SUBST_STAGE.fix-paths=          pre-configure",
 		"SUBST_MESSAGE.fix-paths=        Message",
 		"SUBST_FILES.fix-paths=          filename",
-		"SUBST_VARS.fix-paths=           PREFIX")
+		"SUBST_VARS.fix-paths=           PREFIX",
+		"")
 }
 
 func (s *Suite) Test_SubstContext_suggestSubstVars__conditional(c *check.C) {
