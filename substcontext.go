@@ -199,8 +199,6 @@ func (ctx *SubstContext) varassignDifferentClass(mkline *MkLine, varparam string
 		return false
 	}
 
-	// XXX: This code sometimes produces weird warnings. See
-	// meta-pkgs/xorg/Makefile.common 1.41 for an example.
 	ctx.Finish(mkline)
 
 	if ctx.queuedIds[varparam] {
