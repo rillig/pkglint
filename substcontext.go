@@ -176,9 +176,8 @@ func (ctx *SubstContext) varassignMissingId(mkline *MkLine) {
 	if containsWord(mkline.Rationale(), varparam) {
 		return
 	}
-	if ctx.queuedIds[varparam] {
-		ctx.queuedIds[varparam] = false
-		ctx.id = varparam
+
+	if ctx.start(varparam) {
 		return
 	}
 
@@ -201,9 +200,7 @@ func (ctx *SubstContext) varassignDifferentClass(mkline *MkLine) (ok bool) {
 
 	ctx.Finish(mkline)
 
-	if ctx.queuedIds[varparam] {
-		ctx.id = varparam
-	}
+	ctx.start(varparam)
 	return true
 }
 
@@ -501,4 +498,13 @@ func (*SubstContext) extractVarname(token string) string {
 
 func (ctx *SubstContext) top() *substSeen {
 	return &ctx.conds[len(ctx.conds)-1].curr
+}
+
+func (ctx *SubstContext) start(id string) bool {
+	if ctx.queuedIds[id] {
+		ctx.queuedIds[id] = false
+		ctx.id = id
+		return true
+	}
+	return false
 }
