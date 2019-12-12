@@ -34,6 +34,10 @@ type substCond struct {
 	// Tells whether a SUBST block has started at this conditional level.
 	// All variable assignments that belong to this class must happen at
 	// this conditional level or below it.
+	//
+	// TODO: For Test_SubstContext_Directive__conditional_complete,
+	//  this needs to be changed to the set of classes that have been
+	//  added to SUBST_CLASSES at this level.
 	top bool
 
 	// Collects the parts of the SUBST block that have been defined in all
