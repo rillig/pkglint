@@ -351,7 +351,8 @@ func (bt *BasicType) NeedsQ() bool {
 		BtEmulPlatform,
 		BtFileMode,
 		BtFilename,
-		BtIdentifier,
+		BtIdentifierDirect,
+		BtIdentifierIndirect,
 		BtInteger,
 		BtMachineGnuPlatform,
 		BtMachinePlatform,
@@ -419,7 +420,8 @@ var (
 	BtFileMode               = &BasicType{"FileMode", (*VartypeCheck).FileMode}
 	BtGccReqd                = &BasicType{"GccReqd", (*VartypeCheck).GccReqd}
 	BtHomepage               = &BasicType{"Homepage", (*VartypeCheck).Homepage}
-	BtIdentifier             = &BasicType{"Identifier", (*VartypeCheck).Identifier}
+	BtIdentifierDirect       = &BasicType{"Identifier", (*VartypeCheck).IdentifierDirect}
+	BtIdentifierIndirect     = &BasicType{"Identifier", (*VartypeCheck).IdentifierIndirect}
 	BtInteger                = &BasicType{"Integer", (*VartypeCheck).Integer}
 	BtLdFlag                 = &BasicType{"LdFlag", (*VartypeCheck).LdFlag}
 	BtLicense                = &BasicType{"License", (*VartypeCheck).License}

@@ -411,7 +411,8 @@ func (s *Suite) Test_SubstContext_varassignClasses__indirect(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		// TODO: Error that SUBST_CLASSES identifiers must be literals.
+		"ERROR: filename.mk:2: Identifiers for SUBST_CLASSES "+
+			"must not refer to other variables.",
 		"WARN: filename.mk:2: VAR is used but not defined.")
 }
 
