@@ -1252,8 +1252,8 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_sed(c *check.C)
 		"SUBST_STAGE.pfx=        pre-configure",
 		"SUBST_FILES.pfx=        filename",
 		"SUBST_VARS.pfx=         PREFIX",
-		// XXX: If this subst class is used nowhere else, pkglint could
-		//  replace this += with a simple =.
+		// Since the SUBST_SED that was previously here used the = operator,
+		// this += might be replaced with a simple =.
 		"SUBST_SED.pfx+=         -e s,@PREFIX@,other,g")
 }
 
@@ -1285,8 +1285,7 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_vars(c *check.C
 			"can be replaced with \"SUBST_VARS.id= PREFIX\".",
 		"WARN: subst.mk:7: All but the first \"SUBST_VARS.id\" lines "+
 			"should use the \"+=\" operator.",
-		// FIXME: What is this?
-		"NOTE: subst.mk:7: Adjust.",
+		"NOTE: subst.mk:7: All but the first assignments should use the += operator.",
 
 		"AUTOFIX: subst.mk:6: "+
 			"Replacing \"SUBST_SED.id=\\t-e s,@PREFIX@,${PREFIX},g\" "+

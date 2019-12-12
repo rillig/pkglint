@@ -282,7 +282,7 @@ func (ctx *SubstContext) varassignVars(mkline *MkLine, varname string, op MkOper
 		before := mkline.ValueAlign()
 		after := alignWith(mkline.Varname()+"+=", before)
 		fix := mkline.Autofix()
-		fix.Notef("Adjust.")
+		fix.Notef("All but the first assignments should use the += operator.")
 		fix.Replace(before, after)
 		fix.Apply()
 	}
