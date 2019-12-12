@@ -220,8 +220,8 @@ func (ctx *SubstContext) varassignStage(mkline *MkLine) {
 		mkline.Warnf("%s should not be defined conditionally.", mkline.Varname())
 	}
 
-	seen := func(s *substSeen) *bool { return &s.stage }
-	ctx.dupString(mkline, seen)
+	accessor := func(s *substSeen) *bool { return &s.stage }
+	ctx.dupString(mkline, accessor)
 
 	value := mkline.Value()
 	if value == "pre-patch" || value == "post-patch" {
@@ -257,27 +257,27 @@ func (ctx *SubstContext) varassignMessages(mkline *MkLine) {
 		mkline.Warnf("%s should not be defined conditionally.", varname)
 	}
 
-	seen := func(s *substSeen) *bool { return &s.message }
-	ctx.dupString(mkline, seen)
+	accessor := func(s *substSeen) *bool { return &s.message }
+	ctx.dupString(mkline, accessor)
 }
 
 func (ctx *SubstContext) varassignFiles(mkline *MkLine) {
-	seen := func(s *substSeen) *bool { return &s.files }
-	ctx.dupList(mkline, seen)
+	accessor := func(s *substSeen) *bool { return &s.files }
+	ctx.dupList(mkline, accessor)
 }
 
 func (ctx *SubstContext) varassignSed(mkline *MkLine) {
-	seen := func(s *substSeen) *bool { return &s.sed }
-	ctx.dupList(mkline, seen)
+	accessor := func(s *substSeen) *bool { return &s.sed }
+	ctx.dupList(mkline, accessor)
 	ctx.top().transform = true
 
 	ctx.suggestSubstVars(mkline)
 }
 
 func (ctx *SubstContext) varassignVars(mkline *MkLine) {
-	seen := func(s *substSeen) *bool { return &s.vars }
-	prev := ctx.seenInBranch(seen)
-	ctx.dupList(mkline, seen)
+	accessor := func(s *substSeen) *bool { return &s.vars }
+	prev := ctx.seenInBranch(accessor)
+	ctx.dupList(mkline, accessor)
 	ctx.top().transform = true
 	for _, substVar := range mkline.Fields() {
 		// TODO: What about variables that are defined before the SUBST_VARS line?
@@ -295,8 +295,8 @@ func (ctx *SubstContext) varassignVars(mkline *MkLine) {
 }
 
 func (ctx *SubstContext) varassignFilterCmd(mkline *MkLine) {
-	seen := func(s *substSeen) *bool { return &s.cmd }
-	ctx.dupString(mkline, seen)
+	accessor := func(s *substSeen) *bool { return &s.cmd }
+	ctx.dupString(mkline, accessor)
 	ctx.top().transform = true
 }
 
