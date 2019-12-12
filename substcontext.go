@@ -209,17 +209,14 @@ func (ctx *SubstContext) varassignDifferentClass(mkline *MkLine) (ok bool) {
 }
 
 func (ctx *SubstContext) varassignStage(mkline *MkLine) {
-	varname := mkline.Varname()
-	value := mkline.Value()
-	// TODO: move further down
-
 	if ctx.isConditional() {
-		mkline.Warnf("%s should not be defined conditionally.", varname)
+		mkline.Warnf("%s should not be defined conditionally.", mkline.Varname())
 	}
 
 	seen := func(s *substSeen) *bool { return &s.stage }
 	ctx.dupString(mkline, seen)
 
+	value := mkline.Value()
 	if value == "pre-patch" || value == "post-patch" {
 		fix := mkline.Autofix()
 		fix.Warnf("Substitutions should not happen in the patch phase.")
