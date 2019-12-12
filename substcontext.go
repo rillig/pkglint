@@ -87,17 +87,13 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 		trace.Stepf("SubstContext.Varassign curr=%v", *ctx.top())
 	}
 
-	varname := mkline.Varname()
 	varcanon := mkline.Varcanon()
-	varparam := mkline.Varparam()
-	op := mkline.Op()
-	value := mkline.Value()
-
 	if varcanon == "SUBST_CLASSES" || varcanon == "SUBST_CLASSES.*" {
-		ctx.varassignClasses(mkline, value)
+		ctx.varassignClasses(mkline)
 		return
 	}
 
+	varname := mkline.Varname()
 	if ctx.isForeignCanon(varcanon) && !ctx.vars[varname] {
 		if ctx.id != "" {
 			mkline.Warnf("Foreign variable %q in SUBST block.", varname)
@@ -106,34 +102,34 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 	}
 
 	if ctx.id == "" {
-		ctx.varassignMissingId(varcanon, varparam, mkline, varname)
+		ctx.varassignMissingId(mkline)
 		return
 	}
 
-	if hasPrefix(varname, "SUBST_") && varparam != ctx.id {
-		if !ctx.varassignDifferentClass(mkline, varparam, varname) {
+	if hasPrefix(varname, "SUBST_") && mkline.Varparam() != ctx.id {
+		if !ctx.varassignDifferentClass(mkline) {
 			return
 		}
 	}
 
 	switch varcanon {
 	case "SUBST_STAGE.*":
-		ctx.varassignStage(mkline, varname, value)
+		ctx.varassignStage(mkline)
 	case "SUBST_MESSAGE.*":
-		ctx.varassignMessages(mkline, varname)
+		ctx.varassignMessages(mkline)
 	case "SUBST_FILES.*":
-		ctx.varassignFiles(mkline, varname, op)
+		ctx.varassignFiles(mkline)
 	case "SUBST_SED.*":
-		ctx.varassignSed(mkline, varname, op)
+		ctx.varassignSed(mkline)
 	case "SUBST_VARS.*":
-		ctx.varassignVars(mkline, varname, op)
+		ctx.varassignVars(mkline)
 	case "SUBST_FILTER_CMD.*":
-		ctx.varassignFilterCmd(mkline, varname)
+		ctx.varassignFilterCmd(mkline)
 	}
 }
 
-func (ctx *SubstContext) varassignClasses(mkline *MkLine, value string) {
-	classes := mkline.ValueFields(value)
+func (ctx *SubstContext) varassignClasses(mkline *MkLine) {
+	classes := mkline.ValueFields(mkline.Value())
 
 	if len(classes) > 1 {
 		mkline.Notef("Please add only one class at a time to SUBST_CLASSES.")
@@ -168,8 +164,10 @@ func (ctx *SubstContext) varassignClasses(mkline *MkLine, value string) {
 	return
 }
 
-func (ctx *SubstContext) varassignMissingId(varcanon string, varparam string, mkline *MkLine, varname string) {
-	if ctx.isListCanon(varcanon) && ctx.doneIds[varparam] {
+func (ctx *SubstContext) varassignMissingId(mkline *MkLine) {
+	varparam := mkline.Varparam()
+
+	if ctx.isListCanon(mkline.Varcanon()) && ctx.doneIds[varparam] {
 		if mkline.Op() != opAssignAppend {
 			mkline.Warnf("Late additions to a SUBST variable should use the += operator.")
 		}
@@ -187,12 +185,15 @@ func (ctx *SubstContext) varassignMissingId(varcanon string, varparam string, mk
 	if ctx.once.FirstTimeSlice("SubstContext.Varassign", varparam) {
 		mkline.Warnf("Before defining %s, the SUBST class "+
 			"should be declared using \"SUBST_CLASSES+= %s\".",
-			varname, varparam)
+			mkline.Varname(), varparam)
 	}
 	return
 }
 
-func (ctx *SubstContext) varassignDifferentClass(mkline *MkLine, varparam string, varname string) (ok bool) {
+func (ctx *SubstContext) varassignDifferentClass(mkline *MkLine) (ok bool) {
+	varname := mkline.Varname()
+	varparam := mkline.Varparam()
+
 	if !ctx.IsComplete() {
 		mkline.Warnf("Variable %q does not match SUBST class %q.", varname, ctx.id)
 		return false
@@ -206,13 +207,17 @@ func (ctx *SubstContext) varassignDifferentClass(mkline *MkLine, varparam string
 	return true
 }
 
-func (ctx *SubstContext) varassignStage(mkline *MkLine, varname string, value string) {
+func (ctx *SubstContext) varassignStage(mkline *MkLine) {
+	varname := mkline.Varname()
+	value := mkline.Value()
+
 	if !ctx.top().id {
 		mkline.Warnf("%s should not be defined conditionally.", varname)
 	}
 
 	seen := func(s *substSeen) *bool { return &s.stage }
-	ctx.dupString(mkline, seen, varname)
+	ctx.dupString(mkline, seen)
+
 	if value == "pre-patch" || value == "post-patch" {
 		fix := mkline.Autofix()
 		fix.Warnf("Substitutions should not happen in the patch phase.")
@@ -239,32 +244,34 @@ func (ctx *SubstContext) varassignStage(mkline *MkLine, varname string, value st
 	}
 }
 
-func (ctx *SubstContext) varassignMessages(mkline *MkLine, varname string) {
+func (ctx *SubstContext) varassignMessages(mkline *MkLine) {
+	varname := mkline.Varname()
+
 	if !ctx.top().id {
 		mkline.Warnf("%s should not be defined conditionally.", varname)
 	}
 
 	seen := func(s *substSeen) *bool { return &s.message }
-	ctx.dupString(mkline, seen, varname)
+	ctx.dupString(mkline, seen)
 }
 
-func (ctx *SubstContext) varassignFiles(mkline *MkLine, varname string, op MkOperator) {
+func (ctx *SubstContext) varassignFiles(mkline *MkLine) {
 	seen := func(s *substSeen) *bool { return &s.files }
-	ctx.dupList(mkline, seen, varname, op)
+	ctx.dupList(mkline, seen)
 }
 
-func (ctx *SubstContext) varassignSed(mkline *MkLine, varname string, op MkOperator) {
+func (ctx *SubstContext) varassignSed(mkline *MkLine) {
 	seen := func(s *substSeen) *bool { return &s.sed }
-	ctx.dupList(mkline, seen, varname, op)
+	ctx.dupList(mkline, seen)
 	ctx.top().transform = true
 
 	ctx.suggestSubstVars(mkline)
 }
 
-func (ctx *SubstContext) varassignVars(mkline *MkLine, varname string, op MkOperator) {
+func (ctx *SubstContext) varassignVars(mkline *MkLine) {
 	seen := func(s *substSeen) *bool { return &s.vars }
 	prev := ctx.seen(seen)
-	ctx.dupList(mkline, seen, varname, op)
+	ctx.dupList(mkline, seen)
 	ctx.top().transform = true
 	for _, substVar := range mkline.Fields() {
 		if ctx.vars == nil {
@@ -283,9 +290,9 @@ func (ctx *SubstContext) varassignVars(mkline *MkLine, varname string, op MkOper
 	}
 }
 
-func (ctx *SubstContext) varassignFilterCmd(mkline *MkLine, varname string) {
+func (ctx *SubstContext) varassignFilterCmd(mkline *MkLine) {
 	seen := func(s *substSeen) *bool { return &s.cmd }
-	ctx.dupString(mkline, seen, varname)
+	ctx.dupString(mkline, seen)
 	ctx.top().transform = true
 }
 
@@ -397,18 +404,17 @@ func (ctx *SubstContext) Finish(diag Diagnoser) {
 	ctx.reset()
 }
 
-func (ctx *SubstContext) dupString(mkline *MkLine, flag func(stats *substSeen) *bool, varname string) {
+func (ctx *SubstContext) dupString(mkline *MkLine, flag func(stats *substSeen) *bool) {
 	if ctx.seen(flag) {
-		mkline.Warnf("Duplicate definition of %q.", varname)
+		mkline.Warnf("Duplicate definition of %q.", mkline.Varname())
 	}
 	*flag(ctx.top()) = true
 }
 
-func (ctx *SubstContext) dupList(mkline *MkLine, flag func(stats *substSeen) *bool,
-	varname string, op MkOperator) {
+func (ctx *SubstContext) dupList(mkline *MkLine, flag func(stats *substSeen) *bool) {
 
-	if ctx.seen(flag) && op != opAssignAppend {
-		mkline.Warnf("All but the first %q lines should use the \"+=\" operator.", varname)
+	if ctx.seen(flag) && mkline.Op() != opAssignAppend {
+		mkline.Warnf("All but the first %q lines should use the \"+=\" operator.", mkline.Varname())
 	}
 	*flag(ctx.top()) = true
 }
