@@ -210,6 +210,10 @@ func (ctx *SubstContext) varassignDifferentClass(mkline *MkLine, varparam string
 }
 
 func (ctx *SubstContext) varassignStage(mkline *MkLine, varname string, value string) {
+	if !ctx.top().id {
+		mkline.Warnf("%s should not be defined conditionally.", varname)
+	}
+
 	seen := func(s *substSeen) *bool { return &s.stage }
 	ctx.dupString(mkline, seen, varname)
 	if value == "pre-patch" || value == "post-patch" {
@@ -241,6 +245,10 @@ func (ctx *SubstContext) varassignStage(mkline *MkLine, varname string, value st
 }
 
 func (ctx *SubstContext) varassignMessages(mkline *MkLine, varname string) {
+	if !ctx.top().id {
+		mkline.Warnf("%s should not be defined conditionally.", varname)
+	}
+
 	seen := func(s *substSeen) *bool { return &s.message }
 	ctx.dupString(mkline, seen, varname)
 }

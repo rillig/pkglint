@@ -112,6 +112,7 @@ func (s *Suite) Test_SubstContext__multiple_classes_in_one_line(c *check.C) {
 
 	t.CheckOutputLines(
 		"NOTE: filename.mk:1: Please add only one class at a time to SUBST_CLASSES.",
+		"WARN: filename.mk:5: SUBST_STAGE.two should not be defined conditionally.",
 		"WARN: filename.mk:7: Incomplete SUBST block: SUBST_SED.two, SUBST_VARS.two or SUBST_FILTER_CMD.two missing.")
 }
 
@@ -716,10 +717,11 @@ func (s *Suite) Test_SubstContext_Directive__conditional_complete(c *check.C) {
 
 	mklines.ForEach(ctx.Process)
 
-	// XXX: Maybe add a warning that SUBST_STAGE.id and SUBST_MESSAGE.id
-	//  should not be defined conditionally. There's no practical use
-	//  case for that.
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: filename.mk:3: SUBST_STAGE.id should not be defined conditionally.",
+		"WARN: filename.mk:4: SUBST_MESSAGE.id should not be defined conditionally.",
+		"WARN: filename.mk:10: SUBST_STAGE.id should not be defined conditionally.",
+		"WARN: filename.mk:11: SUBST_MESSAGE.id should not be defined conditionally.")
 }
 
 func (s *Suite) Test_SubstContext_Directive__conditionally_overwritten_filter(c *check.C) {
@@ -876,6 +878,8 @@ func (s *Suite) Test_SubstContext_Finish__details_in_then_branch(c *check.C) {
 	mklines.ForEach(ctx.Process)
 
 	t.CheckOutputLines(
+		"WARN: filename.mk:5: SUBST_STAGE.os should not be defined conditionally.",
+		"WARN: filename.mk:6: SUBST_MESSAGE.os should not be defined conditionally.",
 		"WARN: filename.mk:9: Incomplete SUBST block: SUBST_STAGE.os missing.",
 		"WARN: filename.mk:9: Incomplete SUBST block: SUBST_FILES.os missing.",
 		"WARN: filename.mk:9: Incomplete SUBST block: "+
@@ -901,6 +905,8 @@ func (s *Suite) Test_SubstContext_Finish__details_in_else_branch(c *check.C) {
 	mklines.ForEach(ctx.Process)
 
 	t.CheckOutputLines(
+		"WARN: filename.mk:6: SUBST_STAGE.os should not be defined conditionally.",
+		"WARN: filename.mk:7: SUBST_MESSAGE.os should not be defined conditionally.",
 		"WARN: filename.mk:10: Incomplete SUBST block: SUBST_STAGE.os missing.",
 		"WARN: filename.mk:10: Incomplete SUBST block: SUBST_FILES.os missing.",
 		"WARN: filename.mk:10: Incomplete SUBST block: "+
