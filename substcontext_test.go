@@ -393,6 +393,38 @@ func (s *Suite) Test_SubstContext_Varassign__late_addition_to_unknown_class(c *c
 			"the SUBST class should be declared using \"SUBST_CLASSES+= id\".")
 }
 
+func (s *Suite) Test_SubstContext_varassignClasses__none(c *check.C) {
+	t := s.Init(c)
+
+	// FIXME: Oops
+	t.ExpectPanicMatches(
+		func() {
+			t.RunSubst(
+				"SUBST_CLASSES+=\t# none")
+		},
+		`^runtime error: index out of range.*`)
+}
+
+func (s *Suite) Test_SubstContext_varassignClasses__indirect(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"SUBST_CLASSES+=\t${VAR}")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		// TODO: Error that SUBST_CLASSES identifiers must be literals.
+		"WARN: filename.mk:2: VAR is used but not defined.",
+		// FIXME: Ignore these completely.
+		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_STAGE.${VAR} missing.",
+		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_FILES.${VAR} missing.",
+		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_SED.${VAR}, "+
+			"SUBST_VARS.${VAR} or SUBST_FILTER_CMD.${VAR} missing.")
+}
+
 // The rationale for the stray SUBST variables has to be specific.
 //
 // For example, in the following snippet from mail/dkim-milter/options.mk
