@@ -50,7 +50,6 @@ type substSeen struct {
 }
 
 func (st *substSeen) And(other substSeen) {
-	// TODO: Add test to show that "&& other.id" makes any difference.
 	st.id = st.id && other.id
 	st.stage = st.stage && other.stage
 	st.message = st.message && other.message
