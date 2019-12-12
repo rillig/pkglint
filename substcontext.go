@@ -333,6 +333,7 @@ func (ctx *SubstContext) Directive(mkline *MkLine) {
 	}
 }
 
+// TODO: unexport
 func (ctx *SubstContext) IsComplete() bool {
 	seen := ctx.seen()
 	return seen.get(ssStage) && seen.get(ssFiles) && seen.get(ssTransform)
@@ -343,8 +344,12 @@ func (ctx *SubstContext) Finish(diag Diagnoser) {
 		return
 	}
 
-	// TODO: Extract these warnings into a separate method,
-	//  to decouple them from the state manipulation.
+	ctx.checkBlockComplete(diag)
+
+	ctx.reset()
+}
+
+func (ctx *SubstContext) checkBlockComplete(diag Diagnoser) {
 	id := ctx.activeId()
 	seen := ctx.seen()
 	if !seen.get(ssStage) {
@@ -356,8 +361,6 @@ func (ctx *SubstContext) Finish(diag Diagnoser) {
 	if !seen.get(ssTransform) {
 		diag.Warnf("Incomplete SUBST block: SUBST_SED.%[1]s, SUBST_VARS.%[1]s or SUBST_FILTER_CMD.%[1]s missing.", id)
 	}
-
-	ctx.reset()
 }
 
 func (ctx *SubstContext) dupString(mkline *MkLine, part substSeen) {
