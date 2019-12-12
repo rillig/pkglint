@@ -493,7 +493,7 @@ func (s *Suite) Test_SubstContext_Varassign__late_addition_to_unknown_class(c *c
 //  .if !empty(PKG_OPTIONS:Minet6)
 //  SUBST_SED.libs+=        -e 's|@INET6@||g'
 //  .endif
-func (s *Suite) Test_SubstContext_varassignOutOfScope__rationale(c *check.C) {
+func (s *Suite) Test_SubstContext_varassignOutsideBlock__rationale(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("filename.mk",

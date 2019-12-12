@@ -100,9 +100,8 @@ func (ctx *SubstContext) Varassign(mkline *MkLine) {
 		return
 	}
 
-	// TODO: Move before the previous if clause.
 	if !ctx.isActive() {
-		ctx.varassignOutOfScope(mkline)
+		ctx.varassignOutsideBlock(mkline)
 		return
 	}
 
@@ -164,7 +163,9 @@ func (ctx *SubstContext) varassignClasses(mkline *MkLine) {
 	return
 }
 
-func (ctx *SubstContext) varassignOutOfScope(mkline *MkLine) {
+// varassignOutsideBlock handles variable assignments of SUBST variables that
+// appear without a directly corresponding SUBST block.
+func (ctx *SubstContext) varassignOutsideBlock(mkline *MkLine) {
 	varparam := mkline.Varparam()
 
 	if ctx.isListCanon(mkline.Varcanon()) && ctx.isDone(varparam) {
