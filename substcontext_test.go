@@ -112,8 +112,6 @@ func (s *Suite) Test_SubstContext__multiple_classes_in_one_line(c *check.C) {
 
 	t.CheckOutputLines(
 		"NOTE: filename.mk:1: Please add only one class at a time to SUBST_CLASSES.",
-		// FIXME: This is completely wrong.
-		"WARN: filename.mk:5: SUBST_STAGE.two should not be defined conditionally.",
 		"WARN: filename.mk:7: Incomplete SUBST block: SUBST_SED.two, SUBST_VARS.two or SUBST_FILTER_CMD.two missing.")
 }
 

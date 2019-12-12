@@ -480,7 +480,7 @@ func (ctx *SubstContext) queue(id string) {
 func (ctx *SubstContext) start(id string) bool {
 	if ctx.queuedIds[id] {
 		ctx.queuedIds[id] = false
-		ctx.id = id
+		ctx.setActiveId(id)
 		return true
 	}
 	return false
