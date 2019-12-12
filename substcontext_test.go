@@ -1311,7 +1311,8 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_vars(c *check.C
 			"can be replaced with \"SUBST_VARS.id= PREFIX\".",
 		"WARN: filename.mk:5: All but the first \"SUBST_VARS.id\" lines "+
 			"should use the \"+=\" operator.",
-		"NOTE: filename.mk:5: All but the first assignments should use the += operator.",
+		// FIXME: This is obviously redundant.
+		"NOTE: filename.mk:5: All but the first assignment should use the += operator.",
 
 		"AUTOFIX: filename.mk:4: "+
 			"Replacing \"SUBST_SED.id=\\t-e s,@PREFIX@,${PREFIX},g\" "+
