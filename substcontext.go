@@ -276,17 +276,19 @@ func (ctx *SubstContext) varassignSed(mkline *MkLine) {
 
 func (ctx *SubstContext) varassignVars(mkline *MkLine) {
 	accessor := func(s *substSeen) *bool { return &s.vars }
-	prev := ctx.seenInBranch(accessor)
+	seen := ctx.seenInBranch(accessor) // since ctx.dupList modifies it
 	ctx.dupList(mkline, accessor)
 	ctx.top().transform = true
+
 	for _, substVar := range mkline.Fields() {
 		// TODO: What about variables that are defined before the SUBST_VARS line?
 		ctx.allowVar(substVar)
 	}
 
-	if prev && mkline.Op() == opAssign {
+	if seen && mkline.Op() == opAssign {
 		before := mkline.ValueAlign()
 		after := alignWith(mkline.Varname()+"+=", before)
+
 		fix := mkline.Autofix()
 		fix.Notef("All but the first assignment should use the += operator.")
 		fix.Replace(before, after)
