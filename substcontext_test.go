@@ -174,6 +174,34 @@ func (s *Suite) Test_SubstContext__multiple_classes_in_one_block(c *check.C) {
 		"WARN: filename.mk:6: Variable \"SUBST_SED.one\" does not match SUBST class \"two\".")
 }
 
+// This is a strange example that probably won't occur in practice.
+//
+// Continuing a SUBST class in one of the branches and starting
+// a fresh one in the other seems far-fetched.
+func (s *Suite) Test_SubstContext__partially_continued_class_in_conditional(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("filename.mk",
+		"SUBST_CLASSES+=         outer",
+		"SUBST_STAGE.outer=      post-configure",
+		"SUBST_FILES.outer=      files",
+		"SUBST_VARS.outer=       OUTER.first",
+		".if ${:Ualways}",
+		"SUBST_VARS.outer+=      OUTER.second",
+		".else",
+		"SUBST_CLASSES+=         inner",
+		"SUBST_STAGE.inner=      post-configure",
+		"SUBST_FILES.inner=      files",
+		"SUBST_VARS.inner=       INNER",
+		".endif",
+		"")
+	ctx := NewSubstContext()
+
+	mklines.ForEach(ctx.Process)
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_SubstContext__files_missing(c *check.C) {
 	t := s.Init(c)
 
