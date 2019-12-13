@@ -345,27 +345,23 @@ func (ctx *SubstContext) directive(mkline *MkLine) {
 
 func (ctx *SubstContext) nextBranch(mkline *MkLine, dir string) {
 	top := ctx.cond()
-	top.total.retain(top.curr)
+	top.leaveBranch()
 	if !ctx.isConditional() {
 		ctx.finishBlock(mkline)
 	}
-	top.curr = ssNone
-	top.seenElse = dir == "else"
+	top.enterBranch(dir == "else")
 }
 
 func (ctx *SubstContext) leave(diag Diagnoser) {
 	top := ctx.cond()
-	top.total.retain(top.curr)
+	top.leaveBranch()
 	if !ctx.isConditional() {
 		ctx.finishBlock(diag)
-	}
-	if !top.seenElse {
-		top.total = ssNone
 	}
 	if len(ctx.conds) > 1 {
 		ctx.conds = ctx.conds[:len(ctx.conds)-1]
 	}
-	ctx.seen().union(top.total)
+	ctx.cond().union(top)
 }
 
 func (ctx *SubstContext) finishBlock(diag Diagnoser) {
@@ -496,7 +492,9 @@ type substBlock struct {
 }
 
 func newSubstBlock(id string) *substBlock {
-	return &substBlock{id, nil, nil, []*substCond{{seenElse: true}}}
+	cond := newSubstCond()
+	cond.enterBranch(true)
+	return &substBlock{id, nil, nil, []*substCond{cond}}
 }
 
 func (ctx *substBlock) dupList(mkline *MkLine, part substSeen, autofixPart substSeen) {
@@ -566,7 +564,7 @@ func (ctx *substBlock) isComplete() bool {
 //
 // TODO: Adjust the implementation to this description.
 func (ctx *substBlock) isConditional() bool {
-	return !ctx.cond().top
+	return ctx.cond().isConditional()
 }
 
 // cond returns information about the parts of the SUBST block that
@@ -614,6 +612,25 @@ type substCond struct {
 	// an .else branch. If it doesn't, this means that all variables
 	// are potentially unset in that branch.
 	seenElse bool
+}
+
+func newSubstCond() *substCond {
+	return &substCond{}
+}
+
+func (c *substCond) isConditional() bool { return !c.top }
+
+func (c *substCond) leaveBranch() { c.total.retain(c.curr) }
+
+func (c *substCond) enterBranch(isElse bool) {
+	c.curr = ssNone
+	c.seenElse = isElse
+}
+
+func (c *substCond) union(child *substCond) {
+	if child.seenElse {
+		c.curr.union(child.total)
+	}
 }
 
 // substSeen contains all variables that depend on a particular SUBST
