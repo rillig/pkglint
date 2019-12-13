@@ -344,17 +344,12 @@ func (s *Suite) Test_SubstContext__SUBST_CLASSES_in_separate_paragraph(c *check.
 		"NOTE: filename.mk:1: Please add only one class at a time to SUBST_CLASSES.",
 
 		// FIXME
-		"WARN: filename.mk:2: Incomplete SUBST block: SUBST_STAGE.1 missing.",
-		// FIXME
-		"WARN: filename.mk:2: Incomplete SUBST block: SUBST_FILES.1 missing.",
-		// FIXME
-		"WARN: filename.mk:2: Incomplete SUBST block: SUBST_SED.1, SUBST_VARS.1 or SUBST_FILTER_CMD.1 missing.",
-		// FIXME
 		"WARN: filename.mk:6: Incomplete SUBST block: SUBST_STAGE.1 missing.",
 		// FIXME
 		"WARN: filename.mk:10: Incomplete SUBST block: SUBST_STAGE.2 missing.",
 		// FIXME
-		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_STAGE.3 missing.")
+		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_STAGE.3 missing.",
+		"WARN: filename.mk:EOF: Missing SUBST block for \"4\".")
 }
 
 func (s *Suite) Test_SubstContext_varassign__late_addition(c *check.C) {
@@ -992,10 +987,7 @@ func (s *Suite) Test_SubstContext_directive__before_SUBST_CLASSES(c *check.C) {
 		".elif 0") // Just for branch coverage.
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:4: Incomplete SUBST block: SUBST_STAGE.os missing.",
-		"WARN: filename.mk:4: Incomplete SUBST block: SUBST_FILES.os missing.",
-		"WARN: filename.mk:4: Incomplete SUBST block: "+
-			"SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
+		"WARN: filename.mk:EOF: Missing SUBST block for \"os\".")
 }
 
 func (s *Suite) Test_SubstContext_directive__conditional_blocks_complete(c *check.C) {
@@ -1201,10 +1193,7 @@ func (s *Suite) Test_SubstContext_finishClass__details_in_then_branch(c *check.C
 	t.CheckOutputLines(
 		"WARN: filename.mk:5: SUBST_STAGE.os should not be defined conditionally.",
 		"WARN: filename.mk:6: SUBST_MESSAGE.os should not be defined conditionally.",
-		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_STAGE.os missing.",
-		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_FILES.os missing.",
-		"WARN: filename.mk:EOF: Incomplete SUBST block: "+
-			"SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
+		"WARN: filename.mk:EOF: Missing SUBST block for \"os\".")
 }
 
 func (s *Suite) Test_SubstContext_finishClass__details_in_else_branch(c *check.C) {
@@ -1224,10 +1213,7 @@ func (s *Suite) Test_SubstContext_finishClass__details_in_else_branch(c *check.C
 	t.CheckOutputLines(
 		"WARN: filename.mk:6: SUBST_STAGE.os should not be defined conditionally.",
 		"WARN: filename.mk:7: SUBST_MESSAGE.os should not be defined conditionally.",
-		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_STAGE.os missing.",
-		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_FILES.os missing.",
-		"WARN: filename.mk:EOF: Incomplete SUBST block: "+
-			"SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
+		"WARN: filename.mk:EOF: Missing SUBST block for \"os\".")
 }
 
 func (s *Suite) Test_SubstContext_finishClass__empty_conditional_at_end(c *check.C) {

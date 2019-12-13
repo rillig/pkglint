@@ -5,7 +5,7 @@ import "netbsd.org/pkglint/textproc"
 // SubstContext records the state of a block of variable assignments
 // that make up a SUBST class (see `mk/subst.mk`).
 type SubstContext struct {
-	queuedIds map[string]bool
+	queuedIds []string
 	id        string
 	doneIds   map[string]bool
 
@@ -36,6 +36,7 @@ func (ctx *SubstContext) Process(mkline *MkLine) {
 
 func (ctx *SubstContext) Finish(diag Diagnoser) {
 	ctx.finishClass(diag)
+	ctx.finishFile(diag)
 }
 
 func (ctx *SubstContext) varassign(mkline *MkLine) {
@@ -409,8 +410,12 @@ func (ctx *SubstContext) finishClass(diag Diagnoser) {
 		return
 	}
 
-	ctx.checkBlockComplete(diag)
-	ctx.checkForeignVariables()
+	if ctx.seen().get(ssAll) {
+		ctx.checkBlockComplete(diag)
+		ctx.checkForeignVariables()
+	} else {
+		ctx.markAsNotDone()
+	}
 
 	ctx.reset()
 }
@@ -433,6 +438,23 @@ func (ctx *SubstContext) checkForeignVariables() {
 	ctx.forEachForeignVar(func(mkline *MkLine) {
 		mkline.Warnf("Foreign variable %q in SUBST block.", mkline.Varname())
 	})
+}
+
+func (ctx *SubstContext) finishFile(diag Diagnoser) {
+	for _, id := range ctx.queuedIds {
+		if id != "" && !ctx.isDone(id) {
+			ctx.warnUndefinedBlock(diag, id)
+		}
+	}
+}
+
+func (*SubstContext) warnUndefinedBlock(diag Diagnoser, id string) {
+	diag.Warnf("Missing SUBST block for %q.", id)
+	diag.Explain(
+		"After adding a SUBST class to SUBST_CLASSES,",
+		"the remaining SUBST variables should be defined in the same file.",
+		"",
+		"See mk/subst.mk for the comprehensive documentation.")
 }
 
 // In the paragraph of a SUBST block, there should be only variables
@@ -485,17 +507,16 @@ func (ctx *SubstContext) setActiveId(id string) {
 }
 
 func (ctx *SubstContext) queue(id string) {
-	if ctx.queuedIds == nil {
-		ctx.queuedIds = map[string]bool{}
-	}
-	ctx.queuedIds[id] = true
+	ctx.queuedIds = append(ctx.queuedIds, id)
 }
 
 func (ctx *SubstContext) start(id string) bool {
-	if ctx.queuedIds[id] {
-		ctx.queuedIds[id] = false
-		ctx.setActiveId(id)
-		return true
+	for i, queuedId := range ctx.queuedIds {
+		if queuedId == id {
+			ctx.queuedIds[i] = ""
+			ctx.setActiveId(id)
+			return true
+		}
 	}
 	return false
 }
@@ -505,6 +526,10 @@ func (ctx *SubstContext) markAsDone(id string) {
 		ctx.doneIds = map[string]bool{}
 	}
 	ctx.doneIds[id] = true
+}
+
+func (ctx *SubstContext) markAsNotDone() {
+	ctx.doneIds[ctx.id] = false
 }
 
 func (ctx *SubstContext) isDone(varparam string) bool {
