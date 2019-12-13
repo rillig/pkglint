@@ -1328,11 +1328,11 @@ func (s *Suite) Test_SubstContext_isComplete__incomplete(c *check.C) {
 
 	ctx.varassign(t.NewMkLine("filename.mk", 10, "PKGNAME=pkgname-1.0"))
 
-	t.CheckEquals(ctx.id, "")
+	t.CheckEquals(ctx.isActive(), false)
 
 	ctx.varassign(t.NewMkLine("filename.mk", 11, "SUBST_CLASSES+=interp"))
 
-	t.CheckEquals(ctx.id, "interp")
+	t.CheckEquals(ctx.activeId(), "interp")
 
 	ctx.varassign(t.NewMkLine("filename.mk", 12, "SUBST_FILES.interp=Makefile"))
 
