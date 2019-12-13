@@ -632,7 +632,7 @@ func (s *Suite) Test_SubstContext_varassignVars__var_before_SUBST_VARS(c *check.
 		"WARN: filename.mk:4: Foreign variable \"FOREIGN\" in SUBST block.")
 }
 
-func (s *Suite) Test_SubstContext_dupList__conditional_before_unconditional(c *check.C) {
+func (s *Suite) Test_substBlock_dupList__conditional_before_unconditional(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -1321,7 +1321,7 @@ func (s *Suite) Test_SubstContext_finishBlock__nested_conditionals(c *check.C) {
 		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_FILES.os missing.")
 }
 
-func (s *Suite) Test_SubstContext_isComplete__incomplete(c *check.C) {
+func (s *Suite) Test_substBlock_isComplete__incomplete(c *check.C) {
 	t := s.Init(c)
 
 	ctx := NewSubstContext()
@@ -1350,7 +1350,7 @@ func (s *Suite) Test_SubstContext_isComplete__incomplete(c *check.C) {
 		"WARN: filename.mk:14: Incomplete SUBST block: SUBST_STAGE.interp missing.")
 }
 
-func (s *Suite) Test_SubstContext_isComplete__complete(c *check.C) {
+func (s *Suite) Test_substBlock_isComplete__complete(c *check.C) {
 	t := s.Init(c)
 
 	ctx := NewSubstContext()

@@ -6,13 +6,12 @@ import "netbsd.org/pkglint/textproc"
 // that make up a SUBST class (see `mk/subst.mk`).
 type SubstContext struct {
 	queuedIds []string
-	id        string
 	doneIds   map[string]bool
 
 	foreignAllowed map[string]struct{}
 	foreign        []*MkLine
 
-	conds []*substCond
+	substBlock
 
 	once Once
 }
@@ -231,21 +230,21 @@ func (ctx *SubstContext) varassignFilterCmd(mkline *MkLine) {
 	ctx.seen().set(ssTransform)
 }
 
-func (ctx *SubstContext) dupList(mkline *MkLine, part substSeen, autofixPart substSeen) {
+func (ctx *substBlock) dupList(mkline *MkLine, part substSeen, autofixPart substSeen) {
 	if ctx.seenInBranch(part) && mkline.Op() != opAssignAppend {
 		ctx.fixOperatorAppend(mkline, ctx.seenInBranch(autofixPart))
 	}
 	ctx.seen().set(part)
 }
 
-func (ctx *SubstContext) dupString(mkline *MkLine, part substSeen) {
+func (ctx *substBlock) dupString(mkline *MkLine, part substSeen) {
 	if ctx.seenInBranch(part) {
 		mkline.Warnf("Duplicate definition of %q.", mkline.Varname())
 	}
 	ctx.seen().set(part)
 }
 
-func (ctx *SubstContext) fixOperatorAppend(mkline *MkLine, dueToAutofix bool) {
+func (ctx *substBlock) fixOperatorAppend(mkline *MkLine, dueToAutofix bool) {
 	before := mkline.ValueAlign()
 	after := alignWith(mkline.Varname()+"+=", before)
 
@@ -376,7 +375,7 @@ func (ctx *SubstContext) directive(mkline *MkLine) {
 	}
 }
 
-func (ctx *SubstContext) enter() {
+func (ctx *substBlock) enter() {
 	top := substCond{total: ssAll}
 	ctx.conds = append(ctx.conds, &top)
 }
@@ -421,7 +420,7 @@ func (ctx *SubstContext) finishBlock(diag Diagnoser) {
 	ctx.reset()
 }
 
-func (ctx *SubstContext) checkBlockComplete(diag Diagnoser) {
+func (ctx *substBlock) checkBlockComplete(diag Diagnoser) {
 	id := ctx.activeId()
 	seen := ctx.seen()
 	if !seen.get(ssStage) {
@@ -492,11 +491,11 @@ func (ctx *SubstContext) reset() {
 	ctx.conds = []*substCond{{seenElse: true}}
 }
 
-func (ctx *SubstContext) isActive() bool { return ctx.id != "" }
+func (ctx *substBlock) isActive() bool { return ctx.id != "" }
 
-func (ctx *SubstContext) isActiveId(id string) bool { return ctx.id == id }
+func (ctx *substBlock) isActiveId(id string) bool { return ctx.id == id }
 
-func (ctx *SubstContext) activeId() string {
+func (ctx *substBlock) activeId() string {
 	assert(ctx.isActive())
 	return ctx.id
 }
@@ -537,7 +536,7 @@ func (ctx *SubstContext) isDone(varparam string) bool {
 	return ctx.doneIds[varparam]
 }
 
-func (ctx *SubstContext) isComplete() bool {
+func (ctx *substBlock) isComplete() bool {
 	return ctx.seen().hasAll(ssStage | ssFiles | ssTransform)
 }
 
@@ -546,30 +545,36 @@ func (ctx *SubstContext) isComplete() bool {
 // SUBST_CLASSES.
 //
 // TODO: Adjust the implementation to this description.
-func (ctx *SubstContext) isConditional() bool {
+func (ctx *substBlock) isConditional() bool {
 	return !ctx.cond().top
 }
 
 // cond returns information about the parts of the SUBST block that
 // have already been seen in the current leaf branch of the conditionals.
-func (ctx *SubstContext) seen() *substSeen {
+func (ctx *substBlock) seen() *substSeen {
 	return &ctx.cond().curr
 }
 
 // cond returns information about the current branch of conditionals.
-func (ctx *SubstContext) cond() *substCond {
+func (ctx *substBlock) cond() *substCond {
 	return ctx.conds[len(ctx.conds)-1]
 }
 
 // Returns true if the given flag from substSeen has been seen
 // somewhere in the conditional path of the current line.
-func (ctx *SubstContext) seenInBranch(part substSeen) bool {
+func (ctx *substBlock) seenInBranch(part substSeen) bool {
 	for _, cond := range ctx.conds {
 		if cond.curr.get(part) {
 			return true
 		}
 	}
 	return false
+}
+
+type substBlock struct {
+	id string
+
+	conds []*substCond
 }
 
 type substCond struct {
