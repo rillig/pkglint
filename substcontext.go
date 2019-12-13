@@ -437,10 +437,9 @@ func (ctx *SubstContext) forEachForeignVar(action func(*MkLine)) {
 }
 
 func (ctx *SubstContext) reset() {
-	ctx.id = ""
 	ctx.foreignAllowed = nil
 	ctx.foreign = nil
-	ctx.conds = []*substCond{{seenElse: true}}
+	ctx.substBlock = *newSubstBlock("")
 }
 
 func (ctx *SubstContext) setActiveId(id string) {
@@ -492,6 +491,10 @@ type substBlock struct {
 	id string
 
 	conds []*substCond
+}
+
+func newSubstBlock(id string) *substBlock {
+	return &substBlock{id, []*substCond{{seenElse: true}}}
 }
 
 func (ctx *substBlock) dupList(mkline *MkLine, part substSeen, autofixPart substSeen) {
