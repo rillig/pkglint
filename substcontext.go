@@ -26,7 +26,7 @@ func NewSubstContext() *SubstContext {
 func (ctx *SubstContext) Process(mkline *MkLine) {
 	switch {
 	case mkline.IsEmpty():
-		ctx.finishClass(mkline)
+		ctx.finishBlock(mkline)
 	case mkline.IsVarassign():
 		ctx.varassign(mkline)
 	case mkline.IsDirective():
@@ -35,7 +35,7 @@ func (ctx *SubstContext) Process(mkline *MkLine) {
 }
 
 func (ctx *SubstContext) Finish(diag Diagnoser) {
-	ctx.finishClass(diag)
+	ctx.finishBlock(diag)
 	ctx.finishFile(diag)
 }
 
@@ -99,17 +99,17 @@ func (ctx *SubstContext) varassignClasses(mkline *MkLine) {
 
 	id := classes[0]
 	if ctx.isActive() && !ctx.isActiveId(id) {
-		id := ctx.activeId() // since ctx.condEndif may reset it
+		id := ctx.activeId() // since ctx.leave may reset it
 
 		for ctx.isConditional() {
 			// This will be confusing for the outer SUBST block,
 			// but since that block is assumed to be finished,
 			// this doesn't matter.
-			ctx.condEndif(mkline)
+			ctx.leave(mkline)
 		}
 
-		complete := ctx.isComplete() // since ctx.finishClass will reset it
-		ctx.finishClass(mkline)
+		complete := ctx.isComplete() // since ctx.finishBlock will reset it
+		ctx.finishBlock(mkline)
 		if !complete {
 			mkline.Warnf("Subst block %q should be finished before adding the next class to SUBST_CLASSES.", id)
 		}
@@ -156,7 +156,7 @@ func (ctx *SubstContext) varassignDifferentClass(mkline *MkLine) (ok bool) {
 		return false
 	}
 
-	ctx.finishClass(mkline)
+	ctx.finishBlock(mkline)
 
 	ctx.start(varparam)
 	return true
@@ -366,36 +366,36 @@ func (ctx *SubstContext) directive(mkline *MkLine) {
 	dir := mkline.Directive()
 	switch dir {
 	case "if":
-		ctx.condIf()
+		ctx.enter()
 
 	case "elif", "else":
-		ctx.condElse(mkline, dir)
+		ctx.nextBranch(mkline, dir)
 
 	case "endif":
-		ctx.condEndif(mkline)
+		ctx.leave(mkline)
 	}
 }
 
-func (ctx *SubstContext) condIf() {
+func (ctx *SubstContext) enter() {
 	top := substCond{total: ssAll}
 	ctx.conds = append(ctx.conds, &top)
 }
 
-func (ctx *SubstContext) condElse(mkline *MkLine, dir string) {
+func (ctx *SubstContext) nextBranch(mkline *MkLine, dir string) {
 	top := ctx.cond()
 	top.total.retain(top.curr)
 	if !ctx.isConditional() {
-		ctx.finishClass(mkline)
+		ctx.finishBlock(mkline)
 	}
 	top.curr = ssNone
 	top.seenElse = dir == "else"
 }
 
-func (ctx *SubstContext) condEndif(diag Diagnoser) {
+func (ctx *SubstContext) leave(diag Diagnoser) {
 	top := ctx.cond()
 	top.total.retain(top.curr)
 	if !ctx.isConditional() {
-		ctx.finishClass(diag)
+		ctx.finishBlock(diag)
 	}
 	if !top.seenElse {
 		top.total = ssNone
@@ -406,7 +406,7 @@ func (ctx *SubstContext) condEndif(diag Diagnoser) {
 	ctx.seen().union(top.total)
 }
 
-func (ctx *SubstContext) finishClass(diag Diagnoser) {
+func (ctx *SubstContext) finishBlock(diag Diagnoser) {
 	if !ctx.isActive() {
 		return
 	}

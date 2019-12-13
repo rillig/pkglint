@@ -1214,7 +1214,7 @@ func (s *Suite) Test_SubstContext_directive__nested_conditional_incomplete_block
 			"before adding the next class to SUBST_CLASSES.")
 }
 
-func (s *Suite) Test_SubstContext_finishClass__details_in_then_branch(c *check.C) {
+func (s *Suite) Test_SubstContext_finishBlock__details_in_then_branch(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -1233,7 +1233,7 @@ func (s *Suite) Test_SubstContext_finishClass__details_in_then_branch(c *check.C
 		"WARN: filename.mk:EOF: Missing SUBST block for \"os\".")
 }
 
-func (s *Suite) Test_SubstContext_finishClass__details_in_else_branch(c *check.C) {
+func (s *Suite) Test_SubstContext_finishBlock__details_in_else_branch(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -1253,7 +1253,7 @@ func (s *Suite) Test_SubstContext_finishClass__details_in_else_branch(c *check.C
 		"WARN: filename.mk:EOF: Missing SUBST block for \"os\".")
 }
 
-func (s *Suite) Test_SubstContext_finishClass__empty_conditional_at_end(c *check.C) {
+func (s *Suite) Test_SubstContext_finishBlock__empty_conditional_at_end(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -1270,7 +1270,7 @@ func (s *Suite) Test_SubstContext_finishClass__empty_conditional_at_end(c *check
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_SubstContext_finishClass__missing_transformation_in_one_branch(c *check.C) {
+func (s *Suite) Test_SubstContext_finishBlock__missing_transformation_in_one_branch(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -1296,7 +1296,7 @@ func (s *Suite) Test_SubstContext_finishClass__missing_transformation_in_one_bra
 			"SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
 }
 
-func (s *Suite) Test_SubstContext_finishClass__nested_conditionals(c *check.C) {
+func (s *Suite) Test_SubstContext_finishBlock__nested_conditionals(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
