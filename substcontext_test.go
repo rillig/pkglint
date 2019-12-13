@@ -94,7 +94,6 @@ func (s *Suite) Test_SubstContext__multiple_classes_in_one_line_multiple_blocks(
 
 	t.CheckOutputLines(
 		"NOTE: filename.mk:1: Please add only one class at a time to SUBST_CLASSES.",
-		"WARN: filename.mk:8: Incomplete SUBST block: SUBST_STAGE.two missing.",
 		"WARN: filename.mk:8: Incomplete SUBST block: "+
 			"SUBST_SED.two, SUBST_VARS.two or SUBST_FILTER_CMD.two missing.",
 		"WARN: filename.mk:9: Before defining SUBST_STAGE.three, "+
@@ -342,13 +341,6 @@ func (s *Suite) Test_SubstContext__SUBST_CLASSES_in_separate_paragraph(c *check.
 
 	t.CheckOutputLines(
 		"NOTE: filename.mk:1: Please add only one class at a time to SUBST_CLASSES.",
-
-		// FIXME
-		"WARN: filename.mk:6: Incomplete SUBST block: SUBST_STAGE.1 missing.",
-		// FIXME
-		"WARN: filename.mk:10: Incomplete SUBST block: SUBST_STAGE.2 missing.",
-		// FIXME
-		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_STAGE.3 missing.",
 		"WARN: filename.mk:EOF: Missing SUBST block for \"4\".")
 }
 

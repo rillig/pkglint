@@ -54,8 +54,9 @@ func (ctx *SubstContext) varassign(mkline *MkLine) {
 	}
 
 	if !ctx.isActive() {
-		ctx.varassignOutsideBlock(mkline)
-		return
+		if !ctx.varassignOutsideBlock(mkline) {
+			return
+		}
 	}
 
 	if hasPrefix(mkline.Varname(), "SUBST_") && !ctx.isActiveId(mkline.Varparam()) {
@@ -121,7 +122,7 @@ func (ctx *SubstContext) varassignClasses(mkline *MkLine) {
 
 // varassignOutsideBlock handles variable assignments of SUBST variables that
 // appear without a directly corresponding SUBST block.
-func (ctx *SubstContext) varassignOutsideBlock(mkline *MkLine) {
+func (ctx *SubstContext) varassignOutsideBlock(mkline *MkLine) (continueWithNewId bool) {
 	varparam := mkline.Varparam()
 
 	if ctx.isListCanon(mkline.Varcanon()) && ctx.isDone(varparam) {
@@ -135,7 +136,7 @@ func (ctx *SubstContext) varassignOutsideBlock(mkline *MkLine) {
 	}
 
 	if ctx.start(varparam) {
-		return
+		return true
 	}
 
 	if ctx.once.FirstTime(varparam) {
