@@ -262,7 +262,7 @@ func (ctx *substBlock) suggestSubstVars(mkline *MkLine) {
 		// assignment operators on them. It's probably not worth the
 		// effort, though.
 
-		ctx.seen().union(ssVars | ssVarsAutofix)
+		ctx.seen().addAll(ssVars | ssVarsAutofix)
 	}
 }
 
@@ -557,13 +557,13 @@ func (ctx *substBlock) checkBlockComplete(diag Diagnoser) {
 	assert(id != "")
 	seen := ctx.seen()
 
-	if !seen.get(ssStage) {
+	if !seen.has(ssStage) {
 		diag.Warnf("Incomplete SUBST block: SUBST_STAGE.%s missing.", id)
 	}
-	if !seen.get(ssFiles) {
+	if !seen.has(ssFiles) {
 		diag.Warnf("Incomplete SUBST block: SUBST_FILES.%s missing.", id)
 	}
-	if !seen.get(ssTransform) {
+	if !seen.has(ssTransform) {
 		diag.Warnf("Incomplete SUBST block: SUBST_SED.%[1]s, SUBST_VARS.%[1]s or SUBST_FILTER_CMD.%[1]s missing.", id)
 	}
 }
@@ -596,7 +596,7 @@ func (ctx *substBlock) cond() *substCond {
 // somewhere in the conditional path of the current line.
 func (ctx *substBlock) seenInBranch(part substSeen) bool {
 	for _, cond := range ctx.conds {
-		if cond.curr.get(part) {
+		if cond.curr.has(part) {
 			return true
 		}
 	}
@@ -651,7 +651,7 @@ func (s *substScope) markAsDone(id string) { s.defs[id].done = true }
 func (s *substScope) nextBranch(diag Diagnoser, isElse bool) {
 	for _, block := range s.defs { // TODO: in order
 		cond := block.cond()
-		cond.total.retain(cond.curr)
+		cond.total.retainAll(cond.curr)
 		if !block.isConditional() {
 			s.leave(diag, nil)
 		}
@@ -665,7 +665,7 @@ func (s *substScope) leave(diag Diagnoser, parent *substScope) {
 	s.finish(diag)
 
 	for id, cond := range s.uses {
-		parent.use(id).curr.union(cond.total)
+		parent.use(id).curr.addAll(cond.total)
 	}
 }
 
@@ -708,7 +708,7 @@ func newSubstCond() *substCond {
 
 func (c *substCond) isConditional() bool { return !c.top }
 
-func (c *substCond) leaveBranch() { c.total.retain(c.curr) }
+func (c *substCond) leaveBranch() { c.total.retainAll(c.curr) }
 
 func (c *substCond) enterBranch(isElse bool) {
 	c.curr = ssNone
@@ -717,7 +717,7 @@ func (c *substCond) enterBranch(isElse bool) {
 
 func (c *substCond) union(child *substCond) {
 	if child.seenElse {
-		c.curr.union(child.total)
+		c.curr.addAll(child.total)
 	}
 }
 
@@ -745,11 +745,11 @@ func (s *substSeen) set(part substSeen) {
 	assert(part&(part-1) == 0)
 	*s |= part
 }
-func (s *substSeen) get(part substSeen) bool {
+func (s *substSeen) has(part substSeen) bool {
 	assert(part&(part-1) == 0)
 	return *s&part != 0
 }
 func (s *substSeen) hasAny(other substSeen) bool { return *s&other != 0 }
 func (s *substSeen) hasAll(other substSeen) bool { return *s&other == other }
-func (s *substSeen) union(other substSeen)       { *s |= other }
-func (s *substSeen) retain(other substSeen)      { *s &= other }
+func (s *substSeen) addAll(other substSeen)      { *s |= other }
+func (s *substSeen) retainAll(other substSeen)   { *s &= other }
