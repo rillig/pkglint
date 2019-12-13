@@ -383,7 +383,6 @@ func (ctx *SubstContext) condElse(mkline *MkLine, dir string) {
 	top := ctx.cond()
 	top.total.retain(top.curr)
 	if !ctx.isConditional() {
-		// XXX: This is a higher-level method
 		ctx.finishClass(mkline)
 	}
 	top.curr = ssNone
@@ -394,7 +393,6 @@ func (ctx *SubstContext) condEndif(diag Diagnoser) {
 	top := ctx.cond()
 	top.total.retain(top.curr)
 	if !ctx.isConditional() {
-		// XXX: This is a higher-level method
 		ctx.finishClass(diag)
 	}
 	if !top.seenElse {
