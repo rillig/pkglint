@@ -36,7 +36,7 @@ func (s *Suite) Test_SubstContext__OPSYSVARS(c *check.C) {
 	ctx.varassign(t.NewMkLine("filename.mk", 14, "SUBST_SED.prefix=s,@PREFIX@,${PREFIX},g"))
 	ctx.varassign(t.NewMkLine("filename.mk", 15, "SUBST_STAGE.prefix=post-configure"))
 
-	t.CheckEquals(ctx.block.isComplete(), true)
+	t.CheckEquals(ctx.block().isComplete(), true)
 
 	ctx.Finish(t.NewMkLine("filename.mk", 15, ""))
 
@@ -94,7 +94,9 @@ func (s *Suite) Test_SubstContext__multiple_classes_in_one_line_multiple_blocks(
 
 	t.CheckOutputLines(
 		"NOTE: filename.mk:1: Please add only one class at a time to SUBST_CLASSES.",
-		"WARN: filename.mk:8: Incomplete SUBST block: "+
+		"WARN: filename.mk:9: Variable \"SUBST_STAGE.three\" "+
+			"does not match SUBST class \"two\".",
+		"WARN: filename.mk:9: Incomplete SUBST block: "+
 			"SUBST_SED.two, SUBST_VARS.two or SUBST_FILTER_CMD.two missing.",
 		"WARN: filename.mk:9: Before defining SUBST_STAGE.three, "+
 			"the SUBST class should be declared using \"SUBST_CLASSES+= three\".",
@@ -119,8 +121,7 @@ func (s *Suite) Test_SubstContext__multiple_classes_in_one_block(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: filename.mk:3: Duplicate definition of \"SUBST_STAGE.one\".",
 		"WARN: filename.mk:5: Incomplete SUBST block: SUBST_SED.one, SUBST_VARS.one or SUBST_FILTER_CMD.one missing.",
-		"WARN: filename.mk:5: Subst block \"one\" should be finished before adding the next class to SUBST_CLASSES.",
-		"WARN: filename.mk:6: Variable \"SUBST_SED.one\" does not match SUBST class \"two\".")
+		"WARN: filename.mk:6: Late additions to a SUBST variable should use the += operator.")
 }
 
 // This is a strange example that probably won't occur in practice.
@@ -161,9 +162,7 @@ func (s *Suite) Test_SubstContext__files_missing(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: filename.mk:3: Incomplete SUBST block: SUBST_FILES.one missing.",
 		"WARN: filename.mk:3: Incomplete SUBST block: "+
-			"SUBST_SED.one, SUBST_VARS.one or SUBST_FILTER_CMD.one missing.",
-		"WARN: filename.mk:3: Subst block \"one\" should be finished "+
-			"before adding the next class to SUBST_CLASSES.")
+			"SUBST_SED.one, SUBST_VARS.one or SUBST_FILTER_CMD.one missing.")
 }
 
 func (s *Suite) Test_SubstContext__directives(c *check.C) {
@@ -193,7 +192,26 @@ func (s *Suite) Test_SubstContext__directives(c *check.C) {
 			"to \"SUBST_SED.os\" should use the \"+=\" operator.")
 }
 
-func (s *Suite) Test_SubstContext__adjacent(c *check.C) {
+func (s *Suite) Test_SubstContext__adjacent_assign(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+=\t1",
+		"SUBST_STAGE.1=\tpre-configure",
+		"SUBST_FILES.1=\tfile1",
+		"SUBST_SED.1=\t-e s,subst1,repl1,",
+		"SUBST_CLASSES+=\t2",
+		"SUBST_SED.1=\t-e s,subst1b,repl1b,", // Misplaced
+		"SUBST_STAGE.2=\tpre-configure",
+		"SUBST_FILES.2=\tfile2",
+		"SUBST_SED.2=\t-e s,subst2,repl2,")
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:6: Late additions to a SUBST variable " +
+			"should use the += operator.")
+}
+
+func (s *Suite) Test_SubstContext__adjacent_append(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -207,8 +225,9 @@ func (s *Suite) Test_SubstContext__adjacent(c *check.C) {
 		"SUBST_FILES.2=\tfile2",
 		"SUBST_SED.2=\t-e s,subst2,repl2,")
 
-	t.CheckOutputLines(
-		"WARN: filename.mk:6: Variable \"SUBST_SED.1\" does not match SUBST class \"2\".")
+	// The SUBST_SED.1 line is misplaced. It uses the += operator,
+	// which makes it unclear whether this is a typo or not.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_SubstContext__do_patch(c *check.C) {
@@ -358,15 +377,9 @@ func (s *Suite) Test_SubstContext__wrong_class(c *check.C) {
 
 	t.CheckOutputLines(
 		"NOTE: filename.mk:1: Please add only one class at a time to SUBST_CLASSES.",
-		"WARN: filename.mk:2: Variable \"SUBST_STAGE.x\" does not match SUBST class \"1\".",
-		"WARN: filename.mk:3: Variable \"SUBST_FILES.x\" does not match SUBST class \"1\".",
-		"WARN: filename.mk:4: Variable \"SUBST_VARS.x\" does not match SUBST class \"1\".",
-		// XXX: This line could change to 2, since that is already in the queue.
-		"WARN: filename.mk:5: Variable \"SUBST_STAGE.2\" does not match SUBST class \"1\".",
-		"WARN: filename.mk:6: Variable \"SUBST_FILES.2\" does not match SUBST class \"1\".",
-		"WARN: filename.mk:7: Variable \"SUBST_VARS.2\" does not match SUBST class \"1\".",
-		"WARN: filename.mk:EOF: Missing SUBST block for \"1\".",
-		"WARN: filename.mk:EOF: Missing SUBST block for \"2\".")
+		"WARN: filename.mk:2: Before defining SUBST_STAGE.x, "+
+			"the SUBST class should be declared using \"SUBST_CLASSES+= x\".",
+		"WARN: filename.mk:EOF: Missing SUBST block for \"1\".")
 }
 
 func (s *Suite) Test_SubstContext_varassign__late_addition(c *check.C) {
@@ -383,8 +396,8 @@ func (s *Suite) Test_SubstContext_varassign__late_addition(c *check.C) {
 		".endif")
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:7: Late additions to a SUBST variable " +
-			"should use the += operator.")
+		"WARN: filename.mk:7: All but the first assignment " +
+			"to \"SUBST_VARS.id\" should use the \"+=\" operator.")
 }
 
 func (s *Suite) Test_SubstContext_varassign__late_addition_to_unknown_class(c *check.C) {
@@ -482,7 +495,7 @@ func (s *Suite) Test_SubstContext_directive__before_SUBST_CLASSES(c *check.C) {
 		".elif 0") // Just for branch coverage.
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:EOF: Missing SUBST block for \"os\".")
+		"WARN: filename.mk:4: Missing SUBST block for \"os\".")
 }
 
 func (s *Suite) Test_SubstContext_directive__conditional_blocks_complete(c *check.C) {
@@ -572,7 +585,6 @@ func (s *Suite) Test_SubstContext_directive__conditionally_overwritten_filter(c 
 // Hopefully nobody will ever trigger this case in real pkgsrc.
 // It's plain confusing to a casual reader to nest a complete
 // SUBST block into another SUBST block.
-// That's why pkglint doesn't cover this case correctly.
 func (s *Suite) Test_SubstContext_directive__conditionally_nested_block(c *check.C) {
 	t := s.Init(c)
 
@@ -588,13 +600,7 @@ func (s *Suite) Test_SubstContext_directive__conditionally_nested_block(c *check
 		".endif",
 		"SUBST_VARS.outer=       OUTER")
 
-	t.CheckOutputLines(
-		"WARN: filename.mk:5: Incomplete SUBST block: "+
-			"SUBST_SED.outer, SUBST_VARS.outer or SUBST_FILTER_CMD.outer missing.",
-		"WARN: filename.mk:5: Subst block \"outer\" should be finished "+
-			"before adding the next class to SUBST_CLASSES.",
-		"WARN: filename.mk:10: "+
-			"Late additions to a SUBST variable should use the += operator.")
+	t.CheckOutputEmpty()
 }
 
 // It's completely valid to have several SUBST blocks in a single paragraph.
@@ -667,12 +673,10 @@ func (s *Suite) Test_SubstContext_directive__nested_conditional_incomplete_block
 		".endif")
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:9: Incomplete SUBST block: SUBST_FILES.inner1 missing.",
-		"WARN: filename.mk:9: Subst block \"inner1\" should be finished "+
-			"before adding the next class to SUBST_CLASSES.")
+		"WARN: filename.mk:9: Incomplete SUBST block: SUBST_FILES.inner1 missing.")
 }
 
-func (s *Suite) Test_SubstContext_finishBlock__details_in_then_branch(c *check.C) {
+func (s *Suite) Test_SubstContext_leave__details_in_then_branch(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -691,7 +695,7 @@ func (s *Suite) Test_SubstContext_finishBlock__details_in_then_branch(c *check.C
 		"WARN: filename.mk:EOF: Missing SUBST block for \"os\".")
 }
 
-func (s *Suite) Test_SubstContext_finishBlock__details_in_else_branch(c *check.C) {
+func (s *Suite) Test_SubstContext_leave__details_in_else_branch(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -711,7 +715,7 @@ func (s *Suite) Test_SubstContext_finishBlock__details_in_else_branch(c *check.C
 		"WARN: filename.mk:EOF: Missing SUBST block for \"os\".")
 }
 
-func (s *Suite) Test_SubstContext_finishBlock__empty_conditional_at_end(c *check.C) {
+func (s *Suite) Test_SubstContext_leave__empty_conditional_at_end(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -728,7 +732,7 @@ func (s *Suite) Test_SubstContext_finishBlock__empty_conditional_at_end(c *check
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_SubstContext_finishBlock__missing_transformation_in_one_branch(c *check.C) {
+func (s *Suite) Test_SubstContext_leave__missing_transformation_in_one_branch(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -754,7 +758,7 @@ func (s *Suite) Test_SubstContext_finishBlock__missing_transformation_in_one_bra
 			"SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
 }
 
-func (s *Suite) Test_SubstContext_finishBlock__nested_conditionals(c *check.C) {
+func (s *Suite) Test_SubstContext_leave__nested_conditionals(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -851,19 +855,20 @@ func (s *Suite) Test_substBlock_isComplete__incomplete(c *check.C) {
 
 	ctx.varassign(t.NewMkLine("filename.mk", 10, "PKGNAME=pkgname-1.0"))
 
-	t.CheckEquals(ctx.block.isActive(), false)
+	t.CheckEquals(ctx.isActive(), false)
 
 	ctx.varassign(t.NewMkLine("filename.mk", 11, "SUBST_CLASSES+=interp"))
 
-	t.CheckEquals(ctx.block.activeId(), "interp")
+	t.CheckEquals(ctx.isActive(), false)
 
 	ctx.varassign(t.NewMkLine("filename.mk", 12, "SUBST_FILES.interp=Makefile"))
 
-	t.CheckEquals(ctx.block.isComplete(), false)
+	t.CheckEquals(ctx.activeId(), "interp")
+	t.CheckEquals(ctx.block().isComplete(), false)
 
 	ctx.varassign(t.NewMkLine("filename.mk", 13, "SUBST_SED.interp=s,@PREFIX@,${PREFIX},g"))
 
-	t.CheckEquals(ctx.block.isComplete(), false)
+	t.CheckEquals(ctx.block().isComplete(), false)
 
 	ctx.Finish(t.NewMkLine("filename.mk", 14, ""))
 
@@ -883,11 +888,11 @@ func (s *Suite) Test_substBlock_isComplete__complete(c *check.C) {
 	ctx.varassign(t.NewMkLine("filename.mk", 12, "SUBST_FILES.p=Makefile"))
 	ctx.varassign(t.NewMkLine("filename.mk", 13, "SUBST_SED.p=s,@PREFIX@,${PREFIX},g"))
 
-	t.CheckEquals(ctx.block.isComplete(), false)
+	t.CheckEquals(ctx.block().isComplete(), false)
 
 	ctx.varassign(t.NewMkLine("filename.mk", 14, "SUBST_STAGE.p=post-configure"))
 
-	t.CheckEquals(ctx.block.isComplete(), true)
+	t.CheckEquals(ctx.block().isComplete(), true)
 
 	ctx.Finish(t.NewMkLine("filename.mk", 15, ""))
 

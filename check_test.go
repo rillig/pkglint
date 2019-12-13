@@ -137,6 +137,7 @@ func Test__qa(t *testing.T) {
 	ck.Configure("shtokenizer.go", "*", "*", -intqa.EMissingTest)    // TODO
 	ck.Configure("shtypes.go", "*", "*", -intqa.EMissingTest)        // TODO
 	ck.Configure("substcontext.go", "*", "*", -intqa.EMissingTest)   // TODO
+	ck.Configure("substcontext_test.go", "*", "*", -intqa.EOrder)    // TODO
 	ck.Configure("tools.go", "*", "*", -intqa.EMissingTest)          // TODO
 	ck.Configure("util.go", "*", "*", -intqa.EMissingTest)           // TODO
 	ck.Configure("var.go", "*", "*", -intqa.EMissingTest)            // TODO
