@@ -472,7 +472,7 @@ func (s *Suite) Test_SubstContext_varassignOutsideBlock__rationale(c *check.C) {
 			"the SUBST class should be declared using \"SUBST_CLASSES+= libs\".")
 }
 
-func (s *Suite) Test_SubstContext_varassignStage__pre_patch(c *check.C) {
+func (s *Suite) Test_substBlock_varassignStage__pre_patch(c *check.C) {
 	t := s.Init(c)
 
 	t.Chdir(".")
@@ -495,7 +495,7 @@ func (s *Suite) Test_SubstContext_varassignStage__pre_patch(c *check.C) {
 		"SUBST_SED.os=   -e s,@OPSYS@,Darwin,")
 }
 
-func (s *Suite) Test_SubstContext_varassignStage__post_patch(c *check.C) {
+func (s *Suite) Test_substBlock_varassignStage__post_patch(c *check.C) {
 	t := s.Init(c)
 
 	t.Chdir(".")
@@ -518,7 +518,7 @@ func (s *Suite) Test_SubstContext_varassignStage__post_patch(c *check.C) {
 		"SUBST_SED.os=   -e s,@OPSYS@,Darwin,")
 }
 
-func (s *Suite) Test_SubstContext_varassignStage__empty_class(c *check.C) {
+func (s *Suite) Test_substBlock_varassignStage__empty_class(c *check.C) {
 	t := s.Init(c)
 
 	t.Chdir(".")
@@ -543,7 +543,7 @@ func (s *Suite) Test_SubstContext_varassignStage__empty_class(c *check.C) {
 // To avoid damaging anything, replacements are only done if they are
 // unambiguous. This is not the case here, since line 4 contains the
 // string "pre-patch" twice.
-func (s *Suite) Test_SubstContext_varassignStage__ambiguous_replacement(c *check.C) {
+func (s *Suite) Test_substBlock_varassignStage__ambiguous_replacement(c *check.C) {
 	t := s.Init(c)
 
 	t.Chdir(".")
@@ -561,7 +561,7 @@ func (s *Suite) Test_SubstContext_varassignStage__ambiguous_replacement(c *check
 	t.CheckEquals(t.File("filename.mk").IsFile(), false)
 }
 
-func (s *Suite) Test_SubstContext_varassignStage__with_NO_CONFIGURE(c *check.C) {
+func (s *Suite) Test_substBlock_varassignStage__with_NO_CONFIGURE(c *check.C) {
 	t := s.Init(c)
 
 	pkg := t.SetUpPackage("category/package",
@@ -592,7 +592,7 @@ func (s *Suite) Test_SubstContext_varassignStage__with_NO_CONFIGURE(c *check.C) 
 			"when NO_CONFIGURE is set (in line 35).")
 }
 
-func (s *Suite) Test_SubstContext_varassignStage__without_NO_CONFIGURE(c *check.C) {
+func (s *Suite) Test_substBlock_varassignStage__without_NO_CONFIGURE(c *check.C) {
 	t := s.Init(c)
 
 	pkg := t.SetUpPackage("category/package",

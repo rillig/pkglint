@@ -67,13 +67,13 @@ func (ctx *SubstContext) varassign(mkline *MkLine) {
 
 	switch varcanon {
 	case "SUBST_STAGE.*":
-		ctx.varassignStage(mkline)
+		ctx.block.varassignStage(mkline)
 	case "SUBST_MESSAGE.*":
-		ctx.varassignMessages(mkline)
+		ctx.block.varassignMessages(mkline)
 	case "SUBST_FILES.*":
-		ctx.varassignFiles(mkline)
+		ctx.block.varassignFiles(mkline)
 	case "SUBST_SED.*":
-		ctx.varassignSed(mkline)
+		ctx.block.varassignSed(mkline)
 	case "SUBST_VARS.*":
 		ctx.block.varassignVars(mkline)
 	case "SUBST_FILTER_CMD.*":
@@ -162,12 +162,12 @@ func (ctx *SubstContext) varassignDifferentClass(mkline *MkLine) (ok bool) {
 	return true
 }
 
-func (ctx *SubstContext) varassignStage(mkline *MkLine) {
-	if ctx.block.isConditional() {
+func (ctx *substBlock) varassignStage(mkline *MkLine) {
+	if ctx.isConditional() {
 		mkline.Warnf("%s should not be defined conditionally.", mkline.Varname())
 	}
 
-	ctx.block.dupString(mkline, ssStage)
+	ctx.dupString(mkline, ssStage)
 
 	value := mkline.Value()
 	if value == "pre-patch" || value == "post-patch" {
@@ -196,25 +196,25 @@ func (ctx *SubstContext) varassignStage(mkline *MkLine) {
 	}
 }
 
-func (ctx *SubstContext) varassignMessages(mkline *MkLine) {
+func (ctx *substBlock) varassignMessages(mkline *MkLine) {
 	varname := mkline.Varname()
 
-	if ctx.block.isConditional() {
+	if ctx.isConditional() {
 		mkline.Warnf("%s should not be defined conditionally.", varname)
 	}
 
-	ctx.block.dupString(mkline, ssMessage)
+	ctx.dupString(mkline, ssMessage)
 }
 
-func (ctx *SubstContext) varassignFiles(mkline *MkLine) {
-	ctx.block.dupList(mkline, ssFiles, ssNone)
+func (ctx *substBlock) varassignFiles(mkline *MkLine) {
+	ctx.dupList(mkline, ssFiles, ssNone)
 }
 
-func (ctx *SubstContext) varassignSed(mkline *MkLine) {
-	ctx.block.dupList(mkline, ssSed, ssNone)
-	ctx.block.seen().set(ssTransform)
+func (ctx *substBlock) varassignSed(mkline *MkLine) {
+	ctx.dupList(mkline, ssSed, ssNone)
+	ctx.seen().set(ssTransform)
 
-	ctx.block.suggestSubstVars(mkline)
+	ctx.suggestSubstVars(mkline)
 }
 
 func (ctx *substBlock) varassignVars(mkline *MkLine) {
