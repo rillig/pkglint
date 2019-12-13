@@ -600,322 +600,6 @@ func (s *Suite) Test_SubstContext_varassignVars__var_before_SUBST_VARS(c *check.
 		"WARN: filename.mk:4: Foreign variable \"FOREIGN\" in SUBST block.")
 }
 
-func (s *Suite) Test_SubstContext_directive__before_SUBST_CLASSES(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		".if 0",
-		".endif",
-		"SUBST_CLASSES+=\tos",
-		".elif 0") // Just for branch coverage.
-
-	t.CheckOutputLines(
-		"WARN: filename.mk:4: Incomplete SUBST block: SUBST_STAGE.os missing.",
-		"WARN: filename.mk:4: Incomplete SUBST block: SUBST_FILES.os missing.",
-		"WARN: filename.mk:4: Incomplete SUBST block: "+
-			"SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
-}
-
-func (s *Suite) Test_SubstContext_directive__conditional_blocks_complete(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		".if ${OPSYS} == NetBSD",
-		"SUBST_CLASSES+= nb",
-		"SUBST_STAGE.nb= post-configure",
-		"SUBST_FILES.nb= guess-netbsd.h",
-		"SUBST_VARS.nb=  HAVE_NETBSD",
-		".else",
-		"SUBST_CLASSES+= os",
-		"SUBST_STAGE.os= post-configure",
-		"SUBST_FILES.os= guess-netbsd.h",
-		"SUBST_VARS.os=  HAVE_OTHER",
-		".endif")
-
-	t.CheckOutputEmpty()
-}
-
-func (s *Suite) Test_SubstContext_directive__conditional_blocks_incomplete(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		".if ${OPSYS} == NetBSD",
-		"SUBST_CLASSES+= nb",
-		"SUBST_STAGE.nb= post-configure",
-		"SUBST_VARS.nb=  HAVE_NETBSD",
-		".else",
-		"SUBST_CLASSES+= os",
-		"SUBST_STAGE.os= post-configure",
-		"SUBST_FILES.os= guess-netbsd.h",
-		".endif")
-
-	t.CheckOutputLines(
-		"WARN: filename.mk:5: Incomplete SUBST block: SUBST_FILES.nb missing.",
-		"WARN: filename.mk:9: Incomplete SUBST block: "+
-			"SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
-}
-
-func (s *Suite) Test_SubstContext_directive__conditional_complete(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		"SUBST_CLASSES+= id",
-		".if ${OPSYS} == NetBSD",
-		"SUBST_STAGE.id=\t\tpost-configure",
-		"SUBST_MESSAGE.id=\tpost-configure",
-		"SUBST_FILES.id=\t\tguess-netbsd.h",
-		"SUBST_SED.id=\t\t-e s,from,to,",
-		"SUBST_VARS.id=\t\tHAVE_OTHER",
-		"SUBST_FILTER_CMD.id=\tHAVE_OTHER",
-		".else",
-		"SUBST_STAGE.id=\t\tpost-configure",
-		"SUBST_MESSAGE.id=\tpost-configure",
-		"SUBST_FILES.id=\t\tguess-netbsd.h",
-		"SUBST_SED.id=\t\t-e s,from,to,",
-		"SUBST_VARS.id=\t\tHAVE_OTHER",
-		"SUBST_FILTER_CMD.id=\tHAVE_OTHER",
-		".endif")
-
-	t.CheckOutputLines(
-		"WARN: filename.mk:3: SUBST_STAGE.id should not be defined conditionally.",
-		"WARN: filename.mk:4: SUBST_MESSAGE.id should not be defined conditionally.",
-		"WARN: filename.mk:10: SUBST_STAGE.id should not be defined conditionally.",
-		"WARN: filename.mk:11: SUBST_MESSAGE.id should not be defined conditionally.")
-}
-
-func (s *Suite) Test_SubstContext_directive__conditionally_overwritten_filter(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		"SUBST_CLASSES+= id",
-		"SUBST_STAGE.id=\t\tpost-configure",
-		"SUBST_MESSAGE.id=\tpost-configure",
-		"SUBST_FILES.id=\t\tguess-netbsd.h",
-		"SUBST_FILTER_CMD.id=\tHAVE_OTHER",
-		".if ${OPSYS} == NetBSD",
-		"SUBST_FILTER_CMD.id=\tHAVE_OTHER",
-		".endif")
-
-	t.CheckOutputLines(
-		"WARN: filename.mk:7: Duplicate definition of \"SUBST_FILTER_CMD.id\".")
-}
-
-// Hopefully nobody will ever trigger this case in real pkgsrc.
-// It's plain confusing to a casual reader to nest a complete
-// SUBST block into another SUBST block.
-// That's why pkglint doesn't cover this case correctly.
-func (s *Suite) Test_SubstContext_directive__conditionally_nested_block(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		"SUBST_CLASSES+=         outer",
-		"SUBST_STAGE.outer=      post-configure",
-		"SUBST_FILES.outer=      outer.txt",
-		".if ${OPSYS} == NetBSD",
-		"SUBST_CLASSES+=         inner",
-		"SUBST_STAGE.inner=      post-configure",
-		"SUBST_FILES.inner=      inner.txt",
-		"SUBST_VARS.inner=       INNER",
-		".endif",
-		"SUBST_VARS.outer=       OUTER")
-
-	t.CheckOutputLines(
-		"WARN: filename.mk:5: Incomplete SUBST block: "+
-			"SUBST_SED.outer, SUBST_VARS.outer or SUBST_FILTER_CMD.outer missing.",
-		"WARN: filename.mk:5: Subst block \"outer\" should be finished "+
-			"before adding the next class to SUBST_CLASSES.",
-		"WARN: filename.mk:10: "+
-			"Late additions to a SUBST variable should use the += operator.")
-}
-
-// It's completely valid to have several SUBST blocks in a single paragraph.
-// As soon as a SUBST_CLASSES line appears, pkglint assumes that all previous
-// SUBST blocks are finished. That's exactly the case here.
-func (s *Suite) Test_SubstContext_directive__conditionally_following_block(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		"SUBST_CLASSES+=         outer",
-		"SUBST_STAGE.outer=      post-configure",
-		"SUBST_FILES.outer=      outer.txt",
-		"SUBST_VARS.outer=       OUTER",
-		".if ${OPSYS} == NetBSD",
-		"SUBST_CLASSES+=         middle",
-		"SUBST_STAGE.middle=     post-configure",
-		"SUBST_FILES.middle=     inner.txt",
-		"SUBST_VARS.middle=      INNER",
-		".  if ${MACHINE_ARCH} == amd64",
-		"SUBST_CLASSES+=         inner",
-		"SUBST_STAGE.inner=      post-configure",
-		"SUBST_FILES.inner=      inner.txt",
-		"SUBST_VARS.inner=       INNER",
-		".  endif",
-		".endif")
-
-	t.CheckOutputEmpty()
-}
-
-func (s *Suite) Test_SubstContext_directive__two_blocks_in_condition(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		".if ${OPSYS} == NetBSD",
-		"SUBST_CLASSES+= a",
-		"SUBST_STAGE.a=  post-configure",
-		"SUBST_FILES.a=  outer.txt",
-		"SUBST_VARS.a=   OUTER",
-		"SUBST_CLASSES+= b",
-		"SUBST_STAGE.b=  post-configure",
-		"SUBST_FILES.b=  inner.txt",
-		"SUBST_VARS.b=   INNER",
-		".endif")
-
-	// Up to 2019-12-12, pkglint wrongly warned in filename.mk:6:
-	//  Subst block "a" should be finished before adding
-	//  the next class to SUBST_CLASSES.
-	// The warning was wrong since block "a" has all required fields set.
-	// The warning was caused by an inconsistent check whether the current
-	// block had any conditional variables.
-	t.CheckOutputEmpty()
-}
-
-func (s *Suite) Test_SubstContext_directive__nested_conditional_incomplete_block(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		"SUBST_CLASSES+=         outer",
-		"SUBST_STAGE.outer=      post-configure",
-		"SUBST_FILES.outer=      outer.txt",
-		"SUBST_VARS.outer=       OUTER",
-		".if ${OPSYS} == NetBSD",
-		"SUBST_CLASSES+=         inner1",
-		"SUBST_STAGE.inner1=     post-configure",
-		"SUBST_VARS.inner1=      INNER",
-		"SUBST_CLASSES+=         inner2",
-		"SUBST_STAGE.inner2=     post-configure",
-		"SUBST_FILES.inner2=     inner.txt",
-		"SUBST_VARS.inner2=      INNER",
-		".endif")
-
-	t.CheckOutputLines(
-		"WARN: filename.mk:9: Incomplete SUBST block: SUBST_FILES.inner1 missing.",
-		"WARN: filename.mk:9: Subst block \"inner1\" should be finished "+
-			"before adding the next class to SUBST_CLASSES.")
-}
-
-func (s *Suite) Test_SubstContext_finishClass__details_in_then_branch(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		"SUBST_CLASSES+=         os",
-		".if ${OPSYS} == NetBSD",
-		"SUBST_VARS.os=          OPSYS",
-		"SUBST_SED.os=           -e s,@OPSYS@,NetBSD,",
-		"SUBST_STAGE.os=         post-configure",
-		"SUBST_MESSAGE.os=       Guessing operating system",
-		"SUBST_FILES.os=         guess-os.h",
-		".endif")
-
-	t.CheckOutputLines(
-		"WARN: filename.mk:5: SUBST_STAGE.os should not be defined conditionally.",
-		"WARN: filename.mk:6: SUBST_MESSAGE.os should not be defined conditionally.",
-		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_STAGE.os missing.",
-		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_FILES.os missing.",
-		"WARN: filename.mk:EOF: Incomplete SUBST block: "+
-			"SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
-}
-
-func (s *Suite) Test_SubstContext_finishClass__details_in_else_branch(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		"SUBST_CLASSES+=         os",
-		".if ${OPSYS} == NetBSD",
-		".else",
-		"SUBST_VARS.os=          OPSYS",
-		"SUBST_SED.os=           -e s,@OPSYS@,NetBSD,",
-		"SUBST_STAGE.os=         post-configure",
-		"SUBST_MESSAGE.os=       Guessing operating system",
-		"SUBST_FILES.os=         guess-os.h",
-		".endif")
-
-	t.CheckOutputLines(
-		"WARN: filename.mk:6: SUBST_STAGE.os should not be defined conditionally.",
-		"WARN: filename.mk:7: SUBST_MESSAGE.os should not be defined conditionally.",
-		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_STAGE.os missing.",
-		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_FILES.os missing.",
-		"WARN: filename.mk:EOF: Incomplete SUBST block: "+
-			"SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
-}
-
-func (s *Suite) Test_SubstContext_finishClass__empty_conditional_at_end(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		"SUBST_CLASSES+=         os",
-		"SUBST_VARS.os=          OPSYS",
-		"SUBST_SED.os=           -e s,@OPSYS@,NetBSD,",
-		"SUBST_STAGE.os=         post-configure",
-		"SUBST_MESSAGE.os=       Guessing operating system",
-		"SUBST_FILES.os=         guess-os.h",
-		".if ${OPSYS} == NetBSD",
-		".else",
-		".endif")
-
-	t.CheckOutputEmpty()
-}
-
-func (s *Suite) Test_SubstContext_finishClass__missing_transformation_in_one_branch(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		"SUBST_CLASSES+=         os",
-		"SUBST_STAGE.os=         post-configure",
-		"SUBST_MESSAGE.os=       Guessing operating system",
-		"SUBST_FILES.os=         guess-os.h",
-		".if ${OPSYS} == NetBSD",
-		"SUBST_FILES.os=         -e s,@OpSYS@,NetBSD,", // A simple typo, this should be SUBST_SED.
-		".elif ${OPSYS} == Darwin",
-		"SUBST_SED.os=           -e s,@OPSYS@,Darwin1,",
-		"SUBST_SED.os=           -e s,@OPSYS@,Darwin2,",
-		".else",
-		"SUBST_VARS.os=           OPSYS",
-		".endif")
-
-	t.CheckOutputLines(
-		"WARN: filename.mk:6: All but the first assignment "+
-			"to \"SUBST_FILES.os\" should use the \"+=\" operator.",
-		"WARN: filename.mk:9: All but the first assignment "+
-			"to \"SUBST_SED.os\" should use the \"+=\" operator.",
-		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_SED.os, "+
-			"SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
-}
-
-func (s *Suite) Test_SubstContext_finishClass__nested_conditionals(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		"SUBST_CLASSES+=         os",
-		"SUBST_STAGE.os=         post-configure",
-		"SUBST_MESSAGE.os=       Guessing operating system",
-		".if ${OPSYS} == NetBSD",
-		"SUBST_FILES.os=         guess-netbsd.h",
-		".  if ${ARCH} == i386",
-		"SUBST_FILTER_CMD.os=    ${SED} -e s,@OPSYS,NetBSD-i386,",
-		".  elif ${ARCH} == x86_64",
-		"SUBST_VARS.os=          OPSYS",
-		".  else",
-		"SUBST_SED.os=           -e s,@OPSYS,NetBSD-unknown",
-		".  endif",
-		".else",
-		// This branch omits SUBST_FILES.
-		"SUBST_SED.os=           -e s,@OPSYS@,unknown,",
-		".endif")
-
-	t.CheckOutputLines(
-		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_FILES.os missing.")
-}
-
 func (s *Suite) Test_SubstContext_dupList__conditional_before_unconditional(c *check.C) {
 	t := s.Init(c)
 
@@ -1296,6 +980,322 @@ func (s *Suite) Test_SubstContext_extractVarname(c *check.C) {
 
 	// The replacement must be a plain variable expression, without suffix.
 	test("s,@VAR@,${VAR}suffix,", "")
+}
+
+func (s *Suite) Test_SubstContext_directive__before_SUBST_CLASSES(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		".if 0",
+		".endif",
+		"SUBST_CLASSES+=\tos",
+		".elif 0") // Just for branch coverage.
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:4: Incomplete SUBST block: SUBST_STAGE.os missing.",
+		"WARN: filename.mk:4: Incomplete SUBST block: SUBST_FILES.os missing.",
+		"WARN: filename.mk:4: Incomplete SUBST block: "+
+			"SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
+}
+
+func (s *Suite) Test_SubstContext_directive__conditional_blocks_complete(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		".if ${OPSYS} == NetBSD",
+		"SUBST_CLASSES+= nb",
+		"SUBST_STAGE.nb= post-configure",
+		"SUBST_FILES.nb= guess-netbsd.h",
+		"SUBST_VARS.nb=  HAVE_NETBSD",
+		".else",
+		"SUBST_CLASSES+= os",
+		"SUBST_STAGE.os= post-configure",
+		"SUBST_FILES.os= guess-netbsd.h",
+		"SUBST_VARS.os=  HAVE_OTHER",
+		".endif")
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_SubstContext_directive__conditional_blocks_incomplete(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		".if ${OPSYS} == NetBSD",
+		"SUBST_CLASSES+= nb",
+		"SUBST_STAGE.nb= post-configure",
+		"SUBST_VARS.nb=  HAVE_NETBSD",
+		".else",
+		"SUBST_CLASSES+= os",
+		"SUBST_STAGE.os= post-configure",
+		"SUBST_FILES.os= guess-netbsd.h",
+		".endif")
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:5: Incomplete SUBST block: SUBST_FILES.nb missing.",
+		"WARN: filename.mk:9: Incomplete SUBST block: "+
+			"SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
+}
+
+func (s *Suite) Test_SubstContext_directive__conditional_complete(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+= id",
+		".if ${OPSYS} == NetBSD",
+		"SUBST_STAGE.id=\t\tpost-configure",
+		"SUBST_MESSAGE.id=\tpost-configure",
+		"SUBST_FILES.id=\t\tguess-netbsd.h",
+		"SUBST_SED.id=\t\t-e s,from,to,",
+		"SUBST_VARS.id=\t\tHAVE_OTHER",
+		"SUBST_FILTER_CMD.id=\tHAVE_OTHER",
+		".else",
+		"SUBST_STAGE.id=\t\tpost-configure",
+		"SUBST_MESSAGE.id=\tpost-configure",
+		"SUBST_FILES.id=\t\tguess-netbsd.h",
+		"SUBST_SED.id=\t\t-e s,from,to,",
+		"SUBST_VARS.id=\t\tHAVE_OTHER",
+		"SUBST_FILTER_CMD.id=\tHAVE_OTHER",
+		".endif")
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:3: SUBST_STAGE.id should not be defined conditionally.",
+		"WARN: filename.mk:4: SUBST_MESSAGE.id should not be defined conditionally.",
+		"WARN: filename.mk:10: SUBST_STAGE.id should not be defined conditionally.",
+		"WARN: filename.mk:11: SUBST_MESSAGE.id should not be defined conditionally.")
+}
+
+func (s *Suite) Test_SubstContext_directive__conditionally_overwritten_filter(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+= id",
+		"SUBST_STAGE.id=\t\tpost-configure",
+		"SUBST_MESSAGE.id=\tpost-configure",
+		"SUBST_FILES.id=\t\tguess-netbsd.h",
+		"SUBST_FILTER_CMD.id=\tHAVE_OTHER",
+		".if ${OPSYS} == NetBSD",
+		"SUBST_FILTER_CMD.id=\tHAVE_OTHER",
+		".endif")
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:7: Duplicate definition of \"SUBST_FILTER_CMD.id\".")
+}
+
+// Hopefully nobody will ever trigger this case in real pkgsrc.
+// It's plain confusing to a casual reader to nest a complete
+// SUBST block into another SUBST block.
+// That's why pkglint doesn't cover this case correctly.
+func (s *Suite) Test_SubstContext_directive__conditionally_nested_block(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+=         outer",
+		"SUBST_STAGE.outer=      post-configure",
+		"SUBST_FILES.outer=      outer.txt",
+		".if ${OPSYS} == NetBSD",
+		"SUBST_CLASSES+=         inner",
+		"SUBST_STAGE.inner=      post-configure",
+		"SUBST_FILES.inner=      inner.txt",
+		"SUBST_VARS.inner=       INNER",
+		".endif",
+		"SUBST_VARS.outer=       OUTER")
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:5: Incomplete SUBST block: "+
+			"SUBST_SED.outer, SUBST_VARS.outer or SUBST_FILTER_CMD.outer missing.",
+		"WARN: filename.mk:5: Subst block \"outer\" should be finished "+
+			"before adding the next class to SUBST_CLASSES.",
+		"WARN: filename.mk:10: "+
+			"Late additions to a SUBST variable should use the += operator.")
+}
+
+// It's completely valid to have several SUBST blocks in a single paragraph.
+// As soon as a SUBST_CLASSES line appears, pkglint assumes that all previous
+// SUBST blocks are finished. That's exactly the case here.
+func (s *Suite) Test_SubstContext_directive__conditionally_following_block(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+=         outer",
+		"SUBST_STAGE.outer=      post-configure",
+		"SUBST_FILES.outer=      outer.txt",
+		"SUBST_VARS.outer=       OUTER",
+		".if ${OPSYS} == NetBSD",
+		"SUBST_CLASSES+=         middle",
+		"SUBST_STAGE.middle=     post-configure",
+		"SUBST_FILES.middle=     inner.txt",
+		"SUBST_VARS.middle=      INNER",
+		".  if ${MACHINE_ARCH} == amd64",
+		"SUBST_CLASSES+=         inner",
+		"SUBST_STAGE.inner=      post-configure",
+		"SUBST_FILES.inner=      inner.txt",
+		"SUBST_VARS.inner=       INNER",
+		".  endif",
+		".endif")
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_SubstContext_directive__two_blocks_in_condition(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		".if ${OPSYS} == NetBSD",
+		"SUBST_CLASSES+= a",
+		"SUBST_STAGE.a=  post-configure",
+		"SUBST_FILES.a=  outer.txt",
+		"SUBST_VARS.a=   OUTER",
+		"SUBST_CLASSES+= b",
+		"SUBST_STAGE.b=  post-configure",
+		"SUBST_FILES.b=  inner.txt",
+		"SUBST_VARS.b=   INNER",
+		".endif")
+
+	// Up to 2019-12-12, pkglint wrongly warned in filename.mk:6:
+	//  Subst block "a" should be finished before adding
+	//  the next class to SUBST_CLASSES.
+	// The warning was wrong since block "a" has all required fields set.
+	// The warning was caused by an inconsistent check whether the current
+	// block had any conditional variables.
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_SubstContext_directive__nested_conditional_incomplete_block(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+=         outer",
+		"SUBST_STAGE.outer=      post-configure",
+		"SUBST_FILES.outer=      outer.txt",
+		"SUBST_VARS.outer=       OUTER",
+		".if ${OPSYS} == NetBSD",
+		"SUBST_CLASSES+=         inner1",
+		"SUBST_STAGE.inner1=     post-configure",
+		"SUBST_VARS.inner1=      INNER",
+		"SUBST_CLASSES+=         inner2",
+		"SUBST_STAGE.inner2=     post-configure",
+		"SUBST_FILES.inner2=     inner.txt",
+		"SUBST_VARS.inner2=      INNER",
+		".endif")
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:9: Incomplete SUBST block: SUBST_FILES.inner1 missing.",
+		"WARN: filename.mk:9: Subst block \"inner1\" should be finished "+
+			"before adding the next class to SUBST_CLASSES.")
+}
+
+func (s *Suite) Test_SubstContext_finishClass__details_in_then_branch(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+=         os",
+		".if ${OPSYS} == NetBSD",
+		"SUBST_VARS.os=          OPSYS",
+		"SUBST_SED.os=           -e s,@OPSYS@,NetBSD,",
+		"SUBST_STAGE.os=         post-configure",
+		"SUBST_MESSAGE.os=       Guessing operating system",
+		"SUBST_FILES.os=         guess-os.h",
+		".endif")
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:5: SUBST_STAGE.os should not be defined conditionally.",
+		"WARN: filename.mk:6: SUBST_MESSAGE.os should not be defined conditionally.",
+		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_STAGE.os missing.",
+		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_FILES.os missing.",
+		"WARN: filename.mk:EOF: Incomplete SUBST block: "+
+			"SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
+}
+
+func (s *Suite) Test_SubstContext_finishClass__details_in_else_branch(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+=         os",
+		".if ${OPSYS} == NetBSD",
+		".else",
+		"SUBST_VARS.os=          OPSYS",
+		"SUBST_SED.os=           -e s,@OPSYS@,NetBSD,",
+		"SUBST_STAGE.os=         post-configure",
+		"SUBST_MESSAGE.os=       Guessing operating system",
+		"SUBST_FILES.os=         guess-os.h",
+		".endif")
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:6: SUBST_STAGE.os should not be defined conditionally.",
+		"WARN: filename.mk:7: SUBST_MESSAGE.os should not be defined conditionally.",
+		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_STAGE.os missing.",
+		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_FILES.os missing.",
+		"WARN: filename.mk:EOF: Incomplete SUBST block: "+
+			"SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
+}
+
+func (s *Suite) Test_SubstContext_finishClass__empty_conditional_at_end(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+=         os",
+		"SUBST_VARS.os=          OPSYS",
+		"SUBST_SED.os=           -e s,@OPSYS@,NetBSD,",
+		"SUBST_STAGE.os=         post-configure",
+		"SUBST_MESSAGE.os=       Guessing operating system",
+		"SUBST_FILES.os=         guess-os.h",
+		".if ${OPSYS} == NetBSD",
+		".else",
+		".endif")
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_SubstContext_finishClass__missing_transformation_in_one_branch(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+=         os",
+		"SUBST_STAGE.os=         post-configure",
+		"SUBST_MESSAGE.os=       Guessing operating system",
+		"SUBST_FILES.os=         guess-os.h",
+		".if ${OPSYS} == NetBSD",
+		"SUBST_FILES.os=         -e s,@OpSYS@,NetBSD,", // A simple typo, this should be SUBST_SED.
+		".elif ${OPSYS} == Darwin",
+		"SUBST_SED.os=           -e s,@OPSYS@,Darwin1,",
+		"SUBST_SED.os=           -e s,@OPSYS@,Darwin2,",
+		".else",
+		"SUBST_VARS.os=           OPSYS",
+		".endif")
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:6: All but the first assignment "+
+			"to \"SUBST_FILES.os\" should use the \"+=\" operator.",
+		"WARN: filename.mk:9: All but the first assignment "+
+			"to \"SUBST_SED.os\" should use the \"+=\" operator.",
+		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_SED.os, "+
+			"SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
+}
+
+func (s *Suite) Test_SubstContext_finishClass__nested_conditionals(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+=         os",
+		"SUBST_STAGE.os=         post-configure",
+		"SUBST_MESSAGE.os=       Guessing operating system",
+		".if ${OPSYS} == NetBSD",
+		"SUBST_FILES.os=         guess-netbsd.h",
+		".  if ${ARCH} == i386",
+		"SUBST_FILTER_CMD.os=    ${SED} -e s,@OPSYS,NetBSD-i386,",
+		".  elif ${ARCH} == x86_64",
+		"SUBST_VARS.os=          OPSYS",
+		".  else",
+		"SUBST_SED.os=           -e s,@OPSYS,NetBSD-unknown",
+		".  endif",
+		".else",
+		// This branch omits SUBST_FILES.
+		"SUBST_SED.os=           -e s,@OPSYS@,unknown,",
+		".endif")
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_FILES.os missing.")
 }
 
 func (s *Suite) Test_SubstContext_isComplete__incomplete(c *check.C) {

@@ -229,86 +229,16 @@ func (ctx *SubstContext) varassignFilterCmd(mkline *MkLine) {
 	ctx.seen().set(ssTransform)
 }
 
-func (*SubstContext) isForeign(varcanon string) bool {
-	switch varcanon {
-	case
-		"SUBST_STAGE.*",
-		"SUBST_MESSAGE.*",
-		"SUBST_FILES.*",
-		"SUBST_SED.*",
-		"SUBST_VARS.*",
-		"SUBST_FILTER_CMD.*":
-		return false
+func (ctx *SubstContext) dupList(mkline *MkLine, part substSeen, autofixPart substSeen) {
+	if ctx.seenInBranch(part) && mkline.Op() != opAssignAppend {
+		ctx.fixOperatorAppend(mkline, ctx.seenInBranch(autofixPart))
 	}
-	return true
-}
-
-func (*SubstContext) isListCanon(varcanon string) bool {
-	switch varcanon {
-	case
-		"SUBST_FILES.*",
-		"SUBST_SED.*",
-		"SUBST_VARS.*":
-		return true
-	}
-	return false
-}
-
-func (ctx *SubstContext) directive(mkline *MkLine) {
-	dir := mkline.Directive()
-	switch dir {
-	case "if":
-		ctx.condIf()
-
-	case "elif", "else":
-		ctx.condElse(mkline, dir)
-
-	case "endif":
-		ctx.condEndif(mkline)
-	}
-}
-
-func (ctx *SubstContext) finishClass(diag Diagnoser) {
-	if !ctx.isActive() {
-		return
-	}
-
-	ctx.checkBlockComplete(diag)
-	ctx.checkForeignVariables()
-
-	ctx.reset()
-}
-
-func (ctx *SubstContext) checkBlockComplete(diag Diagnoser) {
-	id := ctx.activeId()
-	seen := ctx.seen()
-	if !seen.get(ssStage) {
-		diag.Warnf("Incomplete SUBST block: SUBST_STAGE.%s missing.", id)
-	}
-	if !seen.get(ssFiles) {
-		diag.Warnf("Incomplete SUBST block: SUBST_FILES.%s missing.", id)
-	}
-	if !seen.get(ssTransform) {
-		diag.Warnf("Incomplete SUBST block: SUBST_SED.%[1]s, SUBST_VARS.%[1]s or SUBST_FILTER_CMD.%[1]s missing.", id)
-	}
-}
-
-func (ctx *SubstContext) checkForeignVariables() {
-	ctx.forEachForeignVar(func(mkline *MkLine) {
-		mkline.Warnf("Foreign variable %q in SUBST block.", mkline.Varname())
-	})
+	ctx.seen().set(part)
 }
 
 func (ctx *SubstContext) dupString(mkline *MkLine, part substSeen) {
 	if ctx.seenInBranch(part) {
 		mkline.Warnf("Duplicate definition of %q.", mkline.Varname())
-	}
-	ctx.seen().set(part)
-}
-
-func (ctx *SubstContext) dupList(mkline *MkLine, part substSeen, autofixPart substSeen) {
-	if ctx.seenInBranch(part) && mkline.Op() != opAssignAppend {
-		ctx.fixOperatorAppend(mkline, ctx.seenInBranch(autofixPart))
 	}
 	ctx.seen().set(part)
 }
@@ -405,6 +335,135 @@ func (*SubstContext) extractVarname(token string) string {
 	return varname
 }
 
+func (*SubstContext) isForeign(varcanon string) bool {
+	switch varcanon {
+	case
+		"SUBST_STAGE.*",
+		"SUBST_MESSAGE.*",
+		"SUBST_FILES.*",
+		"SUBST_SED.*",
+		"SUBST_VARS.*",
+		"SUBST_FILTER_CMD.*":
+		return false
+	}
+	return true
+}
+
+func (*SubstContext) isListCanon(varcanon string) bool {
+	switch varcanon {
+	case
+		"SUBST_FILES.*",
+		"SUBST_SED.*",
+		"SUBST_VARS.*":
+		return true
+	}
+	return false
+}
+
+func (ctx *SubstContext) directive(mkline *MkLine) {
+	dir := mkline.Directive()
+	switch dir {
+	case "if":
+		ctx.condIf()
+
+	case "elif", "else":
+		ctx.condElse(mkline, dir)
+
+	case "endif":
+		ctx.condEndif(mkline)
+	}
+}
+
+func (ctx *SubstContext) condIf() {
+	top := substCond{total: ssAll}
+	ctx.conds = append(ctx.conds, &top)
+}
+
+func (ctx *SubstContext) condElse(mkline *MkLine, dir string) {
+	top := ctx.cond()
+	top.total.retain(top.curr)
+	if !ctx.isConditional() {
+		// XXX: This is a higher-level method
+		ctx.finishClass(mkline)
+	}
+	top.curr = ssNone
+	top.seenElse = dir == "else"
+}
+
+func (ctx *SubstContext) condEndif(diag Diagnoser) {
+	top := ctx.cond()
+	top.total.retain(top.curr)
+	if !ctx.isConditional() {
+		// XXX: This is a higher-level method
+		ctx.finishClass(diag)
+	}
+	if !top.seenElse {
+		top.total = ssNone
+	}
+	if len(ctx.conds) > 1 {
+		ctx.conds = ctx.conds[:len(ctx.conds)-1]
+	}
+	ctx.seen().union(top.total)
+}
+
+func (ctx *SubstContext) finishClass(diag Diagnoser) {
+	if !ctx.isActive() {
+		return
+	}
+
+	ctx.checkBlockComplete(diag)
+	ctx.checkForeignVariables()
+
+	ctx.reset()
+}
+
+func (ctx *SubstContext) checkBlockComplete(diag Diagnoser) {
+	id := ctx.activeId()
+	seen := ctx.seen()
+	if !seen.get(ssStage) {
+		diag.Warnf("Incomplete SUBST block: SUBST_STAGE.%s missing.", id)
+	}
+	if !seen.get(ssFiles) {
+		diag.Warnf("Incomplete SUBST block: SUBST_FILES.%s missing.", id)
+	}
+	if !seen.get(ssTransform) {
+		diag.Warnf("Incomplete SUBST block: SUBST_SED.%[1]s, SUBST_VARS.%[1]s or SUBST_FILTER_CMD.%[1]s missing.", id)
+	}
+}
+
+func (ctx *SubstContext) checkForeignVariables() {
+	ctx.forEachForeignVar(func(mkline *MkLine) {
+		mkline.Warnf("Foreign variable %q in SUBST block.", mkline.Varname())
+	})
+}
+
+// In the paragraph of a SUBST block, there should be only variables
+// that actually belong to the SUBST block.
+//
+// In addition, variables that are mentioned in SUBST_VARS may also
+// be defined there because they closely relate to the SUBST block.
+
+func (ctx *SubstContext) allowVar(varname string) {
+	if ctx.foreignAllowed == nil {
+		ctx.foreignAllowed = make(map[string]struct{})
+	}
+	ctx.foreignAllowed[varname] = struct{}{}
+}
+
+func (ctx *SubstContext) rememberForeign(mkline *MkLine) {
+	ctx.foreign = append(ctx.foreign, mkline)
+}
+
+// forEachForeignVar performs the given action for each variable that
+// is defined in the SUBST block and is not mentioned in SUBST_VARS.
+func (ctx *SubstContext) forEachForeignVar(action func(*MkLine)) {
+	for _, foreign := range ctx.foreign {
+		if _, ok := ctx.foreignAllowed[foreign.Varname()]; !ok {
+			action(foreign)
+		}
+	}
+}
+
 func (ctx *SubstContext) reset() {
 	ctx.id = ""
 	ctx.foreignAllowed = nil
@@ -454,31 +513,8 @@ func (ctx *SubstContext) isDone(varparam string) bool {
 	return ctx.doneIds[varparam]
 }
 
-// In the paragraph of a SUBST block, there should be only variables
-// that actually belong to the SUBST block.
-//
-// In addition, variables that are mentioned in SUBST_VARS may also
-// be defined there because they closely relate to the SUBST block.
-
-func (ctx *SubstContext) allowVar(varname string) {
-	if ctx.foreignAllowed == nil {
-		ctx.foreignAllowed = make(map[string]struct{})
-	}
-	ctx.foreignAllowed[varname] = struct{}{}
-}
-
-func (ctx *SubstContext) rememberForeign(mkline *MkLine) {
-	ctx.foreign = append(ctx.foreign, mkline)
-}
-
-// forEachForeignVar performs the given action for each variable that
-// is defined in the SUBST block and is not mentioned in SUBST_VARS.
-func (ctx *SubstContext) forEachForeignVar(action func(*MkLine)) {
-	for _, foreign := range ctx.foreign {
-		if _, ok := ctx.foreignAllowed[foreign.Varname()]; !ok {
-			action(foreign)
-		}
-	}
+func (ctx *SubstContext) isComplete() bool {
+	return ctx.seen().hasAll(ssStage | ssFiles | ssTransform)
 }
 
 // isConditional returns whether the current line is at a deeper conditional
@@ -494,51 +530,15 @@ func (ctx *SubstContext) isConditional() bool {
 	return !ctx.cond().top
 }
 
-// cond returns information about the current branch of conditionals.
-func (ctx *SubstContext) cond() *substCond {
-	return ctx.conds[len(ctx.conds)-1]
-}
-
 // cond returns information about the parts of the SUBST block that
 // have already been seen in the current leaf branch of the conditionals.
 func (ctx *SubstContext) seen() *substSeen {
 	return &ctx.cond().curr
 }
 
-func (ctx *SubstContext) condIf() {
-	top := substCond{total: ssAll}
-	ctx.conds = append(ctx.conds, &top)
-}
-
-func (ctx *SubstContext) condElse(mkline *MkLine, dir string) {
-	top := ctx.cond()
-	top.total.retain(top.curr)
-	if !ctx.isConditional() {
-		// XXX: This is a higher-level method
-		ctx.finishClass(mkline)
-	}
-	top.curr = ssNone
-	top.seenElse = dir == "else"
-}
-
-func (ctx *SubstContext) condEndif(diag Diagnoser) {
-	top := ctx.cond()
-	top.total.retain(top.curr)
-	if !ctx.isConditional() {
-		// XXX: This is a higher-level method
-		ctx.finishClass(diag)
-	}
-	if !top.seenElse {
-		top.total = ssNone
-	}
-	if len(ctx.conds) > 1 {
-		ctx.conds = ctx.conds[:len(ctx.conds)-1]
-	}
-	ctx.seen().union(top.total)
-}
-
-func (ctx *SubstContext) isComplete() bool {
-	return ctx.seen().hasAll(ssStage | ssFiles | ssTransform)
+// cond returns information about the current branch of conditionals.
+func (ctx *SubstContext) cond() *substCond {
+	return ctx.conds[len(ctx.conds)-1]
 }
 
 // Returns true if the given flag from substSeen has been seen
