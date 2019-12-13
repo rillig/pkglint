@@ -344,6 +344,31 @@ func (s *Suite) Test_SubstContext__SUBST_CLASSES_in_separate_paragraph(c *check.
 		"WARN: filename.mk:EOF: Missing SUBST block for \"4\".")
 }
 
+func (s *Suite) Test_SubstContext__wrong_class(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+= 1 2",
+		"SUBST_STAGE.x=  post-configure",
+		"SUBST_FILES.x=  files",
+		"SUBST_VARS.x=   VAR1",
+		"SUBST_STAGE.2=  post-configure",
+		"SUBST_FILES.2=  files",
+		"SUBST_VARS.2=   VAR1")
+
+	t.CheckOutputLines(
+		"NOTE: filename.mk:1: Please add only one class at a time to SUBST_CLASSES.",
+		"WARN: filename.mk:2: Variable \"SUBST_STAGE.x\" does not match SUBST class \"1\".",
+		"WARN: filename.mk:3: Variable \"SUBST_FILES.x\" does not match SUBST class \"1\".",
+		"WARN: filename.mk:4: Variable \"SUBST_VARS.x\" does not match SUBST class \"1\".",
+		// XXX: This line could change to 2, since that is already in the queue.
+		"WARN: filename.mk:5: Variable \"SUBST_STAGE.2\" does not match SUBST class \"1\".",
+		"WARN: filename.mk:6: Variable \"SUBST_FILES.2\" does not match SUBST class \"1\".",
+		"WARN: filename.mk:7: Variable \"SUBST_VARS.2\" does not match SUBST class \"1\".",
+		"WARN: filename.mk:EOF: Missing SUBST block for \"1\".",
+		"WARN: filename.mk:EOF: Missing SUBST block for \"2\".")
+}
+
 func (s *Suite) Test_SubstContext_varassign__late_addition(c *check.C) {
 	t := s.Init(c)
 
