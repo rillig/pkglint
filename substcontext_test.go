@@ -518,6 +518,26 @@ func (s *Suite) Test_SubstContext_varassignStage__post_patch(c *check.C) {
 		"SUBST_SED.os=   -e s,@OPSYS@,Darwin,")
 }
 
+func (s *Suite) Test_SubstContext_varassignStage__empty_class(c *check.C) {
+	t := s.Init(c)
+
+	t.Chdir(".")
+
+	t.RunSubst(
+		"SUBST_CLASSES+= id",
+		"",
+		"SUBST_STAGE.=   post-patch",
+		"SUBST_FILES.id= files",
+		"SUBST_VARS.id=  VAR")
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:3: Before defining SUBST_STAGE., "+
+			// FIXME: Wrong suggestion in diagnostic; I had expected that
+			//  this would be caught by an assertion.
+			"the SUBST class should be declared using \"SUBST_CLASSES+= \".",
+		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_STAGE.id missing.")
+}
+
 // As of December 2019, pkglint does not use token positions internally.
 // Instead it only does simple string replacement when autofixing things.
 // To avoid damaging anything, replacements are only done if they are
