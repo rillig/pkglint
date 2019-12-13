@@ -84,15 +84,19 @@ func (s *substSeen) retain(other substSeen)      { *s &= other }
 func (ctx *SubstContext) Process(mkline *MkLine) {
 	switch {
 	case mkline.IsEmpty():
-		ctx.Finish(mkline)
+		ctx.finishClass(mkline)
 	case mkline.IsVarassign():
-		ctx.Varassign(mkline)
+		ctx.varassign(mkline)
 	case mkline.IsDirective():
-		ctx.Directive(mkline)
+		ctx.directive(mkline)
 	}
 }
 
-func (ctx *SubstContext) Varassign(mkline *MkLine) {
+func (ctx *SubstContext) Finish(diag Diagnoser) {
+	ctx.finishClass(diag)
+}
+
+func (ctx *SubstContext) varassign(mkline *MkLine) {
 	varcanon := mkline.Varcanon()
 	if varcanon == "SUBST_CLASSES" || varcanon == "SUBST_CLASSES.*" {
 		ctx.varassignClasses(mkline)
@@ -160,8 +164,8 @@ func (ctx *SubstContext) varassignClasses(mkline *MkLine) {
 			ctx.condEndif(mkline)
 		}
 
-		complete := ctx.isComplete() // since ctx.Finish will reset it
-		ctx.Finish(mkline)
+		complete := ctx.isComplete() // since ctx.finishClass will reset it
+		ctx.finishClass(mkline)
 		if !complete {
 			mkline.Warnf("Subst block %q should be finished before adding the next class to SUBST_CLASSES.", id)
 		}
@@ -191,7 +195,7 @@ func (ctx *SubstContext) varassignOutsideBlock(mkline *MkLine) {
 		return
 	}
 
-	if ctx.once.FirstTimeSlice("SubstContext.Varassign", varparam) {
+	if ctx.once.FirstTime(varparam) {
 		mkline.Warnf("Before defining %s, the SUBST class "+
 			"should be declared using \"SUBST_CLASSES+= %s\".",
 			mkline.Varname(), varparam)
@@ -208,7 +212,7 @@ func (ctx *SubstContext) varassignDifferentClass(mkline *MkLine) (ok bool) {
 		return false
 	}
 
-	ctx.Finish(mkline)
+	ctx.finishClass(mkline)
 
 	ctx.start(varparam)
 	return true
@@ -308,7 +312,7 @@ func (ctx *SubstContext) isListCanon(varcanon string) bool {
 	return false
 }
 
-func (ctx *SubstContext) Directive(mkline *MkLine) {
+func (ctx *SubstContext) directive(mkline *MkLine) {
 	dir := mkline.Directive()
 	switch dir {
 	case "if":
@@ -322,7 +326,7 @@ func (ctx *SubstContext) Directive(mkline *MkLine) {
 	}
 }
 
-func (ctx *SubstContext) Finish(diag Diagnoser) {
+func (ctx *SubstContext) finishClass(diag Diagnoser) {
 	if !ctx.isActive() {
 		return
 	}
@@ -562,7 +566,7 @@ func (ctx *SubstContext) condElse(mkline *MkLine, dir string) {
 	top.total.retain(top.curr)
 	if !ctx.isConditional() {
 		// XXX: This is a higher-level method
-		ctx.Finish(mkline)
+		ctx.finishClass(mkline)
 	}
 	top.curr = ssNone
 	top.seenElse = dir == "else"
@@ -573,7 +577,7 @@ func (ctx *SubstContext) condEndif(diag Diagnoser) {
 	top.total.retain(top.curr)
 	if !ctx.isConditional() {
 		// XXX: This is a higher-level method
-		ctx.Finish(diag)
+		ctx.finishClass(diag)
 	}
 	if !top.seenElse {
 		top.total = ssNone

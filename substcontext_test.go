@@ -30,11 +30,11 @@ func (s *Suite) Test_SubstContext__OPSYSVARS(c *check.C) {
 	ctx := NewSubstContext()
 
 	// SUBST_CLASSES is added to OPSYSVARS in mk/bsd.pkg.mk.
-	ctx.Varassign(t.NewMkLine("filename.mk", 11, "SUBST_CLASSES.SunOS+=prefix"))
-	ctx.Varassign(t.NewMkLine("filename.mk", 12, "SUBST_CLASSES.NetBSD+=prefix"))
-	ctx.Varassign(t.NewMkLine("filename.mk", 13, "SUBST_FILES.prefix=Makefile"))
-	ctx.Varassign(t.NewMkLine("filename.mk", 14, "SUBST_SED.prefix=s,@PREFIX@,${PREFIX},g"))
-	ctx.Varassign(t.NewMkLine("filename.mk", 15, "SUBST_STAGE.prefix=post-configure"))
+	ctx.varassign(t.NewMkLine("filename.mk", 11, "SUBST_CLASSES.SunOS+=prefix"))
+	ctx.varassign(t.NewMkLine("filename.mk", 12, "SUBST_CLASSES.NetBSD+=prefix"))
+	ctx.varassign(t.NewMkLine("filename.mk", 13, "SUBST_FILES.prefix=Makefile"))
+	ctx.varassign(t.NewMkLine("filename.mk", 14, "SUBST_SED.prefix=s,@PREFIX@,${PREFIX},g"))
+	ctx.varassign(t.NewMkLine("filename.mk", 15, "SUBST_STAGE.prefix=post-configure"))
 
 	t.CheckEquals(ctx.isComplete(), true)
 
@@ -357,7 +357,7 @@ func (s *Suite) Test_SubstContext__SUBST_CLASSES_in_separate_paragraph(c *check.
 		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_STAGE.3 missing.")
 }
 
-func (s *Suite) Test_SubstContext_Varassign__late_addition(c *check.C) {
+func (s *Suite) Test_SubstContext_varassign__late_addition(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -375,7 +375,7 @@ func (s *Suite) Test_SubstContext_Varassign__late_addition(c *check.C) {
 			"should use the += operator.")
 }
 
-func (s *Suite) Test_SubstContext_Varassign__late_addition_to_unknown_class(c *check.C) {
+func (s *Suite) Test_SubstContext_varassign__late_addition_to_unknown_class(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("filename.mk",
@@ -600,7 +600,7 @@ func (s *Suite) Test_SubstContext_varassignVars__var_before_SUBST_VARS(c *check.
 		"WARN: filename.mk:4: Foreign variable \"FOREIGN\" in SUBST block.")
 }
 
-func (s *Suite) Test_SubstContext_Directive__before_SUBST_CLASSES(c *check.C) {
+func (s *Suite) Test_SubstContext_directive__before_SUBST_CLASSES(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -616,7 +616,7 @@ func (s *Suite) Test_SubstContext_Directive__before_SUBST_CLASSES(c *check.C) {
 			"SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
 }
 
-func (s *Suite) Test_SubstContext_Directive__conditional_blocks_complete(c *check.C) {
+func (s *Suite) Test_SubstContext_directive__conditional_blocks_complete(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -635,7 +635,7 @@ func (s *Suite) Test_SubstContext_Directive__conditional_blocks_complete(c *chec
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_SubstContext_Directive__conditional_blocks_incomplete(c *check.C) {
+func (s *Suite) Test_SubstContext_directive__conditional_blocks_incomplete(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -655,7 +655,7 @@ func (s *Suite) Test_SubstContext_Directive__conditional_blocks_incomplete(c *ch
 			"SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
 }
 
-func (s *Suite) Test_SubstContext_Directive__conditional_complete(c *check.C) {
+func (s *Suite) Test_SubstContext_directive__conditional_complete(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -683,7 +683,7 @@ func (s *Suite) Test_SubstContext_Directive__conditional_complete(c *check.C) {
 		"WARN: filename.mk:11: SUBST_MESSAGE.id should not be defined conditionally.")
 }
 
-func (s *Suite) Test_SubstContext_Directive__conditionally_overwritten_filter(c *check.C) {
+func (s *Suite) Test_SubstContext_directive__conditionally_overwritten_filter(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -704,7 +704,7 @@ func (s *Suite) Test_SubstContext_Directive__conditionally_overwritten_filter(c 
 // It's plain confusing to a casual reader to nest a complete
 // SUBST block into another SUBST block.
 // That's why pkglint doesn't cover this case correctly.
-func (s *Suite) Test_SubstContext_Directive__conditionally_nested_block(c *check.C) {
+func (s *Suite) Test_SubstContext_directive__conditionally_nested_block(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -731,7 +731,7 @@ func (s *Suite) Test_SubstContext_Directive__conditionally_nested_block(c *check
 // It's completely valid to have several SUBST blocks in a single paragraph.
 // As soon as a SUBST_CLASSES line appears, pkglint assumes that all previous
 // SUBST blocks are finished. That's exactly the case here.
-func (s *Suite) Test_SubstContext_Directive__conditionally_following_block(c *check.C) {
+func (s *Suite) Test_SubstContext_directive__conditionally_following_block(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -755,7 +755,7 @@ func (s *Suite) Test_SubstContext_Directive__conditionally_following_block(c *ch
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_SubstContext_Directive__two_blocks_in_condition(c *check.C) {
+func (s *Suite) Test_SubstContext_directive__two_blocks_in_condition(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -779,7 +779,7 @@ func (s *Suite) Test_SubstContext_Directive__two_blocks_in_condition(c *check.C)
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_SubstContext_Directive__nested_conditional_incomplete_block(c *check.C) {
+func (s *Suite) Test_SubstContext_directive__nested_conditional_incomplete_block(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -803,7 +803,7 @@ func (s *Suite) Test_SubstContext_Directive__nested_conditional_incomplete_block
 			"before adding the next class to SUBST_CLASSES.")
 }
 
-func (s *Suite) Test_SubstContext_Finish__details_in_then_branch(c *check.C) {
+func (s *Suite) Test_SubstContext_finishClass__details_in_then_branch(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -825,7 +825,7 @@ func (s *Suite) Test_SubstContext_Finish__details_in_then_branch(c *check.C) {
 			"SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
 }
 
-func (s *Suite) Test_SubstContext_Finish__details_in_else_branch(c *check.C) {
+func (s *Suite) Test_SubstContext_finishClass__details_in_else_branch(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -848,7 +848,7 @@ func (s *Suite) Test_SubstContext_Finish__details_in_else_branch(c *check.C) {
 			"SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
 }
 
-func (s *Suite) Test_SubstContext_Finish__empty_conditional_at_end(c *check.C) {
+func (s *Suite) Test_SubstContext_finishClass__empty_conditional_at_end(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -865,7 +865,7 @@ func (s *Suite) Test_SubstContext_Finish__empty_conditional_at_end(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_SubstContext_Finish__missing_transformation_in_one_branch(c *check.C) {
+func (s *Suite) Test_SubstContext_finishClass__missing_transformation_in_one_branch(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -891,7 +891,7 @@ func (s *Suite) Test_SubstContext_Finish__missing_transformation_in_one_branch(c
 			"SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
 }
 
-func (s *Suite) Test_SubstContext_Finish__nested_conditionals(c *check.C) {
+func (s *Suite) Test_SubstContext_finishClass__nested_conditionals(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -1303,19 +1303,19 @@ func (s *Suite) Test_SubstContext_isComplete__incomplete(c *check.C) {
 
 	ctx := NewSubstContext()
 
-	ctx.Varassign(t.NewMkLine("filename.mk", 10, "PKGNAME=pkgname-1.0"))
+	ctx.varassign(t.NewMkLine("filename.mk", 10, "PKGNAME=pkgname-1.0"))
 
 	t.CheckEquals(ctx.id, "")
 
-	ctx.Varassign(t.NewMkLine("filename.mk", 11, "SUBST_CLASSES+=interp"))
+	ctx.varassign(t.NewMkLine("filename.mk", 11, "SUBST_CLASSES+=interp"))
 
 	t.CheckEquals(ctx.id, "interp")
 
-	ctx.Varassign(t.NewMkLine("filename.mk", 12, "SUBST_FILES.interp=Makefile"))
+	ctx.varassign(t.NewMkLine("filename.mk", 12, "SUBST_FILES.interp=Makefile"))
 
 	t.CheckEquals(ctx.isComplete(), false)
 
-	ctx.Varassign(t.NewMkLine("filename.mk", 13, "SUBST_SED.interp=s,@PREFIX@,${PREFIX},g"))
+	ctx.varassign(t.NewMkLine("filename.mk", 13, "SUBST_SED.interp=s,@PREFIX@,${PREFIX},g"))
 
 	t.CheckEquals(ctx.isComplete(), false)
 
@@ -1332,14 +1332,14 @@ func (s *Suite) Test_SubstContext_isComplete__complete(c *check.C) {
 
 	ctx := NewSubstContext()
 
-	ctx.Varassign(t.NewMkLine("filename.mk", 10, "PKGNAME=pkgname-1.0"))
-	ctx.Varassign(t.NewMkLine("filename.mk", 11, "SUBST_CLASSES+=p"))
-	ctx.Varassign(t.NewMkLine("filename.mk", 12, "SUBST_FILES.p=Makefile"))
-	ctx.Varassign(t.NewMkLine("filename.mk", 13, "SUBST_SED.p=s,@PREFIX@,${PREFIX},g"))
+	ctx.varassign(t.NewMkLine("filename.mk", 10, "PKGNAME=pkgname-1.0"))
+	ctx.varassign(t.NewMkLine("filename.mk", 11, "SUBST_CLASSES+=p"))
+	ctx.varassign(t.NewMkLine("filename.mk", 12, "SUBST_FILES.p=Makefile"))
+	ctx.varassign(t.NewMkLine("filename.mk", 13, "SUBST_SED.p=s,@PREFIX@,${PREFIX},g"))
 
 	t.CheckEquals(ctx.isComplete(), false)
 
-	ctx.Varassign(t.NewMkLine("filename.mk", 14, "SUBST_STAGE.p=post-configure"))
+	ctx.varassign(t.NewMkLine("filename.mk", 14, "SUBST_STAGE.p=post-configure"))
 
 	t.CheckEquals(ctx.isComplete(), true)
 
