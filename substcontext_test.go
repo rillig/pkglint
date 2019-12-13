@@ -1372,3 +1372,52 @@ func (s *Suite) Test_substBlock_isComplete__complete(c *check.C) {
 		"NOTE: filename.mk:13: The substitution command \"s,@PREFIX@,${PREFIX},g\" " +
 			"can be replaced with \"SUBST_VARS.p= PREFIX\".")
 }
+
+// With every .if directive, a new scope is created, to properly
+// keep track of the conditional level at which the SUBST classes
+// are declared.
+func (s *Suite) Test_substScope__conditionals(c *check.C) {
+	t := s.Init(c)
+
+	ctx := NewSubstContext()
+
+	line := func(text string) {
+		mkline := t.NewMkLine("filename.mk", 123, text)
+		ctx.Process(mkline)
+	}
+	verifyScopes := func(n int) {
+		t.CheckEquals(len(ctx.scopes), n)
+	}
+
+	verifyScopes(1)
+
+	line(".if 1")
+	verifyScopes(2)
+
+	line(".  if 1")
+	verifyScopes(3)
+
+	line(".    if 1")
+	verifyScopes(4)
+
+	line(".    elif 1")
+	verifyScopes(4)
+
+	line(".    else")
+	verifyScopes(4)
+
+	line(".    endif")
+	verifyScopes(3)
+
+	line(".  endif")
+	verifyScopes(2)
+
+	line(".endif")
+	verifyScopes(1)
+
+	// An unbalanced .endif must not lead to a panic.
+	line(".endif")
+	verifyScopes(1)
+
+	ctx.Finish(NewLineEOF("filename.mk"))
+}

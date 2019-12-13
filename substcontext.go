@@ -11,11 +11,14 @@ type SubstContext struct {
 	// Deprecated: will be replaced with substScopes
 	block substBlock
 
+	scopes []*substScope
+
 	once Once
 }
 
 func NewSubstContext() *SubstContext {
-	ctx := SubstContext{}
+	ctx := SubstContext{
+		scopes: []*substScope{newSubstScope()}}
 	ctx.reset()
 	return &ctx
 }
@@ -334,7 +337,7 @@ func (ctx *SubstContext) directive(mkline *MkLine) {
 	dir := mkline.Directive()
 	switch dir {
 	case "if":
-		ctx.block.enter()
+		ctx.enter()
 
 	case "elif", "else":
 		ctx.nextBranch(mkline, dir)
@@ -342,6 +345,11 @@ func (ctx *SubstContext) directive(mkline *MkLine) {
 	case "endif":
 		ctx.leave(mkline)
 	}
+}
+
+func (ctx *SubstContext) enter() {
+	ctx.block.enter()
+	ctx.scopes = append(ctx.scopes, newSubstScope())
 }
 
 func (ctx *SubstContext) nextBranch(mkline *MkLine, dir string) {
@@ -363,6 +371,9 @@ func (ctx *SubstContext) leave(diag Diagnoser) {
 		ctx.block.conds = ctx.block.conds[:len(ctx.block.conds)-1]
 	}
 	ctx.block.cond().union(top)
+	if len(ctx.scopes) > 1 {
+		ctx.scopes = ctx.scopes[:len(ctx.scopes)-1]
+	}
 }
 
 func (ctx *SubstContext) finishBlock(diag Diagnoser) {
@@ -484,7 +495,9 @@ func (ctx *substBlock) activeId() string {
 }
 
 type substBlock struct {
-	id string
+	id        string
+	seenEmpty bool
+	done      bool
 
 	foreignAllowed map[string]struct{}
 	foreign        []*MkLine
@@ -495,7 +508,7 @@ type substBlock struct {
 func newSubstBlock(id string) *substBlock {
 	cond := newSubstCond()
 	cond.enterBranch(true)
-	return &substBlock{id, nil, nil, []*substCond{cond}}
+	return &substBlock{id, false, false, nil, nil, []*substCond{cond}}
 }
 
 func (ctx *substBlock) dupList(mkline *MkLine, part substSeen, autofixPart substSeen) {
@@ -588,6 +601,80 @@ func (ctx *substBlock) seenInBranch(part substSeen) bool {
 		}
 	}
 	return false
+}
+
+func (ctx *substBlock) finish(diag Diagnoser) {
+	if ctx.seen().hasAny(ssAll) {
+		ctx.checkBlockComplete(diag)
+		ctx.checkForeignVariables()
+		ctx.done = true
+	}
+}
+
+type substScope struct {
+	defs map[string]*substBlock
+	uses map[string]*substCond
+}
+
+func newSubstScope() *substScope {
+	return &substScope{map[string]*substBlock{}, map[string]*substCond{}}
+}
+
+func (s *substScope) block(id string) *substBlock {
+	assertNotNil(s.defs[id])
+	return s.defs[id]
+}
+
+func (s *substScope) define(id string) {
+	assert(s.defs[id] == nil)
+	s.defs[id] = newSubstBlock(id)
+}
+
+func (s *substScope) use(id string) *substCond {
+	cond := s.uses[id]
+	if cond == nil {
+		cond = &substCond{false, ssAll, ssNone, false}
+		s.uses[id] = cond
+	}
+	return cond
+}
+
+func (s *substScope) isDone(id string) bool {
+	def := s.defs[id]
+	return def != nil && def.done
+}
+
+func (s *substScope) isDefined(id string) bool { return s.defs[id] != nil }
+
+func (s *substScope) markAsDone(id string) { s.defs[id].done = true }
+
+func (s *substScope) nextBranch(diag Diagnoser, isElse bool) {
+	for _, block := range s.defs { // TODO: in order
+		cond := block.cond()
+		cond.total.retain(cond.curr)
+		if !block.isConditional() {
+			s.leave(diag, nil)
+		}
+		cond.curr = ssNone
+		cond.seenElse = isElse
+
+	}
+}
+
+func (s *substScope) leave(diag Diagnoser, parent *substScope) {
+	s.finish(diag)
+
+	for id, cond := range s.uses {
+		parent.use(id).curr.union(cond.total)
+	}
+}
+
+func (s *substScope) finish(diag Diagnoser) {
+	for _, block := range s.defs {
+		if !block.isConditional() {
+			block.finish(diag)
+		}
+	}
 }
 
 type substCond struct {
