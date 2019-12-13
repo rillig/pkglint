@@ -516,12 +516,8 @@ func (ctx *SubstContext) isComplete() bool {
 }
 
 // isConditional returns whether the current line is at a deeper conditional
-// level than the corresponding start of the SUBST block.
-//
-// The start of the block is most often the SUBST_CLASSES line.
-// When more than one class is added to SUBST_CLASSES in a single line,
-// the start of the block is the first variable assignment that uses the
-// corresponding class ID.
+// level than the assignment where the corresponding class ID is added to
+// SUBST_CLASSES.
 //
 // TODO: Adjust the implementation to this description.
 func (ctx *SubstContext) isConditional() bool {
