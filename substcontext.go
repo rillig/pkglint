@@ -291,7 +291,7 @@ func (ctx *SubstContext) suggestSubstVars(mkline *MkLine) {
 		// assignment operators on them. It's probably not worth the
 		// effort, though.
 
-		ctx.seen().set(ssVars | ssVarsAutofix)
+		ctx.seen().union(ssVars | ssVarsAutofix)
 	}
 }
 
@@ -411,7 +411,7 @@ func (ctx *SubstContext) finishBlock(diag Diagnoser) {
 		return
 	}
 
-	if ctx.seen().get(ssAll) {
+	if ctx.seen().hasAny(ssAll) {
 		ctx.checkBlockComplete(diag)
 		ctx.checkForeignVariables()
 	} else {
@@ -617,8 +617,15 @@ const (
 	ssNone substSeen = 0
 )
 
-func (s *substSeen) set(part substSeen)          { *s |= part }
-func (s *substSeen) get(part substSeen) bool     { return *s&part != 0 }
+func (s *substSeen) set(part substSeen) {
+	assert(part&(part-1) == 0)
+	*s |= part
+}
+func (s *substSeen) get(part substSeen) bool {
+	assert(part&(part-1) == 0)
+	return *s&part != 0
+}
+func (s *substSeen) hasAny(other substSeen) bool { return *s&other != 0 }
 func (s *substSeen) hasAll(other substSeen) bool { return *s&other == other }
 func (s *substSeen) union(other substSeen)       { *s |= other }
 func (s *substSeen) retain(other substSeen)      { *s &= other }
