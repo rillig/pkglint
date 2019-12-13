@@ -8,9 +8,6 @@ type SubstContext struct {
 	queuedIds []string
 	doneIds   map[string]bool
 
-	foreignAllowed map[string]struct{}
-	foreign        []*MkLine
-
 	substBlock
 
 	once Once
@@ -216,7 +213,7 @@ func (ctx *SubstContext) varassignSed(mkline *MkLine) {
 	ctx.suggestSubstVars(mkline)
 }
 
-func (ctx *SubstContext) varassignVars(mkline *MkLine) {
+func (ctx *substBlock) varassignVars(mkline *MkLine) {
 	ctx.dupList(mkline, ssVars, ssVarsAutofix)
 	ctx.seen().set(ssTransform)
 
@@ -225,12 +222,12 @@ func (ctx *SubstContext) varassignVars(mkline *MkLine) {
 	}
 }
 
-func (ctx *SubstContext) varassignFilterCmd(mkline *MkLine) {
+func (ctx *substBlock) varassignFilterCmd(mkline *MkLine) {
 	ctx.dupString(mkline, ssFilterCmd)
 	ctx.seen().set(ssTransform)
 }
 
-func (ctx *SubstContext) suggestSubstVars(mkline *MkLine) {
+func (ctx *substBlock) suggestSubstVars(mkline *MkLine) {
 
 	tokens, _ := splitIntoShellTokens(mkline.Line, mkline.Value())
 	for _, token := range tokens {
@@ -267,7 +264,7 @@ func (ctx *SubstContext) suggestSubstVars(mkline *MkLine) {
 
 // extractVarname extracts the variable name from a sed command of the form
 // s,@VARNAME@,${VARNAME}, and some related variants thereof.
-func (*SubstContext) extractVarname(token string) string {
+func (*substBlock) extractVarname(token string) string {
 	parser := NewMkLexer(token, nil)
 	lexer := parser.lexer
 	if !lexer.SkipByte('s') {
@@ -386,7 +383,7 @@ func (ctx *SubstContext) finishBlock(diag Diagnoser) {
 	ctx.reset()
 }
 
-func (ctx *SubstContext) checkForeignVariables() {
+func (ctx *substBlock) checkForeignVariables() {
 	ctx.forEachForeignVar(func(mkline *MkLine) {
 		mkline.Warnf("Foreign variable %q in SUBST block.", mkline.Varname())
 	})
@@ -415,20 +412,20 @@ func (*SubstContext) warnUndefinedBlock(diag Diagnoser, id string) {
 // In addition, variables that are mentioned in SUBST_VARS may also
 // be defined there because they closely relate to the SUBST block.
 
-func (ctx *SubstContext) allowVar(varname string) {
+func (ctx *substBlock) allowVar(varname string) {
 	if ctx.foreignAllowed == nil {
 		ctx.foreignAllowed = make(map[string]struct{})
 	}
 	ctx.foreignAllowed[varname] = struct{}{}
 }
 
-func (ctx *SubstContext) rememberForeign(mkline *MkLine) {
+func (ctx *substBlock) rememberForeign(mkline *MkLine) {
 	ctx.foreign = append(ctx.foreign, mkline)
 }
 
 // forEachForeignVar performs the given action for each variable that
 // is defined in the SUBST block and is not mentioned in SUBST_VARS.
-func (ctx *SubstContext) forEachForeignVar(action func(*MkLine)) {
+func (ctx *substBlock) forEachForeignVar(action func(*MkLine)) {
 	for _, foreign := range ctx.foreign {
 		if _, ok := ctx.foreignAllowed[foreign.Varname()]; !ok {
 			action(foreign)
@@ -478,11 +475,13 @@ func (ctx *SubstContext) isDone(varparam string) bool {
 	return ctx.doneIds[varparam]
 }
 
-func (ctx *SubstContext) isActive() bool { return ctx.id != "" }
+// TODO: As soon as there are multiple blocks, the activeness
+//  must be handled by the SubstContext again.
+func (ctx *substBlock) isActive() bool { return ctx.id != "" }
 
 func (ctx *SubstContext) isActiveId(id string) bool { return ctx.id == id }
 
-func (ctx *SubstContext) activeId() string {
+func (ctx *substBlock) activeId() string {
 	assert(ctx.isActive())
 	return ctx.id
 }
@@ -490,11 +489,14 @@ func (ctx *SubstContext) activeId() string {
 type substBlock struct {
 	id string
 
+	foreignAllowed map[string]struct{}
+	foreign        []*MkLine
+
 	conds []*substCond
 }
 
 func newSubstBlock(id string) *substBlock {
-	return &substBlock{id, []*substCond{{seenElse: true}}}
+	return &substBlock{id, nil, nil, []*substCond{{seenElse: true}}}
 }
 
 func (ctx *substBlock) dupList(mkline *MkLine, part substSeen, autofixPart substSeen) {

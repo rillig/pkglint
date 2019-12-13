@@ -609,7 +609,7 @@ func (s *Suite) Test_SubstContext_varassignStage__without_NO_CONFIGURE(c *check.
 
 // Before 2019-12-12, pkglint wrongly warned about variables that were
 // not obviously SUBST variables, even if they were used later in SUBST_VARS.
-func (s *Suite) Test_SubstContext_varassignVars__var_before_SUBST_VARS(c *check.C) {
+func (s *Suite) Test_substBlock_varassignVars__var_before_SUBST_VARS(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -632,7 +632,7 @@ func (s *Suite) Test_SubstContext_varassignVars__var_before_SUBST_VARS(c *check.
 		"WARN: filename.mk:4: Foreign variable \"FOREIGN\" in SUBST block.")
 }
 
-func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {
+func (s *Suite) Test_substBlock_suggestSubstVars(c *check.C) {
 	t := s.Init(c)
 
 	t.Chdir(".")
@@ -756,7 +756,7 @@ func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {
 
 // If the SUBST_CLASS identifier ends with a plus, the generated code must
 // use the correct assignment operator and be nicely formatted.
-func (s *Suite) Test_SubstContext_suggestSubstVars__plus(c *check.C) {
+func (s *Suite) Test_substBlock_suggestSubstVars__plus(c *check.C) {
 	t := s.Init(c)
 
 	t.Chdir(".")
@@ -790,7 +790,7 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__plus(c *check.C) {
 // The last of the SUBST_SED variables is 15 characters wide. When SUBST_SED
 // is replaced with SUBST_VARS, this becomes 16 characters and therefore
 // requires the whole paragraph to be indented by one more tab.
-func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_realign_paragraph(c *check.C) {
+func (s *Suite) Test_substBlock_suggestSubstVars__autofix_realign_paragraph(c *check.C) {
 	t := s.Init(c)
 
 	t.Chdir(".")
@@ -822,7 +822,7 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_realign_paragraph(c 
 		"SUBST_VARS.pfx+=        PREFIX")
 }
 
-func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_sed(c *check.C) {
+func (s *Suite) Test_substBlock_suggestSubstVars__autofix_plus_sed(c *check.C) {
 	t := s.Init(c)
 
 	t.Chdir(".")
@@ -853,7 +853,7 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_sed(c *check.C)
 		"SUBST_SED.pfx+=         -e s,@PREFIX@,other,g")
 }
 
-func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_vars(c *check.C) {
+func (s *Suite) Test_substBlock_suggestSubstVars__autofix_plus_vars(c *check.C) {
 	t := s.Init(c)
 
 	t.Chdir(".")
@@ -885,7 +885,7 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_plus_vars(c *check.C
 		"SUBST_VARS.id+= PKGMANDIR")
 }
 
-func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_indentation(c *check.C) {
+func (s *Suite) Test_substBlock_suggestSubstVars__autofix_indentation(c *check.C) {
 	t := s.Init(c)
 
 	t.Chdir(".")
@@ -915,7 +915,7 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__autofix_indentation(c *check
 		"SUBST_VARS.fix-paths=           PREFIX")
 }
 
-func (s *Suite) Test_SubstContext_suggestSubstVars__conditional(c *check.C) {
+func (s *Suite) Test_substBlock_suggestSubstVars__conditional(c *check.C) {
 	t := s.Init(c)
 
 	t.Chdir(".")
@@ -951,11 +951,11 @@ func (s *Suite) Test_SubstContext_suggestSubstVars__conditional(c *check.C) {
 		".endif")
 }
 
-func (s *Suite) Test_SubstContext_extractVarname(c *check.C) {
+func (s *Suite) Test_substBlock_extractVarname(c *check.C) {
 	t := s.Init(c)
 
 	test := func(input, expected string) {
-		t.CheckEquals((*SubstContext).extractVarname(nil, input), expected)
+		t.CheckEquals((*substBlock).extractVarname(nil, input), expected)
 	}
 
 	// A simple variable name.
