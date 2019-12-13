@@ -162,6 +162,348 @@ func (ctx *SubstContext) varassignDifferentClass(mkline *MkLine) (ok bool) {
 	return true
 }
 
+func (*SubstContext) isForeign(varcanon string) bool {
+	switch varcanon {
+	case
+		"SUBST_STAGE.*",
+		"SUBST_MESSAGE.*",
+		"SUBST_FILES.*",
+		"SUBST_SED.*",
+		"SUBST_VARS.*",
+		"SUBST_FILTER_CMD.*":
+		return false
+	}
+	return true
+}
+
+func (*SubstContext) isListCanon(varcanon string) bool {
+	switch varcanon {
+	case
+		"SUBST_FILES.*",
+		"SUBST_SED.*",
+		"SUBST_VARS.*":
+		return true
+	}
+	return false
+}
+
+func (ctx *SubstContext) directive(mkline *MkLine) {
+	dir := mkline.Directive()
+	switch dir {
+	case "if":
+		ctx.enter()
+
+	case "elif", "else":
+		ctx.nextBranch(mkline, dir)
+
+	case "endif":
+		ctx.leave(mkline)
+	}
+}
+
+func (ctx *SubstContext) enter() {
+	ctx.block.enter()
+	ctx.scopes = append(ctx.scopes, newSubstScope())
+}
+
+func (ctx *SubstContext) nextBranch(mkline *MkLine, dir string) {
+	top := ctx.block.cond()
+	top.leaveBranch()
+	if !ctx.block.isConditional() {
+		ctx.finishBlock(mkline)
+	}
+	top.enterBranch(dir == "else")
+}
+
+func (ctx *SubstContext) leave(diag Diagnoser) {
+	top := ctx.block.cond()
+	top.leaveBranch()
+	if !ctx.block.isConditional() {
+		ctx.finishBlock(diag)
+	}
+	if len(ctx.block.conds) > 1 {
+		ctx.block.conds = ctx.block.conds[:len(ctx.block.conds)-1]
+	}
+	ctx.block.cond().union(top)
+	if len(ctx.scopes) > 1 {
+		ctx.scopes = ctx.scopes[:len(ctx.scopes)-1]
+	}
+}
+
+func (ctx *SubstContext) finishBlock(diag Diagnoser) {
+	if !ctx.block.isActive() {
+		return
+	}
+
+	if ctx.block.seen().hasAny(ssAll) {
+		ctx.block.checkBlockComplete(diag)
+		ctx.block.checkForeignVariables()
+	} else {
+		ctx.markAsNotDone()
+	}
+
+	ctx.reset()
+}
+
+func (ctx *SubstContext) finishFile(diag Diagnoser) {
+	for _, id := range ctx.queuedIds {
+		if id != "" && !ctx.isDone(id) {
+			ctx.warnUndefinedBlock(diag, id)
+		}
+	}
+}
+
+func (*SubstContext) warnUndefinedBlock(diag Diagnoser, id string) {
+	diag.Warnf("Missing SUBST block for %q.", id)
+	diag.Explain(
+		"After adding a SUBST class to SUBST_CLASSES,",
+		"the remaining SUBST variables should be defined in the same file.",
+		"",
+		"See mk/subst.mk for the comprehensive documentation.")
+}
+
+func (ctx *SubstContext) reset() {
+	ctx.block.foreignAllowed = nil
+	ctx.block.foreign = nil
+	ctx.block = *newSubstBlock("")
+}
+
+func (ctx *SubstContext) setActiveId(id string) {
+	ctx.block.id = id
+	ctx.block.cond().top = true
+	ctx.markAsDone(id)
+}
+
+func (ctx *SubstContext) queue(id string) {
+	ctx.queuedIds = append(ctx.queuedIds, id)
+}
+
+func (ctx *SubstContext) start(id string) bool {
+	for i, queuedId := range ctx.queuedIds {
+		if queuedId == id {
+			ctx.queuedIds[i] = ""
+			ctx.setActiveId(id)
+			return true
+		}
+	}
+	return false
+}
+
+func (ctx *SubstContext) markAsDone(id string) {
+	if ctx.doneIds == nil {
+		ctx.doneIds = map[string]bool{}
+	}
+	ctx.doneIds[id] = true
+}
+
+func (ctx *SubstContext) markAsNotDone() {
+	ctx.doneIds[ctx.block.id] = false
+}
+
+func (ctx *SubstContext) isDone(varparam string) bool {
+	return ctx.doneIds[varparam]
+}
+
+// TODO: As soon as there are multiple blocks, the activeness
+//  must be handled by the SubstContext again.
+func (ctx *substBlock) isActive() bool { return ctx.id != "" }
+
+func (ctx *SubstContext) isActiveId(id string) bool { return ctx.block.id == id }
+
+func (ctx *substBlock) activeId() string {
+	assert(ctx.isActive())
+	return ctx.id
+}
+
+type substScope struct {
+	defs map[string]*substBlock
+	uses map[string]*substCond
+}
+
+func newSubstScope() *substScope {
+	return &substScope{map[string]*substBlock{}, map[string]*substCond{}}
+}
+
+func (s *substScope) block(id string) *substBlock {
+	assertNotNil(s.defs[id])
+	return s.defs[id]
+}
+
+func (s *substScope) define(id string) {
+	assert(s.defs[id] == nil)
+	s.defs[id] = newSubstBlock(id)
+}
+
+func (s *substScope) use(id string) *substCond {
+	cond := s.uses[id]
+	if cond == nil {
+		cond = &substCond{false, ssAll, ssNone, false}
+		s.uses[id] = cond
+	}
+	return cond
+}
+
+func (s *substScope) isDone(id string) bool {
+	def := s.defs[id]
+	return def != nil && def.done
+}
+
+func (s *substScope) isDefined(id string) bool { return s.defs[id] != nil }
+
+func (s *substScope) markAsDone(id string) { s.defs[id].done = true }
+
+func (s *substScope) nextBranch(diag Diagnoser, isElse bool) {
+	for _, block := range s.defs { // TODO: in order
+		cond := block.cond()
+		cond.total.retainAll(cond.curr)
+		if !block.isConditional() {
+			s.leave(diag, nil)
+		}
+		cond.curr = ssNone
+		cond.seenElse = isElse
+
+	}
+}
+
+func (s *substScope) leave(diag Diagnoser, parent *substScope) {
+	s.finish(diag)
+
+	for id, cond := range s.uses {
+		parent.use(id).curr.addAll(cond.total)
+	}
+}
+
+func (s *substScope) finish(diag Diagnoser) {
+	for _, block := range s.defs {
+		if !block.isConditional() {
+			block.finish(diag)
+		}
+	}
+}
+
+type substBlock struct {
+	id        string
+	seenEmpty bool
+	done      bool
+
+	foreignAllowed map[string]struct{}
+	foreign        []*MkLine
+
+	conds []*substCond
+}
+
+func newSubstBlock(id string) *substBlock {
+	cond := newSubstCond()
+	cond.enterBranch(true)
+	return &substBlock{id, false, false, nil, nil, []*substCond{cond}}
+}
+
+func (ctx *substBlock) dupList(mkline *MkLine, part substSeen, autofixPart substSeen) {
+	if ctx.seenInBranch(part) && mkline.Op() != opAssignAppend {
+		ctx.fixOperatorAppend(mkline, ctx.seenInBranch(autofixPart))
+	}
+	ctx.seen().set(part)
+}
+
+func (ctx *substBlock) dupString(mkline *MkLine, part substSeen) {
+	if ctx.seenInBranch(part) {
+		mkline.Warnf("Duplicate definition of %q.", mkline.Varname())
+	}
+	ctx.seen().set(part)
+}
+
+func (ctx *substBlock) fixOperatorAppend(mkline *MkLine, dueToAutofix bool) {
+	before := mkline.ValueAlign()
+	after := alignWith(mkline.Varname()+"+=", before)
+
+	fix := mkline.Autofix()
+	if dueToAutofix {
+		fix.Notef(SilentAutofixFormat)
+	} else {
+		fix.Warnf("All but the first assignment to %q should use the \"+=\" operator.",
+			mkline.Varname())
+	}
+	fix.Replace(before, after)
+	fix.Apply()
+}
+
+func (ctx *substBlock) enter() {
+	top := substCond{total: ssAll}
+	ctx.conds = append(ctx.conds, &top)
+}
+
+// TODO: nextBranch
+
+// TODO: leave
+
+// TODO: finish
+
+// TODO: rename
+func (ctx *substBlock) checkBlockComplete(diag Diagnoser) {
+	id := ctx.id
+	assert(id != "")
+	seen := ctx.seen()
+
+	if !seen.has(ssStage) {
+		diag.Warnf("Incomplete SUBST block: SUBST_STAGE.%s missing.", id)
+	}
+	if !seen.has(ssFiles) {
+		diag.Warnf("Incomplete SUBST block: SUBST_FILES.%s missing.", id)
+	}
+	if !seen.has(ssTransform) {
+		diag.Warnf("Incomplete SUBST block: SUBST_SED.%[1]s, SUBST_VARS.%[1]s or SUBST_FILTER_CMD.%[1]s missing.", id)
+	}
+}
+
+func (ctx *substBlock) isComplete() bool {
+	return ctx.seen().hasAll(ssStage | ssFiles | ssTransform)
+}
+
+// isConditional returns whether the current line is at a deeper conditional
+// level than the assignment where the corresponding class ID is added to
+// SUBST_CLASSES.
+//
+// TODO: Adjust the implementation to this description.
+func (ctx *substBlock) isConditional() bool {
+	return ctx.cond().isConditional()
+}
+
+// cond returns information about the parts of the SUBST block that
+// have already been seen in the current leaf branch of the conditionals.
+func (ctx *substBlock) seen() *substSeen {
+	return &ctx.cond().curr
+}
+
+// cond returns information about the current branch of conditionals.
+func (ctx *substBlock) cond() *substCond {
+	return ctx.conds[len(ctx.conds)-1]
+}
+
+// Returns true if the given flag from substSeen has been seen
+// somewhere in the conditional path of the current line.
+func (ctx *substBlock) seenInBranch(part substSeen) bool {
+	for _, cond := range ctx.conds {
+		if cond.curr.has(part) {
+			return true
+		}
+	}
+	return false
+}
+
+func (ctx *substBlock) finish(diag Diagnoser) {
+	if ctx.seen().hasAny(ssAll) {
+		ctx.checkBlockComplete(diag)
+		ctx.checkForeignVariables()
+		ctx.done = true
+	}
+}
+
+func (ctx *substBlock) checkForeignVariables() {
+	ctx.forEachForeignVar(func(mkline *MkLine) {
+		mkline.Warnf("Foreign variable %q in SUBST block.", mkline.Varname())
+	})
+}
+
 func (ctx *substBlock) varassignStage(mkline *MkLine) {
 	if ctx.isConditional() {
 		mkline.Warnf("%s should not be defined conditionally.", mkline.Varname())
@@ -308,112 +650,6 @@ func (*substBlock) extractVarname(token string) string {
 	return varname
 }
 
-func (*SubstContext) isForeign(varcanon string) bool {
-	switch varcanon {
-	case
-		"SUBST_STAGE.*",
-		"SUBST_MESSAGE.*",
-		"SUBST_FILES.*",
-		"SUBST_SED.*",
-		"SUBST_VARS.*",
-		"SUBST_FILTER_CMD.*":
-		return false
-	}
-	return true
-}
-
-func (*SubstContext) isListCanon(varcanon string) bool {
-	switch varcanon {
-	case
-		"SUBST_FILES.*",
-		"SUBST_SED.*",
-		"SUBST_VARS.*":
-		return true
-	}
-	return false
-}
-
-func (ctx *SubstContext) directive(mkline *MkLine) {
-	dir := mkline.Directive()
-	switch dir {
-	case "if":
-		ctx.enter()
-
-	case "elif", "else":
-		ctx.nextBranch(mkline, dir)
-
-	case "endif":
-		ctx.leave(mkline)
-	}
-}
-
-func (ctx *SubstContext) enter() {
-	ctx.block.enter()
-	ctx.scopes = append(ctx.scopes, newSubstScope())
-}
-
-func (ctx *SubstContext) nextBranch(mkline *MkLine, dir string) {
-	top := ctx.block.cond()
-	top.leaveBranch()
-	if !ctx.block.isConditional() {
-		ctx.finishBlock(mkline)
-	}
-	top.enterBranch(dir == "else")
-}
-
-func (ctx *SubstContext) leave(diag Diagnoser) {
-	top := ctx.block.cond()
-	top.leaveBranch()
-	if !ctx.block.isConditional() {
-		ctx.finishBlock(diag)
-	}
-	if len(ctx.block.conds) > 1 {
-		ctx.block.conds = ctx.block.conds[:len(ctx.block.conds)-1]
-	}
-	ctx.block.cond().union(top)
-	if len(ctx.scopes) > 1 {
-		ctx.scopes = ctx.scopes[:len(ctx.scopes)-1]
-	}
-}
-
-func (ctx *SubstContext) finishBlock(diag Diagnoser) {
-	if !ctx.block.isActive() {
-		return
-	}
-
-	if ctx.block.seen().hasAny(ssAll) {
-		ctx.block.checkBlockComplete(diag)
-		ctx.block.checkForeignVariables()
-	} else {
-		ctx.markAsNotDone()
-	}
-
-	ctx.reset()
-}
-
-func (ctx *substBlock) checkForeignVariables() {
-	ctx.forEachForeignVar(func(mkline *MkLine) {
-		mkline.Warnf("Foreign variable %q in SUBST block.", mkline.Varname())
-	})
-}
-
-func (ctx *SubstContext) finishFile(diag Diagnoser) {
-	for _, id := range ctx.queuedIds {
-		if id != "" && !ctx.isDone(id) {
-			ctx.warnUndefinedBlock(diag, id)
-		}
-	}
-}
-
-func (*SubstContext) warnUndefinedBlock(diag Diagnoser, id string) {
-	diag.Warnf("Missing SUBST block for %q.", id)
-	diag.Explain(
-		"After adding a SUBST class to SUBST_CLASSES,",
-		"the remaining SUBST variables should be defined in the same file.",
-		"",
-		"See mk/subst.mk for the comprehensive documentation.")
-}
-
 // In the paragraph of a SUBST block, there should be only variables
 // that actually belong to the SUBST block.
 //
@@ -437,242 +673,6 @@ func (ctx *substBlock) forEachForeignVar(action func(*MkLine)) {
 	for _, foreign := range ctx.foreign {
 		if _, ok := ctx.foreignAllowed[foreign.Varname()]; !ok {
 			action(foreign)
-		}
-	}
-}
-
-func (ctx *SubstContext) reset() {
-	ctx.block.foreignAllowed = nil
-	ctx.block.foreign = nil
-	ctx.block = *newSubstBlock("")
-}
-
-func (ctx *SubstContext) setActiveId(id string) {
-	ctx.block.id = id
-	ctx.block.cond().top = true
-	ctx.markAsDone(id)
-}
-
-func (ctx *SubstContext) queue(id string) {
-	ctx.queuedIds = append(ctx.queuedIds, id)
-}
-
-func (ctx *SubstContext) start(id string) bool {
-	for i, queuedId := range ctx.queuedIds {
-		if queuedId == id {
-			ctx.queuedIds[i] = ""
-			ctx.setActiveId(id)
-			return true
-		}
-	}
-	return false
-}
-
-func (ctx *SubstContext) markAsDone(id string) {
-	if ctx.doneIds == nil {
-		ctx.doneIds = map[string]bool{}
-	}
-	ctx.doneIds[id] = true
-}
-
-func (ctx *SubstContext) markAsNotDone() {
-	ctx.doneIds[ctx.block.id] = false
-}
-
-func (ctx *SubstContext) isDone(varparam string) bool {
-	return ctx.doneIds[varparam]
-}
-
-// TODO: As soon as there are multiple blocks, the activeness
-//  must be handled by the SubstContext again.
-func (ctx *substBlock) isActive() bool { return ctx.id != "" }
-
-func (ctx *SubstContext) isActiveId(id string) bool { return ctx.block.id == id }
-
-func (ctx *substBlock) activeId() string {
-	assert(ctx.isActive())
-	return ctx.id
-}
-
-type substBlock struct {
-	id        string
-	seenEmpty bool
-	done      bool
-
-	foreignAllowed map[string]struct{}
-	foreign        []*MkLine
-
-	conds []*substCond
-}
-
-func newSubstBlock(id string) *substBlock {
-	cond := newSubstCond()
-	cond.enterBranch(true)
-	return &substBlock{id, false, false, nil, nil, []*substCond{cond}}
-}
-
-func (ctx *substBlock) dupList(mkline *MkLine, part substSeen, autofixPart substSeen) {
-	if ctx.seenInBranch(part) && mkline.Op() != opAssignAppend {
-		ctx.fixOperatorAppend(mkline, ctx.seenInBranch(autofixPart))
-	}
-	ctx.seen().set(part)
-}
-
-func (ctx *substBlock) dupString(mkline *MkLine, part substSeen) {
-	if ctx.seenInBranch(part) {
-		mkline.Warnf("Duplicate definition of %q.", mkline.Varname())
-	}
-	ctx.seen().set(part)
-}
-
-func (ctx *substBlock) fixOperatorAppend(mkline *MkLine, dueToAutofix bool) {
-	before := mkline.ValueAlign()
-	after := alignWith(mkline.Varname()+"+=", before)
-
-	fix := mkline.Autofix()
-	if dueToAutofix {
-		fix.Notef(SilentAutofixFormat)
-	} else {
-		fix.Warnf("All but the first assignment to %q should use the \"+=\" operator.",
-			mkline.Varname())
-	}
-	fix.Replace(before, after)
-	fix.Apply()
-}
-
-func (ctx *substBlock) enter() {
-	top := substCond{total: ssAll}
-	ctx.conds = append(ctx.conds, &top)
-}
-
-// TODO: nextBranch
-
-// TODO: leave
-
-// TODO: finish
-
-// TODO: rename
-func (ctx *substBlock) checkBlockComplete(diag Diagnoser) {
-	id := ctx.id
-	assert(id != "")
-	seen := ctx.seen()
-
-	if !seen.has(ssStage) {
-		diag.Warnf("Incomplete SUBST block: SUBST_STAGE.%s missing.", id)
-	}
-	if !seen.has(ssFiles) {
-		diag.Warnf("Incomplete SUBST block: SUBST_FILES.%s missing.", id)
-	}
-	if !seen.has(ssTransform) {
-		diag.Warnf("Incomplete SUBST block: SUBST_SED.%[1]s, SUBST_VARS.%[1]s or SUBST_FILTER_CMD.%[1]s missing.", id)
-	}
-}
-
-func (ctx *substBlock) isComplete() bool {
-	return ctx.seen().hasAll(ssStage | ssFiles | ssTransform)
-}
-
-// isConditional returns whether the current line is at a deeper conditional
-// level than the assignment where the corresponding class ID is added to
-// SUBST_CLASSES.
-//
-// TODO: Adjust the implementation to this description.
-func (ctx *substBlock) isConditional() bool {
-	return ctx.cond().isConditional()
-}
-
-// cond returns information about the parts of the SUBST block that
-// have already been seen in the current leaf branch of the conditionals.
-func (ctx *substBlock) seen() *substSeen {
-	return &ctx.cond().curr
-}
-
-// cond returns information about the current branch of conditionals.
-func (ctx *substBlock) cond() *substCond {
-	return ctx.conds[len(ctx.conds)-1]
-}
-
-// Returns true if the given flag from substSeen has been seen
-// somewhere in the conditional path of the current line.
-func (ctx *substBlock) seenInBranch(part substSeen) bool {
-	for _, cond := range ctx.conds {
-		if cond.curr.has(part) {
-			return true
-		}
-	}
-	return false
-}
-
-func (ctx *substBlock) finish(diag Diagnoser) {
-	if ctx.seen().hasAny(ssAll) {
-		ctx.checkBlockComplete(diag)
-		ctx.checkForeignVariables()
-		ctx.done = true
-	}
-}
-
-type substScope struct {
-	defs map[string]*substBlock
-	uses map[string]*substCond
-}
-
-func newSubstScope() *substScope {
-	return &substScope{map[string]*substBlock{}, map[string]*substCond{}}
-}
-
-func (s *substScope) block(id string) *substBlock {
-	assertNotNil(s.defs[id])
-	return s.defs[id]
-}
-
-func (s *substScope) define(id string) {
-	assert(s.defs[id] == nil)
-	s.defs[id] = newSubstBlock(id)
-}
-
-func (s *substScope) use(id string) *substCond {
-	cond := s.uses[id]
-	if cond == nil {
-		cond = &substCond{false, ssAll, ssNone, false}
-		s.uses[id] = cond
-	}
-	return cond
-}
-
-func (s *substScope) isDone(id string) bool {
-	def := s.defs[id]
-	return def != nil && def.done
-}
-
-func (s *substScope) isDefined(id string) bool { return s.defs[id] != nil }
-
-func (s *substScope) markAsDone(id string) { s.defs[id].done = true }
-
-func (s *substScope) nextBranch(diag Diagnoser, isElse bool) {
-	for _, block := range s.defs { // TODO: in order
-		cond := block.cond()
-		cond.total.retainAll(cond.curr)
-		if !block.isConditional() {
-			s.leave(diag, nil)
-		}
-		cond.curr = ssNone
-		cond.seenElse = isElse
-
-	}
-}
-
-func (s *substScope) leave(diag Diagnoser, parent *substScope) {
-	s.finish(diag)
-
-	for id, cond := range s.uses {
-		parent.use(id).curr.addAll(cond.total)
-	}
-}
-
-func (s *substScope) finish(diag Diagnoser) {
-	for _, block := range s.defs {
-		if !block.isConditional() {
-			block.finish(diag)
 		}
 	}
 }
