@@ -632,22 +632,6 @@ func (s *Suite) Test_SubstContext_varassignVars__var_before_SUBST_VARS(c *check.
 		"WARN: filename.mk:4: Foreign variable \"FOREIGN\" in SUBST block.")
 }
 
-func (s *Suite) Test_substBlock_dupList__conditional_before_unconditional(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		"SUBST_CLASSES+= os",
-		"SUBST_STAGE.os= post-configure",
-		".if 1",
-		"SUBST_FILES.os= conditional",
-		".endif",
-		"SUBST_FILES.os= unconditional",
-		"SUBST_VARS.os=  OPSYS")
-
-	// TODO: Warn that the conditional line is overwritten.
-	t.CheckOutputEmpty()
-}
-
 func (s *Suite) Test_SubstContext_suggestSubstVars(c *check.C) {
 	t := s.Init(c)
 
@@ -1319,6 +1303,22 @@ func (s *Suite) Test_SubstContext_finishBlock__nested_conditionals(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_FILES.os missing.")
+}
+
+func (s *Suite) Test_substBlock_dupList__conditional_before_unconditional(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+= os",
+		"SUBST_STAGE.os= post-configure",
+		".if 1",
+		"SUBST_FILES.os= conditional",
+		".endif",
+		"SUBST_FILES.os= unconditional",
+		"SUBST_VARS.os=  OPSYS")
+
+	// TODO: Warn that the conditional line is overwritten.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_substBlock_isComplete__incomplete(c *check.C) {

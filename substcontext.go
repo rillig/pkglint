@@ -230,35 +230,6 @@ func (ctx *SubstContext) varassignFilterCmd(mkline *MkLine) {
 	ctx.seen().set(ssTransform)
 }
 
-func (ctx *substBlock) dupList(mkline *MkLine, part substSeen, autofixPart substSeen) {
-	if ctx.seenInBranch(part) && mkline.Op() != opAssignAppend {
-		ctx.fixOperatorAppend(mkline, ctx.seenInBranch(autofixPart))
-	}
-	ctx.seen().set(part)
-}
-
-func (ctx *substBlock) dupString(mkline *MkLine, part substSeen) {
-	if ctx.seenInBranch(part) {
-		mkline.Warnf("Duplicate definition of %q.", mkline.Varname())
-	}
-	ctx.seen().set(part)
-}
-
-func (ctx *substBlock) fixOperatorAppend(mkline *MkLine, dueToAutofix bool) {
-	before := mkline.ValueAlign()
-	after := alignWith(mkline.Varname()+"+=", before)
-
-	fix := mkline.Autofix()
-	if dueToAutofix {
-		fix.Notef(SilentAutofixFormat)
-	} else {
-		fix.Warnf("All but the first assignment to %q should use the \"+=\" operator.",
-			mkline.Varname())
-	}
-	fix.Replace(before, after)
-	fix.Apply()
-}
-
 func (ctx *SubstContext) suggestSubstVars(mkline *MkLine) {
 
 	tokens, _ := splitIntoShellTokens(mkline.Line, mkline.Value())
@@ -375,11 +346,6 @@ func (ctx *SubstContext) directive(mkline *MkLine) {
 	}
 }
 
-func (ctx *substBlock) enter() {
-	top := substCond{total: ssAll}
-	ctx.conds = append(ctx.conds, &top)
-}
-
 func (ctx *SubstContext) nextBranch(mkline *MkLine, dir string) {
 	top := ctx.cond()
 	top.total.retain(top.curr)
@@ -418,20 +384,6 @@ func (ctx *SubstContext) finishBlock(diag Diagnoser) {
 	}
 
 	ctx.reset()
-}
-
-func (ctx *substBlock) checkBlockComplete(diag Diagnoser) {
-	id := ctx.activeId()
-	seen := ctx.seen()
-	if !seen.get(ssStage) {
-		diag.Warnf("Incomplete SUBST block: SUBST_STAGE.%s missing.", id)
-	}
-	if !seen.get(ssFiles) {
-		diag.Warnf("Incomplete SUBST block: SUBST_FILES.%s missing.", id)
-	}
-	if !seen.get(ssTransform) {
-		diag.Warnf("Incomplete SUBST block: SUBST_SED.%[1]s, SUBST_VARS.%[1]s or SUBST_FILTER_CMD.%[1]s missing.", id)
-	}
 }
 
 func (ctx *SubstContext) checkForeignVariables() {
@@ -491,15 +443,6 @@ func (ctx *SubstContext) reset() {
 	ctx.conds = []*substCond{{seenElse: true}}
 }
 
-func (ctx *substBlock) isActive() bool { return ctx.id != "" }
-
-func (ctx *substBlock) isActiveId(id string) bool { return ctx.id == id }
-
-func (ctx *substBlock) activeId() string {
-	assert(ctx.isActive())
-	return ctx.id
-}
-
 func (ctx *SubstContext) setActiveId(id string) {
 	ctx.id = id
 	ctx.cond().top = true
@@ -536,6 +479,78 @@ func (ctx *SubstContext) isDone(varparam string) bool {
 	return ctx.doneIds[varparam]
 }
 
+func (ctx *SubstContext) isActive() bool { return ctx.id != "" }
+
+func (ctx *SubstContext) isActiveId(id string) bool { return ctx.id == id }
+
+func (ctx *SubstContext) activeId() string {
+	assert(ctx.isActive())
+	return ctx.id
+}
+
+type substBlock struct {
+	id string
+
+	conds []*substCond
+}
+
+func (ctx *substBlock) dupList(mkline *MkLine, part substSeen, autofixPart substSeen) {
+	if ctx.seenInBranch(part) && mkline.Op() != opAssignAppend {
+		ctx.fixOperatorAppend(mkline, ctx.seenInBranch(autofixPart))
+	}
+	ctx.seen().set(part)
+}
+
+func (ctx *substBlock) dupString(mkline *MkLine, part substSeen) {
+	if ctx.seenInBranch(part) {
+		mkline.Warnf("Duplicate definition of %q.", mkline.Varname())
+	}
+	ctx.seen().set(part)
+}
+
+func (ctx *substBlock) fixOperatorAppend(mkline *MkLine, dueToAutofix bool) {
+	before := mkline.ValueAlign()
+	after := alignWith(mkline.Varname()+"+=", before)
+
+	fix := mkline.Autofix()
+	if dueToAutofix {
+		fix.Notef(SilentAutofixFormat)
+	} else {
+		fix.Warnf("All but the first assignment to %q should use the \"+=\" operator.",
+			mkline.Varname())
+	}
+	fix.Replace(before, after)
+	fix.Apply()
+}
+
+func (ctx *substBlock) enter() {
+	top := substCond{total: ssAll}
+	ctx.conds = append(ctx.conds, &top)
+}
+
+// TODO: nextBranch
+
+// TODO: leave
+
+// TODO: finish
+
+// TODO: rename
+func (ctx *substBlock) checkBlockComplete(diag Diagnoser) {
+	id := ctx.id
+	assert(id != "")
+	seen := ctx.seen()
+
+	if !seen.get(ssStage) {
+		diag.Warnf("Incomplete SUBST block: SUBST_STAGE.%s missing.", id)
+	}
+	if !seen.get(ssFiles) {
+		diag.Warnf("Incomplete SUBST block: SUBST_FILES.%s missing.", id)
+	}
+	if !seen.get(ssTransform) {
+		diag.Warnf("Incomplete SUBST block: SUBST_SED.%[1]s, SUBST_VARS.%[1]s or SUBST_FILTER_CMD.%[1]s missing.", id)
+	}
+}
+
 func (ctx *substBlock) isComplete() bool {
 	return ctx.seen().hasAll(ssStage | ssFiles | ssTransform)
 }
@@ -569,12 +584,6 @@ func (ctx *substBlock) seenInBranch(part substSeen) bool {
 		}
 	}
 	return false
-}
-
-type substBlock struct {
-	id string
-
-	conds []*substCond
 }
 
 type substCond struct {
