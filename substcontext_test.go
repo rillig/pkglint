@@ -36,7 +36,7 @@ func (s *Suite) Test_SubstContext__OPSYSVARS(c *check.C) {
 	ctx.varassign(t.NewMkLine("filename.mk", 14, "SUBST_SED.prefix=s,@PREFIX@,${PREFIX},g"))
 	ctx.varassign(t.NewMkLine("filename.mk", 15, "SUBST_STAGE.prefix=post-configure"))
 
-	t.CheckEquals(ctx.isComplete(), true)
+	t.CheckEquals(ctx.block.isComplete(), true)
 
 	ctx.Finish(t.NewMkLine("filename.mk", 15, ""))
 
@@ -1328,19 +1328,19 @@ func (s *Suite) Test_substBlock_isComplete__incomplete(c *check.C) {
 
 	ctx.varassign(t.NewMkLine("filename.mk", 10, "PKGNAME=pkgname-1.0"))
 
-	t.CheckEquals(ctx.isActive(), false)
+	t.CheckEquals(ctx.block.isActive(), false)
 
 	ctx.varassign(t.NewMkLine("filename.mk", 11, "SUBST_CLASSES+=interp"))
 
-	t.CheckEquals(ctx.activeId(), "interp")
+	t.CheckEquals(ctx.block.activeId(), "interp")
 
 	ctx.varassign(t.NewMkLine("filename.mk", 12, "SUBST_FILES.interp=Makefile"))
 
-	t.CheckEquals(ctx.isComplete(), false)
+	t.CheckEquals(ctx.block.isComplete(), false)
 
 	ctx.varassign(t.NewMkLine("filename.mk", 13, "SUBST_SED.interp=s,@PREFIX@,${PREFIX},g"))
 
-	t.CheckEquals(ctx.isComplete(), false)
+	t.CheckEquals(ctx.block.isComplete(), false)
 
 	ctx.Finish(t.NewMkLine("filename.mk", 14, ""))
 
@@ -1360,11 +1360,11 @@ func (s *Suite) Test_substBlock_isComplete__complete(c *check.C) {
 	ctx.varassign(t.NewMkLine("filename.mk", 12, "SUBST_FILES.p=Makefile"))
 	ctx.varassign(t.NewMkLine("filename.mk", 13, "SUBST_SED.p=s,@PREFIX@,${PREFIX},g"))
 
-	t.CheckEquals(ctx.isComplete(), false)
+	t.CheckEquals(ctx.block.isComplete(), false)
 
 	ctx.varassign(t.NewMkLine("filename.mk", 14, "SUBST_STAGE.p=post-configure"))
 
-	t.CheckEquals(ctx.isComplete(), true)
+	t.CheckEquals(ctx.block.isComplete(), true)
 
 	ctx.Finish(t.NewMkLine("filename.mk", 15, ""))
 

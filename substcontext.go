@@ -8,7 +8,8 @@ type SubstContext struct {
 	queuedIds []string
 	doneIds   map[string]bool
 
-	substBlock
+	// Deprecated: will be replaced with substScopes
+	block substBlock
 
 	once Once
 }
@@ -43,13 +44,13 @@ func (ctx *SubstContext) varassign(mkline *MkLine) {
 	}
 
 	if ctx.isForeign(mkline.Varcanon()) {
-		if ctx.isActive() {
-			ctx.rememberForeign(mkline)
+		if ctx.block.isActive() {
+			ctx.block.rememberForeign(mkline)
 		}
 		return
 	}
 
-	if !ctx.isActive() {
+	if !ctx.block.isActive() {
 		if !ctx.varassignOutsideBlock(mkline) {
 			return
 		}
@@ -71,9 +72,9 @@ func (ctx *SubstContext) varassign(mkline *MkLine) {
 	case "SUBST_SED.*":
 		ctx.varassignSed(mkline)
 	case "SUBST_VARS.*":
-		ctx.varassignVars(mkline)
+		ctx.block.varassignVars(mkline)
 	case "SUBST_FILTER_CMD.*":
-		ctx.varassignFilterCmd(mkline)
+		ctx.block.varassignFilterCmd(mkline)
 	}
 }
 
@@ -94,17 +95,17 @@ func (ctx *SubstContext) varassignClasses(mkline *MkLine) {
 	}
 
 	id := classes[0]
-	if ctx.isActive() && !ctx.isActiveId(id) {
-		id := ctx.activeId() // since ctx.leave may reset it
+	if ctx.block.isActive() && !ctx.isActiveId(id) {
+		id := ctx.block.activeId() // since ctx.leave may reset it
 
-		for ctx.isConditional() {
+		for ctx.block.isConditional() {
 			// This will be confusing for the outer SUBST block,
 			// but since that block is assumed to be finished,
 			// this doesn't matter.
 			ctx.leave(mkline)
 		}
 
-		complete := ctx.isComplete() // since ctx.finishBlock will reset it
+		complete := ctx.block.isComplete() // since ctx.finishBlock will reset it
 		ctx.finishBlock(mkline)
 		if !complete {
 			mkline.Warnf("Subst block %q should be finished before adding the next class to SUBST_CLASSES.", id)
@@ -147,8 +148,8 @@ func (ctx *SubstContext) varassignDifferentClass(mkline *MkLine) (ok bool) {
 	varname := mkline.Varname()
 	varparam := mkline.Varparam()
 
-	if !ctx.isComplete() {
-		mkline.Warnf("Variable %q does not match SUBST class %q.", varname, ctx.activeId())
+	if !ctx.block.isComplete() {
+		mkline.Warnf("Variable %q does not match SUBST class %q.", varname, ctx.block.activeId())
 		return false
 	}
 
@@ -159,11 +160,11 @@ func (ctx *SubstContext) varassignDifferentClass(mkline *MkLine) (ok bool) {
 }
 
 func (ctx *SubstContext) varassignStage(mkline *MkLine) {
-	if ctx.isConditional() {
+	if ctx.block.isConditional() {
 		mkline.Warnf("%s should not be defined conditionally.", mkline.Varname())
 	}
 
-	ctx.dupString(mkline, ssStage)
+	ctx.block.dupString(mkline, ssStage)
 
 	value := mkline.Value()
 	if value == "pre-patch" || value == "post-patch" {
@@ -195,22 +196,22 @@ func (ctx *SubstContext) varassignStage(mkline *MkLine) {
 func (ctx *SubstContext) varassignMessages(mkline *MkLine) {
 	varname := mkline.Varname()
 
-	if ctx.isConditional() {
+	if ctx.block.isConditional() {
 		mkline.Warnf("%s should not be defined conditionally.", varname)
 	}
 
-	ctx.dupString(mkline, ssMessage)
+	ctx.block.dupString(mkline, ssMessage)
 }
 
 func (ctx *SubstContext) varassignFiles(mkline *MkLine) {
-	ctx.dupList(mkline, ssFiles, ssNone)
+	ctx.block.dupList(mkline, ssFiles, ssNone)
 }
 
 func (ctx *SubstContext) varassignSed(mkline *MkLine) {
-	ctx.dupList(mkline, ssSed, ssNone)
-	ctx.seen().set(ssTransform)
+	ctx.block.dupList(mkline, ssSed, ssNone)
+	ctx.block.seen().set(ssTransform)
 
-	ctx.suggestSubstVars(mkline)
+	ctx.block.suggestSubstVars(mkline)
 }
 
 func (ctx *substBlock) varassignVars(mkline *MkLine) {
@@ -333,7 +334,7 @@ func (ctx *SubstContext) directive(mkline *MkLine) {
 	dir := mkline.Directive()
 	switch dir {
 	case "if":
-		ctx.enter()
+		ctx.block.enter()
 
 	case "elif", "else":
 		ctx.nextBranch(mkline, dir)
@@ -344,34 +345,34 @@ func (ctx *SubstContext) directive(mkline *MkLine) {
 }
 
 func (ctx *SubstContext) nextBranch(mkline *MkLine, dir string) {
-	top := ctx.cond()
+	top := ctx.block.cond()
 	top.leaveBranch()
-	if !ctx.isConditional() {
+	if !ctx.block.isConditional() {
 		ctx.finishBlock(mkline)
 	}
 	top.enterBranch(dir == "else")
 }
 
 func (ctx *SubstContext) leave(diag Diagnoser) {
-	top := ctx.cond()
+	top := ctx.block.cond()
 	top.leaveBranch()
-	if !ctx.isConditional() {
+	if !ctx.block.isConditional() {
 		ctx.finishBlock(diag)
 	}
-	if len(ctx.conds) > 1 {
-		ctx.conds = ctx.conds[:len(ctx.conds)-1]
+	if len(ctx.block.conds) > 1 {
+		ctx.block.conds = ctx.block.conds[:len(ctx.block.conds)-1]
 	}
-	ctx.cond().union(top)
+	ctx.block.cond().union(top)
 }
 
 func (ctx *SubstContext) finishBlock(diag Diagnoser) {
-	if !ctx.isActive() {
+	if !ctx.block.isActive() {
 		return
 	}
 
-	if ctx.seen().hasAny(ssAll) {
-		ctx.checkBlockComplete(diag)
-		ctx.checkForeignVariables()
+	if ctx.block.seen().hasAny(ssAll) {
+		ctx.block.checkBlockComplete(diag)
+		ctx.block.checkForeignVariables()
 	} else {
 		ctx.markAsNotDone()
 	}
@@ -430,14 +431,14 @@ func (ctx *substBlock) forEachForeignVar(action func(*MkLine)) {
 }
 
 func (ctx *SubstContext) reset() {
-	ctx.foreignAllowed = nil
-	ctx.foreign = nil
-	ctx.substBlock = *newSubstBlock("")
+	ctx.block.foreignAllowed = nil
+	ctx.block.foreign = nil
+	ctx.block = *newSubstBlock("")
 }
 
 func (ctx *SubstContext) setActiveId(id string) {
-	ctx.id = id
-	ctx.cond().top = true
+	ctx.block.id = id
+	ctx.block.cond().top = true
 	ctx.markAsDone(id)
 }
 
@@ -464,7 +465,7 @@ func (ctx *SubstContext) markAsDone(id string) {
 }
 
 func (ctx *SubstContext) markAsNotDone() {
-	ctx.doneIds[ctx.id] = false
+	ctx.doneIds[ctx.block.id] = false
 }
 
 func (ctx *SubstContext) isDone(varparam string) bool {
@@ -475,7 +476,7 @@ func (ctx *SubstContext) isDone(varparam string) bool {
 //  must be handled by the SubstContext again.
 func (ctx *substBlock) isActive() bool { return ctx.id != "" }
 
-func (ctx *SubstContext) isActiveId(id string) bool { return ctx.id == id }
+func (ctx *SubstContext) isActiveId(id string) bool { return ctx.block.id == id }
 
 func (ctx *substBlock) activeId() string {
 	assert(ctx.isActive())
