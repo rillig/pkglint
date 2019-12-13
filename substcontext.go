@@ -23,64 +23,6 @@ func NewSubstContext() *SubstContext {
 	return &ctx
 }
 
-func (ctx *SubstContext) reset() {
-	ctx.id = ""
-	ctx.foreignAllowed = nil
-	ctx.foreign = nil
-	ctx.conds = []*substCond{{seenElse: true}}
-}
-
-type substCond struct {
-	// Tells whether a SUBST block has started at this conditional level.
-	// All variable assignments that belong to this class must happen at
-	// this conditional level or below it.
-	//
-	// TODO: For Test_SubstContext_Directive__conditional_complete,
-	//  this needs to be changed to the set of classes that have been
-	//  added to SUBST_CLASSES at this level.
-	top bool
-
-	// Collects the parts of the SUBST block that have been defined in all
-	// branches that have been parsed completely.
-	total substSeen
-
-	// Collects the parts of the SUBST block that are defined in the current
-	// branch of the conditional. At the end of the branch, they are merged
-	// into the total.
-	curr substSeen
-
-	// Marks whether the current conditional statement has
-	// an .else branch. If it doesn't, this means that all variables
-	// are potentially unset in that branch.
-	seenElse bool
-}
-
-// substSeen contains all variables that depend on a particular SUBST
-// class ID. These variables can be set in conditional branches, and
-// pkglint keeps track whether they are set in all branches or only
-// in some of them.
-type substSeen uint8
-
-const (
-	ssStage substSeen = 1 << iota
-	ssMessage
-	ssFiles
-	ssSed
-	ssVars
-	ssVarsAutofix
-	ssFilterCmd
-	ssTransform
-
-	ssAll  substSeen = 1<<iota - 1
-	ssNone substSeen = 0
-)
-
-func (s *substSeen) set(part substSeen)          { *s |= part }
-func (s *substSeen) get(part substSeen) bool     { return *s&part != 0 }
-func (s *substSeen) hasAll(other substSeen) bool { return *s&other == other }
-func (s *substSeen) union(other substSeen)       { *s |= other }
-func (s *substSeen) retain(other substSeen)      { *s &= other }
-
 func (ctx *SubstContext) Process(mkline *MkLine) {
 	switch {
 	case mkline.IsEmpty():
@@ -287,7 +229,7 @@ func (ctx *SubstContext) varassignFilterCmd(mkline *MkLine) {
 	ctx.seen().set(ssTransform)
 }
 
-func (ctx *SubstContext) isForeign(varcanon string) bool {
+func (*SubstContext) isForeign(varcanon string) bool {
 	switch varcanon {
 	case
 		"SUBST_STAGE.*",
@@ -301,7 +243,7 @@ func (ctx *SubstContext) isForeign(varcanon string) bool {
 	return true
 }
 
-func (ctx *SubstContext) isListCanon(varcanon string) bool {
+func (*SubstContext) isListCanon(varcanon string) bool {
 	switch varcanon {
 	case
 		"SUBST_FILES.*",
@@ -463,6 +405,13 @@ func (*SubstContext) extractVarname(token string) string {
 	return varname
 }
 
+func (ctx *SubstContext) reset() {
+	ctx.id = ""
+	ctx.foreignAllowed = nil
+	ctx.foreign = nil
+	ctx.conds = []*substCond{{seenElse: true}}
+}
+
 func (ctx *SubstContext) isActive() bool { return ctx.id != "" }
 
 func (ctx *SubstContext) isActiveId(id string) bool { return ctx.id == id }
@@ -602,3 +551,54 @@ func (ctx *SubstContext) seenInBranch(part substSeen) bool {
 	}
 	return false
 }
+
+type substCond struct {
+	// Tells whether a SUBST block has started at this conditional level.
+	// All variable assignments that belong to this class must happen at
+	// this conditional level or below it.
+	//
+	// TODO: For Test_SubstContext_Directive__conditional_complete,
+	//  this needs to be changed to the set of classes that have been
+	//  added to SUBST_CLASSES at this level.
+	top bool
+
+	// Collects the parts of the SUBST block that have been defined in all
+	// branches that have been parsed completely.
+	total substSeen
+
+	// Collects the parts of the SUBST block that are defined in the current
+	// branch of the conditional. At the end of the branch, they are merged
+	// into the total.
+	curr substSeen
+
+	// Marks whether the current conditional statement has
+	// an .else branch. If it doesn't, this means that all variables
+	// are potentially unset in that branch.
+	seenElse bool
+}
+
+// substSeen contains all variables that depend on a particular SUBST
+// class ID. These variables can be set in conditional branches, and
+// pkglint keeps track whether they are set in all branches or only
+// in some of them.
+type substSeen uint8
+
+const (
+	ssStage substSeen = 1 << iota
+	ssMessage
+	ssFiles
+	ssSed
+	ssVars
+	ssVarsAutofix
+	ssFilterCmd
+	ssTransform
+
+	ssAll  substSeen = 1<<iota - 1
+	ssNone substSeen = 0
+)
+
+func (s *substSeen) set(part substSeen)          { *s |= part }
+func (s *substSeen) get(part substSeen) bool     { return *s&part != 0 }
+func (s *substSeen) hasAll(other substSeen) bool { return *s&other == other }
+func (s *substSeen) union(other substSeen)       { *s |= other }
+func (s *substSeen) retain(other substSeen)      { *s &= other }
