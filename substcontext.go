@@ -319,7 +319,7 @@ func (s *substScope) finish(diag Diagnoser) {
 }
 
 func (s *substScope) prepareSubstClasses(diag Diagnoser) {
-	for _, block := range s.defs { // TODO: in order
+	for _, block := range s.defs {
 		if block.hasStarted() && !block.isComplete() {
 			diag.Warnf("Subst block %q should be finished "+
 				"before adding the next class to SUBST_CLASSES.",
