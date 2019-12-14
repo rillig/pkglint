@@ -267,9 +267,7 @@ func (ctx *SubstContext) scope() *substScope {
 	return ctx.scopes[len(ctx.scopes)-1]
 }
 
-func (ctx *SubstContext) isActive() bool {
-	return ctx.lastSeenId != ""
-}
+func (ctx *SubstContext) isActive() bool { return ctx.lastSeenId != "" }
 
 func (ctx *SubstContext) activeId() string {
 	assert(ctx.isActive())
@@ -564,13 +562,9 @@ func (b *substBlock) hasSeen(part substSeen) bool {
 }
 
 // TODO: Check whether onlyTheCurrentCond really makes sense everywhere.
-func (b *substBlock) cond() *substCond {
-	return b.conds[len(b.conds)-1]
-}
+func (b *substBlock) cond() *substCond { return b.conds[len(b.conds)-1] }
 
-func (b *substBlock) addSeen(part substSeen) {
-	b.cond().addSeen(part)
-}
+func (b *substBlock) addSeen(part substSeen) { b.cond().addSeen(part) }
 
 func (b *substBlock) rememberForeign(mkline *MkLine) {
 	b.foreign = append(b.foreign, mkline)
@@ -587,9 +581,7 @@ func (b *substBlock) allowVar(varname string) {
 	b.foreignAllowed[varname] = struct{}{}
 }
 
-func (b *substBlock) enter() {
-	b.conds = append(b.conds, newSubstCond())
-}
+func (b *substBlock) enter() { b.conds = append(b.conds, newSubstCond()) }
 
 func (b *substBlock) nextBranch(isElse bool) {
 	cond := b.cond()
@@ -667,9 +659,7 @@ type substCond struct {
 	seenElse bool
 }
 
-func newSubstCond() *substCond {
-	return &substCond{total: ssAll}
-}
+func newSubstCond() *substCond { return &substCond{total: ssAll} }
 
 func (c *substCond) enterBranch(isElse bool) {
 	c.curr = ssNone
@@ -694,9 +684,7 @@ func (c *substCond) hasSeenAll(parts substSeen) bool {
 	return c.curr.hasAll(parts)
 }
 
-func (c *substCond) addSeen(part substSeen) {
-	c.curr.set(part)
-}
+func (c *substCond) addSeen(part substSeen) { c.curr.set(part) }
 
 // substSeen contains all variables that depend on a particular SUBST
 // class ID. These variables can be set in conditional branches, and
