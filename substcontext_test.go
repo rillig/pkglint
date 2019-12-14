@@ -231,6 +231,35 @@ func (s *Suite) Test_SubstContext_varassign__rationale(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_SubstContext_varassign__interleaved(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+= 1 2 3",
+		"SUBST_STAGE.1=  post-configure",
+		"SUBST_STAGE.2=  post-configure",
+		"SUBST_STAGE.3=  post-configure",
+		"SUBST_FILES.1=  setup.py",
+		"SUBST_FILES.2=  setup.py",
+		"SUBST_FILES.3=  setup.py",
+		"SUBST_VARS.1=   VAR",
+		"SUBST_VARS.2=   VAR",
+		"SUBST_VARS.3=   VAR")
+
+	// FIXME: The above does not follow the common pattern of defining
+	//  each block on its own. Nevertheless it is technically valid.
+	t.CheckOutputLines(
+		"NOTE: filename.mk:1: Please add only one class at a time to SUBST_CLASSES.",
+		"WARN: filename.mk:3: Variable \"SUBST_STAGE.2\" does not match SUBST class \"1\".",
+		"WARN: filename.mk:4: Variable \"SUBST_STAGE.3\" does not match SUBST class \"1\".",
+		"WARN: filename.mk:6: Variable \"SUBST_FILES.2\" does not match SUBST class \"1\".",
+		"WARN: filename.mk:7: Variable \"SUBST_FILES.3\" does not match SUBST class \"1\".",
+		"WARN: filename.mk:10: Variable \"SUBST_VARS.3\" does not match SUBST class \"2\".",
+		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_STAGE.2 missing.",
+		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_FILES.2 missing.",
+		"WARN: filename.mk:EOF: Missing SUBST block for \"3\".")
+}
+
 func (s *Suite) Test_SubstContext_varassignClasses__OPSYSVARS(c *check.C) {
 	t := s.Init(c)
 
