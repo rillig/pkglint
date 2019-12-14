@@ -173,28 +173,21 @@ func (ctx *SubstContext) nextBranch(diag Diagnoser, isElse bool) {
 }
 
 func (ctx *SubstContext) leave(diag Diagnoser) {
+	ctx.deactivate(diag)
+
 	for _, scope := range ctx.scopes {
 		scope.leave(diag)
 	}
 
 	if len(ctx.scopes) > 1 {
-		// XXX: Why is this condition necessary?
-		//  It looks quite similar to the one in ctx.deactivate.
-		// if ctx.isActive() && !ctx.block().isConditional() {
-		if ctx.isActive() && ctx.scope().isDefined(ctx.activeId()) {
-			ctx.deactivate(diag)
-		}
 		ctx.scopes = ctx.scopes[:len(ctx.scopes)-1]
 	}
 }
 
 func (ctx *SubstContext) activate(id string, mkline *MkLine) bool {
-	if ctx.lastSeenId != "" {
-		ctx.deactivate(mkline)
-	}
+	ctx.deactivate(mkline)
 
-	block := ctx.lookup(id)
-	if block != nil {
+	if ctx.lookup(id) != nil {
 		ctx.lastSeenId = id
 		return true
 	}
@@ -208,13 +201,15 @@ func (ctx *SubstContext) activate(id string, mkline *MkLine) bool {
 }
 
 func (ctx *SubstContext) deactivate(diag Diagnoser) {
-	if ctx.isActive() {
-		block := ctx.block()
-		if !block.isConditional() {
-			block.finish(diag)
-		}
-		ctx.lastSeenId = ""
+	if !ctx.isActive() {
+		return
 	}
+
+	block := ctx.block()
+	if !block.isConditional() {
+		block.finish(diag)
+	}
+	ctx.lastSeenId = ""
 }
 
 func (*SubstContext) isForeign(varcanon string) bool {
