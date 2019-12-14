@@ -5,6 +5,7 @@ import "gopkg.in/check.v1"
 func (t *Tester) NewSubstAutofixTest(lines ...string) func(bool) {
 	return func(autofix bool) {
 		mklines := t.NewMkLines("filename.mk", lines...)
+		mklines.collectRationale()
 		ctx := NewSubstContext()
 
 		mklines.ForEach(ctx.Process)
@@ -18,6 +19,7 @@ func (t *Tester) RunSubst(lines ...string) {
 	assert(lines[len(lines)-1] != "")
 
 	mklines := t.NewMkLines("filename.mk", lines...)
+	mklines.collectRationale()
 	ctx := NewSubstContext()
 
 	mklines.ForEach(ctx.Process)
@@ -212,6 +214,22 @@ func (s *Suite) Test_SubstContext_varassign__late_addition_to_unknown_class(c *c
 	t.CheckOutputLines(
 		"WARN: filename.mk:1: Before defining SUBST_VARS.id, " +
 			"the SUBST class should be declared using \"SUBST_CLASSES+= id\".")
+}
+
+func (s *Suite) Test_SubstContext_varassign__rationale(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"# Adjust setup.py",
+		"SUBST_CLASSES+=         setup",
+		"SUBST_STAGE.setup=      post-configure",
+		"SUBST_FILES.setup=      setup.py",
+		"SUBST_VARS.setup=       VAR")
+
+	// FIXME: The rationale in line 1 is supposed to suppress
+	//  warnings, not add new ones.
+	t.CheckOutputLines(
+		"WARN: filename.mk:EOF: Missing SUBST block for \"setup\".")
 }
 
 func (s *Suite) Test_SubstContext_varassignClasses__OPSYSVARS(c *check.C) {
