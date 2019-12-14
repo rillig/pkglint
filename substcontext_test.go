@@ -24,7 +24,7 @@ func (t *Tester) RunSubst(lines ...string) {
 	ctx.Finish(mklines.EOFLine())
 }
 
-func (s *Suite) Test_SubstContext__OPSYSVARS(c *check.C) {
+func (s *Suite) Test_SubstContext_varassignClasses__OPSYSVARS(c *check.C) {
 	t := s.Init(c)
 
 	ctx := NewSubstContext()
@@ -57,7 +57,7 @@ func (s *Suite) Test_SubstContext_varassignClasses__duplicate_id(c *check.C) {
 		"WARN: filename.mk:EOF: Missing SUBST block for \"id\".")
 }
 
-func (s *Suite) Test_SubstContext__no_class(c *check.C) {
+func (s *Suite) Test_SubstContext_varassign__no_class(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -70,7 +70,7 @@ func (s *Suite) Test_SubstContext__no_class(c *check.C) {
 			"the SUBST class should be declared using \"SUBST_CLASSES+= repl\".")
 }
 
-func (s *Suite) Test_SubstContext__multiple_classes_in_one_line(c *check.C) {
+func (s *Suite) Test_SubstContext_varassignClasses__multiple_classes_in_one_line(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -86,7 +86,7 @@ func (s *Suite) Test_SubstContext__multiple_classes_in_one_line(c *check.C) {
 		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_SED.two, SUBST_VARS.two or SUBST_FILTER_CMD.two missing.")
 }
 
-func (s *Suite) Test_SubstContext__multiple_classes_in_one_line_multiple_blocks(c *check.C) {
+func (s *Suite) Test_SubstContext_varassign__multiple_classes_in_one_line_multiple_blocks(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -116,7 +116,7 @@ func (s *Suite) Test_SubstContext__multiple_classes_in_one_line_multiple_blocks(
 			"the SUBST class should be declared using \"SUBST_CLASSES+= four\".")
 }
 
-func (s *Suite) Test_SubstContext__multiple_classes_in_one_block(c *check.C) {
+func (s *Suite) Test_SubstContext_varassign__multiple_classes_in_one_block(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -162,7 +162,7 @@ func (s *Suite) Test_SubstContext__partially_continued_class_in_conditional(c *c
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_SubstContext__files_missing(c *check.C) {
+func (s *Suite) Test_substBlock_finish__files_missing(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -181,7 +181,7 @@ func (s *Suite) Test_SubstContext__files_missing(c *check.C) {
 			"SUBST_SED.one, SUBST_VARS.one or SUBST_FILTER_CMD.one missing.")
 }
 
-func (s *Suite) Test_SubstContext__directives(c *check.C) {
+func (s *Suite) Test_SubstContext__conditionals(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -208,7 +208,7 @@ func (s *Suite) Test_SubstContext__directives(c *check.C) {
 			"to \"SUBST_SED.os\" should use the \"+=\" operator.")
 }
 
-func (s *Suite) Test_SubstContext__adjacent_assign(c *check.C) {
+func (s *Suite) Test_SubstContext_varassignOutsideBlock__assign(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -227,7 +227,7 @@ func (s *Suite) Test_SubstContext__adjacent_assign(c *check.C) {
 			"should use the += operator.")
 }
 
-func (s *Suite) Test_SubstContext__adjacent_append(c *check.C) {
+func (s *Suite) Test_SubstContext_varassignOutsideBlock__append(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -246,7 +246,7 @@ func (s *Suite) Test_SubstContext__adjacent_append(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_SubstContext__do_patch(c *check.C) {
+func (s *Suite) Test_substBlock_varassignStage__do_patch(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -262,7 +262,7 @@ func (s *Suite) Test_SubstContext__do_patch(c *check.C) {
 
 // Variables mentioned in SUBST_VARS are not considered "foreign"
 // in the block and may be mixed with the other SUBST variables.
-func (s *Suite) Test_SubstContext__SUBST_VARS_defined_in_block(c *check.C) {
+func (s *Suite) Test_substBlock_checkForeignVariables__in_block(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -279,7 +279,7 @@ func (s *Suite) Test_SubstContext__SUBST_VARS_defined_in_block(c *check.C) {
 
 // Variables mentioned in SUBST_VARS may appear in the same paragraph,
 // or alternatively anywhere else in the file.
-func (s *Suite) Test_SubstContext__SUBST_VARS_in_next_paragraph(c *check.C) {
+func (s *Suite) Test_substBlock_checkForeignVariables__in_next_paragraph(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -294,7 +294,7 @@ func (s *Suite) Test_SubstContext__SUBST_VARS_in_next_paragraph(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_SubstContext__multiple_SUBST_VARS(c *check.C) {
+func (s *Suite) Test_substBlock_varassignVars(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -306,10 +306,10 @@ func (s *Suite) Test_SubstContext__multiple_SUBST_VARS(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-// As of May 2019, pkglint does not check the order of the variables in
+// As of December 2019, pkglint does not check the order of the variables in
 // a SUBST block. Enforcing this order, or at least suggesting it, would
 // make pkgsrc packages more uniform, which is a good idea, but not urgent.
-func (s *Suite) Test_SubstContext__unusual_variable_order(c *check.C) {
+func (s *Suite) Test_SubstContext_varassign__unusual_order(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -322,7 +322,7 @@ func (s *Suite) Test_SubstContext__unusual_variable_order(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_SubstContext__completely_conditional_then(c *check.C) {
+func (s *Suite) Test_substBlock_finish__conditional_inside_then(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -339,7 +339,7 @@ func (s *Suite) Test_SubstContext__completely_conditional_then(c *check.C) {
 		"WARN: filename.mk:5: Incomplete SUBST block: SUBST_FILES.id missing.")
 }
 
-func (s *Suite) Test_SubstContext__completely_conditional_else(c *check.C) {
+func (s *Suite) Test_substBlock_finish__conditional_inside_else(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -356,7 +356,7 @@ func (s *Suite) Test_SubstContext__completely_conditional_else(c *check.C) {
 		"WARN: filename.mk:6: Incomplete SUBST block: SUBST_FILES.id missing.")
 }
 
-func (s *Suite) Test_SubstContext__SUBST_CLASSES_in_separate_paragraph(c *check.C) {
+func (s *Suite) Test_SubstContext_varassign__blocks_in_separate_paragraphs(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -379,7 +379,7 @@ func (s *Suite) Test_SubstContext__SUBST_CLASSES_in_separate_paragraph(c *check.
 		"WARN: filename.mk:EOF: Missing SUBST block for \"4\".")
 }
 
-func (s *Suite) Test_SubstContext__wrong_class(c *check.C) {
+func (s *Suite) Test_SubstContext_varassign__typo_in_id(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -398,7 +398,7 @@ func (s *Suite) Test_SubstContext__wrong_class(c *check.C) {
 		"WARN: filename.mk:EOF: Missing SUBST block for \"1\".")
 }
 
-func (s *Suite) Test_SubstContext_varassign__late_addition(c *check.C) {
+func (s *Suite) Test_substBlock_dupList__late_addition(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -501,6 +501,7 @@ func (s *Suite) Test_SubstContext_varassignOutsideBlock__rationale(c *check.C) {
 			"the SUBST class should be declared using \"SUBST_CLASSES+= libs\".")
 }
 
+// Unbalanced conditionals must not lead to a panic.
 func (s *Suite) Test_SubstContext_directive__before_SUBST_CLASSES(c *check.C) {
 	t := s.Init(c)
 
@@ -508,7 +509,7 @@ func (s *Suite) Test_SubstContext_directive__before_SUBST_CLASSES(c *check.C) {
 		".if 0",
 		".endif",
 		"SUBST_CLASSES+=\tos",
-		".elif 0") // Just for branch coverage.
+		".elif 0")
 
 	t.CheckOutputLines(
 		"WARN: filename.mk:4: Missing SUBST block for \"os\".")
@@ -843,6 +844,10 @@ func (s *Suite) Test_SubstContext_leave__nested_conditionals(c *check.C) {
 // With every .if directive, a new scope is created, to properly
 // keep track of the conditional level at which the SUBST classes
 // are declared.
+//
+// The scopes are even created when there is no SUBST variable
+// anywhere close. The conditionals must be tracked for determining
+// the end of the scope for the SUBST_CLASSES IDs.
 func (s *Suite) Test_substScope__conditionals(c *check.C) {
 	t := s.Init(c)
 
@@ -902,6 +907,9 @@ func (s *Suite) Test_substBlock_dupList__conditional_before_unconditional(c *che
 		"SUBST_VARS.os=  OPSYS")
 
 	// TODO: Warn that the conditional line is overwritten.
+	//  To do this, the code needs to track not only the variables
+	//  that have been set in _all_ branches, but also those that
+	//  have been set in _some_ branch.
 	t.CheckOutputEmpty()
 }
 
