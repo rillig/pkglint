@@ -585,10 +585,9 @@ func (b *substBlock) allSeen() substSeen {
 	return all
 }
 
-// TODO: Check whether onlyTheCurrentCond really makes sense everywhere.
-func (b *substBlock) cond() *substCond { return b.conds[len(b.conds)-1] }
-
-func (b *substBlock) addSeen(part substSeen) { b.cond().addSeen(part) }
+func (b *substBlock) addSeen(part substSeen) {
+	b.conds[len(b.conds)-1].addSeen(part)
+}
 
 func (b *substBlock) rememberForeign(mkline *MkLine) {
 	b.foreign = append(b.foreign, mkline)
@@ -608,7 +607,7 @@ func (b *substBlock) allowVar(varname string) {
 func (b *substBlock) enter() { b.conds = append(b.conds, newSubstCond()) }
 
 func (b *substBlock) nextBranch(isElse bool) {
-	cond := b.cond()
+	cond := b.conds[len(b.conds)-1]
 	cond.leaveBranch()
 	cond.enterBranch(isElse)
 }
