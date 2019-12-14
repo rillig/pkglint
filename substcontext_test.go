@@ -1518,6 +1518,23 @@ func (s *Suite) Test_substBlock_checkForeignVariables__in_next_paragraph(c *chec
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_substBlock_checkForeignVariables__mixed_separate(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+= 1",
+		"SUBST_STAGE.1=  post-configure",
+		"SUBST_FILES.1=  files",
+		"",
+		"SUBST_VARS.1=   VAR",
+		"USE_TOOLS+=     gmake")
+
+	// FIXME: This is not a SUBST block anymore since there is an empty
+	//  line between SUBST_CLASSES and SUBST_VARS.
+	t.CheckOutputLines(
+		"WARN: filename.mk:6: Foreign variable \"USE_TOOLS\" in SUBST block.")
+}
+
 // Variables mentioned in SUBST_VARS are not considered "foreign"
 // in the block and may be mixed with the other SUBST variables.
 func (s *Suite) Test_substBlock_checkForeignVariables__in_block(c *check.C) {
