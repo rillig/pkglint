@@ -66,27 +66,14 @@ func (ctx *SubstContext) varassign(mkline *MkLine) {
 		}
 	}
 
-	if hasPrefix(mkline.Varname(), "SUBST_") && mkline.Varparam() != ctx.activeId() {
+	if mkline.Varparam() != ctx.activeId() {
 		if !ctx.varassignDifferentClass(mkline) {
 			return
 		}
 	}
 
 	block := ctx.block()
-	switch varcanon {
-	case "SUBST_STAGE.*":
-		block.varassignStage(mkline)
-	case "SUBST_MESSAGE.*":
-		block.varassignMessages(mkline)
-	case "SUBST_FILES.*":
-		block.varassignFiles(mkline)
-	case "SUBST_SED.*":
-		block.varassignSed(mkline)
-	case "SUBST_VARS.*":
-		block.varassignVars(mkline)
-	case "SUBST_FILTER_CMD.*":
-		block.varassignFilterCmd(mkline)
-	}
+	block.varassign(mkline)
 }
 
 func (ctx *SubstContext) varassignClasses(mkline *MkLine) {
@@ -407,6 +394,23 @@ type substBlock struct {
 func newSubstBlock(id string) *substBlock {
 	assert(id != "")
 	return &substBlock{id: id, conds: []*substCond{newSubstCond()}}
+}
+
+func (b *substBlock) varassign(mkline *MkLine) {
+	switch mkline.Varcanon() {
+	case "SUBST_STAGE.*":
+		b.varassignStage(mkline)
+	case "SUBST_MESSAGE.*":
+		b.varassignMessages(mkline)
+	case "SUBST_FILES.*":
+		b.varassignFiles(mkline)
+	case "SUBST_SED.*":
+		b.varassignSed(mkline)
+	case "SUBST_VARS.*":
+		b.varassignVars(mkline)
+	default:
+		b.varassignFilterCmd(mkline)
+	}
 }
 
 func (b *substBlock) varassignStage(mkline *MkLine) {

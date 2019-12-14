@@ -878,6 +878,21 @@ func (s *Suite) Test_substScope_prepareSubstClasses__nested(c *check.C) {
 			"SUBST_SED.1, SUBST_VARS.1 or SUBST_FILTER_CMD.1 missing.")
 }
 
+func (s *Suite) Test_substBlock_varassign__typo_in_subst_variable(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+=\tos",
+		"SUBST_STAGE.os=\tdo-patch",
+		"SUBST_FILES.os=\tguess-os.h",
+		"SUBST_DED.os=\t-e s,@OPSYS@,Darwin,")
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:EOF: Incomplete SUBST block: "+
+			"SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.",
+		"WARN: filename.mk:4: Foreign variable \"SUBST_DED.os\" in SUBST block.")
+}
+
 func (s *Suite) Test_substBlock_varassignStage__do_patch(c *check.C) {
 	t := s.Init(c)
 
