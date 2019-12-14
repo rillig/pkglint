@@ -319,8 +319,22 @@ func (s *substScope) emptyLine() {
 // finish brings all blocks that are defined in the current scope
 // to an end.
 func (s *substScope) finish(diag Diagnoser) {
+	foreignOk := map[string]bool{}
+	for _, def := range s.defs {
+		for allowed := range def.foreignAllowed {
+			foreignOk[allowed] = true
+		}
+	}
+
 	for _, block := range s.defs {
 		block.finish(diag)
+
+		for _, mkline := range block.foreign {
+			if !foreignOk[mkline.Varname()] {
+				mkline.Warnf("Foreign variable %q in SUBST block.",
+					mkline.Varname())
+			}
+		}
 	}
 }
 
@@ -660,16 +674,6 @@ func (b *substBlock) finish(diag Diagnoser) {
 			"Incomplete SUBST block: SUBST_SED.%[1]s, "+
 				"SUBST_VARS.%[1]s or SUBST_FILTER_CMD.%[1]s missing.",
 			b.id)
-	}
-
-	b.checkForeignVariables()
-}
-
-func (b *substBlock) checkForeignVariables() {
-	for _, mkline := range b.foreign {
-		if _, ok := b.foreignAllowed[mkline.Varname()]; !ok {
-			mkline.Warnf("Foreign variable %q in SUBST block.", mkline.Varname())
-		}
 	}
 }
 

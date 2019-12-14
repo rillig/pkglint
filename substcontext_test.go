@@ -1566,9 +1566,6 @@ func (s *Suite) Test_substBlock_checkForeignVariables__two_blocks_one_paragraph(
 		"SUBST_VARS.2=   VAR2")
 
 	t.CheckOutputLines(
-		"NOTE: filename.mk:1: Please add only one class at a time to SUBST_CLASSES.",
-		// FIXME: VAR2 is not foreign since it is used in 2.
-		"WARN: filename.mk:3: Foreign variable \"VAR2\" in SUBST block.",
-		// FIXME: VAR1 is not foreign since it is used in 1.
-		"WARN: filename.mk:8: Foreign variable \"VAR1\" in SUBST block.")
+		"NOTE: filename.mk:1: " +
+			"Please add only one class at a time to SUBST_CLASSES.")
 }
