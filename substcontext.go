@@ -103,7 +103,7 @@ func (ctx *SubstContext) varassignClasses(mkline *MkLine) {
 			"and to delete this block, it is not necessary to look anywhere else.")
 	}
 
-	ctx.scope().prepareSubstClasses(mkline)
+	ctx.prepareSubstClasses(mkline)
 	ctx.deactivate(mkline)
 
 	for _, id := range classes {
@@ -112,6 +112,12 @@ func (ctx *SubstContext) varassignClasses(mkline *MkLine) {
 		} else if mkline.Varparam() == "" {
 			mkline.Errorf("Duplicate SUBST class %q.", id)
 		}
+	}
+}
+
+func (ctx *SubstContext) prepareSubstClasses(mkline *MkLine) {
+	for _, scope := range ctx.scopes {
+		scope.prepareSubstClasses(mkline)
 	}
 }
 
@@ -552,8 +558,7 @@ func (*substBlock) extractVarname(token string) string {
 }
 
 func (b *substBlock) isComplete() bool {
-	// XXX: loop over all conds, like in hasSeen.
-	return b.cond().hasSeenAll(ssStage | ssFiles | ssTransform)
+	return b.allSeen().hasAll(ssStage | ssFiles | ssTransform)
 }
 
 func (b *substBlock) hasSeen(part substSeen) bool {
@@ -563,6 +568,14 @@ func (b *substBlock) hasSeen(part substSeen) bool {
 		}
 	}
 	return false
+}
+
+func (b *substBlock) allSeen() substSeen {
+	all := ssNone
+	for _, cond := range b.conds {
+		all.addAll(cond.curr)
+	}
+	return all
 }
 
 // TODO: Check whether onlyTheCurrentCond really makes sense everywhere.
@@ -720,7 +733,7 @@ func (s *substSeen) has(part substSeen) bool {
 	return *s&part != 0
 }
 
-func (s *substSeen) hasAny(other substSeen) bool { return *s&other != 0 }
-func (s *substSeen) hasAll(other substSeen) bool { return *s&other == other }
-func (s *substSeen) addAll(other substSeen)      { *s |= other }
-func (s *substSeen) retainAll(other substSeen)   { *s &= other }
+func (s substSeen) hasAny(other substSeen) bool { return s&other != 0 }
+func (s substSeen) hasAll(other substSeen) bool { return s&other == other }
+func (s *substSeen) addAll(other substSeen)     { *s |= other }
+func (s *substSeen) retainAll(other substSeen)  { *s &= other }

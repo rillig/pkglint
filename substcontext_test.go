@@ -618,7 +618,9 @@ func (s *Suite) Test_SubstContext_directive__conditionally_nested_block(c *check
 		".endif",
 		"SUBST_VARS.outer=       OUTER")
 
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: filename.mk:5: Subst block \"outer\" should be finished " +
+			"before adding the next class to SUBST_CLASSES.")
 }
 
 // It's completely valid to have several SUBST blocks in a single paragraph.
@@ -804,8 +806,9 @@ func (s *Suite) Test_substScope_prepareSubstClasses__nested(c *check.C) {
 		".if 0",
 		"SUBST_CLASSES+= 2")
 
-	// TODO: Add a warning that 1 should be finished before starting 2.
 	t.CheckOutputLines(
+		"WARN: filename.mk:5: Subst block \"1\" should be finished "+
+			"before adding the next class to SUBST_CLASSES.",
 		"WARN: filename.mk:EOF: Missing SUBST block for \"2\".",
 		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_FILES.1 missing.",
 		"WARN: filename.mk:EOF: Incomplete SUBST block: "+
