@@ -98,8 +98,8 @@ func (ctx *SubstContext) varassignClasses(mkline *MkLine) {
 			"and to delete this block, it is not necessary to look anywhere else.")
 	}
 
-	ctx.deactivate(mkline)
 	ctx.scope().prepareSubstClasses(mkline)
+	ctx.deactivate(mkline)
 
 	for _, class := range classes {
 		// TODO: Prevent the same ID in any scope.
@@ -319,7 +319,7 @@ func (s *substScope) finish(diag Diagnoser) {
 
 func (s *substScope) prepareSubstClasses(diag Diagnoser) {
 	for id, block := range s.defs { // TODO: in order
-		if block.hasStarted() && !block.done && !block.isComplete() {
+		if block.hasStarted() && !block.isComplete() {
 			diag.Warnf("Subst block %q should be finished "+
 				"before adding the next class to SUBST_CLASSES.",
 				id)
