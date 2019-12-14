@@ -133,12 +133,13 @@ func (ctx *SubstContext) varassignOutsideBlock(mkline *MkLine) (continueWithNewI
 		return
 	}
 
-	return ctx.activate(mkline)
+	return ctx.activate(mkline, ctx.lookup(id) == nil)
 }
 
 func (ctx *SubstContext) varassignDifferentClass(mkline *MkLine) (ok bool) {
 	varname := mkline.Varname()
-	if ctx.isActive() && !ctx.block().isComplete() {
+	unknown := ctx.lookup(mkline.Varparam()) == nil
+	if unknown && ctx.isActive() && !ctx.block().isComplete() {
 		mkline.Warnf("Variable %q does not match SUBST class %q.",
 			varname, ctx.activeId())
 		if !ctx.block().seenEmpty {
@@ -146,7 +147,7 @@ func (ctx *SubstContext) varassignDifferentClass(mkline *MkLine) (ok bool) {
 		}
 	}
 
-	return ctx.activate(mkline)
+	return ctx.activate(mkline, unknown)
 }
 
 func (ctx *SubstContext) directive(mkline *MkLine) {
@@ -192,14 +193,16 @@ func (ctx *SubstContext) leave(diag Diagnoser) {
 	}
 }
 
-func (ctx *SubstContext) activate(mkline *MkLine) bool {
+func (ctx *SubstContext) activate(mkline *MkLine, deactivate bool) bool {
 	id := mkline.Varparam()
 	if id == "" {
 		mkline.Errorf("Invalid SUBST class %q in variable name.", id)
 		return false
 	}
 
-	ctx.deactivate(mkline)
+	if deactivate {
+		ctx.deactivate(mkline)
+	}
 
 	if block := ctx.lookup(id); block != nil {
 		ctx.active = block
