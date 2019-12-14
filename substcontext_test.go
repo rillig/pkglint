@@ -769,6 +769,56 @@ func (s *Suite) Test_SubstContext_leave__nested_conditionals(c *check.C) {
 		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_FILES.os missing.")
 }
 
+func (s *Suite) Test_SubstContext_activeId__SUBST_CLASSES_in_separate_paragraph(c *check.C) {
+	t := s.Init(c)
+
+	ctx := NewSubstContext()
+
+	checkNoActiveId := func() {
+		t.CheckEquals(ctx.isActive(), false)
+	}
+	checkActiveId := func(id string) {
+		t.CheckEquals(ctx.activeId(), id)
+	}
+	lineno := 1
+	line := func(text string) {
+		ctx.Process(t.NewMkLine("filename.mk", lineno, text))
+		lineno++
+	}
+
+	line("SUBST_CLASSES+= 1 2 3 4")
+	checkNoActiveId()
+
+	line("")
+	checkNoActiveId()
+
+	line("SUBST_STAGE.1=  post-configure")
+	checkActiveId("1")
+
+	line("SUBST_FILES.1=  files")
+	line("SUBST_VARS.1=   VAR1")
+	checkActiveId("1")
+
+	line("")
+	checkActiveId("1")
+
+	line("SUBST_STAGE.2=  post-configure")
+	checkActiveId("2")
+
+	line("SUBST_FILES.2=  files")
+	line("SUBST_VARS.2=   VAR1")
+	line("")
+	line("SUBST_STAGE.3=  post-configure")
+	line("SUBST_FILES.3=  files")
+	line("SUBST_VARS.3=   VAR1")
+
+	ctx.Finish(NewLineEOF("filename.mk"))
+
+	t.CheckOutputLines(
+		"NOTE: filename.mk:1: Please add only one class at a time to SUBST_CLASSES.",
+		"WARN: filename.mk:EOF: Missing SUBST block for \"4\".")
+}
+
 // With every .if directive, a new scope is created, to properly
 // keep track of the conditional level at which the SUBST classes
 // are declared.
@@ -934,6 +984,91 @@ func (s *Suite) Test_substScope_prepareSubstClasses__nested(c *check.C) {
 		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_FILES.1 missing.",
 		"WARN: filename.mk:EOF: Incomplete SUBST block: "+
 			"SUBST_SED.1, SUBST_VARS.1 or SUBST_FILTER_CMD.1 missing.")
+}
+
+func (s *Suite) Test_substBlock__enter_leave_and_finish(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("filename.mk", 123, "")
+	b := newSubstBlock("id")
+
+	t.CheckEquals(len(b.conds), 1)
+
+	b.enter()
+
+	t.CheckEquals(len(b.conds), 2)
+
+	b.leave()
+
+	t.CheckEquals(len(b.conds), 1)
+
+	b.finish(mkline)
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:123: Missing SUBST block for \"id\".")
+}
+
+// In a conditional without an else branch, none of the variable
+// definitions from the then branch are seen in the outer scope.
+func (s *Suite) Test_substBlock__enter_and_leave_without_else(c *check.C) {
+	t := s.Init(c)
+
+	b := newSubstBlock("id")
+
+	b.enter()        // .if
+	b.addSeen(ssSed) // SUBST_SED
+	b.leave()        // .endif
+
+	t.CheckEquals(b.allSeen(), ssNone)
+	t.CheckEquals(b.done, false)
+}
+
+func (s *Suite) Test_substBlock__enter_and_leave_with_else(c *check.C) {
+	t := s.Init(c)
+
+	b := newSubstBlock("id")
+
+	b.enter()              // .if
+	b.addSeen(ssVars)      // SUBST_VARS
+	b.addSeen(ssTransform) // SUBST_VARS
+	b.nextBranch(true)     // .else
+	b.addSeen(ssSed)       // SUBST_SED
+	b.addSeen(ssTransform) // SUBST_SED
+	b.leave()              // .endif
+
+	t.CheckEquals(b.hasSeen(ssTransform), true)
+	t.CheckEquals(b.done, false)
+}
+
+func (s *Suite) Test_substBlock__enter_and_leave_with_elif(c *check.C) {
+	t := s.Init(c)
+
+	b := newSubstBlock("id")
+
+	b.enter()           // .if
+	b.addSeen(ssFiles)  // SUBST_FILES
+	b.addSeen(ssVars)   // SUBST_VARS
+	b.nextBranch(false) // .elif
+	b.addSeen(ssFiles)  // SUBST_FILES
+	b.addSeen(ssSed)    // SUBST_SED
+	b.nextBranch(true)  // .else
+	b.addSeen(ssFiles)  // SUBST_FILES
+	b.addSeen(ssSed)    // SUBST_SED
+	b.leave()           // .endif
+
+	t.CheckEquals(b.hasSeen(ssFiles), true)
+	t.CheckEquals(b.done, false)
+}
+
+func (s *Suite) Test_newSubstBlock(c *check.C) {
+	t := s.Init(c)
+
+	b := newSubstBlock("id")
+
+	t.CheckEquals(b.id, "id")
+	t.CheckEquals(len(b.conds), 1)
+	t.CheckEquals(b.done, false)
+	t.CheckEquals(b.allSeen(), ssNone)
 }
 
 func (s *Suite) Test_newSubstBlock__assertion(c *check.C) {
