@@ -781,14 +781,17 @@ func (s *Suite) Test_SubstContext_leave__missing_transformation_in_one_branch(c 
 func (s *Suite) Test_substScope_prepareSubstClasses(c *check.C) {
 	t := s.Init(c)
 
-	// FIXME
-	t.ExpectAssert(
-		func() {
-			t.RunSubst(
-				"SUBST_CLASSES+= 1",
-				"SUBST_STAGE.1=  post-configure",
-				".if 0")
-		})
+	t.RunSubst(
+		"SUBST_CLASSES+= 1",
+		"SUBST_STAGE.1=  post-configure",
+		".if 0")
+
+	// There's no need to warn about unbalanced conditionals
+	// since that is already done by MkLines.Check.
+	t.CheckOutputLines(
+		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_FILES.1 missing.",
+		"WARN: filename.mk:EOF: Incomplete SUBST block: "+
+			"SUBST_SED.1, SUBST_VARS.1 or SUBST_FILTER_CMD.1 missing.")
 }
 
 func (s *Suite) Test_SubstContext_leave__nested_conditionals(c *check.C) {

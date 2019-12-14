@@ -30,6 +30,11 @@ func (ctx *SubstContext) Process(mkline *MkLine) {
 }
 
 func (ctx *SubstContext) Finish(diag Diagnoser) {
+	// Prevent panics on unbalanced conditionals.
+	for len(ctx.scopes) > 1 {
+		ctx.leave(diag)
+	}
+
 	for _, scope := range ctx.scopes {
 		scope.finish(diag)
 	}
