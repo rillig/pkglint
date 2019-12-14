@@ -91,12 +91,12 @@ func (ctx *SubstContext) varassign(mkline *MkLine) {
 }
 
 func (ctx *SubstContext) varassignClasses(mkline *MkLine) {
-	classes := mkline.ValueFields(mkline.WithoutMakeVariables(mkline.Value()))
-	if len(classes) == 0 {
+	ids := mkline.ValueFields(mkline.WithoutMakeVariables(mkline.Value()))
+	if len(ids) == 0 {
 		return
 	}
 
-	if len(classes) > 1 {
+	if len(ids) > 1 {
 		mkline.Notef("Please add only one class at a time to SUBST_CLASSES.")
 		mkline.Explain(
 			"This way, each substitution class forms a block in the package Makefile,",
@@ -106,7 +106,7 @@ func (ctx *SubstContext) varassignClasses(mkline *MkLine) {
 	ctx.prepareSubstClasses(mkline)
 	ctx.deactivate(mkline)
 
-	for _, id := range classes {
+	for _, id := range ids {
 		if ctx.lookup(id) == nil {
 			ctx.scope().define(id)
 		} else if mkline.Varparam() == "" {
