@@ -24,37 +24,55 @@ func (t *Tester) RunSubst(lines ...string) {
 	ctx.Finish(mklines.EOFLine())
 }
 
-func (s *Suite) Test_SubstContext_varassignClasses__OPSYSVARS(c *check.C) {
-	t := s.Init(c)
-
-	ctx := NewSubstContext()
-
-	// SUBST_CLASSES is added to OPSYSVARS in mk/bsd.pkg.mk.
-	ctx.varassign(t.NewMkLine("filename.mk", 11, "SUBST_CLASSES.SunOS+=prefix"))
-	ctx.varassign(t.NewMkLine("filename.mk", 12, "SUBST_CLASSES.NetBSD+=prefix"))
-	ctx.varassign(t.NewMkLine("filename.mk", 13, "SUBST_FILES.prefix=Makefile"))
-	ctx.varassign(t.NewMkLine("filename.mk", 14, "SUBST_SED.prefix=s,@PREFIX@,${PREFIX},g"))
-	ctx.varassign(t.NewMkLine("filename.mk", 15, "SUBST_STAGE.prefix=post-configure"))
-
-	t.CheckEquals(ctx.block().isComplete(), true)
-
-	ctx.Finish(t.NewMkLine("filename.mk", 15, ""))
-
-	t.CheckOutputLines(
-		"NOTE: filename.mk:14: The substitution command \"s,@PREFIX@,${PREFIX},g\" " +
-			"can be replaced with \"SUBST_VARS.prefix= PREFIX\".")
-}
-
-func (s *Suite) Test_SubstContext_varassignClasses__duplicate_id(c *check.C) {
+// This is a strange example that probably won't occur in practice.
+//
+// Continuing a SUBST class in one of the branches and starting
+// a fresh one in the other seems far-fetched.
+func (s *Suite) Test_SubstContext__partially_continued_class_in_conditional(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
-		"SUBST_CLASSES+= id",
-		"SUBST_CLASSES+= id")
+		"SUBST_CLASSES+=         outer",
+		"SUBST_STAGE.outer=      post-configure",
+		"SUBST_FILES.outer=      files",
+		"SUBST_VARS.outer=       OUTER.first",
+		".if ${:Ualways}",
+		"SUBST_VARS.outer+=      OUTER.second",
+		".else",
+		"SUBST_CLASSES+=         inner",
+		"SUBST_STAGE.inner=      post-configure",
+		"SUBST_FILES.inner=      files",
+		"SUBST_VARS.inner=       INNER",
+		".endif")
 
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_SubstContext__conditionals(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+=         os",
+		"SUBST_STAGE.os=         post-configure",
+		"SUBST_MESSAGE.os=       Guessing operating system",
+		"SUBST_FILES.os=         guess-os.h",
+		".if ${OPSYS} == NetBSD",
+		"SUBST_FILTER_CMD.os=    ${SED} -e s,@OPSYS@,NetBSD,",
+		".elif ${OPSYS} == Darwin",
+		"SUBST_SED.os=           -e s,@OPSYS@,Darwin1,",
+		"SUBST_SED.os=           -e s,@OPSYS@,Darwin2,",
+		".elif ${OPSYS} == Linux",
+		"SUBST_SED.os=           -e s,@OPSYS@,Linux,",
+		".else",
+		"SUBST_VARS.os=           OPSYS",
+		".endif")
+
+	// All the other lines are correctly determined as being alternatives
+	// to each other. And since every branch contains some transformation
+	// (SED, VARS, FILTER_CMD), everything is fine.
 	t.CheckOutputLines(
-		"ERROR: filename.mk:2: Duplicate SUBST class \"id\".",
-		"WARN: filename.mk:EOF: Missing SUBST block for \"id\".")
+		"WARN: filename.mk:9: All but the first assignment " +
+			"to \"SUBST_SED.os\" should use the \"+=\" operator.")
 }
 
 func (s *Suite) Test_SubstContext_varassign__no_class(c *check.C) {
@@ -68,22 +86,6 @@ func (s *Suite) Test_SubstContext_varassign__no_class(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: filename.mk:2: Before defining SUBST_FILES.repl, " +
 			"the SUBST class should be declared using \"SUBST_CLASSES+= repl\".")
-}
-
-func (s *Suite) Test_SubstContext_varassignClasses__multiple_classes_in_one_line(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		"SUBST_CLASSES+=         one two",
-		"SUBST_STAGE.one=        post-configure",
-		"SUBST_FILES.one=        one.txt",
-		"SUBST_SED.one=          s,one,1,g",
-		"SUBST_STAGE.two=        post-configure",
-		"SUBST_FILES.two=        two.txt")
-
-	t.CheckOutputLines(
-		"NOTE: filename.mk:1: Please add only one class at a time to SUBST_CLASSES.",
-		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_SED.two, SUBST_VARS.two or SUBST_FILTER_CMD.two missing.")
 }
 
 func (s *Suite) Test_SubstContext_varassign__multiple_classes_in_one_line_multiple_blocks(c *check.C) {
@@ -138,174 +140,6 @@ func (s *Suite) Test_SubstContext_varassign__multiple_classes_in_one_block(c *ch
 		"WARN: filename.mk:6: Late additions to a SUBST variable should use the += operator.")
 }
 
-// This is a strange example that probably won't occur in practice.
-//
-// Continuing a SUBST class in one of the branches and starting
-// a fresh one in the other seems far-fetched.
-func (s *Suite) Test_SubstContext__partially_continued_class_in_conditional(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		"SUBST_CLASSES+=         outer",
-		"SUBST_STAGE.outer=      post-configure",
-		"SUBST_FILES.outer=      files",
-		"SUBST_VARS.outer=       OUTER.first",
-		".if ${:Ualways}",
-		"SUBST_VARS.outer+=      OUTER.second",
-		".else",
-		"SUBST_CLASSES+=         inner",
-		"SUBST_STAGE.inner=      post-configure",
-		"SUBST_FILES.inner=      files",
-		"SUBST_VARS.inner=       INNER",
-		".endif")
-
-	t.CheckOutputEmpty()
-}
-
-func (s *Suite) Test_substBlock_finish__files_missing(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		"SUBST_CLASSES+=         one",
-		"SUBST_STAGE.one=        pre-configure",
-		"SUBST_CLASSES+=         two",
-		"SUBST_STAGE.two=        pre-configure",
-		"SUBST_FILES.two=        two.txt",
-		"SUBST_SED.two=          s,two,2,g")
-
-	t.CheckOutputLines(
-		"WARN: filename.mk:3: Subst block \"one\" should be finished "+
-			"before adding the next class to SUBST_CLASSES.",
-		"WARN: filename.mk:3: Incomplete SUBST block: SUBST_FILES.one missing.",
-		"WARN: filename.mk:3: Incomplete SUBST block: "+
-			"SUBST_SED.one, SUBST_VARS.one or SUBST_FILTER_CMD.one missing.")
-}
-
-func (s *Suite) Test_SubstContext__conditionals(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		"SUBST_CLASSES+=         os",
-		"SUBST_STAGE.os=         post-configure",
-		"SUBST_MESSAGE.os=       Guessing operating system",
-		"SUBST_FILES.os=         guess-os.h",
-		".if ${OPSYS} == NetBSD",
-		"SUBST_FILTER_CMD.os=    ${SED} -e s,@OPSYS@,NetBSD,",
-		".elif ${OPSYS} == Darwin",
-		"SUBST_SED.os=           -e s,@OPSYS@,Darwin1,",
-		"SUBST_SED.os=           -e s,@OPSYS@,Darwin2,",
-		".elif ${OPSYS} == Linux",
-		"SUBST_SED.os=           -e s,@OPSYS@,Linux,",
-		".else",
-		"SUBST_VARS.os=           OPSYS",
-		".endif")
-
-	// All the other lines are correctly determined as being alternatives
-	// to each other. And since every branch contains some transformation
-	// (SED, VARS, FILTER_CMD), everything is fine.
-	t.CheckOutputLines(
-		"WARN: filename.mk:9: All but the first assignment " +
-			"to \"SUBST_SED.os\" should use the \"+=\" operator.")
-}
-
-func (s *Suite) Test_SubstContext_varassignOutsideBlock__assign(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		"SUBST_CLASSES+=\t1",
-		"SUBST_STAGE.1=\tpre-configure",
-		"SUBST_FILES.1=\tfile1",
-		"SUBST_SED.1=\t-e s,subst1,repl1,",
-		"SUBST_CLASSES+=\t2",
-		"SUBST_SED.1=\t-e s,subst1b,repl1b,", // Misplaced
-		"SUBST_STAGE.2=\tpre-configure",
-		"SUBST_FILES.2=\tfile2",
-		"SUBST_SED.2=\t-e s,subst2,repl2,")
-
-	t.CheckOutputLines(
-		"WARN: filename.mk:6: Late additions to a SUBST variable " +
-			"should use the += operator.")
-}
-
-func (s *Suite) Test_SubstContext_varassignOutsideBlock__append(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		"SUBST_CLASSES+=\t1",
-		"SUBST_STAGE.1=\tpre-configure",
-		"SUBST_FILES.1=\tfile1",
-		"SUBST_SED.1=\t-e s,subst1,repl1,",
-		"SUBST_CLASSES+=\t2",
-		"SUBST_SED.1+=\t-e s,subst1b,repl1b,", // Misplaced
-		"SUBST_STAGE.2=\tpre-configure",
-		"SUBST_FILES.2=\tfile2",
-		"SUBST_SED.2=\t-e s,subst2,repl2,")
-
-	// The SUBST_SED.1 line is misplaced. It uses the += operator,
-	// which makes it unclear whether this is a typo or not.
-	t.CheckOutputEmpty()
-}
-
-func (s *Suite) Test_substBlock_varassignStage__do_patch(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		"SUBST_CLASSES+=\tos",
-		"SUBST_STAGE.os=\tdo-patch",
-		"SUBST_FILES.os=\tguess-os.h",
-		"SUBST_SED.os=\t-e s,@OPSYS@,Darwin,")
-
-	// No warning, since there is nothing to fix automatically.
-	// This case doesn't occur in practice anyway.
-	t.CheckOutputEmpty()
-}
-
-// Variables mentioned in SUBST_VARS are not considered "foreign"
-// in the block and may be mixed with the other SUBST variables.
-func (s *Suite) Test_substBlock_checkForeignVariables__in_block(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		"SUBST_CLASSES+=\tos",
-		"SUBST_STAGE.os=\tpre-configure",
-		"SUBST_FILES.os=\tguess-os.h",
-		"SUBST_VARS.os=\tTODAY1",
-		"TODAY1!=\tdate",
-		"TODAY2!=\tdate")
-
-	t.CheckOutputLines(
-		"WARN: filename.mk:6: Foreign variable \"TODAY2\" in SUBST block.")
-}
-
-// Variables mentioned in SUBST_VARS may appear in the same paragraph,
-// or alternatively anywhere else in the file.
-func (s *Suite) Test_substBlock_checkForeignVariables__in_next_paragraph(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		"SUBST_CLASSES+=\tos",
-		"SUBST_STAGE.os=\tpre-configure",
-		"SUBST_FILES.os=\tguess-os.h",
-		"SUBST_VARS.os=\tTODAY1",
-		"",
-		"TODAY1!=\tdate",
-		"TODAY2!=\tdate")
-
-	t.CheckOutputEmpty()
-}
-
-func (s *Suite) Test_substBlock_varassignVars(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		"SUBST_CLASSES+=\tos",
-		"SUBST_STAGE.os=\tpre-configure",
-		"SUBST_FILES.os=\tguess-os.h",
-		"SUBST_VARS.os=\tPREFIX VARBASE")
-
-	t.CheckOutputEmpty()
-}
-
 // As of December 2019, pkglint does not check the order of the variables in
 // a SUBST block. Enforcing this order, or at least suggesting it, would
 // make pkgsrc packages more uniform, which is a good idea, but not urgent.
@@ -320,40 +154,6 @@ func (s *Suite) Test_SubstContext_varassign__unusual_order(c *check.C) {
 		"SUBST_STAGE.id=\t\tpre-configure")
 
 	t.CheckOutputEmpty()
-}
-
-func (s *Suite) Test_substBlock_finish__conditional_inside_then(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		".if ${OPSYS} == Linux",
-		"SUBST_CLASSES+=\tid",
-		"SUBST_STAGE.id=\tpre-configure",
-		"SUBST_SED.id=\t-e sahara",
-		".else",
-		".endif")
-
-	// The block already ends at the .else, not at the end of the file,
-	// since that is the scope where the SUBST id is defined.
-	t.CheckOutputLines(
-		"WARN: filename.mk:5: Incomplete SUBST block: SUBST_FILES.id missing.")
-}
-
-func (s *Suite) Test_substBlock_finish__conditional_inside_else(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		".if ${OPSYS} == Linux",
-		".else",
-		"SUBST_CLASSES+=\tid",
-		"SUBST_STAGE.id=\tpre-configure",
-		"SUBST_SED.id=\t-e sahara",
-		".endif")
-
-	// The block already ends at the .endif, not at the end of the file,
-	// since that is the scope where the SUBST id is defined.
-	t.CheckOutputLines(
-		"WARN: filename.mk:6: Incomplete SUBST block: SUBST_FILES.id missing.")
 }
 
 func (s *Suite) Test_SubstContext_varassign__blocks_in_separate_paragraphs(c *check.C) {
@@ -398,24 +198,6 @@ func (s *Suite) Test_SubstContext_varassign__typo_in_id(c *check.C) {
 		"WARN: filename.mk:EOF: Missing SUBST block for \"1\".")
 }
 
-func (s *Suite) Test_substBlock_dupList__late_addition(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		"SUBST_CLASSES+=\tid",
-		"SUBST_STAGE.id=\tpost-configure",
-		"SUBST_FILES.id=\tfiles",
-		"SUBST_VARS.id=\tPREFIX",
-		"",
-		".if ${OPSYS} == NetBSD",
-		"SUBST_VARS.id=\tOPSYS",
-		".endif")
-
-	t.CheckOutputLines(
-		"WARN: filename.mk:7: All but the first assignment " +
-			"to \"SUBST_VARS.id\" should use the \"+=\" operator.")
-}
-
 func (s *Suite) Test_SubstContext_varassign__late_addition_to_unknown_class(c *check.C) {
 	t := s.Init(c)
 
@@ -430,6 +212,55 @@ func (s *Suite) Test_SubstContext_varassign__late_addition_to_unknown_class(c *c
 	t.CheckOutputLines(
 		"WARN: filename.mk:1: Before defining SUBST_VARS.id, " +
 			"the SUBST class should be declared using \"SUBST_CLASSES+= id\".")
+}
+
+func (s *Suite) Test_SubstContext_varassignClasses__OPSYSVARS(c *check.C) {
+	t := s.Init(c)
+
+	ctx := NewSubstContext()
+
+	// SUBST_CLASSES is added to OPSYSVARS in mk/bsd.pkg.mk.
+	ctx.varassign(t.NewMkLine("filename.mk", 11, "SUBST_CLASSES.SunOS+=prefix"))
+	ctx.varassign(t.NewMkLine("filename.mk", 12, "SUBST_CLASSES.NetBSD+=prefix"))
+	ctx.varassign(t.NewMkLine("filename.mk", 13, "SUBST_FILES.prefix=Makefile"))
+	ctx.varassign(t.NewMkLine("filename.mk", 14, "SUBST_SED.prefix=s,@PREFIX@,${PREFIX},g"))
+	ctx.varassign(t.NewMkLine("filename.mk", 15, "SUBST_STAGE.prefix=post-configure"))
+
+	t.CheckEquals(ctx.block().isComplete(), true)
+
+	ctx.Finish(t.NewMkLine("filename.mk", 15, ""))
+
+	t.CheckOutputLines(
+		"NOTE: filename.mk:14: The substitution command \"s,@PREFIX@,${PREFIX},g\" " +
+			"can be replaced with \"SUBST_VARS.prefix= PREFIX\".")
+}
+
+func (s *Suite) Test_SubstContext_varassignClasses__duplicate_id(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+= id",
+		"SUBST_CLASSES+= id")
+
+	t.CheckOutputLines(
+		"ERROR: filename.mk:2: Duplicate SUBST class \"id\".",
+		"WARN: filename.mk:EOF: Missing SUBST block for \"id\".")
+}
+
+func (s *Suite) Test_SubstContext_varassignClasses__multiple_classes_in_one_line(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+=         one two",
+		"SUBST_STAGE.one=        post-configure",
+		"SUBST_FILES.one=        one.txt",
+		"SUBST_SED.one=          s,one,1,g",
+		"SUBST_STAGE.two=        post-configure",
+		"SUBST_FILES.two=        two.txt")
+
+	t.CheckOutputLines(
+		"NOTE: filename.mk:1: Please add only one class at a time to SUBST_CLASSES.",
+		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_SED.two, SUBST_VARS.two or SUBST_FILTER_CMD.two missing.")
 }
 
 func (s *Suite) Test_SubstContext_varassignClasses__none(c *check.C) {
@@ -455,6 +286,44 @@ func (s *Suite) Test_SubstContext_varassignClasses__indirect(c *check.C) {
 		"ERROR: filename.mk:2: Identifiers for SUBST_CLASSES "+
 			"must not refer to other variables.",
 		"WARN: filename.mk:2: VAR is used but not defined.")
+}
+
+func (s *Suite) Test_SubstContext_varassignOutsideBlock__assign(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+=\t1",
+		"SUBST_STAGE.1=\tpre-configure",
+		"SUBST_FILES.1=\tfile1",
+		"SUBST_SED.1=\t-e s,subst1,repl1,",
+		"SUBST_CLASSES+=\t2",
+		"SUBST_SED.1=\t-e s,subst1b,repl1b,", // Misplaced
+		"SUBST_STAGE.2=\tpre-configure",
+		"SUBST_FILES.2=\tfile2",
+		"SUBST_SED.2=\t-e s,subst2,repl2,")
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:6: Late additions to a SUBST variable " +
+			"should use the += operator.")
+}
+
+func (s *Suite) Test_SubstContext_varassignOutsideBlock__append(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+=\t1",
+		"SUBST_STAGE.1=\tpre-configure",
+		"SUBST_FILES.1=\tfile1",
+		"SUBST_SED.1=\t-e s,subst1,repl1,",
+		"SUBST_CLASSES+=\t2",
+		"SUBST_SED.1+=\t-e s,subst1b,repl1b,", // Misplaced
+		"SUBST_STAGE.2=\tpre-configure",
+		"SUBST_FILES.2=\tfile2",
+		"SUBST_SED.2=\t-e s,subst2,repl2,")
+
+	// The SUBST_SED.1 line is misplaced. It uses the += operator,
+	// which makes it unclear whether this is a typo or not.
+	t.CheckOutputEmpty()
 }
 
 // The rationale for the stray SUBST variables has to be specific.
@@ -781,41 +650,6 @@ func (s *Suite) Test_SubstContext_leave__missing_transformation_in_one_branch(c 
 			"SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
 }
 
-func (s *Suite) Test_substScope_prepareSubstClasses(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		"SUBST_CLASSES+= 1",
-		"SUBST_STAGE.1=  post-configure",
-		".if 0")
-
-	// There's no need to warn about unbalanced conditionals
-	// since that is already done by MkLines.Check.
-	t.CheckOutputLines(
-		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_FILES.1 missing.",
-		"WARN: filename.mk:EOF: Incomplete SUBST block: "+
-			"SUBST_SED.1, SUBST_VARS.1 or SUBST_FILTER_CMD.1 missing.")
-}
-
-func (s *Suite) Test_substScope_prepareSubstClasses__nested(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		"SUBST_CLASSES+= 1",
-		"SUBST_STAGE.1=  post-configure",
-		".if 0",
-		".if 0",
-		"SUBST_CLASSES+= 2")
-
-	t.CheckOutputLines(
-		"WARN: filename.mk:5: Subst block \"1\" should be finished "+
-			"before adding the next class to SUBST_CLASSES.",
-		"WARN: filename.mk:EOF: Missing SUBST block for \"2\".",
-		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_FILES.1 missing.",
-		"WARN: filename.mk:EOF: Incomplete SUBST block: "+
-			"SUBST_SED.1, SUBST_VARS.1 or SUBST_FILTER_CMD.1 missing.")
-}
-
 func (s *Suite) Test_SubstContext_leave__nested_conditionals(c *check.C) {
 	t := s.Init(c)
 
@@ -894,76 +728,53 @@ func (s *Suite) Test_substScope__conditionals(c *check.C) {
 	ctx.Finish(NewLineEOF("filename.mk"))
 }
 
-func (s *Suite) Test_substBlock_dupList__conditional_before_unconditional(c *check.C) {
+func (s *Suite) Test_substScope_prepareSubstClasses(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
-		"SUBST_CLASSES+= os",
-		"SUBST_STAGE.os= post-configure",
-		".if 1",
-		"SUBST_FILES.os= conditional",
-		".endif",
-		"SUBST_FILES.os= unconditional",
-		"SUBST_VARS.os=  OPSYS")
+		"SUBST_CLASSES+= 1",
+		"SUBST_STAGE.1=  post-configure",
+		".if 0")
 
-	// TODO: Warn that the conditional line is overwritten.
-	//  To do this, the code needs to track not only the variables
-	//  that have been set in _all_ branches, but also those that
-	//  have been set in _some_ branch.
+	// There's no need to warn about unbalanced conditionals
+	// since that is already done by MkLines.Check.
+	t.CheckOutputLines(
+		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_FILES.1 missing.",
+		"WARN: filename.mk:EOF: Incomplete SUBST block: "+
+			"SUBST_SED.1, SUBST_VARS.1 or SUBST_FILTER_CMD.1 missing.")
+}
+
+func (s *Suite) Test_substScope_prepareSubstClasses__nested(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+= 1",
+		"SUBST_STAGE.1=  post-configure",
+		".if 0",
+		".if 0",
+		"SUBST_CLASSES+= 2")
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:5: Subst block \"1\" should be finished "+
+			"before adding the next class to SUBST_CLASSES.",
+		"WARN: filename.mk:EOF: Missing SUBST block for \"2\".",
+		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_FILES.1 missing.",
+		"WARN: filename.mk:EOF: Incomplete SUBST block: "+
+			"SUBST_SED.1, SUBST_VARS.1 or SUBST_FILTER_CMD.1 missing.")
+}
+
+func (s *Suite) Test_substBlock_varassignStage__do_patch(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+=\tos",
+		"SUBST_STAGE.os=\tdo-patch",
+		"SUBST_FILES.os=\tguess-os.h",
+		"SUBST_SED.os=\t-e s,@OPSYS@,Darwin,")
+
+	// No warning, since there is nothing to fix automatically.
+	// This case doesn't occur in practice anyway.
 	t.CheckOutputEmpty()
-}
-
-func (s *Suite) Test_substBlock_isComplete__incomplete(c *check.C) {
-	t := s.Init(c)
-
-	ctx := NewSubstContext()
-
-	ctx.varassign(t.NewMkLine("filename.mk", 10, "PKGNAME=pkgname-1.0"))
-
-	t.CheckEquals(ctx.isActive(), false)
-
-	ctx.varassign(t.NewMkLine("filename.mk", 11, "SUBST_CLASSES+=interp"))
-
-	t.CheckEquals(ctx.isActive(), false)
-
-	ctx.varassign(t.NewMkLine("filename.mk", 12, "SUBST_FILES.interp=Makefile"))
-
-	t.CheckEquals(ctx.activeId(), "interp")
-	t.CheckEquals(ctx.block().isComplete(), false)
-
-	ctx.varassign(t.NewMkLine("filename.mk", 13, "SUBST_SED.interp=s,@PREFIX@,${PREFIX},g"))
-
-	t.CheckEquals(ctx.block().isComplete(), false)
-
-	ctx.Finish(t.NewMkLine("filename.mk", 14, ""))
-
-	t.CheckOutputLines(
-		"NOTE: filename.mk:13: The substitution command \"s,@PREFIX@,${PREFIX},g\" "+
-			"can be replaced with \"SUBST_VARS.interp= PREFIX\".",
-		"WARN: filename.mk:14: Incomplete SUBST block: SUBST_STAGE.interp missing.")
-}
-
-func (s *Suite) Test_substBlock_isComplete__complete(c *check.C) {
-	t := s.Init(c)
-
-	ctx := NewSubstContext()
-
-	ctx.varassign(t.NewMkLine("filename.mk", 10, "PKGNAME=pkgname-1.0"))
-	ctx.varassign(t.NewMkLine("filename.mk", 11, "SUBST_CLASSES+=p"))
-	ctx.varassign(t.NewMkLine("filename.mk", 12, "SUBST_FILES.p=Makefile"))
-	ctx.varassign(t.NewMkLine("filename.mk", 13, "SUBST_SED.p=s,@PREFIX@,${PREFIX},g"))
-
-	t.CheckEquals(ctx.block().isComplete(), false)
-
-	ctx.varassign(t.NewMkLine("filename.mk", 14, "SUBST_STAGE.p=post-configure"))
-
-	t.CheckEquals(ctx.block().isComplete(), true)
-
-	ctx.Finish(t.NewMkLine("filename.mk", 15, ""))
-
-	t.CheckOutputLines(
-		"NOTE: filename.mk:13: The substitution command \"s,@PREFIX@,${PREFIX},g\" " +
-			"can be replaced with \"SUBST_VARS.p= PREFIX\".")
 }
 
 func (s *Suite) Test_substBlock_varassignStage__pre_patch(c *check.C) {
@@ -1124,6 +935,18 @@ func (s *Suite) Test_substBlock_varassignVars__var_before_SUBST_VARS(c *check.C)
 
 	t.CheckOutputLines(
 		"WARN: filename.mk:4: Foreign variable \"FOREIGN\" in SUBST block.")
+}
+
+func (s *Suite) Test_substBlock_varassignVars(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+=\tos",
+		"SUBST_STAGE.os=\tpre-configure",
+		"SUBST_FILES.os=\tguess-os.h",
+		"SUBST_VARS.os=\tPREFIX VARBASE")
+
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_substBlock_suggestSubstVars(c *check.C) {
@@ -1445,6 +1268,43 @@ func (s *Suite) Test_substBlock_suggestSubstVars__conditional(c *check.C) {
 		".endif")
 }
 
+func (s *Suite) Test_substBlock_dupList__late_addition(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+=\tid",
+		"SUBST_STAGE.id=\tpost-configure",
+		"SUBST_FILES.id=\tfiles",
+		"SUBST_VARS.id=\tPREFIX",
+		"",
+		".if ${OPSYS} == NetBSD",
+		"SUBST_VARS.id=\tOPSYS",
+		".endif")
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:7: All but the first assignment " +
+			"to \"SUBST_VARS.id\" should use the \"+=\" operator.")
+}
+
+func (s *Suite) Test_substBlock_dupList__conditional_before_unconditional(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+= os",
+		"SUBST_STAGE.os= post-configure",
+		".if 1",
+		"SUBST_FILES.os= conditional",
+		".endif",
+		"SUBST_FILES.os= unconditional",
+		"SUBST_VARS.os=  OPSYS")
+
+	// TODO: Warn that the conditional line is overwritten.
+	//  To do this, the code needs to track not only the variables
+	//  that have been set in _all_ branches, but also those that
+	//  have been set in _some_ branch.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_substBlock_extractVarname(c *check.C) {
 	t := s.Init(c)
 
@@ -1490,4 +1350,144 @@ func (s *Suite) Test_substBlock_extractVarname(c *check.C) {
 
 	// The replacement must be a plain variable expression, without suffix.
 	test("s,@VAR@,${VAR}suffix,", "")
+}
+
+func (s *Suite) Test_substBlock_isComplete__incomplete(c *check.C) {
+	t := s.Init(c)
+
+	ctx := NewSubstContext()
+
+	ctx.varassign(t.NewMkLine("filename.mk", 10, "PKGNAME=pkgname-1.0"))
+
+	t.CheckEquals(ctx.isActive(), false)
+
+	ctx.varassign(t.NewMkLine("filename.mk", 11, "SUBST_CLASSES+=interp"))
+
+	t.CheckEquals(ctx.isActive(), false)
+
+	ctx.varassign(t.NewMkLine("filename.mk", 12, "SUBST_FILES.interp=Makefile"))
+
+	t.CheckEquals(ctx.activeId(), "interp")
+	t.CheckEquals(ctx.block().isComplete(), false)
+
+	ctx.varassign(t.NewMkLine("filename.mk", 13, "SUBST_SED.interp=s,@PREFIX@,${PREFIX},g"))
+
+	t.CheckEquals(ctx.block().isComplete(), false)
+
+	ctx.Finish(t.NewMkLine("filename.mk", 14, ""))
+
+	t.CheckOutputLines(
+		"NOTE: filename.mk:13: The substitution command \"s,@PREFIX@,${PREFIX},g\" "+
+			"can be replaced with \"SUBST_VARS.interp= PREFIX\".",
+		"WARN: filename.mk:14: Incomplete SUBST block: SUBST_STAGE.interp missing.")
+}
+
+func (s *Suite) Test_substBlock_isComplete__complete(c *check.C) {
+	t := s.Init(c)
+
+	ctx := NewSubstContext()
+
+	ctx.varassign(t.NewMkLine("filename.mk", 10, "PKGNAME=pkgname-1.0"))
+	ctx.varassign(t.NewMkLine("filename.mk", 11, "SUBST_CLASSES+=p"))
+	ctx.varassign(t.NewMkLine("filename.mk", 12, "SUBST_FILES.p=Makefile"))
+	ctx.varassign(t.NewMkLine("filename.mk", 13, "SUBST_SED.p=s,@PREFIX@,${PREFIX},g"))
+
+	t.CheckEquals(ctx.block().isComplete(), false)
+
+	ctx.varassign(t.NewMkLine("filename.mk", 14, "SUBST_STAGE.p=post-configure"))
+
+	t.CheckEquals(ctx.block().isComplete(), true)
+
+	ctx.Finish(t.NewMkLine("filename.mk", 15, ""))
+
+	t.CheckOutputLines(
+		"NOTE: filename.mk:13: The substitution command \"s,@PREFIX@,${PREFIX},g\" " +
+			"can be replaced with \"SUBST_VARS.p= PREFIX\".")
+}
+
+func (s *Suite) Test_substBlock_finish__conditional_inside_then(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		".if ${OPSYS} == Linux",
+		"SUBST_CLASSES+=\tid",
+		"SUBST_STAGE.id=\tpre-configure",
+		"SUBST_SED.id=\t-e sahara",
+		".else",
+		".endif")
+
+	// The block already ends at the .else, not at the end of the file,
+	// since that is the scope where the SUBST id is defined.
+	t.CheckOutputLines(
+		"WARN: filename.mk:5: Incomplete SUBST block: SUBST_FILES.id missing.")
+}
+
+func (s *Suite) Test_substBlock_finish__conditional_inside_else(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		".if ${OPSYS} == Linux",
+		".else",
+		"SUBST_CLASSES+=\tid",
+		"SUBST_STAGE.id=\tpre-configure",
+		"SUBST_SED.id=\t-e sahara",
+		".endif")
+
+	// The block already ends at the .endif, not at the end of the file,
+	// since that is the scope where the SUBST id is defined.
+	t.CheckOutputLines(
+		"WARN: filename.mk:6: Incomplete SUBST block: SUBST_FILES.id missing.")
+}
+
+func (s *Suite) Test_substBlock_finish__files_missing(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+=         one",
+		"SUBST_STAGE.one=        pre-configure",
+		"SUBST_CLASSES+=         two",
+		"SUBST_STAGE.two=        pre-configure",
+		"SUBST_FILES.two=        two.txt",
+		"SUBST_SED.two=          s,two,2,g")
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:3: Subst block \"one\" should be finished "+
+			"before adding the next class to SUBST_CLASSES.",
+		"WARN: filename.mk:3: Incomplete SUBST block: SUBST_FILES.one missing.",
+		"WARN: filename.mk:3: Incomplete SUBST block: "+
+			"SUBST_SED.one, SUBST_VARS.one or SUBST_FILTER_CMD.one missing.")
+}
+
+// Variables mentioned in SUBST_VARS may appear in the same paragraph,
+// or alternatively anywhere else in the file.
+func (s *Suite) Test_substBlock_checkForeignVariables__in_next_paragraph(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+=\tos",
+		"SUBST_STAGE.os=\tpre-configure",
+		"SUBST_FILES.os=\tguess-os.h",
+		"SUBST_VARS.os=\tTODAY1",
+		"",
+		"TODAY1!=\tdate",
+		"TODAY2!=\tdate")
+
+	t.CheckOutputEmpty()
+}
+
+// Variables mentioned in SUBST_VARS are not considered "foreign"
+// in the block and may be mixed with the other SUBST variables.
+func (s *Suite) Test_substBlock_checkForeignVariables__in_block(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+=\tos",
+		"SUBST_STAGE.os=\tpre-configure",
+		"SUBST_FILES.os=\tguess-os.h",
+		"SUBST_VARS.os=\tTODAY1",
+		"TODAY1!=\tdate",
+		"TODAY2!=\tdate")
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:6: Foreign variable \"TODAY2\" in SUBST block.")
 }
