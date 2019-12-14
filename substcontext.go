@@ -126,29 +126,30 @@ func (ctx *SubstContext) prepareSubstClasses(mkline *MkLine) {
 func (ctx *SubstContext) varassignOutsideBlock(mkline *MkLine) (continueWithNewId bool) {
 	id := mkline.Varparam()
 
-	if ctx.isListCanon(mkline.Varcanon()) && ctx.isDone(id) {
+	if id != "" && ctx.isListCanon(mkline.Varcanon()) && ctx.isDone(id) {
 		if mkline.Op() != opAssignAppend {
 			mkline.Warnf("Late additions to a SUBST variable should use the += operator.")
 		}
 		return
 	}
-	if containsWord(mkline.Rationale(), id) {
+	if id != "" && containsWord(mkline.Rationale(), id) {
 		return
 	}
 
-	return ctx.activate(id, mkline)
+	return ctx.activate(mkline)
 }
 
 func (ctx *SubstContext) varassignDifferentClass(mkline *MkLine) (ok bool) {
 	varname := mkline.Varname()
 	if ctx.isActive() && !ctx.block().isComplete() {
-		mkline.Warnf("Variable %q does not match SUBST class %q.", varname, ctx.activeId())
+		mkline.Warnf("Variable %q does not match SUBST class %q.",
+			varname, ctx.activeId())
 		if !ctx.block().seenEmpty {
 			return false
 		}
 	}
 
-	return ctx.activate(mkline.Varparam(), mkline)
+	return ctx.activate(mkline)
 }
 
 func (ctx *SubstContext) directive(mkline *MkLine) {
@@ -194,7 +195,13 @@ func (ctx *SubstContext) leave(diag Diagnoser) {
 	}
 }
 
-func (ctx *SubstContext) activate(id string, mkline *MkLine) bool {
+func (ctx *SubstContext) activate(mkline *MkLine) bool {
+	id := mkline.Varparam()
+	if id == "" {
+		mkline.Errorf("Invalid SUBST class %q in variable name.", id)
+		return false
+	}
+
 	ctx.deactivate(mkline)
 
 	if block := ctx.lookup(id); block != nil {

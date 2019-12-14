@@ -832,15 +832,14 @@ func (s *Suite) Test_substBlock_varassignStage__empty_class(c *check.C) {
 		"SUBST_CLASSES+= id",
 		"",
 		"SUBST_STAGE.=   post-patch",
+		"SUBST_STAGE.id= post-configure",
 		"SUBST_FILES.id= files",
-		"SUBST_VARS.id=  VAR")
+		"SUBST_VARS.id=  VAR",
+		"SUBST_VARS.=    VAR")
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:3: Before defining SUBST_STAGE., "+
-			// FIXME: Wrong suggestion in diagnostic; I had expected that
-			//  this would be caught by an assertion.
-			"the SUBST class should be declared using \"SUBST_CLASSES+= \".",
-		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_STAGE.id missing.")
+		"ERROR: filename.mk:3: Invalid SUBST class \"\" in variable name.",
+		"ERROR: filename.mk:7: Invalid SUBST class \"\" in variable name.")
 }
 
 // As of December 2019, pkglint does not use token positions internally.
