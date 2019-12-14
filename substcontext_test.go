@@ -226,10 +226,9 @@ func (s *Suite) Test_SubstContext_varassign__rationale(c *check.C) {
 		"SUBST_FILES.setup=      setup.py",
 		"SUBST_VARS.setup=       VAR")
 
-	// FIXME: The rationale in line 1 is supposed to suppress
-	//  warnings, not add new ones.
-	t.CheckOutputLines(
-		"WARN: filename.mk:EOF: Missing SUBST block for \"setup\".")
+	// The rationale in line 1 is supposed to suppress warnings,
+	// not add new ones.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_SubstContext_varassignClasses__OPSYSVARS(c *check.C) {

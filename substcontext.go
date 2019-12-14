@@ -132,9 +132,6 @@ func (ctx *SubstContext) varassignOutsideBlock(mkline *MkLine) (continueWithNewI
 		}
 		return
 	}
-	if id != "" && containsWord(mkline.Rationale(), id) {
-		return
-	}
 
 	return ctx.activate(mkline)
 }
@@ -209,7 +206,7 @@ func (ctx *SubstContext) activate(mkline *MkLine) bool {
 		return true
 	}
 
-	if ctx.once.FirstTime(id) {
+	if ctx.once.FirstTime(id) && !containsWord(mkline.Rationale(), id) {
 		mkline.Warnf("Before defining %s, the SUBST class "+
 			"should be declared using \"SUBST_CLASSES+= %s\".",
 			mkline.Varname(), id)
