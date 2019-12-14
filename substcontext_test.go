@@ -410,7 +410,33 @@ func (s *Suite) Test_SubstContext_varassignOutsideBlock__rationale(c *check.C) {
 			"the SUBST class should be declared using \"SUBST_CLASSES+= libs\".")
 }
 
-func (s *Suite) Test_SubstContext_varassignDifferentClass(c *check.C) {
+func (s *Suite) Test_SubstContext_varassignDifferentClass__same_paragraph(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+= 1",
+		"SUBST_STAGE.1=  pre-configure",
+		"SUBST_FILES.1=  files",
+		"SUBST_VARS.x=   VAR",
+		"SUBST_VARS.x=   VAR")
+
+	// There is a switch of the SUBST class in the middle of the paragraph.
+	// This is often a typo, therefore pkglint still expects the SUBST class
+	// 1 to be continued in line 4.
+	//
+	// If there were an empty line before line 4, pkglint would have
+	// interpreted that as an intention to start a new block in the next
+	// paragraph.
+	t.CheckOutputLines(
+		"WARN: filename.mk:4: Variable \"SUBST_VARS.x\" "+
+			"does not match SUBST class \"1\".",
+		"WARN: filename.mk:5: Variable \"SUBST_VARS.x\" "+
+			"does not match SUBST class \"1\".",
+		"WARN: filename.mk:EOF: Incomplete SUBST block: "+
+			"SUBST_SED.1, SUBST_VARS.1 or SUBST_FILTER_CMD.1 missing.")
+}
+
+func (s *Suite) Test_SubstContext_varassignDifferentClass__next_paragraph(c *check.C) {
 	t := s.Init(c)
 
 	t.RunSubst(
@@ -421,6 +447,8 @@ func (s *Suite) Test_SubstContext_varassignDifferentClass(c *check.C) {
 		"SUBST_VARS.x=   VAR",
 		"SUBST_VARS.x=   VAR")
 
+	// There is a switch of the SUBST class at the end of the paragraph.
+	// Pkglint sees that as an intention to start a new SUBST block.
 	t.CheckOutputLines(
 		"WARN: filename.mk:5: Variable \"SUBST_VARS.x\" "+
 			"does not match SUBST class \"1\".",
