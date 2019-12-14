@@ -133,6 +133,21 @@ func (s *Suite) Test_MkVarUseModifier_Subst(c *check.C) {
 	// context in which to resolve the variables. If that happens, the
 	// .TARGET variable needs to be set to "target".
 	test("S/$@/replaced/", "The target", "The target", true)
+	test("S,${PREFIX},/prefix,", "${PREFIX}/dir", "", false)
+
+	// Just for code coverage.
+	t.DisableTracing()
+	test("S,long,long long,g", "A long story", "A long long story", true)
+	t.EnableTracing()
+
+	// And now again with full tracing, to investigate cases where
+	// pkglint produces results that are not easily understandable.
+	t.EnableTracingToLog()
+	test("S,long,long long,g", "A long story", "A long long story", true)
+	t.EnableTracing()
+	t.CheckOutputLines(
+		"TRACE:   Subst: \"A long story\" " +
+			"\"S,long,long long,g\" => \"A long long story\"")
 }
 
 func (s *Suite) Test_MkVarUseModifier_EvalSubst(c *check.C) {
