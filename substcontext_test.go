@@ -774,6 +774,75 @@ func (s *Suite) Test_substScope__conditionals(c *check.C) {
 	ctx.Finish(NewLineEOF("filename.mk"))
 }
 
+// Variables mentioned in SUBST_VARS may appear in the same paragraph,
+// or alternatively anywhere else in the file.
+func (s *Suite) Test_substScope_finish__foreign_in_next_paragraph(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+=\tos",
+		"SUBST_STAGE.os=\tpre-configure",
+		"SUBST_FILES.os=\tguess-os.h",
+		"SUBST_VARS.os=\tTODAY1",
+		"",
+		"TODAY1!=\tdate",
+		"TODAY2!=\tdate")
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_substScope_finish__foreign_mixed_separate(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+= 1",
+		"SUBST_STAGE.1=  post-configure",
+		"SUBST_FILES.1=  files",
+		"",
+		"SUBST_VARS.1=   VAR",
+		"USE_TOOLS+=     gmake")
+
+	// The USE_TOOLS is not in the SUBST block anymore since there is
+	// an empty line between SUBST_CLASSES and SUBST_VARS.
+	t.CheckOutputEmpty()
+}
+
+// Variables mentioned in SUBST_VARS are not considered "foreign"
+// in the block and may be mixed with the other SUBST variables.
+func (s *Suite) Test_substScope_finish__foreign_in_block(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+=\tos",
+		"SUBST_STAGE.os=\tpre-configure",
+		"SUBST_FILES.os=\tguess-os.h",
+		"SUBST_VARS.os=\tTODAY1",
+		"TODAY1!=\tdate",
+		"TODAY2!=\tdate")
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:6: Foreign variable \"TODAY2\" in SUBST block.")
+}
+
+func (s *Suite) Test_substScope_finish__foreign_two_blocks_one_paragraph(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+= 1 2",
+		"SUBST_STAGE.1=  pre-configure",
+		"VAR2=           value2",
+		"SUBST_FILES.1=  files",
+		"SUBST_VARS.1=   VAR1",
+		"SUBST_STAGE.2=  pre-configure",
+		"SUBST_FILES.2=  files",
+		"VAR1=           value1",
+		"SUBST_VARS.2=   VAR2")
+
+	t.CheckOutputLines(
+		"NOTE: filename.mk:1: " +
+			"Please add only one class at a time to SUBST_CLASSES.")
+}
+
 func (s *Suite) Test_substScope_prepareSubstClasses(c *check.C) {
 	t := s.Init(c)
 
@@ -1499,73 +1568,4 @@ func (s *Suite) Test_substBlock_finish__files_missing(c *check.C) {
 		"WARN: filename.mk:3: Incomplete SUBST block: SUBST_FILES.one missing.",
 		"WARN: filename.mk:3: Incomplete SUBST block: "+
 			"SUBST_SED.one, SUBST_VARS.one or SUBST_FILTER_CMD.one missing.")
-}
-
-// Variables mentioned in SUBST_VARS may appear in the same paragraph,
-// or alternatively anywhere else in the file.
-func (s *Suite) Test_substBlock_checkForeignVariables__in_next_paragraph(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		"SUBST_CLASSES+=\tos",
-		"SUBST_STAGE.os=\tpre-configure",
-		"SUBST_FILES.os=\tguess-os.h",
-		"SUBST_VARS.os=\tTODAY1",
-		"",
-		"TODAY1!=\tdate",
-		"TODAY2!=\tdate")
-
-	t.CheckOutputEmpty()
-}
-
-func (s *Suite) Test_substBlock_checkForeignVariables__mixed_separate(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		"SUBST_CLASSES+= 1",
-		"SUBST_STAGE.1=  post-configure",
-		"SUBST_FILES.1=  files",
-		"",
-		"SUBST_VARS.1=   VAR",
-		"USE_TOOLS+=     gmake")
-
-	// The USE_TOOLS is not in the SUBST block anymore since there is
-	// an empty line between SUBST_CLASSES and SUBST_VARS.
-	t.CheckOutputEmpty()
-}
-
-// Variables mentioned in SUBST_VARS are not considered "foreign"
-// in the block and may be mixed with the other SUBST variables.
-func (s *Suite) Test_substBlock_checkForeignVariables__in_block(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		"SUBST_CLASSES+=\tos",
-		"SUBST_STAGE.os=\tpre-configure",
-		"SUBST_FILES.os=\tguess-os.h",
-		"SUBST_VARS.os=\tTODAY1",
-		"TODAY1!=\tdate",
-		"TODAY2!=\tdate")
-
-	t.CheckOutputLines(
-		"WARN: filename.mk:6: Foreign variable \"TODAY2\" in SUBST block.")
-}
-
-func (s *Suite) Test_substBlock_checkForeignVariables__two_blocks_one_paragraph(c *check.C) {
-	t := s.Init(c)
-
-	t.RunSubst(
-		"SUBST_CLASSES+= 1 2",
-		"SUBST_STAGE.1=  pre-configure",
-		"VAR2=           value2",
-		"SUBST_FILES.1=  files",
-		"SUBST_VARS.1=   VAR1",
-		"SUBST_STAGE.2=  pre-configure",
-		"SUBST_FILES.2=  files",
-		"VAR1=           value1",
-		"SUBST_VARS.2=   VAR2")
-
-	t.CheckOutputLines(
-		"NOTE: filename.mk:1: " +
-			"Please add only one class at a time to SUBST_CLASSES.")
 }
