@@ -1550,3 +1550,25 @@ func (s *Suite) Test_substBlock_checkForeignVariables__in_block(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: filename.mk:6: Foreign variable \"TODAY2\" in SUBST block.")
 }
+
+func (s *Suite) Test_substBlock_checkForeignVariables__two_blocks_one_paragraph(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+= 1 2",
+		"SUBST_STAGE.1=  pre-configure",
+		"VAR2=           value2",
+		"SUBST_FILES.1=  files",
+		"SUBST_VARS.1=   VAR1",
+		"SUBST_STAGE.2=  pre-configure",
+		"SUBST_FILES.2=  files",
+		"VAR1=           value1",
+		"SUBST_VARS.2=   VAR2")
+
+	t.CheckOutputLines(
+		"NOTE: filename.mk:1: Please add only one class at a time to SUBST_CLASSES.",
+		// FIXME: VAR2 is not foreign since it is used in 2.
+		"WARN: filename.mk:3: Foreign variable \"VAR2\" in SUBST block.",
+		// FIXME: VAR1 is not foreign since it is used in 1.
+		"WARN: filename.mk:8: Foreign variable \"VAR1\" in SUBST block.")
+}
