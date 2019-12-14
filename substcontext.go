@@ -108,7 +108,7 @@ func (ctx *SubstContext) varassignClasses(mkline *MkLine) {
 
 	for _, id := range ids {
 		if ctx.lookup(id) == nil {
-			ctx.scope().define(id)
+			ctx.scopes[len(ctx.scopes)-1].define(id)
 		} else if mkline.Varparam() == "" {
 			mkline.Errorf("Duplicate SUBST class %q.", id)
 		}
@@ -268,11 +268,6 @@ func (ctx *SubstContext) isDone(id string) bool {
 		}
 	}
 	return false
-}
-
-// XXX: Check every caller whether onlyCurrentScope is really intended.
-func (ctx *SubstContext) scope() *substScope {
-	return ctx.scopes[len(ctx.scopes)-1]
 }
 
 func (ctx *SubstContext) isActive() bool { return ctx.active != nil }
