@@ -361,9 +361,11 @@ func (s *substScope) leave(diag Diagnoser) {
 }
 
 type substBlock struct {
-	id        string
-	seenEmpty bool
-	done      bool
+	id string
+
+	// Records which of the SUBST variables have been seen either
+	// directly or in a conditional branch.
+	conds []*substCond
 
 	// In the paragraph of a SUBST block, there should be only variables
 	// that actually belong to the SUBST block.
@@ -373,7 +375,19 @@ type substBlock struct {
 	foreignAllowed map[string]struct{}
 	foreign        []*MkLine
 
-	conds []*substCond
+	// Whether there has been an empty line between the SUBST_CLASSES
+	// line and the current line.
+	//
+	// Before the empty line, variables that don't obviously belong to
+	// this SUBST block generate warnings since they may be typos,
+	// such as for a different SUBST block.
+	seenEmpty bool
+
+	// Whether the SUBST_CLASSES has already gone out of scope.
+	//
+	// XXX: When it is out of scope, it should also be unreachable
+	//  by any pkglint code. There's something inconsistent here.
+	done bool
 }
 
 func newSubstBlock(id string) *substBlock {
