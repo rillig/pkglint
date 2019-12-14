@@ -101,14 +101,13 @@ func (ctx *SubstContext) varassignClasses(mkline *MkLine) {
 	ctx.scope().prepareSubstClasses(mkline)
 	ctx.deactivate(mkline)
 
-	for _, class := range classes {
-		// TODO: Prevent the same ID in any scope.
-		// TODO: Don't panic on duplicate IDs in SUBST_CLASSES.OPSYS.
-		if mkline.Varparam() == "" || !ctx.scope().isDefined(class) {
-			ctx.scope().define(class)
+	for _, id := range classes {
+		if ctx.lookup(id) == nil {
+			ctx.scope().define(id)
+		} else if mkline.Varparam() == "" {
+			mkline.Errorf("Duplicate SUBST class %q.", id)
 		}
 	}
-
 }
 
 // varassignOutsideBlock handles variable assignments of SUBST variables that

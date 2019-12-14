@@ -45,6 +45,18 @@ func (s *Suite) Test_SubstContext__OPSYSVARS(c *check.C) {
 			"can be replaced with \"SUBST_VARS.prefix= PREFIX\".")
 }
 
+func (s *Suite) Test_SubstContext_varassignClasses__duplicate_id(c *check.C) {
+	t := s.Init(c)
+
+	t.RunSubst(
+		"SUBST_CLASSES+= id",
+		"SUBST_CLASSES+= id")
+
+	t.CheckOutputLines(
+		"ERROR: filename.mk:2: Duplicate SUBST class \"id\".",
+		"WARN: filename.mk:EOF: Missing SUBST block for \"id\".")
+}
+
 func (s *Suite) Test_SubstContext__no_class(c *check.C) {
 	t := s.Init(c)
 
