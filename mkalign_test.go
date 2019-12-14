@@ -244,18 +244,18 @@ func (s *Suite) Test_MkAlignLine_IsCanonicalFollow(c *check.C) {
 	// Therefore it counts as canonical.
 	//
 	// XXX: Is it really worth having this rule?
-	//  It should be equally ok to just have the continuation
+	//  It may be equally ok to just have the continuation
 	//  backslash further to the right.
-	// XXX: maybe the result should be true here, not false.
-	test("\tv\t\t\t\t\t\t......64", 16, false)
+	test("\tv\t\t\t\t\t\t......64", 16, true)
 
 	// This line already already overflows the right margin.
 	// On an 80-column display it is not decidable whether this line
 	// continues to the right or whether it stops there.
-	// Therefore it doesn't hurt to make the line even longer.
+	// It wouldn't hurt to make the line even longer.
+	// Still, it is ok to keep the indentation at a minimum.
 	//
 	// Splitting this line into several shorter lines would require
 	// too much knowledge, therefore this task is left to the pkgsrc
 	// developers.
-	test("\tv\t\t\t\t\t\t\t\t.....79", 16, false)
+	test("\tv\t\t\t\t\t\t\t\t.....79", 16, true)
 }

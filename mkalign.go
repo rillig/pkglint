@@ -241,7 +241,8 @@ func (l *MkAlignLine) IsCanonicalFollow(minAlign int) bool {
 
 	width := tabWidth(l.SpaceBeforeValue)
 	if width < 8 || width < minAlign {
-		return false
+		rightWidth := tabWidthAppend(minAlign, l.Value)
+		return rightWidth >= 72
 	}
 
 	if l.SpaceBeforeValue != indent(width) {
