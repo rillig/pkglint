@@ -781,21 +781,14 @@ func (s *Suite) Test_SubstContext_leave__missing_transformation_in_one_branch(c 
 func (s *Suite) Test_substScope_prepareSubstClasses(c *check.C) {
 	t := s.Init(c)
 
-	t.RunSubst(
-		"SUBST_CLASSES+= 1",
-		"SUBST_STAGE.1=  post-configure",
-		"SUBST_CLASSES+= 2",
-		"SUBST_STAGE.2=  post-configure")
-
-	t.CheckOutputLines(
-		"WARN: filename.mk:3: Subst block \"1\" should be finished "+
-			"before adding the next class to SUBST_CLASSES.",
-		"WARN: filename.mk:3: Incomplete SUBST block: SUBST_FILES.1 missing.",
-		"WARN: filename.mk:3: Incomplete SUBST block: "+
-			"SUBST_SED.1, SUBST_VARS.1 or SUBST_FILTER_CMD.1 missing.",
-		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_FILES.2 missing.",
-		"WARN: filename.mk:EOF: Incomplete SUBST block: "+
-			"SUBST_SED.2, SUBST_VARS.2 or SUBST_FILTER_CMD.2 missing.")
+	// FIXME
+	t.ExpectAssert(
+		func() {
+			t.RunSubst(
+				"SUBST_CLASSES+= 1",
+				"SUBST_STAGE.1=  post-configure",
+				".if 0")
+		})
 }
 
 func (s *Suite) Test_SubstContext_leave__nested_conditionals(c *check.C) {
