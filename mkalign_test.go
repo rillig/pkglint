@@ -217,6 +217,11 @@ func (s *Suite) Test_MkAlignLine_IsCanonicalFollow(c *check.C) {
 	test("\tvalue", 8, true)
 	test("\tvalue", 9, false)
 
+	// The indentation width is correct, but there is an additional
+	// space in the indentation. That space must be replaced with tabs,
+	// which in this case means it is simply removed.
+	test("\t \tvalue", 16, false)
+
 	// TODO: Why should pkglint care about the right margin?
 	//  If there is an existing right margin, it should be kept as-is,
 	//  but otherwise, why not let the pkgsrc developers fix this
