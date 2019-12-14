@@ -299,13 +299,6 @@ func (s *substScope) define(id string) {
 	s.defs = append(s.defs, newSubstBlock(id))
 }
 
-func (s *substScope) block(id string) *substBlock {
-	assert(id != "")
-	block := s.def(id)
-	assertNotNil(block)
-	return block
-}
-
 func (s *substScope) isDone(id string) bool {
 	def := s.def(id)
 	return def != nil && def.done
