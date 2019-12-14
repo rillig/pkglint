@@ -7,7 +7,7 @@ import "netbsd.org/pkglint/textproc"
 //
 // See mk/subst.mk.
 type SubstContext struct {
-	lastSeenId string
+	active *substBlock
 
 	scopes []*substScope
 
@@ -142,7 +142,7 @@ func (ctx *SubstContext) varassignOutsideBlock(mkline *MkLine) (continueWithNewI
 func (ctx *SubstContext) varassignDifferentClass(mkline *MkLine) (ok bool) {
 	varname := mkline.Varname()
 	if ctx.isActive() && !ctx.block().isComplete() {
-		mkline.Warnf("Variable %q does not match SUBST class %q.", varname, ctx.lastSeenId)
+		mkline.Warnf("Variable %q does not match SUBST class %q.", varname, ctx.activeId())
 		if !ctx.block().seenEmpty {
 			return false
 		}
@@ -197,8 +197,8 @@ func (ctx *SubstContext) leave(diag Diagnoser) {
 func (ctx *SubstContext) activate(id string, mkline *MkLine) bool {
 	ctx.deactivate(mkline)
 
-	if ctx.lookup(id) != nil {
-		ctx.lastSeenId = id
+	if block := ctx.lookup(id); block != nil {
+		ctx.active = block
 		return true
 	}
 
@@ -219,7 +219,7 @@ func (ctx *SubstContext) deactivate(diag Diagnoser) {
 	if !block.isConditional() {
 		block.finish(diag)
 	}
-	ctx.lastSeenId = ""
+	ctx.active = nil
 }
 
 func (*SubstContext) isForeign(varcanon string) bool {
@@ -248,9 +248,8 @@ func (*SubstContext) isListCanon(varcanon string) bool {
 }
 
 func (ctx *SubstContext) block() *substBlock {
-	block := ctx.lookup(ctx.activeId())
-	assertNotNil(block)
-	return block
+	assertNotNil(ctx.active)
+	return ctx.active
 }
 
 func (ctx *SubstContext) lookup(id string) *substBlock {
@@ -276,11 +275,11 @@ func (ctx *SubstContext) scope() *substScope {
 	return ctx.scopes[len(ctx.scopes)-1]
 }
 
-func (ctx *SubstContext) isActive() bool { return ctx.lastSeenId != "" }
+func (ctx *SubstContext) isActive() bool { return ctx.active != nil }
 
 func (ctx *SubstContext) activeId() string {
 	assert(ctx.isActive())
-	return ctx.lastSeenId
+	return ctx.active.id
 }
 
 type substScope struct {
