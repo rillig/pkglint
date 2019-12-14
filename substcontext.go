@@ -495,7 +495,7 @@ func (b *substBlock) dupString(mkline *MkLine, part substSeen) {
 }
 
 func (b *substBlock) dupList(mkline *MkLine, part substSeen, autofixPart substSeen) {
-	if b.hasSeen(part) && mkline.Op() != opAssignAppend {
+	if b.hasSeenAnywhere(part) && mkline.Op() != opAssignAppend {
 		b.fixOperatorAppend(mkline, b.hasSeen(autofixPart))
 	}
 	b.addSeen(part)
@@ -565,6 +565,15 @@ func (b *substBlock) isComplete() bool {
 func (b *substBlock) hasSeen(part substSeen) bool {
 	for _, cond := range b.conds {
 		if cond.hasSeen(part) {
+			return true
+		}
+	}
+	return false
+}
+
+func (b *substBlock) hasSeenAnywhere(part substSeen) bool {
+	for _, cond := range b.conds {
+		if cond.hasSeenAnywhere(part) {
 			return true
 		}
 	}
@@ -653,7 +662,7 @@ func (b *substBlock) checkForeignVariables() {
 
 func (b *substBlock) hasStarted() bool {
 	for _, cond := range b.conds {
-		if cond.curr != ssNone {
+		if cond.currAny != ssNone {
 			return true
 		}
 	}
@@ -663,12 +672,14 @@ func (b *substBlock) hasStarted() bool {
 type substCond struct {
 	// Collects the parts of the SUBST block that have been defined in all
 	// branches that have been parsed completely.
-	total substSeen
+	total    substSeen
+	totalAny substSeen
 
 	// Collects the parts of the SUBST block that are defined in the current
 	// branch of the conditional. At the end of the branch, they are merged
 	// into the total.
-	curr substSeen
+	curr    substSeen
+	currAny substSeen
 
 	// Marks whether the current conditional statement has
 	// an .else branch. If it doesn't, this means that all variables
@@ -680,12 +691,15 @@ func newSubstCond() *substCond { return &substCond{total: ssAll} }
 
 func (c *substCond) enterBranch(isElse bool) {
 	c.curr = ssNone
+	c.currAny = ssNone
 	c.seenElse = isElse
 }
 
 func (c *substCond) leaveBranch() {
 	c.total.retainAll(c.curr)
+	c.totalAny.addAll(c.currAny)
 	c.curr = ssNone
+	c.currAny = ssNone
 }
 
 func (c *substCond) leaveLevel(child *substCond) {
@@ -693,11 +707,19 @@ func (c *substCond) leaveLevel(child *substCond) {
 	if child.seenElse {
 		c.curr.addAll(child.total)
 	}
+	c.currAny.addAll(child.totalAny)
 }
 
 func (c *substCond) hasSeen(part substSeen) bool { return c.curr.has(part) }
 
-func (c *substCond) addSeen(part substSeen) { c.curr.set(part) }
+func (c *substCond) hasSeenAnywhere(part substSeen) bool {
+	return c.currAny.has(part)
+}
+
+func (c *substCond) addSeen(part substSeen) {
+	c.curr.set(part)
+	c.currAny.set(part)
+}
 
 // substSeen contains all variables that depend on a particular SUBST
 // class ID. These variables can be set in conditional branches, and

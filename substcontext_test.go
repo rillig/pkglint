@@ -584,7 +584,10 @@ func (s *Suite) Test_SubstContext_leave__details_in_then_branch(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: filename.mk:5: SUBST_STAGE.os should not be defined conditionally.",
 		"WARN: filename.mk:6: SUBST_MESSAGE.os should not be defined conditionally.",
-		"WARN: filename.mk:EOF: Missing SUBST block for \"os\".")
+		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_STAGE.os missing.",
+		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_FILES.os missing.",
+		"WARN: filename.mk:EOF: Incomplete SUBST block: "+
+			"SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
 }
 
 func (s *Suite) Test_SubstContext_leave__details_in_else_branch(c *check.C) {
@@ -604,7 +607,10 @@ func (s *Suite) Test_SubstContext_leave__details_in_else_branch(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: filename.mk:6: SUBST_STAGE.os should not be defined conditionally.",
 		"WARN: filename.mk:7: SUBST_MESSAGE.os should not be defined conditionally.",
-		"WARN: filename.mk:EOF: Missing SUBST block for \"os\".")
+		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_STAGE.os missing.",
+		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_FILES.os missing.",
+		"WARN: filename.mk:EOF: Incomplete SUBST block: "+
+			"SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
 }
 
 func (s *Suite) Test_SubstContext_leave__empty_conditional_at_end(c *check.C) {
@@ -1297,11 +1303,9 @@ func (s *Suite) Test_substBlock_dupList__conditional_before_unconditional(c *che
 		"SUBST_FILES.os= unconditional",
 		"SUBST_VARS.os=  OPSYS")
 
-	// TODO: Warn that the conditional line is overwritten.
-	//  To do this, the code needs to track not only the variables
-	//  that have been set in _all_ branches, but also those that
-	//  have been set in _some_ branch.
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: filename.mk:6: All but the first assignment " +
+			"to \"SUBST_FILES.os\" should use the \"+=\" operator.")
 }
 
 func (s *Suite) Test_substBlock_extractVarname(c *check.C) {
