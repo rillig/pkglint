@@ -1641,7 +1641,8 @@ func (s *Suite) Test_VartypeCheck_SedCommands(c *check.C) {
 		"1d",
 		"-e",
 		"-i s,from,to,",
-		"-e s,$${unclosedShellVar") // Just for code coverage.
+		"-e s,$${unclosedShellVar", // Just for code coverage.
+		"-e s,...")                 // Syntactically invalid sed command.
 
 	vt.Output(
 		"NOTE: filename.mk:1: Please always use \"-e\" in sed commands, even if there is only one substitution.",
@@ -1652,7 +1653,7 @@ func (s *Suite) Test_VartypeCheck_SedCommands(c *check.C) {
 		"ERROR: filename.mk:9: The -e option to sed requires an argument.",
 		"WARN: filename.mk:10: Unknown sed command \"-i\".",
 		"NOTE: filename.mk:10: Please always use \"-e\" in sed commands, even if there is only one substitution.",
-		// TODO: duplicate warning
+		// XXX: duplicate warning
 		"WARN: filename.mk:11: Unclosed shell variable starting at \"$${unclosedShellVar\".",
 		"WARN: filename.mk:11: Unclosed shell variable starting at \"$${unclosedShellVar\".")
 }
