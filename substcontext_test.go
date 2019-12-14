@@ -822,6 +822,16 @@ func (s *Suite) Test_substScope__conditionals(c *check.C) {
 	ctx.Finish(NewLineEOF("filename.mk"))
 }
 
+func (s *Suite) Test_substScope_define__assertion(c *check.C) {
+	t := s.Init(c)
+
+	scope := newSubstScope()
+	scope.define("id")
+
+	t.ExpectAssert(
+		func() { scope.define("id") })
+}
+
 // Variables mentioned in SUBST_VARS may appear in the same paragraph,
 // or alternatively anywhere else in the file.
 func (s *Suite) Test_substScope_finish__foreign_in_next_paragraph(c *check.C) {
@@ -924,6 +934,13 @@ func (s *Suite) Test_substScope_prepareSubstClasses__nested(c *check.C) {
 		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_FILES.1 missing.",
 		"WARN: filename.mk:EOF: Incomplete SUBST block: "+
 			"SUBST_SED.1, SUBST_VARS.1 or SUBST_FILTER_CMD.1 missing.")
+}
+
+func (s *Suite) Test_newSubstBlock__assertion(c *check.C) {
+	t := s.Init(c)
+
+	t.ExpectAssert(
+		func() { newSubstBlock("") })
 }
 
 func (s *Suite) Test_substBlock_varassign__typo_in_subst_variable(c *check.C) {
@@ -1631,4 +1648,34 @@ func (s *Suite) Test_substBlock_finish__files_missing(c *check.C) {
 		"WARN: filename.mk:3: Incomplete SUBST block: SUBST_FILES.one missing.",
 		"WARN: filename.mk:3: Incomplete SUBST block: "+
 			"SUBST_SED.one, SUBST_VARS.one or SUBST_FILTER_CMD.one missing.")
+}
+
+func (s *Suite) Test_substBlock_finish__assertion(c *check.C) {
+	t := s.Init(c)
+
+	b := newSubstBlock("id")
+	b.enter()
+
+	t.ExpectAssert(
+		func() { b.finish(nil) })
+}
+
+func (s *Suite) Test_substSeen_set__assertion(c *check.C) {
+	t := s.Init(c)
+
+	t.ExpectAssert(
+		func() {
+			seen := ssAll
+			seen.set(ssAll)
+		})
+}
+
+func (s *Suite) Test_substSeen_has__assertion(c *check.C) {
+	t := s.Init(c)
+
+	t.ExpectAssert(
+		func() {
+			seen := ssAll
+			seen.has(ssAll)
+		})
 }
