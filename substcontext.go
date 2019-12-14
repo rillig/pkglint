@@ -125,7 +125,7 @@ func (ctx *SubstContext) varassignOutsideBlock(mkline *MkLine) (continueWithNewI
 func (ctx *SubstContext) varassignDifferentClass(mkline *MkLine) (ok bool) {
 	varname := mkline.Varname()
 	unknown := ctx.lookup(mkline.Varparam()) == nil
-	if unknown && ctx.isActive() && !ctx.block().isComplete() {
+	if unknown && !ctx.block().isComplete() {
 		mkline.Warnf("Variable %q does not match SUBST class %q.",
 			varname, ctx.activeId())
 		if !ctx.block().seenEmpty {
