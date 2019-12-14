@@ -1659,7 +1659,6 @@ func (s *Suite) Test_VartypeCheck_SedCommands(c *check.C) {
 
 func (s *Suite) Test_VartypeCheck_SedCommands__experimental(c *check.C) {
 	vt := NewVartypeCheckTester(s.Init(c), BtSedCommands)
-	G.Experimental = true
 
 	vt.Varname("SUBST_SED.dummy")
 
