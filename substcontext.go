@@ -690,10 +690,6 @@ func (c *substCond) leaveLevel(child *substCond) {
 
 func (c *substCond) hasSeen(part substSeen) bool { return c.curr.has(part) }
 
-func (c *substCond) hasSeenAll(parts substSeen) bool {
-	return c.curr.hasAll(parts)
-}
-
 func (c *substCond) addSeen(part substSeen) { c.curr.set(part) }
 
 // substSeen contains all variables that depend on a particular SUBST
@@ -726,7 +722,6 @@ func (s *substSeen) has(part substSeen) bool {
 	return *s&part != 0
 }
 
-func (s substSeen) hasAny(other substSeen) bool { return s&other != 0 }
 func (s substSeen) hasAll(other substSeen) bool { return s&other == other }
 func (s *substSeen) addAll(other substSeen)     { *s |= other }
 func (s *substSeen) retainAll(other substSeen)  { *s &= other }
