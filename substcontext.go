@@ -255,9 +255,8 @@ func (ctx *SubstContext) block() *substBlock {
 
 func (ctx *SubstContext) lookup(id string) *substBlock {
 	for i := len(ctx.scopes) - 1; i >= 0; i-- {
-		scope := ctx.scopes[i]
-		if scope.isDefined(id) {
-			return scope.block(id)
+		if def := ctx.scopes[i].def(id); def != nil {
+			return def
 		}
 	}
 	return nil
@@ -285,29 +284,36 @@ func (ctx *SubstContext) activeId() string {
 }
 
 type substScope struct {
-	defs map[string]*substBlock
+	defs []*substBlock
 }
 
 func newSubstScope() *substScope {
-	return &substScope{map[string]*substBlock{}}
+	return &substScope{nil}
 }
 
-func (s *substScope) isDefined(id string) bool { return s.defs[id] != nil }
+func (s *substScope) def(id string) *substBlock {
+	for _, def := range s.defs {
+		if def.id == id {
+			return def
+		}
+	}
+	return nil
+}
 
 func (s *substScope) define(id string) {
-	assert(s.defs[id] == nil)
-	s.defs[id] = newSubstBlock(id)
+	assert(s.def(id) == nil)
+	s.defs = append(s.defs, newSubstBlock(id))
 }
 
 func (s *substScope) block(id string) *substBlock {
 	assert(id != "")
-	block := s.defs[id]
+	block := s.def(id)
 	assertNotNil(block)
 	return block
 }
 
 func (s *substScope) isDone(id string) bool {
-	def := s.defs[id]
+	def := s.def(id)
 	return def != nil && def.done
 }
 
@@ -326,11 +332,11 @@ func (s *substScope) finish(diag Diagnoser) {
 }
 
 func (s *substScope) prepareSubstClasses(diag Diagnoser) {
-	for id, block := range s.defs { // TODO: in order
+	for _, block := range s.defs { // TODO: in order
 		if block.hasStarted() && !block.isComplete() {
 			diag.Warnf("Subst block %q should be finished "+
 				"before adding the next class to SUBST_CLASSES.",
-				id)
+				block.id)
 		}
 	}
 }
@@ -378,6 +384,7 @@ type substBlock struct {
 }
 
 func newSubstBlock(id string) *substBlock {
+	assert(id != "")
 	return &substBlock{id: id, conds: []*substCond{newSubstCond()}}
 }
 
