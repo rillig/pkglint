@@ -87,7 +87,6 @@ func (ctx *SubstContext) varassign(mkline *MkLine) {
 	case "SUBST_FILTER_CMD.*":
 		block.varassignFilterCmd(mkline)
 	}
-	block.seenEmpty = false
 }
 
 func (ctx *SubstContext) varassignClasses(mkline *MkLine) {

@@ -1529,10 +1529,9 @@ func (s *Suite) Test_substBlock_checkForeignVariables__mixed_separate(c *check.C
 		"SUBST_VARS.1=   VAR",
 		"USE_TOOLS+=     gmake")
 
-	// FIXME: This is not a SUBST block anymore since there is an empty
-	//  line between SUBST_CLASSES and SUBST_VARS.
-	t.CheckOutputLines(
-		"WARN: filename.mk:6: Foreign variable \"USE_TOOLS\" in SUBST block.")
+	// The USE_TOOLS is not in the SUBST block anymore since there is
+	// an empty line between SUBST_CLASSES and SUBST_VARS.
+	t.CheckOutputEmpty()
 }
 
 // Variables mentioned in SUBST_VARS are not considered "foreign"
