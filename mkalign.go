@@ -163,6 +163,15 @@ type MkAlignLine struct {
 	Continuation     string
 }
 
+func NewMkAlignLine(
+	comment, varOp, spaceBeforeValue,
+	value, spaceAfterValue, continuation string) *MkAlignLine {
+
+	return &MkAlignLine{
+		comment, varOp, spaceBeforeValue,
+		value, spaceAfterValue, continuation}
+}
+
 func (l *MkAlignLine) HasCanonicalRightMargin(valueAlignColumn int) bool {
 	panic("implement me")
 }
@@ -214,7 +223,10 @@ func (l *MkAlignLine) IsCanonicalFollowLead() bool {
 	panic("implement me")
 }
 
-func (l *MkAlignLine) IsCanonicalFollow() bool {
+func (l *MkAlignLine) IsCanonicalFollow(minAlign int) bool {
+	assert(minAlign >= 0)
+	assert(l.VarOp == "")
+
 	// In the continuation lines, each follow-up line is indented with at least
 	// one tab, to avoid confusing them with regular single-lines. This is
 	// especially true for CONFIGURE_ENV, since the environment variables are
@@ -226,8 +238,19 @@ func (l *MkAlignLine) IsCanonicalFollow() bool {
 	//          else                                                            \
 	//                  ${ECHO} no;                                             \
 	//          fi
-	//
-	//
 
-	panic("implement me")
+	width := tabWidth(l.SpaceBeforeValue)
+	if width < 8 || width < minAlign {
+		return false
+	}
+
+	if l.SpaceBeforeValue != indent(width) {
+		return false
+	}
+
+	if width == minAlign {
+		return true
+	}
+
+	return tabWidthAppend(width, l.Value) < 72
 }

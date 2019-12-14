@@ -1327,7 +1327,8 @@ func (t *Tester) CheckDotColumns(lines ...string) {
 			width := tabWidth(prefix)
 			num, err := strconv.Atoi(line[m[2]:m[3]])
 			assertNil(err, "")
-			t.CheckEqualsf(num, width, "lines[%d]", index)
+			t.CheckEqualsf(num, width,
+				"The dots in lines[%d] are wrong.", index)
 		}
 	}
 }
