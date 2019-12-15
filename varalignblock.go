@@ -252,10 +252,9 @@ func (*VaralignBlock) optimalWidth(mkinfos []*varalignMkLine) int {
 
 	var widths bag
 	for _, mkinfo := range mkinfos {
-		for _, info := range mkinfo.infos {
-			if !info.multiEmpty && info.rawIndex == 0 {
-				widths.Add(info.fixer, info.varnameOpWidth())
-			}
+		info := mkinfo.infos[0]
+		if !info.multiEmpty {
+			widths.Add(info.fixer, info.varnameOpWidth())
 		}
 	}
 	widths.sortDesc()
