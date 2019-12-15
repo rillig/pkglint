@@ -271,13 +271,14 @@ func (va *VaralignBlock) varnameOpWidths() (int, int) {
 			widths.Add(info.fixer, info.varnameOpWidth())
 		}
 	}
+	if widths.len() == 0 {
+		return 0, 0
+	}
+
 	widths.sortDesc()
 
 	longest := widths.opt(0)
-	var longestLine *MkLine
-	if widths.len() > 0 {
-		longestLine = widths.key(0).(*MkLine)
-	}
+	longestLine := widths.key(0).(*MkLine)
 	secondLongest := widths.opt(1)
 
 	haveOutlier := secondLongest != 0 &&
