@@ -572,6 +572,25 @@ func (s *Suite) Test_Autofix_ReplaceAt(c *check.C) {
 		t.ExpectDiagnosticsAutofix(mainPart, diagnostics...)
 	}
 
+	// FIXME: use testPanic consistently below.
+	testPanic := func(texts []string, rawIndex int, column int, from, to string) {
+
+		mainPart := func() {
+			mklines := t.NewMkLines("filename.mk", texts...)
+			assert(len(mklines.mklines) == 1)
+			mkline := mklines.mklines[0]
+
+			fix := mkline.Autofix()
+			fix.Notef("Should be appended instead of assigned.")
+			fix.ReplaceAt(rawIndex, column, from, to)
+			fix.Apply()
+		}
+
+		t.ExpectDiagnosticsAutofix(
+			func(bool) { t.ExpectAssert(mainPart) },
+			nil...)
+	}
+
 	test(
 		lines(
 			"VAR=value1 \\",
@@ -582,14 +601,12 @@ func (s *Suite) Test_Autofix_ReplaceAt(c *check.C) {
 		"AUTOFIX: filename.mk:1: Replacing \"=\" with \"+=\".")
 
 	// If the text at the precisely given position does not match,
-	// the note is still printed, but nothing is replaced automatically.
-	test(
+	// it is a programming mistake, therefore pkglint panics.
+	testPanic(
 		lines(
 			"VAR=value1 \\",
 			"\tvalue2"),
-		0, 3, "?", "+=",
-
-		"NOTE: filename.mk:1--2: Should be appended instead of assigned.")
+		0, 3, "?", "+=")
 
 	// Getting the line number wrong is a strange programming error, and
 	// there does not need to be any code checking for this in the main code.
@@ -603,14 +620,15 @@ func (s *Suite) Test_Autofix_ReplaceAt(c *check.C) {
 		func() { test(lines("VAR=value"), 0, 4, "value", "value", nil...) })
 
 	// Getting the column number wrong may happen when a previous replacement
-	// has made the string shorter than before, therefore no panic in this case.
-	test(
+	// has made the string shorter than before.
+	// This is a programming mistake, therefore panic.
+	// All fixes that work on the raw lines are supposed to work exactly and
+	// know what they are doing.
+	testPanic(
 		lines(
 			"VAR=value1 \\",
 			"\tvalue2"),
-		0, 20, "?", "+=",
-
-		"NOTE: filename.mk:1--2: Should be appended instead of assigned.")
+		0, 20, "?", "+=")
 }
 
 func (s *Suite) Test_Autofix_ReplaceRegex__show_autofix(c *check.C) {

@@ -95,12 +95,11 @@ func (vt *VaralignTester) run(autofix bool) {
 
 		varalign.Process(mkline)
 	}
-	mkinfos := varalign.mkinfos // since they are overwritten by Finish
-	varalign.Finish()
 
+	var actualInternals []string
 	if len(vt.internals) > 0 {
 		var actual []string
-		for _, mkinfo := range mkinfos {
+		for _, mkinfo := range varalign.mkinfos {
 			for _, info := range mkinfo.infos {
 				var minWidth, curWidth, continuation string
 				minWidth = condStr(info.rawIndex == 0, sprintf("%02d", info.varnameOpWidth()), "  ")
@@ -111,7 +110,13 @@ func (vt *VaralignTester) run(autofix bool) {
 				actual = append(actual, minWidth+curWidth+continuation)
 			}
 		}
-		t.CheckDeepEquals(actual, vt.internals)
+		actualInternals = actual
+	}
+
+	varalign.Finish()
+
+	if len(vt.internals) > 0 {
+		t.CheckDeepEquals(actualInternals, vt.internals)
 	}
 
 	if autofix {
@@ -2794,17 +2799,16 @@ func (s *Suite) Test_VaralignBlock__long_lines(c *check.C) {
 	vt.Diagnostics(
 		"NOTE: Makefile:1: The continuation backslash should be in column 57, not 66.",
 		"NOTE: Makefile:2: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".",
+		"NOTE: Makefile:2: The continuation backslash should be in column 57, not 58.",
 		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".")
 	vt.Autofixes(
 		"AUTOFIX: Makefile:1: Replacing \"\\t\\t \" with \"\\t\".",
 		"AUTOFIX: Makefile:2: Replacing \"\\t\" with \"\\t\\t\\t\\t\\t\\t\".",
+		"AUTOFIX: Makefile:2: Replacing \" \\t \" with \"\\t\".",
 		"AUTOFIX: Makefile:3: Replacing \"\\t\" with \"\\t\\t\\t\\t\\t\\t\".")
 	vt.Fixed(
 		"VAR=                                            value   \\",
-		// FIXME: The backslash should be aligned properly.
-		//  It is not replaced because alignContinuation is called before fixAlign,
-		//  which is the wrong order.
-		"                                                value    \\",
+		"                                                value   \\",
 		"                                                value")
 	vt.Run()
 }
@@ -3588,8 +3592,7 @@ func (s *Suite) Test_varalignLine_alignValueSingle(c *check.C) {
 			info.alignValueSingle(column)
 
 			t.CheckEqualsf(
-				mkline.raw[0].text(),
-				condStr(autofix, after, before),
+				mkline.raw[0].text(), after,
 				"Line.raw.text, autofix=%v", autofix)
 
 			// As of 2019-12-11, the info fields are not updated
@@ -3734,14 +3737,10 @@ func (s *Suite) Test_varalignLine_alignValueMultiInitial(c *check.C) {
 			info.alignValueMultiInitial(column)
 
 			t.CheckEqualsf(
-				mkline.raw[0].text(),
-				condStr(autofix, after, before),
+				mkline.raw[0].text(), after,
 				"Line.raw.text, autofix=%v", autofix)
 
-			// As of 2019-12-11, the info fields are not updated
-			// accordingly, but they should.
-			// TODO: update info accordingly
-			t.CheckEqualsf(info.String(), before,
+			t.CheckEqualsf(info.String(), after,
 				"info.String, autofix=%v", autofix)
 		}
 
@@ -3801,7 +3800,7 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow(c *check.C) {
 
 	// newLine creates a line consisting of either 2 or 3 physical lines.
 	// The text ends up in the raw line with index 1.
-	newLine := func(text string, column, indentDiff int) *varalignLine {
+	newLine := func(text string, column, indentDiff int) (*varalignLine, *RawLine) {
 		t.CheckDotColumns("", text)
 
 		leading := alignWith("VAR=", indent(column)) + "value \\"
@@ -3816,19 +3815,17 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow(c *check.C) {
 
 		parts := NewVaralignSplitter().split(text, false)
 		isLong := parts.isTooLongFor(column + indentDiff)
-		return &varalignLine{mkline, 1, isLong, parts}
+		return &varalignLine{mkline, 1, isLong, parts}, mkline.raw[1]
 	}
 
 	test := func(before string, column, indentDiff int, after string, diagnostics ...string) {
 
 		doTest := func(autofix bool) {
-			info := newLine(before, column, indentDiff)
+			info, raw := newLine(before, column, indentDiff)
 
 			info.alignValueMultiFollow(column, indentDiff)
 
-			t.CheckEquals(
-				info.fixer.(*MkLine).raw[info.rawIndex].text(),
-				condStr(autofix, after, before))
+			t.CheckEquals(raw.text(), after)
 		}
 
 		t.ExpectDiagnosticsAutofix(
@@ -3919,11 +3916,11 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_lines(c *
 		"NOTE: Makefile:1: This variable value should be aligned to column 17.",
 		"NOTE: Makefile:2: This variable value should be aligned to column 17.",
 		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".",
-		"NOTE: Makefile:3: The continuation backslash should be preceded by a single space or tab.",
+		"NOTE: Makefile:3: The continuation backslash should be in column 73, not 66.",
 		"NOTE: Makefile:4: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".",
-		"NOTE: Makefile:4: The continuation backslash should be preceded by a single space or tab.",
+		"NOTE: Makefile:4: The continuation backslash should be in column 73, not 66.",
 		"NOTE: Makefile:5: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".",
-		"NOTE: Makefile:5: The continuation backslash should be preceded by a single space or tab.",
+		"NOTE: Makefile:5: The continuation backslash should be in column 73, not 75.",
 		"NOTE: Makefile:6: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".",
 		"NOTE: Makefile:7: This continuation line should be indented with \"\\t\\t\\t\\t\\t\".",
 		"NOTE: Makefile:8: This continuation line should be indented with \"\\t\\t\\t\\t\\t\".")
@@ -3931,8 +3928,11 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_lines(c *
 		"AUTOFIX: Makefile:1: Replacing \"\\t\" with \"\\t\\t\".",
 		"AUTOFIX: Makefile:2: Replacing \"\\t\\t\\t\\t\" with \"\\t\".",
 		"AUTOFIX: Makefile:3: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\\t\".",
+		"AUTOFIX: Makefile:3: Replacing \"                \" with \"\\t\\t\\t\".",
 		"AUTOFIX: Makefile:4: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\\t\".",
+		"AUTOFIX: Makefile:4: Replacing \"               \" with \"\\t\\t\\t\".",
 		"AUTOFIX: Makefile:5: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\\t\".",
+		"AUTOFIX: Makefile:5: Replacing \"  \\t\\t\\t  \" with \"\\t\\t\\t\".",
 		"AUTOFIX: Makefile:6: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\\t\".",
 		"AUTOFIX: Makefile:7: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\".",
 		"AUTOFIX: Makefile:8: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\".")
@@ -3943,11 +3943,11 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_lines(c *
 		"SHORT=          value",
 		"PROGRAM_AWK=    ........50........60........70 \\",
 		// FIXME: Remove additional space before continuation backslash.
-		"                                                3                \\",
+		"                                                3                       \\",
 		// FIXME: Remove additional space before continuation backslash.
-		"                                                74               \\",
+		"                                                74                      \\",
 		// FIXME: Remove additional space before continuation backslash.
-		"                                                -75                       \\",
+		"                                                -75                     \\",
 		"                                                ..76 \\",
 		"                                        66 \\",
 		"                                        1")
@@ -4019,14 +4019,10 @@ func (s *Suite) Test_varalignLine_alignContinuation(c *check.C) {
 			info.alignContinuation(valueColumn, rightMarginColumn)
 
 			t.CheckEqualsf(
-				mkline.raw[rawIndex].text(),
-				condStr(autofix, after, before[rawIndex]),
+				mkline.raw[rawIndex].text(), after,
 				"Line.raw.text, autofix=%v", autofix)
 
-			// As of 2019-12-11, the info fields are not updated
-			// accordingly, but they should.
-			// TODO: update info accordingly
-			t.CheckEqualsf(info.String(), before[rawIndex],
+			t.CheckEqualsf(info.String(), after,
 				"info.String, autofix=%v", autofix)
 		}
 

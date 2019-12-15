@@ -623,6 +623,7 @@ func (info *varalignLine) alignValueMultiEmptyInitial(newWidth int) {
 	}
 	fix.ReplaceAt(info.rawIndex, info.spaceBeforeValueIndex(), oldSpace, newSpace)
 	fix.Apply()
+	info.spaceBeforeValue = newSpace
 }
 
 func (info *varalignLine) alignValueMultiInitial(column int) {
@@ -648,6 +649,7 @@ func (info *varalignLine) alignValueMultiInitial(column int) {
 	}
 	fix.ReplaceAt(info.rawIndex, info.spaceBeforeValueIndex(), oldSpace, newSpace)
 	fix.Apply()
+	info.spaceBeforeValue = newSpace
 }
 
 func (info *varalignLine) alignValueMultiEmptyFollow(column int) {
@@ -667,7 +669,7 @@ func (info *varalignLine) alignValueMultiEmptyFollow(column int) {
 	fix.Notef("This continuation line should be indented with %q.", newSpace)
 	fix.ReplaceAt(info.rawIndex, info.spaceBeforeValueIndex(), oldSpace, newSpace)
 	fix.Apply()
-
+	info.spaceBeforeValue = newSpace
 	// TODO: Merge with alignValueMultiFollow
 }
 
@@ -681,10 +683,14 @@ func (info *varalignLine) alignValueMultiFollow(column, indentDiff int) {
 
 	fix := info.fixer.Autofix()
 	fix.Notef("This continuation line should be indented with %q.", newSpace)
-	modified, replaced := fix.ReplaceAt(info.rawIndex, info.spaceBeforeValueIndex(), oldSpace, newSpace)
-	assert(modified)
-	if info.continuation != "" && info.continuationColumn() == 72 {
-		orig := strings.TrimSuffix(replaced, "\n")
+	fix.ReplaceAt(info.rawIndex, info.spaceBeforeValueIndex(), oldSpace, newSpace)
+	was72 := info.continuationColumn() == 72
+	info.spaceBeforeValue = newSpace
+	if info.continuation != "" && was72 {
+		// FIXME: This type cast is ugly.
+		// Since the varalignParts are updated now after fixing the text,
+		// the same text is available there.
+		orig := info.fixer.(*MkLine).raw[info.rawIndex].text()
 		base := rtrimHspace(strings.TrimSuffix(orig, "\\"))
 		spaceIndex := len(base)
 		oldSuffix := orig[spaceIndex:]
@@ -694,6 +700,7 @@ func (info *varalignLine) alignValueMultiFollow(column, indentDiff int) {
 		}
 		if newSuffix != oldSuffix {
 			fix.ReplaceAt(info.rawIndex, spaceIndex, oldSuffix, newSuffix)
+			info.setSpaceBeforeContinuation(strings.TrimSuffix(newSuffix, "\\"))
 		}
 	}
 	fix.Apply()
@@ -730,6 +737,7 @@ func (info *varalignLine) alignContinuation(valueColumn, rightMarginColumn int) 
 	}
 	index := info.continuationIndex() - len(oldSpace)
 	fix.ReplaceAt(info.rawIndex, index, oldSpace, newSpace)
+	info.setSpaceBeforeContinuation(newSpace)
 	fix.Apply()
 }
 
@@ -801,6 +809,14 @@ func (p *varalignParts) spaceBeforeContinuation() string {
 		return p.spaceBeforeValue
 	}
 	return p.spaceAfterValue
+}
+
+func (p *varalignParts) setSpaceBeforeContinuation(space string) {
+	if p.value == "" {
+		p.spaceBeforeValue = space
+	} else {
+		p.spaceAfterValue = space
+	}
 }
 
 func (p *varalignParts) uptoValueWidth() int {
