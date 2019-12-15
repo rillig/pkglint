@@ -3918,24 +3918,20 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_lines(c *
 	vt.Diagnostics(
 		"NOTE: Makefile:1: This variable value should be aligned to column 17.",
 		"NOTE: Makefile:2: This variable value should be aligned to column 17.",
-		// XXX: Wrong order; should be strictly from left to right.
-		"NOTE: Makefile:3: The continuation backslash should be preceded by a single space or tab.",
 		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".",
-		"NOTE: Makefile:4: The continuation backslash should be preceded by a single space or tab.",
+		"NOTE: Makefile:3: The continuation backslash should be preceded by a single space or tab.",
 		"NOTE: Makefile:4: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".",
-		"NOTE: Makefile:5: The continuation backslash should be preceded by a single space or tab.",
+		"NOTE: Makefile:4: The continuation backslash should be preceded by a single space or tab.",
 		"NOTE: Makefile:5: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".",
+		"NOTE: Makefile:5: The continuation backslash should be preceded by a single space or tab.",
 		"NOTE: Makefile:6: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".",
 		"NOTE: Makefile:7: This continuation line should be indented with \"\\t\\t\\t\\t\\t\".",
 		"NOTE: Makefile:8: This continuation line should be indented with \"\\t\\t\\t\\t\\t\".")
 	vt.Autofixes(
 		"AUTOFIX: Makefile:1: Replacing \"\\t\" with \"\\t\\t\".",
 		"AUTOFIX: Makefile:2: Replacing \"\\t\\t\\t\\t\" with \"\\t\".",
-		"AUTOFIX: Makefile:3: Replacing \"                \" with \" \".",
 		"AUTOFIX: Makefile:3: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\\t\".",
-		"AUTOFIX: Makefile:4: Replacing \"               \" with \" \".",
 		"AUTOFIX: Makefile:4: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\\t\".",
-		"AUTOFIX: Makefile:5: Replacing \"  \\t\\t\\t  \" with \" \".",
 		"AUTOFIX: Makefile:5: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\\t\".",
 		"AUTOFIX: Makefile:6: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\\t\".",
 		"AUTOFIX: Makefile:7: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\".",
@@ -3946,9 +3942,12 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_lines(c *
 		// kept in column 72. Nevertheless they look unorganized right now.
 		"SHORT=          value",
 		"PROGRAM_AWK=    ........50........60........70 \\",
-		"                                                3 \\",
-		"                                                74 \\",
-		"                                                -75 \\",
+		// FIXME: Remove additional space before continuation backslash.
+		"                                                3                \\",
+		// FIXME: Remove additional space before continuation backslash.
+		"                                                74               \\",
+		// FIXME: Remove additional space before continuation backslash.
+		"                                                -75                       \\",
 		"                                                ..76 \\",
 		"                                        66 \\",
 		"                                        1")

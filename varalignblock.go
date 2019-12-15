@@ -229,12 +229,11 @@ func (l *varalignMkLine) realign(newWidth int) {
 	isMultiEmpty := l.isMultiEmpty()
 	for _, info := range l.infos {
 
-		// TODO: move below va.realignDetails
-		info.alignContinuation(newWidth, rightMargin)
-
 		if newWidth > 0 || info.rawIndex > 0 {
 			info.realignDetails(newWidth, &indentDiffSet, &indentDiff, isMultiEmpty)
 		}
+
+		info.alignContinuation(newWidth, rightMargin)
 	}
 }
 
