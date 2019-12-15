@@ -193,11 +193,8 @@ func (va *VaralignBlock) processVarassign(mkline *MkLine) {
 }
 
 func (va *VaralignBlock) Finish() {
-	mkinfos := va.mkinfos
-	skip := va.skip
-	*va = VaralignBlock{} // overwrites infos and skip
-
-	if len(mkinfos) == 0 || skip {
+	if len(va.mkinfos) == 0 || va.skip {
+		*va = VaralignBlock{}
 		return
 	}
 
@@ -205,10 +202,10 @@ func (va *VaralignBlock) Finish() {
 		defer trace.Call()()
 	}
 
-	newWidth := va.optimalWidth(mkinfos)
-	va.adjustLong(newWidth, mkinfos)
+	newWidth := va.optimalWidth()
+	va.adjustLong(newWidth)
 
-	for _, mkinfo := range mkinfos {
+	for _, mkinfo := range va.mkinfos {
 
 		// When the indentation of the initial line of a multiline is
 		// changed, all its follow-up lines are shifted by the same
@@ -234,6 +231,8 @@ func (va *VaralignBlock) Finish() {
 			}
 		}
 	}
+
+	*va = VaralignBlock{}
 }
 
 // optimalWidth computes the desired screen width for the variable assignment
@@ -242,16 +241,9 @@ func (va *VaralignBlock) Finish() {
 // There may be a single line sticking out from the others (called outlier).
 // This is to prevent a single SITES.* variable from forcing the rest of the
 // paragraph to be indented too far to the right.
-func (*VaralignBlock) optimalWidth(mkinfos []*varalignMkLine) int {
+func (va *VaralignBlock) optimalWidth() int {
 
-	var widths bag
-	for _, mkinfo := range mkinfos {
-		if !mkinfo.isMultiEmpty() {
-			info := mkinfo.infos[0]
-			widths.Add(info.fixer, info.varnameOpWidth())
-		}
-	}
-	widths.sortDesc()
+	widths := va.varnameOpWidths()
 
 	longest := widths.opt(0)
 	var longestLine *MkLine
@@ -271,7 +263,7 @@ func (*VaralignBlock) optimalWidth(mkinfos []*varalignMkLine) int {
 
 	// Widths of the current indentation (including whitespace)
 	var spaceWidths bag
-	for _, mkinfo := range mkinfos {
+	for _, mkinfo := range va.mkinfos {
 		info := mkinfo.infos[0]
 		if mkinfo.isMultiEmpty() || outlier > 0 && info.varnameOpWidth() == outlier {
 			continue
@@ -305,12 +297,24 @@ func (*VaralignBlock) optimalWidth(mkinfos []*varalignMkLine) int {
 	return minVarnameOpWidth&-8 + 8
 }
 
+func (va *VaralignBlock) varnameOpWidths() bag {
+	var widths bag
+	for _, mkinfo := range va.mkinfos {
+		if !mkinfo.isMultiEmpty() {
+			info := mkinfo.infos[0]
+			widths.Add(info.fixer, info.varnameOpWidth())
+		}
+	}
+	widths.sortDesc()
+	return widths
+}
+
 // adjustLong allows any follow-up line to start either in column 8 or at
 // least in column newWidth. But only if there is at least one continuation
 // line that starts in column 8 and needs the full width up to column 72.
-func (va *VaralignBlock) adjustLong(newWidth int, mkinfos []*varalignMkLine) {
+func (va *VaralignBlock) adjustLong(newWidth int) {
 	anyLong := false
-	for _, mkinfo := range mkinfos {
+	for _, mkinfo := range va.mkinfos {
 		infos := mkinfo.infos
 		isMultiEmpty := mkinfo.isMultiEmpty()
 		for i, info := range infos {
