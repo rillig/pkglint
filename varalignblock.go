@@ -286,8 +286,9 @@ func (*VaralignBlock) optimalWidth(mkinfos []*varalignMkLine) int {
 	}
 	spaceWidths.sortDesc()
 
-	minTotalWidth := spaceWidths.min()
-	maxTotalWidth := spaceWidths.max()
+	// FIXME: swap min and max here, because of the sortDesc above.
+	minTotalWidth := spaceWidths.first()
+	maxTotalWidth := spaceWidths.last()
 
 	if trace.Tracing {
 		trace.Stepf("Indentation including whitespace is between %d and %d.",
@@ -901,6 +902,6 @@ func (mi *bag) Add(key interface{}, value int) {
 	}{key, value})
 }
 
-func (mi *bag) min() int { return mi.opt(0) }
+func (mi *bag) first() int { return mi.opt(0) }
 
-func (mi *bag) max() int { return mi.opt(len(mi.slice) - 1) }
+func (mi *bag) last() int { return mi.opt(len(mi.slice) - 1) }
