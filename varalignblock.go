@@ -206,33 +206,36 @@ func (va *VaralignBlock) Finish() {
 	va.adjustLong(newWidth)
 
 	for _, mkinfo := range va.mkinfos {
-
-		// When the indentation of the initial line of a multiline is
-		// changed, all its follow-up lines are shifted by the same
-		// amount and in the same direction. Typical examples are
-		// SUBST_SED, shell programs and AWK programs like in
-		// GENERATE_PLIST.
-		indentDiffSet := false
-
-		// The amount by which the follow-up lines are shifted.
-		// Positive values mean shifting to the right, negative values
-		// mean shifting to the left.
-		indentDiff := 0
-
-		_, rightMargin := mkinfo.rightMargin()
-		isMultiEmpty := mkinfo.isMultiEmpty()
-		for _, info := range mkinfo.infos {
-
-			// TODO: move below va.realignDetails
-			info.alignContinuation(newWidth, rightMargin)
-
-			if newWidth > 0 || info.rawIndex > 0 {
-				info.realignDetails(newWidth, &indentDiffSet, &indentDiff, isMultiEmpty)
-			}
-		}
+		mkinfo.realign(newWidth)
 	}
 
 	*va = VaralignBlock{}
+}
+
+func (l *varalignMkLine) realign(newWidth int) {
+	// When the indentation of the initial line of a multiline is
+	// changed, all its follow-up lines are shifted by the same
+	// amount and in the same direction. Typical examples are
+	// SUBST_SED, shell programs and AWK programs like in
+	// GENERATE_PLIST.
+	indentDiffSet := false
+
+	// The amount by which the follow-up lines are shifted.
+	// Positive values mean shifting to the right, negative values
+	// mean shifting to the left.
+	indentDiff := 0
+
+	_, rightMargin := l.rightMargin()
+	isMultiEmpty := l.isMultiEmpty()
+	for _, info := range l.infos {
+
+		// TODO: move below va.realignDetails
+		info.alignContinuation(newWidth, rightMargin)
+
+		if newWidth > 0 || info.rawIndex > 0 {
+			info.realignDetails(newWidth, &indentDiffSet, &indentDiff, isMultiEmpty)
+		}
+	}
 }
 
 // optimalWidth computes the desired screen width for the variable assignment
