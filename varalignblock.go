@@ -278,12 +278,11 @@ func (*VaralignBlock) optimalWidth(mkinfos []*varalignMkLine) int {
 	// Widths of the current indentation (including whitespace)
 	var spaceWidths bag
 	for _, mkinfo := range mkinfos {
-		for _, info := range mkinfo.infos {
-			if info.multiEmpty || info.rawIndex > 0 || outlier > 0 && info.varnameOpWidth() == outlier {
-				continue
-			}
-			spaceWidths.Add(nil, info.varnameOpSpaceWidth())
+		info := mkinfo.infos[0]
+		if info.multiEmpty || outlier > 0 && info.varnameOpWidth() == outlier {
+			continue
 		}
+		spaceWidths.Add(nil, info.varnameOpSpaceWidth())
 	}
 	spaceWidths.sortDesc()
 
