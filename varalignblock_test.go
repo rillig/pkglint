@@ -2024,13 +2024,10 @@ func (s *Suite) Test_VaralignBlock__lead_var_tab8_value_lead_var_tab16_value(c *
 //
 // The value in the first line starts in column 16, which means that all
 // follow-up lines should also start in column 16 or further to the right.
-// Line 2 though is already quite long, and since its right margin is in
-// column 72, it may keep its lower-than-usual indentation of 8.
-// Line 3 is not that long, therefore the rule from line 2 doesn't apply
-// here, and it needs to be indented to column 16.
 //
-// Since the above result would look inconsistent, all follow-up lines
-// after a long line may be indented in column 8 as well.
+// Line 2 though is already quite long, and even though its right margin
+// is in column 72, it needs to be indented at least as much as the value
+// of the first line.
 func (s *Suite) Test_VaralignBlock__var_tab_value63_space_cont_tab8_value71_space_cont_tab8_value(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -2042,13 +2039,17 @@ func (s *Suite) Test_VaralignBlock__var_tab_value63_space_cont_tab8_value71_spac
 		"   08 72",
 		"   08")
 	vt.Diagnostics(
-		nil...)
+		"NOTE: Makefile:2: This continuation line should be "+
+			"indented with \"\\t\\t\".",
+		"NOTE: Makefile:3: This continuation line should be "+
+			"indented with \"\\t\\t\".")
 	vt.Autofixes(
-		nil...)
+		"AUTOFIX: Makefile:2: Replacing \"\\t\" with \"\\t\\t\".",
+		"AUTOFIX: Makefile:3: Replacing \"\\t\" with \"\\t\\t\".")
 	vt.Fixed(
 		"PROGFILES=      67890 234567890 234567890 234567890 234567890 2 \\",
-		"        890 234567890 234567890 234567890 234567890 234567890 234567890 \\",
-		"        value")
+		"                890 234567890 234567890 234567890 234567890 234567890 234567890 \\",
+		"                value")
 	vt.Run()
 }
 
@@ -2540,11 +2541,20 @@ func (s *Suite) Test_VaralignBlock__aligned(c *check.C) {
 		false)
 
 	// The second line is indented with a single tab because otherwise
-	// it would be longer than 72 characters. In this case it is ok to
-	// use the smaller indentation.
+	// it would be longer than 72 characters. It could be argued that
+	// in this case it is ok to use the smaller indentation. That would
+	// make the indentation rules more complicated than necessary though.
+	// If absolutely necessary, it is possible to use a continued line
+	// with only the backslash in the first line. These may be indented
+	// with a single tab.
 	test(
 		"VAR.param=\tvalue \\",
 		"\t10........20........30........40........50........60...65",
+		false)
+
+	test(
+		"VAR.param=\tvalue \\",
+		"\t\t\t......32\t\t\t\t\t......80.",
 		true)
 
 	// Having the continuation line in column 0 looks even more confusing.
@@ -3073,16 +3083,18 @@ func (s *Suite) Test_VaralignBlock_Finish__continuation_beyond_right_margin(c *c
 		//  of the variable value.
 		"NOTE: Makefile:1: The continuation backslash should be "+
 			"in column 73, not 81.",
-		// Line 2 is not indented to column 32
-		// since that would make the line longer than 72 columns.
+		"NOTE: Makefile:2: This continuation line should be "+
+			"indented with \"\\t\\t\\t\\t\".",
 		"NOTE: Makefile:3: This continuation line should be "+
 			"indented with \"\\t\\t\\t\\t\".")
 	vt.Autofixes(
 		"AUTOFIX: Makefile:1: Replacing \"\\t\\t\\t\\t\" with \"\\t\\t\\t\".",
+		"AUTOFIX: Makefile:2: Replacing \"\\t\\t\\t\" with \"\\t\\t\\t\\t\".",
+		"AUTOFIX: Makefile:2: Replacing \"\\t\\\\\" with \" \\\\\".",
 		"AUTOFIX: Makefile:3: Replacing \"\\t\\t\\t\" with \"\\t\\t\\t\\t\".")
 	vt.Fixed(
 		"VAR....8......16..=             ......40......48.                       \\",
-		"                        ......32......40......48......56......64..      \\",
+		"                                ......32......40......48......56......64.. \\",
 		"                                ...29")
 	vt.Run()
 }
@@ -3855,14 +3867,15 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow(c *check.C) {
 			"with \"\\t\\t\\t\\t\\t\\t\\\\\".")
 
 	// If the value is so wide that the continuation backslash cannot
-	// be kept in column 72, the line is not adjusted at all.
-	//
-	// XXX: Whether this line should be adjusted is a matter of preference.
+	// be kept in column 72, the line is still adjusted, and the
+	// continuation backslash is separated with a single space.
 	test(
 		"value\t\t\t\t\t\t\t......64\t\\", 24, 0,
-		"value\t\t\t\t\t\t\t......64\t\\",
+		"\t\t\tvalue\t\t\t\t\t\t\t......64 \\",
 
-		nil...)
+		"NOTE: filename.mk:2: This continuation line should be indented with \"\\t\\t\\t\".",
+		"AUTOFIX: filename.mk:2: Replacing \"\" with \"\\t\\t\\t\".",
+		"AUTOFIX: filename.mk:2: Replacing \"\\t\\\\\" with \" \\\\\".")
 }
 
 func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_lines(c *check.C) {
@@ -3957,12 +3970,15 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_initial_l
 	vt.Diagnostics(
 		"NOTE: Makefile:1: The continuation backslash should be in column 73, not 81.",
 		"NOTE: Makefile:2: This continuation line should be indented with \"\\t\\t\\t\".",
+		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\\t\\t\".",
 		"NOTE: Makefile:4: This continuation line should be indented with \"\\t\\t\\t\".",
 		"NOTE: Makefile:5: This continuation line should be indented with \"\\t\\t\\t\".")
 	vt.Autofixes(
 		// FIXME: Mention the continuation backslash in the replacement.
 		"AUTOFIX: Makefile:1: Replacing \"\\t\\t\\t\" with \"\\t\\t\".",
 		"AUTOFIX: Makefile:2: Replacing \"\\t\\t    \" with \"\\t\\t\\t\".",
+		"AUTOFIX: Makefile:3: Replacing \"\\t\\t    \" with \"\\t\\t\\t\".",
+		"AUTOFIX: Makefile:3: Replacing \"\\t\\\\\" with \" \\\\\".",
 		"AUTOFIX: Makefile:4: Replacing \"\\t\\t    \" with \"\\t\\t\\t\".",
 		"AUTOFIX: Makefile:5: Replacing \"\\t\\t\" with \"\\t\\t\\t\".")
 	vt.Fixed(
@@ -3970,7 +3986,7 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_initial_l
 		// FIXME: Preserve the original relative indentation.
 		"                        --------30--------40-                           \\",
 		// FIXME: Preserve the original relative indentation.
-		"                    --------30--------40--------50--------60-------8    \\",
+		"                        --------30--------40--------50--------60-------8 \\",
 		// FIXME: Preserve the original relative indentation.
 		"                        ----5                                           \\",
 		"                        -7")

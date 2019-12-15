@@ -668,7 +668,7 @@ func (info *varalignLine) alignValueMultiFollow(column, indentDiff int) {
 	oldSpace := info.spaceBeforeValue
 	newWidth := imax(column, tabWidth(oldSpace)+indentDiff)
 	newSpace := indent(newWidth)
-	if newSpace == oldSpace || info.long || info.isTooLongFor(newWidth) {
+	if newSpace == oldSpace {
 		return
 	}
 
