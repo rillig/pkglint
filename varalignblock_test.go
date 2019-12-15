@@ -3779,9 +3779,9 @@ func (s *Suite) Test_varalignLine_alignValueMultiEmptyFollow(c *check.C) {
 func (s *Suite) Test_varalignLine_alignValueMultiFollow(c *check.C) {
 	t := s.Init(c)
 
-	// newMkLine creates a line consisting of either 2 or 3 physical lines.
+	// newLine creates a line consisting of either 2 or 3 physical lines.
 	// The text ends up in the raw line with index 1.
-	newMkLine := func(text string, column int) *MkLine {
+	newLine := func(text string, column, indentDiff int) *varalignLine {
 		leading := alignWith("VAR=", indent(column)) + "value \\"
 		trailing := indent(column) + "trailing"
 		n := condInt(hasSuffix(text, "\\"), 3, 2)
@@ -3790,15 +3790,17 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow(c *check.C) {
 		mklines := t.NewMkLines("filename.mk",
 			lines...)
 		assert(len(mklines.mklines) == 1)
-		return mklines.mklines[0]
+		mkline := mklines.mklines[0]
+
+		parts := NewVaralignSplitter().split(text, false)
+		isLong := parts.isTooLongFor(column + indentDiff)
+		return &varalignLine{mkline, 1, false, isLong, parts}
 	}
 
 	test := func(before string, column, indentDiff int, after string, diagnostics ...string) {
+
 		doTest := func(autofix bool) {
-			mkline := newMkLine(before, column)
-			parts := NewVaralignSplitter().split(before, false)
-			isLong := parts.isTooLongFor(column + indentDiff)
-			info := varalignLine{mkline, 1, false, isLong, parts}
+			info := newLine(before, column, indentDiff)
 
 			info.alignValueMultiFollow(column, indentDiff)
 		}
