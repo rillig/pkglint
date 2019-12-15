@@ -246,46 +246,9 @@ func (l *varalignMkLine) realign(newWidth int) {
 // paragraph to be indented too far to the right.
 func (va *VaralignBlock) optimalWidth() int {
 
-	widths := va.varnameOpWidths()
-
-	longest := widths.opt(0)
-	var longestLine *MkLine
-	if widths.len() > 0 {
-		longestLine = widths.key(0).(*MkLine)
-	}
-	secondLongest := widths.opt(1)
-
-	haveOutlier := longestLine != nil &&
-		secondLongest != 0 &&
-		secondLongest/8+1 < longest/8 &&
-		!longestLine.IsMultiline() // TODO: may be too imprecise
-
-	// Minimum required width of varnameOp, without the trailing whitespace.
-	minVarnameOpWidth := condInt(haveOutlier, secondLongest, longest)
-	outlier := condInt(haveOutlier, longest, 0)
-
-	// Widths of the current indentation (including whitespace)
-	var spaceWidths bag
-	for _, mkinfo := range va.mkinfos {
-		info := mkinfo.infos[0]
-		if mkinfo.isMultiEmpty() || outlier > 0 && info.varnameOpWidth() == outlier {
-			continue
-		}
-		spaceWidths.Add(nil, info.varnameOpSpaceWidth())
-	}
-	spaceWidths.sortDesc()
-
-	minTotalWidth := spaceWidths.last()
-	maxTotalWidth := spaceWidths.first()
-
-	if trace.Tracing {
-		trace.Stepf("Indentation including whitespace is between %d and %d.",
-			minTotalWidth, maxTotalWidth)
-		trace.Stepf("Minimum required indentation is %d + 1.", minVarnameOpWidth)
-		if outlier != 0 {
-			trace.Stepf("The outlier is at indentation %d.", outlier)
-		}
-	}
+	minVarnameOpWidth, outlier := va.varnameOpWidths()
+	minTotalWidth, maxTotalWidth := va.spaceWidths(outlier)
+	va.traceWidths(minTotalWidth, maxTotalWidth, minVarnameOpWidth, outlier)
 
 	if minTotalWidth > minVarnameOpWidth && minTotalWidth == maxTotalWidth && minTotalWidth%8 == 0 {
 		// The whole paragraph is already indented to the same width.
@@ -300,7 +263,7 @@ func (va *VaralignBlock) optimalWidth() int {
 	return minVarnameOpWidth&-8 + 8
 }
 
-func (va *VaralignBlock) varnameOpWidths() bag {
+func (va *VaralignBlock) varnameOpWidths() (int, int) {
 	var widths bag
 	for _, mkinfo := range va.mkinfos {
 		if !mkinfo.isMultiEmpty() {
@@ -309,7 +272,48 @@ func (va *VaralignBlock) varnameOpWidths() bag {
 		}
 	}
 	widths.sortDesc()
-	return widths
+
+	longest := widths.opt(0)
+	var longestLine *MkLine
+	if widths.len() > 0 {
+		longestLine = widths.key(0).(*MkLine)
+	}
+	secondLongest := widths.opt(1)
+
+	haveOutlier := secondLongest != 0 &&
+		secondLongest/8+1 < longest/8 &&
+		!longestLine.IsMultiline() // TODO: may be too imprecise
+
+	// Minimum required width of varnameOp, without the trailing whitespace.
+	minVarnameOpWidth := condInt(haveOutlier, secondLongest, longest)
+	outlier := condInt(haveOutlier, longest, 0)
+	return minVarnameOpWidth, outlier
+}
+
+func (va *VaralignBlock) spaceWidths(outlier int) (min, max int) {
+	// Widths of the current indentation (including whitespace)
+	var spaceWidths bag
+	for _, mkinfo := range va.mkinfos {
+		info := mkinfo.infos[0]
+		if mkinfo.isMultiEmpty() || outlier > 0 && info.varnameOpWidth() == outlier {
+			continue
+		}
+		spaceWidths.Add(nil, info.varnameOpSpaceWidth())
+	}
+	spaceWidths.sortDesc()
+
+	return spaceWidths.last(), spaceWidths.first()
+}
+
+func (va *VaralignBlock) traceWidths(minTotalWidth int, maxTotalWidth int, minVarnameOpWidth int, outlier int) {
+	if trace.Tracing {
+		trace.Stepf("Indentation including whitespace is between %d and %d.",
+			minTotalWidth, maxTotalWidth)
+		trace.Stepf("Minimum required indentation is %d + 1.", minVarnameOpWidth)
+		if outlier != 0 {
+			trace.Stepf("The outlier is at indentation %d.", outlier)
+		}
+	}
 }
 
 // adjustLong allows any follow-up line to start either in column 8 or at
