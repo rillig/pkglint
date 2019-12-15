@@ -183,17 +183,10 @@ func (va *VaralignBlock) processVarassign(mkline *MkLine) {
 		return
 	}
 
-	follow := false
 	var infos []*varalignLine
 	for i, raw := range mkline.raw {
 		parts := NewVaralignSplitter().split(strings.TrimSuffix(raw.textnl, "\n"), i == 0)
-		info := varalignLine{mkline, i, follow, false, parts}
-
-		if i == 0 && info.isEmptyContinuation() {
-			follow = true
-			info.multiEmpty = true
-		}
-
+		info := varalignLine{mkline, i, false, parts}
 		infos = append(infos, &info)
 	}
 	va.mkinfos = append(va.mkinfos, &varalignMkLine{infos})
@@ -230,13 +223,14 @@ func (va *VaralignBlock) Finish() {
 		indentDiff := 0
 
 		_, rightMargin := mkinfo.rightMargin()
+		isMultiEmpty := mkinfo.isMultiEmpty()
 		for _, info := range mkinfo.infos {
 
 			// TODO: move below va.realign
 			info.alignContinuation(newWidth, rightMargin)
 
 			if newWidth > 0 || info.rawIndex > 0 {
-				va.realign(info, newWidth, &indentDiffSet, &indentDiff)
+				va.realign(info, newWidth, &indentDiffSet, &indentDiff, isMultiEmpty)
 			}
 		}
 	}
@@ -252,8 +246,8 @@ func (*VaralignBlock) optimalWidth(mkinfos []*varalignMkLine) int {
 
 	var widths bag
 	for _, mkinfo := range mkinfos {
-		info := mkinfo.infos[0]
-		if !info.multiEmpty {
+		if !mkinfo.isMultiEmpty() {
+			info := mkinfo.infos[0]
 			widths.Add(info.fixer, info.varnameOpWidth())
 		}
 	}
@@ -279,7 +273,7 @@ func (*VaralignBlock) optimalWidth(mkinfos []*varalignMkLine) int {
 	var spaceWidths bag
 	for _, mkinfo := range mkinfos {
 		info := mkinfo.infos[0]
-		if info.multiEmpty || outlier > 0 && info.varnameOpWidth() == outlier {
+		if mkinfo.isMultiEmpty() || outlier > 0 && info.varnameOpWidth() == outlier {
 			continue
 		}
 		spaceWidths.Add(nil, info.varnameOpSpaceWidth())
@@ -318,6 +312,7 @@ func (va *VaralignBlock) adjustLong(newWidth int, mkinfos []*varalignMkLine) {
 	anyLong := false
 	for _, mkinfo := range mkinfos {
 		infos := mkinfo.infos
+		isMultiEmpty := mkinfo.isMultiEmpty()
 		for i, info := range infos {
 			if info.rawIndex == 0 {
 				anyLong = false
@@ -325,7 +320,7 @@ func (va *VaralignBlock) adjustLong(newWidth int, mkinfos []*varalignMkLine) {
 					if follow.rawIndex == 0 {
 						break
 					}
-					if !follow.multiEmpty && follow.spaceBeforeValue == "\t" && follow.varnameOpSpaceWidth() < newWidth && follow.widthAlignedAt(newWidth) > 72 {
+					if !isMultiEmpty && follow.spaceBeforeValue == "\t" && follow.varnameOpSpaceWidth() < newWidth && follow.widthAlignedAt(newWidth) > 72 {
 						anyLong = true
 						break
 					}
@@ -337,8 +332,8 @@ func (va *VaralignBlock) adjustLong(newWidth int, mkinfos []*varalignMkLine) {
 	}
 }
 
-func (va *VaralignBlock) realign(info *varalignLine, newWidth int, indentDiffSet *bool, indentDiff *int) {
-	if info.multiEmpty {
+func (va *VaralignBlock) realign(info *varalignLine, newWidth int, indentDiffSet *bool, indentDiff *int, isMultiEmpty bool) {
+	if isMultiEmpty {
 		if info.rawIndex == 0 {
 			info.alignValueMultiEmptyInitial(newWidth)
 		} else {
@@ -475,6 +470,20 @@ type varalignMkLine struct {
 	infos []*varalignLine
 }
 
+// Is true for multilines that don't have a value in their first
+// physical line.
+//
+// The follow-up lines of these lines may be indented with as few
+// as a single tab. Example:
+//  VAR= \
+//          value1 \
+//          value2
+// In all other lines, the indentation must be at least the indentation
+// of the first value found.
+func (l *varalignMkLine) isMultiEmpty() bool {
+	return l.infos[0].isEmptyContinuation()
+}
+
 // rightMargin calculates the column in which the continuation backslashes
 // should be placed.
 // In addition it returns whether the right margin is already in its
@@ -522,18 +531,6 @@ func (l *varalignMkLine) rightMargin() (ok bool, margin int) {
 type varalignLine struct {
 	fixer    Autofixer
 	rawIndex int
-
-	// Is true for multilines that don't have a value in their first
-	// physical line.
-	//
-	// The follow-up lines of these lines may be indented with as few
-	// as a single tab. Example:
-	//  VAR= \
-	//          value1 \
-	//          value2
-	// In all other lines, the indentation must be at least the indentation
-	// of the first value found.
-	multiEmpty bool
 
 	// Whether the line is so long that it may use a single tab as indentation.
 	long bool

@@ -3575,7 +3575,7 @@ func (s *Suite) Test_varalignLine_alignValueSingle(c *check.C) {
 			t.CheckDotColumns(before)
 			mkline := t.NewMkLine("filename.mk", 123, before)
 			parts := NewVaralignSplitter().split(before, true)
-			info := &varalignLine{mkline, 0, false, false, parts}
+			info := &varalignLine{mkline, 0, false, parts}
 
 			info.alignValueSingle(column)
 
@@ -3721,7 +3721,7 @@ func (s *Suite) Test_varalignLine_alignValueMultiInitial(c *check.C) {
 
 			text := mkline.raw[0].text()
 			parts := NewVaralignSplitter().split(text, true)
-			info := &varalignLine{mkline, 0, false, false, parts}
+			info := &varalignLine{mkline, 0, false, parts}
 
 			info.alignValueMultiInitial(column)
 
@@ -3808,7 +3808,7 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow(c *check.C) {
 
 		parts := NewVaralignSplitter().split(text, false)
 		isLong := parts.isTooLongFor(column + indentDiff)
-		return &varalignLine{mkline, 1, false, isLong, parts}
+		return &varalignLine{mkline, 1, isLong, parts}
 	}
 
 	test := func(before string, column, indentDiff int, after string, diagnostics ...string) {
@@ -4007,7 +4007,7 @@ func (s *Suite) Test_varalignLine_alignContinuation(c *check.C) {
 
 			text := mkline.raw[rawIndex].text()
 			parts := NewVaralignSplitter().split(text, rawIndex == 0)
-			info := &varalignLine{mkline, rawIndex, false, false, parts}
+			info := &varalignLine{mkline, rawIndex, false, parts}
 
 			info.alignContinuation(valueColumn, rightMarginColumn)
 
