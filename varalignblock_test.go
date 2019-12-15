@@ -3782,6 +3782,8 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow(c *check.C) {
 	// newLine creates a line consisting of either 2 or 3 physical lines.
 	// The text ends up in the raw line with index 1.
 	newLine := func(text string, column, indentDiff int) *varalignLine {
+		t.CheckDotColumns("", text)
+
 		leading := alignWith("VAR=", indent(column)) + "value \\"
 		trailing := indent(column) + "trailing"
 		n := condInt(hasSuffix(text, "\\"), 3, 2)
@@ -3838,6 +3840,29 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow(c *check.C) {
 		"NOTE: filename.mk:2: This continuation line should be "+
 			"indented with \"\\t\\t\\t\".",
 		"AUTOFIX: filename.mk:2: Replacing \"\" with \"\\t\\t\\t\".")
+
+	// As a special case, a continuation backslash in column 72 is preserved.
+	// TODO: Make this more general.
+	test(
+		"value\t\t\t\t\t\t\t\t\t\\", 24, 0,
+		"\t\t\tvalue\t\t\t\t\t\t\\",
+
+		"NOTE: filename.mk:2: This continuation line should be indented "+
+			"with \"\\t\\t\\t\".",
+		"AUTOFIX: filename.mk:2: Replacing \"\" with \"\\t\\t\\t\".",
+		"AUTOFIX: filename.mk:2: "+
+			"Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\\t\\\\\" "+
+			"with \"\\t\\t\\t\\t\\t\\t\\\\\".")
+
+	// If the value is so wide that the continuation backslash cannot
+	// be kept in column 72, the line is not adjusted at all.
+	//
+	// XXX: Whether this line should be adjusted is a matter of preference.
+	test(
+		"value\t\t\t\t\t\t\t......64\t\\", 24, 0,
+		"value\t\t\t\t\t\t\t......64\t\\",
+
+		nil...)
 }
 
 func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_lines(c *check.C) {
