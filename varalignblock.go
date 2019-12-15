@@ -223,11 +223,11 @@ func (va *VaralignBlock) Finish() {
 		isMultiEmpty := mkinfo.isMultiEmpty()
 		for _, info := range mkinfo.infos {
 
-			// TODO: move below va.realign
+			// TODO: move below va.realignDetails
 			info.alignContinuation(newWidth, rightMargin)
 
 			if newWidth > 0 || info.rawIndex > 0 {
-				va.realign(info, newWidth, &indentDiffSet, &indentDiff, isMultiEmpty)
+				info.realignDetails(newWidth, &indentDiffSet, &indentDiff, isMultiEmpty)
 			}
 		}
 	}
@@ -336,15 +336,15 @@ func (va *VaralignBlock) adjustLong(newWidth int) {
 	}
 }
 
-func (va *VaralignBlock) realign(info *varalignLine, newWidth int, indentDiffSet *bool, indentDiff *int, isMultiEmpty bool) {
+func (info *varalignLine) realignDetails(newWidth int, indentDiffSet *bool, indentDiff *int, isMultiEmpty bool) {
 	if isMultiEmpty {
 		if info.rawIndex == 0 {
 			info.alignValueMultiEmptyInitial(newWidth)
 		} else {
-			va.realignMultiEmptyFollow(info, newWidth, indentDiffSet, indentDiff)
+			info.realignMultiEmptyFollow(newWidth, indentDiffSet, indentDiff)
 		}
 	} else if info.rawIndex == 0 && info.isContinuation() {
-		va.realignMultiInitial(info, newWidth, indentDiffSet, indentDiff)
+		info.realignMultiInitial(newWidth, indentDiffSet, indentDiff)
 	} else if info.rawIndex > 0 {
 		assert(*indentDiffSet)
 		info.alignValueMultiFollow(newWidth, *indentDiff)
@@ -353,7 +353,7 @@ func (va *VaralignBlock) realign(info *varalignLine, newWidth int, indentDiffSet
 	}
 }
 
-func (va *VaralignBlock) realignMultiEmptyFollow(info *varalignLine, newWidth int, indentDiffSet *bool, indentDiff *int) {
+func (info *varalignLine) realignMultiEmptyFollow(newWidth int, indentDiffSet *bool, indentDiff *int) {
 	oldSpace := info.spaceBeforeValue
 	oldWidth := tabWidth(oldSpace)
 
@@ -368,7 +368,7 @@ func (va *VaralignBlock) realignMultiEmptyFollow(info *varalignLine, newWidth in
 	info.alignValueMultiEmptyFollow(imax(oldWidth+*indentDiff, 8))
 }
 
-func (va *VaralignBlock) realignMultiInitial(info *varalignLine, newWidth int, indentDiffSet *bool, indentDiff *int) {
+func (info *varalignLine) realignMultiInitial(newWidth int, indentDiffSet *bool, indentDiff *int) {
 	*indentDiffSet = true
 	*indentDiff = newWidth - info.varnameOpSpaceWidth()
 

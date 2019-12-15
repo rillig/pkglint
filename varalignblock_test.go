@@ -3099,12 +3099,20 @@ func (s *Suite) Test_VaralignBlock_Finish__continuation_beyond_right_margin(c *c
 	vt.Run()
 }
 
+func (s *Suite) Test_varalignLine_realignDetails(c *check.C) {
+	t := s.Init(c)
+
+	// FIXME
+
+	t.CheckOutputEmpty()
+}
+
 // This example is quite unrealistic since typically the first line is
 // the least indented.
 //
 // All follow-up lines are indented with at least one tab, to make clear
 // they are continuation lines.
-func (s *Suite) Test_VaralignBlock_realignMultiEmptyFollow(c *check.C) {
+func (s *Suite) Test_varalignLine_realignMultiEmptyFollow(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"VAR= \\",
@@ -3147,7 +3155,7 @@ func (s *Suite) Test_VaralignBlock_realignMultiEmptyFollow(c *check.C) {
 	vt.Run()
 }
 
-func (s *Suite) Test_VaralignBlock_realignMultiInitial__spaces(c *check.C) {
+func (s *Suite) Test_varalignLine_realignMultiInitial__spaces(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"VAR=    value1 \\",
