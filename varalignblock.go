@@ -261,12 +261,13 @@ func (*VaralignBlock) optimalWidth(mkinfos []*varalignMkLine) int {
 
 	longest := widths.opt(0)
 	var longestLine *MkLine
-	if len(widths.slice) > 0 {
+	if widths.len() > 0 {
 		longestLine = widths.key(0).(*MkLine)
 	}
 	secondLongest := widths.opt(1)
 
-	haveOutlier := secondLongest != 0 &&
+	haveOutlier := longestLine != nil &&
+		secondLongest != 0 &&
 		secondLongest/8+1 < longest/8 &&
 		!longestLine.IsMultiline() // TODO: may be too imprecise
 
@@ -903,3 +904,5 @@ func (mi *bag) Add(key interface{}, value int) {
 func (mi *bag) first() int { return mi.opt(0) }
 
 func (mi *bag) last() int { return mi.opt(len(mi.slice) - 1) }
+
+func (mi *bag) len() int { return len(mi.slice) }
