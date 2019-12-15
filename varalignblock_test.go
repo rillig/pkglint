@@ -2272,8 +2272,8 @@ func (s *Suite) Test_VaralignBlock__mixed_indentation(c *check.C) {
 func (s *Suite) Test_VaralignBlock__long_line_followed_by_short_line_with_small_indentation(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
-		"VAR.567890123456+=\t----30 -------40 -------50 -------60 -------70 234567 \\",
-		"\t\t--20 -------30")
+		"VAR...........16+=\t....30........40........50........60........70 234567 \\",
+		"\t\t..20........30")
 	vt.Internals(
 		"18 24 78",
 		"   16")
@@ -2282,8 +2282,8 @@ func (s *Suite) Test_VaralignBlock__long_line_followed_by_short_line_with_small_
 	vt.Autofixes(
 		"AUTOFIX: Makefile:2: Replacing \"\\t\\t\" with \"\\t\\t\\t\".")
 	vt.Fixed(
-		"VAR.567890123456+=      ----30 -------40 -------50 -------60 -------70 234567 \\",
-		"                        --20 -------30")
+		"VAR...........16+=      ....30........40........50........60........70 234567 \\",
+		"                        ..20........30")
 	vt.Run()
 }
 
@@ -2315,8 +2315,8 @@ func (s *Suite) Test_VaralignBlock__shift_already_long_line_to_the__right(c *che
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"INSTALLATION_DIRS+=\tvalue",
-		"CONF_FILES=\t--20 -------30 -------40 -------50 -------60 -------70 \\",
-		"\t\t--20")
+		"CONF_FILES=\t..20........30........40........50........60........70 \\",
+		"\t\t..20")
 	vt.Internals(
 		"19 24",
 		"11 16 71",
@@ -2330,8 +2330,8 @@ func (s *Suite) Test_VaralignBlock__shift_already_long_line_to_the__right(c *che
 		"AUTOFIX: Makefile:3: Replacing \"\\t\\t\" with \"\\t\\t\\t\".")
 	vt.Fixed(
 		"INSTALLATION_DIRS+=     value",
-		"CONF_FILES=             --20 -------30 -------40 -------50 -------60 -------70 \\",
-		"                        --20")
+		"CONF_FILES=             ..20........30........40........50........60........70 \\",
+		"                        ..20")
 	vt.Run()
 }
 
@@ -2732,13 +2732,13 @@ func (s *Suite) Test_VaralignBlock__continuation_backslashes_one_sticks_out(c *c
 func (s *Suite) Test_VaralignBlock__realign_continuation_backslashes(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
-		"VAR4567890.234567890=\t----30--------40--------50\t\t\t\\",
-		"\t\t--20--------30--------40--------50\t\t\t\\",
-		"\t\t--20--------30--------40--------50")
+		"VAR4567890.234567890=\t....30........40........50\t\t\t\\",
+		"\t\t..20........30........40........50\t\t\t\\",
+		"\t\t..20........30........40........50")
 	vt.InputDetab(
-		"VAR4567890.234567890=   ----30--------40--------50                      \\",
-		"                --20--------30--------40--------50                      \\",
-		"                --20--------30--------40--------50")
+		"VAR4567890.234567890=   ....30........40........50                      \\",
+		"                ..20........30........40........50                      \\",
+		"                ..20........30........40........50")
 	vt.Internals(
 		"21 24 72",
 		"   16 72",
@@ -2751,9 +2751,9 @@ func (s *Suite) Test_VaralignBlock__realign_continuation_backslashes(c *check.C)
 		"AUTOFIX: Makefile:2: Replacing \"\\t\\t\\t\\\\\" with \"\\t\\t\\\\\".",
 		"AUTOFIX: Makefile:3: Replacing \"\\t\\t\" with \"\\t\\t\\t\".")
 	vt.Fixed(
-		"VAR4567890.234567890=   ----30--------40--------50                      \\",
-		"                        --20--------30--------40--------50              \\",
-		"                        --20--------30--------40--------50")
+		"VAR4567890.234567890=   ....30........40........50                      \\",
+		"                        ..20........30........40........50              \\",
+		"                        ..20........30........40........50")
 	vt.Run()
 }
 
@@ -3882,20 +3882,20 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_lines(c *
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"SHORT=\tvalue",
-		"PROGRAM_AWK=\t\t\t\t--------50--------60--------70 \\",
+		"PROGRAM_AWK=\t\t\t\t........50........60........70 \\",
 		"\t\t\t\t\t\t\t\t\t3                \\",
 		"\t\t\t\t\t\t\t\t\t74               \\",
 		"\t\t\t\t\t\t\t\t\t-75  \t\t\t  \\",
-		"\t\t\t\t\t\t\t\t\t--76 \\",
+		"\t\t\t\t\t\t\t\t\t..76 \\",
 		"\t\t\t\t\t\t\t\t66 \\",
 		"\t\t\t\t\t\t\t\t1")
 	vt.InputDetab(
 		"SHORT=  value",
-		"PROGRAM_AWK=                            --------50--------60--------70 \\",
+		"PROGRAM_AWK=                            ........50........60........70 \\",
 		"                                                                        3                \\",
 		"                                                                        74               \\",
 		"                                                                        -75                       \\",
-		"                                                                        --76 \\",
+		"                                                                        ..76 \\",
 		"                                                                66 \\",
 		"                                                                1")
 	vt.Internals(
@@ -3937,11 +3937,11 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_lines(c *
 		// considered "long" anymore, therefore the backslashes are not
 		// kept in column 72. Nevertheless they look unorganized right now.
 		"SHORT=          value",
-		"PROGRAM_AWK=    --------50--------60--------70 \\",
+		"PROGRAM_AWK=    ........50........60........70 \\",
 		"                                                3 \\",
 		"                                                74 \\",
 		"                                                -75 \\",
-		"                                                --76 \\",
+		"                                                ..76 \\",
 		"                                        66 \\",
 		"                                        1")
 	vt.Run()
@@ -3950,16 +3950,16 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_lines(c *
 func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_initial_line(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
-		"VAR-----10!=\t\t----30--------40--------50-----6\t\t\t\\",
-		"\t\t    --------30--------40-\t\t\t\t\\",
-		"\t\t    --------30--------40--------50--------60-------8\t\\",
-		"\t\t    ----5\t\t\t\t\t\t\\",
+		"VAR.....10!=\t\t....30........40........50....56\t\t\t\\",
+		"\t\t    ........30........40.\t\t\t\t\\",
+		"\t\t    ........30........40........50........60......68\t\\",
+		"\t\t    ...25\t\t\t\t\t\t\\",
 		"\t\t-7")
 	vt.InputDetab(
-		"VAR-----10!=            ----30--------40--------50-----6                        \\",
-		"                    --------30--------40-                               \\",
-		"                    --------30--------40--------50--------60-------8    \\",
-		"                    ----5                                               \\",
+		"VAR.....10!=            ....30........40........50....56                        \\",
+		"                    ........30........40.                               \\",
+		"                    ........30........40........50........60......68    \\",
+		"                    ...25                                               \\",
 		"                -7")
 	vt.Internals(
 		"12 24 80",
@@ -3982,13 +3982,13 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_initial_l
 		"AUTOFIX: Makefile:4: Replacing \"\\t\\t    \" with \"\\t\\t\\t\".",
 		"AUTOFIX: Makefile:5: Replacing \"\\t\\t\" with \"\\t\\t\\t\".")
 	vt.Fixed(
-		"VAR-----10!=            ----30--------40--------50-----6                \\",
+		"VAR.....10!=            ....30........40........50....56                \\",
 		// FIXME: Preserve the original relative indentation.
-		"                        --------30--------40-                           \\",
+		"                        ........30........40.                           \\",
 		// FIXME: Preserve the original relative indentation.
-		"                        --------30--------40--------50--------60-------8 \\",
+		"                        ........30........40........50........60......68 \\",
 		// FIXME: Preserve the original relative indentation.
-		"                        ----5                                           \\",
+		"                        ...25                                           \\",
 		"                        -7")
 	vt.Run()
 }
