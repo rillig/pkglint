@@ -3803,6 +3803,10 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow(c *check.C) {
 			info := newLine(before, column, indentDiff)
 
 			info.alignValueMultiFollow(column, indentDiff)
+
+			t.CheckEquals(
+				info.fixer.(*MkLine).raw[info.rawIndex].text(),
+				condStr(autofix, after, before))
 		}
 
 		t.ExpectDiagnosticsAutofix(
@@ -3813,6 +3817,23 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow(c *check.C) {
 	test(
 		"value", 24, 0,
 		"\t\t\tvalue",
+
+		"NOTE: filename.mk:2: This continuation line should be "+
+			"indented with \"\\t\\t\\t\".",
+		"AUTOFIX: filename.mk:2: Replacing \"\" with \"\\t\\t\\t\".")
+
+	test(
+		"value \\", 24, 0,
+		"\t\t\tvalue \\",
+
+		"NOTE: filename.mk:2: This continuation line should be "+
+			"indented with \"\\t\\t\\t\".",
+		"AUTOFIX: filename.mk:2: Replacing \"\" with \"\\t\\t\\t\".")
+
+	// FIXME: The space before the continuation backslash must be adjusted.
+	test(
+		"value   \\", 24, 0,
+		"\t\t\tvalue   \\",
 
 		"NOTE: filename.mk:2: This continuation line should be "+
 			"indented with \"\\t\\t\\t\".",
