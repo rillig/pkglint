@@ -3776,6 +3776,47 @@ func (s *Suite) Test_varalignLine_alignValueMultiEmptyFollow(c *check.C) {
 	test()
 }
 
+func (s *Suite) Test_varalignLine_alignValueMultiFollow(c *check.C) {
+	t := s.Init(c)
+
+	// newMkLine creates a line consisting of either 2 or 3 physical lines.
+	// The text ends up in the raw line with index 1.
+	newMkLine := func(text string, column int) *MkLine {
+		leading := alignWith("VAR=", indent(column)) + "value \\"
+		trailing := indent(column) + "trailing"
+		n := condInt(hasSuffix(text, "\\"), 3, 2)
+		lines := []string{leading, text, trailing}[:n]
+
+		mklines := t.NewMkLines("filename.mk",
+			lines...)
+		assert(len(mklines.mklines) == 1)
+		return mklines.mklines[0]
+	}
+
+	test := func(before string, column, indentDiff int, after string, diagnostics ...string) {
+		doTest := func(autofix bool) {
+			mkline := newMkLine(before, column)
+			parts := NewVaralignSplitter().split(before, false)
+			isLong := parts.isTooLongFor(column + indentDiff)
+			info := varalignLine{mkline, 1, false, isLong, parts}
+
+			info.alignValueMultiFollow(column, indentDiff)
+		}
+
+		t.ExpectDiagnosticsAutofix(
+			doTest,
+			diagnostics...)
+	}
+
+	test(
+		"value", 24, 0,
+		"\t\t\tvalue",
+
+		"NOTE: filename.mk:2: This continuation line should be "+
+			"indented with \"\\t\\t\\t\".",
+		"AUTOFIX: filename.mk:2: Replacing \"\" with \"\\t\\t\\t\".")
+}
+
 func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_lines(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
