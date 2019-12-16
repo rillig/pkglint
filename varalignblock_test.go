@@ -3930,6 +3930,28 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow(c *check.C) {
 		"\t\t\t\t   ...40 \\",
 
 		nil...)
+
+	// The value is missing in this line, there is only the continuation
+	// backslash. It is preserved as well.
+	test(
+		"\t\t\t\t   \\", 24, 0,
+		"\t\t\t\t   \\",
+
+		nil...)
+
+	// If the indentation is not in the canonical form, it is corrected.
+	test(
+		"\t   \t\t\t   \\", 24, 0,
+		"\t\t\t\t   \\",
+
+		// The diagnostic is carefully chosen to just say how this
+		// particular line should be indented. It does not mention the rule
+		// that the indentation should be preferably tabs and up to 7 spaces.
+		//
+		// Above all, the diagnostic does not say "be indented with tabs",
+		// as that would be wrong for follow-up lines.
+		"NOTE: filename.mk:2: This continuation line should be indented with \"\\t\\t\\t\\t   \".",
+		"AUTOFIX: filename.mk:2: Replacing \"\\t   \\t\\t\\t   \" with \"\\t\\t\\t\\t   \".")
 }
 
 func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_lines(c *check.C) {
