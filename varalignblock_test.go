@@ -3917,8 +3917,17 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow(c *check.C) {
 	// The second line is indented deeper (40) than the first line (24).
 	// Assuming that the relative indentation was intended, it is preserved.
 	test(
-		"\t\t\t\t\tvalue \\", 24, 0,
-		"\t\t\t\t\tvalue \\",
+		"\t\t\t\t\t...45 \\", 24, 0,
+		"\t\t\t\t\t...45 \\",
+
+		nil...)
+
+	// The second line is indented deeper (35) than the first line (24).
+	// It uses tabs and spaces for indentation.
+	// Assuming that the relative indentation was intended, it is preserved.
+	test(
+		"\t\t\t\t   ...40 \\", 24, 0,
+		"\t\t\t\t   ...40 \\",
 
 		nil...)
 }
