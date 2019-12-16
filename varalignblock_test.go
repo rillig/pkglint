@@ -3942,11 +3942,8 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_lines(c *
 		// kept in column 72. Nevertheless they look unorganized right now.
 		"SHORT=          value",
 		"PROGRAM_AWK=    ........50........60........70 \\",
-		// FIXME: Remove additional space before continuation backslash.
 		"                                                3                       \\",
-		// FIXME: Remove additional space before continuation backslash.
 		"                                                74                      \\",
-		// FIXME: Remove additional space before continuation backslash.
 		"                                                -75                     \\",
 		"                                                ..76 \\",
 		"                                        66 \\",
