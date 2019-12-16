@@ -668,12 +668,18 @@ func (info *varalignLine) alignValueMultiEmptyFollow(column int) {
 		return
 	}
 
+	continuationColumn := 0
+	if info.spaceBeforeContinuation() != " " {
+		continuationColumn = imin(72, info.continuationColumn())
+	}
+
 	fix := info.fixer.Autofix()
 	fix.Notef("This continuation line should be indented with %q.", newSpace)
-	fix.ReplaceAt(info.rawIndex, info.spaceBeforeValueIndex(), oldSpace, newSpace)
+	info.replaceSpaceBeforeValue(fix, newSpace)
+	if info.isContinuation() {
+		info.replaceSpaceBeforeContinuationSilently(fix, continuationColumn)
+	}
 	fix.Apply()
-	info.spaceBeforeValue = newSpace
-	// TODO: Merge with alignValueMultiFollow
 }
 
 func (info *varalignLine) alignValueMultiFollow(column, indentDiff int) {
@@ -688,6 +694,7 @@ func (info *varalignLine) alignValueMultiFollow(column, indentDiff int) {
 	if info.spaceBeforeContinuation() != " " {
 		continuationColumn = imin(72, info.continuationColumn())
 	}
+
 	fix := info.fixer.Autofix()
 	fix.Notef("This continuation line should be indented with %q.", newSpace)
 	info.replaceSpaceBeforeValue(fix, newSpace)
@@ -742,6 +749,10 @@ func (info *varalignLine) replaceSpaceBeforeValue(fix *Autofix, newSpace string)
 }
 
 func (info *varalignLine) replaceSpaceBeforeContinuationSilently(fix *Autofix, column int) {
+	if info.value == "" {
+		return
+	}
+
 	oldSpace := info.spaceBeforeContinuation()
 	if oldSpace == " " {
 		return
@@ -841,6 +852,8 @@ func (p *varalignParts) setSpaceBeforeContinuation(space string) {
 
 func (p *varalignParts) spaceBeforeContinuationIndex() int {
 	assert(p.isContinuation())
+	assert(p.value != "")
+
 	return len(p.leadingComment) +
 		len(p.varnameOp) + len(p.spaceBeforeValue) +
 		len(p.value)
