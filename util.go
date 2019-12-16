@@ -1381,3 +1381,23 @@ func (b *LazyStringBuilder) String() string {
 	}
 	return b.expected[:b.len]
 }
+
+type interval struct {
+	min int
+	max int
+}
+
+func newInterval() *interval {
+	return &interval{int(^uint(0) >> 1), ^int(^uint(0) >> 1)}
+}
+
+func (i *interval) add(x int) {
+	if x < i.min {
+		i.min = x
+	}
+	if x > i.max {
+		i.max = x
+	}
+}
+
+func (i *interval) isEmpty() bool { return i.min > i.max }

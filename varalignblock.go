@@ -292,17 +292,16 @@ func (va *VaralignBlock) varnameOpWidths() (int, int) {
 
 func (va *VaralignBlock) spaceWidths(outlier int) (min, max int) {
 	// Widths of the current indentation (including whitespace)
-	var spaceWidths bag
+	spaceWidths := newInterval()
 	for _, mkinfo := range va.mkinfos {
 		info := mkinfo.infos[0]
 		if mkinfo.isMultiEmpty() || outlier > 0 && info.varnameOpWidth() == outlier {
 			continue
 		}
-		spaceWidths.Add(nil, info.varnameOpSpaceWidth())
+		spaceWidths.add(info.varnameOpSpaceWidth())
 	}
-	spaceWidths.sortDesc()
 
-	return spaceWidths.last(), spaceWidths.first()
+	return spaceWidths.min, spaceWidths.max
 }
 
 func (va *VaralignBlock) traceWidths(minTotalWidth int, maxTotalWidth int, minVarnameOpWidth int, outlier int) {
