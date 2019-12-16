@@ -201,9 +201,7 @@ func (fix *Autofix) ReplaceRegex(from regex.Pattern, toText string, howOften int
 
 		replaced := replaceAllFunc(rawLine.textnl, from, replace)
 		if replaced != rawLine.textnl {
-			if G.Logger.IsAutofix() {
-				rawLine.textnl = replaced
-			}
+			rawLine.textnl = replaced
 			for _, fromText := range froms {
 				fix.Describef(rawLine.Lineno, "Replacing %q with %q.", fromText, toText)
 			}
@@ -241,9 +239,7 @@ func (fix *Autofix) InsertBefore(text string) {
 		return
 	}
 
-	if G.Logger.IsAutofix() {
-		fix.linesBefore = append(fix.linesBefore, text+"\n")
-	}
+	fix.linesBefore = append(fix.linesBefore, text+"\n")
 	fix.Describef(fix.line.raw[0].Lineno, "Inserting a line %q before this line.", text)
 }
 
@@ -255,9 +251,7 @@ func (fix *Autofix) InsertAfter(text string) {
 		return
 	}
 
-	if G.Logger.IsAutofix() {
-		fix.linesAfter = append(fix.linesAfter, text+"\n")
-	}
+	fix.linesAfter = append(fix.linesAfter, text+"\n")
 	fix.Describef(fix.line.raw[len(fix.line.raw)-1].Lineno, "Inserting a line %q after this line.", text)
 }
 
@@ -271,9 +265,7 @@ func (fix *Autofix) Delete() {
 	}
 
 	for _, line := range fix.line.raw {
-		if G.Logger.IsAutofix() {
-			line.textnl = ""
-		}
+		line.textnl = ""
 		fix.Describef(line.Lineno, "Deleting this line.")
 	}
 }

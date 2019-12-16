@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func (s *Suite) Test_Autofix__default_leaves_line_unchanged(c *check.C) {
+func (s *Suite) Test_Autofix__default_also_updates_line(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("--source")
@@ -26,8 +26,8 @@ func (s *Suite) Test_Autofix__default_leaves_line_unchanged(c *check.C) {
 	fix.Apply()
 
 	t.CheckEquals(fix.RawText(), ""+
-		"# row 1 \\\n"+
-		"continuation of row 1\n")
+		"above\n"+
+		"below\n")
 	t.CheckOutputLines(
 		">\t# row 1 \\",
 		">\tcontinuation of row 1",
@@ -463,7 +463,7 @@ func (s *Suite) Test_Autofix_Explain__silent_with_diagnostic(c *check.C) {
 		"\tWhen inserting multiple lines, Apply must be called in-between.",
 		"\tOtherwise the changes are not described to the human reader.",
 		"")
-	t.CheckEquals(fix.RawText(), "Text\n")
+	t.CheckEquals(fix.RawText(), "before\nText\nafter\n")
 }
 
 func (s *Suite) Test_Autofix_ReplaceAfter__autofix_in_continuation_line(c *check.C) {

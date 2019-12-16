@@ -210,13 +210,13 @@ func (l *Logger) showSource(line *Line) {
 	printDiff := func(rawLines []*RawLine) {
 		prefix := ">\t"
 		for _, rawLine := range rawLines {
-			if rawLine.textnl != rawLine.orignl {
+			if rawLine.textnl != rawLine.orignl && l.IsAutofix() {
 				prefix = "\t" // Make it look like an actual diff
 			}
 		}
 
 		for _, rawLine := range rawLines {
-			if rawLine.textnl != rawLine.orignl {
+			if rawLine.textnl != rawLine.orignl && l.IsAutofix() {
 				writeLine("-\t", rawLine.orignl)
 				if rawLine.textnl != "" {
 					writeLine("+\t", rawLine.textnl)
@@ -230,7 +230,7 @@ func (l *Logger) showSource(line *Line) {
 	if !l.IsAutofix() {
 		l.out.Separate()
 	}
-	if line.autofix != nil {
+	if l.IsAutofix() && line.autofix != nil {
 		for _, before := range line.autofix.linesBefore {
 			writeLine("+\t", before)
 		}
