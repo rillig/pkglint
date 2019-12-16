@@ -269,7 +269,7 @@ func (va *VaralignBlock) varnameOpWidths() (int, int) {
 	for _, mkinfo := range va.mkinfos {
 		if !mkinfo.isMultiEmpty() {
 			info := mkinfo.infos[0]
-			widths.Add(info.fixer, info.varnameOpWidth())
+			widths.add(info.fixer, info.varnameOpWidth())
 		}
 	}
 	if widths.len() == 0 {
@@ -951,7 +951,7 @@ func (mi *bag) key(index int) interface{} {
 	return mi.slice[index].key
 }
 
-func (mi *bag) Add(key interface{}, value int) {
+func (mi *bag) add(key interface{}, value int) {
 	mi.slice = append(mi.slice, struct {
 		key   interface{}
 		value int
