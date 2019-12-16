@@ -317,7 +317,7 @@ func (s *Suite) Test_Logger_shallBeLogged(c *check.C) {
 // to first show the code and then show the diagnostic. This allows
 // the diagnostics to underline the relevant part of the source code
 // and reminds of the squiggly line used for spellchecking.
-func (s *Suite) Test_Logger_showSource__separator(c *check.C) {
+func (s *Suite) Test_Logger_writeSource__separator(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("--source")
@@ -347,7 +347,7 @@ func (s *Suite) Test_Logger_showSource__separator(c *check.C) {
 		"WARN: ~/DESCR:3: Using \"third\" is deprecated.")
 }
 
-func (s *Suite) Test_Logger_showSource__with_explanation(c *check.C) {
+func (s *Suite) Test_Logger_writeSource__with_explanation(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("--source", "--explain")
@@ -388,7 +388,7 @@ func (s *Suite) Test_Logger_showSource__with_explanation(c *check.C) {
 // if there are several diagnostics for the same line. In this case though,
 // there is an explanation between the diagnostics, and because it may get
 // quite long, it's better to repeat the source code once again.
-func (s *Suite) Test_Logger_showSource__with_explanation_in_same_line(c *check.C) {
+func (s *Suite) Test_Logger_writeSource__with_explanation_in_same_line(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("--source", "--explain")
@@ -421,7 +421,7 @@ func (s *Suite) Test_Logger_showSource__with_explanation_in_same_line(c *check.C
 
 // When there is no explanation after the first diagnostic, it is not
 // necessary to repeat the source code again for the second diagnostic.
-func (s *Suite) Test_Logger_showSource__without_explanation_in_same_line(c *check.C) {
+func (s *Suite) Test_Logger_writeSource__without_explanation_in_same_line(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("--source", "--explain")
@@ -453,7 +453,7 @@ func (s *Suite) Test_Logger_showSource__without_explanation_in_same_line(c *chec
 // the "Replacing" message. Since these are shown in diff style, they
 // must be kept together. And since the "+" line must be below the "Replacing"
 // line, this order of lines seems to be the most intuitive.
-func (s *Suite) Test_Logger_showSource__separator_show_autofix(c *check.C) {
+func (s *Suite) Test_Logger_writeSource__separator_show_autofix(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("--source", "--show-autofix")
@@ -486,7 +486,7 @@ func (s *Suite) Test_Logger_showSource__separator_show_autofix(c *check.C) {
 		"+\tThe bronze medal line")
 }
 
-func (s *Suite) Test_Logger_showSource__separator_show_autofix_with_explanation(c *check.C) {
+func (s *Suite) Test_Logger_writeSource__separator_show_autofix_with_explanation(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("--source", "--show-autofix", "--explain")
@@ -531,7 +531,7 @@ func (s *Suite) Test_Logger_showSource__separator_show_autofix_with_explanation(
 //
 // TODO: Giving the diagnostics again would be useful, but the warning and
 //  error counters should not be affected, as well as the exitcode.
-func (s *Suite) Test_Logger_showSource__separator_autofix(c *check.C) {
+func (s *Suite) Test_Logger_writeSource__separator_autofix(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("--source", "--autofix")

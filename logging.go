@@ -139,7 +139,7 @@ func (l *Logger) Diag(line *Line, level *LogLevel, format string, args ...interf
 		if line != l.prevLine {
 			l.out.Separate()
 		}
-		l.showSource(line)
+		l.writeSource(line)
 	}
 
 	l.Logf(level, filename, linenos, format, msg)
@@ -186,7 +186,7 @@ func (l *Logger) shallBeLogged(format string) bool {
 	return false
 }
 
-func (l *Logger) showSource(line *Line) {
+func (l *Logger) writeSource(line *Line) {
 	if !G.Logger.Opts.ShowSource {
 		return
 	}

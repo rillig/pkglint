@@ -358,7 +358,7 @@ func (fix *Autofix) Apply() {
 		linenos := fix.affectedLinenos()
 		msg := sprintf(fix.diagFormat, fix.diagArgs...)
 		if !logFix && G.Logger.FirstTime(line.Filename, linenos, msg) {
-			G.Logger.showSource(line)
+			G.Logger.writeSource(line)
 		}
 		G.Logger.Logf(fix.level, line.Filename, linenos, fix.diagFormat, msg)
 	}
@@ -371,7 +371,7 @@ func (fix *Autofix) Apply() {
 			}
 			G.Logger.Logf(AutofixLogLevel, line.Filename, lineno, autofixFormat, action.description)
 		}
-		G.Logger.showSource(line)
+		G.Logger.writeSource(line)
 	}
 
 	if logDiagnostic && len(fix.explanation) > 0 {
