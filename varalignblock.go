@@ -226,6 +226,11 @@ func (l *varalignMkLine) realign(newWidth int) {
 
 	_, rightMargin := l.rightMargin()
 	isMultiEmpty := l.isMultiEmpty()
+
+	if info := l.infos[0]; !isMultiEmpty && info.rawIndex == 0 && info.isContinuation() {
+		indentDiff.set(newWidth - info.valueColumn())
+	}
+
 	for _, info := range l.infos {
 
 		if newWidth > 0 || info.rawIndex > 0 {
@@ -361,7 +366,6 @@ func (info *varalignLine) realignDetails(newWidth int, indentDiff *optInt, isMul
 			info.alignValueMultiEmptyFollow(width)
 		}
 	} else if info.rawIndex == 0 && info.isContinuation() {
-		indentDiff.set(newWidth - info.valueColumn())
 		info.realignMultiInitial(newWidth)
 	} else if info.rawIndex > 0 {
 		info.alignValueMultiFollow(newWidth, indentDiff.get())
@@ -658,6 +662,7 @@ func (info *varalignLine) alignValueMultiEmptyFollow(column int) {
 
 func (info *varalignLine) alignValueMultiFollow(column, indentDiff int) {
 	oldSpace := info.spaceBeforeValue
+	// FIXME: tabWithAppend instead of the simple tabWidth.
 	newWidth := imax(column, tabWidth(oldSpace)+indentDiff)
 	newSpace := indent(newWidth)
 	if newSpace == oldSpace {
