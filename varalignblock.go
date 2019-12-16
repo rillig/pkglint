@@ -662,12 +662,6 @@ func (info *varalignLine) alignValueMultiEmptyFollow(column int) {
 		return
 	}
 
-	// Below a continuation marker, there may be a completely empty line.
-	// This is confusing to the human readers, but technically allowed.
-	if info.varalignParts.isEmpty() {
-		return
-	}
-
 	info.alignFollow(newSpace)
 }
 
@@ -683,6 +677,12 @@ func (info *varalignLine) alignValueMultiFollow(column, indentDiff int) {
 }
 
 func (info *varalignLine) alignFollow(newSpace string) {
+	// Below a continuation marker, there may be a completely empty line.
+	// This is confusing to the human readers, but technically allowed.
+	if info.varalignParts.isEmpty() {
+		return
+	}
+
 	continuationColumn := 0
 	if info.spaceBeforeContinuation() != " " {
 		continuationColumn = imin(72, info.continuationColumn())

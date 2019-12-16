@@ -3992,6 +3992,8 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_initial_l
 	vt.Run()
 }
 
+// The seemingly empty line 3 is actually a continuation from the line above it.
+// Its indentation is is not fixed since that would lead to trailing whitespace.
 func (s *Suite) Test_varalignLine_alignFollow(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -4003,16 +4005,13 @@ func (s *Suite) Test_varalignLine_alignFollow(c *check.C) {
 		"                ...21 \\",
 		"")
 	vt.Diagnostics(
-		// FIXME
-		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\\t\".")
+		nil...)
 	vt.Autofixes(
-		// FIXME
-		"AUTOFIX: Makefile:3: Replacing \"\" with \"\\t\\t\".")
+		nil...)
 	vt.Fixed(
 		"VAR=            ...21 \\",
 		"                ...21 \\",
-		// FIXME
-		"                ")
+		"")
 	vt.Run()
 }
 
