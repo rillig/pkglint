@@ -61,8 +61,6 @@ func (s *Suite) SetUpTest(c *check.C) {
 	G.Testing = true
 	trace.Out = &t.stdout
 
-	// XXX: Maybe the tests can run a bit faster when they don't
-	// create a temporary directory each.
 	G.Pkgsrc = NewPkgsrc(t.File("."))
 
 	t.c = c
