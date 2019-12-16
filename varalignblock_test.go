@@ -2327,7 +2327,6 @@ func (s *Suite) Test_VaralignBlock__shift_already_long_line_to_the__right(c *che
 		"11 16 71",
 		"   16")
 	vt.Diagnostics(
-		// FIXME: No, it shouldn't, as that would make the continuation marker invisible on 80x25.
 		"NOTE: Makefile:2: This variable value should be aligned to column 25.",
 		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\\t\\t\".")
 	vt.Autofixes(
