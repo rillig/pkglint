@@ -218,19 +218,18 @@ func (l *varalignMkLine) realign(newWidth int) {
 	// amount and in the same direction. Typical examples are
 	// SUBST_SED, shell programs and AWK programs like in
 	// GENERATE_PLIST.
-	indentDiffSet := false
-
+	//
 	// The amount by which the follow-up lines are shifted.
 	// Positive values mean shifting to the right, negative values
 	// mean shifting to the left.
-	indentDiff := 0
+	var indentDiff optInt
 
 	_, rightMargin := l.rightMargin()
 	isMultiEmpty := l.isMultiEmpty()
 	for _, info := range l.infos {
 
 		if newWidth > 0 || info.rawIndex > 0 {
-			info.realignDetails(newWidth, &indentDiffSet, &indentDiff, isMultiEmpty)
+			info.realignDetails(newWidth, &indentDiff, isMultiEmpty)
 		}
 
 		if !info.fixedSpaceBeforeContinuation {
@@ -344,41 +343,39 @@ func (va *VaralignBlock) adjustLong(newWidth int) {
 	}
 }
 
-func (info *varalignLine) realignDetails(newWidth int, indentDiffSet *bool, indentDiff *int, isMultiEmpty bool) {
+func (info *varalignLine) realignDetails(newWidth int, indentDiff *optInt, isMultiEmpty bool) {
 	if isMultiEmpty {
 		if info.rawIndex == 0 {
 			info.alignValueMultiEmptyInitial(newWidth)
 		} else {
-			info.realignMultiEmptyFollow(newWidth, indentDiffSet, indentDiff)
+			info.realignMultiEmptyFollow(newWidth, indentDiff)
 		}
 	} else if info.rawIndex == 0 && info.isContinuation() {
-		info.realignMultiInitial(newWidth, indentDiffSet, indentDiff)
+		info.realignMultiInitial(newWidth, indentDiff)
 	} else if info.rawIndex > 0 {
-		assert(*indentDiffSet)
-		info.alignValueMultiFollow(newWidth, *indentDiff)
+		info.alignValueMultiFollow(newWidth, indentDiff.get())
 	} else {
 		info.alignValueSingle(newWidth)
 	}
 }
 
-func (info *varalignLine) realignMultiEmptyFollow(newWidth int, indentDiffSet *bool, indentDiff *int) {
+func (info *varalignLine) realignMultiEmptyFollow(newWidth int, indentDiff *optInt) {
 	oldSpace := info.spaceBeforeValue
 	oldWidth := tabWidth(oldSpace)
 
-	if !*indentDiffSet {
-		*indentDiffSet = true
-		*indentDiff = condInt(newWidth != 0, newWidth-oldWidth, 0)
-		if *indentDiff > 0 && !info.isCommentedOut() {
-			*indentDiff = 0
+	if !indentDiff.isSet {
+		diff := condInt(newWidth != 0, newWidth-oldWidth, 0)
+		if diff > 0 && !info.isCommentedOut() {
+			diff = 0
 		}
+		indentDiff.set(diff)
 	}
 
-	info.alignValueMultiEmptyFollow(imax(oldWidth+*indentDiff, 8))
+	info.alignValueMultiEmptyFollow(imax(oldWidth+indentDiff.get(), 8))
 }
 
-func (info *varalignLine) realignMultiInitial(newWidth int, indentDiffSet *bool, indentDiff *int) {
-	*indentDiffSet = true
-	*indentDiff = newWidth - info.valueColumn()
+func (info *varalignLine) realignMultiInitial(newWidth int, indentDiff *optInt) {
+	indentDiff.set(newWidth - info.valueColumn())
 
 	info.alignValueMultiInitial(newWidth)
 }

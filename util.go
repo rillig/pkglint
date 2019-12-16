@@ -1404,3 +1404,18 @@ func (i *interval) add(x int) {
 		i.max = x
 	}
 }
+
+type optInt struct {
+	isSet bool
+	value int
+}
+
+func (i *optInt) get() int {
+	assert(i.isSet)
+	return i.value
+}
+
+func (i *optInt) set(value int) {
+	i.value = value
+	i.isSet = true
+}
