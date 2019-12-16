@@ -3109,26 +3109,6 @@ func (s *Suite) Test_varalignLine_realignDetails(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_varalignLine_realignMultiInitial__spaces(c *check.C) {
-	vt := NewVaralignTester(s, c)
-	vt.Input(
-		"VAR=    value1 \\",
-		"        value2")
-	vt.Internals(
-		"04 08 15",
-		"   08")
-	vt.Diagnostics(
-		"NOTE: Makefile:1: Variable values should be aligned with tabs, not spaces.",
-		"NOTE: Makefile:2: This continuation line should be indented with \"\\t\".")
-	vt.Autofixes(
-		"AUTOFIX: Makefile:1: Replacing \"    \" with \"\\t\".",
-		"AUTOFIX: Makefile:2: Replacing \"        \" with \"\\t\".")
-	vt.Fixed(
-		"VAR=    value1 \\",
-		"        value2")
-	vt.Run()
-}
-
 func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 	t := s.Init(c)
 
@@ -3664,6 +3644,26 @@ func (s *Suite) Test_varalignLine_alignValueMultiEmptyInitial__spaces(c *check.C
 		"VAR=    \\",
 		"        value",
 		"VAR=    value")
+	vt.Run()
+}
+
+func (s *Suite) Test_varalignLine_alignValueMultiInitial__spaces(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR=    value1 \\",
+		"        value2")
+	vt.Internals(
+		"04 08 15",
+		"   08")
+	vt.Diagnostics(
+		"NOTE: Makefile:1: Variable values should be aligned with tabs, not spaces.",
+		"NOTE: Makefile:2: This continuation line should be indented with \"\\t\".")
+	vt.Autofixes(
+		"AUTOFIX: Makefile:1: Replacing \"    \" with \"\\t\".",
+		"AUTOFIX: Makefile:2: Replacing \"        \" with \"\\t\".")
+	vt.Fixed(
+		"VAR=    value1 \\",
+		"        value2")
 	vt.Run()
 }
 

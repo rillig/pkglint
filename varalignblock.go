@@ -366,17 +366,13 @@ func (info *varalignLine) realignDetails(newWidth int, indentDiff *optInt, isMul
 			info.alignValueMultiFollow(width)
 		}
 	} else if info.rawIndex == 0 && info.isContinuation() {
-		info.realignMultiInitial(newWidth)
+		info.alignValueMultiInitial(newWidth)
 	} else if info.rawIndex > 0 {
 		width := imax(newWidth, info.valueColumn()+indentDiff.get())
 		info.alignValueMultiFollow(width)
 	} else {
 		info.alignValueSingle(newWidth)
 	}
-}
-
-func (info *varalignLine) realignMultiInitial(newWidth int) {
-	info.alignValueMultiInitial(newWidth)
 }
 
 // VaralignSplitter parses the text of a raw line into those parts that
