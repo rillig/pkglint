@@ -1404,5 +1404,3 @@ func (i *interval) add(x int) {
 		i.max = x
 	}
 }
-
-func (i *interval) isEmpty() bool { return i.min > i.max }
