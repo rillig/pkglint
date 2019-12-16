@@ -3797,7 +3797,7 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow(c *check.C) {
 	t := s.Init(c)
 
 	// newLine creates a line consisting of either 2 or 3 physical lines.
-	// The text ends up in the raw line with index 1.
+	// The given text ends up in the raw line with index 1.
 	newLine := func(text string, column, indentDiff int) (*varalignLine, *RawLine) {
 		t.CheckDotColumns("", text)
 
@@ -3856,8 +3856,18 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow(c *check.C) {
 		"AUTOFIX: filename.mk:2: Replacing \"\" with \"\\t\\t\\t\".",
 		"AUTOFIX: filename.mk:2: Replacing \"   \\\\\" with \" \\\\\".")
 
-	// As a special case, a continuation backslash in column 72 is preserved.
-	// TODO: Make this more general.
+	// The position of the continuation backslash is preserved.
+	test(
+		"value\t\t\t\t\t\t\\", 24, 0,
+		"\t\t\tvalue\t\t\t\\",
+
+		"NOTE: filename.mk:2: This continuation line should be indented "+
+			"with \"\\t\\t\\t\".",
+		"AUTOFIX: filename.mk:2: Replacing \"\" with \"\\t\\t\\t\".",
+		"AUTOFIX: filename.mk:2: "+
+			"Replacing \"\\t\\t\\t\\t\\t\\t\\\\\" "+
+			"with \"\\t\\t\\t\\\\\".")
+
 	test(
 		"value\t\t\t\t\t\t\t\t\t\\", 24, 0,
 		"\t\t\tvalue\t\t\t\t\t\t\\",
@@ -3879,6 +3889,38 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow(c *check.C) {
 		"NOTE: filename.mk:2: This continuation line should be indented with \"\\t\\t\\t\".",
 		"AUTOFIX: filename.mk:2: Replacing \"\" with \"\\t\\t\\t\".",
 		"AUTOFIX: filename.mk:2: Replacing \"\\t\\\\\" with \" \\\\\".")
+
+	// The indentation of the continuation backslash is even preserved
+	// when it is not aligned with tabs only but with spaces.
+	test(
+		"value\t\t\t\t\t\t   \\", 24, 0,
+		"\t\t\tvalue\t\t\t   \\",
+
+		"NOTE: filename.mk:2: This continuation line should be indented "+
+			"with \"\\t\\t\\t\".",
+		"AUTOFIX: filename.mk:2: Replacing \"\" with \"\\t\\t\\t\".",
+		"AUTOFIX: filename.mk:2: "+
+			"Replacing \"\\t\\t\\t\\t\\t\\t   \\\\\" "+
+			"with \"\\t\\t\\t   \\\\\".")
+
+	// Since the value is shifted to the right, the position of the
+	// continuation backslash cannot be preserved, therefore it is
+	// shifted to the right along with the value.
+	test(
+		"value \\", 24, 0,
+		"\t\t\tvalue \\",
+
+		"NOTE: filename.mk:2: This continuation line should be indented "+
+			"with \"\\t\\t\\t\".",
+		"AUTOFIX: filename.mk:2: Replacing \"\" with \"\\t\\t\\t\".")
+
+	// The second line is indented deeper (40) than the first line (24).
+	// Assuming that the relative indentation was intended, it is preserved.
+	test(
+		"\t\t\t\t\tvalue \\", 24, 0,
+		"\t\t\t\t\tvalue \\",
+
+		nil...)
 }
 
 func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_lines(c *check.C) {
