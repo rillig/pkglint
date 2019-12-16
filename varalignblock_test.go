@@ -2799,16 +2799,15 @@ func (s *Suite) Test_VaralignBlock__long_lines(c *check.C) {
 	vt.Diagnostics(
 		"NOTE: Makefile:1: The continuation backslash should be in column 57, not 66.",
 		"NOTE: Makefile:2: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".",
-		"NOTE: Makefile:2: The continuation backslash should be in column 57, not 58.",
 		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".")
 	vt.Autofixes(
 		"AUTOFIX: Makefile:1: Replacing \"\\t\\t \" with \"\\t\".",
 		"AUTOFIX: Makefile:2: Replacing \"\\t\" with \"\\t\\t\\t\\t\\t\\t\".",
-		"AUTOFIX: Makefile:2: Replacing \" \\t \" with \"\\t\".",
+		"AUTOFIX: Makefile:2: Replacing \" \\t \\\\\" with \" \\\\\".",
 		"AUTOFIX: Makefile:3: Replacing \"\\t\" with \"\\t\\t\\t\\t\\t\\t\".")
 	vt.Fixed(
 		"VAR=                                            value   \\",
-		"                                                value   \\",
+		"                                                value \\",
 		"                                                value")
 	vt.Run()
 }
@@ -3587,7 +3586,7 @@ func (s *Suite) Test_varalignLine_alignValueSingle(c *check.C) {
 			t.CheckDotColumns(before)
 			mkline := t.NewMkLine("filename.mk", 123, before)
 			parts := NewVaralignSplitter().split(before, true)
-			info := &varalignLine{mkline, 0, false, parts}
+			info := &varalignLine{mkline, 0, false, false, parts}
 
 			info.alignValueSingle(column)
 
@@ -3732,7 +3731,7 @@ func (s *Suite) Test_varalignLine_alignValueMultiInitial(c *check.C) {
 
 			text := mkline.raw[0].text()
 			parts := NewVaralignSplitter().split(text, true)
-			info := &varalignLine{mkline, 0, false, parts}
+			info := &varalignLine{mkline, 0, false, false, parts}
 
 			info.alignValueMultiInitial(column)
 
@@ -3815,7 +3814,7 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow(c *check.C) {
 
 		parts := NewVaralignSplitter().split(text, false)
 		isLong := parts.isTooLongFor(column + indentDiff)
-		return &varalignLine{mkline, 1, isLong, parts}, mkline.raw[1]
+		return &varalignLine{mkline, 1, isLong, false, parts}, mkline.raw[1]
 	}
 
 	test := func(before string, column, indentDiff int, after string, diagnostics ...string) {
@@ -3849,14 +3848,14 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow(c *check.C) {
 			"indented with \"\\t\\t\\t\".",
 		"AUTOFIX: filename.mk:2: Replacing \"\" with \"\\t\\t\\t\".")
 
-	// FIXME: The space before the continuation backslash must be adjusted.
 	test(
 		"value   \\", 24, 0,
-		"\t\t\tvalue   \\",
+		"\t\t\tvalue \\",
 
 		"NOTE: filename.mk:2: This continuation line should be "+
 			"indented with \"\\t\\t\\t\".",
-		"AUTOFIX: filename.mk:2: Replacing \"\" with \"\\t\\t\\t\".")
+		"AUTOFIX: filename.mk:2: Replacing \"\" with \"\\t\\t\\t\".",
+		"AUTOFIX: filename.mk:2: Replacing \"   \\\\\" with \" \\\\\".")
 
 	// As a special case, a continuation backslash in column 72 is preserved.
 	// TODO: Make this more general.
@@ -3916,11 +3915,8 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_lines(c *
 		"NOTE: Makefile:1: This variable value should be aligned to column 17.",
 		"NOTE: Makefile:2: This variable value should be aligned to column 17.",
 		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".",
-		"NOTE: Makefile:3: The continuation backslash should be in column 73, not 66.",
 		"NOTE: Makefile:4: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".",
-		"NOTE: Makefile:4: The continuation backslash should be in column 73, not 66.",
 		"NOTE: Makefile:5: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".",
-		"NOTE: Makefile:5: The continuation backslash should be in column 73, not 75.",
 		"NOTE: Makefile:6: This continuation line should be indented with \"\\t\\t\\t\\t\\t\\t\".",
 		"NOTE: Makefile:7: This continuation line should be indented with \"\\t\\t\\t\\t\\t\".",
 		"NOTE: Makefile:8: This continuation line should be indented with \"\\t\\t\\t\\t\\t\".")
@@ -3928,11 +3924,11 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_lines(c *
 		"AUTOFIX: Makefile:1: Replacing \"\\t\" with \"\\t\\t\".",
 		"AUTOFIX: Makefile:2: Replacing \"\\t\\t\\t\\t\" with \"\\t\".",
 		"AUTOFIX: Makefile:3: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\\t\".",
-		"AUTOFIX: Makefile:3: Replacing \"                \" with \"\\t\\t\\t\".",
+		"AUTOFIX: Makefile:3: Replacing \"                \\\\\" with \"\\t\\t\\t\\\\\".",
 		"AUTOFIX: Makefile:4: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\\t\".",
-		"AUTOFIX: Makefile:4: Replacing \"               \" with \"\\t\\t\\t\".",
+		"AUTOFIX: Makefile:4: Replacing \"               \\\\\" with \"\\t\\t\\t\\\\\".",
 		"AUTOFIX: Makefile:5: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\\t\".",
-		"AUTOFIX: Makefile:5: Replacing \"  \\t\\t\\t  \" with \"\\t\\t\\t\".",
+		"AUTOFIX: Makefile:5: Replacing \"  \\t\\t\\t  \\\\\" with \"\\t\\t\\t\\\\\".",
 		"AUTOFIX: Makefile:6: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\\t\".",
 		"AUTOFIX: Makefile:7: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\".",
 		"AUTOFIX: Makefile:8: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\".")
@@ -4010,7 +4006,7 @@ func (s *Suite) Test_varalignLine_alignContinuation(c *check.C) {
 
 			text := mkline.raw[rawIndex].text()
 			parts := NewVaralignSplitter().split(text, rawIndex == 0)
-			info := &varalignLine{mkline, rawIndex, false, parts}
+			info := &varalignLine{mkline, rawIndex, false, false, parts}
 
 			info.alignContinuation(valueColumn, rightMarginColumn)
 
@@ -4170,6 +4166,22 @@ func (s *Suite) Test_varalignLine_alignContinuation(c *check.C) {
 		"NOTE: filename.mk:1: The continuation backslash should be "+
 			"preceded by a single space.",
 		"AUTOFIX: filename.mk:1: Replacing \"\\t\\t\\t\" with \" \".")
+}
+
+func (s *Suite) Test_varalignLine_replaceSpaceBeforeValue(c *check.C) {
+	t := s.Init(c)
+
+	// FIXME
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_varalignLine_replaceSpaceBeforeContinuationSilently(c *check.C) {
+	t := s.Init(c)
+
+	// FIXME
+
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_varalignLine_explainWrongColumn(c *check.C) {

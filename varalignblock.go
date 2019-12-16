@@ -186,7 +186,7 @@ func (va *VaralignBlock) processVarassign(mkline *MkLine) {
 	var infos []*varalignLine
 	for i, raw := range mkline.raw {
 		parts := NewVaralignSplitter().split(strings.TrimSuffix(raw.textnl, "\n"), i == 0)
-		info := varalignLine{mkline, i, false, parts}
+		info := varalignLine{mkline, i, false, false, parts}
 		infos = append(infos, &info)
 	}
 	va.mkinfos = append(va.mkinfos, &varalignMkLine{infos})
@@ -233,7 +233,9 @@ func (l *varalignMkLine) realign(newWidth int) {
 			info.realignDetails(newWidth, &indentDiffSet, &indentDiff, isMultiEmpty)
 		}
 
-		info.alignContinuation(newWidth, rightMargin)
+		if !info.fixedSpaceBeforeContinuation {
+			info.alignContinuation(newWidth, rightMargin)
+		}
 	}
 }
 
@@ -545,6 +547,8 @@ type varalignLine struct {
 	// Whether the line is so long that it may use a single tab as indentation.
 	long bool
 
+	fixedSpaceBeforeContinuation bool
+
 	varalignParts
 }
 
@@ -680,27 +684,15 @@ func (info *varalignLine) alignValueMultiFollow(column, indentDiff int) {
 		return
 	}
 
+	continuationColumn := 0
+	if info.spaceBeforeContinuation() != " " {
+		continuationColumn = imin(72, info.continuationColumn())
+	}
 	fix := info.fixer.Autofix()
 	fix.Notef("This continuation line should be indented with %q.", newSpace)
-	fix.ReplaceAt(info.rawIndex, info.spaceBeforeValueIndex(), oldSpace, newSpace)
-	was72 := info.continuationColumn() == 72
-	info.spaceBeforeValue = newSpace
-	if info.continuation != "" && was72 {
-		// FIXME: This type cast is ugly.
-		// Since the varalignParts are updated now after fixing the text,
-		// the same text is available there.
-		orig := info.fixer.(*MkLine).raw[info.rawIndex].text()
-		base := rtrimHspace(strings.TrimSuffix(orig, "\\"))
-		spaceIndex := len(base)
-		oldSuffix := orig[spaceIndex:]
-		newSuffix := " \\"
-		if tabWidth(base) < 72 {
-			newSuffix = alignmentAfter(base, 72) + "\\"
-		}
-		if newSuffix != oldSuffix {
-			fix.ReplaceAt(info.rawIndex, spaceIndex, oldSuffix, newSuffix)
-			info.setSpaceBeforeContinuation(strings.TrimSuffix(newSuffix, "\\"))
-		}
+	info.replaceSpaceBeforeValue(fix, newSpace)
+	if info.isContinuation() {
+		info.replaceSpaceBeforeContinuationSilently(fix, continuationColumn)
 	}
 	fix.Apply()
 }
@@ -741,6 +733,32 @@ func (info *varalignLine) alignContinuation(valueColumn, rightMarginColumn int) 
 	fix.ReplaceAt(info.rawIndex, index, oldSpace, newSpace)
 	info.setSpaceBeforeContinuation(newSpace)
 	fix.Apply()
+}
+
+func (info *varalignLine) replaceSpaceBeforeValue(fix *Autofix, newSpace string) {
+	index := info.spaceBeforeValueIndex()
+	fix.ReplaceAt(info.rawIndex, index, info.spaceBeforeValue, newSpace)
+	info.spaceBeforeValue = newSpace
+}
+
+func (info *varalignLine) replaceSpaceBeforeContinuationSilently(fix *Autofix, column int) {
+	oldSpace := info.spaceBeforeContinuation()
+	if oldSpace == " " {
+		return
+	}
+	newSpaceColumn := info.uptoValueWidth()
+	newSpace := alignmentToWidths(newSpaceColumn, column)
+	if newSpace == "" {
+		newSpace = " "
+	}
+	if oldSpace == newSpace {
+		return
+	}
+
+	index := info.spaceBeforeContinuationIndex()
+	fix.ReplaceAt(info.rawIndex, index, oldSpace+"\\", newSpace+"\\")
+	info.varalignParts.setSpaceBeforeContinuation(newSpace)
+	info.fixedSpaceBeforeContinuation = true
 }
 
 func (*varalignLine) explainWrongColumn(fix *Autofix) {
@@ -819,6 +837,13 @@ func (p *varalignParts) setSpaceBeforeContinuation(space string) {
 	} else {
 		p.spaceAfterValue = space
 	}
+}
+
+func (p *varalignParts) spaceBeforeContinuationIndex() int {
+	assert(p.isContinuation())
+	return len(p.leadingComment) +
+		len(p.varnameOp) + len(p.spaceBeforeValue) +
+		len(p.value)
 }
 
 func (p *varalignParts) uptoValueWidth() int {
