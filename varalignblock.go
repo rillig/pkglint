@@ -348,10 +348,21 @@ func (info *varalignLine) realignDetails(newWidth int, indentDiff *optInt, isMul
 		if info.rawIndex == 0 {
 			info.alignValueMultiEmptyInitial(newWidth)
 		} else {
-			info.realignMultiEmptyFollow(newWidth, indentDiff)
+			oldWidth := tabWidth(info.spaceBeforeValue)
+			if !indentDiff.isSet {
+				diff := condInt(newWidth != 0, newWidth-oldWidth, 0)
+				if diff > 0 && !info.isCommentedOut() {
+					diff = 0
+				}
+				indentDiff.set(diff)
+			}
+
+			width := imax(oldWidth+indentDiff.get(), 8)
+			info.alignValueMultiEmptyFollow(width)
 		}
 	} else if info.rawIndex == 0 && info.isContinuation() {
-		info.realignMultiInitial(newWidth, indentDiff)
+		indentDiff.set(newWidth - info.valueColumn())
+		info.realignMultiInitial(newWidth)
 	} else if info.rawIndex > 0 {
 		info.alignValueMultiFollow(newWidth, indentDiff.get())
 	} else {
@@ -359,24 +370,7 @@ func (info *varalignLine) realignDetails(newWidth int, indentDiff *optInt, isMul
 	}
 }
 
-func (info *varalignLine) realignMultiEmptyFollow(newWidth int, indentDiff *optInt) {
-	oldSpace := info.spaceBeforeValue
-	oldWidth := tabWidth(oldSpace)
-
-	if !indentDiff.isSet {
-		diff := condInt(newWidth != 0, newWidth-oldWidth, 0)
-		if diff > 0 && !info.isCommentedOut() {
-			diff = 0
-		}
-		indentDiff.set(diff)
-	}
-
-	info.alignValueMultiEmptyFollow(imax(oldWidth+indentDiff.get(), 8))
-}
-
-func (info *varalignLine) realignMultiInitial(newWidth int, indentDiff *optInt) {
-	indentDiff.set(newWidth - info.valueColumn())
-
+func (info *varalignLine) realignMultiInitial(newWidth int) {
 	info.alignValueMultiInitial(newWidth)
 }
 

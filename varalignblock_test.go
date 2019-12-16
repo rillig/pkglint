@@ -3109,54 +3109,6 @@ func (s *Suite) Test_varalignLine_realignDetails(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-// This example is quite unrealistic since typically the first line is
-// the least indented.
-//
-// All follow-up lines are indented with at least one tab, to make clear
-// they are continuation lines.
-func (s *Suite) Test_varalignLine_realignMultiEmptyFollow(c *check.C) {
-	vt := NewVaralignTester(s, c)
-	vt.Input(
-		"VAR= \\",
-		"        value1 \\",
-		"          value2 \\",
-		"      value3 \\",
-		"value4 \\",
-		"\\",
-		"# comment")
-	vt.Internals(
-		"04 05 05",
-		"   08 15",
-		"   10 17",
-		"   06 13",
-		"   00 07",
-		"   00 00",
-		"   00")
-	vt.Diagnostics(
-		"NOTE: Makefile:2: This continuation line should be indented with \"\\t\".",
-		"NOTE: Makefile:3: This continuation line should be indented with \"\\t  \".",
-		"NOTE: Makefile:4: This continuation line should be indented with \"\\t\".",
-		"NOTE: Makefile:5: This continuation line should be indented with \"\\t\".",
-		"NOTE: Makefile:6: This continuation line should be indented with \"\\t\".",
-		"NOTE: Makefile:7: This continuation line should be indented with \"\\t\".")
-	vt.Autofixes(
-		"AUTOFIX: Makefile:2: Replacing \"        \" with \"\\t\".",
-		"AUTOFIX: Makefile:3: Replacing \"          \" with \"\\t  \".",
-		"AUTOFIX: Makefile:4: Replacing \"      \" with \"\\t\".",
-		"AUTOFIX: Makefile:5: Replacing \"\" with \"\\t\".",
-		"AUTOFIX: Makefile:6: Replacing \"\" with \"\\t\".",
-		"AUTOFIX: Makefile:7: Replacing \"\" with \"\\t\".")
-	vt.Fixed(
-		"VAR= \\",
-		"        value1 \\",
-		"          value2 \\",
-		"        value3 \\",
-		"        value4 \\",
-		"        \\",
-		"        # comment")
-	vt.Run()
-}
-
 func (s *Suite) Test_varalignLine_realignMultiInitial__spaces(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -3791,6 +3743,54 @@ func (s *Suite) Test_varalignLine_alignValueMultiEmptyFollow(c *check.C) {
 	}
 
 	test()
+}
+
+// This example is quite unrealistic since typically the first line is
+// the least indented.
+//
+// All follow-up lines are indented with at least one tab, to make clear
+// they are continuation lines.
+func (s *Suite) Test_varalignLine_alignValueMultiEmptyFollow__unrealistic(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR= \\",
+		"        value1 \\",
+		"          value2 \\",
+		"      value3 \\",
+		"value4 \\",
+		"\\",
+		"# comment")
+	vt.Internals(
+		"04 05 05",
+		"   08 15",
+		"   10 17",
+		"   06 13",
+		"   00 07",
+		"   00 00",
+		"   00")
+	vt.Diagnostics(
+		"NOTE: Makefile:2: This continuation line should be indented with \"\\t\".",
+		"NOTE: Makefile:3: This continuation line should be indented with \"\\t  \".",
+		"NOTE: Makefile:4: This continuation line should be indented with \"\\t\".",
+		"NOTE: Makefile:5: This continuation line should be indented with \"\\t\".",
+		"NOTE: Makefile:6: This continuation line should be indented with \"\\t\".",
+		"NOTE: Makefile:7: This continuation line should be indented with \"\\t\".")
+	vt.Autofixes(
+		"AUTOFIX: Makefile:2: Replacing \"        \" with \"\\t\".",
+		"AUTOFIX: Makefile:3: Replacing \"          \" with \"\\t  \".",
+		"AUTOFIX: Makefile:4: Replacing \"      \" with \"\\t\".",
+		"AUTOFIX: Makefile:5: Replacing \"\" with \"\\t\".",
+		"AUTOFIX: Makefile:6: Replacing \"\" with \"\\t\".",
+		"AUTOFIX: Makefile:7: Replacing \"\" with \"\\t\".")
+	vt.Fixed(
+		"VAR= \\",
+		"        value1 \\",
+		"          value2 \\",
+		"        value3 \\",
+		"        value4 \\",
+		"        \\",
+		"        # comment")
+	vt.Run()
 }
 
 func (s *Suite) Test_varalignLine_alignValueMultiFollow(c *check.C) {
