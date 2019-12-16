@@ -269,7 +269,7 @@ func (va *VaralignBlock) varnameOpWidths() (int, int) {
 	for _, mkinfo := range va.mkinfos {
 		if !mkinfo.isMultiEmpty() {
 			info := mkinfo.infos[0]
-			widths.add(info.fixer, info.varnameOpWidth())
+			widths.add(info.fixer, info.spaceBeforeValueColumn())
 		}
 	}
 	if widths.len() == 0 {
@@ -297,10 +297,10 @@ func (va *VaralignBlock) spaceWidths(outlier int) (min, max int) {
 	spaceWidths := newInterval()
 	for _, mkinfo := range va.mkinfos {
 		info := mkinfo.infos[0]
-		if mkinfo.isMultiEmpty() || outlier > 0 && info.varnameOpWidth() == outlier {
+		if mkinfo.isMultiEmpty() || outlier > 0 && info.spaceBeforeValueColumn() == outlier {
 			continue
 		}
-		spaceWidths.add(info.varnameOpSpaceWidth())
+		spaceWidths.add(info.valueColumn())
 	}
 
 	return spaceWidths.min, spaceWidths.max
@@ -332,14 +332,14 @@ func (va *VaralignBlock) adjustLong(newWidth int) {
 					if follow.rawIndex == 0 {
 						break
 					}
-					if !isMultiEmpty && follow.spaceBeforeValue == "\t" && follow.varnameOpSpaceWidth() < newWidth && follow.widthAlignedAt(newWidth) > 72 {
+					if !isMultiEmpty && follow.spaceBeforeValue == "\t" && follow.valueColumn() < newWidth && follow.widthAlignedAt(newWidth) > 72 {
 						anyLong = true
 						break
 					}
 				}
 			}
 
-			info.long = anyLong && info.varnameOpSpaceWidth() == 8
+			info.long = anyLong && info.valueColumn() == 8
 		}
 	}
 }
@@ -378,7 +378,7 @@ func (info *varalignLine) realignMultiEmptyFollow(newWidth int, indentDiffSet *b
 
 func (info *varalignLine) realignMultiInitial(newWidth int, indentDiffSet *bool, indentDiff *int) {
 	*indentDiffSet = true
-	*indentDiff = newWidth - info.varnameOpSpaceWidth()
+	*indentDiff = newWidth - info.valueColumn()
 
 	info.alignValueMultiInitial(newWidth)
 }
@@ -600,7 +600,7 @@ func (info *varalignLine) alignValueMultiEmptyInitial(newWidth int) {
 	// Indent the outlier and any other lines that stick out
 	// with a space instead of a tab to keep the line short.
 	newSpace := " "
-	if info.varnameOpSpaceWidth() <= newWidth {
+	if info.valueColumn() <= newWidth {
 		newSpace = alignmentAfter(leadingComment+varnameOp, newWidth)
 	}
 
@@ -613,7 +613,7 @@ func (info *varalignLine) alignValueMultiEmptyInitial(newWidth int) {
 	}
 
 	hasSpace := strings.IndexByte(oldSpace, ' ') != -1
-	oldColumn := info.varnameOpSpaceWidth()
+	oldColumn := info.valueColumn()
 	column := tabWidthSlice(leadingComment, varnameOp, newSpace)
 
 	fix := info.fixer.Autofix()
@@ -639,7 +639,7 @@ func (info *varalignLine) alignValueMultiInitial(column int) {
 		return
 	}
 
-	oldWidth := info.varnameOpSpaceWidth()
+	oldWidth := info.valueColumn()
 	width := tabWidthSlice(leadingComment, varnameOp, newSpace)
 
 	fix := info.fixer.Autofix()
@@ -724,7 +724,7 @@ func (info *varalignLine) alignContinuation(valueColumn, rightMarginColumn int) 
 	} else if info.uptoValueWidth() >= rightMarginColumn {
 		fix.Notef("The continuation backslash should be preceded by a single space or tab.")
 	} else {
-		newSpace = alignmentAfter(info.uptoValue(), rightMarginColumn)
+		newSpace = alignmentToWidths(info.uptoValueWidth(), rightMarginColumn)
 		fix.Notef(
 			"The continuation backslash should be in column %d, not %d.",
 			rightMarginColumn+1, column+1)
@@ -799,6 +799,58 @@ func (p *varalignParts) String() string {
 		p.continuation
 }
 
+func (p *varalignParts) leadingCommentIndex() int {
+	return 0
+}
+
+func (p *varalignParts) varnameOpIndex() int {
+	return p.leadingCommentIndex() + len(p.leadingComment)
+}
+
+// spaceBeforeValueIndex returns the string index at which the space before the value starts.
+// It's the same as the end of the assignment operator. Example:
+//  #VAR=   value
+// The index is 5.
+func (p *varalignParts) spaceBeforeValueIndex() int {
+	return p.varnameOpIndex() + len(p.varnameOp)
+}
+
+func (p *varalignParts) valueIndex() int {
+	return p.spaceBeforeValueIndex() + len(p.spaceBeforeValue)
+}
+
+func (p *varalignParts) spaceAfterValueIndex() int {
+	return p.valueIndex() + len(p.value)
+}
+
+func (p *varalignParts) continuationIndex() int {
+	return p.spaceAfterValueIndex() + len(p.spaceAfterValue)
+}
+
+func (p *varalignParts) leadingCommentColumn() int {
+	return 0
+}
+
+func (p *varalignParts) varnameOpColumn() int {
+	return tabWidthAppend(p.leadingCommentColumn(), p.leadingComment)
+}
+
+func (p *varalignParts) spaceBeforeValueColumn() int {
+	return tabWidthAppend(p.varnameOpColumn(), p.varnameOp)
+}
+
+func (p *varalignParts) valueColumn() int {
+	return tabWidthAppend(p.spaceBeforeValueColumn(), p.spaceBeforeValue)
+}
+
+func (p *varalignParts) spaceAfterValueColumn() int {
+	return tabWidthAppend(p.valueColumn(), p.value)
+}
+
+func (p *varalignParts) continuationColumn() int {
+	return tabWidthAppend(p.spaceAfterValueColumn(), p.spaceAfterValue)
+}
+
 // continuation returns whether this line ends with a backslash.
 func (p *varalignParts) isContinuation() bool {
 	return p.continuation != ""
@@ -810,22 +862,6 @@ func (p *varalignParts) isEmptyContinuation() bool {
 
 func (p *varalignParts) isEmpty() bool {
 	return p.value == "" && !p.isContinuation()
-}
-
-func (p *varalignParts) varnameOpWidth() int {
-	return tabWidthSlice(p.leadingComment, p.varnameOp)
-}
-
-func (p *varalignParts) varnameOpSpaceWidth() int {
-	return tabWidthSlice(p.leadingComment, p.varnameOp, p.spaceBeforeValue)
-}
-
-// spaceBeforeValueIndex returns the string index at which the space before the value starts.
-// It's the same as the end of the assignment operator. Example:
-//  #VAR=   value
-// The index is 5.
-func (p *varalignParts) spaceBeforeValueIndex() int {
-	return len(p.leadingComment) + len(p.varnameOp)
 }
 
 func (p *varalignParts) spaceBeforeContinuation() string {
@@ -847,33 +883,15 @@ func (p *varalignParts) spaceBeforeContinuationIndex() int {
 	assert(p.isContinuation())
 	assert(p.value != "")
 
-	return len(p.leadingComment) +
-		len(p.varnameOp) + len(p.spaceBeforeValue) +
-		len(p.value)
+	return p.spaceAfterValueIndex()
 }
 
 func (p *varalignParts) uptoValueWidth() int {
-	return tabWidth(rtrimHspace(p.leadingComment +
-		p.varnameOp + p.spaceBeforeValue +
-		p.value))
-}
-
-func (p *varalignParts) uptoValue() string {
-	return rtrimHspace(p.leadingComment +
-		p.varnameOp + p.spaceBeforeValue +
-		p.value)
-}
-
-func (p *varalignParts) continuationColumn() int {
-	return tabWidthSlice(p.leadingComment,
-		p.varnameOp, p.spaceBeforeValue,
-		p.value, p.spaceAfterValue)
-}
-
-func (p *varalignParts) continuationIndex() int {
-	return len(p.leadingComment) +
-		len(p.varnameOp) + len(p.spaceBeforeValue) +
-		len(p.value) + len(p.spaceAfterValue)
+	if p.value != "" {
+		return p.spaceAfterValueColumn()
+	} else {
+		return p.varnameOpColumn()
+	}
 }
 
 func (p *varalignParts) isCommentedOut() bool {
@@ -883,13 +901,13 @@ func (p *varalignParts) isCommentedOut() bool {
 // isCanonicalInitial returns whether the space between the assignment
 // operator and the value has its canonical form, which is either
 // at least one tab, or a single space, but only for lines that stick out.
-func (p *varalignParts) isCanonicalInitial(width int) bool {
+func (p *varalignParts) isCanonicalInitial(column int) bool {
 	space := p.spaceBeforeValue
 	if space == "" {
 		return false
 	}
 
-	if space == " " && p.varnameOpSpaceWidth() > width {
+	if space == " " && p.valueColumn() > column {
 		return true
 	}
 

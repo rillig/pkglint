@@ -102,8 +102,8 @@ func (vt *VaralignTester) run(autofix bool) {
 		for _, mkinfo := range varalign.mkinfos {
 			for _, info := range mkinfo.infos {
 				var minWidth, curWidth, continuation string
-				minWidth = condStr(info.rawIndex == 0, sprintf("%02d", info.varnameOpWidth()), "  ")
-				curWidth = sprintf(" %02d", info.varnameOpSpaceWidth())
+				minWidth = condStr(info.rawIndex == 0, sprintf("%02d", info.spaceBeforeValueColumn()), "  ")
+				curWidth = sprintf(" %02d", info.valueColumn())
 				if info.isContinuation() {
 					continuation = sprintf(" %02d", info.continuationColumn())
 				}
