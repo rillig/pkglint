@@ -88,7 +88,7 @@ func (s *Suite) Test_CheckLinesPlist__empty(c *check.C) {
 	CheckLinesPlist(nil, lines)
 
 	t.CheckOutputLines(
-		"WARN: PLIST:1: PLIST files shouldn't be empty.")
+		"ERROR: PLIST:1: PLIST files must not be empty.")
 }
 
 func (s *Suite) Test_CheckLinesPlist__common_end(c *check.C) {

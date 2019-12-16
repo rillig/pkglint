@@ -15,7 +15,7 @@ func CheckLinesPlist(pkg *Package, lines *Lines) {
 
 	if idOk && lines.Len() == 1 {
 		line := lines.Lines[0]
-		line.Warnf("PLIST files shouldn't be empty.")
+		line.Errorf("PLIST files must not be empty.")
 		line.Explain(
 			"One reason for empty PLISTs is that this is a newly created package",
 			sprintf("and that the author didn't run %q after installing the files.", bmake("print-PLIST")),
