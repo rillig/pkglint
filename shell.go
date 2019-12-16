@@ -277,7 +277,7 @@ func (scc *SimpleCommandChecker) checkAutoMkdirs() {
 		}
 
 		autoMkdirs := false
-		if G.Pkg != nil && prefixRel != "." {
+		if G.Pkg != nil {
 			plistLine := G.Pkg.Plist.Dirs[prefixRel]
 			if plistLine != nil && !containsVarRef(plistLine.Text) {
 				autoMkdirs = true
