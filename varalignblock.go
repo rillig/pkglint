@@ -661,11 +661,9 @@ func (info *varalignLine) alignValueMultiEmptyFollow(column int) {
 }
 
 func (info *varalignLine) alignValueMultiFollow(column, indentDiff int) {
-	oldSpace := info.spaceBeforeValue
-	// FIXME: tabWithAppend instead of the simple tabWidth.
-	newWidth := imax(column, tabWidth(oldSpace)+indentDiff)
+	newWidth := imax(column, info.valueColumn()+indentDiff)
 	newSpace := indent(newWidth)
-	if newSpace == oldSpace {
+	if newSpace == info.spaceBeforeValue {
 		return
 	}
 
