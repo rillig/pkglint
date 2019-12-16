@@ -3951,6 +3951,9 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_lines(c *
 	vt.Run()
 }
 
+// In this example, the continued lines are indented less than the line
+// containing the first value. This is not the common style, therefore all
+// continuation lines are aligned to the value of the first line.
 func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_initial_line(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -3978,7 +3981,6 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_initial_l
 		"NOTE: Makefile:4: This continuation line should be indented with \"\\t\\t\\t\".",
 		"NOTE: Makefile:5: This continuation line should be indented with \"\\t\\t\\t\".")
 	vt.Autofixes(
-		// FIXME: Mention the continuation backslash in the replacement.
 		"AUTOFIX: Makefile:1: Replacing \"\\t\\t\\t\" with \"\\t\\t\".",
 		"AUTOFIX: Makefile:2: Replacing \"\\t\\t    \" with \"\\t\\t\\t\".",
 		"AUTOFIX: Makefile:3: Replacing \"\\t\\t    \" with \"\\t\\t\\t\".",
@@ -3987,11 +3989,8 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_initial_l
 		"AUTOFIX: Makefile:5: Replacing \"\\t\\t\" with \"\\t\\t\\t\".")
 	vt.Fixed(
 		"VAR.....10!=            ....30........40........50....56                \\",
-		// FIXME: Preserve the original relative indentation.
 		"                        ........30........40.                           \\",
-		// FIXME: Preserve the original relative indentation.
 		"                        ........30........40........50........60......68 \\",
-		// FIXME: Preserve the original relative indentation.
 		"                        ...25                                           \\",
 		"                        -7")
 	vt.Run()
