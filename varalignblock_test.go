@@ -3993,11 +3993,27 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_initial_l
 }
 
 func (s *Suite) Test_varalignLine_alignFollow(c *check.C) {
-	t := s.Init(c)
-
-	// FIXME
-
-	t.CheckOutputEmpty()
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"VAR=\t\t...21 \\",
+		"\t\t...21 \\",
+		"")
+	vt.InputDetab(
+		"VAR=            ...21 \\",
+		"                ...21 \\",
+		"")
+	vt.Diagnostics(
+		// FIXME
+		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\\t\".")
+	vt.Autofixes(
+		// FIXME
+		"AUTOFIX: Makefile:3: Replacing \"\" with \"\\t\\t\".")
+	vt.Fixed(
+		"VAR=            ...21 \\",
+		"                ...21 \\",
+		// FIXME
+		"                ")
+	vt.Run()
 }
 
 func (s *Suite) Test_varalignLine_alignContinuation(c *check.C) {
