@@ -712,11 +712,14 @@ func (info *varalignLine) alignContinuation(valueColumn, rightMarginColumn int) 
 	}
 
 	oldSpace := info.spaceBeforeContinuation()
-	if oldSpace == " " || oldSpace == "\t" {
+	if oldSpace == " " {
 		return
 	}
 
 	column := info.continuationColumn()
+	if column <= 72 && oldSpace == "\t" {
+		return
+	}
 	if column == 72 || column == rightMarginColumn || column <= valueColumn {
 		return
 	}

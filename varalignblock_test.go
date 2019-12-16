@@ -4156,12 +4156,10 @@ func (s *Suite) Test_varalignLine_alignContinuation(c *check.C) {
 			"\t...13"),
 		0, 32, 48,
 
-		"VAR=\t...13\t\t\t\t\t\t\t\t...77\t\\",
-		nil...)
-	// FIXME
-	// "NOTE: filename.mk:1: The continuation backslash should be "+
-	// 	"preceded by a single space.",
-	// "AUTOFIX: filename.mk:1: Replacing \"\\t\" with \" \".")
+		"VAR=\t...13\t\t\t\t\t\t\t\t...77 \\",
+		"NOTE: filename.mk:1: The continuation backslash should be "+
+			"preceded by a single space.",
+		"AUTOFIX: filename.mk:1: Replacing \"\\t\" with \" \".")
 
 	test(
 		lines(
