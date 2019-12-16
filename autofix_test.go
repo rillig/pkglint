@@ -555,40 +555,43 @@ func (s *Suite) Test_Autofix_ReplaceAfter__after_inserting_a_line(c *check.C) {
 func (s *Suite) Test_Autofix_ReplaceAt(c *check.C) {
 	t := s.Init(c)
 
-	lines := func(lines ...string) []string { return lines }
-	test := func(texts []string, rawIndex int, column int, from, to string, diagnostics ...string) {
+	mainPart := func(texts []string, rawIndex int, column int, from, to string) {
+		mklines := t.NewMkLines("filename.mk", texts...)
+		assert(len(mklines.mklines) == 1)
+		mkline := mklines.mklines[0]
 
-		mainPart := func(autofix bool) {
-			mklines := t.NewMkLines("filename.mk", texts...)
-			assert(len(mklines.mklines) == 1)
-			mkline := mklines.mklines[0]
-
-			fix := mkline.Autofix()
-			fix.Notef("Should be appended instead of assigned.")
-			fix.ReplaceAt(rawIndex, column, from, to)
-			fix.Apply()
-		}
-
-		t.ExpectDiagnosticsAutofix(mainPart, diagnostics...)
+		fix := mkline.Autofix()
+		fix.Notef("Should be appended instead of assigned.")
+		fix.ReplaceAt(rawIndex, column, from, to)
+		fix.Apply()
 	}
 
-	// FIXME: use testPanic consistently below.
-	testPanic := func(texts []string, rawIndex int, column int, from, to string) {
-
-		mainPart := func() {
-			mklines := t.NewMkLines("filename.mk", texts...)
-			assert(len(mklines.mklines) == 1)
-			mkline := mklines.mklines[0]
-
-			fix := mkline.Autofix()
-			fix.Notef("Should be appended instead of assigned.")
-			fix.ReplaceAt(rawIndex, column, from, to)
-			fix.Apply()
+	lines := func(lines ...string) []string { return lines }
+	test := func(texts []string, rawIndex int, column int, from, to string, diagnostics ...string) {
+		doTest := func(bool) {
+			mainPart(texts, rawIndex, column, from, to)
 		}
 
-		t.ExpectDiagnosticsAutofix(
-			func(bool) { t.ExpectAssert(mainPart) },
-			nil...)
+		t.ExpectDiagnosticsAutofix(doTest, diagnostics...)
+	}
+
+	testAssert := func(texts []string, rawIndex int, column int, from, to string) {
+		doTest := func(bool) {
+			t.ExpectAssert(
+				func() { mainPart(texts, rawIndex, column, from, to) })
+		}
+
+		t.ExpectDiagnosticsAutofix(doTest, nil...)
+	}
+
+	testPanicMatches := func(texts []string, rawIndex int, column int, from, to, panicMessage string) {
+		doTest := func(bool) {
+			t.ExpectPanicMatches(
+				func() { mainPart(texts, rawIndex, column, from, to) },
+				panicMessage)
+		}
+
+		t.ExpectDiagnosticsAutofix(doTest, nil...)
 	}
 
 	test(
@@ -602,7 +605,7 @@ func (s *Suite) Test_Autofix_ReplaceAt(c *check.C) {
 
 	// If the text at the precisely given position does not match,
 	// it is a programming mistake, therefore pkglint panics.
-	testPanic(
+	testAssert(
 		lines(
 			"VAR=value1 \\",
 			"\tvalue2"),
@@ -610,21 +613,25 @@ func (s *Suite) Test_Autofix_ReplaceAt(c *check.C) {
 
 	// Getting the line number wrong is a strange programming error, and
 	// there does not need to be any code checking for this in the main code.
-	t.ExpectPanicMatches(
-		func() { test(lines("VAR=value"), 10, 3, "from", "to", nil...) },
+	testPanicMatches(
+		lines(
+			"VAR=value"),
+		10, 3, "from", "to",
 		`runtime error: index out of range.*`)
 
 	// It is a programming error to replace a string with itself, since that
 	// would produce confusing diagnostics.
-	t.ExpectAssert(
-		func() { test(lines("VAR=value"), 0, 4, "value", "value", nil...) })
+	testAssert(
+		lines(
+			"VAR=value"),
+		0, 4, "value", "value")
 
 	// Getting the column number wrong may happen when a previous replacement
 	// has made the string shorter than before.
 	// This is a programming mistake, therefore panic.
 	// All fixes that work on the raw lines are supposed to work exactly and
 	// know what they are doing.
-	testPanic(
+	testAssert(
 		lines(
 			"VAR=value1 \\",
 			"\tvalue2"),
