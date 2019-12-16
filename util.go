@@ -574,6 +574,11 @@ func (o *Once) check(key uint64) bool {
 //
 // TODO: Merge this code with Var, which defines essentially the
 //  same features.
+//
+// See also substScope, which already analyzes the possible variable values
+// based on the conditional code paths.
+//
+// See also RedundantScope.
 type Scope struct {
 	firstDef       map[string]*MkLine // TODO: Can this be removed?
 	lastDef        map[string]*MkLine
