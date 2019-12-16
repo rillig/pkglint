@@ -3734,23 +3734,12 @@ func (s *Suite) Test_varalignLine_alignValueMultiInitial(c *check.C) {
 		"AUTOFIX: filename.mk:1: Replacing \"  \\t    \" with \"\\t\\t\".")
 }
 
-func (s *Suite) Test_varalignLine_alignValueMultiEmptyFollow(c *check.C) {
-	t := s.Init(c)
-
-	test := func(diagnostics ...string) {
-		// FIXME
-		t.CheckOutput(diagnostics)
-	}
-
-	test()
-}
-
 // This example is quite unrealistic since typically the first line is
 // the least indented.
 //
 // All follow-up lines are indented with at least one tab, to make clear
 // they are continuation lines.
-func (s *Suite) Test_varalignLine_alignValueMultiEmptyFollow__unrealistic(c *check.C) {
+func (s *Suite) Test_varalignLine_alignValueMultiFollow__unrealistic(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"VAR= \\",

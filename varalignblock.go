@@ -363,7 +363,7 @@ func (info *varalignLine) realignDetails(newWidth int, indentDiff *optInt, isMul
 			}
 
 			width := imax(oldWidth+indentDiff.get(), 8)
-			info.alignValueMultiEmptyFollow(width)
+			info.alignValueMultiFollow(width)
 		}
 	} else if info.rawIndex == 0 && info.isContinuation() {
 		info.realignMultiInitial(newWidth)
@@ -649,15 +649,6 @@ func (info *varalignLine) alignValueMultiInitial(column int) {
 	fix.ReplaceAt(info.rawIndex, info.spaceBeforeValueIndex(), oldSpace, newSpace)
 	fix.Apply()
 	info.spaceBeforeValue = newSpace
-}
-
-func (info *varalignLine) alignValueMultiEmptyFollow(column int) {
-	newSpace := indent(column)
-	if newSpace == info.spaceBeforeValue {
-		return
-	}
-
-	info.alignFollow(newSpace)
 }
 
 func (info *varalignLine) alignValueMultiFollow(newWidth int) {
