@@ -902,9 +902,9 @@ func (p *varalignParts) isCanonicalFollow() bool {
 }
 
 func (p *varalignParts) widthAlignedAt(valueAlign int) int {
-	return tabWidthAppend(
-		valueAlign,
-		p.value+p.spaceAfterValue+p.continuation)
+	w1 := tabWidthAppend(valueAlign, p.value)
+	w2 := tabWidthAppend(w1, p.spaceAfterValue)
+	return tabWidthAppend(w2, p.continuation)
 }
 
 func (p *varalignParts) isTooLongFor(valueColumn int) bool {
