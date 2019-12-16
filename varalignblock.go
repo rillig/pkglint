@@ -897,19 +897,8 @@ func (p *varalignParts) isCanonicalInitial(column int) bool {
 // isCanonicalFollow returns whether the space before the value has its
 // canonical form, which is at least one tab, followed by up to 7 spaces.
 func (p *varalignParts) isCanonicalFollow() bool {
-	lexer := textproc.NewLexer(p.spaceBeforeValue)
-
-	tabs := 0
-	for lexer.SkipByte('\t') {
-		tabs++
-	}
-
-	spaces := 0
-	for lexer.SkipByte(' ') {
-		spaces++
-	}
-
-	return tabs >= 1 && spaces <= 7
+	column := p.valueColumn()
+	return column >= 8 && p.spaceBeforeValue == indent(column)
 }
 
 func (p *varalignParts) widthAlignedAt(valueAlign int) int {
