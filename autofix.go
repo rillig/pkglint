@@ -55,12 +55,11 @@ type autofixAction struct {
 // to log a diagnostic by other means.
 const SilentAutofixFormat = "SilentAutofixFormat"
 
-// AutofixFormat is a special value that is used for logging
+// autofixFormat is a special value that is used for logging
 // diagnostics like "Replacing \"old\" with \"new\".".
 //
 // Since these are not really diagnostics, duplicates are not suppressed.
-// FIXME: unexport, this is only an implementation detail.
-const AutofixFormat = "AutofixFormat"
+const autofixFormat = "AutofixFormat"
 
 func NewAutofix(line *Line) *Autofix {
 	return &Autofix{line: line}
@@ -378,7 +377,7 @@ func (fix *Autofix) Apply() {
 			if action.lineno != 0 {
 				lineno = strconv.Itoa(action.lineno)
 			}
-			G.Logger.Logf(AutofixLogLevel, line.Filename, lineno, AutofixFormat, action.description)
+			G.Logger.Logf(AutofixLogLevel, line.Filename, lineno, autofixFormat, action.description)
 		}
 		G.Logger.showSource(line)
 	}
