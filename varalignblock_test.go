@@ -4253,6 +4253,21 @@ func (s *Suite) Test_varalignParts_spaceBeforeContinuation__continued_comment(c 
 	vt.Run()
 }
 
+func (s *Suite) Test_varalignParts_spaceBeforeContinuationIndex__assertion(c *check.C) {
+	t := s.Init(c)
+
+	test := func(value, continuation string) {
+		parts := varalignParts{value: value, continuation: continuation}
+
+		t.ExpectAssert(
+			func() { _ = parts.spaceBeforeContinuationIndex() })
+	}
+
+	test("", "")
+	test("value", "")
+	test("", "\\")
+}
+
 // This test runs isCanonicalInitial directly since as of August 2019
 // that function is only used in a single place, and from this place
 // varnameOpSpaceWidth is always bigger than width.
