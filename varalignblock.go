@@ -368,7 +368,8 @@ func (info *varalignLine) realignDetails(newWidth int, indentDiff *optInt, isMul
 	} else if info.rawIndex == 0 && info.isContinuation() {
 		info.realignMultiInitial(newWidth)
 	} else if info.rawIndex > 0 {
-		info.alignValueMultiFollow(newWidth, indentDiff.get())
+		width := imax(newWidth, info.valueColumn()+indentDiff.get())
+		info.alignValueMultiFollow(width)
 	} else {
 		info.alignValueSingle(newWidth)
 	}
@@ -651,17 +652,15 @@ func (info *varalignLine) alignValueMultiInitial(column int) {
 }
 
 func (info *varalignLine) alignValueMultiEmptyFollow(column int) {
-	oldSpace := info.spaceBeforeValue
 	newSpace := indent(column)
-	if newSpace == oldSpace {
+	if newSpace == info.spaceBeforeValue {
 		return
 	}
 
 	info.alignFollow(newSpace)
 }
 
-func (info *varalignLine) alignValueMultiFollow(column, indentDiff int) {
-	newWidth := imax(column, info.valueColumn()+indentDiff)
+func (info *varalignLine) alignValueMultiFollow(newWidth int) {
 	newSpace := indent(newWidth)
 	if newSpace == info.spaceBeforeValue {
 		return

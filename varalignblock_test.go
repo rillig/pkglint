@@ -3820,8 +3820,9 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow(c *check.C) {
 
 		doTest := func(autofix bool) {
 			info, raw := newLine(before, column, indentDiff)
+			width := imax(column, info.valueColumn()+indentDiff)
 
-			info.alignValueMultiFollow(column, indentDiff)
+			info.alignValueMultiFollow(width)
 
 			t.CheckEquals(raw.text(), after)
 		}
