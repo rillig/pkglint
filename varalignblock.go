@@ -668,18 +668,7 @@ func (info *varalignLine) alignValueMultiEmptyFollow(column int) {
 		return
 	}
 
-	continuationColumn := 0
-	if info.spaceBeforeContinuation() != " " {
-		continuationColumn = imin(72, info.continuationColumn())
-	}
-
-	fix := info.fixer.Autofix()
-	fix.Notef("This continuation line should be indented with %q.", newSpace)
-	info.replaceSpaceBeforeValue(fix, newSpace)
-	if info.isContinuation() {
-		info.replaceSpaceBeforeContinuationSilently(fix, continuationColumn)
-	}
-	fix.Apply()
+	info.alignFollow(newSpace)
 }
 
 func (info *varalignLine) alignValueMultiFollow(column, indentDiff int) {
@@ -690,6 +679,10 @@ func (info *varalignLine) alignValueMultiFollow(column, indentDiff int) {
 		return
 	}
 
+	info.alignFollow(newSpace)
+}
+
+func (info *varalignLine) alignFollow(newSpace string) {
 	continuationColumn := 0
 	if info.spaceBeforeContinuation() != " " {
 		continuationColumn = imin(72, info.continuationColumn())

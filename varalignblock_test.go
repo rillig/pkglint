@@ -3992,6 +3992,14 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_initial_l
 	vt.Run()
 }
 
+func (s *Suite) Test_varalignLine_alignFollow(c *check.C) {
+	t := s.Init(c)
+
+	// FIXME
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_varalignLine_alignContinuation(c *check.C) {
 	t := s.Init(c)
 
