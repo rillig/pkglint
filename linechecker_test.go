@@ -20,21 +20,29 @@ func (s *Suite) Test_LineChecker_CheckLength(c *check.C) {
 func (s *Suite) Test_LineChecker_CheckTrailingWhitespace(c *check.C) {
 	t := s.Init(c)
 
-	line := t.NewLine("Makefile", 32, "The line must go on   ")
+	doTest := func(autofix bool) {
+		line := t.NewLine("Makefile", 32, "The line must go on   ")
 
-	LineChecker{line}.CheckTrailingWhitespace()
+		LineChecker{line}.CheckTrailingWhitespace()
+	}
 
-	t.CheckOutputLines(
-		"NOTE: Makefile:32: Trailing whitespace.")
+	t.ExpectDiagnosticsAutofix(
+		doTest,
+		"NOTE: Makefile:32: Trailing whitespace.",
+		"AUTOFIX: Makefile:32: Replacing \"   \" with \"\".")
 }
 
 func (s *Suite) Test_LineChecker_CheckTrailingWhitespace__tab(c *check.C) {
 	t := s.Init(c)
 
-	line := t.NewLine("Makefile", 32, "The line must go on\t")
+	doTest := func(autofix bool) {
+		line := t.NewLine("Makefile", 32, "The line must go on\t")
 
-	LineChecker{line}.CheckTrailingWhitespace()
+		LineChecker{line}.CheckTrailingWhitespace()
+	}
 
-	t.CheckOutputLines(
-		"NOTE: Makefile:32: Trailing whitespace.")
+	t.ExpectDiagnosticsAutofix(
+		doTest,
+		"NOTE: Makefile:32: Trailing whitespace.",
+		"AUTOFIX: Makefile:32: Replacing \"\\t\" with \"\".")
 }
