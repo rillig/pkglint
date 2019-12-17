@@ -486,6 +486,7 @@ func (s *Suite) Test_QAChecker_checkMethodsSameFile(c *check.C) {
 	ck.addTestee(code{"other.go", "Main", "MethodWrong", 2})
 	ck.addTestee(code{"main_test.go", "Main", "MethodOkTest", 3})
 	ck.addTestee(code{"other_test.go", "Main", "MethodWrongTest", 4})
+	ck.addTestee(code{"other_test.go", "Elsewhere", "Func", 4})
 	ck.addTestee(code{"main_test.go", "T", "", 100})
 	ck.addTestee(code{"main_test.go", "T", "MethodOk", 101})
 	ck.addTestee(code{"other_test.go", "T", "MethodWrong", 102})
