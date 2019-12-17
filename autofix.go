@@ -319,6 +319,12 @@ func (fix *Autofix) Describef(lineno int, format string, args ...interface{}) {
 // SaveAutofixChanges needs to be called. For example, this is done by
 // MkLines.Check.
 func (fix *Autofix) Apply() {
+	// XXX: Make the following annotations actually do something.
+	// gobco:beforeCall:!G.Opts.ShowAutofix && !G.Opts.Autofix
+	// gobco:beforeCall:G.Opts.ShowAutofix
+	// gobco:beforeCall:G.Opts.Autofix
+	// See https://github.com/rillig/gobco
+
 	line := fix.line
 
 	// Each autofix must have a log level and a diagnostic.
