@@ -163,7 +163,7 @@ func replaceOnce(s, from, to string) (ok bool, replaced string) {
 
 	index := strings.Index(s, from)
 	if index != -1 && index == strings.LastIndex(s, from) {
-		return true, strings.Replace(s, from, to, 1)
+		return true, s[:index] + to + s[index+len(from):]
 	}
 	return false, s
 }
