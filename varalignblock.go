@@ -327,15 +327,12 @@ func (va *VaralignBlock) traceWidths(minTotalWidth int, maxTotalWidth int, minVa
 func (va *VaralignBlock) adjustLong(newWidth int) {
 
 	isLong := func(mkinfo *varalignMkLine) bool {
-		if mkinfo.isMultiEmpty() {
+		if mkinfo.isMultiEmpty() || newWidth <= 8 {
 			return false
 		}
 
 		for _, follow := range mkinfo.infos[1:] {
-			if follow.spaceBeforeValue == "\t" &&
-				follow.valueColumn() < newWidth &&
-				follow.widthAlignedAt(newWidth) > 72 {
-
+			if follow.spaceBeforeValue == "\t" && follow.isTooLongFor(newWidth) {
 				return true
 			}
 		}
