@@ -1,3 +1,5 @@
+// +build ignore
+
 package pkglint
 
 import "gopkg.in/check.v1"

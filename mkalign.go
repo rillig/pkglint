@@ -1,3 +1,5 @@
+// +build ignore
+
 package pkglint
 
 type MkAlignFile struct {
