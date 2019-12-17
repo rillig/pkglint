@@ -595,6 +595,10 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation__multiline_indented
 		doTest,
 		"NOTE: ~/options.mk:2: This directive should be indented by 0 spaces.",
 		"WARN: ~/options.mk:2--3: PLATFORM is used but not defined.",
+		// If the indentation should ever change here, it is probably
+		// because MkLineParser.parseDirective has been changed to
+		// behave more like bmake, which preserves a bit more of the
+		// whitespace.
 		"AUTOFIX: ~/options.mk:2: Replacing \". \" with \".\".")
 
 	// It's not really fixed since the backslash is still replaced
