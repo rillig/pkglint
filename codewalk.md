@@ -99,7 +99,7 @@ func (pkglint *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) 
 
 The code for setting up the tests looks similar to the main code:
 
-> from [check_test.go](check_test.go#L55):
+> from [check_test.go](check_test.go#L56):
 
 ```go
 func (s *Suite) SetUpTest(c *check.C) {
@@ -110,8 +110,6 @@ func (s *Suite) SetUpTest(c *check.C) {
 	G.Testing = true
 	trace.Out = &t.stdout
 
-	// XXX: Maybe the tests can run a bit faster when they don't
-	// create a temporary directory each.
 	G.Pkgsrc = NewPkgsrc(t.File("."))
 
 	t.c = c
@@ -341,23 +339,24 @@ since none of the visible checks fixes anything.
 The autofix feature must be hidden in one of the line checks,
 and indeed, the code for `CheckTrailingWhitespace` says:
 
-> from [linechecker.go](linechecker.go#L42):
+> from [linechecker.go](linechecker.go#L39):
 
 ```go
 func (ck LineChecker) CheckTrailingWhitespace() {
 
-	// XXX: Markdown files may need trailing whitespace. If there should ever
+	// Markdown files may need trailing whitespace. If there should ever
 	// be Markdown files in pkgsrc, this code has to be adjusted.
 
-	if strings.HasSuffix(ck.line.Text, " ") || strings.HasSuffix(ck.line.Text, "\t") {
-		fix := ck.line.Autofix()
-		fix.Notef("Trailing whitespace.")
-		fix.Explain(
-			"When a line ends with some whitespace, that space is in most cases",
-			"irrelevant and can be removed.")
-		fix.ReplaceRegex(`[ \t\r]+\n$`, "\n", 1)
-		fix.Apply()
+	if rtrimHspace(ck.line.Text) == ck.line.Text {
+		return
 	}
+
+	fix := ck.line.Autofix()
+	fix.Notef("Trailing whitespace.")
+	fix.Explain(
+		"This whitespace is irrelevant and can be removed.")
+	fix.ReplaceRegex(`[ \t\r]+\n$`, "\n", 1)
+	fix.Apply()
 }
 ```
 
@@ -377,15 +376,14 @@ type Autofix struct {
 	line        *Line
 	linesBefore []string // Newly inserted lines, including \n
 	linesAfter  []string // Newly inserted lines, including \n
-	// Whether an actual fix has been applied (or, without --show-autofix,
-	// whether a fix is applicable)
+	// Whether an actual fix has been applied to the text of the raw lines
 	modified bool
 
 	autofixShortTerm
 }
 ```
 
-> from [line.go](line.go#L163):
+> from [line.go](line.go#L171):
 
 ```go
 // Autofix returns the autofix instance belonging to the line.
@@ -426,7 +424,7 @@ func (line *Line) Autofix() *Autofix {
 The journey ends here, and it hasn't been that difficult.
 If that was too easy, have a look at the complex cases here:
 
-> from [mkline.go](mkline.go#L654):
+> from [mkline.go](mkline.go#L656):
 
 ```go
 // VariableNeedsQuoting determines whether the given variable needs the :Q
@@ -569,7 +567,7 @@ WARN: Makefile:3: COMMENT should not start with "A" or "An".
 
 The definition for the `Line` type is:
 
-> from [line.go](line.go#L70):
+> from [line.go](line.go#L78):
 
 ```go
 // Line represents a line of text from a file.
@@ -641,7 +639,7 @@ The instructions for building and installing packages are written in shell comma
 which are embedded in Makefile fragments.
 The `ShellLineChecker` type provides methods for checking shell commands and their individual parts.
 
-> from [shell.go](shell.go#L321):
+> from [shell.go](shell.go#L387):
 
 ```go
 // ShellLineChecker checks either a line from a Makefile starting with a tab,
@@ -756,7 +754,7 @@ The `t` variable is the center of most tests.
 It is of type `Tester` and provides a high-level interface
 for setting up tests and checking the results.
 
-> from [check_test.go](check_test.go#L176):
+> from [check_test.go](check_test.go#L179):
 
 ```go
 // Tester provides utility methods for testing pkglint.
