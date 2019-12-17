@@ -3334,7 +3334,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 func (s *Suite) Test_varalignMkLine_rightMargin(c *check.C) {
 	t := s.Init(c)
 
-	test := func(common bool, margin int, lines ...string) {
+	test := func(common bool, expectedRightMargin int, lines ...string) {
 		t.CheckDotColumns(lines...)
 		mklines := t.NewMkLines("filename.mk",
 			lines...)
@@ -3349,7 +3349,7 @@ func (s *Suite) Test_varalignMkLine_rightMargin(c *check.C) {
 			actualCommon, actualMargin := mkinfo.rightMargin()
 			t.CheckDeepEquals(
 				[]interface{}{actualCommon, actualMargin},
-				[]interface{}{common, margin})
+				[]interface{}{common, expectedRightMargin})
 		}
 	}
 
@@ -3506,6 +3506,18 @@ func (s *Suite) Test_varalignMkLine_rightMargin(c *check.C) {
 		"VAR....8......16..=\t\t......40......48.\t\t\t\t\\",   // column 80
 		"\t\t\t......32......40......48......56......64..\t\\", // column 72
 		"\t\t\t...29")
+
+	// If the right margin lies completely off-screen (that is, beyond
+	// column 72), it counts as a right margin, but not as canonical.
+	// The preferred right margin is shifted left to column 72,
+	// to make it actually visible.
+	test(false, 72,
+		"VAR=\t\\",                    // column 16
+		"\tv\t\t\t\t\t\t\t\t\t\t\t\\", // column 96
+		"\tv\t\t\t\t\t\t\t\t\t\t\t\\", // column 96
+		"\tv\t\t\t\t\t\t\t\t\t\t\t\\", // column 96
+		"\tv\t\t\t\t\t\t\t\t\t\t\t\\", // column 96
+		"\tv")
 }
 
 func (s *Suite) Test_varalignLine_alignValueSingle(c *check.C) {
