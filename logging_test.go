@@ -324,7 +324,8 @@ func (s *Suite) Test_Logger_writeSource__separator(c *check.C) {
 	lines := t.SetUpFileLines("DESCR",
 		"The first line",
 		"The second line",
-		"The third line")
+		"The third line",
+		"The fourth line")
 
 	fix := lines.Lines[1].Autofix()
 	fix.Warnf("Using \"second\" is deprecated.")
@@ -338,13 +339,18 @@ func (s *Suite) Test_Logger_writeSource__separator(c *check.C) {
 	fix.Replace("third", "bronze medal")
 	fix.Apply()
 
+	lines.Lines[3].Warnf("No autofix, just a warning.")
+
 	t.CheckOutputLines(
 		">\tThe second line",
 		"WARN: ~/DESCR:2: Using \"second\" is deprecated.",
 		"",
 		">\tThe third line",
 		"WARN: ~/DESCR:3: Dummy warning.",
-		"WARN: ~/DESCR:3: Using \"third\" is deprecated.")
+		"WARN: ~/DESCR:3: Using \"third\" is deprecated.",
+		"",
+		">\tThe fourth line",
+		"WARN: ~/DESCR:4: No autofix, just a warning.")
 }
 
 func (s *Suite) Test_Logger_writeSource__with_explanation(c *check.C) {
@@ -460,7 +466,8 @@ func (s *Suite) Test_Logger_writeSource__separator_show_autofix(c *check.C) {
 	lines := t.SetUpFileLines("DESCR",
 		"The first line",
 		"The second line",
-		"The third line")
+		"The third line",
+		"The fourth line")
 
 	fix := lines.Lines[1].Autofix()
 	fix.Warnf("Using \"second\" is deprecated.")
@@ -473,6 +480,8 @@ func (s *Suite) Test_Logger_writeSource__separator_show_autofix(c *check.C) {
 	fix.Warnf("Using \"third\" is deprecated.")
 	fix.Replace("third", "bronze medal")
 	fix.Apply()
+
+	lines.Lines[3].Warnf("No autofix, just a warning.")
 
 	t.CheckOutputLines(
 		"WARN: ~/DESCR:2: Using \"second\" is deprecated.",
@@ -493,7 +502,8 @@ func (s *Suite) Test_Logger_writeSource__separator_show_autofix_with_explanation
 	lines := t.SetUpFileLines("DESCR",
 		"The first line",
 		"The second line",
-		"The third line")
+		"The third line",
+		"The fourth line")
 
 	fix := lines.Lines[1].Autofix()
 	fix.Warnf("Using \"second\" is deprecated.")
@@ -508,6 +518,8 @@ func (s *Suite) Test_Logger_writeSource__separator_show_autofix_with_explanation
 	fix.Explain("Explanation 2.")
 	fix.Replace("third", "bronze medal")
 	fix.Apply()
+
+	lines.Lines[3].Warnf("No autofix, just a warning.")
 
 	t.CheckOutputLines(
 		"WARN: ~/DESCR:2: Using \"second\" is deprecated.",
@@ -526,6 +538,27 @@ func (s *Suite) Test_Logger_writeSource__separator_show_autofix_with_explanation
 		"")
 }
 
+func (s *Suite) Test_Logger_writeSource__fatal_with_show_autofix(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--source", "--show-autofix")
+	lines := t.SetUpFileLines("DESCR",
+		"The first line")
+
+	// In the unusual constellation where a fatal error occurs with both
+	// --source and --show-autofix, and the line has not had any autofix,
+	// the cited source code is shown above the diagnostic. This is
+	// different from the usual order in --show-autofix mode, which is to
+	// show the diagnostic first and then its effects.
+	//
+	// This inconsistency does not matter though since it is extremely
+	// rare.
+	t.ExpectFatal(
+		func() { lines.Lines[0].Fatalf("Fatal.") },
+		">\tThe first line",
+		"FATAL: ~/DESCR:1: Fatal.")
+}
+
 // See Test__show_source_separator_show_autofix for the ordering of the
 // output lines.
 //
@@ -538,7 +571,8 @@ func (s *Suite) Test_Logger_writeSource__separator_autofix(c *check.C) {
 	lines := t.SetUpFileLines("DESCR",
 		"The first line",
 		"The second line",
-		"The third line")
+		"The third line",
+		"The fourth line")
 
 	fix := lines.Lines[1].Autofix()
 	fix.Warnf("Using \"second\" is deprecated.")
@@ -551,6 +585,8 @@ func (s *Suite) Test_Logger_writeSource__separator_autofix(c *check.C) {
 	fix.Warnf("Using \"third\" is deprecated.")
 	fix.Replace("third", "bronze medal")
 	fix.Apply()
+
+	lines.Lines[3].Warnf("No autofix, just a warning.")
 
 	t.CheckOutputLines(
 		"AUTOFIX: ~/DESCR:2: Replacing \"second\" with \"silver medal\".",
