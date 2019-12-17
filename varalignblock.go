@@ -325,24 +325,27 @@ func (va *VaralignBlock) traceWidths(minTotalWidth int, maxTotalWidth int, minVa
 // least in column newWidth. But only if there is at least one continuation
 // line that starts in column 8 and needs the full width up to column 72.
 func (va *VaralignBlock) adjustLong(newWidth int) {
-	anyLong := false
+
+	isLong := func(mkinfo *varalignMkLine) bool {
+		anyLong := false
+		isMultiEmpty := mkinfo.isMultiEmpty()
+		for _, follow := range mkinfo.infos[1:] {
+			if !isMultiEmpty &&
+				follow.spaceBeforeValue == "\t" &&
+				follow.valueColumn() < newWidth &&
+				follow.widthAlignedAt(newWidth) > 72 {
+
+				anyLong = true
+				break
+			}
+		}
+		return anyLong
+	}
+
 	for _, mkinfo := range va.mkinfos {
 		infos := mkinfo.infos
-		isMultiEmpty := mkinfo.isMultiEmpty()
-		for i, info := range infos {
-			if info.rawIndex == 0 {
-				anyLong = false
-				for _, follow := range infos[i+1:] {
-					if follow.rawIndex == 0 {
-						break
-					}
-					if !isMultiEmpty && follow.spaceBeforeValue == "\t" && follow.valueColumn() < newWidth && follow.widthAlignedAt(newWidth) > 72 {
-						anyLong = true
-						break
-					}
-				}
-			}
-
+		anyLong := isLong(mkinfo)
+		for _, info := range infos {
 			info.long = anyLong && info.valueColumn() == 8
 		}
 	}
