@@ -219,7 +219,7 @@ func (l *Logger) writeSource(line *Line) {
 
 func (l *Logger) writeDiff(line *Line) {
 	showAsChanged := func(rawLine *RawLine) bool {
-		return rawLine.textnl != rawLine.orignl && l.IsAutofix()
+		return l.IsAutofix() && rawLine.textnl != rawLine.orignl
 	}
 
 	rawLines := line.raw
