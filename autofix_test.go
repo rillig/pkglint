@@ -552,6 +552,58 @@ func (s *Suite) Test_Autofix_ReplaceAfter__after_inserting_a_line(c *check.C) {
 		"AUTOFIX: filename:5: Replacing \"i\" with \"I\".")
 }
 
+func (s *Suite) Test_Autofix_ReplaceAfter__replace_once(c *check.C) {
+	t := s.Init(c)
+
+	doTest := func(autofix bool) {
+		mklines := t.NewMkLines("filename.mk",
+			"# before ##### after")
+		mklines.ForEach(func(mkline *MkLine) {
+			fix := mkline.Autofix()
+			fix.Warnf("Warning.")
+			fix.ReplaceAfter("", "###", "replaced")
+			fix.Apply()
+		})
+	}
+
+	// XXX: Be more cautious here since there are multiple possible
+	//  replacements.
+	t.ExpectDiagnosticsAutofix(
+		doTest,
+		"WARN: filename.mk:1: Warning.",
+		"AUTOFIX: filename.mk:1: Replacing \"###\" with \"replaced\".")
+}
+
+func (s *Suite) Test_Autofix_ReplaceAfter__replace_once_escaped(c *check.C) {
+	t := s.Init(c)
+
+	doTest := func(autofix bool) {
+		G.Logger.Opts.ShowSource = true
+		mklines := t.NewMkLines("filename.mk",
+			"VAR=\tvalue \\#\\#\\# # comment #####")
+		mklines.ForEach(func(mkline *MkLine) {
+			fix := mkline.Autofix()
+			fix.Warnf("Warning.")
+			fix.ReplaceAfter("", "###", "replaced")
+			fix.Apply()
+		})
+	}
+
+	// This may be the wrong replacement since the part before the
+	// comment is already unescaped when most of the checks run.
+	//
+	// This is most probably an edge case. As soon as pkglint parses
+	// the lines into tokens containing exact positioning information,
+	// this will be fixed as a by-product.
+	t.ExpectDiagnosticsAutofix(
+		doTest,
+		">\tVAR=\tvalue \\#\\#\\# # comment #####",
+		"WARN: filename.mk:1: Warning.",
+		"AUTOFIX: filename.mk:1: Replacing \"###\" with \"replaced\".",
+		"-\tVAR=\tvalue \\#\\#\\# # comment #####",
+		"+\tVAR=\tvalue \\#\\#\\# # comment replaced##")
+}
+
 func (s *Suite) Test_Autofix_ReplaceAt(c *check.C) {
 	t := s.Init(c)
 
