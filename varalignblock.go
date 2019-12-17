@@ -227,7 +227,7 @@ func (l *varalignMkLine) realign(newWidth int) {
 	_, rightMargin := l.rightMargin()
 	isMultiEmpty := l.isMultiEmpty()
 
-	if info := l.infos[0]; !isMultiEmpty && info.rawIndex == 0 && info.isContinuation() {
+	if info := l.infos[0]; !isMultiEmpty && info.isContinuation() {
 		indentDiff.set(newWidth - info.valueColumn())
 	}
 
