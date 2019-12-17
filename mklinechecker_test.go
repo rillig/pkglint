@@ -551,6 +551,32 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation__autofix_multiline(
 		".endif")
 }
 
+// Having a continuation line between the dot and the directive is so
+// unusual that pkglint doesn't fix it automatically. It also doesn't panic.
+func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation__multiline(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--autofix")
+	t.SetUpVartypes()
+
+	t.ExpectDiagnosticsAutofix(
+		func(autofix bool) {
+			mklines := t.SetUpFileMkLines("options.mk",
+				MkCvsID,
+				".\\",
+				"if \\",
+				"   ${MACHINE_PLATFORM:MNetBSD-4.*}",
+				".endif")
+
+			mklines.Check()
+		},
+		"NOTE: ~/options.mk:2--4: "+
+			"This directive should be indented by 0 spaces.",
+		"WARN: ~/options.mk:2--4: "+
+			"To use MACHINE_PLATFORM at load time, "+
+			".include \"mk/bsd.prefs.mk\" first.")
+}
+
 func (s *Suite) Test_MkLineChecker_CheckRelativePath(c *check.C) {
 	t := s.Init(c)
 
