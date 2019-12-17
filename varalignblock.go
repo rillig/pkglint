@@ -905,8 +905,4 @@ func (mi *bag) add(key interface{}, value int) {
 	}{key, value})
 }
 
-func (mi *bag) first() int { return mi.opt(0) }
-
-func (mi *bag) last() int { return mi.opt(len(mi.slice) - 1) }
-
 func (mi *bag) len() int { return len(mi.slice) }
