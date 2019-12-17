@@ -566,12 +566,11 @@ func (s *Suite) Test_Autofix_ReplaceAfter__replace_once(c *check.C) {
 		})
 	}
 
-	// XXX: Be more cautious here since there are multiple possible
-	//  replacements.
 	t.ExpectDiagnosticsAutofix(
 		doTest,
-		"WARN: filename.mk:1: Warning.",
-		"AUTOFIX: filename.mk:1: Replacing \"###\" with \"replaced\".")
+		"WARN: filename.mk:1: Warning.")
+	// No autofix since it is not clear which of the 3 possible
+	// ### is meant.
 }
 
 func (s *Suite) Test_Autofix_ReplaceAfter__replace_once_escaped(c *check.C) {
@@ -580,7 +579,7 @@ func (s *Suite) Test_Autofix_ReplaceAfter__replace_once_escaped(c *check.C) {
 	doTest := func(autofix bool) {
 		G.Logger.Opts.ShowSource = true
 		mklines := t.NewMkLines("filename.mk",
-			"VAR=\tvalue \\#\\#\\# # comment #####")
+			"VAR=\tvalue \\#\\#\\# # comment ###")
 		mklines.ForEach(func(mkline *MkLine) {
 			fix := mkline.Autofix()
 			fix.Warnf("Warning.")
@@ -590,18 +589,20 @@ func (s *Suite) Test_Autofix_ReplaceAfter__replace_once_escaped(c *check.C) {
 	}
 
 	// This may be the wrong replacement since the part before the
-	// comment is already unescaped when most of the checks run.
+	// comment is already unescaped when most of the checks run,
+	// and the tests then try to replace the parsed text instead of
+	// the original text as it appears in the actual file.
 	//
 	// This is most probably an edge case. As soon as pkglint parses
 	// the lines into tokens containing exact positioning information,
-	// this will be fixed as a by-product.
+	// this can be easily fixed as a by-product.
 	t.ExpectDiagnosticsAutofix(
 		doTest,
-		">\tVAR=\tvalue \\#\\#\\# # comment #####",
+		">\tVAR=\tvalue \\#\\#\\# # comment ###",
 		"WARN: filename.mk:1: Warning.",
 		"AUTOFIX: filename.mk:1: Replacing \"###\" with \"replaced\".",
-		"-\tVAR=\tvalue \\#\\#\\# # comment #####",
-		"+\tVAR=\tvalue \\#\\#\\# # comment replaced##")
+		"-\tVAR=\tvalue \\#\\#\\# # comment ###",
+		"+\tVAR=\tvalue \\#\\#\\# # comment replaced")
 }
 
 func (s *Suite) Test_Autofix_ReplaceAt(c *check.C) {
