@@ -1354,7 +1354,7 @@ func (s *Suite) Test_SaveAutofixChanges__file_busy_Windows(c *check.C) {
 		"line 1")
 
 	// As long as the file is kept open, it cannot be overwritten or deleted.
-	openFile, err := os.OpenFile(t.File("subdir/file.txt").String(), 0, 0666) // TODO: replace with Path.Open
+	openFile, err := os.OpenFile(t.File("subdir/file.txt").String(), 0, 0666)
 	defer func() { assertNil(openFile.Close(), "") }()
 	c.Check(err, check.IsNil)
 
