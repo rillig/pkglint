@@ -159,6 +159,15 @@ func trimCommon(a, b string) (string, string) {
 	return a, b
 }
 
+func replaceOnce(s, from, to string) (ok bool, replaced string) {
+
+	index := strings.Index(s, from)
+	if index != -1 && index == strings.LastIndex(s, from) {
+		return true, strings.Replace(s, from, to, 1)
+	}
+	return false, s
+}
+
 func isHspace(ch byte) bool {
 	return ch == ' ' || ch == '\t'
 }
