@@ -165,9 +165,7 @@ func (fix *Autofix) ReplaceAt(rawIndex int, textIndex int, from string, to strin
 	// TODO: Do this properly by parsing the whole line again,
 	//  and ideally everything that depends on the parsed line.
 	//  This probably requires a generic notification mechanism.
-	if strings.Count(fix.line.Text, from) == 1 {
-		fix.line.Text = strings.Replace(fix.line.Text, from, to, 1)
-	}
+	_, fix.line.Text = replaceOnce(fix.line.Text, from, to)
 
 	fix.Describef(rawLine.Lineno, "Replacing %q with %q.", from, to)
 }
