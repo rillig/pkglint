@@ -669,8 +669,6 @@ func (info *varalignLine) alignContinuation(valueColumn, rightMarginColumn int) 
 		fix.Notef("The continuation backslash should be preceded by a single space or tab.")
 	} else if info.isTooLongFor(valueColumn) {
 		fix.Notef("The continuation backslash should be preceded by a single space.")
-	} else if info.uptoValueWidth() >= rightMarginColumn {
-		fix.Notef("The continuation backslash should be preceded by a single space or tab.")
 	} else {
 		newSpace = alignmentToWidths(info.uptoValueWidth(), rightMarginColumn)
 		fix.Notef(
