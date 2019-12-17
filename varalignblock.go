@@ -867,12 +867,6 @@ func (p *varalignParts) isCanonicalFollow() bool {
 	return column >= 8 && p.spaceBeforeValue == indent(column)
 }
 
-func (p *varalignParts) widthAlignedAt(valueAlign int) int {
-	w1 := tabWidthAppend(valueAlign, p.value)
-	w2 := tabWidthAppend(w1, p.spaceAfterValue)
-	return tabWidthAppend(w2, p.continuation)
-}
-
 func (p *varalignParts) isTooLongFor(valueColumn int) bool {
 	column := tabWidthAppend(valueColumn, p.value)
 	if p.isContinuation() {
