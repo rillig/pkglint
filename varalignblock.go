@@ -186,7 +186,7 @@ func (va *VaralignBlock) processVarassign(mkline *MkLine) {
 	var infos []*varalignLine
 	for i, raw := range mkline.raw {
 		parts := NewVaralignSplitter().split(strings.TrimSuffix(raw.textnl, "\n"), i == 0)
-		info := varalignLine{mkline, i, false, false, parts}
+		info := varalignLine{mkline, i, false, parts}
 		infos = append(infos, &info)
 	}
 	va.mkinfos = append(va.mkinfos, &varalignMkLine{infos})
@@ -203,8 +203,6 @@ func (va *VaralignBlock) Finish() {
 	}
 
 	newWidth := va.optimalWidth()
-	va.adjustLong(newWidth)
-
 	for _, mkinfo := range va.mkinfos {
 		mkinfo.realign(newWidth)
 	}
@@ -317,32 +315,6 @@ func (va *VaralignBlock) traceWidths(minTotalWidth int, maxTotalWidth int, minVa
 		trace.Stepf("Minimum required indentation is %d + 1.", minVarnameOpWidth)
 		if outlier != 0 {
 			trace.Stepf("The outlier is at indentation %d.", outlier)
-		}
-	}
-}
-
-// adjustLong allows any follow-up line to start either in column 8 or at
-// least in column newWidth. But only if there is at least one continuation
-// line that starts in column 8 and needs the full width up to column 72.
-func (va *VaralignBlock) adjustLong(newWidth int) {
-
-	isLong := func(mkinfo *varalignMkLine) bool {
-		if mkinfo.isMultiEmpty() || newWidth <= 8 {
-			return false
-		}
-
-		for _, follow := range mkinfo.infos[1:] {
-			if follow.spaceBeforeValue == "\t" && follow.isTooLongFor(newWidth) {
-				return true
-			}
-		}
-		return false
-	}
-
-	for _, mkinfo := range va.mkinfos {
-		anyLong := isLong(mkinfo)
-		for _, info := range mkinfo.infos {
-			info.long = anyLong && info.valueColumn() == 8
 		}
 	}
 }
@@ -534,9 +506,6 @@ func (l *varalignMkLine) rightMargin() (ok bool, margin int) {
 type varalignLine struct {
 	fixer    Autofixer
 	rawIndex int
-
-	// Whether the line is so long that it may use a single tab as indentation.
-	long bool
 
 	fixedSpaceBeforeContinuation bool
 
