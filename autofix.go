@@ -1,7 +1,6 @@
 package pkglint
 
 import (
-	"netbsd.org/pkglint/regex"
 	"os"
 	"strconv"
 	"strings"
@@ -168,62 +167,6 @@ func (fix *Autofix) ReplaceAt(rawIndex int, textIndex int, from string, to strin
 	_, fix.line.Text = replaceOnce(fix.line.Text, from, to)
 
 	fix.Describef(rawLine.Lineno, "Replacing %q with %q.", from, to)
-}
-
-// ReplaceRegex replaces the first howOften or all occurrences (if negative)
-// of the `from` pattern with the fixed string `toText`.
-//
-// Placeholders like `$1` are _not_ expanded in the `toText`.
-// (If you know how to do the expansion correctly, feel free to implement it.)
-func (fix *Autofix) ReplaceRegex(from regex.Pattern, toText string, howOften int) {
-	fix.assertRealLine()
-	if fix.skip() {
-		return
-	}
-
-	done := 0
-	for _, rawLine := range fix.line.raw {
-		var froms []string // The strings that have actually changed
-
-		replace := func(fromText string) string {
-			if howOften >= 0 && done >= howOften {
-				return fromText
-			}
-			froms = append(froms, fromText)
-			done++
-			return toText
-		}
-
-		replaced := replaceAllFunc(rawLine.textnl, from, replace)
-		if replaced != rawLine.textnl {
-			rawLine.textnl = replaced
-			for _, fromText := range froms {
-				fix.Describef(rawLine.Lineno, "Replacing %q with %q.", fromText, toText)
-			}
-		}
-	}
-
-	// Fix the parsed text as well.
-	// This is only approximate and won't work in some edge cases
-	// that involve escaped comments or replacements across line breaks.
-	//
-	// TODO: Do this properly by parsing the whole line again,
-	//  and ideally everything that depends on the parsed line.
-	//  This probably requires a generic notification mechanism.
-	//
-	// FIXME: Only actually update fix.line.Text if the replacement
-	//  has been done exactly once.
-	done = 0
-	fix.line.Text = replaceAllFunc(
-		fix.line.Text,
-		from,
-		func(fromText string) string {
-			if howOften >= 0 && done >= howOften {
-				return fromText
-			}
-			done++
-			return toText
-		})
 }
 
 // InsertBefore prepends a line before the current line.

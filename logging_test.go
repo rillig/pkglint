@@ -825,11 +825,12 @@ func (s *Suite) Test_Logger_Logf__duplicate_autofix(c *check.C) {
 
 	fix := line.Autofix()
 	fix.Warnf("T should always be uppercase.")
-	fix.ReplaceRegex(`t`, "T", -1)
+	fix.Replace("te", "Te")
+	fix.Replace("t", "T")
 	fix.Apply()
 
 	t.CheckOutputLines(
-		"AUTOFIX: README.txt:123: Replacing \"t\" with \"T\".",
+		"AUTOFIX: README.txt:123: Replacing \"te\" with \"Te\".",
 		"AUTOFIX: README.txt:123: Replacing \"t\" with \"T\".")
 }
 
