@@ -572,21 +572,9 @@ func (info *varalignLine) alignValueMultiEmptyInitial(newWidth int) {
 		return // This case is handled by checkRightMargin.
 	}
 
-	hasSpace := strings.IndexByte(oldSpace, ' ') != -1
-	oldColumn := info.valueColumn()
 	column := tabWidthSlice(leadingComment, varnameOp, newSpace)
 
-	fix := info.fixer.Autofix()
-	if hasSpace && column != oldColumn {
-		fix.Notef("This variable value should be aligned with tabs, not spaces, to column %d.", column+1)
-	} else if column != oldColumn {
-		fix.Notef("This variable value should be aligned to column %d.", column+1) // TODO: to column %d instead of %d.
-	} else {
-		fix.Notef("Variable values should be aligned with tabs, not spaces.")
-	}
-	fix.ReplaceAt(info.rawIndex, info.spaceBeforeValueIndex(), oldSpace, newSpace)
-	fix.Apply()
-	info.spaceBeforeValue = newSpace
+	info.alignValue(column)
 }
 
 func (info *varalignLine) alignValueMultiInitial(column int) {
@@ -615,7 +603,7 @@ func (info *varalignLine) alignValue(width int) {
 	if width != oldWidth && contains(oldSpace, " ") {
 		fix.Notef("This variable value should be aligned with tabs, not spaces, to column %d.", width+1)
 	} else if width != oldWidth {
-		fix.Notef("This variable value should be aligned to column %d.", width+1)
+		fix.Notef("This variable value should be aligned to column %d.", width+1) // TODO: to column %d instead of %d.
 	} else {
 		fix.Notef("Variable values should be aligned with tabs, not spaces.")
 	}
