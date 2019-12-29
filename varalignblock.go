@@ -553,27 +553,16 @@ func (info *varalignLine) alignValueSingle(newWidth int) {
 }
 
 func (info *varalignLine) alignValueMultiEmptyInitial(newWidth int) {
-	leadingComment := info.leadingComment
-	varnameOp := info.varnameOp
-	oldSpace := info.spaceBeforeValue
-
-	// Indent the outlier and any other lines that stick out
-	// with a space instead of a tab to keep the line short.
-	newSpace := " "
-	if info.valueColumn() <= newWidth {
-		newSpace = alignmentAfter(leadingComment+varnameOp, newWidth)
-	}
-
-	if newSpace == oldSpace {
+	if info.valueColumn() > newWidth {
 		return
 	}
 
-	if newSpace == " " {
-		return // This case is handled by checkRightMargin.
+	newSpace := alignmentToWidths(info.spaceBeforeValueColumn(), newWidth)
+	if newSpace == info.spaceBeforeValue {
+		return
 	}
 
-	column := tabWidthSlice(leadingComment, varnameOp, newSpace)
-
+	column := tabWidthAppend(info.spaceBeforeValueColumn(), newSpace)
 	info.alignValue(column)
 }
 
