@@ -320,30 +320,32 @@ func (va *VaralignBlock) traceWidths(minTotalWidth int, maxTotalWidth int, minVa
 }
 
 func (info *varalignLine) realignDetails(newWidth int, indentDiff *optInt, isMultiEmpty bool) {
-	if info.rawIndex == 0 && info.isContinuation() {
-		info.alignValueInitial(newWidth)
-		return
-	}
-	if isMultiEmpty {
-		if info.rawIndex == 0 {
-			info.alignValueInitial(newWidth)
-		} else {
-			oldWidth := tabWidth(info.spaceBeforeValue)
-			if !indentDiff.isSet {
-				diff := condInt(newWidth != 0, newWidth-oldWidth, 0)
-				if diff > 0 && !info.isCommentedOut() {
-					diff = 0
-				}
-				indentDiff.set(diff)
-			}
+	switch {
 
-			width := imax(oldWidth+indentDiff.get(), 8)
-			info.alignValueMultiFollow(width)
+	case info.rawIndex == 0 && info.isContinuation():
+		info.alignValueInitial(newWidth)
+
+	case isMultiEmpty && info.rawIndex == 0:
+		info.alignValueInitial(newWidth)
+
+	case isMultiEmpty:
+		oldWidth := tabWidth(info.spaceBeforeValue)
+		if !indentDiff.isSet {
+			diff := condInt(newWidth != 0, newWidth-oldWidth, 0)
+			if diff > 0 && !info.isCommentedOut() {
+				diff = 0
+			}
+			indentDiff.set(diff)
 		}
-	} else if info.rawIndex > 0 {
+
+		width := imax(oldWidth+indentDiff.get(), 8)
+		info.alignValueMultiFollow(width)
+
+	case info.rawIndex > 0:
 		width := imax(newWidth, info.valueColumn()+indentDiff.get())
 		info.alignValueMultiFollow(width)
-	} else {
+
+	default:
 		info.alignValueSingle(newWidth)
 	}
 }
