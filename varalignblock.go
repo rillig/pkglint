@@ -590,17 +590,26 @@ func (info *varalignLine) alignValueMultiEmptyInitial(newWidth int) {
 }
 
 func (info *varalignLine) alignValueMultiInitial(column int) {
-	leadingComment := info.leadingComment
-	varnameOp := info.varnameOp
-	oldSpace := info.spaceBeforeValue
+	newSpace := alignmentToWidths(info.spaceBeforeValueColumn(), column)
+	if newSpace == info.spaceBeforeValue {
+		return
+	}
+	info.alignValue(column)
+}
 
-	newSpace := alignmentAfter(leadingComment+varnameOp, column)
-	if newSpace == oldSpace {
+func (info *varalignLine) alignValueMultiFollow(newWidth int) {
+	newSpace := indent(newWidth)
+	if newSpace == info.spaceBeforeValue {
 		return
 	}
 
+	info.alignFollow(newSpace)
+}
+
+func (info *varalignLine) alignValue(width int) {
+	oldSpace := info.spaceBeforeValue
 	oldWidth := info.valueColumn()
-	width := tabWidthSlice(leadingComment, varnameOp, newSpace)
+	newSpace := alignmentToWidths(info.spaceBeforeValueColumn(), width)
 
 	fix := info.fixer.Autofix()
 	if width != oldWidth && contains(oldSpace, " ") {
@@ -613,15 +622,6 @@ func (info *varalignLine) alignValueMultiInitial(column int) {
 	fix.ReplaceAt(info.rawIndex, info.spaceBeforeValueIndex(), oldSpace, newSpace)
 	fix.Apply()
 	info.spaceBeforeValue = newSpace
-}
-
-func (info *varalignLine) alignValueMultiFollow(newWidth int) {
-	newSpace := indent(newWidth)
-	if newSpace == info.spaceBeforeValue {
-		return
-	}
-
-	info.alignFollow(newSpace)
 }
 
 func (info *varalignLine) alignFollow(newSpace string) {

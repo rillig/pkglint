@@ -4065,6 +4065,98 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow__unindent_long_initial_l
 	vt.Run()
 }
 
+func (s *Suite) Test_varalignLine_alignValue(c *check.C) {
+	t := s.Init(c)
+
+	test := func(before string, column int, after string, diagnostics ...string) {
+		t.CheckDotColumns(before)
+
+		doTest := func(autofix bool) {
+			mklines := t.NewMkLines("filename.mk",
+				before,
+				"\t...13")
+			assert(len(mklines.mklines) == 1)
+			mkline := mklines.mklines[0]
+
+			text := mkline.raw[0].text()
+			parts := NewVaralignSplitter().split(text, true)
+			info := &varalignLine{mkline, 0, false, parts}
+
+			info.alignValue(column)
+
+			t.CheckEqualsf(
+				mkline.raw[0].text(), after,
+				"Line.raw.text, autofix=%v", autofix)
+
+			t.CheckEqualsf(info.String(), after,
+				"info.String, autofix=%v", autofix)
+		}
+
+		t.ExpectDiagnosticsAutofix(doTest, diagnostics...)
+	}
+
+	testAssert := func(before string, column int) {
+		t.CheckDotColumns(before)
+
+		doTest := func(autofix bool) {
+			mklines := t.NewMkLines("filename.mk",
+				before,
+				"\t...13")
+			assert(len(mklines.mklines) == 1)
+			mkline := mklines.mklines[0]
+
+			text := mkline.raw[0].text()
+			parts := NewVaralignSplitter().split(text, true)
+			info := &varalignLine{mkline, 0, false, parts}
+
+			t.ExpectAssert(
+				func() { info.alignValue(column) })
+
+			t.CheckEqualsf(
+				mkline.raw[0].text(), before,
+				"Line.raw.text, autofix=%v", autofix)
+
+			t.CheckEqualsf(info.String(), before,
+				"info.String, autofix=%v", autofix)
+		}
+
+		t.ExpectDiagnosticsAutofix(doTest, nil...)
+	}
+
+	// The value is already in column 8, thus nothing to do.
+	testAssert(
+		"VAR=\tvalue \\",
+		8)
+
+	test(
+		"VAR=\tvalue \\",
+		16,
+
+		"VAR=\t\tvalue \\",
+		"NOTE: filename.mk:1: This variable value should be aligned to column 17.",
+		"AUTOFIX: filename.mk:1: Replacing \"\\t\" with \"\\t\\t\".")
+
+	// The column is already correct,
+	// but the alignment should be done with tabs, not spaces.
+	test(
+		"VAR=  \t  \tvalue \\",
+		16,
+
+		"VAR=\t\tvalue \\",
+		"NOTE: filename.mk:1: Variable values should be aligned with tabs, not spaces.",
+		"AUTOFIX: filename.mk:1: Replacing \"  \\t  \\t\" with \"\\t\\t\".")
+
+	// Both the column and the use of spaces in the alignment
+	// need to be fixed.
+	test(
+		"VAR=  \t    value \\",
+		16,
+
+		"VAR=\t\tvalue \\",
+		"NOTE: filename.mk:1: This variable value should be aligned with tabs, not spaces, to column 17.",
+		"AUTOFIX: filename.mk:1: Replacing \"  \\t    \" with \"\\t\\t\".")
+}
+
 // The seemingly empty line 3 is actually a continuation from the line above it.
 // Its indentation is is not fixed since that would lead to trailing whitespace.
 func (s *Suite) Test_varalignLine_alignFollow(c *check.C) {
