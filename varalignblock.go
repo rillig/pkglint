@@ -320,9 +320,13 @@ func (va *VaralignBlock) traceWidths(minTotalWidth int, maxTotalWidth int, minVa
 }
 
 func (info *varalignLine) realignDetails(newWidth int, indentDiff *optInt, isMultiEmpty bool) {
+	if info.rawIndex == 0 && info.isContinuation() {
+		info.alignValueInitial(newWidth)
+		return
+	}
 	if isMultiEmpty {
 		if info.rawIndex == 0 {
-			info.alignValueMultiEmptyInitial(newWidth)
+			info.alignValueInitial(newWidth)
 		} else {
 			oldWidth := tabWidth(info.spaceBeforeValue)
 			if !indentDiff.isSet {
@@ -336,8 +340,6 @@ func (info *varalignLine) realignDetails(newWidth int, indentDiff *optInt, isMul
 			width := imax(oldWidth+indentDiff.get(), 8)
 			info.alignValueMultiFollow(width)
 		}
-	} else if info.rawIndex == 0 && info.isContinuation() {
-		info.alignValueMultiInitial(newWidth)
 	} else if info.rawIndex > 0 {
 		width := imax(newWidth, info.valueColumn()+indentDiff.get())
 		info.alignValueMultiFollow(width)
@@ -552,26 +554,15 @@ func (info *varalignLine) alignValueSingle(newWidth int) {
 	fix.Apply()
 }
 
-func (info *varalignLine) alignValueMultiEmptyInitial(newWidth int) {
-	if info.valueColumn() > newWidth {
+func (info *varalignLine) alignValueInitial(newWidth int) {
+	if info.isEmptyContinuation() && info.valueColumn() > newWidth {
 		return
 	}
-
 	newSpace := alignmentToWidths(info.spaceBeforeValueColumn(), newWidth)
 	if newSpace == info.spaceBeforeValue {
 		return
 	}
-
-	column := tabWidthAppend(info.spaceBeforeValueColumn(), newSpace)
-	info.alignValue(column)
-}
-
-func (info *varalignLine) alignValueMultiInitial(column int) {
-	newSpace := alignmentToWidths(info.spaceBeforeValueColumn(), column)
-	if newSpace == info.spaceBeforeValue {
-		return
-	}
-	info.alignValue(column)
+	info.alignValue(newWidth)
 }
 
 func (info *varalignLine) alignValueMultiFollow(newWidth int) {

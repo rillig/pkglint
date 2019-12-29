@@ -3620,7 +3620,7 @@ func (s *Suite) Test_varalignLine_alignValueSingle(c *check.C) {
 		"AUTOFIX: filename.mk:123: Replacing \"\\t\\t\\t \\t\\t\" with \" \".")
 }
 
-func (s *Suite) Test_varalignLine_alignValueMultiEmptyInitial(c *check.C) {
+func (s *Suite) Test_varalignLine_alignValueInitial__empty(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("filename.mk",
@@ -3635,7 +3635,7 @@ func (s *Suite) Test_varalignLine_alignValueMultiEmptyInitial(c *check.C) {
 		"NOTE: filename.mk:3: The continuation backslash should be preceded by a single space or tab.")
 }
 
-func (s *Suite) Test_varalignLine_alignValueMultiEmptyInitial__spaces(c *check.C) {
+func (s *Suite) Test_varalignLine_alignValueInitial__empty_spaces(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"VAR=    \\",
@@ -3659,7 +3659,7 @@ func (s *Suite) Test_varalignLine_alignValueMultiEmptyInitial__spaces(c *check.C
 	vt.Run()
 }
 
-func (s *Suite) Test_varalignLine_alignValueMultiInitial__spaces(c *check.C) {
+func (s *Suite) Test_varalignLine_alignValueInitial__spaces(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"VAR=    value1 \\",
@@ -3679,7 +3679,7 @@ func (s *Suite) Test_varalignLine_alignValueMultiInitial__spaces(c *check.C) {
 	vt.Run()
 }
 
-func (s *Suite) Test_varalignLine_alignValueMultiInitial(c *check.C) {
+func (s *Suite) Test_varalignLine_alignValueInitial(c *check.C) {
 	t := s.Init(c)
 
 	test := func(before string, column int, after string, diagnostics ...string) {
@@ -3696,7 +3696,7 @@ func (s *Suite) Test_varalignLine_alignValueMultiInitial(c *check.C) {
 			parts := NewVaralignSplitter().split(text, true)
 			info := &varalignLine{mkline, 0, false, parts}
 
-			info.alignValueMultiInitial(column)
+			info.alignValueInitial(column)
 
 			t.CheckEqualsf(
 				mkline.raw[0].text(), after,
