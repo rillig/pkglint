@@ -82,7 +82,7 @@ func (ck *Buildlink3Checker) checkFirstParagraph(mlex *MkLinesLexer) bool {
 	pkgbaseLine := mlex.PreviousMkLine()
 
 	if containsVarRef(pkgbase) {
-		ck.checkVaruseInPkgbase(pkgbase, pkgbaseLine)
+		ck.checkVaruseInPkgbase(pkgbaseLine)
 	}
 
 	ck.checkUniquePkgbase(pkgbase, pkgbaseLine)
@@ -240,7 +240,7 @@ func (ck *Buildlink3Checker) checkVarassign(mlex *MkLinesLexer, mkline *MkLine, 
 	}
 }
 
-func (ck *Buildlink3Checker) checkVaruseInPkgbase(pkgbase string, pkgbaseLine *MkLine) {
+func (ck *Buildlink3Checker) checkVaruseInPkgbase(pkgbaseLine *MkLine) {
 	tokens, _ := pkgbaseLine.ValueTokens()
 	for _, token := range tokens {
 		if token.Varuse == nil {
