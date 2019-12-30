@@ -396,7 +396,7 @@ func (s *Suite) Test_Path_JoinClean(c *check.C) {
 func (s *Suite) Test_Path_JoinNoClean(c *check.C) {
 	t := s.Init(c)
 
-	test := func(p, rel RelPath, result RelPath) {
+	test := func(p Path, rel RelPath, result Path) {
 		t.CheckEquals(p.JoinNoClean(rel), result)
 	}
 
