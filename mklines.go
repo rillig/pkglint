@@ -6,7 +6,6 @@ import "strings"
 type MkLines struct {
 	mklines       []*MkLine
 	lines         *Lines
-	target        string             // Current make(1) target; only available during checkAll
 	allVars       Scope              // The variables after loading the complete file
 	buildDefs     map[string]bool    // Variables that are registered in BUILD_DEFS, to ensure that all user-defined variables are added to it.
 	plistVarAdded map[string]*MkLine // Identifiers that are added to PLIST_VARS.
@@ -14,12 +13,25 @@ type MkLines struct {
 	plistVarSkip  bool               // True if any of the PLIST_VARS identifiers refers to a variable.
 	Tools         *Tools             // Tools defined in file scope.
 	indentation   *Indentation       // Indentation depth of preprocessing directives; only available during MkLines.ForEach.
-	forVars       map[string]bool    // The variables currently used in .for loops; only available during MkLines.checkAll.
 	once          Once
-	postLine      func(mkline *MkLine) // Custom action that is run after checking each line
 
 	// TODO: Consider extracting plistVarAdded, plistVarSet, plistVarSkip into an own type.
 	// TODO: Describe where each of the above fields is valid.
+
+	mklinesCheckAll
+}
+
+type mklinesCheckAll struct {
+	// Current make(1) target
+	target string
+
+	vars Scope
+
+	// The variables currently used in .for loops
+	forVars map[string]bool
+
+	// Custom action that is run after checking each line
+	postLine func(mkline *MkLine)
 }
 
 func NewMkLines(lines *Lines) *MkLines {
@@ -34,7 +46,6 @@ func NewMkLines(lines *Lines) *MkLines {
 	return &MkLines{
 		mklines,
 		lines,
-		"",
 		NewScope(),
 		make(map[string]bool),
 		make(map[string]*MkLine),
@@ -42,9 +53,12 @@ func NewMkLines(lines *Lines) *MkLines {
 		false,
 		tools,
 		nil,
-		make(map[string]bool),
 		Once{},
-		nil}
+		mklinesCheckAll{
+			target:   "",
+			vars:     NewScope(),
+			forVars:  make(map[string]bool),
+			postLine: nil}}
 }
 
 // TODO: Consider defining an interface MkLinesChecker (different name, though, since this one confuses even me)
