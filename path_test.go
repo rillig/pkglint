@@ -404,6 +404,7 @@ func (s *Suite) Test_Path_JoinNoClean(c *check.C) {
 	test("dir", "///file", "dir////file")
 	test("dir/./../dir/", "///file", "dir/./../dir/////file")
 	test("dir", "..", "dir/..")
+	test(".", "sub", "./sub")
 }
 
 func (s *Suite) Test_Path_Clean(c *check.C) {
