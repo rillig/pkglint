@@ -285,8 +285,6 @@ func (va *VaralignBlock) varnameOpWidths() (int, int) {
 	longest := widths.opt(0)
 	secondLongest := widths.opt(1)
 
-	// TODO: This definition of an outlier may need to be more precise.
-	//  It might make sense to replace isContinuation with isMultiEmpty.
 	haveOutlier := secondLongest != 0 &&
 		secondLongest/8+1 < longest/8 &&
 		!va.mkinfos[widths.key(0).(int)].infos[0].isContinuation()
