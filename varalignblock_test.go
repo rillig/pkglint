@@ -1375,6 +1375,11 @@ func (s *Suite) Test_VaralignBlock__var_tab8_value_var_tab16_value_var28_tab_val
 		"DISTFILES=\tdistfile-1.0.0.tar.gz",
 		"SITES.distfile-1.0.0.tar.gz=\t${MASTER_SITES_SOURCEFORGE} \\",
 		"\t\t\t\t${MASTER_SITES_GITHUB}")
+	vt.InputDetab(
+		"WRKSRC= ${WRKDIR}",
+		"DISTFILES=      distfile-1.0.0.tar.gz",
+		"SITES.distfile-1.0.0.tar.gz=    ${MASTER_SITES_SOURCEFORGE} \\",
+		"                                ${MASTER_SITES_GITHUB}")
 	vt.Internals(
 		"07 08",
 		"10 16",
