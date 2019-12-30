@@ -52,7 +52,7 @@ func (s *Suite) Test_SimpleCommandChecker_checkInstallCommand(c *check.C) {
 	test := func(lines []string, diagnostics ...string) {
 		mklines := t.NewMkLines("filename.mk",
 			mapStr(lines, func(s string) string { return "\t" + s })...)
-		mklines.target = "do-install"
+		mklines.checkAllData.target = "do-install"
 
 		mklines.ForEach(func(mkline *MkLine) {
 			program, err := parseShellProgram(nil, mkline.ShellCommand())

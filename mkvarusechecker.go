@@ -47,7 +47,7 @@ func (ck *MkVarUseChecker) checkUndefined() {
 		vartype != nil && !vartype.IsGuessed(),
 		// TODO: At load time, check ck.MkLines.loadVars instead of allVars.
 		ck.MkLines.allVars.IsDefinedSimilar(varname),
-		ck.MkLines.forVars[varname],
+		ck.MkLines.checkAllData.forVars[varname],
 		ck.MkLines.allVars.Mentioned(varname) != nil,
 		G.Pkg != nil && G.Pkg.vars.IsDefinedSimilar(varname),
 		containsVarRef(varname),

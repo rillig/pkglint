@@ -77,7 +77,7 @@ func (scc *SimpleCommandChecker) checkInstallCommand(shellcmd string) {
 		defer trace.Call0()()
 	}
 
-	if !matches(scc.mklines.target, `^(?:pre|do|post)-install$`) {
+	if !matches(scc.mklines.checkAllData.target, `^(?:pre|do|post)-install$`) {
 		return
 	}
 
@@ -673,7 +673,8 @@ func (ck *ShellLineChecker) checkHiddenAndSuppress(hiddenAndSuppress, rest strin
 	case !contains(hiddenAndSuppress, "@"):
 		// Nothing is hidden at all.
 
-	case hasPrefix(ck.MkLines.target, "show-") || hasSuffix(ck.MkLines.target, "-message"):
+	case hasPrefix(ck.MkLines.checkAllData.target, "show-"),
+		hasSuffix(ck.MkLines.checkAllData.target, "-message"):
 		// In these targets, all commands may be hidden.
 
 	case hasPrefix(rest, "#"):

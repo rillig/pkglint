@@ -18,7 +18,7 @@ type MkLines struct {
 	// TODO: Consider extracting plistVarAdded, plistVarSet, plistVarSkip into an own type.
 	// TODO: Describe where each of the above fields is valid.
 
-	mklinesCheckAll
+	checkAllData mklinesCheckAll
 }
 
 type mklinesCheckAll struct {
@@ -438,30 +438,30 @@ func (mklines *MkLines) checkLine(
 	switch {
 
 	case mkline.IsVarassign():
-		mklines.target = ""
+		mklines.checkAllData.target = ""
 		mkline.Tokenize(mkline.Value(), true) // Just for the side-effect of the warnings.
 
 		mklines.checkVarassignPlist(mkline)
 
 	case mkline.IsInclude():
-		mklines.target = ""
+		mklines.checkAllData.target = ""
 		if G.Pkg != nil {
 			G.Pkg.checkIncludeConditionally(mkline, mklines.indentation)
 		}
 
 	case mkline.IsDirective():
-		ck.checkDirective(mklines.forVars, mklines.indentation)
+		ck.checkDirective(mklines.checkAllData.forVars, mklines.indentation)
 
 	case mkline.IsDependency():
 		ck.checkDependencyRule(allowedTargets)
-		mklines.target = mkline.Targets()
+		mklines.checkAllData.target = mkline.Targets()
 
 	case mkline.IsShellCommand():
 		mkline.Tokenize(mkline.ShellCommand(), true) // Just for the side-effect of the warnings.
 	}
 
-	if mklines.postLine != nil {
-		mklines.postLine(mkline)
+	if mklines.checkAllData.postLine != nil {
+		mklines.checkAllData.postLine(mkline)
 	}
 }
 

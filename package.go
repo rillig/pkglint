@@ -634,7 +634,7 @@ func (pkg *Package) checkfilePackageMakefile(filename CurrPath, mklines *MkLines
 	//  set Tools.SeenPrefs, but it should.
 	//
 	// See Test_Package_checkfilePackageMakefile__options_mk.
-	mklines.postLine = func(mkline *MkLine) {
+	mklines.checkAllData.postLine = func(mkline *MkLine) {
 		if mkline == pkg.prefsLine {
 			pkg.seenPrefs = true
 		}
