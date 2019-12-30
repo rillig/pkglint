@@ -328,9 +328,12 @@ func (info *varalignLine) realignDetails(newWidth int, indentDiff *optInt, isMul
 	case isMultiEmpty:
 		oldWidth := tabWidth(info.spaceBeforeValue)
 		if !indentDiff.isSet {
-			diff := condInt(newWidth != 0, newWidth-oldWidth, 0)
-			if diff > 0 && !info.isCommentedOut() {
-				diff = 0
+			diff := 0
+			if newWidth != 0 {
+				diff = newWidth - oldWidth
+				if diff > 0 && !info.isCommentedOut() {
+					diff = 0
+				}
 			}
 			indentDiff.set(diff)
 		}
