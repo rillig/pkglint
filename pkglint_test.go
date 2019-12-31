@@ -1009,16 +1009,17 @@ func (s *Suite) Test_Pkglint_checkReg__readme_and_todo(c *check.C) {
 		"SHA1 (patch-README) = ebbf34b0641bcb508f17d5a27f2bf2a536d810ac")
 
 	// Copy category/package/** to wip/package.
+	// TODO: Extract into Tester.CopyAll.
 	err := filepath.Walk(
 		t.File("category/package").String(),
 		func(pathname string, info os.FileInfo, err error) error {
 			if info.Mode().IsRegular() {
 				src := filepath.ToSlash(pathname)
 				dst := strings.Replace(src, "category/package", "wip/package", 1)
-				text, e := ioutil.ReadFile(src)
+				data, e := ioutil.ReadFile(src)
 				c.Check(e, check.IsNil)
 				_ = os.MkdirAll(path.Dir(dst), 0700)
-				e = ioutil.WriteFile(dst, []byte(text), 0600)
+				e = ioutil.WriteFile(dst, data, 0600)
 				c.Check(e, check.IsNil)
 			}
 			return err
