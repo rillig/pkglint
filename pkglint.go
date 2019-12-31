@@ -377,12 +377,13 @@ func resolveVariableRefs(text string, mklines *MkLines, pkg *Package) string {
 		return text
 	}
 
-	if pkg == nil && mklines != nil {
+	if pkg == nil {
 		pkg = mklines.pkg
 	}
+
 	visited := make(map[string]bool) // To prevent endless loops
 
-	replacer := func(m string) string {
+	replace := func(m string) string {
 		varname := m[2 : len(m)-1]
 		if !visited[varname] {
 			visited[varname] = true
@@ -391,6 +392,7 @@ func resolveVariableRefs(text string, mklines *MkLines, pkg *Package) string {
 					return value
 				}
 			}
+			// TODO: Prefer mklines over pkg since the scope is narrower.
 			if mklines != nil {
 				// TODO: At load time, use mklines.loadVars instead.
 				if value, ok := mklines.allVars.LastValueFound(varname); ok {
@@ -404,7 +406,7 @@ func resolveVariableRefs(text string, mklines *MkLines, pkg *Package) string {
 	str := text
 	for {
 		// TODO: Replace regular expression with full parser.
-		replaced := replaceAllFunc(str, `\$\{([\w.]+)\}`, replacer)
+		replaced := replaceAllFunc(str, `\$\{([\w.]+)\}`, replace)
 		if replaced == str {
 			if trace.Tracing && str != text {
 				trace.Stepf("resolveVariableRefs %q => %q", text, replaced)
