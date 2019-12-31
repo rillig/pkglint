@@ -513,7 +513,7 @@ func (pkg *Package) check(filenames []CurrPath, mklines, allLines *MkLines) {
 			// since all those files come from calls to dirglob.
 			break
 
-		case filename.HasBase("Makefile") && G.Pkgsrc.Rel(filename).Count() == 3:
+		case filename.HasBase("Makefile") && pkg.Rel(filename) == "Makefile":
 			G.checkExecutable(filename, st.Mode())
 			pkg.checkfilePackageMakefile(filename, mklines, allLines)
 

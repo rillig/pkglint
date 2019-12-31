@@ -224,18 +224,23 @@ func (s *Suite) Test_MkCondChecker_checkEmpty(c *check.C) {
 	t.Chdir("category/package")
 	t.FinishSetUp()
 
-	// before: the directive before the condition is simplified
-	// after: the directive after the condition is simplified
-	// diagnostics: the usual ones
-	test := func(before, after string, diagnostics ...string) {
+	doTest := func(before string) {
 		mklines := t.SetUpFileMkLines("filename.mk",
 			MkCvsID,
 			"",
 			before,
 			".endif")
 
+		mklines.Check()
+	}
+
+	// before: the directive before the condition is simplified
+	// after: the directive after the condition is simplified
+	// diagnostics: the usual ones
+	test := func(before, after string, diagnostics ...string) {
+
 		t.ExpectDiagnosticsAutofix(
-			func(autofix bool) { mklines.Check() },
+			func(bool) { doTest(before) },
 			diagnostics...)
 
 		afterMklines := LoadMk(t.File("filename.mk"), nil, MustSucceed)
@@ -949,9 +954,7 @@ func (s *Suite) Test_MkCondChecker_simplify__defined_in_same_file(c *check.C) {
 	t.Chdir("category/package")
 	t.FinishSetUp()
 
-	// before: the directive before the condition is simplified
-	// after: the directive after the condition is simplified
-	test := func(before, after string, diagnostics ...string) {
+	doTest := func(before string) {
 		mklines := t.SetUpFileMkLines("filename.mk",
 			MkCvsID,
 			"OK=\t\tok",
@@ -965,11 +968,15 @@ func (s *Suite) Test_MkCondChecker_simplify__defined_in_same_file(c *check.C) {
 		// The high-level call MkLines.Check is used here to
 		// get MkLines.Tools.SeenPrefs correct, which decides
 		// whether the :U modifier is necessary.
-		//
-		// TODO: Replace MkLines.Check this with a more specific method.
+		mklines.Check()
+	}
+
+	// before: the directive before the condition is simplified
+	// after: the directive after the condition is simplified
+	test := func(before, after string, diagnostics ...string) {
 
 		t.ExpectDiagnosticsAutofix(
-			func(autofix bool) { mklines.Check() },
+			func(bool) { doTest(before) },
 			diagnostics...)
 
 		// TODO: Move this assertion above the assertion about the diagnostics.
@@ -1094,7 +1101,7 @@ func (s *Suite) Test_MkCondChecker_checkCompareVarStrCompiler(c *check.C) {
 	t.Chdir("category/package")
 	t.FinishSetUp()
 
-	test := func(cond string, diagnostics ...string) {
+	doTest := func(cond string) {
 		mklines := t.SetUpFileMkLines("filename.mk",
 			MkCvsID,
 			"",
@@ -1103,12 +1110,13 @@ func (s *Suite) Test_MkCondChecker_checkCompareVarStrCompiler(c *check.C) {
 			".if "+cond,
 			".endif")
 
-		t.SetUpCommandLine("-Wall")
 		mklines.Check()
-		t.SetUpCommandLine("-Wall", "--autofix")
-		mklines.Check()
+	}
 
-		t.CheckOutput(diagnostics)
+	test := func(cond string, diagnostics ...string) {
+		t.ExpectDiagnosticsAutofix(
+			func(bool) { doTest(cond) },
+			diagnostics...)
 	}
 
 	test(

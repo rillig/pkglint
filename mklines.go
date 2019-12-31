@@ -378,6 +378,10 @@ func (mklines *MkLines) collectElse() {
 }
 
 func (mklines *MkLines) checkAll() {
+	// checkAll must only be called once, even during tests, since it
+	// doesn't clean up all its effects on mklines.
+	assert(mklines.once.FirstTime("checkAll"))
+
 	allowedTargets := map[string]bool{
 		"pre-fetch": true, "do-fetch": true, "post-fetch": true,
 		"pre-extract": true, "do-extract": true, "post-extract": true,
