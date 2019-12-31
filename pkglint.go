@@ -387,15 +387,16 @@ func resolveVariableRefs(text string, mklines *MkLines, pkg *Package) string {
 		varname := m[2 : len(m)-1]
 		if !visited[varname] {
 			visited[varname] = true
-			if pkg != nil {
-				if value, ok := pkg.vars.LastValueFound(varname); ok {
-					return value
-				}
-			}
-			// TODO: Prefer mklines over pkg since the scope is narrower.
+
 			if mklines != nil {
 				// TODO: At load time, use mklines.loadVars instead.
 				if value, ok := mklines.allVars.LastValueFound(varname); ok {
+					return value
+				}
+			}
+
+			if pkg != nil {
+				if value, ok := pkg.vars.LastValueFound(varname); ok {
 					return value
 				}
 			}

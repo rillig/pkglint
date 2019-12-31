@@ -721,8 +721,7 @@ func (s *Suite) Test_resolveVariableRefs__scope_precedence(c *check.C) {
 
 	resolved := resolveVariableRefs("From ${ORIGIN}", mklines, pkg)
 
-	// FIXME: Should be from filename.mk.
-	t.CheckEquals(resolved, "From package")
+	t.CheckEquals(resolved, "From filename.mk")
 }
 
 // Usually, a dot in a variable name means a parameterized form.
