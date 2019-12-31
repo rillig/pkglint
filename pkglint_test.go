@@ -683,7 +683,7 @@ func (s *Suite) Test_resolveVariableRefs__circular_reference(c *check.C) {
 
 	// TODO: It may be better to define MkLines.Resolve and Package.Resolve,
 	//  to clearly state the scope of the involved variables.
-	resolved := resolveVariableRefs(nil, "the a:${VAR} b:${VAR}")
+	resolved := resolveVariableRefs("the a:${VAR} b:${VAR}", nil, G.Pkg)
 
 	// TODO: The ${VAR} after "b:" should also be expanded since there
 	//  is no recursion.
@@ -704,7 +704,7 @@ func (s *Suite) Test_resolveVariableRefs__multilevel(c *check.C) {
 	// TODO: Add a similar test in which some of the variables are defined
 	//  conditionally or with differing values, just to see what pkglint does
 	//  in such a case.
-	resolved := resolveVariableRefs(nil, "you ${FIRST}")
+	resolved := resolveVariableRefs("you ${FIRST}", nil, G.Pkg)
 
 	t.CheckEquals(resolved, "you got it")
 }
@@ -719,7 +719,7 @@ func (s *Suite) Test_resolveVariableRefs__special_chars(c *check.C) {
 	G.Pkg = NewPackage(t.File("category/pkg"))
 	G.Pkg.vars.Define("GST_PLUGINS0.10_TYPE", mkline)
 
-	resolved := resolveVariableRefs(nil, "gst-plugins0.10-${GST_PLUGINS0.10_TYPE}/distinfo")
+	resolved := resolveVariableRefs("gst-plugins0.10-${GST_PLUGINS0.10_TYPE}/distinfo", nil, G.Pkg)
 
 	t.CheckEquals(resolved, "gst-plugins0.10-x11/distinfo")
 }

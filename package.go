@@ -390,7 +390,7 @@ func (pkg *Package) resolveIncludedFile(mkline *MkLine, includingFilename CurrPa
 	// XXX: resolveVariableRefs uses G.Pkg implicitly. It should be made explicit.
 	// TODO: Try to combine resolveVariableRefs and ResolveVarsInRelativePath.
 	resolved := mkline.ResolveVarsInRelativePath(mkline.IncludedFile())
-	includedText := resolveVariableRefs(nil /* XXX: or maybe some mklines? */, resolved.String())
+	includedText := resolveVariableRefs(resolved.String(), nil, pkg)
 	includedFile := NewRelPathString(includedText)
 	if containsVarRef(includedText) {
 		if trace.Tracing && !includingFilename.ContainsPath("mk") {
@@ -1502,7 +1502,7 @@ func (pkg *Package) AutofixDistinfo(oldSha1, newSha1 string) {
 // Variables that are known in the package are resolved, e.g. ${PKGDIR}.
 func (pkg *Package) File(relativeFileName PackagePath) CurrPath {
 	joined := pkg.dir.JoinNoClean(NewRelPath(relativeFileName.AsPath()))
-	resolved := resolveVariableRefs(nil /* XXX: or maybe some mklines? */, joined.String())
+	resolved := resolveVariableRefs(joined.String(), nil, pkg)
 	return NewCurrPathString(resolved).CleanPath()
 }
 
