@@ -453,6 +453,8 @@ func (mklines *MkLines) checkLine(
 		mkline.Tokenize(mkline.Value(), true) // Just for the side-effect of the warnings.
 
 		mklines.checkVarassignPlist(mkline)
+		varname := mkline.Varname()
+		mklines.checkAllData.vars.Define(varname, mkline)
 
 	case mkline.IsInclude():
 		mklines.checkAllData.target = ""

@@ -1017,16 +1017,15 @@ func (s *Suite) Test_MkCondChecker_simplify__defined_in_same_file(c *check.C) {
 	// therefore at the time of the .if statement, it is still empty.
 	test(
 		".if ${LATER_DIR:Mpattern}",
-		".if ${LATER_DIR} == pattern",
+		".if ${LATER_DIR:U} == pattern",
 
-		// FIXME: Warn that LATER_DIR is used before it is defined.
-		// FIXME: Add :U modifier since LATER_DIR is not yet defined.
+		// TODO: Warn that LATER_DIR is used before it is defined.
 		"NOTE: filename.mk:4: LATER_DIR can be "+
-			"compared using the simpler \"${LATER_DIR} == pattern\" "+
+			"compared using the simpler \"${LATER_DIR:U} == pattern\" "+
 			"instead of matching against \":Mpattern\".",
 		"AUTOFIX: filename.mk:4: "+
 			"Replacing \"${LATER_DIR:Mpattern}\" "+
-			"with \"${LATER_DIR} == pattern\".")
+			"with \"${LATER_DIR:U} == pattern\".")
 }
 
 func (s *Suite) Test_MkCondChecker_checkCompare(c *check.C) {
