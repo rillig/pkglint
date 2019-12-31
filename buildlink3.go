@@ -172,7 +172,7 @@ func (ck *Buildlink3Checker) checkMainPart(mlex *MkLinesLexer) bool {
 
 		switch {
 		case mkline.IsVarassign():
-			ck.checkVarassign(mlex, mkline, pkgbase)
+			ck.checkVarassign(mkline, pkgbase)
 
 		case mkline.IsDirective() && mkline.Directive() == "if":
 			indentLevel++
@@ -193,7 +193,7 @@ func (ck *Buildlink3Checker) checkMainPart(mlex *MkLinesLexer) bool {
 	return true
 }
 
-func (ck *Buildlink3Checker) checkVarassign(mlex *MkLinesLexer, mkline *MkLine, pkgbase string) {
+func (ck *Buildlink3Checker) checkVarassign(mkline *MkLine, pkgbase string) {
 	varname, value := mkline.Varname(), mkline.Value()
 	doCheck := false
 

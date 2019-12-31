@@ -411,7 +411,7 @@ func (mklines *MkLines) checkAll() {
 			// This check is not done by ForEach because ForEach only
 			// manages the iteration, not the actual checks.
 			mklines.indentation.CheckFinish(mklines.lines.Filename)
-			vargroupsChecker.Finish(mkline)
+			vargroupsChecker.Finish()
 		})
 
 	substContext.Finish(mklines.EOFLine())

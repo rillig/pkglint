@@ -244,7 +244,7 @@ func (ck *VargroupsChecker) isVargroups(varname string) bool {
 	return false
 }
 
-func (ck *VargroupsChecker) Finish(mkline *MkLine) {
+func (ck *VargroupsChecker) Finish() {
 	if ck.skip {
 		return
 	}
