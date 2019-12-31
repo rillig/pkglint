@@ -236,63 +236,67 @@ func (mklines *MkLines) collectVariables() {
 	}
 
 	mklines.ForEach(func(mkline *MkLine) {
-		mklines.Tools.ParseToolLine(mklines, mkline, false, true)
-
-		if !mkline.IsVarassignMaybeCommented() {
-			return
-		}
-
-		mklines.defineVar(mkline, mkline.Varname())
-
-		varcanon := mkline.Varcanon()
-		switch varcanon {
-		case
-			"BUILD_DEFS",
-			"PKG_GROUPS_VARS", // see mk/misc/unprivileged.mk
-			"PKG_USERS_VARS":  // see mk/misc/unprivileged.mk
-			for _, varname := range mkline.Fields() {
-				mklines.buildDefs[varname] = true
-				if trace.Tracing {
-					trace.Step1("%q is added to BUILD_DEFS.", varname)
-				}
-			}
-
-		case
-			"BUILTIN_FIND_FILES_VAR",
-			"BUILTIN_FIND_HEADERS_VAR":
-			for _, varname := range mkline.Fields() {
-				mklines.allVars.Define(varname, mkline)
-			}
-
-		case "PLIST_VARS":
-			for _, id := range mkline.ValueFields(resolveVariableRefs(mkline.Value(), mklines, nil)) {
-				if trace.Tracing {
-					trace.Step1("PLIST.%s is added to PLIST_VARS.", id)
-				}
-
-				if containsVarRef(id) {
-					mklines.UseVar(mkline, "PLIST.*", mkline.Op().Time())
-					mklines.plistVarSkip = true
-				} else {
-					mklines.UseVar(mkline, "PLIST."+id, mkline.Op().Time())
-				}
-			}
-
-		case "SUBST_VARS.*":
-			for _, substVar := range mkline.Fields() {
-				mklines.UseVar(mkline, varnameCanon(substVar), mkline.Op().Time())
-				if trace.Tracing {
-					trace.Step1("varuse %s", substVar)
-				}
-			}
-
-		case "OPSYSVARS":
-			for _, opsysVar := range mkline.Fields() {
-				mklines.UseVar(mkline, opsysVar+".*", mkline.Op().Time())
-				mklines.defineVar(mkline, opsysVar)
-			}
-		}
+		mklines.collectVariable(mkline)
 	})
+}
+
+func (mklines *MkLines) collectVariable(mkline *MkLine) {
+	mklines.Tools.ParseToolLine(mklines, mkline, false, true)
+
+	if !mkline.IsVarassignMaybeCommented() {
+		return
+	}
+
+	mklines.defineVar(mkline, mkline.Varname())
+
+	varcanon := mkline.Varcanon()
+	switch varcanon {
+	case
+		"BUILD_DEFS",
+		"PKG_GROUPS_VARS", // see mk/misc/unprivileged.mk
+		"PKG_USERS_VARS":  // see mk/misc/unprivileged.mk
+		for _, varname := range mkline.Fields() {
+			mklines.buildDefs[varname] = true
+			if trace.Tracing {
+				trace.Step1("%q is added to BUILD_DEFS.", varname)
+			}
+		}
+
+	case
+		"BUILTIN_FIND_FILES_VAR",
+		"BUILTIN_FIND_HEADERS_VAR":
+		for _, varname := range mkline.Fields() {
+			mklines.allVars.Define(varname, mkline)
+		}
+
+	case "PLIST_VARS":
+		for _, id := range mkline.ValueFields(resolveVariableRefs(mkline.Value(), mklines, nil)) {
+			if trace.Tracing {
+				trace.Step1("PLIST.%s is added to PLIST_VARS.", id)
+			}
+
+			if containsVarRef(id) {
+				mklines.UseVar(mkline, "PLIST.*", mkline.Op().Time())
+				mklines.plistVarSkip = true
+			} else {
+				mklines.UseVar(mkline, "PLIST."+id, mkline.Op().Time())
+			}
+		}
+
+	case "SUBST_VARS.*":
+		for _, substVar := range mkline.Fields() {
+			mklines.UseVar(mkline, varnameCanon(substVar), mkline.Op().Time())
+			if trace.Tracing {
+				trace.Step1("varuse %s", substVar)
+			}
+		}
+
+	case "OPSYSVARS":
+		for _, opsysVar := range mkline.Fields() {
+			mklines.UseVar(mkline, opsysVar+".*", mkline.Op().Time())
+			mklines.defineVar(mkline, opsysVar)
+		}
+	}
 }
 
 // ForEach calls the action for each line, until the action returns false.
