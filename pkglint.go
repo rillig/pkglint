@@ -202,7 +202,7 @@ func (pkglint *Pkglint) prepareMainLoop() {
 		firstDir = firstDir.DirNoClean()
 	}
 
-	relTopdir := findPkgsrcTopdir(firstDir)
+	relTopdir := pkglint.findPkgsrcTopdir(firstDir)
 	if relTopdir.IsEmpty() {
 		// If the first argument to pkglint is not inside a pkgsrc tree,
 		// pkglint doesn't know where to load the infrastructure files from,
@@ -319,7 +319,7 @@ func (pkglint *Pkglint) checkMode(dirent CurrPath, mode os.FileMode) {
 
 	pkglint.Wip = pkgsrcRel.HasPrefixPath("wip")
 	pkglint.Infrastructure = pkgsrcRel.HasPrefixPath("mk")
-	pkgsrcdir := findPkgsrcTopdir(dir)
+	pkgsrcdir := pkglint.findPkgsrcTopdir(dir)
 	if pkgsrcdir.IsEmpty() {
 		G.Logger.TechErrorf("",
 			"Cannot determine the pkgsrc root directory for %q.",
@@ -361,7 +361,7 @@ func (pkglint *Pkglint) checkdirPackage(dir CurrPath) {
 }
 
 // Returns the pkgsrc top-level directory, relative to the given directory.
-func findPkgsrcTopdir(dirname CurrPath) RelPath {
+func (*Pkglint) findPkgsrcTopdir(dirname CurrPath) RelPath {
 	for _, dir := range [...]RelPath{".", "..", "../..", "../../.."} {
 		if dirname.JoinNoClean(dir).JoinNoClean("mk/bsd.pkg.mk").IsFile() {
 			return dir
