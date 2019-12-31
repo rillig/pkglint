@@ -158,7 +158,7 @@ func (pkg *Package) load() ([]CurrPath, *MkLines, *MkLines) {
 	for _, filename := range files {
 		basename := filename.Base()
 		if isRelevantMk(filename, basename) {
-			fragmentMklines := LoadMk(filename, MustSucceed)
+			fragmentMklines := LoadMk(filename, pkg, MustSucceed)
 			pkg.collectConditionalIncludes(fragmentMklines)
 		}
 		if hasPrefix(basename, "PLIST") {
@@ -176,12 +176,12 @@ func (pkg *Package) loadPackageMakefile() (*MkLines, *MkLines) {
 		defer trace.Call(filename)()
 	}
 
-	mainLines := LoadMk(filename, NotEmpty|LogErrors)
+	mainLines := LoadMk(filename, pkg, NotEmpty|LogErrors)
 	if mainLines == nil {
 		return nil, nil
 	}
 
-	allLines := NewMkLines(NewLines("", nil))
+	allLines := NewMkLines(NewLines("", nil), pkg)
 	if !pkg.parse(mainLines, allLines, "", true) {
 		return nil, nil
 	}
@@ -256,7 +256,7 @@ func (pkg *Package) parse(mklines *MkLines, allLines *MkLines, includingFileForU
 		builtin := filename.DirNoClean().JoinNoClean("builtin.mk").CleanPath()
 		builtinRel := G.Pkgsrc.Relpath(pkg.dir, builtin)
 		if pkg.included.FirstTime(builtinRel.String()) && builtin.IsFile() {
-			builtinMkLines := LoadMk(builtin, MustSucceed|LogErrors)
+			builtinMkLines := LoadMk(builtin, pkg, MustSucceed|LogErrors)
 			pkg.parse(builtinMkLines, allLines, "", false)
 		}
 	}
@@ -342,7 +342,7 @@ func (pkg *Package) loadIncluded(mkline *MkLine, includingFile CurrPath) (includ
 	if trace.Tracing {
 		trace.Stepf("Including %q.", fullIncluded)
 	}
-	includedMklines = LoadMk(fullIncluded, 0)
+	includedMklines = LoadMk(fullIncluded, pkg, 0)
 	if includedMklines != nil {
 		return includedMklines, false
 	}
@@ -365,7 +365,7 @@ func (pkg *Package) loadIncluded(mkline *MkLine, includingFile CurrPath) (includ
 	dirname = pkgBasedir
 
 	fullIncludedFallback := dirname.JoinNoClean(includedFile)
-	includedMklines = LoadMk(fullIncludedFallback, 0)
+	includedMklines = LoadMk(fullIncludedFallback, pkg, 0)
 	if includedMklines == nil {
 		return nil, false
 	}
@@ -389,7 +389,7 @@ func (pkg *Package) resolveIncludedFile(mkline *MkLine, includingFilename CurrPa
 
 	// XXX: resolveVariableRefs uses G.Pkg implicitly. It should be made explicit.
 	// TODO: Try to combine resolveVariableRefs and ResolveVarsInRelativePath.
-	resolved := mkline.ResolveVarsInRelativePath(mkline.IncludedFile())
+	resolved := mkline.ResolveVarsInRelativePath(mkline.IncludedFile(), pkg)
 	includedText := resolveVariableRefs(resolved.String(), nil, pkg)
 	includedFile := NewRelPathString(includedText)
 	if containsVarRef(includedText) {
@@ -403,8 +403,8 @@ func (pkg *Package) resolveIncludedFile(mkline *MkLine, includingFilename CurrPa
 	if mkline.Basename != "buildlink3.mk" {
 		if includedFile.HasSuffixPath("buildlink3.mk") {
 			curr := mkline.File(includedFile)
-			if G.Pkg != nil && !curr.IsFile() {
-				curr = G.Pkg.File(PackagePath(includedFile))
+			if pkg != nil && !curr.IsFile() {
+				curr = pkg.File(PackagePath(includedFile))
 			}
 			packagePath := pkg.Rel(curr)
 			pkg.bl3[packagePath] = mkline
@@ -1268,7 +1268,7 @@ func (pkg *Package) checkDirent(dirent CurrPath, mode os.FileMode) {
 	switch {
 
 	case mode.IsRegular():
-		G.checkReg(dirent, basename, G.Pkgsrc.Rel(dirent).Count())
+		G.checkReg(dirent, basename, G.Pkgsrc.Rel(dirent).Count(), pkg)
 
 	case hasPrefix(basename, "work"):
 		if G.Opts.Import {
@@ -1361,7 +1361,8 @@ func (pkg *Package) checkFreeze(filename CurrPath) {
 		"See https://www.NetBSD.org/developers/pkgsrc/ for the exact rules.")
 }
 
-func (pkg *Package) checkFileMakefileExt(filename CurrPath) {
+// TODO: Move to MkLinesChecker.
+func (*Package) checkFileMakefileExt(filename CurrPath) {
 	base := filename.Base()
 	if !hasPrefix(base, "Makefile.") || base == "Makefile.common" {
 		return
@@ -1482,6 +1483,11 @@ func (pkg *Package) checkIncludeConditionally(mkline *MkLine, indentation *Inden
 	//  Ideally they should match, but there may be some differences in internal
 	//  variables, which need to be filtered out before comparing them, like it is
 	//  already done with *_MK variables.
+}
+
+func (pkg *Package) matchesLicenseFile(basename string) bool {
+	licenseFile := NewPath(pkg.vars.LastValue("LICENSE_FILE"))
+	return basename == licenseFile.Base()
 }
 
 func (pkg *Package) AutofixDistinfo(oldSha1, newSha1 string) {

@@ -14,12 +14,12 @@ const (
 	LogErrors                           //
 )
 
-func LoadMk(filename CurrPath, options LoadOptions) *MkLines {
+func LoadMk(filename CurrPath, pkg *Package, options LoadOptions) *MkLines {
 	lines := Load(filename, options|Makefile)
 	if lines == nil {
 		return nil
 	}
-	return NewMkLines(lines)
+	return NewMkLines(lines, pkg)
 }
 
 func Load(filename CurrPath, options LoadOptions) *Lines {

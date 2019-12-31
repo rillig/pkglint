@@ -678,12 +678,12 @@ func (s *Suite) Test_resolveVariableRefs__circular_reference(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("filename.mk", 1, "VAR=\t1:${VAR}+ 2:${VAR}")
-	G.Pkg = NewPackage(t.File("category/pkgbase"))
-	G.Pkg.vars.Define("VAR", mkline)
+	pkg := NewPackage(t.File("category/pkgbase"))
+	pkg.vars.Define("VAR", mkline)
 
 	// TODO: It may be better to define MkLines.Resolve and Package.Resolve,
 	//  to clearly state the scope of the involved variables.
-	resolved := resolveVariableRefs("the a:${VAR} b:${VAR}", nil, G.Pkg)
+	resolved := resolveVariableRefs("the a:${VAR} b:${VAR}", nil, pkg)
 
 	// TODO: The ${VAR} after "b:" should also be expanded since there
 	//  is no recursion.
@@ -696,15 +696,15 @@ func (s *Suite) Test_resolveVariableRefs__multilevel(c *check.C) {
 	mkline1 := t.NewMkLine("filename.mk", 10, "FIRST=\t${SECOND}")
 	mkline2 := t.NewMkLine("filename.mk", 11, "SECOND=\t${THIRD}")
 	mkline3 := t.NewMkLine("filename.mk", 12, "THIRD=\tgot it")
-	G.Pkg = NewPackage(t.File("category/pkgbase"))
-	G.Pkg.vars.Define("FIRST", mkline1)
-	G.Pkg.vars.Define("SECOND", mkline2)
-	G.Pkg.vars.Define("THIRD", mkline3)
+	pkg := NewPackage(t.File("category/pkgbase"))
+	pkg.vars.Define("FIRST", mkline1)
+	pkg.vars.Define("SECOND", mkline2)
+	pkg.vars.Define("THIRD", mkline3)
 
 	// TODO: Add a similar test in which some of the variables are defined
 	//  conditionally or with differing values, just to see what pkglint does
 	//  in such a case.
-	resolved := resolveVariableRefs("you ${FIRST}", nil, G.Pkg)
+	resolved := resolveVariableRefs("you ${FIRST}", nil, pkg)
 
 	t.CheckEquals(resolved, "you got it")
 }
@@ -716,10 +716,10 @@ func (s *Suite) Test_resolveVariableRefs__special_chars(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("filename.mk", 10, "_=x11")
-	G.Pkg = NewPackage(t.File("category/pkg"))
-	G.Pkg.vars.Define("GST_PLUGINS0.10_TYPE", mkline)
+	pkg := NewPackage(t.File("category/pkg"))
+	pkg.vars.Define("GST_PLUGINS0.10_TYPE", mkline)
 
-	resolved := resolveVariableRefs("gst-plugins0.10-${GST_PLUGINS0.10_TYPE}/distinfo", nil, G.Pkg)
+	resolved := resolveVariableRefs("gst-plugins0.10-${GST_PLUGINS0.10_TYPE}/distinfo", nil, pkg)
 
 	t.CheckEquals(resolved, "gst-plugins0.10-x11/distinfo")
 }
@@ -805,7 +805,7 @@ func (s *Suite) Test_CheckLinesMessage__one_line_of_text(c *check.C) {
 	lines := t.NewLines("MESSAGE",
 		"one line")
 
-	CheckLinesMessage(lines)
+	CheckLinesMessage(lines, nil)
 
 	t.CheckOutputLines(
 		"WARN: MESSAGE:1: File too short.")
@@ -817,7 +817,7 @@ func (s *Suite) Test_CheckLinesMessage__one_hline(c *check.C) {
 	lines := t.NewLines("MESSAGE",
 		strings.Repeat("=", 75))
 
-	CheckLinesMessage(lines)
+	CheckLinesMessage(lines, nil)
 
 	t.CheckOutputLines(
 		"WARN: MESSAGE:1: File too short.")
@@ -833,7 +833,7 @@ func (s *Suite) Test_CheckLinesMessage__malformed(c *check.C) {
 		"4",
 		"5")
 
-	CheckLinesMessage(lines)
+	CheckLinesMessage(lines, nil)
 
 	t.CheckOutputLines(
 		"WARN: MESSAGE:1: Expected a line of exactly 75 \"=\" characters.",
@@ -852,7 +852,7 @@ func (s *Suite) Test_CheckLinesMessage__autofix(c *check.C) {
 		"4",
 		"5")
 
-	CheckLinesMessage(lines)
+	CheckLinesMessage(lines, nil)
 
 	t.CheckOutputLines(
 		"AUTOFIX: ~/MESSAGE:1: Inserting a line \"=============================="+
@@ -894,7 +894,7 @@ func (s *Suite) Test_CheckLinesMessage__common(c *check.C) {
 func (s *Suite) Test_CheckFileMk__enoent(c *check.C) {
 	t := s.Init(c)
 
-	CheckFileMk(t.File("filename.mk"))
+	CheckFileMk(t.File("filename.mk"), nil)
 
 	t.CheckOutputLines(
 		"ERROR: ~/filename.mk: Cannot be read.")
@@ -923,12 +923,12 @@ func (s *Suite) Test_Pkglint_checkReg__file_not_found(c *check.C) {
 
 	t.Chdir(".")
 
-	G.checkReg("buildlink3.mk", "buildlink3.mk", 3)
-	G.checkReg("DESCR", "DESCR", 3)
-	G.checkReg("distinfo", "distinfo", 3)
-	G.checkReg("MESSAGE", "MESSAGE", 3)
-	G.checkReg("patches/patch-aa", "patch-aa", 3)
-	G.checkReg("PLIST", "PLIST", 3)
+	G.checkReg("buildlink3.mk", "buildlink3.mk", 3, nil)
+	G.checkReg("DESCR", "DESCR", 3, nil)
+	G.checkReg("distinfo", "distinfo", 3, nil)
+	G.checkReg("MESSAGE", "MESSAGE", 3, nil)
+	G.checkReg("patches/patch-aa", "patch-aa", 3, nil)
+	G.checkReg("PLIST", "PLIST", 3, nil)
 
 	t.CheckOutputLines(
 		"ERROR: buildlink3.mk: Cannot be read.",
@@ -946,7 +946,7 @@ func (s *Suite) Test_Pkglint_checkReg__no_tracing(c *check.C) {
 	t.Chdir(".")
 	t.DisableTracing()
 
-	G.checkReg("patches/manual-aa", "manual-aa", 4)
+	G.checkReg("patches/manual-aa", "manual-aa", 4, nil)
 
 	t.CheckOutputEmpty()
 }
@@ -1048,7 +1048,7 @@ func (s *Suite) Test_Pkglint_checkReg__unknown_file_in_patches(c *check.C) {
 
 	t.CreateFileDummyPatch("category/Makefile/patches/index")
 
-	G.checkReg(t.File("category/Makefile/patches/index"), "index", 4)
+	G.checkReg(t.File("category/Makefile/patches/index"), "index", 4, nil)
 
 	t.CheckOutputLines(
 		"WARN: ~/category/Makefile/patches/index: " +
@@ -1061,7 +1061,7 @@ func (s *Suite) Test_Pkglint_checkReg__patch_for_Makefile_fragment(c *check.C) {
 	t.CreateFileDummyPatch("category/package/patches/patch-compiler.mk")
 	t.Chdir("category/package")
 
-	G.checkReg(t.File("patches/patch-compiler.mk"), "patch-compiler.mk", 4)
+	G.checkReg(t.File("patches/patch-compiler.mk"), "patch-compiler.mk", 4, nil)
 
 	t.CheckOutputEmpty()
 }
@@ -1071,7 +1071,7 @@ func (s *Suite) Test_Pkglint_checkReg__file_in_files(c *check.C) {
 
 	t.CreateFileLines("category/package/files/index")
 
-	G.checkReg(t.File("category/package/files/index"), "index", 4)
+	G.checkReg(t.File("category/package/files/index"), "index", 4, nil)
 
 	// These files are ignored since they could contain anything.
 	t.CheckOutputEmpty()
@@ -1083,8 +1083,8 @@ func (s *Suite) Test_Pkglint_checkReg__spec(c *check.C) {
 	t.CreateFileLines("category/package/spec")
 	t.CreateFileLines("regress/package/spec")
 
-	G.checkReg(t.File("category/package/spec"), "spec", 3)
-	G.checkReg(t.File("regress/package/spec"), "spec", 3)
+	G.checkReg(t.File("category/package/spec"), "spec", 3, nil)
+	G.checkReg(t.File("regress/package/spec"), "spec", 3, nil)
 
 	t.CheckOutputLines(
 		"WARN: ~/category/package/spec: Only packages in regress/ may have spec files.")

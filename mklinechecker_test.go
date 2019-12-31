@@ -501,7 +501,7 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation__autofix(c *check.C
 		".endif",
 		".endfor",
 		".endif")
-	mklines := NewMkLines(lines)
+	mklines := NewMkLines(lines, nil)
 
 	mklines.Check()
 

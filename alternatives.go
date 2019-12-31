@@ -5,14 +5,14 @@ import (
 	"strings"
 )
 
-func CheckFileAlternatives(filename CurrPath) {
+func CheckFileAlternatives(filename CurrPath, pkg *Package) {
 	lines := Load(filename, NotEmpty|LogErrors)
 	if lines == nil {
 		return
 	}
 
 	var ck AlternativesChecker
-	ck.Check(lines, G.Pkg)
+	ck.Check(lines, pkg)
 }
 
 type AlternativesChecker struct{}
@@ -24,13 +24,13 @@ func (ck *AlternativesChecker) Check(lines *Lines, pkg *Package) {
 	}
 
 	for _, line := range lines.Lines {
-		ck.checkLine(line, plistFiles)
+		ck.checkLine(line, plistFiles, pkg)
 	}
 }
 
 // checkLine checks a single line for the following format:
 //  wrapper alternative [optional arguments]
-func (ck *AlternativesChecker) checkLine(line *Line, plistFiles map[RelPath]*PlistLine) {
+func (ck *AlternativesChecker) checkLine(line *Line, plistFiles map[RelPath]*PlistLine, pkg *Package) {
 	// TODO: Add $ to the regex, just for confidence
 	m, wrapper, space, alternative := match3(line.Text, `^([^\t ]+)([ \t]+)([^\t ]+)`)
 	if !m {
@@ -44,7 +44,7 @@ func (ck *AlternativesChecker) checkLine(line *Line, plistFiles map[RelPath]*Pli
 		ck.checkWrapperPlist(line, NewRelPathString(wrapper), plistFiles)
 	}
 	if plistFiles != nil {
-		ck.checkAlternativePlist(line, alternative, plistFiles)
+		ck.checkAlternativePlist(line, alternative, plistFiles, pkg)
 	}
 
 	ck.checkAlternativeAbs(alternative, line, space)
@@ -85,7 +85,7 @@ func (ck *AlternativesChecker) checkAlternativeAbs(alternative string, line *Lin
 }
 
 func (ck *AlternativesChecker) checkAlternativePlist(line *Line, alternative string,
-	plistFiles map[RelPath]*PlistLine) {
+	plistFiles map[RelPath]*PlistLine, pkg *Package) {
 
 	relImplementation := strings.Replace(alternative, "@PREFIX@/", "", 1)
 	plistName := replaceAll(relImplementation, `@(\w+)@`, "${$1}")
@@ -96,7 +96,7 @@ func (ck *AlternativesChecker) checkAlternativePlist(line *Line, alternative str
 	}
 
 	rel := NewRelPathString(plistName)
-	if plistFiles[rel] != nil || G.Pkg.vars.IsDefined("ALTERNATIVES_SRC") {
+	if plistFiles[rel] != nil || pkg.vars.IsDefined("ALTERNATIVES_SRC") {
 		return
 	}
 	if plistFiles[rel.Replace("${PKGMANDIR}", "man")] != nil {

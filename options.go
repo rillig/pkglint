@@ -106,7 +106,7 @@ func (ck *OptionsLinesChecker) handleUpperLine(mkline *MkLine, seenPkgOptionsVar
 					declare(option)
 				}
 				if len(forVars) == 0 {
-					for _, option := range mkline.ValueFields(resolveVariableRefs(option, ck.mklines, G.Pkg)) {
+					for _, option := range mkline.ValueFields(resolveVariableRefs(option, ck.mklines, nil)) {
 						declare(option)
 					}
 				}

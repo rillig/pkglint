@@ -179,7 +179,7 @@ func (scc *SimpleCommandChecker) handleCommandVariable() bool {
 		return true
 	}
 
-	return G.Pkg != nil && G.Pkg.vars.IsDefinedSimilar(varname)
+	return scc.mklines.pkg != nil && scc.mklines.pkg.vars.IsDefinedSimilar(varname)
 }
 
 func (scc *SimpleCommandChecker) handleShellBuiltin() bool {
@@ -277,8 +277,8 @@ func (scc *SimpleCommandChecker) checkAutoMkdirs() {
 		}
 
 		autoMkdirs := false
-		if G.Pkg != nil {
-			plistLine := G.Pkg.Plist.Dirs[prefixRel]
+		if scc.mklines.pkg != nil {
+			plistLine := scc.mklines.pkg.Plist.Dirs[prefixRel]
 			if plistLine != nil && !containsVarRef(plistLine.Text) {
 				autoMkdirs = true
 			}

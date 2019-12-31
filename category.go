@@ -7,7 +7,7 @@ func CheckdirCategory(dir CurrPath) {
 		defer trace.Call(dir)()
 	}
 
-	mklines := LoadMk(dir.JoinNoClean("Makefile").CleanDot(), NotEmpty|LogErrors)
+	mklines := LoadMk(dir.JoinNoClean("Makefile").CleanDot(), nil, NotEmpty|LogErrors)
 	if mklines == nil {
 		return
 	}

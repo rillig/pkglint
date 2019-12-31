@@ -4,8 +4,10 @@ import "strings"
 
 // MkLines contains data for the Makefile (or *.mk) that is currently checked.
 type MkLines struct {
-	mklines       []*MkLine
-	lines         *Lines
+	mklines []*MkLine
+	lines   *Lines
+	pkg     *Package
+
 	allVars       Scope              // The variables after loading the complete file
 	buildDefs     map[string]bool    // Variables that are registered in BUILD_DEFS, to ensure that all user-defined variables are added to it.
 	plistVarAdded map[string]*MkLine // Identifiers that are added to PLIST_VARS.
@@ -34,7 +36,7 @@ type mklinesCheckAll struct {
 	postLine func(mkline *MkLine)
 }
 
-func NewMkLines(lines *Lines) *MkLines {
+func NewMkLines(lines *Lines, pkg *Package) *MkLines {
 	mklines := make([]*MkLine, lines.Len())
 	for i, line := range lines.Lines {
 		mklines[i] = NewMkLineParser().Parse(line)
@@ -46,6 +48,7 @@ func NewMkLines(lines *Lines) *MkLines {
 	return &MkLines{
 		mklines,
 		lines,
+		pkg,
 		NewScope(),
 		make(map[string]bool),
 		make(map[string]*MkLine),
@@ -96,8 +99,8 @@ func (mklines *MkLines) Check() {
 	mklines.collectVariables()
 	mklines.collectPlistVars()
 	mklines.collectElse()
-	if G.Pkg != nil {
-		G.Pkg.collectConditionalIncludes(mklines)
+	if mklines.pkg != nil {
+		mklines.pkg.collectConditionalIncludes(mklines)
 	}
 
 	// In the second pass, the actual checks are done.
@@ -152,8 +155,8 @@ func (mklines *MkLines) collectUsedVariables() {
 // This controls the "defined but not used" warning.
 func (mklines *MkLines) UseVar(mkline *MkLine, varname string, time VucTime) {
 	mklines.allVars.Use(varname, mkline, time)
-	if G.Pkg != nil {
-		G.Pkg.vars.Use(varname, mkline, time)
+	if mklines.pkg != nil {
+		mklines.pkg.vars.Use(varname, mkline, time)
 	}
 }
 
@@ -239,7 +242,7 @@ func (mklines *MkLines) collectVariables() {
 			return
 		}
 
-		mklines.defineVar(G.Pkg, mkline, mkline.Varname())
+		mklines.defineVar(mkline, mkline.Varname())
 
 		varcanon := mkline.Varcanon()
 		switch varcanon {
@@ -262,7 +265,7 @@ func (mklines *MkLines) collectVariables() {
 			}
 
 		case "PLIST_VARS":
-			for _, id := range mkline.ValueFields(resolveVariableRefs(mkline.Value(), mklines, G.Pkg)) {
+			for _, id := range mkline.ValueFields(resolveVariableRefs(mkline.Value(), mklines, nil)) {
 				if trace.Tracing {
 					trace.Step1("PLIST.%s is added to PLIST_VARS.", id)
 				}
@@ -286,7 +289,7 @@ func (mklines *MkLines) collectVariables() {
 		case "OPSYSVARS":
 			for _, opsysVar := range mkline.Fields() {
 				mklines.UseVar(mkline, opsysVar+".*", mkline.Op().Time())
-				mklines.defineVar(G.Pkg, mkline, opsysVar)
+				mklines.defineVar(mkline, opsysVar)
 			}
 		}
 	})
@@ -336,10 +339,10 @@ func (mklines *MkLines) ForEachEnd(action func(mkline *MkLine) bool, atEnd func(
 }
 
 // defineVar marks a variable as defined in both the current package and the current file.
-func (mklines *MkLines) defineVar(pkg *Package, mkline *MkLine, varname string) {
+func (mklines *MkLines) defineVar(mkline *MkLine, varname string) {
 	mklines.allVars.Define(varname, mkline)
-	if pkg != nil {
-		pkg.vars.Define(varname, mkline)
+	if mklines.pkg != nil {
+		mklines.pkg.vars.Define(varname, mkline)
 	}
 }
 
@@ -349,7 +352,7 @@ func (mklines *MkLines) collectPlistVars() {
 		if mkline.IsVarassign() {
 			switch mkline.Varcanon() {
 			case "PLIST_VARS":
-				for _, id := range mkline.ValueFields(resolveVariableRefs(mkline.Value(), mklines, G.Pkg)) {
+				for _, id := range mkline.ValueFields(resolveVariableRefs(mkline.Value(), mklines, nil)) {
 					if containsVarRef(id) {
 						mklines.plistVarSkip = true
 					} else {
@@ -390,7 +393,7 @@ func (mklines *MkLines) checkAll() {
 
 	mklines.lines.CheckCvsID(0, `#[\t ]+`, "# ")
 
-	substContext := NewSubstContext()
+	substContext := NewSubstContext(mklines.pkg)
 	var varalign VaralignBlock
 	vargroupsChecker := NewVargroupsChecker(mklines)
 	isHacksMk := mklines.lines.BaseName == "hacks.mk"
@@ -445,8 +448,8 @@ func (mklines *MkLines) checkLine(
 
 	case mkline.IsInclude():
 		mklines.checkAllData.target = ""
-		if G.Pkg != nil {
-			G.Pkg.checkIncludeConditionally(mkline, mklines.indentation)
+		if mklines.pkg != nil {
+			mklines.pkg.checkIncludeConditionally(mkline, mklines.indentation)
 		}
 
 	case mkline.IsDirective():
@@ -468,7 +471,7 @@ func (mklines *MkLines) checkLine(
 func (mklines *MkLines) checkVarassignPlist(mkline *MkLine) {
 	switch mkline.Varcanon() {
 	case "PLIST_VARS":
-		for _, id := range mkline.ValueFields(resolveVariableRefs(mkline.Value(), mklines, G.Pkg)) {
+		for _, id := range mkline.ValueFields(resolveVariableRefs(mkline.Value(), mklines, nil)) {
 			if !mklines.plistVarSkip && mklines.plistVarSet[id] == nil {
 				mkline.Warnf("%q is added to PLIST_VARS, but PLIST.%s is not defined in this file.", id, id)
 			}
@@ -625,7 +628,7 @@ func (mklines *MkLines) ExpandLoopVar(varname string) []string {
 		}
 
 		// TODO: If needed, add support for multi-variable .for loops.
-		resolved := resolveVariableRefs(mkline.Args(), mklines, G.Pkg)
+		resolved := resolveVariableRefs(mkline.Args(), mklines, nil)
 		words := mkline.ValueFields(resolved)
 		if len(words) >= 3 && words[0] == varname && words[1] == "in" {
 			return words[2:]

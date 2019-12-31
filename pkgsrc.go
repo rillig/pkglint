@@ -407,7 +407,7 @@ func (src *Pkgsrc) loadTools() {
 	toolFiles := []RelPath{"defaults.mk"}
 	{
 		toc := src.File("mk/tools/bsd.tools.mk")
-		mklines := LoadMk(toc, MustSucceed|NotEmpty)
+		mklines := LoadMk(toc, nil, MustSucceed|NotEmpty)
 		for _, mkline := range mklines.mklines {
 			if mkline.IsInclude() {
 				includedFile := mkline.IncludedFile()
@@ -669,7 +669,7 @@ func (src *Pkgsrc) loadUntypedVars() {
 	}
 
 	handleMkFile := func(path CurrPath) {
-		mklines := LoadMk(path, MustSucceed)
+		mklines := LoadMk(path, nil, MustSucceed)
 		mklines.collectVariables()
 		mklines.collectUsedVariables()
 		for varname, mkline := range mklines.allVars.firstDef {
@@ -1027,7 +1027,7 @@ func (src *Pkgsrc) LoadMkExisting(filename PkgsrcPath) *MkLines {
 
 // LoadMk loads the Makefile relative to the pkgsrc top directory.
 func (src *Pkgsrc) LoadMk(filename PkgsrcPath, options LoadOptions) *MkLines {
-	return LoadMk(src.File(filename), options)
+	return LoadMk(src.File(filename), nil, options)
 }
 
 // Load loads the file relative to the pkgsrc top directory.

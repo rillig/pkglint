@@ -37,9 +37,9 @@ func (s *Suite) Test_MkAssignChecker_checkVarassign(c *check.C) {
 func (s *Suite) Test_MkAssignChecker_checkVarassign__URL_with_shell_special_characters(c *check.C) {
 	t := s.Init(c)
 
-	G.Pkg = NewPackage(t.File("graphics/gimp-fix-ca"))
+	pkg := NewPackage(t.File("graphics/gimp-fix-ca"))
 	t.SetUpVartypes()
-	mklines := t.NewMkLines("filename.mk",
+	mklines := t.NewMkLinesPkg("filename.mk", pkg,
 		MkCvsID,
 		"MASTER_SITES=\thttp://registry.gimp.org/file/fix-ca.c?action=download&id=9884&file=")
 

@@ -230,9 +230,10 @@ func (cv *VartypeCheck) Comment() {
 		cv.Warnf("COMMENT should not begin with %q.", first)
 	}
 
-	if G.Pkg != nil && G.Pkg.EffectivePkgbase != "" {
-		pkgbase := G.Pkg.EffectivePkgbase
-		if hasPrefix(strings.ToLower(value), strings.ToLower(pkgbase+" ")) {
+	pkg := cv.MkLines.pkg
+	if pkg != nil && pkg.EffectivePkgbase != "" {
+		prefix := strings.ToLower(pkg.EffectivePkgbase + " ")
+		if hasPrefix(strings.ToLower(value), prefix) {
 			cv.Warnf("COMMENT should not start with the package name.")
 			cv.Explain(
 				"The COMMENT is usually displayed together with the package name.",
@@ -529,7 +530,7 @@ func (cv *VartypeCheck) FetchURL() {
 		}
 
 		if G.Pkgsrc.MasterSiteVarToURL[name] == "" {
-			if G.Pkg == nil || !G.Pkg.vars.IsDefined(name) {
+			if cv.MkLines.pkg == nil || !cv.MkLines.pkg.vars.IsDefined(name) {
 				cv.Errorf("The site %s does not exist.", name)
 			}
 		}
@@ -641,8 +642,8 @@ func (cv *VartypeCheck) Homepage() {
 	}
 
 	baseURL := G.Pkgsrc.MasterSiteVarToURL[sitename]
-	if sitename == "MASTER_SITES" && G.Pkg != nil {
-		mkline := G.Pkg.vars.FirstDefinition("MASTER_SITES")
+	if sitename == "MASTER_SITES" && cv.MkLines.pkg != nil {
+		mkline := cv.MkLines.pkg.vars.FirstDefinition("MASTER_SITES")
 		if mkline != nil {
 			if !containsVarRef(mkline.Value()) {
 				masterSites := cv.MkLine.ValueFields(mkline.Value())

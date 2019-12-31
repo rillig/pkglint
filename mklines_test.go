@@ -10,8 +10,8 @@ func (s *Suite) Test_MkLines__quoting_LDFLAGS_for_GNU_configure(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
-	G.Pkg = NewPackage(t.File("category/pkgbase"))
-	mklines := t.NewMkLines("Makefile",
+	pkg := NewPackage(t.File("category/pkgbase"))
+	mklines := t.NewMkLinesPkg("Makefile", pkg, // XXX: Is in wrong directory.
 		MkCvsID,
 		"GNU_CONFIGURE=\tyes",
 		"CONFIGURE_ENV+=\tX_LIBS=${X11_LDFLAGS:Q}")
@@ -1107,8 +1107,8 @@ func (s *Suite) Test_MkLines_checkAll__extra_warnings(c *check.C) {
 
 	t.SetUpCommandLine("-Wextra")
 	t.SetUpVartypes()
-	G.Pkg = NewPackage(t.File("category/pkgbase"))
-	mklines := t.NewMkLines("options.mk",
+	pkg := NewPackage(t.File("category/pkgbase"))
+	mklines := t.NewMkLinesPkg("options.mk", pkg,
 		MkCvsID,
 		"",
 		".for word in ${PKG_FAIL_REASON}",

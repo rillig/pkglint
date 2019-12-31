@@ -238,7 +238,7 @@ func (s *Suite) Test_MkCondChecker_checkEmpty(c *check.C) {
 			func(autofix bool) { mklines.Check() },
 			diagnostics...)
 
-		afterMklines := LoadMk(t.File("filename.mk"), MustSucceed)
+		afterMklines := LoadMk(t.File("filename.mk"), nil, MustSucceed)
 		t.CheckEquals(afterMklines.mklines[2].Text, after)
 	}
 
@@ -434,7 +434,7 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 			})
 
 			if autofix {
-				afterMklines := LoadMk(t.File("filename.mk"), MustSucceed)
+				afterMklines := LoadMk(t.File("filename.mk"), nil, MustSucceed)
 				t.CheckEquals(afterMklines.mklines[2].Text, after)
 			}
 		}
@@ -973,7 +973,7 @@ func (s *Suite) Test_MkCondChecker_simplify__defined_in_same_file(c *check.C) {
 			diagnostics...)
 
 		// TODO: Move this assertion above the assertion about the diagnostics.
-		afterMklines := LoadMk(t.File("filename.mk"), MustSucceed)
+		afterMklines := LoadMk(t.File("filename.mk"), nil, MustSucceed)
 		t.CheckEquals(afterMklines.mklines[3].Text, after)
 	}
 

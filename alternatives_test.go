@@ -8,9 +8,9 @@ func (s *Suite) Test_CheckFileAlternatives__empty(c *check.C) {
 	t.Chdir("category/package")
 	t.CreateFileLines("ALTERNATIVES")
 
-	G.Pkg = NewPackage(".")
+	pkg := NewPackage(".")
 
-	CheckFileAlternatives("ALTERNATIVES")
+	CheckFileAlternatives("ALTERNATIVES", pkg)
 
 	t.CheckOutputLines(
 		"ERROR: ALTERNATIVES: Must not be empty.")
@@ -113,7 +113,7 @@ func (s *Suite) Test_AlternativesChecker_checkWrapperAbs(c *check.C) {
 		"relative @PREFIX@/bin/echo",
 		"/absolute @PREFIX@/bin/echo")
 
-	CheckFileAlternatives(t.File("ALTERNATIVES"))
+	CheckFileAlternatives(t.File("ALTERNATIVES"), nil)
 
 	t.CheckOutputLines(
 		"ERROR: ~/ALTERNATIVES:2: Alternative wrapper \"/absolute\" " +

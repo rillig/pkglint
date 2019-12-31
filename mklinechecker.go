@@ -304,7 +304,7 @@ func (ck MkLineChecker) CheckRelativePath(relativePath RelPath, mustExist bool) 
 		mkline.Errorf("A main pkgsrc package must not depend on a pkgsrc-wip package.")
 	}
 
-	resolvedPath := mkline.ResolveVarsInRelativePath(relativePath)
+	resolvedPath := mkline.ResolveVarsInRelativePath(relativePath, ck.MkLines.pkg)
 	if containsVarRef(resolvedPath.String()) {
 		return
 	}
@@ -360,7 +360,7 @@ func (ck MkLineChecker) CheckRelativePkgdir(pkgdir RelPath) {
 
 	mkline := ck.MkLine
 	ck.CheckRelativePath(pkgdir.JoinNoClean("Makefile"), true)
-	pkgdir = mkline.ResolveVarsInRelativePath(pkgdir)
+	pkgdir = mkline.ResolveVarsInRelativePath(pkgdir, ck.MkLines.pkg)
 
 	if !matches(pkgdir.String(), `^\.\./\.\./([^./][^/]*/[^./][^/]*)$`) && !containsVarRef(pkgdir.String()) {
 		mkline.Warnf("%q is not a valid relative package directory.", pkgdir)

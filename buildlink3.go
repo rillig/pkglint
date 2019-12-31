@@ -62,8 +62,9 @@ func (ck *Buildlink3Checker) Check() {
 		llex.CurrentLine().Warnf("The file should end here.")
 	}
 
-	if G.Pkg != nil {
-		G.Pkg.checkLinesBuildlink3Inclusion(mklines)
+	pkg := ck.mklines.pkg
+	if pkg != nil {
+		pkg.checkLinesBuildlink3Inclusion(mklines)
 	}
 
 	mklines.SaveAutofixChanges()
@@ -142,11 +143,12 @@ func (ck *Buildlink3Checker) checkSecondParagraph(mlex *MkLinesLexer) bool {
 }
 
 func (ck *Buildlink3Checker) checkPkgbaseMismatch(bl3base string) {
-	if G.Pkg == nil {
+	pkg := ck.mklines.pkg
+	if pkg == nil {
 		return
 	}
 
-	mkbase := G.Pkg.EffectivePkgbase
+	mkbase := pkg.EffectivePkgbase
 	if mkbase == "" || mkbase == bl3base || strings.TrimPrefix(mkbase, "lib") == bl3base {
 		return
 	}
@@ -156,7 +158,7 @@ func (ck *Buildlink3Checker) checkPkgbaseMismatch(bl3base string) {
 	}
 
 	ck.pkgbaseLine.Errorf("Package name mismatch between %q in this file and %q from %s.",
-		bl3base, mkbase, ck.pkgbaseLine.RelMkLine(G.Pkg.EffectivePkgnameLine))
+		bl3base, mkbase, ck.pkgbaseLine.RelMkLine(pkg.EffectivePkgnameLine))
 }
 
 // Third paragraph: Package information.

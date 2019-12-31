@@ -49,7 +49,7 @@ func (ck *MkVarUseChecker) checkUndefined() {
 		ck.MkLines.allVars.IsDefinedSimilar(varname),
 		ck.MkLines.checkAllData.forVars[varname],
 		ck.MkLines.allVars.Mentioned(varname) != nil,
-		G.Pkg != nil && G.Pkg.vars.IsDefinedSimilar(varname),
+		ck.MkLines.pkg != nil && ck.MkLines.pkg.vars.IsDefinedSimilar(varname),
 		containsVarRef(varname),
 		G.Pkgsrc.vartypes.IsDefinedCanon(varname),
 		varname == "":
@@ -371,7 +371,7 @@ func (ck *MkVarUseChecker) checkUseAtLoadTime(time VucTime) {
 	if ck.vartype.IsAlwaysInScope() || ck.MkLines.Tools.SeenPrefs {
 		return
 	}
-	if G.Pkg != nil && G.Pkg.seenPrefs {
+	if ck.MkLines.pkg != nil && ck.MkLines.pkg.seenPrefs {
 		return
 	}
 	mkline := ck.MkLine
@@ -473,7 +473,7 @@ func (ck *MkVarUseChecker) checkQuoting(vuc *VarUseContext) {
 	// since the GNU configure scripts cannot handle these space characters.
 	//
 	// When doing checks outside a package, the :M* modifier is needed for safety.
-	needMstar := (G.Pkg == nil || G.Pkg.vars.IsDefined("GNU_CONFIGURE")) &&
+	needMstar := (ck.MkLines.pkg == nil || ck.MkLines.pkg.vars.IsDefined("GNU_CONFIGURE")) &&
 		matches(varUse.varname, `^(?:.*_)?(?:CFLAGS|CPPFLAGS|CXXFLAGS|FFLAGS|LDFLAGS|LIBS)$`)
 
 	mkline := ck.MkLine
@@ -502,11 +502,11 @@ func (ck *MkVarUseChecker) checkQuotingQM(mod string, needMstar bool, vuc *VarUs
 	if correctMod == mod+":Q" && vuc.IsWordPart && !vartype.IsShell() {
 
 		isSingleWordConstant := func() bool {
-			if G.Pkg == nil {
+			if ck.MkLines.pkg == nil {
 				return false
 			}
 
-			varinfo := G.Pkg.redundant.vars[varname]
+			varinfo := ck.MkLines.pkg.redundant.vars[varname]
 			if varinfo == nil || !varinfo.vari.IsConstant() {
 				return false
 			}

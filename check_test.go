@@ -300,8 +300,12 @@ func (t *Tester) SetUpFileLines(filename RelPath, lines ...string) *Lines {
 //
 // If the filename is irrelevant for the particular test, take filename.mk.
 func (t *Tester) SetUpFileMkLines(filename RelPath, lines ...string) *MkLines {
+	return t.SetUpFileMkLinesPkg(filename, nil, lines...)
+}
+
+func (t *Tester) SetUpFileMkLinesPkg(filename RelPath, pkg *Package, lines ...string) *MkLines {
 	abs := t.CreateFileLines(filename, lines...)
-	return LoadMk(abs, MustSucceed)
+	return LoadMk(abs, pkg, MustSucceed)
 }
 
 // LoadMkInclude loads the given Makefile fragment and all the files it includes,
@@ -317,7 +321,7 @@ func (t *Tester) LoadMkInclude(filename RelPath) *MkLines {
 
 	var load func(filename CurrPath)
 	load = func(filename CurrPath) {
-		for _, mkline := range NewMkLines(Load(filename, MustSucceed)).mklines {
+		for _, mkline := range NewMkLines(Load(filename, MustSucceed), nil).mklines {
 			lines = append(lines, mkline.Line)
 
 			if mkline.IsInclude() {
@@ -330,7 +334,7 @@ func (t *Tester) LoadMkInclude(filename RelPath) *MkLines {
 
 	// This assumes that the test files do not contain parse errors.
 	// Otherwise the diagnostics would appear twice.
-	return NewMkLines(NewLines(t.File(filename), lines))
+	return NewMkLines(NewLines(t.File(filename), lines), nil)
 }
 
 // SetUpPkgsrc sets up a minimal but complete pkgsrc installation in the
@@ -747,7 +751,7 @@ func (t *Tester) SetUpHierarchy() (
 			}
 		}
 
-		mklines := NewMkLines(NewLines(NewCurrPath(relFilename.AsPath()), lines))
+		mklines := NewMkLines(NewLines(NewCurrPath(relFilename.AsPath()), lines), nil)
 		assertf(files[filename] == nil, "MkLines with name %q already exists.", filename)
 		files[filename] = mklines
 		return mklines
@@ -1053,6 +1057,10 @@ func (t *Tester) NewLinesAt(filename CurrPath, firstLine int, texts ...string) *
 //
 // If the filename is irrelevant for the particular test, take filename.mk.
 func (t *Tester) NewMkLines(filename CurrPath, lines ...string) *MkLines {
+	return t.NewMkLinesPkg(filename, nil, lines...)
+}
+
+func (t *Tester) NewMkLinesPkg(filename CurrPath, pkg *Package, lines ...string) *MkLines {
 	basename := filename.Base()
 	assertf(
 		hasSuffix(basename, ".mk") || basename == "Makefile" || hasPrefix(basename, "Makefile."),
@@ -1063,7 +1071,7 @@ func (t *Tester) NewMkLines(filename CurrPath, lines ...string) *MkLines {
 		rawText.WriteString(line)
 		rawText.WriteString("\n")
 	}
-	return NewMkLines(convertToLogicalLines(filename, rawText.String(), true))
+	return NewMkLines(convertToLogicalLines(filename, rawText.String(), true), pkg)
 }
 
 // Returns and consumes the output from both stdout and stderr.

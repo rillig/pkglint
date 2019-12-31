@@ -431,7 +431,7 @@ func (s *Suite) Test_MkLineParser_fixSpaceAfterVarname__autofix(c *check.C) {
 		"VARNAME+ ?=\t${VARNAME}",
 		"pkgbase := pkglint")
 
-	CheckFileMk(filename)
+	CheckFileMk(filename, nil)
 
 	t.CheckOutputLines(
 		"NOTE: ~/Makefile:2: Unnecessary space after variable name \"VARNAME\".",
@@ -444,7 +444,7 @@ func (s *Suite) Test_MkLineParser_fixSpaceAfterVarname__autofix(c *check.C) {
 
 	t.SetUpCommandLine("-Wall", "--autofix")
 
-	CheckFileMk(filename)
+	CheckFileMk(filename, nil)
 
 	t.CheckOutputLines(
 		"AUTOFIX: ~/Makefile:2: Replacing \"VARNAME +=\\t\" with \"VARNAME+=\\t\".",

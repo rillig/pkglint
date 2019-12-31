@@ -556,14 +556,14 @@ func (*MkLine) WithoutMakeVariables(value string) string {
 	return valueNovar.String()
 }
 
-func (mkline *MkLine) ResolveVarsInRelativePath(relativePath RelPath) RelPath {
+func (mkline *MkLine) ResolveVarsInRelativePath(relativePath RelPath, pkg *Package) RelPath {
 	if !containsVarRef(relativePath.String()) {
 		return relativePath.CleanPath()
 	}
 
 	var basedir CurrPath
-	if G.Pkg != nil {
-		basedir = G.Pkg.File(".")
+	if pkg != nil {
+		basedir = pkg.File(".")
 	} else {
 		basedir = mkline.Filename.DirNoClean()
 	}
@@ -615,12 +615,12 @@ func (mkline *MkLine) ResolveVarsInRelativePath(relativePath RelPath) RelPath {
 	replaceLatest("${PYPACKAGE}", "lang", `^python[0-9]+$`, "$0")
 	replaceLatest("${SUSE_DIR_PREFIX}", "emulators", `^(suse[0-9]+)_base$`, "$1")
 
-	if G.Pkg != nil {
+	if pkg != nil {
 		// XXX: Even if these variables are defined indirectly,
 		// pkglint should be able to resolve them properly.
 		// There is already G.Pkg.Value, maybe that can be used here.
-		tmp = tmp.Replace("${FILESDIR}", G.Pkg.Filesdir.String())
-		tmp = tmp.Replace("${PKGDIR}", G.Pkg.Pkgdir.String())
+		tmp = tmp.Replace("${FILESDIR}", pkg.Filesdir.String())
+		tmp = tmp.Replace("${PKGDIR}", pkg.Pkgdir.String())
 	}
 
 	tmp = tmp.CleanPath()
