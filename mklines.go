@@ -98,7 +98,6 @@ func (mklines *MkLines) Check() {
 	mklines.collectUsedVariables()
 	mklines.collectVariables()
 	mklines.collectPlistVars()
-	mklines.collectElse()
 	if mklines.pkg != nil {
 		mklines.pkg.collectConditionalIncludes(mklines)
 	}
@@ -373,12 +372,6 @@ func (mklines *MkLines) collectPlistVars() {
 			}
 		}
 	}
-}
-
-func (mklines *MkLines) collectElse() {
-	// Make a dry-run over the lines, which sets data.elseLine (in mkline.go) as a side-effect.
-	mklines.ForEach(func(mkline *MkLine) {})
-	// TODO: Check whether this ForEach is redundant because it is already run somewhere else.
 }
 
 func (mklines *MkLines) checkAll() {

@@ -763,7 +763,7 @@ func (s *Suite) Test_MkLines_ForEachEnd(c *check.C) {
 	})
 }
 
-func (s *Suite) Test_MkLines_collectElse(c *check.C) {
+func (s *Suite) Test_MkLines_checkAll__collect_else(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
@@ -782,7 +782,9 @@ func (s *Suite) Test_MkLines_collectElse(c *check.C) {
 		".elif 0",
 		".endif")
 
-	mklines.collectElse()
+	// As a side-effect of MkLines.ForEach,
+	// the HasElseBranch in the lines is updated.
+	mklines.collectVariables()
 
 	t.CheckEquals(mklines.mklines[2].HasElseBranch(), false)
 	t.CheckEquals(mklines.mklines[5].HasElseBranch(), true)
