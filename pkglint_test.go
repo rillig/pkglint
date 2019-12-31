@@ -709,6 +709,22 @@ func (s *Suite) Test_resolveVariableRefs__multilevel(c *check.C) {
 	t.CheckEquals(resolved, "you got it")
 }
 
+func (s *Suite) Test_resolveVariableRefs__scope_precedence(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"ORIGIN=\tfilename.mk")
+	mklines.collectVariables()
+	pkg := NewPackage(t.File("category/package"))
+	pkg.vars.Define("ORIGIN", t.NewMkLine("other.mk", 123, "ORIGIN=\tpackage"))
+
+	resolved := resolveVariableRefs("From ${ORIGIN}", mklines, pkg)
+
+	// FIXME: Should be from filename.mk.
+	t.CheckEquals(resolved, "From package")
+}
+
 // Usually, a dot in a variable name means a parameterized form.
 // In this case, it is part of a version number. Resolving these
 // variables from the scope works nevertheless.
