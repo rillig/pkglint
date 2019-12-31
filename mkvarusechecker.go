@@ -200,7 +200,9 @@ func (ck *MkVarUseChecker) checkPermissions(vuc *VarUseContext) {
 
 	effPerms := vartype.EffectivePermissions(basename)
 	if effPerms.Contains(aclpUseLoadtime) {
-		ck.checkUseAtLoadTime(vuc.time)
+		if vuc.time == VucLoadTime {
+			ck.checkUseAtLoadTime()
+		}
 
 		// Since the variable may be used at load time, it probably
 		// may be used at run time as well. If it weren't, that would
@@ -285,34 +287,32 @@ func (ck *MkVarUseChecker) warnPermissions(
 	}
 	alternativeFiles := vartype.AlternativeFiles(needed)
 
-	loadTimeExplanation := func() []string {
-		return []string{
-			"Many variables, especially lists of something, get their values incrementally.",
-			"Therefore it is generally unsafe to rely on their",
-			"value until it is clear that it will never change again.",
-			"This point is reached when the whole package Makefile is loaded and",
-			"execution of the shell commands starts; in some cases earlier.",
-			"",
-			"Additionally, when using the \":=\" operator, each $$ is replaced",
-			"with a single $, so variables that have references to shell",
-			"variables or regular expressions are modified in a subtle way."}
-	}
+	loadTimeExplanation := []string{
+		"Many variables, especially lists of something, get their values incrementally.",
+		"Therefore it is generally unsafe to rely on their",
+		"value until it is clear that it will never change again.",
+		"This point is reached when the whole package Makefile is loaded and",
+		"execution of the shell commands starts; in some cases earlier.",
+		"",
+		"Additionally, when using the \":=\" operator, each $$ is replaced",
+		"with a single $, so variables that have references to shell",
+		"variables or regular expressions are modified in a subtle way."}
 
 	switch {
 	case alternativeFiles == "" && directly:
 		mkline.Warnf("%s should not be used at load time in any file.", varname)
-		ck.explainPermissions(varname, vartype, loadTimeExplanation()...)
+		ck.explainPermissions(varname, vartype, loadTimeExplanation...)
 
 	case alternativeFiles == "":
 		mkline.Warnf("%s should not be used in any file.", varname)
-		ck.explainPermissions(varname, vartype, loadTimeExplanation()...)
+		ck.explainPermissions(varname, vartype, loadTimeExplanation...)
 
 	case directly:
 		mkline.Warnf(
 			"%s should not be used at load time in this file; "+
 				"it would be ok in %s.",
 			varname, alternativeFiles)
-		ck.explainPermissions(varname, vartype, loadTimeExplanation()...)
+		ck.explainPermissions(varname, vartype, loadTimeExplanation...)
 
 	default:
 		mkline.Warnf(
@@ -364,10 +364,7 @@ func (ck *MkVarUseChecker) explainPermissions(varname string, vartype *Vartype, 
 	ck.MkLine.Explain(expl...)
 }
 
-func (ck *MkVarUseChecker) checkUseAtLoadTime(time VucTime) {
-	if time != VucLoadTime {
-		return
-	}
+func (ck *MkVarUseChecker) checkUseAtLoadTime() {
 	if ck.vartype.IsAlwaysInScope() || ck.MkLines.Tools.SeenPrefs {
 		return
 	}
