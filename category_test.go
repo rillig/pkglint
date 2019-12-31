@@ -368,3 +368,26 @@ func (s *Suite) Test_CheckdirCategory__case_mismatch(c *check.C) {
 		"ERROR: ~/category/Makefile:5: \"p5-net-dns\" "+
 			"exists in the Makefile but not in the file system.")
 }
+
+func (s *Suite) Test_CheckdirCategory__dot(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.CreateFileLines("mk/misc/category.mk")
+	t.CreateFileLines("category/Makefile",
+		MkCvsID,
+		"",
+		"COMMENT=\tCategory comment",
+		"",
+		"SUBDIR+=\tpackage",
+		"",
+		".include \"../mk/misc/category.mk\"")
+	t.Chdir("category")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	t.CheckOutputLines(
+		"ERROR: Makefile:5: \"package\" exists in the Makefile " +
+			"but not in the file system.")
+}
