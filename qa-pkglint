@@ -135,7 +135,7 @@ qa_pkgsrc() {
     && printf 'pkgsrc HEAD commit: %s\n' "$(git rev-parse HEAD)" \
     && printf 'pkgsrc-wip HEAD commit: %s\n' "$(git -C wip rev-parse HEAD)" \
     && printf '\n' \
-    && { GODEBUG=gctrace=1 time "$archivedir/$runid.exe" -s -pr -Wall -Call . wip 2> "$archivedir/$runid.err" || true; } \
+    && { time GODEBUG=gctrace=1 "$archivedir/$runid.exe" -s -pr -Wall -Call . wip 2> "$archivedir/$runid.err" || true; } \
     && : cp "pkglint.pprof" "$archivedir/$runid.pprof" \
     && : cp "pkglint.heapdump" "$archivedir/$runid.heapdump"
     ) > "$archivedir/$runid.tmp" || true
