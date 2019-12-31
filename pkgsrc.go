@@ -672,12 +672,11 @@ func (src *Pkgsrc) loadUntypedVars() {
 		mklines := LoadMk(path, nil, MustSucceed)
 		mklines.collectVariables()
 		mklines.collectUsedVariables()
-		for varname, mkline := range mklines.allVars.firstDef {
+		def := func(varname string, mkline *MkLine) {
 			define(varnameCanon(varname), mkline)
 		}
-		for varname, mkline := range mklines.allVars.used {
-			define(varnameCanon(varname), mkline)
-		}
+		forEachStringMkLine(mklines.allVars.firstDef, def)
+		forEachStringMkLine(mklines.allVars.used, def)
 	}
 
 	handleFile := func(pathName string, info os.FileInfo, err error) error {
