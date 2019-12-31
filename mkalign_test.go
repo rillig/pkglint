@@ -139,7 +139,7 @@ func (s *Suite) Test_MkAlignMkLine_CurrentValueAlign(c *check.C) {
 func (s *Suite) Test_NewMkAlignLine(c *check.C) {
 	t := s.Init(c)
 
-	// FIXME
+	// TODO
 
 	t.CheckOutputEmpty()
 }
