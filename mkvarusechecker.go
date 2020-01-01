@@ -414,8 +414,6 @@ func (ck *MkVarUseChecker) warnToolLoadTime(varname string, tool *Tool) {
 	//  to skip the shell and execute the commands via execve, which
 	//  means that even echo is not a shell-builtin anymore.
 
-	// TODO: Replace "parse time" with "load time" everywhere.
-
 	if tool.Validity == AfterPrefsMk {
 		ck.MkLine.Warnf("To use the tool ${%s} at load time, bsd.prefs.mk has to be included before.", varname)
 		return
