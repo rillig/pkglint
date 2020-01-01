@@ -43,7 +43,7 @@ func (ck MkLineChecker) checkEmptyContinuation() {
 	}
 
 	line := ck.MkLine.Line
-	if line.raw[len(line.raw)-1].orignl == "\n" {
+	if line.raw[len(line.raw)-1].Orig() == "" {
 		lastLine := NewLine(line.Filename, int(line.lastLine), "", line.raw[len(line.raw)-1])
 		lastLine.Warnf("This line looks empty but continues the previous line.")
 		lastLine.Explain(
@@ -190,7 +190,7 @@ func (ck MkLineChecker) checkShellCommand() {
 
 	shellCommand := mkline.ShellCommand()
 	if hasPrefix(mkline.Text, "\t\t") {
-		lexer := textproc.NewLexer(mkline.raw[0].textnl)
+		lexer := textproc.NewLexer(mkline.raw[0].Text())
 		tabs := lexer.NextBytesFunc(func(b byte) bool { return b == '\t' })
 
 		fix := mkline.Autofix()
@@ -202,7 +202,7 @@ func (ck MkLineChecker) checkShellCommand() {
 			"or to use more horizontal space than necessary.")
 
 		for i, raw := range mkline.Line.raw {
-			if hasPrefix(raw.textnl, tabs) {
+			if hasPrefix(raw.Text(), tabs) {
 				fix.ReplaceAt(i, 0, tabs, "\t")
 			}
 		}
@@ -285,7 +285,7 @@ func (ck MkLineChecker) checkDirectiveIndentation(expectedDepth int) {
 	if expected := strings.Repeat(" ", expectedDepth); indent != expected {
 		fix := mkline.Line.Autofix()
 		fix.Notef("This directive should be indented by %d spaces.", expectedDepth)
-		if hasPrefix(mkline.Line.raw[0].text(), "."+indent) {
+		if hasPrefix(mkline.Line.raw[0].Text(), "."+indent) {
 			fix.ReplaceAt(0, 0, "."+indent, "."+expected)
 		}
 		fix.Apply()

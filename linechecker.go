@@ -42,7 +42,7 @@ func (ck LineChecker) CheckTrailingWhitespace() {
 	// be Markdown files in pkgsrc, this code has to be adjusted.
 
 	rawIndex := len(ck.line.raw) - 1
-	text := ck.line.raw[rawIndex].text()
+	text := ck.line.raw[rawIndex].Text()
 	trimmed := rtrimHspace(text)
 	if len(trimmed) == len(text) {
 		return

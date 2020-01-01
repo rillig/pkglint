@@ -37,11 +37,12 @@ type RawLine struct {
 
 func (rline *RawLine) String() string { return sprintf("%d:%s", rline.Lineno, rline.textnl) }
 
-func (rline *RawLine) text() string {
-	// TODO: use this method everywhere
-	// TODO: add orig()
-	// TODO: export these two functions
+func (rline *RawLine) Text() string {
 	return strings.TrimSuffix(rline.textnl, "\n")
+}
+
+func (rline *RawLine) Orig() string {
+	return strings.TrimSuffix(rline.orignl, "\n")
 }
 
 type Location struct {

@@ -134,7 +134,7 @@ func (p MkLineParser) MatchVarassign(line *Line, text string, splitResult *mkLin
 
 	value := trimHspace(lexer.Rest())
 	parsedValueAlign := condStr(commented, "#", "") + lexer.Since(mainStart)
-	valueAlign := p.getRawValueAlign(line.raw[0].orignl, parsedValueAlign)
+	valueAlign := p.getRawValueAlign(line.raw[0].Orig(), parsedValueAlign)
 	if value == "" {
 		valueAlign += splitResult.spaceBeforeComment
 		splitResult.spaceBeforeComment = ""

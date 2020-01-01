@@ -185,7 +185,7 @@ func (va *VaralignBlock) processVarassign(mkline *MkLine) {
 
 	var infos []*varalignLine
 	for i, raw := range mkline.raw {
-		parts := NewVaralignSplitter().split(strings.TrimSuffix(raw.textnl, "\n"), i == 0)
+		parts := NewVaralignSplitter().split(raw.Text(), i == 0)
 		info := varalignLine{mkline, i, false, parts}
 		infos = append(infos, &info)
 	}

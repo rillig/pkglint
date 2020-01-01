@@ -227,7 +227,7 @@ func (mkline *MkLine) FirstLineContainsValue() bool {
 	assert(mkline.IsMultiline())
 
 	// Parsing the continuation marker as variable value is cheating but works well.
-	text := strings.TrimSuffix(mkline.raw[0].orignl, "\n")
+	text := mkline.raw[0].Orig()
 	parser := NewMkLineParser()
 	splitResult := parser.split(nil, text, true)
 	_, a := parser.MatchVarassign(mkline.Line, text, &splitResult)

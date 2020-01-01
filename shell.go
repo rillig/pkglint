@@ -1023,8 +1023,7 @@ func (ck *ShellLineChecker) checkMultiLineComment() {
 	}
 
 	for _, line := range mkline.raw[:len(mkline.raw)-1] {
-		text := strings.TrimSuffix(line.textnl, "\\\n")
-
+		text := strings.TrimSuffix(line.Text(), "\\")
 		tokens, rest := splitIntoShellTokens(nil, text)
 		if rest != "" {
 			return
@@ -1040,8 +1039,7 @@ func (ck *ShellLineChecker) checkMultiLineComment() {
 }
 
 func (ck *ShellLineChecker) warnMultiLineComment(raw *RawLine) {
-	text := strings.TrimSuffix(raw.textnl, "\n")
-	line := NewLine(ck.mkline.Filename, raw.Lineno, text, raw)
+	line := NewLine(ck.mkline.Filename, raw.Lineno, raw.Text(), raw)
 
 	line.Warnf("The shell comment does not stop at the end of this line.")
 	line.Explain(

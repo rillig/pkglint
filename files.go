@@ -76,7 +76,7 @@ func convertToLogicalLines(filename CurrPath, rawText string, joinBackslashLines
 		}
 	} else {
 		for _, rawLine := range rawLines {
-			text := strings.TrimSuffix(rawLine.textnl, "\n")
+			text := rawLine.Text()
 			logline := NewLine(filename, rawLine.Lineno, text, rawLine)
 			loglines = append(loglines, logline)
 		}
@@ -92,9 +92,9 @@ func convertToLogicalLines(filename CurrPath, rawText string, joinBackslashLines
 func nextLogicalLine(filename CurrPath, rawLines []*RawLine, index int) (*Line, int) {
 	{ // Handle the common case efficiently
 		rawLine := rawLines[index]
-		textnl := rawLine.textnl
-		if hasSuffix(textnl, "\n") && !hasSuffix(textnl, "\\\n") {
-			return NewLine(filename, rawLine.Lineno, textnl[:len(textnl)-1], rawLines[index]), index + 1
+		text := rawLine.Text()
+		if !hasSuffix(text, "\\") {
+			return NewLine(filename, rawLine.Lineno, text, rawLines[index]), index + 1
 		}
 	}
 
