@@ -47,6 +47,8 @@ func (ck *AlternativesChecker) checkLine(line *Line, plistFiles map[RelPath]*Pli
 	}
 
 	ck.checkAlternativeAbs(alternative, line, space)
+
+	LineChecker{line}.CheckTrailingWhitespace()
 }
 
 func (ck *AlternativesChecker) checkWrapperAbs(line *Line, wrapper Path) bool {

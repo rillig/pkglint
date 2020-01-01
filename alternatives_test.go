@@ -92,7 +92,7 @@ func (s *Suite) Test_AlternativesChecker_checkLine(c *check.C) {
 		"bin/no-args @PREFIX@/bin/echo",
 		"bin/with-args @PREFIX@/bin/echo hello,",
 		"bin/with-quoted-args @PREFIX@/bin/echo \"hello, world\" \\ cowboy",
-		"bin/trailing @PREFIX@/bin/echo spaces ", // TODO: warn about this
+		"bin/trailing @PREFIX@/bin/echo spaces ",
 		"/abs-echo @PREFIX@/bin/echo")
 	t.CreateFileLines("PLIST",
 		PlistCvsID,
@@ -102,7 +102,8 @@ func (s *Suite) Test_AlternativesChecker_checkLine(c *check.C) {
 	G.Check(".")
 
 	t.CheckOutputLines(
-		"ERROR: ALTERNATIVES:5: Alternative wrapper \"/abs-echo\" " +
+		"NOTE: ALTERNATIVES:4: Trailing whitespace.",
+		"ERROR: ALTERNATIVES:5: Alternative wrapper \"/abs-echo\" "+
 			"must be relative to PREFIX.")
 }
 
