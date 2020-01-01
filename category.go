@@ -53,7 +53,12 @@ func CheckdirCategory(dir CurrPath) {
 		if mkline.IsVarassignMaybeCommented() && mkline.Varname() == "SUBDIR" {
 			mlex.Skip()
 
-			name := mkline.Value() // TODO: Maybe NewPath here already
+			name := mkline.Value()
+			if NewPath(name).IsAbs() {
+				mkline.Errorf("%q must be a relative path.", name)
+				continue
+			}
+
 			if mkline.IsCommentedVarassign() && !mkline.HasComment() {
 				mkline.Warnf("%q commented out without giving a reason.", name)
 			}

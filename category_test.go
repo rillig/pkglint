@@ -392,3 +392,27 @@ func (s *Suite) Test_CheckdirCategory__dot(c *check.C) {
 		"ERROR: Makefile:5: \"package\" exists in the Makefile " +
 			"but not in the file system.")
 }
+
+func (s *Suite) Test_CheckdirCategory__absolute(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.CreateFileLines("mk/misc/category.mk")
+	t.CreateFileLines("category/Makefile",
+		MkCvsID,
+		"",
+		"COMMENT=\tCategory comment",
+		"",
+		"SUBDIR+=\t/other",
+		"",
+		".include \"../mk/misc/category.mk\"")
+	t.Chdir("category")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	t.CheckOutputLines(
+		"WARN: Makefile:5: The filename \"/other\" "+
+			"contains the invalid character \"/\".",
+		"ERROR: Makefile:5: \"/other\" must be a relative path.")
+}
