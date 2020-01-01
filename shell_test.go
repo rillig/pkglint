@@ -1541,8 +1541,8 @@ func (s *Suite) Test_ShellLineChecker_CheckWord__PKGMANDIR(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: chat/ircII/Makefile:2: Please use ${PKGMANDIR} instead of \"man\".",
-		"NOTE: chat/ircII/Makefile:2: This variable value should be aligned to column 25.",
-		"NOTE: chat/ircII/Makefile:3: This variable value should be aligned to column 25.")
+		"NOTE: chat/ircII/Makefile:2: This variable value should be aligned to column 25 instead of 17.",
+		"NOTE: chat/ircII/Makefile:3: This variable value should be aligned to column 25 instead of 17.")
 }
 
 func (s *Suite) Test_ShellLineChecker_CheckWord__empty(c *check.C) {

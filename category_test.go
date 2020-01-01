@@ -20,9 +20,9 @@ func (s *Suite) Test_CheckdirCategory__totally_broken(c *check.C) {
 		"ERROR: ~/archivers/Makefile:1: Expected \"# $"+"NetBSD$\".",
 		"WARN: ~/archivers/Makefile:4: Line contains invalid characters (U+2019).",
 		"WARN: ~/archivers/Makefile:4: SUBDIR- is defined but not used.",
-		"NOTE: ~/archivers/Makefile:2: This variable value should be aligned to column 17.",
-		"NOTE: ~/archivers/Makefile:3: This variable value should be aligned with tabs, not spaces, to column 17.",
-		"NOTE: ~/archivers/Makefile:4: This variable value should be aligned to column 17.",
+		"NOTE: ~/archivers/Makefile:2: This variable value should be aligned to column 17 instead of 9.",
+		"NOTE: ~/archivers/Makefile:3: This variable value should be aligned with tabs, not spaces, to column 17 instead of 10.",
+		"NOTE: ~/archivers/Makefile:4: This variable value should be aligned to column 17 instead of 9.",
 		"ERROR: ~/archivers/Makefile:6: Relative path \"../mk/category.mk\" does not exist.",
 		"NOTE: ~/archivers/Makefile:1: Empty line expected after this line.",
 		"ERROR: ~/archivers/Makefile:2: COMMENT= line expected.",
@@ -270,7 +270,8 @@ func (s *Suite) Test_CheckdirCategory__indentation(c *check.C) {
 	CheckdirCategory(t.File("category"))
 
 	t.CheckOutputLines(
-		"NOTE: ~/category/Makefile:5: This variable value should be aligned with tabs, not spaces, to column 17.")
+		"NOTE: ~/category/Makefile:5: This variable value should be aligned " +
+			"with tabs, not spaces, to column 17 instead of 29.")
 }
 
 func (s *Suite) Test_CheckdirCategory__comment_at_the_top(c *check.C) {

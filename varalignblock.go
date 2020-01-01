@@ -542,13 +542,20 @@ func (info *varalignLine) alignValueSingle(newWidth int) {
 
 	fix := info.fixer.Autofix()
 	if newSpace == " " {
-		fix.Notef("This outlier variable value should be aligned with a single space.")
+		fix.Notef(
+			"This outlier variable value should be aligned " +
+				"with a single space.")
 		info.explainWrongColumn(fix)
 	} else if hasSpace && column != oldColumn {
-		fix.Notef("This variable value should be aligned with tabs, not spaces, to column %d.", column+1)
+		fix.Notef(
+			"This variable value should be aligned "+
+				"with tabs, not spaces, to column %d instead of %d.",
+			column+1, oldColumn+1)
 		info.explainWrongColumn(fix)
 	} else if column != oldColumn {
-		fix.Notef("This variable value should be aligned to column %d.", column+1)
+		fix.Notef(
+			"This variable value should be aligned to column %d instead of %d.",
+			column+1, oldColumn+1)
 		info.explainWrongColumn(fix)
 	} else {
 		fix.Notef("Variable values should be aligned with tabs, not spaces.")
@@ -584,9 +591,15 @@ func (info *varalignLine) alignValue(width int) {
 
 	fix := info.fixer.Autofix()
 	if width != oldWidth && contains(oldSpace, " ") {
-		fix.Notef("This variable value should be aligned with tabs, not spaces, to column %d.", width+1)
+		fix.Notef(
+			"This variable value should be aligned "+
+				"with tabs, not spaces, to column %d instead of %d.",
+			width+1, oldWidth+1)
 	} else if width != oldWidth {
-		fix.Notef("This variable value should be aligned to column %d.", width+1) // TODO: to column %d instead of %d.
+		fix.Notef(
+			"This variable value should be aligned "+
+				"to column %d instead of %d.",
+			width+1, oldWidth+1)
 	} else {
 		fix.Notef("Variable values should be aligned with tabs, not spaces.")
 	}
