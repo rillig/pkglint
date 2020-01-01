@@ -1140,8 +1140,9 @@ func (s *Suite) Test_MkLines_checkAll__assertion(c *check.C) {
 		"PKGDIR=\t../../category/package"))
 	t.FinishSetUp()
 
-	// FIXME
-	t.ExpectAssert(pkg.Check)
+	pkg.Check()
+
+	t.CheckOutputEmpty()
 }
 
 // At 2018-12-02, pkglint had resolved ${MY_PLIST_VARS} into a single word,

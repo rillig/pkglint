@@ -131,7 +131,7 @@ func (pkg *Package) load() ([]CurrPath, *MkLines, *MkLines) {
 	}
 
 	files := pkg.File(".").ReadPaths()
-	if pkg.Pkgdir != "." {
+	if pkg.Pkgdir != "." && pkg.Rel(pkg.File(pkg.Pkgdir)) != "." {
 		files = append(files, pkg.File(pkg.Pkgdir).ReadPaths()...)
 	}
 	files = append(files, pkg.File(pkg.Patchdir).ReadPaths()...)
