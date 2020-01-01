@@ -385,7 +385,7 @@ func (p *ShTokenizer) shOperator(q ShQuoting) *ShAtom {
 	case lexer.SkipString("||"),
 		lexer.SkipString("&&"),
 		lexer.SkipString(";;"),
-		lexer.NextBytesFunc(func(b byte) bool { return b == '\n' }) != "",
+		lexer.SkipBytesFunc(func(b byte) bool { return b == '\n' }),
 		lexer.SkipByte(';'),
 		lexer.SkipByte('('),
 		lexer.SkipByte(')'),

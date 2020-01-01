@@ -239,7 +239,7 @@ func (ck *PlistChecker) checkPathNonAscii(pline *PlistLine) {
 	text := pline.text
 
 	lex := textproc.NewLexer(text)
-	lex.NextBytesFunc(func(b byte) bool { return b >= ' ' && b <= '~' })
+	lex.SkipBytesFunc(func(b byte) bool { return b >= ' ' && b <= '~' })
 	ascii := lex.EOF()
 
 	switch {
