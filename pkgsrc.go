@@ -94,17 +94,24 @@ func (src *Pkgsrc) loadMasterSites() {
 	mklines := src.LoadMk("mk/fetch/sites.mk", MustSucceed|NotEmpty)
 
 	for _, mkline := range mklines.mklines {
-		if mkline.IsVarassign() {
-			varname := mkline.Varname()
-			// TODO: Give a plausible reason for the MASTER_SITE_BACKUP exception.
-			if hasPrefix(varname, "MASTER_SITE_") && varname != "MASTER_SITE_BACKUP" {
-				for _, url := range mkline.ValueFields(mkline.Value()) {
-					if matches(url, `^(?:http://|https://|ftp://)`) {
-						src.registerMasterSite(varname, url)
-					}
-				}
+		if !mkline.IsVarassign() {
+			continue
+		}
+		varname := mkline.Varname()
 
-				// TODO: register variable type, to avoid redundant definitions in vardefs.go.
+		// MASTER_SITE_BACKUP is only used internally and should
+		// not appear in package definitions since it is not the
+		// primary, official source for getting the files.
+		if varname == "MASTER_SITE_BACKUP" {
+			continue
+		}
+		if !hasPrefix(varname, "MASTER_SITE_") {
+			continue
+		}
+
+		for _, url := range mkline.ValueFields(mkline.Value()) {
+			if matches(url, `^(?:http://|https://|ftp://)`) {
+				src.registerMasterSite(varname, url)
 			}
 		}
 	}
