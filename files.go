@@ -137,13 +137,13 @@ func matchContinuationLine(textnl string) (leadingWhitespace, text, trailingWhit
 		j--
 	}
 
-	backslashes := 0
+	end := j
 	for j > 0 && textnl[j-1] == '\\' {
 		j--
-		backslashes++
 	}
-	cont = textnl[j : j+backslashes%2]
-	j += backslashes / 2
+	backslashes := (end - j) % 2
+	j = end - backslashes
+	cont = textnl[j:end]
 
 	trailingEnd := j
 	for j > 0 && isHspace(textnl[j-1]) {

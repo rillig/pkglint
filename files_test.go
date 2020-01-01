@@ -166,17 +166,17 @@ func (s *Suite) Test_convertToLogicalLines__comments(c *check.C) {
 		"",
 		"# Multiline comment",
 		"# Another escaped comment that goes on and on",
-		"# This is NOT an escaped comment due to the double backslashes \\",
+		"# This is NOT an escaped comment due to the double backslashes \\\\",
 		"VAR=\tThis is not a comment",
 		"",
 		"# This is a comment",
-		"#\\",
-		"\tThis is no comment",
-		"#\\ This is a comment",
 		"#\\\\",
 		"\tThis is no comment",
 		"#\\\\ This is a comment",
-		"#\\\\\\",
+		"#\\\\\\\\",
+		"\tThis is no comment",
+		"#\\\\\\\\ This is a comment",
+		"#\\\\\\\\\\\\",
 		"\tThis is no comment"})
 
 	t.CheckOutputEmpty()
