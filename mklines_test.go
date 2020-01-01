@@ -1131,6 +1131,19 @@ func (s *Suite) Test_MkLines_checkAll__extra_warnings(c *check.C) {
 		"NOTE: options.mk:11: You can use \"../build\" instead of \"${WRKSRC}/../build\".")
 }
 
+// Between 2019-12-31 and 2020-01-01, pkglint panicked because it didn't
+// expect that a package would define PKGDIR to point to itself.
+func (s *Suite) Test_MkLines_checkAll__assertion(c *check.C) {
+	t := s.Init(c)
+
+	pkg := NewPackage(t.SetUpPackage("category/package",
+		"PKGDIR=\t../../category/package"))
+	t.FinishSetUp()
+
+	// FIXME
+	t.ExpectAssert(pkg.Check)
+}
+
 // At 2018-12-02, pkglint had resolved ${MY_PLIST_VARS} into a single word,
 // whereas the correct behavior is to resolve it into two words.
 // It had produced warnings about mismatched PLIST_VARS IDs.
