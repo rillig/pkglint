@@ -1202,7 +1202,7 @@ func (s *Suite) Test_Autofix_skip(c *check.C) {
 		"VAR=\t111 222 333 444 555 \\",
 		"666")
 	t.CheckEquals(fix.RawText(), ""+
-		"VAR=\t111 222 333 444 555 \\\n"+
+		"NEW=\t111 222 333 444 555 \\\n"+
 		"666\n")
 }
 
