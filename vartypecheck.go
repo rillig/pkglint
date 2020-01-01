@@ -589,8 +589,6 @@ func (cv *VartypeCheck) Filename() {
 
 func (cv *VartypeCheck) FilePattern() {
 
-	// TODO: Decide whether to call this a "mask" or a "pattern", and use only that word everywhere.
-
 	invalid := replaceAll(cv.ValueNoVar, `[%*+,\-.0-9?@A-Z\[\]_a-z~]`, "")
 	if invalid == "" {
 		return
