@@ -31,8 +31,7 @@ func (ck *AlternativesChecker) Check(lines *Lines, pkg *Package) {
 // checkLine checks a single line for the following format:
 //  wrapper alternative [optional arguments]
 func (ck *AlternativesChecker) checkLine(line *Line, plistFiles map[RelPath]*PlistLine, pkg *Package) {
-	// TODO: Add $ to the regex, just for confidence
-	m, wrapper, space, alternative := match3(line.Text, `^([^\t ]+)([ \t]+)([^\t ]+)`)
+	m, wrapper, space, alternative := match3(line.Text, `^([^\t ]+)([ \t]+)([^\t ]+).*$`)
 	if !m {
 		line.Errorf("Invalid line %q.", line.Text)
 		line.Explain(
