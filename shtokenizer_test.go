@@ -534,6 +534,17 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: filename.mk:1: Internal pkglint error " +
 			"in ShTokenizer.ShAtom at \"\\\\${VAR}`\" (quoting=b).")
+
+	// The remaining tokens are shortened in the warning.
+	testRest("`echo \\${VAR.123456789012345678901234567890}`",
+		atoms(
+			backt(text("`")),
+			backt(text("echo")),
+			backt(space)),
+		"\\${VAR.123456789012345678901234567890}`")
+	t.CheckOutputLines(
+		"WARN: filename.mk:1: Internal pkglint error in ShTokenizer.ShAtom " +
+			"at \"\\\\${VAR.1234567890123...\" (quoting=b).")
 }
 
 func (s *Suite) Test_ShTokenizer_ShAtom__quoting(c *check.C) {
