@@ -244,14 +244,14 @@ func (s *Suite) Test_nextLogicalLine__commented_multi(c *check.C) {
 func (s *Suite) Test_matchContinuationLine(c *check.C) {
 	t := s.Init(c)
 
-	leadingWhitespace, text, trailingWhitespace, continuation := matchContinuationLine("\n")
+	leadingWhitespace, text, trailingWhitespace, continuation := matchContinuationLine("")
 
 	t.CheckEquals(leadingWhitespace, "")
 	t.CheckEquals(text, "")
 	t.CheckEquals(trailingWhitespace, "")
 	t.CheckEquals(continuation, "")
 
-	leadingWhitespace, text, trailingWhitespace, continuation = matchContinuationLine("\tword   \\\n")
+	leadingWhitespace, text, trailingWhitespace, continuation = matchContinuationLine("\tword   \\")
 
 	t.CheckEquals(leadingWhitespace, "\t")
 	t.CheckEquals(text, "word")

@@ -105,7 +105,7 @@ func nextLogicalLine(filename CurrPath, rawLines []*RawLine, index int) (*Line, 
 	trim := ""
 
 	for i, rawLine := range interestingRawLines {
-		indent, rawText, outdent, cont := matchContinuationLine(rawLine.textnl)
+		indent, rawText, outdent, cont := matchContinuationLine(rawLine.Text())
 
 		if text.Len() == 0 {
 			text.WriteString(indent)
@@ -130,36 +130,32 @@ func nextLogicalLine(filename CurrPath, rawLines []*RawLine, index int) (*Line, 
 	return NewLineMulti(filename, firstlineno, lastlineno, text.String(), lineRawLines), index + 1
 }
 
-func matchContinuationLine(textnl string) (leadingWhitespace, text, trailingWhitespace, cont string) {
-	j := len(textnl)
+func matchContinuationLine(text string) (leadingWhitespace, result, trailingWhitespace, cont string) {
+	end := len(text)
 
-	if textnl[j-1] == '\n' {
-		j--
-	}
-
-	end := j
-	for j > 0 && textnl[j-1] == '\\' {
+	j := end
+	for j > 0 && text[j-1] == '\\' {
 		j--
 	}
 	backslashes := (end - j) % 2
 	j = end - backslashes
-	cont = textnl[j:end]
+	cont = text[j:end]
 
 	trailingEnd := j
-	for j > 0 && isHspace(textnl[j-1]) {
+	for j > 0 && isHspace(text[j-1]) {
 		j--
 	}
 	trailingStart := j
-	trailingWhitespace = textnl[trailingStart:trailingEnd]
+	trailingWhitespace = text[trailingStart:trailingEnd]
 
 	i := 0
 	leadingStart := i
-	for i < j && isHspace(textnl[i]) {
+	for i < j && isHspace(text[i]) {
 		i++
 	}
 	leadingEnd := i
-	leadingWhitespace = textnl[leadingStart:leadingEnd]
+	leadingWhitespace = text[leadingStart:leadingEnd]
 
-	text = textnl[leadingEnd:trailingStart]
+	result = text[leadingEnd:trailingStart]
 	return
 }
