@@ -68,6 +68,8 @@ func NewMkShWalker() *MkShWalker {
 // It is used for debugging only.
 //
 // See Test_MkShWalker_Walk, Callback.SimpleCommand for examples.
+//
+// TODO: Move to test file.
 func (w *MkShWalker) Path() string {
 	var path []string
 	for _, level := range w.Context {

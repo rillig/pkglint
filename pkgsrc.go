@@ -117,7 +117,7 @@ func (src *Pkgsrc) loadMasterSites() {
 	}
 
 	// Explicitly allowed, although not defined in mk/fetch/sites.mk.
-	// TODO: Document where this definition comes from and why it is good.
+	// It is defined in mk/fetch/fetch.mk instead.
 	src.registerMasterSite("MASTER_SITE_LOCAL", "ftp://ftp.NetBSD.org/pub/pkgsrc/distfiles/LOCAL_PORTS/")
 
 	if trace.Tracing {
@@ -157,8 +157,9 @@ func (src *Pkgsrc) loadDocChanges() {
 	var filenames []RelPath
 	for _, file := range files {
 		filename := file.Name()
-		if matches(filename, `^CHANGES-20\d\d$`) && filename >= "CHANGES-2011" { // XXX: Why 2011?
-			filenames = append(filenames, NewRelPathString(filename)) // XXX: low-level API
+		// Files before 2011 are too far in the past to be still relevant today.
+		if matches(filename, `^CHANGES-20\d\d$`) && filename >= "CHANGES-2011" {
+			filenames = append(filenames, NewRelPathString(filename))
 		}
 	}
 
@@ -690,7 +691,7 @@ func (src *Pkgsrc) loadUntypedVars() {
 		assertNil(err, "handleFile %q", pathName)
 		baseName := info.Name()
 		if info.Mode().IsRegular() && (hasSuffix(baseName, ".mk") || baseName == "mk.conf") {
-			handleMkFile(NewCurrPathSlash(pathName)) // XXX: This is too deep to handle os-specific paths
+			handleMkFile(NewCurrPathSlash(pathName))
 		}
 		return nil
 	}
@@ -802,7 +803,7 @@ func (src *Pkgsrc) ListVersions(category PkgsrcPath, re regex.Pattern, repl stri
 		assert(hasSuffix(string(re), "$"))
 	}
 
-	// TODO: Maybe convert cache key to a struct, to save allocations.
+	// XXX: Maybe convert cache key to a struct, to save allocations.
 	cacheKey := category.String() + "/" + string(re) + " => " + repl
 	if latest, found := src.listVersions[cacheKey]; found {
 		return latest

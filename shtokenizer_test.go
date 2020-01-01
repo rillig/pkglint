@@ -512,9 +512,10 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		subsh(operator("`")),
 		operator(")"))
 
-	// Subshell with unbalanced parentheses, taken from src/build.sh,
-	// around line 160. Many shells (and pkglint) fail this test,
-	// therefore just don't write code like this.
+	// Subshell with unbalanced parentheses. Many shells (and pkglint)
+	// fail this test, therefore please don't write code like this.
+	//
+	// See NetBSD/src/build.sh, around line 160.
 	test("var=$$(case x in x) still-subshell;; esac);",
 		text("var="), subsh(subshell),
 		subsh(text("case")), subsh(space), subsh(text("x")), subsh(space),

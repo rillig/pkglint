@@ -329,7 +329,8 @@ func (s *Suite) Test_MkLine_ValueFields__compared_to_splitIntoShellTokens(c *che
 	words = mkline.ValueFields("a b \"c  c  c\" d;;d;; \"e\"''`` 'rest")
 
 	t.CheckDeepEquals(words, []string{"a", "b", "\"c  c  c\"", "d;;d;;", "\"e\"''``"})
-	// TODO: c.Check(rest, equals, "'rest")
+	// The rest "'rest" is silently discarded.
+	// Most probably, the shell will complain about it when it is executed.
 }
 
 func (s *Suite) Test_MkLine_ValueTokens(c *check.C) {

@@ -250,6 +250,7 @@ func (p *MkParser) mkCondFunc() *MkCond {
 		// TODO: Consider suggesting ${VAR} instead of !empty(VAR) since it is shorter and
 		//  avoids unnecessary negation, which makes the expression less confusing.
 		//  This applies especially to the ${VAR:Mpattern} form.
+		//  See MkCondChecker.simplify.
 
 	case "commands", "exists", "make", "target":
 		argMark := lexer.Mark()

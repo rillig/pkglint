@@ -1438,6 +1438,7 @@ func (s *Suite) Test_ShellLineChecker_CheckWord(c *check.C) {
 		"WARN: filename.mk:1: id is used but not defined.")
 
 	// TODO: Since $@ refers to ${.TARGET} and not sh.argv, there is no point in checking for quotes.
+	//  The corresponding code in ShellLineChecker.CheckWord should be removed.
 	// TODO: Having the same tests for $$@ would be much more interesting.
 
 	// The unquoted $@ takes a different code path in pkglint than the quoted $@.

@@ -630,7 +630,6 @@ func (ck *ShellLineChecker) CheckShellCommandLine(shelltext string) {
 			"to understand, since all the complexity of using sed and mv is",
 			"hidden behind the scenes.",
 			"",
-			// TODO: Provide a copy-and-paste example.
 			sprintf("Run %q for more information.", bmakeHelp("subst")))
 		if contains(shelltext, "#") {
 			line.Explain(
@@ -900,7 +899,7 @@ func (ck *ShellLineChecker) unescapeBackticks(atoms *[]*ShAtom, quoting ShQuotin
 		}
 
 		// XXX: The regular expression is a bit cheated but is good enough until
-		// pkglint has a real parser for all shell constructs.
+		//  pkglint has a real parser for all shell constructs.
 		if atom.Quoting == shqDquotBackt && matches(atom.MkText, `(^|[^\\])"`) {
 			line.Warnf("Double quotes inside backticks inside double quotes are error prone.")
 			line.Explain(
@@ -1007,9 +1006,6 @@ func (ck *ShellLineChecker) checkVaruseToken(atoms *[]*ShAtom, quoting ShQuoting
 			"the correct form is ${VAR:Q}'' with either leading or trailing single or double quotes.",
 			"If the empty string should just be skipped,",
 			"a simple ${VAR:Q} without any surrounding quotes is correct.")
-
-		// TODO: What about single quotes?
-		// TODO: What about backticks?
 	}
 
 	if ck.checkVarUse {

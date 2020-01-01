@@ -525,7 +525,7 @@ func (ck *MkAssignChecker) checkVarassignRightVaruse() {
 
 	if vartype != nil && vartype.IsShell() {
 		ck.checkVarassignVaruseShell(vartype, time)
-	} else { // XXX: This else looks as if it should be omitted.
+	} else {
 		mkLineChecker := NewMkLineChecker(ck.MkLines, ck.MkLine)
 		mkLineChecker.checkTextVarUse(ck.MkLine.Value(), vartype, time)
 	}

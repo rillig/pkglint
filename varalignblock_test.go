@@ -3544,7 +3544,7 @@ func (s *Suite) Test_varalignLine_alignValueSingle(c *check.C) {
 
 			// As of 2019-12-11, the info fields are not updated
 			// accordingly, but they should.
-			// TODO: update info accordingly
+			// FIXME: update info accordingly
 			t.CheckEqualsf(info.String(), before,
 				"info.String, autofix=%v", autofix)
 		}

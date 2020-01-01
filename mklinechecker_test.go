@@ -53,12 +53,6 @@ func (s *Suite) Test_MkLineChecker_Check__buildlink3_include_prefs(c *check.C) {
 		".include \"../../mk/bsd.prefs.mk\"",
 		".include \"../../mk/bsd.fast.prefs.mk\"")
 
-	// If the buildlink3.mk file doesn't actually exist, resolving the
-	// relative path fails since that depends on the actual file system,
-	// not on syntactical paths; see os.Stat in CheckRelativePath.
-	//
-	// TODO: Refactor Relpath to be independent of a filesystem.
-
 	mklines.Check()
 
 	t.CheckOutputLines(

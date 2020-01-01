@@ -192,8 +192,6 @@ func (cv *VartypeCheck) Category() {
 }
 
 // CFlag is a single option to the C/C++ compiler.
-//
-// XXX: How can flags like "-D NAME" be handled?
 func (cv *VartypeCheck) CFlag() {
 	if cv.Op == opUseMatch {
 		return

@@ -188,8 +188,6 @@ func (s *Suite) Test_MkCondChecker_Check__compare_pattern_with_empty(c *check.C)
 
 	mklines.Check()
 
-	// TODO: There should be a warning about "<>" containing invalid
-	//  characters for a path. See VartypeCheck.Pathname
 	t.CheckOutputLines(
 		"WARN: filename.mk:8: The pathname pattern \"<>\" contains the invalid characters \"<>\".",
 		"WARN: filename.mk:8: The pathname \"*\" contains the invalid character \"*\".")

@@ -317,11 +317,11 @@ func (t *Tester) LoadMkInclude(filename RelPath) *MkLines {
 
 	// TODO: Include files with multiple-inclusion guard only once.
 	// TODO: Include files without multiple-inclusion guard as often as needed.
-	// TODO: Set an upper limit, to prevent denial of service.
 
 	var load func(filename CurrPath)
 	load = func(filename CurrPath) {
-		for _, mkline := range NewMkLines(Load(filename, MustSucceed), nil).mklines {
+		mklines := NewMkLines(Load(filename, MustSucceed), nil)
+		for _, mkline := range mklines.mklines {
 			lines = append(lines, mkline.Line)
 
 			if mkline.IsInclude() {

@@ -342,7 +342,6 @@ func (s *Suite) Test_MkLines_Check__indentation_include(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		// TODO: Use relative path for missing package.
 		"ERROR: module.mk:5: There is no package in \"../../category/nonexistent\".",
 		"NOTE: module.mk:7: This directive should be indented by 2 spaces.",
 		"NOTE: module.mk:9: This directive should be indented by 2 spaces.")

@@ -474,12 +474,10 @@ func (ck MkLineChecker) checkDirectiveFor(forVars map[string]bool, indentation *
 			forVars[forvar] = true
 		}
 
-		// XXX: The type BtUnknown is very unspecific here. For known variables
-		// or constant values this could probably be improved.
-		//
-		// The guessed flag could also be determined more correctly. As of November 2018,
-		// running pkglint over the whole pkgsrc tree did not produce any different result
-		// whether guessed was true or false.
+		// The guessed flag could be determined more correctly.
+		// As of January 2020, running pkglint over the whole pkgsrc
+		// tree did not produce any different result whether guessed
+		// was true or false.
 		forLoopType := NewVartype(btForLoop, List, NewACLEntry("*", aclpAllRead))
 		forLoopContext := VarUseContext{forLoopType, VucLoadTime, VucQuotPlain, false}
 		mkline.ForEachUsed(func(varUse *MkVarUse, time VucTime) {

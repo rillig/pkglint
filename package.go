@@ -387,7 +387,6 @@ func (pkg *Package) loadIncluded(mkline *MkLine, includingFile CurrPath) (includ
 // their actual values.
 func (pkg *Package) resolveIncludedFile(mkline *MkLine, includingFilename CurrPath) RelPath {
 
-	// XXX: resolveVariableRefs uses G.Pkg implicitly. It should be made explicit.
 	// TODO: Try to combine resolveVariableRefs and ResolveVarsInRelativePath.
 	resolved := mkline.ResolveVarsInRelativePath(mkline.IncludedFile(), pkg)
 	includedText := resolveVariableRefs(resolved.String(), nil, pkg)
@@ -624,7 +623,7 @@ func (pkg *Package) checkfilePackageMakefile(filename CurrPath, mklines *MkLines
 	// TODO: Maybe later collect the conditional includes from allLines
 	//  instead of mklines. This will lead to about 6000 new warnings
 	//  though.
-	//  pkg.collectConditionalIncludes(allLines)
+	// pkg.collectConditionalIncludes(allLines)
 
 	allLines.collectVariables()    // To get the tool definitions
 	mklines.Tools = allLines.Tools // TODO: also copy the other collected data
@@ -950,8 +949,6 @@ func (pkg *Package) checkCategories() {
 		switch mkline.Op() {
 		case opAssignDefault:
 			for _, category := range mkline.ValueFields(mkline.Value()) {
-				// XXX: This looks wrong. It should probably be replaced by
-				//  an "if len(seen) == 0" outside the for loop.
 				if seen[category] == nil {
 					seen[category] = mkline
 				}
