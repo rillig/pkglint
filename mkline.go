@@ -1049,6 +1049,7 @@ type indentationLevel struct {
 	mkline          *MkLine  // The line in which the indentation started; the .if/.for
 	depth           int      // Number of space characters; always a multiple of 2
 	args            string   // The arguments from the .if or .for, or the latest .elif
+	argsLine        *MkLine  //
 	conditionalVars []string // Variables on which the current path depends
 
 	// Files whose existence has been checked in an if branch that is
@@ -1093,7 +1094,8 @@ func (ind *Indentation) Pop() {
 
 func (ind *Indentation) Push(mkline *MkLine, indent int, args string, guard bool) {
 	assert(mkline.IsDirective())
-	ind.levels = append(ind.levels, indentationLevel{mkline, indent, args, nil, nil, guard})
+	ind.levels = append(ind.levels,
+		indentationLevel{mkline, indent, args, mkline, nil, nil, guard})
 }
 
 // AddVar remembers that the current indentation depends on the given variable,
@@ -1154,8 +1156,8 @@ func (ind *Indentation) Varnames() []string {
 }
 
 // Args returns the arguments of the innermost .if, .elif or .for.
-func (ind *Indentation) Args() string {
-	return ind.top().args
+func (ind *Indentation) Args() (string, *MkLine) {
+	return ind.top().args, ind.top().argsLine
 }
 
 func (ind *Indentation) AddCheckedFile(filename PkgsrcPath) {
@@ -1216,6 +1218,7 @@ func (ind *Indentation) TrackAfter(mkline *MkLine) {
 		// Handled here instead of TrackBefore to allow the action to access the previous condition.
 		if !ind.IsEmpty() {
 			ind.top().args = args
+			ind.top().argsLine = mkline
 		}
 
 	case "else":

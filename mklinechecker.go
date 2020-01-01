@@ -440,14 +440,16 @@ func (ck MkLineChecker) checkDirectiveEnd(ind *Indentation) {
 	}
 
 	if directive == "endif" {
-		if args := ind.Args(); !contains(args, comment) {
-			mkline.Warnf("Comment %q does not match condition %q.", comment, args)
+		if args, argsLine := ind.Args(); !contains(args, comment) {
+			mkline.Warnf("Comment %q does not match condition %q in %s.",
+				comment, args, mkline.RelMkLine(argsLine))
 		}
 	}
 
 	if directive == "endfor" {
-		if args := ind.Args(); !contains(args, comment) {
-			mkline.Warnf("Comment %q does not match loop %q.", comment, args)
+		if args, argsLine := ind.Args(); !contains(args, comment) {
+			mkline.Warnf("Comment %q does not match loop %q in %s.",
+				comment, args, mkline.RelMkLine(argsLine))
 		}
 	}
 }
