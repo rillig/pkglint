@@ -46,35 +46,37 @@ func CheckdirCategory(dir CurrPath) {
 	fSubdirs := getSubdirs(dir)
 	var mSubdirs []subdir
 
-	seen := make(map[string]*MkLine)
+	seen := make(map[RelPath]*MkLine)
 	for !mlex.EOF() {
 		mkline := mlex.CurrentMkLine()
 
 		if mkline.IsVarassignMaybeCommented() && mkline.Varname() == "SUBDIR" {
 			mlex.Skip()
 
-			name := mkline.Value()
-			if NewPath(name).IsAbs() {
-				mkline.Errorf("%q must be a relative path.", name)
+			value := NewPath(mkline.Value())
+			if value.IsAbs() {
+				mkline.Errorf("%q must be a relative path.", value.String())
 				continue
 			}
+			sub := NewRelPath(value)
 
 			if mkline.IsCommentedVarassign() && !mkline.HasComment() {
-				mkline.Warnf("%q commented out without giving a reason.", name)
+				mkline.Warnf("%q commented out without giving a reason.", sub)
 			}
 
-			if prev := seen[name]; prev != nil {
-				mkline.Errorf("%q must only appear once, already seen in %s.", name, mkline.RelMkLine(prev))
+			if prev := seen[sub]; prev != nil {
+				mkline.Errorf("%q must only appear once, already seen in %s.",
+					sub, mkline.RelMkLine(prev))
 			}
-			seen[name] = mkline
+			seen[sub] = mkline
 
 			if len(mSubdirs) > 0 {
-				if prev := mSubdirs[len(mSubdirs)-1].name; name < prev.String() {
-					mkline.Warnf("%q should come before %q.", name, prev)
+				if prev := mSubdirs[len(mSubdirs)-1].name; sub < prev {
+					mkline.Warnf("%q should come before %q.", sub, prev)
 				}
 			}
 
-			mSubdirs = append(mSubdirs, subdir{NewRelPathString(name), mkline})
+			mSubdirs = append(mSubdirs, subdir{sub, mkline})
 
 		} else {
 			if !mkline.IsEmpty() {
