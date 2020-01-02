@@ -93,20 +93,16 @@ func (ck *VargroupsChecker) collectVarassign(mkline *MkLine) {
 func (ck *VargroupsChecker) appendToStyle(vars map[string]*MkLine, mkline *MkLine) {
 	ck.checkGroupName(mkline)
 
-	for _, varname := range mkline.ValueFields(mkline.Value()) {
-		if !containsVarRef(varname) {
-			vars[varname] = mkline
-		}
+	for _, varname := range mkline.ValueFieldsLiteral() {
+		vars[varname] = mkline
 	}
 }
 
 func (ck *VargroupsChecker) appendTo(vars map[string]*MkLine, mkline *MkLine, publicGroup bool, firstPrivate *string) {
 	ck.checkGroupName(mkline)
 
-	for _, varname := range mkline.ValueFields(mkline.Value()) {
-		if !containsVarRef(varname) {
-			ck.appendToVar(varname, mkline, publicGroup, vars, firstPrivate)
-		}
+	for _, varname := range mkline.ValueFieldsLiteral() {
+		ck.appendToVar(varname, mkline, publicGroup, vars, firstPrivate)
 	}
 }
 

@@ -492,6 +492,12 @@ func (mkline *MkLine) ValueFields(value string) []string {
 	return fields
 }
 
+func (mkline *MkLine) ValueFieldsLiteral() []string {
+	return filterStr(
+		mkline.ValueFields(mkline.Value()),
+		func(s string) bool { return !containsVarRef(s) })
+}
+
 func (mkline *MkLine) ValueTokens() ([]*MkToken, string) {
 	value := mkline.Value()
 	if value == "" {

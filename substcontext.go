@@ -79,7 +79,7 @@ func (ctx *SubstContext) varassign(mkline *MkLine) {
 }
 
 func (ctx *SubstContext) varassignClasses(mkline *MkLine) {
-	ids := mkline.ValueFields(mkline.WithoutMakeVariables(mkline.Value()))
+	ids := mkline.ValueFieldsLiteral()
 	if len(ids) == 0 {
 		return
 	}

@@ -93,6 +93,16 @@ func mapStr(slice []string, fn func(s string) string) []string {
 	return result
 }
 
+func filterStr(slice []string, fn func(s string) bool) []string {
+	result := make([]string, 0, len(slice))
+	for _, str := range slice {
+		if fn(str) {
+			result = append(result, str)
+		}
+	}
+	return result
+}
+
 func invalidCharacters(s string, valid *textproc.ByteSet) string {
 	var unis strings.Builder
 
