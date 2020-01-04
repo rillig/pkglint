@@ -72,9 +72,9 @@ func (s *Suite) Test_distinfoLinesChecker_parse__commented_first_line(c *check.C
 	CheckLinesDistinfo(nil, lines)
 
 	t.CheckOutputLines(
-		"ERROR: ~/distinfo:1: Expected \"$NetBSD$\".",
+		"ERROR: ~/distinfo:1: Expected \""+CvsID+"\".",
 		"NOTE: ~/distinfo:1: Empty line expected before this line.",
-		"ERROR: ~/distinfo:1: Invalid line: @comment $NetBSD$")
+		"ERROR: ~/distinfo:1: Invalid line: "+PlistCvsID)
 }
 
 func (s *Suite) Test_distinfoLinesChecker_parse__completely_empty_file(c *check.C) {
