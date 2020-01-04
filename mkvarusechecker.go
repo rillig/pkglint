@@ -50,7 +50,7 @@ func (ck *MkVarUseChecker) checkUndefined() {
 		ck.MkLines.checkAllData.forVars[varname],
 		ck.MkLines.allVars.Mentioned(varname) != nil,
 		ck.MkLines.pkg != nil && ck.MkLines.pkg.vars.IsDefinedSimilar(varname),
-		containsVarRef(varname),
+		containsVarUse(varname),
 		G.Pkgsrc.vartypes.IsDefinedCanon(varname),
 		varname == "":
 		return

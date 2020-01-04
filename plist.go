@@ -472,7 +472,7 @@ func (pline *PlistLine) HasPlainPath() bool {
 	text := pline.text
 	return text != "" &&
 		plistLineStart.Contains(text[0]) &&
-		!containsVarRef(text)
+		!containsVarUse(text)
 }
 
 func (pline *PlistLine) CheckTrailingWhitespace() {

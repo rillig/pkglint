@@ -191,7 +191,7 @@ func (ck *VargroupsChecker) checkUseVar(mkline *MkLine, varUse *MkVarUse) {
 
 func (ck *VargroupsChecker) ignore(varname string) bool {
 	switch {
-	case containsVarRef(varname),
+	case containsVarUse(varname),
 		hasSuffix(varname, "_MK"),
 		ck.registered[varname] != nil,
 		G.Pkgsrc.Tools.ExistsVar(varname),

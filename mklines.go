@@ -274,7 +274,7 @@ func (mklines *MkLines) collectVariable(mkline *MkLine) {
 				trace.Step1("PLIST.%s is added to PLIST_VARS.", id)
 			}
 
-			if containsVarRef(id) {
+			if containsVarUse(id) {
 				mklines.UseVar(mkline, "PLIST.*", mkline.Op().Time())
 				mklines.plistVarSkip = true
 			} else {
@@ -356,7 +356,7 @@ func (mklines *MkLines) collectPlistVars() {
 			switch mkline.Varcanon() {
 			case "PLIST_VARS":
 				for _, id := range mkline.ValueFields(resolveVariableRefs(mkline.Value(), mklines, nil)) {
-					if containsVarRef(id) {
+					if containsVarUse(id) {
 						mklines.plistVarSkip = true
 					} else {
 						mklines.plistVarAdded[id] = mkline
@@ -364,7 +364,7 @@ func (mklines *MkLines) collectPlistVars() {
 				}
 			case "PLIST.*":
 				id := mkline.Varparam()
-				if containsVarRef(id) {
+				if containsVarUse(id) {
 					mklines.plistVarSkip = true
 				} else {
 					mklines.plistVarSet[id] = mkline

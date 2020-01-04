@@ -394,7 +394,7 @@ func (cv *VartypeCheck) DependencyWithPath() {
 			cv.MkLine.ExplainRelativeDirs()
 		}
 
-		if !containsVarRef(relpath.String()) {
+		if !containsVarUse(relpath.String()) {
 			MkLineChecker{cv.MkLines, cv.MkLine}.CheckRelativePkgdir(relpath)
 		}
 
@@ -641,7 +641,7 @@ func (cv *VartypeCheck) Homepage() {
 	if sitename == "MASTER_SITES" && cv.MkLines.pkg != nil {
 		mkline := cv.MkLines.pkg.vars.FirstDefinition("MASTER_SITES")
 		if mkline != nil {
-			if !containsVarRef(mkline.Value()) {
+			if !containsVarUse(mkline.Value()) {
 				masterSites := cv.MkLine.ValueFields(mkline.Value())
 				if len(masterSites) > 0 {
 					baseURL = masterSites[0]
@@ -1302,7 +1302,7 @@ func (cv *VartypeCheck) URL() {
 	if value == "" && hasPrefix(cv.MkComment, "#") {
 		// Ok
 
-	} else if containsVarRef(value) {
+	} else if containsVarUse(value) {
 		// No further checks
 
 	} else if m, _, host, _, _ := match4(value, `^(https?|ftp|gopher)://([-0-9A-Za-z.]+)(?::(\d+))?/([-%&+,./0-9:;=?@A-Z_a-z~]|#)*$`); m {

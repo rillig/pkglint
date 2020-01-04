@@ -495,7 +495,7 @@ func (mkline *MkLine) ValueFields(value string) []string {
 func (mkline *MkLine) ValueFieldsLiteral() []string {
 	return filterStr(
 		mkline.ValueFields(mkline.Value()),
-		func(s string) bool { return !containsVarRef(s) })
+		func(s string) bool { return !containsVarUse(s) })
 }
 
 func (mkline *MkLine) ValueTokens() ([]*MkToken, string) {
@@ -563,7 +563,7 @@ func (*MkLine) WithoutMakeVariables(value string) string {
 }
 
 func (mkline *MkLine) ResolveVarsInRelativePath(relativePath RelPath, pkg *Package) RelPath {
-	if !containsVarRef(relativePath.String()) {
+	if !containsVarUse(relativePath.String()) {
 		return relativePath.CleanPath()
 	}
 

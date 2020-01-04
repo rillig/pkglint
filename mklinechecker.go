@@ -305,7 +305,7 @@ func (ck MkLineChecker) CheckRelativePath(relativePath RelPath, mustExist bool) 
 	}
 
 	resolvedPath := mkline.ResolveVarsInRelativePath(relativePath, ck.MkLines.pkg)
-	if containsVarRef(resolvedPath.String()) {
+	if containsVarUse(resolvedPath.String()) {
 		return
 	}
 
@@ -362,7 +362,7 @@ func (ck MkLineChecker) CheckRelativePkgdir(pkgdir RelPath) {
 	ck.CheckRelativePath(pkgdir.JoinNoClean("Makefile"), true)
 	pkgdir = mkline.ResolveVarsInRelativePath(pkgdir, ck.MkLines.pkg)
 
-	if !matches(pkgdir.String(), `^\.\./\.\./([^./][^/]*/[^./][^/]*)$`) && !containsVarRef(pkgdir.String()) {
+	if !matches(pkgdir.String(), `^\.\./\.\./([^./][^/]*/[^./][^/]*)$`) && !containsVarUse(pkgdir.String()) {
 		mkline.Warnf("%q is not a valid relative package directory.", pkgdir)
 		mkline.Explain(
 			"A relative pathname always starts with \"../../\", followed",

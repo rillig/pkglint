@@ -499,7 +499,7 @@ func toInt(s string, def int) int {
 	return def
 }
 
-func containsVarRef(s string) bool {
+func containsVarUse(s string) bool {
 	if !contains(s, "$") {
 		return false
 	}

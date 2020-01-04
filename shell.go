@@ -148,7 +148,7 @@ func (scc *SimpleCommandChecker) handleTool() bool {
 		scc.mkline.Warnf("The %q tool is used but not added to USE_TOOLS.", command)
 	}
 
-	if tool != nil && tool.MustUseVarForm && !containsVarRef(command) {
+	if tool != nil && tool.MustUseVarForm && !containsVarUse(command) {
 		scc.mkline.Warnf("Please use \"${%s}\" instead of %q.", tool.Varname, command)
 	}
 
@@ -279,7 +279,7 @@ func (scc *SimpleCommandChecker) checkAutoMkdirs() {
 		autoMkdirs := false
 		if scc.mklines.pkg != nil {
 			plistLine := scc.mklines.pkg.Plist.Dirs[prefixRel]
-			if plistLine != nil && !containsVarRef(plistLine.Text) {
+			if plistLine != nil && !containsVarUse(plistLine.Text) {
 				autoMkdirs = true
 			}
 		}

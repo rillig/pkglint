@@ -391,7 +391,7 @@ func (pkg *Package) resolveIncludedFile(mkline *MkLine, includingFilename CurrPa
 	resolved := mkline.ResolveVarsInRelativePath(mkline.IncludedFile(), pkg)
 	includedText := resolveVariableRefs(resolved.String(), nil, pkg)
 	includedFile := NewRelPathString(includedText)
-	if containsVarRef(includedText) {
+	if containsVarUse(includedText) {
 		if trace.Tracing && !includingFilename.ContainsPath("mk") {
 			trace.Stepf("%s:%s: Skipping unresolvable include file %q.",
 				mkline.Filename, mkline.Linenos(), includedFile)
@@ -495,7 +495,7 @@ func (pkg *Package) check(filenames []CurrPath, mklines, allLines *MkLines) {
 	havePatches := false
 
 	for _, filename := range filenames {
-		if containsVarRef(filename.String()) {
+		if containsVarUse(filename.String()) {
 			if trace.Tracing {
 				trace.Stepf("Skipping file %q because the name contains an unresolved variable.", filename)
 			}
@@ -560,7 +560,7 @@ func (pkg *Package) checkfilePackageMakefile(filename CurrPath, mklines *MkLines
 		}
 	} else {
 		distinfoFile := pkg.File(pkg.DistinfoFile)
-		if !containsVarRef(distinfoFile.String()) && !distinfoFile.IsFile() {
+		if !containsVarUse(distinfoFile.String()) && !distinfoFile.IsFile() {
 			line := NewLineWhole(distinfoFile)
 			line.Warnf("A package that downloads files should have a distinfo file.")
 			line.Explain(
@@ -1083,7 +1083,7 @@ func (pkg *Package) determineEffectivePkgVars() {
 		}
 	}
 
-	if pkgname == "" && distnameLine != nil && !containsVarRef(distname) && !matches(distname, rePkgname) {
+	if pkgname == "" && distnameLine != nil && !containsVarUse(distname) && !matches(distname, rePkgname) {
 		distnameLine.Warnf("As DISTNAME is not a valid package name, please define the PKGNAME explicitly.")
 	}
 
@@ -1091,7 +1091,7 @@ func (pkg *Package) determineEffectivePkgVars() {
 		distname = ""
 	}
 
-	if effname != "" && !containsVarRef(effname) {
+	if effname != "" && !containsVarUse(effname) {
 		if m, m1, m2 := match2(effname, rePkgname); m {
 			pkg.EffectivePkgname = effname + pkg.nbPart()
 			pkg.EffectivePkgnameLine = pkgnameLine
@@ -1100,7 +1100,7 @@ func (pkg *Package) determineEffectivePkgVars() {
 		}
 	}
 
-	if pkg.EffectivePkgnameLine == nil && distname != "" && !containsVarRef(distname) {
+	if pkg.EffectivePkgnameLine == nil && distname != "" && !containsVarUse(distname) {
 		if m, m1, m2 := match2(distname, rePkgname); m {
 			pkg.EffectivePkgname = distname + pkg.nbPart()
 			pkg.EffectivePkgnameLine = distnameLine

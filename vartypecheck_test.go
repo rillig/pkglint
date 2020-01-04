@@ -788,7 +788,7 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 	// The ${.TARGET} variable doesn't make sense at all in a URL.
 	// Other variables might, and there could be checks for them.
 	// As of December 2019 these are skipped completely,
-	// see containsVarRef in VartypeCheck.URL.
+	// see containsVarUse in VartypeCheck.URL.
 	vt.Values(
 		"https://example.org/$@")
 

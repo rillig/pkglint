@@ -82,7 +82,7 @@ func (ck *Buildlink3Checker) checkFirstParagraph(mlex *MkLinesLexer) bool {
 	pkgbase := m[1]
 	pkgbaseLine := mlex.PreviousMkLine()
 
-	if containsVarRef(pkgbase) {
+	if containsVarUse(pkgbase) {
 		ck.checkVaruseInPkgbase(pkgbaseLine)
 	}
 
@@ -133,7 +133,7 @@ func (ck *Buildlink3Checker) checkSecondParagraph(mlex *MkLinesLexer) bool {
 
 	// See pkgtools/createbuildlink/files/createbuildlink, keyword PKGUPPER
 	ucPkgbase := strings.ToUpper(strings.Replace(pkgbase, "-", "_", -1))
-	if ucPkgbase != pkgupper && !containsVarRef(pkgbase) {
+	if ucPkgbase != pkgupper && !containsVarUse(pkgbase) {
 		pkgupperLine.Errorf("Package name mismatch between multiple-inclusion guard %q (expected %q) and package name %q (from %s).",
 			pkgupper, ucPkgbase, pkgbase, pkgupperLine.RelMkLine(ck.pkgbaseLine))
 	}
@@ -225,8 +225,8 @@ func (ck *Buildlink3Checker) checkVarassign(mkline *MkLine, pkgbase string) {
 	}
 
 	if doCheck {
-		if ck.abi != nil && ck.abi.Lower != "" && !containsVarRef(ck.abi.Lower) {
-			if ck.api != nil && ck.api.Lower != "" && !containsVarRef(ck.api.Lower) {
+		if ck.abi != nil && ck.abi.Lower != "" && !containsVarUse(ck.abi.Lower) {
+			if ck.api != nil && ck.api.Lower != "" && !containsVarUse(ck.api.Lower) {
 				if pkgver.Compare(ck.abi.Lower, ck.api.Lower) < 0 {
 					ck.abiLine.Warnf("ABI version %q should be at least API version %q (see %s).",
 						ck.abi.Lower, ck.api.Lower, ck.abiLine.RelMkLine(ck.apiLine))

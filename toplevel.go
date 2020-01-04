@@ -44,7 +44,7 @@ func (ctx *Toplevel) checkSubdir(mkline *MkLine) {
 		}
 	}
 
-	if containsVarRef(subdir.String()) || !ctx.dir.JoinNoClean(subdir).JoinNoClean("Makefile").IsFile() {
+	if containsVarUse(subdir.String()) || !ctx.dir.JoinNoClean(subdir).JoinNoClean("Makefile").IsFile() {
 		return
 	}
 
