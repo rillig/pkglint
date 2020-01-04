@@ -85,6 +85,34 @@ func (s *Suite) Test_replaceOnce(c *check.C) {
 	test("aaa", "aa", "b", "aaa")
 }
 
+func (s *Suite) Test_condStr(c *check.C) {
+	t := s.Init(c)
+
+	t.CheckEquals(condStr(true, "T", "F"), "T")
+	t.CheckEquals(condStr(false, "T", "F"), "F")
+}
+
+func (s *Suite) Test_condInt(c *check.C) {
+	t := s.Init(c)
+
+	t.CheckEquals(condInt(true, 123, 456), 123)
+	t.CheckEquals(condInt(false, 123, 456), 456)
+}
+
+func (s *Suite) Test_imax(c *check.C) {
+	t := s.Init(c)
+
+	t.CheckEquals(imax(2, 5), 5)
+	t.CheckEquals(imax(5, 2), 5)
+}
+
+func (s *Suite) Test_imin(c *check.C) {
+	t := s.Init(c)
+
+	t.CheckEquals(imin(2, 5), 2)
+	t.CheckEquals(imin(5, 2), 2)
+}
+
 func (s *Suite) Test_assertNil(c *check.C) {
 	t := s.Init(c)
 
@@ -106,6 +134,13 @@ func (s *Suite) Test_assertNotNil(c *check.C) {
 	t.ExpectPanic(
 		func() { var ptr *string; assertNotNil(ptr) },
 		"Pkglint internal error: unexpected nil pointer")
+}
+
+func (s *Suite) Test_assert(c *check.C) {
+	t := s.Init(c)
+
+	assert(true)
+	t.ExpectAssert(func() { assert(false) })
 }
 
 func (s *Suite) Test_isEmptyDir(c *check.C) {
