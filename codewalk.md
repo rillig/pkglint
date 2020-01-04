@@ -25,7 +25,7 @@ therefore the decision whether each element should be exported or not is not car
 If you want to use some of the code in your own pkgsrc programs,
 [just ask](mailto:%72%69%6C%6C%69%67%40NetBSD.org?subject=using%20pkglint%20as%20a%20library).
 
-> from [pkglint.go](pkglint.go#L113):
+> from [pkglint.go](pkglint.go#L111):
 
 ```go
 func (pkglint *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) (exitCode int) {
@@ -34,7 +34,7 @@ func (pkglint *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) 
 When running pkglint, the `G` variable is set up first.
 It contains the whole global state of pkglint:
 
-> from [pkglint.go](pkglint.go#L98):
+> from [pkglint.go](pkglint.go#L96):
 
 ```go
 // G is the abbreviation for "global state";
@@ -48,7 +48,7 @@ var (
 All the interesting code is in the `Pkglint` type.
 Having only two global variables makes it easy to reset the global state during testing.
 
-> from [pkglint.go](pkglint.go#L105):
+> from [pkglint.go](pkglint.go#L103):
 
 ```go
 // Main runs the main program with the given arguments.
@@ -148,13 +148,13 @@ func main() {
 }
 ```
 
-> from [pkglint.go](pkglint.go#L113):
+> from [pkglint.go](pkglint.go#L111):
 
 ```go
 func (pkglint *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) (exitCode int) {
 ```
 
-> from [pkglint.go](pkglint.go#L125):
+> from [pkglint.go](pkglint.go#L123):
 
 ```go
 	if exitcode := pkglint.ParseCommandLine(args); exitcode != -1 {
@@ -169,7 +169,7 @@ and that is saved in `pkglint.Todo`, which contains all items that still need to
 The default use case for pkglint is to check the package from the
 current working directory, therefore this is done if no arguments are given.
 
-> from [pkglint.go](pkglint.go#L274):
+> from [pkglint.go](pkglint.go#L272):
 
 ```go
 	for _, arg := range pkglint.Opts.args {
@@ -190,7 +190,7 @@ In this example run, the first and only argument is `DESCR`.
 From there, the pkgsrc root is usually reachable via `../../`,
 and this is what pkglint tries.
 
-> from [pkglint.go](pkglint.go#L202):
+> from [pkglint.go](pkglint.go#L200):
 
 ```go
 	firstDir := pkglint.Todo.Front()
@@ -198,7 +198,7 @@ and this is what pkglint tries.
 		firstDir = firstDir.DirNoClean()
 	}
 
-	relTopdir := findPkgsrcTopdir(firstDir)
+	relTopdir := pkglint.findPkgsrcTopdir(firstDir)
 	if relTopdir.IsEmpty() {
 		// If the first argument to pkglint is not inside a pkgsrc tree,
 		// pkglint doesn't know where to load the infrastructure files from,
@@ -218,7 +218,7 @@ one after another. When pkglint is called with the `-r` option,
 some entries may be added to the Todo list,
 but that doesn't happen in this simple example run.
 
-> from [pkglint.go](pkglint.go#L135):
+> from [pkglint.go](pkglint.go#L133):
 
 ```go
 	for !pkglint.Todo.IsEmpty() {
@@ -228,12 +228,12 @@ but that doesn't happen in this simple example run.
 
 The main work is done in `Pkglint.Check`:
 
-> from [pkglint.go](pkglint.go#L332):
+> from [pkglint.go](pkglint.go#L330):
 
 ```go
 	if isReg {
 		pkglint.checkExecutable(dirent, mode)
-		pkglint.checkReg(dirent, basename, pkgsrcRel.Count())
+		pkglint.checkReg(dirent, basename, pkgsrcRel.Count(), nil)
 		return
 	}
 ```
@@ -242,19 +242,19 @@ Since `DESCR` is a regular file, the next function to call is `checkReg`.
 For directories, the next function would depend on the depth from the
 pkgsrc root directory.
 
-> from [pkglint.go](pkglint.go#L548):
+> from [pkglint.go](pkglint.go#L551):
 
 ```go
-func (pkglint *Pkglint) checkReg(filename CurrPath, basename string, depth int) {
+func (pkglint *Pkglint) checkReg(filename CurrPath, basename string, depth int, pkg *Package) {
 ```
 
 The relevant part of `Pkglint.checkReg` is:
 
-> from [pkglint.go](pkglint.go#L573):
+> from [pkglint.go](pkglint.go#L576):
 
 ```go
 	case basename == "buildlink3.mk":
-		if mklines := LoadMk(filename, NotEmpty|LogErrors); mklines != nil {
+		if mklines := LoadMk(filename, pkg, NotEmpty|LogErrors); mklines != nil {
 			CheckLinesBuildlink3Mk(mklines)
 		}
 
@@ -265,7 +265,7 @@ The relevant part of `Pkglint.checkReg` is:
 
 	case basename == "distinfo":
 		if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
-			CheckLinesDistinfo(G.Pkg, lines)
+			CheckLinesDistinfo(pkg, lines)
 		}
 ```
 
@@ -281,7 +281,7 @@ The actual checks usually work on `Line` objects instead of files
 because the lines offer nice methods for logging the diagnostics
 and for automatically fixing the text (in pkglint's `--autofix` mode).
 
-> from [pkglint.go](pkglint.go#L428):
+> from [pkglint.go](pkglint.go#L431):
 
 ```go
 func CheckLinesDescr(lines *Lines) {
@@ -347,7 +347,10 @@ func (ck LineChecker) CheckTrailingWhitespace() {
 	// Markdown files may need trailing whitespace. If there should ever
 	// be Markdown files in pkgsrc, this code has to be adjusted.
 
-	if rtrimHspace(ck.line.Text) == ck.line.Text {
+	rawIndex := len(ck.line.raw) - 1
+	text := ck.line.raw[rawIndex].Text()
+	trimmed := rtrimHspace(text)
+	if len(trimmed) == len(text) {
 		return
 	}
 
@@ -355,7 +358,7 @@ func (ck LineChecker) CheckTrailingWhitespace() {
 	fix.Notef("Trailing whitespace.")
 	fix.Explain(
 		"This whitespace is irrelevant and can be removed.")
-	fix.ReplaceRegex(`[ \t\r]+\n$`, "\n", 1)
+	fix.ReplaceAt(rawIndex, len(trimmed), text[len(trimmed):], "")
 	fix.Apply()
 }
 ```
@@ -364,7 +367,7 @@ This code is a typical example for using the autofix feature.
 Some more possibilities are described at the `Autofix` type itself
 and at its typical call site `Line.Autofix()`:
 
-> from [autofix.go](autofix.go#L15):
+> from [autofix.go](autofix.go#L14):
 
 ```go
 // Autofix handles all modifications to a single line,
@@ -383,7 +386,7 @@ type Autofix struct {
 }
 ```
 
-> from [line.go](line.go#L171):
+> from [line.go](line.go#L172):
 
 ```go
 // Autofix returns the autofix instance belonging to the line.
@@ -402,7 +405,6 @@ type Autofix struct {
 //
 //  fix.Replace("from", "to")
 //  fix.ReplaceAfter("prefix", "from", "to")
-//  fix.ReplaceRegex(`[\t ]+`, "space", -1)
 //  fix.InsertBefore("new line")
 //  fix.InsertAfter("new line")
 //  fix.Delete()
@@ -424,7 +426,7 @@ func (line *Line) Autofix() *Autofix {
 The journey ends here, and it hasn't been that difficult.
 If that was too easy, have a look at the complex cases here:
 
-> from [mkline.go](mkline.go#L656):
+> from [mkline.go](mkline.go#L662):
 
 ```go
 // VariableNeedsQuoting determines whether the given variable needs the :Q
@@ -567,7 +569,7 @@ WARN: Makefile:3: COMMENT should not start with "A" or "An".
 
 The definition for the `Line` type is:
 
-> from [line.go](line.go#L78):
+> from [line.go](line.go#L79):
 
 ```go
 // Line represents a line of text from a file.
@@ -754,7 +756,7 @@ The `t` variable is the center of most tests.
 It is of type `Tester` and provides a high-level interface
 for setting up tests and checking the results.
 
-> from [check_test.go](check_test.go#L179):
+> from [check_test.go](check_test.go#L178):
 
 ```go
 // Tester provides utility methods for testing pkglint.
@@ -787,7 +789,7 @@ which is the underlying testing framework.
 Most pkglint tests don't need this variable.
 Low-level tests call `c.Check` to compare their results to the expected values.
 
-> from [util_test.go](util_test.go#L191):
+> from [util_test.go](util_test.go#L217):
 
 ```go
 func (s *Suite) Test_tabWidth(c *check.C) {
