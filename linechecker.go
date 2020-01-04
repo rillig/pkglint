@@ -43,8 +43,8 @@ func (ck LineChecker) CheckTrailingWhitespace() {
 
 	rawIndex := len(ck.line.raw) - 1
 	text := ck.line.raw[rawIndex].Text()
-	trimmed := rtrimHspace(text)
-	if len(trimmed) == len(text) {
+	trimmedLen := len(rtrimHspace(text))
+	if trimmedLen == len(text) {
 		return
 	}
 
@@ -52,6 +52,6 @@ func (ck LineChecker) CheckTrailingWhitespace() {
 	fix.Notef("Trailing whitespace.")
 	fix.Explain(
 		"This whitespace is irrelevant and can be removed.")
-	fix.ReplaceAt(rawIndex, len(trimmed), text[len(trimmed):], "")
+	fix.ReplaceAt(rawIndex, trimmedLen, text[trimmedLen:], "")
 	fix.Apply()
 }
