@@ -36,7 +36,7 @@ func (s *Suite) Test_CheckLinesDistinfo__parse_errors(c *check.C) {
 		"WARN: distinfo:9: Patch file \"patch-nonexistent\" does not exist in directory \"patches\".")
 }
 
-func (s *Suite) Test_distinfoLinesChecker_parse__empty(c *check.C) {
+func (s *Suite) Test_distinfoLinesChecker_parse__trailing_empty_line(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("distinfo",
@@ -47,6 +47,46 @@ func (s *Suite) Test_distinfoLinesChecker_parse__empty(c *check.C) {
 
 	t.CheckOutputLines(
 		"NOTE: ~/distinfo:2: Trailing empty lines.")
+}
+
+func (s *Suite) Test_distinfoLinesChecker_parse__empty_file(c *check.C) {
+	t := s.Init(c)
+
+	lines := t.SetUpFileLines("distinfo",
+		CvsID)
+
+	CheckLinesDistinfo(nil, lines)
+
+	t.CheckOutputLines(
+		"NOTE: ~/distinfo:1: Empty line expected after this line.")
+}
+
+func (s *Suite) Test_distinfoLinesChecker_parse__commented_first_line(c *check.C) {
+	t := s.Init(c)
+
+	// This mismatch can happen for inexperienced pkgsrc users.
+	// It's not easy to keep all these different file types apart.
+	lines := t.SetUpFileLines("distinfo",
+		PlistCvsID)
+
+	CheckLinesDistinfo(nil, lines)
+
+	t.CheckOutputLines(
+		"ERROR: ~/distinfo:1: Expected \"$NetBSD$\".",
+		"NOTE: ~/distinfo:1: Empty line expected before this line.",
+		"ERROR: ~/distinfo:1: Invalid line: @comment $NetBSD$")
+}
+
+func (s *Suite) Test_distinfoLinesChecker_parse__completely_empty_file(c *check.C) {
+	t := s.Init(c)
+
+	lines := t.SetUpFileLines("distinfo",
+		nil...)
+
+	CheckLinesDistinfo(nil, lines)
+
+	t.CheckOutputLines(
+		"NOTE: ~/distinfo:EOF: Empty line expected before this line.")
 }
 
 // When the distinfo file and the patches are placed in the same package,
