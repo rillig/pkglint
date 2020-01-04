@@ -210,9 +210,12 @@ func (s *Suite) Test_MkLineParser_parseVarassign__escaped_hash_in_value(c *check
 func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 	t := s.Init(c)
 
-	// TODO: remove align
 	testLine := func(line *Line, commented bool, varname, spaceAfterVarname, op, align, value, spaceAfterValue, comment string, diagnostics ...string) {
 		text := line.Text
+
+		t.CheckOutputEmpty()
+		valueAlign := NewMkLineParser().Parse(line).ValueAlign()
+		_ = t.Output()
 
 		parser := NewMkLineParser()
 		splitResult := parser.split(nil, text, true)
@@ -232,6 +235,7 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 			fields:            nil,
 		}
 		t.CheckDeepEquals(*actual, expected)
+		t.CheckEquals(valueAlign, align)
 		t.CheckEquals(splitResult.spaceBeforeComment, spaceAfterValue)
 		t.CheckEquals(splitResult.hasComment, comment != "")
 		t.CheckEquals(condStr(splitResult.hasComment, "#", "")+splitResult.comment, comment)
