@@ -181,7 +181,7 @@ func (pkg *Package) loadPackageMakefile() (*MkLines, *MkLines) {
 		return nil, nil
 	}
 
-	allLines := NewMkLines(NewLines("", nil), pkg)
+	allLines := NewMkLines(NewLines("", nil), pkg, &pkg.vars)
 	if !pkg.parse(mainLines, allLines, "", true) {
 		return nil, nil
 	}

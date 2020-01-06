@@ -709,8 +709,7 @@ func (s *Suite) Test_Scope_LastValue__append_in_multiple_files(c *check.C) {
 
 	pkg.Check()
 
-	// FIXME: "one two"
-	t.CheckEquals(pkg.vars.LastValue("PLIST_VARS"), "one")
+	t.CheckEquals(pkg.vars.LastValue("PLIST_VARS"), "one two")
 }
 
 func (s *Suite) Test_Scope_DefineAll(c *check.C) {

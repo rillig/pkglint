@@ -319,7 +319,7 @@ func (t *Tester) LoadMkInclude(filename RelPath) *MkLines {
 
 	var load func(filename CurrPath)
 	load = func(filename CurrPath) {
-		mklines := NewMkLines(Load(filename, MustSucceed), nil)
+		mklines := NewMkLines(Load(filename, MustSucceed), nil, nil)
 		for _, mkline := range mklines.mklines {
 			lines = append(lines, mkline.Line)
 
@@ -333,7 +333,7 @@ func (t *Tester) LoadMkInclude(filename RelPath) *MkLines {
 
 	// This assumes that the test files do not contain parse errors.
 	// Otherwise the diagnostics would appear twice.
-	return NewMkLines(NewLines(t.File(filename), lines), nil)
+	return NewMkLines(NewLines(t.File(filename), lines), nil, nil)
 }
 
 // SetUpPkgsrc sets up a minimal but complete pkgsrc installation in the
@@ -753,7 +753,7 @@ func (t *Tester) SetUpHierarchy() (
 			}
 		}
 
-		mklines := NewMkLines(NewLines(NewCurrPath(relFilename.AsPath()), lines), nil)
+		mklines := NewMkLines(NewLines(NewCurrPath(relFilename.AsPath()), lines), nil, nil)
 		assertf(files[filename] == nil, "MkLines with name %q already exists.", filename)
 		files[filename] = mklines
 		return mklines
@@ -1057,7 +1057,7 @@ func (t *Tester) NewLinesAt(filename CurrPath, firstLine int, texts ...string) *
 // This can lead to strange error messages such as "Relative path %s does
 // not exist." because an intermediate directory in the path does not exist.
 //
-// If the filename is irrelevant for the particular test, take filename.mk.
+// If the filename is irrelevant for the particular test, just use filename.mk.
 func (t *Tester) NewMkLines(filename CurrPath, lines ...string) *MkLines {
 	return t.NewMkLinesPkg(filename, nil, lines...)
 }
@@ -1073,7 +1073,7 @@ func (t *Tester) NewMkLinesPkg(filename CurrPath, pkg *Package, lines ...string)
 		rawText.WriteString(line)
 		rawText.WriteString("\n")
 	}
-	return NewMkLines(convertToLogicalLines(filename, rawText.String(), true), pkg)
+	return NewMkLines(convertToLogicalLines(filename, rawText.String(), true), pkg, nil)
 }
 
 // Returns and consumes the output from both stdout and stderr.
