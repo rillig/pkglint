@@ -1042,7 +1042,8 @@ func (s *Suite) Test_PlistChecker_checkCond(c *check.C) {
 		"PLIST.both=\tyes")
 	t.CreateFileLines("category/package/PLIST",
 		PlistCvsID,
-		"${PLIST.both}${PLIST.plist}bin/program")
+		"${PLIST.both}${PLIST.plist}bin/program",
+		"${PLIST.both}${PLIST.plist}bin/program2")
 	t.FinishSetUp()
 
 	G.Check(pkg)

@@ -484,21 +484,18 @@ func (ck *PlistChecker) checkCond(pline *PlistLine, cond string) {
 			return
 		}
 		if containsVarUse(varparam) {
-			if trace.Tracing {
-				trace.Stepf(
-					"Skipping check for condition %q because PLIST_VARS "+
-						"contains the unresolved %q as part of %q.",
-					cond, varparam, resolvedPlistVars)
-			}
+			trace.Stepf(
+				"Skipping check for condition %q because PLIST_VARS "+
+					"contains the unresolved %q as part of %q.",
+				cond, varparam, resolvedPlistVars)
 			return
 		}
 	}
 
-	if ck.once.FirstTimeSlice("cond", cond) {
-		pline.Warnf(
-			"Condition %q should be added to PLIST_VARS in the package Makefile.",
-			cond)
-	}
+	assert(ck.once.FirstTimeSlice("cond", cond))
+	pline.Warnf(
+		"Condition %q should be added to PLIST_VARS in the package Makefile.",
+		cond)
 }
 
 type PlistLine struct {
