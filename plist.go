@@ -206,6 +206,7 @@ func (ck *PlistChecker) checkPath(pline *PlistLine, rel RelPath) {
 	}
 
 	ck.checkPathMisc(rel, pline)
+	ck.checkPathCond(pline)
 }
 
 func (ck *PlistChecker) checkPathMisc(rel RelPath, pline *PlistLine) {
@@ -456,6 +457,47 @@ func (ck *PlistChecker) checkPathShareIcons(pline *PlistLine) {
 
 	if contains(text[12:], "/") && !pkg.vars.IsDefined("ICON_THEMES") && ck.once.FirstTime("ICON_THEMES") {
 		pline.Warnf("Packages that install icon theme files should set ICON_THEMES.")
+	}
+}
+
+func (ck *PlistChecker) checkPathCond(pline *PlistLine) {
+	if ck.pkg == nil {
+		return
+	}
+
+	for _, cond := range pline.conditions {
+		ck.checkCond(pline, cond[6:])
+	}
+}
+
+func (ck *PlistChecker) checkCond(pline *PlistLine, cond string) {
+	vars := ck.pkg.vars
+	mkline := vars.LastDefinition("PLIST_VARS")
+	if mkline == nil || ck.once.SeenSlice("cond", cond) {
+		return
+	}
+
+	plistVars := vars.LastValue("PLIST_VARS")
+	resolvedPlistVars := resolveVariableRefs(plistVars, nil, ck.pkg)
+	for _, varparam := range mkline.ValueFields(resolvedPlistVars) {
+		if varparam == cond {
+			return
+		}
+		if containsVarUse(varparam) {
+			if trace.Tracing {
+				trace.Stepf(
+					"Skipping check for condition %q because PLIST_VARS "+
+						"contains the unresolved %q as part of %q.",
+					cond, varparam, resolvedPlistVars)
+			}
+			return
+		}
+	}
+
+	if ck.once.FirstTimeSlice("cond", cond) {
+		pline.Warnf(
+			"Condition %q should be added to PLIST_VARS in the package Makefile.",
+			cond)
 	}
 }
 

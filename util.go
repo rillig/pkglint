@@ -558,6 +558,11 @@ func (o *Once) Seen(what string) bool {
 	return seen
 }
 
+func (o *Once) SeenSlice(whats ...string) bool {
+	_, seen := o.seen[o.keyStrings(whats)]
+	return seen
+}
+
 func (*Once) keyString(what string) uint64 {
 	return crc64.Checksum([]byte(what), crc64.MakeTable(crc64.ECMA))
 }
