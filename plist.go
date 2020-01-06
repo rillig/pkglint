@@ -406,11 +406,10 @@ func (ck *PlistChecker) checkPathMan(pline *PlistLine) {
 }
 
 func (ck *PlistChecker) checkPathShare(pline *PlistLine) {
-	pkg := ck.pkg
 	text := pline.text
 
 	switch {
-	case pkg != nil && hasPrefix(text, "share/icons/"):
+	case ck.pkg != nil && hasPrefix(text, "share/icons/"):
 		ck.checkPathShareIcons(pline)
 
 	case hasPrefix(text, "share/doc/html/"):
