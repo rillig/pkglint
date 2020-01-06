@@ -444,6 +444,9 @@ func (t *Tester) SetUpCategory(name RelPath) {
 // After calling this method, individual files can be overwritten as necessary.
 // At the end of the setup phase, t.FinishSetUp() must be called to load all
 // the files.
+//
+// If the package path does not really matter for this test,
+// just use "category/package".
 func (t *Tester) SetUpPackage(pkgpath RelPath, makefileLines ...string) CurrPath {
 	assertf(
 		matches(pkgpath.String(), `^[^/]+/[^/]+$`),

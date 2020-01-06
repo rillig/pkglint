@@ -691,6 +691,28 @@ func (s *Suite) Test_Scope_LastValue(c *check.C) {
 		"WARN: file.mk:2: VAR is defined but not used.")
 }
 
+// Up to 2020-01-06, pkglint wrongly returned "one" as the variable value,
+// even though Makefile.common is included before appending "two".
+func (s *Suite) Test_Scope_LastValue__append_in_multiple_files(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".include \"Makefile.common\"",
+		"PLIST_VARS+=\ttwo",
+		"PLIST.two=\tyes")
+	t.CreateFileLines("category/package/Makefile.common",
+		MkCvsID,
+		"PLIST_VARS=\tone",
+		"PLIST.one=\tyes")
+	pkg := NewPackage(t.File("category/package"))
+	t.FinishSetUp()
+
+	pkg.Check()
+
+	// FIXME: "one two"
+	t.CheckEquals(pkg.vars.LastValue("PLIST_VARS"), "one")
+}
+
 func (s *Suite) Test_Scope_DefineAll(c *check.C) {
 	t := s.Init(c)
 
