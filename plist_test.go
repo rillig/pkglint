@@ -1098,13 +1098,10 @@ func (s *Suite) Test_PlistChecker_checkCond__hacks_mk(c *check.C) {
 
 	G.Check(".")
 
+	// Since hacks.mk is included implicitly into the package Makefile,
+	// the condition that is defined there may be used in the PLIST.
 	t.CheckOutputLines(
-		// FIXME: Include hacks.mk implicitly into the package Makefile,
-		//  at the very end. See mk/bsd.hacks.mk, which is included by
-		//  bsd.pkg.mk.
-		"WARN: PLIST:2: Condition \"hack\" should be added to PLIST_VARS "+
-			"in the package Makefile.",
-		"WARN: PLIST:2: Condition \"plist\" should be added to PLIST_VARS "+
+		"WARN: PLIST:2: Condition \"plist\" should be added to PLIST_VARS " +
 			"in the package Makefile.")
 }
 
