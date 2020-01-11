@@ -362,7 +362,7 @@ func (s *Suite) Test_VartypeCheck_ConfFiles(c *check.C) {
 		"WARN: filename.mk:5: The destination file \"/etc/bootrc\" should start with a variable reference.")
 }
 
-// See Test_MkParser_Dependency.
+// See Test_MkParser_DependencyPattern.
 func (s *Suite) Test_VartypeCheck_DependencyPattern(c *check.C) {
 	vt := NewVartypeCheckTester(s.Init(c), BtDependencyPattern)
 

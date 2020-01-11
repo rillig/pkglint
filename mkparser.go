@@ -341,8 +341,8 @@ type DependencyPattern struct {
 	Wildcard string // "[0-9]*", "1.5.*", "${PYVER}"
 }
 
-// Dependency parses a dependency pattern like "pkg>=1<2" or "pkg-[0-9]*".
-func (p *MkParser) Dependency() *DependencyPattern {
+// DependencyPattern parses a dependency pattern like "pkg>=1<2" or "pkg-[0-9]*".
+func (p *MkParser) DependencyPattern() *DependencyPattern {
 	lexer := p.lexer
 
 	parseVersion := func() string {

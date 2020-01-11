@@ -356,12 +356,12 @@ func (s *Suite) Test_MkParser_isPkgbasePart(c *check.C) {
 	test("_client", false) // The combination foo-_client looks strange.
 }
 
-func (s *Suite) Test_MkParser_Dependency(c *check.C) {
+func (s *Suite) Test_MkParser_DependencyPattern(c *check.C) {
 	t := s.Init(c)
 
 	testRest := func(pattern string, expected DependencyPattern, rest string) {
 		parser := NewMkParser(nil, pattern)
-		dp := parser.Dependency()
+		dp := parser.DependencyPattern()
 		if c.Check(dp, check.NotNil) {
 			t.CheckEquals(*dp, expected)
 			t.CheckEquals(parser.Rest(), rest)
@@ -370,7 +370,7 @@ func (s *Suite) Test_MkParser_Dependency(c *check.C) {
 
 	testNil := func(pattern string) {
 		parser := NewMkParser(nil, pattern)
-		dp := parser.Dependency()
+		dp := parser.DependencyPattern()
 		if c.Check(dp, check.IsNil) {
 			t.CheckEquals(parser.Rest(), pattern)
 		}

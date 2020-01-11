@@ -293,7 +293,7 @@ func (cv *VartypeCheck) DependencyPattern() {
 	value := cv.Value
 
 	parser := NewMkParser(nil, value)
-	deppat := parser.Dependency()
+	deppat := parser.DependencyPattern()
 	rest := parser.Rest()
 
 	if deppat != nil && deppat.Wildcard == "" && (rest == "{,nb*}" || rest == "{,nb[0-9]*}") {
