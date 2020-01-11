@@ -1105,6 +1105,27 @@ func (s *Suite) Test_Pkglint_checkReg__spec(c *check.C) {
 		"WARN: ~/category/package/spec: Only packages in regress/ may have spec files.")
 }
 
+func (s *Suite) Test_Pkglint_checkRegCvsSubst(c *check.C) {
+	t := s.Init(c)
+
+	t.Chdir(".")
+	t.CreateFileLines("ok")
+	t.CreateFileLines("binary")
+	t.CreateFileLines("other")
+	t.CreateFileLines("CVS/Entries",
+		"/ok/1.1/mod//",
+		"/binary/1.1/mod/-kb/",
+		"/other/1.1/mod/-ko/")
+
+	G.checkRegCvsSubst("ok")
+	G.checkRegCvsSubst("binary")
+	G.checkRegCvsSubst("other")
+
+	t.CheckOutputLines(
+		"ERROR: binary: The CVS keyword substitution must be the default one.",
+		"ERROR: other: The CVS keyword substitution must be the default one.")
+}
+
 func (s *Suite) Test_Pkglint_checkExecutable(c *check.C) {
 	t := s.Init(c)
 
