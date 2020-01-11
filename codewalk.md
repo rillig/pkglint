@@ -250,7 +250,7 @@ func (pkglint *Pkglint) checkReg(filename CurrPath, basename string, depth int, 
 
 The relevant part of `Pkglint.checkReg` is:
 
-> from [pkglint.go](pkglint.go#L576):
+> from [pkglint.go](pkglint.go#L578):
 
 ```go
 	case basename == "buildlink3.mk":
@@ -349,8 +349,8 @@ func (ck LineChecker) CheckTrailingWhitespace() {
 
 	rawIndex := len(ck.line.raw) - 1
 	text := ck.line.raw[rawIndex].Text()
-	trimmed := rtrimHspace(text)
-	if len(trimmed) == len(text) {
+	trimmedLen := len(rtrimHspace(text))
+	if trimmedLen == len(text) {
 		return
 	}
 
@@ -358,7 +358,7 @@ func (ck LineChecker) CheckTrailingWhitespace() {
 	fix.Notef("Trailing whitespace.")
 	fix.Explain(
 		"This whitespace is irrelevant and can be removed.")
-	fix.ReplaceAt(rawIndex, len(trimmed), text[len(trimmed):], "")
+	fix.ReplaceAt(rawIndex, trimmedLen, text[trimmedLen:], "")
 	fix.Apply()
 }
 ```
@@ -426,7 +426,7 @@ func (line *Line) Autofix() *Autofix {
 The journey ends here, and it hasn't been that difficult.
 If that was too easy, have a look at the complex cases here:
 
-> from [mkline.go](mkline.go#L662):
+> from [mkline.go](mkline.go#L664):
 
 ```go
 // VariableNeedsQuoting determines whether the given variable needs the :Q
@@ -789,7 +789,7 @@ which is the underlying testing framework.
 Most pkglint tests don't need this variable.
 Low-level tests call `c.Check` to compare their results to the expected values.
 
-> from [util_test.go](util_test.go#L217):
+> from [util_test.go](util_test.go#L252):
 
 ```go
 func (s *Suite) Test_tabWidth(c *check.C) {
