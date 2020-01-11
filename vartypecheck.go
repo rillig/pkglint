@@ -289,7 +289,7 @@ func (cv *VartypeCheck) ConfFiles() {
 	}
 }
 
-func (cv *VartypeCheck) Dependency() {
+func (cv *VartypeCheck) DependencyPattern() {
 	value := cv.Value
 
 	parser := NewMkParser(nil, value)
@@ -406,7 +406,7 @@ func (cv *VartypeCheck) DependencyWithPath() {
 			cv.Warnf("Please use USE_TOOLS+=gmake instead of this dependency.")
 		}
 
-		cv.WithValue(pattern).Dependency()
+		cv.WithValue(pattern).DependencyPattern()
 
 		return
 	}

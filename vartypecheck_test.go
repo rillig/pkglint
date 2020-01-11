@@ -363,8 +363,8 @@ func (s *Suite) Test_VartypeCheck_ConfFiles(c *check.C) {
 }
 
 // See Test_MkParser_Dependency.
-func (s *Suite) Test_VartypeCheck_Dependency(c *check.C) {
-	vt := NewVartypeCheckTester(s.Init(c), BtDependency)
+func (s *Suite) Test_VartypeCheck_DependencyPattern(c *check.C) {
+	vt := NewVartypeCheckTester(s.Init(c), BtDependencyPattern)
 
 	vt.Varname("CONFLICTS")
 	vt.Op(opAssignAppend)
