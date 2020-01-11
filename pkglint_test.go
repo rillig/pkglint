@@ -1148,7 +1148,7 @@ func (s *Suite) Test_Pkglint_checkRegCvsSubst__full_package(c *check.C) {
 	G.Check(".")
 
 	t.CheckOutputLines(
-		// TODO: Add error message for Makefile.
+		"ERROR: Makefile: The CVS keyword substitution must be the default one.",
 		"ERROR: patches/patch-any: The CVS keyword substitution must be the default one.")
 }
 
