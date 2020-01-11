@@ -384,8 +384,9 @@ func (cv *VartypeCheck) DependencyWithPath() {
 	parts := cv.MkLine.ValueSplit(value, ":")
 	if len(parts) == 2 {
 		pattern := parts[0]
-		relpath := NewRelPathString(parts[1])
-		pathParts := relpath.Parts()
+		packagePath := NewPackagePathString(parts[1])
+		relPath := packagePath.AsRelPath()
+		pathParts := relPath.Parts()
 		pkg := pathParts[len(pathParts)-1]
 
 		if len(pathParts) >= 2 && pathParts[0] == ".." && pathParts[1] != ".." {
@@ -393,8 +394,9 @@ func (cv *VartypeCheck) DependencyWithPath() {
 			cv.MkLine.ExplainRelativeDirs()
 		}
 
-		if !containsVarUse(relpath.String()) {
-			MkLineChecker{cv.MkLines, cv.MkLine}.CheckRelativePkgdir(relpath)
+		if !containsVarUse(packagePath.String()) {
+			ck := MkLineChecker{cv.MkLines, cv.MkLine}
+			ck.CheckRelativePkgdir(relPath, packagePath)
 		}
 
 		switch pkg {
@@ -1148,17 +1150,21 @@ func (cv *VartypeCheck) RPkgVer() {
 	}
 }
 
-// RelativePkgDir refers to a package directory, e.g. ../../category/pkgbase.
+// RelativePkgDir refers from one package directory to another package
+// directory, e.g. ../../category/pkgbase.
 func (cv *VartypeCheck) RelativePkgDir() {
 	if NewPath(cv.Value).IsAbs() {
 		cv.Errorf("The path %q must be relative.", cv.Value)
 		return
 	}
 
-	MkLineChecker{cv.MkLines, cv.MkLine}.CheckRelativePkgdir(NewRelPathString(cv.Value))
+	ck := MkLineChecker{cv.MkLines, cv.MkLine}
+	packagePath := NewPackagePathString(cv.Value)
+	ck.CheckRelativePkgdir(packagePath.AsRelPath(), packagePath)
 }
 
-// RelativePkgPath refers to a file or directory, e.g. ../../category/pkgbase,
+// RelativePkgPath refers from one package directory to another file
+// or directory, e.g. ../../category/pkgbase,
 // ../../category/pkgbase/Makefile.
 //
 // See RelativePkgDir, which requires a directory, not a file.
@@ -1168,7 +1174,9 @@ func (cv *VartypeCheck) RelativePkgPath() {
 		return
 	}
 
-	MkLineChecker{cv.MkLines, cv.MkLine}.CheckRelativePath(NewRelPathString(cv.Value), true)
+	packagePath := NewPackagePathString(cv.Value)
+	ck := MkLineChecker{cv.MkLines, cv.MkLine}
+	ck.CheckRelativePath(packagePath, packagePath.AsRelPath(), true)
 }
 
 func (cv *VartypeCheck) Restricted() {

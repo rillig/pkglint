@@ -564,7 +564,8 @@ func (*MkLine) WithoutMakeVariables(value string) string {
 	return valueNovar.String()
 }
 
-func (mkline *MkLine) ResolveVarsInRelativePath(relativePath RelPath, pkg *Package) RelPath {
+func (mkline *MkLine) ResolveVarsInRelativePath(relativePath PackagePath, pkg *Package) PackagePath {
+	// TODO: Not every path is relative to the package directory.
 	if !containsVarUse(relativePath.String()) {
 		return relativePath.CleanPath()
 	}

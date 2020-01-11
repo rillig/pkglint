@@ -535,7 +535,7 @@ func (s *Suite) Test_MkLine_ResolveVarsInRelativePath(c *check.C) {
 	mkline := mklines.mklines[0]
 	var pkg *Package = nil
 
-	test := func(before RelPath, after RelPath) {
+	test := func(before PackagePath, after PackagePath) {
 		t.CheckEquals(mkline.ResolveVarsInRelativePath(before, pkg), after)
 	}
 
