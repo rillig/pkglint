@@ -1126,6 +1126,32 @@ func (s *Suite) Test_Pkglint_checkRegCvsSubst(c *check.C) {
 		"ERROR: other: The CVS keyword substitution must be the default one.")
 }
 
+// The package Makefile is loaded via a different path
+// than direct command line arguments. Same for the patches.
+// Therefore these code paths must be tested separately.
+func (s *Suite) Test_Pkglint_checkRegCvsSubst__full_package(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.Chdir("category/package")
+	t.CreateFileDummyPatch("patches/patch-any")
+	t.CreateFileLines("distinfo",
+		CvsID,
+		"",
+		"SHA1 (patch-any) = ebbf34b0641bcb508f17d5a27f2bf2a536d810ac")
+	t.CreateFileLines("CVS/Entries",
+		"/Makefile/1.1/modified/-ko/")
+	t.CreateFileLines("patches/CVS/Entries",
+		"/patch-any/1.1/modified/-ko/")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	t.CheckOutputLines(
+		// TODO: Add error message for Makefile.
+		"ERROR: patches/patch-any: The CVS keyword substitution must be the default one.")
+}
+
 func (s *Suite) Test_Pkglint_checkExecutable(c *check.C) {
 	t := s.Init(c)
 
