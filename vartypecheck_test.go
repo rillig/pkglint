@@ -1651,6 +1651,20 @@ func (s *Suite) Test_VartypeCheck_RelativePkgPath(c *check.C) {
 		"ERROR: filename.mk:4: Relative path \"invalid\" does not exist.",
 		"ERROR: filename.mk:5: Relative path \"../../invalid/relative\" does not exist.",
 		"ERROR: filename.mk:6: The path \"/absolute\" must be relative.")
+
+	vt.File("../../mk/infra.mk")
+	vt.Values(
+		"../package",
+		"../../category/other-package",
+		"../../missing/package",
+		"../../category/missing")
+
+	vt.Output(
+		"ERROR: ../../mk/infra.mk:1: Relative path \"../package\" does not exist.",
+		// FIXME: This directory _does_ exist.
+		"ERROR: ../../mk/infra.mk:2: Relative path \"../../category/other-package\" does not exist.",
+		"ERROR: ../../mk/infra.mk:3: Relative path \"../../missing/package\" does not exist.",
+		"ERROR: ../../mk/infra.mk:4: Relative path \"../../category/missing\" does not exist.")
 }
 
 func (s *Suite) Test_VartypeCheck_Restricted(c *check.C) {
