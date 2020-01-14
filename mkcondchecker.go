@@ -36,7 +36,7 @@ func (ck *MkCondChecker) Check() {
 	// Skip subconditions that have already been handled as part of the !(...).
 	done := make(map[interface{}]bool)
 
-	checkNotEmpty := func(not *MkCond) {
+	checkNot := func(not *MkCond) {
 		empty := not.Empty
 		if empty != nil {
 			ck.checkEmpty(empty, true, true)
@@ -48,6 +48,8 @@ func (ck *MkCondChecker) Check() {
 			ck.checkEmpty(varUse, false, false)
 			done[varUse] = true
 		}
+
+		ck.checkNotCompare(not)
 	}
 
 	checkEmpty := func(empty *MkVarUse) {
@@ -63,7 +65,7 @@ func (ck *MkCondChecker) Check() {
 	}
 
 	cond.Walk(&MkCondCallback{
-		Not:     checkNotEmpty,
+		Not:     checkNot,
 		Empty:   checkEmpty,
 		Var:     checkVar,
 		Compare: ck.checkCompare,
@@ -299,4 +301,13 @@ func (ck *MkCondChecker) checkCompareVarStrCompiler(op string, value string) {
 	fix.Replace("${PKGSRC_COMPILER} "+op+" "+value, "${PKGSRC_COMPILER:"+matchOp+value+"}")
 	fix.Replace("${PKGSRC_COMPILER} "+op+" \""+value+"\"", "${PKGSRC_COMPILER:"+matchOp+value+"}")
 	fix.Apply()
+}
+
+func (ck *MkCondChecker) checkNotCompare(not *MkCond) {
+	if not.Compare == nil {
+		return
+	}
+
+	// FIXME: Don't warn about already parenthesized conditions.
+	ck.MkLine.Warnf("The ! should use parentheses or be merged into the comparison operator.")
 }

@@ -90,6 +90,7 @@ func (s *Suite) Test_MkCondChecker_Check(c *check.C) {
 	// Doesn't occur in practice since it is surprising that the ! applies
 	// to the comparison operator, and not to one of its arguments.
 	test(".if !${VAR} == value",
+		"WARN: filename.mk:4: The ! should use parentheses or be merged into the comparison operator.",
 		"WARN: filename.mk:4: VAR is used but not defined.")
 
 	// Doesn't occur in practice since this string can never be empty.
@@ -190,7 +191,8 @@ func (s *Suite) Test_MkCondChecker_Check__compare_pattern_with_empty(c *check.C)
 
 	t.CheckOutputLines(
 		"WARN: filename.mk:8: The pathname pattern \"<>\" contains the invalid characters \"<>\".",
-		"WARN: filename.mk:8: The pathname \"*\" contains the invalid character \"*\".")
+		"WARN: filename.mk:8: The pathname \"*\" contains the invalid character \"*\".",
+		"WARN: filename.mk:11: The ! should use parentheses or be merged into the comparison operator.")
 }
 
 func (s *Suite) Test_MkCondChecker_Check__comparing_PKGSRC_COMPILER_with_eqeq(c *check.C) {
@@ -1148,5 +1150,37 @@ func (s *Suite) Test_MkCondChecker_checkCompareVarStrCompiler(c *check.C) {
 	test(
 		"${PKGSRC_COMPILER} == \"distcc gcc\"",
 
+		nil...)
+}
+
+func (s *Suite) Test_MkCondChecker_checkNotCompare(c *check.C) {
+	t := s.Init(c)
+
+	test := func(cond string, diagnostics ...string) {
+		mklines := t.NewMkLines("filename.mk",
+			".if "+cond)
+		mkline := mklines.mklines[0]
+		ck := NewMkCondChecker(mkline, mklines)
+
+		ck.checkNotCompare(mkline.Cond().Not)
+
+		t.CheckOutput(diagnostics)
+	}
+
+	test("!${VAR} == value",
+		"WARN: filename.mk:1: The ! should use parentheses "+
+			"or be merged into the comparison operator.")
+
+	test("!${VAR} != value",
+		"WARN: filename.mk:1: The ! should use parentheses "+
+			"or be merged into the comparison operator.")
+
+	// @beta
+	test("!(${VAR} == value)",
+		// FIXME: This is already parenthesized.
+		"WARN: filename.mk:1: The ! should use parentheses "+
+			"or be merged into the comparison operator.")
+
+	test("!${VAR}",
 		nil...)
 }
