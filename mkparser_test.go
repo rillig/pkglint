@@ -38,6 +38,7 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 		return &MkCond{Empty: b.VarUse(varname, mods...)}
 	}
 	defined := func(varname string) *MkCond { return &MkCond{Defined: varname} }
+	paren := func(cond *MkCond) *MkCond { return &MkCond{Paren: cond} }
 
 	testRest := func(input string, expectedTree *MkCond, expectedRest string) {
 		// As of July 2019 p.MkCond does not emit warnings;
@@ -138,7 +139,7 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 		cmp(cvar("VAR"), "==", cnum("0xCAFEBABE")))
 
 	test("! ( defined(A)  && empty(VARNAME) )",
-		not(and(defined("A"), empty("VARNAME"))))
+		not(paren(and(defined("A"), empty("VARNAME")))))
 
 	test("${REQD_MAJOR} > ${MAJOR}",
 		cmp(cvar("REQD_MAJOR"), ">", cvar("MAJOR")))
@@ -163,8 +164,7 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	// Contrary to most other programming languages, the == operator binds
 	// more tightly than the ! operator.
 	//
-	// TODO: Since this operator precedence is surprising there should be a warning,
-	//  suggesting to replace "!${VAR} == value" with "${VAR} != value".
+	// See MkCondChecker.checkNotCompare.
 	test("!${VAR} == value",
 		not(cmp(cvar("VAR"), "==", cstr("value"))))
 
@@ -259,7 +259,7 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 
 	// Too many closing parentheses are a syntax error.
 	testRest("(${VAR}))",
-		termVar("VAR"),
+		paren(termVar("VAR")),
 		")")
 
 	// The left-hand side of the comparison cannot be an unquoted string literal.

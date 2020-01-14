@@ -113,7 +113,7 @@ func (p *MkParser) mkCondCompare() *MkCond {
 		if cond != nil {
 			lexer.SkipHspace()
 			if lexer.SkipByte(')') {
-				return cond
+				return &MkCond{Paren: cond}
 			}
 		}
 		lexer.Reset(mark)
@@ -454,6 +454,7 @@ type MkCond struct {
 	Term    *MkCondTerm
 	Compare *MkCondCompare
 	Call    *MkCondCall
+	Paren   *MkCond
 }
 type MkCondCompare struct {
 	Left MkCondTerm
@@ -483,6 +484,7 @@ type MkCondCallback struct {
 	Empty   func(empty *MkVarUse)
 	Compare func(left *MkCondTerm, op string, right *MkCondTerm)
 	Call    func(name string, arg string)
+	Paren   func(cond *MkCond)
 
 	// Var is called for every atomic expression that consists solely
 	// of a variable use, possibly enclosed in double quotes, but without
@@ -560,6 +562,12 @@ func (w *MkCondWalker) Walk(cond *MkCond, callback *MkCondCallback) {
 			callback.Call(call.Name, call.Arg)
 		}
 		w.walkStr(cond.Call.Arg, callback)
+
+	case cond.Paren != nil:
+		if callback.Paren != nil {
+			callback.Paren(cond.Paren)
+		}
+		w.Walk(cond.Paren, callback)
 	}
 }
 

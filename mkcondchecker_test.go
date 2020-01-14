@@ -191,8 +191,7 @@ func (s *Suite) Test_MkCondChecker_Check__compare_pattern_with_empty(c *check.C)
 
 	t.CheckOutputLines(
 		"WARN: filename.mk:8: The pathname pattern \"<>\" contains the invalid characters \"<>\".",
-		"WARN: filename.mk:8: The pathname \"*\" contains the invalid character \"*\".",
-		"WARN: filename.mk:11: The ! should use parentheses or be merged into the comparison operator.")
+		"WARN: filename.mk:8: The pathname \"*\" contains the invalid character \"*\".")
 }
 
 func (s *Suite) Test_MkCondChecker_Check__comparing_PKGSRC_COMPILER_with_eqeq(c *check.C) {
@@ -1175,11 +1174,8 @@ func (s *Suite) Test_MkCondChecker_checkNotCompare(c *check.C) {
 		"WARN: filename.mk:1: The ! should use parentheses "+
 			"or be merged into the comparison operator.")
 
-	// @beta
 	test("!(${VAR} == value)",
-		// FIXME: This is already parenthesized.
-		"WARN: filename.mk:1: The ! should use parentheses "+
-			"or be merged into the comparison operator.")
+		nil...)
 
 	test("!${VAR}",
 		nil...)
