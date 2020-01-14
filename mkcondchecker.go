@@ -39,6 +39,7 @@ func (ck *MkCondChecker) Check() {
 	checkNot := func(not *MkCond) {
 		empty := not.Empty
 		if empty != nil {
+			ck.checkNotEmpty(not)
 			ck.checkEmpty(empty, true, true)
 			done[empty] = true
 		}
@@ -72,6 +73,22 @@ func (ck *MkCondChecker) Check() {
 		VarUse:  checkVarUse})
 }
 
+func (ck *MkCondChecker) checkNotEmpty(not *MkCond) {
+	// Consider suggesting ${VAR} instead of !empty(VAR) since it is
+	// shorter and avoids unnecessary negation, which makes the
+	// expression less confusing.
+	//
+	// This applies especially to the ${VAR:Mpattern} form.
+	//
+	// See MkCondChecker.simplify.
+	if !G.Experimental {
+		return
+	}
+
+	ck.MkLine.Notef("!empty(%s%s) can be replaced with the simpler %s.",
+		not.Empty.varname, not.Empty.Mod(), not.Empty.String())
+}
+
 // checkEmpty checks a condition of the form empty(VAR),
 // empty(VAR:Mpattern) or ${VAR:Mpattern} in an .if directive.
 func (ck *MkCondChecker) checkEmpty(varuse *MkVarUse, fromEmpty bool, neg bool) {
@@ -92,6 +109,7 @@ func (ck *MkCondChecker) checkEmptyExpr(varuse *MkVarUse) {
 		"",
 		"\tempty(VARNAME:Mpattern)",
 		"\t${VARNAME:Mpattern} == \"\"",
+		"\t!${VARNAME:Mpattern}",
 		"",
 		"Instead of !empty(${VARNAME:Mpattern}), you should write either of the following:",
 		"",

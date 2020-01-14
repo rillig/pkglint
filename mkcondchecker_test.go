@@ -216,6 +216,27 @@ func (s *Suite) Test_MkCondChecker_Check__comparing_PKGSRC_COMPILER_with_eqeq(c 
 		"ERROR: Makefile:6: Use ${PKGSRC_COMPILER:Ngcc} instead of the != operator.")
 }
 
+func (s *Suite) Test_MkCondChecker_checkNotEmpty(c *check.C) {
+	t := s.Init(c)
+
+	G.Experimental = true
+
+	test := func(cond string, diagnostics ...string) {
+		mklines := t.NewMkLines("filename.mk",
+			".if "+cond)
+		mkline := mklines.mklines[0]
+		ck := NewMkCondChecker(mkline, mklines)
+
+		ck.checkNotEmpty(mkline.Cond().Not)
+
+		t.CheckOutput(diagnostics)
+	}
+
+	test("!empty(VAR)",
+		// FIXME: Add a :U modifier if VAR might be undefined.
+		"NOTE: filename.mk:1: !empty(VAR) can be replaced with the simpler ${VAR}.")
+}
+
 func (s *Suite) Test_MkCondChecker_checkEmpty(c *check.C) {
 	t := s.Init(c)
 
