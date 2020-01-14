@@ -149,7 +149,6 @@ var mkCondModifierPatternLiteral = textproc.NewByteSet("+---./0-9<=>@A-Z_a-z")
 // * fromEmpty is true for the form empty(VAR...), and false for ${VAR...}.
 //
 // * neg is true for the form !empty(VAR...), and false for empty(VAR...).
-// It also applies to the ${VAR} form.
 func (ck *MkCondChecker) simplify(varuse *MkVarUse, fromEmpty bool, neg bool) {
 	varname := varuse.varname
 	mods := varuse.modifiers
