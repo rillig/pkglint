@@ -632,7 +632,10 @@ func (cv *VartypeCheck) GccReqd() {
 
 func (cv *VartypeCheck) Homepage() {
 	cv.URL()
+	cv.homepageBasedOnMasterSites()
+}
 
+func (cv *VartypeCheck) homepageBasedOnMasterSites() {
 	m, wrong, sitename, subdir := match3(cv.Value, `^(\$\{(MASTER_SITE\w+)(?::=([\w\-/]+))?\})`)
 	if !m {
 		return
