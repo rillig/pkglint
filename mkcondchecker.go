@@ -325,6 +325,5 @@ func (ck *MkCondChecker) checkNotCompare(not *MkCond) {
 		return
 	}
 
-	// FIXME: Don't warn about already parenthesized conditions.
 	ck.MkLine.Warnf("The ! should use parentheses or be merged into the comparison operator.")
 }
