@@ -504,17 +504,19 @@ func (s *Suite) Test_MkCondWalker_Walk(c *check.C) {
 		events = append(events, sprintf("%14s  %s", name, strings.Join(args, ", ")))
 	}
 
-	// TODO: Add callbacks for And, Or, Not if needed.
-	//  Especially Not(Empty(VARNAME)) should be an interesting case.
+	// XXX: Add callbacks for And and Or if needed.
 
 	mkline.Cond().Walk(&MkCondCallback{
-		Defined: func(varname string) {
+		func(cond *MkCond) {
+			addEvent("not")
+		},
+		func(varname string) {
 			addEvent("defined", varname)
 		},
-		Empty: func(varuse *MkVarUse) {
+		func(varuse *MkVarUse) {
 			addEvent("empty", varuseStr(varuse))
 		},
-		Compare: func(left *MkCondTerm, op string, right *MkCondTerm) {
+		func(left *MkCondTerm, op string, right *MkCondTerm) {
 			assert(left.Var != nil)
 			switch {
 			case right.Var != nil:
@@ -525,13 +527,16 @@ func (s *Suite) Test_MkCondWalker_Walk(c *check.C) {
 				addEvent("compareVarStr", varuseStr(left.Var), right.Str)
 			}
 		},
-		Call: func(name string, arg string) {
+		func(name string, arg string) {
 			addEvent("call", name, arg)
 		},
-		Var: func(varuse *MkVarUse) {
+		func(cond *MkCond) {
+			addEvent("paren")
+		},
+		func(varuse *MkVarUse) {
 			addEvent("var", varuseStr(varuse))
 		},
-		VarUse: func(varuse *MkVarUse) {
+		func(varuse *MkVarUse) {
 			addEvent("varUse", varuseStr(varuse))
 		}})
 
@@ -549,9 +554,13 @@ func (s *Suite) Test_MkCondWalker_Walk(c *check.C) {
 		"        varUse  NUM",
 		"       defined  VAR",
 		"        varUse  VAR",
+		"           not  ",
 		"          call  exists, file.mk",
 		"          call  exists, ${FILE}",
 		"        varUse  FILE",
+		"         paren  ",
+		"         paren  ",
+		"         paren  ",
 		"           var  NONEMPTY",
 		"        varUse  NONEMPTY"})
 }
