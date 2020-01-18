@@ -919,6 +919,7 @@ func (s *Suite) Test_VartypeCheck_Homepage(c *check.C) {
 		"${MASTER_SITES}")
 
 	vt.Output(
+		"WARN: filename.mk:1: HOMEPAGE should use https instead of http.",
 		"WARN: filename.mk:3: HOMEPAGE should not be defined in terms of MASTER_SITEs.")
 
 	pkg := NewPackage(t.File("category/package"))
@@ -970,6 +971,27 @@ func (s *Suite) Test_VartypeCheck_Homepage(c *check.C) {
 	// for using it in the HOMEPAGE.
 	vt.Output(
 		"WARN: filename.mk:41: HOMEPAGE should not be defined in terms of MASTER_SITEs.")
+}
+
+func (s *Suite) Test_VartypeCheck_Homepage__http(c *check.C) {
+	t := s.Init(c)
+	vt := NewVartypeCheckTester(t, BtHomepage)
+
+	vt.Varname("HOMEPAGE")
+	vt.Values(
+		"http://www.gnustep.org/",
+		"http://www.pkgsrc.org/",
+		"http://project.sourceforge.net/",
+		"http://sf.net/p/project/",
+		"http://example.org/ # doesn't support https",
+		"http://example.org/ # only supports http",
+		"http://asf.net/")
+
+	vt.Output(
+		"WARN: filename.mk:2: HOMEPAGE should use https instead of http.",
+		"WARN: filename.mk:3: HOMEPAGE should use https instead of http.",
+		"WARN: filename.mk:4: HOMEPAGE should use https instead of http.",
+		"WARN: filename.mk:7: HOMEPAGE should use https instead of http.")
 }
 
 func (s *Suite) Test_VartypeCheck_IdentifierDirect(c *check.C) {
@@ -2336,6 +2358,7 @@ func (vt *VartypeCheckTester) Values(values ...string) {
 
 		line := vt.tester.NewLine(vt.filename, vt.lineno, text)
 		mklines := NewMkLines(NewLines(vt.filename, []*Line{line}), vt.pkg, nil)
+		mklines.collectRationale()
 		vt.lineno++
 
 		mklines.ForEach(func(mkline *MkLine) { test(mklines, mkline, value) })
