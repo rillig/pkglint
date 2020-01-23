@@ -691,7 +691,7 @@ func (cv *VartypeCheck) homepageHttp() {
 		for _, suffix := range suffixes {
 			if hasSuffix(s, suffix) {
 				dotIndex := len(s) - len(suffix)
-				if dotIndex == 0 || s[dotIndex-1] == '.' {
+				if dotIndex == 0 || s[dotIndex-1] == '.' || suffix[0] == '.' {
 					return true
 				}
 			}
@@ -704,6 +704,13 @@ func (cv *VartypeCheck) homepageHttp() {
 		"www.gnustep.org", // 2020-01-18
 		"aspell.net",      // 2020-01-18
 	) {
+		return
+	}
+
+	if hasAnySuffix(host, ".sf.net", ".sourceforge.net") {
+		// Exclude SourceForge subdomains since each of these projects
+		// must migrate to https manually and individually.
+		// As of January 2020, only around 50% of the projects have done that.
 		return
 	}
 
@@ -721,20 +728,20 @@ func (cv *VartypeCheck) homepageHttp() {
 		"linuxfoundation.org",
 		"NetBSD.org",
 		"nongnu.org",
-		"sf.net",
-		"sourceforge.net",
 		"tryton.org",
 		"tug.org")
 
+	from := "http"
+	to := "https"
+	if host == "sf.net" {
+		from = "http://sf.net"
+		to = "https://sourceforge.net"
+	}
+
 	fix := cv.Autofix()
-	fix.Warnf("HOMEPAGE should use https instead of http.")
+	fix.Warnf("HOMEPAGE should migrate from %s to %s.", from, to)
 	if supportsHttps {
-		if hasAnySuffix(host, "sourceforge.net") {
-			// See https://sourceforge.net/p/forge/documentation/Custom%20VHOSTs/
-			fix.Replace("http://"+host, "https://"+replaceAll(host, `\.net`, ".io"))
-		} else {
-			fix.Replace("http", "https")
-		}
+		fix.Replace(from, to)
 	}
 	fix.Explain(
 		"To provide secure communication by default,",

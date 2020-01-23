@@ -919,7 +919,7 @@ func (s *Suite) Test_VartypeCheck_Homepage(c *check.C) {
 		"${MASTER_SITES}")
 
 	vt.Output(
-		"WARN: filename.mk:1: HOMEPAGE should use https instead of http.",
+		"WARN: filename.mk:1: HOMEPAGE should migrate from http to https.",
 		"WARN: filename.mk:3: HOMEPAGE should not be defined in terms of MASTER_SITEs.")
 
 	pkg := NewPackage(t.File("category/package"))
@@ -983,15 +983,16 @@ func (s *Suite) Test_VartypeCheck_Homepage__http(c *check.C) {
 		"http://www.pkgsrc.org/",
 		"http://project.sourceforge.net/",
 		"http://sf.net/p/project/",
+		"http://sourceforge.net/p/project/",
 		"http://example.org/ # doesn't support https",
 		"http://example.org/ # only supports http",
 		"http://asf.net/")
 
 	vt.Output(
-		"WARN: filename.mk:2: HOMEPAGE should use https instead of http.",
-		"WARN: filename.mk:3: HOMEPAGE should use https instead of http.",
-		"WARN: filename.mk:4: HOMEPAGE should use https instead of http.",
-		"WARN: filename.mk:7: HOMEPAGE should use https instead of http.")
+		"WARN: filename.mk:2: HOMEPAGE should migrate from http to https.",
+		"WARN: filename.mk:4: HOMEPAGE should migrate from http://sf.net to https://sourceforge.net.",
+		"WARN: filename.mk:5: HOMEPAGE should migrate from http to https.",
+		"WARN: filename.mk:8: HOMEPAGE should migrate from http to https.")
 
 	t.SetUpCommandLine("--autofix")
 	vt.Values(
@@ -999,16 +1000,17 @@ func (s *Suite) Test_VartypeCheck_Homepage__http(c *check.C) {
 		"http://www.pkgsrc.org/",
 		"http://project.sourceforge.net/",
 		"http://sf.net/p/project/",
+		"http://sourceforge.net/p/project/",
 		"http://example.org/ # doesn't support https",
 		"http://example.org/ # only supports http",
+		"http://kde.org/",
 		"http://asf.net/")
 
 	// www.gnustep.org does not support https at all.
 	// www.pkgsrc.org is not in the (short) list of known https domains,
 	// therefore pkglint does not dare to change it automatically.
 	vt.Output(
-		"AUTOFIX: filename.mk:13: Replacing \"http://project.sourceforge.net\" with \"https://project.sourceforge.io\".",
-		"AUTOFIX: filename.mk:14: Replacing \"http\" with \"https\".")
+		"AUTOFIX: filename.mk:18: Replacing \"http\" with \"https\".")
 }
 
 func (s *Suite) Test_VartypeCheck_IdentifierDirect(c *check.C) {
