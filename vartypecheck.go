@@ -634,6 +634,9 @@ func (cv *VartypeCheck) Homepage() {
 	cv.URL()
 	cv.homepageBasedOnMasterSites()
 	cv.homepageHttp()
+
+	// TODO: Warn about dl.sourceforge.net
+	// TODO: Warn about downloads.sourceforge.net
 }
 
 func (cv *VartypeCheck) homepageBasedOnMasterSites() {
