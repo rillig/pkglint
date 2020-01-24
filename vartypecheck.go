@@ -1,10 +1,12 @@
 package pkglint
 
 import (
+	"net/http"
 	"netbsd.org/pkglint/regex"
 	"netbsd.org/pkglint/textproc"
 	"path"
 	"strings"
+	"time"
 )
 
 // VartypeCheck groups together the various checks for variables of the different types.
@@ -634,6 +636,7 @@ func (cv *VartypeCheck) Homepage() {
 	cv.URL()
 	cv.homepageBasedOnMasterSites()
 	cv.homepageHttp()
+	cv.homepageReachable()
 
 	// TODO: Warn about dl.sourceforge.net
 	// TODO: Warn about downloads.sourceforge.net
@@ -753,6 +756,42 @@ func (cv *VartypeCheck) homepageHttp() {
 		"If the HOMEPAGE really does not support https,",
 		"add a comment near the HOMEPAGE variable stating this clearly.")
 	fix.Apply()
+}
+
+func (cv *VartypeCheck) homepageReachable() {
+	if !G.Opts.Network || cv.Value != cv.ValueNoVar {
+		return
+	}
+	if !matches(cv.Value, `^https?://[A-Za-z0-9-.]+(?::[0-9]+)?/[!-~]*$`) {
+		return
+	}
+
+	var client http.Client
+	client.Timeout = 3 * time.Second
+	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		return http.ErrUseLastResponse
+	}
+
+	request, err := http.NewRequest("GET", cv.Value, nil)
+	if err != nil {
+		cv.Warnf("Network error: %s", err)
+		return
+	}
+	response, err := client.Do(request)
+	if err != nil {
+		cv.Warnf("Do error: %s", err)
+		return
+	}
+	location, err := response.Location()
+	if err == nil {
+		cv.Warnf("Status: %s, location: %s", response.Status, location.String())
+		return
+	}
+	if response.StatusCode != 200 {
+		cv.Warnf("Status: %s", response.Status)
+		return
+	}
+	cv.Notef("Homepage found: %s", response.Status)
 }
 
 // Identifier checks for valid identifiers in various contexts, limiting the

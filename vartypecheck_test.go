@@ -2,6 +2,9 @@ package pkglint
 
 import (
 	"gopkg.in/check.v1"
+	"net/http"
+	"strconv"
+	"time"
 )
 
 func (s *Suite) Test_VartypeCheck_Errorf(c *check.C) {
@@ -1011,6 +1014,74 @@ func (s *Suite) Test_VartypeCheck_Homepage__http(c *check.C) {
 	// therefore pkglint does not dare to change it automatically.
 	vt.Output(
 		"AUTOFIX: filename.mk:18: Replacing \"http\" with \"https\".")
+}
+
+func (s *Suite) Test_VartypeCheck_homepageReachable(c *check.C) {
+	t := s.Init(c)
+	vt := NewVartypeCheckTester(t, BtHomepage)
+
+	t.SetUpCommandLine("--network")
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/status/", func(writer http.ResponseWriter, request *http.Request) {
+		location := request.URL.Query().Get("location")
+		if location != "" {
+			writer.Header().Set("Location", location)
+		}
+
+		status, err := strconv.Atoi(request.URL.Path[len("/status/"):])
+		assertNil(err, "")
+		writer.WriteHeader(status)
+	})
+	mux.HandleFunc("/timeout", func(writer http.ResponseWriter, request *http.Request) {
+		time.Sleep(5 * time.Second)
+	})
+
+	go func() {
+		// 28780 = 256 * 'p' + 'l'
+		err := http.ListenAndServe("localhost:28780", mux)
+		assertNil(err, "")
+	}()
+
+	vt.Varname("HOMEPAGE")
+	vt.Values(
+		"http://localhost:28780/status/200",
+		"http://localhost:28780/status/301?location=/redirect301",
+		"http://localhost:28780/status/302?location=/redirect302",
+		"http://localhost:28780/status/307?location=/redirect307",
+		"http://localhost:28780/status/404",
+		"http://localhost:28780/status/500")
+
+	vt.Output(
+		"WARN: filename.mk:1: HOMEPAGE should migrate from http to https.",
+		"NOTE: filename.mk:1: Homepage found: 200 OK",
+		"WARN: filename.mk:2: HOMEPAGE should migrate from http to https.",
+		"WARN: filename.mk:2: Status: 301 Moved Permanently, "+
+			"location: http://localhost:28780/redirect301",
+		"WARN: filename.mk:3: HOMEPAGE should migrate from http to https.",
+		"WARN: filename.mk:3: Status: 302 Found, "+
+			"location: http://localhost:28780/redirect302",
+		"WARN: filename.mk:4: HOMEPAGE should migrate from http to https.",
+		"WARN: filename.mk:4: Status: 307 Temporary Redirect, "+
+			"location: http://localhost:28780/redirect307",
+		"WARN: filename.mk:5: HOMEPAGE should migrate from http to https.",
+		"WARN: filename.mk:5: Status: 404 Not Found",
+		"WARN: filename.mk:6: HOMEPAGE should migrate from http to https.",
+		"WARN: filename.mk:6: Status: 500 Internal Server Error")
+
+	vt.Values(
+		"http://localhost:28780/timeout",
+		"http://localhost:28780/%invalid")
+
+	vt.Output(
+		"WARN: filename.mk:11: HOMEPAGE should migrate from http to https.",
+		"WARN: filename.mk:11: Do error: Get http://localhost:28780/timeout: "+
+			"net/http: request canceled "+
+			"(Client.Timeout exceeded while awaiting headers)",
+		"WARN: filename.mk:12: HOMEPAGE should migrate from http to https.",
+		"WARN: filename.mk:12: Network error: "+
+			"parse http://localhost:28780/%invalid: "+
+			"invalid URL escape \"%in\"")
 }
 
 func (s *Suite) Test_VartypeCheck_IdentifierDirect(c *check.C) {
