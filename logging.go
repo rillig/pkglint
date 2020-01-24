@@ -109,7 +109,10 @@ func (l *Logger) Diag(line *Line, level *LogLevel, format string, args ...interf
 	if G.Testing {
 		for _, arg := range args {
 			switch arg.(type) {
-			case int, string, error:
+			case int, string:
+			case error:
+				// TODO: errors do not belong into diagnostics,
+				//  they belong in normal error messages.
 			default:
 				// All paths in diagnostics must be relative to the line.
 				// To achieve that, call line.Rel(currPath).
