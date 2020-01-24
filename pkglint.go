@@ -81,8 +81,6 @@ type CmdOpts struct {
 	Recursive,
 	ShowVersion bool
 
-	LogOnly []string
-
 	args []string
 }
 
@@ -235,7 +233,7 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) int {
 	opts.AddFlagVar('h', "help", &gopts.ShowHelp, false, "show a detailed usage message")
 	opts.AddFlagVar('I', "dumpmakefile", &gopts.DumpMakefile, false, "dump the Makefile after parsing")
 	opts.AddFlagVar('i', "import", &gopts.Import, false, "prepare the import of a wip package")
-	opts.AddStrList('o', "only", &gopts.LogOnly, "only log diagnostics containing the given text")
+	opts.AddStrList('o', "only", &lopts.Only, "only log diagnostics containing the given text")
 	opts.AddFlagVar('p', "profiling", &gopts.Profiling, false, "profile the executing program")
 	opts.AddFlagVar('q', "quiet", &lopts.Quiet, false, "don't show a summary line when finishing")
 	opts.AddFlagVar('r', "recursive", &gopts.Recursive, false, "check subdirectories, too")

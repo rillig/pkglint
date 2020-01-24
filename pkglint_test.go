@@ -356,7 +356,7 @@ func (s *Suite) Test_Pkglint_ParseCommandLine__only(c *check.C) {
 	if exitcode != -1 {
 		t.CheckEquals(exitcode, 0)
 	}
-	t.CheckDeepEquals(G.Opts.LogOnly, []string{":Q"})
+	t.CheckDeepEquals(G.Logger.Opts.Only, []string{":Q"})
 	t.CheckOutputLines(
 		confVersion)
 }

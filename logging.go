@@ -48,6 +48,8 @@ type LoggerOpts struct {
 	ShowSource,
 	GccOutput,
 	Quiet bool
+
+	Only []string
 }
 
 type LogLevel struct {
@@ -174,11 +176,11 @@ func (l *Logger) Relevant(format string) bool {
 //
 // It only inspects the --only arguments; duplicates are handled in Logger.Logf.
 func (l *Logger) shallBeLogged(format string) bool {
-	if len(G.Opts.LogOnly) == 0 {
+	if len(l.Opts.Only) == 0 {
 		return true
 	}
 
-	for _, substr := range G.Opts.LogOnly {
+	for _, substr := range l.Opts.Only {
 		if contains(format, substr) {
 			return true
 		}
