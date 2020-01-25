@@ -1078,9 +1078,7 @@ func (s *Suite) Test_VartypeCheck_homepageReachable(c *check.C) {
 			"net/http: request canceled "+
 			"(Client.Timeout exceeded while awaiting headers)",
 		"WARN: filename.mk:12: HOMEPAGE should migrate from http to https.",
-		"WARN: filename.mk:12: Network error: "+
-			"parse http://localhost:28780/%invalid: "+
-			"invalid URL escape \"%in\"")
+		"ERROR: filename.mk:12: Invalid URL \"http://localhost:28780/%invalid\".")
 }
 
 func (s *Suite) Test_VartypeCheck_IdentifierDirect(c *check.C) {

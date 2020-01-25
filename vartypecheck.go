@@ -774,7 +774,7 @@ func (cv *VartypeCheck) homepageReachable() {
 
 	request, err := http.NewRequest("GET", cv.Value, nil)
 	if err != nil {
-		cv.Warnf("Network error: %s", err)
+		cv.Errorf("Invalid URL %q.", cv.Value)
 		return
 	}
 	response, err := client.Do(request)
