@@ -271,8 +271,7 @@ func (s *Suite) Test_Options_Parse__only_long(c *check.C) {
 	args, err := opts.Parse([]string{"program", "-", "arg"})
 
 	c.Check(err, check.IsNil)
-	// FIXME: preserve the "-" argument.
-	c.Check(args, check.DeepEquals, []string{"arg"})
+	c.Check(args, check.DeepEquals, []string{"-", "arg"})
 	c.Check(onlyLong, check.Equals, false)
 }
 

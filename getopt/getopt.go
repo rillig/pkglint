@@ -106,7 +106,7 @@ func (o *Options) Parse(args []string) (remainingArgs []string, err error) {
 			skip, err = o.parseLongOption(args, i, arg[2:])
 			i += skip
 
-		case strings.HasPrefix(arg, "-"):
+		case strings.HasPrefix(arg, "-") && len(arg) > 1:
 			skip, err = o.parseShortOptions(args, i, arg[1:])
 			i += skip
 
