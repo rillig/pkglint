@@ -132,7 +132,11 @@ func (s *Suite) Test_HomepageChecker_checkHttp(c *check.C) {
 
 	vt.Output(
 		"WARN: filename.mk:2: HOMEPAGE should migrate from http to https.",
-		"WARN: filename.mk:4: HOMEPAGE should migrate from http://sf.net to https://sourceforge.net.",
+		"WARN: filename.mk:3: HOMEPAGE should migrate "+
+			"from http://project.sourceforge.net "+
+			"to https://project.sourceforge.io.",
+		"WARN: filename.mk:4: HOMEPAGE should migrate "+
+			"from http://sf.net to https://sourceforge.net.",
 		"WARN: filename.mk:5: HOMEPAGE should migrate from http to https.",
 		"WARN: filename.mk:8: HOMEPAGE should migrate from http to https.")
 

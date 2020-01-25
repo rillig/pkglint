@@ -119,20 +119,22 @@ func (ck *HomepageChecker) toHttps(url string) (bool, string, string) {
 	}
 
 	if ck.hasAnySuffix(host,
-		"www.gnustep.org", // 2020-01-18
-		"aspell.net",      // 2020-01-18
+		"www.gnustep.org",           // 2020-01-18
+		"aspell.net",                // 2020-01-18
+		"downloads.sourceforge.net", // gets another warning already
+		".dl.sourceforge.net",       // gets another warning already
 	) {
 		return false, "", ""
 	}
 
-	if ck.hasAnySuffix(host, ".sf.net", ".sourceforge.net") {
+	if m, project := match1(host, `^([\w-]+)\.(?:sf|sourceforge)\.net$`); m {
 		// Exclude SourceForge subdomains since each of these projects
 		// must migrate to https manually and individually.
-		// As of January 2020, only around 50% of the projects have done that.
+		//
+		// As of January 2020, only around 50% of the pkgsrc-wip projects
+		// have done that.
 
-		// TODO: Consider migrating these URLs from http://*.sourceforge.net/
-		//  to https://*.sourceforge.io/.
-		return false, "", ""
+		return false, "http://" + host, "https://" + project + ".sourceforge.io"
 	}
 
 	if ck.hasAnySuffix(host,
