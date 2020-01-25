@@ -94,34 +94,22 @@ func (ck *HomepageChecker) checkHttp() {
 		return
 	}
 
-	hasAnySuffix := func(s string, suffixes ...string) bool {
-		for _, suffix := range suffixes {
-			if hasSuffix(s, suffix) {
-				dotIndex := len(s) - len(suffix)
-				if dotIndex == 0 || s[dotIndex-1] == '.' || suffix[0] == '.' {
-					return true
-				}
-			}
-		}
-		return false
-	}
-
 	// Don't warn about sites that don't support https at all.
-	if hasAnySuffix(host,
+	if ck.hasAnySuffix(host,
 		"www.gnustep.org", // 2020-01-18
 		"aspell.net",      // 2020-01-18
 	) {
 		return
 	}
 
-	if hasAnySuffix(host, ".sf.net", ".sourceforge.net") {
+	if ck.hasAnySuffix(host, ".sf.net", ".sourceforge.net") {
 		// Exclude SourceForge subdomains since each of these projects
 		// must migrate to https manually and individually.
 		// As of January 2020, only around 50% of the projects have done that.
 		return
 	}
 
-	supportsHttps := hasAnySuffix(host,
+	supportsHttps := ck.hasAnySuffix(host,
 		"apache.org",
 		"archive.org",
 		"ctan.org",
@@ -199,4 +187,16 @@ func (ck *HomepageChecker) checkReachable() {
 		mkline.Warnf("Status: %s", response.Status)
 		return
 	}
+}
+
+func (*HomepageChecker) hasAnySuffix(s string, suffixes ...string) bool {
+	for _, suffix := range suffixes {
+		if hasSuffix(s, suffix) {
+			dotIndex := len(s) - len(suffix)
+			if dotIndex == 0 || s[dotIndex-1] == '.' || suffix[0] == '.' {
+				return true
+			}
+		}
+	}
+	return false
 }

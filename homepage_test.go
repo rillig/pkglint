@@ -228,3 +228,19 @@ func (s *Suite) Test_HomepageChecker_checkReachable(c *check.C) {
 		"WARN: filename.mk:12: HOMEPAGE should migrate from http to https.",
 		"ERROR: filename.mk:12: Invalid URL \"http://localhost:28780/%invalid\".")
 }
+
+func (s *Suite) Test_HomepageChecker_hasAnySuffix(c *check.C) {
+	t := s.Init(c)
+
+	test := func(s string, hasAnySuffix bool, suffixes ...string) {
+		actual := (*HomepageChecker).hasAnySuffix(nil, s, suffixes...)
+
+		t.CheckEquals(actual, hasAnySuffix)
+	}
+
+	test("example.org", true, "org")
+	test("example.com", false, "org")
+	test("example.org", true, "example.org")
+	test("example.org", false, ".example.org")
+	test("example.org", true, ".org")
+}
