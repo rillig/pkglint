@@ -218,18 +218,23 @@ func (s *Suite) Test_HomepageChecker_checkReachable(c *check.C) {
 	vt.Output(
 		"WARN: filename.mk:1: HOMEPAGE should migrate from http to https.",
 		"WARN: filename.mk:2: HOMEPAGE should migrate from http to https.",
-		"WARN: filename.mk:2: Status: 301 Moved Permanently, "+
-			"location: http://localhost:28780/redirect301",
+		"WARN: filename.mk:2: Homepage "+
+			"\"http://localhost:28780/status/301?location=/redirect301\" "+
+			"redirects to \"http://localhost:28780/redirect301\".",
 		"WARN: filename.mk:3: HOMEPAGE should migrate from http to https.",
-		"WARN: filename.mk:3: Status: 302 Found, "+
-			"location: http://localhost:28780/redirect302",
+		"WARN: filename.mk:3: Homepage "+
+			"\"http://localhost:28780/status/302?location=/redirect302\" "+
+			"redirects to \"http://localhost:28780/redirect302\".",
 		"WARN: filename.mk:4: HOMEPAGE should migrate from http to https.",
-		"WARN: filename.mk:4: Status: 307 Temporary Redirect, "+
-			"location: http://localhost:28780/redirect307",
+		"WARN: filename.mk:4: Homepage "+
+			"\"http://localhost:28780/status/307?location=/redirect307\" "+
+			"redirects to \"http://localhost:28780/redirect307\".",
 		"WARN: filename.mk:5: HOMEPAGE should migrate from http to https.",
-		"WARN: filename.mk:5: Status: 404 Not Found",
+		"WARN: filename.mk:5: Homepage \"http://localhost:28780/status/404\" "+
+			"returns HTTP status \"404 Not Found\".",
 		"WARN: filename.mk:6: HOMEPAGE should migrate from http to https.",
-		"WARN: filename.mk:6: Status: 500 Internal Server Error")
+		"WARN: filename.mk:6: Homepage \"http://localhost:28780/status/500\" "+
+			"returns HTTP status \"500 Internal Server Error\".")
 
 	vt.Values(
 		"http://localhost:28780/timeout",

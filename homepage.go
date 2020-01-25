@@ -203,12 +203,12 @@ func (ck *HomepageChecker) checkReachable() {
 
 	location, err := response.Location()
 	if err == nil {
-		mkline.Warnf("Status: %s, location: %s", response.Status, location.String())
+		mkline.Warnf("Homepage %q redirects to %q.", url, location.String())
 		return
 	}
 
 	if response.StatusCode != 200 {
-		mkline.Warnf("Status: %s", response.Status)
+		mkline.Warnf("Homepage %q returns HTTP status %q.", url, response.Status)
 		return
 	}
 }
