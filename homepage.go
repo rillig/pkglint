@@ -113,7 +113,7 @@ func (ck *HomepageChecker) checkHttp() {
 // toHttps checks whether the homepage should be migrated from http to https
 // and which part of the homepage URL needs to be modified for that.
 func (ck *HomepageChecker) toHttps(url string) (bool, string, string) {
-	m, host, port := match2(url, `http://([A-Za-z0-9-.]+)(:[0-9]+)?`)
+	m, scheme, host, port := match3(url, `(https?)://([A-Za-z0-9-.]+)(:[0-9]+)?`)
 	if !m {
 		return false, "", ""
 	}
@@ -127,7 +127,7 @@ func (ck *HomepageChecker) toHttps(url string) (bool, string, string) {
 		return false, "", ""
 	}
 
-	if ck.hasAnySuffix(host,
+	if scheme == "http" && ck.hasAnySuffix(host,
 		"apache.org",
 		"archive.org",
 		"ctan.org",
@@ -146,31 +146,27 @@ func (ck *HomepageChecker) toHttps(url string) (bool, string, string) {
 		return port == "", "http", "https"
 	}
 
-	if host == "sf.net" {
+	if scheme == "http" && host == "sf.net" {
 		return port == "", "http://sf.net", "https://sourceforge.net"
 	}
 
-	if m, project := match1(host, `^([\w-]+)\.(?:sf|sourceforge)\.net$`); m {
-		// Exclude SourceForge subdomains since each of these projects
-		// must migrate to https manually and individually.
-		//
-		// As of January 2020, only around 50% of the pkgsrc-wip projects
-		// have done that.
+	from := scheme
+	to := "https"
 
-		return false, "http://" + host, "https://" + project + ".sourceforge.io"
+	// SourceForge projects use either http://project.sourceforge.net or
+	// https://project.sourceforge.io (not net).
+	if m, project := match1(host, `^([\w-]+)\.(?:sf|sourceforge)\.net$`); m {
+		if scheme == "http" {
+			from = scheme + "://" + host
+			to = "https://" + project + ".sourceforge.io"
+		} else {
+			from = "sourceforge.net"
+			to = "sourceforge.io"
+		}
 	}
 
-	from := "http"
-	to := "https"
-	if m, project := match1(host, `^([\w-]+)\.(?:sf|sourceforge)\.net$`); m {
-		// Exclude SourceForge subdomains since each of these projects
-		// must migrate to https manually and individually.
-		//
-		// As of January 2020, only around 50% of the pkgsrc-wip projects
-		// have done that.
-
-		from = "http://" + host
-		to = "https://" + project + ".sourceforge.io"
+	if from == to {
+		return false, "", ""
 	}
 
 	shouldAutofix := false

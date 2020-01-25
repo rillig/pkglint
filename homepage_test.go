@@ -173,6 +173,20 @@ func (s *Suite) Test_HomepageChecker_toHttps(c *check.C) {
 	}
 
 	test("http://localhost/", false, "http", "https")
+
+	test(
+		"http://project.sourceforge.net/",
+		false,
+		"http://project.sourceforge.net",
+		"https://project.sourceforge.io")
+
+	// To clean up the wrong autofix from 2020-01-18:
+	// https://mail-index.netbsd.org/pkgsrc-changes/2020/01/18/msg205146.html
+	test(
+		"https://project.sourceforge.net/",
+		false,
+		"sourceforge.net",
+		"sourceforge.io")
 }
 
 func (s *Suite) Test_HomepageChecker_checkBadUrls(c *check.C) {
