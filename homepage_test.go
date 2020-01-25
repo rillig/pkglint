@@ -1,6 +1,7 @@
 package pkglint
 
 import (
+	"context"
 	"gopkg.in/check.v1"
 	"net/http"
 	"strconv"
@@ -187,10 +188,20 @@ func (s *Suite) Test_HomepageChecker_checkReachable(c *check.C) {
 		time.Sleep(5 * time.Second)
 	})
 
+	// 28780 = 256 * 'p' + 'l'
+	srv := http.Server{Addr: "localhost:28780", Handler: mux}
+	shutdown := make(chan error)
+
 	go func() {
-		// 28780 = 256 * 'p' + 'l'
-		err := http.ListenAndServe("localhost:28780", mux)
+		err := srv.ListenAndServe()
+		assertf(err == http.ErrServerClosed, "%s", err)
+		shutdown <- err
+	}()
+
+	defer func() {
+		err := srv.Shutdown(context.Background())
 		assertNil(err, "")
+		<-shutdown
 	}()
 
 	vt.Varname("HOMEPAGE")
@@ -220,15 +231,21 @@ func (s *Suite) Test_HomepageChecker_checkReachable(c *check.C) {
 
 	vt.Values(
 		"http://localhost:28780/timeout",
-		"http://localhost:28780/%invalid")
+		"http://localhost:28780/%invalid",
+		"http://localhost:28781/",
+		"https://no-such-name.example.org/")
 
 	vt.Output(
 		"WARN: filename.mk:11: HOMEPAGE should migrate from http to https.",
-		"WARN: filename.mk:11: Do error: Get http://localhost:28780/timeout: "+
-			"net/http: request canceled "+
-			"(Client.Timeout exceeded while awaiting headers)",
+		"WARN: filename.mk:11: Homepage \"http://localhost:28780/timeout\" "+
+			"cannot be checked: timeout",
 		"WARN: filename.mk:12: HOMEPAGE should migrate from http to https.",
-		"ERROR: filename.mk:12: Invalid URL \"http://localhost:28780/%invalid\".")
+		"ERROR: filename.mk:12: Invalid URL \"http://localhost:28780/%invalid\".",
+		"WARN: filename.mk:13: HOMEPAGE should migrate from http to https.",
+		"WARN: filename.mk:13: Homepage \"http://localhost:28781/\" "+
+			"cannot be checked: connection refused",
+		"WARN: filename.mk:14: Homepage \"https://no-such-name.example.org/\" "+
+			"cannot be checked: name not found")
 }
 
 func (s *Suite) Test_HomepageChecker_hasAnySuffix(c *check.C) {

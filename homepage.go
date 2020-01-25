@@ -1,7 +1,9 @@
 package pkglint
 
 import (
+	"net"
 	"net/http"
+	"syscall"
 	"time"
 )
 
@@ -170,11 +172,12 @@ func (ck *HomepageChecker) checkBadUrls() {
 
 func (ck *HomepageChecker) checkReachable() {
 	mkline := ck.MkLine
+	url := ck.Value
 
-	if !G.Opts.Network || ck.Value != ck.ValueNoVar {
+	if !G.Opts.Network || url != ck.ValueNoVar {
 		return
 	}
-	if !matches(ck.Value, `^https?://[A-Za-z0-9-.]+(?::[0-9]+)?/[!-~]*$`) {
+	if !matches(url, `^https?://[A-Za-z0-9-.]+(?::[0-9]+)?/[!-~]*$`) {
 		return
 	}
 
@@ -184,14 +187,15 @@ func (ck *HomepageChecker) checkReachable() {
 		return http.ErrUseLastResponse
 	}
 
-	request, err := http.NewRequest("GET", ck.Value, nil)
+	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		mkline.Errorf("Invalid URL %q.", ck.Value)
+		mkline.Errorf("Invalid URL %q.", url)
 		return
 	}
 	response, err := client.Do(request)
 	if err != nil {
-		mkline.Warnf("Do error: %s", err)
+		networkError := ck.classifyNetworkError(err)
+		mkline.Warnf("Homepage %q cannot be checked: %s", url, networkError)
 		return
 	}
 	location, err := response.Location()
@@ -215,4 +219,32 @@ func (*HomepageChecker) hasAnySuffix(s string, suffixes ...string) bool {
 		}
 	}
 	return false
+}
+
+func (*HomepageChecker) classifyNetworkError(err error) string {
+	cause := err
+	for {
+		type nested interface{ Unwrap() error }
+		unwrap, ok := cause.(nested)
+		if !ok {
+			break
+		}
+		cause = unwrap.Unwrap()
+	}
+
+	switch cause := cause.(type) {
+	case *net.DNSError:
+		if cause.IsNotFound {
+			return "name not found"
+		}
+	case syscall.Errno:
+		if cause == 10061 {
+			return "connection refused"
+		}
+	case net.Error:
+		if cause.Timeout() {
+			return "timeout"
+		}
+	}
+	return "unknown network error"
 }
