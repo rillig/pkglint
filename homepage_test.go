@@ -161,7 +161,9 @@ func (s *Suite) Test_HomepageChecker_checkBadUrls(c *check.C) {
 		"http://garr.dl.sourceforge.net/project/name/dir/subdir/",
 		"https://downloads.sourceforge.net/project/name/dir/subdir/")
 
-	// TODO: Warn about unfriendly homepage URLs.
+	vt.Output(
+		"WARN: filename.mk:1: A direct download URL is not a user-friendly homepage.",
+		"WARN: filename.mk:2: A direct download URL is not a user-friendly homepage.")
 }
 
 func (s *Suite) Test_HomepageChecker_checkReachable(c *check.C) {
