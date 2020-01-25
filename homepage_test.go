@@ -308,6 +308,7 @@ func (s *Suite) Test_HomepageChecker_isReachable(c *check.C) {
 	mux.HandleFunc("/timeout", func(http.ResponseWriter, *http.Request) {
 		time.Sleep(5 * time.Second)
 	})
+	mux.HandleFunc("/ok/", func(http.ResponseWriter, *http.Request) {})
 
 	// 28780 = 256 * 'p' + 'l'
 	srv := http.Server{Addr: "localhost:28780", Handler: mux}
@@ -325,19 +326,21 @@ func (s *Suite) Test_HomepageChecker_isReachable(c *check.C) {
 		<-shutdown
 	}()
 
-	test := func(url string, reachable bool) {
+	test := func(url string, reachable YesNoUnknown) {
 		actual := (*HomepageChecker).isReachable(nil, url)
 
 		t.CheckEquals(actual, reachable)
 	}
 
-	test("http://localhost:28780/status/200", true)
-	test("http://localhost:28780/status/301?location=/", false)
-	test("http://localhost:28780/status/404", false)
-	test("http://localhost:28780/status/500", false)
-	test("http://localhost:28780/timeout", false)
-	test("http://localhost:28780/%invalid", false)
-	test("http://localhost:28781/", false)
+	test("http://localhost:28780/status/200", yes)
+	test("http://localhost:28780/status/301?location=/", no)
+	test("http://localhost:28780/status/404", no)
+	test("http://localhost:28780/status/500", no)
+	test("http://localhost:28780/timeout", no)
+	test("http://localhost:28780/ok/${VAR}", unknown)
+	test("http://localhost:28780/ invalid", unknown)
+	test("http://localhost:28780/%invalid", no)
+	test("http://localhost:28781/", no)
 }
 
 func (s *Suite) Test_HomepageChecker_hasAnySuffix(c *check.C) {

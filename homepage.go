@@ -170,9 +170,9 @@ func (ck *HomepageChecker) toHttps(url string) (bool, string, string) {
 	}
 
 	shouldAutofix := false
-	if port == "" && G.Opts.Network {
+	if port == "" {
 		_, migrated := replaceOnce(url, from, to)
-		shouldAutofix = ck.isReachable(migrated)
+		shouldAutofix = ck.isReachable(migrated) == yes
 	}
 	return shouldAutofix, from, to
 }
@@ -241,10 +241,13 @@ func (ck *HomepageChecker) checkReachable() {
 	}
 }
 
-func (*HomepageChecker) isReachable(url string) bool {
-	assert(G.Opts.Network)
-	assert(!containsVarRefLong(url))
-	assert(matches(url, `^https?://[A-Za-z0-9-.]+(?::[0-9]+)?/[!-~]*$`))
+func (*HomepageChecker) isReachable(url string) YesNoUnknown {
+	switch {
+	case !G.Opts.Network,
+		containsVarRefLong(url),
+		!matches(url, `^https?://[A-Za-z0-9-.]+(?::[0-9]+)?/[!-~]*$`):
+		return unknown
+	}
 
 	var client http.Client
 	client.Timeout = 3 * time.Second
@@ -254,14 +257,17 @@ func (*HomepageChecker) isReachable(url string) bool {
 
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return false
+		return no
 	}
 	response, err := client.Do(request)
 	if err != nil {
-		return false
+		return no
 	}
 	_ = response.Body.Close()
-	return response.StatusCode == 200
+	if response.StatusCode != 200 {
+		return no
+	}
+	return yes
 }
 
 func (*HomepageChecker) hasAnySuffix(s string, suffixes ...string) bool {
