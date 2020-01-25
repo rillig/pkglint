@@ -232,19 +232,14 @@ func (*HomepageChecker) classifyNetworkError(err error) string {
 		cause = unwrap.Unwrap()
 	}
 
-	switch cause := cause.(type) {
-	case *net.DNSError:
-		if cause.IsNotFound {
-			return "name not found"
-		}
-	case syscall.Errno:
-		if cause == 10061 {
-			return "connection refused"
-		}
-	case net.Error:
-		if cause.Timeout() {
-			return "timeout"
-		}
+	if cause, ok := cause.(*net.DNSError); ok && cause.IsNotFound {
+		return "name not found"
+	}
+	if cause, ok := cause.(syscall.Errno); ok && cause == 10061 {
+		return "connection refused"
+	}
+	if cause, ok := cause.(net.Error); ok && cause.Timeout() {
+		return "timeout"
 	}
 	return "unknown network error"
 }

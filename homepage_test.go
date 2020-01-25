@@ -2,9 +2,11 @@ package pkglint
 
 import (
 	"context"
+	"errors"
 	"gopkg.in/check.v1"
 	"net/http"
 	"strconv"
+	"syscall"
 	"time"
 )
 
@@ -262,4 +264,17 @@ func (s *Suite) Test_HomepageChecker_hasAnySuffix(c *check.C) {
 	test("example.org", true, "example.org")
 	test("example.org", false, ".example.org")
 	test("example.org", true, ".org")
+}
+
+func (s *Suite) Test_HomepageChecker_classifyNetworkError(c *check.C) {
+	t := s.Init(c)
+
+	test := func(err error, expectedClass string) {
+		actual := (*HomepageChecker).classifyNetworkError(nil, err)
+
+		t.CheckEquals(actual, expectedClass)
+	}
+
+	test(syscall.Errno(10061), "connection refused")
+	test(errors.New("unknown"), "unknown network error")
 }
