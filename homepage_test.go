@@ -255,6 +255,57 @@ func (s *Suite) Test_HomepageChecker_checkReachable(c *check.C) {
 			"cannot be checked: name not found")
 }
 
+func (s *Suite) Test_HomepageChecker_isReachable(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--network")
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/status/", func(writer http.ResponseWriter, request *http.Request) {
+		location := request.URL.Query().Get("location")
+		if location != "" {
+			writer.Header().Set("Location", location)
+		}
+
+		status, err := strconv.Atoi(request.URL.Path[len("/status/"):])
+		assertNil(err, "")
+		writer.WriteHeader(status)
+	})
+	mux.HandleFunc("/timeout", func(http.ResponseWriter, *http.Request) {
+		time.Sleep(5 * time.Second)
+	})
+
+	// 28780 = 256 * 'p' + 'l'
+	srv := http.Server{Addr: "localhost:28780", Handler: mux}
+	shutdown := make(chan error)
+
+	go func() {
+		err := srv.ListenAndServe()
+		assertf(err == http.ErrServerClosed, "%s", err)
+		shutdown <- err
+	}()
+
+	defer func() {
+		err := srv.Shutdown(context.Background())
+		assertNil(err, "")
+		<-shutdown
+	}()
+
+	test := func(url string, reachable bool) {
+		actual := (*HomepageChecker).isReachable(nil, url)
+
+		t.CheckEquals(actual, reachable)
+	}
+
+	test("http://localhost:28780/status/200", true)
+	test("http://localhost:28780/status/301?location=/", false)
+	test("http://localhost:28780/status/404", false)
+	test("http://localhost:28780/status/500", false)
+	test("http://localhost:28780/timeout", false)
+	test("http://localhost:28780/%invalid", false)
+	test("http://localhost:28781/", false)
+}
+
 func (s *Suite) Test_HomepageChecker_hasAnySuffix(c *check.C) {
 	t := s.Init(c)
 

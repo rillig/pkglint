@@ -213,6 +213,29 @@ func (ck *HomepageChecker) checkReachable() {
 	}
 }
 
+func (*HomepageChecker) isReachable(url string) bool {
+	assert(G.Opts.Network)
+	assert(!containsVarRefLong(url))
+	assert(matches(url, `^https?://[A-Za-z0-9-.]+(?::[0-9]+)?/[!-~]*$`))
+
+	var client http.Client
+	client.Timeout = 3 * time.Second
+	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		return http.ErrUseLastResponse
+	}
+
+	request, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return false
+	}
+	response, err := client.Do(request)
+	if err != nil {
+		return false
+	}
+	_ = response.Body.Close()
+	return response.StatusCode == 200
+}
+
 func (*HomepageChecker) hasAnySuffix(s string, suffixes ...string) bool {
 	for _, suffix := range suffixes {
 		if hasSuffix(s, suffix) {
