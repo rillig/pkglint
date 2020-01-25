@@ -1016,6 +1016,20 @@ func (s *Suite) Test_VartypeCheck_Homepage__http(c *check.C) {
 		"AUTOFIX: filename.mk:18: Replacing \"http\" with \"https\".")
 }
 
+func (s *Suite) Test_VartypeCheck_Homepage__ftp(c *check.C) {
+	t := s.Init(c)
+	vt := NewVartypeCheckTester(t, BtHomepage)
+
+	vt.Varname("HOMEPAGE")
+	vt.Values(
+		"ftp://example.org/",
+		"ftp://example.org/ # no HTTP homepage available")
+
+	vt.Output(
+		"WARN: filename.mk:1: " +
+			"An FTP URL does not represent a user-friendly homepage.")
+}
+
 func (s *Suite) Test_VartypeCheck_homepageReachable(c *check.C) {
 	t := s.Init(c)
 	vt := NewVartypeCheckTester(t, BtHomepage)
