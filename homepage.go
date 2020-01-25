@@ -160,8 +160,25 @@ func (ck *HomepageChecker) toHttps(url string) (bool, string, string) {
 		return false, "http://" + host, "https://" + project + ".sourceforge.io"
 	}
 
-	shouldAutofix := port == "" && G.Opts.Network && ck.isReachable("https"+url[4:])
-	return shouldAutofix, "http", "https"
+	from := "http"
+	to := "https"
+	if m, project := match1(host, `^([\w-]+)\.(?:sf|sourceforge)\.net$`); m {
+		// Exclude SourceForge subdomains since each of these projects
+		// must migrate to https manually and individually.
+		//
+		// As of January 2020, only around 50% of the pkgsrc-wip projects
+		// have done that.
+
+		from = "http://" + host
+		to = "https://" + project + ".sourceforge.io"
+	}
+
+	shouldAutofix := false
+	if port == "" && G.Opts.Network {
+		_, migrated := replaceOnce(url, from, to)
+		shouldAutofix = ck.isReachable(migrated)
+	}
+	return shouldAutofix, from, to
 }
 
 func (ck *HomepageChecker) checkBadUrls() {
