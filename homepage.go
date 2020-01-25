@@ -87,31 +87,55 @@ func (ck *HomepageChecker) checkFtp() {
 }
 
 func (ck *HomepageChecker) checkHttp() {
-	m, host := match1(ck.Value, `http://([A-Za-z0-9-.]+)`)
-	if !m {
-		return
-	}
-
 	if ck.MkLine.HasRationale("http", "https") {
 		return
 	}
 
-	// Don't warn about sites that don't support https at all.
+	shouldAutofix, from, to := ck.toHttps(ck.Value)
+	if from == "" {
+		return
+	}
+
+	fix := ck.MkLine.Autofix()
+	fix.Warnf("HOMEPAGE should migrate from %s to %s.", from, to)
+	if shouldAutofix {
+		fix.Replace(from, to)
+	}
+	fix.Explain(
+		"To provide secure communication by default,",
+		"the HOMEPAGE URL should use the https protocol if available.",
+		"",
+		"If the HOMEPAGE really does not support https,",
+		"add a comment near the HOMEPAGE variable stating this clearly.")
+	fix.Apply()
+}
+
+// toHttps checks whether the homepage should be migrated from http to https
+// and which part of the homepage URL needs to be modified for that.
+func (ck *HomepageChecker) toHttps(url string) (bool, string, string) {
+	m, host, port := match2(url, `http://([A-Za-z0-9-.]+)(:[0-9]+)?`)
+	if !m {
+		return false, "", ""
+	}
+
 	if ck.hasAnySuffix(host,
 		"www.gnustep.org", // 2020-01-18
 		"aspell.net",      // 2020-01-18
 	) {
-		return
+		return false, "", ""
 	}
 
 	if ck.hasAnySuffix(host, ".sf.net", ".sourceforge.net") {
 		// Exclude SourceForge subdomains since each of these projects
 		// must migrate to https manually and individually.
 		// As of January 2020, only around 50% of the projects have done that.
-		return
+
+		// TODO: Consider migrating these URLs from http://*.sourceforge.net/
+		//  to https://*.sourceforge.io/.
+		return false, "", ""
 	}
 
-	supportsHttps := ck.hasAnySuffix(host,
+	if ck.hasAnySuffix(host,
 		"apache.org",
 		"archive.org",
 		"ctan.org",
@@ -126,27 +150,16 @@ func (ck *HomepageChecker) checkHttp() {
 		"NetBSD.org",
 		"nongnu.org",
 		"tryton.org",
-		"tug.org")
+		"tug.org") {
+		return port == "", "http", "https"
+	}
 
-	from := "http"
-	to := "https"
 	if host == "sf.net" {
-		from = "http://sf.net"
-		to = "https://sourceforge.net"
+		return port == "", "http://sf.net", "https://sourceforge.net"
 	}
 
-	fix := ck.MkLine.Autofix()
-	fix.Warnf("HOMEPAGE should migrate from %s to %s.", from, to)
-	if supportsHttps {
-		fix.Replace(from, to)
-	}
-	fix.Explain(
-		"To provide secure communication by default,",
-		"the HOMEPAGE URL should use the https protocol if available.",
-		"",
-		"If the HOMEPAGE really does not support https,",
-		"add a comment near the HOMEPAGE variable stating this clearly.")
-	fix.Apply()
+	shouldAutofix := port == "" && G.Opts.Network && ck.isReachable("https"+url[4:])
+	return shouldAutofix, "http", "https"
 }
 
 func (ck *HomepageChecker) checkBadUrls() {

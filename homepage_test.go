@@ -152,7 +152,23 @@ func (s *Suite) Test_HomepageChecker_checkHttp(c *check.C) {
 	// www.pkgsrc.org is not in the (short) list of known https domains,
 	// therefore pkglint does not dare to change it automatically.
 	vt.Output(
+		"AUTOFIX: filename.mk:14: Replacing \"http://sf.net\" "+
+			"with \"https://sourceforge.net\".",
 		"AUTOFIX: filename.mk:18: Replacing \"http\" with \"https\".")
+}
+
+func (s *Suite) Test_HomepageChecker_toHttps(c *check.C) {
+	t := s.Init(c)
+
+	test := func(url string, shouldAutofix bool, from, to string) {
+		toHttps := (*HomepageChecker).toHttps
+		actualShouldAutofix, actualFrom, actualTo := toHttps(nil, url)
+		t.CheckDeepEquals(
+			[]interface{}{actualShouldAutofix, actualFrom, actualTo},
+			[]interface{}{shouldAutofix, from, to})
+	}
+
+	test("http://localhost/", false, "http", "https")
 }
 
 func (s *Suite) Test_HomepageChecker_checkBadUrls(c *check.C) {
