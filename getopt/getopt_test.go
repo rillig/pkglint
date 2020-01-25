@@ -449,10 +449,8 @@ func (s *Suite) Test_Options_Help__partial(c *check.C) {
 	c.Check(out.String(), check.Equals, ""+
 		"usage: progname [options] args\n"+
 		"\n"+
-		// FIXME: "--" is wrong
-		"  -s, --       Only short option\n"+
-		// FIXME: Never output a null byte.
-		"  -\x00, --long   Only long option\n")
+		"  -s       Only short option\n"+
+		"  --long   Only long option\n")
 }
 
 func (s *Suite) Test__qa(c *check.C) {
