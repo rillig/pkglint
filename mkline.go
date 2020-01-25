@@ -74,12 +74,31 @@ func (mkline *MkLine) String() string {
 
 func (mkline *MkLine) HasComment() bool { return mkline.splitResult.hasComment }
 
-// Rationale returns the comments that are close enough to this line.
+// HasRationale returns true if the comments that are close enough to
+// this line contain a rationale for suppressing a diagnostic.
 //
 // These comments are used to suppress pkglint warnings,
 // such as for BROKEN, NOT_FOR_PLATFORMS, MAKE_JOBS_SAFE,
 // and HOMEPAGE using http instead of https.
-func (mkline *MkLine) Rationale() string { return mkline.splitResult.rationale }
+//
+// To qualify as a rationale, the comment must contain any of the given
+// keywords. If no keywords are given, any comment qualifies.
+func (mkline *MkLine) HasRationale(keywords ...string) bool {
+	rationale := mkline.splitResult.rationale
+	if rationale == "" {
+		return false
+	}
+	if len(keywords) == 0 {
+		return true
+	}
+
+	for _, keyword := range keywords {
+		if containsWord(rationale, keyword) {
+			return true
+		}
+	}
+	return false
+}
 
 // Comment returns the comment after the first unescaped #.
 //

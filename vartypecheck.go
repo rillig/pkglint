@@ -688,8 +688,7 @@ func (cv *VartypeCheck) homepageHttp() {
 		return
 	}
 
-	rationale := cv.MkLine.Rationale()
-	if containsWord(rationale, "http") || containsWord(rationale, "https") {
+	if cv.MkLine.HasRationale("http", "https") {
 		return
 	}
 
