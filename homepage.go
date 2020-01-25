@@ -192,17 +192,21 @@ func (ck *HomepageChecker) checkReachable() {
 		mkline.Errorf("Invalid URL %q.", url)
 		return
 	}
+
 	response, err := client.Do(request)
 	if err != nil {
 		networkError := ck.classifyNetworkError(err)
 		mkline.Warnf("Homepage %q cannot be checked: %s", url, networkError)
 		return
 	}
+	defer func() { _ = response.Body.Close() }()
+
 	location, err := response.Location()
 	if err == nil {
 		mkline.Warnf("Status: %s, location: %s", response.Status, location.String())
 		return
 	}
+
 	if response.StatusCode != 200 {
 		mkline.Warnf("Status: %s", response.Status)
 		return

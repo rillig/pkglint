@@ -186,7 +186,7 @@ func (s *Suite) Test_HomepageChecker_checkReachable(c *check.C) {
 		assertNil(err, "")
 		writer.WriteHeader(status)
 	})
-	mux.HandleFunc("/timeout", func(writer http.ResponseWriter, request *http.Request) {
+	mux.HandleFunc("/timeout", func(http.ResponseWriter, *http.Request) {
 		time.Sleep(5 * time.Second)
 	})
 
