@@ -259,7 +259,9 @@ func (*HomepageChecker) classifyNetworkError(err error) string {
 		cause = unwrap.Unwrap()
 	}
 
-	if cause, ok := cause.(*net.DNSError); ok && cause.IsNotFound {
+	// DNSError.IsNotFound was added in 1.13.
+	// See https://github.com/golang/go/issues/28635
+	if cause, ok := cause.(*net.DNSError); ok && cause.Err == "no such host" {
 		return "name not found"
 	}
 	if cause, ok := cause.(syscall.Errno); ok {
