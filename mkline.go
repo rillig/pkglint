@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"netbsd.org/pkglint/regex"
 	"netbsd.org/pkglint/textproc"
+	"regexp"
 	"strings"
 )
 
@@ -92,8 +93,17 @@ func (mkline *MkLine) HasRationale(keywords ...string) bool {
 		return true
 	}
 
+	// Avoid expensive regular expression search.
+	rationaleContains := func(keyword string) bool {
+		return contains(rationale, keyword)
+	}
+	if !anyStr(keywords, rationaleContains) {
+		return false
+	}
+
 	for _, keyword := range keywords {
-		if containsWord(rationale, keyword) {
+		pattern := regex.Pattern(`\b` + regexp.QuoteMeta(keyword) + `\b`)
+		if matches(rationale, pattern) {
 			return true
 		}
 	}
