@@ -1054,7 +1054,6 @@ func (s *Suite) Test_VartypeCheck_homepageReachable(c *check.C) {
 
 	vt.Output(
 		"WARN: filename.mk:1: HOMEPAGE should migrate from http to https.",
-		"NOTE: filename.mk:1: Homepage found: 200 OK",
 		"WARN: filename.mk:2: HOMEPAGE should migrate from http to https.",
 		"WARN: filename.mk:2: Status: 301 Moved Permanently, "+
 			"location: http://localhost:28780/redirect301",

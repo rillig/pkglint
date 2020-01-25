@@ -791,7 +791,6 @@ func (cv *VartypeCheck) homepageReachable() {
 		cv.Warnf("Status: %s", response.Status)
 		return
 	}
-	cv.Notef("Homepage found: %s", response.Status)
 }
 
 // Identifier checks for valid identifiers in various contexts, limiting the
