@@ -127,16 +127,6 @@ func (ck *HomepageChecker) toHttps(url string) (bool, string, string) {
 		return false, "", ""
 	}
 
-	if m, project := match1(host, `^([\w-]+)\.(?:sf|sourceforge)\.net$`); m {
-		// Exclude SourceForge subdomains since each of these projects
-		// must migrate to https manually and individually.
-		//
-		// As of January 2020, only around 50% of the pkgsrc-wip projects
-		// have done that.
-
-		return false, "http://" + host, "https://" + project + ".sourceforge.io"
-	}
-
 	if ck.hasAnySuffix(host,
 		"apache.org",
 		"archive.org",
@@ -158,6 +148,16 @@ func (ck *HomepageChecker) toHttps(url string) (bool, string, string) {
 
 	if host == "sf.net" {
 		return port == "", "http://sf.net", "https://sourceforge.net"
+	}
+
+	if m, project := match1(host, `^([\w-]+)\.(?:sf|sourceforge)\.net$`); m {
+		// Exclude SourceForge subdomains since each of these projects
+		// must migrate to https manually and individually.
+		//
+		// As of January 2020, only around 50% of the pkgsrc-wip projects
+		// have done that.
+
+		return false, "http://" + host, "https://" + project + ".sourceforge.io"
 	}
 
 	shouldAutofix := port == "" && G.Opts.Network && ck.isReachable("https"+url[4:])
