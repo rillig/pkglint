@@ -187,6 +187,12 @@ func (s *Suite) Test_HomepageChecker_toHttps(c *check.C) {
 		false,
 		"sourceforge.net",
 		"sourceforge.io")
+
+	test(
+		"http://godoc.org/${GO_SRCPATH}",
+		false,
+		"http",
+		"https")
 }
 
 func (s *Suite) Test_HomepageChecker_checkBadUrls(c *check.C) {
