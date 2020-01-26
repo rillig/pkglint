@@ -142,7 +142,7 @@ func (s *Suite) Test_VartypeCheck_AwkCommand(c *check.C) {
 	vt.Output(
 		"WARN: filename.mk:1: $0 is ambiguous. "+
 			"Use ${0} if you mean a Make variable or $$0 if you mean a shell variable.",
-		"WARN: filename.mk:3: $0 is ambiguous. "+
+		"WARN: filename.mk:11: $0 is ambiguous. "+
 			"Use ${0} if you mean a Make variable or $$0 if you mean a shell variable.")
 }
 
@@ -2292,6 +2292,8 @@ func (vt *VartypeCheckTester) Values(values ...string) {
 
 		mklines.ForEach(func(mkline *MkLine) { test(mklines, mkline, value) })
 	}
+
+	vt.nextSection()
 }
 
 // Output checks that the output from all previous steps is
