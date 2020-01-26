@@ -1,7 +1,6 @@
 package pkglint
 
 import (
-	"github.com/davecgh/go-spew/spew"
 	"net"
 	"net/http"
 	"syscall"
@@ -350,9 +349,5 @@ func (*HomepageChecker) classifyNetworkError(err error) string {
 	if cause, ok := cause.(net.Error); ok && cause.Timeout() {
 		return "timeout"
 	}
-	config := spew.NewDefaultConfig()
-	config.DisableMethods = true
-	config.DisablePointerAddresses = true
-	return sprintf("unknown network error: %s, cause: %s",
-		config.Sdump(err), config.Sdump(cause))
+	return "unknown network error"
 }

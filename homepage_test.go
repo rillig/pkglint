@@ -2,7 +2,9 @@ package pkglint
 
 import (
 	"context"
+	"errors"
 	"gopkg.in/check.v1"
+	"net"
 	"net/http"
 	"strconv"
 	"syscall"
@@ -231,12 +233,14 @@ func (s *Suite) Test_HomepageChecker_checkReachable(c *check.C) {
 
 	// 28780 = 256 * 'p' + 'l'
 	srv := http.Server{Addr: "localhost:28780", Handler: mux}
-	shutdown := make(chan error)
+	listener, err := net.Listen("tcp", srv.Addr)
+	assertNil(err, "")
+	shutdown := make(chan bool)
 
 	go func() {
-		err := srv.ListenAndServe()
+		err = srv.Serve(listener)
 		assertf(err == http.ErrServerClosed, "%s", err)
-		shutdown <- err
+		shutdown <- true
 	}()
 
 	defer func() {
@@ -317,12 +321,14 @@ func (s *Suite) Test_HomepageChecker_isReachable(c *check.C) {
 
 	// 28780 = 256 * 'p' + 'l'
 	srv := http.Server{Addr: "localhost:28780", Handler: mux}
-	shutdown := make(chan error)
+	listener, err := net.Listen("tcp", srv.Addr)
+	assertNil(err, "")
+	shutdown := make(chan bool)
 
 	go func() {
-		err := srv.ListenAndServe()
+		err := srv.Serve(listener)
 		assertf(err == http.ErrServerClosed, "%s", err)
-		shutdown <- err
+		shutdown <- true
 	}()
 
 	defer func() {
@@ -374,6 +380,6 @@ func (s *Suite) Test_HomepageChecker_classifyNetworkError(c *check.C) {
 	}
 
 	test(syscall.Errno(10061), "connection refused")
-	// FIXME: enable again
-	// test(errors.New("unknown"), "unknown network error: &errors.errorString{s:\"unknown\"}")
+	test(syscall.ECONNREFUSED, "connection refused")
+	test(errors.New("unknown"), "unknown network error")
 }
