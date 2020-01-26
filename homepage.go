@@ -350,5 +350,8 @@ func (*HomepageChecker) classifyNetworkError(err error) string {
 	if cause, ok := cause.(net.Error); ok && cause.Timeout() {
 		return "timeout"
 	}
-	return sprintf("unknown network error: %s", spew.Sdump(err))
+	config := spew.NewDefaultConfig()
+	config.DisableMethods = true
+	config.DisablePointerAddresses = true
+	return sprintf("unknown network error: %s", config.Sdump(err))
 }
