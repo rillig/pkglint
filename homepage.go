@@ -140,6 +140,9 @@ func (ck *HomepageChecker) checkHttp() {
 
 // toHttps checks whether the homepage should be migrated from http to https
 // and which part of the homepage URL needs to be modified for that.
+//
+// If for some reason the https URL should not be reachable but the
+// corresponding http URL is, the homepage is changed back to http.
 func (ck *HomepageChecker) toHttps(url string) (bool, string, string) {
 	m, scheme, host, port := match3(url, `(https?)://([A-Za-z0-9-.]+)(:[0-9]+)?`)
 	if !m {
@@ -187,6 +190,7 @@ func (ck *HomepageChecker) toHttps(url string) (bool, string, string) {
 	if m, project := match1(host, `^([\w-]+)\.(?:sf|sourceforge)\.net$`); m {
 		if scheme == "http" {
 			from = scheme + "://" + host
+			// See https://sourceforge.net/p/forge/documentation/Custom%20VHOSTs
 			to = "https://" + project + ".sourceforge.io"
 		} else {
 			from = "sourceforge.net"

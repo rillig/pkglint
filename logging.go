@@ -111,7 +111,7 @@ func (l *Logger) Diag(line *Line, level *LogLevel, format string, args ...interf
 			switch arg.(type) {
 			case int, string:
 			case error:
-				// TODO: errors do not belong into diagnostics,
+				// TODO: errors do not belong in diagnostics,
 				//  they belong in normal error messages.
 			default:
 				// All paths in diagnostics must be relative to the line.
