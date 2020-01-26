@@ -25,7 +25,7 @@ therefore the decision whether each element should be exported or not is not car
 If you want to use some of the code in your own pkgsrc programs,
 [just ask](mailto:%72%69%6C%6C%69%67%40NetBSD.org?subject=using%20pkglint%20as%20a%20library).
 
-> from [pkglint.go](pkglint.go#L111):
+> from [pkglint.go](pkglint.go#L110):
 
 ```go
 func (pkglint *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) (exitCode int) {
@@ -34,7 +34,7 @@ func (pkglint *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) 
 When running pkglint, the `G` variable is set up first.
 It contains the whole global state of pkglint:
 
-> from [pkglint.go](pkglint.go#L96):
+> from [pkglint.go](pkglint.go#L95):
 
 ```go
 // G is the abbreviation for "global state";
@@ -48,7 +48,7 @@ var (
 All the interesting code is in the `Pkglint` type.
 Having only two global variables makes it easy to reset the global state during testing.
 
-> from [pkglint.go](pkglint.go#L103):
+> from [pkglint.go](pkglint.go#L102):
 
 ```go
 // Main runs the main program with the given arguments.
@@ -148,13 +148,13 @@ func main() {
 }
 ```
 
-> from [pkglint.go](pkglint.go#L111):
+> from [pkglint.go](pkglint.go#L110):
 
 ```go
 func (pkglint *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) (exitCode int) {
 ```
 
-> from [pkglint.go](pkglint.go#L123):
+> from [pkglint.go](pkglint.go#L122):
 
 ```go
 	if exitcode := pkglint.ParseCommandLine(args); exitcode != -1 {
@@ -190,7 +190,7 @@ In this example run, the first and only argument is `DESCR`.
 From there, the pkgsrc root is usually reachable via `../../`,
 and this is what pkglint tries.
 
-> from [pkglint.go](pkglint.go#L200):
+> from [pkglint.go](pkglint.go#L199):
 
 ```go
 	firstDir := pkglint.Todo.Front()
@@ -218,7 +218,7 @@ one after another. When pkglint is called with the `-r` option,
 some entries may be added to the Todo list,
 but that doesn't happen in this simple example run.
 
-> from [pkglint.go](pkglint.go#L133):
+> from [pkglint.go](pkglint.go#L132):
 
 ```go
 	for !pkglint.Todo.IsEmpty() {
@@ -426,7 +426,7 @@ func (line *Line) Autofix() *Autofix {
 The journey ends here, and it hasn't been that difficult.
 If that was too easy, have a look at the complex cases here:
 
-> from [mkline.go](mkline.go#L664):
+> from [mkline.go](mkline.go#L697):
 
 ```go
 // VariableNeedsQuoting determines whether the given variable needs the :Q
@@ -599,7 +599,7 @@ In these, there may be line continuations  (the ones ending in backslash).
 Plus, they may contain Make variables of the form `${VARNAME}` or `${VARNAME:Modifiers}`,
 and these are handled specially.
 
-> from [mkline.go](mkline.go#L10):
+> from [mkline.go](mkline.go#L11):
 
 ```go
 // MkLine is a line from a Makefile fragment.
@@ -702,7 +702,7 @@ type Path string
 type CurrPath string
 ```
 
-> from [path.go](path.go#L426):
+> from [path.go](path.go#L446):
 
 ```go
 // RelPath is a path that is relative to some base directory that is not
@@ -756,7 +756,7 @@ The `t` variable is the center of most tests.
 It is of type `Tester` and provides a high-level interface
 for setting up tests and checking the results.
 
-> from [check_test.go](check_test.go#L178):
+> from [check_test.go](check_test.go#L181):
 
 ```go
 // Tester provides utility methods for testing pkglint.
@@ -818,7 +818,7 @@ t.DisableTracing()
 To see how to setup complicated tests, have a look at the following test,
 which sets up a realistic environment to run the tests in.
 
-> from [pkglint_test.go](pkglint_test.go#L119):
+> from [pkglint_test.go](pkglint_test.go#L120):
 
 ```go
 // Demonstrates which infrastructure files are necessary to actually run
