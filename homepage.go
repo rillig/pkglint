@@ -219,7 +219,8 @@ func (ck *HomepageChecker) toHttps(url string) (bool, string, string) {
 	shouldAutofix := toReachable == yes
 	if port == "" && G.Opts.Network && toReachable == unknown {
 		_, migrated := replaceOnce(url, from, to)
-		if ck.isReachable(migrated) == yes {
+		toReachable = ck.isReachable(migrated)
+		if toReachable == yes {
 			shouldAutofix = true
 		} else {
 			return false, "", ""
