@@ -353,5 +353,6 @@ func (*HomepageChecker) classifyNetworkError(err error) string {
 	config := spew.NewDefaultConfig()
 	config.DisableMethods = true
 	config.DisablePointerAddresses = true
-	return sprintf("unknown network error: %s", config.Sdump(err))
+	return sprintf("unknown network error: %s, cause: %s",
+		config.Sdump(err), config.Sdump(cause))
 }
