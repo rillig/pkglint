@@ -328,15 +328,16 @@ func (*HomepageChecker) hasAnySuffix(s string, suffixes ...string) bool {
 func (*HomepageChecker) classifyNetworkError(err error) string {
 	cause := err
 	for {
-		type nested interface{ Unwrap() error }
-		unwrap, ok := cause.(nested)
-		if !ok {
-			break
+		// Unwrap was added in Go 1.13.
+		// See https://github.com/golang/go/issues/36781
+		if unwrap, ok := cause.(interface{ Unwrap() error }); ok {
+			cause = unwrap.Unwrap()
+			continue
 		}
-		cause = unwrap.Unwrap()
+		break
 	}
 
-	// DNSError.IsNotFound was added in 1.13.
+	// DNSError.IsNotFound was added in Go 1.13.
 	// See https://github.com/golang/go/issues/28635
 	if cause, ok := cause.(*net.DNSError); ok && cause.Err == "no such host" {
 		return "name not found"
@@ -352,5 +353,5 @@ func (*HomepageChecker) classifyNetworkError(err error) string {
 		return "timeout"
 	}
 
-	return sprintf("unknown network error: %s, cause: %s", err, cause)
+	return sprintf("unknown network error: %s", err)
 }

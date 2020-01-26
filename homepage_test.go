@@ -297,17 +297,19 @@ func (s *Suite) Test_HomepageChecker_checkReachable(c *check.C) {
 	vt.Values(
 		"http://localhost:28781/")
 
+	// The "unknown network error" is for compatibility with Go < 1.13.
 	t.CheckOutputMatches(
 		"WARN: filename.mk:31: HOMEPAGE should migrate from http to https.",
 		`^WARN: filename\.mk:31: Homepage "http://localhost:28781/" `+
-			`cannot be checked: (connection refused|unknown network error)$`)
+			`cannot be checked: (connection refused|unknown network error:.*)$`)
 
 	vt.Values(
 		"https://no-such-name.example.org/")
 
+	// The "unknown network error" is for compatibility with Go < 1.13.
 	t.CheckOutputMatches(
 		`^WARN: filename\.mk:41: Homepage "https://no-such-name.example.org/" ` +
-			`cannot be checked: (name not found|unknown network error)$`)
+			`cannot be checked: (name not found|unknown network error:.*)$`)
 }
 
 func (s *Suite) Test_HomepageChecker_isReachable(c *check.C) {
@@ -393,5 +395,5 @@ func (s *Suite) Test_HomepageChecker_classifyNetworkError(c *check.C) {
 
 	test(syscall.Errno(10061), "connection refused")
 	test(syscall.ECONNREFUSED, "connection refused")
-	test(errors.New("unknown"), "unknown network error: unknown, cause: unknown")
+	test(errors.New("unknown"), "unknown network error: unknown")
 }
