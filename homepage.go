@@ -341,13 +341,16 @@ func (*HomepageChecker) classifyNetworkError(err error) string {
 	if cause, ok := cause.(*net.DNSError); ok && cause.Err == "no such host" {
 		return "name not found"
 	}
+
 	if cause, ok := cause.(syscall.Errno); ok {
 		if cause == 10061 || cause == syscall.ECONNREFUSED {
 			return "connection refused"
 		}
 	}
+
 	if cause, ok := cause.(net.Error); ok && cause.Timeout() {
 		return "timeout"
 	}
-	return "unknown network error: " + err.Error()
+
+	return sprintf("unknown network error: %s, cause: %s", err, cause)
 }
