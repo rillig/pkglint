@@ -7,6 +7,34 @@ import (
 	"time"
 )
 
+// HomepageChecker runs the checks for a HOMEPAGE definition.
+//
+// When pkglint is in network mode (which has to be enabled explicitly using
+// --network), it checks whether the homepage is actually reachable.
+//
+// The homepage URLs should use https as far as possible.
+// To achieve this goal, the HomepageChecker can migrate homepages
+// from less preferred URLs to preferred URLs.
+//
+// For most sites, the list of possible URLs is:
+//  - https://$rest (preferred)
+//  - http://$rest (less preferred)
+//
+// For SourceForge, it's a little more complicated:
+//  - https://$project.sourceforge.io/$path
+//  - http://$project.sourceforge.net/$path
+//  - http://$project.sourceforge.io/$path (not officially supported)
+//  - https://$project.sourceforge.net/$path (not officially supported)
+//  - https://sourceforge.net/projects/$project/
+//  - http://sourceforge.net/projects/$project/
+//  - https://sf.net/projects/$project/
+//  - http://sf.net/projects/$project/
+//  - https://sf.net/p/$project/
+//  - http://sf.net/p/$project/
+//
+// TODO: implement complete homepage migration for SourceForge.
+// TODO: allow to suppress the automatic migration for SourceForge,
+//  even if it is not about https vs. http.
 type HomepageChecker struct {
 	Value      string
 	ValueNoVar string
