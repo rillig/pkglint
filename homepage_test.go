@@ -375,5 +375,5 @@ func (s *Suite) Test_HomepageChecker_classifyNetworkError(c *check.C) {
 	}
 
 	test(syscall.Errno(10061), "connection refused")
-	test(errors.New("unknown"), "unknown network error")
+	test(errors.New("unknown"), "unknown network error: &errors.errorString{s:\"unknown\"}")
 }
