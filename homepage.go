@@ -1,6 +1,7 @@
 package pkglint
 
 import (
+	"github.com/davecgh/go-spew/spew"
 	"net"
 	"net/http"
 	"syscall"
@@ -349,5 +350,5 @@ func (*HomepageChecker) classifyNetworkError(err error) string {
 	if cause, ok := cause.(net.Error); ok && cause.Timeout() {
 		return "timeout"
 	}
-	return sprintf("unknown network error: %#v", err)
+	return sprintf("unknown network error: %s", spew.Sdump(err))
 }
