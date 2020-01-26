@@ -349,5 +349,5 @@ func (*HomepageChecker) classifyNetworkError(err error) string {
 	if cause, ok := cause.(net.Error); ok && cause.Timeout() {
 		return "timeout"
 	}
-	return "unknown network error"
+	return "unknown network error: " + err.Error()
 }

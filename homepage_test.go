@@ -280,22 +280,34 @@ func (s *Suite) Test_HomepageChecker_checkReachable(c *check.C) {
 			"returns HTTP status \"500 Internal Server Error\".")
 
 	vt.Values(
-		"http://localhost:28780/timeout",
-		"http://localhost:28780/%invalid",
-		"http://localhost:28781/",
-		"https://no-such-name.example.org/")
+		"http://localhost:28780/timeout")
 
 	vt.Output(
 		"WARN: filename.mk:11: HOMEPAGE should migrate from http to https.",
 		"WARN: filename.mk:11: Homepage \"http://localhost:28780/timeout\" "+
-			"cannot be checked: timeout",
-		"WARN: filename.mk:12: HOMEPAGE should migrate from http to https.",
-		"ERROR: filename.mk:12: Invalid URL \"http://localhost:28780/%invalid\".",
-		"WARN: filename.mk:13: HOMEPAGE should migrate from http to https.",
-		"WARN: filename.mk:13: Homepage \"http://localhost:28781/\" "+
-			"cannot be checked: connection refused",
-		"WARN: filename.mk:14: Homepage \"https://no-such-name.example.org/\" "+
-			"cannot be checked: name not found")
+			"cannot be checked: timeout")
+
+	vt.Values(
+		"http://localhost:28780/%invalid")
+
+	vt.Output(
+		"WARN: filename.mk:21: HOMEPAGE should migrate from http to https.",
+		"ERROR: filename.mk:21: Invalid URL \"http://localhost:28780/%invalid\".")
+
+	vt.Values(
+		"http://localhost:28781/")
+
+	t.CheckOutputMatches(
+		"WARN: filename.mk:31: HOMEPAGE should migrate from http to https.",
+		`^WARN: filename\.mk:31: Homepage "http://localhost:28781/" `+
+			`cannot be checked: (connection refused|unknown network error)$`)
+
+	vt.Values(
+		"https://no-such-name.example.org/")
+
+	t.CheckOutputMatches(
+		`^WARN: filename\.mk:41: Homepage "https://no-such-name.example.org/" ` +
+			`cannot be checked: (name not found|unknown network error)$`)
 }
 
 func (s *Suite) Test_HomepageChecker_isReachable(c *check.C) {
@@ -381,5 +393,5 @@ func (s *Suite) Test_HomepageChecker_classifyNetworkError(c *check.C) {
 
 	test(syscall.Errno(10061), "connection refused")
 	test(syscall.ECONNREFUSED, "connection refused")
-	test(errors.New("unknown"), "unknown network error")
+	test(errors.New("unknown"), "unknown network error: unknown")
 }
