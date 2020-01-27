@@ -218,7 +218,7 @@ func (vt *VaralignTester) checkTestName() {
 	}
 
 	vt.tester.CheckDeepEquals(descriptorsString(actual), descriptorsString(expected))
-	vt.tester.CheckDeepEquals(actual, expected)
+	vt.tester.CheckDeepEquals(expected, actual)
 }
 
 func (s *Suite) Test_VaralignBlock__var_none_value(c *check.C) {
@@ -2060,6 +2060,54 @@ func (s *Suite) Test_VaralignBlock__var_tab_value63_space_cont_tab8_value71_spac
 		"PROGFILES=      67890 234567890 234567890 234567890 234567890 2 \\",
 		"                890 234567890 234567890 234567890 234567890 234567890 234567890 \\",
 		"                value")
+	vt.Run()
+}
+
+// Up to 2020-01-27, pkglint removed all spaces before the backslash,
+// which was against the rule of having at least one space.
+func (s *Suite) Test_VaralignBlock__right_margin(c *check.C) {
+	vt := NewVaralignTester(s, c)
+	vt.Input(
+		"CONFIGURE_ARGS+=\t\\",
+		"\t.....................................................................79\t\\",
+		"\t............................................................70 \t\t\\",
+		"\t..................................................................76\t\\",
+		"\t.................................................................75\t\\",
+		"\t........................................................66\t\t\\",
+		"\t..................................................................76\t\\",
+		"\t.............................................................71\t\t\\",
+		"\t..............................................................72\t\\",
+		"\t........................................................66")
+	vt.Diagnostics(
+		"NOTE: Makefile:2: The continuation backslash should be in column 73, not 81.",
+		"NOTE: Makefile:3: The continuation backslash should be in column 73, not 81.",
+		"NOTE: Makefile:4: The continuation backslash should be in column 73, not 81.",
+		"NOTE: Makefile:5: The continuation backslash should be in column 73, not 81.",
+		"NOTE: Makefile:6: The continuation backslash should be in column 73, not 81.",
+		"NOTE: Makefile:7: The continuation backslash should be in column 73, not 81.",
+		"NOTE: Makefile:8: The continuation backslash should be in column 73, not 81.",
+		"NOTE: Makefile:9: The continuation backslash should be in column 73, not 81.")
+	vt.Autofixes(
+		"AUTOFIX: Makefile:2: Replacing \"\\t\" with \"\".",
+		"AUTOFIX: Makefile:3: Replacing \" \\t\\t\" with \"\\t\".",
+		"AUTOFIX: Makefile:4: Replacing \"\\t\" with \"\".",
+		"AUTOFIX: Makefile:5: Replacing \"\\t\" with \"\".",
+		"AUTOFIX: Makefile:6: Replacing \"\\t\\t\" with \"\\t\".",
+		"AUTOFIX: Makefile:7: Replacing \"\\t\" with \"\".",
+		"AUTOFIX: Makefile:8: Replacing \"\\t\\t\" with \"\\t\".",
+		"AUTOFIX: Makefile:9: Replacing \"\\t\" with \"\".")
+	vt.Fixed(
+		"CONFIGURE_ARGS+=        \\",
+		// FIXME: Several of the lines do not have a space before the backslash.
+		"        .....................................................................79\\",
+		"        ............................................................70  \\",
+		"        ..................................................................76\\",
+		"        .................................................................75\\",
+		"        ........................................................66      \\",
+		"        ..................................................................76\\",
+		"        .............................................................71 \\",
+		"        ..............................................................72\\",
+		"        ........................................................66")
 	vt.Run()
 }
 
