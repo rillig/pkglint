@@ -85,6 +85,8 @@ func (s *Suite) Test_newVersion(c *check.C) {
 		&version{nil, 1})
 	c.Check(newVersion("1.0.1a"), check.DeepEquals,
 		&version{[]int{1, 0, 0, 0, 1, 1}, 0})
+	c.Check(newVersion("1.1.1dnb2"), check.DeepEquals,
+		&version{[]int{1, 0, 1, 0, 1, 4}, 2})
 	c.Check(newVersion("1.0.1z"), check.DeepEquals,
 		&version{[]int{1, 0, 0, 0, 1, 26}, 0})
 	c.Check(newVersion("0pre20160620"), check.DeepEquals,
