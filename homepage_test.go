@@ -376,6 +376,12 @@ func (s *Suite) Test_HomepageChecker_checkReachable(c *check.C) {
 	t.CheckOutputMatches(
 		`^WARN: filename\.mk:41: Homepage "https://no-such-name.example.org/" ` +
 			`cannot be checked: (name not found|unknown network error:.*)$`)
+
+	vt.Values(
+		"https://!!!invalid/")
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:51: \"https://!!!invalid/\" is not a valid URL.")
 }
 
 func (s *Suite) Test_HomepageChecker_isReachableOnline(c *check.C) {
