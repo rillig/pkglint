@@ -37,7 +37,7 @@ func (s *Suite) Test_HomepageChecker_Check(c *check.C) {
 	ck.Check()
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:1: An FTP URL does not represent a user-friendly homepage.")
+		"WARN: filename.mk:1: An FTP URL is not a user-friendly homepage.")
 }
 
 func (s *Suite) Test_HomepageChecker_checkBasedOnMasterSites(c *check.C) {
@@ -113,7 +113,7 @@ func (s *Suite) Test_HomepageChecker_checkFtp(c *check.C) {
 
 	vt.Output(
 		"WARN: filename.mk:1: " +
-			"An FTP URL does not represent a user-friendly homepage.")
+			"An FTP URL is not a user-friendly homepage.")
 }
 
 func (s *Suite) Test_HomepageChecker_checkHttp(c *check.C) {
