@@ -75,12 +75,10 @@ type CmdOpts struct {
 	WarnQuoting bool
 
 	Profiling,
-	ShowHelp,
 	DumpMakefile,
 	Import,
 	Network,
-	Recursive,
-	ShowVersion bool
+	Recursive bool
 
 	args []string
 }
@@ -225,13 +223,16 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) int {
 	lopts := &pkglint.Logger.Opts
 	opts := getopt.NewOptions()
 
+	var showHelp bool
+	var showVersion bool
+
 	check := opts.AddFlagGroup('C', "check", "check,...", "enable or disable specific checks")
 	opts.AddFlagVar('d', "debug", &trace.Tracing, false, "log verbose call traces for debugging")
 	opts.AddFlagVar('e', "explain", &lopts.Explain, false, "explain the diagnostics or give further help")
 	opts.AddFlagVar('f', "show-autofix", &lopts.ShowAutofix, false, "show what pkglint can fix automatically")
 	opts.AddFlagVar('F', "autofix", &lopts.Autofix, false, "try to automatically fix some errors")
 	opts.AddFlagVar('g', "gcc-output-format", &lopts.GccOutput, false, "mimic the gcc output format")
-	opts.AddFlagVar('h', "help", &gopts.ShowHelp, false, "show a detailed usage message")
+	opts.AddFlagVar('h', "help", &showHelp, false, "show a detailed usage message")
 	opts.AddFlagVar('I', "dumpmakefile", &gopts.DumpMakefile, false, "dump the Makefile after parsing")
 	opts.AddFlagVar('i', "import", &gopts.Import, false, "prepare the import of a wip package")
 	opts.AddFlagVar('n', "network", &gopts.Network, false, "enable checks that need network access")
@@ -240,7 +241,7 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) int {
 	opts.AddFlagVar('q', "quiet", &lopts.Quiet, false, "don't show a summary line when finishing")
 	opts.AddFlagVar('r', "recursive", &gopts.Recursive, false, "check subdirectories, too")
 	opts.AddFlagVar('s', "source", &lopts.ShowSource, false, "show the source lines together with diagnostics")
-	opts.AddFlagVar('V', "version", &gopts.ShowVersion, false, "show the version number of pkglint")
+	opts.AddFlagVar('V', "version", &showVersion, false, "show the version number of pkglint")
 	warn := opts.AddFlagGroup('W', "warning", "warning,...", "enable or disable groups of warnings")
 
 	check.AddFlagVar("global", &gopts.CheckGlobal, false, "inter-package checks")
@@ -259,12 +260,12 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) int {
 	}
 	gopts.args = remainingArgs
 
-	if gopts.ShowHelp {
+	if showHelp {
 		opts.Help(pkglint.Logger.out.out, "pkglint [options] dir...")
 		return 0
 	}
 
-	if pkglint.Opts.ShowVersion {
+	if showVersion {
 		_, _ = fmt.Fprintf(pkglint.Logger.out.out, "%s\n", confVersion)
 		return 0
 	}
