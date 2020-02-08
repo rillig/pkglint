@@ -111,7 +111,7 @@ func (ck *MkAssignChecker) checkVarassignLeftBsdPrefs() {
 		return
 	}
 
-	if !G.Opts.WarnExtra ||
+	if !G.WarnExtra ||
 		G.Infrastructure ||
 		mkline.Op() != opAssignDefault ||
 		ck.MkLines.Tools.SeenPrefs {
@@ -203,7 +203,7 @@ func (ck *MkAssignChecker) checkVarassignLeftUserSettable() bool {
 //
 // See checkPermissions.
 func (ck *MkAssignChecker) checkVarassignLeftPermissions() {
-	if !G.Opts.WarnPerm {
+	if !G.WarnPerm {
 		return
 	}
 	if G.Infrastructure {
@@ -274,7 +274,7 @@ func (ck *MkAssignChecker) checkVarassignLeftPermissions() {
 }
 
 func (ck *MkAssignChecker) checkVarassignLeftRationale() {
-	if !G.Opts.WarnExtra {
+	if !G.WarnExtra {
 		return
 	}
 

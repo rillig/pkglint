@@ -147,7 +147,7 @@ func CheckdirCategory(dir CurrPath) {
 
 	mklines.SaveAutofixChanges()
 
-	if G.Opts.Recursive {
+	if G.Recursive {
 		var recurseInto []CurrPath
 		for _, msub := range mSubdirs {
 			if !msub.line.IsCommentedVarassign() {

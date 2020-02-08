@@ -179,7 +179,7 @@ func (src *Pkgsrc) loadDocChanges() {
 
 func (src *Pkgsrc) loadDocChangesFromFile(filename CurrPath) []*Change {
 
-	warn := G.Opts.CheckGlobal && !G.Wip
+	warn := G.CheckGlobal && !G.Wip
 
 	// Each date in the file should be from the same year as the filename says.
 	// This check has been added in 2018.
@@ -330,7 +330,7 @@ func (*Pkgsrc) parseDocChange(line *Line, warn bool) *Change {
 }
 
 func (src *Pkgsrc) checkRemovedAfterLastFreeze() {
-	if src.LastFreezeStart == "" || G.Wip || !G.Opts.CheckGlobal {
+	if src.LastFreezeStart == "" || G.Wip || !G.CheckGlobal {
 		return
 	}
 

@@ -27,8 +27,8 @@ func CheckdirToplevel(dir CurrPath) {
 
 	mklines.Check()
 
-	if G.Opts.Recursive {
-		if G.Opts.CheckGlobal {
+	if G.Recursive {
+		if G.CheckGlobal {
 			G.InterPackage.Enable()
 		}
 		G.Todo.PushFront(ctx.subdirs...)

@@ -252,7 +252,7 @@ func (ck *HomepageChecker) checkReachable() {
 	mkline := ck.MkLine
 	url := ck.Value
 
-	if !G.Opts.Network || url != ck.ValueNoVar {
+	if !G.Network || url != ck.ValueNoVar {
 		return
 	}
 	if !matches(url, `^https?://[A-Za-z0-9-.]+(?::[0-9]+)?/[!-~]*$`) {
@@ -293,7 +293,7 @@ func (ck *HomepageChecker) checkReachable() {
 
 func (*HomepageChecker) isReachableOnline(url string) YesNoUnknown {
 	switch {
-	case !G.Opts.Network,
+	case !G.Network,
 		containsVarRefLong(url),
 		!matches(url, `^https?://[A-Za-z0-9-.]+(?::[0-9]+)?/[!-~]*$`):
 		return unknown

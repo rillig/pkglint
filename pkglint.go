@@ -20,8 +20,19 @@ const confVersion = "@VERSION@"
 
 // Pkglint is a container for all global variables of this Go package.
 type Pkglint struct {
-	Opts   CmdOpts // Command line options.
-	Pkgsrc Pkgsrc  // Global data, mostly extracted from mk/*.
+	CheckGlobal bool
+
+	WarnExtra,
+	WarnPerm,
+	WarnQuoting bool
+
+	Profiling,
+	DumpMakefile,
+	Import,
+	Network,
+	Recursive bool
+
+	Pkgsrc Pkgsrc // Global data, mostly extracted from mk/*.
 
 	Todo CurrPathQueue // The files or directories that still need to be checked.
 
@@ -67,22 +78,6 @@ func NewPkglint(stdout io.Writer, stderr io.Writer) Pkglint {
 // This is to ensure that tests are properly initialized and shut down.
 func unusablePkglint() Pkglint { return Pkglint{} }
 
-type CmdOpts struct {
-	CheckGlobal bool
-
-	WarnExtra,
-	WarnPerm,
-	WarnQuoting bool
-
-	Profiling,
-	DumpMakefile,
-	Import,
-	Network,
-	Recursive bool
-
-	args []string
-}
-
 type Hash struct {
 	hash     []byte
 	location Location
@@ -121,7 +116,7 @@ func (pkglint *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) 
 		return exitcode
 	}
 
-	if pkglint.Opts.Profiling {
+	if pkglint.Profiling {
 		defer pkglint.setUpProfiling()()
 	}
 
@@ -203,8 +198,8 @@ func (pkglint *Pkglint) prepareMainLoop() {
 	if relTopdir.IsEmpty() {
 		// If the first argument to pkglint is not inside a pkgsrc tree,
 		// pkglint doesn't know where to load the infrastructure files from,
-		// and these are needed for virtually every single check.
-		// Therefore, the only sensible thing to do is to quit immediately.
+		// Since virtually every single check needs these files,
+		// the only sensible thing to do is to quit immediately.
 		NewLineWhole(firstDir).Fatalf("Must be inside a pkgsrc tree.")
 	}
 
@@ -219,7 +214,6 @@ func (pkglint *Pkglint) prepareMainLoop() {
 }
 
 func (pkglint *Pkglint) ParseCommandLine(args []string) int {
-	gopts := &pkglint.Opts
 	lopts := &pkglint.Logger.Opts
 	opts := getopt.NewOptions()
 
@@ -233,22 +227,22 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) int {
 	opts.AddFlagVar('F', "autofix", &lopts.Autofix, false, "try to automatically fix some errors")
 	opts.AddFlagVar('g', "gcc-output-format", &lopts.GccOutput, false, "mimic the gcc output format")
 	opts.AddFlagVar('h', "help", &showHelp, false, "show a detailed usage message")
-	opts.AddFlagVar('I', "dumpmakefile", &gopts.DumpMakefile, false, "dump the Makefile after parsing")
-	opts.AddFlagVar('i', "import", &gopts.Import, false, "prepare the import of a wip package")
-	opts.AddFlagVar('n', "network", &gopts.Network, false, "enable checks that need network access")
+	opts.AddFlagVar('I', "dumpmakefile", &pkglint.DumpMakefile, false, "dump the Makefile after parsing")
+	opts.AddFlagVar('i', "import", &pkglint.Import, false, "prepare the import of a wip package")
+	opts.AddFlagVar('n', "network", &pkglint.Network, false, "enable checks that need network access")
 	opts.AddStrList('o', "only", &lopts.Only, "only log diagnostics containing the given text")
-	opts.AddFlagVar('p', "profiling", &gopts.Profiling, false, "profile the executing program")
+	opts.AddFlagVar('p', "profiling", &pkglint.Profiling, false, "profile the executing program")
 	opts.AddFlagVar('q', "quiet", &lopts.Quiet, false, "don't show a summary line when finishing")
-	opts.AddFlagVar('r', "recursive", &gopts.Recursive, false, "check subdirectories, too")
+	opts.AddFlagVar('r', "recursive", &pkglint.Recursive, false, "check subdirectories, too")
 	opts.AddFlagVar('s', "source", &lopts.ShowSource, false, "show the source lines together with diagnostics")
 	opts.AddFlagVar('V', "version", &showVersion, false, "show the version number of pkglint")
 	warn := opts.AddFlagGroup('W', "warning", "warning,...", "enable or disable groups of warnings")
 
-	check.AddFlagVar("global", &gopts.CheckGlobal, false, "inter-package checks")
+	check.AddFlagVar("global", &pkglint.CheckGlobal, false, "inter-package checks")
 
-	warn.AddFlagVar("extra", &gopts.WarnExtra, false, "enable some extra warnings")
-	warn.AddFlagVar("perm", &gopts.WarnPerm, false, "warn about unforeseen variable definition and use")
-	warn.AddFlagVar("quoting", &gopts.WarnQuoting, false, "warn about quoting issues")
+	warn.AddFlagVar("extra", &pkglint.WarnExtra, false, "enable some extra warnings")
+	warn.AddFlagVar("perm", &pkglint.WarnPerm, false, "warn about unforeseen variable definition and use")
+	warn.AddFlagVar("quoting", &pkglint.WarnQuoting, false, "warn about quoting issues")
 
 	remainingArgs, err := opts.Parse(args)
 	if err != nil {
@@ -258,7 +252,6 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) int {
 		opts.Help(errOut, "pkglint [options] dir...")
 		return 1
 	}
-	gopts.args = remainingArgs
 
 	if showHelp {
 		opts.Help(pkglint.Logger.out.out, "pkglint [options] dir...")
@@ -270,7 +263,7 @@ func (pkglint *Pkglint) ParseCommandLine(args []string) int {
 		return 0
 	}
 
-	for _, arg := range pkglint.Opts.args {
+	for _, arg := range remainingArgs {
 		pkglint.Todo.Push(NewCurrPathSlash(arg))
 	}
 	if pkglint.Todo.IsEmpty() {
@@ -351,7 +344,7 @@ func (pkglint *Pkglint) checkMode(dirent CurrPath, mode os.FileMode) {
 }
 
 // checkdirPackage checks a complete pkgsrc package, including each
-// of the files individually, and also when seen in combination.
+// of the files individually, and when seen in combination.
 func (pkglint *Pkglint) checkdirPackage(dir CurrPath) {
 	if trace.Tracing {
 		defer trace.Call(dir)()
@@ -478,7 +471,7 @@ func CheckLinesMessage(lines *Lines, pkg *Package) {
 	// For now, skip all checks when the MESSAGE may be built from multiple
 	// files.
 	//
-	// If the need arises, some of the checks may be activated again, but
+	// If the need arises, some of these checks may be activated again, but
 	// that requires more sophisticated code.
 	if pkg != nil && pkg.vars.IsDefined("MESSAGE_SRC") {
 		return
@@ -564,7 +557,7 @@ func (pkglint *Pkglint) checkReg(filename CurrPath, basename string, depth int, 
 		hasSuffix(basename, ".orig"),
 		hasSuffix(basename, ".rej"),
 		contains(basename, "TODO") && depth == 3:
-		if pkglint.Opts.Import {
+		if pkglint.Import {
 			NewLineWhole(filename).Errorf("Must be cleaned up before committing the package.")
 		}
 		return

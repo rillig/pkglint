@@ -670,7 +670,7 @@ func (s *Suite) Test_Logger_Logf__profiling(c *check.C) {
 
 	line := t.NewLine("filename", 123, "text")
 
-	G.Opts.Profiling = true
+	G.Profiling = true
 	G.Logger.histo = histogram.New()
 	line.Warnf("Warning.")
 
@@ -687,7 +687,7 @@ func (s *Suite) Test_Logger_Logf__profiling_autofix(c *check.C) {
 	t.SetUpCommandLine("--show-autofix", "--source", "--explain")
 	line := t.NewLine("filename", 123, "text")
 
-	G.Opts.Profiling = true
+	G.Profiling = true
 	G.Logger.histo = histogram.New()
 
 	fix := line.Autofix()

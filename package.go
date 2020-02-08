@@ -197,7 +197,7 @@ func (pkg *Package) loadPackageMakefile() (*MkLines, *MkLines) {
 	//  when pkglint loaded the package Makefile including all included files into
 	//  a single string. Maybe it makes sense to print the file inclusion hierarchy
 	//  to quickly see files that cannot be included because of unresolved variables.
-	if G.Opts.DumpMakefile {
+	if G.DumpMakefile {
 		G.Logger.out.WriteLine("Whole Makefile (with all included files) follows:")
 		for _, line := range allLines.lines.Lines {
 			G.Logger.out.WriteLine(line.String())
@@ -604,7 +604,7 @@ func (pkg *Package) checkfilePackageMakefile(filename CurrPath, mklines *MkLines
 		//
 		// If the RedundantScope is applied also to individual files,
 		// it would have to be added here.
-		return G.Opts.CheckGlobal || !G.Pkgsrc.IsInfra(mkline.Filename)
+		return G.CheckGlobal || !G.Pkgsrc.IsInfra(mkline.Filename)
 	}
 	pkg.redundant.Check(allLines) // Updates the variables in the scope
 	pkg.checkCategories()
@@ -1276,7 +1276,7 @@ func (pkg *Package) checkDirent(dirent CurrPath, mode os.FileMode) {
 		G.checkReg(dirent, basename, G.Pkgsrc.Rel(dirent).Count(), pkg)
 
 	case hasPrefix(basename, "work"):
-		if G.Opts.Import {
+		if G.Import {
 			NewLineWhole(dirent).Errorf("Must be cleaned up before committing the package.")
 		}
 		return
