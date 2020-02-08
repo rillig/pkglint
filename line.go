@@ -45,15 +45,15 @@ type Location struct {
 	Filename CurrPath
 
 	// zero means the whole file, -1 means EOF, normal lines start with 1
-	lineno int32
+	lineno int
 }
 
 func NewLocation(filename CurrPath, lineno int) Location {
-	return Location{filename, int32(lineno)}
+	return Location{filename, lineno}
 }
 
 func (loc *Location) Lineno(rawIndex int) int {
-	return int(loc.lineno) + rawIndex
+	return loc.lineno + rawIndex
 }
 
 func (loc *Location) File(rel RelPath) CurrPath {
@@ -102,7 +102,7 @@ func NewLineWhole(filename CurrPath) *Line {
 func (line *Line) Filename() CurrPath { return line.Location.Filename }
 
 func (line *Line) Linenos() string {
-	first := int(line.Location.lineno)
+	first := line.Location.lineno
 	if first == -1 {
 		return "EOF"
 	}
