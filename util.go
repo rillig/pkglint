@@ -673,8 +673,9 @@ func (s *Scope) def(name string, mkline *MkLine) {
 		}
 		s.value[name] += " " + value
 	case opAssignDefault:
-		// No change to the value.
-		// FIXME: If there is no value yet, set it.
+		if _, set := s.value[name]; !set {
+			s.value[name] = mkline.Value()
+		}
 	case opAssignShell:
 		delete(s.value, name)
 	default:

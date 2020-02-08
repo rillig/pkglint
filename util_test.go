@@ -560,6 +560,7 @@ func (s *Suite) Test_Scope_Define(c *check.C) {
 
 		t.CheckEquals(actualValue, value)
 		t.CheckEquals(actualFound, ok)
+		t.CheckEquals(scope.value["BUILD_DIRS"], value)
 	}
 
 	test("BUILD_DIRS?=\tdefault",
