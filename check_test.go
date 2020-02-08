@@ -979,36 +979,11 @@ func (t *Tester) ExpectDiagnosticsAutofix(action func(autofix bool), diagnostics
 	t.CheckOutput(diagnostics)
 }
 
-// NewRawLines creates lines from line numbers and raw text, including newlines.
-//
-// Arguments are sequences of either (lineno, orignl) or (lineno, orignl, textnl).
-//
-// Specifying textnl is only useful when simulating a line that has already been
-// modified by Autofix.
-func (t *Tester) NewRawLines(args ...interface{}) []*RawLine {
-	rawlines := make([]*RawLine, len(args)/2)
-	j := 0
-	for i := 0; i < len(args); i += 2 {
-		lineno := args[i].(int)
-		orignl := args[i+1].(string)
-		textnl := orignl
-		if i+2 < len(args) {
-			if s, ok := args[i+2].(string); ok {
-				textnl = s
-				i++
-			}
-		}
-		rawlines[j] = &RawLine{lineno, orignl, textnl}
-		j++
-	}
-	return rawlines[:j]
-}
-
 // NewLine creates an in-memory line with the given text.
 // This line does not correspond to any line in a file.
 func (t *Tester) NewLine(filename CurrPath, lineno int, text string) *Line {
 	textnl := text + "\n"
-	rawLine := RawLine{lineno, textnl, textnl}
+	rawLine := RawLine{textnl, textnl}
 	return NewLine(filename, lineno, text, &rawLine)
 }
 

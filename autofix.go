@@ -115,7 +115,7 @@ func (fix *Autofix) ReplaceAfter(prefix, from string, to string) {
 		return
 	}
 
-	for _, rawLine := range fix.line.raw {
+	for rawIndex, rawLine := range fix.line.raw {
 		ok, replaced := replaceOnce(rawLine.textnl, prefixFrom, prefixTo)
 		if ok {
 			if G.Logger.IsAutofix() {
@@ -130,7 +130,7 @@ func (fix *Autofix) ReplaceAfter(prefix, from string, to string) {
 				//  This probably requires a generic notification mechanism.
 				_, fix.line.Text = replaceOnce(fix.line.Text, prefixFrom, prefixTo)
 			}
-			fix.Describef(rawLine.Lineno, "Replacing %q with %q.", from, to)
+			fix.Describef(fix.line.Lineno(rawIndex), "Replacing %q with %q.", from, to)
 			return
 		}
 	}
@@ -162,7 +162,7 @@ func (fix *Autofix) ReplaceAt(rawIndex int, textIndex int, from string, to strin
 	if fix.skip() {
 		return
 	}
-	fix.Describef(rawLine.Lineno, "Replacing %q with %q.", from, to)
+	fix.Describef(fix.line.Lineno(rawIndex), "Replacing %q with %q.", from, to)
 }
 
 // InsertBefore prepends a line before the current line.
@@ -174,7 +174,7 @@ func (fix *Autofix) InsertBefore(text string) {
 	}
 
 	fix.linesBefore = append(fix.linesBefore, text+"\n")
-	fix.Describef(fix.line.raw[0].Lineno, "Inserting a line %q before this line.", text)
+	fix.Describef(fix.line.Lineno(0), "Inserting a line %q before this line.", text)
 }
 
 // InsertAfter appends a line after the current line.
@@ -186,7 +186,7 @@ func (fix *Autofix) InsertAfter(text string) {
 	}
 
 	fix.linesAfter = append(fix.linesAfter, text+"\n")
-	fix.Describef(fix.line.raw[len(fix.line.raw)-1].Lineno, "Inserting a line %q after this line.", text)
+	fix.Describef(int(fix.line.lastLine), "Inserting a line %q after this line.", text)
 }
 
 // Delete removes the current line completely.
@@ -198,9 +198,9 @@ func (fix *Autofix) Delete() {
 		return
 	}
 
-	for _, line := range fix.line.raw {
+	for rawIndex, line := range fix.line.raw {
 		line.textnl = ""
-		fix.Describef(line.Lineno, "Deleting this line.")
+		fix.Describef(fix.line.Lineno(rawIndex), "Deleting this line.")
 	}
 }
 

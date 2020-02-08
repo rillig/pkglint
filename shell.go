@@ -1022,8 +1022,8 @@ func (ck *ShellLineChecker) checkMultiLineComment() {
 		return
 	}
 
-	for _, line := range mkline.raw[:len(mkline.raw)-1] {
-		text := strings.TrimSuffix(line.Text(), "\\")
+	for rawIndex, rawLine := range mkline.raw[:len(mkline.raw)-1] {
+		text := strings.TrimSuffix(rawLine.Text(), "\\")
 		tokens, rest := splitIntoShellTokens(nil, text)
 		if rest != "" {
 			return
@@ -1031,15 +1031,15 @@ func (ck *ShellLineChecker) checkMultiLineComment() {
 
 		for _, token := range tokens {
 			if hasPrefix(token, "#") {
-				ck.warnMultiLineComment(line)
+				ck.warnMultiLineComment(rawIndex, rawLine)
 				return
 			}
 		}
 	}
 }
 
-func (ck *ShellLineChecker) warnMultiLineComment(raw *RawLine) {
-	line := NewLine(ck.mkline.Filename, raw.Lineno, raw.Text(), raw)
+func (ck *ShellLineChecker) warnMultiLineComment(rawIndex int, raw *RawLine) {
+	line := NewLine(ck.mkline.Filename, ck.mkline.Lineno(rawIndex), raw.Text(), raw)
 
 	line.Warnf("The shell comment does not stop at the end of this line.")
 	line.Explain(

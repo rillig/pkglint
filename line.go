@@ -20,8 +20,6 @@ import (
 )
 
 type RawLine struct {
-	Lineno int // Counting starts at 1
-
 	// The line as read in from the file, including newline;
 	// can never be empty. Only in the very last line of each file,
 	// the trailing newline might be missing.
@@ -34,8 +32,6 @@ type RawLine struct {
 	// XXX: Since only Autofix needs to distinguish between orignl and textnl,
 	// one of these fields should probably be moved there.
 }
-
-func (rline *RawLine) String() string { return sprintf("%d:%s", rline.Lineno, rline.textnl) }
 
 func (rline *RawLine) Text() string {
 	return strings.TrimSuffix(rline.textnl, "\n")
@@ -57,6 +53,10 @@ func NewLocation(filename CurrPath, firstLine, lastLine int) Location {
 
 func (loc *Location) String() string {
 	return loc.Filename.String() + ":" + loc.Linenos()
+}
+
+func (loc *Location) Lineno(rawIndex int) int {
+	return int(loc.firstLine) + rawIndex
 }
 
 func (loc *Location) Linenos() string {

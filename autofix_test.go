@@ -71,12 +71,20 @@ func (s *Suite) Test_Autofix__show_autofix_modifies_line(c *check.C) {
 func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
 	t := s.Init(c)
 
+	newRawLines := func(rawLines ...*RawLine) []*RawLine { return rawLines }
+	newRawLine := func(textnl string) *RawLine {
+		return &RawLine{textnl, textnl}
+	}
+	newRawLineModified := func(orignl, textnl string) *RawLine {
+		return &RawLine{orignl, textnl}
+	}
+
 	t.SetUpCommandLine("--show-autofix", "--explain")
 
 	line := t.NewLine("filename", 1, "original")
 
 	c.Check(line.autofix, check.IsNil)
-	t.CheckDeepEquals(line.raw, t.NewRawLines(1, "original\n"))
+	t.CheckDeepEquals(line.raw, newRawLines(newRawLine("original\n")))
 
 	{
 		fix := line.Autofix()
@@ -86,7 +94,7 @@ func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
 	}
 
 	c.Check(line.autofix, check.NotNil)
-	t.CheckDeepEquals(line.raw, t.NewRawLines(1, "original\n", "lriginao\n"))
+	t.CheckDeepEquals(line.raw, newRawLines(newRawLineModified("original\n", "lriginao\n")))
 	t.CheckOutputLines(
 		"AUTOFIX: filename:1: Replacing \"original\" with \"lriginao\".")
 
@@ -98,7 +106,7 @@ func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
 	}
 
 	c.Check(line.autofix, check.NotNil)
-	t.CheckDeepEquals(line.raw, t.NewRawLines(1, "original\n", "lruginao\n"))
+	t.CheckDeepEquals(line.raw, newRawLines(newRawLineModified("original\n", "lruginao\n")))
 	t.CheckEquals(line.raw[0].textnl, "lruginao\n")
 	t.CheckOutputLines(
 		"AUTOFIX: filename:1: Replacing \"ig\" with \"ug\".")
@@ -111,7 +119,7 @@ func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
 	}
 
 	c.Check(line.autofix, check.NotNil)
-	t.CheckDeepEquals(line.raw, t.NewRawLines(1, "original\n", "middle\n"))
+	t.CheckDeepEquals(line.raw, newRawLines(newRawLineModified("original\n", "middle\n")))
 	t.CheckEquals(line.raw[0].textnl, "middle\n")
 	t.CheckOutputLines(
 		"AUTOFIX: filename:1: Replacing \"lruginao\" with \"middle\".")
