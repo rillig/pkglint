@@ -16,7 +16,7 @@ func (s *Suite) Test_Line_IsMultiline(c *check.C) {
 	t.CheckEquals(t.NewLine("filename", 123, "text").IsMultiline(), false)
 	t.CheckEquals(NewLineEOF("filename").IsMultiline(), false)
 
-	t.CheckEquals(NewLineMulti("filename", 123, 125, "text", nil).IsMultiline(), true)
+	t.CheckEquals(NewLineMulti("filename", 123, 125, "text", []*RawLine{nil, nil, nil}).IsMultiline(), true)
 }
 
 // In case of a fatal error, pkglint quits in a controlled manner,

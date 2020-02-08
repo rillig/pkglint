@@ -85,6 +85,7 @@ func NewLine(filename CurrPath, lineno int, text string, rawLine *RawLine) *Line
 
 // NewLineMulti is for logical Makefile lines that end with backslash.
 func NewLineMulti(filename CurrPath, firstLine, lastLine int, text string, rawLines []*RawLine) *Line {
+	assert(firstLine < 1 || lastLine+1-firstLine == len(rawLines))
 	return &Line{NewLocation(filename, firstLine, lastLine), filename.Base(), text, rawLines, nil, Once{}}
 }
 
@@ -101,17 +102,19 @@ func NewLineWhole(filename CurrPath) *Line {
 func (line *Line) Filename() CurrPath { return line.Location.Filename }
 
 func (line *Line) Linenos() string {
-	loc := line.Location
-	switch {
-	case loc.firstLine == -1:
+	first := int(line.Location.firstLine)
+	if first == -1 {
 		return "EOF"
-	case loc.firstLine == 0:
-		return ""
-	case loc.firstLine == loc.lastLine:
-		return strconv.Itoa(int(loc.firstLine))
-	default:
-		return sprintf("%d--%d", loc.firstLine, loc.lastLine)
 	}
+	if first == 0 {
+		return ""
+	}
+
+	n := len(line.raw)
+	if n == 1 {
+		return strconv.Itoa(first)
+	}
+	return sprintf("%d--%d", first, first+n-1)
 }
 
 // RelLine returns a reference to another line,
@@ -137,9 +140,7 @@ func (line *Line) Rel(other CurrPath) RelPath {
 	return G.Pkgsrc.Relpath(line.Filename().DirNoClean(), other)
 }
 
-func (line *Line) IsMultiline() bool {
-	return line.firstLine > 0 && line.firstLine != line.lastLine
-}
+func (line *Line) IsMultiline() bool { return len(line.raw) > 1 }
 
 func (line *Line) IsCvsID(prefixRe regex.Pattern) (found bool, expanded bool) {
 	m, exp := match1(line.Text, `^`+prefixRe+`\$`+`NetBSD(:[^\$]+)?\$$`)

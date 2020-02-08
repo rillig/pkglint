@@ -43,8 +43,9 @@ func (ck MkLineChecker) checkEmptyContinuation() {
 	}
 
 	line := ck.MkLine.Line
-	if line.raw[len(line.raw)-1].Orig() == "" {
-		lastLine := NewLine(line.Filename(), int(line.lastLine), "", line.raw[len(line.raw)-1])
+	lastRawIndex := len(line.raw) - 1
+	if line.raw[lastRawIndex].Orig() == "" {
+		lastLine := NewLine(line.Filename(), line.Lineno(lastRawIndex), "", line.raw[lastRawIndex])
 		lastLine.Warnf("This line looks empty but continues the previous line.")
 		lastLine.Explain(
 			"This line should be indented like other continuation lines,",
