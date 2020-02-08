@@ -991,7 +991,7 @@ func (pkg *Package) checkGnuConfigureUseLanguages() {
 	var wrongLines []*MkLine
 	for _, mkline := range useLanguages.vari.WriteLocations() {
 
-		if G.Pkgsrc.IsInfra(mkline.Line.Filename()) {
+		if G.Pkgsrc.IsInfra(mkline.Filename()) {
 			continue
 		}
 
