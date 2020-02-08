@@ -510,18 +510,20 @@ func (s *Suite) Test_Pkgsrc_checkRemovedAfterLastFreeze__check_global(c *check.C
 	// And for finding the removal reliably, it doesn't matter how long ago
 	// the last package change was.
 
-	// The empty lines in the following output demonstrate the cheating
-	// by creating fake lines from Change.Location.
 	t.CheckOutputLines(
+		">\t\tUpdated category/updated-before to 1.0 [updater 2019-04-01]",
 		"ERROR: ~/doc/CHANGES-2019:3: Package category/updated-before "+
 			"must either exist or be marked as removed.",
 		"",
+		">\t\tUpdated category/updated-after to 1.0 [updater 2019-07-01]",
 		"ERROR: ~/doc/CHANGES-2019:6: Package category/updated-after "+
 			"must either exist or be marked as removed.",
 		"",
+		">\t\tAdded category/added-after version 1.0 [updater 2019-07-01]",
 		"ERROR: ~/doc/CHANGES-2019:7: Package category/added-after "+
 			"must either exist or be marked as removed.",
 		"",
+		">\t\tDowngraded category/downgraded to 1.0 [author 2019-07-03]",
 		"ERROR: ~/doc/CHANGES-2019:9: Package category/downgraded "+
 			"must either exist or be marked as removed.")
 }

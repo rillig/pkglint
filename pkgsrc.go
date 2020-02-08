@@ -347,10 +347,10 @@ func (src *Pkgsrc) checkRemovedAfterLastFreeze() {
 	sort.Slice(wrong, func(i, j int) bool { return wrong[i].IsAbove(wrong[j]) })
 
 	for _, change := range wrong {
-		// It's a bit cheated to construct a Line from only a Location,
-		// without the wrong text. That's only because I'm too lazy loading
-		// the file again, and the original text is not lying around anywhere.
-		line := NewLineMulti(change.Location.Filename, int(change.Location.firstLine), int(change.Location.lastLine), "", nil)
+		// The original line of the change is not available anymore.
+		// Therefore it is necessary to load the whole file again.
+		lines := Load(change.Location.Filename, MustSucceed)
+		line := lines.Lines[change.Location.firstLine-1]
 		line.Errorf("Package %s must either exist or be marked as removed.", change.Pkgpath.String())
 	}
 }
