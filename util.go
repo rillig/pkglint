@@ -1466,34 +1466,34 @@ func (i *optInt) set(value int) {
 	i.isSet = true
 }
 
-type bag struct {
-	slice []struct {
-		key   interface{}
-		value int
-	}
+type bag []struct {
+	key   interface{}
+	count int
 }
 
-func (mi *bag) sortDesc() {
-	less := func(i, j int) bool { return mi.slice[j].value < mi.slice[i].value }
-	sort.SliceStable(mi.slice, less)
+func (b *bag) sortDesc() {
+	s := *b
+	less := func(i, j int) bool { return s[j].count < s[i].count }
+	sort.SliceStable(s, less)
 }
 
-func (mi *bag) opt(index int) int {
-	if uint(index) < uint(len(mi.slice)) {
-		return mi.slice[index].value
+func (b *bag) opt(index int) int {
+	s := *b
+	if uint(index) < uint(len(s)) {
+		return s[index].count
 	}
 	return 0
 }
 
-func (mi *bag) key(index int) interface{} {
-	return mi.slice[index].key
+func (b *bag) key(index int) interface{} {
+	return (*b)[index].key
 }
 
-func (mi *bag) add(key interface{}, value int) {
-	mi.slice = append(mi.slice, struct {
+func (b *bag) add(key interface{}, count int) {
+	*b = append(*b, struct {
 		key   interface{}
-		value int
-	}{key, value})
+		count int
+	}{key, count})
 }
 
-func (mi *bag) len() int { return len(mi.slice) }
+func (b *bag) len() int { return len(*b) }
