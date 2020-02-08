@@ -579,6 +579,11 @@ func (s *Suite) Test_Scope_Define(c *check.C) {
 
 	test("BUILD_DIRS!=\techo dynamic",
 		false, "")
+
+	// FIXME: This is not correct. The shell assignment sets the variable,
+	//  after which all further default assignments are ignored.
+	test("BUILD_DIRS?=\tdefault after shell assignment",
+		true, "default after shell assignment")
 }
 
 func (s *Suite) Test_Scope_Mentioned(c *check.C) {

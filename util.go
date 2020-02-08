@@ -831,7 +831,7 @@ func (s *Scope) FirstUse(varname string) *MkLine {
 
 // LastValue returns the value from the last variable definition.
 //
-// If an empty string is returned this can mean either that the
+// If an empty string is returned, this can mean either that the
 // variable value is indeed the empty string or that the variable
 // was not found, or that the variable value cannot be determined
 // reliably. To distinguish these cases, call LastValueFound instead.
