@@ -292,7 +292,7 @@ func (ck *HomepageChecker) checkReachable() {
 	}
 }
 
-func (*HomepageChecker) isReachableOnline(url string) YesNoUnknown {
+func (ck *HomepageChecker) isReachableOnline(url string) YesNoUnknown {
 	switch {
 	case !G.Network,
 		containsVarRefLong(url),
@@ -300,20 +300,22 @@ func (*HomepageChecker) isReachableOnline(url string) YesNoUnknown {
 		return unknown
 	}
 
-	var client http.Client
-	client.Timeout = 3 * time.Second
-	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-		return http.ErrUseLastResponse
-	}
-
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return no
+	}
+
+	client := http.Client{
+		Timeout: ck.Timeout,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
 	}
 	response, err := client.Do(request)
 	if err != nil {
 		return no
 	}
+
 	_ = response.Body.Close()
 	if response.StatusCode != 200 {
 		return no
