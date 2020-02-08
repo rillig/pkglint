@@ -70,7 +70,7 @@ type mkLineDependency struct {
 
 // String returns the filename and line numbers.
 func (mkline *MkLine) String() string {
-	return sprintf("%s:%s", mkline.Filename, mkline.Linenos())
+	return sprintf("%s:%s", mkline.Filename(), mkline.Linenos())
 }
 
 func (mkline *MkLine) HasComment() bool { return mkline.splitResult.hasComment }
@@ -316,7 +316,7 @@ func (mkline *MkLine) IncludedFile() RelPath { return mkline.data.(*mkLineInclud
 
 // IncludedFileFull returns the path to the included file.
 func (mkline *MkLine) IncludedFileFull() CurrPath {
-	dir := mkline.Filename.DirNoClean()
+	dir := mkline.Filename().DirNoClean()
 	joined := dir.JoinNoClean(mkline.IncludedFile())
 	return joined.CleanPath()
 }
@@ -606,7 +606,7 @@ func (mkline *MkLine) ResolveVarsInRelativePath(relativePath PackagePath, pkg *P
 	if pkg != nil {
 		basedir = pkg.File(".")
 	} else {
-		basedir = mkline.Filename.DirNoClean()
+		basedir = mkline.Filename().DirNoClean()
 	}
 
 	tmp := relativePath

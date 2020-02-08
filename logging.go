@@ -135,7 +135,7 @@ func (l *Logger) Diag(line *Line, level *LogLevel, format string, args ...interf
 		return
 	}
 
-	filename := line.Filename
+	filename := line.Filename()
 	linenos := line.Linenos()
 	msg := sprintf(format, args...)
 	if !l.FirstTime(filename, linenos, msg) {

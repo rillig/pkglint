@@ -276,7 +276,7 @@ func (pkg *Package) parseLine(mklines *MkLines, mkline *MkLine, allLines *MkLine
 	allLines.lines.Lines = append(allLines.lines.Lines, mkline.Line)
 
 	if mkline.IsInclude() {
-		includingFile := mkline.Filename
+		includingFile := mkline.Filename()
 		includedFile := mkline.IncludedFile()
 		includedMkLines, skip := pkg.loadIncluded(mkline, includingFile)
 
@@ -402,7 +402,7 @@ func (pkg *Package) resolveIncludedFile(mkline *MkLine, includingFilename CurrPa
 	if containsVarUse(includedText) {
 		if trace.Tracing && !includingFilename.ContainsPath("mk") {
 			trace.Stepf("%s:%s: Skipping unresolvable include file %q.",
-				mkline.Filename, mkline.Linenos(), includedFile)
+				mkline.Filename(), mkline.Linenos(), includedFile)
 		}
 		return ""
 	}
@@ -604,7 +604,7 @@ func (pkg *Package) checkfilePackageMakefile(filename CurrPath, mklines *MkLines
 		//
 		// If the RedundantScope is applied also to individual files,
 		// it would have to be added here.
-		return G.CheckGlobal || !G.Pkgsrc.IsInfra(mkline.Filename)
+		return G.CheckGlobal || !G.Pkgsrc.IsInfra(mkline.Filename())
 	}
 	pkg.redundant.Check(allLines) // Updates the variables in the scope
 	pkg.checkCategories()
@@ -620,7 +620,7 @@ func (pkg *Package) checkfilePackageMakefile(filename CurrPath, mklines *MkLines
 
 	if imake := vars.FirstDefinition("USE_IMAKE"); imake != nil {
 		if x11 := vars.FirstDefinition("USE_X11"); x11 != nil {
-			if !x11.Filename.HasSuffixPath("mk/x11.buildlink3.mk") {
+			if !x11.Filename().HasSuffixPath("mk/x11.buildlink3.mk") {
 				imake.Notef("USE_IMAKE makes USE_X11 in %s redundant.", imake.RelMkLine(x11))
 			}
 		}
@@ -991,7 +991,7 @@ func (pkg *Package) checkGnuConfigureUseLanguages() {
 	var wrongLines []*MkLine
 	for _, mkline := range useLanguages.vari.WriteLocations() {
 
-		if G.Pkgsrc.IsInfra(mkline.Line.Filename) {
+		if G.Pkgsrc.IsInfra(mkline.Line.Filename()) {
 			continue
 		}
 
@@ -1035,7 +1035,7 @@ func (pkg *Package) checkUseLanguagesCompilerMk(mklines *MkLines) {
 		}
 
 		if mkline.Basename == "compiler.mk" {
-			if G.Pkgsrc.Relpath(pkg.dir, mkline.Filename) == "../../mk/compiler.mk" {
+			if G.Pkgsrc.Relpath(pkg.dir, mkline.Filename()) == "../../mk/compiler.mk" {
 				return
 			}
 		}
@@ -1205,7 +1205,7 @@ func (pkg *Package) checkPossibleDowngrade() {
 				"This is unusual, since packages are typically upgraded instead of",
 				"downgraded.")
 
-		case cmp > 0 && !isLocallyModified(mkline.Filename):
+		case cmp > 0 && !isLocallyModified(mkline.Filename()):
 			mkline.Notef("Package version %q is greater than the latest %q from %s.",
 				pkgversion, change.Version(), mkline.Line.RelLocation(change.Location))
 			mkline.Explain(

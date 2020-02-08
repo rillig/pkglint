@@ -111,6 +111,8 @@ func NewLineWhole(filename CurrPath) *Line {
 	return NewLineMulti(filename, 0, 0, "", nil)
 }
 
+func (line *Line) Filename() CurrPath { return line.Location.Filename }
+
 // RelLine returns a reference to another line,
 // which can be in the same file or in a different file.
 func (line *Line) RelLine(other *Line) string {
@@ -118,7 +120,7 @@ func (line *Line) RelLine(other *Line) string {
 }
 
 func (line *Line) RelLocation(other Location) string {
-	if line.Filename != other.Filename {
+	if line.Filename() != other.Filename {
 		return line.Rel(other.Filename).String() + ":" + other.Linenos()
 	}
 	return "line " + other.Linenos()
@@ -128,7 +130,7 @@ func (line *Line) RelLocation(other Location) string {
 // This is typically used for arguments in diagnostics, which should always be
 // relative to the line with which the diagnostic is associated.
 func (line *Line) Rel(other CurrPath) RelPath {
-	return G.Pkgsrc.Relpath(line.Filename.DirNoClean(), other)
+	return G.Pkgsrc.Relpath(line.Filename().DirNoClean(), other)
 }
 
 func (line *Line) IsMultiline() bool {
@@ -165,7 +167,7 @@ func (line *Line) Notef(format string, args ...interface{}) {
 func (line *Line) Explain(explanation ...string) { G.Logger.Explain(explanation...) }
 
 func (line *Line) String() string {
-	return sprintf("%s:%s: %s", line.Filename, line.Linenos(), line.Text)
+	return sprintf("%s:%s: %s", line.Filename(), line.Linenos(), line.Text)
 }
 
 // Autofix returns the autofix instance belonging to the line.

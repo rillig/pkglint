@@ -385,7 +385,7 @@ func (ck *MkAssignChecker) checkVarassignRightCategory() {
 
 	categories := mkline.ValueFields(mkline.Value())
 	actual := categories[0]
-	expected := G.Pkgsrc.Rel(mkline.Filename).DirNoClean().DirNoClean().Base()
+	expected := G.Pkgsrc.Rel(mkline.Filename()).DirNoClean().DirNoClean().Base()
 
 	if expected == "wip" || actual == expected {
 		return

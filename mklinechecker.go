@@ -44,7 +44,7 @@ func (ck MkLineChecker) checkEmptyContinuation() {
 
 	line := ck.MkLine.Line
 	if line.raw[len(line.raw)-1].Orig() == "" {
-		lastLine := NewLine(line.Filename, int(line.lastLine), "", line.raw[len(line.raw)-1])
+		lastLine := NewLine(line.Filename(), int(line.lastLine), "", line.raw[len(line.raw)-1])
 		lastLine.Warnf("This line looks empty but continues the previous line.")
 		lastLine.Explain(
 			"This line should be indented like other continuation lines,",
@@ -234,7 +234,7 @@ func (ck MkLineChecker) checkInclude() {
 	includedFile := mkline.IncludedFile()
 	mustExist := mkline.MustExist()
 	if trace.Tracing {
-		trace.Stepf("includingFile=%s includedFile=%s", mkline.Filename, includedFile)
+		trace.Stepf("includingFile=%s includedFile=%s", mkline.Filename(), includedFile)
 	}
 	// TODO: Not every path is relative to the package directory.
 	ck.CheckRelativePath(NewPackagePath(includedFile), includedFile, mustExist)
@@ -326,7 +326,7 @@ func (ck MkLineChecker) CheckRelativePath(pp PackagePath, rel RelPath, mustExist
 	}
 
 	resolvedRel := resolvedPath.AsRelPath()
-	abs := mkline.Filename.DirNoClean().JoinNoClean(resolvedRel)
+	abs := mkline.Filename().DirNoClean().JoinNoClean(resolvedRel)
 	if !abs.Exists() {
 		pkgsrcPath := G.Pkgsrc.Rel(ck.MkLine.File(resolvedRel))
 		if mustExist && !ck.MkLines.indentation.HasExists(pkgsrcPath) {
@@ -345,7 +345,7 @@ func (ck MkLineChecker) CheckRelativePath(pp PackagePath, rel RelPath, mustExist
 	case matches(resolvedPath.String(), `^\.\./\.\./[^./][^/]*/[^/]`):
 		// From a package to another package.
 
-	case resolvedPath.HasPrefixPath("../mk") && G.Pkgsrc.Rel(mkline.Filename).Count() == 2:
+	case resolvedPath.HasPrefixPath("../mk") && G.Pkgsrc.Rel(mkline.Filename()).Count() == 2:
 		// For category Makefiles.
 		// TODO: Or from a pkgsrc wip package to wip/mk.
 

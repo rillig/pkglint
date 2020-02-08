@@ -299,10 +299,10 @@ func (fix *Autofix) Apply() {
 	if logDiagnostic {
 		linenos := fix.affectedLinenos()
 		msg := sprintf(fix.diagFormat, fix.diagArgs...)
-		if !logFix && G.Logger.FirstTime(line.Filename, linenos, msg) {
+		if !logFix && G.Logger.FirstTime(line.Filename(), linenos, msg) {
 			G.Logger.writeSource(line)
 		}
-		G.Logger.Logf(fix.level, line.Filename, linenos, fix.diagFormat, msg)
+		G.Logger.Logf(fix.level, line.Filename(), linenos, fix.diagFormat, msg)
 	}
 
 	if logFix {
@@ -311,7 +311,7 @@ func (fix *Autofix) Apply() {
 			if action.lineno != 0 {
 				lineno = strconv.Itoa(action.lineno)
 			}
-			G.Logger.Logf(AutofixLogLevel, line.Filename, lineno, autofixFormat, action.description)
+			G.Logger.Logf(AutofixLogLevel, line.Filename(), lineno, autofixFormat, action.description)
 		}
 		G.Logger.writeSource(line)
 	}
@@ -398,7 +398,7 @@ func SaveAutofixChanges(lines *Lines) (autofixed bool) {
 				G.Logger.autofixAvailable = true
 				if G.Logger.Opts.ShowAutofix {
 					// Only in this case can the loaded lines be modified.
-					G.fileCache.Evict(line.Filename)
+					G.fileCache.Evict(line.Filename())
 				}
 			}
 		}
@@ -422,10 +422,11 @@ func SaveAutofixChanges(lines *Lines) (autofixed bool) {
 	changes := make(map[CurrPath][]string)
 	changed := make(map[CurrPath]bool)
 	for _, line := range lines.Lines {
-		chlines := changes[line.Filename]
+		filename := line.Filename()
+		chlines := changes[filename]
 		if fix := line.autofix; fix != nil {
 			if fix.modified {
-				changed[line.Filename] = true
+				changed[filename] = true
 			}
 			chlines = append(chlines, fix.linesBefore...)
 			for _, raw := range line.raw {
@@ -437,7 +438,7 @@ func SaveAutofixChanges(lines *Lines) (autofixed bool) {
 				chlines = append(chlines, raw.textnl)
 			}
 		}
-		changes[line.Filename] = chlines
+		changes[filename] = chlines
 	}
 
 	for filename := range changed {

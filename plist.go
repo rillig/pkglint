@@ -661,5 +661,5 @@ func (s *plistLineSorter) Sort() {
 		lines = append(lines, pline.Line)
 	}
 
-	s.autofixed = SaveAutofixChanges(NewLines(lines[0].Filename, lines))
+	s.autofixed = SaveAutofixChanges(NewLines(lines[0].Filename(), lines))
 }

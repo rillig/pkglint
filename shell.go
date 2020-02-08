@@ -1039,7 +1039,7 @@ func (ck *ShellLineChecker) checkMultiLineComment() {
 }
 
 func (ck *ShellLineChecker) warnMultiLineComment(rawIndex int, raw *RawLine) {
-	line := NewLine(ck.mkline.Filename, ck.mkline.Lineno(rawIndex), raw.Text(), raw)
+	line := NewLine(ck.mkline.Filename(), ck.mkline.Lineno(rawIndex), raw.Text(), raw)
 
 	line.Warnf("The shell comment does not stop at the end of this line.")
 	line.Explain(
