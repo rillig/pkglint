@@ -239,7 +239,7 @@ func (fix *Autofix) Custom(fixer func(showAutofix, autofix bool)) {
 // Describef may be called multiple times before calling Apply.
 func (fix *Autofix) Describef(rawIndex int, format string, args ...interface{}) {
 	msg := sprintf(format, args...)
-	lineno := fix.line.Lineno(rawIndex)
+	lineno := fix.line.Location.Lineno(rawIndex)
 	fix.actions = append(fix.actions, autofixAction{msg, lineno})
 }
 
@@ -377,7 +377,7 @@ func (fix *Autofix) skip() bool {
 func (fix *Autofix) assertRealLine() {
 	// Some Line objects do not correspond to real lines of a file.
 	// These cannot be fixed since they are neither part of Lines nor of MkLines.
-	assert(fix.line.lineno >= 1)
+	assert(fix.line.Location.lineno >= 1)
 }
 
 // SaveAutofixChanges writes the given lines back into their files,

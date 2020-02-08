@@ -64,7 +64,7 @@ func (loc *Location) File(rel RelPath) CurrPath {
 type Line struct {
 	// TODO: Consider storing pointers to the Filename and Basename instead of strings to save memory.
 	//  But first find out where and why pkglint needs so much memory (200 MB for a full recursive run over pkgsrc + wip).
-	Location
+	Location Location
 	Basename string // the last component of the Filename
 
 	// the text of the line, without the trailing newline character;
@@ -101,6 +101,8 @@ func NewLineWhole(filename CurrPath) *Line {
 
 func (line *Line) Filename() CurrPath { return line.Location.Filename }
 
+func (line *Line) File(rel RelPath) CurrPath { return line.Location.File(rel) }
+
 func (line *Line) Linenos() string {
 	first := line.Location.lineno
 	if first == -1 {
@@ -120,7 +122,10 @@ func (line *Line) Linenos() string {
 // RelLine returns a reference to another line,
 // which can be in the same file or in a different file.
 func (line *Line) RelLine(other *Line) string {
-	return line.RelLocation(other.Location)
+	if line.Filename() != other.Filename() {
+		return line.Rel(other.Filename()).String() + ":" + other.Linenos()
+	}
+	return "line " + other.Linenos()
 }
 
 func (line *Line) RelLocation(other Location) string {
