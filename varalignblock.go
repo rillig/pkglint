@@ -156,7 +156,7 @@ func (va *VaralignBlock) Process(mkline *MkLine) {
 	case mkline.IsComment(), mkline.IsDirective():
 
 	default:
-		trace.Stepf("Skipping varalign block because of line %s", &mkline.Location)
+		trace.Stepf("Skipping varalign block because of line %s", mkline.String())
 		va.skip = true
 	}
 }

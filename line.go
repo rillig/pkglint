@@ -51,10 +51,6 @@ func NewLocation(filename CurrPath, firstLine, lastLine int) Location {
 	return Location{filename, int32(firstLine), int32(lastLine)}
 }
 
-func (loc *Location) String() string {
-	return loc.Filename.String() + ":" + loc.Linenos()
-}
-
 func (loc *Location) Lineno(rawIndex int) int {
 	return int(loc.firstLine) + rawIndex
 }

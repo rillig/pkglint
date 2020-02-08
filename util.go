@@ -669,7 +669,7 @@ func (s *Scope) def(name string, mkline *MkLine) {
 		value := mkline.Value()
 		if trace.Tracing {
 			trace.Stepf("Scope.Define.append %s: %s = %q + %q",
-				&mkline.Location, name, s.value[name], value)
+				mkline.String(), name, s.value[name], value)
 		}
 		s.value[name] += " " + value
 	case opAssignDefault:
