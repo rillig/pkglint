@@ -933,7 +933,7 @@ func naturalLess(str1, str2 string) bool {
 			if nr1, nr2 := str1[nonZero1:idx1], str2[nonZero2:idx2]; nr1 != nr2 {
 				return nr1 < nr2
 			}
-			// Otherwise, the one with less zeros is less.
+			// Otherwise, the one with fewer zeros is less.
 			// Because everything up to the number is equal, comparing the index
 			// after the zeros is sufficient.
 			if nonZero1 != nonZero2 {
@@ -1466,34 +1466,35 @@ func (i *optInt) set(value int) {
 	i.isSet = true
 }
 
-type bag []struct {
-	key   interface{}
-	count int
+type bag struct {
+	// Wrapping the slice in an extra struct avoids 'receiver might be nil'
+	// warnings.
+
+	entries []bagEntry
 }
 
 func (b *bag) sortDesc() {
-	s := *b
-	less := func(i, j int) bool { return s[j].count < s[i].count }
-	sort.SliceStable(s, less)
+	es := b.entries
+	less := func(i, j int) bool { return es[j].count < es[i].count }
+	sort.SliceStable(es, less)
 }
 
 func (b *bag) opt(index int) int {
-	s := *b
-	if uint(index) < uint(len(s)) {
-		return s[index].count
+	if uint(index) < uint(len(b.entries)) {
+		return b.entries[index].count
 	}
 	return 0
 }
 
-func (b *bag) key(index int) interface{} {
-	return (*b)[index].key
-}
+func (b *bag) key(index int) interface{} { return b.entries[index].key }
 
 func (b *bag) add(key interface{}, count int) {
-	*b = append(*b, struct {
-		key   interface{}
-		count int
-	}{key, count})
+	b.entries = append(b.entries, bagEntry{key, count})
 }
 
-func (b *bag) len() int { return len(*b) }
+func (b *bag) len() int { return len(b.entries) }
+
+type bagEntry struct {
+	key   interface{}
+	count int
+}
