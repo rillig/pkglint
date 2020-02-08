@@ -43,10 +43,11 @@ type HomepageChecker struct {
 
 	// Can be mocked for the tests.
 	isReachable func(url string) YesNoUnknown
+	Timeout     time.Duration
 }
 
 func NewHomepageChecker(value string, valueNoVar string, mkline *MkLine, mklines *MkLines) *HomepageChecker {
-	ck := HomepageChecker{value, valueNoVar, mkline, mklines, nil}
+	ck := HomepageChecker{value, valueNoVar, mkline, mklines, nil, 3 * time.Second}
 	ck.isReachable = ck.isReachableOnline
 	return &ck
 }
@@ -259,18 +260,18 @@ func (ck *HomepageChecker) checkReachable() {
 		return
 	}
 
-	var client http.Client
-	client.Timeout = 3 * time.Second
-	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-		return http.ErrUseLastResponse
-	}
-
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		mkline.Errorf("Invalid URL %q.", url)
 		return
 	}
 
+	client := http.Client{
+		Timeout: ck.Timeout,
+		CheckRedirect: func(*http.Request, []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
 	response, err := client.Do(request)
 	if err != nil {
 		networkError := ck.classifyNetworkError(err)
