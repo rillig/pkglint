@@ -906,7 +906,7 @@ func (s *Suite) Test_Autofix_Custom__in_memory(c *check.C) {
 		fix := line.Autofix()
 		fix.Warnf("Please write in ALL-UPPERCASE.")
 		fix.Custom(func(showAutofix, autofix bool) {
-			fix.Describef(int(line.firstLine), "Converting to uppercase")
+			fix.Describef(0, "Converting to uppercase")
 			if showAutofix || autofix {
 				line.Text = strings.ToUpper(line.Text)
 			}
@@ -941,12 +941,12 @@ func (s *Suite) Test_Autofix_Describef(c *check.C) {
 	t := s.Init(c)
 
 	doTest := func(bool) {
-		line := t.NewLine("DESCR", 1, "Description of the package")
+		line := t.NewLine("DESCR", 123, "Description of the package")
 
 		fix := line.Autofix()
 		fix.Errorf("Error.")
 		fix.Custom(func(showAutofix, autofix bool) {
-			fix.Describef(123, "Masking.")
+			fix.Describef(0, "Masking.")
 			raw := line.raw[0]
 			raw.textnl = replaceAll(raw.Text(), `\p{L}`, "*") + "\n"
 		})

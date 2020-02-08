@@ -130,7 +130,7 @@ func (fix *Autofix) ReplaceAfter(prefix, from string, to string) {
 				//  This probably requires a generic notification mechanism.
 				_, fix.line.Text = replaceOnce(fix.line.Text, prefixFrom, prefixTo)
 			}
-			fix.Describef(fix.line.Lineno(rawIndex), "Replacing %q with %q.", from, to)
+			fix.Describef(rawIndex, "Replacing %q with %q.", from, to)
 			return
 		}
 	}
@@ -162,7 +162,7 @@ func (fix *Autofix) ReplaceAt(rawIndex int, textIndex int, from string, to strin
 	if fix.skip() {
 		return
 	}
-	fix.Describef(fix.line.Lineno(rawIndex), "Replacing %q with %q.", from, to)
+	fix.Describef(rawIndex, "Replacing %q with %q.", from, to)
 }
 
 // InsertBefore prepends a line before the current line.
@@ -174,7 +174,7 @@ func (fix *Autofix) InsertBefore(text string) {
 	}
 
 	fix.linesBefore = append(fix.linesBefore, text+"\n")
-	fix.Describef(fix.line.Lineno(0), "Inserting a line %q before this line.", text)
+	fix.Describef(0, "Inserting a line %q before this line.", text)
 }
 
 // InsertAfter appends a line after the current line.
@@ -186,7 +186,7 @@ func (fix *Autofix) InsertAfter(text string) {
 	}
 
 	fix.linesAfter = append(fix.linesAfter, text+"\n")
-	fix.Describef(int(fix.line.lastLine), "Inserting a line %q after this line.", text)
+	fix.Describef(len(fix.line.raw)-1, "Inserting a line %q after this line.", text)
 }
 
 // Delete removes the current line completely.
@@ -200,7 +200,7 @@ func (fix *Autofix) Delete() {
 
 	for rawIndex, line := range fix.line.raw {
 		line.textnl = ""
-		fix.Describef(fix.line.Lineno(rawIndex), "Deleting this line.")
+		fix.Describef(rawIndex, "Deleting this line.")
 	}
 }
 
@@ -237,8 +237,10 @@ func (fix *Autofix) Custom(fixer func(showAutofix, autofix bool)) {
 // Describef can be called from within an Autofix.Custom call to remember a
 // description of the actual fix for logging it later when Apply is called.
 // Describef may be called multiple times before calling Apply.
-func (fix *Autofix) Describef(lineno int, format string, args ...interface{}) {
-	fix.actions = append(fix.actions, autofixAction{sprintf(format, args...), lineno})
+func (fix *Autofix) Describef(rawIndex int, format string, args ...interface{}) {
+	msg := sprintf(format, args...)
+	lineno := fix.line.Lineno(rawIndex)
+	fix.actions = append(fix.actions, autofixAction{msg, lineno})
 }
 
 // Apply does the actual work that has been prepared by previous calls to
