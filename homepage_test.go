@@ -327,7 +327,8 @@ func (s *Suite) Test_HomepageChecker_checkReachable(c *check.C) {
 	test := func(url string, diagnostics ...string) {
 		mklines := t.NewMkLines("filename.mk",
 			"HOMEPAGE=\t"+url)
-		ck := NewHomepageChecker(url, url, mklines.mklines[0], mklines)
+		mkline := mklines.mklines[0]
+		ck := NewHomepageChecker(url, mkline.WithoutMakeVariables(url), mkline, mklines)
 		ck.Timeout = 1 * time.Second
 		ck.checkReachable()
 		t.CheckOutput(diagnostics)
@@ -399,6 +400,11 @@ func (s *Suite) Test_HomepageChecker_checkReachable(c *check.C) {
 	test(
 		"https://!!!invalid/",
 		nil...)
+
+	// URLs with variables are skipped since they cannot be resolved in this form.
+	test(
+		"https://${SERVER}/",
+		nil...)
 }
 
 func (s *Suite) Test_HomepageChecker_isReachableOnline(c *check.C) {
@@ -462,8 +468,8 @@ func (s *Suite) Test_HomepageChecker_isReachableOnline(c *check.C) {
 func (s *Suite) Test_HomepageChecker_hasAnySuffix(c *check.C) {
 	t := s.Init(c)
 
-	test := func(s string, hasAnySuffix bool, suffixes ...string) {
-		actual := (*HomepageChecker).hasAnySuffix(nil, s, suffixes...)
+	test := func(s string, hasAnySuffix bool, suffix string) {
+		actual := (*HomepageChecker).hasAnySuffix(nil, s, suffix)
 
 		t.CheckEquals(actual, hasAnySuffix)
 	}
@@ -473,6 +479,7 @@ func (s *Suite) Test_HomepageChecker_hasAnySuffix(c *check.C) {
 	test("example.org", true, "example.org")
 	test("example.org", false, ".example.org")
 	test("example.org", true, ".org")
+	test("borg", false, "org")
 }
 
 func (s *Suite) Test_HomepageChecker_classifyNetworkError(c *check.C) {
@@ -486,5 +493,8 @@ func (s *Suite) Test_HomepageChecker_classifyNetworkError(c *check.C) {
 
 	test(syscall.Errno(10061), "connection refused")
 	test(syscall.ECONNREFUSED, "connection refused")
+	test(syscall.ECONNRESET, "unknown network error: connection reset by peer")
 	test(errors.New("unknown"), "unknown network error: unknown")
+	test(&net.AddrError{"msg", "addr"}, "unknown network error: address addr: msg")
+	test(&net.DNSError{Err: "msg", Name: "name"}, "unknown network error: lookup name: msg")
 }

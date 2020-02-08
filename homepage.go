@@ -133,7 +133,7 @@ func (ck *HomepageChecker) checkHttp() {
 	fix := ck.MkLine.Autofix()
 	fix.Warnf("HOMEPAGE should migrate from %s to %s.", from, to)
 	fix.Replace(from, to)
-	if from == "http" && to == "https" {
+	if from == "http" {
 		fix.Explain(
 			"To provide secure communication by default,",
 			"the HOMEPAGE URL should use the https protocol if available.",
