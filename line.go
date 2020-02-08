@@ -55,19 +55,6 @@ func (loc *Location) Lineno(rawIndex int) int {
 	return int(loc.firstLine) + rawIndex
 }
 
-func (loc *Location) Linenos() string {
-	switch {
-	case loc.firstLine == -1:
-		return "EOF"
-	case loc.firstLine == 0:
-		return ""
-	case loc.firstLine == loc.lastLine:
-		return strconv.Itoa(int(loc.firstLine))
-	default:
-		return sprintf("%d--%d", loc.firstLine, loc.lastLine)
-	}
-}
-
 func (loc *Location) File(rel RelPath) CurrPath {
 	return loc.Filename.DirNoClean().JoinNoClean(rel)
 }
@@ -113,6 +100,20 @@ func NewLineWhole(filename CurrPath) *Line {
 
 func (line *Line) Filename() CurrPath { return line.Location.Filename }
 
+func (line *Line) Linenos() string {
+	loc := line.Location
+	switch {
+	case loc.firstLine == -1:
+		return "EOF"
+	case loc.firstLine == 0:
+		return ""
+	case loc.firstLine == loc.lastLine:
+		return strconv.Itoa(int(loc.firstLine))
+	default:
+		return sprintf("%d--%d", loc.firstLine, loc.lastLine)
+	}
+}
+
 // RelLine returns a reference to another line,
 // which can be in the same file or in a different file.
 func (line *Line) RelLine(other *Line) string {
@@ -120,10 +121,13 @@ func (line *Line) RelLine(other *Line) string {
 }
 
 func (line *Line) RelLocation(other Location) string {
+	lineno := other.Lineno(0)
+	assert(lineno >= 1)
+
 	if line.Filename() != other.Filename {
-		return line.Rel(other.Filename).String() + ":" + other.Linenos()
+		return sprintf("%s:%d", line.Rel(other.Filename).String(), lineno)
 	}
-	return "line " + other.Linenos()
+	return sprintf("line %d", lineno)
 }
 
 // Rel returns the relative path from this line to the given file path.
