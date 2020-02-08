@@ -1410,7 +1410,7 @@ func (s *Suite) Test_Pkgsrc_File(c *check.C) {
 func (s *Suite) Test_Change_Version(c *check.C) {
 	t := s.Init(c)
 
-	loc := Location{"doc/CHANGES-2019", 5, 5}
+	loc := Location{"doc/CHANGES-2019", 5}
 	added := Change{loc, Added, "category/path", "1.0", "author", "2019-01-01"}
 	updated := Change{loc, Updated, "category/path", "1.0", "author", "2019-01-01"}
 	downgraded := Change{loc, Downgraded, "category/path", "1.0", "author", "2019-01-01"}
@@ -1425,7 +1425,7 @@ func (s *Suite) Test_Change_Version(c *check.C) {
 func (s *Suite) Test_Change_Target(c *check.C) {
 	t := s.Init(c)
 
-	loc := Location{"doc/CHANGES-2019", 5, 5}
+	loc := Location{"doc/CHANGES-2019", 5}
 	renamed := Change{loc, Renamed, "category/path", "category/other", "author", "2019-01-01"}
 	moved := Change{loc, Moved, "category/path", "category/other", "author", "2019-01-01"}
 	downgraded := Change{loc, Downgraded, "category/path", "1.0", "author", "2019-01-01"}
@@ -1438,7 +1438,7 @@ func (s *Suite) Test_Change_Target(c *check.C) {
 func (s *Suite) Test_Change_Successor(c *check.C) {
 	t := s.Init(c)
 
-	loc := Location{"doc/CHANGES-2019", 5, 5}
+	loc := Location{"doc/CHANGES-2019", 5}
 	removed := Change{loc, Removed, "category/path", "", "author", "2019-01-01"}
 	removedSucc := Change{loc, Removed, "category/path", "category/successor", "author", "2019-01-01"}
 	downgraded := Change{loc, Downgraded, "category/path", "1.0", "author", "2019-01-01"}
@@ -1452,9 +1452,9 @@ func (s *Suite) Test_Change_IsAbove(c *check.C) {
 	t := s.Init(c)
 
 	var changes = []*Change{
-		{Location{"", 1, 1}, 0, "", "", "", "2011-07-01"},
-		{Location{"", 2, 2}, 0, "", "", "", "2011-07-01"},
-		{Location{"", 1, 1}, 0, "", "", "", "2011-07-02"}}
+		{Location{"", 1}, 0, "", "", "", "2011-07-01"},
+		{Location{"", 2}, 0, "", "", "", "2011-07-01"},
+		{Location{"", 1}, 0, "", "", "", "2011-07-02"}}
 
 	test := func(i int, chi *Change, j int, chj *Change) {
 		actual := chi.IsAbove(chj)

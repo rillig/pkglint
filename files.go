@@ -125,7 +125,7 @@ func nextLogicalLine(filename CurrPath, rawLines []*RawLine, index int) (*Line, 
 		}
 	}
 
-	return NewLineMulti(filename, firstLineno, index+1, text.String(), lineRawLines), index + 1
+	return NewLineMulti(filename, firstLineno, text.String(), lineRawLines), index + 1
 }
 
 func matchContinuationLine(text string) (leadingWhitespace, result, trailingWhitespace, cont string) {

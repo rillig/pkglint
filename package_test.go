@@ -3538,5 +3538,5 @@ func (s *Suite) Test_Package_Includes(c *check.C) {
 	// See Package.collectConditionalIncludes and Indentation.IsConditional.
 	t.CheckEquals(
 		pkg.conditionalIncludes["never.mk"].Location,
-		NewLocation(t.File("category/package/Makefile"), 22, 22))
+		NewLocation(t.File("category/package/Makefile"), 22))
 }

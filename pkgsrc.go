@@ -350,7 +350,7 @@ func (src *Pkgsrc) checkRemovedAfterLastFreeze() {
 		// The original line of the change is not available anymore.
 		// Therefore it is necessary to load the whole file again.
 		lines := Load(change.Location.Filename, MustSucceed)
-		line := lines.Lines[change.Location.firstLine-1]
+		line := lines.Lines[change.Location.lineno-1]
 		line.Errorf("Package %s must either exist or be marked as removed.", change.Pkgpath.String())
 	}
 }
@@ -1177,7 +1177,7 @@ func (ch *Change) IsAbove(other *Change) bool {
 	if ch.Date != other.Date {
 		return ch.Date < other.Date
 	}
-	return ch.Location.firstLine < other.Location.firstLine
+	return ch.Location.lineno < other.Location.lineno
 }
 
 type ChangeAction uint8

@@ -42,17 +42,18 @@ func (rline *RawLine) Orig() string {
 }
 
 type Location struct {
-	Filename  CurrPath
-	firstLine int32 // zero means the whole file, -1 means EOF
-	lastLine  int32 // usually the same as firstLine, may differ in Makefiles
+	Filename CurrPath
+
+	// zero means the whole file, -1 means EOF, normal lines start with 1
+	lineno int32
 }
 
-func NewLocation(filename CurrPath, firstLine, lastLine int) Location {
-	return Location{filename, int32(firstLine), int32(lastLine)}
+func NewLocation(filename CurrPath, lineno int) Location {
+	return Location{filename, int32(lineno)}
 }
 
 func (loc *Location) Lineno(rawIndex int) int {
-	return int(loc.firstLine) + rawIndex
+	return int(loc.lineno) + rawIndex
 }
 
 func (loc *Location) File(rel RelPath) CurrPath {
@@ -80,29 +81,28 @@ type Line struct {
 
 func NewLine(filename CurrPath, lineno int, text string, rawLine *RawLine) *Line {
 	assert(rawLine != nil) // Use NewLineMulti for creating a Line with no RawLine attached to it.
-	return NewLineMulti(filename, lineno, lineno, text, []*RawLine{rawLine})
+	return NewLineMulti(filename, lineno, text, []*RawLine{rawLine})
 }
 
 // NewLineMulti is for logical Makefile lines that end with backslash.
-func NewLineMulti(filename CurrPath, firstLine, lastLine int, text string, rawLines []*RawLine) *Line {
-	assert(firstLine < 1 || lastLine+1-firstLine == len(rawLines))
-	return &Line{NewLocation(filename, firstLine, lastLine), filename.Base(), text, rawLines, nil, Once{}}
+func NewLineMulti(filename CurrPath, firstLine int, text string, rawLines []*RawLine) *Line {
+	return &Line{NewLocation(filename, firstLine), filename.Base(), text, rawLines, nil, Once{}}
 }
 
 // NewLineEOF creates a dummy line for logging, with the "line number" EOF.
 func NewLineEOF(filename CurrPath) *Line {
-	return NewLineMulti(filename, -1, 0, "", nil)
+	return NewLineMulti(filename, -1, "", nil)
 }
 
 // NewLineWhole creates a dummy line for logging messages that affect a file as a whole.
 func NewLineWhole(filename CurrPath) *Line {
-	return NewLineMulti(filename, 0, 0, "", nil)
+	return NewLineMulti(filename, 0, "", nil)
 }
 
 func (line *Line) Filename() CurrPath { return line.Location.Filename }
 
 func (line *Line) Linenos() string {
-	first := int(line.Location.firstLine)
+	first := int(line.Location.lineno)
 	if first == -1 {
 		return "EOF"
 	}

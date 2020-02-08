@@ -377,7 +377,7 @@ func (fix *Autofix) skip() bool {
 func (fix *Autofix) assertRealLine() {
 	// Some Line objects do not correspond to real lines of a file.
 	// These cannot be fixed since they are neither part of Lines nor of MkLines.
-	assert(fix.line.firstLine >= 1)
+	assert(fix.line.lineno >= 1)
 }
 
 // SaveAutofixChanges writes the given lines back into their files,
