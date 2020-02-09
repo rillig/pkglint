@@ -334,23 +334,14 @@ func (l *Logger) Logf(level *LogLevel, filename CurrPath, lineno, format, msg st
 //
 // For diagnostics, use Logf instead.
 func (l *Logger) TechFatalf(location CurrPath, format string, args ...interface{}) {
+	loc := location.String() + condStr(location.IsEmpty(), "", ": ")
 	msg := sprintf(format, args...)
-
-	locationStr := ""
-	if !location.IsEmpty() {
-		locationStr = location.String() + ": "
-	}
-
-	var diag string
-	if l.Opts.GccOutput {
-		diag = sprintf("%s%s: %s\n", locationStr, Fatal.GccName, msg)
-	} else {
-		diag = sprintf("%s: %s%s\n", Fatal.TraditionalName, locationStr, msg)
-	}
-	l.err.Write(escapePrintable(diag))
+	all := sprintf("FATAL: %s%s\n", loc, msg)
+	esc := escapePrintable(all)
+	l.err.Write(esc)
 
 	if trace.Tracing {
-		trace.Stepf("TechFatalf: %q, %v", format, args)
+		trace.Stepf("TechFatalf: %s%s", loc, msg)
 	}
 	panic(pkglintFatal{})
 }
@@ -359,20 +350,11 @@ func (l *Logger) TechFatalf(location CurrPath, format string, args ...interface{
 //
 // For diagnostics, use Logf instead.
 func (l *Logger) TechErrorf(location CurrPath, format string, args ...interface{}) {
+	loc := location.String() + condStr(location.IsEmpty(), "", ": ")
 	msg := sprintf(format, args...)
-
-	locationStr := ""
-	if !location.IsEmpty() {
-		locationStr = location.String() + ": "
-	}
-
-	var diag string
-	if l.Opts.GccOutput {
-		diag = sprintf("%s%s: %s\n", locationStr, Error.GccName, msg)
-	} else {
-		diag = sprintf("%s: %s%s\n", Error.TraditionalName, locationStr, msg)
-	}
-	l.err.Write(escapePrintable(diag))
+	all := sprintf("ERROR: %s%s\n", loc, msg)
+	esc := escapePrintable(all)
+	l.err.Write(esc)
 }
 
 func (l *Logger) ShowSummary(args []string) {

@@ -873,12 +873,14 @@ func (s *Suite) Test_Logger_TechFatalf__trace(c *check.C) {
 		outer,
 		"TRACE: + (*Suite).Test_Logger_TechFatalf__trace.func2()",
 		"TRACE: 1 + (*Suite).Test_Logger_TechFatalf__trace.func1()",
-		"TRACE: 1 2   TechFatalf: \"Cannot continue because of %q and %q.\", [reason 1 reason 2]",
+		"TRACE: 1 2   TechFatalf: filename: Cannot continue because of \"reason 1\" and \"reason 2\".",
 		"TRACE: 1 - (*Suite).Test_Logger_TechFatalf__trace.func1()",
 		"TRACE: - (*Suite).Test_Logger_TechFatalf__trace.func2()",
 		"FATAL: filename: Cannot continue because of \"reason 1\" and \"reason 2\".")
 }
 
+// Technical errors are not diagnostics.
+// Therefore --gcc-output-format has no effect on them.
 func (s *Suite) Test_Logger_TechErrorf__gcc_format(c *check.C) {
 	t := s.Init(c)
 
@@ -887,7 +889,7 @@ func (s *Suite) Test_Logger_TechErrorf__gcc_format(c *check.C) {
 	G.Logger.TechErrorf("filename", "Cannot be opened for %s.", "reading")
 
 	t.CheckOutputLines(
-		"filename: error: Cannot be opened for reading.")
+		"ERROR: filename: Cannot be opened for reading.")
 }
 
 func (s *Suite) Test_Logger_ShowSummary__explanations_with_only(c *check.C) {
