@@ -226,24 +226,26 @@ func (l *Logger) writeSource(line *Line) {
 }
 
 func (l *Logger) writeDiff(line *Line) {
-	showAsChanged := func(rawLine *RawLine) bool {
-		return l.IsAutofix() && rawLine.textnl != rawLine.orignl
+	showAsChanged := func(rawIndex int, rawLine *RawLine) bool {
+		return l.IsAutofix() &&
+			line.autofix != nil &&
+			line.autofix.texts[rawIndex] != rawLine.orignl
 	}
 
 	rawLines := line.raw
 
 	prefix := ">\t"
-	for _, rawLine := range rawLines {
-		if showAsChanged(rawLine) {
+	for rawIndex, rawLine := range rawLines {
+		if showAsChanged(rawIndex, rawLine) {
 			prefix = "\t" // Make it look like an actual diff
 		}
 	}
 
-	for _, rawLine := range rawLines {
-		if showAsChanged(rawLine) {
+	for rawIndex, rawLine := range rawLines {
+		if showAsChanged(rawIndex, rawLine) {
 			l.writeLine("-\t", rawLine.orignl)
-			if rawLine.textnl != "" {
-				l.writeLine("+\t", rawLine.textnl)
+			if line.autofix.texts[rawIndex] != "" {
+				l.writeLine("+\t", line.autofix.texts[rawIndex])
 			}
 		} else {
 			l.writeLine(prefix, rawLine.orignl)

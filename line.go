@@ -24,17 +24,6 @@ type RawLine struct {
 	// can never be empty. Only in the very last line of each file,
 	// the trailing newline might be missing.
 	orignl string
-
-	// The line as modified by Autofix, including newline;
-	// empty string for deleted lines.
-	textnl string
-
-	// XXX: Since only Autofix needs to distinguish between orignl and textnl,
-	// one of these fields should probably be moved there.
-}
-
-func (rline *RawLine) Text() string {
-	return strings.TrimSuffix(rline.textnl, "\n")
 }
 
 func (rline *RawLine) Orig() string {
@@ -150,7 +139,13 @@ func (line *Line) IsMultiline() bool { return len(line.raw) > 1 }
 // RawText returns the raw text from the given physical line,
 // excluding \n, including any previous autofixes.
 func (line *Line) RawText(rawIndex int) string {
-	return line.raw[rawIndex].Text()
+	var textnl string
+	if line.autofix != nil {
+		textnl = line.autofix.texts[rawIndex]
+	} else {
+		textnl = line.raw[rawIndex].orignl
+	}
+	return strings.TrimSuffix(textnl, "\n")
 }
 
 func (line *Line) IsCvsID(prefixRe regex.Pattern) (found bool, expanded bool) {

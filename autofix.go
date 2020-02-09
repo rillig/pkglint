@@ -19,6 +19,7 @@ type Autofixer interface {
 type Autofix struct {
 	line  *Line
 	above []string // Newly inserted lines, including \n
+	texts []string // Modified lines, including \n
 	below []string // Newly inserted lines, including \n
 	// Whether an actual fix has been applied to the text of the raw lines
 	modified bool
@@ -61,7 +62,11 @@ const SilentAutofixFormat = "SilentAutofixFormat"
 const autofixFormat = "AutofixFormat"
 
 func NewAutofix(line *Line) *Autofix {
-	return &Autofix{line: line}
+	texts := make([]string, len(line.raw))
+	for i, rawLine := range line.raw {
+		texts[i] = rawLine.orignl
+	}
+	return &Autofix{line, nil, texts, nil, false, autofixShortTerm{}}
 }
 
 // Errorf remembers the error for logging it later when Apply is called.
@@ -108,18 +113,18 @@ func (fix *Autofix) ReplaceAfter(prefix, from string, to string) {
 	prefixTo := prefix + to
 
 	n := 0
-	for _, rawLine := range fix.line.raw {
-		n += strings.Count(rawLine.textnl, prefixFrom)
+	for _, text := range fix.texts {
+		n += strings.Count(text, prefixFrom)
 	}
 	if n != 1 {
 		return
 	}
 
-	for rawIndex, rawLine := range fix.line.raw {
-		ok, replaced := replaceOnce(rawLine.textnl, prefixFrom, prefixTo)
+	for rawIndex, text := range fix.texts {
+		ok, replaced := replaceOnce(text, prefixFrom, prefixTo)
 		if ok {
 			if G.Logger.IsAutofix() {
-				rawLine.textnl = replaced
+				fix.texts[rawIndex] = replaced
 
 				// Fix the parsed text as well.
 				// This is only approximate and won't work in some edge cases
@@ -142,13 +147,13 @@ func (fix *Autofix) ReplaceAt(rawIndex int, textIndex int, from string, to strin
 	assert(from != to)
 	fix.assertRealLine()
 
-	rawLine := fix.line.raw[rawIndex]
-	assert(textIndex < len(rawLine.textnl))
-	assert(hasPrefix(rawLine.textnl[textIndex:], from))
+	text := fix.texts[rawIndex]
+	assert(textIndex < len(text))
+	assert(hasPrefix(text[textIndex:], from))
 
-	replaced := rawLine.textnl[:textIndex] + to + rawLine.textnl[textIndex+len(from):]
+	replaced := text[:textIndex] + to + text[textIndex+len(from):]
 
-	rawLine.textnl = replaced
+	fix.texts[rawIndex] = replaced
 
 	// Fix the parsed text as well.
 	// This is only approximate and won't work in some edge cases
@@ -198,8 +203,8 @@ func (fix *Autofix) Delete() {
 		return
 	}
 
-	for rawIndex, line := range fix.line.raw {
-		line.textnl = ""
+	for rawIndex := range fix.texts {
+		fix.texts[rawIndex] = ""
 		fix.Describef(rawIndex, "Deleting this line.")
 	}
 }
@@ -429,13 +434,11 @@ func SaveAutofixChanges(lines *Lines) (autofixed bool) {
 				changed[filename] = true
 			}
 			chlines = append(chlines, fix.above...)
-			for _, raw := range line.raw {
-				chlines = append(chlines, raw.textnl)
-			}
+			chlines = append(chlines, fix.texts...)
 			chlines = append(chlines, fix.below...)
 		} else {
 			for _, raw := range line.raw {
-				chlines = append(chlines, raw.textnl)
+				chlines = append(chlines, raw.orignl)
 			}
 		}
 		changes[filename] = chlines

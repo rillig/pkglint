@@ -3831,7 +3831,7 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow(c *check.C) {
 
 	// newLine creates a line consisting of either 2 or 3 physical lines.
 	// The given text ends up in the raw line with index 1.
-	newLine := func(text string, column, indentDiff int) (*varalignLine, *RawLine) {
+	newLine := func(text string, column, indentDiff int) (*varalignLine, *MkLine) {
 		t.CheckDotColumns("", text)
 
 		leading := alignWith("VAR=", indent(column)) + "value \\"
@@ -3845,18 +3845,18 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow(c *check.C) {
 		mkline := mklines.mklines[0]
 
 		parts := NewVaralignSplitter().split(text, false)
-		return &varalignLine{mkline, 1, false, parts}, mkline.raw[1]
+		return &varalignLine{mkline, 1, false, parts}, mkline
 	}
 
 	test := func(before string, column, indentDiff int, after string, diagnostics ...string) {
 
 		doTest := func(autofix bool) {
-			info, raw := newLine(before, column, indentDiff)
+			info, mkline := newLine(before, column, indentDiff)
 			width := imax(column, info.valueColumn()+indentDiff)
 
 			info.alignValueMultiFollow(width)
 
-			t.CheckEquals(raw.Text(), after)
+			t.CheckEquals(mkline.RawText(1), after)
 		}
 
 		t.ExpectDiagnosticsAutofix(

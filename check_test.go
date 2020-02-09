@@ -982,9 +982,7 @@ func (t *Tester) ExpectDiagnosticsAutofix(action func(autofix bool), diagnostics
 // NewLine creates an in-memory line with the given text.
 // This line does not correspond to any line in a file.
 func (t *Tester) NewLine(filename CurrPath, lineno int, text string) *Line {
-	textnl := text + "\n"
-	rawLine := RawLine{textnl, textnl}
-	return NewLine(filename, lineno, text, &rawLine)
+	return NewLine(filename, lineno, text, &RawLine{text + "\n"})
 }
 
 // NewMkLine creates an in-memory line in the Makefile format with the given text.

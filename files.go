@@ -63,7 +63,7 @@ func convertToLogicalLines(filename CurrPath, rawText string, joinBackslashLines
 	var rawLines []*RawLine
 	for _, rawLine := range strings.SplitAfter(rawText, "\n") {
 		if rawLine != "" {
-			rawLines = append(rawLines, &RawLine{rawLine, rawLine})
+			rawLines = append(rawLines, &RawLine{rawLine})
 		}
 	}
 

@@ -71,12 +71,12 @@ func (s *Suite) Test_Autofix__show_autofix_modifies_line(c *check.C) {
 func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
 	t := s.Init(c)
 
-	newRawLines := func(rawLines ...*RawLine) []*RawLine { return rawLines }
-	newRawLine := func(textnl string) *RawLine {
-		return &RawLine{textnl, textnl}
-	}
-	newRawLineModified := func(orignl, textnl string) *RawLine {
-		return &RawLine{orignl, textnl}
+	newRawLines := func(texts ...string) []*RawLine {
+		var rawLines []*RawLine
+		for _, text := range texts {
+			rawLines = append(rawLines, &RawLine{text})
+		}
+		return rawLines
 	}
 
 	t.SetUpCommandLine("--show-autofix", "--explain")
@@ -84,7 +84,7 @@ func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
 	line := t.NewLine("filename", 1, "original")
 
 	c.Check(line.autofix, check.IsNil)
-	t.CheckDeepEquals(line.raw, newRawLines(newRawLine("original\n")))
+	t.CheckDeepEquals(line.raw, newRawLines("original\n"))
 
 	{
 		fix := line.Autofix()
@@ -94,7 +94,8 @@ func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
 	}
 
 	c.Check(line.autofix, check.NotNil)
-	t.CheckDeepEquals(line.raw, newRawLines(newRawLineModified("original\n", "lriginao\n")))
+	t.CheckDeepEquals(line.raw, newRawLines("original\n"))
+	t.CheckDeepEquals(line.autofix.texts, []string{"lriginao\n"})
 	t.CheckOutputLines(
 		"AUTOFIX: filename:1: Replacing \"original\" with \"lriginao\".")
 
@@ -106,8 +107,9 @@ func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
 	}
 
 	c.Check(line.autofix, check.NotNil)
-	t.CheckDeepEquals(line.raw, newRawLines(newRawLineModified("original\n", "lruginao\n")))
-	t.CheckEquals(line.raw[0].textnl, "lruginao\n")
+	t.CheckDeepEquals(line.raw, newRawLines("original\n"))
+	t.CheckDeepEquals(line.autofix.texts, []string{"lruginao\n"})
+	t.CheckEquals(line.RawText(0), "lruginao")
 	t.CheckOutputLines(
 		"AUTOFIX: filename:1: Replacing \"ig\" with \"ug\".")
 
@@ -119,12 +121,12 @@ func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
 	}
 
 	c.Check(line.autofix, check.NotNil)
-	t.CheckDeepEquals(line.raw, newRawLines(newRawLineModified("original\n", "middle\n")))
-	t.CheckEquals(line.raw[0].textnl, "middle\n")
+	t.CheckDeepEquals(line.raw, newRawLines("original\n"))
+	t.CheckDeepEquals(line.autofix.texts, []string{"middle\n"})
 	t.CheckOutputLines(
 		"AUTOFIX: filename:1: Replacing \"lruginao\" with \"middle\".")
 
-	t.CheckEquals(line.raw[0].textnl, "middle\n")
+	t.CheckDeepEquals(line.autofix.texts, []string{"middle\n"})
 	t.CheckOutputEmpty()
 
 	{
@@ -947,11 +949,10 @@ func (s *Suite) Test_Autofix_Describef(c *check.C) {
 		fix.Errorf("Error.")
 		fix.Custom(func(showAutofix, autofix bool) {
 			fix.Describef(0, "Masking.")
-			raw := line.raw[0]
-			raw.textnl = replaceAll(raw.Text(), `\p{L}`, "*") + "\n"
+			fix.texts[0] = replaceAll(fix.texts[0], `\p{L}`, "*")
 		})
 		fix.Apply()
-		t.CheckEquals(line.raw[0].Text(), "*********** ** *** *******")
+		t.CheckEquals(line.RawText(0), "*********** ** *** *******")
 	}
 
 	t.ExpectDiagnosticsAutofix(
@@ -1204,7 +1205,7 @@ func (s *Suite) Test_Autofix_Apply__text_after_replacing(c *check.C) {
 	t.CheckOutputLines(
 		"AUTOFIX: filename.mk:123: Replacing \"value\" with \"new value\".")
 
-	t.CheckEquals(mkline.raw[0].textnl, "VAR=\tnew value\n")
+	t.CheckEquals(mkline.autofix.texts[0], "VAR=\tnew value\n")
 	t.CheckEquals(mkline.raw[0].orignl, "VAR=\tvalue\n")
 	t.CheckEquals(mkline.Text, "VAR=\tnew value")
 	// TODO: should be updated as well.
@@ -1461,8 +1462,8 @@ func (fix *Autofix) RawText() string {
 	for _, above := range fix.above {
 		text.WriteString(above)
 	}
-	for _, raw := range fix.line.raw {
-		text.WriteString(raw.textnl)
+	for _, modified := range fix.texts {
+		text.WriteString(modified)
 	}
 	for _, below := range fix.below {
 		text.WriteString(below)

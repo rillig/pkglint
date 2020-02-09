@@ -241,7 +241,7 @@ func (mkline *MkLine) Varparam() string { return mkline.data.(*mkLineAssign).var
 func (mkline *MkLine) Op() MkOperator { return mkline.data.(*mkLineAssign).op }
 
 // ValueAlign applies to variable assignments and returns all the text
-// before the variable value, e.g. "VARNAME+=\t".
+// to the left of the variable value, e.g. "VARNAME+=\t".
 func (mkline *MkLine) ValueAlign() string {
 	parts := NewVaralignSplitter().split(mkline.Line.RawText(0), true)
 	return parts.leadingComment + parts.varnameOp + parts.spaceBeforeValue
