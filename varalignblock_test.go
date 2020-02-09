@@ -3308,7 +3308,7 @@ func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
 	// as usual.
 	//
 	// 2. It is a continuation of the value, and therefore the value ends
-	// here; everything after this line is part of the trailing comment.
+	// here; everything below this line is part of the trailing comment.
 	//
 	// The character that follows the comment character decides which
 	// interpretation is used. A space makes the comment a trailing

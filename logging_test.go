@@ -218,17 +218,17 @@ func (s *Suite) Test_Logger_Diag__show_source(c *check.C) {
 
 	fix := line.Autofix()
 	fix.Notef("Diagnostics can show the differences in autofix mode.")
-	fix.InsertBefore("new line before")
-	fix.InsertAfter("new line after")
+	fix.InsertAbove("new line above")
+	fix.InsertBelow("new line below")
 	fix.Apply()
 
 	t.CheckOutputLines(
 		"NOTE: filename:123: Diagnostics can show the differences in autofix mode.",
-		"AUTOFIX: filename:123: Inserting a line \"new line before\" before this line.",
-		"AUTOFIX: filename:123: Inserting a line \"new line after\" after this line.",
-		"+\tnew line before",
+		"AUTOFIX: filename:123: Inserting a line \"new line above\" above this line.",
+		"AUTOFIX: filename:123: Inserting a line \"new line below\" below this line.",
+		"+\tnew line above",
 		">\ttext",
-		"+\tnew line after")
+		"+\tnew line below")
 }
 
 func (s *Suite) Test_Logger_Diag__show_source_with_whole_file(c *check.C) {

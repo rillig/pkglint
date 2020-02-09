@@ -497,7 +497,7 @@ func CheckLinesMessage(lines *Lines, pkg *Package) {
 		fix := line.Autofix()
 		fix.Warnf("Expected a line of exactly 75 \"=\" characters.")
 		fix.Explain(explanation()...)
-		fix.InsertBefore(hline)
+		fix.InsertAbove(hline)
 		fix.Apply()
 		lines.CheckCvsID(0, ``, "")
 	} else {
@@ -513,7 +513,7 @@ func CheckLinesMessage(lines *Lines, pkg *Package) {
 		fix := lastLine.Autofix()
 		fix.Warnf("Expected a line of exactly 75 \"=\" characters.")
 		fix.Explain(explanation()...)
-		fix.InsertAfter(hline)
+		fix.InsertBelow(hline)
 		fix.Apply()
 	}
 	CheckLinesTrailingEmptyLines(lines)

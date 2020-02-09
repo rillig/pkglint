@@ -71,7 +71,7 @@ func (ls *Lines) CheckCvsID(index int, prefixRe regex.Pattern, suggestedPrefix s
 		"Most files in pkgsrc contain the CVS Id, so that their current",
 		"version can be traced back later from a binary package.",
 		"This is to ensure reproducible builds, for example for finding bugs.")
-	fix.InsertBefore(suggestedPrefix + "$" + "NetBSD$")
+	fix.InsertAbove(suggestedPrefix + "$" + "NetBSD$")
 	fix.Apply()
 
 	return false

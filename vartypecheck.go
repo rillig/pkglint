@@ -46,8 +46,8 @@ func (cv *VartypeCheck) Explain(explanation ...string)             { cv.MkLine.E
 //
 //  fix.Replace("from", "to")
 //  fix.ReplaceAfter("prefix", "from", "to")
-//  fix.InsertBefore("new line")
-//  fix.InsertAfter("new line")
+//  fix.InsertAbove("new line")
+//  fix.InsertBelow("new line")
 //  fix.Delete()
 //  fix.Custom(func(showAutofix, autofix bool) {})
 //

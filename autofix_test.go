@@ -19,8 +19,8 @@ func (s *Suite) Test_Autofix__default_also_updates_line(c *check.C) {
 	fix := line.Autofix()
 	fix.Warnf("Row should be replaced with line.")
 	fix.Replace("row", "line")
-	fix.InsertBefore("above")
-	fix.InsertAfter("below")
+	fix.InsertAbove("above")
+	fix.InsertBelow("below")
 	fix.Delete()
 	fix.Apply()
 
@@ -46,8 +46,8 @@ func (s *Suite) Test_Autofix__show_autofix_modifies_line(c *check.C) {
 	fix := line.Autofix()
 	fix.Warnf("Row should be replaced with line.")
 	fix.ReplaceAfter("", "# row", "# line")
-	fix.InsertBefore("above")
-	fix.InsertAfter("below")
+	fix.InsertAbove("above")
+	fix.InsertBelow("below")
 	fix.Delete()
 	fix.Apply()
 
@@ -57,8 +57,8 @@ func (s *Suite) Test_Autofix__show_autofix_modifies_line(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: ~/Makefile:1--2: Row should be replaced with line.",
 		"AUTOFIX: ~/Makefile:1: Replacing \"# row\" with \"# line\".",
-		"AUTOFIX: ~/Makefile:1: Inserting a line \"above\" before this line.",
-		"AUTOFIX: ~/Makefile:2: Inserting a line \"below\" after this line.",
+		"AUTOFIX: ~/Makefile:1: Inserting a line \"above\" above this line.",
+		"AUTOFIX: ~/Makefile:2: Inserting a line \"below\" below this line.",
 		"AUTOFIX: ~/Makefile:1: Deleting this line.",
 		"AUTOFIX: ~/Makefile:2: Deleting this line.",
 		"+\tabove",
@@ -493,14 +493,14 @@ func (s *Suite) Test_Autofix_Explain__silent_with_diagnostic(c *check.C) {
 
 	fix := line.Autofix()
 	fix.Warnf(SilentAutofixFormat)
-	fix.InsertBefore("before")
+	fix.InsertAbove("above")
 	fix.Apply()
 
 	fix.Notef("This diagnostic is necessary for the following explanation.")
 	fix.Explain(
 		"When inserting multiple lines, Apply must be called in-between.",
 		"Otherwise the changes are not described to the human reader.")
-	fix.InsertAfter("after")
+	fix.InsertBelow("below")
 	fix.Apply()
 
 	t.CheckOutputLines(
@@ -509,7 +509,7 @@ func (s *Suite) Test_Autofix_Explain__silent_with_diagnostic(c *check.C) {
 		"\tWhen inserting multiple lines, Apply must be called in-between.",
 		"\tOtherwise the changes are not described to the human reader.",
 		"")
-	t.CheckEquals(fix.RawText(), "before\nText\nafter\n")
+	t.CheckEquals(fix.RawText(), "above\nText\nbelow\n")
 }
 
 func (s *Suite) Test_Autofix_Replace(c *check.C) {
@@ -597,8 +597,8 @@ func (s *Suite) Test_Autofix_ReplaceAfter__after_inserting_a_line(c *check.C) {
 
 	fix := line.Autofix()
 	fix.Notef("Inserting a line.")
-	fix.InsertBefore("line before")
-	fix.InsertAfter("line after")
+	fix.InsertAbove("line above")
+	fix.InsertBelow("line below")
 	fix.Apply()
 
 	fix.Notef("Replacing text.")
@@ -608,8 +608,8 @@ func (s *Suite) Test_Autofix_ReplaceAfter__after_inserting_a_line(c *check.C) {
 
 	t.CheckOutputLines(
 		"NOTE: filename:5: Inserting a line.",
-		"AUTOFIX: filename:5: Inserting a line \"line before\" before this line.",
-		"AUTOFIX: filename:5: Inserting a line \"line after\" after this line.",
+		"AUTOFIX: filename:5: Inserting a line \"line above\" above this line.",
+		"AUTOFIX: filename:5: Inserting a line \"line below\" below this line.",
 		"NOTE: filename:5: Replacing text.",
 		"AUTOFIX: filename:5: Replacing \"l\" with \"L\".",
 		"AUTOFIX: filename:5: Replacing \"i\" with \"I\".")
@@ -788,7 +788,7 @@ func (s *Suite) Test_Autofix_ReplaceAt__only(c *check.C) {
 		"COMMENT=\tremark")
 }
 
-func (s *Suite) Test_Autofix_InsertBefore(c *check.C) {
+func (s *Suite) Test_Autofix_InsertAbove(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("--show-autofix", "--source")
@@ -796,17 +796,17 @@ func (s *Suite) Test_Autofix_InsertBefore(c *check.C) {
 
 	fix := line.Autofix()
 	fix.Warnf("Dummy.")
-	fix.InsertBefore("inserted")
+	fix.InsertAbove("inserted")
 	fix.Apply()
 
 	t.CheckOutputLines(
 		"WARN: Makefile:30: Dummy.",
-		"AUTOFIX: Makefile:30: Inserting a line \"inserted\" before this line.",
+		"AUTOFIX: Makefile:30: Inserting a line \"inserted\" above this line.",
 		"+\tinserted",
 		">\toriginal")
 }
 
-func (s *Suite) Test_Autofix_InsertAfter(c *check.C) {
+func (s *Suite) Test_Autofix_InsertBelow(c *check.C) {
 	t := s.Init(c)
 
 	doTest := func(bool) {
@@ -814,14 +814,14 @@ func (s *Suite) Test_Autofix_InsertAfter(c *check.C) {
 
 		fix := line.Autofix()
 		fix.Errorf("Error.")
-		fix.InsertAfter("after")
+		fix.InsertBelow("below")
 		fix.Apply()
 	}
 
 	t.ExpectDiagnosticsAutofix(
 		doTest,
 		"ERROR: DESCR:1: Error.",
-		"AUTOFIX: DESCR:1: Inserting a line \"after\" after this line.")
+		"AUTOFIX: DESCR:1: Inserting a line \"below\" below this line.")
 }
 
 func (s *Suite) Test_Autofix_Delete(c *check.C) {
@@ -874,15 +874,15 @@ func (s *Suite) Test_Autofix_Delete__combined_with_insert(c *check.C) {
 	fix := line.Autofix()
 	fix.Warnf("This line should be replaced completely.")
 	fix.Delete()
-	fix.InsertAfter("below")
-	fix.InsertBefore("above")
+	fix.InsertBelow("below")
+	fix.InsertAbove("above")
 	fix.Apply()
 
 	t.CheckOutputLines(
 		"WARN: Makefile:30: This line should be replaced completely.",
 		"AUTOFIX: Makefile:30: Deleting this line.",
-		"AUTOFIX: Makefile:30: Inserting a line \"below\" after this line.",
-		"AUTOFIX: Makefile:30: Inserting a line \"above\" before this line.",
+		"AUTOFIX: Makefile:30: Inserting a line \"below\" below this line.",
+		"AUTOFIX: Makefile:30: Inserting a line \"above\" above this line.",
 		"+\tabove",
 		"-\tto be deleted",
 		"+\tbelow")
@@ -1303,8 +1303,8 @@ func (s *Suite) Test_Autofix_skip(c *check.C) {
 	fix.Replace("111", "___")
 	fix.ReplaceAfter(" ", "222", "___")
 	fix.ReplaceAt(0, 0, "VAR", "NEW")
-	fix.InsertBefore("before")
-	fix.InsertAfter("after")
+	fix.InsertAbove("above")
+	fix.InsertBelow("below")
 	fix.Delete()
 	fix.Custom(func(showAutofix, autofix bool) {})
 
@@ -1458,14 +1458,14 @@ func (s *Suite) Test_SaveAutofixChanges__no_changes_necessary(c *check.C) {
 // or --autofix options are enabled.
 func (fix *Autofix) RawText() string {
 	var text strings.Builder
-	for _, lineBefore := range fix.linesBefore {
-		text.WriteString(lineBefore)
+	for _, above := range fix.above {
+		text.WriteString(above)
 	}
 	for _, raw := range fix.line.raw {
 		text.WriteString(raw.textnl)
 	}
-	for _, lineAfter := range fix.linesAfter {
-		text.WriteString(lineAfter)
+	for _, below := range fix.below {
+		text.WriteString(below)
 	}
 	return text.String()
 }

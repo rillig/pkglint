@@ -17,9 +17,9 @@ type Autofixer interface {
 // The modifications are kept in memory only,
 // until they are written to disk by SaveAutofixChanges.
 type Autofix struct {
-	line        *Line
-	linesBefore []string // Newly inserted lines, including \n
-	linesAfter  []string // Newly inserted lines, including \n
+	line  *Line
+	above []string // Newly inserted lines, including \n
+	below []string // Newly inserted lines, including \n
 	// Whether an actual fix has been applied to the text of the raw lines
 	modified bool
 
@@ -165,32 +165,32 @@ func (fix *Autofix) ReplaceAt(rawIndex int, textIndex int, from string, to strin
 	fix.Describef(rawIndex, "Replacing %q with %q.", from, to)
 }
 
-// InsertBefore prepends a line before the current line.
+// InsertAbove prepends a line above the current line.
 // The newline is added internally.
-func (fix *Autofix) InsertBefore(text string) {
+func (fix *Autofix) InsertAbove(text string) {
 	fix.assertRealLine()
 	if fix.skip() {
 		return
 	}
 
-	fix.linesBefore = append(fix.linesBefore, text+"\n")
-	fix.Describef(0, "Inserting a line %q before this line.", text)
+	fix.above = append(fix.above, text+"\n")
+	fix.Describef(0, "Inserting a line %q above this line.", text)
 }
 
-// InsertAfter appends a line after the current line.
+// InsertBelow appends a line below the current line.
 // The newline is added internally.
-func (fix *Autofix) InsertAfter(text string) {
+func (fix *Autofix) InsertBelow(text string) {
 	fix.assertRealLine()
 	if fix.skip() {
 		return
 	}
 
-	fix.linesAfter = append(fix.linesAfter, text+"\n")
-	fix.Describef(len(fix.line.raw)-1, "Inserting a line %q after this line.", text)
+	fix.below = append(fix.below, text+"\n")
+	fix.Describef(len(fix.line.raw)-1, "Inserting a line %q below this line.", text)
 }
 
 // Delete removes the current line completely.
-// It can be combined with InsertAfter or InsertBefore to
+// It can be combined with InsertBelow or InsertAbove to
 // replace the complete line with some different text.
 func (fix *Autofix) Delete() {
 	fix.assertRealLine()
@@ -428,11 +428,11 @@ func SaveAutofixChanges(lines *Lines) (autofixed bool) {
 			if fix.modified {
 				changed[filename] = true
 			}
-			chlines = append(chlines, fix.linesBefore...)
+			chlines = append(chlines, fix.above...)
 			for _, raw := range line.raw {
 				chlines = append(chlines, raw.textnl)
 			}
-			chlines = append(chlines, fix.linesAfter...)
+			chlines = append(chlines, fix.below...)
 		} else {
 			for _, raw := range line.raw {
 				chlines = append(chlines, raw.textnl)

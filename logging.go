@@ -210,12 +210,12 @@ func (l *Logger) writeSource(line *Line) {
 		l.out.Separate()
 	}
 	if l.IsAutofix() && line.autofix != nil {
-		for _, before := range line.autofix.linesBefore {
-			l.writeLine("+\t", before)
+		for _, above := range line.autofix.above {
+			l.writeLine("+\t", above)
 		}
 		l.writeDiff(line)
-		for _, after := range line.autofix.linesAfter {
-			l.writeLine("+\t", after)
+		for _, below := range line.autofix.below {
+			l.writeLine("+\t", below)
 		}
 	} else {
 		l.writeDiff(line)
