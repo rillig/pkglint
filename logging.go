@@ -124,7 +124,7 @@ func (l *Logger) Diag(line *Line, level *LogLevel, format string, args ...interf
 		}
 	}
 
-	if l.IsAutofix() && level != Fatal {
+	if l.IsAutofix() {
 		// In these two cases, the only interesting diagnostics are those that can
 		// be fixed automatically. These are logged by Autofix.Apply.
 		l.suppressExpl = true
@@ -300,13 +300,8 @@ func (l *Logger) Logf(level *LogLevel, filename CurrPath, lineno, format, msg st
 	if !filename.IsEmpty() {
 		filename = filename.CleanPath()
 	}
-	if G.Profiling && format != autofixFormat && level != Fatal {
+	if G.Profiling && format != autofixFormat {
 		l.histo.Add(format, 1)
-	}
-
-	out := l.out
-	if level == Fatal {
-		out = l.err
 	}
 
 	filenameSep := condStr(!filename.IsEmpty(), ": ", "")
@@ -318,11 +313,9 @@ func (l *Logger) Logf(level *LogLevel, filename CurrPath, lineno, format, msg st
 	} else {
 		diag = sprintf("%s%s%s%s%s: %s\n", level.TraditionalName, filenameSep, filename, linenoSep, effLineno, msg)
 	}
-	out.Write(escapePrintable(diag))
+	l.out.Write(escapePrintable(diag))
 
 	switch level {
-	case Fatal:
-		panic(pkglintFatal{})
 	case Error:
 		l.errors++
 	case Warn:
