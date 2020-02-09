@@ -554,7 +554,8 @@ func (s *Suite) Test_Scope_Define(c *check.C) {
 	scope := NewScope()
 
 	test := func(line string, ok bool, value string) {
-		scope.Define("BUILD_DIRS", t.NewMkLine("file.mk", 123, line))
+		mkline := t.NewMkLine("file.mk", 123, line)
+		scope.Define("BUILD_DIRS", mkline)
 
 		actualValue, actualFound := scope.LastValueFound("BUILD_DIRS")
 

@@ -658,7 +658,7 @@ func (s *Scope) def(name string, mkline *MkLine) {
 
 	// In most cases the defining lines are indeed variable assignments.
 	// Exceptions are comments from documentation sections, which still mark
-	// it as defined so that it doesn't produce the "used but not defined" warning;
+	// the variable as defined so that it doesn't produce the "used but not defined" warning;
 	// see MkLines.collectDocumentedVariables.
 	if !mkline.IsVarassign() {
 		return
@@ -847,10 +847,6 @@ func (s *Scope) LastValueFound(varname string) (value string, found bool) {
 		return
 	}
 
-	mkline := s.LastDefinition(varname)
-	if mkline != nil && mkline.Op() != opAssignShell {
-		return mkline.Value(), true
-	}
 	if fallback, ok := s.fallback[varname]; ok {
 		return fallback, true
 	}
