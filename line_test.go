@@ -10,6 +10,24 @@ func (s *Suite) Test_NewLine__assertion(c *check.C) {
 	t.ExpectAssert(func() { NewLine("filename", 123, "text", nil) })
 }
 
+func (s *Suite) Test_Line_RelLine__assertion(c *check.C) {
+	t := s.Init(c)
+
+	line := t.NewLine("filename", 123, "")
+	whole := NewLineWhole("filename")
+
+	t.ExpectAssert(func() { line.RelLine(whole) })
+}
+
+func (s *Suite) Test_Line_RelLocation__assertion(c *check.C) {
+	t := s.Init(c)
+
+	line := t.NewLine("filename", 123, "")
+	whole := NewLineWhole("filename")
+
+	t.ExpectAssert(func() { line.RelLocation(whole.Location) })
+}
+
 func (s *Suite) Test_Line_IsMultiline(c *check.C) {
 	t := s.Init(c)
 

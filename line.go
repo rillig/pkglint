@@ -111,6 +111,8 @@ func (line *Line) Linenos() string {
 // RelLine returns a reference to another line,
 // which can be in the same file or in a different file.
 func (line *Line) RelLine(other *Line) string {
+	assert(other.Location.Lineno(0) >= 1)
+
 	if line.Filename() != other.Filename() {
 		return line.Rel(other.Filename()).String() + ":" + other.Linenos()
 	}
