@@ -843,14 +843,10 @@ func (s *Scope) LastValue(varname string) string {
 
 func (s *Scope) LastValueFound(varname string) (value string, found bool) {
 	value, found = s.value[varname]
-	if found {
-		return
+	if !found {
+		value, found = s.fallback[varname]
 	}
-
-	if fallback, ok := s.fallback[varname]; ok {
-		return fallback, true
-	}
-	return "", false
+	return
 }
 
 func (s *Scope) DefineAll(other Scope) {
