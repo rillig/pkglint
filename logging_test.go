@@ -590,6 +590,58 @@ func (s *Suite) Test_Logger_writeSource__separator_autofix(c *check.C) {
 		"+\tThe bronze medal line")
 }
 
+func (s *Suite) Test_Logger_writeSource__first_warn_then_autofix(c *check.C) {
+	t := s.Init(c)
+
+	test := func(diagnostics ...string) {
+		lines := t.SetUpFileLines("DESCR",
+			"The first line",
+			"The second line")
+		line := lines.Lines[0]
+
+		line.Warnf("Warning.")
+		fix := line.Autofix()
+		fix.Warnf("Autofix.")
+		fix.Replace("first", "upper")
+		fix.Apply()
+
+		fix = lines.Lines[1].Autofix()
+		fix.Warnf("Autofix.")
+		fix.Replace("second", "last")
+		fix.Apply()
+
+		t.CheckOutput(diagnostics)
+	}
+
+	t.SetUpCommandLine("--source")
+
+	// The warning reports the unmodified source text of the affected line.
+	// Later, the autofix modifies that same line, but the modification is
+	// not reported.
+	// Luckily, this behavior is consistent with the one in line 2, which
+	// also only reports the original source text.
+	test(
+		">\tThe first line",
+		"WARN: ~/DESCR:1: Warning.",
+		"WARN: ~/DESCR:1: Autofix.",
+		"",
+		">\tThe second line",
+		"WARN: ~/DESCR:2: Autofix.")
+
+	t.SetUpCommandLine("--source", "--show-autofix")
+
+	test(
+		"WARN: ~/DESCR:1: Autofix.",
+		"AUTOFIX: ~/DESCR:1: Replacing \"first\" with \"upper\".",
+		"-\tThe first line",
+		"+\tThe upper line",
+		"",
+		"WARN: ~/DESCR:2: Autofix.",
+		"AUTOFIX: ~/DESCR:2: Replacing \"second\" with \"last\".",
+		"-\tThe second line",
+		"+\tThe last line")
+}
+
 // Calling Logf without further preparation just logs the message.
 // Suppressing duplicate messages or filtering messages happens
 // in other methods of the Logger, namely Relevant, FirstTime, Diag.
