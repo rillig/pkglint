@@ -584,7 +584,7 @@ func (t *Tester) CreateFileBuildlink3(filename RelPath, customLines ...string) {
 	// Buildlink3.mk files only make sense in category/package directories.
 	assert(G.Pkgsrc.Rel(t.File(filename)).Count() == 3)
 
-	dir := filename.DirClean()
+	dir := filename.Dir().Clean()
 	lower := dir.Base()
 	// see pkgtools/createbuildlink/files/createbuildlink, "package specific variables"
 	upper := strings.Replace(strings.ToUpper(lower), "-", "_", -1)
@@ -642,7 +642,7 @@ func (t *Tester) Copy(source, target RelPath) {
 
 	data, err := absSource.ReadString()
 	assertNil(err, "Copy.Read")
-	err = os.MkdirAll(absTarget.DirClean().String(), 0777)
+	err = os.MkdirAll(absTarget.Dir().Clean().String(), 0777)
 	assertNil(err, "Copy.MkdirAll")
 	err = absTarget.WriteString(data)
 	assertNil(err, "Copy.Write")
@@ -724,7 +724,7 @@ func (t *Tester) SetUpHierarchy() (
 	//
 	// This is the same mechanism that is used in Pkgsrc.Relpath.
 	includePath := func(including, included RelPath) RelPath {
-		fromDir := including.DirClean()
+		fromDir := including.Dir().Clean()
 		to := basedir.Rel(included.AsPath())
 		if fromDir == to.Dir() {
 			return NewRelPathString(to.Base())

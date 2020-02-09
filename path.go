@@ -25,8 +25,6 @@ func (p Path) GoString() string { return sprintf("%q", string(p)) }
 // which is usually a sign of an uninitialized variable.
 func (p Path) IsEmpty() bool { return p == "" }
 
-func (p Path) DirClean() Path { return Path(path.Dir(string(p))) }
-
 // Returns the directory of the path, with only minimal cleaning.
 // Only redundant dots and slashes are removed, and only at the end.
 func (p Path) Dir() Path {
@@ -232,10 +230,6 @@ func (p CurrPath) AsPath() Path { return Path(p) }
 
 func (p CurrPath) IsEmpty() bool { return p.AsPath().IsEmpty() }
 
-func (p CurrPath) DirClean() CurrPath {
-	return CurrPath(p.AsPath().DirClean())
-}
-
 func (p CurrPath) Dir() CurrPath {
 	return CurrPath(p.AsPath().Dir())
 }
@@ -378,10 +372,6 @@ func (p PkgsrcPath) AsPath() Path { return NewPath(string(p)) }
 
 func (p PkgsrcPath) AsRelPath() RelPath { return RelPath(p) }
 
-func (p PkgsrcPath) DirClean() PkgsrcPath {
-	return NewPkgsrcPath(p.AsPath().DirClean())
-}
-
 func (p PkgsrcPath) Dir() PkgsrcPath {
 	return NewPkgsrcPath(p.AsPath().Dir())
 }
@@ -466,8 +456,6 @@ func (p RelPath) Split() (RelPath, string) {
 	dir, base := p.AsPath().Split()
 	return NewRelPath(dir), base
 }
-
-func (p RelPath) DirClean() RelPath { return RelPath(p.AsPath().DirClean()) }
 
 func (p RelPath) Dir() RelPath {
 	return RelPath(p.AsPath().Dir())

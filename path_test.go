@@ -57,23 +57,6 @@ func (s *Suite) Test_Path_IsEmpty(c *check.C) {
 	test("/", false)
 }
 
-func (s *Suite) Test_Path_DirClean(c *check.C) {
-	t := s.Init(c)
-
-	test := func(p, dir Path) {
-		t.CheckEquals(p.DirClean(), dir)
-	}
-
-	test("", ".")
-	test("././././", ".")
-	test("/root", "/")
-	test("filename", ".")
-	test("dir/filename", "dir")
-	test("dir/filename\\with\\backslash", "dir")
-
-	test("././././dir/filename", "dir")
-}
-
 func (s *Suite) Test_Path_Dir(c *check.C) {
 	t := s.Init(c)
 
@@ -617,16 +600,6 @@ func (s *Suite) Test_CurrPath_IsEmpty(c *check.C) {
 	test("/", false)
 }
 
-func (s *Suite) Test_CurrPath_DirClean(c *check.C) {
-	t := s.Init(c)
-
-	test := func(curr, dir CurrPath) {
-		t.CheckEquals(curr.DirClean(), dir)
-	}
-
-	test("./dir/../dir///./file", "dir")
-}
-
 func (s *Suite) Test_CurrPath_Dir(c *check.C) {
 	t := s.Init(c)
 
@@ -1116,16 +1089,6 @@ func (s *Suite) Test_PkgsrcPath_AsRelPath(c *check.C) {
 	t.CheckEquals(rel.String(), "./category/package/Makefile")
 }
 
-func (s *Suite) Test_PkgsrcPath_DirClean(c *check.C) {
-	t := s.Init(c)
-
-	test := func(pp, cleaned PkgsrcPath) {
-		t.CheckEquals(pp.DirClean(), cleaned)
-	}
-
-	test("./dir/../dir/base///.", "dir/base")
-}
-
 func (s *Suite) Test_PkgsrcPath_Dir(c *check.C) {
 	t := s.Init(c)
 
@@ -1367,16 +1330,6 @@ func (s *Suite) Test_RelPath_Split(c *check.C) {
 	t.ExpectAssert(
 		func() { test("/", "/", "") })
 
-}
-
-func (s *Suite) Test_RelPath_DirClean(c *check.C) {
-	t := s.Init(c)
-
-	test := func(rel RelPath, dir RelPath) {
-		t.CheckEquals(rel.DirClean(), dir)
-	}
-
-	test("./dir/../dir///./file", "dir")
 }
 
 func (s *Suite) Test_RelPath_Dir(c *check.C) {
