@@ -209,7 +209,7 @@ func (l *Logger) writeSource(line *Line) {
 	if !l.IsAutofix() {
 		l.out.Separate()
 	}
-	if l.IsAutofix() && line.autofix != nil {
+	if l.IsAutofix() {
 		for _, above := range line.autofix.above {
 			l.writeLine("+\t", above)
 		}
@@ -228,7 +228,6 @@ func (l *Logger) writeSource(line *Line) {
 func (l *Logger) writeDiff(line *Line) {
 	showAsChanged := func(rawIndex int, rawLine *RawLine) bool {
 		return l.IsAutofix() &&
-			line.autofix != nil &&
 			line.autofix.texts[rawIndex] != rawLine.orignl
 	}
 
