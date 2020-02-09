@@ -456,7 +456,7 @@ func (t *Tester) SetUpPackage(pkgpath RelPath, makefileLines ...string) CurrPath
 		"pkgpath %q must have the form \"category/package\"", pkgpath)
 
 	distname := pkgpath.Base()
-	category := pkgpath.DirNoClean()
+	category := pkgpath.Dir()
 	if category == "wip" {
 		// To avoid boilerplate CATEGORIES definitions for wip packages.
 		category = "local"
@@ -551,7 +551,7 @@ func (t *Tester) CreateFileLines(filename RelPath, lines ...string) CurrPath {
 	}
 
 	abs := t.File(filename)
-	err := os.MkdirAll(abs.DirNoClean().String(), 0777)
+	err := os.MkdirAll(abs.Dir().String(), 0777)
 	t.c.Assert(err, check.IsNil)
 
 	err = abs.WriteString(content.String())
@@ -726,7 +726,7 @@ func (t *Tester) SetUpHierarchy() (
 	includePath := func(including, included RelPath) RelPath {
 		fromDir := including.DirClean()
 		to := basedir.Rel(included.AsPath())
-		if fromDir == to.DirNoClean() {
+		if fromDir == to.Dir() {
 			return NewRelPathString(to.Base())
 		} else {
 			return fromDir.Rel(basedir).JoinNoClean(to).CleanDot()

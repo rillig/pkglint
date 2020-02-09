@@ -143,7 +143,7 @@ func (pkg *Package) load() ([]CurrPath, *MkLines, *MkLines) {
 		if !hasPrefix(basename, "Makefile.") && !filename.HasSuffixText(".mk") {
 			return false
 		}
-		if filename.DirNoClean().Base() == "patches" {
+		if filename.Dir().Base() == "patches" {
 			return false
 		}
 		if pkg.Pkgdir == "." {
@@ -260,7 +260,7 @@ func (pkg *Package) parse(mklines *MkLines, allLines *MkLines, includingFileForU
 	// automatically since the pkgsrc infrastructure does the same.
 	filename := mklines.lines.Filename
 	if filename.Base() == "buildlink3.mk" {
-		builtin := filename.DirNoClean().JoinNoClean("builtin.mk").CleanPath()
+		builtin := filename.Dir().JoinNoClean("builtin.mk").CleanPath()
 		builtinRel := G.Pkgsrc.Relpath(pkg.dir, builtin)
 		if pkg.included.FirstTime(builtinRel.String()) && builtin.IsFile() {
 			builtinMkLines := LoadMk(builtin, pkg, MustSucceed|LogErrors)
@@ -1285,7 +1285,7 @@ func (pkg *Package) checkDirent(dirent CurrPath, mode os.FileMode) {
 		switch {
 		case basename == "files",
 			basename == "patches",
-			dirent.DirNoClean().Base() == "files",
+			dirent.Dir().Base() == "files",
 			isEmptyDir(dirent):
 			break
 

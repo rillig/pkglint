@@ -286,7 +286,7 @@ func (ck MkLineChecker) checkIncludeBuiltin() {
 		return
 	}
 
-	includeInstead := includedFile.DirNoClean().JoinNoClean("buildlink3.mk")
+	includeInstead := includedFile.Dir().JoinNoClean("buildlink3.mk")
 
 	fix := mkline.Autofix()
 	fix.Errorf("%q must not be included directly. Include %q instead.",
@@ -327,7 +327,7 @@ func (ck MkLineChecker) CheckRelativePath(pp PackagePath, rel RelPath, mustExist
 	}
 
 	resolvedRel := resolvedPath.AsRelPath()
-	abs := mkline.Filename().DirNoClean().JoinNoClean(resolvedRel)
+	abs := mkline.Filename().Dir().JoinNoClean(resolvedRel)
 	if !abs.Exists() {
 		pkgsrcPath := G.Pkgsrc.Rel(ck.MkLine.File(resolvedRel))
 		if mustExist && !ck.MkLines.indentation.HasExists(pkgsrcPath) {

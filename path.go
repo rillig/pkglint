@@ -29,7 +29,7 @@ func (p Path) DirClean() Path { return Path(path.Dir(string(p))) }
 
 // Returns the directory of the path, with only minimal cleaning.
 // Only redundant dots and slashes are removed, and only at the end.
-func (p Path) DirNoClean() Path {
+func (p Path) Dir() Path {
 	s := p.String()
 	end := len(s)
 	for end > 0 && s[end-1] != '/' {
@@ -236,8 +236,8 @@ func (p CurrPath) DirClean() CurrPath {
 	return CurrPath(p.AsPath().DirClean())
 }
 
-func (p CurrPath) DirNoClean() CurrPath {
-	return CurrPath(p.AsPath().DirNoClean())
+func (p CurrPath) Dir() CurrPath {
+	return CurrPath(p.AsPath().Dir())
 }
 
 func (p CurrPath) Base() string { return p.AsPath().Base() }
@@ -382,8 +382,8 @@ func (p PkgsrcPath) DirClean() PkgsrcPath {
 	return NewPkgsrcPath(p.AsPath().DirClean())
 }
 
-func (p PkgsrcPath) DirNoClean() PkgsrcPath {
-	return NewPkgsrcPath(p.AsPath().DirNoClean())
+func (p PkgsrcPath) Dir() PkgsrcPath {
+	return NewPkgsrcPath(p.AsPath().Dir())
 }
 
 func (p PkgsrcPath) Base() string { return p.AsPath().Base() }
@@ -469,8 +469,8 @@ func (p RelPath) Split() (RelPath, string) {
 
 func (p RelPath) DirClean() RelPath { return RelPath(p.AsPath().DirClean()) }
 
-func (p RelPath) DirNoClean() RelPath {
-	return RelPath(p.AsPath().DirNoClean())
+func (p RelPath) Dir() RelPath {
+	return RelPath(p.AsPath().Dir())
 }
 
 func (p RelPath) Base() string { return p.AsPath().Base() }

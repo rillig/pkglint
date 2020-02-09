@@ -126,7 +126,7 @@ func (ck *PlistChecker) collectPath(rel RelPath, pline *PlistLine) {
 	if prev := ck.allFiles[rel]; prev == nil || stringSliceLess(pline.conditions, prev.conditions) {
 		ck.allFiles[rel] = pline
 	}
-	for dir := rel.DirNoClean(); dir != "."; dir = dir.DirNoClean() {
+	for dir := rel.Dir(); dir != "."; dir = dir.Dir() {
 		ck.allDirs[dir] = pline
 	}
 }
@@ -136,7 +136,7 @@ func (ck *PlistChecker) collectDirective(pline *PlistLine) {
 	if !m || NewPath(dirname).IsAbs() {
 		return
 	}
-	for dir := NewRelPathString(dirname); dir != "."; dir = dir.DirNoClean() {
+	for dir := NewRelPathString(dirname); dir != "."; dir = dir.Dir() {
 		ck.allDirs[dir] = pline
 	}
 }

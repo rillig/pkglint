@@ -46,7 +46,7 @@ func (loc *Location) Lineno(rawIndex int) int {
 }
 
 func (loc *Location) File(rel RelPath) CurrPath {
-	return loc.Filename.DirNoClean().JoinNoClean(rel)
+	return loc.Filename.Dir().JoinNoClean(rel)
 }
 
 // Line represents a line of text from a file.
@@ -133,7 +133,7 @@ func (line *Line) RelLocation(other Location) string {
 // This is typically used for arguments in diagnostics, which should always be
 // relative to the line with which the diagnostic is associated.
 func (line *Line) Rel(other CurrPath) RelPath {
-	return G.Pkgsrc.Relpath(line.Filename().DirNoClean(), other)
+	return G.Pkgsrc.Relpath(line.Filename().Dir(), other)
 }
 
 func (line *Line) IsMultiline() bool { return len(line.raw) > 1 }
