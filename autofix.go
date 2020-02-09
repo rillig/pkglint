@@ -210,7 +210,7 @@ func (fix *Autofix) Delete() {
 // The fixer function must check whether it can actually fix something,
 // and if so, call Describef to describe the actual fix.
 //
-// If autofix is false, the the fix should be applied, as far as only
+// If autofix is false, the fix should be applied, as far as only
 // in-memory data structures are effected, and these are not written
 // back to disk. No externally observable modification must be done.
 // For example, changing the text of Line.raw is appropriate,
