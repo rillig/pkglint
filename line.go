@@ -61,9 +61,9 @@ type Line struct {
 	// joined by single spaces
 	Text string
 
-	raw     []*RawLine // contains the original text including trailing newline
-	autofix *Autofix   // any changes that pkglint would like to apply to the line
-	once    Once
+	raw  []*RawLine // contains the original text including trailing newline
+	fix  *Autofix   // any changes that pkglint would like to apply to the line
+	once Once
 
 	// XXX: Filename and Basename could be replaced with a pointer to a Lines object.
 }
@@ -142,8 +142,8 @@ func (line *Line) IsMultiline() bool { return len(line.raw) > 1 }
 // excluding \n, including any previous autofixes.
 func (line *Line) RawText(rawIndex int) string {
 	var textnl string
-	if line.autofix != nil {
-		textnl = line.autofix.texts[rawIndex]
+	if line.fix != nil {
+		textnl = line.fix.texts[rawIndex]
 	} else {
 		textnl = line.raw[rawIndex].orignl
 	}
@@ -196,12 +196,12 @@ func (line *Line) String() string {
 //
 //  fix.Apply()
 func (line *Line) Autofix() *Autofix {
-	if line.autofix == nil {
-		line.autofix = NewAutofix(line)
+	if line.fix == nil {
+		line.fix = NewAutofix(line)
 	} else {
 		// This assertion fails if an Autofix is reused before
 		// its Apply method is called.
-		assert(line.autofix.autofixShortTerm.diagFormat == "")
+		assert(line.fix.autofixShortTerm.diagFormat == "")
 	}
-	return line.autofix
+	return line.fix
 }

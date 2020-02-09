@@ -83,7 +83,7 @@ func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
 
 	line := t.NewLine("filename", 1, "original")
 
-	c.Check(line.autofix, check.IsNil)
+	c.Check(line.fix, check.IsNil)
 	t.CheckDeepEquals(line.raw, newRawLines("original\n"))
 
 	{
@@ -93,9 +93,9 @@ func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
 		fix.Apply()
 	}
 
-	c.Check(line.autofix, check.NotNil)
+	c.Check(line.fix, check.NotNil)
 	t.CheckDeepEquals(line.raw, newRawLines("original\n"))
-	t.CheckDeepEquals(line.autofix.texts, []string{"lriginao\n"})
+	t.CheckDeepEquals(line.fix.texts, []string{"lriginao\n"})
 	t.CheckOutputLines(
 		"AUTOFIX: filename:1: Replacing \"original\" with \"lriginao\".")
 
@@ -106,9 +106,9 @@ func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
 		fix.Apply()
 	}
 
-	c.Check(line.autofix, check.NotNil)
+	c.Check(line.fix, check.NotNil)
 	t.CheckDeepEquals(line.raw, newRawLines("original\n"))
-	t.CheckDeepEquals(line.autofix.texts, []string{"lruginao\n"})
+	t.CheckDeepEquals(line.fix.texts, []string{"lruginao\n"})
 	t.CheckEquals(line.RawText(0), "lruginao")
 	t.CheckOutputLines(
 		"AUTOFIX: filename:1: Replacing \"ig\" with \"ug\".")
@@ -120,13 +120,13 @@ func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
 		fix.Apply()
 	}
 
-	c.Check(line.autofix, check.NotNil)
+	c.Check(line.fix, check.NotNil)
 	t.CheckDeepEquals(line.raw, newRawLines("original\n"))
-	t.CheckDeepEquals(line.autofix.texts, []string{"middle\n"})
+	t.CheckDeepEquals(line.fix.texts, []string{"middle\n"})
 	t.CheckOutputLines(
 		"AUTOFIX: filename:1: Replacing \"lruginao\" with \"middle\".")
 
-	t.CheckDeepEquals(line.autofix.texts, []string{"middle\n"})
+	t.CheckDeepEquals(line.fix.texts, []string{"middle\n"})
 	t.CheckOutputEmpty()
 
 	{
@@ -1205,7 +1205,7 @@ func (s *Suite) Test_Autofix_Apply__text_after_replacing(c *check.C) {
 	t.CheckOutputLines(
 		"AUTOFIX: filename.mk:123: Replacing \"value\" with \"new value\".")
 
-	t.CheckEquals(mkline.autofix.texts[0], "VAR=\tnew value\n")
+	t.CheckEquals(mkline.fix.texts[0], "VAR=\tnew value\n")
 	t.CheckEquals(mkline.raw[0].orignl, "VAR=\tvalue\n")
 	t.CheckEquals(mkline.Text, "VAR=\tnew value")
 	// TODO: should be updated as well.

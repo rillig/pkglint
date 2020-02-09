@@ -399,7 +399,7 @@ func SaveAutofixChanges(lines *Lines) (autofixed bool) {
 	// Fast lane for the case that nothing is written back to disk.
 	if !G.Logger.Opts.Autofix {
 		for _, line := range lines.Lines {
-			if line.autofix != nil && line.autofix.modified {
+			if line.fix != nil && line.fix.modified {
 				G.Logger.autofixAvailable = true
 				if G.Logger.Opts.ShowAutofix {
 					// Only in this case can the loaded lines be modified.
@@ -429,7 +429,7 @@ func SaveAutofixChanges(lines *Lines) (autofixed bool) {
 	for _, line := range lines.Lines {
 		filename := line.Filename()
 		chlines := changes[filename]
-		if fix := line.autofix; fix != nil {
+		if fix := line.fix; fix != nil {
 			if fix.modified {
 				changed[filename] = true
 			}

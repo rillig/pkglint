@@ -210,11 +210,11 @@ func (l *Logger) writeSource(line *Line) {
 		l.out.Separate()
 	}
 	if l.IsAutofix() {
-		for _, above := range line.autofix.above {
+		for _, above := range line.fix.above {
 			l.writeLine("+\t", above)
 		}
 		l.writeDiff(line)
-		for _, below := range line.autofix.below {
+		for _, below := range line.fix.below {
 			l.writeLine("+\t", below)
 		}
 	} else {
@@ -228,7 +228,7 @@ func (l *Logger) writeSource(line *Line) {
 func (l *Logger) writeDiff(line *Line) {
 	showAsChanged := func(rawIndex int, rawLine *RawLine) bool {
 		return l.IsAutofix() &&
-			line.autofix.texts[rawIndex] != rawLine.orignl
+			line.fix.texts[rawIndex] != rawLine.orignl
 	}
 
 	rawLines := line.raw
@@ -243,8 +243,8 @@ func (l *Logger) writeDiff(line *Line) {
 	for rawIndex, rawLine := range rawLines {
 		if showAsChanged(rawIndex, rawLine) {
 			l.writeLine("-\t", rawLine.orignl)
-			if line.autofix.texts[rawIndex] != "" {
-				l.writeLine("+\t", line.autofix.texts[rawIndex])
+			if line.fix.texts[rawIndex] != "" {
+				l.writeLine("+\t", line.fix.texts[rawIndex])
 			}
 		} else {
 			l.writeLine(prefix, rawLine.orignl)
