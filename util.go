@@ -325,7 +325,7 @@ func isEmptyDir(filename CurrPath) bool {
 func getSubdirs(filename CurrPath) []RelPath {
 	dirents, err := filename.ReadDir()
 	if err != nil {
-		NewLineWhole(filename).Fatalf("Cannot be read: %s", err)
+		G.Logger.TechFatalf(filename, "Cannot be read: %s", err)
 	}
 
 	var subdirs []RelPath

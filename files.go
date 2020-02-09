@@ -31,7 +31,7 @@ func Load(filename CurrPath, options LoadOptions) *Lines {
 	if err != nil {
 		switch {
 		case options&MustSucceed != 0:
-			NewLineWhole(filename).Fatalf("Cannot be read.")
+			G.Logger.TechFatalf(filename, "Cannot be read.")
 		case options&LogErrors != 0:
 			NewLineWhole(filename).Errorf("Cannot be read.")
 		}
@@ -41,7 +41,7 @@ func Load(filename CurrPath, options LoadOptions) *Lines {
 	if rawText == "" && options&NotEmpty != 0 {
 		switch {
 		case options&MustSucceed != 0:
-			NewLineWhole(filename).Fatalf("Must not be empty.")
+			G.Logger.TechFatalf(filename, "Must not be empty.")
 		case options&LogErrors != 0:
 			NewLineWhole(filename).Errorf("Must not be empty.")
 		}

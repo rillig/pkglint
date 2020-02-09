@@ -538,25 +538,17 @@ func (s *Suite) Test_Logger_writeSource__separator_show_autofix_with_explanation
 		"")
 }
 
+// Fatal errors are not specific to a single line, therefore they only
+// take a filename as argument.
+// The --show-autofix and --source options have no effect on fatal errors.
 func (s *Suite) Test_Logger_writeSource__fatal_with_show_autofix(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("--source", "--show-autofix")
-	lines := t.SetUpFileLines("DESCR",
-		"The first line")
 
-	// In the unusual constellation where a fatal error occurs with both
-	// --source and --show-autofix, and the line has not had any autofix,
-	// the cited source code is shown above the diagnostic. This is
-	// different from the usual order in --show-autofix mode, which is to
-	// show the diagnostic first and then its effects.
-	//
-	// This inconsistency does not matter though since it is extremely
-	// rare.
 	t.ExpectFatal(
-		func() { lines.Lines[0].Fatalf("Fatal.") },
-		">\tThe first line",
-		"FATAL: ~/DESCR:1: Fatal.")
+		func() { G.Logger.TechFatalf("DESCR", "Fatal.") },
+		"FATAL: DESCR: Fatal.")
 }
 
 // See Test__show_source_separator_show_autofix for the ordering of the
@@ -857,6 +849,34 @@ func (s *Suite) Test_Logger_Logf__wording(c *check.C) {
 
 	t.CheckOutputLines(
 		"NOTE: filename:13: This should.")
+}
+
+// In case of a fatal error, pkglint quits in a controlled manner,
+// and the trace log shows where the fatal error happened.
+func (s *Suite) Test_Logger_TechFatalf__trace(c *check.C) {
+	t := s.Init(c)
+
+	t.EnableTracingToLog()
+
+	inner := func() {
+		defer trace.Call0()()
+		G.Logger.TechFatalf(
+			"filename",
+			"Cannot continue because of %q and %q.", "reason 1", "reason 2")
+	}
+	outer := func() {
+		defer trace.Call0()()
+		inner()
+	}
+
+	t.ExpectFatal(
+		outer,
+		"TRACE: + (*Suite).Test_Logger_TechFatalf__trace.func2()",
+		"TRACE: 1 + (*Suite).Test_Logger_TechFatalf__trace.func1()",
+		"TRACE: 1 2   TechFatalf: \"Cannot continue because of %q and %q.\", [reason 1 reason 2]",
+		"TRACE: 1 - (*Suite).Test_Logger_TechFatalf__trace.func1()",
+		"TRACE: - (*Suite).Test_Logger_TechFatalf__trace.func2()",
+		"FATAL: filename: Cannot continue because of \"reason 1\" and \"reason 2\".")
 }
 
 func (s *Suite) Test_Logger_TechErrorf__gcc_format(c *check.C) {

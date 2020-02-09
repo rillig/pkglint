@@ -200,7 +200,7 @@ func (p *Pkglint) prepareMainLoop() {
 		// pkglint doesn't know where to load the infrastructure files from,
 		// Since virtually every single check needs these files,
 		// the only sensible thing to do is to quit immediately.
-		NewLineWhole(firstDir).Fatalf("Must be inside a pkgsrc tree.")
+		G.Logger.TechFatalf(firstDir, "Must be inside a pkgsrc tree.")
 	}
 
 	p.Pkgsrc = NewPkgsrc(firstDir.JoinNoClean(relTopdir))

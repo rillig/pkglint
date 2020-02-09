@@ -151,7 +151,7 @@ func (src *Pkgsrc) loadDocChanges() {
 	docDir := src.File("doc")
 	files := src.ReadDir("doc")
 	if len(files) == 0 {
-		NewLineWhole(docDir).Fatalf("Cannot be read for loading the package changes.")
+		G.Logger.TechFatalf(docDir, "Cannot be read for loading the package changes.")
 	}
 
 	var filenames []RelPath
@@ -425,7 +425,7 @@ func (src *Pkgsrc) loadTools() {
 			}
 		}
 		if len(toolFiles) <= 1 {
-			NewLineWhole(toc).Fatalf("Too few tool files.")
+			G.Logger.TechFatalf(toc, "Too few tool files.")
 		}
 	}
 

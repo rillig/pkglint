@@ -330,6 +330,31 @@ func (l *Logger) Logf(level *LogLevel, filename CurrPath, lineno, format, msg st
 	}
 }
 
+// TechFatalf logs a technical error on the error output and quits pkglint.
+//
+// For diagnostics, use Logf instead.
+func (l *Logger) TechFatalf(location CurrPath, format string, args ...interface{}) {
+	msg := sprintf(format, args...)
+
+	locationStr := ""
+	if !location.IsEmpty() {
+		locationStr = location.String() + ": "
+	}
+
+	var diag string
+	if l.Opts.GccOutput {
+		diag = sprintf("%s%s: %s\n", locationStr, Fatal.GccName, msg)
+	} else {
+		diag = sprintf("%s: %s%s\n", Fatal.TraditionalName, locationStr, msg)
+	}
+	l.err.Write(escapePrintable(diag))
+
+	if trace.Tracing {
+		trace.Stepf("TechFatalf: %q, %v", format, args)
+	}
+	panic(pkglintFatal{})
+}
+
 // TechErrorf logs a technical error on the error output.
 //
 // For diagnostics, use Logf instead.
