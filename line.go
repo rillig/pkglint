@@ -147,6 +147,12 @@ func (line *Line) Rel(other CurrPath) RelPath {
 
 func (line *Line) IsMultiline() bool { return len(line.raw) > 1 }
 
+// RawText returns the raw text from the given physical line,
+// excluding \n, including any previous autofixes.
+func (line *Line) RawText(rawIndex int) string {
+	return line.raw[rawIndex].Text()
+}
+
 func (line *Line) IsCvsID(prefixRe regex.Pattern) (found bool, expanded bool) {
 	m, exp := match1(line.Text, `^`+prefixRe+`\$`+`NetBSD(:[^\$]+)?\$$`)
 	return m, exp != ""

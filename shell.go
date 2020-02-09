@@ -1023,7 +1023,7 @@ func (ck *ShellLineChecker) checkMultiLineComment() {
 	}
 
 	for rawIndex, rawLine := range mkline.raw[:len(mkline.raw)-1] {
-		text := strings.TrimSuffix(rawLine.Text(), "\\")
+		text := strings.TrimSuffix(mkline.RawText(rawIndex), "\\")
 		tokens, rest := splitIntoShellTokens(nil, text)
 		if rest != "" {
 			return
@@ -1039,10 +1039,15 @@ func (ck *ShellLineChecker) checkMultiLineComment() {
 }
 
 func (ck *ShellLineChecker) warnMultiLineComment(rawIndex int, raw *RawLine) {
-	line := NewLine(ck.mkline.Filename(), ck.mkline.Location.Lineno(rawIndex), raw.Text(), raw)
+	line := ck.mkline.Line
+	singleLine := NewLine(
+		line.Filename(),
+		line.Location.Lineno(rawIndex),
+		line.RawText(rawIndex),
+		raw)
 
-	line.Warnf("The shell comment does not stop at the end of this line.")
-	line.Explain(
+	singleLine.Warnf("The shell comment does not stop at the end of this line.")
+	singleLine.Explain(
 		"When a shell command is spread out on multiple lines that are",
 		"continued with a backslash, they will nevertheless be converted to",
 		"a single line before the shell sees them.",

@@ -184,9 +184,9 @@ func (va *VaralignBlock) processVarassign(mkline *MkLine) {
 	}
 
 	var infos []*varalignLine
-	for i, raw := range mkline.raw {
-		parts := NewVaralignSplitter().split(raw.Text(), i == 0)
-		info := varalignLine{mkline, i, false, parts}
+	for rawIndex := range mkline.raw {
+		parts := NewVaralignSplitter().split(mkline.RawText(rawIndex), rawIndex == 0)
+		info := varalignLine{mkline, rawIndex, false, parts}
 		infos = append(infos, &info)
 	}
 	va.mkinfos = append(va.mkinfos, &varalignMkLine{infos})

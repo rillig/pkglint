@@ -191,7 +191,7 @@ func (ck MkLineChecker) checkShellCommand() {
 
 	shellCommand := mkline.ShellCommand()
 	if hasPrefix(mkline.Text, "\t\t") {
-		lexer := textproc.NewLexer(mkline.raw[0].Text())
+		lexer := textproc.NewLexer(mkline.RawText(0))
 		tabs := lexer.NextBytesFunc(func(b byte) bool { return b == '\t' })
 
 		fix := mkline.Autofix()
@@ -202,8 +202,8 @@ func (ck MkLineChecker) checkShellCommand() {
 			"there is no need to indent some of the commands,",
 			"or to use more horizontal space than necessary.")
 
-		for i, raw := range mkline.Line.raw {
-			if hasPrefix(raw.Text(), tabs) {
+		for i := range mkline.raw {
+			if hasPrefix(mkline.RawText(i), tabs) {
 				fix.ReplaceAt(i, 0, tabs, "\t")
 			}
 		}
@@ -299,9 +299,9 @@ func (ck MkLineChecker) checkDirectiveIndentation(expectedDepth int) {
 	mkline := ck.MkLine
 	indent := mkline.Indent()
 	if expected := strings.Repeat(" ", expectedDepth); indent != expected {
-		fix := mkline.Line.Autofix()
+		fix := mkline.Autofix()
 		fix.Notef("This directive should be indented by %d spaces.", expectedDepth)
-		if hasPrefix(mkline.Line.raw[0].Text(), "."+indent) {
+		if hasPrefix(mkline.RawText(0), "."+indent) {
 			fix.ReplaceAt(0, 0, "."+indent, "."+expected)
 		}
 		fix.Apply()

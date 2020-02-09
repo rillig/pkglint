@@ -3566,7 +3566,7 @@ func (s *Suite) Test_varalignLine_alignValueSingle(c *check.C) {
 			info.alignValueSingle(column)
 
 			t.CheckEqualsf(
-				mkline.raw[0].Text(), after,
+				mkline.RawText(0), after,
 				"Line.raw.text, autofix=%v", autofix)
 
 			// As of 2019-12-11, the info fields are not updated
@@ -3724,14 +3724,14 @@ func (s *Suite) Test_varalignLine_alignValueInitial(c *check.C) {
 			assert(len(mklines.mklines) == 1)
 			mkline := mklines.mklines[0]
 
-			text := mkline.raw[0].Text()
+			text := mkline.RawText(0)
 			parts := NewVaralignSplitter().split(text, true)
 			info := &varalignLine{mkline, 0, false, parts}
 
 			info.alignValueInitial(column)
 
 			t.CheckEqualsf(
-				mkline.raw[0].Text(), after,
+				mkline.RawText(0), after,
 				"Line.raw.text, autofix=%v", autofix)
 
 			t.CheckEqualsf(info.String(), after,
@@ -4110,14 +4110,14 @@ func (s *Suite) Test_varalignLine_alignValue(c *check.C) {
 			assert(len(mklines.mklines) == 1)
 			mkline := mklines.mklines[0]
 
-			text := mkline.raw[0].Text()
+			text := mkline.RawText(0)
 			parts := NewVaralignSplitter().split(text, true)
 			info := &varalignLine{mkline, 0, false, parts}
 
 			info.alignValue(column)
 
 			t.CheckEqualsf(
-				mkline.raw[0].Text(), after,
+				mkline.RawText(0), after,
 				"Line.raw.text, autofix=%v", autofix)
 
 			t.CheckEqualsf(info.String(), after,
@@ -4137,7 +4137,7 @@ func (s *Suite) Test_varalignLine_alignValue(c *check.C) {
 			assert(len(mklines.mklines) == 1)
 			mkline := mklines.mklines[0]
 
-			text := mkline.raw[0].Text()
+			text := mkline.RawText(0)
 			parts := NewVaralignSplitter().split(text, true)
 			info := &varalignLine{mkline, 0, false, parts}
 
@@ -4145,7 +4145,7 @@ func (s *Suite) Test_varalignLine_alignValue(c *check.C) {
 				func() { info.alignValue(column) })
 
 			t.CheckEqualsf(
-				mkline.raw[0].Text(), before,
+				mkline.RawText(0), before,
 				"Line.raw.text, autofix=%v", autofix)
 
 			t.CheckEqualsf(info.String(), before,
@@ -4224,14 +4224,14 @@ func (s *Suite) Test_varalignLine_alignContinuation(c *check.C) {
 			assert(len(mklines.mklines) == 1)
 			mkline := mklines.mklines[0]
 
-			text := mkline.raw[rawIndex].Text()
+			text := mkline.RawText(rawIndex)
 			parts := NewVaralignSplitter().split(text, rawIndex == 0)
 			info := &varalignLine{mkline, rawIndex, false, parts}
 
 			info.alignContinuation(valueColumn, rightMarginColumn)
 
 			t.CheckEqualsf(
-				mkline.raw[rawIndex].Text(), after,
+				mkline.RawText(rawIndex), after,
 				"Line.raw.text, autofix=%v", autofix)
 
 			t.CheckEqualsf(info.String(), after,
