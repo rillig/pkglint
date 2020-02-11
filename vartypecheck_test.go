@@ -1354,10 +1354,15 @@ func (s *Suite) Test_VartypeCheck_PathnameSpace(c *check.C) {
 	vt.Op(opUseMatch)
 	vt.Values(
 		"anything",
-		"/path with *spaces:")
+		"/path with *spaces&",
+		"/path with spaces and ;several, other &characters.",
+	)
 	vt.Output(
-		"WARN: filename.mk:12: The pathname pattern \"/path with *spaces:\" " +
-			"contains the invalid character \":\".")
+		"WARN: filename.mk:12: The pathname pattern \"/path with *spaces&\" "+
+			"contains the invalid character \"&\".",
+		"WARN: filename.mk:13: The pathname pattern "+
+			"\"/path with spaces and ;several, other &characters.\" "+
+			"contains the invalid characters \";&\".")
 }
 
 func (s *Suite) Test_VartypeCheck_Perl5Packlist(c *check.C) {
