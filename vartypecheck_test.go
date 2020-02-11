@@ -1316,28 +1316,6 @@ func (s *Suite) Test_VartypeCheck_Pathname(c *check.C) {
 		"${PREFIX}/*",
 		"${PREFIX}/share/locale",
 		"share/locale",
-		"/bin")
-	vt.Output(
-		"WARN: filename.mk:1: The pathname \"${PREFIX}/*\" " +
-			"contains the invalid character \"*\".")
-
-	vt.Op(opUseMatch)
-	vt.Values(
-		"anything",
-		"/path with *spaces")
-	vt.Output(
-		"WARN: filename.mk:12: The pathname pattern \"/path with *spaces\" " +
-			"contains the invalid characters \"  \".")
-}
-
-func (s *Suite) Test_VartypeCheck_PathnameSpace(c *check.C) {
-	vt := NewVartypeCheckTester(s.Init(c), BtPathname)
-
-	vt.Varname("EGDIR")
-	vt.Values(
-		"${PREFIX}/*",
-		"${PREFIX}/share/locale",
-		"share/locale",
 		"/bin",
 		"/path with spaces")
 	vt.Output(
@@ -1353,6 +1331,33 @@ func (s *Suite) Test_VartypeCheck_PathnameSpace(c *check.C) {
 	vt.Output(
 		"WARN: filename.mk:12: The pathname pattern \"/path with *spaces\" " +
 			"contains the invalid characters \"  \".")
+}
+
+func (s *Suite) Test_VartypeCheck_PathnameSpace(c *check.C) {
+	// Invent a variable name since this data type is only used as part
+	// of CONF_FILES.
+	G.Pkgsrc.vartypes.DefineParse("CONFIG_FILE", BtPathnameSpace,
+		NoVartypeOptions, "*.mk: set, use")
+	vt := NewVartypeCheckTester(s.Init(c), BtPathnameSpace)
+
+	vt.Varname("CONFIG_FILE")
+	vt.Values(
+		"${PREFIX}/*",
+		"${PREFIX}/share/locale",
+		"share/locale",
+		"/bin",
+		"/path with spaces")
+	vt.Output(
+		"WARN: filename.mk:1: The pathname \"${PREFIX}/*\" " +
+			"contains the invalid character \"*\".")
+
+	vt.Op(opUseMatch)
+	vt.Values(
+		"anything",
+		"/path with *spaces:")
+	vt.Output(
+		"WARN: filename.mk:12: The pathname pattern \"/path with *spaces:\" " +
+			"contains the invalid character \":\".")
 }
 
 func (s *Suite) Test_VartypeCheck_Perl5Packlist(c *check.C) {

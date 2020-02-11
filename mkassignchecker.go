@@ -384,21 +384,21 @@ func (ck *MkAssignChecker) checkVarassignRightCategory() {
 	}
 
 	categories := mkline.ValueFields(mkline.Value())
-	actual := categories[0]
-	expected := G.Pkgsrc.Rel(mkline.Filename()).Dir().Dir().Base()
+	primary := categories[0]
+	dir := G.Pkgsrc.Rel(mkline.Filename()).Dir().Dir().Base()
 
-	if expected == "wip" || actual == expected {
+	if primary == dir || dir == "wip" || dir == "regress" {
 		return
 	}
 
 	fix := mkline.Autofix()
-	fix.Warnf("The primary category should be %q, not %q.", expected, actual)
+	fix.Warnf("The primary category should be %q, not %q.", dir, primary)
 	fix.Explain(
 		"The primary category of a package should be its location in the",
 		"pkgsrc directory tree, to make it easy to find the package.",
 		"All other categories may be added after this primary category.")
-	if len(categories) > 1 && categories[1] == expected {
-		fix.Replace(categories[0]+" "+categories[1], categories[1]+" "+categories[0])
+	if len(categories) > 1 && categories[1] == dir {
+		fix.Replace(primary+" "+categories[1], categories[1]+" "+primary)
 	}
 	fix.Apply()
 }
