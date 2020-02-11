@@ -358,6 +358,20 @@ func (s *Suite) Test_VartypeCheck_ConfFiles(c *check.C) {
 		"WARN: filename.mk:1: Values for CONF_FILES should always be pairs of paths.",
 		"WARN: filename.mk:3: Values for CONF_FILES should always be pairs of paths.",
 		"WARN: filename.mk:5: The destination file \"/etc/bootrc\" should start with a variable reference.")
+
+	// See pkgsrc/regress/conf-files-spaces.
+	vt.Values(
+		"back\\ slash.conf ${PKG_SYSCONFDIR}/back\\ slash.conf",
+		"\"d quot.conf\" \"${PKG_SYSCONFDIR}/d quot.conf\"",
+		"'s quot.conf' '${PKG_SYSCONFDIR}/''s quot.conf'")
+	vt.OutputEmpty()
+
+	vt.Values(
+		"\\*.conf ${PKG_SYSCONFDIR}/\\*.conf")
+	vt.Output(
+		"WARN: filename.mk:21: The pathname \"\\\\*.conf\" contains the invalid character \"*\".",
+		"WARN: filename.mk:21: The pathname \"${PKG_SYSCONFDIR}/\\\\*.conf\" contains the invalid character \"*\".")
+
 }
 
 // See Test_MkParser_DependencyPattern.
@@ -1303,12 +1317,42 @@ func (s *Suite) Test_VartypeCheck_Pathname(c *check.C) {
 		"${PREFIX}/share/locale",
 		"share/locale",
 		"/bin")
+	vt.Output(
+		"WARN: filename.mk:1: The pathname \"${PREFIX}/*\" " +
+			"contains the invalid character \"*\".")
+
 	vt.Op(opUseMatch)
 	vt.Values(
-		"anything")
-
+		"anything",
+		"/path with *spaces")
 	vt.Output(
-		"WARN: filename.mk:1: The pathname \"${PREFIX}/*\" contains the invalid character \"*\".")
+		"WARN: filename.mk:12: The pathname pattern \"/path with *spaces\" " +
+			"contains the invalid characters \"  \".")
+}
+
+func (s *Suite) Test_VartypeCheck_PathnameSpace(c *check.C) {
+	vt := NewVartypeCheckTester(s.Init(c), BtPathname)
+
+	vt.Varname("EGDIR")
+	vt.Values(
+		"${PREFIX}/*",
+		"${PREFIX}/share/locale",
+		"share/locale",
+		"/bin",
+		"/path with spaces")
+	vt.Output(
+		"WARN: filename.mk:1: The pathname \"${PREFIX}/*\" "+
+			"contains the invalid character \"*\".",
+		"WARN: filename.mk:5: The pathname \"/path with spaces\" "+
+			"contains the invalid characters \"  \".")
+
+	vt.Op(opUseMatch)
+	vt.Values(
+		"anything",
+		"/path with *spaces")
+	vt.Output(
+		"WARN: filename.mk:12: The pathname pattern \"/path with *spaces\" " +
+			"contains the invalid characters \"  \".")
 }
 
 func (s *Suite) Test_VartypeCheck_Perl5Packlist(c *check.C) {
