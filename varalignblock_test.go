@@ -3134,11 +3134,28 @@ func (s *Suite) Test_VaralignBlock_Finish__continuation_beyond_right_margin(c *c
 }
 
 func (s *Suite) Test_varalignLine_realignDetails(c *check.C) {
-	t := s.Init(c)
+	vt := NewVaralignTester(s, c)
 
-	// FIXME
-
-	t.CheckOutputEmpty()
+	// Just a random example to exercise some of the code paths,
+	// with no particular intention.
+	vt.Input(
+		"VAR=\t\tvalue",
+		"VAR= \\",
+		"\t\t    ..24 \\",
+		"\t..12")
+	vt.Diagnostics(
+		"NOTE: Makefile:2: This variable value should be aligned "+
+			"with tabs, not spaces, to column 17 instead of 6.",
+		"NOTE: Makefile:3: This continuation line should be indented with \"\\t\\t\".")
+	vt.Autofixes(
+		"AUTOFIX: Makefile:2: Replacing \" \" with \"\\t\\t\".",
+		"AUTOFIX: Makefile:3: Replacing \"\\t\\t    \" with \"\\t\\t\".")
+	vt.Fixed(
+		"VAR=            value",
+		"VAR=            \\",
+		"                ..24 \\",
+		"        ..12")
+	vt.Run()
 }
 
 func (s *Suite) Test_VaralignSplitter_split(c *check.C) {
