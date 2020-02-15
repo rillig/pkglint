@@ -4408,9 +4408,20 @@ func (s *Suite) Test_varalignLine_alignContinuation(c *check.C) {
 func (s *Suite) Test_varalignLine_replaceSpaceBeforeValue(c *check.C) {
 	t := s.Init(c)
 
-	// FIXME
+	t.SetUpCommandLine("--autofix", "--show-autofix")
+	mklines := t.NewMkLines("filename.mk",
+		"VAR=  \t  value")
+	line := mklines.lines.Lines[0]
+	parts := NewVaralignSplitter().split(line.RawText(0), true)
+	info := varalignLine{line, 0, false, parts}
+	fix := line.Autofix()
+	fix.Warnf("Warning.")
+	info.replaceSpaceBeforeValue(fix, "\t\t")
+	fix.Apply()
 
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: filename.mk:1: Warning.",
+		"AUTOFIX: filename.mk:1: Replacing \"  \\t  \" with \"\\t\\t\".")
 }
 
 func (s *Suite) Test_varalignLine_replaceSpaceBeforeContinuationSilently(c *check.C) {
