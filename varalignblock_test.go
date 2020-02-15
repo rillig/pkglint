@@ -4416,6 +4416,7 @@ func (s *Suite) Test_varalignLine_replaceSpaceBeforeValue(c *check.C) {
 	info := varalignLine{line, 0, false, parts}
 	fix := line.Autofix()
 	fix.Warnf("Warning.")
+
 	info.replaceSpaceBeforeValue(fix, "\t\t")
 	fix.Apply()
 
@@ -4427,7 +4428,22 @@ func (s *Suite) Test_varalignLine_replaceSpaceBeforeValue(c *check.C) {
 func (s *Suite) Test_varalignLine_replaceSpaceBeforeContinuationSilently(c *check.C) {
 	t := s.Init(c)
 
-	// FIXME
+	t.SetUpCommandLine("--autofix", "--show-autofix")
+	mklines := t.NewMkLines("filename.mk",
+		"VAR=  \t  value   \\",
+		"\\tend")
+	line := mklines.lines.Lines[0]
+	parts := NewVaralignSplitter().split(line.RawText(0), true)
+	info := varalignLine{line, 0, false, parts}
+	fix := line.Autofix()
+	fix.Warnf("Warning.")
+
+	info.replaceSpaceBeforeContinuationSilently(fix, 32)
+	fix.Apply()
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:1: Warning.",
+		"AUTOFIX: filename.mk:1: Replacing \"   \\\\\" with \"\\t\\t\\t\\\\\".")
 
 	t.CheckOutputEmpty()
 }
