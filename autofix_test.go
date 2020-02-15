@@ -1318,7 +1318,7 @@ func (s *Suite) Test_Autofix_skip(c *check.C) {
 		"VAR=\t111 222 333 444 555 \\",
 		"666")
 	t.CheckEquals(fix.RawText(), ""+
-		"NEW=\t111 222 333 444 555 \\\n"+
+		"NEW=\t111 222 333 444 555 \\\n"+ // FIXME: Must be VAR, like before.
 		"666\n")
 }
 
