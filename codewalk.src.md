@@ -117,7 +117,7 @@ but that doesn't happen in this simple example run.
 
 ```codewalk
 file   pkglint.go
-start  ^[\t]for !pkglint\.Todo\.IsEmpty
+start  ^[\t]for !p\.Todo\.IsEmpty
 end    ^\t}
 ```
 

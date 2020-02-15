@@ -25,16 +25,16 @@ therefore the decision whether each element should be exported or not is not car
 If you want to use some of the code in your own pkgsrc programs,
 [just ask](mailto:%72%69%6C%6C%69%67%40NetBSD.org?subject=using%20pkglint%20as%20a%20library).
 
-> from [pkglint.go](pkglint.go#L110):
+> from [pkglint.go](pkglint.go#L103):
 
 ```go
-func (pkglint *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) (exitCode int) {
+func (p *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) (exitCode int) {
 ```
 
 When running pkglint, the `G` variable is set up first.
 It contains the whole global state of pkglint:
 
-> from [pkglint.go](pkglint.go#L95):
+> from [pkglint.go](pkglint.go#L88):
 
 ```go
 // G is the abbreviation for "global state";
@@ -48,7 +48,7 @@ var (
 All the interesting code is in the `Pkglint` type.
 Having only two global variables makes it easy to reset the global state during testing.
 
-> from [pkglint.go](pkglint.go#L102):
+> from [pkglint.go](pkglint.go#L95):
 
 ```go
 // Main runs the main program with the given arguments.
@@ -59,7 +59,7 @@ Having only two global variables makes it easy to reset the global state during 
 // One of these options is trace.Tracing, which is connected to --debug.
 //
 // It also discards the -Wall option that is used by default in other tests.
-func (pkglint *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) (exitCode int) {
+func (p *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) (exitCode int) {
 	G.Logger.out = NewSeparatorWriter(stdout)
 	G.Logger.err = NewSeparatorWriter(stderr)
 	trace.Out = stdout
@@ -71,24 +71,24 @@ func (pkglint *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) 
 		}
 	}()
 
-	if exitcode := pkglint.ParseCommandLine(args); exitcode != -1 {
+	if exitcode := p.ParseCommandLine(args); exitcode != -1 {
 		return exitcode
 	}
 
-	if pkglint.Opts.Profiling {
-		defer pkglint.setUpProfiling()()
+	if p.Profiling {
+		defer p.setUpProfiling()()
 	}
 
-	pkglint.prepareMainLoop()
+	p.prepareMainLoop()
 
-	for !pkglint.Todo.IsEmpty() {
-		pkglint.Check(pkglint.Todo.Pop())
+	for !p.Todo.IsEmpty() {
+		p.Check(p.Todo.Pop())
 	}
 
-	pkglint.Pkgsrc.checkToplevelUnusedLicenses()
+	p.Pkgsrc.checkToplevelUnusedLicenses()
 
-	pkglint.Logger.ShowSummary(args)
-	if pkglint.Logger.errors != 0 {
+	p.Logger.ShowSummary(args)
+	if p.Logger.errors != 0 {
 		return 1
 	}
 	return 0
@@ -148,16 +148,16 @@ func main() {
 }
 ```
 
-> from [pkglint.go](pkglint.go#L110):
+> from [pkglint.go](pkglint.go#L103):
 
 ```go
-func (pkglint *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) (exitCode int) {
+func (p *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) (exitCode int) {
 ```
 
-> from [pkglint.go](pkglint.go#L122):
+> from [pkglint.go](pkglint.go#L115):
 
 ```go
-	if exitcode := pkglint.ParseCommandLine(args); exitcode != -1 {
+	if exitcode := p.ParseCommandLine(args); exitcode != -1 {
 		return exitcode
 	}
 ```
@@ -169,14 +169,14 @@ and that is saved in `pkglint.Todo`, which contains all items that still need to
 The default use case for pkglint is to check the package from the
 current working directory, therefore this is done if no arguments are given.
 
-> from [pkglint.go](pkglint.go#L272):
+> from [pkglint.go](pkglint.go#L266):
 
 ```go
-	for _, arg := range pkglint.Opts.args {
-		pkglint.Todo.Push(NewCurrPathSlash(arg))
+	for _, arg := range remainingArgs {
+		p.Todo.Push(NewCurrPathSlash(arg))
 	}
-	if pkglint.Todo.IsEmpty() {
-		pkglint.Todo.Push(".")
+	if p.Todo.IsEmpty() {
+		p.Todo.Push(".")
 	}
 ```
 
@@ -190,26 +190,26 @@ In this example run, the first and only argument is `DESCR`.
 From there, the pkgsrc root is usually reachable via `../../`,
 and this is what pkglint tries.
 
-> from [pkglint.go](pkglint.go#L199):
+> from [pkglint.go](pkglint.go#L192):
 
 ```go
-	firstDir := pkglint.Todo.Front()
+	firstDir := p.Todo.Front()
 	if firstDir.IsFile() {
-		firstDir = firstDir.DirNoClean()
+		firstDir = firstDir.Dir()
 	}
 
-	relTopdir := pkglint.findPkgsrcTopdir(firstDir)
+	relTopdir := p.findPkgsrcTopdir(firstDir)
 	if relTopdir.IsEmpty() {
 		// If the first argument to pkglint is not inside a pkgsrc tree,
 		// pkglint doesn't know where to load the infrastructure files from,
-		// and these are needed for virtually every single check.
-		// Therefore, the only sensible thing to do is to quit immediately.
-		NewLineWhole(firstDir).Fatalf("Must be inside a pkgsrc tree.")
+		// Since virtually every single check needs these files,
+		// the only sensible thing to do is to quit immediately.
+		G.Logger.TechFatalf(firstDir, "Must be inside a pkgsrc tree.")
 	}
 
-	pkglint.Pkgsrc = NewPkgsrc(firstDir.JoinNoClean(relTopdir))
-	pkglint.Wip = pkglint.Pkgsrc.IsWip(firstDir) // See Pkglint.checkMode.
-	pkglint.Pkgsrc.LoadInfrastructure()
+	p.Pkgsrc = NewPkgsrc(firstDir.JoinNoClean(relTopdir))
+	p.Wip = p.Pkgsrc.IsWip(firstDir) // See Pkglint.checkMode.
+	p.Pkgsrc.LoadInfrastructure()
 ```
 
 Now the information from pkgsrc is loaded into `pkglint.Pkgsrc`, and the main work can start.
@@ -218,22 +218,22 @@ one after another. When pkglint is called with the `-r` option,
 some entries may be added to the Todo list,
 but that doesn't happen in this simple example run.
 
-> from [pkglint.go](pkglint.go#L132):
+> from [pkglint.go](pkglint.go#L125):
 
 ```go
-	for !pkglint.Todo.IsEmpty() {
-		pkglint.Check(pkglint.Todo.Pop())
+	for !p.Todo.IsEmpty() {
+		p.Check(p.Todo.Pop())
 	}
 ```
 
 The main work is done in `Pkglint.Check`:
 
-> from [pkglint.go](pkglint.go#L330):
+> from [pkglint.go](pkglint.go#L324):
 
 ```go
 	if isReg {
-		pkglint.checkExecutable(dirent, mode)
-		pkglint.checkReg(dirent, basename, pkgsrcRel.Count(), nil)
+		p.checkExecutable(dirent, mode)
+		p.checkReg(dirent, basename, pkgsrcRel.Count(), nil)
 		return
 	}
 ```
@@ -242,15 +242,15 @@ Since `DESCR` is a regular file, the next function to call is `checkReg`.
 For directories, the next function would depend on the depth from the
 pkgsrc root directory.
 
-> from [pkglint.go](pkglint.go#L551):
+> from [pkglint.go](pkglint.go#L545):
 
 ```go
-func (pkglint *Pkglint) checkReg(filename CurrPath, basename string, depth int, pkg *Package) {
+func (p *Pkglint) checkReg(filename CurrPath, basename string, depth int, pkg *Package) {
 ```
 
 The relevant part of `Pkglint.checkReg` is:
 
-> from [pkglint.go](pkglint.go#L578):
+> from [pkglint.go](pkglint.go#L572):
 
 ```go
 	case basename == "buildlink3.mk":
@@ -281,7 +281,7 @@ The actual checks usually work on `Line` objects instead of files
 because the lines offer nice methods for logging the diagnostics
 and for automatically fixing the text (in pkglint's `--autofix` mode).
 
-> from [pkglint.go](pkglint.go#L431):
+> from [pkglint.go](pkglint.go#L425):
 
 ```go
 func CheckLinesDescr(lines *Lines) {
@@ -348,7 +348,7 @@ func (ck LineChecker) CheckTrailingWhitespace() {
 	// be Markdown files in pkgsrc, this code has to be adjusted.
 
 	rawIndex := len(ck.line.raw) - 1
-	text := ck.line.raw[rawIndex].Text()
+	text := ck.line.RawText(rawIndex)
 	trimmedLen := len(rtrimHspace(text))
 	if trimmedLen == len(text) {
 		return
@@ -376,9 +376,10 @@ and at its typical call site `Line.Autofix()`:
 // The modifications are kept in memory only,
 // until they are written to disk by SaveAutofixChanges.
 type Autofix struct {
-	line        *Line
-	linesBefore []string // Newly inserted lines, including \n
-	linesAfter  []string // Newly inserted lines, including \n
+	line  *Line
+	above []string // Newly inserted lines, including \n
+	texts []string // Modified lines, including \n
+	below []string // Newly inserted lines, including \n
 	// Whether an actual fix has been applied to the text of the raw lines
 	modified bool
 
@@ -386,7 +387,7 @@ type Autofix struct {
 }
 ```
 
-> from [line.go](line.go#L172):
+> from [line.go](line.go#L180):
 
 ```go
 // Autofix returns the autofix instance belonging to the line.
@@ -405,21 +406,21 @@ type Autofix struct {
 //
 //  fix.Replace("from", "to")
 //  fix.ReplaceAfter("prefix", "from", "to")
-//  fix.InsertBefore("new line")
-//  fix.InsertAfter("new line")
+//  fix.InsertAbove("new line")
+//  fix.InsertBelow("new line")
 //  fix.Delete()
 //  fix.Custom(func(showAutofix, autofix bool) {})
 //
 //  fix.Apply()
 func (line *Line) Autofix() *Autofix {
-	if line.autofix == nil {
-		line.autofix = NewAutofix(line)
+	if line.fix == nil {
+		line.fix = NewAutofix(line)
 	} else {
 		// This assertion fails if an Autofix is reused before
 		// its Apply method is called.
-		assert(line.autofix.autofixShortTerm.diagFormat == "")
+		assert(line.fix.autofixShortTerm.diagFormat == "")
 	}
-	return line.autofix
+	return line.fix
 }
 ```
 
@@ -569,14 +570,14 @@ WARN: Makefile:3: COMMENT should not start with "A" or "An".
 
 The definition for the `Line` type is:
 
-> from [line.go](line.go#L79):
+> from [line.go](line.go#L54):
 
 ```go
 // Line represents a line of text from a file.
 type Line struct {
 	// TODO: Consider storing pointers to the Filename and Basename instead of strings to save memory.
 	//  But first find out where and why pkglint needs so much memory (200 MB for a full recursive run over pkgsrc + wip).
-	Location
+	Location Location
 	Basename string // the last component of the Filename
 
 	// the text of the line, without the trailing newline character;
@@ -584,9 +585,9 @@ type Line struct {
 	// joined by single spaces
 	Text string
 
-	raw     []*RawLine // contains the original text including trailing newline
-	autofix *Autofix   // any changes that pkglint would like to apply to the line
-	once    Once
+	raw  []*RawLine // contains the original text including trailing newline
+	fix  *Autofix   // any changes that pkglint would like to apply to the line
+	once Once
 
 	// XXX: Filename and Basename could be replaced with a pointer to a Lines object.
 }
@@ -693,7 +694,7 @@ All these path types are defined in `path.go`:
 type Path string
 ```
 
-> from [path.go](path.go#L214):
+> from [path.go](path.go#L212):
 
 ```go
 // CurrPath is a path that is either absolute or relative to the current
@@ -702,7 +703,7 @@ type Path string
 type CurrPath string
 ```
 
-> from [path.go](path.go#L446):
+> from [path.go](path.go#L440):
 
 ```go
 // RelPath is a path that is relative to some base directory that is not
@@ -710,19 +711,23 @@ type CurrPath string
 type RelPath string
 ```
 
-> from [path.go](path.go#L367):
+> from [path.go](path.go#L361):
 
 ```go
 // PkgsrcPath is a path relative to the pkgsrc root.
 type PkgsrcPath string
 ```
 
-> from [path.go](path.go#L401):
+> from [path.go](path.go#L391):
 
 ```go
 // PackagePath is a path relative to the package directory. It is used
 // for the PATCHDIR and PKGDIR variables, as well as dependencies and
 // conflicts on other packages.
+//
+// It can have two forms:
+//  - patches (further down)
+//  - ../../category/package/* (up to the pkgsrc root, then down again)
 type PackagePath string
 ```
 
