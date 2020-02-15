@@ -45,6 +45,8 @@ func (loc *Location) Lineno(rawIndex int) int {
 	return loc.lineno + rawIndex
 }
 
+// File resolves the given path relative to the directory of this
+// location.
 func (loc *Location) File(rel RelPath) CurrPath {
 	return loc.Filename.Dir().JoinNoClean(rel)
 }
@@ -90,6 +92,8 @@ func NewLineWhole(filename CurrPath) *Line {
 
 func (line *Line) Filename() CurrPath { return line.Location.Filename }
 
+// File resolves the given path relative to the directory where this line
+// appears in.
 func (line *Line) File(rel RelPath) CurrPath { return line.Location.File(rel) }
 
 func (line *Line) Linenos() string {

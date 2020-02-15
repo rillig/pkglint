@@ -1120,6 +1120,16 @@ func (src *Pkgsrc) File(relativeName PkgsrcPath) CurrPath {
 	return src.topdir.JoinNoClean(cleaned).CleanDot()
 }
 
+// FilePkg resolves a package-relative path to the real file that it represents.
+// If the given path does not start with "../../", the result is empty.
+func (src *Pkgsrc) FilePkg(rel PackagePath) CurrPath {
+	parts := rel.AsPath().Parts()
+	if len(parts) >= 4 && parts[0] == ".." && parts[1] == ".." && parts[2] != ".." {
+		return src.File(NewPkgsrcPath(NewPath(strings.Join(parts[2:], "/"))))
+	}
+	return ""
+}
+
 // Rel returns the path of `filename`, relative to the pkgsrc top directory.
 //
 // Example:

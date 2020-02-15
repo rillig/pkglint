@@ -327,7 +327,10 @@ func (ck MkLineChecker) CheckRelativePath(pp PackagePath, rel RelPath, mustExist
 	}
 
 	resolvedRel := resolvedPath.AsRelPath()
-	abs := mkline.Filename().Dir().JoinNoClean(resolvedRel)
+	abs := G.Pkgsrc.FilePkg(pp)
+	if abs.IsEmpty() {
+		abs = mkline.File(resolvedRel)
+	}
 	if !abs.Exists() {
 		pkgsrcPath := G.Pkgsrc.Rel(ck.MkLine.File(resolvedRel))
 		if mustExist && !ck.MkLines.indentation.HasExists(pkgsrcPath) {

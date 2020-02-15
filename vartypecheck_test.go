@@ -1665,8 +1665,6 @@ func (s *Suite) Test_VartypeCheck_RelativePkgPath(c *check.C) {
 
 	vt.Output(
 		"ERROR: ../../mk/infra.mk:1: Relative path \"../package\" does not exist.",
-		// FIXME: This directory _does_ exist.
-		"ERROR: ../../mk/infra.mk:2: Relative path \"../../category/other-package\" does not exist.",
 		"ERROR: ../../mk/infra.mk:3: Relative path \"../../missing/package\" does not exist.",
 		"ERROR: ../../mk/infra.mk:4: Relative path \"../../category/missing\" does not exist.")
 }

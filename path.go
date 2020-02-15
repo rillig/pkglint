@@ -391,6 +391,10 @@ func (p PkgsrcPath) JoinNoClean(other RelPath) PkgsrcPath {
 // PackagePath is a path relative to the package directory. It is used
 // for the PATCHDIR and PKGDIR variables, as well as dependencies and
 // conflicts on other packages.
+//
+// It can have two forms:
+//  - patches (further down)
+//  - ../../category/package/* (up to the pkgsrc root, then down again)
 type PackagePath string
 
 func NewPackagePath(p RelPath) PackagePath {
