@@ -122,22 +122,24 @@ func (fix *Autofix) ReplaceAfter(prefix, from string, to string) {
 
 	for rawIndex, text := range fix.texts {
 		ok, replaced := replaceOnce(text, prefixFrom, prefixTo)
-		if ok {
-			if G.Logger.IsAutofix() {
-				fix.texts[rawIndex] = replaced
-
-				// Fix the parsed text as well.
-				// This is only approximate and won't work in some edge cases
-				// that involve escaped comments or replacements across line breaks.
-				//
-				// TODO: Do this properly by parsing the whole line again,
-				//  and ideally everything that depends on the parsed line.
-				//  This probably requires a generic notification mechanism.
-				_, fix.line.Text = replaceOnce(fix.line.Text, prefixFrom, prefixTo)
-			}
-			fix.Describef(rawIndex, "Replacing %q with %q.", from, to)
-			return
+		if !ok {
+			continue
 		}
+
+		if G.Logger.IsAutofix() {
+			fix.texts[rawIndex] = replaced
+
+			// Fix the parsed text as well.
+			// This is only approximate and won't work in some edge cases
+			// that involve escaped comments or replacements across line breaks.
+			//
+			// TODO: Do this properly by parsing the whole line again,
+			//  and ideally everything that depends on the parsed line.
+			//  This probably requires a generic notification mechanism.
+			_, fix.line.Text = replaceOnce(fix.line.Text, prefixFrom, prefixTo)
+		}
+		fix.Describef(rawIndex, "Replacing %q with %q.", from, to)
+		return
 	}
 }
 
