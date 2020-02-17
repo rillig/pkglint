@@ -1106,7 +1106,7 @@ func (s *Suite) Test_PlistChecker_checkCond__hacks_mk(c *check.C) {
 			"in the package Makefile.")
 }
 
-func (s *Suite) Test_PlistChecker_checkOmf(c *check.C) {
+func (s *Suite) Test_PlistChecker_checkOmf__autofix(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("mk/omf-scrollkeeper.mk",
@@ -1137,6 +1137,25 @@ func (s *Suite) Test_PlistChecker_checkOmf__rationale(c *check.C) {
 		func(bool) { G.checkdirPackage(".") },
 		"ERROR: Makefile:20: Only packages that have .omf files in "+
 			"their PLIST may include omf-scrollkeeper.mk.")
+}
+
+func (s *Suite) Test_PlistChecker_checkOmf__ok(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("mk/omf-scrollkeeper.mk",
+		MkCvsID)
+	t.SetUpPackage("category/package",
+		".include \"../../mk/omf-scrollkeeper.mk\" # needs to stay")
+	t.Chdir("category/package")
+	t.CreateFileLines("PLIST",
+		PlistCvsID,
+		"bin/program",
+		"share/omf/documentation.omf")
+	t.FinishSetUp()
+
+	t.ExpectDiagnosticsAutofix(
+		func(bool) { G.checkdirPackage(".") },
+		nil...)
 }
 
 func (s *Suite) Test_PlistLine_Path(c *check.C) {
