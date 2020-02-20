@@ -625,8 +625,9 @@ type scopeVar struct {
 	lastDef        *MkLine
 	value          string
 	used           *MkLine
-	usedAtLoadTime bool
 	fallback       string
+	usedAtLoadTime bool
+	indeterminate  bool
 }
 
 func NewScope() Scope {
@@ -681,11 +682,12 @@ func (s *Scope) def(name string, mkline *MkLine) {
 		}
 		v.value += " " + value
 	case opAssignDefault:
-		if v.value == "" {
+		if v.value == "" && !v.indeterminate {
 			v.value = mkline.Value()
 		}
 	case opAssignShell:
 		v.value = ""
+		v.indeterminate = true
 	default:
 		v.value = mkline.Value()
 	}
@@ -846,25 +848,24 @@ func (s *Scope) FirstUse(varname string) *MkLine {
 // was not found, or that the variable value cannot be determined
 // reliably. To distinguish these cases, call LastValueFound instead.
 func (s *Scope) LastValue(varname string) string {
-	value, _ := s.LastValueFound(varname)
+	value, _, _ := s.LastValueFound(varname)
 	return value
 }
 
-func (s *Scope) LastValueFound(varname string) (value string, found bool) {
+func (s *Scope) LastValueFound(varname string) (value string, found bool, indeterminate bool) {
 	v := s.vs[varname]
 	if v == nil {
 		return
 	}
 
 	value = v.value
-	found = value != ""
+	found = v.firstDef != nil && v.firstDef.IsVarassign()
+	indeterminate = v.indeterminate
 	if found {
 		return
 	}
 
-	value = s.v(varname).fallback
-	found = value != ""
-	return
+	return v.fallback, v.fallback != "", v.indeterminate
 }
 
 func (s *Scope) DefineAll(other Scope) {
