@@ -617,22 +617,29 @@ func (o *Once) check(key uint64) bool {
 //
 // See also RedundantScope.
 type Scope struct {
-	firstDef       map[string]*MkLine
-	lastDef        map[string]*MkLine
-	value          map[string]string
-	used           map[string]*MkLine
-	usedAtLoadTime map[string]bool
-	fallback       map[string]string
+	vs map[string]*scopeVar
+}
+
+type scopeVar struct {
+	firstDef       *MkLine
+	lastDef        *MkLine
+	value          string
+	used           *MkLine
+	usedAtLoadTime bool
+	fallback       string
 }
 
 func NewScope() Scope {
-	return Scope{
-		make(map[string]*MkLine),
-		make(map[string]*MkLine),
-		make(map[string]string),
-		make(map[string]*MkLine),
-		make(map[string]bool),
-		make(map[string]string)}
+	return Scope{make(map[string]*scopeVar)}
+}
+
+func (s *Scope) v(varname string) *scopeVar {
+	if v, found := s.vs[varname]; found {
+		return v
+	}
+	var sv scopeVar
+	s.vs[varname] = &sv
+	return &sv
 }
 
 // Define marks the variable and its canonicalized form as defined.
@@ -645,8 +652,9 @@ func (s *Scope) Define(varname string, mkline *MkLine) {
 }
 
 func (s *Scope) def(name string, mkline *MkLine) {
-	if s.firstDef[name] == nil {
-		s.firstDef[name] = mkline
+	v := s.v(name)
+	if v.firstDef == nil {
+		v.firstDef = mkline
 		if trace.Tracing {
 			trace.Step2("Defining %q for the first time in %s", name, mkline.String())
 		}
@@ -654,7 +662,7 @@ func (s *Scope) def(name string, mkline *MkLine) {
 		trace.Step2("Defining %q in %s", name, mkline.String())
 	}
 
-	s.lastDef[name] = mkline
+	v.lastDef = mkline
 
 	// In most cases the defining lines are indeed variable assignments.
 	// Exceptions are comments from documentation sections, which still mark
@@ -669,35 +677,36 @@ func (s *Scope) def(name string, mkline *MkLine) {
 		value := mkline.Value()
 		if trace.Tracing {
 			trace.Stepf("Scope.Define.append %s: %s = %q + %q",
-				mkline.String(), name, s.value[name], value)
+				mkline.String(), name, v.value, value)
 		}
-		s.value[name] += " " + value
+		v.value += " " + value
 	case opAssignDefault:
-		if _, set := s.value[name]; !set {
-			s.value[name] = mkline.Value()
+		if v.value == "" {
+			v.value = mkline.Value()
 		}
 	case opAssignShell:
-		delete(s.value, name)
+		v.value = ""
 	default:
-		s.value[name] = mkline.Value()
+		v.value = mkline.Value()
 	}
 }
 
 func (s *Scope) Fallback(varname string, value string) {
-	s.fallback[varname] = value
+	s.v(varname).fallback = value
 }
 
 // Use marks the variable and its canonicalized form as used.
 func (s *Scope) Use(varname string, line *MkLine, time VucTime) {
 	use := func(name string) {
-		if s.used[name] == nil {
-			s.used[name] = line
+		v := s.v(name)
+		if v.used == nil {
+			v.used = line
 			if trace.Tracing {
 				trace.Step2("Using %q in %s", name, line.String())
 			}
 		}
 		if time == VucLoadTime {
-			s.usedAtLoadTime[name] = true
+			v.usedAtLoadTime = true
 		}
 	}
 
@@ -710,7 +719,7 @@ func (s *Scope) Use(varname string, line *MkLine, time VucTime) {
 //  - mentioned in a commented variable assignment,
 //  - mentioned in a documentation comment.
 func (s *Scope) Mentioned(varname string) *MkLine {
-	return s.firstDef[varname]
+	return s.v(varname).firstDef
 }
 
 // IsDefined tests whether the variable is defined.
@@ -719,7 +728,7 @@ func (s *Scope) Mentioned(varname string) *MkLine {
 // Even if IsDefined returns true, FirstDefinition doesn't necessarily return true
 // since the latter ignores the default definitions from vardefs.go, keyword dummyVardefMkline.
 func (s *Scope) IsDefined(varname string) bool {
-	mkline := s.firstDef[varname]
+	mkline := s.v(varname).firstDef
 	return mkline != nil && mkline.IsVarassign()
 }
 
@@ -745,21 +754,21 @@ func (s *Scope) IsDefinedSimilar(varname string) bool {
 // IsUsed tests whether the variable is used.
 // It does NOT test the canonicalized variable name.
 func (s *Scope) IsUsed(varname string) bool {
-	return s.used[varname] != nil
+	return s.v(varname).used != nil
 }
 
 // IsUsedSimilar tests whether the variable or its canonicalized form is used.
 func (s *Scope) IsUsedSimilar(varname string) bool {
-	if s.used[varname] != nil {
+	if s.v(varname).used != nil {
 		return true
 	}
-	return s.used[varnameCanon(varname)] != nil
+	return s.v(varnameCanon(varname)).used != nil
 }
 
 // IsUsedAtLoadTime returns true if the variable is used at load time
 // somewhere.
 func (s *Scope) IsUsedAtLoadTime(varname string) bool {
-	return s.usedAtLoadTime[varname]
+	return s.v(varname).usedAtLoadTime
 }
 
 // FirstDefinition returns the line in which the variable has been defined first.
@@ -771,7 +780,7 @@ func (s *Scope) IsUsedAtLoadTime(varname string) bool {
 // round: the including file sets a value first, and the included file then
 // assigns a default value using ?=.
 func (s *Scope) FirstDefinition(varname string) *MkLine {
-	mkline := s.firstDef[varname]
+	mkline := s.v(varname).firstDef
 	if mkline != nil && mkline.IsVarassign() {
 		lastLine := s.LastDefinition(varname)
 		if trace.Tracing && lastLine != mkline {
@@ -792,7 +801,7 @@ func (s *Scope) FirstDefinition(varname string) *MkLine {
 // round: the including file sets a value first, and the included file then
 // assigns a default value using ?=.
 func (s *Scope) LastDefinition(varname string) *MkLine {
-	mkline := s.lastDef[varname]
+	mkline := s.v(varname).lastDef
 	if mkline != nil && mkline.IsVarassign() {
 		return mkline
 	}
@@ -804,10 +813,10 @@ func (s *Scope) LastDefinition(varname string) *MkLine {
 // mk/defaults/mk.conf for documentation.
 func (s *Scope) Commented(varname string) *MkLine {
 	var mklines []*MkLine
-	if first := s.firstDef[varname]; first != nil {
+	if first := s.v(varname).firstDef; first != nil {
 		mklines = append(mklines, first)
 	}
-	if last := s.lastDef[varname]; last != nil {
+	if last := s.v(varname).lastDef; last != nil {
 		mklines = append(mklines, last)
 	}
 
@@ -827,7 +836,7 @@ func (s *Scope) Commented(varname string) *MkLine {
 }
 
 func (s *Scope) FirstUse(varname string) *MkLine {
-	return s.used[varname]
+	return s.v(varname).used
 }
 
 // LastValue returns the value from the last variable definition.
@@ -842,23 +851,46 @@ func (s *Scope) LastValue(varname string) string {
 }
 
 func (s *Scope) LastValueFound(varname string) (value string, found bool) {
-	value, found = s.value[varname]
-	if !found {
-		value, found = s.fallback[varname]
+	v := s.vs[varname]
+	if v == nil {
+		return
 	}
+
+	value = v.value
+	found = value != ""
+	if found {
+		return
+	}
+
+	value = s.v(varname).fallback
+	found = value != ""
 	return
 }
 
 func (s *Scope) DefineAll(other Scope) {
 	var varnames []string
-	for varname := range other.firstDef {
+	for varname := range other.vs {
 		varnames = append(varnames, varname)
 	}
 	sort.Strings(varnames)
 
 	for _, varname := range varnames {
-		s.Define(varname, other.firstDef[varname])
-		s.Define(varname, other.lastDef[varname])
+		v := other.vs[varname]
+		if v.firstDef != nil {
+			s.Define(varname, v.firstDef)
+			s.Define(varname, v.lastDef)
+		}
+	}
+}
+
+func (s *Scope) forEach(action func(varname string, data *scopeVar)) {
+	var keys []string
+	for key := range s.vs {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		action(key, s.vs[key])
 	}
 }
 

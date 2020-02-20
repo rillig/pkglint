@@ -561,7 +561,7 @@ func (s *Suite) Test_Scope_Define(c *check.C) {
 
 		t.CheckEquals(actualValue, value)
 		t.CheckEquals(actualFound, ok)
-		t.CheckEquals(scope.value["BUILD_DIRS"], value)
+		t.CheckEquals(scope.v("BUILD_DIRS").value, value)
 	}
 
 	test("BUILD_DIRS?=\tdefault",
@@ -727,9 +727,7 @@ func (s *Suite) Test_Scope_DefineAll(c *check.C) {
 	dst := NewScope()
 	dst.DefineAll(src)
 
-	c.Check(dst.firstDef, check.HasLen, 0)
-	c.Check(dst.lastDef, check.HasLen, 0)
-	c.Check(dst.used, check.HasLen, 0)
+	c.Check(dst.vs, check.HasLen, 0)
 
 	src.Define("VAR", t.NewMkLine("file.mk", 1, "VAR=value"))
 	dst.DefineAll(src)
