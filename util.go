@@ -617,7 +617,7 @@ func (o *Once) check(key uint64) bool {
 //
 // See also RedundantScope.
 type Scope struct {
-	firstDef       map[string]*MkLine // TODO: Can this be removed?
+	firstDef       map[string]*MkLine
 	lastDef        map[string]*MkLine
 	value          map[string]string
 	used           map[string]*MkLine
