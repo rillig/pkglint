@@ -562,6 +562,7 @@ func (info *varalignLine) alignValueSingle(newWidth int) {
 	}
 	fix.ReplaceAt(info.rawIndex, info.spaceBeforeValueIndex(), oldSpace, newSpace)
 	fix.Apply()
+	info.spaceBeforeValue = newSpace
 }
 
 func (info *varalignLine) alignValueInitial(newWidth int) {

@@ -3585,11 +3585,7 @@ func (s *Suite) Test_varalignLine_alignValueSingle(c *check.C) {
 			t.CheckEqualsf(
 				mkline.RawText(0), after,
 				"Line.raw.text, autofix=%v", autofix)
-
-			// As of 2019-12-11, the info fields are not updated
-			// accordingly, but they should.
-			// FIXME: update info accordingly
-			t.CheckEqualsf(info.String(), before,
+			t.CheckEqualsf(info.String(), after,
 				"info.String, autofix=%v", autofix)
 		}
 
