@@ -2073,7 +2073,7 @@ func (s *Suite) Test_VaralignBlock__right_margin(c *check.C) {
 		"\t............................................................70 \t\t\\",
 		"\t........................................................66")
 	vt.Diagnostics(
-		"NOTE: Makefile:2: The continuation backslash should be in column 73, not 81.",
+		"NOTE: Makefile:2: The continuation backslash should be preceded by a single space.",
 		"NOTE: Makefile:3: The continuation backslash should be in column 73, not 81.")
 	vt.Autofixes(
 		"AUTOFIX: Makefile:2: Replacing \"\\t\" with \" \".",
