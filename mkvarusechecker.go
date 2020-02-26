@@ -447,7 +447,25 @@ func (ck *MkVarUseChecker) warnToolLoadTime(varname string, tool *Tool) {
 }
 
 func (ck *MkVarUseChecker) checkAssignable(vuc *VarUseContext) {
-	// TODO: Test_MkVarUseChecker_checkAssignable
+	leftType := vuc.vartype
+	if leftType == nil || leftType.basicType != BtPathname {
+		return
+	}
+	rightType := G.Pkgsrc.VariableType(ck.MkLines, ck.use.varname)
+	if rightType == nil || rightType.basicType != BtShellCommand {
+		return
+	}
+
+	mkline := ck.MkLine
+	mkline.Warnf(
+		"Incompatible types: %s (type %q) cannot be assigned to type %q.",
+		ck.use.varname, rightType.basicType.name, leftType.basicType.name)
+	mkline.Explain(
+		"Shell commands often start with a pathname.",
+		"They could also start with a list of environment variable",
+		"definitions, since that is accepted by the shell.",
+		"They can also contain addition command line arguments",
+		"that are not filenames at all.")
 }
 
 // checkVarUseWords checks whether a variable use of the form ${VAR}

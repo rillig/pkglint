@@ -970,10 +970,10 @@ func (s *Suite) Test_MkVarUseChecker_checkAssignable(c *check.C) {
 		ck.checkVarassignRight()
 	})
 
-	// TODO: Warn that TOOLS_PLATFORM.* is a ShellCommand and can therefore
-	//  contain command line options and arbitrary other text, which is not
-	//  compatible with the valid filename characters.
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: filename.mk:2: Incompatible types: " +
+			"TOOLS_PLATFORM.file (type \"ShellCommand\") " +
+			"cannot be assigned to type \"Pathname\".")
 }
 
 func (s *Suite) Test_MkVarUseChecker_checkQuoting(c *check.C) {

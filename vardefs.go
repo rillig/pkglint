@@ -1067,7 +1067,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.pkg("CONFIGURE_SCRIPT", BtPathname)
 	reg.pkglist("CONFIG_GUESS_OVERRIDE", BtPathPattern)
 	reg.pkglist("CONFIG_STATUS_OVERRIDE", BtPathPattern)
-	reg.pkg("CONFIG_SHELL", BtPathname)
+	reg.pkg("CONFIG_SHELL", BtShellCommand)
 	reg.pkglist("CONFIG_SUB_OVERRIDE", BtPathPattern)
 	reg.pkglist("CONFLICTS", BtDependencyPattern)
 	reg.pkgappend("CONF_FILES", BtConfFiles)
