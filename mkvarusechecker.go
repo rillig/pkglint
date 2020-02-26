@@ -457,6 +457,13 @@ func (ck *MkVarUseChecker) checkAssignable(vuc *VarUseContext) {
 	}
 
 	mkline := ck.MkLine
+	if mkline.IsVarassign() && mkline.Varcanon() == "PKG_SHELL.*" {
+		switch ck.use.varname {
+		case "SH", "BASH", "TOOLS_PLATFORM.sh":
+			return
+		}
+	}
+
 	mkline.Warnf(
 		"Incompatible types: %s (type %q) cannot be assigned to type %q.",
 		ck.use.varname, rightType.basicType.name, leftType.basicType.name)

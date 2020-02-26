@@ -988,20 +988,20 @@ func (s *Suite) Test_MkVarUseChecker_checkAssignable__shell_command_to_pathname(
 	t := s.Init(c)
 
 	t.SetUpVartypes()
+	t.SetUpTool("sh", "SH", AtRunTime)
+	t.SetUpTool("bash", "BASH", AtRunTime)
 	mklines := t.NewMkLines("filename.mk",
-		"PKG_SHELL.pkgbase=\t${TOOLS_PLATFORM.sh}")
+		"PKG_SHELL.user=\t${TOOLS_PLATFORM.sh}",
+		"PKG_SHELL.user=\t${SH}",
+		"PKG_SHELL.user=\t${BASH}")
 
 	mklines.ForEach(func(mkline *MkLine) {
 		ck := NewMkAssignChecker(mkline, mklines)
 		ck.checkVarassignRight()
 	})
 
-	// FIXME: Assume TOOLS_PLATFORM.sh is a simple pathname.
 	t.CheckOutputLines(
-		"WARN: filename.mk:1: "+
-			"Incompatible types: TOOLS_PLATFORM.sh (type \"ShellCommand\") "+
-			"cannot be assigned to type \"Pathname\".",
-		"WARN: filename.mk:1: Please use ${TOOLS_PLATFORM.sh:Q} "+
+		"WARN: filename.mk:1: Please use ${TOOLS_PLATFORM.sh:Q} " +
 			"instead of ${TOOLS_PLATFORM.sh}.")
 }
 
