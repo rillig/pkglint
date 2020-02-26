@@ -976,6 +976,35 @@ func (s *Suite) Test_MkVarUseChecker_checkAssignable(c *check.C) {
 			"cannot be assigned to type \"Pathname\".")
 }
 
+// NetBSD's chsh program only allows a simple pathname for the shell, without
+// any command line arguments. This makes sense since the shell is started
+// using execve, not system (which would require shell-like argument parsing).
+//
+// Under the assumption that TOOLS_PLATFORM.sh does not contain any command
+// line arguments, it's ok in that special case. This covers most of the
+// real-life situations where this type mismatch (Pathname := ShellCommand)
+// occurs.
+func (s *Suite) Test_MkVarUseChecker_checkAssignable__shell_command_to_pathname(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("filename.mk",
+		"PKG_SHELL.pkgbase=\t${TOOLS_PLATFORM.sh}")
+
+	mklines.ForEach(func(mkline *MkLine) {
+		ck := NewMkAssignChecker(mkline, mklines)
+		ck.checkVarassignRight()
+	})
+
+	// FIXME: Assume TOOLS_PLATFORM.sh is a simple pathname.
+	t.CheckOutputLines(
+		"WARN: filename.mk:1: "+
+			"Incompatible types: TOOLS_PLATFORM.sh (type \"ShellCommand\") "+
+			"cannot be assigned to type \"Pathname\".",
+		"WARN: filename.mk:1: Please use ${TOOLS_PLATFORM.sh:Q} "+
+			"instead of ${TOOLS_PLATFORM.sh}.")
+}
+
 func (s *Suite) Test_MkVarUseChecker_checkQuoting(c *check.C) {
 	t := s.Init(c)
 
