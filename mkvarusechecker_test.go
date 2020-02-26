@@ -957,6 +957,25 @@ func (s *Suite) Test_MkVarUseChecker_warnToolLoadTime__local_tool(c *check.C) {
 		"WARN: ~/category/package/Makefile:7: The tool ${MK_TOOL} cannot be used at load time.")
 }
 
+func (s *Suite) Test_MkVarUseChecker_checkAssignable(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("filename.mk",
+		"BUILTIN_FIND_FILES_VAR:=\tBIN_FILE",
+		"BUILTIN_FIND_FILES.BIN_FILE=\t${TOOLS_PLATFORM.file} /bin/file /usr/bin/file")
+
+	mklines.ForEach(func(mkline *MkLine) {
+		ck := NewMkAssignChecker(mkline, mklines)
+		ck.checkVarassignRight()
+	})
+
+	// TODO: Warn that TOOLS_PLATFORM.* is a ShellCommand and can therefore
+	//  contain command line options and arbitrary other text, which is not
+	//  compatible with the valid filename characters.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_MkVarUseChecker_checkQuoting(c *check.C) {
 	t := s.Init(c)
 

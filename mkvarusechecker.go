@@ -27,6 +27,7 @@ func (ck *MkVarUseChecker) Check(vuc *VarUseContext) {
 
 	ck.checkVarname(vuc.time)
 	ck.checkModifiers()
+	ck.checkAssignable(vuc)
 	ck.checkQuoting(vuc)
 
 	ck.checkBuildDefs()
@@ -443,6 +444,10 @@ func (ck *MkVarUseChecker) warnToolLoadTime(varname string, tool *Tool) {
 		"load time (see above for the tricky rules).",
 		"Therefore the tools can only be used at run time,",
 		"except in the package Makefile itself.")
+}
+
+func (ck *MkVarUseChecker) checkAssignable(vuc *VarUseContext) {
+	// TODO: Test_MkVarUseChecker_checkAssignable
 }
 
 // checkVarUseWords checks whether a variable use of the form ${VAR}
