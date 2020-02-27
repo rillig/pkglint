@@ -45,6 +45,22 @@ func (s *Suite) Test_SimpleCommandChecker_checkCommandStart__unknown_default(c *
 		"WARN: Makefile:8: UNKNOWN_TOOL is used but not defined.")
 }
 
+// Despite its name, the TOOLS_PATH.* name the whole shell command,
+// not just the path of its executable.
+func (s *Suite) Test_SimpleCommandChecker_checkCommandStart__TOOLS_PATH(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"CONFIG_SHELL=\t${TOOLS_PATH.bash}")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+	G.checkdirPackage(".")
+
+	// FIXME: Don't warn here.
+	t.CheckOutputLines(
+		"WARN: Makefile:20: Unknown shell command \"${TOOLS_PATH.bash}\".")
+}
+
 func (s *Suite) Test_SimpleCommandChecker_checkInstallCommand(c *check.C) {
 	t := s.Init(c)
 
