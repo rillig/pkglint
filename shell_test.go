@@ -56,9 +56,7 @@ func (s *Suite) Test_SimpleCommandChecker_checkCommandStart__TOOLS_PATH(c *check
 	t.FinishSetUp()
 	G.checkdirPackage(".")
 
-	// FIXME: Don't warn here.
-	t.CheckOutputLines(
-		"WARN: Makefile:20: Unknown shell command \"${TOOLS_PATH.bash}\".")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_SimpleCommandChecker_checkInstallCommand(c *check.C) {
@@ -857,6 +855,7 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
+	t.SetUpTool("[", "TEST", AtRunTime)
 	t.SetUpTool("awk", "AWK", AtRunTime)
 	t.SetUpTool("cp", "CP", AtRunTime)
 	t.SetUpTool("echo", "", AtRunTime)
@@ -943,16 +942,13 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine(c *check.C) {
 		"WARN: filename.mk:1: The exitcode of \"${UNZIP_CMD}\" at the left of the | operator is ignored.")
 
 	// From x11/wxGTK28/Makefile
-	// TODO: Why is TOOLS_PATH.msgfmt not recognized?
-	//  At least, the warning should be more specific, mentioning USE_TOOLS.
 	test(""+
 		"set -e; cd ${WRKSRC}/locale; "+
 		"for lang in *.po; do "+
 		"  [ \"$${lang}\" = \"wxstd.po\" ] && continue; "+
 		"  ${TOOLS_PATH.msgfmt} -c -o \"$${lang%.po}.mo\" \"$${lang}\"; "+
 		"done",
-		"WARN: filename.mk:1: Unknown shell command \"[\".",
-		"WARN: filename.mk:1: Unknown shell command \"${TOOLS_PATH.msgfmt}\".")
+		nil...)
 
 	test("@cp from to",
 		"WARN: filename.mk:1: The shell command \"cp\" should not be hidden.")
