@@ -210,12 +210,16 @@ func condInt(cond bool, trueValue, falseValue int) int {
 }
 
 func keysJoined(m map[string]bool) string {
+	return strings.Join(keysSorted(m), " ")
+}
+
+func keysSorted(m map[string]bool) []string {
 	var keys []string
 	for key := range m {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
-	return strings.Join(keys, " ")
+	return keys
 }
 
 func copyStringMkLine(m map[string]*MkLine) map[string]*MkLine {

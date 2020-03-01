@@ -1201,6 +1201,65 @@ func (s *Suite) Test_MkVarUseChecker_fixQuotingModifiers(c *check.C) {
 		"AUTOFIX: ~/filename.mk:5: Replacing \"${CFLAGS:N*:Q}\" with \"${CFLAGS:N*:M*:Q}\".")
 }
 
+func (s *Suite) Test_MkVarUseChecker_checkToolsPlatform(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.SetUpTool("available", "", AfterPrefsMk)
+	t.SetUpTool("cond1", "", AfterPrefsMk)
+	t.SetUpTool("cond2", "", AfterPrefsMk)
+	t.SetUpTool("undefined", "", AfterPrefsMk)
+	t.CreateFileLines("mk/tools/tools.NetBSD.mk",
+		"TOOLS_PLATFORM.available?=\t/bin/available",
+		"TOOLS_PLATFORM.cond1?=\t/usr/cond1",
+		"TOOLS_PLATFORM.cond2?=\t/usr/cond2",
+		"TOOLS_PLATFORM.undefined?=\t/usr/undefined")
+	t.CreateFileLines("mk/tools/tools.SunOS.mk",
+		"TOOLS_PLATFORM.available?=\t/bin/available",
+		"",
+		".if exists(/usr/gnu/bin/cond1)",
+		"TOOLS_PLATFORM.cond1?=\t/usr/gnu/bin/cond1",
+		".endif",
+		"",
+		".if exists(/usr/gnu/bin/cond2)",
+		"TOOLS_PLATFORM.cond2?=\t/usr/gnu/bin/cond2",
+		".else",
+		"TOOLS_PLATFORM.cond2?=\t/usr/sfw/bin/cond2",
+		".endif",
+		"",
+		"# No definition for undefined.")
+	t.Chdir(".")
+	t.FinishSetUp()
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"",
+		".include \"mk/bsd.prefs.mk\"",
+		"",
+		".if ${OPSYS} == SunOS",
+		"post-build:",
+		"\t${TOOLS_PLATFORM.available}",
+		"\t${TOOLS_PLATFORM.cond1}",
+		"\t${TOOLS_PLATFORM.cond2}",
+		"\t${TOOLS_PLATFORM.undefined}",
+		".endif",
+		"",
+		"do-build:",
+		"\t${TOOLS_PLATFORM.available}",
+		"\t${TOOLS_PLATFORM.cond1}",
+		"\t${TOOLS_PLATFORM.cond2}",
+		"\t${TOOLS_PLATFORM.undefined}",
+		"",
+		".if defined(TOOLS_PLATFORM.undefined)",
+		"\t${TOOLS_PLATFORM.undefined}",
+		".endif")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:15: TOOLS_PLATFORM.cond1 may be undefined on SunOS.",
+		"WARN: filename.mk:17: TOOLS_PLATFORM.undefined is undefined on SunOS.")
+}
+
 func (s *Suite) Test_MkVarUseChecker_checkBuildDefs(c *check.C) {
 	t := s.Init(c)
 

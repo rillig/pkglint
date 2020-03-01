@@ -30,6 +30,7 @@ func (ck *MkVarUseChecker) Check(vuc *VarUseContext) {
 	ck.checkAssignable(vuc)
 	ck.checkQuoting(vuc)
 
+	ck.checkToolsPlatform()
 	ck.checkBuildDefs()
 	ck.checkDeprecated()
 
@@ -666,6 +667,40 @@ func (ck *MkVarUseChecker) warnRedundantModifierQ(mod string) {
 		"\t* package names (but not dependency patterns like pkg>=1.2)")
 	fix.Replace(bad, good)
 	fix.Apply()
+}
+
+func (ck *MkVarUseChecker) checkToolsPlatform() {
+	if ck.MkLine.IsDirective() {
+		return
+	}
+
+	varname := ck.use.varname
+	if varnameCanon(varname) != "TOOLS_PLATFORM.*" {
+		return
+	}
+
+	indentation := ck.MkLines.indentation
+	switch {
+	case indentation.DependsOn("OPSYS"),
+		indentation.DependsOn("MACHINE_PLATFORM"),
+		indentation.DependsOn(varname):
+		// TODO: Only return if the conditional is on the correct OPSYS.
+		return
+	}
+
+	toolName := varnameParam(varname)
+	tool := G.Pkgsrc.Tools.ByName(toolName)
+	if tool == nil {
+		return
+	}
+
+	if len(tool.undefinedOn) > 0 {
+		ck.MkLine.Warnf("%s is undefined on %s.",
+			varname, joinSkipEmptyCambridge("and", tool.undefinedOn...))
+	} else if len(tool.conditionalOn) > 0 {
+		ck.MkLine.Warnf("%s may be undefined on %s.",
+			varname, joinSkipEmptyCambridge("and", tool.conditionalOn...))
+	}
 }
 
 func (ck *MkVarUseChecker) checkBuildDefs() {
