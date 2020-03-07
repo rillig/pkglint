@@ -1242,7 +1242,7 @@ func joinCambridge(conn string, elements ...string) string {
 	return strings.Join(parts, "")
 }
 
-// joinCambridge returns "first, second, conn third".
+// joinOxford returns "first, second, conn third".
 // It is used when each element may consist of multiple words.
 // Empty elements are ignored completely.
 func joinOxford(conn string, elements ...string) string {
