@@ -421,7 +421,7 @@ func (reg *VarTypeRegistry) enumFrom(
 		G.Logger.TechFatalf(
 			mklines.lines.Filename,
 			"Must contain at least 1 variable definition for %s.",
-			joinSkipEmptyCambridge("or", varcanons...))
+			joinCambridge("or", varcanons...))
 	}
 
 	if trace.Tracing {

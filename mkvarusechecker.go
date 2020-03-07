@@ -696,10 +696,10 @@ func (ck *MkVarUseChecker) checkToolsPlatform() {
 
 	if len(tool.undefinedOn) > 0 {
 		ck.MkLine.Warnf("%s is undefined on %s.",
-			varname, joinSkipEmptyCambridge("and", tool.undefinedOn...))
+			varname, joinCambridge("and", tool.undefinedOn...))
 	} else if len(tool.conditionalOn) > 0 {
 		ck.MkLine.Warnf("%s may be undefined on %s.",
-			varname, joinSkipEmptyCambridge("and", tool.conditionalOn...))
+			varname, joinCambridge("and", tool.conditionalOn...))
 	}
 }
 

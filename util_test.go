@@ -1020,23 +1020,23 @@ func (s *Suite) Test_joinSkipEmpty(c *check.C) {
 		"one, two, three")
 }
 
-func (s *Suite) Test_joinSkipEmptyCambridge(c *check.C) {
+func (s *Suite) Test_joinCambridge(c *check.C) {
 	t := s.Init(c)
 
 	t.CheckDeepEquals(
-		joinSkipEmptyCambridge("and", "", "one", "", "", "two", "", "three"),
+		joinCambridge("and", "", "one", "", "", "two", "", "three"),
 		"one, two and three")
 
 	t.CheckDeepEquals(
-		joinSkipEmptyCambridge("and", "", "one", "", ""),
+		joinCambridge("and", "", "one", "", ""),
 		"one")
 }
 
-func (s *Suite) Test_joinSkipEmptyOxford(c *check.C) {
+func (s *Suite) Test_joinOxford(c *check.C) {
 	t := s.Init(c)
 
 	t.CheckDeepEquals(
-		joinSkipEmptyOxford("and", "", "one", "", "", "two", "", "three"),
+		joinOxford("and", "", "one", "", "", "two", "", "three"),
 		"one, two, and three")
 }
 

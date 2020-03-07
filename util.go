@@ -1220,7 +1220,10 @@ func joinSkipEmpty(sep string, elements ...string) string {
 	return strings.Join(nonempty, sep)
 }
 
-func joinSkipEmptyCambridge(conn string, elements ...string) string {
+// joinCambridge returns "first, second conn third".
+// It is used when each element is a single word.
+// Empty elements are ignored completely.
+func joinCambridge(conn string, elements ...string) string {
 	var nonempty []string
 	for _, element := range elements {
 		if element != "" {
@@ -1232,7 +1235,7 @@ func joinSkipEmptyCambridge(conn string, elements ...string) string {
 	for i, element := range nonempty {
 		if i > 0 {
 			if i == len(nonempty)-1 {
-				sb.WriteRune(' ')
+				sb.WriteByte(' ')
 				sb.WriteString(conn)
 				sb.WriteRune(' ')
 			} else {
@@ -1245,7 +1248,10 @@ func joinSkipEmptyCambridge(conn string, elements ...string) string {
 	return sb.String()
 }
 
-func joinSkipEmptyOxford(conn string, elements ...string) string {
+// joinCambridge returns "first, second, conn third".
+// It is used when each element may consist of multiple words.
+// Empty elements are ignored completely.
+func joinOxford(conn string, elements ...string) string {
 	var nonempty []string
 	for _, element := range elements {
 		if element != "" {
