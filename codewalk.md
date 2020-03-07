@@ -642,7 +642,7 @@ The instructions for building and installing packages are written in shell comma
 which are embedded in Makefile fragments.
 The `ShellLineChecker` type provides methods for checking shell commands and their individual parts.
 
-> from [shell.go](shell.go#L387):
+> from [shell.go](shell.go#L388):
 
 ```go
 // ShellLineChecker checks either a line from a Makefile starting with a tab,
