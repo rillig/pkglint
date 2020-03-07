@@ -195,10 +195,8 @@ func (mklines *MkLines) collectDocumentedVariables() {
 		// leaving 2 of these 3 lines for the actual documentation.
 		if commentLines >= 3 && relevant {
 			scope.forEach(func(varname string, data *scopeVar) {
-				if mkline := data.used; mkline != nil {
-					mklines.allVars.Define(varname, mkline)
-					mklines.allVars.Use(varname, mkline, VucRunTime)
-				}
+				mklines.allVars.Define(varname, data.used)
+				mklines.allVars.Use(varname, data.used, VucRunTime)
 			})
 		}
 
