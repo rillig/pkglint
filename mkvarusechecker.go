@@ -458,7 +458,7 @@ func (ck *MkVarUseChecker) checkAssignable(vuc *VarUseContext) {
 	}
 
 	mkline := ck.MkLine
-	if mkline.IsVarassign() && mkline.Varcanon() == "PKG_SHELL.*" {
+	if mkline.Varcanon() == "PKG_SHELL.*" {
 		switch ck.use.varname {
 		case "SH", "BASH", "TOOLS_PLATFORM.sh":
 			return

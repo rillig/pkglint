@@ -1005,6 +1005,29 @@ func (s *Suite) Test_MkVarUseChecker_checkAssignable__shell_command_to_pathname(
 			"instead of ${TOOLS_PLATFORM.sh}.")
 }
 
+func (s *Suite) Test_MkVarUseChecker_checkAssignable__shell_command_in_exists(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpTool("sh", "SH", AfterPrefsMk)
+	t.SetUpTool("bash", "BASH", AfterPrefsMk)
+	t.SetUpPkgsrc()
+	t.Chdir(".")
+	t.FinishSetUp()
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		".include \"mk/bsd.prefs.mk\"",
+		".if exists(${TOOLS_PLATFORM.sh})",
+		".elif exists(${SH})",
+		".elif exists(${BASH})",
+		".endif")
+
+	mklines.Check()
+
+	// TODO: Call MkVarUseChecker.checkAssignable with a VarUseContext of type
+	//  BtPathname here.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_MkVarUseChecker_checkQuoting(c *check.C) {
 	t := s.Init(c)
 
