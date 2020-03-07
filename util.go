@@ -1238,8 +1238,8 @@ func joinCambridge(conn string, elements ...string) string {
 		return parts[1]
 	}
 
-	parts = append(parts[:len(parts)-2], " ", conn, " ", parts[len(parts)-1])
-	return strings.Join(parts[1:], "")
+	parts = append(parts[1:len(parts)-2], " ", conn, " ", parts[len(parts)-1])
+	return strings.Join(parts, "")
 }
 
 // joinCambridge returns "first, second, conn third".
