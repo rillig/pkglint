@@ -1035,8 +1035,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__shellword_part(c *check.C) {
 
 // Tools, when used in a shell command, must not be quoted.
 // Shell commands may have command line arguments, pathnames must not.
-// CONFIG_SHELL is defined to be a pathname, and any command line arguments
-// are defined in CONFIG_SHELL_FLAGS (usually only -x).
+// The original intention of having both CONFIG_SHELL and CONFIG_SHELL_FLAGS
+// was to separate the command from its arguments.
+// It doesn't hurt though if the command includes some of the arguments as well.
 func (s *Suite) Test_MkLine_VariableNeedsQuoting__tool_in_shell_command(c *check.C) {
 	t := s.Init(c)
 
@@ -1046,14 +1047,13 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__tool_in_shell_command(c *check
 	mklines := t.SetUpFileMkLines("Makefile",
 		MkCvsID,
 		"",
-		"CONFIG_SHELL=\t${BASH}")
+		"CONFIG_SHELL=\t${BASH}",
+		"DIST_SUBDIR=\t${BASH}")
 
 	mklines.Check()
 
-	// FIXME: In most cases this assignment is ok since BASH really
-	//  doesn't have any command line arguments.
 	t.CheckOutputLines(
-		"WARN: ~/Makefile:3: Incompatible types: " +
+		"WARN: ~/Makefile:4: Incompatible types: " +
 			"BASH (type \"ShellCommand\") cannot be assigned to type \"Pathname\".")
 }
 
