@@ -1224,28 +1224,22 @@ func joinSkipEmpty(sep string, elements ...string) string {
 // It is used when each element is a single word.
 // Empty elements are ignored completely.
 func joinCambridge(conn string, elements ...string) string {
-	var nonempty []string
+	parts := make([]string, 0, 2+2*len(elements))
 	for _, element := range elements {
 		if element != "" {
-			nonempty = append(nonempty, element)
+			parts = append(parts, ", ", element)
 		}
 	}
 
-	var sb strings.Builder
-	for i, element := range nonempty {
-		if i > 0 {
-			if i == len(nonempty)-1 {
-				sb.WriteByte(' ')
-				sb.WriteString(conn)
-				sb.WriteRune(' ')
-			} else {
-				sb.WriteString(", ")
-			}
-		}
-		sb.WriteString(element)
+	if len(parts) == 0 {
+		return ""
+	}
+	if len(parts) < 4 {
+		return parts[1]
 	}
 
-	return sb.String()
+	parts = append(parts[:len(parts)-2], " ", conn, " ", parts[len(parts)-1])
+	return strings.Join(parts[1:], "")
 }
 
 // joinCambridge returns "first, second, conn third".
