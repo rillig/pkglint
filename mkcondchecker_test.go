@@ -474,6 +474,7 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		doTest(true, before, after, diagnostics...)
 	}
 	testBeforeAndAfterPrefs := func(before, after string, diagnostics ...string) {
+		doTest(false, before, after, diagnostics...)
 		doTest(true, before, after, diagnostics...)
 	}
 
@@ -919,13 +920,24 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 	// replaced automatically, see mkCondLiteralChars.
 	// TODO: Add tests for all characters that are special in string literals or patterns.
 	// TODO: Then, extend the set of characters for which the expressions are simplified.
-	testBeforeAndAfterPrefs(
+	testBeforePrefs(
+		".if ${PREFS_DEFINED:M&&}",
+		".if ${PREFS_DEFINED:M&&}",
+
+		"WARN: filename.mk:3: To use PREFS_DEFINED at load time, .include \"../../mk/bsd.prefs.mk\" first.")
+	testAfterPrefs(
 		".if ${PREFS_DEFINED:M&&}",
 		".if ${PREFS_DEFINED:M&&}",
 
 		nil...)
 
-	testBeforeAndAfterPrefs(
+	testBeforePrefs(
+		".if ${PREFS:M&&}",
+		".if ${PREFS:M&&}",
+
+		// TODO: Warn that the :U is missing.
+		"WARN: filename.mk:3: To use PREFS at load time, .include \"../../mk/bsd.prefs.mk\" first.")
+	testAfterPrefs(
 		".if ${PREFS:M&&}",
 		".if ${PREFS:M&&}",
 
@@ -947,7 +959,19 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 
 	// The characters <=> may be used unescaped in :M and :N patterns
 	// but not in .if conditions. There they must be enclosed in quotes.
-	testBeforeAndAfterPrefs(
+	testBeforePrefs(
+		".if ${PREFS_DEFINED:M<=>}",
+		".if ${PREFS_DEFINED:U} == \"<=>\"",
+
+		"NOTE: filename.mk:3: PREFS_DEFINED can be "+
+			"compared using the simpler \"${PREFS_DEFINED:U} == \"<=>\"\" "+
+			"instead of matching against \":M<=>\".",
+		"WARN: filename.mk:3: To use PREFS_DEFINED at load time, "+
+			".include \"../../mk/bsd.prefs.mk\" first.",
+		"AUTOFIX: filename.mk:3: "+
+			"Replacing \"${PREFS_DEFINED:M<=>}\" "+
+			"with \"${PREFS_DEFINED:U} == \\\"<=>\\\"\".")
+	testAfterPrefs(
 		".if ${PREFS_DEFINED:M<=>}",
 		".if ${PREFS_DEFINED} == \"<=>\"",
 
