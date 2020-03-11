@@ -395,7 +395,7 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 	t.Chdir("category/package")
 
 	// The Anything type suppresses the warnings from type checking.
-	// BtUnknown would not work, see Pkgsrc.VariableType.
+	// BtUnknown would not work here, see Pkgsrc.VariableType.
 	btAnything := &BasicType{"Anything", func(cv *VartypeCheck) {}}
 
 	// For simplifying the expressions, it is necessary to know whether
