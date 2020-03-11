@@ -400,8 +400,9 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 
 	// For simplifying the expressions, it is necessary to know whether
 	// a variable can be undefined. Undefined variables need the
-	// :U modifier, otherwise bmake will complain about "malformed
-	// conditions", which is not entirely precise since the expression
+	// :U modifier or must be enclosed in double quotes, otherwise
+	// bmake will complain about a "Malformed conditional". That error
+	// message is not entirely precise since the expression
 	// is syntactically valid, it's just the evaluation that fails.
 	//
 	// Some variables such as MACHINE_ARCH are in scope from the very
