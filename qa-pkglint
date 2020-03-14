@@ -82,6 +82,9 @@ qa_netbsd() {
   if (cd "$srcdir" && grep -F -n "\$NetBSD\$" -- *_test.go); then
     exit 1
   fi
+  if (cd "$archivedir" && grep "Pkglint internal error" -- *.err); then
+    exit 1
+  fi
 
   step_msg "Copying files to NetBSD VM"
   rsync -a --delete --rsync-path=/usr/pkg/bin/rsync \
