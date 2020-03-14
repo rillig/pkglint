@@ -86,13 +86,17 @@ func (ck *MkCondChecker) checkNotEmpty(not *MkCond) {
 		return
 	}
 
-	ck.MkLine.Notef("!empty(%s%s) can be replaced with %s.",
-		not.Empty.varname, not.Empty.Mod(), not.Empty.String())
-	ck.MkLine.Explain(
+	fix := ck.MkLine.Autofix()
+	from := sprintf("!empty(%s%s)", not.Empty.varname, not.Empty.Mod())
+	to := not.Empty.String()
+	fix.Notef("%s can be replaced with %s.", from, to)
+	fix.Explain(
 		"Besides being simpler to read, the expression will also fail",
 		"quickly with a \"Malformed conditional\" error from bmake",
 		"if it should ever be undefined at this point.",
 		"This catches typos and other programming mistakes.")
+	fix.Replace(from, to)
+	fix.Apply()
 }
 
 // checkEmpty checks a condition of the form empty(VAR),
