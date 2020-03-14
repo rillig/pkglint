@@ -477,6 +477,26 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__invalid_dependency_patterns(c *chec
 		"WARN: buildlink3.mk:10: Invalid dependency pattern \"hs-X11!=1.6.1.2nb2\".")
 }
 
+func (s *Suite) Test_CheckLinesBuildlink3Mk__PKG_OPTIONS(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpOption("option", "")
+	t.SetUpPkgsrc()
+	t.SetUpPackage("category/package")
+	t.CreateFileBuildlink3("category/package/buildlink3.mk",
+		".include \"../../mk/bsd.fast.prefs.mk\"",
+		".if ${PKG_OPTIONS:Moption}",
+		".endif")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package/buildlink3.mk"))
+
+	// TODO: PKG_OPTIONS must not be used in buildlink3.mk files.
+	// That variable is not assigned at all.
+	// To access the package options, see ../mk/pkg-build-options.mk.
+	t.CheckOutputEmpty()
+}
+
 // Just for branch coverage.
 func (s *Suite) Test_Buildlink3Checker_Check__no_tracing(c *check.C) {
 	t := s.Init(c)
