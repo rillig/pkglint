@@ -491,10 +491,9 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__PKG_OPTIONS(c *check.C) {
 
 	G.Check(t.File("category/package/buildlink3.mk"))
 
-	// TODO: PKG_OPTIONS must not be used in buildlink3.mk files.
-	// That variable is not assigned at all.
-	// To access the package options, see ../mk/pkg-build-options.mk.
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"ERROR: ~/category/package/buildlink3.mk:13: " +
+			"PKG_OPTIONS is not available in buildlink3.mk files.")
 }
 
 // Just for branch coverage.
