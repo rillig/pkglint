@@ -821,7 +821,7 @@ func (p *varalignParts) uptoValueWidth() int {
 	if p.value != "" {
 		return p.spaceAfterValueColumn()
 	} else {
-		return p.varnameOpColumn()
+		return p.spaceBeforeValueColumn()
 	}
 }
 

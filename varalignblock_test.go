@@ -2063,7 +2063,7 @@ func (s *Suite) Test_VaralignBlock__var_tab_value63_space_cont_tab8_value71_spac
 	vt.Run()
 }
 
-func (s *Suite) Test_VaralignBlock__var8_tabs88_cont_tab_value_tabs72_cont_tab_value_tabs72_cont_tab_value9(c *check.C) {
+func (s *Suite) Test_VaralignBlock__var8_tabs80_cont_tab_value_tabs72_cont_tab_value_tabs72_cont_tab_value9(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		"VAR...7=\t\t\t\t\t\t\t\t\t\\",
@@ -2076,15 +2076,15 @@ func (s *Suite) Test_VaralignBlock__var8_tabs88_cont_tab_value_tabs72_cont_tab_v
 		"        .                                                               \\",
 		"        .")
 	vt.Diagnostics(
-		"NOTE: Makefile:1: The continuation backslash should be in column 73, not 89.")
+		"NOTE: Makefile:1: The continuation backslash should be in column 73, not 81.")
 	vt.Autofixes(
-		"AUTOFIX: Makefile:1: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\\t\\t\\t\\t\".")
+		"AUTOFIX: Makefile:1: Replacing \"\\t\\t\\t\\t\\t\\t\\t\\t\\t\" with \"\\t\\t\\t\\t\\t\\t\\t\\t\".")
 	vt.Fixed(
 		"VAR...7=                                                                \\",
 		"        .                                                               \\",
 		"        .                                                               \\",
 		"        .")
-	vt.tester.ExpectAssert(vt.Run) // FIXME: panic
+	vt.Run()
 }
 
 // Up to 2020-01-27, pkglint removed all spaces before the backslash,
