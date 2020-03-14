@@ -184,17 +184,7 @@ func (ck *Buildlink3Checker) checkMainPart(mlex *MkLinesLexer) bool {
 		}
 
 		mkline.ForEachUsed(func(varUse *MkVarUse, time VucTime) {
-			if varUse.varname == "PKG_OPTIONS" {
-				mkline.Errorf("PKG_OPTIONS is not available in buildlink3.mk files.")
-				mkline.Explain(
-					"The buildlink3.mk file of a package is only ever included",
-					"by other packages, never by the package itself.",
-					"Therefore it does not make sense to use the variable PKG_OPTIONS",
-					"in this place since it contains the package options of a random",
-					"package that happens to include this file.",
-					"",
-					"To access the options of this package, see mk/pkg-build-options.mk.")
-			}
+			ck.checkVarUse(varUse, mkline)
 		})
 	}
 
@@ -207,6 +197,20 @@ func (ck *Buildlink3Checker) checkMainPart(mlex *MkLinesLexer) bool {
 	}
 	mlex.SkipEmptyOrNote()
 	return true
+}
+
+func (ck *Buildlink3Checker) checkVarUse(varUse *MkVarUse, mkline *MkLine) {
+	if varUse.varname == "PKG_OPTIONS" {
+		mkline.Errorf("PKG_OPTIONS is not available in buildlink3.mk files.")
+		mkline.Explain(
+			"The buildlink3.mk file of a package is only ever included",
+			"by other packages, never by the package itself.",
+			"Therefore it does not make sense to use the variable PKG_OPTIONS",
+			"in this place since it contains the package options of a random",
+			"package that happens to include this file.",
+			"",
+			"To access the options of this package, see mk/pkg-build-options.mk.")
+	}
 }
 
 func (ck *Buildlink3Checker) checkVarassign(mkline *MkLine, pkgbase string) {
