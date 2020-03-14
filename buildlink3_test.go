@@ -2,6 +2,10 @@ package pkglint
 
 import "gopkg.in/check.v1"
 
+func CheckLinesBuildlink3Mk(mklines *MkLines) {
+	NewBuildlink3Checker(mklines).Check()
+}
+
 // This test ensures that CheckLinesBuildlink3Mk really checks for
 // buildlink3.mk files that are included by the buildlink3.mk file
 // but not by the package.

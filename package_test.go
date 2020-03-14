@@ -352,11 +352,12 @@ func (s *Suite) Test_Package__different_package_identifiers(c *check.C) {
 
 	G.checkdirPackage(".")
 
-	// TODO: Warn about the mismatch between optid and bl3id
-	//  since mk/pkg-build-options.mk relies on them being identical.
 	t.CheckOutputLines(
-		"ERROR: buildlink3.mk:3: Package name mismatch " +
-			"between \"bl3id\" in this file and \"pkgname\" from Makefile:4.")
+		"ERROR: buildlink3.mk:3: Package name mismatch "+
+			"between \"bl3id\" in this file and \"pkgname\" from Makefile:4.",
+		"WARN: options.mk:3: The buildlink3 identifier \"bl3id\" "+
+			"should be the same as the options identifier \"optid\".")
+
 }
 
 func (s *Suite) Test_NewPackage(c *check.C) {

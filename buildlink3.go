@@ -13,8 +13,8 @@ type Buildlink3Checker struct {
 	abi, api         *DependencyPattern
 }
 
-func CheckLinesBuildlink3Mk(mklines *MkLines) {
-	(&Buildlink3Checker{mklines: mklines}).Check()
+func NewBuildlink3Checker(mklines *MkLines) *Buildlink3Checker {
+	return &Buildlink3Checker{mklines: mklines}
 }
 
 func (ck *Buildlink3Checker) Check() {
