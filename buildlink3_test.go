@@ -496,6 +496,35 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__PKG_OPTIONS(c *check.C) {
 			"PKG_OPTIONS is not available in buildlink3.mk files.")
 }
 
+func (s *Suite) Test_CheckLinesBuildlink3Mk__PKG_BUILD_OPTIONS(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpOption("option", "")
+	t.SetUpPkgsrc()
+	t.CreateFileLines("mk/pkg-build-options.mk")
+	t.SetUpPackage("category/package")
+	t.CreateFileBuildlink3("category/package/buildlink3.mk",
+		"pkgbase := unrelated",
+		".include \"../../mk/pkg-build-options.mk\"",
+		"",
+		".if ${PKG_BUILD_OPTIONS:Moption}", // missing variable parameter
+		".endif",
+		"",
+		".if ${PKG_BUILD_OPTIONS.package:Moption}", // wrong variable parameter
+		".endif",
+		"",
+		".if ${PKG_BUILD_OPTIONS.unrelated:Moption}", // corresponds to pkgbase above
+		".endif")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package/buildlink3.mk"))
+
+	// TODO: Warn about PKG_BUILD_OPTIONS.package since that variable is not defined.
+	t.CheckOutputLines(
+		"WARN: ~/category/package/buildlink3.mk:15: " +
+			"PKG_BUILD_OPTIONS is used but not defined.")
+}
+
 // Just for branch coverage.
 func (s *Suite) Test_Buildlink3Checker_Check__no_tracing(c *check.C) {
 	t := s.Init(c)
