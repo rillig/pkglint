@@ -430,6 +430,9 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		"*.mk: use")
 	t.SetUpType("LATER", btAnything, NoVartypeOptions,
 		"*.mk: use")
+	t.SetUpType("PKG_BUILD_OPTIONS.*", BtOption, SystemProvided|List,
+		"*.mk: use, use-loadtime")
+	t.SetUpOption("option", "")
 	// UNDEFINED is also used in the following tests, but is obviously
 	// not defined here.
 
@@ -437,7 +440,7 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 	// before: the directive before the condition is simplified
 	// after: the directive after the condition is simplified
 	doTest := func(prefs bool, before, after string, diagnostics ...string) {
-		if !matches(before, `IN_SCOPE|PREFS|LATER|UNDEFINED`) {
+		if !matches(before, `IN_SCOPE|PREFS|LATER|UNDEFINED|PKG_BUILD_OPTIONS`) {
 			c.Errorf("Condition %q must include one of the above variable names.", before)
 		}
 		mklines := t.SetUpFileMkLines("filename.mk",
@@ -988,6 +991,19 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 	testBeforeAndAfterPrefs(
 		".if ${IN_SCOPE_DEFINED:M\"}",
 		".if ${IN_SCOPE_DEFINED:M\"}",
+
+		nil...)
+
+	testAfterPrefs(
+		".if !empty(PKG_BUILD_OPTIONS.package:Moption)",
+		".if !empty(PKG_BUILD_OPTIONS.package:Moption)",
+
+		// TODO: Suggest ${...} instead of !empty, to catch typos
+		nil...)
+
+	testAfterPrefs(
+		".if ${PKG_BUILD_OPTIONS.package:Moption}",
+		".if ${PKG_BUILD_OPTIONS.package:Moption}",
 
 		nil...)
 }
