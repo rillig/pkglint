@@ -200,7 +200,8 @@ func (ck *Buildlink3Checker) checkMainPart(mlex *MkLinesLexer) bool {
 }
 
 func (ck *Buildlink3Checker) checkVarUse(varUse *MkVarUse, mkline *MkLine) {
-	if varUse.varname == "PKG_OPTIONS" {
+	varname := varUse.varname
+	if varname == "PKG_OPTIONS" {
 		mkline.Errorf("PKG_OPTIONS is not available in buildlink3.mk files.")
 		mkline.Explain(
 			"The buildlink3.mk file of a package is only ever included",
@@ -210,6 +211,17 @@ func (ck *Buildlink3Checker) checkVarUse(varUse *MkVarUse, mkline *MkLine) {
 			"package that happens to include this file.",
 			"",
 			"To access the options of this package, see mk/pkg-build-options.mk.")
+	}
+
+	if varnameBase(varname) == "PKG_BUILD_OPTIONS" {
+		param := varnameParam(varname)
+		if param != "" && param != ck.pkgbase {
+			mkline.Warnf("Wrong PKG_BUILD_OPTIONS, expected %q instead of %q.",
+				ck.pkgbase, param)
+			mkline.Explain(
+				"The variable parameter for PKG_BUILD_OPTIONS must correspond",
+				"to the value of \"pkgbase\" above.")
+		}
 	}
 }
 

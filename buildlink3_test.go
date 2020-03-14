@@ -709,8 +709,10 @@ func (s *Suite) Test_Buildlink3Checker_checkVarUse__PKG_BUILD_OPTIONS(c *check.C
 
 	// TODO: Warn about PKG_BUILD_OPTIONS.package since that variable is not defined.
 	t.CheckOutputLines(
-		"WARN: ~/category/package/buildlink3.mk:15: " +
-			"PKG_BUILD_OPTIONS is used but not defined.")
+		"WARN: ~/category/package/buildlink3.mk:15: "+
+			"PKG_BUILD_OPTIONS is used but not defined.",
+		"WARN: ~/category/package/buildlink3.mk:21: "+
+			"Wrong PKG_BUILD_OPTIONS, expected \"package\" instead of \"unrelated\".")
 }
 
 // As of October 2018, pkglint parses package dependencies a little
