@@ -82,12 +82,17 @@ func (ck *MkCondChecker) checkNotEmpty(not *MkCond) {
 	// This applies especially to the ${VAR:Mpattern} form.
 	//
 	// See MkCondChecker.simplify.
-	if !G.Experimental {
+	if !hasPrefix(not.Empty.varname, "PKG_BUILD_OPTIONS.") {
 		return
 	}
 
-	ck.MkLine.Notef("!empty(%s%s) can be replaced with the simpler %s.",
+	ck.MkLine.Notef("!empty(%s%s) can be replaced with %s.",
 		not.Empty.varname, not.Empty.Mod(), not.Empty.String())
+	ck.MkLine.Explain(
+		"Besides being simpler to read, the expression will also fail",
+		"quickly with a \"Malformed conditional\" error from bmake",
+		"if it should ever be undefined at this point.",
+		"This catches typos and other programming mistakes.")
 }
 
 // checkEmpty checks a condition of the form empty(VAR),

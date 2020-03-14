@@ -219,7 +219,7 @@ func (s *Suite) Test_MkCondChecker_Check__comparing_PKGSRC_COMPILER_with_eqeq(c 
 func (s *Suite) Test_MkCondChecker_checkNotEmpty(c *check.C) {
 	t := s.Init(c)
 
-	G.Experimental = true
+	t.SetUpVartypes()
 
 	test := func(cond string, diagnostics ...string) {
 		mklines := t.NewMkLines("filename.mk",
@@ -233,8 +233,17 @@ func (s *Suite) Test_MkCondChecker_checkNotEmpty(c *check.C) {
 	}
 
 	test("!empty(VAR)",
-		// TODO: Add a :U modifier if VAR might be undefined.
-		"NOTE: filename.mk:1: !empty(VAR) can be replaced with the simpler ${VAR}.")
+
+		// Only a few variables are suggested to use the simpler form,
+		// because of the side-effect when the variable is undefined.
+		// VAR is not one of these variables.
+		nil...)
+
+	test(
+		"!empty(PKG_BUILD_OPTIONS.package:Moption)",
+
+		"NOTE: filename.mk:1: !empty(PKG_BUILD_OPTIONS.package:Moption) "+
+			"can be replaced with ${PKG_BUILD_OPTIONS.package:Moption}.")
 }
 
 func (s *Suite) Test_MkCondChecker_checkEmpty(c *check.C) {
@@ -430,9 +439,6 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		"*.mk: use")
 	t.SetUpType("LATER", btAnything, NoVartypeOptions,
 		"*.mk: use")
-	t.SetUpType("PKG_BUILD_OPTIONS.*", BtOption, SystemProvided|List,
-		"*.mk: use, use-loadtime")
-	t.SetUpOption("option", "")
 	// UNDEFINED is also used in the following tests, but is obviously
 	// not defined here.
 
@@ -440,7 +446,7 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 	// before: the directive before the condition is simplified
 	// after: the directive after the condition is simplified
 	doTest := func(prefs bool, before, after string, diagnostics ...string) {
-		if !matches(before, `IN_SCOPE|PREFS|LATER|UNDEFINED|PKG_BUILD_OPTIONS`) {
+		if !matches(before, `IN_SCOPE|PREFS|LATER|UNDEFINED`) {
 			c.Errorf("Condition %q must include one of the above variable names.", before)
 		}
 		mklines := t.SetUpFileMkLines("filename.mk",
@@ -991,19 +997,6 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 	testBeforeAndAfterPrefs(
 		".if ${IN_SCOPE_DEFINED:M\"}",
 		".if ${IN_SCOPE_DEFINED:M\"}",
-
-		nil...)
-
-	testAfterPrefs(
-		".if !empty(PKG_BUILD_OPTIONS.package:Moption)",
-		".if !empty(PKG_BUILD_OPTIONS.package:Moption)",
-
-		// TODO: Suggest ${...} instead of !empty, to catch typos
-		nil...)
-
-	testAfterPrefs(
-		".if ${PKG_BUILD_OPTIONS.package:Moption}",
-		".if ${PKG_BUILD_OPTIONS.package:Moption}",
 
 		nil...)
 }
