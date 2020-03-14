@@ -581,11 +581,15 @@ func (t *Tester) CreateFileDummyPatch(filename RelPath) {
 }
 
 func (t *Tester) CreateFileBuildlink3(filename RelPath, customLines ...string) {
+	lower := filename.Dir().Base()
+	t.CreateFileBuildlink3Id(filename, lower, customLines...)
+}
+
+func (t *Tester) CreateFileBuildlink3Id(filename RelPath, lower string, customLines ...string) {
 	// Buildlink3.mk files only make sense in category/package directories.
 	assert(G.Pkgsrc.Rel(t.File(filename)).Count() == 3)
 
 	dir := filename.Dir().Clean()
-	lower := dir.Base()
 	// see pkgtools/createbuildlink/files/createbuildlink, "package specific variables"
 	upper := strings.Replace(strings.ToUpper(lower), "-", "_", -1)
 
