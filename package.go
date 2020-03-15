@@ -167,11 +167,7 @@ func (pkg *Package) load() ([]CurrPath, *MkLines, *MkLines) {
 		if isRelevantMk(filename, basename) {
 			fragmentMklines := LoadMk(filename, pkg, MustSucceed)
 			pkg.collectConditionalIncludes(fragmentMklines)
-			fragmentMklines.ForEach(func(mkline *MkLine) {
-				if mkline.IsVarassign() && mkline.Varname() == "pkgbase" {
-					pkg.seenPkgbase.FirstTime(mkline.Value())
-				}
-			})
+			pkg.loadBuildlink3Pkgbase(filename, fragmentMklines)
 		}
 		if hasPrefix(basename, "PLIST") {
 			pkg.loadPlistDirs(filename)
@@ -180,6 +176,17 @@ func (pkg *Package) load() ([]CurrPath, *MkLines, *MkLines) {
 
 	pkg.seenPrefs = false
 	return files, mklines, allLines
+}
+
+func (pkg *Package) loadBuildlink3Pkgbase(filename CurrPath, fragmentMklines *MkLines) {
+	if !filename.HasBase("buildlink3.mk") {
+		return
+	}
+	fragmentMklines.ForEach(func(mkline *MkLine) {
+		if mkline.IsVarassign() && mkline.Varname() == "pkgbase" {
+			pkg.seenPkgbase.FirstTime(mkline.Value())
+		}
+	})
 }
 
 func (pkg *Package) loadPackageMakefile() (*MkLines, *MkLines) {
