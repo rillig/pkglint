@@ -740,6 +740,20 @@ func (s *Suite) Test_resolveVariableRefs__special_chars(c *check.C) {
 	t.CheckEquals(resolved, "gst-plugins0.10-x11/distinfo")
 }
 
+func (s *Suite) Test_resolveVariableRefs__indeterminate(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("filename.mk",
+		"VAR!=\tcommand")
+	mklines.ForEach(mklines.collectVariable)
+
+	resolved := resolveVariableRefs("${VAR}", mklines, nil)
+
+	// VAR is defined, but since it contains the result of a shell command,
+	// its value is indeterminate. Therefore it is not replaced.
+	t.CheckEquals(resolved, "${VAR}")
+}
+
 // Just for code coverage.
 func (s *Suite) Test_CheckFileOther__no_tracing(c *check.C) {
 	t := s.Init(c)
