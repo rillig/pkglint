@@ -963,7 +963,8 @@ func (s *Suite) Test_MkVarUseChecker_checkAssignable(c *check.C) {
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("filename.mk",
 		"BUILTIN_FIND_FILES_VAR:=\tBIN_FILE",
-		"BUILTIN_FIND_FILES.BIN_FILE=\t${TOOLS_PLATFORM.file} /bin/file /usr/bin/file")
+		"BUILTIN_FIND_FILES.BIN_FILE=\t${TOOLS_PLATFORM.file} /bin/file /usr/bin/file",
+		"PKG_SHELL.user=\t${TOOLS_PLATFORM.false:Q}")
 
 	mklines.ForEach(func(mkline *MkLine) {
 		ck := NewMkAssignChecker(mkline, mklines)
@@ -971,8 +972,11 @@ func (s *Suite) Test_MkVarUseChecker_checkAssignable(c *check.C) {
 	})
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:2: Incompatible types: " +
-			"TOOLS_PLATFORM.file (type \"ShellCommand\") " +
+		"WARN: filename.mk:2: Incompatible types: "+
+			"TOOLS_PLATFORM.file (type \"ShellCommand\") "+
+			"cannot be assigned to type \"Pathname\".",
+		"WARN: filename.mk:3: Incompatible types: "+
+			"TOOLS_PLATFORM.false (type \"ShellCommand\") "+
 			"cannot be assigned to type \"Pathname\".")
 }
 
