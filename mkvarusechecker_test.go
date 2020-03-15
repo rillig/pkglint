@@ -993,7 +993,8 @@ func (s *Suite) Test_MkVarUseChecker_checkAssignable__shell_command_to_pathname(
 	mklines := t.NewMkLines("filename.mk",
 		"PKG_SHELL.user=\t${TOOLS_PLATFORM.sh}",
 		"PKG_SHELL.user=\t${SH}",
-		"PKG_SHELL.user=\t${BASH}")
+		"PKG_SHELL.user=\t${BASH}",
+		"PKG_SHELL.user=\t/bin/sh")
 
 	mklines.ForEach(func(mkline *MkLine) {
 		ck := NewMkAssignChecker(mkline, mklines)
