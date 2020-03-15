@@ -743,15 +743,18 @@ func (s *Suite) Test_resolveVariableRefs__special_chars(c *check.C) {
 func (s *Suite) Test_resolveVariableRefs__indeterminate(c *check.C) {
 	t := s.Init(c)
 
-	mklines := t.NewMkLines("filename.mk",
+	pkg := NewPackage(G.Pkgsrc.File("category/package"))
+	pkg.vars.Define("PKGVAR", t.NewMkLine("filename.mk", 123, "PKGVAR!=\tcommand"))
+	mklines := t.NewMkLinesPkg("filename.mk", pkg,
 		"VAR!=\tcommand")
-	mklines.ForEach(mklines.collectVariable)
+	mklines.collectVariables()
 
-	resolved := resolveVariableRefs("${VAR}", mklines, nil)
+	resolved := resolveVariableRefs("${VAR} ${PKGVAR}", mklines, nil)
 
-	// VAR is defined, but since it contains the result of a shell command,
-	// its value is indeterminate. Therefore it is not replaced.
-	t.CheckEquals(resolved, "${VAR}")
+	// VAR and PKGVAR are defined, but since they contain the result of
+	// a shell command, their value is indeterminate.
+	// Therefore they are not replaced.
+	t.CheckEquals(resolved, "${VAR} ${PKGVAR}")
 }
 
 // Just for code coverage.
