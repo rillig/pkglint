@@ -555,7 +555,8 @@ type Once struct {
 }
 
 func (o *Once) FirstTime(what string) bool {
-	firstTime := o.check(o.keyString(what))
+	key := o.keyString(what)
+	firstTime := o.check(key)
 	if firstTime && o.Trace {
 		G.Logger.out.WriteLine(sprintf("FirstTime: %s", what))
 	}
@@ -563,7 +564,8 @@ func (o *Once) FirstTime(what string) bool {
 }
 
 func (o *Once) FirstTimeSlice(whats ...string) bool {
-	firstTime := o.check(o.keyStrings(whats))
+	key := o.keyStrings(whats)
+	firstTime := o.check(key)
 	if firstTime && o.Trace {
 		G.Logger.out.WriteLine(sprintf("FirstTime: %s", strings.Join(whats, ", ")))
 	}
