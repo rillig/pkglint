@@ -14,8 +14,8 @@ import (
 // It just doesn't make sense to check multiple pkgsrc installations at once.
 //
 // This type only contains data that is loaded once and then stays constant.
-// Everything else (distfile hashes, package names) is recorded in the Pkglint
-// type instead.
+// Everything else (distfile hashes, package names) is recorded in the
+// InterPackage type instead.
 type Pkgsrc struct {
 	// The top directory (PKGSRCDIR).
 	topdir CurrPath
