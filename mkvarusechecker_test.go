@@ -1237,11 +1237,17 @@ func (s *Suite) Test_MkVarUseChecker_checkToolsPlatform(c *check.C) {
 	t.SetUpTool("cond1", "", AfterPrefsMk)
 	t.SetUpTool("cond2", "", AfterPrefsMk)
 	t.SetUpTool("undefined", "", AfterPrefsMk)
+	t.SetUpTool("non-const", "", AfterPrefsMk)
 	t.CreateFileLines("mk/tools/tools.NetBSD.mk",
+		"OTHER_VAR?=\tother value", // Just for code coverage
 		"TOOLS_PLATFORM.available?=\t/bin/available",
 		"TOOLS_PLATFORM.cond1?=\t/usr/cond1",
 		"TOOLS_PLATFORM.cond2?=\t/usr/cond2",
-		"TOOLS_PLATFORM.undefined?=\t/usr/undefined")
+		"TOOLS_PLATFORM.undefined?=\t/usr/undefined",
+		"",
+		"TOOLS_PLATFORM.non-const?=\t/non-const-initial",
+		"READ=\t${TOOLS_PLATFORM.non-const}", // Make the variable non-const
+		"TOOLS_PLATFORM.non-const?=\t/non-const-final")
 	t.CreateFileLines("mk/tools/tools.SunOS.mk",
 		"TOOLS_PLATFORM.available?=\t/bin/available",
 		"",

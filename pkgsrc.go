@@ -530,11 +530,8 @@ func (src *Pkgsrc) loadToolsPlatform() {
 			conditional[opsys] = true
 		}
 		for opsys, status := range statusByNameAndOpsys[name] {
-			switch status {
-			case 1:
-				delete(undefined, opsys)
-			case 2:
-				delete(undefined, opsys)
+			delete(undefined, opsys)
+			if status == 2 {
 				delete(conditional, opsys)
 			}
 		}
