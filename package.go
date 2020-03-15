@@ -59,6 +59,9 @@ type Package struct {
 	// TODO: Be more precise about the purpose of this field.
 	seenInclude bool
 
+	// The identifiers for which PKG_BUILD_OPTIONS is defined.
+	seenPkgbase Once
+
 	// During both load() and check(), tells whether bsd.prefs.mk has
 	// already been loaded directly or indirectly.
 	//
@@ -164,6 +167,11 @@ func (pkg *Package) load() ([]CurrPath, *MkLines, *MkLines) {
 		if isRelevantMk(filename, basename) {
 			fragmentMklines := LoadMk(filename, pkg, MustSucceed)
 			pkg.collectConditionalIncludes(fragmentMklines)
+			fragmentMklines.ForEach(func(mkline *MkLine) {
+				if mkline.IsVarassign() && mkline.Varname() == "pkgbase" {
+					pkg.seenPkgbase.FirstTime(mkline.Value())
+				}
+			})
 		}
 		if hasPrefix(basename, "PLIST") {
 			pkg.loadPlistDirs(filename)
@@ -314,6 +322,10 @@ func (pkg *Package) parseLine(mklines *MkLines, mkline *MkLine, allLines *MkLine
 				trace.Stepf("varassign(%q, %q, %q)", varname, op, value)
 			}
 			pkg.vars.Define(varname, mkline)
+		}
+
+		if varname == "pkgbase" {
+			pkg.seenPkgbase.FirstTime(mkline.Value())
 		}
 	}
 	return true
