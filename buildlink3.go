@@ -13,8 +13,8 @@ type Buildlink3Checker struct {
 	abi, api         *DependencyPattern
 }
 
-func NewBuildlink3Checker(mklines *MkLines) *Buildlink3Checker {
-	return &Buildlink3Checker{mklines: mklines}
+func CheckLinesBuildlink3Mk(mklines *MkLines) {
+	(&Buildlink3Checker{mklines: mklines}).Check()
 }
 
 func (ck *Buildlink3Checker) Check() {
@@ -90,6 +90,9 @@ func (ck *Buildlink3Checker) checkFirstParagraph(mlex *MkLinesLexer) bool {
 
 	mlex.SkipEmptyOrNote()
 	ck.pkgbase = pkgbase
+	if pkg := ck.mklines.pkg; pkg != nil {
+		pkg.buildlinkID = ck.pkgbase
+	}
 	ck.pkgbaseLine = pkgbaseLine
 	return true
 }
