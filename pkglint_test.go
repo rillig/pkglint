@@ -1123,6 +1123,24 @@ func (s *Suite) Test_Pkglint_checkReg__spec(c *check.C) {
 		"WARN: ~/category/package/spec: Only packages in regress/ may have spec files.")
 }
 
+func (s *Suite) Test_Pkglint_checkReg__options_mk(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.CreateFileLines("mk/bsd.options.mk")
+	t.CreateFileLines("category/package/options.mk",
+		MkCvsID,
+		"",
+		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
+		"",
+		".include \"../../mk/bsd.options.mk\"")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package/options.mk"))
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Pkglint_checkRegCvsSubst(c *check.C) {
 	t := s.Init(c)
 
