@@ -738,15 +738,32 @@ func (s *Suite) Test_PlistChecker_checkDuplicate__OPSYS(c *check.C) {
 	t.Chdir("category/package")
 	t.CreateFileLines("PLIST",
 		PlistCvsID,
-		"bin/program")
+		"bin/common",
+		"bin/common_end",
+		"${PLIST.cond}bin/conditional",
+		"bin/plist")
 	t.CreateFileLines("PLIST.Linux",
 		PlistCvsID,
+		"bin/common",
+		"bin/common_end",
+		"${PLIST.cond}bin/conditional",
 		"bin/os-specific",
-		"bin/program")
+		"bin/plist")
 	t.CreateFileLines("PLIST.NetBSD",
 		PlistCvsID,
+		"bin/common",
+		"bin/common_end",
+		"${PLIST.cond}bin/conditional",
 		"bin/os-specific",
-		"bin/program")
+		"bin/plist")
+	t.CreateFileLines("PLIST.common",
+		PlistCvsID,
+		"bin/common",
+		"${PLIST.cond}bin/conditional")
+	t.CreateFileLines("PLIST.common_end",
+		PlistCvsID,
+		"bin/common_end",
+		"${PLIST.cond}bin/conditional")
 	t.FinishSetUp()
 
 	G.Check(".")
