@@ -766,6 +766,23 @@ func (s *Suite) Test_PlistChecker_checkDuplicate__OPSYS(c *check.C) {
 		"${PLIST.cond}bin/conditional")
 	t.FinishSetUp()
 
+	// TODO: Use the same order as in PLIST_SRC_DFLT, see mk/plist/plist.mk.
+	// PLIST.common
+	// PLIST.${OPSYS}
+	// PLIST.${MACHINE_ARCH:C/i[3-6]86/i386/g}
+	// PLIST.${OPSYS}-${MACHINE_ARCH:C/i[3-6]86/i386/g}
+	// ${defined(EMUL_PLATFORM):?PLIST.${EMUL_PLATFORM}:}
+	// PLIST
+	// PLIST.common_end
+	//
+	// The ranks among the files are:
+	//  PLIST
+	//  -> PLIST.common
+	//  -> PLIST.common_end
+	//  -> { PLIST.OPSYS, PLIST.ARCH }
+	//  -> { PLIST.OPSYS.ARCH, PLIST.EMUL_PLATFORM }
+	// Files are a later level must not mention files that are already
+	// mentioned at an earlier level.
 	G.Check(".")
 
 	// TODO: Warn that bin/program is duplicate, but not bin/os-specific.
