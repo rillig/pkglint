@@ -81,7 +81,8 @@ func (reg *VarTypeRegistry) DefineName(varname string, basicType *BasicType, opt
 	reg.Define(varname, basicType, options, aclEntries)
 }
 
-// DefineParse defines a variable with the given type and permissions.
+// acl defines the permissions of a variable by listing the permissions
+// individually.
 //
 // A permission entry looks like this:
 //  "Makefile, Makefile.*, *.mk: default, set, append, use, use-loadtime"
@@ -89,34 +90,18 @@ func (reg *VarTypeRegistry) DefineName(varname string, basicType *BasicType, opt
 // to prevent typos. To use arbitrary filenames, prefix them with
 // "special:".
 //
-// TODO: When prefixed with "infra:", the entry should only
-//  apply to files within the pkgsrc infrastructure. Without this prefix,
-//  the pattern should only apply to files outside the pkgsrc infrastructure.
-func (reg *VarTypeRegistry) DefineParse(varname string, basicType *BasicType, options vartypeOptions, aclEntries ...string) {
-	parsedEntries := reg.parseACLEntries(varname, aclEntries...)
-	reg.Define(varname, basicType, options, parsedEntries)
-}
-
-// acl defines the permissions of a variable by listing the permissions
-// individually.
-//
 // Each variable that uses this function directly must document:
 //  - which of the predefined permission sets is the closest
 //  - how this individual permission set differs
 //  - why the predefined permission set is not good enough
 //  - which packages need this custom permission set.
+//
+// TODO: When prefixed with "infra:", the entry should only
+//  apply to files within the pkgsrc infrastructure. Without this prefix,
+//  the pattern should only apply to files outside the pkgsrc infrastructure.
 func (reg *VarTypeRegistry) acl(varname string, basicType *BasicType, options vartypeOptions, aclEntries ...string) {
-
-	// If this assertion fails, it usually means that
-	// the test calls SetUpVartypes redundantly.
-	// For example, it is called by SetUpPkgsrc or SetUpPackage as well.
-	assertf(!reg.IsDefinedExact(varname), "Variable %q must only be defined once.", varname)
-
-	reg.DefineParse(varname, basicType, options, aclEntries...)
-}
-
-func (reg *VarTypeRegistry) compile(name string, aclEntries ...string) {
-	reg.cache[name] = reg.parseACLEntries(name, aclEntries...)
+	parsedEntries := reg.parseACLEntries(varname, aclEntries...)
+	reg.Define(varname, basicType, options, parsedEntries)
 }
 
 // acllist defines the permissions of a list variable by listing
@@ -440,6 +425,10 @@ func (reg *VarTypeRegistry) options(base vartypeOptions, additional []vartypeOpt
 		opts |= additional[0]
 	}
 	return opts
+}
+
+func (reg *VarTypeRegistry) compile(name string, aclEntries ...string) {
+	reg.cache[name] = reg.parseACLEntries(name, aclEntries...)
 }
 
 // Init initializes the long list of predefined pkgsrc variables.

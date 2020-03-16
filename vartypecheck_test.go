@@ -1334,11 +1334,12 @@ func (s *Suite) Test_VartypeCheck_Pathname(c *check.C) {
 }
 
 func (s *Suite) Test_VartypeCheck_PathnameSpace(c *check.C) {
+	t := s.Init(c)
 	// Invent a variable name since this data type is only used as part
 	// of CONF_FILES.
-	G.Pkgsrc.vartypes.DefineParse("CONFIG_FILE", BtPathnameSpace,
+	t.SetUpType("CONFIG_FILE", BtPathnameSpace,
 		NoVartypeOptions, "*.mk: set, use")
-	vt := NewVartypeCheckTester(s.Init(c), BtPathnameSpace)
+	vt := NewVartypeCheckTester(t, BtPathnameSpace)
 
 	vt.Varname("CONFIG_FILE")
 	vt.Values(

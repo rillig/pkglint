@@ -243,7 +243,7 @@ func (t *Tester) SetUpVartypes() {
 
 func (t *Tester) SetUpMasterSite(varname string, urls ...string) {
 	if !G.Pkgsrc.vartypes.IsDefinedExact(varname) {
-		G.Pkgsrc.vartypes.DefineParse(varname, BtFetchURL,
+		t.SetUpType(varname, BtFetchURL,
 			List|SystemProvided,
 			"buildlink3.mk: none",
 			"*: use")
