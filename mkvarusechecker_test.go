@@ -657,7 +657,7 @@ func (s *Suite) Test_MkVarUseChecker_checkPermissions__assigned_to_infrastructur
 	// This combination of BtUnknown and all permissions is typical for
 	// otherwise unknown variables from the pkgsrc infrastructure.
 	G.Pkgsrc.vartypes.Define("INFRA", BtUnknown, NoVartypeOptions,
-		NewACLEntry("*", aclpAll))
+		[]ACLEntry{NewACLEntry("*", aclpAll)})
 	G.Pkgsrc.vartypes.DefineParse("VAR", BtUnknown, NoVartypeOptions,
 		"buildlink3.mk: none",
 		"*: use")

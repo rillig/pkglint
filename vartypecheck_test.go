@@ -610,7 +610,7 @@ func (s *Suite) Test_VartypeCheck_EmulPlatform(c *check.C) {
 
 func (s *Suite) Test_VartypeCheck_Enum(c *check.C) {
 	basicType := enum("jdk1 jdk2 jdk4")
-	G.Pkgsrc.vartypes.Define("JDK", basicType, UserSettable)
+	G.Pkgsrc.vartypes.Define("JDK", basicType, UserSettable, []ACLEntry{})
 	vt := NewVartypeCheckTester(s.Init(c), basicType)
 
 	vt.Varname("JDK")
