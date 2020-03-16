@@ -731,6 +731,30 @@ func (s *Suite) Test_PlistChecker_checkDuplicate(c *check.C) {
 			"already appeared in line 2.")
 }
 
+func (s *Suite) Test_PlistChecker_checkDuplicate__OPSYS(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.Chdir("category/package")
+	t.CreateFileLines("PLIST",
+		PlistCvsID,
+		"bin/program")
+	t.CreateFileLines("PLIST.Linux",
+		PlistCvsID,
+		"bin/os-specific",
+		"bin/program")
+	t.CreateFileLines("PLIST.NetBSD",
+		PlistCvsID,
+		"bin/os-specific",
+		"bin/program")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	// TODO: Warn that bin/program is duplicate, but not bin/os-specific.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_PlistChecker_checkPathBin(c *check.C) {
 	t := s.Init(c)
 
