@@ -1269,20 +1269,20 @@ func (s *Suite) Test_interval(c *check.C) {
 }
 
 type relation struct {
-	pairs         []struct{ a, b uint }
+	pairs         []struct{ a, b int }
 	reflexive     bool
 	transitive    bool
 	antisymmetric bool
 }
 
 func (r *relation) add(a interface{}, b interface{}) {
-	ia := uint(reflect.ValueOf(a).Uint())
-	ib := uint(reflect.ValueOf(b).Uint())
-	r.pairs = append(r.pairs, struct{ a, b uint }{ia, ib})
+	ia := int(reflect.ValueOf(a).Uint())
+	ib := int(reflect.ValueOf(b).Uint())
+	r.pairs = append(r.pairs, struct{ a, b int }{ia, ib})
 }
 
 func (r *relation) size() int {
-	max := uint(0)
+	max := 0
 	for _, pair := range r.pairs {
 		if pair.a > max {
 			max = pair.a
@@ -1291,7 +1291,7 @@ func (r *relation) size() int {
 			max = pair.b
 		}
 	}
-	return int(max + 1)
+	return max + 1
 }
 
 func (r *relation) check(actual func(int, int) bool) {
