@@ -687,3 +687,32 @@ func (s *plistLineSorter) Sort() {
 
 	s.autofixed = SaveAutofixChanges(NewLines(lines[0].Filename(), lines))
 }
+
+type PlistRank uint8
+
+const (
+	Plain PlistRank = iota
+	Common
+	CommonEnd
+	Opsys
+	Arch
+	OpsysArch
+	EmulOpsysArch
+)
+
+// The ranks among the files are:
+//  PLIST
+//  -> PLIST.common
+//  -> PLIST.common_end
+//  -> { PLIST.OPSYS, PLIST.ARCH }
+//  -> { PLIST.OPSYS.ARCH, PLIST.EMUL_PLATFORM }
+// Files are a later level must not mention files that are already
+// mentioned at an earlier level.
+func (r PlistRank) Dominates(other PlistRank) bool {
+	return r <= other &&
+		!(r == Opsys && other == Arch) &&
+		!(r == OpsysArch && other == EmulOpsysArch)
+}
+
+type PlistLines struct {
+}

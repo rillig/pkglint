@@ -775,14 +775,6 @@ func (s *Suite) Test_PlistChecker_checkDuplicate__OPSYS(c *check.C) {
 	// PLIST
 	// PLIST.common_end
 	//
-	// The ranks among the files are:
-	//  PLIST
-	//  -> PLIST.common
-	//  -> PLIST.common_end
-	//  -> { PLIST.OPSYS, PLIST.ARCH }
-	//  -> { PLIST.OPSYS.ARCH, PLIST.EMUL_PLATFORM }
-	// Files are a later level must not mention files that are already
-	// mentioned at an earlier level.
 	G.Check(".")
 
 	// TODO: Warn that bin/program is duplicate, but not bin/os-specific.
@@ -1385,4 +1377,21 @@ func (s *Suite) Test_plistLineSorter_Sort(c *check.C) {
 		"man/man1/program.1",
 		"sbin/program",
 		"@exec echo \"after lib/after.la\"") // The footer starts here
+}
+
+func (s *Suite) Test_PlistRank_Dominates(c *check.C) {
+	var rel relation
+	rel.add(Plain, Common)
+	rel.add(Common, CommonEnd)
+	rel.add(CommonEnd, Opsys)
+	rel.add(CommonEnd, Arch)
+	rel.add(Opsys, OpsysArch)
+	rel.add(Opsys, EmulOpsysArch)
+	rel.add(Arch, OpsysArch)
+	rel.add(Arch, EmulOpsysArch)
+	rel.reflexive = true
+	rel.transitive = true
+	rel.antisymmetric = true
+
+	rel.check(func(a, b int) bool { return PlistRank(a).Dominates(PlistRank(b)) })
 }
