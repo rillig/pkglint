@@ -1208,15 +1208,25 @@ func (s *Suite) Test_PlistChecker_checkOmf__ok(c *check.C) {
 		nil...)
 }
 
-func (s *Suite) Test_PlistLine_Path(c *check.C) {
+func (s *Suite) Test_PlistLine_HasPath(c *check.C) {
 	t := s.Init(c)
 
-	t.CheckEquals(
-		(&PlistLine{text: "relative"}).Path(),
-		NewRelPathString("relative"))
+	test := func(text string, hasPath bool) {
+		t.CheckEquals((&PlistLine{text: text}).HasPath(), hasPath)
+	}
 
-	t.ExpectAssert(
-		func() { (&PlistLine{text: "/absolute"}).Path() })
+	test("abc", true)
+	test("9plan", true)
+	test("bin/program", true)
+
+	test("", false)
+	test("@", false)
+	test(":", false)
+	test("/absolute", false)
+	test("-rf", false)
+	test("\\", false)
+	test("bin/$<", true)
+	test("bin/${VAR}", true)
 }
 
 func (s *Suite) Test_PlistLine_HasPlainPath(c *check.C) {
@@ -1238,6 +1248,17 @@ func (s *Suite) Test_PlistLine_HasPlainPath(c *check.C) {
 	test("\\", false)
 	test("bin/$<", false)
 	test("bin/${VAR}", false)
+}
+
+func (s *Suite) Test_PlistLine_Path(c *check.C) {
+	t := s.Init(c)
+
+	t.CheckEquals(
+		(&PlistLine{text: "relative"}).Path(),
+		NewRelPathString("relative"))
+
+	t.ExpectAssert(
+		func() { (&PlistLine{text: "/absolute"}).Path() })
 }
 
 func (s *Suite) Test_PlistLine_CheckTrailingWhitespace(c *check.C) {
@@ -1394,4 +1415,40 @@ func (s *Suite) Test_PlistRank_Dominates(c *check.C) {
 	rel.antisymmetric = true
 
 	rel.check(func(a, b int) bool { return PlistRank(a).Dominates(PlistRank(b)) })
+}
+
+func (s *Suite) Test_NewPlistLines(c *check.C) {
+	lines := NewPlistLines()
+
+	c.Check(lines.all, check.NotNil)
+}
+
+func (s *Suite) Test_PlistLines_Add(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpFileLines("PLIST",
+		PlistCvsID,
+		"bin/program")
+	t.SetUpFileLines("PLIST.common",
+		PlistCvsID,
+		"bin/program")
+	plistLines := NewPlistChecker(nil).Load(Load(t.File("PLIST"), MustSucceed))
+	plistCommonLines := NewPlistChecker(nil).Load(Load(t.File("PLIST.common"), MustSucceed))
+	lines := NewPlistLines()
+
+	for _, line := range plistLines {
+		if line.HasPath() {
+			lines.Add(line, Plain)
+		}
+	}
+	for _, line := range plistCommonLines {
+		if line.HasPath() {
+			lines.Add(line, Common)
+		}
+	}
+
+	t.CheckOutputLines(
+		// TODO: Wrong order. The diagnostics should be in the same order
+		//  as in mk/plist/plist.mk.
+		"ERROR: ~/PLIST.common:2: Path bin/program is already listed in PLIST:2.")
 }

@@ -528,13 +528,20 @@ type PlistLine struct {
 	text       string   // Line.Text without any conditions of the form ${PLIST.cond}
 }
 
-func (pline *PlistLine) Path() RelPath { return NewRelPathString(pline.text) }
+func (pline *PlistLine) HasPath() bool {
+	return pline.text != "" && plistLineStart.Contains(pline.text[0])
+}
 
 func (pline *PlistLine) HasPlainPath() bool {
 	text := pline.text
 	return text != "" &&
 		plistLineStart.Contains(text[0]) &&
 		!containsVarUse(text)
+}
+
+func (pline *PlistLine) Path() RelPath {
+	assert(pline.HasPath())
+	return NewRelPathString(pline.text)
 }
 
 func (pline *PlistLine) CheckTrailingWhitespace() {
@@ -715,4 +722,25 @@ func (r PlistRank) Dominates(other PlistRank) bool {
 }
 
 type PlistLines struct {
+	all map[RelPath][]*plistLineData
+}
+
+func NewPlistLines() *PlistLines {
+	return &PlistLines{make(map[RelPath][]*plistLineData)}
+}
+
+type plistLineData struct {
+	line *PlistLine
+	rank PlistRank
+}
+
+func (pl *PlistLines) Add(line *PlistLine, rank PlistRank) {
+	path := line.Path()
+	for _, existing := range pl.all[path] {
+		if existing.rank.Dominates(rank) {
+			line.Errorf("Path %s is already listed in %s.",
+				path, line.RelLine(existing.line.Line))
+		}
+	}
+	pl.all[path] = append(pl.all[path], &plistLineData{line, rank})
 }
