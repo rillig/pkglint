@@ -705,7 +705,33 @@ const (
 	Arch
 	OpsysArch
 	EmulOpsysArch
+	Other
 )
+
+func NewPlistRank(basename string) PlistRank {
+
+	isOpsys := func(s string) bool {
+		return G.Pkgsrc.VariableType(nil, "OPSYS").basicType.HasEnum(s)
+	}
+	isArch := func(s string) bool {
+		return G.Pkgsrc.VariableType(nil, "MACHINE_ARCH").basicType.HasEnum(s)
+	}
+
+	switch {
+	case basename == "PLIST":
+		return Plain
+	case basename == "PLIST.common":
+		return Common
+	case basename == "PLIST.common_end":
+		return CommonEnd
+	case hasPrefix(basename, "PLIST.") && isOpsys(basename[6:]):
+		return Opsys
+	case hasPrefix(basename, "PLIST.") && isArch(basename[6:]):
+		return Arch
+	default:
+		return Other
+	}
+}
 
 // The ranks among the files are:
 //  PLIST
@@ -737,9 +763,15 @@ type plistLineData struct {
 func (pl *PlistLines) Add(line *PlistLine, rank PlistRank) {
 	path := line.Path()
 	for _, existing := range pl.all[path] {
-		if existing.rank.Dominates(rank) {
+		switch {
+		case existing.rank == rank:
+			break
+		case existing.rank.Dominates(rank):
 			line.Errorf("Path %s is already listed in %s.",
 				path, line.RelLine(existing.line.Line))
+		case rank.Dominates(existing.rank):
+			existing.line.Errorf("Path %s is already listed in %s.",
+				path, existing.line.RelLine(line.Line))
 		}
 	}
 	pl.all[path] = append(pl.all[path], &plistLineData{line, rank})

@@ -777,8 +777,29 @@ func (s *Suite) Test_PlistChecker_checkDuplicate__OPSYS(c *check.C) {
 	//
 	G.Check(".")
 
-	// TODO: Warn that bin/program is duplicate, but not bin/os-specific.
-	t.CheckOutputEmpty()
+	// For example, bin/program is duplicate, but not bin/os-specific.
+	t.CheckOutputLines(
+		"ERROR: PLIST.Linux:2: Path bin/common is already listed in PLIST:2.",
+		"ERROR: PLIST.Linux:3: Path bin/common_end is already listed in PLIST:3.",
+		"ERROR: PLIST.Linux:4: Path bin/conditional is already listed in PLIST:4.",
+		"ERROR: PLIST.Linux:6: Path bin/plist is already listed in PLIST:5.",
+		"ERROR: PLIST.NetBSD:2: Path bin/common is already listed in PLIST:2.",
+		"ERROR: PLIST.NetBSD:3: Path bin/common_end is already listed in PLIST:3.",
+		"ERROR: PLIST.NetBSD:4: Path bin/conditional is already listed in PLIST:4.",
+		"ERROR: PLIST.NetBSD:6: Path bin/plist is already listed in PLIST:5.",
+		"ERROR: PLIST.common:2: Path bin/common is already listed in PLIST:2.",
+		"ERROR: PLIST.Linux:2: Path bin/common is already listed in PLIST.common:2.",
+		"ERROR: PLIST.NetBSD:2: Path bin/common is already listed in PLIST.common:2.",
+		"ERROR: PLIST.common:3: Path bin/conditional is already listed in PLIST:4.",
+		"ERROR: PLIST.Linux:4: Path bin/conditional is already listed in PLIST.common:3.",
+		"ERROR: PLIST.NetBSD:4: Path bin/conditional is already listed in PLIST.common:3.",
+		"ERROR: PLIST.common_end:2: Path bin/common_end is already listed in PLIST:3.",
+		"ERROR: PLIST.Linux:3: Path bin/common_end is already listed in PLIST.common_end:2.",
+		"ERROR: PLIST.NetBSD:3: Path bin/common_end is already listed in PLIST.common_end:2.",
+		"ERROR: PLIST.common_end:3: Path bin/conditional is already listed in PLIST:4.",
+		"ERROR: PLIST.Linux:4: Path bin/conditional is already listed in PLIST.common_end:3.",
+		"ERROR: PLIST.NetBSD:4: Path bin/conditional is already listed in PLIST.common_end:3.",
+		"ERROR: PLIST.common_end:3: Path bin/conditional is already listed in PLIST.common:3.")
 }
 
 func (s *Suite) Test_PlistChecker_checkPathBin(c *check.C) {
@@ -1398,6 +1419,20 @@ func (s *Suite) Test_plistLineSorter_Sort(c *check.C) {
 		"man/man1/program.1",
 		"sbin/program",
 		"@exec echo \"after lib/after.la\"") // The footer starts here
+}
+
+func (s *Suite) Test_NewPlistRank(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+
+	t.CheckEquals(NewPlistRank("PLIST"), Plain)
+	t.CheckEquals(NewPlistRank("PLIST.common"), Common)
+	t.CheckEquals(NewPlistRank("PLIST.common_end"), CommonEnd)
+	t.CheckEquals(NewPlistRank("PLIST.NetBSD"), Opsys)
+	t.CheckEquals(NewPlistRank("PLIST.x86_64"), Arch)
+	// TODO: OpsysArch
+	t.CheckEquals(NewPlistRank("PLIST.other"), Other)
 }
 
 func (s *Suite) Test_PlistRank_Dominates(c *check.C) {
