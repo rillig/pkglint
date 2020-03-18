@@ -613,6 +613,7 @@ func (t *Tester) CreateFileBuildlink3Id(filename RelPath, id string, customLines
 		sprintf("%s_BUILDLINK3_MK:=", upperID),
 		"",
 		aligned("BUILDLINK_API_DEPENDS.%s+=", id)+sprintf("%s>=0", id),
+		// TODO: Add ABI_DEPENDS; see Test_LoadBuildlink3Data
 		aligned("BUILDLINK_PKGSRCDIR.%s?=", id)+sprintf("../../%s", dir),
 		aligned("BUILDLINK_DEPMETHOD.%s?=", id)+"build",
 		"")

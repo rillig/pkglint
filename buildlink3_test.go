@@ -1062,3 +1062,31 @@ func (s *Suite) Test_Buildlink3Checker_checkVaruseInPkgbase__PKGBASE_with_unknow
 		"WARN: buildlink3.mk:3: Please replace \"${LICENSE}\" with a simple string "+
 			"(also in other variables in this file).")
 }
+
+func (s *Suite) Test_LoadBuildlink3Data(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileBuildlink3("category/package/buildlink3.mk",
+		"BUILDLINK_ABI_DEPENDS.package+=\tpackage>=0.1")
+	t.Chdir("category/package")
+	mklines := LoadMk("buildlink3.mk", nil, MustSucceed)
+
+	data := LoadBuildlink3Data(mklines)
+
+	t.CheckDeepEquals(data, &Buildlink3Data{
+		id:        "package",
+		pkgsrcdir: "../../category/package",
+		apiDepends: &DependencyPattern{
+			Pkgbase: "package",
+			LowerOp: ">=",
+			Lower:   "0",
+		},
+		apiDependsLine: mklines.mklines[7],
+		abiDepends: &DependencyPattern{
+			Pkgbase: "package",
+			LowerOp: ">=",
+			Lower:   "0.1",
+		},
+		abiDependsLine: mklines.mklines[11],
+	})
+}
