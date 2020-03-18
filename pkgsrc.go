@@ -1087,6 +1087,7 @@ func (src *Pkgsrc) ReadDir(dirName PkgsrcPath) []os.FileInfo {
 	var relevantFiles []os.FileInfo
 	for _, dirent := range files {
 		name := dirent.Name()
+		// TODO: defer isEmptyDir, for performance reasons; run ktrace or strace to see why.
 		if !dirent.IsDir() || !isIgnoredFilename(name) && !isEmptyDir(dir.JoinNoClean(NewRelPathString(name))) {
 			relevantFiles = append(relevantFiles, dirent)
 		}
