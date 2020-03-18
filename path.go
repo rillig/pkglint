@@ -211,7 +211,7 @@ func (p Path) CleanPath() Path {
 }
 
 func (p Path) IsAbs() bool {
-	return p.HasPrefixText("/") || filepath.IsAbs(string(p))
+	return len(p) > 0 && (p[0] == '/' || len(p) > 2 && p[1] == ':' && p[2] == '/')
 }
 
 // Rel returns the relative path from this path to the other.
