@@ -585,7 +585,21 @@ func (pkg *Package) check(filenames []CurrPath, mklines, allLines *MkLines) {
 				"To generate a distinfo file for the existing patches, run",
 				sprintf("%q.", bmake("makepatchsum")))
 		}
+
+		pkg.checkDescr(filenames, mklines)
 	}
+}
+
+func (pkg *Package) checkDescr(filenames []CurrPath, mklines *MkLines) {
+	if mklines == nil {
+		return
+	}
+	for _, filename := range filenames {
+		if filename.HasBase("DESCR") {
+			return
+		}
+	}
+	mklines.Whole().Errorf("Each package must have a DESCR file.")
 }
 
 func (pkg *Package) checkfilePackageMakefile(filename CurrPath, mklines *MkLines, allLines *MkLines) {
