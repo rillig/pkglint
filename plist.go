@@ -716,6 +716,16 @@ func NewPlistRank(basename string) PlistRank {
 	isArch := func(s string) bool {
 		return G.Pkgsrc.VariableType(nil, "MACHINE_ARCH").basicType.HasEnum(s)
 	}
+	isOpsysArch := func(s string) bool {
+		parts := strings.Split(s, "-")
+		return len(parts) == 2 && isOpsys(parts[0]) && isArch(parts[1])
+	}
+	isEmulPlatform := func(s string) bool {
+		parts := strings.Split(s, "-")
+		return len(parts) == 2 &&
+			G.Pkgsrc.VariableType(nil, "EMUL_OPSYS").basicType.HasEnum(parts[0]) &&
+			G.Pkgsrc.VariableType(nil, "EMUL_ARCH").basicType.HasEnum(parts[1])
+	}
 
 	switch {
 	case basename == "PLIST":
@@ -724,10 +734,14 @@ func NewPlistRank(basename string) PlistRank {
 		return Common
 	case basename == "PLIST.common_end":
 		return CommonEnd
-	case hasPrefix(basename, "PLIST.") && isOpsys(basename[6:]):
+	case isOpsys(basename[6:]):
 		return Opsys
-	case hasPrefix(basename, "PLIST.") && isArch(basename[6:]):
+	case isArch(basename[6:]):
 		return Arch
+	case isOpsysArch(basename[6:]):
+		return OpsysArch
+	case isEmulPlatform(basename[6:]):
+		return EmulOpsysArch
 	default:
 		return Other
 	}
