@@ -599,6 +599,9 @@ func (pkg *Package) checkDescr(filenames []CurrPath, mklines *MkLines) {
 			return
 		}
 	}
+	if pkg.vars.IsDefined("DESCR_SRC") {
+		return
+	}
 	mklines.Whole().Errorf("Each package must have a DESCR file.")
 }
 

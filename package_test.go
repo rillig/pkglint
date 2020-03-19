@@ -1330,6 +1330,20 @@ func (s *Suite) Test_Package_check__patches_Makefile(c *check.C) {
 		"1 warning found.")
 }
 
+func (s *Suite) Test_Package_checkDescr__DESCR_SRC(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("other/package")
+	t.SetUpPackage("category/package",
+		"DESCR_SRC=\t../../other/package/DESCR")
+	t.Remove("category/package/DESCR")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Package_checkfilePackageMakefile__GNU_CONFIGURE(c *check.C) {
 	t := s.Init(c)
 
