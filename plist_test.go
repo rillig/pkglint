@@ -1426,36 +1426,52 @@ func (s *Suite) Test_NewPlistRank(c *check.C) {
 
 	t.SetUpVartypes()
 
-	t.CheckEquals(NewPlistRank("PLIST"), Plain)
-	t.CheckEquals(NewPlistRank("PLIST.common"), Common)
-	t.CheckEquals(NewPlistRank("PLIST.common_end"), CommonEnd)
-	t.CheckEquals(NewPlistRank("PLIST.NetBSD"), Opsys)
-	t.CheckEquals(NewPlistRank("PLIST.x86_64"), Arch)
-	t.CheckEquals(NewPlistRank("PLIST.NetBSD-x86_64"), OpsysArch)
-	t.CheckEquals(NewPlistRank("PLIST.NetBSD-x86_64"), OpsysArch)
-	t.CheckEquals(NewPlistRank("PLIST.linux-x86_64"), EmulOpsysArch)
-	t.CheckEquals(NewPlistRank("PLIST.solaris-sparc"), EmulOpsysArch)
-	t.CheckEquals(NewPlistRank("PLIST.other"), Other)
+	t.CheckDeepEquals(NewPlistRank("PLIST"), &PlistRank{0, "", "", ""})
+	t.CheckDeepEquals(NewPlistRank("PLIST.common"), &PlistRank{1, "", "", ""})
+	t.CheckDeepEquals(NewPlistRank("PLIST.common_end"), &PlistRank{2, "", "", ""})
+	t.CheckDeepEquals(NewPlistRank("PLIST.NetBSD"), &PlistRank{3, "NetBSD", "", ""})
+	t.CheckDeepEquals(NewPlistRank("PLIST.NetBSD-opt"), &PlistRank{3, "NetBSD", "", "opt"})
+	t.CheckDeepEquals(NewPlistRank("PLIST.x86_64"), &PlistRank{3, "", "x86_64", ""})
+	t.CheckDeepEquals(NewPlistRank("PLIST.NetBSD-x86_64"), &PlistRank{3, "NetBSD", "x86_64", ""})
+	t.CheckDeepEquals(NewPlistRank("PLIST.linux-x86_64"), &PlistRank{3, "linux", "x86_64", ""})
+	t.CheckDeepEquals(NewPlistRank("PLIST.solaris-sparc"), &PlistRank{3, "solaris", "sparc", ""})
+	t.CheckDeepEquals(NewPlistRank("PLIST.other"), &PlistRank{3, "", "", "other"})
 
 	// To list all current PLIST filenames:
 	//  cd $pkgsrcdir && find . -name 'PLIST*' -printf '%f\n' | sort | uniq -c | sort -nr
 }
 
-func (s *Suite) Test_PlistRank_Dominates(c *check.C) {
+func (s *Suite) Test_PlistRank_MoreGeneric(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	plain := NewPlistRank("PLIST")
+	common := NewPlistRank("PLIST.common")
+	commonEnd := NewPlistRank("PLIST.common_end")
+	netbsd := NewPlistRank("PLIST.NetBSD")
+	netbsdRest := NewPlistRank("PLIST.NetBSD-rest")
+	x86 := NewPlistRank("PLIST.x86_64")
+	netbsdX86 := NewPlistRank("PLIST.NetBSD-x86_64")
+	linuxX86 := NewPlistRank("PLIST.Linux-x86_64")
+	emulLinuxX86 := NewPlistRank("PLIST.linux-x86_64")
+
 	var rel relation
-	rel.add(Plain, Common)
-	rel.add(Common, CommonEnd)
-	rel.add(CommonEnd, Opsys)
-	rel.add(CommonEnd, Arch)
-	rel.add(Opsys, OpsysArch)
-	rel.add(Opsys, EmulOpsysArch)
-	rel.add(Arch, OpsysArch)
-	rel.add(Arch, EmulOpsysArch)
-	rel.reflexive = true
+	rel.add(plain, common)
+	rel.add(common, commonEnd)
+	rel.add(commonEnd, netbsd)
+	rel.add(commonEnd, x86)
+	rel.add(commonEnd, linuxX86)
+	rel.add(netbsd, netbsdX86)
+	rel.add(netbsd, netbsdRest)
+	rel.add(x86, netbsdX86)
+	rel.add(x86, linuxX86)
+	rel.add(x86, emulLinuxX86)
+	rel.reflexive = false
 	rel.transitive = true
 	rel.antisymmetric = true
+	rel.onError = func(s string) { c.Error(s) }
 
-	rel.check(func(a, b int) bool { return PlistRank(a).Dominates(PlistRank(b)) })
+	rel.check(func(a, b interface{}) bool { return a.(*PlistRank).MoreGeneric(b.(*PlistRank)) })
 }
 
 func (s *Suite) Test_NewPlistLines(c *check.C) {
@@ -1479,12 +1495,12 @@ func (s *Suite) Test_PlistLines_Add(c *check.C) {
 
 	for _, line := range plistLines {
 		if line.HasPath() {
-			lines.Add(line, Plain)
+			lines.Add(line, NewPlistRank(line.Basename))
 		}
 	}
 	for _, line := range plistCommonLines {
 		if line.HasPath() {
-			lines.Add(line, Common)
+			lines.Add(line, NewPlistRank(line.Basename))
 		}
 	}
 

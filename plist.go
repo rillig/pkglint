@@ -695,56 +695,55 @@ func (s *plistLineSorter) Sort() {
 	s.autofixed = SaveAutofixChanges(NewLines(lines[0].Filename(), lines))
 }
 
-type PlistRank uint8
+type PlistRank struct {
+	Rank  int
+	Opsys string
+	Arch  string
+	Rest  string
+}
 
-const (
-	Plain PlistRank = iota
-	Common
-	CommonEnd
-	Opsys
-	Arch
-	OpsysArch
-	EmulOpsysArch
-	Other
-)
+var defaultPlistRank = &PlistRank{0, "", "", ""}
 
-func NewPlistRank(basename string) PlistRank {
-
+func NewPlistRank(basename string) *PlistRank {
 	isOpsys := func(s string) bool {
 		return G.Pkgsrc.VariableType(nil, "OPSYS").basicType.HasEnum(s)
 	}
 	isArch := func(s string) bool {
 		return G.Pkgsrc.VariableType(nil, "MACHINE_ARCH").basicType.HasEnum(s)
 	}
-	isOpsysArch := func(s string) bool {
-		parts := strings.Split(s, "-")
-		return len(parts) == 2 && isOpsys(parts[0]) && isArch(parts[1])
+	isEmulOpsys := func(s string) bool {
+		return G.Pkgsrc.VariableType(nil, "EMUL_OPSYS").basicType.HasEnum(s)
 	}
-	isEmulPlatform := func(s string) bool {
-		parts := strings.Split(s, "-")
-		return len(parts) == 2 &&
-			G.Pkgsrc.VariableType(nil, "EMUL_OPSYS").basicType.HasEnum(parts[0]) &&
-			G.Pkgsrc.VariableType(nil, "EMUL_ARCH").basicType.HasEnum(parts[1])
+	isEmulArch := func(s string) bool {
+		return G.Pkgsrc.VariableType(nil, "EMUL_ARCH").basicType.HasEnum(s)
 	}
 
-	switch {
-	case basename == "PLIST":
-		return Plain
-	case basename == "PLIST.common":
-		return Common
-	case basename == "PLIST.common_end":
-		return CommonEnd
-	case isOpsys(basename[6:]):
-		return Opsys
-	case isArch(basename[6:]):
-		return Arch
-	case isOpsysArch(basename[6:]):
-		return OpsysArch
-	case isEmulPlatform(basename[6:]):
-		return EmulOpsysArch
-	default:
-		return Other
+	switch basename {
+	case "PLIST":
+		return defaultPlistRank
+	case "PLIST.common":
+		return &PlistRank{1, "", "", ""}
+	case "PLIST.common_end":
+		return &PlistRank{2, "", "", ""}
 	}
+
+	parts := strings.Split(basename[6:], "-")
+	rank := PlistRank{3, "", "", ""}
+	if isOpsys(parts[0]) {
+		rank.Opsys = parts[0]
+		parts = parts[1:]
+	}
+	if len(parts) > 0 && isArch(parts[0]) {
+		rank.Arch = parts[0]
+		parts = parts[1:]
+	}
+	if len(parts) >= 2 && isEmulOpsys(parts[0]) && isEmulArch(parts[1]) {
+		rank.Opsys = parts[0]
+		rank.Arch = parts[1]
+		parts = parts[2:]
+	}
+	rank.Rest = strings.Join(parts, "-")
+	return &rank
 }
 
 // The ranks among the files are:
@@ -755,10 +754,18 @@ func NewPlistRank(basename string) PlistRank {
 //  -> { PLIST.OPSYS.ARCH, PLIST.EMUL_PLATFORM }
 // Files are a later level must not mention files that are already
 // mentioned at an earlier level.
-func (r PlistRank) Dominates(other PlistRank) bool {
-	return r <= other &&
-		!(r == Opsys && other == Arch) &&
-		!(r == OpsysArch && other == EmulOpsysArch)
+func (r *PlistRank) MoreGeneric(other *PlistRank) bool {
+	if r.Rank != 3 && other.Rank != 3 {
+		return r.Rank < other.Rank
+	}
+	if r.Opsys == "" || r.Opsys == other.Opsys {
+		if r.Arch == "" || r.Arch == other.Arch {
+			if r.Rest == "" || r.Rest == other.Rest {
+				return *r != *other
+			}
+		}
+	}
+	return false
 }
 
 type PlistLines struct {
@@ -771,19 +778,19 @@ func NewPlistLines() *PlistLines {
 
 type plistLineData struct {
 	line *PlistLine
-	rank PlistRank
+	rank *PlistRank
 }
 
-func (pl *PlistLines) Add(line *PlistLine, rank PlistRank) {
+func (pl *PlistLines) Add(line *PlistLine, rank *PlistRank) {
 	path := line.Path()
 	for _, existing := range pl.all[path] {
 		switch {
 		case existing.rank == rank:
 			break
-		case existing.rank.Dominates(rank):
+		case existing.rank.MoreGeneric(rank):
 			line.Errorf("Path %s is already listed in %s.",
 				path, line.RelLine(existing.line.Line))
-		case rank.Dominates(existing.rank):
+		case rank.MoreGeneric(existing.rank):
 			existing.line.Errorf("Path %s is already listed in %s.",
 				path, existing.line.RelLine(line.Line))
 		}
