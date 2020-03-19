@@ -758,14 +758,16 @@ func (r *PlistRank) MoreGeneric(other *PlistRank) bool {
 	if r.Rank != 3 && other.Rank != 3 {
 		return r.Rank < other.Rank
 	}
-	if r.Opsys == "" || r.Opsys == other.Opsys {
-		if r.Arch == "" || r.Arch == other.Arch {
-			if r.Rest == "" || r.Rest == other.Rest {
-				return *r != *other
-			}
-		}
+	if r.Opsys != "" && r.Opsys != other.Opsys {
+		return false
 	}
-	return false
+	if r.Arch != "" && r.Arch != other.Arch {
+		return false
+	}
+	if r.Rest != "" && r.Rest != other.Rest {
+		return false
+	}
+	return *r != *other
 }
 
 type PlistLines struct {
