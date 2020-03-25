@@ -1691,7 +1691,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.syslist("TOUCH_FLAGS", BtShellWord)
 	reg.pkglist("UAC_REQD_EXECS", BtPrefixPathname)
 	reg.pkglistbl3("UNLIMIT_RESOURCES",
-		enum("cputime datasize memorysize stacksize"))
+		enum("cputime datasize memorysize stacksize virtualsize"))
 	reg.usr("UNPRIVILEGED_USER", BtUserGroupName)
 	reg.usr("UNPRIVILEGED_GROUP", BtUserGroupName)
 	reg.pkglist("UNWRAP_FILES", BtPathPattern)
