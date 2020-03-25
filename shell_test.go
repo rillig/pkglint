@@ -587,6 +587,21 @@ func (s *Suite) Test_SimpleCommandChecker_checkEchoN(c *check.C) {
 		"WARN: Makefile:4: Please use ${ECHO_N} instead of \"echo -n\".")
 }
 
+func (s *Suite) Test_ShellLineChecker__skip_ULIMIT_CMD(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"pre-configure:",
+		"\t${RUN} ${_ULIMIT_CMD} while :; do :; done")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:3: Pkglint ShellLine.CheckShellCommand: " +
+			"parse error at []string{\"do\", \":\", \";\", \"done\"}")
+}
+
 func (s *Suite) Test_ShellLineChecker_checkConditionalCd(c *check.C) {
 	t := s.Init(c)
 
