@@ -588,6 +588,8 @@ func (pkg *Package) check(filenames []CurrPath, mklines, allLines *MkLines) {
 
 		pkg.checkDescr(filenames, mklines)
 	}
+
+	pkg.checkDistfilesInDistinfo()
 }
 
 func (pkg *Package) checkDescr(filenames []CurrPath, mklines *MkLines) {
@@ -603,6 +605,10 @@ func (pkg *Package) checkDescr(filenames []CurrPath, mklines *MkLines) {
 		return
 	}
 	mklines.Whole().Errorf("Each package must have a DESCR file.")
+}
+
+func (pkg *Package) checkDistfilesInDistinfo() {
+	// TODO: See Test_Package_checkDistfilesInDistinfo
 }
 
 func (pkg *Package) checkfilePackageMakefile(filename CurrPath, mklines *MkLines, allLines *MkLines) {

@@ -1344,6 +1344,34 @@ func (s *Suite) Test_Package_checkDescr__DESCR_SRC(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+// All files that can possibly be added to DISTFILES need a corresponding
+// entry in the distinfo file.
+//
+// https://mail-index.netbsd.org/pkgsrc-changes/2020/02/05/msg206172.html
+// https://mail-index.netbsd.org/pkgsrc-changes/2020/03/25/msg209445.html
+func (s *Suite) Test_Package_checkDistfilesInDistinfo(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".include \"../../mk/bsd.prefs.mk\"",
+		"",
+		"DISTFILES.i386=\t\tdistfile-i386.tar.gz",
+		"DISTFILES.other=\tdistfile-other.tar.gz",
+		"",
+		".if ${MACHINE_ARCH} == i386",
+		"DISTFILES+=\t${DISTFILES.i386}",
+		".else",
+		"DISTFILES+=\t${DISTFILES.other}",
+		".endif")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	// TODO: Warn that distinfo neither of the additional distfiles.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Package_checkfilePackageMakefile__GNU_CONFIGURE(c *check.C) {
 	t := s.Init(c)
 
