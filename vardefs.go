@@ -1767,6 +1767,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.pkglist("X11_LDFLAGS", BtLdFlag)
 	reg.sys("X11_PKGSRCDIR.*", BtPathname)
 	reg.pkglist("XMKMF_FLAGS", BtShellWord)
+	reg.sys("_ULIMIT_CMD", BtShellCommands)
 	reg.pkglist("_WRAP_EXTRA_ARGS.*", BtShellWord)
 
 	reg.infralist("_VARGROUPS", BtIdentifierDirect)
