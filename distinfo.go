@@ -34,6 +34,13 @@ func CheckLinesDistinfo(pkg *Package, lines *Lines) {
 	CheckLinesTrailingEmptyLines(lines)
 	ck.checkUnrecordedPatches()
 
+	if pkg != nil {
+		pkg.distinfoDistfiles = make(map[RelPath]bool)
+		for path := range ck.infos {
+			pkg.distinfoDistfiles[path] = true
+		}
+	}
+
 	SaveAutofixChanges(lines)
 }
 

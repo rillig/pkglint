@@ -86,6 +86,8 @@ type Package struct {
 	IgnoreMissingPatches bool // In distinfo, don't warn about patches that cannot be found.
 
 	Once Once
+
+	distinfoDistfiles map[RelPath]bool
 }
 
 func NewPackage(dir CurrPath) *Package {
@@ -132,6 +134,9 @@ func NewPackage(dir CurrPath) *Package {
 
 func (pkg *Package) Check() {
 	files, mklines, allLines := pkg.load()
+	if files == nil {
+		return
+	}
 	pkg.check(files, mklines, allLines)
 }
 
@@ -608,7 +613,38 @@ func (pkg *Package) checkDescr(filenames []CurrPath, mklines *MkLines) {
 }
 
 func (pkg *Package) checkDistfilesInDistinfo() {
-	// TODO: See Test_Package_checkDistfilesInDistinfo
+	if pkg.distinfoDistfiles == nil {
+		return
+	}
+
+	// As of March 2020 there is only a single DIST_SUBDIR per package,
+	// not a file-specific DIST_SUBDIR.${file}. This seems inflexible at
+	// first but apparently was sufficient for the last 25 years of pkgsrc.
+	distSubdir := NewRelPathString(pkg.vars.LastValue("DIST_SUBDIR"))
+
+	redundant := pkg.redundant
+	distfiles := redundant.get("DISTFILES")
+	if distfiles == nil {
+		return
+	}
+
+	for _, mkline := range distfiles.vari.WriteLocations() {
+		resolved := resolveVariableRefs(mkline.Value(), nil, pkg)
+		for _, distfile := range mkline.ValueFields(resolved) {
+			if containsVarUse(distfile) {
+				continue
+			}
+			distfilePath := NewRelPathString(distfile)
+			if !distSubdir.IsEmpty() {
+				distfilePath = distSubdir.JoinNoClean(distfilePath)
+			}
+			if pkg.distinfoDistfiles[distfilePath] {
+				continue
+			}
+			mkline.Warnf("Distfile %q is not mentioned in %s.",
+				distfile, mkline.Rel(pkg.File(pkg.DistinfoFile)))
+		}
+	}
 }
 
 func (pkg *Package) checkfilePackageMakefile(filename CurrPath, mklines *MkLines, allLines *MkLines) {

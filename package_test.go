@@ -1362,14 +1362,28 @@ func (s *Suite) Test_Package_checkDistfilesInDistinfo(c *check.C) {
 		"DISTFILES+=\t${DISTFILES.i386}",
 		".else",
 		"DISTFILES+=\t${DISTFILES.other}",
-		".endif")
+		".endif",
+		"",
+		"DISTFILES+=\tok.tar.gz")
+	t.CreateFileLines("category/package/distinfo",
+		CvsID,
+		"",
+		"SHA1 (ok.tar.gz) = 1234",
+		"RMD160 (ok.tar.gz) = 1234",
+		"SHA512 (ok.tar.gz) = 1234",
+		"Size (ok.tar.gz) = 1234",
+		"SHA1 (package-1.0.tar.gz) = 1234",
+		"RMD160 (package-1.0.tar.gz) = 1234",
+		"SHA512 (package-1.0.tar.gz) = 1234",
+		"Size (package-1.0.tar.gz) = 1234")
 	t.Chdir("category/package")
 	t.FinishSetUp()
 
 	G.Check(".")
 
-	// TODO: Warn that distinfo neither of the additional distfiles.
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: Makefile:26: Distfile \"distfile-i386.tar.gz\" is not mentioned in distinfo.",
+		"WARN: Makefile:28: Distfile \"distfile-other.tar.gz\" is not mentioned in distinfo.")
 }
 
 func (s *Suite) Test_Package_checkfilePackageMakefile__GNU_CONFIGURE(c *check.C) {
