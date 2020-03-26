@@ -597,7 +597,7 @@ func (pkg *Package) check(filenames []CurrPath, mklines, allLines *MkLines) {
 		pkg.checkDescr(filenames, mklines)
 	}
 
-	pkg.checkDistfilesInDistinfo()
+	pkg.checkDistfilesInDistinfo(allLines)
 }
 
 func (pkg *Package) checkDescr(filenames []CurrPath, mklines *MkLines) {
@@ -615,7 +615,12 @@ func (pkg *Package) checkDescr(filenames []CurrPath, mklines *MkLines) {
 	mklines.Whole().Errorf("Each package must have a DESCR file.")
 }
 
-func (pkg *Package) checkDistfilesInDistinfo() {
+func (pkg *Package) checkDistfilesInDistinfo(mklines *MkLines) {
+	// Needs more work; see MkLines.IsUnreachable.
+	if !G.Experimental {
+		return
+	}
+
 	if pkg.distinfoDistfiles == nil {
 		return
 	}
@@ -627,24 +632,18 @@ func (pkg *Package) checkDistfilesInDistinfo() {
 	}
 
 	for _, mkline := range distfiles.vari.WriteLocations() {
-		if mkline.Op() == opAssignDefault {
-			// See Test_Package_checkDistfilesInDistinfo__depending_on_package_settable.
-			// This is the easiest way to make the test succeed, but it is only almost correct.
-			// The proper way would be to indeed check whether all conditions on the path
-			// are satisfied, using the usual control flow graph analysis.
-			// As of 2020-03-26, pkglint doesn't analyze control flow graphs in their most
-			// generic form.
-			//
-			// If print/texlive/package.mk had used += instead of ?=, this would still
-			// trigger a wrong warning.
-			continue
-		}
+		unreachable := newLazyBool(
+			func() bool { return mklines.IsUnreachable(mkline) })
 		resolved := resolveVariableRefs(mkline.Value(), nil, pkg)
+
 		for _, distfile := range mkline.ValueFields(resolved) {
 			if containsVarUse(distfile) {
 				continue
 			}
 			if pkg.distinfoDistfiles[NewPath(distfile).Base()] {
+				continue
+			}
+			if unreachable.get() {
 				continue
 			}
 			mkline.Warnf("Distfile %q is not mentioned in %s.",
