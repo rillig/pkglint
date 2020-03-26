@@ -1418,6 +1418,42 @@ func (s *Suite) Test_Package_checkDistfilesInDistinfo__indirect_DIST_SUBDIR(c *c
 		"WARN: Makefile:24: Distfile \"distfile-other.tar.gz\" is not mentioned in distinfo.")
 }
 
+func (s *Suite) Test_Package_checkDistfilesInDistinfo__depending_on_package_settable(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("print/tex-varisize",
+		"DISTNAME=\tvarisize",
+		"PKGNAME=\ttex-${DISTNAME}-2014",
+		"TEXLIVE_REV=\t15878",
+		"",
+		"TEXLIVE_UNVERSIONED=\tyes",
+		"",
+		".include \"../../print/texlive/package.mk\"")
+	t.CreateFileLines("print/tex-varisize/distinfo",
+		CvsID,
+		"",
+		"SHA1 (tex-varisize-15878/varisize.tar.xz) = 1234",
+		"RMD160 (tex-varisize-15878/varisize.tar.xz) = 1234",
+		"SHA512 (tex-varisize-15878/varisize.tar.xz) = 1234",
+		"Size (tex-varisize-15878/varisize.tar.xz) = 3176 bytes")
+	t.CreateFileLines("print/texlive/package.mk",
+		MkCvsID,
+		"",
+		".if empty(TEXLIVE_UNVERSIONED)",
+		"DISTFILES?=\t${DISTNAME}.r${TEXLIVE_REV}${EXTRACT_SUFX}",
+		".endif")
+	t.Chdir("print/tex-varisize")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	// FIXME: This is wrong. The package-settable TEXLIVE_UNVERSIONED is
+	//  definitely not empty, therefore the line in package.mk doesn't apply.
+	t.CheckOutputLines(
+		"WARN: ../../print/texlive/package.mk:4: Distfile \"varisize.r15878.tar.gz\" " +
+			"is not mentioned in ../../print/tex-varisize/distinfo.")
+}
+
 func (s *Suite) Test_Package_checkfilePackageMakefile__GNU_CONFIGURE(c *check.C) {
 	t := s.Init(c)
 
