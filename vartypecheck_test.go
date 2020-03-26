@@ -596,20 +596,31 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 	// TODO: Warn about the dots in the path.
 	vt.OutputEmpty()
 
-	// FIXME
-	t.ExpectAssert(func() { vt.Values("py-sqlite3>=0:/usr/pkg") })
+	vt.Values("py-sqlite3>=0:/usr/pkg")
+
+	vt.Output(
+		"ERROR: ~/category/package/filename.mk:51: " +
+			"Dependency paths like \"/usr/pkg\" must be relative.")
 
 	vt.Values(
 		"py-sqlite3>=0:../package/../../category/package")
 
 	// These warnings are quite redundant. It's an edge case anyway.
 	vt.Output(
-		"WARN: ~/category/package/filename.mk:52: "+
+		"WARN: ~/category/package/filename.mk:61: "+
 			"Dependency paths should have the form \"../../category/package\".",
-		"WARN: ~/category/package/filename.mk:52: "+
+		"WARN: ~/category/package/filename.mk:61: "+
 			"References to other packages should look like \"../../category/package\", not \"../package\".",
-		"WARN: ~/category/package/filename.mk:52: "+
+		"WARN: ~/category/package/filename.mk:61: "+
 			"\"../package/../../category/package\" is not a valid relative package directory.")
+
+	// The "empty" field after the colon is not even counted as a field.
+	vt.Values(
+		"py-sqlite3>=0:")
+
+	vt.Output(
+		"WARN: ~/category/package/filename.mk:71: " +
+			"Invalid dependency pattern with path \"py-sqlite3>=0:\".")
 }
 
 func (s *Suite) Test_VartypeCheck_DistSuffix(c *check.C) {

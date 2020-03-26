@@ -447,21 +447,25 @@ func (cv *VartypeCheck) DependencyWithPath() {
 	}
 
 	pattern := parts[0]
-	packagePath := NewPackagePathString(parts[1])
-	relPath := packagePath.AsRelPath()
-	pathParts := relPath.Parts()
-	pkg := pathParts[len(pathParts)-1]
+	dependencyDir := NewPath(parts[1])
+	if dependencyDir.IsAbs() {
+		cv.Errorf("Dependency paths like %q must be relative.", parts[1])
+		return
+	}
 
+	pathParts := dependencyDir.Parts()
 	if len(pathParts) >= 2 && pathParts[0] == ".." && pathParts[1] != ".." {
 		cv.Warnf("Dependency paths should have the form \"../../category/package\".")
 		cv.MkLine.ExplainRelativeDirs()
 	}
 
-	if !containsVarUse(packagePath.String()) {
+	if !containsVarUse(parts[1]) {
 		ck := MkLineChecker{cv.MkLines, cv.MkLine}
-		ck.CheckRelativePkgdir(relPath, packagePath)
+		rel := NewRelPath(dependencyDir)
+		ck.CheckRelativePkgdir(rel, NewPackagePath(rel))
 	}
 
+	pkg := pathParts[len(pathParts)-1]
 	switch pkg {
 	case "gettext":
 		cv.Warnf("Please use USE_TOOLS+=msgfmt instead of this dependency.")
