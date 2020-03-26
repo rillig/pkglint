@@ -632,8 +632,7 @@ func (pkg *Package) checkDistfilesInDistinfo() {
 			if containsVarUse(distfile) {
 				continue
 			}
-			distfilePath := NewRelPathString(distfile)
-			if pkg.distinfoDistfiles[distfilePath.Base()] {
+			if pkg.distinfoDistfiles[NewPath(distfile).Base()] {
 				continue
 			}
 			mkline.Warnf("Distfile %q is not mentioned in %s.",
