@@ -582,8 +582,11 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 		"gettext-[0-9]*:files/../../../databases/py-sqlite3")
 
 	vt.Output(
-		"WARN: ~/category/package/filename.mk:31: " +
-			"\"files/../../../databases/py-sqlite3\" is " +
+		"ERROR: ~/category/package/filename.mk:31: "+
+			"Relative package directories like "+
+			"\"files/../../../databases/py-sqlite3\" must be canonical.",
+		"WARN: ~/category/package/filename.mk:31: "+
+			"\"files/../../../databases/py-sqlite3\" is "+
 			"not a valid relative package directory.")
 
 	// The path has a trailing slash.
@@ -592,9 +595,13 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 		"py-sqlite3-[0-9]*:../../databases/py-sqlite3/",
 		"py-sqlite3-[0-9]*:../../././databases/py-sqlite3")
 
-	// TODO: Warn about the non-canonical path.
-	// TODO: Warn about the dots in the path.
-	vt.OutputEmpty()
+	vt.Output(
+		"ERROR: ~/category/package/filename.mk:41: "+
+			"Relative package directories like "+
+			"\"../../databases/py-sqlite3/\" must not end with a slash.",
+		"ERROR: ~/category/package/filename.mk:42: "+
+			"Relative package directories like "+
+			"\"../../././databases/py-sqlite3\" must be canonical.")
 
 	vt.Values("py-sqlite3>=0:/usr/pkg")
 
@@ -611,6 +618,9 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 			"Dependency paths should have the form \"../../category/package\".",
 		"WARN: ~/category/package/filename.mk:61: "+
 			"References to other packages should look like \"../../category/package\", not \"../package\".",
+		"ERROR: ~/category/package/filename.mk:61: "+
+			"Relative package directories like "+
+			"\"../package/../../category/package\" must be canonical.",
 		"WARN: ~/category/package/filename.mk:61: "+
 			"\"../package/../../category/package\" is not a valid relative package directory.")
 
