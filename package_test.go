@@ -1349,7 +1349,7 @@ func (s *Suite) Test_Package_checkDescr__DESCR_SRC(c *check.C) {
 //
 // https://mail-index.netbsd.org/pkgsrc-changes/2020/02/05/msg206172.html
 // https://mail-index.netbsd.org/pkgsrc-changes/2020/03/25/msg209445.html
-func (s *Suite) Test_Package_checkDistfilesInDistinfo(c *check.C) {
+func (s *Suite) Test_Package_checkDistfilesInDistinfo__indirect_conditional_DISTFILES(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package",
@@ -1384,6 +1384,40 @@ func (s *Suite) Test_Package_checkDistfilesInDistinfo(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: Makefile:26: Distfile \"distfile-i386.tar.gz\" is not mentioned in distinfo.",
 		"WARN: Makefile:28: Distfile \"distfile-other.tar.gz\" is not mentioned in distinfo.")
+}
+
+func (s *Suite) Test_Package_checkDistfilesInDistinfo__indirect_DIST_SUBDIR(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".include \"../../mk/bsd.prefs.mk\"",
+		"",
+		// As of 2020-03-26, pkglint doesn't know how to resolve PKGNAME_NOREV.
+		"DIST_SUBDIR=\t${PKGNAME_NOREV}",
+		// Strictly speaking, this is redundant, but as of 2020-03-26,
+		// pkglint doesn't infer the default DISTFILES, so it needs a bit of help here.
+		"DISTFILES+=\tpackage-1.0.tar.gz",
+		"DISTFILES+=\tdistfile-other.tar.gz")
+	t.CreateFileLines("distinfo",
+		CvsID,
+		"",
+		"SHA1 (package-1.0/distfile-other.tar.gz) = 1234",
+		"RMD160 (package-1.0/distfile-other.tar.gz) = 1234",
+		"SHA512 (package-1.0/distfile-other.tar.gz) = 1234",
+		"Size (package-1.0/distfile-other.tar.gz) = 1234",
+		"SHA1 (package-1.0/package-1.0.tar.gz) = 1234",
+		"RMD160 (package-1.0/package-1.0.tar.gz) = 1234",
+		"SHA512 (package-1.0/package-1.0.tar.gz) = 1234",
+		"Size (package-1.0/package-1.0.tar.gz) = 1234")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	t.CheckOutputLines(
+		// FIXME: It _is_ mentioned, it's just in an unresolvable subdir.
+		"WARN: Makefile:23: Distfile \"package-1.0.tar.gz\" is not mentioned in distinfo.",
+		"WARN: Makefile:24: Distfile \"distfile-other.tar.gz\" is not mentioned in distinfo.")
 }
 
 func (s *Suite) Test_Package_checkfilePackageMakefile__GNU_CONFIGURE(c *check.C) {
