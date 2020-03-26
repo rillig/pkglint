@@ -1447,11 +1447,9 @@ func (s *Suite) Test_Package_checkDistfilesInDistinfo__depending_on_package_sett
 
 	G.Check(".")
 
-	// FIXME: This is wrong. The package-settable TEXLIVE_UNVERSIONED is
-	//  definitely not empty, therefore the line in package.mk doesn't apply.
-	t.CheckOutputLines(
-		"WARN: ../../print/texlive/package.mk:4: Distfile \"varisize.r15878.tar.gz\" " +
-			"is not mentioned in ../../print/tex-varisize/distinfo.")
+	// The package-settable TEXLIVE_UNVERSIONED is definitely not empty,
+	// therefore the line in package.mk doesn't apply.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_Package_checkfilePackageMakefile__GNU_CONFIGURE(c *check.C) {

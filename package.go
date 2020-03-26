@@ -627,6 +627,18 @@ func (pkg *Package) checkDistfilesInDistinfo() {
 	}
 
 	for _, mkline := range distfiles.vari.WriteLocations() {
+		if mkline.Op() == opAssignDefault {
+			// See Test_Package_checkDistfilesInDistinfo__depending_on_package_settable.
+			// This is the easiest way to make the test succeed, but it is only almost correct.
+			// The proper way would be to indeed check whether all conditions on the path
+			// are satisfied, using the usual control flow graph analysis.
+			// As of 2020-03-26, pkglint doesn't analyze control flow graphs in their most
+			// generic form.
+			//
+			// If print/texlive/package.mk had used += instead of ?=, this would still
+			// trigger a wrong warning.
+			continue
+		}
 		resolved := resolveVariableRefs(mkline.Value(), nil, pkg)
 		for _, distfile := range mkline.ValueFields(resolved) {
 			if containsVarUse(distfile) {
