@@ -585,6 +585,16 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 		"WARN: ~/category/package/filename.mk:31: " +
 			"\"files/../../../databases/py-sqlite3\" is " +
 			"not a valid relative package directory.")
+
+	// The path has a trailing slash.
+	// https://mail-index.netbsd.org/pkgsrc-changes/2020/03/26/msg209490.html
+	vt.Values(
+		"py-sqlite3-[0-9]*:../../databases/py-sqlite3/",
+		"py-sqlite3-[0-9]*:../../././databases/py-sqlite3")
+
+	// TODO: Warn about the non-canonical path.
+	// TODO: Warn about the dots in the path.
+	vt.OutputEmpty()
 }
 
 func (s *Suite) Test_VartypeCheck_DistSuffix(c *check.C) {
