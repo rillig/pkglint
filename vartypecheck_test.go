@@ -595,6 +595,9 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 	// TODO: Warn about the non-canonical path.
 	// TODO: Warn about the dots in the path.
 	vt.OutputEmpty()
+
+	// FIXME
+	t.ExpectAssert(func() { vt.Values("py-sqlite3>=0:/usr/pkg") })
 }
 
 func (s *Suite) Test_VartypeCheck_DistSuffix(c *check.C) {
