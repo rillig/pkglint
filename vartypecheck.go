@@ -436,43 +436,42 @@ func (cv *VartypeCheck) DependencyWithPath() {
 	}
 
 	parts := cv.MkLine.ValueSplit(value, ":")
-	if len(parts) == 2 {
-		pattern := parts[0]
-		packagePath := NewPackagePathString(parts[1])
-		relPath := packagePath.AsRelPath()
-		pathParts := relPath.Parts()
-		pkg := pathParts[len(pathParts)-1]
-
-		if len(pathParts) >= 2 && pathParts[0] == ".." && pathParts[1] != ".." {
-			cv.Warnf("Dependency paths should have the form \"../../category/package\".")
-			cv.MkLine.ExplainRelativeDirs()
-		}
-
-		if !containsVarUse(packagePath.String()) {
-			ck := MkLineChecker{cv.MkLines, cv.MkLine}
-			ck.CheckRelativePkgdir(relPath, packagePath)
-		}
-
-		switch pkg {
-		case "gettext":
-			cv.Warnf("Please use USE_TOOLS+=msgfmt instead of this dependency.")
-		case "perl5":
-			cv.Warnf("Please use USE_TOOLS+=perl:run instead of this dependency.")
-		case "gmake":
-			cv.Warnf("Please use USE_TOOLS+=gmake instead of this dependency.")
-		}
-
-		cv.WithValue(pattern).DependencyPattern()
-
+	if len(parts) != 2 {
+		cv.Warnf("Invalid dependency pattern with path %q.", value)
+		cv.Explain(
+			"Examples for valid dependency patterns with path are:",
+			"  package-[0-9]*:../../category/package",
+			"  package>=3.41:../../category/package",
+			"  package-2.718{,nb*}:../../category/package")
 		return
 	}
 
-	cv.Warnf("Invalid dependency pattern with path %q.", value)
-	cv.Explain(
-		"Examples for valid dependency patterns with path are:",
-		"  package-[0-9]*:../../category/package",
-		"  package>=3.41:../../category/package",
-		"  package-2.718{,nb*}:../../category/package")
+	pattern := parts[0]
+	packagePath := NewPackagePathString(parts[1])
+	relPath := packagePath.AsRelPath()
+	pathParts := relPath.Parts()
+	pkg := pathParts[len(pathParts)-1]
+
+	if len(pathParts) >= 2 && pathParts[0] == ".." && pathParts[1] != ".." {
+		cv.Warnf("Dependency paths should have the form \"../../category/package\".")
+		cv.MkLine.ExplainRelativeDirs()
+	}
+
+	if !containsVarUse(packagePath.String()) {
+		ck := MkLineChecker{cv.MkLines, cv.MkLine}
+		ck.CheckRelativePkgdir(relPath, packagePath)
+	}
+
+	switch pkg {
+	case "gettext":
+		cv.Warnf("Please use USE_TOOLS+=msgfmt instead of this dependency.")
+	case "perl5":
+		cv.Warnf("Please use USE_TOOLS+=perl:run instead of this dependency.")
+	case "gmake":
+		cv.Warnf("Please use USE_TOOLS+=gmake instead of this dependency.")
+	}
+
+	cv.WithValue(pattern).DependencyPattern()
 }
 
 func (cv *VartypeCheck) DistSuffix() {
