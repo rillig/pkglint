@@ -35,9 +35,9 @@ func CheckLinesDistinfo(pkg *Package, lines *Lines) {
 	ck.checkUnrecordedPatches()
 
 	if pkg != nil {
-		pkg.distinfoDistfiles = make(map[RelPath]bool)
+		pkg.distinfoDistfiles = make(map[string]bool)
 		for path := range ck.infos {
-			pkg.distinfoDistfiles[path] = true
+			pkg.distinfoDistfiles[path.Base()] = true
 		}
 	}
 

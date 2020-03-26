@@ -1396,7 +1396,7 @@ func (s *Suite) Test_Package_checkDistfilesInDistinfo__indirect_DIST_SUBDIR(c *c
 		"DIST_SUBDIR=\t${PKGNAME_NOREV}",
 		// Strictly speaking, this is redundant, but as of 2020-03-26,
 		// pkglint doesn't infer the default DISTFILES, so it needs a bit of help here.
-		"DISTFILES+=\tpackage-1.0.tar.gz",
+		"DISTFILES+=\tdistfile-1.0.tar.gz",
 		"DISTFILES+=\tdistfile-other.tar.gz")
 	t.CreateFileLines("distinfo",
 		CvsID,
@@ -1415,8 +1415,6 @@ func (s *Suite) Test_Package_checkDistfilesInDistinfo__indirect_DIST_SUBDIR(c *c
 	G.Check(".")
 
 	t.CheckOutputLines(
-		// FIXME: It _is_ mentioned, it's just in an unresolvable subdir.
-		"WARN: Makefile:23: Distfile \"package-1.0.tar.gz\" is not mentioned in distinfo.",
 		"WARN: Makefile:24: Distfile \"distfile-other.tar.gz\" is not mentioned in distinfo.")
 }
 

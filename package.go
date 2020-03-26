@@ -87,7 +87,9 @@ type Package struct {
 
 	Once Once
 
-	distinfoDistfiles map[RelPath]bool
+	// Contains the basenames of the distfiles that are mentioned in distinfo,
+	// for example "package-1.0.tar.gz", even if that file is in a DIST_SUBDIR.
+	distinfoDistfiles map[string]bool
 }
 
 func NewPackage(dir CurrPath) *Package {
@@ -617,11 +619,6 @@ func (pkg *Package) checkDistfilesInDistinfo() {
 		return
 	}
 
-	// As of March 2020 there is only a single DIST_SUBDIR per package,
-	// not a file-specific DIST_SUBDIR.${file}. This seems inflexible at
-	// first but apparently was sufficient for the last 25 years of pkgsrc.
-	distSubdir := NewRelPathString(pkg.vars.LastValue("DIST_SUBDIR"))
-
 	redundant := pkg.redundant
 	distfiles := redundant.get("DISTFILES")
 	if distfiles == nil {
@@ -635,10 +632,7 @@ func (pkg *Package) checkDistfilesInDistinfo() {
 				continue
 			}
 			distfilePath := NewRelPathString(distfile)
-			if !distSubdir.IsEmpty() {
-				distfilePath = distSubdir.JoinNoClean(distfilePath)
-			}
-			if pkg.distinfoDistfiles[distfilePath] {
+			if pkg.distinfoDistfiles[distfilePath.Base()] {
 				continue
 			}
 			mkline.Warnf("Distfile %q is not mentioned in %s.",
