@@ -2176,6 +2176,30 @@ func (s *Suite) Test_VartypeCheck_WrkdirSubdirectory(c *check.C) {
 			"contains the invalid character \" \".")
 }
 
+func (s *Suite) Test_VartypeCheck_WrksrcPathPattern(c *check.C) {
+	t := s.Init(c)
+	vt := NewVartypeCheckTester(t, BtWrksrcPathPattern)
+
+	vt.Varname("SUBST_FILES.class")
+	vt.Op(opAssign)
+	vt.Values(
+		"relative/*.sh",
+		"${WRKSRC}/relative/*.sh")
+
+	vt.Output(
+		"NOTE: filename.mk:2: The pathname patterns in SUBST_FILES.class " +
+			"don't need to mention ${WRKSRC}.")
+
+	t.SetUpCommandLine("--autofix")
+
+	vt.Values(
+		"relative/*.sh",
+		"${WRKSRC}/relative/*.sh")
+
+	vt.Output(
+		"AUTOFIX: filename.mk:12: Replacing \"${WRKSRC}/\" with \"\".")
+}
+
 func (s *Suite) Test_VartypeCheck_WrksrcSubdirectory(c *check.C) {
 	vt := NewVartypeCheckTester(s.Init(c), BtWrksrcSubdirectory)
 

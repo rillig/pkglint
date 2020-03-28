@@ -1525,6 +1525,21 @@ func (cv *VartypeCheck) WrkdirSubdirectory() {
 	cv.Pathname()
 }
 
+// WrksrcPathPattern is a shell pattern for existing pathnames, possibly including slashes.
+func (cv *VartypeCheck) WrksrcPathPattern() {
+	cv.PathPattern()
+
+	if hasPrefix(cv.Value, "${WRKSRC}/") {
+		fix := cv.Autofix()
+		fix.Notef("The pathname patterns in %s don't need to mention ${WRKSRC}.", cv.Varname)
+		fix.Explain(
+			"These pathname patters are interpreted relative to ${WRKSRC} by definition.",
+			"Therefore that part can be left out.")
+		fix.Replace("${WRKSRC}/", "")
+		fix.Apply()
+	}
+}
+
 // WrksrcSubdirectory checks a directory relative to ${WRKSRC},
 // for use in CONFIGURE_DIRS and similar variables.
 func (cv *VartypeCheck) WrksrcSubdirectory() {
