@@ -1007,7 +1007,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		"builtin.mk: set")
 	reg.sys("BUILTIN_X11_TYPE", BtUnknown)
 	reg.sys("BUILTIN_X11_VERSION", BtUnknown)
-	reg.pkglist("CATEGORIES", BtCategory)
+	reg.DefineName("CATEGORIES", BtCategory, List|PackageSettable|Unique, "pkglist")
 	reg.sysload("CC_VERSION", BtMessage, DefinedIfInScope|NonemptyIfDefined)
 	reg.sysload("CC", BtShellCommand)
 	reg.pkglistbl3("CFLAGS", BtCFlag)   // may also be changed by the user
