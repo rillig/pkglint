@@ -1569,11 +1569,12 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		"special:pyversion.mk: set",
 		"*: use, use-loadtime")
 	// See lang/python/pyversion.mk
+	py := reg.enumFromDirs(src, "lang", `^python(\d+)$`, "$1", "27 36 37 38")
 	reg.pkg("PYTHON_FOR_BUILD_ONLY", enum("yes no test tool YES"))
-	reg.pkglistrat("PYTHON_VERSIONS_ACCEPTED", BtVersion)
-	reg.pkglistrat("PYTHON_VERSIONS_INCOMPATIBLE", BtVersion)
-	reg.usr("PYTHON_VERSION_DEFAULT", BtVersion)
-	reg.usr("PYTHON_VERSION_REQD", BtVersion)
+	reg.pkglistrat("PYTHON_VERSIONS_ACCEPTED", py)
+	reg.pkglistrat("PYTHON_VERSIONS_INCOMPATIBLE", py)
+	reg.usr("PYTHON_VERSION_DEFAULT", py)
+	reg.sys("PYTHON_VERSION_REQD", py)
 	reg.pkglist("PYTHON_VERSIONED_DEPENDENCIES", BtPythonDependency)
 	reg.sys("RANLIB", BtShellCommand)
 	reg.pkglist("RCD_SCRIPTS", BtFilename)
