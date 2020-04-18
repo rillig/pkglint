@@ -275,7 +275,6 @@ func (pkg *Package) loadPackageMakefile() (*MkLines, *MkLines) {
 	return mainLines, allLines
 }
 
-// TODO: What is allLines used for, is it still necessary? Would it be better as a field in Package?
 func (pkg *Package) parse(mklines *MkLines, allLines *MkLines, includingFileForUsedCheck CurrPath, main bool) bool {
 	if trace.Tracing {
 		defer trace.Call(mklines.lines.Filename)()
