@@ -1227,7 +1227,7 @@ func (pkg *Package) pkgnameFromDistname(pkgname, distname string) (string, bool)
 			for _, mod := range token.Varuse.modifiers {
 				if mod.IsToLower() {
 					newDistname = strings.ToLower(newDistname)
-				} else if subst, ok := mod.Subst(newDistname); ok {
+				} else if ok, subst := mod.Subst(newDistname); ok {
 					newDistname = subst
 				} else {
 					return "", false
