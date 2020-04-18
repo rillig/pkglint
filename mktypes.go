@@ -40,7 +40,7 @@ func NewMkVarUse(varname string, modifiers ...MkVarUseModifier) *MkVarUse {
 func (vu *MkVarUse) String() string { return sprintf("${%s%s}", vu.varname, vu.Mod()) }
 
 type MkVarUseModifier struct {
-	Text string
+	Text string // The text of the modifier, without the initial colon.
 }
 
 func (m MkVarUseModifier) IsQ() bool { return m.Text == "Q" }

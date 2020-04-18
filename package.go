@@ -1146,7 +1146,7 @@ func (pkg *Package) determineEffectivePkgVars() {
 
 	effname := pkgname
 	if distname != "" && effname != "" {
-		merged, ok := pkg.pkgnameFromDistname(effname, distname)
+		merged, ok := pkg.pkgnameFromDistname(effname, distname, pkgnameLine)
 		if ok {
 			effname = merged
 		}
@@ -1208,7 +1208,7 @@ func (pkg *Package) nbPart() string {
 	return ""
 }
 
-func (pkg *Package) pkgnameFromDistname(pkgname, distname string) (string, bool) {
+func (pkg *Package) pkgnameFromDistname(pkgname, distname string, diag Diagnoser) (string, bool) {
 	tokens, rest := NewMkLexer(pkgname, nil).MkTokens()
 	if rest != "" {
 		return "", false
@@ -1228,6 +1228,9 @@ func (pkg *Package) pkgnameFromDistname(pkgname, distname string) (string, bool)
 				if mod.IsToLower() {
 					newDistname = strings.ToLower(newDistname)
 				} else if ok, subst := mod.Subst(newDistname); ok {
+					if subst == newDistname && !containsVarUse(subst) {
+						diag.Notef("The modifier :%s does not have an effect.", mod.Text)
+					}
 					newDistname = subst
 				} else {
 					return "", false
