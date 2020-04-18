@@ -1566,7 +1566,7 @@ func (cv *VartypeCheck) WrksrcSubdirectory() {
 			"",
 			"Example:",
 			"",
-			"\tWRKSRC=\t${WRKDIR}",
+			"\tWRKSRC=\t\t${WRKDIR}",
 			"\tCONFIGURE_DIRS=\t${WRKSRC}/lib ${WRKSRC}/src",
 			"\tBUILD_DIRS=\t${WRKSRC}/lib ${WRKSRC}/src ${WRKSRC}/cmd",
 			"",
