@@ -552,7 +552,7 @@ func (o *Once) FirstTime(what string) bool {
 	key := o.keyString(what)
 	firstTime := o.check(key)
 	if firstTime && o.Trace {
-		G.Logger.out.WriteLine(sprintf("FirstTime: %s", what))
+		G.Logger.out.WriteLine("FirstTime: " + what)
 	}
 	return firstTime
 }
@@ -561,7 +561,7 @@ func (o *Once) FirstTimeSlice(whats ...string) bool {
 	key := o.keyStrings(whats)
 	firstTime := o.check(key)
 	if firstTime && o.Trace {
-		G.Logger.out.WriteLine(sprintf("FirstTime: %s", strings.Join(whats, ", ")))
+		G.Logger.out.WriteLine("FirstTime: " + strings.Join(whats, ", "))
 	}
 	return firstTime
 }
