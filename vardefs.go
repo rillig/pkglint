@@ -1102,7 +1102,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.pkg("DJB_RESTRICTED", BtYesNo)
 	reg.pkg("DJB_SLASHPACKAGE", BtYesNo)
 	reg.pkg("DLOPEN_REQUIRE_PTHREADS", BtYesNo)
-	reg.pkg("DL_AUTO_VARS", BtYes)
+	reg.pkg("DL_AUTO_VARS", BtYesNo)
 	reg.acllist("DL_LIBS", BtLdFlag,
 		PackageSettable,
 		"*: append, use")
