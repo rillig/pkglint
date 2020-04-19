@@ -58,9 +58,6 @@ func match2(s string, re regex.Pattern) (matched bool, m1, m2 string) {
 func match3(s string, re regex.Pattern) (matched bool, m1, m2, m3 string) {
 	return G.res.Match3(s, re)
 }
-func match4(s string, re regex.Pattern) (matched bool, m1, m2, m3, m4 string) {
-	return G.res.Match4(s, re)
-}
 func match5(s string, re regex.Pattern) (matched bool, m1, m2, m3, m4, m5 string) {
 	return G.res.Match5(s, re)
 }
