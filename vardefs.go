@@ -1357,7 +1357,6 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.sysload("OBJECT_FMT", enum("COFF ECOFF ELF SOM XCOFF Mach-O PE a.out"))
 	reg.pkglistrat("ONLY_FOR_COMPILER", compilers)
 	reg.pkglistrat("ONLY_FOR_PLATFORM", BtMachinePlatformPattern)
-	reg.pkgrat("ONLY_FOR_UNPRIVILEGED", BtYesNo)
 	reg.sysload("OPSYS", operatingSystems, DefinedIfInScope|NonemptyIfDefined)
 	reg.pkglistbl3("OPSYSVARS", BtVariableName)
 	reg.pkg("OSVERSION_SPECIFIC", BtYes)

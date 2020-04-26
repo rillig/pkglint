@@ -890,7 +890,6 @@ func (pkg *Package) CheckVarorder(mklines *MkLines) {
 		{"NOT_FOR_COMPILER", many},
 		{"ONLY_FOR_COMPILER", many},
 		{"NOT_FOR_UNPRIVILEGED", optional},
-		{"ONLY_FOR_UNPRIVILEGED", optional},
 		emptyLine,
 		{"BUILD_DEPENDS", many},
 		{"TOOL_DEPENDS", many},
