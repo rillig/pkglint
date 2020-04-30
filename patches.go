@@ -224,18 +224,39 @@ func (ck *PatchChecker) checkConfigure(addedText string, isConfigure bool) {
 }
 
 func (ck *PatchChecker) checkAddedLine(addedText string) {
-	dirs := regcomp(`(?:^|[^\w)}])(/usr/pkg|/var|/etc)([^\w-]|$)`)
+	dirs := regcomp(`(?:^|[^.@)}])(/usr/pkg|/var|/etc)([^\w-]|$)`)
 	for _, m := range dirs.FindAllStringSubmatchIndex(addedText, -1) {
-		dir, after := NewPath(addedText[m[2]:m[3]]), addedText[m[4]:]
-		ck.checkAddedAbsPath(dir, after)
+		before := addedText[:m[2]]
+		dir := NewPath(addedText[m[2]:m[3]])
+		ck.checkAddedAbsPath(before, dir, addedText[m[4]:])
 	}
 }
 
-func (ck *PatchChecker) checkAddedAbsPath(dir Path, after string) {
+func (ck *PatchChecker) checkAddedAbsPath(before string, dir Path, after string) {
 	line := ck.llex.PreviousLine()
+
+	// Remove the #define from C and C++ macros.
+	before = replaceAll(before, `^[ \t]*#[ \t]*define[ \t]*\w+[ \t]*(.+)[ \t]*$`, "$1")
+
+	// Remove the "set(VAR" from CMakeLists.txt.
+	before = replaceAll(before, `^[ \t]*set\(\w+[ \t]*`, "")
+
+	// Ignore comments in shell programs.
+	if m, first := match1(before, `^[ \t]*#[ \t]*(\w*)`); m && first != "define" {
+		return
+	}
+
+	// Ignore composed C string literals such as PREFIX "/etc".
+	if matches(before, `\w+[ \t]*"$`) {
+		return
+	}
 
 	switch dir {
 	case "/usr/pkg":
+		if matches(before, `\w$`) && !matches(before, `(^|[ \t])-(I|L|R|rpath|Wl,-R)$`) {
+			break
+		}
+
 		line.Errorf("Patches must not hard-code the pkgsrc PREFIX.")
 		line.Explain(
 			"Not every pkgsrc installation uses /usr/pkg as its PREFIX.",
@@ -248,7 +269,8 @@ func (ck *PatchChecker) checkAddedAbsPath(dir Path, after string) {
 			"See mk/subst.mk for details.")
 
 	case "/var":
-		if hasPrefix(after, "/tmp") {
+		afterPath := NewPath(after)
+		if afterPath.HasPrefixPath("/tmp") || afterPath.HasPrefixPath("/shm") {
 			break
 		}
 
