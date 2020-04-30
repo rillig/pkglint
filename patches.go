@@ -224,9 +224,9 @@ func (ck *PatchChecker) checkConfigure(addedText string, isConfigure bool) {
 }
 
 func (ck *PatchChecker) checkAddedLine(addedText string) {
-	dirs := regcomp(`(?:^|\W)(/usr/pkg|/var|/etc)([^\w-].*|$)`)
-	for _, m := range dirs.FindAllStringSubmatch(addedText, -1) {
-		dir, after := NewPath(m[1]), m[2]
+	dirs := regcomp(`(?:^|[^\w)}])(/usr/pkg|/var|/etc)([^\w-]|$)`)
+	for _, m := range dirs.FindAllStringSubmatchIndex(addedText, -1) {
+		dir, after := NewPath(addedText[m[2]:m[3]]), addedText[m[4]:]
 		ck.checkAddedAbsPath(dir, after)
 	}
 }

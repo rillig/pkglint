@@ -757,38 +757,71 @@ func (s *Suite) Test_PatchChecker_checkConfigure__configure_ac(c *check.C) {
 func (s *Suite) Test_PatchChecker_checkAddedAbsPath(c *check.C) {
 	t := s.Init(c)
 
-	lines := t.NewLines("patch-file",
-		CvsID,
-		"",
-		"Demonstrates absolute paths.",
-		"",
-		"--- before",
-		"+++ after",
-		"@@ -1,0 +1,11 @@",
-		"+/usr/pkg",
-		"+/usr/pkgsrc",
-		"+/usr/pkg/bin",
-		"+/usr/local:/usr/pkg:/opt",
-		"+/var",
-		"+/var/tmp",
-		"+/var/db",
-		"+/var/run",
-		"+/etc",
-		"+/etc/mk.conf",
-		"+/etc/rc.d/daemon")
+	test := func(addedLine string, diagnostics ...string) {
+		lines := t.NewLines("patch-file",
+			CvsID,
+			"",
+			"Demonstrates absolute paths.",
+			"",
+			"--- before",
+			"+++ after",
+			"@@ -1,0 +1,1 @@",
+			"+"+addedLine)
 
-	CheckLinesPatch(lines, nil)
+		CheckLinesPatch(lines, nil)
 
-	t.CheckOutputLines(
+		t.CheckOutput(diagnostics)
+	}
+
+	test(
+		"/usr/pkg",
+		"ERROR: patch-file:8: Patches must not hard-code the pkgsrc PREFIX.")
+
+	test(
+		"/usr/pkgsrc",
+		nil...)
+
+	test(
+		"/usr/pkg/bin",
+		"ERROR: patch-file:8: Patches must not hard-code the pkgsrc PREFIX.")
+
+	test(
+		"/usr/local:/usr/pkg:/opt",
+		"ERROR: patch-file:8: Patches must not hard-code the pkgsrc PREFIX.")
+
+	test(
+		"/var",
+		"ERROR: patch-file:8: Patches must not hard-code the pkgsrc VARBASE.")
+
+	test(
+		"/var/tmp",
+		nil...)
+
+	test(
+		"/var/db",
+		"ERROR: patch-file:8: Patches must not hard-code the pkgsrc VARBASE.")
+
+	test(
+		"/var/run",
+		"ERROR: patch-file:8: Patches must not hard-code the pkgsrc VARBASE.")
+
+	test(
+		"/etc",
+		"ERROR: patch-file:8: Patches must not hard-code the pkgsrc PKG_SYSCONFDIR.")
+
+	test(
+		"/etc/mk.conf",
+		"ERROR: patch-file:8: Patches must not hard-code the pkgsrc PKG_SYSCONFDIR.")
+
+	test(
+		"/etc/rc.d/daemon",
+		"ERROR: patch-file:8: Patches must not hard-code the pkgsrc PKG_SYSCONFDIR.")
+
+	test(
+		"/usr/pkg and /var and /etc",
 		"ERROR: patch-file:8: Patches must not hard-code the pkgsrc PREFIX.",
-		"ERROR: patch-file:10: Patches must not hard-code the pkgsrc PREFIX.",
-		"ERROR: patch-file:11: Patches must not hard-code the pkgsrc PREFIX.",
-		"ERROR: patch-file:12: Patches must not hard-code the pkgsrc VARBASE.",
-		"ERROR: patch-file:14: Patches must not hard-code the pkgsrc VARBASE.",
-		"ERROR: patch-file:15: Patches must not hard-code the pkgsrc VARBASE.",
-		"ERROR: patch-file:16: Patches must not hard-code the pkgsrc PKG_SYSCONFDIR.",
-		"ERROR: patch-file:17: Patches must not hard-code the pkgsrc PKG_SYSCONFDIR.",
-		"ERROR: patch-file:18: Patches must not hard-code the pkgsrc PKG_SYSCONFDIR.")
+		"ERROR: patch-file:8: Patches must not hard-code the pkgsrc VARBASE.",
+		"ERROR: patch-file:8: Patches must not hard-code the pkgsrc PKG_SYSCONFDIR.")
 }
 
 func (s *Suite) Test_PatchChecker_checktextCvsID(c *check.C) {
