@@ -246,6 +246,11 @@ func (ck *PatchChecker) checkAddedAbsPath(before string, dir Path, after string)
 		return
 	}
 
+	// Ignore paths inside C-style comments.
+	if contains(before, "/*") && contains(after, "*/") {
+		return
+	}
+
 	// Ignore composed C string literals such as PREFIX "/etc".
 	if matches(before, `\w+[ \t]*"$`) {
 		return

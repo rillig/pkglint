@@ -910,6 +910,10 @@ func (s *Suite) Test_PatchChecker_checkAddedAbsPath(c *check.C) {
 	test(
 		"#define PID_FILE PREFIX \"/etc/conf\"",
 		nil...)
+
+	test(
+		"#define L 150 /* Length of a line in /etc/passwd */",
+		nil...)
 }
 
 func (s *Suite) Test_PatchChecker_checktextCvsID(c *check.C) {
