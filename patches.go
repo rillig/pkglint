@@ -251,11 +251,15 @@ func (ck *PatchChecker) checkAddedAbsPath(before string, dir Path, after string)
 		return
 	}
 
+	// Ignore shell literals such as $PREFIX/etc.
+	// But keep compiler options like -I/usr/pkg even though they look
+	// like a relative pathname.
+	if matches(before, `\w$`) && !matches(before, `(^|[ \t])-(I|L|R|rpath|Wl,-R)$`) {
+		return
+	}
+
 	switch dir {
 	case "/usr/pkg":
-		if matches(before, `\w$`) && !matches(before, `(^|[ \t])-(I|L|R|rpath|Wl,-R)$`) {
-			break
-		}
 
 		line.Errorf("Patches must not hard-code the pkgsrc PREFIX.")
 		line.Explain(

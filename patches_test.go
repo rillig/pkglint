@@ -851,6 +851,11 @@ func (s *Suite) Test_PatchChecker_checkAddedAbsPath(c *check.C) {
 		"ERROR: patch-file:8: Patches must not hard-code the pkgsrc VARBASE.",
 		"ERROR: patch-file:8: Patches must not hard-code the pkgsrc PKG_SYSCONFDIR.")
 
+	// From the --help text of a GNU configure script.
+	test(
+		"[PREFIX/etc]",
+		nil...)
+
 	// Shell program, default value for a variable.
 	test(
 		"DIR=${DIR-/var/bytebench}",
