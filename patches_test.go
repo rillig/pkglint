@@ -754,6 +754,43 @@ func (s *Suite) Test_PatchChecker_checkConfigure__configure_ac(c *check.C) {
 		"ERROR: ~/patch-aa:9: This code must not be included in patches.")
 }
 
+func (s *Suite) Test_PatchChecker_checkAddedAbsPath(c *check.C) {
+	t := s.Init(c)
+
+	lines := t.NewLines("patch-file",
+		CvsID,
+		"",
+		"Demonstrates absolute paths.",
+		"",
+		"--- before",
+		"+++ after",
+		"@@ -1,0 +1,11 @@",
+		"+/usr/pkg",
+		"+/usr/pkgsrc",
+		"+/usr/pkg/bin",
+		"+/usr/local:/usr/pkg:/opt",
+		"+/var",
+		"+/var/tmp",
+		"+/var/db",
+		"+/var/run",
+		"+/etc",
+		"+/etc/mk.conf",
+		"+/etc/rc.d/daemon")
+
+	CheckLinesPatch(lines, nil)
+
+	t.CheckOutputLines(
+		"ERROR: patch-file:8: Patches must not hard-code the pkgsrc PREFIX.",
+		"ERROR: patch-file:10: Patches must not hard-code the pkgsrc PREFIX.",
+		"ERROR: patch-file:11: Patches must not hard-code the pkgsrc PREFIX.",
+		"ERROR: patch-file:12: Patches must not hard-code the pkgsrc VARBASE.",
+		"ERROR: patch-file:14: Patches must not hard-code the pkgsrc VARBASE.",
+		"ERROR: patch-file:15: Patches must not hard-code the pkgsrc VARBASE.",
+		"ERROR: patch-file:16: Patches must not hard-code the pkgsrc PKG_SYSCONFDIR.",
+		"ERROR: patch-file:17: Patches must not hard-code the pkgsrc PKG_SYSCONFDIR.",
+		"ERROR: patch-file:18: Patches must not hard-code the pkgsrc PKG_SYSCONFDIR.")
+}
+
 func (s *Suite) Test_PatchChecker_checktextCvsID(c *check.C) {
 	t := s.Init(c)
 

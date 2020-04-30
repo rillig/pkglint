@@ -224,15 +224,59 @@ func (ck *PatchChecker) checkConfigure(addedText string, isConfigure bool) {
 }
 
 func (ck *PatchChecker) checkAddedLine(addedText string) {
-	if !matches(addedText, `/usr/pkg\b`) {
-		return
+	dirs := regcomp(`(?:^|\W)(/usr/pkg|/var|/etc)([^\w-].*|$)`)
+	for _, m := range dirs.FindAllStringSubmatch(addedText, -1) {
+		dir, after := NewPath(m[1]), m[2]
+		ck.checkAddedAbsPath(dir, after)
 	}
+}
 
+func (ck *PatchChecker) checkAddedAbsPath(dir Path, after string) {
 	line := ck.llex.PreviousLine()
-	line.Errorf("Patches must not hard-code the pkgsrc PREFIX.")
-	line.Explain(
-		"Instead of hard-coding /usr/pkg, packages should use the PREFIX variable.",
-		"The usual way of doing this is to use the SUBST framework in mk/subst.mk.")
+
+	switch dir {
+	case "/usr/pkg":
+		line.Errorf("Patches must not hard-code the pkgsrc PREFIX.")
+		line.Explain(
+			"Not every pkgsrc installation uses /usr/pkg as its PREFIX.",
+			"To keep the PREFIX configurable, the patch files should contain",
+			"the placeholder @PREFIX@ instead.",
+			"",
+			"In the pre-configure stage, this placeholder should then be",
+			"replaced with the actual configuration directory",
+			"using a SUBST block containing SUBST_VARS.dirs=PREFIX.",
+			"See mk/subst.mk for details.")
+
+	case "/var":
+		if hasPrefix(after, "/tmp") {
+			break
+		}
+
+		line.Errorf("Patches must not hard-code the pkgsrc VARBASE.")
+		line.Explain(
+			"Not every pkgsrc installation uses /var as its directory",
+			"for writable files.",
+			"To keep the VARBASE configurable, the patch files should",
+			"contain the placeholder @VARBASE@ instead.",
+			"",
+			"In the pre-configure stage, this placeholder should then be",
+			"replaced with the actual configuration directory",
+			"using a SUBST block containing SUBST_VARS.dirs=VARBASE.",
+			"See mk/subst.mk for details.")
+
+	default:
+		line.Errorf("Patches must not hard-code the pkgsrc PKG_SYSCONFDIR.")
+		line.Explain(
+			"Not every pkgsrc installation uses /etc as its directory",
+			"for configuration files.",
+			"To keep the PKG_SYSCONFDIR configurable, the patch files should",
+			"contain the placeholder @PKG_SYSCONFDIR@ instead.",
+			"",
+			"In the pre-configure stage, this placeholder should then be",
+			"replaced with the actual configuration directory",
+			"using a SUBST block containing SUBST_VARS.dirs=PKG_SYSCONFDIR.",
+			"See mk/subst.mk for details.")
+	}
 }
 
 func (ck *PatchChecker) checktextUniHunkCr() {
