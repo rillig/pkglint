@@ -345,38 +345,40 @@ func (ck *PatchChecker) checktextCvsID(text string) {
 	}
 }
 
-func (ck *PatchChecker) checkCanonicalPatchName(patchedFile Path) {
-	patchName := ck.lines.BaseName
-	if matches(patchName, `^patch-[a-z][a-z]$`) {
+func (ck *PatchChecker) checkCanonicalPatchName(patched Path) {
+	patch := ck.lines.BaseName
+	if matches(patch, `^patch-[a-z][a-z]$`) {
 		// This naming scheme is only accepted for historic reasons.
 		// It has has absolutely no benefit.
 		return
 	}
-	if matches(patchName, `^patch-[A-Z]+-[0-9]+`) {
+	if matches(patch, `^patch-[A-Z]+-[0-9]+`) {
 		return
 	}
 
 	// The patch name only needs to correspond very roughly to the patched file.
-	patchedCanon := replaceAll(patchedFile.Clean().String(), `[^A-Za-z0-9]+`, "*")
-	patchCanon := replaceAll(strings.TrimPrefix(patchName, "patch-"), `[^A-Za-z0-9]+`, "*")
-	if patchCanon == patchedCanon {
+	// There are varying schemes in use that transform a filename to a patch name.
+	normalize := func(s string) string {
+		return strings.ToLower(replaceAll(s, `[^A-Za-z0-9]+`, "*"))
+	}
+
+	patchedNorm := normalize(patched.Clean().String())
+	patchNorm := normalize(strings.TrimPrefix(patch, "patch-"))
+	if patchNorm == patchedNorm {
 		return
 	}
-	if hasSuffix(patchedCanon, patchCanon) {
-		patchedBaseCanon := replaceAll(patchedFile.Base(), `[^A-Za-z0-9]+`, "*")
-		if patchCanon == patchedBaseCanon {
-			return
-		}
+	if hasSuffix(patchedNorm, patchNorm) && patchNorm == normalize(patched.Base()) {
+		return
 	}
 
 	// See pkgtools/pkgdiff/files/mkpatches, function patch_name.
-	canon1 := replaceAll(patchedFile.Clean().String(), `_`, "__")
+	canon1 := replaceAll(patched.Clean().String(), `_`, "__")
 	canon2 := replaceAll(canon1, `[/\s]`, "_")
 	canonicalName := "patch-" + canon2
 
 	ck.lines.Whole().Warnf(
 		"The patch file should be named %q to match the patched file %q.",
-		canonicalName, patchedFile.String())
+		canonicalName, patched.String())
 }
 
 // isEmptyLine tests whether a line provides essentially no interesting content.
