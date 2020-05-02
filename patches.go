@@ -352,6 +352,9 @@ func (ck *PatchChecker) checkCanonicalPatchName(patchedFile Path) {
 		// It has has absolutely no benefit.
 		return
 	}
+	if hasPrefix(patchName, "patch-CVE-") {
+		return
+	}
 
 	// See pkgtools/pkgdiff/files/mkpatches, function patch_name.
 	canon1 := replaceAll(patchedFile.String(), `_`, "__")
