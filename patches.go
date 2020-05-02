@@ -357,7 +357,7 @@ func (ck *PatchChecker) checkCanonicalPatchName(patchedFile Path) {
 	}
 
 	// The patch name only needs to correspond very roughly to the patched file.
-	patchedCanon := replaceAll(patchedFile.String(), `[^A-Za-z0-9]+`, "*")
+	patchedCanon := replaceAll(patchedFile.Clean().String(), `[^A-Za-z0-9]+`, "*")
 	patchCanon := replaceAll(strings.TrimPrefix(patchName, "patch-"), `[^A-Za-z0-9]+`, "*")
 	if patchCanon == patchedCanon {
 		return
