@@ -568,7 +568,7 @@ func (t *Tester) CreateFileDummyPatch(filename RelPath) {
 	// Patch files only make sense in category/package/patches directories.
 	assert(G.Pkgsrc.Rel(t.File(filename)).Count() == 4)
 
-	patchedFile := replaceAll(filename.String(), `.*?\bpatches/`, "")
+	patchedFile := replaceAll(filename.String(), `.*?\bpatches/patch-`, "")
 
 	t.CreateFileLines(filename,
 		CvsID,

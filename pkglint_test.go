@@ -1069,7 +1069,7 @@ func (s *Suite) Test_Pkglint_checkReg__readme_and_todo(c *check.C) {
 	t.CreateFileLines("category/package/distinfo",
 		CvsID,
 		"",
-		"SHA1 (patch-README) = cd6ce460ce17e4805b49c8daca17afb39b55952c")
+		"SHA1 (patch-README) = 87686be2a11c9d610ff09e029db92efddd96e4f9")
 
 	// Copy category/package/** to wip/package.
 	// TODO: Extract into Tester.CopyAll.
@@ -1204,7 +1204,7 @@ func (s *Suite) Test_Pkglint_checkRegCvsSubst__full_package(c *check.C) {
 	t.CreateFileLines("distinfo",
 		CvsID,
 		"",
-		"SHA1 (patch-any) = aa82017cb030248ef1e8ece5d7571e5980d488c8")
+		"SHA1 (patch-any) = c3bc5923e225e5eafb8bb1f55e2142317c19800c")
 	t.CreateFileLines("CVS/Entries",
 		"/Makefile/1.1/modified/-ko/")
 	t.CreateFileLines("patches/CVS/Entries",
