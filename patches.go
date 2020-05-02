@@ -356,18 +356,17 @@ func (ck *PatchChecker) checkCanonicalPatchName(patchedFile Path) {
 		return
 	}
 
+	// The patch name only needs to correspond very roughly to the patched file.
+	patchedCanon := replaceAll(patchedFile.String(), `[^A-Za-z0-9]+`, "*")
+	patchCanon := replaceAll(strings.TrimPrefix(patchName, "patch-"), `[^A-Za-z0-9]+`, "*")
+	if patchCanon == patchedCanon {
+		return
+	}
+
 	// See pkgtools/pkgdiff/files/mkpatches, function patch_name.
 	canon1 := replaceAll(patchedFile.String(), `_`, "__")
 	canon2 := replaceAll(canon1, `[/\s]`, "_")
 	canonicalName := "patch-" + canon2
-
-	if canonicalName == patchName {
-		return
-	}
-
-	if strings.Replace(canonicalName, ".", "_", -1) == patchName {
-		return
-	}
 
 	ck.lines.Whole().Warnf(
 		"The patch file should be named %q to match the patched file %q.",
