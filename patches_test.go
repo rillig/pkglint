@@ -977,6 +977,12 @@ func (s *Suite) Test_PatchChecker_checkCanonicalPatchName(c *check.C) {
 		"src/anything.c",
 		nil...)
 
+	// Same for Xen Security Advisories.
+	test(
+		"patch-XSA-0001",
+		"src/anything.c",
+		nil...)
+
 	test(
 		"patch-file_underscore.py",
 		"file_underscore.py",

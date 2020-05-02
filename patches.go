@@ -352,7 +352,7 @@ func (ck *PatchChecker) checkCanonicalPatchName(patchedFile Path) {
 		// It has has absolutely no benefit.
 		return
 	}
-	if hasPrefix(patchName, "patch-CVE-") {
+	if matches(patchName, `^patch-[A-Z]+-[0-9]+`) {
 		return
 	}
 
