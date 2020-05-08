@@ -229,30 +229,7 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename CurrPath) []*Change {
 		}
 
 		src.checkChangeVersion(change, latest, line)
-
-		if year != "" && change.Date[0:4] != year {
-			line.Warnf("Year %q for %s does not match the filename %s.",
-				change.Date[0:4], change.Pkgpath.String(), line.Rel(filename))
-		}
-
-		if len(changes) >= 2 && year != "" {
-			if prev := changes[len(changes)-2]; change.Date < prev.Date {
-				line.Warnf("Date %q for %s is earlier than %q in %s.",
-					change.Date, change.Pkgpath.String(), prev.Date, line.RelLocation(prev.Location))
-				line.Explain(
-					"The entries in doc/CHANGES should be in chronological order, and",
-					"all dates are assumed to be in the UTC timezone, to prevent time",
-					"warps.",
-					"",
-					"To fix this, determine which of the involved dates are correct",
-					"and which aren't.",
-					"",
-					"To prevent this kind of mistakes in the future,",
-					"make sure that your system time is correct and run",
-					sprintf("%q", bmake("cce")),
-					"to commit the changes entry.")
-			}
-		}
+		src.checkChangeDate(filename, year, change, line, changes)
 	}
 
 	return changes
@@ -283,6 +260,32 @@ func (src *Pkgsrc) checkChangeVersion(change *Change, latest map[PkgsrcPath]*Cha
 		latest[change.Pkgpath] = change
 	case Renamed, Moved, Removed:
 		latest[change.Pkgpath] = nil
+	}
+}
+
+func (src *Pkgsrc) checkChangeDate(filename CurrPath, year string, change *Change, line *Line, changes []*Change) {
+	if year != "" && change.Date[0:4] != year {
+		line.Warnf("Year %q for %s does not match the filename %s.",
+			change.Date[0:4], change.Pkgpath.String(), line.Rel(filename))
+	}
+
+	if len(changes) >= 2 && year != "" {
+		if prev := changes[len(changes)-2]; change.Date < prev.Date {
+			line.Warnf("Date %q for %s is earlier than %q in %s.",
+				change.Date, change.Pkgpath.String(), prev.Date, line.RelLocation(prev.Location))
+			line.Explain(
+				"The entries in doc/CHANGES should be in chronological order, and",
+				"all dates are assumed to be in the UTC timezone, to prevent time",
+				"warps.",
+				"",
+				"To fix this, determine which of the involved dates are correct",
+				"and which aren't.",
+				"",
+				"To prevent this kind of mistakes in the future,",
+				"make sure that your system time is correct and run",
+				sprintf("%q", bmake("cce")),
+				"to commit the changes entry.")
+		}
 	}
 }
 
