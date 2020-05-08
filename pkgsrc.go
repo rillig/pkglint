@@ -237,29 +237,49 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename CurrPath) []*Change {
 
 func (src *Pkgsrc) checkChangeVersion(change *Change, latest map[PkgsrcPath]*Change, line *Line) {
 	switch change.Action {
+
 	case Added:
+		src.checkChangeVersionNumber(change, line)
 		existing := latest[change.Pkgpath]
 		if existing != nil && existing.Version() == change.Version() {
 			line.Warnf("Package %q was already added in %s.",
 				change.Pkgpath.String(), line.RelLocation(existing.Location))
 		}
 		latest[change.Pkgpath] = change
+
 	case Updated:
+		src.checkChangeVersionNumber(change, line)
 		existing := latest[change.Pkgpath]
 		if existing != nil && pkgver.Compare(change.Version(), existing.Version()) <= 0 {
 			line.Warnf("Updating %q from %s in %s to %s should increase the version number.",
 				change.Pkgpath.String(), existing.Version(), line.RelLocation(existing.Location), change.Version())
 		}
 		latest[change.Pkgpath] = change
+
 	case Downgraded:
+		src.checkChangeVersionNumber(change, line)
 		existing := latest[change.Pkgpath]
 		if existing != nil && pkgver.Compare(change.Version(), existing.Version()) >= 0 {
 			line.Warnf("Downgrading %q from %s in %s to %s should decrease the version number.",
 				change.Pkgpath.String(), existing.Version(), line.RelLocation(existing.Location), change.Version())
 		}
 		latest[change.Pkgpath] = change
+
 	case Renamed, Moved, Removed:
 		latest[change.Pkgpath] = nil
+	}
+}
+
+func (src *Pkgsrc) checkChangeVersionNumber(change *Change, line *Line) {
+	version := change.Version()
+
+	switch {
+	case !textproc.NewLexer(version).TestByteSet(textproc.Digit):
+		line.Warnf("Version number %q should start with a digit.", version)
+
+	// See rePkgname for the regular expression.
+	case !matches(version, `^([0-9][.\-0-9A-Z_a-z]*)$`):
+		line.Warnf("Malformed version number %q.", version)
 	}
 }
 
