@@ -1,6 +1,7 @@
 package pkglint
 
 import (
+	"netbsd.org/pkglint/pkgver"
 	"netbsd.org/pkglint/regex"
 	"netbsd.org/pkglint/textproc"
 	"os"
@@ -189,6 +190,8 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename CurrPath) []*Change {
 		year = yyyy
 	}
 
+	latest := make(map[PkgsrcPath]*Change)
+
 	infra := false
 	lines := Load(filename, MustSucceed|NotEmpty)
 	var changes []*Change
@@ -225,6 +228,8 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename CurrPath) []*Change {
 			continue
 		}
 
+		src.checkChangeVersion(change, latest, line)
+
 		if year != "" && change.Date[0:4] != year {
 			line.Warnf("Year %q for %s does not match the filename %s.",
 				change.Date[0:4], change.Pkgpath.String(), line.Rel(filename))
@@ -251,6 +256,34 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename CurrPath) []*Change {
 	}
 
 	return changes
+}
+
+func (src *Pkgsrc) checkChangeVersion(change *Change, latest map[PkgsrcPath]*Change, line *Line) {
+	switch change.Action {
+	case Added:
+		existing := latest[change.Pkgpath]
+		if existing != nil && existing.Version() == change.Version() {
+			line.Warnf("Package %q was already added in %s.",
+				change.Pkgpath.String(), line.RelLocation(existing.Location))
+		}
+		latest[change.Pkgpath] = change
+	case Updated:
+		existing := latest[change.Pkgpath]
+		if existing != nil && pkgver.Compare(change.Version(), existing.Version()) <= 0 {
+			line.Warnf("Updating %q from %s in %s to %s should increase the version number.",
+				change.Pkgpath.String(), existing.Version(), line.RelLocation(existing.Location), change.Version())
+		}
+		latest[change.Pkgpath] = change
+	case Downgraded:
+		existing := latest[change.Pkgpath]
+		if existing != nil && pkgver.Compare(change.Version(), existing.Version()) >= 0 {
+			line.Warnf("Downgrading %q from %s in %s to %s should decrease the version number.",
+				change.Pkgpath.String(), existing.Version(), line.RelLocation(existing.Location), change.Version())
+		}
+		latest[change.Pkgpath] = change
+	case Renamed, Moved, Removed:
+		latest[change.Pkgpath] = nil
+	}
 }
 
 func (*Pkgsrc) parseDocChange(line *Line, warn bool) *Change {

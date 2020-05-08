@@ -351,6 +351,27 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__old(c *check.C) {
 		"WARN: ~/doc/CHANGES-2018:6: Invalid doc/CHANGES line: \tUpdated pkgpath to 1.0 [author d]")
 }
 
+func (s *Suite) Test_Pkgsrc_checkChangeVersion(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Cglobal", "-Wall")
+	t.CreateFileLines("doc/CHANGES-2020",
+		"\tAdded category/package version 1.0 [author1 2020-01-01]",
+		"\tAdded category/package version 1.0 [author1 2020-01-01]",
+		"\tUpdated category/package to 0.9 [author1 2020-01-01]",
+		"\tDowngraded category/package to 1.0 [author1 2020-01-01]",
+		"\tRenamed category/package to category/renamed [author1 2020-01-01]",
+		"\tMoved category/package to other/renamed [author1 2020-01-01]")
+	t.Chdir("doc")
+
+	G.Pkgsrc.loadDocChangesFromFile("CHANGES-2020")
+
+	t.CheckOutputLines(
+		"WARN: CHANGES-2020:2: Package \"category/package\" was already added in line 1.",
+		"WARN: CHANGES-2020:3: Updating \"category/package\" from 1.0 in line 2 to 0.9 should increase the version number.",
+		"WARN: CHANGES-2020:4: Downgrading \"category/package\" from 0.9 in line 3 to 1.0 should decrease the version number.")
+}
+
 func (s *Suite) Test_Pkgsrc_parseDocChange(c *check.C) {
 	t := s.Init(c)
 
