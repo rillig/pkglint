@@ -705,6 +705,8 @@ func (s *Suite) Test_Pkgsrc_loadTools(c *check.C) {
 		"USE_TOOLS+=\tm4:pkgsrc")
 	t.CreateFileLines("mk/bsd.pkg.mk",
 		"USE_TOOLS+=\tmv")
+	t.CreateFileLines("mk/tools/tools.NetBSD.mk",
+		"TOOLS_PLATFORM.ggrep=\t/usr/bin/grep") // TODO: ggrep should be recognized
 
 	G.Pkgsrc.loadTools()
 
