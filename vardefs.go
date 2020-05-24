@@ -1660,6 +1660,8 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		PackageSettable,
 		"Makefile: append")
 
+	reg.usr("SUBST_NOOP_OK", BtYesNo)
+	reg.usr("SUBST_SHOW_DIFF", BtYesNo)
 	reg.pkglistbl3("SUBST_CLASSES", BtIdentifierDirect)
 	reg.pkglistbl3("SUBST_CLASSES.*", BtIdentifierDirect) // OPSYS-specific
 	reg.pkgbl3("SUBST_STAGE.*", BtStage)
