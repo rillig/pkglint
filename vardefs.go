@@ -1334,7 +1334,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.syslist("MISSING_FEATURES", BtIdentifierDirect)
 	reg.pkglist("MYSQL_VERSIONS_ACCEPTED", mysqlVersions)
 	reg.usr("MYSQL_VERSION_DEFAULT", BtVersion)
-	reg.sys("NATIVE_CC", BtShellCommand) // See mk/platform/tools.NetBSD.mk (and some others).
+	reg.sys("NATIVE_CC", BtShellCommand) // See mk/tools/tools.NetBSD.mk (and some others).
 	reg.sys("NM", BtShellCommand)
 	reg.sys("NONBINMODE", BtFileMode)
 	reg.pkglistrat("NOT_FOR_COMPILER", compilers)
