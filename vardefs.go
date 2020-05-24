@@ -1662,12 +1662,15 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 
 	reg.pkglistbl3("SUBST_CLASSES", BtIdentifierDirect)
 	reg.pkglistbl3("SUBST_CLASSES.*", BtIdentifierDirect) // OPSYS-specific
-	reg.pkglistbl3("SUBST_FILES.*", BtWrksrcPathPattern)
-	reg.pkgbl3("SUBST_FILTER_CMD.*", BtShellCommand)
-	reg.pkgbl3("SUBST_MESSAGE.*", BtMessage)
-	reg.pkgappendbl3("SUBST_SED.*", BtSedCommands)
 	reg.pkgbl3("SUBST_STAGE.*", BtStage)
+	reg.pkgbl3("SUBST_MESSAGE.*", BtMessage)
+	reg.pkglistbl3("SUBST_FILES.*", BtWrksrcPathPattern)
+	reg.pkgappendbl3("SUBST_SED.*", BtSedCommands)
 	reg.pkglistbl3("SUBST_VARS.*", BtVariableName)
+	reg.pkgbl3("SUBST_FILTER_CMD.*", BtShellCommand)
+	reg.pkgbl3("SUBST_SKIP_TEXT_CHECK.*", BtYesNo)
+	reg.pkgbl3("SUBST_SHOW_DIFF.*", BtYesNo)
+	reg.pkgbl3("SUBST_NOOP_OK.*", BtYesNo)
 
 	reg.pkglist("SUPERSEDES", BtDependencyPattern)
 	reg.pkglist("TEST_DEPENDS", BtDependencyWithPath)
