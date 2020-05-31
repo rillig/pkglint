@@ -245,7 +245,6 @@ func (ck MkLineChecker) checkInclude() {
 	if trace.Tracing {
 		trace.Stepf("includingFile=%s includedFile=%s", mkline.Filename(), includedFile)
 	}
-	// TODO: Not every path is relative to the package directory.
 	ck.CheckRelativePath(NewPackagePath(includedFile), includedFile, mustExist)
 
 	switch {

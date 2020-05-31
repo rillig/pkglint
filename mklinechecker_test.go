@@ -375,11 +375,14 @@ func (s *Suite) Test_MkLineChecker_checkInclude(c *check.C) {
 		".include \"../../pkgtools/x11-links/buildlink3.mk\"",
 		".include \"../../graphics/jpeg/buildlink3.mk\"",
 		".include \"../../devel/intltool/buildlink3.mk\"",
-		".include \"../../devel/intltool/builtin.mk\"")
+		".include \"../../devel/intltool/builtin.mk\"",
+		".include \"/absolute\"")
 
 	mklines.Check()
 
 	t.CheckOutputLines(
+		"ERROR: ~/category/package/filename.mk:7: "+
+			"Unknown Makefile line format: \".include \\\"/absolute\\\"\".",
 		"ERROR: ~/category/package/filename.mk:3: "+
 			"\"../../pkgtools/x11-links/buildlink3.mk\" must not be included directly. "+
 			"Include \"../../mk/x11.buildlink3.mk\" instead.",
