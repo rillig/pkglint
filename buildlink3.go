@@ -72,6 +72,9 @@ func (ck *Buildlink3Checker) Check() {
 
 func (ck *Buildlink3Checker) checkFirstParagraph(mlex *MkLinesLexer) bool {
 
+	// for mlex.SkipPrefix("#") {
+	// }
+
 	// First paragraph: Introduction of the package identifier
 	m := mlex.NextRegexp(`^BUILDLINK_TREE\+=[\t ]*([^\t ]+)$`)
 	if m == nil {
