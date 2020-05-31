@@ -531,9 +531,8 @@ func (s *Suite) Test_Buildlink3Checker_checkFirstParagraph__comment_before_tree(
 
 	G.Check(t.File("category/package/buildlink3.mk"))
 
-	// FIXME: No warning in line 3. Comments are ok there.
-	t.CheckOutputLines(
-		"WARN: ~/category/package/buildlink3.mk:3: Expected a BUILDLINK_TREE line.")
+	// No warning in line 3. Comments are ok there.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_Buildlink3Checker_checkUniquePkgbase(c *check.C) {
