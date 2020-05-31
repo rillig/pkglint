@@ -308,7 +308,6 @@ func (p *Pkglint) checkMode(dirent CurrPath, mode os.FileMode) {
 		dir = dirent.Dir()
 	}
 
-	basename := dirent.Base()
 	pkgsrcRel := p.Pkgsrc.Rel(dirent)
 
 	p.Wip = pkgsrcRel.HasPrefixPath("wip")
@@ -323,7 +322,7 @@ func (p *Pkglint) checkMode(dirent CurrPath, mode os.FileMode) {
 
 	if isReg {
 		p.checkExecutable(dirent, mode)
-		p.checkReg(dirent, basename, pkgsrcRel.Count(), nil)
+		p.checkReg(dirent, dirent.Base(), pkgsrcRel.Count(), nil)
 		return
 	}
 
