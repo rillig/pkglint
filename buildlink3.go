@@ -332,39 +332,41 @@ type Buildlink3ID string
 func LoadBuildlink3Data(mklines *MkLines) *Buildlink3Data {
 	var data Buildlink3Data
 	mklines.ForEach(func(mkline *MkLine) {
-		if mkline.IsVarassign() {
-			varname := mkline.Varname()
-			varbase := varnameBase(varname)
-			varid := Buildlink3ID(varnameParam(varname))
+		if !mkline.IsVarassign() {
+			return
+		}
 
-			if varname == "BUILDLINK_TREE" {
-				value := mkline.Value()
-				if !hasPrefix(value, "-") {
-					data.id = Buildlink3ID(mkline.Value())
-				}
-			}
+		varname := mkline.Varname()
+		varbase := varnameBase(varname)
+		varid := Buildlink3ID(varnameParam(varname))
 
-			if varbase == "BUILDLINK_API_DEPENDS" && varid == data.id {
-				p := NewMkParser(nil, mkline.Value())
-				dep := p.DependencyPattern()
-				if dep != nil && p.EOF() {
-					data.apiDepends = dep
-					data.apiDependsLine = mkline
-				}
+		if varname == "BUILDLINK_TREE" {
+			value := mkline.Value()
+			if !hasPrefix(value, "-") {
+				data.id = Buildlink3ID(mkline.Value())
 			}
+		}
 
-			if varbase == "BUILDLINK_ABI_DEPENDS" && varid == data.id {
-				p := NewMkParser(nil, mkline.Value())
-				dep := p.DependencyPattern()
-				if dep != nil && p.EOF() {
-					data.abiDepends = dep
-					data.abiDependsLine = mkline
-				}
+		if varbase == "BUILDLINK_API_DEPENDS" && varid == data.id {
+			p := NewMkParser(nil, mkline.Value())
+			dep := p.DependencyPattern()
+			if dep != nil && p.EOF() {
+				data.apiDepends = dep
+				data.apiDependsLine = mkline
 			}
+		}
 
-			if varbase == "BUILDLINK_PKGSRCDIR" && varid == data.id {
-				data.pkgsrcdir = NewPackagePathString(mkline.Value())
+		if varbase == "BUILDLINK_ABI_DEPENDS" && varid == data.id {
+			p := NewMkParser(nil, mkline.Value())
+			dep := p.DependencyPattern()
+			if dep != nil && p.EOF() {
+				data.abiDepends = dep
+				data.abiDependsLine = mkline
 			}
+		}
+
+		if varbase == "BUILDLINK_PKGSRCDIR" && varid == data.id {
+			data.pkgsrcdir = NewPackagePathString(mkline.Value())
 		}
 	})
 	if data.id != "" && !data.pkgsrcdir.IsEmpty() && data.apiDepends != nil && data.abiDepends != nil {
