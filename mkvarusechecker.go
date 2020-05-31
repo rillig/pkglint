@@ -148,6 +148,14 @@ func (ck *MkVarUseChecker) checkVarname(time VucTime) {
 		fix.ReplaceAfter("${", "LOCALBASE", "PREFIX")
 		fix.Apply()
 	}
+
+	if ck.MkLines.pkg != nil && hasPrefix(varname, "BUILDLINK_PREFIX.") {
+		varparam := varnameParam(varname)
+		if ck.MkLines.pkg.bl3Data[Buildlink3ID(varparam)] == nil {
+			ck.MkLine.Warnf("Buildlink identifier %q is not known in this package.",
+				varparam)
+		}
+	}
 }
 
 // checkPermissions checks the permissions when a variable is used,

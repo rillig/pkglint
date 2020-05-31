@@ -315,6 +315,7 @@ func (ck *Buildlink3Checker) checkVaruseInPkgbase(pkgbaseLine *MkLine) {
 
 type Buildlink3Data struct {
 	id             Buildlink3ID
+	prefix         Path
 	pkgsrcdir      PackagePath
 	apiDepends     *DependencyPattern
 	apiDependsLine *MkLine
@@ -366,6 +367,9 @@ func LoadBuildlink3Data(mklines *MkLines) *Buildlink3Data {
 			}
 		}
 
+		if varbase == "BUILDLINK_PREFIX" && varid == data.id {
+			data.prefix = NewPath(mkline.Value())
+		}
 		if varbase == "BUILDLINK_PKGSRCDIR" && varid == data.id {
 			data.pkgsrcdir = NewPackagePathString(mkline.Value())
 		}
