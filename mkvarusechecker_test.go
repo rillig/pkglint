@@ -379,7 +379,7 @@ func (s *Suite) Test_MkVarUseChecker_checkVarname(c *check.C) {
 		"AUTOFIX: filename.mk:3: Replacing \"LOCALBASE\" with \"PREFIX\".")
 }
 
-func (s *Suite) Test_MkVarUseChecker_checkVarname__BUILDLINK_PREFIX(c *check.C) {
+func (s *Suite) Test_MkVarUseChecker_checkVarnameBuildlink(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/library")

@@ -149,13 +149,30 @@ func (ck *MkVarUseChecker) checkVarname(time VucTime) {
 		fix.Apply()
 	}
 
-	if ck.MkLines.pkg != nil && hasPrefix(varname, "BUILDLINK_PREFIX.") {
-		varparam := varnameParam(varname)
-		if ck.MkLines.pkg.bl3Data[Buildlink3ID(varparam)] == nil {
-			ck.MkLine.Warnf("Buildlink identifier %q is not known in this package.",
-				varparam)
-		}
+	ck.checkVarnameBuildlink(varname)
+}
+
+func (ck *MkVarUseChecker) checkVarnameBuildlink(varname string) {
+	if ck.MkLines.pkg == nil {
+		return
 	}
+
+	if !hasPrefix(varname, "BUILDLINK_PREFIX.") {
+		return
+	}
+
+	basename := ck.MkLine.Basename
+	if basename == "buildlink3.mk" || basename == "builtin.mk" {
+		return
+	}
+
+	varparam := varnameParam(varname)
+	if ck.MkLines.pkg.bl3Data[Buildlink3ID(varparam)] != nil {
+		return
+	}
+
+	ck.MkLine.Warnf("Buildlink identifier %q is not known in this package.",
+		varparam)
 }
 
 // checkPermissions checks the permissions when a variable is used,
