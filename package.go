@@ -165,7 +165,7 @@ func (pkg *Package) load() ([]CurrPath, *MkLines, *MkLines) {
 		if !hasPrefix(basename, "Makefile.") && !filename.HasSuffixText(".mk") {
 			return false
 		}
-		if filename.Dir().Base() == "patches" {
+		if filename.Dir().HasBase("patches") {
 			return false
 		}
 		if pkg.Pkgdir == "." {
@@ -1361,7 +1361,7 @@ func (pkg *Package) checkDirent(dirent CurrPath, mode os.FileMode) {
 		switch {
 		case basename == "files",
 			basename == "patches",
-			dirent.Dir().Base() == "files",
+			dirent.Dir().HasBase("files"),
 			isEmptyDir(dirent):
 			break
 

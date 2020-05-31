@@ -259,7 +259,7 @@ func (ck MkLineChecker) checkInclude() {
 	case mkline.Basename != "Makefile" && includedFile.HasBase("bsd.pkg.mk"):
 		mkline.Errorf("The file bsd.pkg.mk must only be included by package Makefiles, not by other Makefile fragments.")
 
-	case mkline.Basename == "buildlink3.mk" && includedFile.Base() == "bsd.prefs.mk":
+	case mkline.Basename == "buildlink3.mk" && includedFile.HasBase("bsd.prefs.mk"):
 		fix := mkline.Autofix()
 		fix.Notef("For efficiency reasons, please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
 		fix.Replace("bsd.prefs.mk", "bsd.fast.prefs.mk")
