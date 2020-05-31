@@ -153,7 +153,8 @@ func (ck *MkVarUseChecker) checkVarname(time VucTime) {
 }
 
 func (ck *MkVarUseChecker) checkVarnameBuildlink(varname string) {
-	if ck.MkLines.pkg == nil {
+	pkg := ck.MkLines.pkg
+	if pkg == nil {
 		return
 	}
 
@@ -167,7 +168,23 @@ func (ck *MkVarUseChecker) checkVarnameBuildlink(varname string) {
 	}
 
 	varparam := varnameParam(varname)
-	if ck.MkLines.pkg.bl3Data[Buildlink3ID(varparam)] != nil {
+	id := Buildlink3ID(varparam)
+	if pkg.bl3Data[id] != nil || containsVarUse(varparam) {
+		return
+	}
+
+	// Several packages contain Makefile fragments that are more related
+	// to the buildlink3.mk file than to the package Makefile.
+	// These may use the buildlink identifier from the package itself.
+	bl3 := LoadMk(pkg.File("buildlink3.mk"), pkg, 0)
+	if bl3 != nil {
+		bl3Data := LoadBuildlink3Data(bl3)
+		if bl3Data != nil && bl3Data.id == id {
+			return
+		}
+	}
+
+	if id == "mysql-client" && pkg.Includes("../../mk/mysql.buildlink3.mk") != nil {
 		return
 	}
 
