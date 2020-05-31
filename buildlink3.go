@@ -331,6 +331,7 @@ type Buildlink3ID string
 
 func LoadBuildlink3Data(mklines *MkLines) *Buildlink3Data {
 	var data Buildlink3Data
+
 	mklines.ForEach(func(mkline *MkLine) {
 		if !mkline.IsVarassign() {
 			return
@@ -369,7 +370,8 @@ func LoadBuildlink3Data(mklines *MkLines) *Buildlink3Data {
 			data.pkgsrcdir = NewPackagePathString(mkline.Value())
 		}
 	})
-	if data.id != "" && !data.pkgsrcdir.IsEmpty() && data.apiDepends != nil && data.abiDepends != nil {
+
+	if data.id != "" {
 		return &data
 	}
 	return nil
