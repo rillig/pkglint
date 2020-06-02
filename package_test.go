@@ -1646,6 +1646,23 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__distfiles(c *check.C) {
 			"A package that downloads files should have a distinfo file.")
 }
 
+func (s *Suite) Test_Package_checkfilePackageMakefile__no_distname(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"#DISTNAME=\t#undefined",
+		"PKGNAME=\tpackage-1.0")
+	t.Remove("category/package/distinfo")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	// FIXME
+	t.CheckOutputLines(
+		"WARN: distinfo: A package that downloads files should have a distinfo file.")
+}
+
 // The fonts/t1lib package has split the options handling between the
 // package Makefile and options.mk. Make sure that this situation is
 // handled correctly by pkglint.
