@@ -322,10 +322,15 @@ func (ck *MkCondChecker) checkCompareVarNum(op string, num string) {
 		"The numeric comparison of bmake is not suitable for version numbers",
 		"since 5.1 == 5.10 == 5.1000000.",
 		"",
-		"The usual way of comparing version numbers is to use pattern matching:",
+		"To fix this, either enclose the number in double quotes,",
+		"or use pattern matching:",
 		"",
-		"\t${OS_VERSION} == 6.5",
-		"\t${OS_VERSION:M1.[1-9]} || ${OS_VERSION:M1.[1-9].*}")
+		"\t${OS_VERSION} == \"6.5\"",
+		"\t${OS_VERSION:M1.[1-9]} || ${OS_VERSION:M1.[1-9].*}",
+		"",
+		"The second example needs to be split into two parts",
+		"since with a single comparison of the form ${OS_VERSION:M1.[1-9]*},",
+		"the version number 1.11 would also match, which is not intended.")
 }
 
 func (ck *MkCondChecker) checkCompareVarStrCompiler(op string, value string) {
