@@ -266,6 +266,8 @@ func (ck *MkCondChecker) simplify(varuse *MkVarUse, fromEmpty bool, neg bool) {
 
 func (ck *MkCondChecker) checkCompare(left *MkCondTerm, op string, right *MkCondTerm) {
 	switch {
+	case right.Num != "":
+		ck.checkCompareVarNum(op, right.Num)
 	case left.Var != nil && right.Var == nil && right.Num == "":
 		ck.checkCompareVarStr(left.Var, op, right.Str)
 	}
@@ -307,6 +309,23 @@ func (ck *MkCondChecker) checkCompareVarStr(varuse *MkVarUse, op string, str str
 				varuse.varname, varuse.Mod(), op, str)
 		}
 	}
+}
+
+func (ck *MkCondChecker) checkCompareVarNum(op string, num string) {
+	if !contains(num, ".") {
+		return
+	}
+
+	mkline := ck.MkLine
+	mkline.Warnf("Numeric comparison %s %s.", op, num)
+	mkline.Explain(
+		"The numeric comparison of bmake is not suitable for version numbers",
+		"since 5.1 == 5.10 == 5.1000000.",
+		"",
+		"The usual way of comparing version numbers is to use pattern matching:",
+		"",
+		"\t${OS_VERSION} == 6.5",
+		"\t${OS_VERSION:M1.[1-9]} || ${OS_VERSION:M1.[1-9].*}")
 }
 
 func (ck *MkCondChecker) checkCompareVarStrCompiler(op string, value string) {
