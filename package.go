@@ -663,10 +663,15 @@ func (pkg *Package) checkfilePackageMakefile(filename CurrPath, mklines *MkLines
 	vars := pkg.vars
 	pkg.checkPlist()
 
-	want := !vars.IsDefined("NO_CHECKSUM")
-	want = want && !vars.IsDefined("META_PACKAGE")
-	want = want && !(vars.IsDefined("DISTFILES") && vars.LastValue("DISTFILES") == "")
-	want = want || !isEmptyDir(pkg.File(pkg.Patchdir))
+	want := true
+	if vars.IsDefined("NO_CHECKSUM") ||
+		vars.IsDefined("META_PACKAGE") ||
+		(vars.IsDefined("DISTFILES") && vars.LastValue("DISTFILES") == "") {
+		want = false
+	}
+	if !isEmptyDir(pkg.File(pkg.Patchdir)) {
+		want = true
+	}
 
 	if !want {
 		distinfoFile := pkg.File(pkg.DistinfoFile)
