@@ -1541,8 +1541,11 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__META_PACKAGE_with_patch(c
 	G.Check(pkg)
 
 	// At first it may sound strange to have a META_PACKAGE with patches.
-	// As of June 2019, there are 21 meta packages having a patches
-	// directory, being referred to by PATCHDIR.
+	// As of June 2019, there are 21 meta packages that have a patches
+	// directory.
+	// These patches are not used by the meta package itself.
+	// They are just stored there in the "most obvious location",
+	// to be used by the related packages.
 	t.CheckOutputEmpty()
 }
 

@@ -770,15 +770,19 @@ func (pkg *Package) checkDistinfoExists() {
 }
 
 func (pkg *Package) wantDistinfo(vars Scope) bool {
-	if vars.IsDefined("DISTINFO_FILE") {
-		return true
-	}
-
 	switch {
+	case vars.IsDefined("DISTINFO_FILE"):
+		return true
+	case vars.IsDefined("DISTFILES") && vars.LastValue("DISTFILES") != "":
+		return true
+	case vars.IsDefined("DISTFILES"):
+		break
 	case vars.IsDefined("NO_CHECKSUM"):
+		break
 	case vars.IsDefined("META_PACKAGE"):
+		break // see Test_Package_checkfilePackageMakefile__META_PACKAGE_with_patch
 	case !vars.IsDefined("DISTNAME"):
-	case vars.IsDefined("DISTFILES") && vars.LastValue("DISTFILES") == "":
+		break
 	default:
 		return true
 	}
