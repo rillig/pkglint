@@ -748,16 +748,7 @@ func (pkg *Package) checkfilePackageMakefile(filename CurrPath, mklines *MkLines
 func (pkg *Package) checkDistinfoExists() {
 	vars := pkg.vars
 
-	want := true
-	if vars.IsDefined("NO_CHECKSUM") ||
-		vars.IsDefined("META_PACKAGE") ||
-		!vars.IsDefined("DISTNAME") ||
-		(vars.IsDefined("DISTFILES") && vars.LastValue("DISTFILES") == "") {
-		want = false
-	}
-	if !isEmptyDir(pkg.File(pkg.Patchdir)) || vars.IsDefined("DISTINFO_FILE") {
-		want = true
-	}
+	want := pkg.wantDistinfo(vars)
 
 	if !want {
 		distinfoFile := pkg.File(pkg.DistinfoFile)
@@ -776,6 +767,23 @@ func (pkg *Package) checkDistinfoExists() {
 				"NO_CHECKSUM=yes in the package Makefile.")
 		}
 	}
+}
+
+func (pkg *Package) wantDistinfo(vars Scope) bool {
+	if vars.IsDefined("DISTINFO_FILE") {
+		return true
+	}
+
+	switch {
+	case vars.IsDefined("NO_CHECKSUM"):
+	case vars.IsDefined("META_PACKAGE"):
+	case !vars.IsDefined("DISTNAME"):
+	case vars.IsDefined("DISTFILES") && vars.LastValue("DISTFILES") == "":
+	default:
+		return true
+	}
+
+	return !isEmptyDir(pkg.File(pkg.Patchdir))
 }
 
 // checkPlist checks whether the package needs a PLIST file,
