@@ -1355,10 +1355,8 @@ func (cv *VartypeCheck) Stage() {
 	}
 }
 
-// Tool checks for tool names like "awk", "m4:pkgsrc", "digest:bootstrap".
-//
-// TODO: Distinguish between Tool and ToolDependency.
-func (cv *VartypeCheck) Tool() {
+// ToolDependency checks for tool dependencies like "awk", "m4:pkgsrc", "digest:bootstrap".
+func (cv *VartypeCheck) ToolDependency() {
 	if cv.Varname == "TOOLS_NOOP" && cv.Op == opAssignAppend {
 		// no warning for package-defined tool definitions
 
@@ -1378,6 +1376,32 @@ func (cv *VartypeCheck) Tool() {
 		cv.Explain(
 			"A tool dependency typically looks like \"sed\" or \"sed:run\".")
 	}
+}
+
+// ToolName checks for a tool name without any trailing ":pkgsrc" or ":run".
+func (cv *VartypeCheck) ToolName() {
+	name := cv.Value
+	nameNoVar := cv.ValueNoVar
+
+	if contains(nameNoVar, ":") {
+		cv.Errorf("%s accepts only plain tool names, without any colon.", cv.Varname)
+		return
+	}
+	if name != nameNoVar {
+		return
+	}
+
+	if !matches(name, `^([-\w]+|\[)$`) {
+		cv.Errorf("Invalid tool name %q.", name)
+		cv.Explain(
+			"Tool names must consist of letters, digits, underscores and hyphens only.")
+		return
+	}
+
+	if tool, _ := G.Tool(cv.MkLines, name, RunTime); tool == nil {
+		cv.Errorf("Unknown tool %q.", name)
+	}
+
 }
 
 // Unknown doesn't check for anything.

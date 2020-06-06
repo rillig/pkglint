@@ -1934,9 +1934,9 @@ func (s *Suite) Test_VartypeCheck_Stage(c *check.C) {
 			"Use one of {pre,do,post}-{extract,patch,configure,build,test,install}.")
 }
 
-func (s *Suite) Test_VartypeCheck_Tool(c *check.C) {
+func (s *Suite) Test_VartypeCheck_ToolDependency(c *check.C) {
 	t := s.Init(c)
-	vt := NewVartypeCheckTester(t, BtTool)
+	vt := NewVartypeCheckTester(t, BtToolDependency)
 
 	t.SetUpTool("tool1", "", AtRunTime)
 	t.SetUpTool("tool2", "", AtRunTime)
@@ -1967,19 +1967,6 @@ func (s *Suite) Test_VartypeCheck_Tool(c *check.C) {
 		"ERROR: filename.mk:12: Invalid tool dependency \"unknown\". " +
 			"Use one of \"bootstrap\", \"build\", \"pkgsrc\", \"run\" or \"test\".")
 
-	vt.Varname("TOOLS_NOOP")
-	vt.Op(opAssignAppend)
-	vt.Values(
-		"gmake:run")
-
-	vt.Varname("TOOLS_NOOP")
-	vt.Op(opAssign) // TODO: In a Makefile, this should be equivalent to opAssignAppend.
-	vt.Values(
-		"gmake:run")
-
-	vt.Output(
-		"ERROR: filename.mk:31: Unknown tool \"gmake\".")
-
 	vt.Varname("USE_TOOLS")
 	vt.Op(opUseMatch)
 	vt.Values(
@@ -1999,6 +1986,42 @@ func (s *Suite) Test_VartypeCheck_Tool(c *check.C) {
 		"tool1:test")
 
 	vt.OutputEmpty()
+}
+
+func (s *Suite) Test_VartypeCheck_ToolName(c *check.C) {
+	t := s.Init(c)
+	vt := NewVartypeCheckTester(t, BtToolName)
+
+	t.SetUpTool("tool1", "", AtRunTime)
+	t.SetUpTool("tool2", "", AtRunTime)
+	t.SetUpTool("tool3", "", AtRunTime)
+
+	vt.Varname("TOOLS_BROKEN")
+	vt.Op(opAssignAppend)
+	vt.Values(
+		"tool1",
+		"tool3:anything",
+		"${t}",
+		"mal:formed:tool",
+		"unknown")
+
+	vt.Output(
+		"ERROR: filename.mk:2: TOOLS_BROKEN accepts only plain tool names, "+
+			"without any colon.",
+		"ERROR: filename.mk:4: TOOLS_BROKEN accepts only plain tool names, "+
+			"without any colon.",
+		"ERROR: filename.mk:5: Unknown tool \"unknown\".")
+
+	vt.Varname("TOOLS_NOOP")
+	vt.Op(opUseMatch)
+	vt.Values(
+		"tool1",
+		"tool1\\:build",
+		"${t}\\:build")
+
+	vt.Output(
+		"ERROR: filename.mk:12: TOOLS_NOOP accepts only plain tool names, without any colon.",
+		"ERROR: filename.mk:13: TOOLS_NOOP accepts only plain tool names, without any colon.")
 }
 
 func (s *Suite) Test_VartypeCheck_Unknown(c *check.C) {

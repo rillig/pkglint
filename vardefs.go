@@ -1686,12 +1686,12 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.pkglistrat("TEXINFO_REQD", BtVersion)
 	reg.pkglistbl3("TOOL_DEPENDS", BtDependencyWithPath)
 	reg.syslist("TOOLS_ALIASES", BtFilename)
-	reg.syslist("TOOLS_BROKEN", BtTool)
+	reg.syslist("TOOLS_BROKEN", BtToolName)
 	reg.sys("TOOLS_CMD.*", BtPathname)
-	reg.pkglist("TOOLS_CREATE", BtTool)
+	reg.pkglist("TOOLS_CREATE", BtToolName)
 	reg.pkglist("TOOLS_DEPENDS.*", BtDependencyWithPath)
-	reg.syslist("TOOLS_GNU_MISSING", BtTool)
-	reg.syslist("TOOLS_NOOP", BtTool)
+	reg.syslist("TOOLS_GNU_MISSING", BtToolName)
+	reg.syslist("TOOLS_NOOP", BtToolName)
 	reg.sys("TOOLS_PATH.*", BtPathname)
 	reg.sysloadbl3("TOOLS_PLATFORM.*", BtShellCommand)
 	reg.sysloadbl3("TOOLS_SHELL", BtShellCommand)
@@ -1750,13 +1750,13 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	//
 	// The use-loadtime is only for devel/ncurses/Makefile.common, which
 	// removes tbl from USE_TOOLS.
-	reg.acllist("USE_TOOLS", BtTool,
+	reg.acllist("USE_TOOLS", BtToolDependency,
 		PackageSettable,
 		"special:Makefile.common: set, append, use, use-loadtime",
 		"buildlink3.mk: append",
 		"builtin.mk: append, use-loadtime",
 		"*: set, append, use")
-	reg.acllist("USE_TOOLS.*", BtTool, // OPSYS-specific
+	reg.acllist("USE_TOOLS.*", BtToolDependency, // OPSYS-specific
 		PackageSettable,
 		"buildlink3.mk, builtin.mk: append",
 		"*: set, append, use")
