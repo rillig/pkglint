@@ -102,6 +102,7 @@ func (p MkLineParser) MatchVarassign(line *Line, text string, splitResult *mkLin
 
 	varnameStart := lexer.Mark()
 	// TODO: duplicated code in MkLexer.Varname
+	lexer.SkipByte('.')
 	for lexer.NextBytesSet(VarbaseBytes) != "" || lexer.NextVarUse() != nil {
 	}
 	if lexer.SkipByte('.') || hasPrefix(splitResult.main, "SITES_") {

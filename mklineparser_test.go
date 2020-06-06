@@ -214,7 +214,9 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 		text := line.Text
 
 		t.CheckOutputEmpty()
-		valueAlign := NewMkLineParser().Parse(line).ValueAlign()
+		mkline := NewMkLineParser().Parse(line)
+		assert(mkline.IsVarassignMaybeCommented())
+		valueAlign := mkline.ValueAlign()
 		_ = t.Output()
 
 		parser := NewMkLineParser()
@@ -276,14 +278,8 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 	test("NFILES=${FILES:[#]}", false, "NFILES", "", "=", "NFILES=", "${FILES:[#]}", "", "")
 	test(".VARNAME=value", false, ".VARNAME", "", "=", ".VARNAME=", "value", "", "")
 	test(".VAR.param=value", false, ".VAR.param", "", "=", ".VAR.param=", "value", "", "")
-	t.ExpectAssert(func() {
-		// FIXME: Oops
-		test("./=value", false, "./", "", "=", "./=", "value", "", "")
-	})
-	t.ExpectAssert(func() {
-		// FIXME: Oops
-		test("#./=value", false, "./", "", "=", "./=", "value", "", "")
-	})
+	testInvalid("./=value", nil...)
+	testInvalid("#./=value", nil...)
 
 	// To humans, the base variable name seems to be SITES_, being parameterized
 	// with distfile-1.0.tar.gz. For pkglint though, the base variable name is
