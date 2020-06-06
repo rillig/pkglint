@@ -743,7 +743,7 @@ func (s *Suite) Test_Buildlink3Checker_checkVarUse__PKG_BUILD_OPTIONS(c *check.C
 // As of October 2018, pkglint parses package dependencies a little
 // different than the pkg_* tools.
 // In all but two cases this works, this is one of the exceptions.
-// The "{totem,totem-xine}" cannot be parsed, therefore the check skipped.
+// The "{totem,totem-xine}" cannot be parsed, therefore the check is skipped.
 func (s *Suite) Test_Buildlink3Checker_checkVarassign__abi_api_versions_brace(c *check.C) {
 	t := s.Init(c)
 
