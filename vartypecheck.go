@@ -1357,10 +1357,7 @@ func (cv *VartypeCheck) Stage() {
 
 // ToolDependency checks for tool dependencies like "awk", "m4:pkgsrc", "digest:bootstrap".
 func (cv *VartypeCheck) ToolDependency() {
-	if cv.Varname == "TOOLS_NOOP" && cv.Op == opAssignAppend {
-		// no warning for package-defined tool definitions
-
-	} else if m, toolname, tooldep := match2(cv.Value, `^([-\w]+|\[)(?::(\w+))?$`); m {
+	if m, toolname, tooldep := match2(cv.Value, `^([-\w]+|\[)(?::(\w+))?$`); m {
 		if tool, _ := G.Tool(cv.MkLines, toolname, RunTime); tool == nil {
 			cv.Errorf("Unknown tool %q.", toolname)
 		}
@@ -1397,11 +1394,6 @@ func (cv *VartypeCheck) ToolName() {
 			"Tool names must consist of letters, digits, underscores and hyphens only.")
 		return
 	}
-
-	if tool, _ := G.Tool(cv.MkLines, name, RunTime); tool == nil {
-		cv.Errorf("Unknown tool %q.", name)
-	}
-
 }
 
 // Unknown doesn't check for anything.
