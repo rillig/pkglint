@@ -245,7 +245,8 @@ func (reg *VarTypeRegistry) usrpkg(varname string, basicType *BasicType) {
 
 // sysload declares a system-provided variable that may already be used at load time.
 //
-// TODO: For some of these variables, bsd.prefs.mk has to be included first.
+// For most of these variables, bsd.prefs.mk has to be included before they can be used.
+// For those that are defined earlier, see AlwaysInScope.
 func (reg *VarTypeRegistry) sysload(varname string, basicType *BasicType, options ...vartypeOptions) {
 	reg.DefineName(varname, basicType, reg.options(SystemProvided, options), "sysload")
 }
@@ -459,6 +460,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		"Makefile, Makefile.*, *.mk: default, set, use")
 	reg.compile("pkglistbl3",
 		"Makefile, Makefile.*, *.mk: default, set, append, use")
+
 	reg.compile("sys",
 		"buildlink3.mk: none",
 		"*: use")
@@ -467,6 +469,9 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.compile("syslist",
 		"buildlink3.mk: none",
 		"*: use")
+	reg.compile("sysload",
+		"*: use, use-loadtime")
+
 	reg.compile("usr",
 		// TODO: why is builtin.mk missing here?
 		"buildlink3.mk: none",
@@ -480,14 +485,15 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		"buildlink3.mk, builtin.mk: none",
 		"Makefile.*, *.mk: default, set, use, use-loadtime",
 		"*: use, use-loadtime")
-	reg.compile("sysload",
-		"*: use, use-loadtime")
+
 	reg.compile("bl3list",
 		"buildlink3.mk, builtin.mk: append",
 		"*: use")
+
 	reg.compile("cmdline",
 		"buildlink3.mk, builtin.mk: none",
 		"*: use, use-loadtime")
+
 	reg.compile("infralist",
 		"*: set, append, use")
 
