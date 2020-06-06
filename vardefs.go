@@ -75,6 +75,8 @@ func (reg *VarTypeRegistry) Define(varname string, basicType *BasicType, options
 	}
 }
 
+// DefineName registers a variable type given an ACL name.
+// The available ACL names are listed in Init.
 func (reg *VarTypeRegistry) DefineName(varname string, basicType *BasicType, options vartypeOptions, aclName string) {
 	aclEntries := reg.cache[aclName]
 	assertNotNil(aclEntries)
