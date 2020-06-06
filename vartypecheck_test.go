@@ -1363,18 +1363,21 @@ func (s *Suite) Test_VartypeCheck_Option(c *check.C) {
 	G.Pkgsrc.PkgOptions["documented"] = "Option description"
 	G.Pkgsrc.PkgOptions["undocumented"] = ""
 
-	vt.Varname("PKG_OPTIONS.pkgbase")
+	vt.Varname("PKG_SUPPORTED_OPTIONS")
 	vt.Values(
 		"documented",
 		"undocumented",
 		"unknown",
 		"underscore_is_deprecated",
-		"UPPER")
+		"UPPER",
+		"-invalid")
 
 	vt.Output(
 		"WARN: filename.mk:3: Unknown option \"unknown\".",
 		"WARN: filename.mk:4: Use of the underscore character in option names is deprecated.",
 		"ERROR: filename.mk:5: Invalid option name \"UPPER\". "+
+			"Option names must start with a lowercase letter and be all-lowercase.",
+		"ERROR: filename.mk:6: Invalid option name \"-invalid\". "+
 			"Option names must start with a lowercase letter and be all-lowercase.")
 }
 
