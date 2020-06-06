@@ -215,12 +215,10 @@ func (p MkLineParser) parseCommentOrEmpty(line *Line, splitResult mkLineSplitRes
 }
 
 func (p MkLineParser) parseDirective(line *Line, splitResult mkLineSplitResult) *MkLine {
-	text := line.Text
-	if !hasPrefix(text, ".") { // TODO: use lexer instead
+	lexer := textproc.NewLexer(splitResult.main)
+	if !lexer.SkipByte('.') {
 		return nil
 	}
-
-	lexer := textproc.NewLexer(splitResult.main[1:])
 
 	indent := lexer.NextHspace()
 	directive := lexer.NextBytesSet(LowerDash)
