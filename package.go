@@ -621,7 +621,7 @@ func (pkg *Package) checkDistfilesInDistinfo(mklines *MkLines) {
 		return
 	}
 
-	if pkg.distinfoDistfiles == nil {
+	if len(pkg.distinfoDistfiles) == 0 {
 		return
 	}
 
