@@ -617,7 +617,8 @@ func (o *Once) check(key uint64) bool {
 //
 // See also RedundantScope.
 type Scope struct {
-	vs map[string]*scopeVar
+	vs    map[string]*scopeVar
+	names []string
 }
 
 type scopeVar struct {
@@ -631,7 +632,21 @@ type scopeVar struct {
 }
 
 func NewScope() Scope {
-	return Scope{make(map[string]*scopeVar)}
+	return Scope{make(map[string]*scopeVar), nil}
+}
+
+func (s *Scope) varnames() []string {
+	if len(s.names) == 0 && len(s.vs) > 0 {
+		varnames := make([]string, len(s.vs))
+		i := 0
+		for varname := range s.vs {
+			varnames[i] = varname
+			i++
+		}
+		sort.Strings(varnames)
+		s.names = varnames
+	}
+	return s.names
 }
 
 func (s *Scope) v(varname string) *scopeVar {
@@ -640,6 +655,7 @@ func (s *Scope) v(varname string) *scopeVar {
 	}
 	var sv scopeVar
 	s.vs[varname] = &sv
+	s.names = nil
 	return &sv
 }
 
@@ -869,13 +885,7 @@ func (s *Scope) LastValueFound(varname string) (value string, found bool, indete
 }
 
 func (s *Scope) DefineAll(other Scope) {
-	var varnames []string
-	for varname := range other.vs {
-		varnames = append(varnames, varname)
-	}
-	sort.Strings(varnames)
-
-	for _, varname := range varnames {
+	for _, varname := range other.varnames() {
 		v := other.vs[varname]
 		if v.firstDef != nil {
 			s.Define(varname, v.firstDef)
