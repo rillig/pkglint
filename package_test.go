@@ -1408,6 +1408,39 @@ func (s *Suite) Test_Package_checkDistfilesInDistinfo__indirect_conditional_DIST
 		"WARN: Makefile:29: Distfile \"distfile-other.tar.gz\" is not mentioned in distinfo.")
 }
 
+func (s *Suite) Test_Package_checkDistfilesInDistinfo__unresolvable(c *check.C) {
+	G.Experimental = true
+
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".include \"../../mk/bsd.prefs.mk\"",
+		"",
+		".if ${MACHINE_ARCH} == i386",
+		"DISTFILES+=\t${UNKNOWN}",
+		".endif",
+		"",
+		"DISTFILES+=\tok-3.tar.gz")
+	t.CreateFileLines("category/package/distinfo",
+		CvsID,
+		"",
+		"SHA1 (ok-3.tar.gz) = 1234",
+		"RMD160 (ok-3.tar.gz) = 1234",
+		"SHA512 (ok-3.tar.gz) = 1234",
+		"Size (ok-3.tar.gz) = 1234",
+		"SHA1 (package-1.0.tar.gz) = 1234",
+		"RMD160 (package-1.0.tar.gz) = 1234",
+		"SHA512 (package-1.0.tar.gz) = 1234",
+		"Size (package-1.0.tar.gz) = 1234")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	t.CheckOutputLines(
+		"WARN: Makefile:23: UNKNOWN is used but not defined.")
+}
+
 func (s *Suite) Test_Package_checkDistfilesInDistinfo__indirect_DIST_SUBDIR(c *check.C) {
 	G.Experimental = true
 
