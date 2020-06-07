@@ -1515,7 +1515,7 @@ func (s *Suite) Test_Package_checkDistfilesInDistinfo__depending_on_package_sett
 			"is not mentioned in ../../print/tex-varisize/distinfo.")
 }
 
-func (s *Suite) Test_Package_checkDistfilesInDistinfo__package_without_distfiles(c *check.C) {
+func (s *Suite) Test_Package_checkDistfilesInDistinfo__empty_distfiles(c *check.C) {
 	G.Experimental = true
 
 	t := s.Init(c)
@@ -1533,6 +1533,31 @@ func (s *Suite) Test_Package_checkDistfilesInDistinfo__package_without_distfiles
 	t.CheckOutputLines(
 		"WARN: distinfo: This file should not exist.",
 		"NOTE: distinfo:1: Empty line expected below this line.")
+}
+
+func (s *Suite) Test_Package_checkDistfilesInDistinfo__no_distfiles(c *check.C) {
+	G.Experimental = true
+
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"#DISTNAME=\t# undefined",
+		"#DISTFILES=\t# undefined")
+	t.CreateFileLines("category/package/distinfo",
+		CvsID,
+		"",
+		"SHA1 (distfile-1.0.tar.gz) = 1234",
+		"RMD160 (distfile-1.0.tar.gz) = 1234",
+		"SHA512 (distfile-1.0.tar.gz) = 1234",
+		"Size (distfile-1.0.tar.gz) = 1234 bytes")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	// For completely empty distinfo files, the check is skipped.
+	t.CheckOutputLines(
+		"WARN: distinfo: This file should not exist.")
 }
 
 func (s *Suite) Test_Package_checkfilePackageMakefile__GNU_CONFIGURE(c *check.C) {

@@ -627,7 +627,7 @@ func (pkg *Package) checkDistfilesInDistinfo(mklines *MkLines) {
 
 	redundant := pkg.redundant
 	distfiles := redundant.get("DISTFILES")
-	if distfiles == nil {
+	if len(distfiles.vari.WriteLocations()) == 0 {
 		return
 	}
 
