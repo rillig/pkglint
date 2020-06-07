@@ -936,7 +936,8 @@ func (s *Suite) Test_PlistChecker_checkPathMan(c *check.C) {
 		"man/cat1/formatted.0",
 		"man/man1/formatted.1",
 		"man/man1/program.8",
-		"man/manx/program.x")
+		"man/manx/program.x",
+		"man/not-valid")
 
 	CheckLinesPlist(nil, lines)
 
