@@ -1376,10 +1376,11 @@ func (s *Suite) Test_Package_checkDistfilesInDistinfo__indirect_conditional_DIST
 		".include \"../../mk/bsd.prefs.mk\"",
 		"",
 		"DISTFILES.i386=\t\tdistfile-i386.tar.gz",
+		"DISTFILES.x86=\t\tdistfile-x86.tar.gz",
 		"DISTFILES.other=\tdistfile-other.tar.gz",
 		"",
 		".if ${MACHINE_ARCH} == i386",
-		"DISTFILES+=\t${DISTFILES.i386}",
+		"DISTFILES+=\t${DISTFILES.i386} ${DISTFILES.x86}",
 		".else",
 		"DISTFILES+=\t${DISTFILES.other}",
 		".endif",
@@ -1402,8 +1403,9 @@ func (s *Suite) Test_Package_checkDistfilesInDistinfo__indirect_conditional_DIST
 	G.Check(".")
 
 	t.CheckOutputLines(
-		"WARN: Makefile:26: Distfile \"distfile-i386.tar.gz\" is not mentioned in distinfo.",
-		"WARN: Makefile:28: Distfile \"distfile-other.tar.gz\" is not mentioned in distinfo.")
+		"WARN: Makefile:27: Distfile \"distfile-i386.tar.gz\" is not mentioned in distinfo.",
+		"WARN: Makefile:27: Distfile \"distfile-x86.tar.gz\" is not mentioned in distinfo.",
+		"WARN: Makefile:29: Distfile \"distfile-other.tar.gz\" is not mentioned in distinfo.")
 }
 
 func (s *Suite) Test_Package_checkDistfilesInDistinfo__indirect_DIST_SUBDIR(c *check.C) {
