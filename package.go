@@ -604,9 +604,6 @@ func (pkg *Package) check(filenames []CurrPath, mklines, allLines *MkLines) {
 }
 
 func (pkg *Package) checkDescr(filenames []CurrPath, mklines *MkLines) {
-	if mklines == nil {
-		return
-	}
 	for _, filename := range filenames {
 		if filename.HasBase("DESCR") {
 			return

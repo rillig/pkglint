@@ -1348,6 +1348,20 @@ func (s *Suite) Test_Package_checkDescr__DESCR_SRC(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_Package_checkDescr__no_package(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.CreateFileLines("category/package/module.mk")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	t.CheckOutputLines(
+		"ERROR: Makefile: Cannot be read.")
+}
+
 // All files that can possibly be added to DISTFILES need a corresponding
 // entry in the distinfo file.
 //
