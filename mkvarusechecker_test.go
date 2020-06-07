@@ -389,13 +389,20 @@ func (s *Suite) Test_MkVarUseChecker_checkVarnameBuildlink(c *check.C) {
 		"CONFIGURE_ARGS+=\t--with-lib=${BUILDLINK_PREFIX.lib}",
 		"",
 		".include \"../../category/library/buildlink3.mk\"")
+	t.CreateFileBuildlink3("category/package/buildlink3.mk",
+		"BL3=\t${BUILDLINK_PREFIX.unknown-bl3}")
+	t.CreateFileLines("category/package/builtin.mk",
+		MkCvsID,
+		"BUILTIN=\t${BUILDLINK_PREFIX.unknown-builtin}")
 	t.Chdir("category/package")
 	t.FinishSetUp()
 
 	G.Check(".")
 
 	t.CheckOutputLines(
-		"WARN: Makefile:20: Buildlink identifier \"library\" is not known in this package.")
+		"WARN: Makefile:20: Buildlink identifier \"library\" is not known in this package.",
+		"WARN: buildlink3.mk:12: BL3 is defined but not used.",
+		"WARN: builtin.mk:2: BUILTIN is defined but not used.")
 }
 
 func (s *Suite) Test_MkVarUseChecker_checkPermissions(c *check.C) {

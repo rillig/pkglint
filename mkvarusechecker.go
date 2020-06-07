@@ -162,6 +162,7 @@ func (ck *MkVarUseChecker) checkVarnameBuildlink(varname string) {
 		return
 	}
 
+	// TODO: This could be unnecessary because of the LoadMk below.
 	basename := ck.MkLine.Basename
 	if basename == "buildlink3.mk" || basename == "builtin.mk" {
 		return
