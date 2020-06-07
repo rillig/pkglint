@@ -526,7 +526,11 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern__different_operators(c *chec
 	// As of June 2020 there is no warning because the operators differ.
 	// In this test case buildlink3.mk uses > and the package uses >=.
 	// For this combination it would be correct and useful to issue a warning.
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: Makefile:21: Version 1.0pkg is smaller than the "+
+			"default version 1.3api from ../../category/lib/buildlink3.mk:12.",
+		"WARN: Makefile:22: Version 1.1pkg is smaller than the "+
+			"default version 1.4abi from ../../category/lib/buildlink3.mk:13.")
 }
 
 func (s *Suite) Test_VartypeCheck_DependencyPattern__API_ABI(c *check.C) {

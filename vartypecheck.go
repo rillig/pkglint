@@ -394,8 +394,13 @@ func (cv *VartypeCheck) DependencyPattern() {
 			return
 		}
 		defpat := depends(data)
-		if defpat == nil || defpat.LowerOp != deppat.LowerOp {
+		if defpat == nil {
 			return
+		}
+		if defpat.LowerOp != deppat.LowerOp {
+			if defpat.LowerOp != ">" || deppat.LowerOp != ">=" {
+				return
+			}
 		}
 		if pkgver.Compare(deppat.Lower, defpat.Lower) < 0 {
 			cv.Warnf("Version %s is smaller than the default version %s from %s.",
