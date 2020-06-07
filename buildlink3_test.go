@@ -1113,7 +1113,19 @@ func (s *Suite) Test_LoadBuildlink3Data(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileBuildlink3("category/package/buildlink3.mk",
-		"BUILDLINK_ABI_DEPENDS.package+=\tpackage>=0.1")
+		"BUILDLINK_ABI_DEPENDS.package+=\tpackage>=0.1",
+		"",
+		"BUILDLINK_API_DEPENDS.other+=\tother>=0.1",
+		"BUILDLINK_ABI_DEPENDS.other+=\tother>=0.1.3",
+		"BUILDLINK_API_DEPENDS.package+=\tinvalid",
+		"BUILDLINK_API_DEPENDS.package+=\tpackage>=0.1:extra",
+		"BUILDLINK_ABI_DEPENDS.package+=\tinvalid",
+		"BUILDLINK_ABI_DEPENDS.package+=\tpackage>=0.1:extra",
+
+		"BUILDLINK_PREFIX.package=\t${PREFIX}",
+		"BUILDLINK_PREFIX.other=\t${PREFIX}",
+
+		"BUILDLINK_PKGSRCDIR.other=\tcategory/package")
 	t.Chdir("category/package")
 	mklines := LoadMk("buildlink3.mk", nil, MustSucceed)
 
@@ -1121,6 +1133,7 @@ func (s *Suite) Test_LoadBuildlink3Data(c *check.C) {
 
 	t.CheckDeepEquals(data, &Buildlink3Data{
 		id:        "package",
+		prefix:    "${PREFIX}",
 		pkgsrcdir: "../../category/package",
 		apiDepends: &DependencyPattern{
 			Pkgbase: "package",
