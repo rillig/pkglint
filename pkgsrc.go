@@ -265,7 +265,7 @@ func (src *Pkgsrc) checkChangeVersion(change *Change, latest map[PkgsrcPath]*Cha
 		}
 		latest[change.Pkgpath] = change
 
-	case Renamed, Moved, Removed:
+	default:
 		latest[change.Pkgpath] = nil
 	}
 }
