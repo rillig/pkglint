@@ -501,10 +501,10 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern__smaller_version(c *check.C)
 	G.checkdirPackage(".")
 
 	t.CheckOutputLines(
-		"WARN: Makefile:21: Version 1.0pkg is smaller than the default "+
-			"version 1.3api from ../../category/lib/buildlink3.mk:12.",
-		"WARN: Makefile:22: Version 1.1pkg is smaller than the default "+
-			"version 1.4abi from ../../category/lib/buildlink3.mk:13.")
+		"NOTE: Makefile:21: The requirement >=1.0pkg is already guaranteed "+
+			"by the >=1.3api from ../../category/lib/buildlink3.mk:12.",
+		"NOTE: Makefile:22: The requirement >=1.1pkg is already guaranteed "+
+			"by the >=1.4abi from ../../category/lib/buildlink3.mk:13.")
 }
 
 func (s *Suite) Test_VartypeCheck_DependencyPattern__different_operators(c *check.C) {
@@ -524,10 +524,10 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern__different_operators(c *chec
 	G.checkdirPackage(".")
 
 	t.CheckOutputLines(
-		"WARN: Makefile:21: Version 1.0pkg is smaller than the "+
-			"default version 1.3api from ../../category/lib/buildlink3.mk:12.",
-		"WARN: Makefile:22: Version 1.1pkg is smaller than the "+
-			"default version 1.4abi from ../../category/lib/buildlink3.mk:13.")
+		"NOTE: Makefile:21: The requirement >=1.0pkg is already guaranteed "+
+			"by the >1.3api from ../../category/lib/buildlink3.mk:12.",
+		"NOTE: Makefile:22: The requirement >=1.1pkg is already guaranteed "+
+			"by the >1.4abi from ../../category/lib/buildlink3.mk:13.")
 }
 
 func (s *Suite) Test_VartypeCheck_DependencyPattern__additional_greater(c *check.C) {
@@ -546,10 +546,11 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern__additional_greater(c *check
 
 	G.checkdirPackage(".")
 
-	// As of June 2020 there is no warning because the additional restriction
-	// uses the > operator and the default restriction uses the >= operator.
-	// It would be possible to issue a warning here, though.
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"NOTE: Makefile:21: The requirement >1.0pkg is already guaranteed "+
+			"by the >=1.3api from ../../category/lib/buildlink3.mk:12.",
+		"NOTE: Makefile:22: The requirement >1.1pkg is already guaranteed "+
+			"by the >=1.4abi from ../../category/lib/buildlink3.mk:13.")
 }
 
 func (s *Suite) Test_VartypeCheck_DependencyPattern__upper_limit(c *check.C) {

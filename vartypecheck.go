@@ -397,12 +397,11 @@ func (cv *VartypeCheck) DependencyPattern() {
 		if defpat == nil || defpat.LowerOp == "" {
 			return
 		}
-		if defpat.LowerOp == ">=" && deppat.LowerOp == ">" {
-			return
-		}
-		if pkgver.Compare(deppat.Lower, defpat.Lower) < 0 {
-			cv.Warnf("Version %s is smaller than the default version %s from %s.",
-				deppat.Lower, defpat.Lower, cv.MkLine.RelMkLine(dependsLine(data)))
+		limit := condInt(defpat.LowerOp == ">=" && deppat.LowerOp == ">", 1, 0)
+		if pkgver.Compare(deppat.Lower, defpat.Lower) < limit {
+			cv.Notef("The requirement %s%s is already guaranteed by the %s%s from %s.",
+				deppat.LowerOp, deppat.Lower, defpat.LowerOp, defpat.Lower,
+				cv.MkLine.RelMkLine(dependsLine(data)))
 		}
 	}
 
