@@ -376,7 +376,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__missing_BUILDLINK_TREE_at_end(c *ch
 	CheckLinesBuildlink3Mk(mklines)
 
 	t.CheckOutputLines(
-		"WARN: buildlink3.mk:13: This line should contain the following text: BUILDLINK_TREE+=\t-hs-X11")
+		"WARN: buildlink3.mk:13: This line should consist of the following text: BUILDLINK_TREE+=\t-hs-X11")
 }
 
 func (s *Suite) Test_CheckLinesBuildlink3Mk__DEPMETHOD_placement(c *check.C) {
@@ -424,7 +424,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__multiple_inclusion_wrong(c *check.C
 	t.CheckOutputLines(
 		"WARN: buildlink3.mk:5: HS_X11_BUILDLINK3_MK is used but not defined.",
 		"WARN: buildlink3.mk:6: UNRELATED_BUILDLINK3_MK is defined but not used.",
-		"WARN: buildlink3.mk:6: This line should contain the following text: HS_X11_BUILDLINK3_MK:=")
+		"WARN: buildlink3.mk:6: This line should consist of the following text: HS_X11_BUILDLINK3_MK:=")
 }
 
 func (s *Suite) Test_CheckLinesBuildlink3Mk__missing_endif(c *check.C) {
