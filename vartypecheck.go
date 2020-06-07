@@ -1402,7 +1402,7 @@ func (cv *VartypeCheck) ToolName() {
 //
 // Used for:
 //  - infrastructure variables that are not in vardefs.go
-//  - other variables whose type is unknown or uninteresting enough to
+//  - other variables whose type is unknown or not interesting enough to
 //    warrant the creation of a specialized type
 func (cv *VartypeCheck) Unknown() {
 	// Do nothing.
