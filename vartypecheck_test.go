@@ -2003,13 +2003,15 @@ func (s *Suite) Test_VartypeCheck_ToolName(c *check.C) {
 		"tool3:anything",
 		"${t}",
 		"mal:formed:tool",
-		"unknown")
+		"unknown",
+		"c++")
 
 	vt.Output(
 		"ERROR: filename.mk:2: TOOLS_BROKEN accepts only plain tool names, "+
 			"without any colon.",
 		"ERROR: filename.mk:4: TOOLS_BROKEN accepts only plain tool names, "+
-			"without any colon.")
+			"without any colon.",
+		"ERROR: filename.mk:6: Invalid tool name \"c++\".")
 
 	vt.Varname("TOOLS_NOOP")
 	vt.Op(opUseMatch)
