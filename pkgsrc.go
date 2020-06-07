@@ -1164,6 +1164,7 @@ func (src *Pkgsrc) ReadDir(dirName PkgsrcPath) []os.FileInfo {
 //
 // During pkglint testing, these files often don't exist, as they are
 // emulated by setting their data structures manually.
+// In that case, returns nil.
 func (src *Pkgsrc) LoadMkExisting(filename PkgsrcPath) *MkLines {
 	options := NotEmpty
 	if !G.Testing {
