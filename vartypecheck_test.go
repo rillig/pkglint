@@ -533,6 +533,27 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern__different_operators(c *chec
 			"default version 1.4abi from ../../category/lib/buildlink3.mk:13.")
 }
 
+func (s *Suite) Test_VartypeCheck_DependencyPattern__upper_limit(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".include \"../../category/lib/buildlink3.mk\"",
+		"BUILDLINK_API_DEPENDS.lib+=\tlib<2.0",
+		"BUILDLINK_ABI_DEPENDS.lib+=\tlib<2.1")
+	t.SetUpPackage("category/lib")
+	t.CreateFileBuildlink3("category/lib/buildlink3.mk",
+		"BUILDLINK_API_DEPENDS.lib+=\tlib>1.3api",
+		"BUILDLINK_ABI_DEPENDS.lib+=\tlib>1.4abi")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.checkdirPackage(".")
+
+	// If the additional constraint doesn't have a lower bound,
+	// there is nothing to compare and warn about.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_VartypeCheck_DependencyPattern__API_ABI(c *check.C) {
 	t := s.Init(c)
 
