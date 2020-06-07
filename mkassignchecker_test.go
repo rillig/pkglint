@@ -517,6 +517,25 @@ func (s *Suite) Test_MkAssignChecker_checkVarassignLeftPermissions__infrastructu
 	t.CheckOutputEmpty()
 }
 
+// Seen in x11/gtkmm3 before 2020-06-07.
+func (s *Suite) Test_MkAssignChecker_checkVarassignLeftAbiDepends(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"BUILDLINK_ABI_DEPENDS.lib+=\tlib>=1.0")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	// It may be a good idea to not only check the buildlink identifier
+	// for ${BUILDLINK_PREFIX.*} but also for appending to
+	// BUILDLINK_API_DEPENDS and BUILDLINK_ABI_DEPENDS.
+	t.CheckOutputLines(
+		"ERROR: Makefile:20: Packages must only require API versions, " +
+			"not ABI versions of dependencies.")
+}
+
 func (s *Suite) Test_MkAssignChecker_checkVarassignLeftRationale(c *check.C) {
 	t := s.Init(c)
 

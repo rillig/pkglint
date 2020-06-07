@@ -33,6 +33,7 @@ func (ck *MkAssignChecker) checkVarassignLeft() {
 	ck.checkVarassignLeftBsdPrefs()
 	if !ck.checkVarassignLeftUserSettable() {
 		ck.checkVarassignLeftPermissions()
+		ck.checkVarassignLeftAbiDepends()
 	}
 	ck.checkVarassignLeftRationale()
 
@@ -271,6 +272,42 @@ func (ck *MkAssignChecker) checkVarassignLeftPermissions() {
 		(&MkVarUseChecker{nil, nil, ck.MkLines, mkline}).
 			explainPermissions(varname, vartype)
 	}
+}
+
+func (ck *MkAssignChecker) checkVarassignLeftAbiDepends() {
+	mkline := ck.MkLine
+
+	varname := mkline.Varname()
+	if !hasPrefix(varname, "BUILDLINK_ABI_DEPENDS.") {
+		return
+	}
+
+	basename := mkline.Basename
+	if basename == "buildlink3.mk" {
+		varparam := varnameParam(varname)
+		bl3id := ""
+		for _, bl3line := range ck.MkLines.mklines {
+			if bl3line.IsVarassign() && bl3line.Varname() == "BUILDLINK_TREE" {
+				bl3id = bl3line.Value()
+				break
+			}
+		}
+		if varparam == bl3id {
+			return
+		}
+	}
+
+	fix := mkline.Autofix()
+	fix.Errorf("Packages must only require API versions, not ABI versions of dependencies.")
+	fix.Explain(
+		"When building a package from the sources,",
+		"the version of the installed package does not matter.",
+		"That version is specified by BUILDLINK_ABI_VERSION.",
+		"",
+		"The only version that matters is the API of the dependency,",
+		"which is selected by specifying BUILDLINK_API_DEPENDS.")
+	fix.Replace("BUILDLINK_ABI_DEPENDS", "BUILDLINK_API_DEPENDS")
+	fix.Apply()
 }
 
 func (ck *MkAssignChecker) checkVarassignLeftRationale() {
