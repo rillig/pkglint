@@ -495,7 +495,7 @@ func (s *Suite) Test_MkLines_collectUsedVariables__simple(c *check.C) {
 	mklines.collectUsedVariables()
 
 	t.Check(mklines.allVars.vs, check.HasLen, 1)
-	t.CheckEquals(mklines.allVars.v("VAR").used, mkline)
+	t.CheckEquals(mklines.allVars.create("VAR").used, mkline)
 	t.CheckEquals(mklines.allVars.FirstUse("VAR"), mkline)
 }
 

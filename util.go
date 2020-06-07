@@ -649,7 +649,7 @@ func (s *Scope) varnames() []string {
 	return s.names
 }
 
-func (s *Scope) v(varname string) *scopeVar {
+func (s *Scope) create(varname string) *scopeVar {
 	if v := s.vs[varname]; v != nil {
 		return v
 	}
@@ -671,7 +671,7 @@ func (s *Scope) Define(varname string, mkline *MkLine) {
 }
 
 func (s *Scope) def(name string, mkline *MkLine) {
-	v := s.v(name)
+	v := s.create(name)
 	if v.firstDef == nil {
 		v.firstDef = mkline
 		if trace.Tracing {
@@ -712,13 +712,13 @@ func (s *Scope) def(name string, mkline *MkLine) {
 }
 
 func (s *Scope) Fallback(varname string, value string) {
-	s.v(varname).fallback = value
+	s.create(varname).fallback = value
 }
 
 // Use marks the variable and its canonicalized form as used.
 func (s *Scope) Use(varname string, line *MkLine, time VucTime) {
 	use := func(name string) {
-		v := s.v(name)
+		v := s.create(name)
 		if v.used == nil {
 			v.used = line
 			if trace.Tracing {
@@ -777,21 +777,19 @@ func (s *Scope) IsDefinedSimilar(varname string) bool {
 // IsUsed tests whether the variable is used.
 // It does NOT test the canonicalized variable name.
 func (s *Scope) IsUsed(varname string) bool {
-	return s.v(varname).used != nil
+	return s.FirstUse(varname) != nil
 }
 
 // IsUsedSimilar tests whether the variable or its canonicalized form is used.
 func (s *Scope) IsUsedSimilar(varname string) bool {
-	if s.v(varname).used != nil {
-		return true
-	}
-	return s.v(varnameCanon(varname)).used != nil
+	return s.FirstUse(varname) != nil || s.FirstUse(varnameCanon(varname)) != nil
 }
 
 // IsUsedAtLoadTime returns true if the variable is used at load time
 // somewhere.
 func (s *Scope) IsUsedAtLoadTime(varname string) bool {
-	return s.v(varname).usedAtLoadTime
+	v := s.vs[varname]
+	return v != nil && v.usedAtLoadTime
 }
 
 // FirstDefinition returns the line in which the variable has been defined first.
@@ -803,7 +801,12 @@ func (s *Scope) IsUsedAtLoadTime(varname string) bool {
 // round: the including file sets a value first, and the included file then
 // assigns a default value using ?=.
 func (s *Scope) FirstDefinition(varname string) *MkLine {
-	mkline := s.v(varname).firstDef
+	v := s.vs[varname]
+	if v == nil {
+		return nil
+	}
+
+	mkline := v.firstDef
 	if mkline != nil && mkline.IsVarassign() {
 		lastLine := s.LastDefinition(varname)
 		if trace.Tracing && lastLine != mkline {
@@ -824,7 +827,12 @@ func (s *Scope) FirstDefinition(varname string) *MkLine {
 // round: the including file sets a value first, and the included file then
 // assigns a default value using ?=.
 func (s *Scope) LastDefinition(varname string) *MkLine {
-	mkline := s.v(varname).lastDef
+	v := s.vs[varname]
+	if v == nil {
+		return nil
+	}
+
+	mkline := v.lastDef
 	if mkline != nil && mkline.IsVarassign() {
 		return mkline
 	}
@@ -835,12 +843,17 @@ func (s *Scope) LastDefinition(varname string) *MkLine {
 // variable assignments. These are ignored by bmake but used heavily in
 // mk/defaults/mk.conf for documentation.
 func (s *Scope) Commented(varname string) *MkLine {
-	var mklines []*MkLine
-	if first := s.v(varname).firstDef; first != nil {
-		mklines = append(mklines, first)
+	v := s.vs[varname]
+	if v == nil {
+		return nil
 	}
-	if last := s.v(varname).lastDef; last != nil {
-		mklines = append(mklines, last)
+
+	mklines := make([]*MkLine, 0, 2)
+	if v.firstDef != nil {
+		mklines = append(mklines, v.firstDef)
+	}
+	if v.lastDef != nil {
+		mklines = append(mklines, v.lastDef)
 	}
 
 	for _, mkline := range mklines {
@@ -859,7 +872,11 @@ func (s *Scope) Commented(varname string) *MkLine {
 }
 
 func (s *Scope) FirstUse(varname string) *MkLine {
-	return s.v(varname).used
+	v := s.vs[varname]
+	if v == nil {
+		return nil
+	}
+	return v.used
 }
 
 // LastValue returns the value from the last variable definition.
