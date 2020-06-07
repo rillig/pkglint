@@ -507,6 +507,28 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern__smaller_version(c *check.C)
 			"version 1.4abi from ../../category/lib/buildlink3.mk:13.")
 }
 
+func (s *Suite) Test_VartypeCheck_DependencyPattern__different_operators(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".include \"../../category/lib/buildlink3.mk\"",
+		"BUILDLINK_API_DEPENDS.lib+=\tlib>=1.0pkg",
+		"BUILDLINK_ABI_DEPENDS.lib+=\tlib>=1.1pkg")
+	t.SetUpPackage("category/lib")
+	t.CreateFileBuildlink3("category/lib/buildlink3.mk",
+		"BUILDLINK_API_DEPENDS.lib+=\tlib>1.3api",
+		"BUILDLINK_ABI_DEPENDS.lib+=\tlib>1.4abi")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.checkdirPackage(".")
+
+	// As of June 2020 there is no warning because the operators differ.
+	// In this test case buildlink3.mk uses > and the package uses >=.
+	// For this combination it would be correct and useful to issue a warning.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_VartypeCheck_DependencyPattern__API_ABI(c *check.C) {
 	t := s.Init(c)
 
