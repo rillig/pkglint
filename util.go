@@ -655,7 +655,9 @@ func (s *Scope) v(varname string) *scopeVar {
 	}
 	var sv scopeVar
 	s.vs[varname] = &sv
-	s.names = nil
+	if s.names != nil {
+		s.names = nil
+	}
 	return &sv
 }
 
@@ -737,7 +739,10 @@ func (s *Scope) Use(varname string, line *MkLine, time VucTime) {
 //  - mentioned in a commented variable assignment,
 //  - mentioned in a documentation comment.
 func (s *Scope) Mentioned(varname string) *MkLine {
-	return s.v(varname).firstDef
+	if v := s.vs[varname]; v != nil {
+		return v.firstDef
+	}
+	return nil
 }
 
 // IsDefined tests whether the variable is defined.
@@ -746,7 +751,7 @@ func (s *Scope) Mentioned(varname string) *MkLine {
 // Even if IsDefined returns true, FirstDefinition doesn't necessarily return true
 // since the latter ignores the default definitions from vardefs.go, keyword dummyVardefMkline.
 func (s *Scope) IsDefined(varname string) bool {
-	mkline := s.v(varname).firstDef
+	mkline := s.Mentioned(varname)
 	return mkline != nil && mkline.IsVarassign()
 }
 
@@ -884,7 +889,7 @@ func (s *Scope) LastValueFound(varname string) (value string, found bool, indete
 	return v.fallback, v.fallback != "", v.indeterminate
 }
 
-func (s *Scope) DefineAll(other Scope) {
+func (s *Scope) DefineAll(other *Scope) {
 	for _, varname := range other.varnames() {
 		v := other.vs[varname]
 		if v.firstDef != nil {

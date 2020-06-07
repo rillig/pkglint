@@ -118,7 +118,7 @@ func NewPackage(dir CurrPath) *Package {
 		conditionalIncludes:   make(map[PackagePath]*MkLine),
 		unconditionalIncludes: make(map[PackagePath]*MkLine),
 	}
-	pkg.vars.DefineAll(G.Pkgsrc.UserDefinedVars)
+	pkg.vars.DefineAll(&G.Pkgsrc.UserDefinedVars)
 
 	pkg.vars.Fallback("PKGDIR", ".")
 	pkg.vars.Fallback("DISTINFO_FILE", "${PKGDIR}/distinfo")
