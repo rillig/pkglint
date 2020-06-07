@@ -1444,6 +1444,8 @@ func (s *Suite) Test_NewPlistRank(c *check.C) {
 	t.CheckDeepEquals(NewPlistRank("PLIST.NetBSD-x86_64"), &PlistRank{3, "NetBSD", "x86_64", ""})
 	t.CheckDeepEquals(NewPlistRank("PLIST.linux-x86_64"), &PlistRank{3, "linux", "x86_64", ""})
 	t.CheckDeepEquals(NewPlistRank("PLIST.solaris-sparc"), &PlistRank{3, "solaris", "sparc", ""})
+	t.CheckDeepEquals(NewPlistRank("PLIST.solaris-specific"), &PlistRank{3, "", "", "solaris-specific"})
+	t.CheckDeepEquals(NewPlistRank("PLIST.arch-x86_64"), &PlistRank{3, "", "", "arch-x86_64"})
 	t.CheckDeepEquals(NewPlistRank("PLIST.other"), &PlistRank{3, "", "", "other"})
 
 	// To list all current PLIST filenames:
