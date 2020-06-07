@@ -650,7 +650,7 @@ func (s *Scope) varnames() []string {
 }
 
 func (s *Scope) v(varname string) *scopeVar {
-	if v, found := s.vs[varname]; found {
+	if v := s.vs[varname]; v != nil {
 		return v
 	}
 	var sv scopeVar
