@@ -104,7 +104,6 @@ func (s *Suite) TearDownTest(c *check.C) {
 func Test__qa(t *testing.T) {
 	ck := intqa.NewQAChecker(t.Errorf)
 
-	ck.Configure("buildlink3.go", "*", "*", -intqa.EMissingTest)     // TODO
 	ck.Configure("distinfo.go", "*", "*", -intqa.EMissingTest)       // TODO
 	ck.Configure("files.go", "*", "*", -intqa.EMissingTest)          // TODO
 	ck.Configure("licenses.go", "*", "*", -intqa.EMissingTest)       // TODO

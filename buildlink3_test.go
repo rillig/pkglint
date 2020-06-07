@@ -631,6 +631,21 @@ func (s *Suite) Test_Buildlink3Checker_checkSecondParagraph__missing_mkbase(c *c
 		"WARN: ~/category/package/Makefile:4: \"\" is not a valid package name.")
 }
 
+func (s *Suite) Test_Buildlink3Checker_checkPkgbaseMismatch(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.CreateFileBuildlink3Id("category/package/buildlink3.mk", "unrelated")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	t.CheckOutputLines(
+		"ERROR: buildlink3.mk:3: Package name mismatch between \"unrelated\" " +
+			"in this file and \"package\" from Makefile:3.")
+}
+
 func (s *Suite) Test_Buildlink3Checker_checkMainPart__if_else_endif(c *check.C) {
 	t := s.Init(c)
 
