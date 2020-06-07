@@ -523,14 +523,33 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern__different_operators(c *chec
 
 	G.checkdirPackage(".")
 
-	// As of June 2020 there is no warning because the operators differ.
-	// In this test case buildlink3.mk uses > and the package uses >=.
-	// For this combination it would be correct and useful to issue a warning.
 	t.CheckOutputLines(
 		"WARN: Makefile:21: Version 1.0pkg is smaller than the "+
 			"default version 1.3api from ../../category/lib/buildlink3.mk:12.",
 		"WARN: Makefile:22: Version 1.1pkg is smaller than the "+
 			"default version 1.4abi from ../../category/lib/buildlink3.mk:13.")
+}
+
+func (s *Suite) Test_VartypeCheck_DependencyPattern__additional_greater(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".include \"../../category/lib/buildlink3.mk\"",
+		"BUILDLINK_API_DEPENDS.lib+=\tlib>1.0pkg",
+		"BUILDLINK_ABI_DEPENDS.lib+=\tlib>1.1pkg")
+	t.SetUpPackage("category/lib")
+	t.CreateFileBuildlink3("category/lib/buildlink3.mk",
+		"BUILDLINK_API_DEPENDS.lib+=\tlib>=1.3api",
+		"BUILDLINK_ABI_DEPENDS.lib+=\tlib>=1.4abi")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.checkdirPackage(".")
+
+	// As of June 2020 there is no warning because the additional restriction
+	// uses the > operator and the default restriction uses the >= operator.
+	// It would be possible to issue a warning here, though.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_VartypeCheck_DependencyPattern__upper_limit(c *check.C) {
@@ -544,6 +563,29 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern__upper_limit(c *check.C) {
 	t.CreateFileBuildlink3("category/lib/buildlink3.mk",
 		"BUILDLINK_API_DEPENDS.lib+=\tlib>1.3api",
 		"BUILDLINK_ABI_DEPENDS.lib+=\tlib>1.4abi")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.checkdirPackage(".")
+
+	// If the additional constraint doesn't have a lower bound,
+	// there is nothing to compare and warn about.
+	t.CheckOutputEmpty()
+}
+
+// Having an upper bound for a library dependency is unusual.
+// A combined lower and upper bound makes sense though.
+func (s *Suite) Test_VartypeCheck_DependencyPattern__upper_limit_in_buildlink3(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		".include \"../../category/lib/buildlink3.mk\"",
+		"BUILDLINK_API_DEPENDS.lib+=\tlib>=16",
+		"BUILDLINK_ABI_DEPENDS.lib+=\tlib>=16.1")
+	t.SetUpPackage("category/lib")
+	t.CreateFileBuildlink3("category/lib/buildlink3.mk",
+		"BUILDLINK_API_DEPENDS.lib+=\tlib<7",
+		"BUILDLINK_ABI_DEPENDS.lib+=\tlib<6")
 	t.Chdir("category/package")
 	t.FinishSetUp()
 
