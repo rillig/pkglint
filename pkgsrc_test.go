@@ -360,6 +360,7 @@ func (s *Suite) Test_Pkgsrc_checkChangeVersion(c *check.C) {
 		"\tAdded category/package version 1.0 [author1 2020-01-01]",
 		"\tUpdated category/package to 0.9 [author1 2020-01-01]",
 		"\tDowngraded category/package to 1.0 [author1 2020-01-01]",
+		"\tDowngraded category/package to 0.8 [author 2020-01-01]",
 		"\tRenamed category/package to category/renamed [author1 2020-01-01]",
 		"\tMoved category/package to other/renamed [author1 2020-01-01]")
 	t.Chdir("doc")
