@@ -655,9 +655,7 @@ func (s *Scope) create(varname string) *scopeVar {
 	}
 	var sv scopeVar
 	s.vs[varname] = &sv
-	if s.names != nil {
-		s.names = nil
-	}
+	s.names = nil
 	return &sv
 }
 
