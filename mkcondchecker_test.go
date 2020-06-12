@@ -216,6 +216,80 @@ func (s *Suite) Test_MkCondChecker_Check__comparing_PKGSRC_COMPILER_with_eqeq(c 
 		"ERROR: Makefile:6: Use ${PKGSRC_COMPILER:Ngcc} instead of the != operator.")
 }
 
+func (s *Suite) Test_MkCondChecker_Check__contradicting_conditions(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.FinishSetUp()
+
+	lines := func(lines ...string) []string { return lines }
+	test := func(lines []string, diagnostics ...string) {
+		allLines := []string{MkCvsID,
+			"",
+			".include \"../../mk/bsd.prefs.mk\"",
+			""}
+		mklines := t.NewMkLines("filename.mk",
+			append(allLines, lines...)...)
+
+		mklines.Check()
+
+		t.CheckOutput(diagnostics)
+	}
+
+	// Seen in lang/rust/Makefile on 2020-06-12.
+	// TODO: The two MACHINE_PLATFORM conditions contradict each other.
+	// TODO: The MACHINE_PLATFORM conditions make the OPSYS condition redundant.
+	test(
+		lines(
+			".if ${OPSYS} == \"NetBSD\" && "+
+				"!empty(MACHINE_PLATFORM:MNetBSD-9.99.*) && "+
+				"!empty(MACHINE_PLATFORM:MNetBSD-[1-9][0-9].*)",
+			".endif"),
+		nil...)
+
+	// A syntactical variation of the above condition.
+	// TODO: The two MACHINE_PLATFORM conditions contradict each other.
+	// TODO: The MACHINE_PLATFORM conditions make the OPSYS condition redundant.
+	test(
+		lines(
+			".if ${OPSYS} == NetBSD && ${MACHINE_PLATFORM:MNetBSD-9.99.*} && ${MACHINE_PLATFORM:MNetBSD-[1-9][0-9].*}",
+			".endif"),
+		nil...)
+
+	// Another variation on the same theme.
+	// TODO: The two MACHINE_PLATFORM conditions contradict each other.
+	// TODO: The MACHINE_PLATFORM conditions make the OPSYS condition redundant.
+	test(
+		lines(
+			".if ${OPSYS} == NetBSD",
+			".  if ${MACHINE_PLATFORM:MNetBSD-9.99.*}",
+			".    if ${MACHINE_PLATFORM:MNetBSD-[1-9][0-9].*}",
+			".    endif",
+			".  endif",
+			".endif"),
+		nil...)
+
+	// TODO: Since MACHINE_PLATFORM always starts with OPSYS, these
+	//  conditions contradict each other as well.
+	test(
+		lines(
+			".if ${OPSYS} == NetBSD",
+			".  if ${MACHINE_PLATFORM:MSunOS-5.*}",
+			".  endif",
+			".endif"),
+		nil...)
+
+	// Ensure that some checks are actually run.
+	// (As of 2020-06-12, the above tests all produce no diagnostics,
+	// which could as well be achieved by running no checks at all.)
+	test(
+		lines(
+			".if ${OPSYS} == Unknown",
+			".endif"),
+		"WARN: filename.mk:5: \"Unknown\" is not valid for OPSYS. "+
+			"Use one of { Cygwin DragonFly FreeBSD Linux NetBSD SunOS } instead.")
+}
+
 func (s *Suite) Test_MkCondChecker_checkNotEmpty(c *check.C) {
 	t := s.Init(c)
 
