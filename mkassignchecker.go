@@ -481,6 +481,8 @@ func (ck *MkAssignChecker) checkMisc() {
 
 	if varname == "PKG_SKIP_REASON" && ck.MkLines.indentation.DependsOn("OPSYS") {
 		// TODO: Provide autofix for simple cases, like ".if ${OPSYS} == SunOS".
+		// This needs support for high-level refactoring tools though.
+		// As of June 2020, refactoring is limited to text replacements in single lines.
 		mkline.Notef("Consider setting NOT_FOR_PLATFORM instead of " +
 			"PKG_SKIP_REASON depending on ${OPSYS}.")
 	}
