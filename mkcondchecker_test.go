@@ -324,14 +324,29 @@ func (s *Suite) Test_MkCondChecker_Check__contradicting_conditions(c *check.C) {
 		"ERROR: filename.mk:6: The patterns \"one\" and \"two\" "+
 			"cannot match at the same time.")
 
-	// FIXME
+	// The conditions from an .if and an .elif don't contradict each other.
 	test(
 		lines(
 			".if ${OPSYS:MNet*}",
 			".elif ${OPSYS:MFree*}",
 			".endif"),
-		"ERROR: filename.mk:6: The patterns \"Net*\" from line 5 "+
-			"and \"Free*\" cannot match at the same time.")
+		nil...)
+
+	// And finally, two conditions that can both match at the same time,
+	// just for the code coverage.
+	// It's strange that the above tests did not include that case.
+	test(
+		lines(
+			".if ${OPSYS:MNet*} && ${OPSYS:MNetB*}",
+			".endif"),
+		nil...)
+
+	test(
+		lines(
+			".if ${OPSYS:M[1} && ${OPSYS:M[2}",
+			".endif"),
+		"WARN: filename.mk:5: Invalid match pattern \"[1\".",
+		"WARN: filename.mk:5: Invalid match pattern \"[2\".")
 }
 
 func (s *Suite) Test_MkCondChecker_checkNotEmpty(c *check.C) {

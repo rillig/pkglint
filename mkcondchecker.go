@@ -371,8 +371,9 @@ func (ck *MkCondChecker) checkContradictions() {
 	mkline := ck.MkLine
 
 	byVarname := make(map[string][]VarFact)
-	for _, level := range ck.MkLines.indentation.levels {
-		if level.mkline == mkline || !level.mkline.NeedsCond() {
+	levels := ck.MkLines.indentation.levels
+	for _, level := range levels[:len(levels)-1] {
+		if !level.mkline.NeedsCond() {
 			continue
 		}
 		prevFacts := ck.collectFacts(level.mkline)
