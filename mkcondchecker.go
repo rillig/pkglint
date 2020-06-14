@@ -94,21 +94,12 @@ func (ck *MkCondChecker) checkAnd(conds []*MkCond) {
 		if use == nil && cond.Not != nil && cond.Not.Empty != nil {
 			use = cond.Not.Empty
 		}
-		if use == nil {
+		if use == nil || len(use.modifiers) != 1 {
 			continue
 		}
 
-		if len(use.modifiers) != 1 {
-			continue
-		}
 		ok, positive, pattern, _ := use.modifiers[0].MatchMatch()
-		if !ok {
-			continue
-		}
-		if !positive {
-			continue
-		}
-		if containsVarUse(pattern) {
+		if !ok || !positive || containsVarUse(pattern) {
 			continue
 		}
 
