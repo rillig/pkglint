@@ -323,6 +323,15 @@ func (s *Suite) Test_MkCondChecker_Check__contradicting_conditions(c *check.C) {
 			"\"${CUSTOM_FILE} == two\" instead of matching against \":Mtwo\".",
 		"ERROR: filename.mk:6: The patterns \"one\" and \"two\" "+
 			"cannot match at the same time.")
+
+	// FIXME
+	test(
+		lines(
+			".if ${OPSYS:MNet*}",
+			".elif ${OPSYS:MFree*}",
+			".endif"),
+		"ERROR: filename.mk:6: The patterns \"Net*\" from line 5 "+
+			"and \"Free*\" cannot match at the same time.")
 }
 
 func (s *Suite) Test_MkCondChecker_checkNotEmpty(c *check.C) {
