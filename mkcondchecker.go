@@ -70,58 +70,13 @@ func (ck *MkCondChecker) Check() {
 	}
 
 	cond.Walk(&MkCondCallback{
-		And:     ck.checkAnd,
 		Not:     checkNot,
 		Empty:   checkEmpty,
 		Var:     checkVar,
 		Compare: ck.checkCompare,
 		VarUse:  checkVarUse})
-}
 
-func (ck *MkCondChecker) checkAnd(conds []*MkCond) {
-	type pat struct {
-		text string
-		pat  *makepat.Pattern
-	}
-
-	byVarname := make(map[string][]pat)
-	for _, cond := range conds {
-
-		var use *MkVarUse
-		if cond.Term != nil {
-			use = cond.Term.Var
-		}
-		if use == nil && cond.Not != nil && cond.Not.Empty != nil {
-			use = cond.Not.Empty
-		}
-		if use == nil || len(use.modifiers) != 1 {
-			continue
-		}
-
-		ok, positive, pattern, _ := use.modifiers[0].MatchMatch()
-		if !ok || !positive || containsVarUse(pattern) {
-			continue
-		}
-
-		varname := use.varname
-		vartype := G.Pkgsrc.VariableType(ck.MkLines, varname)
-		if vartype == nil || vartype.IsList() {
-			continue
-		}
-
-		m, err := makepat.Compile(pattern)
-		if err != nil {
-			continue
-		}
-		for _, prev := range byVarname[varname] {
-			both := makepat.Intersect(prev.pat, m)
-			if !both.CanMatch() {
-				ck.MkLine.Errorf("The patterns %q and %q cannot match at the same time.",
-					prev.text, pattern)
-			}
-		}
-		byVarname[varname] = append(byVarname[varname], pat{pattern, m})
-	}
+	ck.checkContradictions()
 }
 
 func (ck *MkCondChecker) checkNotEmpty(not *MkCond) {
@@ -410,4 +365,92 @@ func (ck *MkCondChecker) checkNotCompare(not *MkCond) {
 	}
 
 	ck.MkLine.Warnf("The ! should use parentheses or be merged into the comparison operator.")
+}
+
+func (ck *MkCondChecker) checkContradictions() {
+	mkline := ck.MkLine
+
+	byVarname := make(map[string][]VarFact)
+	for _, level := range ck.MkLines.indentation.levels {
+		if level.mkline == mkline || !level.mkline.NeedsCond() {
+			continue
+		}
+		prevFacts := ck.collectFacts(level.mkline)
+		for _, prevFact := range prevFacts {
+			varname := prevFact.Varname
+			byVarname[varname] = append(byVarname[varname], prevFact)
+		}
+	}
+
+	facts := ck.collectFacts(mkline)
+	for _, curr := range facts {
+		varname := curr.Varname
+		for _, prev := range byVarname[varname] {
+			both := makepat.Intersect(prev.Matches, curr.Matches)
+			if !both.CanMatch() {
+				if prev.MkLine != mkline {
+					mkline.Errorf("The patterns %q from %s and %q cannot match at the same time.",
+						prev.Text, mkline.RelMkLine(prev.MkLine), curr.Text)
+				} else {
+					mkline.Errorf("The patterns %q and %q cannot match at the same time.",
+						prev.Text, curr.Text)
+				}
+			}
+		}
+		byVarname[varname] = append(byVarname[varname], curr)
+	}
+}
+
+type VarFact struct {
+	MkLine  *MkLine
+	Varname string
+	Text    string
+	Matches *makepat.Pattern
+}
+
+func (ck *MkCondChecker) collectFacts(mkline *MkLine) []VarFact {
+	var facts []VarFact
+
+	collectUse := func(use *MkVarUse) {
+		if use == nil || len(use.modifiers) != 1 {
+			return
+		}
+
+		ok, positive, pattern, _ := use.modifiers[0].MatchMatch()
+		if !ok || !positive || containsVarUse(pattern) {
+			return
+		}
+
+		vartype := G.Pkgsrc.VariableType(ck.MkLines, use.varname)
+		if vartype == nil || vartype.IsList() {
+			return
+		}
+
+		m, err := makepat.Compile(pattern)
+		if err != nil {
+			return
+		}
+
+		facts = append(facts, VarFact{mkline, use.varname, pattern, m})
+	}
+
+	var collectCond func(cond *MkCond)
+	collectCond = func(cond *MkCond) {
+		if cond.Term != nil {
+			collectUse(cond.Term.Var)
+		}
+		if cond.Not != nil {
+			collectUse(cond.Not.Empty)
+		}
+		for _, cond := range cond.And {
+			collectCond(cond)
+		}
+		if cond.Paren != nil {
+			collectCond(cond.Paren)
+		}
+	}
+
+	collectCond(mkline.Cond())
+
+	return facts
 }
