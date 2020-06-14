@@ -290,6 +290,27 @@ func (s *Suite) Test_MkCondChecker_Check__contradicting_conditions(c *check.C) {
 			"Use one of { Cygwin DragonFly FreeBSD Linux NetBSD SunOS } instead.")
 }
 
+func (s *Suite) Test_MkCondChecker_checkAnd(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+
+	test := func(cond string, diagnostics ...string) {
+		mklines := t.NewMkLines("filename.mk",
+			".if "+cond)
+		mkline := mklines.mklines[0]
+		ck := NewMkCondChecker(mkline, mklines)
+
+		ck.checkAnd(mkline.Cond().And)
+
+		t.CheckOutput(diagnostics)
+	}
+
+	test("!empty(VAR:Mone) && !empty(VAR:Mtwo)",
+		"ERROR: filename.mk:1: The patterns \"one\" and \"two\" "+
+			"cannot match at the same time.")
+}
+
 func (s *Suite) Test_MkCondChecker_checkNotEmpty(c *check.C) {
 	t := s.Init(c)
 

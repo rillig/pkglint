@@ -40,49 +40,6 @@ func (ck *MkCondChecker) Check() {
 	// Skip subconditions that have already been handled as part of the !(...).
 	done := make(map[interface{}]bool)
 
-	checkAnd := func(conds []*MkCond) {
-		type pat struct {
-			text string
-			pat  *makepat.Pattern
-		}
-		byVarname := make(map[string][]pat)
-		for _, cond := range conds {
-			if cond.Not == nil {
-				continue
-			}
-			expr := cond.Not.Empty
-			if expr == nil {
-				continue
-			}
-			if len(expr.modifiers) != 1 {
-				continue
-			}
-			ok, positive, pattern, _ := expr.modifiers[0].MatchMatch()
-			if !ok {
-				continue
-			}
-			if !positive {
-				continue
-			}
-			if containsVarUse(pattern) {
-				continue
-			}
-			varname := expr.varname
-			m, err := makepat.Compile(pattern)
-			if err != nil {
-				continue
-			}
-			for _, prev := range byVarname[varname] {
-				both := makepat.Intersect(prev.pat, m)
-				if !both.CanMatch() {
-					mkline.Errorf("The patterns %q and %q cannot match at the same time.",
-						prev.text, pattern)
-				}
-			}
-			byVarname[varname] = append(byVarname[varname], pat{pattern, m})
-		}
-	}
-
 	checkNot := func(not *MkCond) {
 		empty := not.Empty
 		if empty != nil {
@@ -113,12 +70,55 @@ func (ck *MkCondChecker) Check() {
 	}
 
 	cond.Walk(&MkCondCallback{
-		And:     checkAnd,
+		And:     ck.checkAnd,
 		Not:     checkNot,
 		Empty:   checkEmpty,
 		Var:     checkVar,
 		Compare: ck.checkCompare,
 		VarUse:  checkVarUse})
+}
+
+func (ck *MkCondChecker) checkAnd(conds []*MkCond) {
+	type pat struct {
+		text string
+		pat  *makepat.Pattern
+	}
+	byVarname := make(map[string][]pat)
+	for _, cond := range conds {
+		if cond.Not == nil {
+			continue
+		}
+		expr := cond.Not.Empty
+		if expr == nil {
+			continue
+		}
+		if len(expr.modifiers) != 1 {
+			continue
+		}
+		ok, positive, pattern, _ := expr.modifiers[0].MatchMatch()
+		if !ok {
+			continue
+		}
+		if !positive {
+			continue
+		}
+		if containsVarUse(pattern) {
+			continue
+		}
+		varname := expr.varname
+		m, err := makepat.Compile(pattern)
+		if err != nil {
+			continue
+		}
+		for _, prev := range byVarname[varname] {
+			both := makepat.Intersect(prev.pat, m)
+			if !both.CanMatch() {
+				ck.MkLine.Errorf("The patterns %q and %q cannot match at the same time.",
+					prev.text, pattern)
+			}
+		}
+		byVarname[varname] = append(byVarname[varname], pat{pattern, m})
+	}
 }
 
 func (ck *MkCondChecker) checkNotEmpty(not *MkCond) {
