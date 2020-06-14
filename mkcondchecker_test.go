@@ -237,7 +237,6 @@ func (s *Suite) Test_MkCondChecker_Check__contradicting_conditions(c *check.C) {
 	}
 
 	// Seen in lang/rust/Makefile on 2020-06-12.
-	// TODO: The two MACHINE_PLATFORM conditions contradict each other.
 	// TODO: The MACHINE_PLATFORM conditions make the OPSYS condition redundant.
 	test(
 		lines(
@@ -245,7 +244,8 @@ func (s *Suite) Test_MkCondChecker_Check__contradicting_conditions(c *check.C) {
 				"!empty(MACHINE_PLATFORM:MNetBSD-9.99.*) && "+
 				"!empty(MACHINE_PLATFORM:MNetBSD-[1-9][0-9].*)",
 			".endif"),
-		nil...)
+		"ERROR: filename.mk:5: The patterns \"NetBSD-9.99.*\" "+
+			"and \"NetBSD-[1-9][0-9].*\" cannot match at the same time.")
 
 	// A syntactical variation of the above condition.
 	// TODO: The two MACHINE_PLATFORM conditions contradict each other.
