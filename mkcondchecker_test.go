@@ -288,6 +288,15 @@ func (s *Suite) Test_MkCondChecker_Check__contradicting_conditions(c *check.C) {
 		// FIXME
 		"ERROR: filename.mk:5: The patterns \"one\" and \"two\" "+
 			"cannot match at the same time.")
+
+	test(
+		lines(
+			"CUSTOM_VAR=\tone two",
+			".if ${CUSTOM_VAR:Mone} && ${CUSTOM_VAR:Mtwo}",
+			".endif"),
+		// FIXME
+		"ERROR: filename.mk:6: The patterns \"one\" and \"two\" "+
+			"cannot match at the same time.")
 }
 
 func (s *Suite) Test_MkCondChecker_checkAnd(c *check.C) {
