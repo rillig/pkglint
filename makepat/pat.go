@@ -155,14 +155,39 @@ func Intersect(p1, p2 *Pattern) *Pattern {
 		}
 	}
 
-	res.optimize()
-
-	return &res
+	return res.optimized()
 }
 
-func (p *Pattern) optimize() {
+func (p *Pattern) optimized() *Pattern {
+	var opt Pattern
+
+	var todo []StateID
+	hasNewID := make([]bool, len(p.states))
+	newIDs := make([]StateID, len(p.states))
+
+	todo = append(todo, 0)
+	newIDs[0] = opt.AddState(p.states[0].end)
+	hasNewID[0] = true
+
+	for len(todo) > 0 {
+		oldStateID := todo[len(todo)-1]
+		todo = todo[:len(todo)-1]
+
+		oldState := p.states[oldStateID]
+
+		for _, t := range oldState.transitions {
+			if !hasNewID[t.to] {
+				hasNewID[t.to] = true
+				newIDs[t.to] = opt.AddState(p.states[t.to].end)
+				todo = append(todo, t.to)
+			}
+			opt.AddTransition(newIDs[oldStateID], t.min, t.max, newIDs[t.to])
+		}
+	}
+
 	// TODO: remove transitions that point to a dead end
-	// TODO: only keep states that are actually reachable
+
+	return &opt
 }
 
 // CanMatch tests whether the pattern can match some string.
