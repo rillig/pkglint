@@ -119,6 +119,12 @@ func Test_Pattern_Match(t *testing.T) {
 		{"[9-0]", "5", true},
 		{"[9-0]", "9", true},
 		{"[9-0]", ":", false},
+		{"*.c", ".c", true},
+		{"*.c", "a.c", true},
+		{"*.c", "c.c", true},
+		{"*.c", "..c", true},
+		{"*.c", ".c.c", true},
+		{"*.c", "a.c.c", true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.pattern+" "+tt.str, func(t *testing.T) {

@@ -30,8 +30,6 @@ func Compile(pattern string) (*Pattern, error) {
 	var p Pattern
 	s := p.AddState(false)
 
-	var deadEnd StateID
-
 	lex := textproc.NewLexer(pattern)
 	for !lex.EOF() {
 
@@ -67,9 +65,7 @@ func Compile(pattern string) (*Pattern, error) {
 		}
 
 		negate := lex.SkipByte('^')
-		if negate && deadEnd == 0 {
-			deadEnd = p.AddState(false)
-		}
+		chars := make([]bool, 256)
 		next := p.AddState(false)
 		for {
 			if lex.EOF() {
@@ -79,23 +75,48 @@ func Compile(pattern string) (*Pattern, error) {
 			if ch == ']' {
 				break
 			}
-			max := ch
 			if lex.SkipByte('-') {
 				if lex.EOF() {
 					return nil, errors.New("unfinished character range")
 				}
-				max = lex.NextByte()
+				max := lex.NextByte()
+				if ch > max {
+					ch, max = max, ch
+				}
+				for i := int(ch); i <= int(max); i++ {
+					chars[i] = true
+				}
+			} else {
+				chars[ch] = true
 			}
-
-			to := next
-			if negate {
-				to = deadEnd
-			}
-			p.AddTransition(s, bmin(ch, max), bmax(ch, max), to)
 		}
 		if negate {
-			p.AddTransition(s, 0, 255, next)
+			for i, b := range chars {
+				chars[i] = !b
+			}
 		}
+
+		start := 0
+		for start < len(chars) && !chars[start] {
+			start++
+		}
+
+		for start < len(chars) {
+			end := start
+			for end < len(chars) && chars[end] {
+				end++
+			}
+
+			if start < end {
+				p.AddTransition(s, byte(start), byte(end-1), next)
+			}
+
+			start = end
+			for start < len(chars) && !chars[start] {
+				start++
+			}
+		}
+
 		s = next
 	}
 
@@ -115,18 +136,39 @@ func (p *Pattern) AddTransition(from StateID, min, max byte, to StateID) {
 
 // Match tests whether a pattern matches the given string.
 func (p *Pattern) Match(s string) bool {
-	state := StateID(0)
+	curr := make([]bool, len(p.states))
+	next := make([]bool, len(p.states))
+
+	curr[0] = true
 	for _, ch := range []byte(s) {
-		for _, tr := range p.states[state].transitions {
-			if tr.min <= ch && ch <= tr.max {
-				state = tr.to
-				goto nextByte
+		ok := false
+		for i, _ := range next {
+			next[i] = false
+		}
+
+		for si := range curr {
+			if !curr[si] {
+				continue
+			}
+			for _, tr := range p.states[si].transitions {
+				if tr.min <= ch && ch <= tr.max {
+					next[tr.to] = true
+					ok = true
+				}
 			}
 		}
-		return false
-	nextByte:
+		if !ok {
+			return false
+		}
+		curr, next = next, curr
 	}
-	return p.states[state].end
+
+	for i, curr := range curr {
+		if curr && p.states[i].end {
+			return true
+		}
+	}
+	return false
 }
 
 // Intersect computes a pattern that only matches if both given patterns
