@@ -279,24 +279,49 @@ func (s *Suite) Test_MkCondChecker_Check__contradicting_conditions(c *check.C) {
 			".endif"),
 		nil...)
 
+	// Since PKG_OPTIONS is a list and contains several words,
+	// each of them can match one of the patterns.
 	t.SetUpOption("one", "")
 	t.SetUpOption("two", "")
 	test(
 		lines(
 			".if ${PKG_OPTIONS:Mone} && ${PKG_OPTIONS:Mtwo}",
 			".endif"),
-		// FIXME
-		"ERROR: filename.mk:5: The patterns \"one\" and \"two\" "+
-			"cannot match at the same time.")
+		nil...)
 
+	// For variables that are declared individually by a package,
+	// pkglint does not have any type information and thus must
+	// not issue an error here.
 	test(
 		lines(
 			"CUSTOM_VAR=\tone two",
 			".if ${CUSTOM_VAR:Mone} && ${CUSTOM_VAR:Mtwo}",
 			".endif"),
-		// FIXME
+		nil...)
+
+	// In this case, pkglint may infer that CUSTOM_VAR has a
+	// constant value and thus cannot match the second pattern.
+	// As of June 2020, it doesn't do this though.
+	test(
+		lines(
+			"CUSTOM_VAR=\tone",
+			".if ${CUSTOM_VAR:Mone} && ${CUSTOM_VAR:Mtwo}",
+			".endif"),
+		nil...)
+
+	// If the variable type is guessed based on the variable name (see
+	// guessVariableType) and is not a list, the error message is correct.
+	test(
+		lines(
+			"CUSTOM_FILE=\tone",
+			".if ${CUSTOM_FILE:Mone} && ${CUSTOM_FILE:Mtwo}",
+			".endif"),
 		"ERROR: filename.mk:6: The patterns \"one\" and \"two\" "+
-			"cannot match at the same time.")
+			"cannot match at the same time.",
+		"NOTE: filename.mk:6: CUSTOM_FILE can be compared using the simpler "+
+			"\"${CUSTOM_FILE} == one\" instead of matching against \":Mone\".",
+		"NOTE: filename.mk:6: CUSTOM_FILE can be compared using the simpler "+
+			"\"${CUSTOM_FILE} == two\" instead of matching against \":Mtwo\".")
 }
 
 func (s *Suite) Test_MkCondChecker_checkAnd(c *check.C) {
@@ -315,7 +340,7 @@ func (s *Suite) Test_MkCondChecker_checkAnd(c *check.C) {
 		t.CheckOutput(diagnostics)
 	}
 
-	test("!empty(VAR:Mone) && !empty(VAR:Mtwo)",
+	test("!empty(MACHINE_PLATFORM:Mone) && !empty(MACHINE_PLATFORM:Mtwo)",
 		"ERROR: filename.mk:1: The patterns \"one\" and \"two\" "+
 			"cannot match at the same time.")
 }

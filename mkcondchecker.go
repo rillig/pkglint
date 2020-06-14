@@ -111,7 +111,13 @@ func (ck *MkCondChecker) checkAnd(conds []*MkCond) {
 		if containsVarUse(pattern) {
 			continue
 		}
+
 		varname := use.varname
+		vartype := G.Pkgsrc.VariableType(ck.MkLines, varname)
+		if vartype == nil || vartype.IsList() {
+			continue
+		}
+
 		m, err := makepat.Compile(pattern)
 		if err != nil {
 			continue
