@@ -248,13 +248,13 @@ func (s *Suite) Test_MkCondChecker_Check__contradicting_conditions(c *check.C) {
 			"and \"NetBSD-[1-9][0-9].*\" cannot match at the same time.")
 
 	// A syntactical variation of the above condition.
-	// TODO: The two MACHINE_PLATFORM conditions contradict each other.
 	// TODO: The MACHINE_PLATFORM conditions make the OPSYS condition redundant.
 	test(
 		lines(
 			".if ${OPSYS} == NetBSD && ${MACHINE_PLATFORM:MNetBSD-9.99.*} && ${MACHINE_PLATFORM:MNetBSD-[1-9][0-9].*}",
 			".endif"),
-		nil...)
+		"ERROR: filename.mk:5: The patterns \"NetBSD-9.99.*\" "+
+			"and \"NetBSD-[1-9][0-9].*\" cannot match at the same time.")
 
 	// Another variation on the same theme.
 	// TODO: The two MACHINE_PLATFORM conditions contradict each other.

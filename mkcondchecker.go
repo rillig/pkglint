@@ -83,19 +83,25 @@ func (ck *MkCondChecker) checkAnd(conds []*MkCond) {
 		text string
 		pat  *makepat.Pattern
 	}
+
 	byVarname := make(map[string][]pat)
 	for _, cond := range conds {
-		if cond.Not == nil {
+
+		var use *MkVarUse
+		if cond.Term != nil {
+			use = cond.Term.Var
+		}
+		if use == nil && cond.Not != nil && cond.Not.Empty != nil {
+			use = cond.Not.Empty
+		}
+		if use == nil {
 			continue
 		}
-		expr := cond.Not.Empty
-		if expr == nil {
+
+		if len(use.modifiers) != 1 {
 			continue
 		}
-		if len(expr.modifiers) != 1 {
-			continue
-		}
-		ok, positive, pattern, _ := expr.modifiers[0].MatchMatch()
+		ok, positive, pattern, _ := use.modifiers[0].MatchMatch()
 		if !ok {
 			continue
 		}
@@ -105,7 +111,7 @@ func (ck *MkCondChecker) checkAnd(conds []*MkCond) {
 		if containsVarUse(pattern) {
 			continue
 		}
-		varname := expr.varname
+		varname := use.varname
 		m, err := makepat.Compile(pattern)
 		if err != nil {
 			continue
