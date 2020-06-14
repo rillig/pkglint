@@ -169,7 +169,25 @@ func Test_Intersect(t *testing.T) {
 }
 
 func Test_Pattern_optimize(t *testing.T) {
-	// TODO
+	var p Pattern
+	p.AddState(false)
+	p.AddState(false)
+	p.AddState(false)
+	p.AddState(true)
+	p.AddTransition(0, '1', '1', 1)
+	p.AddTransition(1, '2', '2', 3)
+
+	p.optimize()
+
+	// TODO: remove state 2, as it is not reachable.
+	expected := Pattern{[]state{
+		{[]transition{{'1', '1', 1}}, false},
+		{[]transition{{'2', '2', 3}}, false},
+		{nil, false},
+		{nil, true}}}
+	if !reflect.DeepEqual(p, expected) {
+		t.Errorf("%#v", p)
+	}
 }
 
 func Test_Pattern_CanMatch(t *testing.T) {
