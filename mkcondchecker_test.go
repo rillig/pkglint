@@ -279,15 +279,15 @@ func (s *Suite) Test_MkCondChecker_Check__contradicting_conditions(c *check.C) {
 			".endif"),
 		nil...)
 
-	// Ensure that some checks are actually run.
-	// (As of 2020-06-12, the above tests all produce no diagnostics,
-	// which could as well be achieved by running no checks at all.)
+	t.SetUpOption("one", "")
+	t.SetUpOption("two", "")
 	test(
 		lines(
-			".if ${OPSYS} == Unknown",
+			".if ${PKG_OPTIONS:Mone} && ${PKG_OPTIONS:Mtwo}",
 			".endif"),
-		"WARN: filename.mk:5: \"Unknown\" is not valid for OPSYS. "+
-			"Use one of { Cygwin DragonFly FreeBSD Linux NetBSD SunOS } instead.")
+		// FIXME
+		"ERROR: filename.mk:5: The patterns \"one\" and \"two\" "+
+			"cannot match at the same time.")
 }
 
 func (s *Suite) Test_MkCondChecker_checkAnd(c *check.C) {
