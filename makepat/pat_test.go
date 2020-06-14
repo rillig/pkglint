@@ -28,6 +28,31 @@ func Test_Compile__errors(t *testing.T) {
 	}
 }
 
+func Test_compileCharClass(t *testing.T) {
+	tests := []struct {
+		pattern string
+		str     string
+		want    bool
+	}{
+		{"[0-9]", "/", false},
+		{"[0-9]", "0", true},
+		{"[0-9]", "9", true},
+		{"[0-9]", ":", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.pattern, func(t *testing.T) {
+			p, err := Compile(tt.pattern)
+			if err != nil {
+				t.Fail()
+			}
+			got := p.Match(tt.str)
+			if got != tt.want {
+				t.Errorf("got %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func Test_Pattern_AddState(t *testing.T) {
 	var p Pattern
 

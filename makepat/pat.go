@@ -64,57 +64,9 @@ func Compile(pattern string) (*Pattern, error) {
 			continue
 		}
 
-		negate := lex.SkipByte('^')
-		chars := make([]bool, 256)
-		next := p.AddState(false)
-		for {
-			if lex.EOF() {
-				return nil, errors.New("unfinished character class")
-			}
-			ch = lex.NextByte()
-			if ch == ']' {
-				break
-			}
-			if lex.SkipByte('-') {
-				if lex.EOF() {
-					return nil, errors.New("unfinished character range")
-				}
-				max := lex.NextByte()
-				if ch > max {
-					ch, max = max, ch
-				}
-				for i := int(ch); i <= int(max); i++ {
-					chars[i] = true
-				}
-			} else {
-				chars[ch] = true
-			}
-		}
-		if negate {
-			for i, b := range chars {
-				chars[i] = !b
-			}
-		}
-
-		start := 0
-		for start < len(chars) && !chars[start] {
-			start++
-		}
-
-		for start < len(chars) {
-			end := start
-			for end < len(chars) && chars[end] {
-				end++
-			}
-
-			if start < end {
-				p.AddTransition(s, byte(start), byte(end-1), next)
-			}
-
-			start = end
-			for start < len(chars) && !chars[start] {
-				start++
-			}
+		next, err := compileCharClass(&p, lex, ch, s)
+		if err != nil {
+			return nil, err
 		}
 
 		s = next
@@ -122,6 +74,62 @@ func Compile(pattern string) (*Pattern, error) {
 
 	p.states[s].end = true
 	return &p, nil
+}
+
+func compileCharClass(p *Pattern, lex *textproc.Lexer, ch byte, s StateID) (StateID, error) {
+	negate := lex.SkipByte('^')
+	chars := make([]bool, 256)
+	next := p.AddState(false)
+	for {
+		if lex.EOF() {
+			return 0, errors.New("unfinished character class")
+		}
+		ch = lex.NextByte()
+		if ch == ']' {
+			break
+		}
+		if lex.SkipByte('-') {
+			if lex.EOF() {
+				return 0, errors.New("unfinished character range")
+			}
+			max := lex.NextByte()
+			if ch > max {
+				ch, max = max, ch
+			}
+			for i := int(ch); i <= int(max); i++ {
+				chars[i] = true
+			}
+		} else {
+			chars[ch] = true
+		}
+	}
+	if negate {
+		for i, b := range chars {
+			chars[i] = !b
+		}
+	}
+
+	start := 0
+	for start < len(chars) && !chars[start] {
+		start++
+	}
+
+	for start < len(chars) {
+		end := start
+		for end < len(chars) && chars[end] {
+			end++
+		}
+
+		if start < end {
+			p.AddTransition(s, byte(start), byte(end-1), next)
+		}
+
+		start = end
+		for start < len(chars) && !chars[start] {
+			start++
+		}
+	}
+	return next, nil
 }
 
 func (p *Pattern) AddState(end bool) StateID {
