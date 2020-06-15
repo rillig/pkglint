@@ -56,6 +56,8 @@ func (s *Suite) Test_Scope_varnames(c *check.C) {
 	scope.Use("USED", mkline, VucRunTime)
 
 	t.CheckDeepEquals(scope.varnames(), []string{"DEFINED", "USED"})
+	scope.varnames()[0] = "modified" // just to demonstrate the caching
+	t.CheckDeepEquals(scope.varnames(), []string{"modified", "USED"})
 }
 
 func (s *Suite) Test_Scope_create(c *check.C) {
@@ -230,20 +232,24 @@ func (s *Suite) Test_Scope_IsUsedAtLoadTime(c *check.C) {
 func (s *Suite) Test_Scope_FirstDefinition(c *check.C) {
 	t := s.Init(c)
 
-	mkline1 := t.NewMkLine("fname.mk", 3, "VAR=\tvalue")
-	mkline2 := t.NewMkLine("fname.mk", 4, ".if ${SNEAKY::=value}")
+	mkline3 := t.NewMkLine("fname.mk", 3, "VAR=\tvalue")
+	mkline4 := t.NewMkLine("fname.mk", 4, ".if ${SNEAKY::=value}")
+	mkline5 := t.NewMkLine("fname.mk", 5, ".if ${USED}")
 
 	scope := NewScope()
-	scope.Define("VAR", mkline1)
-	scope.Define("SNEAKY", mkline2)
+	scope.Define("VAR", mkline3)
+	scope.Define("SNEAKY", mkline4)
+	scope.Use("USED", mkline5, VucLoadTime)
 
-	t.CheckEquals(scope.FirstDefinition("VAR"), mkline1)
+	t.CheckEquals(scope.FirstDefinition("VAR"), mkline3)
 
 	// This call returns nil because it's not a variable assignment
 	// and the calling code typically assumes a variable definition.
 	// These sneaky variables with implicit definition are an edge
 	// case that only few people actually know. It's better that way.
 	t.Check(scope.FirstDefinition("SNEAKY"), check.IsNil)
+
+	t.Check(scope.FirstDefinition("USED"), check.IsNil)
 
 	t.CheckOutputLines(
 		"ERROR: fname.mk:4: Assignment modifiers like \":=\" " +
