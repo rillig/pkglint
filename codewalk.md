@@ -228,12 +228,12 @@ but that doesn't happen in this simple example run.
 
 The main work is done in `Pkglint.Check`:
 
-> from [pkglint.go](pkglint.go#L324):
+> from [pkglint.go](pkglint.go#L323):
 
 ```go
 	if isReg {
 		p.checkExecutable(dirent, mode)
-		p.checkReg(dirent, basename, pkgsrcRel.Count(), nil)
+		p.checkReg(dirent, dirent.Base(), pkgsrcRel.Count(), nil)
 		return
 	}
 ```
@@ -242,15 +242,15 @@ Since `DESCR` is a regular file, the next function to call is `checkReg`.
 For directories, the next function would depend on the depth from the
 pkgsrc root directory.
 
-> from [pkglint.go](pkglint.go#L545):
+> from [pkglint.go](pkglint.go#L551):
 
 ```go
-func (p *Pkglint) checkReg(filename CurrPath, basename string, depth int, pkg *Package) {
+func (p *Pkglint) checkReg(filename CurrPath, basename RelPath, depth int, pkg *Package) {
 ```
 
 The relevant part of `Pkglint.checkReg` is:
 
-> from [pkglint.go](pkglint.go#L572):
+> from [pkglint.go](pkglint.go#L578):
 
 ```go
 	case basename == "buildlink3.mk":
@@ -258,7 +258,10 @@ The relevant part of `Pkglint.checkReg` is:
 			CheckLinesBuildlink3Mk(mklines)
 		}
 
-	case hasPrefix(basename, "DESCR"):
+	case p.Wip && basename == "COMMIT_MSG":
+		// https://mail-index.netbsd.org/pkgsrc-users/2020/05/10/msg031174.html
+
+	case basename.HasPrefixText("DESCR"):
 		if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
 			CheckLinesDescr(lines)
 		}
@@ -281,7 +284,7 @@ The actual checks usually work on `Line` objects instead of files
 because the lines offer nice methods for logging the diagnostics
 and for automatically fixing the text (in pkglint's `--autofix` mode).
 
-> from [pkglint.go](pkglint.go#L425):
+> from [pkglint.go](pkglint.go#L424):
 
 ```go
 func CheckLinesDescr(lines *Lines) {
@@ -303,12 +306,19 @@ func CheckLinesDescr(lines *Lines) {
 		}
 	}
 
+	checkTodo := func(line *Line) {
+		if hasPrefix(line.Text, "TODO:") {
+			line.Errorf("DESCR files must not have TODO lines.")
+		}
+	}
+
 	for _, line := range lines.Lines {
 		ck := LineChecker{line}
 		ck.CheckLength(80)
 		ck.CheckTrailingWhitespace()
 		ck.CheckValidCharacters()
 		checkVarRefs(line)
+		checkTodo(line)
 	}
 
 	CheckLinesTrailingEmptyLines(lines)
@@ -427,7 +437,7 @@ func (line *Line) Autofix() *Autofix {
 The journey ends here, and it hasn't been that difficult.
 If that was too easy, have a look at the complex cases here:
 
-> from [mkline.go](mkline.go#L697):
+> from [mkline.go](mkline.go#L708):
 
 ```go
 // VariableNeedsQuoting determines whether the given variable needs the :Q
@@ -578,7 +588,7 @@ type Line struct {
 	// TODO: Consider storing pointers to the Filename and Basename instead of strings to save memory.
 	//  But first find out where and why pkglint needs so much memory (200 MB for a full recursive run over pkgsrc + wip).
 	Location Location
-	Basename string // the last component of the Filename
+	Basename RelPath // the last component of the Filename
 
 	// the text of the line, without the trailing newline character;
 	// in Makefiles, also contains the text from the continuation lines,
@@ -642,7 +652,7 @@ The instructions for building and installing packages are written in shell comma
 which are embedded in Makefile fragments.
 The `ShellLineChecker` type provides methods for checking shell commands and their individual parts.
 
-> from [shell.go](shell.go#L388):
+> from [shell.go](shell.go#L386):
 
 ```go
 // ShellLineChecker checks either a line from a Makefile starting with a tab,
@@ -694,7 +704,7 @@ All these path types are defined in `path.go`:
 type Path string
 ```
 
-> from [path.go](path.go#L212):
+> from [path.go](path.go#L231):
 
 ```go
 // CurrPath is a path that is either absolute or relative to the current
@@ -703,7 +713,7 @@ type Path string
 type CurrPath string
 ```
 
-> from [path.go](path.go#L440):
+> from [path.go](path.go#L459):
 
 ```go
 // RelPath is a path that is relative to some base directory that is not
@@ -711,14 +721,14 @@ type CurrPath string
 type RelPath string
 ```
 
-> from [path.go](path.go#L361):
+> from [path.go](path.go#L380):
 
 ```go
 // PkgsrcPath is a path relative to the pkgsrc root.
 type PkgsrcPath string
 ```
 
-> from [path.go](path.go#L391):
+> from [path.go](path.go#L410):
 
 ```go
 // PackagePath is a path relative to the package directory. It is used
@@ -761,7 +771,7 @@ The `t` variable is the center of most tests.
 It is of type `Tester` and provides a high-level interface
 for setting up tests and checking the results.
 
-> from [check_test.go](check_test.go#L181):
+> from [check_test.go](check_test.go#L180):
 
 ```go
 // Tester provides utility methods for testing pkglint.
@@ -895,6 +905,9 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		"",
 		".include \"../../mk/bsd.pkg.mk\"")
 
+	t.CreateFileLines("sysutils/checkperms/DESCR",
+		"Description")
+
 	t.CreateFileLines("sysutils/checkperms/MESSAGE",
 		"===========================================================================",
 		CvsID,
@@ -921,8 +934,8 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		"removed lines. The hunk headers says that one line is to be",
 		"removed, but in fact, there is no deletion line below it.",
 		"",
-		"--- a/checkperms.c",
-		"+++ b/checkperms.c",
+		"--- checkperms.c",
+		"+++ checkperms.c",
 		"@@ -1,1 +1,3 @@", // at line 1, delete 1 line; at line 1, add 3 lines
 		"+// Header 1",
 		"+// Header 2",
@@ -949,7 +962,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		"ERROR: ~/sysutils/checkperms/Makefile:4: Invalid category \"tools\".",
 		"ERROR: ~/sysutils/checkperms/TODO: Packages in main pkgsrc must not have a TODO file.",
 		"ERROR: ~/sysutils/checkperms/distinfo:7: SHA1 hash of patches/patch-checkperms.c differs "+
-			"(distinfo has asdfasdf, patch file has e775969de639ec703866c0336c4c8e0fdd96309c).",
+			"(distinfo has asdfasdf, patch file has bcfb79696cb6bf4d2222a6d78a530e11bf1c0cea).",
 		"WARN: ~/sysutils/checkperms/patches/patch-checkperms.c:12: Premature end of patch hunk "+
 			"(expected 1 lines to be deleted and 0 lines to be added).",
 		"3 errors, 2 warnings and 1 note found.",
