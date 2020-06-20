@@ -488,15 +488,15 @@ func (b *substBlock) varassignVars(mkline *MkLine) {
 	}
 }
 
+func (b *substBlock) varassignFilterCmd(mkline *MkLine) {
+	b.dupString(mkline, ssFilterCmd)
+	b.addSeen(ssTransform)
+}
+
 func (b *substBlock) varassignAllowForeign(mkline *MkLine) {
 	mkline.ForEachUsed(func(varUse *MkVarUse, time VucTime) {
 		b.allowVar(varUse.varname)
 	})
-}
-
-func (b *substBlock) varassignFilterCmd(mkline *MkLine) {
-	b.dupString(mkline, ssFilterCmd)
-	b.addSeen(ssTransform)
 }
 
 func (b *substBlock) suggestSubstVars(mkline *MkLine) {
