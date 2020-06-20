@@ -991,8 +991,7 @@ func (s *Suite) Test_substScope_finish__indirect_SUBST_FILES(c *check.C) {
 	// Since S1_CMD is used in SUBST_FILES, it is not foreign
 	// but obviously belongs to the SUBST block.
 	// Before 2020-06-20, pkglint had warned about this.
-	t.CheckOutputLines(
-		"WARN: filename.mk:3: Foreign variable \"S1_CMD\" in SUBST block.")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_substScope_prepareSubstClasses(c *check.C) {

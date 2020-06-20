@@ -420,6 +420,8 @@ func (b *substBlock) varassign(mkline *MkLine, pkg *Package) {
 	case "SUBST_FILTER_CMD.*":
 		b.varassignFilterCmd(mkline)
 	}
+
+	b.varassignAllowForeign(mkline)
 }
 
 func (b *substBlock) varassignStage(mkline *MkLine, pkg *Package) {
@@ -484,6 +486,12 @@ func (b *substBlock) varassignVars(mkline *MkLine) {
 	for _, substVar := range mkline.Fields() {
 		b.allowVar(substVar)
 	}
+}
+
+func (b *substBlock) varassignAllowForeign(mkline *MkLine) {
+	mkline.ForEachUsed(func(varUse *MkVarUse, time VucTime) {
+		b.allowVar(varUse.varname)
+	})
 }
 
 func (b *substBlock) varassignFilterCmd(mkline *MkLine) {
