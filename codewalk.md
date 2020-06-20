@@ -771,7 +771,7 @@ The `t` variable is the center of most tests.
 It is of type `Tester` and provides a high-level interface
 for setting up tests and checking the results.
 
-> from [check_test.go](check_test.go#L180):
+> from [check_test.go](check_test.go#L179):
 
 ```go
 // Tester provides utility methods for testing pkglint.
