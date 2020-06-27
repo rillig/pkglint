@@ -120,7 +120,6 @@ func Test__qa(t *testing.T) {
 	ck.Configure("mkshtypes.go", "*", "*", -intqa.EMissingTest)      // TODO
 	ck.Configure("mkshwalker.go", "*", "*", -intqa.EMissingTest)     // TODO
 	ck.Configure("mktokenslexer.go", "*", "*", -intqa.EMissingTest)  // TODO
-	ck.Configure("mktypes.go", "*", "*", -intqa.EMissingTest)        // TODO
 	ck.Configure("options.go", "*", "*", -intqa.EMissingTest)        // TODO
 	ck.Configure("package.go", "*", "*", -intqa.EMissingTest)        // TODO
 	ck.Configure("paragraph.go", "*", "*", -intqa.EMissingTest)      // TODO
