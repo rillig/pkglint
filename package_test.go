@@ -2847,6 +2847,28 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__Python_prefix_late(c *ch
 		"1 warning found.")
 }
 
+// The infrastructure file mk/haskell.mk sets a default for PKGNAME
+// that differs from the plain DISTNAME. This makes the assignment
+// PKGNAME=${DISTNAME} non-redundant.
+func (s *Suite) Test_Package_determineEffectivePkgVars__Haskell(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"PKGNAME=\t${DISTNAME}",
+		".include \"../../mk/haskell.mk\"")
+	t.CreateFileLines("mk/haskell.mk",
+		MkCvsID,
+		"PKGNAME?=\ths-${DISTNAME}")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package"))
+
+	// This "probably" is wrong.
+	t.CheckOutputLines(
+		"NOTE: ~/category/package/Makefile:4: This assignment is probably " +
+			"redundant since PKGNAME is ${DISTNAME} by default.")
+}
+
 func (s *Suite) Test_Package_nbPart(c *check.C) {
 	t := s.Init(c)
 
