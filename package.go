@@ -735,13 +735,30 @@ func (pkg *Package) checkfilePackageMakefile(filename CurrPath, mklines *MkLines
 }
 
 func (pkg *Package) checkReplaceInterpreter() {
-	// TODO: There are other REPLACE_* variables which are probably also affected by NO_CONFIGURE.
 	vars := pkg.vars
-	if noConfigureLine := vars.FirstDefinition("NO_CONFIGURE"); noConfigureLine != nil {
-		if replacePerlLine := vars.FirstDefinition("REPLACE_PERL"); replacePerlLine != nil {
-			replacePerlLine.Warnf("REPLACE_PERL is ignored when NO_CONFIGURE is set (in %s).",
-				replacePerlLine.RelMkLine(noConfigureLine))
+	noConfigureLine := vars.FirstDefinition("NO_CONFIGURE")
+	if noConfigureLine == nil {
+		return
+	}
+
+	// See mk/configure/replace-interpreter.mk.
+	varnames := [...]string{
+		"REPLACE_AWK",
+		"REPLACE_BASH",
+		"REPLACE_CSH",
+		"REPLACE_KSH",
+		"REPLACE_PERL",
+		"REPLACE_PERL6",
+		"REPLACE_SH",
+		"REPLACE_INTERPRETER"}
+
+	for _, varname := range varnames {
+		mkline := vars.FirstDefinition(varname)
+		if mkline == nil {
+			continue
 		}
+		mkline.Warnf("%s is ignored when NO_CONFIGURE is set (in %s).",
+			varname, mkline.RelMkLine(noConfigureLine))
 	}
 }
 
