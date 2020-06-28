@@ -1219,6 +1219,10 @@ func (pkg *Package) checkPkgnameRedundant(pkgnameLine *MkLine, pkgname string, d
 	if pkgname != distname && pkgname != "${DISTNAME}" {
 		return
 	}
+	pkgnameInfo := pkg.redundant.vars["PKGNAME"]
+	if len(pkgnameInfo.vari.WriteLocations()) >= 2 {
+		return
+	}
 	pkgnameLine.Notef("This assignment is probably redundant " +
 		"since PKGNAME is ${DISTNAME} by default.")
 	pkgnameLine.Explain(

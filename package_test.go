@@ -2863,7 +2863,25 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__Haskell(c *check.C) {
 
 	G.Check(t.File("category/package"))
 
-	// This "probably" is wrong.
+	// Up to 2020-06-28, pkglint wrongly produced a note about
+	// PKGNAME being "probably redundant".
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_Package_determineEffectivePkgVars__bsd_pkg_mk(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"PKGNAME=\t${DISTNAME}")
+	t.CreateFileLines("mk/bsd.pkg.mk",
+		MkCvsID,
+		"PKGNAME?=\t${DISTNAME}")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package"))
+
+	// Contrary to the one from mk/haskell.mk, the default assignment in
+	// mk/bsd.pkg.mk is not included in the RedundantScope.
 	t.CheckOutputLines(
 		"NOTE: ~/category/package/Makefile:4: This assignment is probably " +
 			"redundant since PKGNAME is ${DISTNAME} by default.")
@@ -2896,7 +2914,10 @@ func (s *Suite) Test_Package_pkgnameFromDistname(c *check.C) {
 		}
 
 		pkg := NewPackage(t.File("category/package"))
-		pkg.loadPackageMakefile()
+		_, allLines := pkg.loadPackageMakefile()
+		pkg.redundant = NewRedundantScope() // See Package.checkfilePackageMakefile.
+		pkg.redundant.IsRelevant = func(mkline *MkLine) bool { return false }
+		pkg.redundant.Check(allLines)
 		pkg.determineEffectivePkgVars()
 		t.CheckEquals(pkg.EffectivePkgname, expectedPkgname)
 		t.CheckOutput(diagnostics)
