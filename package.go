@@ -1176,14 +1176,7 @@ func (pkg *Package) determineEffectivePkgVars() {
 		}
 	}
 
-	if pkgnameLine != nil && (pkgname == distname || pkgname == "${DISTNAME}") {
-		if !pkgnameLine.HasComment() {
-			pkgnameLine.Notef("This assignment is probably redundant " +
-				"since PKGNAME is ${DISTNAME} by default.")
-			pkgnameLine.Explain(
-				"To mark this assignment as necessary, add a comment to the end of this line.")
-		}
-	}
+	pkg.checkPkgnameRedundant(pkgnameLine, pkgname, distname)
 
 	if pkgname == "" && distnameLine != nil && !containsVarUse(distname) && !matches(distname, rePkgname) {
 		distnameLine.Warnf("As DISTNAME is not a valid package name, please define the PKGNAME explicitly.")
@@ -1217,6 +1210,19 @@ func (pkg *Package) determineEffectivePkgVars() {
 				pkg.EffectivePkgname, pkg.EffectivePkgbase, pkg.EffectivePkgversion)
 		}
 	}
+}
+
+func (pkg *Package) checkPkgnameRedundant(pkgnameLine *MkLine, pkgname string, distname string) {
+	if pkgnameLine == nil || pkgnameLine.HasComment() {
+		return
+	}
+	if pkgname != distname && pkgname != "${DISTNAME}" {
+		return
+	}
+	pkgnameLine.Notef("This assignment is probably redundant " +
+		"since PKGNAME is ${DISTNAME} by default.")
+	pkgnameLine.Explain(
+		"To mark this assignment as necessary, add a comment to the end of this line.")
 }
 
 // nbPart determines the smallest part of the package version number,
