@@ -55,8 +55,6 @@ type Package struct {
 	// TODO: Include files with multiple-inclusion guard only once.
 	//
 	// TODO: Include files without multiple-inclusion guard as often as needed.
-	//
-	// TODO: Set an upper limit, to prevent denial of service.
 	included Once
 
 	// Does the package have any .includes?
