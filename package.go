@@ -659,15 +659,9 @@ func (pkg *Package) checkfilePackageMakefile(filename CurrPath, mklines *MkLines
 
 	pkg.checkDistinfoExists()
 
-	// TODO: There are other REPLACE_* variables which are probably also affected by NO_CONFIGURE.
-	vars := pkg.vars
-	if noConfigureLine := vars.FirstDefinition("NO_CONFIGURE"); noConfigureLine != nil {
-		if replacePerlLine := vars.FirstDefinition("REPLACE_PERL"); replacePerlLine != nil {
-			replacePerlLine.Warnf("REPLACE_PERL is ignored when NO_CONFIGURE is set (in %s).",
-				replacePerlLine.RelMkLine(noConfigureLine))
-		}
-	}
+	pkg.checkReplaceInterpreter()
 
+	vars := pkg.vars
 	if !vars.IsDefined("LICENSE") && !vars.IsDefined("META_PACKAGE") {
 		line := NewLineWhole(filename)
 		line.Errorf("Each package must define its LICENSE.")
@@ -738,6 +732,17 @@ func (pkg *Package) checkfilePackageMakefile(filename CurrPath, mklines *MkLines
 	pkg.CheckVarorder(mklines)
 
 	SaveAutofixChanges(mklines.lines)
+}
+
+func (pkg *Package) checkReplaceInterpreter() {
+	// TODO: There are other REPLACE_* variables which are probably also affected by NO_CONFIGURE.
+	vars := pkg.vars
+	if noConfigureLine := vars.FirstDefinition("NO_CONFIGURE"); noConfigureLine != nil {
+		if replacePerlLine := vars.FirstDefinition("REPLACE_PERL"); replacePerlLine != nil {
+			replacePerlLine.Warnf("REPLACE_PERL is ignored when NO_CONFIGURE is set (in %s).",
+				replacePerlLine.RelMkLine(noConfigureLine))
+		}
+	}
 }
 
 func (pkg *Package) checkDistinfoExists() {
