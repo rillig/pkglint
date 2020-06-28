@@ -1283,7 +1283,7 @@ func (pkg *Package) pkgnameFromDistname(pkgname, distname string, diag Diagnoser
 					newDistname = strings.ToLower(newDistname)
 				} else if ok, subst := mod.Subst(newDistname); ok {
 					if subst == newDistname && !containsVarUse(subst) {
-						diag.Notef("The modifier :%s does not have an effect.", mod.Text)
+						diag.Notef("The modifier :%s does not have an effect.", mod.String())
 					}
 					newDistname = subst
 				} else {
