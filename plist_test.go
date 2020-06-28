@@ -153,9 +153,25 @@ func (s *Suite) Test_CheckLinesPlist__sorting(c *check.C) {
 func (s *Suite) Test_CheckLinesPlist__sort_common(c *check.C) {
 	t := s.Init(c)
 
-	// TODO: Examine what happens if there is a PLIST.common to be sorted.
+	t.SetUpPackage("category/package")
+	t.Chdir("category/package")
+	t.CreateFileLines("PLIST.common",
+		PlistCvsID,
+		"bin/common2",
+		"bin/common1")
+	t.CreateFileLines("PLIST.common_end",
+		PlistCvsID,
+		"bin/common_end2",
+		"bin/common_end1")
+	t.FinishSetUp()
 
-	t.CheckOutputEmpty()
+	G.Check(".")
+
+	t.CheckOutputLines(
+		"WARN: PLIST.common:3: \"bin/common1\" "+
+			"should be sorted before \"bin/common2\".",
+		"WARN: PLIST.common_end:3: \"bin/common_end1\" "+
+			"should be sorted before \"bin/common_end2\".")
 }
 
 func (s *Suite) Test_PlistChecker__autofix(c *check.C) {
