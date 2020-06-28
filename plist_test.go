@@ -442,10 +442,10 @@ func (s *Suite) Test_PlistChecker_Load__common_end(c *check.C) {
 	// the package being checked, for cross-validation.
 	t.Check(ck.allFiles["bin/plist"], check.IsNil)
 	t.CheckEquals(
-		ck.allFiles["bin/plist_common"].String(),
+		ck.allFiles["bin/plist_common"].Line.String(),
 		"PLIST.common:2: bin/plist_common")
 	t.CheckEquals(
-		ck.allFiles["bin/plist_common_end"].String(),
+		ck.allFiles["bin/plist_common_end"].Line.String(),
 		"PLIST.common_end:2: bin/plist_common_end")
 }
 
@@ -1239,6 +1239,77 @@ func (s *Suite) Test_PlistChecker_checkOmf__ok(c *check.C) {
 		nil...)
 }
 
+func (s *Suite) Test_PlistLine_Autofix(c *check.C) {
+	t := s.Init(c)
+
+	line := t.NewLine("PLIST", 2, "bin/program")
+	pline := PlistLine{line, nil, line.Text}
+
+	fix := pline.Autofix()
+	fix.Warnf("Warning %s.", "message")
+	fix.Replace("program", "new-name")
+	fix.Apply()
+
+	t.CheckOutputLines(
+		"WARN: PLIST:2: Warning message.")
+}
+
+func (s *Suite) Test_PlistLine_Errorf(c *check.C) {
+	t := s.Init(c)
+
+	line := t.NewLine("PLIST", 2, "bin/program")
+	pline := PlistLine{line, nil, line.Text}
+
+	pline.Errorf("Error %s.", "message")
+
+	t.CheckOutputLines(
+		"ERROR: PLIST:2: Error message.")
+}
+
+func (s *Suite) Test_PlistLine_Warnf(c *check.C) {
+	t := s.Init(c)
+
+	line := t.NewLine("PLIST", 2, "bin/program")
+	pline := PlistLine{line, nil, line.Text}
+
+	pline.Warnf("Warning %s.", "message")
+
+	t.CheckOutputLines(
+		"WARN: PLIST:2: Warning message.")
+}
+
+func (s *Suite) Test_PlistLine_Explain(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--explain")
+	line := t.NewLine("PLIST", 2, "bin/program")
+	pline := PlistLine{line, nil, line.Text}
+
+	pline.Warnf("Warning %s.", "message")
+	pline.Explain(
+		"Line 1.",
+		"Line 2.")
+
+	t.CheckOutputLines(
+		"WARN: PLIST:2: Warning message.",
+		"",
+		"\tLine 1. Line 2.",
+		"")
+}
+
+func (s *Suite) Test_PlistLine_RelLine(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--explain")
+	line := t.NewLine("PLIST", 2, "bin/program")
+	pline := PlistLine{line, nil, line.Text}
+
+	pline.Warnf("Warning, see %s.", line.RelLine(line))
+
+	t.CheckOutputLines(
+		"WARN: PLIST:2: Warning, see line 2.")
+}
+
 func (s *Suite) Test_PlistLine_HasPath(c *check.C) {
 	t := s.Init(c)
 
@@ -1507,12 +1578,12 @@ func (s *Suite) Test_PlistLines_Add(c *check.C) {
 
 	for _, line := range plistLines {
 		if line.HasPath() {
-			lines.Add(line, NewPlistRank(line.Basename))
+			lines.Add(line, NewPlistRank(line.Line.Basename))
 		}
 	}
 	for _, line := range plistCommonLines {
 		if line.HasPath() {
-			lines.Add(line, NewPlistRank(line.Basename))
+			lines.Add(line, NewPlistRank(line.Line.Basename))
 		}
 	}
 

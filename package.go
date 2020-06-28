@@ -540,7 +540,7 @@ func (pkg *Package) loadPlistDirs(plistFilename CurrPath) {
 	}
 	for _, plistLine := range plistLines {
 		if plistLine.HasPath() {
-			rank := NewPlistRank(plistLine.Basename)
+			rank := NewPlistRank(plistLine.Line.Basename)
 			pkg.PlistLines.Add(plistLine, rank)
 		}
 		for _, cond := range plistLine.conditions {
