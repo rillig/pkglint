@@ -354,6 +354,47 @@ func (s *Suite) Test_MkVarUseChecker_checkModifiersRange(c *check.C) {
 	mklines.Check()
 }
 
+func (s *Suite) Test_MkVarUseChecker_checkModifierLoop(c *check.C) {
+	t := s.Init(c)
+
+	autofixTest := func(before, after string) {
+		mklines := t.NewMkLines("filename.mk",
+			MkCvsID,
+			"VAR=\t"+before)
+		mklines.ForEach(func(mkline *MkLine) {
+			mkline.ForEachUsed(func(varUse *MkVarUse, time VucTime) {
+				ck := NewMkVarUseChecker(varUse, nil, mkline)
+				ck.checkModifiers()
+			})
+		})
+	}
+
+	test := func(before, after string, diagnostics ...string) {
+		t.ExpectDiagnosticsAutofix(
+			func(autofix bool) { autofixTest(before, after) },
+			diagnostics...)
+	}
+
+	test("${VAR:@l@-l${l}@}", "${VAR:S,^,-l,}",
+		"NOTE: filename.mk:2: The modifier \"@l@-l${l}@\" "+
+			"can be replaced with the simpler \"=-l\".",
+		"AUTOFIX: filename.mk:2: Replacing \"@l@-l${l}@\" with \"=-l\".")
+
+	// The comma is used in the :S modifier as the separator,
+	// therefore the modifier is left as-is.
+	test("${VAR:@word@-Wl,${word}@}", "${VAR:@word@-Wl,${word}@}",
+		nil...)
+
+	test("${VAR:@l@${l}suffix@}", "${VAR:=suffix}",
+		"NOTE: filename.mk:2: The modifier \"@l@${l}suffix@\" "+
+			"can be replaced with the simpler \"S,^,suffix,\".",
+		"AUTOFIX: filename.mk:2: Replacing \"@l@${l}suffix@\" with \"S,^,suffix,\".")
+
+	// Escaping the colon is not yet supported.
+	test("${VAR:@word@${word}: suffix@}", "${VAR:@word@${word}: suffix@}",
+		nil...)
+}
+
 func (s *Suite) Test_MkVarUseChecker_checkVarname(c *check.C) {
 	t := s.Init(c)
 
