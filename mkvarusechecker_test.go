@@ -377,8 +377,8 @@ func (s *Suite) Test_MkVarUseChecker_checkModifierLoop(c *check.C) {
 
 	test("${VAR:@l@-l${l}@}", "${VAR:S,^,-l,}",
 		"NOTE: filename.mk:2: The modifier \"@l@-l${l}@\" "+
-			"can be replaced with the simpler \"=-l\".",
-		"AUTOFIX: filename.mk:2: Replacing \"@l@-l${l}@\" with \"=-l\".")
+			"can be replaced with the simpler \"S,^,-l,\".",
+		"AUTOFIX: filename.mk:2: Replacing \"@l@-l${l}@\" with \"S,^,-l,\".")
 
 	// The comma is used in the :S modifier as the separator,
 	// therefore the modifier is left as-is.
@@ -387,8 +387,8 @@ func (s *Suite) Test_MkVarUseChecker_checkModifierLoop(c *check.C) {
 
 	test("${VAR:@l@${l}suffix@}", "${VAR:=suffix}",
 		"NOTE: filename.mk:2: The modifier \"@l@${l}suffix@\" "+
-			"can be replaced with the simpler \"S,^,suffix,\".",
-		"AUTOFIX: filename.mk:2: Replacing \"@l@${l}suffix@\" with \"S,^,suffix,\".")
+			"can be replaced with the simpler \"=suffix\".",
+		"AUTOFIX: filename.mk:2: Replacing \"@l@${l}suffix@\" with \"=suffix\".")
 
 	// Escaping the colon is not yet supported.
 	test("${VAR:@word@${word}: suffix@}", "${VAR:@word@${word}: suffix@}",

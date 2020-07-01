@@ -156,7 +156,7 @@ func (ck *MkVarUseChecker) checkModifierLoop(mod MkVarUseModifier) {
 	}
 	varnameUse := "${" + varname + "}"
 
-	if rest := strings.TrimPrefix(body, varnameUse); len(rest) < len(body) {
+	if rest := strings.TrimSuffix(body, varnameUse); len(rest) < len(body) {
 		simpler := "S,^," + rest + ","
 		fix := ck.MkLine.Autofix()
 		fix.Notef("The modifier %q can be replaced with the simpler %q.",
@@ -165,7 +165,7 @@ func (ck *MkVarUseChecker) checkModifierLoop(mod MkVarUseModifier) {
 		fix.Apply()
 	}
 
-	if rest := strings.TrimSuffix(body, varnameUse); len(rest) < len(body) {
+	if rest := strings.TrimPrefix(body, varnameUse); len(rest) < len(body) {
 		simpler := "=" + rest
 		fix := ck.MkLine.Autofix()
 		fix.Notef("The modifier %q can be replaced with the simpler %q.",
