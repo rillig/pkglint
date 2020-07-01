@@ -357,7 +357,7 @@ func (s *Suite) Test_MkVarUseChecker_checkModifiersRange(c *check.C) {
 func (s *Suite) Test_MkVarUseChecker_checkModifierLoop(c *check.C) {
 	t := s.Init(c)
 
-	autofixTest := func(before, after string) {
+	autofixTest := func(before, after string, autofix bool) {
 		mklines := t.NewMkLines("filename.mk",
 			MkCvsID,
 			"VAR=\t"+before)
@@ -367,11 +367,14 @@ func (s *Suite) Test_MkVarUseChecker_checkModifierLoop(c *check.C) {
 				ck.checkModifiers()
 			})
 		})
+		if autofix {
+			t.CheckEquals(mklines.mklines[1].Text, "VAR=\t"+after)
+		}
 	}
 
 	test := func(before, after string, diagnostics ...string) {
 		t.ExpectDiagnosticsAutofix(
-			func(autofix bool) { autofixTest(before, after) },
+			func(autofix bool) { autofixTest(before, after, autofix) },
 			diagnostics...)
 	}
 
@@ -392,6 +395,20 @@ func (s *Suite) Test_MkVarUseChecker_checkModifierLoop(c *check.C) {
 
 	// Escaping the colon is not yet supported.
 	test("${VAR:@word@${word}: suffix@}", "${VAR:@word@${word}: suffix@}",
+		nil...)
+
+	// The loop variable must be mentioned exactly once.
+	test("${VAR:@var@${var}${var}@}", "${VAR:@var@${var}${var}@}",
+		nil...)
+
+	// Other variables are fine though.
+	test("${VAR:@var@${var}${OTHER}@}", "${VAR:=${OTHER}}",
+		"NOTE: filename.mk:2: The modifier \"@var@${var}${OTHER}@\" "+
+			"can be replaced with the simpler \"=${OTHER}\".",
+		"AUTOFIX: filename.mk:2: Replacing \"@var@${var}${OTHER}@\" with \"=${OTHER}\".")
+
+	// If the loop variable has modifiers, the :@var@ is probably appropriate.
+	test("${VAR:@var@${var:Q}@}", "${VAR:@var@${var:Q}@}",
 		nil...)
 }
 

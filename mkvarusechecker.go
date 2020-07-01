@@ -156,6 +156,16 @@ func (ck *MkVarUseChecker) checkModifierLoop(mod MkVarUseModifier) {
 	}
 	varnameUse := "${" + varname + "}"
 
+	n := 0
+	ck.MkLine.ForEachUsedText(str, VucRunTime, func(varUse *MkVarUse, time VucTime) {
+		if varUse.varname == varname {
+			n++
+		}
+	})
+	if n != 1 {
+		return
+	}
+
 	if rest := strings.TrimSuffix(body, varnameUse); len(rest) < len(body) {
 		simpler := "S,^," + rest + ","
 		fix := ck.MkLine.Autofix()
