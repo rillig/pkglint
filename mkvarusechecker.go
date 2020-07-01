@@ -151,7 +151,7 @@ func (ck *MkVarUseChecker) checkModifierLoop(mod MkVarUseModifier) {
 	}
 	body := lex.Rest()
 	// TODO: Are MkVarUse interpreted the same in the before/after modifiers?
-	if !matches(body, `^[-A-Za-z0-9_ ${}]+$`) {
+	if !matches(body, `^[-A-Za-z0-9 $();_{}]+$`) {
 		return
 	}
 	varnameUse := "${" + varname + "}"

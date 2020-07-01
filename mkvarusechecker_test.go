@@ -410,6 +410,11 @@ func (s *Suite) Test_MkVarUseChecker_checkModifierLoop(c *check.C) {
 	// If the loop variable has modifiers, the :@var@ is probably appropriate.
 	test("${VAR:@var@${var:Q}@}", "${VAR:@var@${var:Q}@}",
 		nil...)
+
+	test("${VAR:@p@${p}) continue;; @}", "${VAR:=) continue;; }",
+		"NOTE: filename.mk:2: The modifier \"@p@${p}) continue;; @\" "+
+			"can be replaced with the simpler \"=) continue;; \".",
+		"AUTOFIX: filename.mk:2: Replacing \"@p@${p}) continue;; @\" with \"=) continue;; \".")
 }
 
 func (s *Suite) Test_MkVarUseChecker_checkVarname(c *check.C) {
