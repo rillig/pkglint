@@ -179,7 +179,7 @@ func (cv *VartypeCheck) Category() {
 		"gnome", "gnustep",
 		"japanese", "java",
 		"kde", "korean",
-		"linux", "local",
+		"linux", "local", "lua",
 		"perl5", "plan9", "python",
 		"R", "ruby",
 		"scm",
