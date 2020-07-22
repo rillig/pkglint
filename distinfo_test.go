@@ -57,9 +57,7 @@ func (s *Suite) Test_CheckLinesDistinfo__DISTINFO_FILE(c *check.C) {
 	G.Check(".")
 
 	t.CheckOutputLines(
-		"WARN: distinfo:3: ../../category/package/patches/patch-dummy_txt "+
-			"is registered in distinfo but not added to CVS.",
-		"WARN: ../../category/package/distinfo:3: patches/patch-dummy_txt "+
+		"WARN: distinfo:3: ../../category/package/patches/patch-dummy_txt " +
 			"is registered in distinfo but not added to CVS.")
 }
 
