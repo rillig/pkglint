@@ -148,14 +148,19 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile Path) {
 				// all the patch programs can handle this situation.
 				linesToDel--
 				linesToAdd--
+				linenoDel++
+				linenoAdd++
 
 			case hasPrefix(text, " "), hasPrefix(text, "\t"):
 				linesToDel--
 				linesToAdd--
+				linenoDel++
+				linenoAdd++
 				ck.checktextCvsID(text)
 
 			case hasPrefix(text, "-"):
 				linesToDel--
+				linenoDel++
 
 			case hasPrefix(text, "+"):
 				linesToAdd--
