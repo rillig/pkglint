@@ -269,10 +269,8 @@ func (ck *PatchChecker) checkAddedLine(addedText string, lineno int) {
 				"REPLACE_BASH, REPLACE_PERL, etc.), or by using the",
 				"SUBST framework.",
 				"",
-				"For more information, run",
-				bmakeHelp("interp"),
-				"or",
-				bmakeHelp("subst")+".",
+				sprintf("For more information, run %q or %q.",
+					bmakeHelp("interp"), bmakeHelp("subst")),
 				seeGuide("The SUBST framework", "fixes.subst"),
 				"for more information about the @PLACEHOLDER@.")
 		}
