@@ -161,7 +161,8 @@ func (ck *PatchChecker) checkUnifiedDiff(patchedFile Path) {
 				linesToAdd--
 				ck.checktextCvsID(text)
 				ck.checkConfigure(text[1:], isConfigure)
-				ck.checkAddedLine(text[1:])
+				ck.checkAddedLine(text[1:], linenoAdd)
+				linenoAdd++
 
 			case hasPrefix(text, "\\"):
 				// \ No newline at end of file (or a translation of that message)
@@ -248,12 +249,33 @@ func (ck *PatchChecker) checkConfigure(addedText string, isConfigure bool) {
 		"mk/configure/gnu-configure.mk.")
 }
 
-func (ck *PatchChecker) checkAddedLine(addedText string) {
+func (ck *PatchChecker) checkAddedLine(addedText string, lineno int) {
 	dirs := regcomp(`(?:^|[^.@)}])(/usr/pkg|/var|/etc)([^\w-]|$)`)
 	for _, m := range dirs.FindAllStringSubmatchIndex(addedText, -1) {
 		before := addedText[:m[2]]
 		dir := NewPath(addedText[m[2]:m[3]])
 		ck.checkAddedAbsPath(before, dir, addedText[m[4]:])
+	}
+	if lineno == 1 {
+		if m, interp := match1(addedText, `^#!\s*(/\S+)`); m {
+			line := ck.llex.PreviousLine()
+			line.Errorf("Patches must not add a hard-coded interpreter (%s).", interp)
+			line.Explain(
+				"If a patch modifies the first line of a script,",
+				"it should use the established pattern of setting the",
+				"interpreter to a @PLACEHOLDER@ and later replace this",
+				"placeholder with the actual path, for example by using",
+				"REPLACE_INTERPRETER (or its specialized variants",
+				"REPLACE_BASH, REPLACE_PERL, etc.), or by using the",
+				"SUBST framework.",
+				"",
+				"For more information, run",
+				bmakeHelp("interp"),
+				"or",
+				bmakeHelp("subst")+".",
+				seeGuide("The SUBST framework", "fixes.subst"),
+				"for more information about the @PLACEHOLDER@.")
+		}
 	}
 }
 
