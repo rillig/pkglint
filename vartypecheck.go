@@ -945,7 +945,7 @@ func (cv *VartypeCheck) Pathlist() {
 //
 // See FilePattern.
 func (cv *VartypeCheck) PathPattern() {
-	invalid := replaceAll(cv.ValueNoVar, `[%*+,\-./0-9?@A-Z\[\]_a-z~]`, "")
+	invalid := replaceAll(cv.ValueNoVar, `[!%*+,\-./0-9?@A-Z\[\]_a-z~]`, "")
 	if invalid == "" {
 		return
 	}
@@ -964,8 +964,8 @@ func (cv *VartypeCheck) PathPattern() {
 func (cv *VartypeCheck) Pathname() {
 	valid := regex.Pattern(condStr(
 		cv.Op == opUseMatch,
-		`[%*+,\-./0-9?@A-Z\[\]_a-z~]`,
-		`[%+,\-./0-9@A-Z_a-z~]`))
+		`[!%*+,\-./0-9?@A-Z\[\]_a-z~]`,
+		`[!%+,\-./0-9@A-Z_a-z~]`))
 	invalid := replaceAll(cv.ValueNoVar, valid, "")
 	if invalid == "" {
 		return
