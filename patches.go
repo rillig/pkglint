@@ -301,6 +301,11 @@ func (ck *PatchChecker) checkAddedAbsPath(before string, dir Path, after string)
 		return
 	}
 
+	// Ignore paths inside multiline C-style block comments.
+	if hasPrefix(trimHspace(before), "*") {
+		return
+	}
+
 	// Ignore paths inside C-style end-of-line comments.
 	if contains(before, "//") {
 		return
