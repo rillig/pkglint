@@ -1007,8 +1007,7 @@ func (s *Suite) Test_PatchChecker_checkAddedAbsPath(c *check.C) {
 	//	// even though they could still be confusing.
 	test(
 		"#define L 150 // Length of a line in /etc/passwd",
-		// FIXME
-		"ERROR: patch-file:8: Patches must not hard-code the pkgsrc PKG_SYSCONFDIR.")
+		nil...)
 
 	test(
 		"#define PID_FILE \"/var/run/daemon.pid\" /* comment */",
