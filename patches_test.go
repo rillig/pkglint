@@ -975,13 +975,15 @@ func (s *Suite) Test_PatchChecker_checkAddedAbsPath(c *check.C) {
 
 	// The dot before the "/etc" makes it a relative pathname.
 	test(
-		"cp ./etc/hostname /tmp")
+		"cp ./etc/hostname /tmp",
+		nil...)
 
 	// +>	+#	from /etc/inittab (SYSV systems)
 	// +ERROR: devel/tet3/patches/patch-ac:51: Patches must not hard-code the pkgsrc PKG_SYSCONFDIR.
 
 	test(
-		"# SysV /etc/install, /usr/sbin/install")
+		"# SysV /etc/install, /usr/sbin/install",
+		nil...)
 
 	// C or C++ program, macro definition.
 	// This is an absolute path since the PID_FILE is the macro name,
@@ -995,9 +997,18 @@ func (s *Suite) Test_PatchChecker_checkAddedAbsPath(c *check.C) {
 		"#define PID_FILE PREFIX \"/etc/conf\"",
 		nil...)
 
+	// In C-style block comments, absolute pathnames are ok,
+	// even though they could still be confusing.
 	test(
 		"#define L 150 /* Length of a line in /etc/passwd */",
 		nil...)
+
+	// In C-style end-of-line comments, absolute pathnames are ok,
+	//	// even though they could still be confusing.
+	test(
+		"#define L 150 // Length of a line in /etc/passwd",
+		// FIXME
+		"ERROR: patch-file:8: Patches must not hard-code the pkgsrc PKG_SYSCONFDIR.")
 
 	test(
 		"#define PID_FILE \"/var/run/daemon.pid\" /* comment */",
