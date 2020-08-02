@@ -1015,6 +1015,12 @@ func (s *Suite) Test_PatchChecker_checkAddedAbsPath(c *check.C) {
 		"#define L 150 // Length of a line in /etc/some/file",
 		nil...)
 
+	// Allow /etc/passwd, /etc/shadow, /etc/hosts and their variants.
+	// These belong to the base system, not to pkgsrc.
+	test(
+		"#define PATH_SHADOW \"/etc/master.passwd\"",
+		nil...)
+
 	test(
 		"#define PID_FILE \"/var/run/daemon.pid\" /* comment */",
 		"ERROR: patch-file:8: Patches must not hard-code the pkgsrc VARBASE.")

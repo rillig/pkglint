@@ -323,6 +323,11 @@ func (ck *PatchChecker) checkAddedAbsPath(before string, dir Path, after string)
 		return
 	}
 
+	// Allow well-known pathnames that belong to the base system.
+	if matches(after, `hosts|passwd|shadow`) {
+		return
+	}
+
 	switch dir {
 	case "/usr/pkg":
 
