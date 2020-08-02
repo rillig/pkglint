@@ -1000,19 +1000,19 @@ func (s *Suite) Test_PatchChecker_checkAddedAbsPath(c *check.C) {
 	// In C-style block comments, absolute pathnames are ok,
 	// even though they could still be confusing.
 	test(
-		"#define L 150 /* Length of a line in /etc/passwd */",
+		"#define L 150 /* Length of a line in /etc/some/file */",
 		nil...)
 
 	// In multiline C-style block comment, absolute pathnames are ok,
 	// even though they could still be confusing.
 	test(
-		" * Length of a line in /etc/passwd",
+		" * Length of a line in /etc/some/file",
 		nil...)
 
 	// In C-style end-of-line comments, absolute pathnames are ok,
 	//	// even though they could still be confusing.
 	test(
-		"#define L 150 // Length of a line in /etc/passwd",
+		"#define L 150 // Length of a line in /etc/some/file",
 		nil...)
 
 	test(
