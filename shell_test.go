@@ -1030,6 +1030,25 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__strip(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__chdir(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpTool("echo", "", AfterPrefsMk)
+	mklines := t.NewMkLines("filename.mk",
+		"# $NetBSD$",
+		"",
+		"pre-configure:",
+		"\techo command 1",
+		"\tcd ..",
+		"\techo command 2")
+
+	mklines.Check()
+
+	// TODO: Warn that command 2 is run in "." in compat mode, and in ".." in
+	//  parallel mode.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__nofix(c *check.C) {
 	t := s.Init(c)
 
