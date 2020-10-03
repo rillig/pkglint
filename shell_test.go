@@ -1034,19 +1034,38 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__chdir(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpTool("echo", "", AfterPrefsMk)
+	t.SetUpTool("sed", "", AfterPrefsMk)
 	mklines := t.NewMkLines("filename.mk",
 		"# $NetBSD$",
 		"",
 		"pre-configure:",
+		// This command is run in the current directory.
 		"\techo command 1",
+		// This chdir affects the remaining commands.
+		// TODO: warn about chdir.
 		"\tcd ..",
-		"\techo command 2")
+		// In subshells, chdir is ok.
+		"\t(cd ..)",
+		// In pipes, chdir is ok.
+		"\t{ cd .. && echo sender; } | { cd .. && sed s,sender,receiver; }",
+		// The && operator does not run in a subshell.
+		// TODO: warn about chdir.
+		"\tcd .. && echo",
+		// The || operator does not run in a subshell.
+		// TODO: warn about chdir.
+		"\tcd .. || echo",
+		// The current directory of this command depends on the preceding
+		// commands.
+		"\techo command 2",
+		// In the final command of a target, chdir is ok since there are
+		// no further commands that could be affected.
+		"\tcd ..")
 
 	mklines.Check()
 
-	// TODO: Warn that command 2 is run in "." in compat mode, and in ".." in
-	//  parallel mode.
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: filename.mk:7: The exitcode of the command at the left of " +
+			"the | operator is ignored.")
 }
 
 func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__nofix(c *check.C) {
