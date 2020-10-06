@@ -1036,7 +1036,7 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__chdir(c *check.C) {
 	t.SetUpTool("echo", "", AfterPrefsMk)
 	t.SetUpTool("sed", "", AfterPrefsMk)
 	mklines := t.NewMkLines("filename.mk",
-		"# $NetBSD$",
+		MkCvsID,
 		"",
 		"pre-configure:",
 		// This command is run in the current directory.
