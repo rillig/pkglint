@@ -1030,6 +1030,12 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__strip(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+// After working a lot with usr.bin/make, I thought that lines containing
+// the cd command would differ in behavior between compatibility mode and
+// parallel mode.  But since pkgsrc does not support parallel mode and also
+// actively warns when someone tries to run it in parallel mode, there is
+// no point checking for chdir that might spill over to the next line.
+// That will not happen in compat mode.
 func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__chdir(c *check.C) {
 	t := s.Init(c)
 
@@ -1042,17 +1048,17 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__chdir(c *check.C) {
 		// This command is run in the current directory.
 		"\techo command 1",
 		// This chdir affects the remaining commands.
-		// TODO: warn about chdir.
+		// It might be possible to warn here about chdir.
 		"\tcd ..",
 		// In subshells, chdir is ok.
 		"\t(cd ..)",
 		// In pipes, chdir is ok.
 		"\t{ cd .. && echo sender; } | { cd .. && sed s,sender,receiver; }",
 		// The && operator does not run in a subshell.
-		// TODO: warn about chdir.
+		// It might be possible to warn here about chdir.
 		"\tcd .. && echo",
 		// The || operator does not run in a subshell.
-		// TODO: warn about chdir.
+		// It might be possible to warn here about chdir.
 		"\tcd .. || echo",
 		// The current directory of this command depends on the preceding
 		// commands.
