@@ -477,6 +477,11 @@ func (s *Suite) Test_Pkgsrc_parseDocChange(c *check.C) {
 	test("\tRemoved pkgpath successor pkgpath [author 2019-01-01]",
 		nil...)
 
+	// TODO: Mentioning the version is useful.
+	test("\tRemoved pkgpath version 1.3.4 [author 2019-01-01]",
+		"WARN: doc/CHANGES-2019:123: Invalid doc/CHANGES line: "+
+			"\tRemoved pkgpath version 1.3.4 [author 2019-01-01]")
+
 	// "and" is wrong
 	test("\tRemoved pkgpath and pkgpath [author 2019-01-01]",
 		"WARN: doc/CHANGES-2019:123: Invalid doc/CHANGES line: "+
