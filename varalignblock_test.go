@@ -2955,6 +2955,10 @@ func (s *Suite) Test_VaralignBlock__right_margin_in_adjacent_lines(c *check.C) {
 // The variable assignments are not aligned.  That's good, but why?
 // It might be because of the unknown '.ifmake' or for a completely
 // different reason.
+//
+// Yes, it is because '.ifmake' is not a known directive, therefore
+// VaralignBlock.Process does not classify it as IsDirective and skips
+// the block.
 func (s *Suite) Test_VaralignBlock__unclear(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
