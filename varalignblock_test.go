@@ -2959,7 +2959,7 @@ func (s *Suite) Test_VaralignBlock__right_margin_in_adjacent_lines(c *check.C) {
 // Yes, it is because '.ifmake' is not a known directive, therefore
 // VaralignBlock.Process does not classify it as IsDirective and skips
 // the block.
-func (s *Suite) Test_VaralignBlock__unclear(c *check.C) {
+func (s *Suite) Test_VaralignBlock__unknown_line_format(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
 		".ifmake two",
@@ -2978,7 +2978,7 @@ func (s *Suite) Test_VaralignBlock__unclear(c *check.C) {
 		".endif")
 	vt.Diagnostics(
 		"ERROR: Makefile:1: Unknown Makefile line format: \".ifmake two\".",
-		"ERROR: Makefile:12: Unknown Makefile line format: \".ifmake four\".")
+		"ERROR: Makefile:11: Unknown Makefile line format: \".ifmake four\".")
 	vt.Autofixes(
 		nil...)
 	vt.Fixed(
@@ -2990,7 +2990,6 @@ func (s *Suite) Test_VaralignBlock__unclear(c *check.C) {
 		"_FOO:= ${FOO}",
 		"two: immutable",
 		"immutable:",
-		"        :",
 		"        :",
 		".endif",
 		".ifmake four",
