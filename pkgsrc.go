@@ -189,6 +189,7 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename CurrPath) []*Change {
 	if _, yyyy := match1(filename.Base().String(), `-(\d\d\d\d)$`); yyyy >= "2018" {
 		year = yyyy
 	}
+	thorough := G.CheckGlobal || year >= "2020" // For performance reasons
 
 	latest := make(map[PkgsrcPath]*Change)
 
@@ -228,8 +229,10 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename CurrPath) []*Change {
 			continue
 		}
 
-		src.checkChangeVersion(change, latest, line)
-		src.checkChangeDate(filename, year, change, line, changes)
+		if thorough {
+			src.checkChangeVersion(change, latest, line)
+			src.checkChangeDate(filename, year, change, line, changes)
+		}
 	}
 
 	return changes
