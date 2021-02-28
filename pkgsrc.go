@@ -363,10 +363,39 @@ func (*Pkgsrc) parseDocChange(line *Line, warn bool) *Change {
 		author = f[n-2]
 	}
 
-	if !matches(author, `^\[\w+$`) || !matches(date, `\d\d\d\d-\d\d-\d\d]$`) {
+	parseAuthorAndDate := func(author *string, date *string) bool {
+		alex := textproc.NewLexer(*author)
+		if !alex.SkipByte('[') {
+			return false
+		}
+		*author = alex.NextBytesSet(textproc.AlnumU)
+		if !alex.EOF() {
+			return false
+		}
+		dlex := textproc.NewLexer(*date)
+		if len(*date) == 11 &&
+			dlex.NextByteSet(textproc.Digit) != -1 &&
+			dlex.NextByteSet(textproc.Digit) != -1 &&
+			dlex.NextByteSet(textproc.Digit) != -1 &&
+			dlex.NextByteSet(textproc.Digit) != -1 &&
+			dlex.SkipByte('-') &&
+			dlex.NextByteSet(textproc.Digit) != -1 &&
+			dlex.NextByteSet(textproc.Digit) != -1 &&
+			dlex.SkipByte('-') &&
+			dlex.NextByteSet(textproc.Digit) != -1 &&
+			dlex.NextByteSet(textproc.Digit) != -1 &&
+			dlex.SkipByte(']') &&
+			dlex.EOF() {
+			*date = (*date)[:10]
+			return true
+		}
+
+		return false
+	}
+
+	if !parseAuthorAndDate(&author, &date) {
 		return invalid()
 	}
-	author, date = author[1:], date[:len(date)-1]
 
 	switch {
 	case
