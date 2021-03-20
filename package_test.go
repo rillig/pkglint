@@ -3190,7 +3190,7 @@ func (s *Suite) Test_Package_checkOwnerMaintainer__maintainer_unequal(c *check.C
 	G.Check(t.File("category/package"))
 
 	t.CheckOutputLines(
-		"NOTE: ~/category/package/Makefile: " +
+		"NOTE: ~/category/package: " +
 			"Please only commit changes that maintainer@example.org would approve.")
 }
 
@@ -3204,19 +3204,16 @@ func (s *Suite) Test_Package_checkOwnerMaintainer__maintainer_unequal_several_fi
 		"/distinfo//modified//")
 	t.SetUpPackage("category/package",
 		"MAINTAINER=\tmaintainer@example.org")
+	t.Chdir("category/package")
 	t.FinishSetUp()
 	G.Logger.verbose = false // Suppress duplicate messages
 
-	G.Check(t.File("category/package"))
+	G.Check(".")
 
-	// XXX: Omit the needless repetition.
+	// TODO: Remove the ".:", it is more confusing than helpful.
 	t.CheckOutputLines(
-		"NOTE: ~/category/package/Makefile: "+
-			"Please only commit changes that maintainer@example.org would approve.",
-		"NOTE: ~/category/package/PLIST: "+
-			"Please only commit changes that maintainer@example.org would approve.",
-		"NOTE: ~/category/package/distinfo: "+
-			"Please only commit changes that maintainer@example.org would approve.")
+		"NOTE: .: Please only commit changes " +
+			"that maintainer@example.org would approve.")
 }
 
 // A package with an OWNER may be edited by the owner itself.
@@ -3287,7 +3284,7 @@ func (s *Suite) Test_Package_checkOwnerMaintainer__no_tracing(c *check.C) {
 	G.Check(pkg)
 
 	t.CheckOutputLines(
-		"NOTE: ~/category/package/Makefile: Please only commit changes " +
+		"NOTE: ~/category/package: Please only commit changes " +
 			"that maintainer@example.org would approve.")
 }
 
@@ -3312,7 +3309,7 @@ func (s *Suite) Test_Package_checkOwnerMaintainer__directory(c *check.C) {
 
 	// No warning for the patches directory, only for regular files.
 	t.CheckOutputLines(
-		"NOTE: ~/category/package/Makefile: " +
+		"NOTE: ~/category/package: " +
 			"Please only commit changes that " +
 			"maintainer@example.org would approve.")
 }
