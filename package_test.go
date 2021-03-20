@@ -3194,6 +3194,30 @@ func (s *Suite) Test_Package_checkOwnerMaintainer__maintainer_unequal(c *check.C
 			"Please only commit changes that maintainer@example.org would approve.")
 }
 
+func (s *Suite) Test_Package_checkOwnerMaintainer__maintainer_unequal_several_files(c *check.C) {
+	t := s.Init(c)
+
+	G.Username = "example-user"
+	t.CreateFileLines("category/package/CVS/Entries",
+		"/Makefile//modified//",
+		"/PLIST//modified//",
+		"/distinfo//modified//")
+	t.SetUpPackage("category/package",
+		"MAINTAINER=\tmaintainer@example.org")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package"))
+
+	// XXX: Omit the needless repetition.
+	t.CheckOutputLines(
+		"NOTE: ~/category/package/Makefile: "+
+			"Please only commit changes that maintainer@example.org would approve.",
+		"NOTE: ~/category/package/PLIST: "+
+			"Please only commit changes that maintainer@example.org would approve.",
+		"NOTE: ~/category/package/distinfo: "+
+			"Please only commit changes that maintainer@example.org would approve.")
+}
+
 // A package with an OWNER may be edited by the owner itself.
 func (s *Suite) Test_Package_checkOwnerMaintainer__owner_equal(c *check.C) {
 	t := s.Init(c)
