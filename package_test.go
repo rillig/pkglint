@@ -3205,6 +3205,7 @@ func (s *Suite) Test_Package_checkOwnerMaintainer__maintainer_unequal_several_fi
 	t.SetUpPackage("category/package",
 		"MAINTAINER=\tmaintainer@example.org")
 	t.FinishSetUp()
+	G.Logger.verbose = false // Suppress duplicate messages
 
 	G.Check(t.File("category/package"))
 
