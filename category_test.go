@@ -437,3 +437,35 @@ func (s *Suite) Test_CheckdirCategory__subdir_that_is_not_a_package(c *check.C) 
 	t.CheckOutputLines(
 		"ERROR: Makefile:5: \"sub2\" does not contain a package.")
 }
+
+func (s *Suite) Test_CheckdirCategory__case_insensitive_file_system(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/PACKAGE")
+	t.SetUpPackage("category/Package") // may overwrite PACKAGE
+	t.SetUpPackage("category/package") // may overwrite PACKAGE
+	t.CreateFileLines("mk/misc/category.mk")
+	t.CreateFileLines("category/Makefile",
+		MkCvsID,
+		"",
+		"COMMENT=\tCategory comment",
+		"",
+		"SUBDIR+=\tPACKAGE",
+		"SUBDIR+=\tPackage",
+		"SUBDIR+=\tpackage",
+		"",
+		".include \"../mk/misc/category.mk\"")
+	t.Chdir("category")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	// TODO: Issue the same diagnostics on case-sensitive and
+	//  case-insensitive file systems.
+	output := t.Output()
+	if output != "" { // case-sensitive file system
+		t.CheckEquals(output, ""+ // case-insensitive file system
+			"ERROR: Makefile:6: \"Package\" does not contain a package.\n"+
+			"ERROR: Makefile:7: \"package\" does not contain a package.\n")
+	}
+}
