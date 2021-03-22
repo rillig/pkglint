@@ -15,15 +15,6 @@
 
 * if package A conflicts with B, then B should also conflict with A.
 
-# Case-sensitive file systems
-
-* Check for parallel files/dirs whose names differ only in case.
-
-* When pkglint runs on a case-insensitive filesystem, it should still
-  point out problems that only occur on case-sensitive filesystems. For
-  example, devel/p5-Net-LDAP and devel/p5-Net-ldap should be considered
-  different paths.
-
 # Python
 
 * Warn about using REPLACE_PYTHON without including application.mk.

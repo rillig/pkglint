@@ -460,12 +460,9 @@ func (s *Suite) Test_CheckdirCategory__case_insensitive_file_system(c *check.C) 
 
 	G.Check(".")
 
-	// TODO: Issue the same diagnostics on case-sensitive and
-	//  case-insensitive file systems.
-	output := t.Output()
-	if output != "" { // case-sensitive file system
-		t.CheckEquals(output, ""+ // case-insensitive file system
-			"ERROR: Makefile:6: \"Package\" does not contain a package.\n"+
-			"ERROR: Makefile:7: \"package\" does not contain a package.\n")
-	}
+	t.CheckOutputLines(
+		"ERROR: Makefile:6: On case-insensitive file systems, "+
+			"\"Package\" is the same as \"PACKAGE\" from line 5.",
+		"ERROR: Makefile:7: On case-insensitive file systems, "+
+			"\"package\" is the same as \"PACKAGE\" from line 5.")
 }
