@@ -928,6 +928,25 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__other_variables(c *check.
 			"not \"other\" may be set in this file.")
 }
 
+func (s *Suite) Test_Buildlink3Checker_checkVarassignPkgsrcdir(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.SetUpPackage("category/other-package")
+	t.CreateFileBuildlink3("category/package/buildlink3.mk",
+		"BUILDLINK_PKGSRCDIR.package?=\t../../category/other-package",
+		"BUILDLINK_API_DEPENDS.package+=\tpackage>=3")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputLines(
+		"ERROR: ~/category/package/buildlink3.mk:12: " +
+			"BUILDLINK_PKGSRCDIR.package must be set " +
+			"to the package's own path (../../category/package), " +
+			"not ../../category/other-package.")
+}
+
 func (s *Suite) Test_Buildlink3Checker_checkVaruseInPkgbase__PKGBASE_with_variable_PHP_PKG_PREFIX(c *check.C) {
 	t := s.Init(c)
 
