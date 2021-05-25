@@ -291,6 +291,9 @@ func (ck *Buildlink3Checker) checkVarassignPkgsrcdir(mkline *MkLine,
 	if varname != "BUILDLINK_PKGSRCDIR."+pkgbase {
 		return
 	}
+	if containsVarUse(value) {
+		return
+	}
 
 	pkgdir := mkline.Filename().Dir()
 	expected := "../../" + G.Pkgsrc.Rel(pkgdir).String()

@@ -947,6 +947,7 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassignPkgsrcdir(c *check.C) {
 			"not ../../category/other-package.")
 }
 
+// An indirect BUILDLINK_PKGSRCDIR is used in editors/emacs, among others.
 func (s *Suite) Test_Buildlink3Checker_checkVarassignPkgsrcdir__var(c *check.C) {
 	t := s.Init(c)
 
@@ -960,12 +961,7 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassignPkgsrcdir__var(c *check.C) 
 
 	G.Check(t.File("category/package"))
 
-	// FIXME: Don't warn about indirect PKGSRCDIR.
-	t.CheckOutputLines(
-		"ERROR: ~/category/package/buildlink3.mk:13: " +
-			"BUILDLINK_PKGSRCDIR.package must be set " +
-			"to the package's own path (../../category/package), " +
-			"not ${PACKAGE_SRCDIR}.")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_Buildlink3Checker_checkVaruseInPkgbase__PKGBASE_with_variable_PHP_PKG_PREFIX(c *check.C) {
