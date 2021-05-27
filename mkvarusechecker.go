@@ -19,7 +19,7 @@ func NewMkVarUseChecker(use *MkVarUse, mklines *MkLines, mkline *MkLine) *MkVarU
 	return &MkVarUseChecker{use, vartype, mklines, mkline}
 }
 
-// CheckVaruse checks a single use of a variable in a specific context.
+// Check checks a single use of a variable in a specific context.
 func (ck *MkVarUseChecker) Check(vuc *VarUseContext) {
 	if ck.use.IsExpression() {
 		return
