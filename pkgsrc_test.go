@@ -516,9 +516,9 @@ func (s *Suite) Test_Pkgsrc_parseDocChange(c *check.C) {
 			"\tAdded category/pkgpath version 1.0 [author-dash 2019-01-01]")
 
 	// The word 'version' must only appear with 'Added', not with 'Updated'.
-	// FIXME: The word 'version' must not be there.
-	test("\tUpdated category/pkgpath to version 1.0 [author 2021-01-01]",
-		nil...)
+	test("\tUpdated category/pkgpath to version 1.0 [author 2019-01-01]",
+		"WARN: doc/CHANGES-2019:123: Invalid doc/CHANGES line: "+
+			"\tUpdated category/pkgpath to version 1.0 [author 2019-01-01]")
 }
 
 func (s *Suite) Test_Pkgsrc_checkRemovedAfterLastFreeze(c *check.C) {
