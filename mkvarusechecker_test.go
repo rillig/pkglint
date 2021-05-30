@@ -538,9 +538,7 @@ func (s *Suite) Test_MkVarUseChecker_checkVarnameBuildlink__curses_ok(c *check.C
 
 	G.Check(".")
 
-	// FIXME: BUILDLINK_PREFIX.curses is defined by mk/curses.buildlink3.mk
-	t.CheckOutputLines(
-		"WARN: module.mk:2: Buildlink identifier \"curses\" is not known in this package.")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkVarUseChecker_checkVarnameBuildlink__curses_bad(c *check.C) {

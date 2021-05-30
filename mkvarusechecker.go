@@ -242,6 +242,10 @@ func (ck *MkVarUseChecker) checkVarnameBuildlink(varname string) {
 		}
 	}
 
+	// TODO: Generalize the following paragraphs
+	if id == "curses" && pkg.Includes("../../mk/curses.buildlink3.mk") != nil {
+		return
+	}
 	if id == "mysql-client" && pkg.Includes("../../mk/mysql.buildlink3.mk") != nil {
 		return
 	}
