@@ -208,6 +208,7 @@ qa_diffs() {
   )
 }
 
+cd "$srcdir"
 case "$*" in
 "")
   set -- install pkgsrc diffs
