@@ -682,7 +682,7 @@ func (cv *VartypeCheck) GccReqd() {
 func (cv *VartypeCheck) GitTag() {
 	tag := cv.ValueNoVar
 
-	valid := textproc.NewByteSet("0-9A-Za-z---._/")
+	valid := textproc.NewByteSet("0-9A-Za-z-._/")
 	invalid := invalidCharacters(tag, valid)
 	if invalid != "" {
 		cv.Warnf("Invalid characters %q in Git tag.", invalid)
@@ -1131,7 +1131,7 @@ func (cv *VartypeCheck) PlistIdentifier() {
 	}
 
 	if cv.Op == opUseMatch {
-		invalidPatternChars := textproc.NewByteSet("A-Za-z0-9---_*?[]")
+		invalidPatternChars := textproc.NewByteSet("A-Za-z0-9-_*?[]")
 		invalid := invalidCharacters(cond, invalidPatternChars)
 		if invalid != "" {
 			cv.Warnf("PLIST identifier pattern %q contains invalid characters (%s).",
@@ -1143,7 +1143,7 @@ func (cv *VartypeCheck) PlistIdentifier() {
 		return
 	}
 
-	invalidChars := textproc.NewByteSet("A-Za-z0-9---_")
+	invalidChars := textproc.NewByteSet("A-Za-z0-9-_")
 	invalid := invalidCharacters(cond, invalidChars)
 	if invalid != "" {
 		cv.Errorf("PLIST identifier %q contains invalid characters (%s).",
@@ -1471,7 +1471,7 @@ func (cv *VartypeCheck) UserGroupName() {
 	if value != cv.ValueNoVar {
 		return
 	}
-	invalid := invalidCharacters(value, textproc.NewByteSet("---0-9_a-z"))
+	invalid := invalidCharacters(value, textproc.NewByteSet("-0-9_a-z"))
 	if invalid != "" {
 		cv.Warnf("User or group name %q contains invalid characters: %s",
 			value, invalid)
