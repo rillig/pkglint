@@ -1141,7 +1141,9 @@ func (s *Suite) Test_VartypeCheck_GitTag(c *check.C) {
 		"123456", // Too short in practice.
 		"${DISTNAME}",
 		"invalid:char",  // Bad since ':' is not supported.
-		"invalid:;char") // Bad since neither ':' nor ';' is supported.
+		"invalid:;char", // Bad since neither ':' nor ';' is supported.
+		"jdk-11.0.10+9-1",
+	)
 	vt.Output(
 		"WARN: filename.mk:1: The Git tag \"master\" refers to a moving target.",
 		"WARN: filename.mk:3: The Git tag \"refs/heads/devel\" refers to a moving target.",

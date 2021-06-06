@@ -682,7 +682,7 @@ func (cv *VartypeCheck) GccReqd() {
 func (cv *VartypeCheck) GitTag() {
 	tag := cv.ValueNoVar
 
-	valid := textproc.NewByteSet("0-9A-Za-z-._/")
+	valid := textproc.NewByteSet("0-9A-Za-z-+._/")
 	invalid := invalidCharacters(tag, valid)
 	if invalid != "" {
 		cv.Warnf("Invalid characters %q in Git tag.", invalid)
