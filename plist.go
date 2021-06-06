@@ -534,6 +534,9 @@ type PlistLine struct {
 	text       string   // Line.Text without any conditions of the form ${PLIST.cond}
 }
 
+// Autofix returns the autofix instance belonging to the line.
+//
+// See Line.Autofix for usage details.
 func (pline *PlistLine) Autofix() *Autofix { return pline.Line.Autofix() }
 
 func (pline *PlistLine) Errorf(format string, args ...interface{}) {
