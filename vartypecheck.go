@@ -870,6 +870,16 @@ func (cv *VartypeCheck) MailAddress() {
 	}
 }
 
+func (cv *VartypeCheck) MakeTarget() {
+	if cv.Op == opUseMatch || cv.ValueNoVar != cv.Value {
+		return
+	}
+
+	if !matches(cv.ValueNoVar, `^[+\-.\w/]+$`) {
+		cv.Warnf("Invalid make target %q.", cv.Value)
+	}
+}
+
 // Message is a plain string. When defining a message variable, it should
 // not be enclosed in quotes since that is the job of the code that uses
 // the message.

@@ -1474,6 +1474,33 @@ func (s *Suite) Test_VartypeCheck_MailAddress(c *check.C) {
 		"WARN: filename.mk:4: \"user1@example.org,user2@example.org\" is not a valid mail address.")
 }
 
+func (s *Suite) Test_VartypeCheck_MakeTarget(c *check.C) {
+	t := s.Init(c)
+	vt := NewVartypeCheckTester(t, BtMakeTarget)
+
+	vt.Varname("BUILD_TARGET")
+	vt.Values(
+		"${OTHER_VAR}",
+		"spaces in target lists are ok",
+		"target/may/contain/slashes",
+		"target:must:not:contain:colons",
+		"id-${OTHER_VAR}",
+		"")
+
+	vt.Output(
+		"WARN: filename.mk:4: Invalid make target " +
+			"\"target:must:not:contain:colons\".")
+
+	vt.Op(opUseMatch)
+	vt.Values(
+		"[A-Z]",
+		"[A-Z.]",
+		"${PKG_OPTIONS:Moption}",
+		"A*B")
+
+	vt.OutputEmpty()
+}
+
 func (s *Suite) Test_VartypeCheck_Message(c *check.C) {
 	vt := NewVartypeCheckTester(s.Init(c), BtMessage)
 

@@ -440,6 +440,7 @@ var (
 	BtMachinePlatform        = &BasicType{"MachinePlatform", (*VartypeCheck).MachinePlatform}
 	BtMachinePlatformPattern = &BasicType{"MachinePlatformPattern", (*VartypeCheck).MachinePlatformPattern}
 	BtMailAddress            = &BasicType{"MailAddress", (*VartypeCheck).MailAddress}
+	BtMakeTarget             = &BasicType{"MakeTarget", (*VartypeCheck).MakeTarget}
 	BtMessage                = &BasicType{"Message", (*VartypeCheck).Message}
 	BtOption                 = &BasicType{"Option", (*VartypeCheck).Option}
 	BtPathlist               = &BasicType{"Pathlist", (*VartypeCheck).Pathlist}
