@@ -112,6 +112,8 @@ qa_netbsd() {
     --exclude="*yacc.go" \
     --exclude="*.log" \
     --exclude="mkalign*.go" \
+    --exclude="go.mod" \
+    --exclude="go.sum" \
     "$srcdir/" netbsd:proj/pkgsrc/pkgtools/pkglint/files/
 
   step_msg "Installing NetBSD package"
