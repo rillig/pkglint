@@ -21,7 +21,7 @@ type VartypeCheck struct {
 	Varname    string
 	Op         MkOperator
 	Value      string
-	ValueNoVar string
+	ValueNoVar string // The Value with all expressions removed.
 	MkComment  string // The comment including the "#".
 	Guessed    bool   // Whether the type definition is guessed (based on the variable name) or explicitly defined (see vardefs.go).
 }
@@ -706,8 +706,8 @@ func (cv *VartypeCheck) Homepage() {
 	ck.Check()
 }
 
-// Identifier checks for valid identifiers in various contexts, limiting the
-// valid characters to A-Za-z0-9_.
+// IdentifierDirect checks for valid identifiers in various contexts,
+// limiting the valid characters to A-Za-z0-9_.
 func (cv *VartypeCheck) IdentifierDirect() {
 	if cv.Op == opUseMatch {
 		if cv.Value == cv.ValueNoVar && !matches(cv.Value, `^[\w*\-?\[\]]+$`) {
@@ -726,8 +726,8 @@ func (cv *VartypeCheck) IdentifierDirect() {
 	}
 }
 
-// Identifier checks for valid identifiers in various contexts, limiting the
-// valid characters to A-Za-z0-9_.
+// IdentifierIndirect checks for valid identifiers in various contexts,
+// limiting the valid characters to A-Za-z0-9_.
 func (cv *VartypeCheck) IdentifierIndirect() {
 	if cv.Value == cv.ValueNoVar {
 		cv.IdentifierDirect()
@@ -1003,8 +1003,9 @@ func (cv *VartypeCheck) Pathname() {
 		invalid)
 }
 
-// Like Pathname, but may contain spaces as well.
-// Because the spaces must be quoted, backslashes and quotes are allowed as well.
+// PathnameSpace is like Pathname, but may contain spaces as well.
+// Because the spaces must be quoted, backslashes and quotes are allowed as
+// well.
 func (cv *VartypeCheck) PathnameSpace() {
 	valid := regex.Pattern(condStr(
 		cv.Op == opUseMatch,
