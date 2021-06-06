@@ -358,6 +358,7 @@ func (bt *BasicType) NeedsQ() bool {
 		BtEmulPlatform,
 		BtFileMode,
 		BtFilename,
+		BtGitTag,
 		BtIdentifierDirect,
 		BtIdentifierIndirect,
 		BtInteger,
