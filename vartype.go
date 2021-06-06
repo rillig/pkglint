@@ -428,6 +428,7 @@ var (
 	BtFilePattern            = &BasicType{"FilePattern", (*VartypeCheck).FilePattern}
 	BtFileMode               = &BasicType{"FileMode", (*VartypeCheck).FileMode}
 	BtGccReqd                = &BasicType{"GccReqd", (*VartypeCheck).GccReqd}
+	BtGitTag                 = &BasicType{"GitTag", (*VartypeCheck).GitTag}
 	BtHomepage               = &BasicType{"Homepage", (*VartypeCheck).Homepage}
 	BtIdentifierDirect       = &BasicType{"Identifier", (*VartypeCheck).IdentifierDirect}
 	BtIdentifierIndirect     = &BasicType{"Identifier", (*VartypeCheck).IdentifierIndirect}

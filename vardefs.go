@@ -1230,7 +1230,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.pkglistbl3rat("GCC_REQD", BtGccReqd)
 	reg.pkgappend("GENERATE_PLIST", BtShellCommands)
 	reg.pkg("GITHUB_PROJECT", BtIdentifierIndirect)
-	reg.pkg("GITHUB_TAG", BtIdentifierIndirect)
+	reg.pkg("GITHUB_TAG", BtGitTag)
 	reg.pkg("GITHUB_RELEASE", BtFilename)
 	reg.pkg("GITHUB_TYPE", enum("tag release"))
 	reg.pkgrat("GMAKE_REQD", BtVersion)

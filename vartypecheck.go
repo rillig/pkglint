@@ -676,6 +676,29 @@ func (cv *VartypeCheck) GccReqd() {
 	}
 }
 
+// GitTag checks for a fixed reference to a Git commit.
+//
+// https://git-scm.com/docs/gitrevisions
+func (cv *VartypeCheck) GitTag() {
+	tag := cv.ValueNoVar
+
+	valid := textproc.NewByteSet("0-9A-Za-z---._/")
+	invalid := invalidCharacters(tag, valid)
+	if invalid != "" {
+		cv.Warnf("Invalid characters %q in Git tag.", invalid)
+		return
+	}
+
+	if tag == "master" || hasPrefix(tag, "refs/heads/") {
+		cv.Warnf("The Git tag %q refers to a moving target.", tag)
+		return
+	}
+
+	if len(tag) < 7 && matches(tag, `^[A-Fa-f0-9]+$`) {
+		cv.Warnf("The git commit name %q is too short to be reliable.", tag)
+	}
+}
+
 func (cv *VartypeCheck) Homepage() {
 	cv.URL()
 
