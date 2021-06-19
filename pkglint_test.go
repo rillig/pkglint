@@ -1117,9 +1117,11 @@ func (s *Suite) Test_Pkglint_checkReg__unknown_file_in_patches(c *check.C) {
 			"Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
 }
 
-func (s *Suite) Test_Pkglint_checkReg__patch_for_Makefile_fragment(c *check.C) {
+func (s *Suite) Test_Pkglint_checkReg__patch_for_makefile_fragment(c *check.C) {
 	t := s.Init(c)
 
+	// This is a patch file, and even though its name ends with ".mk", it must
+	// not be interpreted as a makefile fragment.
 	t.CreateFileDummyPatch("category/package/patches/patch-compiler.mk")
 	t.Chdir("category/package")
 
