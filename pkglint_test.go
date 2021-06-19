@@ -515,7 +515,6 @@ func (s *Suite) Test_Pkglint_Check__invalid_files_before_import(c *check.C) {
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/Makefile.orig: Must be cleaned up before committing the package.",
 		"ERROR: ~/category/package/Makefile.rej: Must be cleaned up before committing the package.",
-		"ERROR: ~/category/package/Makefile~: Must be cleaned up before committing the package.",
 		"ERROR: ~/category/package/work: Must be cleaned up before committing the package.")
 }
 
@@ -1214,10 +1213,8 @@ func (s *Suite) Test_Pkglint_checkReg__file_ignored_by_CVS(c *check.C) {
 
 	G.Check(".")
 
-	// FIXME: Files ending in "~" should be ignored since CVS ignores them as
-	//  well.
-	t.CheckOutputLines(
-		"ERROR: PLIST.~1.7.~:2: Path bin/program is already listed in PLIST:2.")
+	// Files ending in "~" should be ignored since CVS ignores them as well.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_Pkglint_checkRegCvsSubst(c *check.C) {

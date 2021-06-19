@@ -219,11 +219,7 @@ func (s *Suite) Test_isIgnoredFilename(c *check.C) {
 	test(".#Makefile.1.689", true)
 
 	// https://www.gnu.org/software/trans-coord/manual/cvs/cvs.html#cvsignore
-	// TODO: true
-	test("PLIST.~1.7.~", false)
-
-	// TODO: Files ending in "~" are already ignored in a few places, see
-	//  Pkglint.checkReg.  They should all be ignored in the same manner.
+	test("PLIST.~1.7.~", true)
 }
 
 func (s *Suite) Test_isLocallyModified(c *check.C) {
