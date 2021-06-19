@@ -1199,6 +1199,27 @@ func (s *Suite) Test_Pkglint_checkReg__wip_commit_message(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_Pkglint_checkReg__file_ignored_by_CVS(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.Chdir("category/package")
+	t.CreateFileLines("PLIST",
+		PlistCvsID,
+		"bin/program")
+	t.CreateFileLines("PLIST.~1.7.~",
+		PlistCvsID,
+		"bin/program")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	// FIXME: Files ending in "~" should be ignored since CVS ignores them as
+	//  well.
+	t.CheckOutputLines(
+		"ERROR: PLIST.~1.7.~:2: Path bin/program is already listed in PLIST:2.")
+}
+
 func (s *Suite) Test_Pkglint_checkRegCvsSubst(c *check.C) {
 	t := s.Init(c)
 
