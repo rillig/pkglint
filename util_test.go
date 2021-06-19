@@ -214,6 +214,16 @@ func (s *Suite) Test_isIgnoredFilename(c *check.C) {
 	// There is actually an IDEA plugin for pkgsrc.
 	// See https://github.com/rillig/intellij-pkgsrc.
 	test(".idea", true)
+
+	// After editing a file, run 'cvs up -CA'.  This creates a backup.
+	test(".#Makefile.1.689", true)
+
+	// https://www.gnu.org/software/trans-coord/manual/cvs/cvs.html#cvsignore
+	// TODO: true
+	test("PLIST.~1.7.~", false)
+
+	// TODO: Files ending in "~" are already ignored in a few places, see
+	//  Pkglint.checkReg.  They should all be ignored in the same manner.
 }
 
 func (s *Suite) Test_isLocallyModified(c *check.C) {
