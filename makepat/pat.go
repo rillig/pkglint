@@ -144,6 +144,10 @@ func (p *Pattern) AddTransition(from StateID, min, max byte, to StateID) {
 
 // Match tests whether a pattern matches the given string.
 func (p *Pattern) Match(s string) bool {
+	if len(p.states) == 0 {
+		return false
+	}
+
 	curr := make([]bool, len(p.states))
 	next := make([]bool, len(p.states))
 
@@ -221,33 +225,101 @@ func Intersect(p1, p2 *Pattern) *Pattern {
 }
 
 func (p *Pattern) optimized() *Pattern {
-	var opt Pattern
+	reachable := p.reachable()
+	relevant := p.relevant(reachable)
+	return p.compressed(relevant)
+}
 
-	var todo []StateID
-	hasNewID := make([]bool, len(p.states))
-	newIDs := make([]StateID, len(p.states))
+// reachable returns all states that are reachable from the start state.
+// In optimized patterns, each state is reachable.
+func (p *Pattern) reachable() []bool {
+	reachable := make([]bool, len(p.states))
 
-	todo = append(todo, 0)
-	newIDs[0] = opt.AddState(p.states[0].end)
-	hasNewID[0] = true
+	progress := make([]int, len(p.states)) // 0 = unseen, 1 = to do, 2 = done
 
-	for len(todo) > 0 {
-		oldStateID := todo[len(todo)-1]
-		todo = todo[:len(todo)-1]
+	progress[0] = 1
 
-		oldState := p.states[oldStateID]
-
-		for _, t := range oldState.transitions {
-			if !hasNewID[t.to] {
-				hasNewID[t.to] = true
-				newIDs[t.to] = opt.AddState(p.states[t.to].end)
-				todo = append(todo, t.to)
+	for {
+		changed := false
+		for i, pr := range progress {
+			if pr == 1 {
+				reachable[i] = true
+				progress[i] = 2
+				changed = true
+				for _, tr := range p.states[i].transitions {
+					if progress[tr.to] == 0 {
+						progress[tr.to] = 1
+					}
+				}
 			}
-			opt.AddTransition(newIDs[oldStateID], t.min, t.max, newIDs[t.to])
+		}
+
+		if !changed {
+			break
 		}
 	}
 
-	// TODO: remove transitions that point to a dead end
+	return reachable
+}
+
+// relevant returns all states from which and end state is reachable.
+// In optimized patterns, each state is relevant.
+func (p *Pattern) relevant(reachable []bool) []bool {
+	relevant := make([]bool, len(p.states))
+
+	progress := make([]int, len(p.states)) // 0 = unseen, 1 = to do, 2 = done
+
+	for i, state := range p.states {
+		if state.end && reachable[i] {
+			progress[i] = 1
+		}
+	}
+
+	for {
+		changed := false
+		for to, pr := range progress {
+			if pr != 1 {
+				continue
+			}
+			progress[to] = 2
+			relevant[to] = true
+			changed = true
+			for from, st := range p.states {
+				for _, tr := range st.transitions {
+					if tr.to == StateID(to) && reachable[from] &&
+						progress[from] == 0 {
+						progress[from] = 1
+					}
+				}
+			}
+		}
+
+		if !changed {
+			break
+		}
+	}
+
+	return relevant
+}
+
+// compressed creates a pattern that contains only the relevant states.
+func (p *Pattern) compressed(relevant []bool) *Pattern {
+	var opt Pattern
+
+	newIDs := make([]StateID, len(p.states))
+	for i, r := range relevant {
+		if r {
+			newIDs[i] = opt.AddState(p.states[i].end)
+		}
+	}
+
+	for from, s := range p.states {
+		for _, t := range s.transitions {
+			if relevant[from] && relevant[t.to] {
+				opt.AddTransition(newIDs[from], t.min, t.max, newIDs[t.to])
+			}
+		}
+	}
 
 	return &opt
 }
@@ -258,6 +330,10 @@ func (p *Pattern) optimized() *Pattern {
 //  [^]
 //  Intersect("*.c", "*.h")
 func (p *Pattern) CanMatch() bool {
+	if len(p.states) == 0 {
+		return false
+	}
+
 	reachable := make([]bool, len(p.states))
 	reachable[0] = true
 

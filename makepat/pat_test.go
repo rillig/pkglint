@@ -223,6 +223,48 @@ func Test_Pattern_optimized(t *testing.T) {
 	}
 }
 
+func Test_Pattern_reachable(t *testing.T) {
+	p, err := Compile("N-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	reachable := p.reachable()
+
+	if !reflect.DeepEqual(reachable, []bool{true, true, true}) {
+		t.Errorf("%#v", reachable)
+	}
+}
+
+func Test_Pattern_relevant(t *testing.T) {
+	p, err := Compile("N-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	reachable := p.reachable()
+	relevant := p.relevant(reachable)
+
+	if !reflect.DeepEqual(relevant, []bool{true, true, true}) {
+		t.Errorf("%#v", relevant)
+	}
+}
+
+func Test_Pattern_compressed(t *testing.T) {
+	p, err := Compile("N-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	reachable := p.reachable()
+	relevant := p.relevant(reachable)
+	compressed := p.compressed(relevant)
+
+	if !reflect.DeepEqual(compressed, p) {
+		t.Errorf("%#v", compressed)
+	}
+}
+
 func Test_Pattern_CanMatch(t *testing.T) {
 	tests := []struct {
 		p1   string
