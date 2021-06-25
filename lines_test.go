@@ -31,7 +31,7 @@ func (s *Suite) Test_Lines_LastLine(c *check.C) {
 	whole := lines.LastLine()
 
 	// The text of the line after the ': ' is empty.
-	t.CheckEquals(whole.String(), "filename:1: before")
+	t.CheckEquals(whole.String(), "filename:1: text")
 }
 
 func (s *Suite) Test_Lines_EOFLine(c *check.C) {
