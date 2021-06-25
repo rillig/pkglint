@@ -192,10 +192,6 @@ func (s *Suite) Test_MkLineChecker_checkTextRpath(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: filename.mk:4: Please use ${COMPILER_RPATH_FLAG} instead of \"-Wl,-rpath,\".",
-		// FIXME
-		"WARN: filename.mk:5: Please use ${COMPILER_RPATH_FLAG} instead of \"-Wl,-R\".",
-		// FIXME
-		"WARN: filename.mk:6: Please use ${COMPILER_RPATH_FLAG} instead of \"-Wl,-rpath,\".",
 		"WARN: filename.mk:7: Please use ${COMPILER_RPATH_FLAG} instead of \"-Wl,-rpath,\".")
 }
 
