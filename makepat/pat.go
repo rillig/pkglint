@@ -201,10 +201,10 @@ func Intersect(p1, p2 *Pattern) *Pattern {
 	// Each pattern needs a start node.
 	stateFor(0, 0)
 
-	for i1 := 0; i1 < len(p1.states); i1++ {
-		for i2 := 0; i2 < len(p2.states); i2++ {
-			for _, t1 := range p1.states[i1].transitions {
-				for _, t2 := range p2.states[i2].transitions {
+	for i1, s1 := range p1.states {
+		for i2, s2 := range p2.states {
+			for _, t1 := range s1.transitions {
+				for _, t2 := range s2.transitions {
 					min := bmax(t1.min, t2.min)
 					max := bmin(t1.max, t2.max)
 					if min <= max {
