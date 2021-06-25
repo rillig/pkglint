@@ -15,8 +15,7 @@ func (s *Suite) Test_LoadMk(c *check.C) {
 	mklines := LoadMk("filename.mk", nil, 0)
 
 	t.CheckEquals(len(mklines.mklines), 1)
-	// XXX: Where does the '#' from line 2 disappear?
-	//  I had expected it to be preserved.
+	// The '#' from line 2 is discarded in nextLogicalLine. Not sure why.
 	t.CheckEquals(mklines.mklines[0].Text, "# line 1  continues in line 2")
 }
 
