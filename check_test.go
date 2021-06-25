@@ -104,7 +104,6 @@ func (s *Suite) TearDownTest(c *check.C) {
 func Test__qa(t *testing.T) {
 	ck := intqa.NewQAChecker(t.Errorf)
 
-	ck.Configure("logging.go", "*", "*", -intqa.EMissingTest)        // TODO
 	ck.Configure("mkline.go", "*", "*", -intqa.EMissingTest)         // TODO
 	ck.Configure("mklineparser.go", "*", "*", -intqa.EMissingTest)   // TODO
 	ck.Configure("mklinechecker.go", "*", "*", -intqa.EMissingTest)  // TODO
