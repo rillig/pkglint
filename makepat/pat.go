@@ -150,7 +150,7 @@ func (p *Pattern) Match(s string) bool {
 	curr[0] = true
 	for _, ch := range []byte(s) {
 		ok := false
-		for i, _ := range next {
+		for i := range next {
 			next[i] = false
 		}
 
