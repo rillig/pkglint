@@ -183,11 +183,23 @@ func (p *Pattern) Match(s string) bool {
 // match at the same time.
 func Intersect(p1, p2 *Pattern) *Pattern {
 	var res Pattern
-	for i1 := 0; i1 < len(p1.states); i1++ {
-		for i2 := 0; i2 < len(p2.states); i2++ {
-			res.AddState(p1.states[i1].end && p2.states[i2].end)
+
+	newState := make(map[[2]StateID]StateID)
+
+	// stateFor returns the state ID in the intersection,
+	// creating it if necessary.
+	stateFor := func(s1, s2 StateID) StateID {
+		key := [2]StateID{s1, s2}
+		ns, ok := newState[key]
+		if !ok {
+			ns = res.AddState(p1.states[s1].end && p2.states[s2].end)
+			newState[key] = ns
 		}
+		return ns
 	}
+
+	// Each pattern needs a start node.
+	stateFor(0, 0)
 
 	for i1 := 0; i1 < len(p1.states); i1++ {
 		for i2 := 0; i2 < len(p2.states); i2++ {
@@ -196,8 +208,8 @@ func Intersect(p1, p2 *Pattern) *Pattern {
 					min := bmax(t1.min, t2.min)
 					max := bmin(t1.max, t2.max)
 					if min <= max {
-						from := StateID(i1*len(p2.states) + i2)
-						to := t1.to*StateID(len(p2.states)) + t2.to
+						from := stateFor(StateID(i1), StateID(i2))
+						to := stateFor(t1.to, t2.to)
 						res.AddTransition(from, min, max, to)
 					}
 				}
