@@ -334,24 +334,7 @@ func (p *Pattern) CanMatch() bool {
 		return false
 	}
 
-	reachable := make([]bool, len(p.states))
-	reachable[0] = true
-
-again:
-	changed := false
-	for i, s := range p.states {
-		if reachable[i] {
-			for _, t := range s.transitions {
-				if !reachable[t.to] {
-					reachable[t.to] = true
-					changed = true
-				}
-			}
-		}
-	}
-	if changed {
-		goto again
-	}
+	reachable := p.reachable()
 
 	for i, s := range p.states {
 		if reachable[i] && s.end {
