@@ -4,6 +4,22 @@ import (
 	"gopkg.in/check.v1"
 )
 
+func (s *Suite) Test_LoadMk(c *check.C) {
+	t := s.Init(c)
+
+	t.Chdir(".")
+	t.CreateFileLines("filename.mk",
+		"# line 1 \\",
+		"# continues in line 2")
+
+	mklines := LoadMk("filename.mk", nil, 0)
+
+	t.CheckEquals(len(mklines.mklines), 1)
+	// XXX: Where does the '#' from line 2 disappear?
+	//  I had expected it to be preserved.
+	t.CheckEquals(mklines.mklines[0].Text, "# line 1  continues in line 2")
+}
+
 func (s *Suite) Test_Load(c *check.C) {
 	t := s.Init(c)
 
