@@ -907,7 +907,7 @@ func (s *Suite) Test_distinfoFileInfo_line(c *check.C) {
 		}},
 	}
 
-	t.CheckEquals(info.line(), 12345)
+	t.CheckEquals(info.line(), line)
 }
 
 func (s *Suite) Test_distinfoFileInfo_algorithms(c *check.C) {
