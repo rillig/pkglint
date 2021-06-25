@@ -30,7 +30,6 @@ func (s *Suite) Test_Lines_LastLine(c *check.C) {
 
 	whole := lines.LastLine()
 
-	// The text of the line after the ': ' is empty.
 	t.CheckEquals(whole.String(), "filename:1: text")
 }
 
