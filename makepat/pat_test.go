@@ -44,10 +44,11 @@ func Test_compileCharClass(t *testing.T) {
 			p, err := Compile(tt.pattern)
 			if err != nil {
 				t.Fail()
-			}
-			got := p.Match(tt.str)
-			if got != tt.want {
-				t.Errorf("got %v, want %v", got, tt.want)
+			} else {
+				got := p.Match(tt.str)
+				if got != tt.want {
+					t.Errorf("got %v, want %v", got, tt.want)
+				}
 			}
 		})
 	}
