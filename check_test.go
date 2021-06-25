@@ -104,7 +104,6 @@ func (s *Suite) TearDownTest(c *check.C) {
 func Test__qa(t *testing.T) {
 	ck := intqa.NewQAChecker(t.Errorf)
 
-	ck.Configure("licenses.go", "*", "*", -intqa.EMissingTest)       // TODO
 	ck.Configure("line.go", "*", "*", -intqa.EMissingTest)           // TODO
 	ck.Configure("linechecker.go", "*", "*", -intqa.EMissingTest)    // TODO
 	ck.Configure("lines.go", "*", "*", -intqa.EMissingTest)          // TODO
