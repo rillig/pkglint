@@ -32,20 +32,16 @@ func Compile(pattern string) (*Pattern, error) {
 
 	lex := textproc.NewLexer(pattern)
 	for !lex.EOF() {
+		ch := lex.NextByte()
 
-		if lex.SkipByte('*') {
+		switch ch {
+		case '*':
 			p.AddTransition(s, 0, 255, s)
-			continue
-		}
-
-		if lex.SkipByte('?') {
+		case '?':
 			next := p.AddState(false)
 			p.AddTransition(s, 0, 255, next)
 			s = next
-			continue
-		}
-
-		if lex.SkipByte('\\') {
+		case '\\':
 			if lex.EOF() {
 				return nil, errors.New("unfinished escape sequence")
 			}
@@ -53,23 +49,17 @@ func Compile(pattern string) (*Pattern, error) {
 			next := p.AddState(false)
 			p.AddTransition(s, ch, ch, next)
 			s = next
-			continue
-		}
-
-		ch := lex.NextByte()
-		if ch != '[' {
+		case '[':
+			next, err := compileCharClass(&p, lex, ch, s)
+			if err != nil {
+				return nil, err
+			}
+			s = next
+		default:
 			next := p.AddState(false)
 			p.AddTransition(s, ch, ch, next)
 			s = next
-			continue
 		}
-
-		next, err := compileCharClass(&p, lex, ch, s)
-		if err != nil {
-			return nil, err
-		}
-
-		s = next
 	}
 
 	p.states[s].end = true
