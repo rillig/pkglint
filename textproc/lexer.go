@@ -199,8 +199,8 @@ func (l *Lexer) SkipRegexp(re *regexp.Regexp) bool {
 }
 
 // NextRegexp tests whether the remaining string matches the given regular
-// expression, and in that case, skips over it and returns the matched substrings,
-// as in regexp.FindStringSubmatch.
+// expression, and in that case, chops it off and returns the matched
+// substrings, as in regexp.FindStringSubmatch.
 // If the regular expression does not match, returns nil.
 func (l *Lexer) NextRegexp(re *regexp.Regexp) []string {
 	if !strings.HasPrefix(re.String(), "^") {
