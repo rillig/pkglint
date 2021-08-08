@@ -765,7 +765,8 @@ func (s *Suite) Test_MkAssignChecker_checkOpAppendOnly(c *check.C) {
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
 		"",
-		"CFLAGS=\t-O2")
+		"CFLAGS=\t\t-O2",
+		"CFLAGS.SunOS=\t-O0")
 
 	mklines.Check()
 

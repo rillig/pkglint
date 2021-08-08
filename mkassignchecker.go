@@ -454,6 +454,15 @@ func (ck *MkAssignChecker) checkOpAppendOnly() {
 	// in sys.mk already, which is loaded even before the very first line
 	// of the package Makefile.
 
+	// The parameterized OPSYS variants do not get any default values before
+	// the package Makefile is included.  Therefore, as long as bsd.prefs.mk
+	// has not been included, the operator '=' can still be used.  Testing for
+	// bsd.prefs.mk is only half the story, any other accidental overwrites
+	// are caught by RedundantScope.
+	if varbase != varname && !ck.MkLines.Tools.SeenPrefs {
+		return
+	}
+
 	ck.MkLine.Warnf("Assignments to %q should use \"+=\", not \"=\".", varname)
 }
 
