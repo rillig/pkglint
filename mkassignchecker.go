@@ -29,6 +29,7 @@ func (ck *MkAssignChecker) checkLeft() {
 	}
 
 	ck.checkLeftNotUsed()
+	ck.checkLeftOpsys()
 	ck.checkLeftDeprecated()
 	ck.checkLeftBsdPrefs()
 	if !ck.checkLeftUserSettable() {
@@ -89,6 +90,32 @@ func (ck *MkAssignChecker) checkLeftNotUsed() {
 		"variables that look unused since they are only used by other packages.",
 		"These variables should be documented at the head of the file;",
 		"see mk/subst.mk for an example of such a documentation comment.")
+}
+
+// checkLeftOpsys checks whether the variable name is one of the OPSYS
+// variables, which get merged with their corresponding VAR.${OPSYS} in
+// bsd.pkg.mk.
+func (ck *MkAssignChecker) checkLeftOpsys() {
+	varname := ck.MkLine.Varname()
+	varbase := varnameBase(varname)
+	if !G.Pkgsrc.IsOpsysVar(varbase) {
+		return
+	}
+
+	varparam := varnameParam(varname)
+	if varparam == "" {
+		return
+	}
+
+	platforms := G.Pkgsrc.VariableType(ck.MkLines, "OPSYS").basicType
+	if platforms.HasEnum(varparam) {
+		return
+	}
+
+	ck.MkLine.Warnf(
+		"Since %s is an OPSYS variable, "+
+			"its parameter %q should be one of %s.",
+		varbase, varparam, platforms.AllowedEnums())
 }
 
 func (ck *MkAssignChecker) checkLeftDeprecated() {
