@@ -397,7 +397,7 @@ type Autofix struct {
 }
 ```
 
-> from [line.go](line.go#L180):
+> from [line.go](line.go#L176):
 
 ```go
 // Autofix returns the autofix instance belonging to the line.
@@ -409,6 +409,7 @@ type Autofix struct {
 //  fix.Errorf("Must not be ...")
 //  fix.Warnf("Should not be ...")
 //  fix.Notef("It is also possible ...")
+//  fix.Silent()
 //
 //  fix.Explain(
 //      "Explanation ...",
@@ -585,8 +586,6 @@ The definition for the `Line` type is:
 ```go
 // Line represents a line of text from a file.
 type Line struct {
-	// TODO: Consider storing pointers to the Filename and Basename instead of strings to save memory.
-	//  But first find out where and why pkglint needs so much memory (200 MB for a full recursive run over pkgsrc + wip).
 	Location Location
 	Basename RelPath // the last component of the Filename
 
@@ -598,8 +597,6 @@ type Line struct {
 	raw  []*RawLine // contains the original text including trailing newline
 	fix  *Autofix   // any changes that pkglint would like to apply to the line
 	once Once
-
-	// XXX: Filename and Basename could be replaced with a pointer to a Lines object.
 }
 ```
 
@@ -704,7 +701,7 @@ All these path types are defined in `path.go`:
 type Path string
 ```
 
-> from [path.go](path.go#L231):
+> from [path.go](path.go#L232):
 
 ```go
 // CurrPath is a path that is either absolute or relative to the current
@@ -713,7 +710,7 @@ type Path string
 type CurrPath string
 ```
 
-> from [path.go](path.go#L459):
+> from [path.go](path.go#L460):
 
 ```go
 // RelPath is a path that is relative to some base directory that is not
@@ -721,14 +718,14 @@ type CurrPath string
 type RelPath string
 ```
 
-> from [path.go](path.go#L380):
+> from [path.go](path.go#L381):
 
 ```go
 // PkgsrcPath is a path relative to the pkgsrc root.
 type PkgsrcPath string
 ```
 
-> from [path.go](path.go#L410):
+> from [path.go](path.go#L411):
 
 ```go
 // PackagePath is a path relative to the package directory. It is used
@@ -771,7 +768,7 @@ The `t` variable is the center of most tests.
 It is of type `Tester` and provides a high-level interface
 for setting up tests and checking the results.
 
-> from [check_test.go](check_test.go#L179):
+> from [check_test.go](check_test.go#L170):
 
 ```go
 // Tester provides utility methods for testing pkglint.
@@ -804,7 +801,7 @@ which is the underlying testing framework.
 Most pkglint tests don't need this variable.
 Low-level tests call `c.Check` to compare their results to the expected values.
 
-> from [util_test.go](util_test.go#L252):
+> from [util_test.go](util_test.go#L258):
 
 ```go
 func (s *Suite) Test_tabWidth(c *check.C) {
