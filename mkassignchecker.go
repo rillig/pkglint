@@ -1,6 +1,7 @@
 package pkglint
 
 import (
+	"netbsd.org/pkglint/textproc"
 	"strconv"
 	"strings"
 )
@@ -103,7 +104,8 @@ func (ck *MkAssignChecker) checkLeftOpsys() {
 	}
 
 	varparam := varnameParam(varname)
-	if varparam == "" || varparam == "*" {
+	if varparam == "" || varparam == "*" ||
+		textproc.Lower.Contains(varparam[0]) {
 		return
 	}
 

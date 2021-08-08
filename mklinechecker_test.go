@@ -190,15 +190,8 @@ func (s *Suite) Test_MkLineChecker_checkTextRpath(c *check.C) {
 
 	mklines.Check()
 
-	// The warnings about BUILDLINK_TRANSFORM.<other> are OK since it is
-	// generally bad style to fiddle around with the build settings of a
-	// dependent package.  As of 2021-08-08, no package does this anyway,
-	// making this a hypothetical scenario.
 	t.CheckOutputLines(
 		"WARN: filename.mk:4: Please use ${COMPILER_RPATH_FLAG} instead of \"-Wl,-rpath,\".",
-		"WARN: filename.mk:5: Since BUILDLINK_TRANSFORM is an OPSYS variable, its parameter \"pkgbase\" should be one of Cygwin DragonFly FreeBSD Linux NetBSD SunOS.",
-		"WARN: filename.mk:6: Since BUILDLINK_TRANSFORM is an OPSYS variable, its parameter \"pkgbase\" should be one of Cygwin DragonFly FreeBSD Linux NetBSD SunOS.",
-		"WARN: filename.mk:7: Since BUILDLINK_TRANSFORM is an OPSYS variable, its parameter \"pkgbase\" should be one of Cygwin DragonFly FreeBSD Linux NetBSD SunOS.",
 		"WARN: filename.mk:7: Please use ${COMPILER_RPATH_FLAG} instead of \"-Wl,-rpath,\".")
 }
 

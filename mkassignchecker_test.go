@@ -222,9 +222,6 @@ func (s *Suite) Test_MkAssignChecker_checkLeftOpsys(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:3: Since CPPFLAGS is an OPSYS variable, "+
-			"its parameter \"mumble\" should be one of "+
-			"Cygwin DragonFly FreeBSD Linux NetBSD SunOS.",
 		"WARN: filename.mk:5: Since CFLAGS is an OPSYS variable, "+
 			"its parameter \"NebTSD\" should be one of "+
 			"Cygwin DragonFly FreeBSD Linux NetBSD SunOS.",
