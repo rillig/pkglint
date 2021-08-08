@@ -758,6 +758,22 @@ func (s *Suite) Test_MkAssignChecker_checkOpShell(c *check.C) {
 		"WARN: ~/category/package/standalone.mk:15: Please use \"${ECHO}\" instead of \"echo\".")
 }
 
+func (s *Suite) Test_MkAssignChecker_checkOpAppendOnly(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"",
+		"CFLAGS=\t-O2")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:3: " +
+			"Assignments to \"CFLAGS\" should use \"+=\", not \"=\".")
+}
+
 func (s *Suite) Test_MkAssignChecker_checkRight(c *check.C) {
 	t := s.Init(c)
 

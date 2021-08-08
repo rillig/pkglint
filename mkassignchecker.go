@@ -371,6 +371,7 @@ func (ck *MkAssignChecker) checkLeftRationale() {
 
 func (ck *MkAssignChecker) checkOp() {
 	ck.checkOpShell()
+	ck.checkOpAppendOnly()
 }
 
 func (ck *MkAssignChecker) checkOpShell() {
@@ -418,6 +419,42 @@ func (ck *MkAssignChecker) checkOpShell() {
 		"of the line, or force the variable to be evaluated at load time,",
 		"by using it at the right-hand side of the := operator, or in an .if",
 		"or .for directive.")
+}
+
+// https://gnats.netbsd.org/56352
+func (ck *MkAssignChecker) checkOpAppendOnly() {
+
+	if ck.MkLine.Op() != opAssign {
+		return
+	}
+
+	varname := ck.MkLine.Varname()
+	varbase := varnameBase(varname)
+
+	// See pkgtools/bootstrap-mk-files/files/sys.mk
+	switch varbase {
+	case
+		"CFLAGS",    // C
+		"OBJCFLAGS", // Objective C
+		"FFLAGS",    // Fortran
+		"RFLAGS",    // Ratfor
+		"LFLAGS",    // Lex
+		"LDFLAGS",   // Linker
+		"LINTFLAGS", // Lint
+		"PFLAGS",    // Pascal
+		"YFLAGS",    // Yacc
+		"LDADD":     // Just for symmetry
+		break
+	default:
+		return
+	}
+
+	// At this point, it does not matter whether bsd.prefs.mk has been
+	// included or not since the above variables get their default values
+	// in sys.mk already, which is loaded even before the very first line
+	// of the package Makefile.
+
+	ck.MkLine.Warnf("Assignments to %q should use \"+=\", not \"=\".", varname)
 }
 
 // checkLeft checks everything to the right of the assignment operator.
