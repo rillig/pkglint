@@ -38,7 +38,7 @@ func (ck *MkAssignChecker) checkLeft() {
 	ck.checkLeftRationale()
 
 	NewMkLineChecker(ck.MkLines, ck.MkLine).checkTextVarUse(
-		ck.MkLine.Varname(),
+		varname,
 		NewVartype(BtVariableName, NoVartypeOptions, NewACLEntry("*", aclpAll)),
 		VucLoadTime)
 }
