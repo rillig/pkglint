@@ -159,7 +159,11 @@ func (s *Suite) Test_MkLines_Check__varuse_parameterized(c *check.C) {
 
 	// No warnings about CONFIGURE_ARGS.* being defined but not used or vice versa.
 	t.CheckOutputLines(
-		"WARN: converters/wv2/Makefile:2: ICONV_TYPE is used but not defined.")
+		"WARN: converters/wv2/Makefile:2: ICONV_TYPE is used but not defined.",
+		"WARN: converters/wv2/Makefile:3: "+
+			"Since CONFIGURE_ARGS is an OPSYS variable, "+
+			"its parameter \"gnu-iconv\" should be one of "+
+			"Cygwin DragonFly FreeBSD Linux NetBSD SunOS.")
 }
 
 // When an ODE runtime loop is used to expand variables to shell commands,
