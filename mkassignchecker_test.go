@@ -172,6 +172,27 @@ func (s *Suite) Test_MkAssignChecker_checkLeftNotUsed__procedure_call_no_tracing
 	t.CheckOutputEmpty()
 }
 
+// https://gnats.netbsd.org/56352
+func (s *Suite) Test_MkAssignChecker_checkLeftNotUsed__opsys(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+
+	// TODO: Since CFLAGS and LDFLAGS are both OPSYS variables, warn about
+	//  typos and other inconsistencies.
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"",
+		"CFLAGS.mumble+=\t\t-DMACRO",
+		"CFLAGS.NebTSD+=\t\t-Wall",
+		"LDFLAGS.DragonFly=\t-lX11 -lm",
+		"LDFLAGS.SunOS+=\t\t-lX11 -lm")
+
+	mklines.Check()
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_MkAssignChecker_checkLeftNotUsed__infra(c *check.C) {
 	t := s.Init(c)
 
