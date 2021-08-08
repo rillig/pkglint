@@ -103,7 +103,7 @@ func (ck *MkAssignChecker) checkLeftOpsys() {
 	}
 
 	varparam := varnameParam(varname)
-	if varparam == "" {
+	if varparam == "" || varparam == "*" {
 		return
 	}
 

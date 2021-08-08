@@ -216,7 +216,8 @@ func (s *Suite) Test_MkAssignChecker_checkLeftOpsys(c *check.C) {
 		"CXXFLAGS.DragonFly=\t-Wall",
 		"CXXFLAGS.DragonFlyBSD=\t-Wall",
 		"LDFLAGS.SunOS+=\t\t-lX11 -lm",
-		"LDFLAGS.SunOS+=\t\t-lX11 -lm")
+		"LDFLAGS.SunOS+=\t\t-lX11 -lm",
+		"LDFLAGS.*+=\t\t-lfallback")
 
 	mklines.Check()
 
