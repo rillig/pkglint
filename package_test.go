@@ -2680,10 +2680,11 @@ func (s *Suite) Test_Package_checkMesonConfigureArgs__include(c *check.C) {
 
 	G.Check(".")
 
-	// FIXME
-	t.CheckOutputLines(
-		"WARN: ../../devel/libcommon/use.mk:3: " +
-			"Meson packages usually don't need CONFIGURE_ARGS.")
+	// When checking the package x11/libxkbcommon, do not warn that
+	// converters/libiconv/builtin.mk defines CONFIGURE_ARGS, since that
+	// file may be used by other packages as well, or the relevant section
+	// may be guarded by '.if ${HAS_CONFIGURE}'.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_Package_checkMesonPython(c *check.C) {

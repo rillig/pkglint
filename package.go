@@ -1204,12 +1204,19 @@ func (pkg *Package) checkMesonGnuMake(mklines *MkLines) {
 }
 
 func (pkg *Package) checkMesonConfigureArgs() {
-	if mkline := pkg.vars.FirstDefinition("CONFIGURE_ARGS"); mkline != nil {
-		mkline.Warnf("Meson packages usually don't need CONFIGURE_ARGS.")
-		mkline.Explain(
-			"After migrating a package from GNU make to Meson,",
-			"CONFIGURE_ARGS are typically not needed anymore.")
+	mkline := pkg.vars.FirstDefinition("CONFIGURE_ARGS")
+	if mkline == nil {
+		return
 	}
+
+	if pkg.Rel(mkline.Location.Filename).HasPrefixPath("..") {
+		return
+	}
+
+	mkline.Warnf("Meson packages usually don't need CONFIGURE_ARGS.")
+	mkline.Explain(
+		"After migrating a package from GNU make to Meson,",
+		"CONFIGURE_ARGS are typically not needed anymore.")
 }
 
 func (pkg *Package) checkMesonPython(mklines *MkLines) {
