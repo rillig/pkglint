@@ -1194,7 +1194,7 @@ func (pkg *Package) checkMeson(mklines *MkLines) {
 
 func (pkg *Package) checkMesonGnuMake(mklines *MkLines) {
 	gmake := mklines.Tools.ByName("gmake")
-	if gmake != nil && gmake.UsableAtRunTime() {
+	if G.Experimental && gmake != nil && gmake.UsableAtRunTime() {
 		mkline := NewLineWhole(pkg.File("."))
 		mkline.Warnf("Meson packages usually don't need GNU make.")
 		mkline.Explain(
