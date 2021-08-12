@@ -2664,6 +2664,28 @@ func (s *Suite) Test_Package_checkMesonConfigureArgs(c *check.C) {
 		"WARN: Makefile:20: Meson packages usually don't need CONFIGURE_ARGS.")
 }
 
+func (s *Suite) Test_Package_checkMesonConfigureArgs__include(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("devel/meson/build.mk")
+	t.CreateFileLines("devel/libcommon/use.mk",
+		MkCvsID,
+		"",
+		"CONFIGURE_ARGS+=\t--enable-feature")
+	t.SetUpPackage("category/package",
+		".include \"../../devel/libcommon/use.mk\"",
+		".include \"../../devel/meson/build.mk\"")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	// FIXME
+	t.CheckOutputLines(
+		"WARN: ../../devel/libcommon/use.mk:3: " +
+			"Meson packages usually don't need CONFIGURE_ARGS.")
+}
+
 func (s *Suite) Test_Package_checkMesonPython(c *check.C) {
 	t := s.Init(c)
 
