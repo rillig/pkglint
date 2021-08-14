@@ -681,7 +681,7 @@ func (s *Suite) Test_MkLines_collectVariables__no_tracing(c *check.C) {
 		"SUBST_VARS.id+=\tVAR3")
 	t.DisableTracing()
 
-	mklines.collectVariables()
+	mklines.collectVariables(false, true)
 
 	t.CheckOutputEmpty()
 }
@@ -809,7 +809,7 @@ func (s *Suite) Test_MkLines_checkAll__collect_else(c *check.C) {
 
 	// As a side-effect of MkLines.ForEach,
 	// the HasElseBranch in the lines is updated.
-	mklines.collectVariables()
+	mklines.collectVariables(false, true)
 
 	t.CheckEquals(mklines.mklines[2].HasElseBranch(), false)
 	t.CheckEquals(mklines.mklines[5].HasElseBranch(), true)
