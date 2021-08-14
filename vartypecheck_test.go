@@ -1824,14 +1824,12 @@ func (s *Suite) Test_VartypeCheck_PrefixPathname(c *check.C) {
 		"ERROR: filename.mk:11: VARBASE must not be used in INSTALLATION_DIRS "+
 			"since it is not relative to PREFIX.")
 
+	// INSTALLATION_DIRS automatically replaces "man" with "${PKGMANDIR}".
 	vt.Varname("INSTALLATION_DIRS")
 	vt.Values(
 		"man/man1")
 
-	// FIXME: INSTALLATION_DIRS contains magic replacements.
-	vt.Output(
-		"WARN: filename.mk:21: " +
-			"Please use \"${PKGMANDIR}/man1\" instead of \"man/man1\".")
+	vt.OutputEmpty()
 }
 
 func (s *Suite) Test_VartypeCheck_PythonDependency(c *check.C) {
