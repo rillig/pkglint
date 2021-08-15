@@ -2455,20 +2455,7 @@ func (s *Suite) Test_VartypeCheck_WrksrcPathPattern(c *check.C) {
 		// This matches the single file literally named '*.py'.
 		"'test cases/*/*/*.py'")
 
-	// FIXME: These patterns are all OK.
-	vt.Output(
-		"WARN: filename.mk:21: "+
-			"The pathname pattern \"test\\\\ cases/*/*/*.py\" "+
-			"contains the invalid characters \"\\\\ \".",
-		"WARN: filename.mk:22: "+
-			"The pathname pattern \"test\\\" \\\"cases/*/*/*.py\" "+
-			"contains the invalid characters \"\\\" \\\"\".",
-		"WARN: filename.mk:23: "+
-			"The pathname pattern \"test' 'cases/*/*/*.py\" "+
-			"contains the invalid characters \"' '\".",
-		"WARN: filename.mk:24: "+
-			"The pathname pattern \"'test cases/*/*/*.py'\" "+
-			"contains the invalid characters \"' '\".")
+	vt.OutputEmpty()
 }
 
 func (s *Suite) Test_VartypeCheck_WrksrcSubdirectory(c *check.C) {
