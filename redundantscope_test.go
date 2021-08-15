@@ -1470,21 +1470,27 @@ func (s *Suite) Test_RedundantScope__is_relevant_for_infrastructure(c *check.C) 
 			"Variable PKG_OPTIONS is overwritten in line 3.")
 }
 
+// All makefile fragments that are not directly or indirectly included by the
+// package Makefile need to be checked separately for redundant variable
+// assignments since these would otherwise go unnoticed.
+//
+// See CheckFileMk and Package.checkfilePackageMakefile.
 func (s *Suite) Test_RedundantScope__standalone(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpPkgsrc()
-	t.CreateFileLines("devel/meson/build.mk",
+	t.SetUpPackage("category/package")
+	t.CreateFileLines("category/package/build.mk",
 		MkCvsID,
 		"",
-		"_PKG_VARS.meson=\tMESON_REQD",
-		"_PKG_VARS.meson=\tCONFIGURE_DIRS")
+		"_PKG_VARS.package=\tPACKAGE_REQD",
+		"_PKG_VARS.package=\tCONFIGURE_DIRS")
 	t.FinishSetUp()
 
-	G.Check(t.File("devel/meson/build.mk"))
+	G.Check(t.File("category/package"))
 
-	// TODO: Warn that the variable is overwritten.
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: ~/category/package/build.mk:3: " +
+			"Variable _PKG_VARS.package is overwritten in line 4.")
 }
 
 // Branch coverage for info.vari.IsConstant(). The other tests typically
