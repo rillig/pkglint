@@ -1470,6 +1470,23 @@ func (s *Suite) Test_RedundantScope__is_relevant_for_infrastructure(c *check.C) 
 			"Variable PKG_OPTIONS is overwritten in line 3.")
 }
 
+func (s *Suite) Test_RedundantScope__standalone(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.CreateFileLines("devel/meson/build.mk",
+		MkCvsID,
+		"",
+		"_PKG_VARS.meson=\tMESON_REQD",
+		"_PKG_VARS.meson=\tCONFIGURE_DIRS")
+	t.FinishSetUp()
+
+	G.Check(t.File("devel/meson/build.mk"))
+
+	// TODO: Warn that the variable is overwritten.
+	t.CheckOutputEmpty()
+}
+
 // Branch coverage for info.vari.IsConstant(). The other tests typically
 // make a variable non-constant by adding conditional assignments between
 // .if/.endif. But there are other ways. The output of shell commands is
