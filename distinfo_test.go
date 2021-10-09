@@ -238,19 +238,15 @@ func (s *Suite) Test_distinfoLinesChecker_checkFilename(c *check.C) {
 	t.CreateFileLines("category/package/distinfo",
 		CvsID,
 		"",
-		"SHA1 (ok-1.0.tar.gz) = 1234",
 		"RMD160 (ok-1.0.tar.gz) = 1234",
 		"SHA512 (ok-1.0.tar.gz) = 1234",
 		"Size (ok-1.0.tar.gz) = 1234",
-		"SHA1 (not-ok.tar.gz) = 1234",
 		"RMD160 (not-ok.tar.gz) = 1234",
 		"SHA512 (not-ok.tar.gz) = 1234",
 		"Size (not-ok.tar.gz) = 1234",
-		"SHA1 (non-versioned/not-ok.tar.gz) = 1234",
 		"RMD160 (non-versioned/not-ok.tar.gz) = 1234",
 		"SHA512 (non-versioned/not-ok.tar.gz) = 1234",
 		"Size (non-versioned/not-ok.tar.gz) = 1234",
-		"SHA1 (versioned-1/ok.tar.gz) = 1234",
 		"RMD160 (versioned-1/ok.tar.gz) = 1234",
 		"SHA512 (versioned-1/ok.tar.gz) = 1234",
 		"Size (versioned-1/ok.tar.gz) = 1234")
@@ -260,9 +256,9 @@ func (s *Suite) Test_distinfoLinesChecker_checkFilename(c *check.C) {
 	G.Check(".")
 
 	t.CheckOutputLines(
-		"WARN: distinfo:7: Distfiles without version number "+
+		"WARN: distinfo:6: Distfiles without version number "+
 			"should be placed in a versioned DIST_SUBDIR.",
-		"WARN: distinfo:11: Distfiles without version number "+
+		"WARN: distinfo:9: Distfiles without version number "+
 			"should be placed in a versioned DIST_SUBDIR.")
 }
 
@@ -360,7 +356,6 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__missing_patch_with_di
 	lines := t.SetUpFileLines("distinfo",
 		CvsID,
 		"",
-		"SHA1 (patch-aa) = ...",
 		"RMD160 (patch-aa) = ...",
 		"SHA512 (patch-aa) = ...",
 		"Size (patch-aa) = ... bytes")
@@ -369,7 +364,7 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__missing_patch_with_di
 
 	// The file name certainly looks like a pkgsrc patch, but there
 	// is no corresponding file in the file system, and there is no
-	// current package to correctly determine the PATCHDIR. Therefore
+	// current package to correctly determine the PATCHDIR. Therefore,
 	// pkglint doesn't know whether this is a distfile or a missing
 	// patch file and doesn't warn at all.
 	t.CheckOutputEmpty()
@@ -382,7 +377,6 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__existing_patch_with_d
 	t.CreateFileLines("category/package/distinfo",
 		CvsID,
 		"",
-		"SHA1 (patch-aa) = ...",
 		"RMD160 (patch-aa) = ...",
 		"SHA512 (patch-aa) = ...",
 		"Size (patch-aa) = ... bytes")
@@ -398,11 +392,8 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__existing_patch_with_d
 	// that the distinfo lines clearly refer to that patch file and not
 	// to a distfile.
 	t.CheckOutputLines(
-		"ERROR: ~/category/package/distinfo:3: "+
-			"Expected SHA1 hash for patch-aa, got SHA1, RMD160, SHA512, Size.",
-		"ERROR: ~/category/package/distinfo:3: "+
-			"SHA1 hash of patches/patch-aa differs (distinfo has ..., "+
-			"patch file has 9a93207561abfef7e7550598c5a08f2c3226995b).")
+		"ERROR: ~/category/package/distinfo:3: " +
+			"Expected SHA1 hash for patch-aa, got RMD160, SHA512, Size.")
 }
 
 func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__missing_patch_with_wrong_algorithms(c *check.C) {
@@ -667,7 +658,6 @@ func (s *Suite) Test_distinfoLinesChecker_checkUnrecordedPatches(c *check.C) {
 	t.SetUpFileLines("distinfo",
 		CvsID,
 		"",
-		"SHA1 (distfile.tar.gz) = ...",
 		"RMD160 (distfile.tar.gz) = ...",
 		"SHA512 (distfile.tar.gz) = ...",
 		"Size (distfile.tar.gz) = 1024 bytes")

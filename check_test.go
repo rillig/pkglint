@@ -479,7 +479,6 @@ func (t *Tester) SetUpPackage(pkgpath RelPath, makefileLines ...string) CurrPath
 	t.CreateFileLines(pkgpath.JoinNoClean("distinfo"),
 		CvsID,
 		"",
-		"SHA1 (distfile-1.0.tar.gz) = 12341234",
 		"RMD160 (distfile-1.0.tar.gz) = 12341234",
 		"SHA512 (distfile-1.0.tar.gz) = 12341234",
 		"Size (distfile-1.0.tar.gz) = 12341234")
