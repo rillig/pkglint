@@ -149,7 +149,9 @@ func (ck *distinfoLinesChecker) checkAlgorithms(info distinfoFileInfo) {
 	case algorithms == "RMD160, SHA512, Size" && isPatch != yes:
 		return
 	case algorithms == "SHA1, RMD160, SHA512, Size" && isPatch != yes:
-		return // TODO: remove as of 2021Q3
+		// TODO: remove after 2021Q4. Until then, allow pkgsrc-wip to
+		//  be used with the stable 2021Q3.
+		return
 	}
 
 	switch {
@@ -447,7 +449,9 @@ func (info *distinfoFileInfo) algorithms() string {
 
 func (info *distinfoFileInfo) hasDistfileAlgorithms() bool {
 	h := info.hashes
-	if len(h) == 4 && // TODO: remove as of 2021Q3
+	// TODO: remove after 2021Q4. Until then, allow pkgsrc-wip to
+	//  be used with the stable 2021Q3.
+	if len(h) == 4 &&
 		h[0].algorithm == "SHA1" &&
 		h[1].algorithm == "RMD160" &&
 		h[2].algorithm == "SHA512" &&
