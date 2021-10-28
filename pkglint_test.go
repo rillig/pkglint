@@ -224,7 +224,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 	t.CreateFileLines("sysutils/checkperms/distinfo",
 		CvsID,
 		"",
-		"RMD160 (checkperms-1.12.tar.gz) = cd95029aa930b6201e9580b3ab7e36dd30b8f925",
+		"BLAKE2s (checkperms-1.12.tar.gz) = cd95029aa930b6201e9580b3ab7e36dd30b8f925",
 		"SHA512 (checkperms-1.12.tar.gz) = "+
 			"43e37b5963c63fdf716acdb470928d7e21a7bdfddd6c85cf626a11acc7f45fa5"+
 			"2a53d4bcd83d543150328fe8cec5587987d2d9a7c5f0aaeb02ac1127ab41f8ae",

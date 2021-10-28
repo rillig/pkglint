@@ -31,7 +31,7 @@ func (s *Suite) Test_CheckLinesDistinfo__parse_errors(c *check.C) {
 		"ERROR: distinfo:1: Invalid line: should be the CVS ID",
 		"ERROR: distinfo:2: Invalid line: should be empty",
 		"ERROR: distinfo:8: Invalid line: Another invalid line",
-		"ERROR: distinfo:3: Expected RMD160, SHA512, Size checksums for \"distfile-1.0.tar.gz\", got MD5, SHA1.",
+		"ERROR: distinfo:3: Expected BLAKE2s, SHA512, Size checksums for \"distfile-1.0.tar.gz\", got MD5, SHA1.",
 		"ERROR: distinfo:5: Expected SHA1 hash for patch-aa, got SHA1, Size.",
 		"WARN: distinfo:9: Patch file \"patch-nonexistent\" does not exist in directory \"patches\".")
 }
@@ -238,16 +238,16 @@ func (s *Suite) Test_distinfoLinesChecker_checkFilename(c *check.C) {
 	t.CreateFileLines("category/package/distinfo",
 		CvsID,
 		"",
-		"RMD160 (ok-1.0.tar.gz) = 1234",
+		"BLAKE2s (ok-1.0.tar.gz) = 1234",
 		"SHA512 (ok-1.0.tar.gz) = 1234",
 		"Size (ok-1.0.tar.gz) = 1234",
-		"RMD160 (not-ok.tar.gz) = 1234",
+		"BLAKE2s (not-ok.tar.gz) = 1234",
 		"SHA512 (not-ok.tar.gz) = 1234",
 		"Size (not-ok.tar.gz) = 1234",
-		"RMD160 (non-versioned/not-ok.tar.gz) = 1234",
+		"BLAKE2s (non-versioned/not-ok.tar.gz) = 1234",
 		"SHA512 (non-versioned/not-ok.tar.gz) = 1234",
 		"Size (non-versioned/not-ok.tar.gz) = 1234",
-		"RMD160 (versioned-1/ok.tar.gz) = 1234",
+		"BLAKE2s (versioned-1/ok.tar.gz) = 1234",
 		"SHA512 (versioned-1/ok.tar.gz) = 1234",
 		"Size (versioned-1/ok.tar.gz) = 1234")
 	t.Chdir("category/package")
@@ -279,7 +279,7 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__nonexistent_distfile_
 	// a patch, it is a normal distfile because it has other hash algorithms
 	// than exactly SHA1.
 	t.CheckOutputLines(
-		"ERROR: distinfo:3: Expected RMD160, SHA512, Size checksums " +
+		"ERROR: distinfo:3: Expected BLAKE2s, SHA512, Size checksums " +
 			"for \"patch-5.3.tar.gz\", got MD5, SHA1.")
 }
 
@@ -296,7 +296,7 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__wrong_distfile_algori
 	CheckLinesDistinfo(nil, lines)
 
 	t.CheckOutputLines(
-		"ERROR: distinfo:3: Expected RMD160, SHA512, Size checksums " +
+		"ERROR: distinfo:3: Expected BLAKE2s, SHA512, Size checksums " +
 			"for \"distfile.tar.gz\", got MD5, SHA1.")
 }
 
@@ -322,7 +322,7 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__ambiguous_distfile(c 
 		"ERROR: distinfo:3: Wrong checksum algorithms MD5 for patch-4.2.tar.gz.",
 		"",
 		"\tDistfiles that are downloaded from external sources must have the",
-		"\tchecksum algorithms RMD160, SHA512, Size.",
+		"\tchecksum algorithms BLAKE2s, SHA512, Size.",
 		"",
 		"\tPatch files from pkgsrc must have only the SHA1 hash.",
 		"")
@@ -356,7 +356,7 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__missing_patch_with_di
 	lines := t.SetUpFileLines("distinfo",
 		CvsID,
 		"",
-		"RMD160 (patch-aa) = ...",
+		"BLAKE2s (patch-aa) = ...",
 		"SHA512 (patch-aa) = ...",
 		"Size (patch-aa) = ... bytes")
 
@@ -377,7 +377,7 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__existing_patch_with_d
 	t.CreateFileLines("category/package/distinfo",
 		CvsID,
 		"",
-		"RMD160 (patch-aa) = ...",
+		"BLAKE2s (patch-aa) = ...",
 		"SHA512 (patch-aa) = ...",
 		"Size (patch-aa) = ... bytes")
 	t.CreateFileDummyPatch("category/package/patches/patch-aa")
@@ -393,7 +393,7 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__existing_patch_with_d
 	// to a distfile.
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/distinfo:3: " +
-			"Expected SHA1 hash for patch-aa, got RMD160, SHA512, Size.")
+			"Expected SHA1 hash for patch-aa, got BLAKE2s, SHA512, Size.")
 }
 
 func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__missing_patch_with_wrong_algorithms(c *check.C) {
@@ -403,7 +403,7 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__missing_patch_with_wr
 	t.SetUpFileLines("category/package/distinfo",
 		CvsID,
 		"",
-		"RMD160 (patch-aa) = ...")
+		"BLAKE2s (patch-aa) = ...")
 	t.FinishSetUp()
 
 	G.Check(t.File("category/package"))
@@ -413,7 +413,7 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__missing_patch_with_wr
 	// therefore it requires the usual distfile checksum algorithms here.
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/distinfo:3: " +
-			"Expected RMD160, SHA512, Size checksums for \"patch-aa\", got RMD160.")
+			"Expected BLAKE2s, SHA512, Size checksums for \"patch-aa\", got BLAKE2s.")
 }
 
 // When there is at least one correct hash for a distfile and the distfile
@@ -427,21 +427,21 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__add_missing_h
 	t.CreateFileLines("category/package/distinfo",
 		CvsID,
 		"",
-		"RMD160 (package-1.0.txt) = 1a88147a0344137404c63f3b695366eab869a98a",
+		"BLAKE2s (package-1.0.txt) = ee494623e60caeda840ed7de4fb70db4a36bc92b445b09f12b9ed46094e9bd59",
 		"Size (package-1.0.txt) = 13 bytes",
 		"CRC32 (package-1.0.txt) = asdf")
 	t.CreateFileLines("distfiles/package-1.0.txt",
 		"hello, world")
 	t.FinishSetUp()
 
-	// This run is only used to verify that the RMD160 hash is correct, and if
+	// This run is only used to verify that the BLAKE2s hash is correct, and if
 	// it should ever differ, the correct hash will appear in an error message.
 	G.Check(t.File("category/package"))
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/distinfo:3: "+
-			"Expected RMD160, SHA512, Size checksums for \"package-1.0.txt\", "+
-			"got RMD160, Size, CRC32.",
+			"Expected BLAKE2s, SHA512, Size checksums for \"package-1.0.txt\", "+
+			"got BLAKE2s, Size, CRC32.",
 		"ERROR: ~/category/package/distinfo:3: Missing SHA512 hash for package-1.0.txt.")
 
 	t.SetUpCommandLine("-Wall", "--autofix", "--show-autofix", "--source")
@@ -457,7 +457,7 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__add_missing_h
 			"Inserting a line \"SHA512 (package-1.0.txt) "+
 			"= f65f341b35981fda842b09b2c8af9bcdb7602a4c2e6fa1f7d41f0974d3e3122f"+
 			"268fc79d5a4af66358f5133885cd1c165c916f80ab25e5d8d95db46f803c782c\" below this line.",
-		">\tRMD160 (package-1.0.txt) = 1a88147a0344137404c63f3b695366eab869a98a",
+		">\tBLAKE2s (package-1.0.txt) = ee494623e60caeda840ed7de4fb70db4a36bc92b445b09f12b9ed46094e9bd59",
 		"+\tSHA512 (package-1.0.txt) = f65f341b35981fda842b09b2c8af9bcdb7602a4c2e6fa1f7d41f0974d3e3122f"+
 			"268fc79d5a4af66358f5133885cd1c165c916f80ab25e5d8d95db46f803c782c")
 
@@ -467,8 +467,8 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__add_missing_h
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/distinfo:3: " +
-			"Expected RMD160, SHA512, Size checksums for \"package-1.0.txt\", " +
-			"got RMD160, SHA512, Size, CRC32.")
+			"Expected BLAKE2s, SHA512, Size checksums for \"package-1.0.txt\", " +
+			"got BLAKE2s, SHA512, Size, CRC32.")
 }
 
 // When some of the hashes for a distfile are missing, pkglint can calculate
@@ -485,7 +485,7 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__add_missing_h
 	t.CreateFileLines("category/package/distinfo",
 		CvsID,
 		"",
-		"RMD160 (package-1.0.txt) = 1a88147a0344137404c63f3b695366eab869a98a",
+		"BLAKE2s (package-1.0.txt) = ee494623e60caeda840ed7de4fb70db4a36bc92b445b09f12b9ed46094e9bd59",
 		"Size (package-1.0.txt) = 13 bytes",
 		"CRC32 (package-1.0.txt) = asdf")
 	t.FinishSetUp()
@@ -494,8 +494,8 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__add_missing_h
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/distinfo:3: "+
-			"Expected RMD160, SHA512, Size checksums for \"package-1.0.txt\", "+
-			"got RMD160, Size, CRC32.",
+			"Expected BLAKE2s, SHA512, Size checksums for \"package-1.0.txt\", "+
+			"got BLAKE2s, Size, CRC32.",
 		"",
 		"\tTo add the missing lines to the distinfo file, run",
 		"\t\t"+confMake+" distinfo",
@@ -529,7 +529,7 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__wrong_distfil
 	t.CreateFileLines("category/package/distinfo",
 		CvsID,
 		"",
-		"RMD160 (package-1.0.txt) = 1234wrongHash1234")
+		"BLAKE2s (package-1.0.txt) = 1234wrongHash1234")
 	t.CreateFileLines("distfiles/package-1.0.txt",
 		"hello, world")
 	t.FinishSetUp()
@@ -538,11 +538,11 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__wrong_distfil
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/distinfo:3: "+
-			"Expected RMD160, SHA512, Size checksums for \"package-1.0.txt\", "+
-			"got RMD160.",
+			"Expected BLAKE2s, SHA512, Size checksums for \"package-1.0.txt\", "+
+			"got BLAKE2s.",
 		"ERROR: ~/category/package/distinfo:3: "+
-			"The RMD160 checksum for \"package-1.0.txt\" is 1234wrongHash1234 in distinfo, "+
-			"1a88147a0344137404c63f3b695366eab869a98a in ../../distfiles/package-1.0.txt.")
+			"The BLAKE2s checksum for \"package-1.0.txt\" is 1234wrongHash1234 in distinfo, "+
+			"ee494623e60caeda840ed7de4fb70db4a36bc92b445b09f12b9ed46094e9bd59 in ../../distfiles/package-1.0.txt.")
 }
 
 func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__no_usual_algorithm(c *check.C) {
@@ -561,7 +561,7 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__no_usual_algo
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/distinfo:3: " +
-			"Expected RMD160, SHA512, Size checksums for \"package-1.0.txt\", " +
+			"Expected BLAKE2s, SHA512, Size checksums for \"package-1.0.txt\", " +
 			"got MD5.")
 }
 
@@ -583,9 +583,9 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__top_algorithm
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/distinfo:3: "+
-			"Expected RMD160, SHA512, Size checksums for \"package-1.0.txt\", "+
+			"Expected BLAKE2s, SHA512, Size checksums for \"package-1.0.txt\", "+
 			"got SHA512, Size.",
-		"ERROR: ~/category/package/distinfo:3: Missing RMD160 hash for package-1.0.txt.")
+		"ERROR: ~/category/package/distinfo:3: Missing BLAKE2s hash for package-1.0.txt.")
 }
 
 func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__bottom_algorithms_missing(c *check.C) {
@@ -595,7 +595,7 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__bottom_algori
 	t.CreateFileLines("category/package/distinfo",
 		CvsID,
 		"",
-		"RMD160 (package-1.0.txt) = 1a88147a0344137404c63f3b695366eab869a98a")
+		"BLAKE2s (package-1.0.txt) = ee494623e60caeda840ed7de4fb70db4a36bc92b445b09f12b9ed46094e9bd59")
 	t.CreateFileLines("distfiles/package-1.0.txt",
 		"hello, world")
 	t.FinishSetUp()
@@ -604,8 +604,8 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__bottom_algori
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/distinfo:3: "+
-			"Expected RMD160, SHA512, Size checksums for \"package-1.0.txt\", "+
-			"got RMD160.",
+			"Expected BLAKE2s, SHA512, Size checksums for \"package-1.0.txt\", "+
+			"got BLAKE2s.",
 		"ERROR: ~/category/package/distinfo:3: Missing SHA512 hash for package-1.0.txt.",
 		"ERROR: ~/category/package/distinfo:3: Missing Size hash for package-1.0.txt.")
 
@@ -629,7 +629,7 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__algorithms_in
 	t.CreateFileLines("category/package/distinfo",
 		CvsID,
 		"",
-		"RMD160 (package-1.0.txt) = 1a88147a0344137404c63f3b695366eab869a98a",
+		"BLAKE2s (package-1.0.txt) = ee494623e60caeda840ed7de4fb70db4a36bc92b445b09f12b9ed46094e9bd59",
 		"Size (package-1.0.txt) = 13 bytes",
 		"SHA512 (package-1.0.txt) = f65f341b35981fda842b09b2c8af9bcdb7602a4c2e6fa1f7"+
 			"d41f0974d3e3122f268fc79d5a4af66358f5133885cd1c165c916f80ab25e5d8d95db46f803c782c")
@@ -643,8 +643,8 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__algorithms_in
 	// This case doesn't happen in practice, therefore there's no autofix for it.
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/distinfo:3: " +
-			"Expected RMD160, SHA512, Size checksums for \"package-1.0.txt\", " +
-			"got RMD160, Size, SHA512.")
+			"Expected BLAKE2s, SHA512, Size checksums for \"package-1.0.txt\", " +
+			"got BLAKE2s, Size, SHA512.")
 }
 
 func (s *Suite) Test_distinfoLinesChecker_checkUnrecordedPatches(c *check.C) {
@@ -658,7 +658,7 @@ func (s *Suite) Test_distinfoLinesChecker_checkUnrecordedPatches(c *check.C) {
 	t.SetUpFileLines("distinfo",
 		CvsID,
 		"",
-		"RMD160 (distfile.tar.gz) = ...",
+		"BLAKE2s (distfile.tar.gz) = ...",
 		"SHA512 (distfile.tar.gz) = ...",
 		"Size (distfile.tar.gz) = 1024 bytes")
 	t.FinishSetUp()
@@ -715,21 +715,21 @@ func (s *Suite) Test_distinfoLinesChecker_checkGlobalDistfileMismatch(c *check.C
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/package1/distinfo:3: "+
-			"Expected RMD160, SHA512, Size checksums for \"distfile-1.0.tar.gz\", got SHA512.",
+			"Expected BLAKE2s, SHA512, Size checksums for \"distfile-1.0.tar.gz\", got SHA512.",
 		"ERROR: ~/category/package1/distinfo:4: "+
-			"Expected RMD160, SHA512, Size checksums for \"distfile-1.1.tar.gz\", got SHA512.",
+			"Expected BLAKE2s, SHA512, Size checksums for \"distfile-1.1.tar.gz\", got SHA512.",
 		"ERROR: ~/category/package1/distinfo:5: "+
-			"Expected RMD160, SHA512, Size checksums for \"patch-4.2.tar.gz\", got SHA512.",
+			"Expected BLAKE2s, SHA512, Size checksums for \"patch-4.2.tar.gz\", got SHA512.",
 
 		"ERROR: ~/category/package2/distinfo:3: "+
-			"Expected RMD160, SHA512, Size checksums for \"distfile-1.0.tar.gz\", got SHA512.",
+			"Expected BLAKE2s, SHA512, Size checksums for \"distfile-1.0.tar.gz\", got SHA512.",
 		"ERROR: ~/category/package2/distinfo:3: "+
 			"The SHA512 hash for distfile-1.0.tar.gz is 1234567822222222, "+
 			"which conflicts with 1234567811111111 in ../../category/package1/distinfo:3.",
 		"ERROR: ~/category/package2/distinfo:4: "+
-			"Expected RMD160, SHA512, Size checksums for \"distfile-1.1.tar.gz\", got SHA512.",
+			"Expected BLAKE2s, SHA512, Size checksums for \"distfile-1.1.tar.gz\", got SHA512.",
 		"ERROR: ~/category/package2/distinfo:5: "+
-			"Expected RMD160, SHA512, Size checksums for \"encoding-error.tar.gz\", got SHA512.",
+			"Expected BLAKE2s, SHA512, Size checksums for \"encoding-error.tar.gz\", got SHA512.",
 		"ERROR: ~/category/package2/distinfo:5: "+
 			"The SHA512 hash for encoding-error.tar.gz contains a non-hex character.",
 
@@ -895,7 +895,7 @@ func (s *Suite) Test_distinfoFileInfo_hasDistfileAlgorithms__code_coverage(c *ch
 		CvsID,
 		"",
 		"other (dist-a.tar.gz) = 1234",
-		"RMD160 (dist-a.tar.gz) = 1234",
+		"BLAKE2s (dist-a.tar.gz) = 1234",
 		"SHA512 (dist-a.tar.gz) = 1234",
 		"Size (dist-a.tar.gz) = 1234",
 
@@ -905,12 +905,12 @@ func (s *Suite) Test_distinfoFileInfo_hasDistfileAlgorithms__code_coverage(c *ch
 		"Size (dist-b.tar.gz) = 1234",
 
 		"SHA1 (dist-c.tar.gz) = 1234",
-		"RMD160 (dist-c.tar.gz) = 1234",
+		"BLAKE2s (dist-c.tar.gz) = 1234",
 		"other (dist-c.tar.gz) = 1234",
 		"Size (dist-c.tar.gz) = 1234",
 
 		"SHA1 (dist-d.tar.gz) = 1234",
-		"RMD160 (dist-d.tar.gz) = 1234",
+		"BLAKE2s (dist-d.tar.gz) = 1234",
 		"SHA512 (dist-d.tar.gz) = 1234",
 		"other (dist-d.tar.gz) = 1234")
 	t.Chdir("category/package")
@@ -919,14 +919,14 @@ func (s *Suite) Test_distinfoFileInfo_hasDistfileAlgorithms__code_coverage(c *ch
 	G.Check(".")
 
 	t.CheckOutputLines(
-		"ERROR: distinfo:3: Expected RMD160, SHA512, Size checksums for "+
-			"\"dist-a.tar.gz\", got other, RMD160, SHA512, Size.",
-		"ERROR: distinfo:7: Expected RMD160, SHA512, Size checksums for "+
+		"ERROR: distinfo:3: Expected BLAKE2s, SHA512, Size checksums for "+
+			"\"dist-a.tar.gz\", got other, BLAKE2s, SHA512, Size.",
+		"ERROR: distinfo:7: Expected BLAKE2s, SHA512, Size checksums for "+
 			"\"dist-b.tar.gz\", got SHA1, other, SHA512, Size.",
-		"ERROR: distinfo:11: Expected RMD160, SHA512, Size checksums for "+
-			"\"dist-c.tar.gz\", got SHA1, RMD160, other, Size.",
-		"ERROR: distinfo:15: Expected RMD160, SHA512, Size checksums for "+
-			"\"dist-d.tar.gz\", got SHA1, RMD160, SHA512, other.")
+		"ERROR: distinfo:11: Expected BLAKE2s, SHA512, Size checksums for "+
+			"\"dist-c.tar.gz\", got SHA1, BLAKE2s, other, Size.",
+		"ERROR: distinfo:15: Expected BLAKE2s, SHA512, Size checksums for "+
+			"\"dist-d.tar.gz\", got SHA1, BLAKE2s, SHA512, other.")
 }
 
 func (s *Suite) Test_computePatchSha1Hex(c *check.C) {
