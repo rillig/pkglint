@@ -219,7 +219,7 @@ func (cv *VartypeCheck) CFlag() {
 func (cv *VartypeCheck) Comment() {
 	value := cv.Value
 
-	// See pkgtools/url2pkg/files/url2pkg.pl, keyword "COMMENT".
+	// See pkgtools/url2pkg/files/url2pkg.py, keyword 'COMMENT'.
 	if value == "TODO: Short description of the package" {
 		cv.Errorf("COMMENT must be set.")
 	}
