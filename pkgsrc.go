@@ -178,9 +178,9 @@ func (src *Pkgsrc) loadDocChanges() {
 	src.checkRemovedAfterLastFreeze()
 }
 
-func (src *Pkgsrc) loadDocChangesFromFile(filename CurrPath, warn bool) []*Change {
+func (src *Pkgsrc) loadDocChangesFromFile(filename CurrPath, direct bool) []*Change {
 
-	warn = warn || G.CheckGlobal && !G.Wip
+	warn := direct || G.CheckGlobal && !G.Wip
 
 	// Each date in the file should be from the same year as the filename says.
 	// This check has been added in 2018.
@@ -189,7 +189,7 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename CurrPath, warn bool) []*Chang
 	if _, yyyy := match1(filename.Base().String(), `-(\d\d\d\d)$`); yyyy >= "2018" {
 		year = yyyy
 	}
-	thorough := G.CheckGlobal || year >= "2020" // For performance reasons
+	thorough := direct || G.CheckGlobal || year >= "2020" // For performance reasons
 
 	latest := make(map[PkgsrcPath]*Change)
 
