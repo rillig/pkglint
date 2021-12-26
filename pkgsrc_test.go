@@ -140,7 +140,6 @@ func (s *Suite) Test_Pkgsrc_loadDocChanges__not_found(c *check.C) {
 func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Cglobal", "-Wall")
 	t.CreateFileLines("doc/CHANGES-2018",
 		"\tAdded category/package version 1.0 [author1 2015-01-01]", // Wrong year
 		"\tUpdated category/package to 1.5 [author2 2018-01-02]",
@@ -161,7 +160,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile(c *check.C) {
 		"",
 		"Normal paragraph.")
 
-	changes := G.Pkgsrc.loadDocChangesFromFile(t.File("doc/CHANGES-2018"))
+	changes := G.Pkgsrc.loadDocChangesFromFile(t.File("doc/CHANGES-2018"), true)
 
 	t.CheckDeepEquals(
 		changes, []*Change{
@@ -201,7 +200,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__not_found(c *check.C) {
 	t := s.Init(c)
 
 	t.ExpectFatal(
-		func() { G.Pkgsrc.loadDocChangesFromFile(t.File("doc/CHANGES-2018")) },
+		func() { G.Pkgsrc.loadDocChangesFromFile(t.File("doc/CHANGES-2018"), false) },
 		"FATAL: ~/doc/CHANGES-2018: Cannot be read.")
 }
 
@@ -354,7 +353,6 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__old(c *check.C) {
 func (s *Suite) Test_Pkgsrc_checkChangeVersion(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Cglobal", "-Wall")
 	t.CreateFileLines("doc/CHANGES-2020",
 		"\tAdded category/package version 1.0 [author1 2020-01-01]",
 		"\tAdded category/package version 1.0 [author1 2020-01-01]",
@@ -366,7 +364,7 @@ func (s *Suite) Test_Pkgsrc_checkChangeVersion(c *check.C) {
 		"\tMoved category/package to other/renamed [author1 2020-01-01]")
 	t.Chdir("doc")
 
-	G.Pkgsrc.loadDocChangesFromFile("CHANGES-2020")
+	G.Pkgsrc.loadDocChangesFromFile("CHANGES-2020", true)
 
 	// In line 3 there is no warning about the repeated addition since
 	// the multi-packages (Lua, PHP, Python) may add a package in
@@ -380,7 +378,6 @@ func (s *Suite) Test_Pkgsrc_checkChangeVersion(c *check.C) {
 func (s *Suite) Test_Pkgsrc_checkChangeVersionNumber(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpCommandLine("-Cglobal", "-Wall")
 	t.CreateFileLines("doc/CHANGES-2020",
 		"\tAdded category/package version v1 [author1 2020-01-01]",
 		"\tUpdated category/package to v2 [author1 2020-01-01]",
@@ -388,7 +385,7 @@ func (s *Suite) Test_Pkgsrc_checkChangeVersionNumber(c *check.C) {
 		"\tUpdated category/package to 2020/03 [author1 2020-01-01]")
 	t.Chdir("doc")
 
-	G.Pkgsrc.loadDocChangesFromFile("CHANGES-2020")
+	G.Pkgsrc.loadDocChangesFromFile("CHANGES-2020", true)
 
 	t.CheckOutputLines(
 		"WARN: CHANGES-2020:1: Version number \"v1\" should start with a digit.",
