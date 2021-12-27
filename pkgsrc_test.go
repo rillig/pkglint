@@ -947,7 +947,7 @@ func (s *Suite) Test_Pkgsrc_loadUntypedVars__local_varnames(c *check.C) {
 	}
 	added := func(varname string, basicType *BasicType) {
 		vartype := G.Pkgsrc.VariableType(nil, "CHECK_FILES_SKIP")
-		if t.Check(vartype, check.NotNil) {
+		if t.CheckNotNil(vartype) {
 			t.CheckEquals(vartype.basicType, BtPathPattern)
 		}
 	}
@@ -1206,9 +1206,9 @@ func (s *Suite) Test_Pkgsrc_VariableType(c *check.C) {
 	test := func(varname string, vartype string) {
 		actualType := G.Pkgsrc.VariableType(nil, varname)
 		if vartype == "" {
-			c.Check(actualType, check.IsNil)
+			t.CheckNil(actualType)
 		} else {
-			if c.Check(actualType, check.NotNil) {
+			if t.CheckNotNil(actualType) {
 				t.CheckEquals(actualType.String(), vartype)
 			}
 		}
@@ -1270,15 +1270,15 @@ func (s *Suite) Test_Pkgsrc_VariableType__from_mk(c *check.C) {
 
 	t.Main("-Wall", "category/package")
 
-	if typ := G.Pkgsrc.VariableType(nil, "PKGSRC_MAKE_ENV"); c.Check(typ, check.NotNil) {
+	if typ := G.Pkgsrc.VariableType(nil, "PKGSRC_MAKE_ENV"); t.CheckNotNil(typ) {
 		t.CheckEquals(typ.String(), "ShellWord (list, guessed)")
 	}
 
-	if typ := G.Pkgsrc.VariableType(nil, "CPPPATH"); c.Check(typ, check.NotNil) {
+	if typ := G.Pkgsrc.VariableType(nil, "CPPPATH"); t.CheckNotNil(typ) {
 		t.CheckEquals(typ.String(), "Pathlist (guessed)")
 	}
 
-	if typ := G.Pkgsrc.VariableType(nil, "OSNAME.Other"); c.Check(typ, check.NotNil) {
+	if typ := G.Pkgsrc.VariableType(nil, "OSNAME.Other"); t.CheckNotNil(typ) {
 		t.CheckEquals(typ.String(), "Unknown")
 	}
 

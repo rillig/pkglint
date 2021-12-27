@@ -191,7 +191,7 @@ func (s *Suite) Test_getSubdirs(c *check.C) {
 
 	t.CreateFileLines("subdir/file")
 	t.CreateFileLines("empty/file")
-	c.Check(os.Remove(t.File("empty/file").String()), check.IsNil)
+	t.CheckNil(os.Remove(t.File("empty/file").String()))
 
 	t.CheckDeepEquals(getSubdirs(t.File(".")), []RelPath{"subdir"})
 }
@@ -229,10 +229,10 @@ func (s *Suite) Test_isLocallyModified(c *check.C) {
 	modTime := time.Unix(1136239445, 0).UTC()
 
 	err := os.Chtimes(unmodified.String(), modTime, modTime)
-	c.Check(err, check.IsNil)
+	t.CheckNil(err)
 
 	st, err := os.Lstat(unmodified.String())
-	c.Check(err, check.IsNil)
+	t.CheckNil(err)
 
 	// Make sure that the file system has second precision and accuracy.
 	t.CheckDeepEquals(st.ModTime().UTC(), modTime)
@@ -918,7 +918,7 @@ func (s *Suite) Test_LazyStringBuilder_WriteByte__exact_match(c *check.C) {
 	sb.WriteByte('d')
 
 	t.CheckEquals(sb.String(), "word")
-	c.Check(sb.buf, check.IsNil)
+	t.CheckNil(sb.buf)
 }
 
 func (s *Suite) Test_LazyStringBuilder_WriteByte__longer_than_expected(c *check.C) {
@@ -943,13 +943,13 @@ func (s *Suite) Test_LazyStringBuilder_WriteByte__shorter_than_expected(c *check
 	sb.WriteByte('o')
 
 	t.CheckEquals(sb.String(), "wo")
-	c.Check(sb.buf, check.IsNil)
+	t.CheckNil(sb.buf)
 
 	sb.WriteByte('r')
 	sb.WriteByte('d')
 
 	t.CheckEquals(sb.String(), "word")
-	c.Check(sb.buf, check.IsNil)
+	t.CheckNil(sb.buf)
 }
 
 func (s *Suite) Test_LazyStringBuilder_WriteByte__other_than_expected(c *check.C) {

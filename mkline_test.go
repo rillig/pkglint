@@ -380,13 +380,13 @@ func (s *Suite) Test_MkLine_ValueTokens__parse_error(c *check.C) {
 
 	tokens, rest := mkline.ValueTokens()
 
-	t.Check(tokens, check.IsNil)
+	t.CheckNil(tokens)
 	t.CheckEquals(rest, "$")
 
 	// Returns the same values, this time from the cache.
 	tokens, rest = mkline.ValueTokens()
 
-	t.Check(tokens, check.IsNil)
+	t.CheckNil(tokens)
 	t.CheckEquals(rest, "$")
 }
 
@@ -1455,7 +1455,7 @@ func (s *Suite) Test_Indentation_String(c *check.C) {
 	mklines.ForEach(func(mkline *MkLine) {
 		if mkline.IsComment() {
 			t.CheckEquals(mklines.indentation.IsConditional(), true)
-			t.Check(mklines.indentation.Varnames(), check.IsNil)
+			t.CheckNil(mklines.indentation.Varnames())
 			str = mklines.indentation.String()
 		}
 	})

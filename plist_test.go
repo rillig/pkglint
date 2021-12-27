@@ -425,8 +425,8 @@ func (s *Suite) Test_NewPlistChecker(c *check.C) {
 	ck := NewPlistChecker(pkg)
 
 	t.CheckEquals(ck.pkg, pkg)
-	t.Check(ck.allDirs, check.NotNil)
-	t.Check(ck.allFiles, check.NotNil)
+	t.CheckNotNil(ck.allDirs)
+	t.CheckNotNil(ck.allFiles)
 }
 
 func (s *Suite) Test_PlistChecker_Load__common_end(c *check.C) {
@@ -455,7 +455,7 @@ func (s *Suite) Test_PlistChecker_Load__common_end(c *check.C) {
 	// But the files and directories from PLIST.common are registered,
 	// to check for duplicates and to make these lists available to
 	// the package being checked, for cross-validation.
-	t.Check(ck.allFiles["bin/plist"], check.IsNil)
+	t.CheckNil(ck.allFiles["bin/plist"])
 	t.CheckEquals(
 		ck.allFiles["bin/plist_common"].Line.String(),
 		"PLIST.common:2: bin/plist_common")
@@ -1522,7 +1522,7 @@ func (s *Suite) Test_plistLineSorter_Sort(c *check.C) {
 	sorter2 := NewPlistLineSorter((&PlistChecker{nil, nil, nil, "", Once{}, false}).
 		newLines(NewLines(lines.Filename, cleanedLines)))
 
-	c.Check(sorter2.unsortable, check.IsNil)
+	t.CheckNil(sorter2.unsortable)
 
 	sorter2.Sort()
 
@@ -1602,9 +1602,11 @@ func (s *Suite) Test_PlistRank_MoreGeneric(c *check.C) {
 }
 
 func (s *Suite) Test_NewPlistLines(c *check.C) {
+	t := s.Init(c)
+
 	lines := NewPlistLines()
 
-	c.Check(lines.all, check.NotNil)
+	t.CheckNotNil(lines.all)
 }
 
 func (s *Suite) Test_PlistLines_Add(c *check.C) {

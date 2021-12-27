@@ -84,7 +84,7 @@ func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
 
 	line := t.NewLine("filename", 1, "original")
 
-	c.Check(line.fix, check.IsNil)
+	t.CheckNil(line.fix)
 	t.CheckDeepEquals(line.raw, newRawLines("original\n"))
 
 	{
@@ -94,7 +94,6 @@ func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
 		fix.Apply()
 	}
 
-	c.Check(line.fix, check.NotNil)
 	t.CheckDeepEquals(line.raw, newRawLines("original\n"))
 	t.CheckDeepEquals(line.fix.texts, []string{"lriginao\n"})
 	t.CheckOutputLines(
@@ -107,7 +106,6 @@ func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
 		fix.Apply()
 	}
 
-	c.Check(line.fix, check.NotNil)
 	t.CheckDeepEquals(line.raw, newRawLines("original\n"))
 	t.CheckDeepEquals(line.fix.texts, []string{"lruginao\n"})
 	t.CheckEquals(line.RawText(0), "lruginao")
@@ -121,7 +119,6 @@ func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
 		fix.Apply()
 	}
 
-	c.Check(line.fix, check.NotNil)
 	t.CheckDeepEquals(line.raw, newRawLines("original\n"))
 	t.CheckDeepEquals(line.fix.texts, []string{"middle\n"})
 	t.CheckOutputLines(
@@ -1380,7 +1377,7 @@ func (s *Suite) Test_SaveAutofixChanges__file_busy_Windows(c *check.C) {
 	// As long as the file is kept open, it cannot be overwritten or deleted.
 	openFile, err := os.OpenFile(t.File("subdir/file.txt").String(), 0, 0666)
 	defer func() { assertNil(openFile.Close(), "") }()
-	c.Check(err, check.IsNil)
+	t.CheckNil(err)
 
 	fix := lines.Lines[0].Autofix()
 	fix.Warnf("Should start with an uppercase letter.")
@@ -1406,8 +1403,8 @@ func (s *Suite) Test_SaveAutofixChanges__cannot_overwrite(c *check.C) {
 	lines := t.SetUpFileLines("file.txt",
 		"line 1")
 
-	c.Check(os.RemoveAll(t.File("file.txt").String()), check.IsNil)
-	c.Check(os.MkdirAll(t.File("file.txt").String(), 0777), check.IsNil)
+	t.CheckNil(os.RemoveAll(t.File("file.txt").String()))
+	t.CheckNil(os.MkdirAll(t.File("file.txt").String(), 0777))
 
 	fix := lines.Lines[0].Autofix()
 	fix.Warnf("Should start with an uppercase letter.")

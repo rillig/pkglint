@@ -641,7 +641,7 @@ func (s *Suite) Test_Tools_parseUseTools(c *check.C) {
 		"USE_TOOLS+=\tunknown unknown unknown")
 	t.FinishSetUp()
 
-	t.Check(G.Pkgsrc.Tools.ByName("unknown"), check.IsNil)
+	t.CheckNil(G.Pkgsrc.Tools.ByName("unknown"))
 
 	t.CheckOutputEmpty()
 }
