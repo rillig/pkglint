@@ -293,9 +293,11 @@ func (s *Suite) Test_Pkglint_Main__autofix_exitcode(c *check.C) {
 //
 // See https://github.com/rillig/gobco for the tool to measure the branch coverage.
 func (s *Suite) Test_Pkglint_Main__realistic(c *check.C) {
+	t := s.Init(c)
+
 	if cwd := os.Getenv("PKGLINT_TESTDIR"); cwd != "" {
 		err := os.Chdir(cwd)
-		c.Assert(err, check.IsNil)
+		t.AssertNil(err)
 	}
 
 	cmdline := os.Getenv("PKGLINT_TESTCMDLINE")

@@ -450,7 +450,7 @@ func (s *Suite) Test_PlistChecker_Load__common_end(c *check.C) {
 	// The corresponding PLIST.common is loaded if possible.
 	// Its lines are not appended to plistLines since they
 	// are checked separately.
-	t.Check(plistLines, check.HasLen, 2)
+	t.CheckLen(plistLines, 2)
 
 	// But the files and directories from PLIST.common are registered,
 	// to check for duplicates and to make these lists available to
@@ -491,16 +491,16 @@ func (s *Suite) Test_PlistChecker_newLines(c *check.C) {
 	// The invalid condition in line 4 is silently skipped when the
 	// lines are parsed. The actual check happens later.
 
-	t.Check(plistLines, check.HasLen, 4)
+	t.CheckLen(plistLines, 4)
 	t.CheckEquals(plistLines[0].text, "bin/program")
 	t.CheckEquals(plistLines[1].text, "bin/conditional")
 	t.CheckEquals(plistLines[2].text, "/bin/conditional-absolute")
 	t.CheckEquals(plistLines[3].text, "${PLIST.mod:Q}invalid")
 
-	t.Check(plistLines[0].conditions, check.HasLen, 0)
+	t.CheckLen(plistLines[0].conditions, 0)
 	t.CheckDeepEquals(plistLines[1].conditions, []string{"PLIST.cond"})
 	t.CheckDeepEquals(plistLines[2].conditions, []string{"PLIST.abs", "PLIST.abs2"})
-	t.Check(plistLines[3].conditions, check.HasLen, 0)
+	t.CheckLen(plistLines[3].conditions, 0)
 }
 
 func (s *Suite) Test_PlistChecker_collectFilesAndDirs(c *check.C) {
@@ -548,7 +548,7 @@ func (s *Suite) Test_PlistChecker_collectDirective(c *check.C) {
 		ck.collectDirective(&PlistLine{line, nil, line.Text})
 
 		t.CheckDeepEquals(keys(ck.allDirs), dirs)
-		t.Check(keys(ck.allFiles), check.HasLen, 0)
+		t.CheckLen(keys(ck.allFiles), 0)
 	}
 
 	test("@exec ${MKDIR} %D/a/b/c",

@@ -31,13 +31,13 @@ func (s *Suite) Test_Load(c *check.C) {
 		"hello, world")
 
 	t.CheckNil(Load(nonexistent, 0))
-	t.Check(Load(empty, 0).Lines, check.HasLen, 0)
+	t.CheckLen(Load(empty, 0).Lines, 0)
 	t.CheckEquals(Load(oneLiner, 0).Lines[0].Text, "hello, world")
 
 	t.CheckOutputEmpty()
 
 	t.CheckNil(Load(nonexistent, LogErrors))
-	t.Check(Load(empty, LogErrors).Lines, check.HasLen, 0)
+	t.CheckLen(Load(empty, LogErrors).Lines, 0)
 	t.CheckEquals(Load(oneLiner, LogErrors).Lines[0].Text, "hello, world")
 
 	t.CheckOutputLines(

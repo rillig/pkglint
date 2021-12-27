@@ -41,7 +41,7 @@ func (s *Suite) Test_NewScope(c *check.C) {
 
 	t.CheckNil(scope.names)
 	t.CheckNotNil(scope.vs)
-	t.Check(scope.vs, check.HasLen, 0)
+	t.CheckLen(scope.vs, 0)
 }
 
 func (s *Suite) Test_Scope_varnames(c *check.C) {
@@ -393,7 +393,7 @@ func (s *Suite) Test_Scope_DefineAll(c *check.C) {
 	dst := NewScope()
 	dst.DefineAll(&src)
 
-	c.Check(dst.vs, check.HasLen, 0)
+	t.CheckLen(dst.vs, 0)
 
 	src.Define("VAR", t.NewMkLine("file.mk", 1, "VAR=value"))
 	dst.DefineAll(&src)

@@ -1142,7 +1142,7 @@ func (s *Suite) Test_Pkgsrc_ListVersions__invalid_argument(c *check.C) {
 	G.Testing = false
 	versions := G.Pkgsrc.ListVersions("databases", `^postgresql[0-9]+`, "$0", false)
 
-	t.Check(versions, check.HasLen, 0)
+	t.CheckLen(versions, 0)
 }
 
 func (s *Suite) Test_Pkgsrc_ListVersions__no_basedir(c *check.C) {
@@ -1150,7 +1150,7 @@ func (s *Suite) Test_Pkgsrc_ListVersions__no_basedir(c *check.C) {
 
 	versions := G.Pkgsrc.ListVersions("lang", `^python[0-9]+$`, "../../lang/$0", true)
 
-	c.Check(versions, check.HasLen, 0)
+	t.CheckLen(versions, 0)
 	t.CheckOutputLines(
 		"ERROR: ~/lang: Cannot find package versions of \"^python[0-9]+$\".")
 }
@@ -1162,7 +1162,7 @@ func (s *Suite) Test_Pkgsrc_ListVersions__no_subdirs(c *check.C) {
 
 	versions := G.Pkgsrc.ListVersions("lang", `^python[0-9]+$`, "../../lang/$0", true)
 
-	c.Check(versions, check.HasLen, 0)
+	t.CheckLen(versions, 0)
 	t.CheckOutputLines(
 		"ERROR: ~/lang: Cannot find package versions of \"^python[0-9]+$\".")
 }
@@ -1174,13 +1174,13 @@ func (s *Suite) Test_Pkgsrc_ListVersions__error_is_cached(c *check.C) {
 
 	versions := G.Pkgsrc.ListVersions("lang", `^python[0-9]+$`, "../../lang/$0", true)
 
-	c.Check(versions, check.HasLen, 0)
+	t.CheckLen(versions, 0)
 	t.CheckOutputLines(
 		"ERROR: ~/lang: Cannot find package versions of \"^python[0-9]+$\".")
 
 	versions2 := G.Pkgsrc.ListVersions("lang", `^python[0-9]+$`, "../../lang/$0", true)
 
-	c.Check(versions2, check.HasLen, 0)
+	t.CheckLen(versions2, 0)
 	t.CheckOutputEmpty() // No repeated error message
 }
 
@@ -1237,12 +1237,12 @@ func (s *Suite) Test_Pkgsrc_VariableType__varparam(c *check.C) {
 
 	t1 := G.Pkgsrc.VariableType(nil, "FONT_DIRS")
 
-	c.Assert(t1, check.NotNil)
+	t.AssertNotNil(t1)
 	t.CheckEquals(t1.String(), "PathPattern (list, guessed)")
 
 	t2 := G.Pkgsrc.VariableType(nil, "FONT_DIRS.ttf")
 
-	c.Assert(t2, check.NotNil)
+	t.AssertNotNil(t2)
 	t.CheckEquals(t2.String(), "PathPattern (list, guessed)")
 }
 

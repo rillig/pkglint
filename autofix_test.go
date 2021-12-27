@@ -359,7 +359,8 @@ func (s *Suite) Test_NewAutofix(c *check.C) {
 	fix := NewAutofix(line)
 	fix2 := NewAutofix(line)
 
-	t.Check(fix2, check.Not(check.Equals), fix)
+	t.CheckEquals(fix2 == fix, false)
+	t.CheckDeepEquals(fix2, fix)
 }
 
 func (s *Suite) Test_Autofix_Errorf(c *check.C) {
