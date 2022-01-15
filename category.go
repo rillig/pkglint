@@ -48,6 +48,7 @@ func CheckdirCategory(dir CurrPath) {
 
 	var fSubdirs []RelPath
 	var mSubdirs []subdir
+	var recurseInto []CurrPath
 
 	for _, subdir := range getSubdirs(dir) {
 		if dir.JoinNoClean(subdir).JoinNoClean("Makefile").IsFile() {
@@ -96,6 +97,9 @@ func CheckdirCategory(dir CurrPath) {
 			}
 
 			mSubdirs = append(mSubdirs, subdir{sub, mkline})
+			if G.Recursive && !mkline.IsCommentedVarassign() {
+				recurseInto = append(recurseInto, dir.JoinNoClean(sub))
+			}
 
 		} else {
 			if !mkline.IsEmpty() {
@@ -168,13 +172,5 @@ func CheckdirCategory(dir CurrPath) {
 
 	mklines.SaveAutofixChanges()
 
-	if G.Recursive {
-		var recurseInto []CurrPath
-		for _, msub := range mSubdirs {
-			if !msub.line.IsCommentedVarassign() {
-				recurseInto = append(recurseInto, dir.JoinNoClean(msub.name))
-			}
-		}
-		G.Todo.PushFront(recurseInto...)
-	}
+	G.Todo.PushFront(recurseInto...)
 }
