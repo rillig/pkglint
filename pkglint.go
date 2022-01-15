@@ -351,6 +351,8 @@ func (p *Pkglint) checkdirPackage(dir CurrPath) {
 
 	pkg := NewPackage(dir)
 	pkg.Check()
+	// TODO: check for case-insensitive collision in parent category
+	// TODO: maybe with CheckdirCategory(dir.JoinNoClean(".."), false)
 }
 
 // Returns the pkgsrc top-level directory, relative to the given directory.
