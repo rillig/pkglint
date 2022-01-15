@@ -334,7 +334,7 @@ func (p *Pkglint) checkMode(dirent CurrPath, mode os.FileMode) {
 	case "../..":
 		p.checkdirPackage(dir)
 	case "..":
-		CheckdirCategory(dir)
+		CheckdirCategory(dir, G.Recursive)
 	case ".":
 		CheckdirToplevel(dir)
 	default:

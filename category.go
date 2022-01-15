@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func CheckdirCategory(dir CurrPath) {
+func CheckdirCategory(dir CurrPath, recurse bool) {
 	if trace.Tracing {
 		defer trace.Call(dir)()
 	}
@@ -97,7 +97,7 @@ func CheckdirCategory(dir CurrPath) {
 			}
 
 			mSubdirs = append(mSubdirs, subdir{sub, mkline})
-			if G.Recursive && !mkline.IsCommentedVarassign() {
+			if recurse && !mkline.IsCommentedVarassign() {
 				recurseInto = append(recurseInto, dir.JoinNoClean(sub))
 			}
 

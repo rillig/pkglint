@@ -14,7 +14,7 @@ func (s *Suite) Test_CheckdirCategory__totally_broken(c *check.C) {
 		"",
 		".include \"../mk/category.mk\"")
 
-	CheckdirCategory(t.File("archivers"))
+	CheckdirCategory(t.File("archivers"), false)
 
 	t.CheckOutputLines(
 		"ERROR: ~/archivers/Makefile:1: Expected \"# $"+"NetBSD$\".",
@@ -53,7 +53,7 @@ func (s *Suite) Test_CheckdirCategory__invalid_comment(c *check.C) {
 	t.CreateFileLines("mk/misc/category.mk",
 		"# dummy")
 
-	CheckdirCategory(t.File("archivers"))
+	CheckdirCategory(t.File("archivers"), true)
 
 	t.CheckOutputLines(
 		"WARN: ~/archivers/Makefile:3: COMMENT contains invalid characters (\\ $ $ $ $ \").")
@@ -118,7 +118,7 @@ func (s *Suite) Test_CheckdirCategory__subdirs(c *check.C) {
 		".include \"../mk/misc/category.mk\"")
 	t.FinishSetUp()
 
-	CheckdirCategory(t.File("category"))
+	CheckdirCategory(t.File("category"), false)
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/Makefile:7: \"duplicate\" must only appear once, already seen in line 5.",
@@ -148,7 +148,7 @@ func (s *Suite) Test_CheckdirCategory__only_in_Makefile(c *check.C) {
 		".include \"../mk/misc/category.mk\"")
 	t.FinishSetUp()
 
-	CheckdirCategory(t.File("category"))
+	CheckdirCategory(t.File("category"), false)
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/Makefile:5: "+
@@ -175,7 +175,7 @@ func (s *Suite) Test_CheckdirCategory__only_in_file_system(c *check.C) {
 		".include \"../mk/misc/category.mk\"")
 	t.FinishSetUp()
 
-	CheckdirCategory(t.File("category"))
+	CheckdirCategory(t.File("category"), false)
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/Makefile:5: Package \"above-only-in-fs\" must be listed here.",
@@ -208,7 +208,7 @@ func (s *Suite) Test_CheckdirCategory__recursive(c *check.C) {
 	// but close enough for this test.
 	t.CheckDeepEquals(G.Todo.entries, []CurrPath{"."})
 
-	CheckdirCategory(".")
+	CheckdirCategory(".", true)
 
 	t.CheckOutputEmpty()
 	t.CheckDeepEquals(G.Todo.entries, []CurrPath{"./package", "."})
@@ -240,7 +240,7 @@ func (s *Suite) Test_CheckdirCategory__subdirs_file_system_at_the_bottom(c *chec
 		".include \"../mk/misc/category.mk\"")
 	t.FinishSetUp()
 
-	CheckdirCategory(t.File("category"))
+	CheckdirCategory(t.File("category"), false)
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/Makefile:6: Package \"zzz-fs-only\" must be listed here.",
@@ -265,7 +265,7 @@ func (s *Suite) Test_CheckdirCategory__indentation(c *check.C) {
 		".include \"../mk/misc/category.mk\"")
 	t.FinishSetUp()
 
-	CheckdirCategory(t.File("category"))
+	CheckdirCategory(t.File("category"), false)
 
 	t.CheckOutputLines(
 		"NOTE: ~/category/Makefile:5: This variable value should be aligned " +
@@ -290,7 +290,7 @@ func (s *Suite) Test_CheckdirCategory__comment_at_the_top(c *check.C) {
 		".include \"../mk/misc/category.mk\"")
 	t.FinishSetUp()
 
-	CheckdirCategory(t.File("category"))
+	CheckdirCategory(t.File("category"), false)
 
 	// These are quite a few warnings and errors, just because there is
 	// an additional comment above the COMMENT definition.
@@ -321,7 +321,7 @@ func (s *Suite) Test_CheckdirCategory__unexpected_EOF_while_reading_SUBDIR(c *ch
 		"SUBDIR+=\tpackage")
 	t.FinishSetUp()
 
-	CheckdirCategory(t.File("category"))
+	CheckdirCategory(t.File("category"), false)
 
 	// Doesn't happen in practice since categories are created very seldom.
 	t.CheckOutputLines(
