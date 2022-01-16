@@ -466,3 +466,48 @@ func (s *Suite) Test_CheckdirCategory__case_insensitive_file_system(c *check.C) 
 		"ERROR: Makefile:7: On case-insensitive file systems, "+
 			"\"package\" is the same as \"PACKAGE\" from line 5.")
 }
+
+func (s *Suite) Test_CheckPackageDirCollision__main(c *check.C) {
+	t := s.Init(c)
+
+	// on case-insensitive filesystems, the packages 'Package' and 'package'
+	// overwrite 'PACKAGE'.
+	t.SetUpPackage("category/PACKAGE")
+	t.SetUpPackage("category/Package")
+	t.SetUpPackage("category/package")
+	t.CreateFileLines("mk/misc/category.mk")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	t.CheckOutputLines(
+		"ERROR: ../Makefile:5: On case-insensitive file systems, "+
+			"\"PACKAGE\" is the same as \"package\".",
+		"ERROR: ../Makefile:6: On case-insensitive file systems, "+
+			"\"Package\" is the same as \"package\".")
+}
+
+func (s *Suite) Test_CheckPackageDirCollision__wip(c *check.C) {
+	t := s.Init(c)
+
+	// on case-insensitive filesystems, the package 'Package' overwrites
+	// 'PACKAGE'.
+	t.SetUpPackage("category/PACKAGE")
+	t.SetUpPackage("category/Package")
+	t.SetUpPackage("wip/package",
+		"CATEGORIES=\tcategory")
+	t.CreateFileLines("mk/misc/category.mk")
+	t.Chdir("wip/package")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	t.CheckOutputLines(
+		"ERROR: ../../category/Makefile:5: "+
+			"On case-insensitive file systems, "+
+			"\"PACKAGE\" is the same as \"package\".",
+		"ERROR: ../../category/Makefile:6: "+
+			"On case-insensitive file systems, "+
+			"\"Package\" is the same as \"package\".")
+}

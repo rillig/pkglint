@@ -174,3 +174,28 @@ func CheckdirCategory(dir CurrPath, recurse bool) {
 
 	G.Todo.PushFront(recurseInto...)
 }
+
+func CheckPackageDirCollision(dir CurrPath, pkgdir RelPath) {
+	mklines := LoadMk(dir.JoinNoClean("Makefile").CleanDot(), nil, 0)
+	if mklines == nil {
+		return
+	}
+
+	lowerPkgdir := strings.ToLower(pkgdir.String())
+	mklines.ForEach(func(mkline *MkLine) {
+		if mkline.IsVarassignMaybeCommented() && mkline.Varname() == "SUBDIR" {
+			value := NewPath(mkline.Value())
+			if value.IsAbs() {
+				return
+			}
+			sub := NewRelPath(value)
+			lowerSub := strings.ToLower(sub.String())
+			if lowerSub == lowerPkgdir && sub != pkgdir {
+				// TODO: Merge duplicate code from CheckdirCategory.
+				mkline.Errorf("On case-insensitive file systems, "+
+					"%q is the same as %q.",
+					sub, pkgdir)
+			}
+		}
+	})
+}
