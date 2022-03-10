@@ -221,7 +221,7 @@ case "$*" in
   exit 0
   ;;
 "notest")
-  set -- install_notest pkgsrc diffs
+  set -- notest install pkgsrc diffs
   ;;
 esac
 
