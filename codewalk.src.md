@@ -97,7 +97,7 @@ Next, the files from the pkgsrc infrastructure are loaded to parse the
 known variable names (like PREFIX, TOOLS_CREATE.*, the MASTER_SITEs).
 
 The path to the pkgsrc root directory is determined from the first command line argument,
-therefore the arguments had to be processed in the code above.
+therefore the arguments had to be processed before loading the pkgsrc infrastructure.
 
 In this example run, the first and only argument is `DESCR`.
 From there, the pkgsrc root is usually reachable via `../../`,
@@ -112,7 +112,7 @@ end    LoadInfrastructure
 Now the information from pkgsrc is loaded into `pkglint.Pkgsrc`, and the main work can start.
 The items from the TODO list are worked off and handed over to `Pkglint.Check`,
 one after another. When pkglint is called with the `-r` option,
-some entries may be added to the Todo list,
+some entries may be added to the `Todo` list,
 but that doesn't happen in this simple example run.
 
 ```codewalk
@@ -193,11 +193,14 @@ go:type Autofix
 
 ```codewalk
 file line.go
-go:func Line.Autofix
+go:func -no-body Line.Autofix
 ```
 
 The journey ends here, and it hasn't been that difficult.
-If that was too easy, have a look at the complex cases here:
+
+If that was too easy, have a look at the code that decides whether an 
+expression such as `${CFLAGS}` needs to be quoted using the `:Q` modifier
+when it is used in a shell command:
 
 ```codewalk
 file mkline.go
@@ -232,7 +235,7 @@ go:type  Line
 
 ### MkLine
 
-Most of the pkgsrc infrastructure is written in Makefiles.
+Most of the pkgsrc infrastructure is written in makefiles.
 In these, there may be line continuations  (the ones ending in backslash).
 Plus, they may contain Make variables of the form `${VARNAME}` or `${VARNAME:Modifiers}`,
 and these are handled specially.
@@ -358,7 +361,6 @@ The only purpose of its type `Suite` is to group the tests so they are all run t
 The `c` variable comes from [gocheck](https://godoc.org/gopkg.in/check.v1),
 which is the underlying testing framework.
 Most pkglint tests don't need this variable.
-Low-level tests call `c.Check` to compare their results to the expected values.
 
 ```codewalk
 file     util_test.go

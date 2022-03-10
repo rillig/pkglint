@@ -99,7 +99,7 @@ func (p *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) (exitC
 
 The code for setting up the tests looks similar to the main code:
 
-> from [check_test.go](check_test.go#L56):
+> from [check_test.go](check_test.go#L57):
 
 ```go
 func (s *Suite) SetUpTest(c *check.C) {
@@ -184,7 +184,7 @@ Next, the files from the pkgsrc infrastructure are loaded to parse the
 known variable names (like PREFIX, TOOLS_CREATE.*, the MASTER_SITEs).
 
 The path to the pkgsrc root directory is determined from the first command line argument,
-therefore the arguments had to be processed in the code above.
+therefore the arguments had to be processed before loading the pkgsrc infrastructure.
 
 In this example run, the first and only argument is `DESCR`.
 From there, the pkgsrc root is usually reachable via `../../`,
@@ -215,7 +215,7 @@ and this is what pkglint tries.
 Now the information from pkgsrc is loaded into `pkglint.Pkgsrc`, and the main work can start.
 The items from the TODO list are worked off and handed over to `Pkglint.Check`,
 one after another. When pkglint is called with the `-r` option,
-some entries may be added to the Todo list,
+some entries may be added to the `Todo` list,
 but that doesn't happen in this simple example run.
 
 > from [pkglint.go](pkglint.go#L125):
@@ -242,7 +242,7 @@ Since `DESCR` is a regular file, the next function to call is `checkReg`.
 For directories, the next function would depend on the depth from the
 pkgsrc root directory.
 
-> from [pkglint.go](pkglint.go#L551):
+> from [pkglint.go](pkglint.go#L584):
 
 ```go
 func (p *Pkglint) checkReg(filename CurrPath, basename RelPath, depth int, pkg *Package) {
@@ -250,7 +250,7 @@ func (p *Pkglint) checkReg(filename CurrPath, basename RelPath, depth int, pkg *
 
 The relevant part of `Pkglint.checkReg` is:
 
-> from [pkglint.go](pkglint.go#L578):
+> from [pkglint.go](pkglint.go#L611):
 
 ```go
 	case basename == "buildlink3.mk":
@@ -284,7 +284,7 @@ The actual checks usually work on `Line` objects instead of files
 because the lines offer nice methods for logging the diagnostics
 and for automatically fixing the text (in pkglint's `--autofix` mode).
 
-> from [pkglint.go](pkglint.go#L424):
+> from [pkglint.go](pkglint.go#L454):
 
 ```go
 func CheckLinesDescr(lines *Lines) {
@@ -397,46 +397,17 @@ type Autofix struct {
 }
 ```
 
-> from [line.go](line.go#L176):
+> from [line.go](line.go#L199):
 
 ```go
-// Autofix returns the autofix instance belonging to the line.
-//
-// Usage:
-//
-//  fix := line.Autofix()
-//
-//  fix.Errorf("Must not be ...")
-//  fix.Warnf("Should not be ...")
-//  fix.Notef("It is also possible ...")
-//  fix.Silent()
-//
-//  fix.Explain(
-//      "Explanation ...",
-//      "... end of explanation.")
-//
-//  fix.Replace("from", "to")
-//  fix.ReplaceAfter("prefix", "from", "to")
-//  fix.InsertAbove("new line")
-//  fix.InsertBelow("new line")
-//  fix.Delete()
-//  fix.Custom(func(showAutofix, autofix bool) {})
-//
-//  fix.Apply()
 func (line *Line) Autofix() *Autofix {
-	if line.fix == nil {
-		line.fix = NewAutofix(line)
-	} else {
-		// This assertion fails if an Autofix is reused before
-		// its Apply method is called.
-		assert(line.fix.autofixShortTerm.diagFormat == "")
-	}
-	return line.fix
-}
 ```
 
 The journey ends here, and it hasn't been that difficult.
-If that was too easy, have a look at the complex cases here:
+
+If that was too easy, have a look at the code that decides whether an 
+expression such as `${CFLAGS}` needs to be quoted using the `:Q` modifier
+when it is used in a shell command:
 
 > from [mkline.go](mkline.go#L708):
 
@@ -602,7 +573,7 @@ type Line struct {
 
 ### MkLine
 
-Most of the pkgsrc infrastructure is written in Makefiles.
+Most of the pkgsrc infrastructure is written in makefiles.
 In these, there may be line continuations  (the ones ending in backslash).
 Plus, they may contain Make variables of the form `${VARNAME}` or `${VARNAME:Modifiers}`,
 and these are handled specially.
@@ -768,7 +739,7 @@ The `t` variable is the center of most tests.
 It is of type `Tester` and provides a high-level interface
 for setting up tests and checking the results.
 
-> from [check_test.go](check_test.go#L170):
+> from [check_test.go](check_test.go#L171):
 
 ```go
 // Tester provides utility methods for testing pkglint.
@@ -799,7 +770,6 @@ The only purpose of its type `Suite` is to group the tests so they are all run t
 The `c` variable comes from [gocheck](https://godoc.org/gopkg.in/check.v1),
 which is the underlying testing framework.
 Most pkglint tests don't need this variable.
-Low-level tests call `c.Check` to compare their results to the expected values.
 
 > from [util_test.go](util_test.go#L258):
 
@@ -940,8 +910,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 	t.CreateFileLines("sysutils/checkperms/distinfo",
 		CvsID,
 		"",
-		"SHA1 (checkperms-1.12.tar.gz) = 34c084b4d06bcd7a8bba922ff57677e651eeced5",
-		"RMD160 (checkperms-1.12.tar.gz) = cd95029aa930b6201e9580b3ab7e36dd30b8f925",
+		"BLAKE2s (checkperms-1.12.tar.gz) = cd95029aa930b6201e9580b3ab7e36dd30b8f925",
 		"SHA512 (checkperms-1.12.tar.gz) = "+
 			"43e37b5963c63fdf716acdb470928d7e21a7bdfddd6c85cf626a11acc7f45fa5"+
 			"2a53d4bcd83d543150328fe8cec5587987d2d9a7c5f0aaeb02ac1127ab41f8ae",
@@ -958,7 +927,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 			"This package should be updated to 1.13 (supports more file formats; see ../../doc/TODO:5).",
 		"ERROR: ~/sysutils/checkperms/Makefile:4: Invalid category \"tools\".",
 		"ERROR: ~/sysutils/checkperms/TODO: Packages in main pkgsrc must not have a TODO file.",
-		"ERROR: ~/sysutils/checkperms/distinfo:7: SHA1 hash of patches/patch-checkperms.c differs "+
+		"ERROR: ~/sysutils/checkperms/distinfo:6: SHA1 hash of patches/patch-checkperms.c differs "+
 			"(distinfo has asdfasdf, patch file has bcfb79696cb6bf4d2222a6d78a530e11bf1c0cea).",
 		"WARN: ~/sysutils/checkperms/patches/patch-checkperms.c:12: Premature end of patch hunk "+
 			"(expected 1 lines to be deleted and 0 lines to be added).",
