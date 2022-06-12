@@ -83,7 +83,7 @@ func (mkline *MkLine) HasComment() bool { return mkline.splitResult.hasComment }
 // and HOMEPAGE using http instead of https.
 //
 // To qualify as a rationale, the comment must contain any of the given
-// keywords. If no keywords are given, any comment qualifies.
+// keywords. If no keywords are given, any nonempty comment qualifies.
 func (mkline *MkLine) HasRationale(keywords ...string) bool {
 	rationale := mkline.splitResult.rationale
 	if rationale == "" {
