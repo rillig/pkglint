@@ -167,8 +167,9 @@ func (mkline *MkLine) IsVarassignMaybeCommented() bool {
 }
 
 // IsShellCommand returns true for tab-indented lines that are assigned to a Make
-// target. Example:
+// target.
 //
+// Example:
 //  pre-configure:    # IsDependency
 //          ${ECHO}   # IsShellCommand
 func (mkline *MkLine) IsShellCommand() bool {
