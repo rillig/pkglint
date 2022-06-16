@@ -1132,6 +1132,33 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if ${IN_SCOPE_DEFINED:M\"}",
 
 		nil...)
+
+	// FIXME: Syntax error in the generated code.
+	testBeforeAndAfterPrefs(
+		".if !empty(IN_SCOPE_DEFINED:M)",
+		".if ${IN_SCOPE_DEFINED} == ",
+
+		"NOTE: filename.mk:3: IN_SCOPE_DEFINED can be "+
+			"compared using the simpler "+"\"${IN_SCOPE_DEFINED} == \" "+
+			"instead of matching against \":M\".",
+		"AUTOFIX: filename.mk:3: "+
+			"Replacing \"!empty(IN_SCOPE_DEFINED:M)\" "+
+			"with \"${IN_SCOPE_DEFINED} == \".",
+	)
+
+	// TODO: Suggest the simpler '${IN_SCOPE_DEFINED:M*.c}'.
+	testBeforeAndAfterPrefs(
+		".if !empty(IN_SCOPE_DEFINED:M*.c)",
+		".if !empty(IN_SCOPE_DEFINED:M*.c)",
+
+		nil...)
+
+	// TODO: Suggest the simpler '!${IN_SCOPE_DEFINED:M*.c}'.
+	testBeforeAndAfterPrefs(
+		".if empty(IN_SCOPE_DEFINED:M*.c)",
+		".if empty(IN_SCOPE_DEFINED:M*.c)",
+
+		nil...)
 }
 
 func (s *Suite) Test_MkCondChecker_simplify__defined_in_same_file(c *check.C) {
