@@ -29,7 +29,7 @@ func (ck *AlternativesChecker) Check(lines *Lines, pkg *Package) {
 }
 
 // checkLine checks a single line for the following format:
-//  wrapper alternative [optional arguments]
+//  wrapper alternative [arguments]
 func (ck *AlternativesChecker) checkLine(line *Line, plistFiles map[RelPath]*PlistLine, pkg *Package) {
 	m, wrapper, space, alternative := match3(line.Text, `^([^\t ]+)([ \t]+)([^\t ]+).*$`)
 	if !m {
@@ -41,9 +41,19 @@ func (ck *AlternativesChecker) checkLine(line *Line, plistFiles map[RelPath]*Pli
 
 	if wrapper := NewPath(wrapper); wrapper.IsAbs() {
 		line.Errorf("Alternative wrapper %q must be relative to PREFIX.", wrapper.String())
-	} else if wrapper := NewRelPath(wrapper); plistFiles[wrapper] != nil {
-		line.Errorf("Alternative wrapper %q must not appear in the PLIST.", wrapper)
+	} else {
+		wrapper := NewRelPath(wrapper)
+		if plistFiles[wrapper] != nil {
+			line.Errorf("Alternative wrapper %q must not appear in the PLIST.", wrapper)
+		}
+		if !wrapper.HasPrefixText("bin/") &&
+			!wrapper.HasPrefixText("@PKGMANDIR@/") &&
+			!wrapper.HasPrefixText("sbin/") {
+			line.Errorf("Alternative wrapper %q must be in "+
+				"\"bin\", \"@PKGMANDIR@\" or \"sbin\".", wrapper)
+		}
 	}
+
 	if plistFiles != nil {
 		ck.checkAlternativePlist(line, alternative, plistFiles, pkg)
 	}
