@@ -1133,17 +1133,16 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 
 		nil...)
 
-	// FIXME: Syntax error in the generated code.
 	testBeforeAndAfterPrefs(
 		".if !empty(IN_SCOPE_DEFINED:M)",
-		".if ${IN_SCOPE_DEFINED} == ",
+		".if ${IN_SCOPE_DEFINED} == \"\"",
 
 		"NOTE: filename.mk:3: IN_SCOPE_DEFINED can be "+
-			"compared using the simpler "+"\"${IN_SCOPE_DEFINED} == \" "+
+			"compared using the simpler "+"\"${IN_SCOPE_DEFINED} == \"\"\" "+
 			"instead of matching against \":M\".",
 		"AUTOFIX: filename.mk:3: "+
 			"Replacing \"!empty(IN_SCOPE_DEFINED:M)\" "+
-			"with \"${IN_SCOPE_DEFINED} == \".",
+			"with \"${IN_SCOPE_DEFINED} == \\\"\\\"\".",
 	)
 
 	// TODO: Suggest the simpler '${IN_SCOPE_DEFINED:M*.c}'.
