@@ -168,14 +168,13 @@ var mkCondModifierPatternLiteral = textproc.NewByteSet("-+,./0-9<=>@A-Z_a-z")
 // * neg is true for the form !empty(VAR...), and false for empty(VAR...).
 func (ck *MkCondChecker) simplify(varuse *MkVarUse, fromEmpty bool, neg bool) {
 	varname := varuse.varname
-	mods := varuse.modifiers
-	modifiers := mods
+	modifiers := varuse.modifiers
 
 	n := len(modifiers)
 	if n == 0 {
 		return
 	}
-	modsExceptLast := NewMkVarUse("", mods[:n-1]...).Mod()
+	modsExceptLast := NewMkVarUse("", modifiers[:n-1]...).Mod()
 	vartype := G.Pkgsrc.VariableType(ck.MkLines, varname)
 
 	isDefined := func() bool {
