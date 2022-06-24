@@ -39,8 +39,10 @@ func (ck *AlternativesChecker) checkLine(line *Line, plistFiles map[RelPath]*Pli
 		return
 	}
 
-	if ck.checkWrapperAbs(line, NewPath(wrapper)) && plistFiles != nil {
-		ck.checkWrapperPlist(line, NewRelPathString(wrapper), plistFiles)
+	if wrapper := NewPath(wrapper); wrapper.IsAbs() {
+		line.Errorf("Alternative wrapper %q must be relative to PREFIX.", wrapper.String())
+	} else if wrapper := NewRelPath(wrapper); plistFiles[wrapper] != nil {
+		line.Errorf("Alternative wrapper %q must not appear in the PLIST.", wrapper)
 	}
 	if plistFiles != nil {
 		ck.checkAlternativePlist(line, alternative, plistFiles, pkg)
@@ -49,23 +51,6 @@ func (ck *AlternativesChecker) checkLine(line *Line, plistFiles map[RelPath]*Pli
 	ck.checkAlternativeAbs(alternative, line, space)
 
 	LineChecker{line}.CheckTrailingWhitespace()
-}
-
-func (ck *AlternativesChecker) checkWrapperAbs(line *Line, wrapper Path) bool {
-	if !wrapper.IsAbs() {
-		return true
-	}
-
-	line.Errorf("Alternative wrapper %q must be relative to PREFIX.", wrapper.String())
-	return false
-}
-
-func (ck *AlternativesChecker) checkWrapperPlist(line *Line, wrapper RelPath,
-	plistFiles map[RelPath]*PlistLine) {
-
-	if plistFiles[wrapper] != nil {
-		line.Errorf("Alternative wrapper %q must not appear in the PLIST.", wrapper)
-	}
 }
 
 func (ck *AlternativesChecker) checkAlternativeAbs(alternative string, line *Line, space string) {

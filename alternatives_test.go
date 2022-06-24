@@ -107,7 +107,7 @@ func (s *Suite) Test_AlternativesChecker_checkLine(c *check.C) {
 			"must be relative to PREFIX.")
 }
 
-func (s *Suite) Test_AlternativesChecker_checkWrapperAbs(c *check.C) {
+func (s *Suite) Test_AlternativesChecker_checkLine__absolute(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("ALTERNATIVES",
@@ -121,7 +121,7 @@ func (s *Suite) Test_AlternativesChecker_checkWrapperAbs(c *check.C) {
 			"must be relative to PREFIX.")
 }
 
-func (s *Suite) Test_AlternativesChecker_checkWrapperPlist(c *check.C) {
+func (s *Suite) Test_AlternativesChecker_checkLine__PLIST(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
