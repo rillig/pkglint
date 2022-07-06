@@ -1149,8 +1149,8 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if !empty(IN_SCOPE_DEFINED:M*.c)",
 		".if ${IN_SCOPE_DEFINED:M*.c}",
 
-		"NOTE: filename.mk:3: \"${IN_SCOPE_DEFINED:M*.c}\" "+
-			"can be simplified to \":M*.c\".",
+		"NOTE: filename.mk:3: \"!empty(IN_SCOPE_DEFINED:M*.c)\" "+
+			"can be simplified to \"${IN_SCOPE_DEFINED:M*.c}\".",
 		"AUTOFIX: filename.mk:3: "+
 			"Replacing \"!empty(IN_SCOPE_DEFINED:M*.c)\" "+
 			"with \"${IN_SCOPE_DEFINED:M*.c}\".")
@@ -1159,8 +1159,8 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if empty(IN_SCOPE_DEFINED:M*.c)",
 		".if !${IN_SCOPE_DEFINED:M*.c}",
 
-		"NOTE: filename.mk:3: \"!${IN_SCOPE_DEFINED:M*.c}\" "+
-			"can be simplified to \":M*.c\".",
+		"NOTE: filename.mk:3: \"empty(IN_SCOPE_DEFINED:M*.c)\" "+
+			"can be simplified to \"!${IN_SCOPE_DEFINED:M*.c}\".",
 		"AUTOFIX: filename.mk:3: "+
 			"Replacing \"empty(IN_SCOPE_DEFINED:M*.c)\" "+
 			"with \"!${IN_SCOPE_DEFINED:M*.c}\".")

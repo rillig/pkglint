@@ -257,10 +257,11 @@ func (ck *MkCondChecker) simplify(varuse *MkVarUse, fromEmpty bool, neg bool) {
 		to := condStr(neg, "", "!") + "${" + fixedPart + "}"
 
 		fix := ck.MkLine.Autofix()
-		fix.Notef("%q can be simplified to %q.", to, ":"+modifier.String())
+		fix.Notef("%q can be simplified to %q.", from, to)
 		fix.Explain(
 			"This variable is guaranteed to be defined at this point.",
-			"Therefore it may occur on the left-hand side of a comparison.")
+			"Therefore it may occur on the left-hand side of a comparison",
+			"and doesn't have to be guarded by the function 'empty'.")
 		fix.Replace(from, to)
 		fix.Apply()
 
