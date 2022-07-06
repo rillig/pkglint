@@ -244,7 +244,7 @@ func (ck *MkCondChecker) simplify(varuse *MkVarUse, fromEmpty bool, neg bool) {
 
 	// Replace !empty(VAR:M*.c) with ${VAR:M*.c}.
 	// Replace empty(VAR:M*.c) with !${VAR:M*.c}.
-	if fromEmpty && positive && !exact && isDefined() &&
+	if fromEmpty && positive && !exact && vartype != nil && isDefined() &&
 		// Restrict replacements to very simple patterns with only few
 		// special characters.
 		// Before generalizing this to arbitrary strings, there has to be
