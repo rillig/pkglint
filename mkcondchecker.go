@@ -242,6 +242,31 @@ func (ck *MkCondChecker) simplify(varuse *MkVarUse, fromEmpty bool, neg bool) {
 		return
 	}
 
+	// Replace !empty(VAR:M*.c) with ${VAR:M*.c}.
+	// Replace empty(VAR:M*.c) with !${VAR:M*.c}.
+	if fromEmpty && positive && !exact && isDefined() &&
+		// Restrict replacements to very simple patterns with only few
+		// special characters.
+		// Before generalizing this to arbitrary strings, there has to be
+		// a proper code generator for these conditions that handles all
+		// possible escaping.
+		matches(varuse.Mod(), `^[*.:\w]+$`) {
+
+		fixedPart := varname + modsExceptLast + ":M" + pattern
+		from := condStr(neg, "!", "") + "empty(" + fixedPart + ")"
+		to := condStr(neg, "", "!") + "${" + fixedPart + "}"
+
+		fix := ck.MkLine.Autofix()
+		fix.Notef("%q can be simplified to %q.", to, ":"+modifier.String())
+		fix.Explain(
+			"This variable is guaranteed to be defined at this point.",
+			"Therefore it may occur on the left-hand side of a comparison.")
+		fix.Replace(from, to)
+		fix.Apply()
+
+		return
+	}
+
 	switch {
 	case !exact,
 		vartype == nil,
