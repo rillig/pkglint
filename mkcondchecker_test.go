@@ -585,6 +585,9 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		mklines := t.SetUpFileMkLines("filename.mk",
 			MkCvsID,
 			condStr(prefs, ".include \"../../mk/bsd.prefs.mk\"", ""),
+			"", // a few spare lines
+			"", // a few spare lines
+			"", // a few spare lines
 			before,
 			".endif")
 
@@ -603,7 +606,7 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 
 			if autofix {
 				afterMklines := LoadMk(t.File("filename.mk"), nil, MustSucceed)
-				t.CheckEquals(afterMklines.mklines[2].Text, after)
+				t.CheckEquals(afterMklines.mklines[5].Text, after)
 			}
 		}
 
@@ -625,20 +628,20 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if ${IN_SCOPE_DEFINED:Mpattern}",
 		".if ${IN_SCOPE_DEFINED} == pattern",
 
-		"NOTE: filename.mk:3: IN_SCOPE_DEFINED can be "+
+		"NOTE: filename.mk:6: IN_SCOPE_DEFINED can be "+
 			"compared using the simpler \"${IN_SCOPE_DEFINED} == pattern\" "+
 			"instead of matching against \":Mpattern\".",
-		"AUTOFIX: filename.mk:3: Replacing \"${IN_SCOPE_DEFINED:Mpattern}\" "+
+		"AUTOFIX: filename.mk:6: Replacing \"${IN_SCOPE_DEFINED:Mpattern}\" "+
 			"with \"${IN_SCOPE_DEFINED} == pattern\".")
 
 	testBeforeAndAfterPrefs(
 		".if ${IN_SCOPE:Mpattern}",
 		".if ${IN_SCOPE:U} == pattern",
 
-		"NOTE: filename.mk:3: IN_SCOPE can be "+
+		"NOTE: filename.mk:6: IN_SCOPE can be "+
 			"compared using the simpler \"${IN_SCOPE:U} == pattern\" "+
 			"instead of matching against \":Mpattern\".",
-		"AUTOFIX: filename.mk:3: Replacing \"${IN_SCOPE:Mpattern}\" "+
+		"AUTOFIX: filename.mk:6: Replacing \"${IN_SCOPE:Mpattern}\" "+
 			"with \"${IN_SCOPE:U} == pattern\".")
 
 	// Even though PREFS_DEFINED is declared as DefinedIfInScope,
@@ -649,34 +652,34 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if ${PREFS_DEFINED:Mpattern}",
 		".if ${PREFS_DEFINED:U} == pattern",
 
-		"NOTE: filename.mk:3: PREFS_DEFINED can be "+
+		"NOTE: filename.mk:6: PREFS_DEFINED can be "+
 			"compared using the simpler \"${PREFS_DEFINED:U} == pattern\" "+
 			"instead of matching against \":Mpattern\".",
-		"WARN: filename.mk:3: To use PREFS_DEFINED at load time, "+
+		"WARN: filename.mk:6: To use PREFS_DEFINED at load time, "+
 			".include \"../../mk/bsd.prefs.mk\" first.",
-		"AUTOFIX: filename.mk:3: Replacing \"${PREFS_DEFINED:Mpattern}\" "+
+		"AUTOFIX: filename.mk:6: Replacing \"${PREFS_DEFINED:Mpattern}\" "+
 			"with \"${PREFS_DEFINED:U} == pattern\".")
 
 	testAfterPrefs(
 		".if ${PREFS_DEFINED:Mpattern}",
 		".if ${PREFS_DEFINED} == pattern",
 
-		"NOTE: filename.mk:3: PREFS_DEFINED can be "+
+		"NOTE: filename.mk:6: PREFS_DEFINED can be "+
 			"compared using the simpler \"${PREFS_DEFINED} == pattern\" "+
 			"instead of matching against \":Mpattern\".",
-		"AUTOFIX: filename.mk:3: Replacing \"${PREFS_DEFINED:Mpattern}\" "+
+		"AUTOFIX: filename.mk:6: Replacing \"${PREFS_DEFINED:Mpattern}\" "+
 			"with \"${PREFS_DEFINED} == pattern\".")
 
 	testBeforePrefs(
 		".if ${PREFS:Mpattern}",
 		".if ${PREFS:U} == pattern",
 
-		"NOTE: filename.mk:3: PREFS can be "+
+		"NOTE: filename.mk:6: PREFS can be "+
 			"compared using the simpler \"${PREFS:U} == pattern\" "+
 			"instead of matching against \":Mpattern\".",
-		"WARN: filename.mk:3: To use PREFS at load time, "+
+		"WARN: filename.mk:6: To use PREFS at load time, "+
 			".include \"../../mk/bsd.prefs.mk\" first.",
-		"AUTOFIX: filename.mk:3: Replacing \"${PREFS:Mpattern}\" "+
+		"AUTOFIX: filename.mk:6: Replacing \"${PREFS:Mpattern}\" "+
 			"with \"${PREFS:U} == pattern\".")
 
 	// Preferences that may be undefined always need the :U modifier,
@@ -685,10 +688,10 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if ${PREFS:Mpattern}",
 		".if ${PREFS:U} == pattern",
 
-		"NOTE: filename.mk:3: PREFS can be "+
+		"NOTE: filename.mk:6: PREFS can be "+
 			"compared using the simpler \"${PREFS:U} == pattern\" "+
 			"instead of matching against \":Mpattern\".",
-		"AUTOFIX: filename.mk:3: Replacing \"${PREFS:Mpattern}\" "+
+		"AUTOFIX: filename.mk:6: Replacing \"${PREFS:Mpattern}\" "+
 			"with \"${PREFS:U} == pattern\".")
 
 	// Variables that are defined later always need the :U modifier.
@@ -697,12 +700,12 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if ${LATER_DEFINED:Mpattern}",
 		".if ${LATER_DEFINED:U} == pattern",
 
-		"NOTE: filename.mk:3: LATER_DEFINED can be "+
+		"NOTE: filename.mk:6: LATER_DEFINED can be "+
 			"compared using the simpler \"${LATER_DEFINED:U} == pattern\" "+
 			"instead of matching against \":Mpattern\".",
-		"WARN: filename.mk:3: "+
+		"WARN: filename.mk:6: "+
 			"LATER_DEFINED should not be used at load time in any file.",
-		"AUTOFIX: filename.mk:3: Replacing \"${LATER_DEFINED:Mpattern}\" "+
+		"AUTOFIX: filename.mk:6: Replacing \"${LATER_DEFINED:Mpattern}\" "+
 			"with \"${LATER_DEFINED:U} == pattern\".")
 
 	// Variables that are defined later always need the :U modifier.
@@ -711,19 +714,19 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if ${LATER:Mpattern}",
 		".if ${LATER:U} == pattern",
 
-		"NOTE: filename.mk:3: LATER can be "+
+		"NOTE: filename.mk:6: LATER can be "+
 			"compared using the simpler \"${LATER:U} == pattern\" "+
 			"instead of matching against \":Mpattern\".",
-		"WARN: filename.mk:3: "+
+		"WARN: filename.mk:6: "+
 			"LATER should not be used at load time in any file.",
-		"AUTOFIX: filename.mk:3: Replacing \"${LATER:Mpattern}\" "+
+		"AUTOFIX: filename.mk:6: Replacing \"${LATER:Mpattern}\" "+
 			"with \"${LATER:U} == pattern\".")
 
 	testBeforeAndAfterPrefs(
 		".if ${UNDEFINED:Mpattern}",
 		".if ${UNDEFINED:Mpattern}",
 
-		"WARN: filename.mk:3: UNDEFINED is used but not defined.")
+		"WARN: filename.mk:6: UNDEFINED is used but not defined.")
 
 	// When the pattern contains placeholders, it cannot be converted to == or !=.
 	testAfterPrefs(
@@ -738,10 +741,10 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if ${PREFS_DEFINED:tl:Mpattern}",
 		".if ${PREFS_DEFINED:tl} == pattern",
 
-		"NOTE: filename.mk:3: PREFS_DEFINED can be "+
+		"NOTE: filename.mk:6: PREFS_DEFINED can be "+
 			"compared using the simpler \"${PREFS_DEFINED:tl} == pattern\" "+
 			"instead of matching against \":Mpattern\".",
-		"AUTOFIX: filename.mk:3: Replacing \"${PREFS_DEFINED:tl:Mpattern}\" "+
+		"AUTOFIX: filename.mk:6: Replacing \"${PREFS_DEFINED:tl:Mpattern}\" "+
 			"with \"${PREFS_DEFINED:tl} == pattern\".")
 
 	// Negated pattern matches are supported as well,
@@ -752,10 +755,10 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if ${PREFS_DEFINED:Npattern}",
 		".if ${PREFS_DEFINED} != pattern",
 
-		"NOTE: filename.mk:3: PREFS_DEFINED can be "+
+		"NOTE: filename.mk:6: PREFS_DEFINED can be "+
 			"compared using the simpler \"${PREFS_DEFINED} != pattern\" "+
 			"instead of matching against \":Npattern\".",
-		"AUTOFIX: filename.mk:3: Replacing \"${PREFS_DEFINED:Npattern}\" "+
+		"AUTOFIX: filename.mk:6: Replacing \"${PREFS_DEFINED:Npattern}\" "+
 			"with \"${PREFS_DEFINED} != pattern\".")
 
 	// ${PREFS_DEFINED:None:Ntwo} is a short variant of
@@ -776,10 +779,10 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if ${PREFS_DEFINED:Mone:Mtwo}",
 		".if ${PREFS_DEFINED:Mone} == two",
 
-		"NOTE: filename.mk:3: PREFS_DEFINED can be "+
+		"NOTE: filename.mk:6: PREFS_DEFINED can be "+
 			"compared using the simpler \"${PREFS_DEFINED:Mone} == two\" "+
 			"instead of matching against \":Mtwo\".",
-		"AUTOFIX: filename.mk:3: Replacing \"${PREFS_DEFINED:Mone:Mtwo}\" "+
+		"AUTOFIX: filename.mk:6: Replacing \"${PREFS_DEFINED:Mone:Mtwo}\" "+
 			"with \"${PREFS_DEFINED:Mone} == two\".")
 
 	// There is no ! before the empty, which is easy to miss.
@@ -788,10 +791,10 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if empty(PREFS_DEFINED:Mpattern)",
 		".if ${PREFS_DEFINED} != pattern",
 
-		"NOTE: filename.mk:3: PREFS_DEFINED can be "+
+		"NOTE: filename.mk:6: PREFS_DEFINED can be "+
 			"compared using the simpler \"${PREFS_DEFINED} != pattern\" "+
 			"instead of matching against \":Mpattern\".",
-		"AUTOFIX: filename.mk:3: Replacing \"empty(PREFS_DEFINED:Mpattern)\" "+
+		"AUTOFIX: filename.mk:6: Replacing \"empty(PREFS_DEFINED:Mpattern)\" "+
 			"with \"${PREFS_DEFINED} != pattern\".")
 
 	testAfterPrefs(
@@ -803,20 +806,20 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		// TODO: When taking all the ! into account, this is actually a
 		//  test for emptiness, therefore the diagnostics should suggest
 		//  the != operator instead of ==.
-		"NOTE: filename.mk:3: PREFS_DEFINED can be "+
+		"NOTE: filename.mk:6: PREFS_DEFINED can be "+
 			"compared using the simpler \"${PREFS_DEFINED} == pattern\" "+
 			"instead of matching against \":Mpattern\".",
-		"AUTOFIX: filename.mk:3: Replacing \"!empty(PREFS_DEFINED:Mpattern)\" "+
+		"AUTOFIX: filename.mk:6: Replacing \"!empty(PREFS_DEFINED:Mpattern)\" "+
 			"with \"${PREFS_DEFINED} == pattern\".")
 
 	// Simplifying the condition also works in complex expressions.
 	testAfterPrefs(".if empty(PREFS_DEFINED:Mpattern) || 0",
 		".if ${PREFS_DEFINED} != pattern || 0",
 
-		"NOTE: filename.mk:3: PREFS_DEFINED can be "+
+		"NOTE: filename.mk:6: PREFS_DEFINED can be "+
 			"compared using the simpler \"${PREFS_DEFINED} != pattern\" "+
 			"instead of matching against \":Mpattern\".",
-		"AUTOFIX: filename.mk:3: Replacing \"empty(PREFS_DEFINED:Mpattern)\" "+
+		"AUTOFIX: filename.mk:6: Replacing \"empty(PREFS_DEFINED:Mpattern)\" "+
 			"with \"${PREFS_DEFINED} != pattern\".")
 
 	// No note in this case since there is no implicit !empty around the varUse.
@@ -825,7 +828,7 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if ${PREFS_DEFINED:Mpattern} != ${OTHER}",
 		".if ${PREFS_DEFINED:Mpattern} != ${OTHER}",
 
-		"WARN: filename.mk:3: OTHER is used but not defined.")
+		"WARN: filename.mk:6: OTHER is used but not defined.")
 
 	// The condition is also simplified if it doesn't use the !empty
 	// form but the implicit conversion to boolean.
@@ -833,10 +836,10 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if ${PREFS_DEFINED:Mpattern}",
 		".if ${PREFS_DEFINED} == pattern",
 
-		"NOTE: filename.mk:3: PREFS_DEFINED can be "+
+		"NOTE: filename.mk:6: PREFS_DEFINED can be "+
 			"compared using the simpler \"${PREFS_DEFINED} == pattern\" "+
 			"instead of matching against \":Mpattern\".",
-		"AUTOFIX: filename.mk:3: Replacing \"${PREFS_DEFINED:Mpattern}\" "+
+		"AUTOFIX: filename.mk:6: Replacing \"${PREFS_DEFINED:Mpattern}\" "+
 			"with \"${PREFS_DEFINED} == pattern\".")
 
 	// A single negation outside the implicit conversion is taken into
@@ -845,10 +848,10 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if !${PREFS_DEFINED:Mpattern}",
 		".if ${PREFS_DEFINED} != pattern",
 
-		"NOTE: filename.mk:3: PREFS_DEFINED can be "+
+		"NOTE: filename.mk:6: PREFS_DEFINED can be "+
 			"compared using the simpler \"${PREFS_DEFINED} != pattern\" "+
 			"instead of matching against \":Mpattern\".",
-		"AUTOFIX: filename.mk:3: Replacing \"!${PREFS_DEFINED:Mpattern}\" "+
+		"AUTOFIX: filename.mk:6: Replacing \"!${PREFS_DEFINED:Mpattern}\" "+
 			"with \"${PREFS_DEFINED} != pattern\".")
 
 	// TODO: Merge the double negation into the comparison operator.
@@ -856,10 +859,10 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if !!${PREFS_DEFINED:Mpattern}",
 		".if !${PREFS_DEFINED} != pattern",
 
-		"NOTE: filename.mk:3: PREFS_DEFINED can be "+
+		"NOTE: filename.mk:6: PREFS_DEFINED can be "+
 			"compared using the simpler \"${PREFS_DEFINED} != pattern\" "+
 			"instead of matching against \":Mpattern\".",
-		"AUTOFIX: filename.mk:3: Replacing \"!${PREFS_DEFINED:Mpattern}\" "+
+		"AUTOFIX: filename.mk:6: Replacing \"!${PREFS_DEFINED:Mpattern}\" "+
 			"with \"${PREFS_DEFINED} != pattern\".")
 
 	// This pattern with spaces doesn't make sense at all in the :M
@@ -910,10 +913,10 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if ${PREFS_DEFINED:Nnegative-pattern}",
 		".if ${PREFS_DEFINED} != negative-pattern",
 
-		"NOTE: filename.mk:3: PREFS_DEFINED can be "+
+		"NOTE: filename.mk:6: PREFS_DEFINED can be "+
 			"compared using the simpler \"${PREFS_DEFINED} != negative-pattern\" "+
 			"instead of matching against \":Nnegative-pattern\".",
-		"AUTOFIX: filename.mk:3: Replacing \"${PREFS_DEFINED:Nnegative-pattern}\" "+
+		"AUTOFIX: filename.mk:6: Replacing \"${PREFS_DEFINED:Nnegative-pattern}\" "+
 			"with \"${PREFS_DEFINED} != negative-pattern\".")
 
 	// Since UNDEFINED is not a well-known variable that is
@@ -923,13 +926,13 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if ${UNDEFINED:Nnegative-pattern}",
 		".if ${UNDEFINED:Nnegative-pattern}",
 
-		"WARN: filename.mk:3: UNDEFINED is used but not defined.")
+		"WARN: filename.mk:6: UNDEFINED is used but not defined.")
 
 	testAfterPrefs(
 		".if ${UNDEFINED:Nnegative-pattern}",
 		".if ${UNDEFINED:Nnegative-pattern}",
 
-		"WARN: filename.mk:3: UNDEFINED is used but not defined.")
+		"WARN: filename.mk:6: UNDEFINED is used but not defined.")
 
 	// A complex condition may contain several simple conditions
 	// that are each simplified independently, in the same go.
@@ -937,15 +940,15 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if ${PREFS_DEFINED:Mpath1} || ${PREFS_DEFINED:Mpath2}",
 		".if ${PREFS_DEFINED} == path1 || ${PREFS_DEFINED} == path2",
 
-		"NOTE: filename.mk:3: PREFS_DEFINED can be "+
+		"NOTE: filename.mk:6: PREFS_DEFINED can be "+
 			"compared using the simpler \"${PREFS_DEFINED} == path1\" "+
 			"instead of matching against \":Mpath1\".",
-		"NOTE: filename.mk:3: PREFS_DEFINED can be "+
+		"NOTE: filename.mk:6: PREFS_DEFINED can be "+
 			"compared using the simpler \"${PREFS_DEFINED} == path2\" "+
 			"instead of matching against \":Mpath2\".",
-		"AUTOFIX: filename.mk:3: Replacing \"${PREFS_DEFINED:Mpath1}\" "+
+		"AUTOFIX: filename.mk:6: Replacing \"${PREFS_DEFINED:Mpath1}\" "+
 			"with \"${PREFS_DEFINED} == path1\".",
-		"AUTOFIX: filename.mk:3: Replacing \"${PREFS_DEFINED:Mpath2}\" "+
+		"AUTOFIX: filename.mk:6: Replacing \"${PREFS_DEFINED:Mpath2}\" "+
 			"with \"${PREFS_DEFINED} == path2\".")
 
 	// Removing redundant parentheses may be useful one day but is
@@ -955,10 +958,10 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if (((((${PREFS_DEFINED:Mpath})))))",
 		".if (((((${PREFS_DEFINED} == path)))))",
 
-		"NOTE: filename.mk:3: PREFS_DEFINED can be "+
+		"NOTE: filename.mk:6: PREFS_DEFINED can be "+
 			"compared using the simpler \"${PREFS_DEFINED} == path\" "+
 			"instead of matching against \":Mpath\".",
-		"AUTOFIX: filename.mk:3: Replacing \"${PREFS_DEFINED:Mpath}\" "+
+		"AUTOFIX: filename.mk:6: Replacing \"${PREFS_DEFINED:Mpath}\" "+
 			"with \"${PREFS_DEFINED} == path\".")
 
 	// Several modifiers like :S and :C may change the variable value.
@@ -968,20 +971,20 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if !empty(PREFS_DEFINED:S,NetBSD,ok,:Mok)",
 		".if ${PREFS_DEFINED:S,NetBSD,ok,} == ok",
 
-		"NOTE: filename.mk:3: PREFS_DEFINED can be "+
+		"NOTE: filename.mk:6: PREFS_DEFINED can be "+
 			"compared using the simpler \"${PREFS_DEFINED:S,NetBSD,ok,} == ok\" "+
 			"instead of matching against \":Mok\".",
-		"AUTOFIX: filename.mk:3: Replacing \"!empty(PREFS_DEFINED:S,NetBSD,ok,:Mok)\" "+
+		"AUTOFIX: filename.mk:6: Replacing \"!empty(PREFS_DEFINED:S,NetBSD,ok,:Mok)\" "+
 			"with \"${PREFS_DEFINED:S,NetBSD,ok,} == ok\".")
 
 	testAfterPrefs(
 		".if empty(PREFS_DEFINED:tl:Msunos)",
 		".if ${PREFS_DEFINED:tl} != sunos",
 
-		"NOTE: filename.mk:3: PREFS_DEFINED can be "+
+		"NOTE: filename.mk:6: PREFS_DEFINED can be "+
 			"compared using the simpler \"${PREFS_DEFINED:tl} != sunos\" "+
 			"instead of matching against \":Msunos\".",
-		"AUTOFIX: filename.mk:3: Replacing \"empty(PREFS_DEFINED:tl:Msunos)\" "+
+		"AUTOFIX: filename.mk:6: Replacing \"empty(PREFS_DEFINED:tl:Msunos)\" "+
 			"with \"${PREFS_DEFINED:tl} != sunos\".")
 
 	// The condition can only be simplified if the :M or :N modifier
@@ -998,10 +1001,10 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if !empty(PREFS_DEFINED:Mpackage1.2)",
 		".if ${PREFS_DEFINED} == package1.2",
 
-		"NOTE: filename.mk:3: PREFS_DEFINED can be "+
+		"NOTE: filename.mk:6: PREFS_DEFINED can be "+
 			"compared using the simpler \"${PREFS_DEFINED} == package1.2\" "+
 			"instead of matching against \":Mpackage1.2\".",
-		"AUTOFIX: filename.mk:3: Replacing \"!empty(PREFS_DEFINED:Mpackage1.2)\" "+
+		"AUTOFIX: filename.mk:6: Replacing \"!empty(PREFS_DEFINED:Mpackage1.2)\" "+
 			"with \"${PREFS_DEFINED} == package1.2\".")
 
 	// Numbers must be enclosed in quotes, otherwise they are compared
@@ -1011,10 +1014,10 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if empty(PREFS:U:M64)",
 		".if ${PREFS:U} != \"64\"",
 
-		"NOTE: filename.mk:3: PREFS can be "+
+		"NOTE: filename.mk:6: PREFS can be "+
 			"compared using the simpler \"${PREFS:U} != \"64\"\" "+
 			"instead of matching against \":M64\".",
-		"AUTOFIX: filename.mk:3: Replacing \"empty(PREFS:U:M64)\" "+
+		"AUTOFIX: filename.mk:6: Replacing \"empty(PREFS:U:M64)\" "+
 			"with \"${PREFS:U} != \\\"64\\\"\".")
 
 	// Fractional numbers must also be enclosed in quotes.
@@ -1022,10 +1025,10 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if empty(PREFS:U:M19.12)",
 		".if ${PREFS:U} != \"19.12\"",
 
-		"NOTE: filename.mk:3: PREFS can be "+
+		"NOTE: filename.mk:6: PREFS can be "+
 			"compared using the simpler \"${PREFS:U} != \"19.12\"\" "+
 			"instead of matching against \":M19.12\".",
-		"AUTOFIX: filename.mk:3: Replacing \"empty(PREFS:U:M19.12)\" "+
+		"AUTOFIX: filename.mk:6: Replacing \"empty(PREFS:U:M19.12)\" "+
 			"with \"${PREFS:U} != \\\"19.12\\\"\".")
 
 	testAfterPrefs(
@@ -1034,7 +1037,7 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 
 		// No diagnostics about the :N modifier yet,
 		// see MkCondChecker.simplify.replace.
-		"WARN: filename.mk:3: LATER should not be used "+
+		"WARN: filename.mk:6: LATER should not be used "+
 			"at load time in any file.")
 
 	// TODO: Add a note that the :U is unnecessary, and explain why.
@@ -1042,10 +1045,10 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if ${PREFS_DEFINED:U:Mpattern}",
 		".if ${PREFS_DEFINED:U} == pattern",
 
-		"NOTE: filename.mk:3: PREFS_DEFINED can be "+
+		"NOTE: filename.mk:6: PREFS_DEFINED can be "+
 			"compared using the simpler \"${PREFS_DEFINED:U} == pattern\" "+
 			"instead of matching against \":Mpattern\".",
-		"AUTOFIX: filename.mk:3: "+
+		"AUTOFIX: filename.mk:6: "+
 			"Replacing \"${PREFS_DEFINED:U:Mpattern}\" "+
 			"with \"${PREFS_DEFINED:U} == pattern\".")
 
@@ -1067,7 +1070,7 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if ${PREFS_DEFINED:M&&}",
 		".if ${PREFS_DEFINED:M&&}",
 
-		"WARN: filename.mk:3: To use PREFS_DEFINED at load time, .include \"../../mk/bsd.prefs.mk\" first.")
+		"WARN: filename.mk:6: To use PREFS_DEFINED at load time, .include \"../../mk/bsd.prefs.mk\" first.")
 	testAfterPrefs(
 		".if ${PREFS_DEFINED:M&&}",
 		".if ${PREFS_DEFINED:M&&}",
@@ -1079,7 +1082,7 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if ${PREFS:M&&}",
 
 		// TODO: Warn that the :U is missing.
-		"WARN: filename.mk:3: To use PREFS at load time, .include \"../../mk/bsd.prefs.mk\" first.")
+		"WARN: filename.mk:6: To use PREFS at load time, .include \"../../mk/bsd.prefs.mk\" first.")
 	testAfterPrefs(
 		".if ${PREFS:M&&}",
 		".if ${PREFS:M&&}",
@@ -1093,10 +1096,10 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if ${PREFS_DEFINED:Mcategory/gtk+}",
 		".if ${PREFS_DEFINED} == category/gtk+",
 
-		"NOTE: filename.mk:3: PREFS_DEFINED can be "+
+		"NOTE: filename.mk:6: PREFS_DEFINED can be "+
 			"compared using the simpler \"${PREFS_DEFINED} == category/gtk+\" "+
 			"instead of matching against \":Mcategory/gtk+\".",
-		"AUTOFIX: filename.mk:3: "+
+		"AUTOFIX: filename.mk:6: "+
 			"Replacing \"${PREFS_DEFINED:Mcategory/gtk+}\" "+
 			"with \"${PREFS_DEFINED} == category/gtk+\".")
 
@@ -1106,22 +1109,22 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if ${PREFS_DEFINED:M<=>}",
 		".if ${PREFS_DEFINED:U} == \"<=>\"",
 
-		"NOTE: filename.mk:3: PREFS_DEFINED can be "+
+		"NOTE: filename.mk:6: PREFS_DEFINED can be "+
 			"compared using the simpler \"${PREFS_DEFINED:U} == \"<=>\"\" "+
 			"instead of matching against \":M<=>\".",
-		"WARN: filename.mk:3: To use PREFS_DEFINED at load time, "+
+		"WARN: filename.mk:6: To use PREFS_DEFINED at load time, "+
 			".include \"../../mk/bsd.prefs.mk\" first.",
-		"AUTOFIX: filename.mk:3: "+
+		"AUTOFIX: filename.mk:6: "+
 			"Replacing \"${PREFS_DEFINED:M<=>}\" "+
 			"with \"${PREFS_DEFINED:U} == \\\"<=>\\\"\".")
 	testAfterPrefs(
 		".if ${PREFS_DEFINED:M<=>}",
 		".if ${PREFS_DEFINED} == \"<=>\"",
 
-		"NOTE: filename.mk:3: PREFS_DEFINED can be "+
+		"NOTE: filename.mk:6: PREFS_DEFINED can be "+
 			"compared using the simpler \"${PREFS_DEFINED} == \"<=>\"\" "+
 			"instead of matching against \":M<=>\".",
-		"AUTOFIX: filename.mk:3: "+
+		"AUTOFIX: filename.mk:6: "+
 			"Replacing \"${PREFS_DEFINED:M<=>}\" "+
 			"with \"${PREFS_DEFINED} == \\\"<=>\\\"\".")
 
@@ -1137,10 +1140,10 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if !empty(IN_SCOPE_DEFINED:M)",
 		".if ${IN_SCOPE_DEFINED} == \"\"",
 
-		"NOTE: filename.mk:3: IN_SCOPE_DEFINED can be "+
+		"NOTE: filename.mk:6: IN_SCOPE_DEFINED can be "+
 			"compared using the simpler "+"\"${IN_SCOPE_DEFINED} == \"\"\" "+
 			"instead of matching against \":M\".",
-		"AUTOFIX: filename.mk:3: "+
+		"AUTOFIX: filename.mk:6: "+
 			"Replacing \"!empty(IN_SCOPE_DEFINED:M)\" "+
 			"with \"${IN_SCOPE_DEFINED} == \\\"\\\"\".",
 	)
@@ -1149,9 +1152,9 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if !empty(IN_SCOPE_DEFINED:M*.c)",
 		".if ${IN_SCOPE_DEFINED:M*.c}",
 
-		"NOTE: filename.mk:3: \"!empty(IN_SCOPE_DEFINED:M*.c)\" "+
+		"NOTE: filename.mk:6: \"!empty(IN_SCOPE_DEFINED:M*.c)\" "+
 			"can be simplified to \"${IN_SCOPE_DEFINED:M*.c}\".",
-		"AUTOFIX: filename.mk:3: "+
+		"AUTOFIX: filename.mk:6: "+
 			"Replacing \"!empty(IN_SCOPE_DEFINED:M*.c)\" "+
 			"with \"${IN_SCOPE_DEFINED:M*.c}\".")
 
@@ -1159,9 +1162,9 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if empty(IN_SCOPE_DEFINED:M*.c)",
 		".if !${IN_SCOPE_DEFINED:M*.c}",
 
-		"NOTE: filename.mk:3: \"empty(IN_SCOPE_DEFINED:M*.c)\" "+
+		"NOTE: filename.mk:6: \"empty(IN_SCOPE_DEFINED:M*.c)\" "+
 			"can be simplified to \"!${IN_SCOPE_DEFINED:M*.c}\".",
-		"AUTOFIX: filename.mk:3: "+
+		"AUTOFIX: filename.mk:6: "+
 			"Replacing \"empty(IN_SCOPE_DEFINED:M*.c)\" "+
 			"with \"!${IN_SCOPE_DEFINED:M*.c}\".")
 
@@ -1169,9 +1172,9 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 		".if !empty(IN_SCOPE_DEFINED:M[Nn][Oo])",
 		".if ${IN_SCOPE_DEFINED:M[Nn][Oo]}",
 
-		"NOTE: filename.mk:3: \"!empty(IN_SCOPE_DEFINED:M[Nn][Oo])\" "+
+		"NOTE: filename.mk:6: \"!empty(IN_SCOPE_DEFINED:M[Nn][Oo])\" "+
 			"can be simplified to \"${IN_SCOPE_DEFINED:M[Nn][Oo]}\".",
-		"AUTOFIX: filename.mk:3: "+
+		"AUTOFIX: filename.mk:6: "+
 			"Replacing \"!empty(IN_SCOPE_DEFINED:M[Nn][Oo])\" "+
 			"with \"${IN_SCOPE_DEFINED:M[Nn][Oo]}\".")
 }
