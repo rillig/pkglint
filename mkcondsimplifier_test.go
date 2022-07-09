@@ -4,9 +4,12 @@ import (
 	"gopkg.in/check.v1"
 )
 
-func (s *Suite) Test_MkCondSimplifier_SimplifyVarUse(c *check.C) {
-	t := s.Init(c)
+type MkCondSimplifierTester struct {
+	c *check.C
+	*Tester
+}
 
+func (t *MkCondSimplifierTester) setUp() {
 	t.CreateFileLines("mk/bsd.prefs.mk")
 	t.Chdir("category/package")
 
@@ -48,55 +51,66 @@ func (s *Suite) Test_MkCondSimplifier_SimplifyVarUse(c *check.C) {
 		"*.mk: use")
 	// UNDEFINED is also used in the following tests, but is obviously
 	// not defined here.
+}
 
-	// prefs: whether to include bsd.prefs.mk before
-	// before: the directive before the condition is simplified
-	// after: the directive after the condition is simplified
-	doTest := func(prefs bool, before, after string, diagnostics ...string) {
-		if !matches(before, `IN_SCOPE|PREFS|LATER|UNDEFINED`) {
-			c.Errorf("Condition %q must include one of the above variable names.", before)
-		}
-		mklines := t.SetUpFileMkLines("filename.mk",
-			MkCvsID,
-			condStr(prefs, ".include \"../../mk/bsd.prefs.mk\"", ""),
-			"", // a few spare lines
-			"", // a few spare lines
-			"", // a few spare lines
-			before,
-			".endif")
+func (t *MkCondSimplifierTester) testBeforePrefs(before, after string, diagnostics ...string) {
+	t.doTest(false, before, after, diagnostics...)
+}
 
-		action := func(autofix bool) {
-			mklines.ForEach(func(mkline *MkLine) {
-				// Sets mklines.Tools.SeenPrefs, which decides whether the :U modifier
-				// is necessary; see MkLines.checkLine.
-				mklines.Tools.ParseToolLine(mklines, mkline, false, false)
+func (t *MkCondSimplifierTester) testAfterPrefs(before, after string, diagnostics ...string) {
+	t.doTest(true, before, after, diagnostics...)
+}
+func (t *MkCondSimplifierTester) testBeforeAndAfterPrefs(before, after string, diagnostics ...string) {
+	t.doTest(false, before, after, diagnostics...)
+	t.doTest(true, before, after, diagnostics...)
+}
 
-				if mkline.IsDirective() && mkline.Directive() != "endif" {
-					// TODO: Replace Check with a more
-					//  specific method that does not do the type checks.
-					NewMkCondChecker(mkline, mklines).Check()
-				}
-			})
+// prefs: whether to include bsd.prefs.mk before the condition
+// before: the directive before the condition is simplified
+// after: the directive after the condition is simplified
+func (t *MkCondSimplifierTester) doTest(prefs bool, before, after string, diagnostics ...string) {
+	if !matches(before, `IN_SCOPE|PREFS|LATER|UNDEFINED`) {
+		t.c.Errorf("Condition %q must include one of the above variable names.", before)
+	}
+	mklines := t.SetUpFileMkLines("filename.mk",
+		MkCvsID,
+		condStr(prefs, ".include \"../../mk/bsd.prefs.mk\"", ""),
+		"", // a few spare lines
+		"", // a few spare lines
+		"", // a few spare lines
+		before,
+		".endif")
 
-			if autofix {
-				afterMklines := LoadMk(t.File("filename.mk"), nil, MustSucceed)
-				t.CheckEquals(afterMklines.mklines[5].Text, after)
+	action := func(autofix bool) {
+		mklines.ForEach(func(mkline *MkLine) {
+			// Sets mklines.Tools.SeenPrefs, which decides whether the :U modifier
+			// is necessary; see MkLines.checkLine.
+			mklines.Tools.ParseToolLine(mklines, mkline, false, false)
+
+			if mkline.IsDirective() && mkline.Directive() != "endif" {
+				// TODO: Replace Check with a more
+				//  specific method that does not do the type checks.
+				NewMkCondChecker(mkline, mklines).Check()
 			}
+		})
+
+		if autofix {
+			afterMklines := LoadMk(t.File("filename.mk"), nil, MustSucceed)
+			t.CheckEquals(afterMklines.mklines[5].Text, after)
 		}
-
-		t.ExpectDiagnosticsAutofix(action, diagnostics...)
 	}
 
-	testBeforePrefs := func(before, after string, diagnostics ...string) {
-		doTest(false, before, after, diagnostics...)
-	}
-	testAfterPrefs := func(before, after string, diagnostics ...string) {
-		doTest(true, before, after, diagnostics...)
-	}
-	testBeforeAndAfterPrefs := func(before, after string, diagnostics ...string) {
-		doTest(false, before, after, diagnostics...)
-		doTest(true, before, after, diagnostics...)
-	}
+	t.ExpectDiagnosticsAutofix(action, diagnostics...)
+}
+
+func (s *Suite) Test_MkCondSimplifier_SimplifyVarUse(c *check.C) {
+	t := MkCondSimplifierTester{c, s.Init(c)}
+
+	t.setUp()
+
+	testBeforePrefs := t.testBeforePrefs
+	testAfterPrefs := t.testAfterPrefs
+	testBeforeAndAfterPrefs := t.testBeforeAndAfterPrefs
 
 	testBeforeAndAfterPrefs(
 		".if ${IN_SCOPE_DEFINED:Mpattern}",
