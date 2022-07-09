@@ -136,32 +136,42 @@ func (s *MkCondSimplifier) simplifyMatch(varuse *MkVarUse, fromEmpty bool, neg b
 		return
 	}
 
-	if fromEmpty && positive && !exact && vartype != nil &&
-		s.isDefined(varname, vartype) &&
-		// Restrict replacements to very simple patterns with only few
-		// special characters, for now.
-		// Before generalizing this to arbitrary strings, there has to be
-		// a proper code generator for these conditions that handles all
-		// possible escaping.
-		// The same reasoning applies to the variable name, even though the
-		// variable name typically only uses a restricted character set.
-		matches(varuse.Mod(), `^[*.:\w\[\]]+$`) {
-
-		fixedPart := varname + modsExceptLast + ":M" + pattern
-		from := condStr(neg, "!", "") + "empty(" + fixedPart + ")"
-		to := condStr(neg, "", "!") + "${" + fixedPart + "}"
-
-		fix := s.MkLine.Autofix()
-		fix.Notef("%q can be simplified to %q.", from, to)
-		fix.Explain(
-			"This variable is guaranteed to be defined at this point.",
-			"Therefore it may occur on the left-hand side of a comparison",
-			"and doesn't have to be guarded by the function 'empty'.")
-		fix.Replace(from, to)
-		fix.Apply()
-
+	if !(fromEmpty && positive && !exact && vartype != nil) {
 		return
 	}
+
+	// For now, only handle cases where the variable is guaranteed to be
+	// defined, to avoid having to place an additional ':U' modifier in the
+	// expression.
+	if !s.isDefined(varname, vartype) {
+		return
+	}
+
+	// For now, restrict replacements to very simple patterns with only few
+	// special characters.
+	//
+	// Before generalizing this to arbitrary strings, there has to be
+	// a proper code generator for these conditions that handles all
+	// possible escaping.
+	//
+	// The same reasoning applies to the variable name, even though the
+	// variable name typically only uses a restricted character set.
+	if !matches(varuse.Mod(), `^[*.:\w\[\]]+$`) {
+		return
+	}
+
+	fixedPart := varname + modsExceptLast + ":M" + pattern
+	from := condStr(neg, "!", "") + "empty(" + fixedPart + ")"
+	to := condStr(neg, "", "!") + "${" + fixedPart + "}"
+
+	fix := s.MkLine.Autofix()
+	fix.Notef("%q can be simplified to %q.", from, to)
+	fix.Explain(
+		"This variable is guaranteed to be defined at this point.",
+		"Therefore it may occur on the left-hand side of a comparison",
+		"and doesn't have to be guarded by the function 'empty'.")
+	fix.Replace(from, to)
+	fix.Apply()
 }
 
 // isDefined determines whether the variable is guaranteed to be defined at
