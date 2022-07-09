@@ -1088,6 +1088,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.pkg("CHECK_SHLIBS", BtYesNo)
 	reg.pkglist("CHECK_SHLIBS_SKIP", BtPathPattern)
 	reg.pkg("CHECK_SHLIBS_SUPPORTED", BtYesNo)
+	reg.usrlist("CHECK_WRKREF", enum("tools wrappers home wrksrc work wrkobjdir pkgsrc buildlink extra"))
 	reg.pkglist("CHECK_WRKREF_SKIP", BtPathPattern)
 	reg.pkg("CMAKE_ARG_PATH", BtPathname)
 	reg.pkglist("CMAKE_ARGS", BtShellWord)
