@@ -108,6 +108,32 @@ func (s *Suite) Test_MkCondSimplifier_SimplifyVarUse(c *check.C) {
 
 	t.setUp()
 
+	t.testBeforeAndAfterPrefs(
+		".if ${IN_SCOPE_DEFINED:Mpattern}",
+		".if ${IN_SCOPE_DEFINED} == pattern",
+
+		"NOTE: filename.mk:6: IN_SCOPE_DEFINED can be "+
+			"compared using the simpler \"${IN_SCOPE_DEFINED} == pattern\" "+
+			"instead of matching against \":Mpattern\".",
+		"AUTOFIX: filename.mk:6: Replacing \"${IN_SCOPE_DEFINED:Mpattern}\" "+
+			"with \"${IN_SCOPE_DEFINED} == pattern\".")
+
+	t.testBeforeAndAfterPrefs(
+		".if !empty(IN_SCOPE_DEFINED:M[Nn][Oo])",
+		".if ${IN_SCOPE_DEFINED:M[Nn][Oo]}",
+
+		"NOTE: filename.mk:6: \"!empty(IN_SCOPE_DEFINED:M[Nn][Oo])\" "+
+			"can be simplified to \"${IN_SCOPE_DEFINED:M[Nn][Oo]}\".",
+		"AUTOFIX: filename.mk:6: "+
+			"Replacing \"!empty(IN_SCOPE_DEFINED:M[Nn][Oo])\" "+
+			"with \"${IN_SCOPE_DEFINED:M[Nn][Oo]}\".")
+}
+
+func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
+	t := MkCondSimplifierTester{c, s.Init(c)}
+
+	t.setUp()
+
 	testBeforePrefs := t.testBeforePrefs
 	testAfterPrefs := t.testAfterPrefs
 	testBeforeAndAfterPrefs := t.testBeforeAndAfterPrefs
@@ -635,39 +661,9 @@ func (s *Suite) Test_MkCondSimplifier_SimplifyVarUse(c *check.C) {
 			"Replacing \"!empty(IN_SCOPE_DEFINED:M)\" "+
 			"with \"${IN_SCOPE_DEFINED} == \\\"\\\"\".",
 	)
-
-	testBeforeAndAfterPrefs(
-		".if !empty(IN_SCOPE_DEFINED:M*.c)",
-		".if ${IN_SCOPE_DEFINED:M*.c}",
-
-		"NOTE: filename.mk:6: \"!empty(IN_SCOPE_DEFINED:M*.c)\" "+
-			"can be simplified to \"${IN_SCOPE_DEFINED:M*.c}\".",
-		"AUTOFIX: filename.mk:6: "+
-			"Replacing \"!empty(IN_SCOPE_DEFINED:M*.c)\" "+
-			"with \"${IN_SCOPE_DEFINED:M*.c}\".")
-
-	testBeforeAndAfterPrefs(
-		".if empty(IN_SCOPE_DEFINED:M*.c)",
-		".if !${IN_SCOPE_DEFINED:M*.c}",
-
-		"NOTE: filename.mk:6: \"empty(IN_SCOPE_DEFINED:M*.c)\" "+
-			"can be simplified to \"!${IN_SCOPE_DEFINED:M*.c}\".",
-		"AUTOFIX: filename.mk:6: "+
-			"Replacing \"empty(IN_SCOPE_DEFINED:M*.c)\" "+
-			"with \"!${IN_SCOPE_DEFINED:M*.c}\".")
-
-	testBeforeAndAfterPrefs(
-		".if !empty(IN_SCOPE_DEFINED:M[Nn][Oo])",
-		".if ${IN_SCOPE_DEFINED:M[Nn][Oo]}",
-
-		"NOTE: filename.mk:6: \"!empty(IN_SCOPE_DEFINED:M[Nn][Oo])\" "+
-			"can be simplified to \"${IN_SCOPE_DEFINED:M[Nn][Oo]}\".",
-		"AUTOFIX: filename.mk:6: "+
-			"Replacing \"!empty(IN_SCOPE_DEFINED:M[Nn][Oo])\" "+
-			"with \"${IN_SCOPE_DEFINED:M[Nn][Oo]}\".")
 }
 
-func (s *Suite) Test_MkCondSimplifier_SimplifyVarUse__defined_in_same_file(c *check.C) {
+func (s *Suite) Test_MkCondSimplifier_simplifyWord__defined_in_same_file(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
@@ -746,6 +742,42 @@ func (s *Suite) Test_MkCondSimplifier_SimplifyVarUse__defined_in_same_file(c *ch
 		"AUTOFIX: filename.mk:4: "+
 			"Replacing \"${LATER_DIR:Mpattern}\" "+
 			"with \"${LATER_DIR:U} == pattern\".")
+}
+
+func (s *Suite) Test_MkCondSimplifier_simplifyMatch(c *check.C) {
+	t := MkCondSimplifierTester{c, s.Init(c)}
+
+	t.setUp()
+
+	t.testBeforeAndAfterPrefs(
+		".if !empty(IN_SCOPE_DEFINED:M*.c)",
+		".if ${IN_SCOPE_DEFINED:M*.c}",
+
+		"NOTE: filename.mk:6: \"!empty(IN_SCOPE_DEFINED:M*.c)\" "+
+			"can be simplified to \"${IN_SCOPE_DEFINED:M*.c}\".",
+		"AUTOFIX: filename.mk:6: "+
+			"Replacing \"!empty(IN_SCOPE_DEFINED:M*.c)\" "+
+			"with \"${IN_SCOPE_DEFINED:M*.c}\".")
+
+	t.testBeforeAndAfterPrefs(
+		".if empty(IN_SCOPE_DEFINED:M*.c)",
+		".if !${IN_SCOPE_DEFINED:M*.c}",
+
+		"NOTE: filename.mk:6: \"empty(IN_SCOPE_DEFINED:M*.c)\" "+
+			"can be simplified to \"!${IN_SCOPE_DEFINED:M*.c}\".",
+		"AUTOFIX: filename.mk:6: "+
+			"Replacing \"empty(IN_SCOPE_DEFINED:M*.c)\" "+
+			"with \"!${IN_SCOPE_DEFINED:M*.c}\".")
+
+	t.testBeforeAndAfterPrefs(
+		".if !empty(IN_SCOPE_DEFINED:M[Nn][Oo])",
+		".if ${IN_SCOPE_DEFINED:M[Nn][Oo]}",
+
+		"NOTE: filename.mk:6: \"!empty(IN_SCOPE_DEFINED:M[Nn][Oo])\" "+
+			"can be simplified to \"${IN_SCOPE_DEFINED:M[Nn][Oo]}\".",
+		"AUTOFIX: filename.mk:6: "+
+			"Replacing \"!empty(IN_SCOPE_DEFINED:M[Nn][Oo])\" "+
+			"with \"${IN_SCOPE_DEFINED:M[Nn][Oo]}\".")
 }
 
 func (s *Suite) Test_MkCondSimplifier_isDefined(c *check.C) {

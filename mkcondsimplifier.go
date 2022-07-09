@@ -16,6 +16,14 @@ type MkCondSimplifier struct {
 //
 // * neg is true for the form !empty(VAR...), and false for empty(VAR...).
 func (s *MkCondSimplifier) SimplifyVarUse(varuse *MkVarUse, fromEmpty bool, neg bool) {
+	s.simplifyMatch(varuse, fromEmpty, neg)
+	s.simplifyWord(varuse, fromEmpty, neg)
+}
+
+// simplifyWord simplifies a condition like '${VAR:Mword}' in the common case
+// where VAR is a single-word variable. This case can be written without any
+// list operators, as '${VAR} == word'.
+func (s *MkCondSimplifier) simplifyWord(varuse *MkVarUse, fromEmpty bool, neg bool) {
 	varname := varuse.varname
 	modifiers := varuse.modifiers
 
@@ -75,35 +83,6 @@ func (s *MkCondSimplifier) SimplifyVarUse(varuse *MkVarUse, fromEmpty bool, neg 
 		return
 	}
 
-	// Replace !empty(VAR:M*.c) with ${VAR:M*.c}.
-	// Replace empty(VAR:M*.c) with !${VAR:M*.c}.
-	if fromEmpty && positive && !exact && vartype != nil &&
-		s.isDefined(varname, vartype) &&
-		// Restrict replacements to very simple patterns with only few
-		// special characters, for now.
-		// Before generalizing this to arbitrary strings, there has to be
-		// a proper code generator for these conditions that handles all
-		// possible escaping.
-		// The same reasoning applies to the variable name, even though the
-		// variable name typically only uses a restricted character set.
-		matches(varuse.Mod(), `^[*.:\w\[\]]+$`) {
-
-		fixedPart := varname + modsExceptLast + ":M" + pattern
-		from := condStr(neg, "!", "") + "empty(" + fixedPart + ")"
-		to := condStr(neg, "", "!") + "${" + fixedPart + "}"
-
-		fix := s.MkLine.Autofix()
-		fix.Notef("%q can be simplified to %q.", from, to)
-		fix.Explain(
-			"This variable is guaranteed to be defined at this point.",
-			"Therefore it may occur on the left-hand side of a comparison",
-			"and doesn't have to be guarded by the function 'empty'.")
-		fix.Replace(from, to)
-		fix.Apply()
-
-		return
-	}
-
 	switch {
 	case !exact,
 		vartype == nil,
@@ -131,6 +110,58 @@ func (s *MkCondSimplifier) SimplifyVarUse(varuse *MkVarUse, fromEmpty bool, neg 
 		"In such a case, using the :M or :N modifiers is useful and preferred.")
 	fix.Replace(from, to)
 	fix.Apply()
+}
+
+// simplifyMatch replaces:
+//  !empty(VAR:M*.c) with ${VAR:M*.c}
+//  empty(VAR:M*.c) with !${VAR:M*.c}
+//
+// * fromEmpty is true for the form empty(VAR...), and false for ${VAR...}.
+//
+// * neg is true for the form !empty(VAR...), and false for empty(VAR...).
+func (s *MkCondSimplifier) simplifyMatch(varuse *MkVarUse, fromEmpty bool, neg bool) {
+	varname := varuse.varname
+	modifiers := varuse.modifiers
+
+	n := len(modifiers)
+	if n == 0 {
+		return
+	}
+	modsExceptLast := NewMkVarUse("", modifiers[:n-1]...).Mod()
+	vartype := G.Pkgsrc.VariableType(s.MkLines, varname)
+
+	modifier := modifiers[n-1]
+	ok, positive, pattern, exact := modifier.MatchMatch()
+	if !ok || !positive && n != 1 {
+		return
+	}
+
+	if fromEmpty && positive && !exact && vartype != nil &&
+		s.isDefined(varname, vartype) &&
+		// Restrict replacements to very simple patterns with only few
+		// special characters, for now.
+		// Before generalizing this to arbitrary strings, there has to be
+		// a proper code generator for these conditions that handles all
+		// possible escaping.
+		// The same reasoning applies to the variable name, even though the
+		// variable name typically only uses a restricted character set.
+		matches(varuse.Mod(), `^[*.:\w\[\]]+$`) {
+
+		fixedPart := varname + modsExceptLast + ":M" + pattern
+		from := condStr(neg, "!", "") + "empty(" + fixedPart + ")"
+		to := condStr(neg, "", "!") + "${" + fixedPart + "}"
+
+		fix := s.MkLine.Autofix()
+		fix.Notef("%q can be simplified to %q.", from, to)
+		fix.Explain(
+			"This variable is guaranteed to be defined at this point.",
+			"Therefore it may occur on the left-hand side of a comparison",
+			"and doesn't have to be guarded by the function 'empty'.")
+		fix.Replace(from, to)
+		fix.Apply()
+
+		return
+	}
 }
 
 // isDefined determines whether the variable is guaranteed to be defined at
