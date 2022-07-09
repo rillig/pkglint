@@ -252,7 +252,7 @@ func (ck *MkCondChecker) simplify(varuse *MkVarUse, fromEmpty bool, neg bool) {
 		// possible escaping.
 		// The same reasoning applies to the variable name, even though the
 		// variable name typically only uses a restricted character set.
-		matches(varuse.Mod(), `^[*.:\w]+$`) {
+		matches(varuse.Mod(), `^[*.:\w\[\]]+$`) {
 
 		fixedPart := varname + modsExceptLast + ":M" + pattern
 		from := condStr(neg, "!", "") + "empty(" + fixedPart + ")"

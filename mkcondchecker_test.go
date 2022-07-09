@@ -1165,12 +1165,15 @@ func (s *Suite) Test_MkCondChecker_simplify(c *check.C) {
 			"Replacing \"empty(IN_SCOPE_DEFINED:M*.c)\" "+
 			"with \"!${IN_SCOPE_DEFINED:M*.c}\".")
 
-	// TODO: Suggest to simplify this condition.
 	testBeforeAndAfterPrefs(
 		".if !empty(IN_SCOPE_DEFINED:M[Nn][Oo])",
-		".if !empty(IN_SCOPE_DEFINED:M[Nn][Oo])",
+		".if ${IN_SCOPE_DEFINED:M[Nn][Oo]}",
 
-		nil...)
+		"NOTE: filename.mk:3: \"!empty(IN_SCOPE_DEFINED:M[Nn][Oo])\" "+
+			"can be simplified to \"${IN_SCOPE_DEFINED:M[Nn][Oo]}\".",
+		"AUTOFIX: filename.mk:3: "+
+			"Replacing \"!empty(IN_SCOPE_DEFINED:M[Nn][Oo])\" "+
+			"with \"${IN_SCOPE_DEFINED:M[Nn][Oo]}\".")
 }
 
 func (s *Suite) Test_MkCondChecker_simplify__defined_in_same_file(c *check.C) {
