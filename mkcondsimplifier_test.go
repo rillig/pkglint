@@ -134,11 +134,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 
 	t.setUp()
 
-	testBeforePrefs := t.testBeforePrefs
-	testAfterPrefs := t.testAfterPrefs
-	testBeforeAndAfterPrefs := t.testBeforeAndAfterPrefs
-
-	testBeforeAndAfterPrefs(
+	t.testBeforeAndAfterPrefs(
 		".if ${IN_SCOPE_DEFINED:Mpattern}",
 		".if ${IN_SCOPE_DEFINED} == pattern",
 
@@ -148,7 +144,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 		"AUTOFIX: filename.mk:6: Replacing \"${IN_SCOPE_DEFINED:Mpattern}\" "+
 			"with \"${IN_SCOPE_DEFINED} == pattern\".")
 
-	testBeforeAndAfterPrefs(
+	t.testBeforeAndAfterPrefs(
 		".if ${IN_SCOPE:Mpattern}",
 		".if ${IN_SCOPE:U} == pattern",
 
@@ -162,7 +158,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 	// it is not in scope yet. Therefore it needs the :U modifier.
 	// The warning that this variable is not yet in scope comes from
 	// a different part of pkglint.
-	testBeforePrefs(
+	t.testBeforePrefs(
 		".if ${PREFS_DEFINED:Mpattern}",
 		".if ${PREFS_DEFINED:U} == pattern",
 
@@ -174,7 +170,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 		"AUTOFIX: filename.mk:6: Replacing \"${PREFS_DEFINED:Mpattern}\" "+
 			"with \"${PREFS_DEFINED:U} == pattern\".")
 
-	testAfterPrefs(
+	t.testAfterPrefs(
 		".if ${PREFS_DEFINED:Mpattern}",
 		".if ${PREFS_DEFINED} == pattern",
 
@@ -184,7 +180,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 		"AUTOFIX: filename.mk:6: Replacing \"${PREFS_DEFINED:Mpattern}\" "+
 			"with \"${PREFS_DEFINED} == pattern\".")
 
-	testBeforePrefs(
+	t.testBeforePrefs(
 		".if ${PREFS:Mpattern}",
 		".if ${PREFS:U} == pattern",
 
@@ -198,7 +194,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 
 	// Preferences that may be undefined always need the :U modifier,
 	// even when they are in scope.
-	testAfterPrefs(
+	t.testAfterPrefs(
 		".if ${PREFS:Mpattern}",
 		".if ${PREFS:U} == pattern",
 
@@ -210,7 +206,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 
 	// Variables that are defined later always need the :U modifier.
 	// It is probably a mistake to use them in conditions at all.
-	testBeforeAndAfterPrefs(
+	t.testBeforeAndAfterPrefs(
 		".if ${LATER_DEFINED:Mpattern}",
 		".if ${LATER_DEFINED:U} == pattern",
 
@@ -224,7 +220,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 
 	// Variables that are defined later always need the :U modifier.
 	// It is probably a mistake to use them in conditions at all.
-	testBeforeAndAfterPrefs(
+	t.testBeforeAndAfterPrefs(
 		".if ${LATER:Mpattern}",
 		".if ${LATER:U} == pattern",
 
@@ -236,14 +232,14 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 		"AUTOFIX: filename.mk:6: Replacing \"${LATER:Mpattern}\" "+
 			"with \"${LATER:U} == pattern\".")
 
-	testBeforeAndAfterPrefs(
+	t.testBeforeAndAfterPrefs(
 		".if ${UNDEFINED:Mpattern}",
 		".if ${UNDEFINED:Mpattern}",
 
 		"WARN: filename.mk:6: UNDEFINED is used but not defined.")
 
 	// When the pattern contains placeholders, it cannot be converted to == or !=.
-	testAfterPrefs(
+	t.testAfterPrefs(
 		".if ${PREFS_DEFINED:Mpa*n}",
 		".if ${PREFS_DEFINED:Mpa*n}",
 
@@ -251,7 +247,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 
 	// When deciding whether to replace the expression, only the
 	// last modifier is inspected. All the others are copied.
-	testAfterPrefs(
+	t.testAfterPrefs(
 		".if ${PREFS_DEFINED:tl:Mpattern}",
 		".if ${PREFS_DEFINED:tl} == pattern",
 
@@ -265,7 +261,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 	// as long as the variable is guaranteed to be nonempty.
 	// TODO: Actually implement this.
 	//  As of December 2019, IsNonemptyIfDefined is not used anywhere.
-	testAfterPrefs(
+	t.testAfterPrefs(
 		".if ${PREFS_DEFINED:Npattern}",
 		".if ${PREFS_DEFINED} != pattern",
 
@@ -280,7 +276,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 	// Applying the transformation would make the condition longer
 	// than before, therefore nothing can be simplified here,
 	// even though all patterns are exact matches.
-	testAfterPrefs(
+	t.testAfterPrefs(
 		".if ${PREFS_DEFINED:None:Ntwo}",
 		".if ${PREFS_DEFINED:None:Ntwo}",
 
@@ -289,7 +285,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 	// Note: this combination doesn't make sense since the patterns
 	// "one" and "two" don't overlap.
 	// Nevertheless it is possible and valid to simplify the condition.
-	testAfterPrefs(
+	t.testAfterPrefs(
 		".if ${PREFS_DEFINED:Mone:Mtwo}",
 		".if ${PREFS_DEFINED:Mone} == two",
 
@@ -301,7 +297,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 
 	// There is no ! before the empty, which is easy to miss.
 	// Because of this missing negation, the comparison operator is !=.
-	testAfterPrefs(
+	t.testAfterPrefs(
 		".if empty(PREFS_DEFINED:Mpattern)",
 		".if ${PREFS_DEFINED} != pattern",
 
@@ -311,7 +307,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 		"AUTOFIX: filename.mk:6: Replacing \"empty(PREFS_DEFINED:Mpattern)\" "+
 			"with \"${PREFS_DEFINED} != pattern\".")
 
-	testAfterPrefs(
+	t.testAfterPrefs(
 		".if !!empty(PREFS_DEFINED:Mpattern)",
 		// TODO: The ! and == could be combined into a !=.
 		//  Luckily the !! pattern doesn't occur in practice.
@@ -327,7 +323,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 			"with \"${PREFS_DEFINED} == pattern\".")
 
 	// Simplifying the condition also works in complex expressions.
-	testAfterPrefs(".if empty(PREFS_DEFINED:Mpattern) || 0",
+	t.testAfterPrefs(".if empty(PREFS_DEFINED:Mpattern) || 0",
 		".if ${PREFS_DEFINED} != pattern || 0",
 
 		"NOTE: filename.mk:6: PREFS_DEFINED can be "+
@@ -338,7 +334,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 
 	// No note in this case since there is no implicit !empty around the varUse.
 	// There is no obvious way of writing this expression in a simpler form.
-	testAfterPrefs(
+	t.testAfterPrefs(
 		".if ${PREFS_DEFINED:Mpattern} != ${OTHER}",
 		".if ${PREFS_DEFINED:Mpattern} != ${OTHER}",
 
@@ -346,7 +342,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 
 	// The condition is also simplified if it doesn't use the !empty
 	// form but the implicit conversion to boolean.
-	testAfterPrefs(
+	t.testAfterPrefs(
 		".if ${PREFS_DEFINED:Mpattern}",
 		".if ${PREFS_DEFINED} == pattern",
 
@@ -358,7 +354,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 
 	// A single negation outside the implicit conversion is taken into
 	// account when simplifying the condition.
-	testAfterPrefs(
+	t.testAfterPrefs(
 		".if !${PREFS_DEFINED:Mpattern}",
 		".if ${PREFS_DEFINED} != pattern",
 
@@ -369,7 +365,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 			"with \"${PREFS_DEFINED} != pattern\".")
 
 	// TODO: Merge the double negation into the comparison operator.
-	testAfterPrefs(
+	t.testAfterPrefs(
 		".if !!${PREFS_DEFINED:Mpattern}",
 		".if !${PREFS_DEFINED} != pattern",
 
@@ -384,21 +380,21 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 	// Or can it, if the PKGPATH contains quotes?
 	// TODO: How exactly does bmake apply the matching here,
 	//  are both values unquoted first? Probably not, but who knows.
-	testBeforeAndAfterPrefs(
+	t.testBeforeAndAfterPrefs(
 		".if ${IN_SCOPE_DEFINED:Mpattern with spaces}",
 		".if ${IN_SCOPE_DEFINED:Mpattern with spaces}",
 
 		nil...)
 	// TODO: ".if ${PKGPATH} == \"pattern with spaces\"")
 
-	testBeforeAndAfterPrefs(
+	t.testBeforeAndAfterPrefs(
 		".if ${IN_SCOPE_DEFINED:M'pattern with spaces'}",
 		".if ${IN_SCOPE_DEFINED:M'pattern with spaces'}",
 
 		nil...)
 	// TODO: ".if ${PKGPATH} == 'pattern with spaces'")
 
-	testBeforeAndAfterPrefs(
+	t.testBeforeAndAfterPrefs(
 		".if ${IN_SCOPE_DEFINED:M&&}",
 		".if ${IN_SCOPE_DEFINED:M&&}",
 
@@ -423,7 +419,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 	// has been included, like everywhere else.
 	//
 	// TODO: This is where NonemptyIfDefined comes into play.
-	testAfterPrefs(
+	t.testAfterPrefs(
 		".if ${PREFS_DEFINED:Nnegative-pattern}",
 		".if ${PREFS_DEFINED} != negative-pattern",
 
@@ -436,13 +432,13 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 	// Since UNDEFINED is not a well-known variable that is
 	// guaranteed to be non-empty (see the previous example), it is not
 	// transformed at all.
-	testBeforePrefs(
+	t.testBeforePrefs(
 		".if ${UNDEFINED:Nnegative-pattern}",
 		".if ${UNDEFINED:Nnegative-pattern}",
 
 		"WARN: filename.mk:6: UNDEFINED is used but not defined.")
 
-	testAfterPrefs(
+	t.testAfterPrefs(
 		".if ${UNDEFINED:Nnegative-pattern}",
 		".if ${UNDEFINED:Nnegative-pattern}",
 
@@ -450,7 +446,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 
 	// A complex condition may contain several simple conditions
 	// that are each simplified independently, in the same go.
-	testAfterPrefs(
+	t.testAfterPrefs(
 		".if ${PREFS_DEFINED:Mpath1} || ${PREFS_DEFINED:Mpath2}",
 		".if ${PREFS_DEFINED} == path1 || ${PREFS_DEFINED} == path2",
 
@@ -468,7 +464,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 	// Removing redundant parentheses may be useful one day but is
 	// not urgent.
 	// Simplifying the inner expression keeps all parentheses as-is.
-	testAfterPrefs(
+	t.testAfterPrefs(
 		".if (((((${PREFS_DEFINED:Mpath})))))",
 		".if (((((${PREFS_DEFINED} == path)))))",
 
@@ -481,7 +477,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 	// Several modifiers like :S and :C may change the variable value.
 	// Whether the condition can be simplified or not only depends on the
 	// last modifier in the chain.
-	testAfterPrefs(
+	t.testAfterPrefs(
 		".if !empty(PREFS_DEFINED:S,NetBSD,ok,:Mok)",
 		".if ${PREFS_DEFINED:S,NetBSD,ok,} == ok",
 
@@ -491,7 +487,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 		"AUTOFIX: filename.mk:6: Replacing \"!empty(PREFS_DEFINED:S,NetBSD,ok,:Mok)\" "+
 			"with \"${PREFS_DEFINED:S,NetBSD,ok,} == ok\".")
 
-	testAfterPrefs(
+	t.testAfterPrefs(
 		".if empty(PREFS_DEFINED:tl:Msunos)",
 		".if ${PREFS_DEFINED:tl} != sunos",
 
@@ -503,7 +499,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 
 	// The condition can only be simplified if the :M or :N modifier
 	// appears at the end of the chain.
-	testAfterPrefs(
+	t.testAfterPrefs(
 		".if !empty(PREFS_DEFINED:O:MUnknown:S,a,b,)",
 		".if !empty(PREFS_DEFINED:O:MUnknown:S,a,b,)",
 
@@ -511,7 +507,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 
 	// The dot is just an ordinary character in a pattern.
 	// In comparisons, an unquoted 1.2 is interpreted as a number though.
-	testAfterPrefs(
+	t.testAfterPrefs(
 		".if !empty(PREFS_DEFINED:Mpackage1.2)",
 		".if ${PREFS_DEFINED} == package1.2",
 
@@ -524,7 +520,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 	// Numbers must be enclosed in quotes, otherwise they are compared
 	// as numbers, not as strings.
 	// The :M and :N modifiers always compare strings.
-	testAfterPrefs(
+	t.testAfterPrefs(
 		".if empty(PREFS:U:M64)",
 		".if ${PREFS:U} != \"64\"",
 
@@ -535,7 +531,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 			"with \"${PREFS:U} != \\\"64\\\"\".")
 
 	// Fractional numbers must also be enclosed in quotes.
-	testAfterPrefs(
+	t.testAfterPrefs(
 		".if empty(PREFS:U:M19.12)",
 		".if ${PREFS:U} != \"19.12\"",
 
@@ -545,7 +541,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 		"AUTOFIX: filename.mk:6: Replacing \"empty(PREFS:U:M19.12)\" "+
 			"with \"${PREFS:U} != \\\"19.12\\\"\".")
 
-	testAfterPrefs(
+	t.testAfterPrefs(
 		".if !empty(LATER:Npattern)",
 		".if !empty(LATER:Npattern)",
 
@@ -555,7 +551,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 			"at load time in any file.")
 
 	// TODO: Add a note that the :U is unnecessary, and explain why.
-	testAfterPrefs(
+	t.testAfterPrefs(
 		".if ${PREFS_DEFINED:U:Mpattern}",
 		".if ${PREFS_DEFINED:U} == pattern",
 
@@ -568,7 +564,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 
 	// Conditions without any modifiers cannot be simplified
 	// and are therefore skipped.
-	testBeforeAndAfterPrefs(
+	t.testBeforeAndAfterPrefs(
 		".if ${IN_SCOPE_DEFINED}",
 		".if ${IN_SCOPE_DEFINED}",
 
@@ -580,24 +576,24 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 	// replaced automatically, see mkCondLiteralChars.
 	// TODO: Add tests for all characters that are special in string literals or patterns.
 	// TODO: Then, extend the set of characters for which the expressions are simplified.
-	testBeforePrefs(
+	t.testBeforePrefs(
 		".if ${PREFS_DEFINED:M&&}",
 		".if ${PREFS_DEFINED:M&&}",
 
 		"WARN: filename.mk:6: To use PREFS_DEFINED at load time, .include \"../../mk/bsd.prefs.mk\" first.")
-	testAfterPrefs(
+	t.testAfterPrefs(
 		".if ${PREFS_DEFINED:M&&}",
 		".if ${PREFS_DEFINED:M&&}",
 
 		nil...)
 
-	testBeforePrefs(
+	t.testBeforePrefs(
 		".if ${PREFS:M&&}",
 		".if ${PREFS:M&&}",
 
 		// TODO: Warn that the :U is missing.
 		"WARN: filename.mk:6: To use PREFS at load time, .include \"../../mk/bsd.prefs.mk\" first.")
-	testAfterPrefs(
+	t.testAfterPrefs(
 		".if ${PREFS:M&&}",
 		".if ${PREFS:M&&}",
 
@@ -606,7 +602,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 
 	// The + is contained in both mkCondStringLiteralUnquoted and
 	// mkCondModifierPatternLiteral, therefore it is copied verbatim.
-	testAfterPrefs(
+	t.testAfterPrefs(
 		".if ${PREFS_DEFINED:Mcategory/gtk+}",
 		".if ${PREFS_DEFINED} == category/gtk+",
 
@@ -619,7 +615,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 
 	// The characters <=> may be used unescaped in :M and :N patterns
 	// but not in .if conditions. There they must be enclosed in quotes.
-	testBeforePrefs(
+	t.testBeforePrefs(
 		".if ${PREFS_DEFINED:M<=>}",
 		".if ${PREFS_DEFINED:U} == \"<=>\"",
 
@@ -631,7 +627,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 		"AUTOFIX: filename.mk:6: "+
 			"Replacing \"${PREFS_DEFINED:M<=>}\" "+
 			"with \"${PREFS_DEFINED:U} == \\\"<=>\\\"\".")
-	testAfterPrefs(
+	t.testAfterPrefs(
 		".if ${PREFS_DEFINED:M<=>}",
 		".if ${PREFS_DEFINED} == \"<=>\"",
 
@@ -644,13 +640,13 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 
 	// If pkglint replaces this particular pattern, the resulting string
 	// literal must be escaped properly.
-	testBeforeAndAfterPrefs(
+	t.testBeforeAndAfterPrefs(
 		".if ${IN_SCOPE_DEFINED:M\"}",
 		".if ${IN_SCOPE_DEFINED:M\"}",
 
 		nil...)
 
-	testBeforeAndAfterPrefs(
+	t.testBeforeAndAfterPrefs(
 		".if !empty(IN_SCOPE_DEFINED:M)",
 		".if ${IN_SCOPE_DEFINED} == \"\"",
 
