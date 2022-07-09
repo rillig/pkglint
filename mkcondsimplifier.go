@@ -26,22 +26,6 @@ func (s *MkCondSimplifier) SimplifyVarUse(varuse *MkVarUse, fromEmpty bool, neg 
 	modsExceptLast := NewMkVarUse("", modifiers[:n-1]...).Mod()
 	vartype := G.Pkgsrc.VariableType(s.MkLines, varname)
 
-	isDefined := func() bool {
-		if vartype.IsAlwaysInScope() && vartype.IsDefinedIfInScope() {
-			return true
-		}
-
-		// For run time expressions, such as ${${VAR} == value:?yes:no},
-		// the scope would need to be changed to ck.MkLines.allVars.
-		if s.MkLines.checkAllData.vars.IsDefined(varname) {
-			return true
-		}
-
-		return s.MkLines.Tools.SeenPrefs &&
-			vartype.Union().Contains(aclpUseLoadtime) &&
-			vartype.IsDefinedIfInScope()
-	}
-
 	// replace constructs the state before and after the autofix.
 	// The before state is constructed to ensure that only very simple
 	// patterns get replaced automatically.
@@ -49,7 +33,7 @@ func (s *MkCondSimplifier) SimplifyVarUse(varuse *MkVarUse, fromEmpty bool, neg 
 	// Before putting any cases involving special characters into
 	// production, there need to be more tests for the edge cases.
 	replace := func(positive bool, pattern string) (bool, string, string) {
-		defined := isDefined()
+		defined := s.isDefined(varname, vartype)
 		if !defined && !positive {
 			// TODO: This is a double negation, maybe even triple.
 			//  There is an :N pattern, and the variable may be undefined.
@@ -93,7 +77,8 @@ func (s *MkCondSimplifier) SimplifyVarUse(varuse *MkVarUse, fromEmpty bool, neg 
 
 	// Replace !empty(VAR:M*.c) with ${VAR:M*.c}.
 	// Replace empty(VAR:M*.c) with !${VAR:M*.c}.
-	if fromEmpty && positive && !exact && vartype != nil && isDefined() &&
+	if fromEmpty && positive && !exact && vartype != nil &&
+		s.isDefined(varname, vartype) &&
 		// Restrict replacements to very simple patterns with only few
 		// special characters, for now.
 		// Before generalizing this to arbitrary strings, there has to be
@@ -146,4 +131,23 @@ func (s *MkCondSimplifier) SimplifyVarUse(varuse *MkVarUse, fromEmpty bool, neg 
 		"In such a case, using the :M or :N modifiers is useful and preferred.")
 	fix.Replace(from, to)
 	fix.Apply()
+}
+
+// isDefined determines whether the variable is guaranteed to be defined at
+// this point of reading the makefile. If it is defined, conditions do not
+// need the ':U' modifier.
+func (s *MkCondSimplifier) isDefined(varname string, vartype *Vartype) bool {
+	if vartype.IsAlwaysInScope() && vartype.IsDefinedIfInScope() {
+		return true
+	}
+
+	// For run time expressions, such as ${${VAR} == value:?yes:no},
+	// the scope would need to be changed to ck.MkLines.allVars.
+	if s.MkLines.checkAllData.vars.IsDefined(varname) {
+		return true
+	}
+
+	return s.MkLines.Tools.SeenPrefs &&
+		vartype.Union().Contains(aclpUseLoadtime) &&
+		vartype.IsDefinedIfInScope()
 }

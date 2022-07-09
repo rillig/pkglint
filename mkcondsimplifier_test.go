@@ -747,3 +747,27 @@ func (s *Suite) Test_MkCondSimplifier_SimplifyVarUse__defined_in_same_file(c *ch
 			"Replacing \"${LATER_DIR:Mpattern}\" "+
 			"with \"${LATER_DIR:U} == pattern\".")
 }
+
+func (s *Suite) Test_MkCondSimplifier_isDefined(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"DEFINED=\tyes",
+		".if defined(UNDEFINED) && defined(DEFINED)",
+		".endif")
+	// Initialize whether the variables are defined.
+	mklines.Check()
+
+	mklines.ForEach(func(mkline *MkLine) {
+		if mkline.IsDirective() && mkline.Directive() == "if" {
+			mcs := MkCondSimplifier{mklines, mkline}
+			vartype := NewVartype(BtMessage, 0, nil...)
+
+			t.AssertEquals(false, mcs.isDefined("UNDEFINED", vartype))
+			t.AssertEquals(true, mcs.isDefined("DEFINED", vartype))
+		}
+	})
+	t.CheckOutputLines(
+		"WARN: filename.mk:3: UNDEFINED is used but not defined.")
+}
