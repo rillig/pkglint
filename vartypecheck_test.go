@@ -2409,7 +2409,12 @@ func (s *Suite) Test_VartypeCheck_WrapperTransform(c *check.C) {
 }
 
 func (s *Suite) Test_VartypeCheck_WrkdirSubdirectory(c *check.C) {
-	vt := NewVartypeCheckTester(s.Init(c), BtWrkdirSubdirectory)
+	t := s.Init(c)
+	pkg := NewPackage(t.SetUpPackage("category/package"))
+	t.FinishSetUp()
+	vt := NewVartypeCheckTester(t, BtWrkdirSubdirectory)
+	pkg.load()
+	vt.pkg = pkg
 
 	vt.Varname("WRKSRC")
 	vt.Op(opAssign)
@@ -2424,12 +2429,23 @@ func (s *Suite) Test_VartypeCheck_WrkdirSubdirectory(c *check.C) {
 		"two words",
 		"../other",
 		"${WRKSRC}", // Recursive definition.
-		"${PKGDIR}/files")
+		"${PKGDIR}/files",
+		// Would be redundant in the context of the package.
+		"${WRKDIR}/package-1.0",
+	)
 
 	// XXX: Many more consistency checks are possible here.
 	vt.Output(
 		"WARN: filename.mk:8: The pathname \"two words\" " +
 			"contains the invalid character \" \".")
+
+	vt.Values(
+		// TODO: Note the redundant definition.
+		"${WRKDIR}/package-1.0",
+		"${WRKDIR}/pkg-1.0",       // different package base
+		"${WRKDIR}/package-1.000", // different version string
+		"${WRKDIR}/package-1.1",   // different version
+	)
 }
 
 func (s *Suite) Test_VartypeCheck_WrksrcPathPattern(c *check.C) {
