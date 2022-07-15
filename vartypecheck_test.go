@@ -2413,9 +2413,9 @@ func (s *Suite) Test_VartypeCheck_WrkdirSubdirectory(c *check.C) {
 	pkg := NewPackage(t.SetUpPackage("category/package"))
 	t.FinishSetUp()
 	vt := NewVartypeCheckTester(t, BtWrkdirSubdirectory)
-	pkg.load()
-	vt.pkg = pkg
+	pkg.Check() // To initialize pkg.redundant.
 
+	vt.Package(pkg)
 	vt.Varname("WRKSRC")
 	vt.Op(opAssign)
 	vt.Values(
@@ -2429,10 +2429,7 @@ func (s *Suite) Test_VartypeCheck_WrkdirSubdirectory(c *check.C) {
 		"two words",
 		"../other",
 		"${WRKSRC}", // Recursive definition.
-		"${PKGDIR}/files",
-		// Would be redundant in the context of the package.
-		"${WRKDIR}/package-1.0",
-	)
+		"${PKGDIR}/files")
 
 	// XXX: Many more consistency checks are possible here.
 	vt.Output(
@@ -2446,6 +2443,10 @@ func (s *Suite) Test_VartypeCheck_WrkdirSubdirectory(c *check.C) {
 		"${WRKDIR}/package-1.000", // different version string
 		"${WRKDIR}/package-1.1",   // different version
 	)
+
+	vt.Output(
+		"NOTE: filename.mk:21: " +
+			"Setting WRKSRC to \"${WRKDIR}/package-1.0\" is redundant.")
 }
 
 func (s *Suite) Test_VartypeCheck_WrksrcPathPattern(c *check.C) {
@@ -2637,8 +2638,16 @@ func NewVartypeCheckTester(t *Tester, basicType *BasicType) *VartypeCheckTester 
 	return &VartypeCheckTester{t, basicType, "filename.mk", 1, "", opAssign, nil}
 }
 
+// Package sets the package that gives context to the MkLines that are
+// temporarily created in all following calls to Values.
+//
+// Depending on the test case at hand, it may be enough to have a bare
+// package created by NewPackage, in other cases the package data needs to be
+// loaded using Package.load.
 func (vt *VartypeCheckTester) Package(pkg *Package) { vt.pkg = pkg }
 
+// Varname sets the variable name that will be used in all following calls to
+// Values.
 func (vt *VartypeCheckTester) Varname(varname string) {
 	vartype := G.Pkgsrc.VariableType(nil, varname)
 	assertNotNil(vartype)
@@ -2648,6 +2657,9 @@ func (vt *VartypeCheckTester) Varname(varname string) {
 	vt.nextSection()
 }
 
+// File sets the filename that will be used in all following calls to Values.
+// This is useful when testing the permissions of the variable, see
+// VarTypeRegistry.
 func (vt *VartypeCheckTester) File(filename CurrPath) {
 	vt.filename = filename
 	vt.lineno = 1

@@ -1349,8 +1349,9 @@ func (s *Suite) Test_Package_check__redundant_WRKSRC(c *check.C) {
 
 	t.Main("-q", "category/package")
 
-	// TODO: Note about redundant WRKSRC definition.
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"NOTE: ~/category/package/Makefile:20: " +
+			"Setting WRKSRC to \"${WRKDIR}/package-1.0\" is redundant.")
 }
 
 func (s *Suite) Test_Package_checkDescr__DESCR_SRC(c *check.C) {
