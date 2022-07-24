@@ -603,6 +603,7 @@ func (pkg *Package) check(filenames []CurrPath, mklines, allLines *MkLines) {
 	}
 
 	pkg.checkDistfilesInDistinfo(allLines)
+	pkg.checkPkgConfig(allLines)
 }
 
 func (pkg *Package) checkDescr(filenames []CurrPath, mklines *MkLines) {
@@ -652,6 +653,31 @@ func (pkg *Package) checkDistfilesInDistinfo(mklines *MkLines) {
 				distfile, mkline.Rel(pkg.File(pkg.DistinfoFile)))
 		}
 	}
+}
+
+func (pkg *Package) checkPkgConfig(allLines *MkLines) {
+	pkgConfig := allLines.Tools.ByName("pkg-config")
+	if pkgConfig == nil || !pkgConfig.UsableAtRunTime() {
+		return
+	}
+
+	for included := range pkg.included.m {
+		if hasSuffix(included.String(), "buildlink3.mk") {
+			return
+		}
+	}
+
+	mkline := allLines.mklines[0]
+	mkline.Warnf("The package uses the tool \"pkg-config\" " +
+		"but doesn't include any buildlink3 file.")
+	mkline.Explain(
+		"The pkgsrc tool wrappers replace the \"pkg-config\" command",
+		"with a pkg-config implementation that looks in the buildlink3",
+		"directory.",
+		"This directory is populated by including the dependencies via",
+		"the buildlink3.mk files.",
+		"Since this package does not include any such files, the buildlink3",
+		"directory will be empty and pkg-config will not find anything.")
 }
 
 func (pkg *Package) checkfilePackageMakefile(filename CurrPath, mklines *MkLines, allLines *MkLines) {

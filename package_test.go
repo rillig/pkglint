@@ -1139,6 +1139,58 @@ func (s *Suite) Test_Package_resolveIncludedFile__no_tracing(c *check.C) {
 		"FirstTime: ../../lang/language/builtin.mk")
 }
 
+func (s *Suite) Test_Package_checkPkgConfig__no_buildlink3(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpTool("pkg-config", "", Nowhere)
+	t.SetUpPackage("category/package",
+		"USE_TOOLS+=\tpkg-config")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	pkg := NewPackage(".")
+	pkg.Check()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:1: The package uses the tool \"pkg-config\" " +
+			"but doesn't include any buildlink3 file.")
+}
+
+func (s *Suite) Test_Package_checkPkgConfig__plain_buildlink3(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpTool("pkg-config", "", Nowhere)
+	t.SetUpPackage("category/package",
+		"USE_TOOLS+=\tpkg-config",
+		".include \"../../devel/library/buildlink3.mk\"")
+	t.SetUpPackage("devel/library")
+	t.CreateFileBuildlink3("devel/library/buildlink3.mk")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	pkg := NewPackage(".")
+	pkg.Check()
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_Package_checkPkgConfig__mk_buildlink3(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpTool("pkg-config", "", Nowhere)
+	t.SetUpPackage("category/package",
+		"USE_TOOLS+=\tpkg-config",
+		".include \"../../mk/curses.buildlink3.mk\"")
+	t.CreateFileLines("mk/curses.buildlink3.mk")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	pkg := NewPackage(".")
+	pkg.Check()
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Package_resolveIncludedFile__skipping(c *check.C) {
 	t := s.Init(c)
 
