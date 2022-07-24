@@ -283,7 +283,7 @@ func (reg *VarTypeRegistry) compilerLanguages(src *Pkgsrc) *BasicType {
 	if mklines != nil {
 		for _, mkline := range mklines.mklines {
 
-			if mkline.IsVarassign() && mkline.Varname() == "_CXX_STD_VERSIONS" {
+			if mkline.IsVarassign() && hasSuffix(mkline.Varname(), "_STD_VERSIONS") {
 				words := mkline.ValueFields(mkline.Value())
 				for _, word := range words {
 					languages[intern(word)] = true
