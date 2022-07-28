@@ -662,7 +662,10 @@ func (pkg *Package) checkPkgConfig(allLines *MkLines) {
 	}
 
 	for included := range pkg.included.m {
-		if hasSuffix(included.String(), "buildlink3.mk") {
+		included := included.String()
+		if hasSuffix(included, "buildlink3.mk") ||
+			hasSuffix(included, "/mk/apache.mk") ||
+			hasSuffix(included, "/mk/apache.module.mk") {
 			return
 		}
 	}
