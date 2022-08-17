@@ -118,10 +118,6 @@ func (s *Suite) Test_MkAssignChecker_checkLeft__infrastructure(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: ~/mk/infra.mk:2: _VARNAME is defined but not used.",
-		// FIXME
-		"WARN: ~/wip/mk/infra.mk:2: "+
-			"Variable names starting with an underscore "+
-			"(_CVS_ENV) are reserved for internal pkgsrc use.",
 		"WARN: ~/wip/mk/infra.mk:2: _CVS_ENV is defined but not used.")
 }
 
