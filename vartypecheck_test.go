@@ -509,13 +509,6 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern__smaller_version(c *check.C)
 	t.CheckOutputLines(
 		"NOTE: Makefile:24: The requirement >=1.0pkg is already guaranteed "+
 			"by the >=1.3api from ../../category/lib/buildlink3.mk:12.",
-		"NOTE: Makefile:25: The requirement >=${LIB_VERSION_SMALL} "+
-			"is already guaranteed by the >=1.3api "+
-			"from ../../category/lib/buildlink3.mk:12.",
-		// FIXME: LIB_VERSION_LARGE is actually larger than 1.3api.
-		"NOTE: Makefile:26: The requirement >=${LIB_VERSION_LARGE} "+
-			"is already guaranteed by the >=1.3api "+
-			"from ../../category/lib/buildlink3.mk:12.",
 		"ERROR: Makefile:27: Packages must only require API versions, "+
 			"not ABI versions of dependencies.",
 		"NOTE: Makefile:27: The requirement >=1.1pkg is already guaranteed "+
