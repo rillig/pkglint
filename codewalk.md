@@ -228,7 +228,7 @@ but that doesn't happen in this simple example run.
 
 The main work is done in `Pkglint.Check`:
 
-> from [pkglint.go](pkglint.go#L323):
+> from [pkglint.go](pkglint.go#L324):
 
 ```go
 	if isReg {
@@ -242,7 +242,7 @@ Since `DESCR` is a regular file, the next function to call is `checkReg`.
 For directories, the next function would depend on the depth from the
 pkgsrc root directory.
 
-> from [pkglint.go](pkglint.go#L584):
+> from [pkglint.go](pkglint.go#L585):
 
 ```go
 func (p *Pkglint) checkReg(filename CurrPath, basename RelPath, depth int, pkg *Package) {
@@ -250,7 +250,7 @@ func (p *Pkglint) checkReg(filename CurrPath, basename RelPath, depth int, pkg *
 
 The relevant part of `Pkglint.checkReg` is:
 
-> from [pkglint.go](pkglint.go#L611):
+> from [pkglint.go](pkglint.go#L612):
 
 ```go
 	case basename == "buildlink3.mk":
@@ -284,7 +284,7 @@ The actual checks usually work on `Line` objects instead of files
 because the lines offer nice methods for logging the diagnostics
 and for automatically fixing the text (in pkglint's `--autofix` mode).
 
-> from [pkglint.go](pkglint.go#L454):
+> from [pkglint.go](pkglint.go#L455):
 
 ```go
 func CheckLinesDescr(lines *Lines) {
@@ -409,7 +409,7 @@ If that was too easy, have a look at the code that decides whether an
 expression such as `${CFLAGS}` needs to be quoted using the `:Q` modifier
 when it is used in a shell command:
 
-> from [mkline.go](mkline.go#L708):
+> from [mkline.go](mkline.go#L710):
 
 ```go
 // VariableNeedsQuoting determines whether the given variable needs the :Q
