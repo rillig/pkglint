@@ -526,7 +526,7 @@ func (b *substBlock) suggestSubstVars(mkline *MkLine) {
 		fix.Apply()
 
 		// At this point the number of SUBST_SED assignments is one
-		// less than before. Therefore it is possible to adjust the
+		// less than before. Therefore, it is possible to adjust the
 		// assignment operators on them. It's probably not worth the
 		// effort, though.
 
