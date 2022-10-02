@@ -448,11 +448,15 @@ func (s *Suite) Test_CheckLinesOptionsMk__PLIST_VARS_based_on_groups(c *check.C)
 		"PKG_OPTIONS_GROUP.req+=\t\treq-one req-two",
 		"",
 		// bsd.options.mk adds the options from the groups to
-		// PKG_SUPPORTED_OPTIONS.
+		// PKG_SUPPORTED_OPTIONS. So does MkLines.collectPlistVars.
 		".include \"../../mk/bsd.options.mk\"",
 		"",
+		// All 6 options are added at this point.
 		"PLIST_VARS+=\t${PKG_SUPPORTED_OPTIONS}",
 		"",
+		// Only the 'one' options are covered properly, the 'two'
+		// options produce warnings, to demonstrate that all cases of
+		// option groups are covered.
 		".if ${PKG_OPTIONS:Mone}",
 		"PLIST.one=\tyes",
 		".endif",
@@ -467,14 +471,10 @@ func (s *Suite) Test_CheckLinesOptionsMk__PLIST_VARS_based_on_groups(c *check.C)
 
 	G.Check(".")
 
-	// TODO: support optional groups
-	// TODO: support required groups
 	t.CheckOutputLines(
 		"WARN: options.mk:14: \"two\" is added to PLIST_VARS, but PLIST.two is not defined in this file.",
-		// FIXME: This warning is wrong.
-		"WARN: options.mk:20: PLIST.opt-one is defined, but \"opt-one\" is not added to PLIST_VARS in this file.",
-		// FIXME: This warning is wrong.
-		"WARN: options.mk:23: PLIST.req-one is defined, but \"req-one\" is not added to PLIST_VARS in this file.",
+		"WARN: options.mk:14: \"opt-two\" is added to PLIST_VARS, but PLIST.opt-two is not defined in this file.",
+		"WARN: options.mk:14: \"req-two\" is added to PLIST_VARS, but PLIST.req-two is not defined in this file.",
 		"WARN: options.mk:4: Option \"two\" should be handled below in an .if block.",
 		"WARN: options.mk:7: Option \"opt-two\" should be handled below in an .if block.",
 		"WARN: options.mk:10: Option \"req-two\" should be handled below in an .if block.")
