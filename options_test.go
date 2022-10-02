@@ -472,12 +472,18 @@ func (s *Suite) Test_CheckLinesOptionsMk__PLIST_VARS_based_on_groups(c *check.C)
 	G.Check(".")
 
 	t.CheckOutputLines(
-		"WARN: options.mk:14: \"two\" is added to PLIST_VARS, but PLIST.two is not defined in this file.",
-		"WARN: options.mk:14: \"opt-two\" is added to PLIST_VARS, but PLIST.opt-two is not defined in this file.",
-		"WARN: options.mk:14: \"req-two\" is added to PLIST_VARS, but PLIST.req-two is not defined in this file.",
-		"WARN: options.mk:4: Option \"two\" should be handled below in an .if block.",
-		"WARN: options.mk:7: Option \"opt-two\" should be handled below in an .if block.",
-		"WARN: options.mk:10: Option \"req-two\" should be handled below in an .if block.")
+		"WARN: options.mk:14: \"two\" is added to PLIST_VARS, "+
+			"but PLIST.two is not defined in this file.",
+		"WARN: options.mk:14: \"opt-two\" is added to PLIST_VARS, "+
+			"but PLIST.opt-two is not defined in this file.",
+		"WARN: options.mk:14: \"req-two\" is added to PLIST_VARS, "+
+			"but PLIST.req-two is not defined in this file.",
+		"WARN: options.mk:4: Option \"two\" "+
+			"should be handled below in an .if block.",
+		"WARN: options.mk:7: Option \"opt-two\" "+
+			"should be handled below in an .if block.",
+		"WARN: options.mk:10: Option \"req-two\" "+
+			"should be handled below in an .if block.")
 }
 
 // A few packages (such as www/w3m) define several options that are
