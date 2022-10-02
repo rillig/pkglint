@@ -423,6 +423,63 @@ func (s *Suite) Test_CheckLinesOptionsMk__PLIST_VARS_based_on_PKG_SUPPORTED_OPTI
 		"WARN: options.mk:5: Option \"two\" should be handled below in an .if block.")
 }
 
+// https://gnats.netbsd.org/57038
+func (s *Suite) Test_CheckLinesOptionsMk__PLIST_VARS_based_on_groups(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpOption("one", "")
+	t.SetUpOption("two", "")
+	t.SetUpOption("opt-one", "")
+	t.SetUpOption("opt-two", "")
+	t.SetUpOption("req-one", "")
+	t.SetUpOption("req-two", "")
+	t.SetUpPackage("category/package")
+	t.CreateFileLines("mk/bsd.options.mk")
+	t.SetUpFileMkLines("category/package/options.mk",
+		MkCvsID,
+		"",
+		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
+		"PKG_SUPPORTED_OPTIONS+=\tone two",
+		"",
+		"PKG_OPTIONS_OPTIONAL_GROUPS+=\topt",
+		"PKG_OPTIONS_GROUP.opt+=\t\topt-one opt-two",
+		"",
+		"PKG_OPTIONS_REQUIRED_GROUPS+=\treq",
+		"PKG_OPTIONS_GROUP.req+=\t\treq-one req-two",
+		"",
+		// bsd.options.mk adds the options from the groups to
+		// PKG_SUPPORTED_OPTIONS.
+		".include \"../../mk/bsd.options.mk\"",
+		"",
+		"PLIST_VARS+=\t${PKG_SUPPORTED_OPTIONS}",
+		"",
+		".if ${PKG_OPTIONS:Mone}",
+		"PLIST.one=\tyes",
+		".endif",
+		".if ${PKG_OPTIONS:Mopt-one}",
+		"PLIST.opt-one=\tyes",
+		".endif",
+		".if ${PKG_OPTIONS:Mreq-one}",
+		"PLIST.req-one=\tyes",
+		".endif")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	// TODO: support optional groups
+	// TODO: support required groups
+	t.CheckOutputLines(
+		"WARN: options.mk:14: \"two\" is added to PLIST_VARS, but PLIST.two is not defined in this file.",
+		// FIXME: This warning is wrong.
+		"WARN: options.mk:20: PLIST.opt-one is defined, but \"opt-one\" is not added to PLIST_VARS in this file.",
+		// FIXME: This warning is wrong.
+		"WARN: options.mk:23: PLIST.req-one is defined, but \"req-one\" is not added to PLIST_VARS in this file.",
+		"WARN: options.mk:4: Option \"two\" should be handled below in an .if block.",
+		"WARN: options.mk:7: Option \"opt-two\" should be handled below in an .if block.",
+		"WARN: options.mk:10: Option \"req-two\" should be handled below in an .if block.")
+}
+
 // A few packages (such as www/w3m) define several options that are
 // handled by a single .if block in the lower part.
 func (s *Suite) Test_CheckLinesOptionsMk__combined_option_handling(c *check.C) {
