@@ -409,9 +409,13 @@ func (*Pkgsrc) parseAuthorAndDate(author, date string) (string, string) {
 		date[4] == '-' &&
 		isDigit(date[5]) &&
 		isDigit(date[6]) &&
+		10*(date[5]-'0')+(date[6]-'0') >= 1 &&
+		10*(date[5]-'0')+(date[6]-'0') <= 12 &&
 		date[7] == '-' &&
 		isDigit(date[8]) &&
 		isDigit(date[9]) &&
+		10*(date[8]-'0')+(date[9]-'0') >= 1 &&
+		10*(date[8]-'0')+(date[9]-'0') <= 31 &&
 		date[10] == ']' {
 		date = date[:10]
 		return author, date

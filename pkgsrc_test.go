@@ -540,17 +540,17 @@ func (s *Suite) Test_Pkgsrc_parseAuthorAndDate(c *check.C) {
 
 	test("[author 2019-x0-01]", "", "") // bad digit 'x' in month
 	test("[author 2019-0x-01]", "", "") // bad digit 'x' in month
-	// TODO: detect the invalid month.
-	test("[author 2019-00-01]", "author", "2019-00-01") // bad month '00'
-	// TODO: detect the invalid month.
-	test("[author 2019-13-01]", "author", "2019-13-01") // bad month '13'
+	test("[author 2019-00-01]", "", "") // bad month '00'
+	test("[author 2019-13-01]", "", "") // bad month '13'
 
 	test("[author 2019-01/01]", "", "") // bad separator '/'
 
 	test("[author 2019-01-x0]", "", "") // bad digit 'x' in day
 	test("[author 2019-01-0x]", "", "") // bad digit 'x' in day
-	// TODO: detect the invalid day of month.
-	test("[author 2019-01-00]", "author", "2019-01-00") // bad day '00'
+	test("[author 2019-01-00]", "", "") // bad day '00'
+	test("[author 2019-01-32]", "", "") // bad day '32'
+	// No leap year detection, to keep the code fast.
+	test("[author 2019-02-29]", "", "") // 2019 is not a leap year.
 
 	test("[author 2019-01-01", "", "")  // missing trailing ']'
 	test("[author 2019-01-01+", "", "") // trailing '+' instead of ']'
