@@ -2,7 +2,6 @@ language: go
 
 go:
 - "1.17"
-- "master"
 
 go_import_path: netbsd.org/pkglint
 
