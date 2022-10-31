@@ -550,7 +550,7 @@ func (s *Suite) Test_Pkgsrc_parseAuthorAndDate(c *check.C) {
 	test("[author 2019-01-00]", "", "") // bad day '00'
 	test("[author 2019-01-32]", "", "") // bad day '32'
 	// No leap year detection, to keep the code fast.
-	test("[author 2019-02-29]", "", "") // 2019 is not a leap year.
+	test("[author 2019-02-29]", "author", "2019-02-29") // 2019 is not a leap year.
 
 	test("[author 2019-01-01", "", "")  // missing trailing ']'
 	test("[author 2019-01-01+", "", "") // trailing '+' instead of ']'
