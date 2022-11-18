@@ -136,8 +136,11 @@ func (s *Suite) Test_MkCondSimplifier_SimplifyVarUse(c *check.C) {
 func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 	t := MkCondSimplifierTester{c, s.Init(c)}
 
+	// Define the variables that are used in the below tests.
 	t.setUp()
 
+	// The variable is guaranteed to be defined,
+	// therefore no ':U' modifier is needed.
 	t.testBeforeAndAfterPrefs(
 		".if ${IN_SCOPE_DEFINED:Mpattern}",
 		".if ${IN_SCOPE_DEFINED} == pattern",
@@ -148,6 +151,8 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 		"AUTOFIX: filename.mk:6: Replacing \"${IN_SCOPE_DEFINED:Mpattern}\" "+
 			"with \"${IN_SCOPE_DEFINED} == pattern\".")
 
+	// The variable may be undefined,
+	// therefore the ':U' modifier is needed.
 	t.testBeforeAndAfterPrefs(
 		".if ${IN_SCOPE:Mpattern}",
 		".if ${IN_SCOPE:U} == pattern",
@@ -159,9 +164,10 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 			"with \"${IN_SCOPE:U} == pattern\".")
 
 	// Even though PREFS_DEFINED is declared as DefinedIfInScope,
-	// it is not in scope yet. Therefore it needs the :U modifier.
-	// The warning that this variable is not yet in scope comes from
-	// a different part of pkglint.
+	// it is not yet in scope, due to the "BeforePrefs".
+	// Therefore, the ':U' modifier is needed.
+	// The warning about "at load time" comes from a different part of
+	// pkglint.
 	t.testBeforePrefs(
 		".if ${PREFS_DEFINED:Mpattern}",
 		".if ${PREFS_DEFINED:U} == pattern",
@@ -174,6 +180,8 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 		"AUTOFIX: filename.mk:6: Replacing \"${PREFS_DEFINED:Mpattern}\" "+
 			"with \"${PREFS_DEFINED:U} == pattern\".")
 
+	// Now that bsd.prefs.mk has been included ("AfterPrefs"),
+	// the ':U' modifier is not needed anymore.
 	t.testAfterPrefs(
 		".if ${PREFS_DEFINED:Mpattern}",
 		".if ${PREFS_DEFINED} == pattern",
@@ -184,6 +192,8 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 		"AUTOFIX: filename.mk:6: Replacing \"${PREFS_DEFINED:Mpattern}\" "+
 			"with \"${PREFS_DEFINED} == pattern\".")
 
+	// The 'PREFS' variable is probably undefined before bsd.prefs.mk,
+	// and after bsd.prefs.mk it _may_ be defined.
 	t.testBeforePrefs(
 		".if ${PREFS:Mpattern}",
 		".if ${PREFS:U} == pattern",
@@ -196,7 +206,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 		"AUTOFIX: filename.mk:6: Replacing \"${PREFS:Mpattern}\" "+
 			"with \"${PREFS:U} == pattern\".")
 
-	// Preferences that may be undefined always need the :U modifier,
+	// Preferences that may be undefined always need the ':U' modifier,
 	// even when they are in scope.
 	t.testAfterPrefs(
 		".if ${PREFS:Mpattern}",
@@ -208,8 +218,11 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 		"AUTOFIX: filename.mk:6: Replacing \"${PREFS:Mpattern}\" "+
 			"with \"${PREFS:U} == pattern\".")
 
-	// Variables that are defined later always need the :U modifier.
-	// It is probably a mistake to use them in conditions at all.
+	// The variable is declared as being defined later (bsd.pkg.mk),
+	// but that point is not yet reached.
+	// Therefore, the ':U' modifier is needed,
+	// even if the variable is guaranteed to be defined later.
+	// It is probably a mistake to use it in conditions at all.
 	t.testBeforeAndAfterPrefs(
 		".if ${LATER_DEFINED:Mpattern}",
 		".if ${LATER_DEFINED:U} == pattern",
@@ -222,8 +235,10 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 		"AUTOFIX: filename.mk:6: Replacing \"${LATER_DEFINED:Mpattern}\" "+
 			"with \"${LATER_DEFINED:U} == pattern\".")
 
-	// Variables that are defined later always need the :U modifier.
-	// It is probably a mistake to use them in conditions at all.
+	// The variable is declared as being defined later (bsd.pkg.mk),
+	// but that point is not yet reached.
+	// Therefore, the ':U' modifier is needed.
+	// It is probably a mistake to use it in conditions at all.
 	t.testBeforeAndAfterPrefs(
 		".if ${LATER:Mpattern}",
 		".if ${LATER:U} == pattern",
@@ -236,21 +251,26 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord(c *check.C) {
 		"AUTOFIX: filename.mk:6: Replacing \"${LATER:Mpattern}\" "+
 			"with \"${LATER:U} == pattern\".")
 
+	// The variable is neither defined nor known,
+	// therefore nothing is suggested.
 	t.testBeforeAndAfterPrefs(
 		".if ${UNDEFINED:Mpattern}",
 		".if ${UNDEFINED:Mpattern}",
 
 		"WARN: filename.mk:6: UNDEFINED is used but not defined.")
 
-	// When the pattern contains placeholders, it cannot be converted to == or !=.
+	// When the pattern contains placeholders such as '*',
+	// it cannot be converted to == or !=.
 	t.testAfterPrefs(
 		".if ${PREFS_DEFINED:Mpa*n}",
 		".if ${PREFS_DEFINED:Mpa*n}",
 
 		nil...)
 
-	// When deciding whether to replace the expression, only the
-	// last modifier is inspected. All the others are copied.
+	// When deciding whether to replace the expression,
+	// only the last modifier is inspected.
+	// All the others are copied, as the modifier ':M'
+	// does not change whether the expression is defined or not.
 	t.testAfterPrefs(
 		".if ${PREFS_DEFINED:tl:Mpattern}",
 		".if ${PREFS_DEFINED:tl} == pattern",
