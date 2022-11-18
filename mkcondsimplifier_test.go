@@ -37,6 +37,10 @@ func (t *MkCondSimplifierTester) setUp() {
 	// Even when they are in scope, some variables such as PKGREVISION
 	// or MAKE_JOBS may be undefined.
 
+	// TODO: Test list variables; they differ in that a ':M' modifier
+	//  cannot be replaced with '==', as the variable may contain
+	//  multiple words.
+
 	t.SetUpVarType("IN_SCOPE_DEFINED", btAnything, AlwaysInScope|DefinedIfInScope,
 		"*.mk: use, use-loadtime")
 	t.SetUpVarType("IN_SCOPE", btAnything, AlwaysInScope,
