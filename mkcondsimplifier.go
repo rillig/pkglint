@@ -33,6 +33,9 @@ func (s *MkCondSimplifier) simplifyWord(varuse *MkVarUse, fromEmpty bool, neg bo
 	}
 	modsExceptLast := NewMkVarUse("", modifiers[:n-1]...).Mod()
 	vartype := G.Pkgsrc.VariableType(s.MkLines, varname)
+	if vartype == nil || vartype.IsList() {
+		return
+	}
 
 	// replace constructs the state before and after the autofix.
 	// The before state is constructed to ensure that only very simple
@@ -82,12 +85,10 @@ func (s *MkCondSimplifier) simplifyWord(varuse *MkVarUse, fromEmpty bool, neg bo
 	if !ok || !positive && n != 1 {
 		return
 	}
-
-	switch {
-	case !exact,
-		vartype == nil,
-		vartype.IsList(),
-		textproc.NewLexer(pattern).NextBytesSet(mkCondModifierPatternLiteral) != pattern:
+	if !exact {
+		return
+	}
+	if textproc.NewLexer(pattern).NextBytesSet(mkCondModifierPatternLiteral) != pattern {
 		return
 	}
 
