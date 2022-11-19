@@ -134,15 +134,16 @@ func (s *Suite) Test_MkCondSimplifier_SimplifyVarUse(c *check.C) {
 		"AUTOFIX: filename.mk:6: Replacing \"${IN_SCOPE_DEFINED:Mpattern}\" "+
 			"with \"${IN_SCOPE_DEFINED} == pattern\".")
 
+	// From simplifyYesNo.
 	t.testBeforeAndAfterPrefs(
 		".if !empty(IN_SCOPE_DEFINED:M[Nn][Oo])",
-		".if ${IN_SCOPE_DEFINED:M[Nn][Oo]}",
+		".if ${IN_SCOPE_DEFINED:tl} == no",
 
 		"NOTE: filename.mk:6: \"!empty(IN_SCOPE_DEFINED:M[Nn][Oo])\" "+
-			"can be simplified to \"${IN_SCOPE_DEFINED:M[Nn][Oo]}\".",
+			"can be simplified to \"${IN_SCOPE_DEFINED:tl} == no\".",
 		"AUTOFIX: filename.mk:6: "+
 			"Replacing \"!empty(IN_SCOPE_DEFINED:M[Nn][Oo])\" "+
-			"with \"${IN_SCOPE_DEFINED:M[Nn][Oo]}\".")
+			"with \"${IN_SCOPE_DEFINED:tl} == no\".")
 }
 
 // Show in which cases the ':U' modifier is needed, and how including
@@ -433,17 +434,39 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord__pattern_yes_no(c *check.C) {
 	// lowercase letters before the uppercase letters.
 	t.testAfterPrefs(
 		".if ${VAR:M[yY][eE][sS]}",
-		".if ${VAR:M[yY][eE][sS]}",
+		".if ${VAR:tl} == yes",
 
-		nil...)
+		"NOTE: filename.mk:6: "+
+			"\"${VAR:M[yY][eE][sS]}\" "+
+			"can be simplified to "+
+			"\"${VAR:tl} == yes\".",
+		"AUTOFIX: filename.mk:6: "+
+			"Replacing \"${VAR:M[yY][eE][sS]}\" "+
+			"with \"${VAR:tl} == yes\".")
 
 	// The less popular pattern for testing YesNo variables lists the
 	// uppercase letters before the lowercase letters.
 	t.testAfterPrefs(
 		".if ${VAR:M[Yy][Ee][Ss]}",
-		".if ${VAR:M[Yy][Ee][Ss]}",
+		".if ${VAR:tl} == yes",
 
-		nil...)
+		"NOTE: filename.mk:6: "+
+			"\"${VAR:M[Yy][Ee][Ss]}\" "+
+			"can be simplified to "+
+			"\"${VAR:tl} == yes\".",
+		"AUTOFIX: filename.mk:6: "+
+			"Replacing \"${VAR:M[Yy][Ee][Ss]}\" "+
+			"with \"${VAR:tl} == yes\".")
+
+	// The last letter only has the lowercase form, therefore the pattern
+	// does not match the word 'YES'. Therefore, don't replace it with
+	// ':tl', as that would match the word 'YES'.
+	t.testAfterPrefs(
+		".if ${VAR:M[Yy][Ee][s]}",
+		".if ${VAR:M[Yy][Ee][s]}",
+
+		"WARN: filename.mk:6: VAR should be matched against "+
+			"\"[yY][eE][sS]\" or \"[nN][oO]\", not \"[Yy][Ee][s]\".")
 }
 
 // Show in which cases the ':N' modifier is replaced.
@@ -819,6 +842,10 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord__defined_in_same_file(c *chec
 			"with \"${LATER_DIR:U} == pattern\".")
 }
 
+func (s *Suite) Test_MkCondSimplifier_simplifyYesNo(c *check.C) {
+	// TODO: Move Test_MkCondSimplifier_simplifyWord__pattern_yes_no here.
+}
+
 func (s *Suite) Test_MkCondSimplifier_simplifyMatch(c *check.C) {
 	t := NewMkCondSimplifierTester(c, s)
 
@@ -844,15 +871,16 @@ func (s *Suite) Test_MkCondSimplifier_simplifyMatch(c *check.C) {
 			"Replacing \"empty(IN_SCOPE_DEFINED:M*.c)\" "+
 			"with \"!${IN_SCOPE_DEFINED:M*.c}\".")
 
+	// From simplifyYesNo.
 	t.testBeforeAndAfterPrefs(
 		".if !empty(IN_SCOPE_DEFINED:M[Nn][Oo])",
-		".if ${IN_SCOPE_DEFINED:M[Nn][Oo]}",
+		".if ${IN_SCOPE_DEFINED:tl} == no",
 
 		"NOTE: filename.mk:6: \"!empty(IN_SCOPE_DEFINED:M[Nn][Oo])\" "+
-			"can be simplified to \"${IN_SCOPE_DEFINED:M[Nn][Oo]}\".",
+			"can be simplified to \"${IN_SCOPE_DEFINED:tl} == no\".",
 		"AUTOFIX: filename.mk:6: "+
 			"Replacing \"!empty(IN_SCOPE_DEFINED:M[Nn][Oo])\" "+
-			"with \"${IN_SCOPE_DEFINED:M[Nn][Oo]}\".")
+			"with \"${IN_SCOPE_DEFINED:tl} == no\".")
 }
 
 func (s *Suite) Test_MkCondSimplifier_isDefined(c *check.C) {
