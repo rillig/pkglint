@@ -2,11 +2,21 @@ package pkglint
 
 import (
 	"gopkg.in/check.v1"
+	"netbsd.org/pkglint/regex"
 )
 
 type MkCondSimplifierTester struct {
 	c *check.C
 	*Tester
+	allowedVariableNames regex.Pattern
+}
+
+func NewMkCondSimplifierTester(c *check.C, s *Suite) *MkCondSimplifierTester {
+	return &MkCondSimplifierTester{
+		c,
+		s.Init(c),
+		`IN_SCOPE|PREFS|LATER|UNDEFINED`,
+	}
 }
 
 func (t *MkCondSimplifierTester) setUp() {
@@ -73,8 +83,10 @@ func (t *MkCondSimplifierTester) testBeforeAndAfterPrefs(before, after string, d
 // before: the directive before the condition is simplified
 // after: the directive after the condition is simplified
 func (t *MkCondSimplifierTester) doTest(prefs bool, before, after string, diagnostics ...string) {
-	if !matches(before, `IN_SCOPE|PREFS|LATER|UNDEFINED`) {
-		t.c.Errorf("Condition %q must include one of the above variable names.", before)
+	if !matches(before, t.allowedVariableNames) {
+		// Prevent typos in the variable names used in the test.
+		t.c.Errorf("Condition %q must include one of the variable names %q.",
+			before, t.allowedVariableNames)
 	}
 	mklines := t.SetUpFileMkLines("filename.mk",
 		MkCvsID,
@@ -108,7 +120,7 @@ func (t *MkCondSimplifierTester) doTest(prefs bool, before, after string, diagno
 }
 
 func (s *Suite) Test_MkCondSimplifier_SimplifyVarUse(c *check.C) {
-	t := MkCondSimplifierTester{c, s.Init(c)}
+	t := NewMkCondSimplifierTester(c, s)
 
 	t.setUp()
 
@@ -139,7 +151,7 @@ func (s *Suite) Test_MkCondSimplifier_SimplifyVarUse(c *check.C) {
 // The ':U' modifier can be omitted if the variable is guaranteed to be
 // defined.
 func (s *Suite) Test_MkCondSimplifier_simplifyWord__undefined(c *check.C) {
-	t := MkCondSimplifierTester{c, s.Init(c)}
+	t := NewMkCondSimplifierTester(c, s)
 
 	// Define the variables that are used in the below tests.
 	t.setUp()
@@ -269,7 +281,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord__undefined(c *check.C) {
 // Show how different kinds of ':M'-style patterns are replaced with simpler
 // comparisons.
 func (s *Suite) Test_MkCondSimplifier_simplifyWord__patterns(c *check.C) {
-	t := MkCondSimplifierTester{c, s.Init(c)}
+	t := NewMkCondSimplifierTester(c, s)
 
 	// Define the variables that are used in the below tests.
 	t.setUp()
@@ -407,11 +419,38 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord__patterns(c *check.C) {
 			"with \"${IN_SCOPE_DEFINED} == \\\"\\\"\".")
 }
 
+// Show how patterns like ':M[yY][eE][sS]' are replaced with simpler
+// conditions.
+func (s *Suite) Test_MkCondSimplifier_simplifyWord__pattern_yes_no(c *check.C) {
+	t := NewMkCondSimplifierTester(c, s)
+
+	t.setUp()
+	t.SetUpVarType("VAR", BtYesNo, AlwaysInScope|DefinedIfInScope,
+		"*.mk: use, use-loadtime")
+	t.allowedVariableNames = `VAR`
+
+	// The most common pattern for testing YesNo variables lists the
+	// lowercase letters before the uppercase letters.
+	t.testAfterPrefs(
+		".if ${VAR:M[yY][eE][sS]}",
+		".if ${VAR:M[yY][eE][sS]}",
+
+		nil...)
+
+	// The less popular pattern for testing YesNo variables lists the
+	// uppercase letters before the lowercase letters.
+	t.testAfterPrefs(
+		".if ${VAR:M[Yy][Ee][Ss]}",
+		".if ${VAR:M[Yy][Ee][Ss]}",
+
+		nil...)
+}
+
 // Show in which cases the ':N' modifier is replaced.
 // That modifier is used less often than ':M',
 // therefore pkglint doesn't do much about it.
 func (s *Suite) Test_MkCondSimplifier_simplifyWord__N(c *check.C) {
-	t := MkCondSimplifierTester{c, s.Init(c)}
+	t := NewMkCondSimplifierTester(c, s)
 
 	// Define the variables that are used in the below tests.
 	t.setUp()
@@ -506,7 +545,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord__N(c *check.C) {
 // Show how the conditions are simplified when the expression contains
 // several modifiers.
 func (s *Suite) Test_MkCondSimplifier_simplifyWord__modifiers(c *check.C) {
-	t := MkCondSimplifierTester{c, s.Init(c)}
+	t := NewMkCondSimplifierTester(c, s)
 
 	// Define the variables that are used in the below tests.
 	t.setUp()
@@ -583,7 +622,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord__modifiers(c *check.C) {
 
 // Show how expressions in complex conditions are simplified.
 func (s *Suite) Test_MkCondSimplifier_simplifyWord__complex(c *check.C) {
-	t := MkCondSimplifierTester{c, s.Init(c)}
+	t := NewMkCondSimplifierTester(c, s)
 
 	// Define the variables that are used in the below tests.
 	t.setUp()
@@ -781,7 +820,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord__defined_in_same_file(c *chec
 }
 
 func (s *Suite) Test_MkCondSimplifier_simplifyMatch(c *check.C) {
-	t := MkCondSimplifierTester{c, s.Init(c)}
+	t := NewMkCondSimplifierTester(c, s)
 
 	t.setUp()
 
