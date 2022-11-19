@@ -420,55 +420,6 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord__patterns(c *check.C) {
 			"with \"${IN_SCOPE_DEFINED} == \\\"\\\"\".")
 }
 
-// Show how patterns like ':M[yY][eE][sS]' are replaced with simpler
-// conditions.
-func (s *Suite) Test_MkCondSimplifier_simplifyWord__pattern_yes_no(c *check.C) {
-	t := NewMkCondSimplifierTester(c, s)
-
-	t.setUp()
-	t.SetUpVarType("VAR", BtYesNo, AlwaysInScope|DefinedIfInScope,
-		"*.mk: use, use-loadtime")
-	t.allowedVariableNames = `VAR`
-
-	// The most common pattern for testing YesNo variables lists the
-	// lowercase letters before the uppercase letters.
-	t.testAfterPrefs(
-		".if ${VAR:M[yY][eE][sS]}",
-		".if ${VAR:tl} == yes",
-
-		"NOTE: filename.mk:6: "+
-			"\"${VAR:M[yY][eE][sS]}\" "+
-			"can be simplified to "+
-			"\"${VAR:tl} == yes\".",
-		"AUTOFIX: filename.mk:6: "+
-			"Replacing \"${VAR:M[yY][eE][sS]}\" "+
-			"with \"${VAR:tl} == yes\".")
-
-	// The less popular pattern for testing YesNo variables lists the
-	// uppercase letters before the lowercase letters.
-	t.testAfterPrefs(
-		".if ${VAR:M[Yy][Ee][Ss]}",
-		".if ${VAR:tl} == yes",
-
-		"NOTE: filename.mk:6: "+
-			"\"${VAR:M[Yy][Ee][Ss]}\" "+
-			"can be simplified to "+
-			"\"${VAR:tl} == yes\".",
-		"AUTOFIX: filename.mk:6: "+
-			"Replacing \"${VAR:M[Yy][Ee][Ss]}\" "+
-			"with \"${VAR:tl} == yes\".")
-
-	// The last letter only has the lowercase form, therefore the pattern
-	// does not match the word 'YES'. Therefore, don't replace it with
-	// ':tl', as that would match the word 'YES'.
-	t.testAfterPrefs(
-		".if ${VAR:M[Yy][Ee][s]}",
-		".if ${VAR:M[Yy][Ee][s]}",
-
-		"WARN: filename.mk:6: VAR should be matched against "+
-			"\"[yY][eE][sS]\" or \"[nN][oO]\", not \"[Yy][Ee][s]\".")
-}
-
 // Show in which cases the ':N' modifier is replaced.
 // That modifier is used less often than ':M',
 // therefore pkglint doesn't do much about it.
@@ -842,8 +793,53 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord__defined_in_same_file(c *chec
 			"with \"${LATER_DIR:U} == pattern\".")
 }
 
+// Show how patterns like ':M[yY][eE][sS]' are replaced with simpler
+// conditions.
 func (s *Suite) Test_MkCondSimplifier_simplifyYesNo(c *check.C) {
-	// TODO: Move Test_MkCondSimplifier_simplifyWord__pattern_yes_no here.
+	t := NewMkCondSimplifierTester(c, s)
+
+	t.setUp()
+	t.SetUpVarType("VAR", BtYesNo, AlwaysInScope|DefinedIfInScope,
+		"*.mk: use, use-loadtime")
+	t.allowedVariableNames = `VAR`
+
+	// The most common pattern for testing YesNo variables lists the
+	// lowercase letters before the uppercase letters.
+	t.testAfterPrefs(
+		".if ${VAR:M[yY][eE][sS]}",
+		".if ${VAR:tl} == yes",
+
+		"NOTE: filename.mk:6: "+
+			"\"${VAR:M[yY][eE][sS]}\" "+
+			"can be simplified to "+
+			"\"${VAR:tl} == yes\".",
+		"AUTOFIX: filename.mk:6: "+
+			"Replacing \"${VAR:M[yY][eE][sS]}\" "+
+			"with \"${VAR:tl} == yes\".")
+
+	// The less popular pattern for testing YesNo variables lists the
+	// uppercase letters before the lowercase letters.
+	t.testAfterPrefs(
+		".if ${VAR:M[Yy][Ee][Ss]}",
+		".if ${VAR:tl} == yes",
+
+		"NOTE: filename.mk:6: "+
+			"\"${VAR:M[Yy][Ee][Ss]}\" "+
+			"can be simplified to "+
+			"\"${VAR:tl} == yes\".",
+		"AUTOFIX: filename.mk:6: "+
+			"Replacing \"${VAR:M[Yy][Ee][Ss]}\" "+
+			"with \"${VAR:tl} == yes\".")
+
+	// The last letter only has the lowercase form, therefore the pattern
+	// does not match the word 'YES'. Therefore, don't replace it with
+	// ':tl', as that would match the word 'YES'.
+	t.testAfterPrefs(
+		".if ${VAR:M[Yy][Ee][s]}",
+		".if ${VAR:M[Yy][Ee][s]}",
+
+		"WARN: filename.mk:6: VAR should be matched against "+
+			"\"[yY][eE][sS]\" or \"[nN][oO]\", not \"[Yy][Ee][s]\".")
 }
 
 func (s *Suite) Test_MkCondSimplifier_simplifyMatch(c *check.C) {
