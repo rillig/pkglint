@@ -47,8 +47,15 @@ func (m MkVarUseModifier) String() string {
 	return string(m)
 }
 
-func (m MkVarUseModifier) Quoted() string {
-	return strings.Replace(string(m), ":", "\\:", -1)
+// Quoted returns the source code representation of the modifier, quoting
+// all characters so that they are interpreted literally.
+func (m MkVarUseModifier) Quoted(end string) string {
+	mod := string(m)
+	mod = strings.Replace(mod, ":", "\\:", -1)
+	mod = strings.Replace(mod, end, "\\"+end, -1)
+	mod = strings.Replace(mod, "#", "\\#", -1)
+	// TODO: There may still be uncovered edge cases.
+	return mod
 }
 
 func (m MkVarUseModifier) HasPrefix(prefix string) bool {
