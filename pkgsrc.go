@@ -35,10 +35,7 @@ type Pkgsrc struct {
 	suggestedUpdates    []SuggestedUpdate
 	suggestedWipUpdates []SuggestedUpdate
 
-	LastChange      map[PkgsrcPath]*Change
-	LastFreezeStart string // e.g. "2018-01-01", or ""
-	LastFreezeEnd   string // e.g. "2018-01-01", or ""
-
+	changes      Changes
 	listVersions map[string][]string // See Pkgsrc.ListVersions
 
 	// Variables that may be overridden by the pkgsrc user.
@@ -62,9 +59,7 @@ func NewPkgsrc(dir CurrPath) Pkgsrc {
 		make(map[string]string),
 		nil,
 		nil,
-		make(map[PkgsrcPath]*Change),
-		"",
-		"",
+		Changes{},
 		make(map[string][]string),
 		NewScope(),
 		make(map[string]string),
@@ -82,7 +77,7 @@ func (src *Pkgsrc) LoadInfrastructure() {
 	src.vartypes.Init(src)
 	src.loadMasterSites()
 	src.loadPkgOptions()
-	src.loadDocChanges()
+	src.changes.load(src)
 	src.loadSuggestedUpdates()
 	src.loadUserDefinedVars()
 	src.loadTools()
@@ -148,7 +143,7 @@ func (src *Pkgsrc) loadPkgOptions() {
 	}
 }
 
-func (src *Pkgsrc) loadDocChanges() {
+func (ch *Changes) load(src *Pkgsrc) {
 	docDir := src.File("doc")
 	files := src.ReadDir("doc")
 	if len(files) == 0 {
@@ -164,13 +159,13 @@ func (src *Pkgsrc) loadDocChanges() {
 		}
 	}
 
-	src.LastChange = make(map[PkgsrcPath]*Change)
+	ch.LastChange = make(map[PkgsrcPath]*Change)
 	for _, filename := range filenames {
-		changes := src.loadDocChangesFromFile(docDir.JoinNoClean(filename), false)
+		changes := ch.parseFile(docDir.JoinNoClean(filename), false)
 		for _, change := range changes {
-			src.LastChange[change.Pkgpath] = change
+			ch.LastChange[change.Pkgpath] = change
 			if change.Action == Renamed || change.Action == Moved {
-				src.LastChange[change.Target()] = change
+				ch.LastChange[change.Target()] = change
 			}
 		}
 	}
@@ -178,7 +173,7 @@ func (src *Pkgsrc) loadDocChanges() {
 	src.checkRemovedAfterLastFreeze()
 }
 
-func (src *Pkgsrc) loadDocChangesFromFile(filename CurrPath, direct bool) []*Change {
+func (ch *Changes) parseFile(filename CurrPath, direct bool) []*Change {
 
 	warn := direct || G.CheckGlobal && !G.Wip
 
@@ -202,12 +197,12 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename CurrPath, direct bool) []*Cha
 			infra = true
 			if hasPrefix(line.Text, "\tmk/bsd.pkg.mk: started freeze for") {
 				if m, date := match1(line.Text, `(\d\d\d\d-\d\d-\d\d)\]$`); m {
-					src.LastFreezeStart = date
-					src.LastFreezeEnd = ""
+					ch.LastFreezeStart = date
+					ch.LastFreezeEnd = ""
 				}
 			} else if hasPrefix(line.Text, "\tmk/bsd.pkg.mk: freeze ended for") {
 				if m, date := match1(line.Text, `(\d\d\d\d-\d\d-\d\d)\]$`); m {
-					src.LastFreezeEnd = date
+					ch.LastFreezeEnd = date
 				}
 			}
 		}
@@ -218,7 +213,7 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename CurrPath, direct bool) []*Cha
 			continue
 		}
 
-		change := src.parseDocChange(line, warn)
+		change := ch.parseLine(line, warn)
 		if change == nil {
 			continue
 		}
@@ -230,19 +225,19 @@ func (src *Pkgsrc) loadDocChangesFromFile(filename CurrPath, direct bool) []*Cha
 		}
 
 		if thorough {
-			src.checkChangeVersion(change, latest, line)
-			src.checkChangeDate(filename, year, change, line, changes)
+			ch.checkChangeVersion(change, latest, line)
+			ch.checkChangeDate(filename, year, change, line, changes)
 		}
 	}
 
 	return changes
 }
 
-func (src *Pkgsrc) checkChangeVersion(change *Change, latest map[PkgsrcPath]*Change, line *Line) {
+func (ch *Changes) checkChangeVersion(change *Change, latest map[PkgsrcPath]*Change, line *Line) {
 	switch change.Action {
 
 	case Added:
-		src.checkChangeVersionNumber(change, line)
+		ch.checkChangeVersionNumber(change, line)
 		existing := latest[change.Pkgpath]
 		if existing != nil && existing.Version() == change.Version() {
 			line.Warnf("Package %q was already added in %s.",
@@ -251,7 +246,7 @@ func (src *Pkgsrc) checkChangeVersion(change *Change, latest map[PkgsrcPath]*Cha
 		latest[change.Pkgpath] = change
 
 	case Updated:
-		src.checkChangeVersionNumber(change, line)
+		ch.checkChangeVersionNumber(change, line)
 		existing := latest[change.Pkgpath]
 		if existing != nil && pkgver.Compare(change.Version(), existing.Version()) <= 0 {
 			line.Warnf("Updating %q from %s in %s to %s should increase the version number.",
@@ -260,7 +255,7 @@ func (src *Pkgsrc) checkChangeVersion(change *Change, latest map[PkgsrcPath]*Cha
 		latest[change.Pkgpath] = change
 
 	case Downgraded:
-		src.checkChangeVersionNumber(change, line)
+		ch.checkChangeVersionNumber(change, line)
 		existing := latest[change.Pkgpath]
 		if existing != nil && pkgver.Compare(change.Version(), existing.Version()) >= 0 {
 			line.Warnf("Downgrading %q from %s in %s to %s should decrease the version number.",
@@ -273,7 +268,7 @@ func (src *Pkgsrc) checkChangeVersion(change *Change, latest map[PkgsrcPath]*Cha
 	}
 }
 
-func (src *Pkgsrc) checkChangeVersionNumber(change *Change, line *Line) {
+func (*Changes) checkChangeVersionNumber(change *Change, line *Line) {
 	version := change.Version()
 
 	switch {
@@ -286,7 +281,7 @@ func (src *Pkgsrc) checkChangeVersionNumber(change *Change, line *Line) {
 	}
 }
 
-func (src *Pkgsrc) checkChangeDate(filename CurrPath, year string, change *Change, line *Line, changes []*Change) {
+func (*Changes) checkChangeDate(filename CurrPath, year string, change *Change, line *Line, changes []*Change) {
 	if year != "" && change.Date[0:4] != year {
 		line.Warnf("Year %q for %s does not match the filename %s.",
 			change.Date[0:4], change.Pkgpath.String(), line.Rel(filename))
@@ -312,7 +307,7 @@ func (src *Pkgsrc) checkChangeDate(filename CurrPath, year string, change *Chang
 	}
 }
 
-func (*Pkgsrc) parseDocChange(line *Line, warn bool) *Change {
+func (*Changes) parseLine(line *Line, warn bool) *Change {
 	lex := textproc.NewLexer(line.Text)
 
 	space := lex.NextHspace()
@@ -363,7 +358,7 @@ func (*Pkgsrc) parseDocChange(line *Line, warn bool) *Change {
 		author = f[n-2]
 	}
 
-	author, date = (*Pkgsrc).parseAuthorAndDate(nil, author, date)
+	author, date = (*Changes).parseAuthorAndDate(nil, author, date)
 	if author == "" {
 		return invalid()
 	}
@@ -389,7 +384,7 @@ func (*Pkgsrc) parseDocChange(line *Line, warn bool) *Change {
 }
 
 // parseAuthorAndDate parses the author and date from a line in doc/CHANGES.
-func (*Pkgsrc) parseAuthorAndDate(author, date string) (string, string) {
+func (*Changes) parseAuthorAndDate(author, date string) (string, string) {
 	alex := textproc.NewLexer(author)
 	if !alex.SkipByte('[') {
 		return "", ""
@@ -425,15 +420,15 @@ func (*Pkgsrc) parseAuthorAndDate(author, date string) (string, string) {
 }
 
 func (src *Pkgsrc) checkRemovedAfterLastFreeze() {
-	if src.LastFreezeStart == "" || G.Wip || !G.CheckGlobal {
+	if src.changes.LastFreezeStart == "" || G.Wip || !G.CheckGlobal {
 		return
 	}
 
 	var wrong []*Change
-	for pkgpath, change := range src.LastChange {
+	for pkgsrcPath, change := range src.changes.LastChange {
 		switch change.Action {
 		case Added, Updated, Downgraded:
-			if !src.File(pkgpath).IsDir() {
+			if !src.File(pkgsrcPath).IsDir() {
 				wrong = append(wrong, change)
 			}
 		}
@@ -1351,6 +1346,15 @@ func (src *Pkgsrc) IsInfraMain(filename CurrPath) bool {
 func (src *Pkgsrc) IsWip(filename CurrPath) bool {
 	rel := src.Rel(filename)
 	return rel.HasPrefixPath("wip")
+}
+
+// Changes collects the doc/CHANGES-* files, which mainly contain package
+// updates, as well as other package modifications and changes to the pkgsrc
+// infrastructure.
+type Changes struct {
+	LastChange      map[PkgsrcPath]*Change
+	LastFreezeStart string // e.g. "2018-01-01", or ""
+	LastFreezeEnd   string // e.g. "2018-01-01", or ""
 }
 
 // Change describes a modification to a single package, from the doc/CHANGES-* files.

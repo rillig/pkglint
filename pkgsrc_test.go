@@ -15,7 +15,7 @@ func (s *Suite) Test_Pkgsrc__frozen(c *check.C) {
 		"\tmk/bsd.pkg.mk: started freeze for pkgsrc-2018Q2 branch [freezer 2018-03-25]")
 	t.FinishSetUp()
 
-	t.CheckEquals(G.Pkgsrc.LastFreezeStart, "2018-03-25")
+	t.CheckEquals(G.Pkgsrc.changes.LastFreezeStart, "2018-03-25")
 }
 
 func (s *Suite) Test_Pkgsrc__not_frozen(c *check.C) {
@@ -27,8 +27,8 @@ func (s *Suite) Test_Pkgsrc__not_frozen(c *check.C) {
 		"\tmk/bsd.pkg.mk: freeze ended for pkgsrc-2018Q2 branch [freezer 2018-03-27]")
 	t.FinishSetUp()
 
-	t.CheckEquals(G.Pkgsrc.LastFreezeStart, "2018-03-25")
-	t.CheckEquals(G.Pkgsrc.LastFreezeEnd, "2018-03-27")
+	t.CheckEquals(G.Pkgsrc.changes.LastFreezeStart, "2018-03-25")
+	t.CheckEquals(G.Pkgsrc.changes.LastFreezeEnd, "2018-03-27")
 }
 
 func (s *Suite) Test_Pkgsrc__frozen_with_typo(c *check.C) {
@@ -40,7 +40,7 @@ func (s *Suite) Test_Pkgsrc__frozen_with_typo(c *check.C) {
 		"\tmk/bsd.pkg.mk: started freeze for pkgsrc-2018Q2 branch [freezer 2018-03-25")
 	t.FinishSetUp()
 
-	t.CheckEquals(G.Pkgsrc.LastFreezeStart, "")
+	t.CheckEquals(G.Pkgsrc.changes.LastFreezeStart, "")
 }
 
 func (s *Suite) Test_Pkgsrc__caching(c *check.C) {
@@ -110,7 +110,7 @@ func (s *Suite) Test_Pkgsrc_loadPkgOptions(c *check.C) {
 		"ERROR: ~/mk/defaults/options.description:4: Invalid line format: >>>>> Merge conflict")
 }
 
-func (s *Suite) Test_Pkgsrc_loadDocChanges(c *check.C) {
+func (s *Suite) Test_Changes_load(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPkgsrc()
@@ -122,10 +122,10 @@ func (s *Suite) Test_Pkgsrc_loadDocChanges(c *check.C) {
 		"\tMoved pkgpath to category/new-pkg [author 2018-03-01]")
 	t.FinishSetUp()
 
-	t.CheckEquals(G.Pkgsrc.LastChange["pkgpath"].Action, Moved)
+	t.CheckEquals(G.Pkgsrc.changes.LastChange["pkgpath"].Action, Moved)
 }
 
-func (s *Suite) Test_Pkgsrc_loadDocChanges__not_found(c *check.C) {
+func (s *Suite) Test_Changes_load__not_found(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPkgsrc()
@@ -138,7 +138,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChanges__not_found(c *check.C) {
 		"FATAL: ~/doc: Cannot be read for loading the package changes.")
 }
 
-func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile(c *check.C) {
+func (s *Suite) Test_Changes_parseFile(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("doc/CHANGES-2018",
@@ -161,7 +161,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile(c *check.C) {
 		"",
 		"Normal paragraph.")
 
-	changes := G.Pkgsrc.loadDocChangesFromFile(t.File("doc/CHANGES-2018"), true)
+	changes := G.Pkgsrc.changes.parseFile(t.File("doc/CHANGES-2018"), true)
 
 	t.CheckDeepEquals(
 		changes, []*Change{
@@ -197,18 +197,18 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile(c *check.C) {
 		"WARN: ~/doc/CHANGES-2018:13: Invalid doc/CHANGES line: \tAdded another [new package]")
 }
 
-func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__not_found(c *check.C) {
+func (s *Suite) Test_Changes_parseFile__not_found(c *check.C) {
 	t := s.Init(c)
 
 	t.ExpectFatal(
-		func() { G.Pkgsrc.loadDocChangesFromFile(t.File("doc/CHANGES-2018"), false) },
+		func() { G.Pkgsrc.changes.parseFile(t.File("doc/CHANGES-2018"), false) },
 		"FATAL: ~/doc/CHANGES-2018: Cannot be read.")
 }
 
 // Since package authors for pkgsrc-wip cannot necessarily commit to
 // main pkgsrc, don't warn about unsorted doc/CHANGES lines.
 // Only pkgsrc main committers can fix these.
-func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__wip_suppresses_warnings(c *check.C) {
+func (s *Suite) Test_Changes_parseFile__wip_suppresses_warnings(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("wip/package")
@@ -231,7 +231,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__wip_suppresses_warnings(c *c
 // When a single package is checked, only the lines from doc/CHANGES
 // that are related to that package are shown. The others are too
 // unrelated.
-func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__default(c *check.C) {
+func (s *Suite) Test_Changes_parseFile__default(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
@@ -267,7 +267,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__default(c *check.C) {
 		t.Shquote("(Run \"pkglint -e -Cglobal -Wall %s\" to show explanations.)", "."))
 }
 
-func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__wrong_indentation(c *check.C) {
+func (s *Suite) Test_Changes_parseFile__wrong_indentation(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
@@ -290,7 +290,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__wrong_indentation(c *check.C
 
 // Once or twice in a decade, changes to the pkgsrc infrastructure are also
 // documented in doc/CHANGES. These entries typically span multiple lines.
-func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__infrastructure(c *check.C) {
+func (s *Suite) Test_Changes_parseFile__infrastructure(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
@@ -312,7 +312,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__infrastructure(c *check.C) {
 		"Looks fine.")
 }
 
-func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__old(c *check.C) {
+func (s *Suite) Test_Changes_parseFile__old(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("-Cglobal", "-Wall")
@@ -351,7 +351,7 @@ func (s *Suite) Test_Pkgsrc_loadDocChangesFromFile__old(c *check.C) {
 		"WARN: ~/doc/CHANGES-2018:6: Invalid doc/CHANGES line: \tUpdated pkgpath to 1.0 [author d]")
 }
 
-func (s *Suite) Test_Pkgsrc_checkChangeVersion(c *check.C) {
+func (s *Suite) Test_Changes_checkChangeVersion(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("doc/CHANGES-2020",
@@ -365,7 +365,7 @@ func (s *Suite) Test_Pkgsrc_checkChangeVersion(c *check.C) {
 		"\tMoved category/package to other/renamed [author1 2020-01-01]")
 	t.Chdir("doc")
 
-	G.Pkgsrc.loadDocChangesFromFile("CHANGES-2020", true)
+	G.Pkgsrc.changes.parseFile("CHANGES-2020", true)
 
 	// In line 3 there is no warning about the repeated addition since
 	// the multi-packages (Lua, PHP, Python) may add a package in
@@ -376,7 +376,7 @@ func (s *Suite) Test_Pkgsrc_checkChangeVersion(c *check.C) {
 		"WARN: CHANGES-2020:5: Downgrading \"category/package\" from 0.9 in line 4 to 1.0 should decrease the version number.")
 }
 
-func (s *Suite) Test_Pkgsrc_checkChangeVersionNumber(c *check.C) {
+func (s *Suite) Test_Changes_checkChangeVersionNumber(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("doc/CHANGES-2020",
@@ -386,7 +386,7 @@ func (s *Suite) Test_Pkgsrc_checkChangeVersionNumber(c *check.C) {
 		"\tUpdated category/package to 2020/03 [author1 2020-01-01]")
 	t.Chdir("doc")
 
-	G.Pkgsrc.loadDocChangesFromFile("CHANGES-2020", true)
+	G.Pkgsrc.changes.parseFile("CHANGES-2020", true)
 
 	t.CheckOutputLines(
 		"WARN: CHANGES-2020:1: Version number \"v1\" should start with a digit.",
@@ -397,12 +397,12 @@ func (s *Suite) Test_Pkgsrc_checkChangeVersionNumber(c *check.C) {
 		"WARN: CHANGES-2020:4: Malformed version number \"2020/03\".")
 }
 
-func (s *Suite) Test_Pkgsrc_parseDocChange(c *check.C) {
+func (s *Suite) Test_Changes_parseLine(c *check.C) {
 	t := s.Init(c)
 
 	test := func(text string, diagnostics ...string) {
 		line := t.NewLine("doc/CHANGES-2019", 123, text)
-		_ = (*Pkgsrc)(nil).parseDocChange(line, true)
+		_ = (*Changes)(nil).parseLine(line, true)
 		t.CheckOutput(diagnostics)
 	}
 
@@ -519,13 +519,13 @@ func (s *Suite) Test_Pkgsrc_parseDocChange(c *check.C) {
 			"\tUpdated category/pkgpath to version 1.0 [author 2019-01-01]")
 }
 
-func (s *Suite) Test_Pkgsrc_parseAuthorAndDate(c *check.C) {
+func (s *Suite) Test_Changes_parseAuthorAndDate(c *check.C) {
 	t := s.Init(c)
 
 	test := func(dateAndAuthor string, expectedAuthor, expectedDate string) {
 		fields := strings.Split(dateAndAuthor, " ")
 		authorIn, dateIn := fields[0], fields[1]
-		author, date := (*Pkgsrc).parseAuthorAndDate(nil, authorIn, dateIn)
+		author, date := (*Changes).parseAuthorAndDate(nil, authorIn, dateIn)
 		t.CheckEquals(author, expectedAuthor)
 		t.CheckEquals(date, expectedDate)
 	}
