@@ -405,11 +405,11 @@ func (line *Line) Autofix() *Autofix {
 
 The journey ends here, and it hasn't been that difficult.
 
-If that was too easy, have a look at the code that decides whether an 
+If that was too easy, have a look at the code that decides whether an
 expression such as `${CFLAGS}` needs to be quoted using the `:Q` modifier
 when it is used in a shell command:
 
-> from [mkline.go](mkline.go#L710):
+> from [mkline.go](mkline.go#L723):
 
 ```go
 // VariableNeedsQuoting determines whether the given variable needs the :Q
@@ -645,19 +645,19 @@ To avoid confusing these paths (which was more than easy as long as they
 were all represented by simple strings), pkglint distinguishes these types
 of paths:
 
-*   `CurrPath` is for paths given on the command line
-    *   these are used at the beginning of the diagnostics
-*   `PkgsrcPath` is for paths relative to the pkgsrc directory
-    *   `PKGPATH`
-*   `PackagePath` is for paths relative to the package directory
-    *   `PATCHDIR`
-    *   `DEPENDS`
-*   `RelPath` is for all other relative paths
-    *   paths that appear in the text of a diagnostic,
-        these are relative to the line of a diagnostic
-    *   paths relative to the `PREFIX`
-        *   paths in `PLIST` files
-        *   paths in `ALTERNATIVES` files
+* `CurrPath` is for paths given on the command line
+    * these are used at the beginning of the diagnostics
+* `PkgsrcPath` is for paths relative to the pkgsrc directory
+    * `PKGPATH`
+* `PackagePath` is for paths relative to the package directory
+    * `PATCHDIR`
+    * `DEPENDS`
+* `RelPath` is for all other relative paths
+    * paths that appear in the text of a diagnostic,
+      these are relative to the line of a diagnostic
+    * paths relative to the `PREFIX`
+        * paths in `PLIST` files
+        * paths in `ALTERNATIVES` files
 
 All these path types are defined in `path.go`:
 
@@ -704,8 +704,8 @@ type PkgsrcPath string
 // conflicts on other packages.
 //
 // It can have two forms:
-//  - patches (further down)
-//  - ../../category/package/* (up to the pkgsrc root, then down again)
+//   - patches (further down)
+//   - ../../category/package/* (up to the pkgsrc root, then down again)
 type PackagePath string
 ```
 
