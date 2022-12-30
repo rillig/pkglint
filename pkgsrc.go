@@ -955,8 +955,9 @@ func (src *Pkgsrc) loadDefaultBuildDefs() {
 // name with repl.
 //
 // Example:
-//  Latest("lang", `^php[0-9]+$`, "../../lang/$0")
-//      => "../../lang/php72"
+//
+//	Latest("lang", `^php[0-9]+$`, "../../lang/$0")
+//	    => "../../lang/php72"
 func (src *Pkgsrc) Latest(category PkgsrcPath, re regex.Pattern, repl string) string {
 	versions := src.ListVersions(category, re, repl, true)
 
@@ -971,8 +972,9 @@ func (src *Pkgsrc) Latest(category PkgsrcPath, re regex.Pattern, repl string) st
 // of them, properly sorted from early to late.
 //
 // Example:
-//  ListVersions("lang", `^php[0-9]+$`, "php-$0")
-//      => {"php-53", "php-56", "php-73"}
+//
+//	ListVersions("lang", `^php[0-9]+$`, "php-$0")
+//	    => {"php-53", "php-56", "php-73"}
 func (src *Pkgsrc) ListVersions(category PkgsrcPath, re regex.Pattern, repl string, errorIfEmpty bool) []string {
 	if G.Testing {
 		// Regular expression must be anchored at both ends, to avoid typos.
@@ -1304,7 +1306,8 @@ func (src *Pkgsrc) Relpath(from, to CurrPath) RelPath {
 // File resolves a filename relative to the pkgsrc top directory.
 //
 // Example:
-//  NewPkgsrc("/usr/pkgsrc").File("distfiles") => "/usr/pkgsrc/distfiles"
+//
+//	NewPkgsrc("/usr/pkgsrc").File("distfiles") => "/usr/pkgsrc/distfiles"
 func (src *Pkgsrc) File(relativeName PkgsrcPath) CurrPath {
 	cleaned := NewRelPath(relativeName.AsPath()).Clean()
 	if cleaned == "." {
@@ -1327,7 +1330,8 @@ func (src *Pkgsrc) FilePkg(rel PackagePath) CurrPath {
 // Rel returns the path of `filename`, relative to the pkgsrc top directory.
 //
 // Example:
-//  NewPkgsrc("/usr/pkgsrc").Rel("/usr/pkgsrc/distfiles") => "distfiles"
+//
+//	NewPkgsrc("/usr/pkgsrc").Rel("/usr/pkgsrc/distfiles") => "distfiles"
 func (src *Pkgsrc) Rel(filename CurrPath) PkgsrcPath {
 	return NewPkgsrcPath(src.Relpath(src.topdir, filename).AsPath())
 }

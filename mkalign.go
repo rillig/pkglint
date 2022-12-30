@@ -39,8 +39,8 @@ func (p *MkAlignPara) IsOutlier(line *MkAlignLine) bool {
 // ValueAlignment returns the column at which all values of the paragraph
 // are aligned, or false if they aren't.
 //
-//  #.  Die Werte aller Zeilen sind mit Tabs an einer gemeinsamen vertikalen Linie
-//      (Ausrichtung) ausgerichtet.
+//	#.  Die Werte aller Zeilen sind mit Tabs an einer gemeinsamen vertikalen Linie
+//	    (Ausrichtung) ausgerichtet.
 func (p *MkAlignPara) ValueAlignment() (bool, int) {
 	panic("implement me")
 }

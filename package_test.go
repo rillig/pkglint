@@ -329,12 +329,13 @@ func (s *Suite) Test_Package__case_insensitive(c *check.C) {
 }
 
 // This package has several identifiers that all differ:
-//  - it lives in the directory "package"
-//  - the package name is "pkgname"
-//  - it downloads "distname-1.0.tar.gz"
-//    (in some places the distname is used as the package name)
-//  - in options.mk its name is "optid"
-//  - in buildlink3.mk its name is "bl3id"
+//   - it lives in the directory "package"
+//   - the package name is "pkgname"
+//   - it downloads "distname-1.0.tar.gz"
+//     (in some places the distname is used as the package name)
+//   - in options.mk its name is "optid"
+//   - in buildlink3.mk its name is "bl3id"
+//
 // All these identifiers should ideally be the same.
 // For historic reasons, the package directory and the package name
 // may differ.
