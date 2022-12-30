@@ -32,7 +32,7 @@
   especially when autofixing the indentation.
 
 ### Test_VaralignBlock__tabbed_outlier
- 
+
 ~~~
 .if !empty(PKG_OPTIONS:Minspircd-sqloper)
 INSPIRCD_STORAGE_DRIVER?=	mysql
