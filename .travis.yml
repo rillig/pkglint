@@ -1,21 +1,21 @@
 language: go
 
 go:
-- "1.19"
+  - "1.19"
 
 go_import_path: netbsd.org/pkglint
 
 install:
-- go get -d -t -v ./...
+  - go get -d -t -v ./...
 
 before_script:
-- go install golang.org/x/tools/cmd/goyacc@latest
-- go generate -x ./...
+  - go install golang.org/x/tools/cmd/goyacc@latest
+  - go generate -x ./...
 
 script:
-- go test -coverprofile=coverage.txt -covermode=count ./...
+  - go test -coverprofile=coverage.txt -covermode=count ./...
 
 after_success:
-- curl -Os https://uploader.codecov.io/latest/linux/codecov
-- chmod +x codecov
-- ./codecov -t ${CODECOV_TOKEN}
+  - curl -Os https://uploader.codecov.io/latest/linux/codecov
+  - chmod +x codecov
+  - ./codecov -t ${CODECOV_TOKEN}
