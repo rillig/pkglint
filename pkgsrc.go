@@ -141,32 +141,6 @@ func (src *Pkgsrc) loadPkgOptions() {
 	}
 }
 
-func (src *Pkgsrc) checkRemovedAfterLastFreeze() {
-	if src.changes.LastFreezeStart == "" || G.Wip || !G.CheckGlobal {
-		return
-	}
-
-	var wrong []*Change
-	for pkgsrcPath, change := range src.changes.LastChange {
-		switch change.Action {
-		case Added, Updated, Downgraded:
-			if !src.File(pkgsrcPath).IsDir() {
-				wrong = append(wrong, change)
-			}
-		}
-	}
-
-	sort.Slice(wrong, func(i, j int) bool { return wrong[i].IsAbove(wrong[j]) })
-
-	for _, change := range wrong {
-		// The original line of the change is not available anymore.
-		// Therefore, it is necessary to load the whole file again.
-		lines := Load(change.Location.Filename, MustSucceed)
-		line := lines.Lines[change.Location.lineno-1]
-		line.Errorf("Package %s must either exist or be marked as removed.", change.Pkgpath.String())
-	}
-}
-
 func (src *Pkgsrc) loadSuggestedUpdates() {
 	src.suggestedUpdates = src.parseSuggestedUpdates(Load(src.File("doc/TODO"), MustSucceed))
 	src.suggestedWipUpdates = src.parseSuggestedUpdates(Load(src.File("wip/TODO"), NotEmpty))

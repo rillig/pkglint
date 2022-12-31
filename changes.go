@@ -3,6 +3,7 @@ package pkglint
 import (
 	"netbsd.org/pkglint/pkgver"
 	"netbsd.org/pkglint/textproc"
+	"sort"
 	"strings"
 )
 
@@ -42,7 +43,7 @@ func (ch *Changes) load(src *Pkgsrc) {
 		}
 	}
 
-	src.checkRemovedAfterLastFreeze()
+	ch.checkRemovedAfterLastFreeze(src)
 }
 
 func (ch *Changes) parseFile(filename CurrPath, direct bool) []*Change {
@@ -288,6 +289,32 @@ func (*Changes) checkChangeDate(filename CurrPath, year string, change *Change, 
 				sprintf("%q", bmake("cce")),
 				"to commit the changes entry.")
 		}
+	}
+}
+
+func (ch *Changes) checkRemovedAfterLastFreeze(src *Pkgsrc) {
+	if ch.LastFreezeStart == "" || G.Wip || !G.CheckGlobal {
+		return
+	}
+
+	var wrong []*Change
+	for pkgsrcPath, change := range ch.LastChange {
+		switch change.Action {
+		case Added, Updated, Downgraded:
+			if !src.File(pkgsrcPath).IsDir() {
+				wrong = append(wrong, change)
+			}
+		}
+	}
+
+	sort.Slice(wrong, func(i, j int) bool { return wrong[i].IsAbove(wrong[j]) })
+
+	for _, change := range wrong {
+		// The original line of the change is not available anymore.
+		// Therefore, it is necessary to load the whole file again.
+		lines := Load(change.Location.Filename, MustSucceed)
+		line := lines.Lines[change.Location.lineno-1]
+		line.Errorf("Package %s must either exist or be marked as removed.", change.Pkgpath.String())
 	}
 }
 
