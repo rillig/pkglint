@@ -763,9 +763,10 @@ func (cv *VartypeCheck) LdFlag() {
 		return
 	}
 
+	// See MkLineChecker.checkTextRpath.
 	ldflag := cv.Value
-	if m, rpathFlag := match1(ldflag, `^(-Wl,(?:-R|-rpath|--rpath))`); m {
-		cv.Warnf("Please use \"${COMPILER_RPATH_FLAG}\" instead of %q.", rpathFlag)
+	if m, rpathFlag := match1(ldflag, `^(-Wl,--rpath,|-Wl,-rpath-link,|-Wl,-rpath,|-Wl,-R\b)`); m {
+		cv.Warnf("Please use ${COMPILER_RPATH_FLAG} instead of %q.", rpathFlag)
 		return
 	}
 
