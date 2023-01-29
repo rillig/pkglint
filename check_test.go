@@ -157,9 +157,12 @@ func Test__qa(t *testing.T) {
 	ck.Configure("*", "*", "", -intqa.EMissingTest)
 
 	// The Suite type is used for testing all parts of pkglint.
-	// Therefore its test methods may be everywhere.
+	// Therefore, its test methods may be everywhere.
 	ck.Configure("*.go", "Suite", "*", -intqa.EMethodsSameFile)
 	ck.Configure("*.go", "Tester", "*", -intqa.EMethodsSameFile)
+
+	// When running gobco, it inserts the function 'GobcoCover'.
+	ck.Configure("*", "", "GobcoCover", -intqa.EMissingTest)
 
 	ck.Check()
 }
