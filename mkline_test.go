@@ -639,7 +639,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__append_URL_to_list_of_URLs(c *
 	t.CheckOutputEmpty() // Up to version 5.3.6, pkglint warned about a missing :Q here, which was wrong.
 }
 
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__append_list_to_list(c *check.C) {
+func (s *Suite) Test_MkLine_VariableNeedsQuoting__assign_list_to_list(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
