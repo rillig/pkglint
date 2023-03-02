@@ -132,6 +132,10 @@ func (s *Suite) Test_MkCondChecker_Check(c *check.C) {
 
 	test(".if !",
 		"WARN: filename.mk:4: Invalid condition, unrecognized part: \"\".")
+
+	// TODO: There should be another error for the '.elif' outside '.if'.
+	test(".elif 0",
+		"ERROR: filename.mk:5: Unmatched .endif.")
 }
 
 func (s *Suite) Test_MkCondChecker_Check__tracing(c *check.C) {

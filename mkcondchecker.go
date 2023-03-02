@@ -289,6 +289,9 @@ func (ck *MkCondChecker) checkContradictions() {
 
 	byVarname := make(map[string][]VarFact)
 	levels := ck.MkLines.indentation.levels
+	if len(levels) == 0 {
+		goto skip // For .elif outside .if
+	}
 	for _, level := range levels[:len(levels)-1] {
 		if !level.mkline.NeedsCond() {
 			continue
@@ -300,6 +303,7 @@ func (ck *MkCondChecker) checkContradictions() {
 		}
 	}
 
+skip:
 	facts := ck.collectFacts(mkline)
 	for _, curr := range facts {
 		varname := curr.Varname
