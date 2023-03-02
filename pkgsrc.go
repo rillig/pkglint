@@ -47,8 +47,8 @@ type Pkgsrc struct {
 	vartypes   VarTypeRegistry
 }
 
-func NewPkgsrc(dir CurrPath) Pkgsrc {
-	return Pkgsrc{
+func NewPkgsrc(dir CurrPath) *Pkgsrc {
+	return &Pkgsrc{
 		dir,
 		make(map[string]bool),
 		NewTools(),

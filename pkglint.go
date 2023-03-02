@@ -32,7 +32,7 @@ type Pkglint struct {
 	Network,
 	Recursive bool
 
-	Pkgsrc Pkgsrc // Global data, mostly extracted from mk/*.
+	Pkgsrc *Pkgsrc // Global data, mostly extracted from mk/*.
 
 	Todo CurrPathQueue // The files or directories that still need to be checked.
 
