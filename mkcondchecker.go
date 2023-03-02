@@ -25,7 +25,7 @@ func (ck *MkCondChecker) Check() {
 
 	p := NewMkParser(nil, mkline.Args()) // No emitWarnings here, see the code below.
 	cond := p.MkCond()
-	if !p.EOF() {
+	if !p.EOF() || cond == nil {
 		mkline.Warnf("Invalid condition, unrecognized part: %q.", p.Rest())
 		return
 	}

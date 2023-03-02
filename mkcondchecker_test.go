@@ -129,6 +129,9 @@ func (s *Suite) Test_MkCondChecker_Check(c *check.C) {
 		"WARN: filename.mk:4: Invalid variable modifier \"//*\" for \"MASTER_SITES\".",
 		"WARN: filename.mk:4: \"ftp\" is not a valid URL.",
 		"WARN: filename.mk:4: MASTER_SITES should not be used at load time in any file.")
+
+	test(".if !",
+		"WARN: filename.mk:4: Invalid condition, unrecognized part: \"\".")
 }
 
 func (s *Suite) Test_MkCondChecker_Check__tracing(c *check.C) {
