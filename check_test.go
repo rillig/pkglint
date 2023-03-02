@@ -1101,12 +1101,14 @@ func (t *Tester) NewMkLinesPkg(filename CurrPath, pkg *Package, lines ...string)
 		basename.HasSuffixText(".mk") || basename == "Makefile" || basename.HasPrefixText("Makefile."),
 		"filename %q must be realistic, otherwise the variable permissions are wrong", filename)
 
-	var rawText strings.Builder
+	var sb strings.Builder
 	for _, line := range lines {
-		rawText.WriteString(line)
-		rawText.WriteString("\n")
+		sb.WriteString(line)
+		sb.WriteString("\n")
 	}
-	return NewMkLines(convertToLogicalLines(filename, rawText.String(), true), pkg, nil)
+	rawText := sb.String()
+	logicalLines := convertToLogicalLines(filename, rawText, true)
+	return NewMkLines(logicalLines, pkg, nil)
 }
 
 // Returns and consumes the output from both stdout and stderr.
