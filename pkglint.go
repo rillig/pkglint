@@ -197,15 +197,14 @@ func (p *Pkglint) prepareMainLoop() {
 	relTopdir := p.findPkgsrcTopdir(firstDir)
 	if relTopdir.IsEmpty() {
 		// If the first argument to pkglint is not inside a pkgsrc tree,
-		// pkglint doesn't know where to load the infrastructure files from,
-		// Since virtually every single check needs these files,
-		// the only sensible thing to do is to quit immediately.
-		G.Logger.TechFatalf(firstDir, "Must be inside a pkgsrc tree.")
+		// pkglint doesn't know where to load the infrastructure files from.
+		// Allow this mode nevertheless, for checking the basic syntax
+		// and for formatting makefiles outside pkgsrc.
+	} else {
+		p.Pkgsrc = NewPkgsrc(firstDir.JoinNoClean(relTopdir))
+		p.Wip = p.Pkgsrc.IsWip(firstDir) // See Pkglint.checkMode.
+		p.Pkgsrc.LoadInfrastructure()
 	}
-
-	p.Pkgsrc = NewPkgsrc(firstDir.JoinNoClean(relTopdir))
-	p.Wip = p.Pkgsrc.IsWip(firstDir) // See Pkglint.checkMode.
-	p.Pkgsrc.LoadInfrastructure()
 
 	currentUser, err := user.Current()
 	assertNil(err, "user.Current")
@@ -306,6 +305,11 @@ func (p *Pkglint) checkMode(dirent CurrPath, mode os.FileMode) {
 	dir := dirent
 	if !isDir {
 		dir = dirent.Dir()
+	}
+
+	if isReg && p.Pkgsrc == nil {
+		CheckFileMk(dirent, nil)
+		return
 	}
 
 	pkgsrcRel := p.Pkgsrc.Rel(dirent)
