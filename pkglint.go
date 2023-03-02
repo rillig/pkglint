@@ -190,7 +190,8 @@ func (p *Pkglint) setUpProfiling() func() {
 
 func (p *Pkglint) prepareMainLoop() {
 	firstDir := p.Todo.Front()
-	if firstDir.IsFile() {
+	isFile := firstDir.IsFile()
+	if isFile {
 		firstDir = firstDir.Dir()
 	}
 
@@ -198,8 +199,12 @@ func (p *Pkglint) prepareMainLoop() {
 	if relTopdir.IsEmpty() {
 		// If the first argument to pkglint is not inside a pkgsrc tree,
 		// pkglint doesn't know where to load the infrastructure files from.
-		// Allow this mode nevertheless, for checking the basic syntax
-		// and for formatting makefiles outside pkgsrc.
+		if isFile {
+			// Allow this mode nevertheless, for checking the basic syntax
+			// and for formatting individual makefiles outside pkgsrc.
+		} else {
+			G.Logger.TechFatalf(firstDir, "Must be inside a pkgsrc tree.")
+		}
 	} else {
 		p.Pkgsrc = NewPkgsrc(firstDir.JoinNoClean(relTopdir))
 		p.Wip = p.Pkgsrc.IsWip(firstDir) // See Pkglint.checkMode.
