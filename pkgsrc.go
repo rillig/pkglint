@@ -43,7 +43,7 @@ type Pkgsrc struct {
 	// to BUILD_DEFS.
 	UserDefinedVars Scope
 
-	Deprecated map[string]string
+	deprecated map[string]string
 	vartypes   VarTypeRegistry
 }
 
@@ -339,7 +339,7 @@ func (src *Pkgsrc) addBuildDefs(varnames ...string) {
 }
 
 func (src *Pkgsrc) initDeprecatedVars() {
-	src.Deprecated = map[string]string{
+	src.deprecated = map[string]string{
 		// December 2003
 		"FIX_RPATH": "It has been removed from pkgsrc in 2003.",
 
@@ -638,6 +638,14 @@ func (src *Pkgsrc) loadDefaultBuildDefs() {
 		"PKGPATH",
 		"RESTRICTED",
 		"USE_ABI_DEPENDS")
+}
+
+func (src *Pkgsrc) Deprecated(varname string) string {
+	deprecated := src.deprecated
+	if instead := deprecated[varname]; instead != "" {
+		return instead
+	}
+	return deprecated[varnameCanon(varname)]
 }
 
 // Latest returns the latest package matching the given pattern.

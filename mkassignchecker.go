@@ -77,8 +77,7 @@ func (ck *MkAssignChecker) checkLeftNotUsed() {
 		return
 	}
 
-	deprecated := G.Pkgsrc.Deprecated
-	if deprecated[varname] != "" || deprecated[varcanon] != "" {
+	if G.Project.Deprecated(varname) != "" {
 		return
 	}
 
@@ -125,11 +124,8 @@ func (ck *MkAssignChecker) checkLeftOpsys() {
 }
 
 func (ck *MkAssignChecker) checkLeftDeprecated() {
-	varname := ck.MkLine.Varname()
-	if fix := G.Pkgsrc.Deprecated[varname]; fix != "" {
-		ck.MkLine.Warnf("Definition of %s is deprecated. %s", varname, fix)
-	} else if fix = G.Pkgsrc.Deprecated[varnameCanon(varname)]; fix != "" {
-		ck.MkLine.Warnf("Definition of %s is deprecated. %s", varname, fix)
+	if instead := G.Project.Deprecated(ck.MkLine.Varname()); instead != "" {
+		ck.MkLine.Warnf("Definition of %s is deprecated. %s", ck.MkLine.Varname(), instead)
 	}
 }
 

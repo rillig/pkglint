@@ -837,10 +837,7 @@ func (ck *MkVarUseChecker) checkBuildDefs() {
 
 func (ck *MkVarUseChecker) checkDeprecated() {
 	varname := ck.use.varname
-	instead := G.Pkgsrc.Deprecated[varname]
-	if instead == "" {
-		instead = G.Pkgsrc.Deprecated[varnameCanon(varname)]
-	}
+	instead := G.Project.Deprecated(varname)
 	if instead == "" {
 		return
 	}

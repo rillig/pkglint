@@ -63,6 +63,7 @@ func (s *Suite) SetUpTest(c *check.C) {
 	trace.Out = &t.stdout
 
 	G.Pkgsrc = NewPkgsrc(t.File("."))
+	G.Project = G.Pkgsrc
 
 	t.c = c
 	t.SetUpCommandLine("-Wall")    // To catch duplicate warnings
