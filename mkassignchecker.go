@@ -25,7 +25,7 @@ func (ck *MkAssignChecker) check() {
 // checkLeft checks everything to the left of the assignment operator.
 func (ck *MkAssignChecker) checkLeft() {
 	varname := ck.MkLine.Varname()
-	if !ck.mayBeDefined(varname) {
+	if G.Pkgsrc != nil && !ck.mayBeDefined(varname) {
 		ck.MkLine.Warnf("Variable names starting with an underscore (%s) are reserved for internal pkgsrc use.", varname)
 	}
 
@@ -72,7 +72,7 @@ func (ck *MkAssignChecker) checkLeftNotUsed() {
 		return
 	}
 
-	vartypes := G.Pkgsrc.vartypes
+	vartypes := G.Project.Types()
 	if vartypes.IsDefinedExact(varname) || vartypes.IsDefinedExact(varcanon) {
 		return
 	}
@@ -699,7 +699,7 @@ func (ck *MkAssignChecker) mayBeDefined(varname string) bool {
 	if G.Infrastructure {
 		return true
 	}
-	if G.Pkgsrc == nil || G.Pkgsrc.vartypes.Canon(varname) != nil {
+	if G.Pkgsrc.Types().Canon(varname) != nil {
 		return true
 	}
 

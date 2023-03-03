@@ -44,7 +44,7 @@ type Pkgsrc struct {
 	UserDefinedVars Scope
 
 	deprecated map[string]string
-	vartypes   VarTypeRegistry
+	types      VarTypeRegistry
 }
 
 func NewPkgsrc(dir CurrPath) *Pkgsrc {
@@ -72,7 +72,7 @@ func NewPkgsrc(dir CurrPath) *Pkgsrc {
 // simple, since setting up a realistic pkgsrc environment requires
 // a lot of files.
 func (src *Pkgsrc) LoadInfrastructure() {
-	src.vartypes.Init(src)
+	src.Types().Init(src)
 	src.loadMasterSites()
 	src.loadPkgOptions()
 	src.changes.load(src)
@@ -513,7 +513,7 @@ func (src *Pkgsrc) loadUntypedVars() {
 
 	define := func(varcanon string, mkline *MkLine) {
 		switch {
-		case src.vartypes.IsDefinedCanon(varcanon):
+		case src.Types().IsDefinedCanon(varcanon):
 			// Already defined, can also be a tool.
 
 		case !matches(varcanon, `^[A-Z]`):
@@ -534,7 +534,7 @@ func (src *Pkgsrc) loadUntypedVars() {
 			if trace.Tracing {
 				trace.Stepf("Untyped variable %q in %s", varcanon, mkline)
 			}
-			src.vartypes.DefineType(varcanon, unknownType)
+			src.Types().DefineType(varcanon, unknownType)
 		}
 	}
 
@@ -648,6 +648,10 @@ func (src *Pkgsrc) Deprecated(varname string) string {
 	return deprecated[varnameCanon(varname)]
 }
 
+func (src *Pkgsrc) Types() *VarTypeRegistry {
+	return &src.types
+}
+
 // Latest returns the latest package matching the given pattern.
 // It searches the category for subdirectories matching the given
 // regular expression, takes the latest of them and replaces its
@@ -754,7 +758,7 @@ func (src *Pkgsrc) VariableType(mklines *MkLines, varname string) (vartype *Vart
 	// When scanning mk/** for otherwise unknown variables, their type
 	// is set to BtUnknown. These variables must not override the guess
 	// based on the variable name.
-	vartype = src.vartypes.Canon(varname)
+	vartype = src.Types().Canon(varname)
 	if vartype != nil && vartype.basicType != BtUnknown {
 		return vartype
 	}
@@ -840,7 +844,7 @@ func (src *Pkgsrc) guessVariableType(varname string) (vartype *Vartype) {
 	// must take precedence over this rule, because otherwise, list
 	// variables from the infrastructure would be guessed to be plain
 	// variables.
-	vartype = src.vartypes.Canon(varname)
+	vartype = src.Types().Canon(varname)
 	if vartype != nil {
 		return vartype
 	}

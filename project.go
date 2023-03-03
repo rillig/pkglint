@@ -12,14 +12,21 @@ type Project interface {
 	// Deprecated determines whether the variable is deprecated,
 	// and if so, what should be done instead.
 	Deprecated(varname string) string
+
+	// Types determines the types of variables.
+	Types() *VarTypeRegistry
 }
 
 type NetBSDProject struct {
 	deprecated map[string]string
+	types      VarTypeRegistry
 }
 
 func NewNetBSDProject() *NetBSDProject {
-	return &NetBSDProject{map[string]string{}}
+	return &NetBSDProject{
+		map[string]string{},
+		NewVarTypeRegistry(),
+	}
 }
 
 func (p NetBSDProject) Deprecated(varname string) string {
@@ -28,4 +35,8 @@ func (p NetBSDProject) Deprecated(varname string) string {
 		return instead
 	}
 	return deprecated[varnameCanon(varname)]
+}
+
+func (p NetBSDProject) Types() *VarTypeRegistry {
+	return &p.types
 }
