@@ -36,6 +36,8 @@ func NewVarTypeRegistry() VarTypeRegistry {
 	return VarTypeRegistry{make(map[string]*Vartype), make(map[string][]ACLEntry)}
 }
 
+// Canon looks up the type of the variable, first by trying the exact
+// variable name, then by trying the canonicalized variable name.
 func (reg *VarTypeRegistry) Canon(varname string) *Vartype {
 	vartype := reg.types[varname]
 	if vartype == nil {
