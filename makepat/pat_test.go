@@ -166,38 +166,63 @@ func Test_Pattern_Match(t *testing.T) {
 }
 
 func Test_Intersect(t *testing.T) {
+	// The state machine of the compiled patterns is more powerful than
+	// the string representation of the patterns, therefore the
+	// intersected pattern is not visualized. Instead, it is tested using
+	// a single example string.
 	tests := []struct {
 		pattern1 string
 		pattern2 string
-		str      string
-		matches  bool
 		canMatch bool
+		example  string
+		matches  bool
 	}{
-		{"N-*", "N-*", "N-*", true, true},
-		{"N-9.99.*", "N-[1-9].*", "", false, true},
-		{"N-9.99.*", "N-[1-9][0-9].*", "", false, false},
-		{"*.c", "*.h", "", false, false},
-		{"a*", "*b", "ab", true, true},
-		{"a*bc", "ab*c", "abc", true, true},
+		{"N-*", "N-*", true, "N-*", true},
+		{"N-9.99.*", "N-[1-9].*", true, "", false},
+		{"N-9.99.*", "N-[1-9][0-9].*", false, "", false},
+		{"*.c", "*.h", false, "", false},
+		{"a*", "*b", true, "ab", true},
+		{"a*bc", "ab*c", true, "abc", true},
+		{"*1*", "*2*", true, "asdf", false},
+		{"*1*", "*2*", true, "a1a", false},
+		{"*1*", "*2*", true, "a2a", false},
+		{"*1*", "*2*", true, "a12a", true},
+		{"*1*", "*2*", true, "a21a", true},
+		{"*[^0-9-+eE.]*", "*.c", true, ".c", true},
+		{"*[^0-9-+eE.]*", "*.c", true, "0.c", true},
+		{"*[^0-9-+eE.]*", "*.e", true, "0.e", false},
+		{"*[^0-9-+eE.]*", "*.e", true, "a.e", true},
+		{"*[^0-9-+eE.]*", "*.0", true, "000a0.0", true},
+		{"*[^0-9-+eE.]*", "*.0", true, "0000.0", false},
+		{"[0-9]", "[a-f]", false, "0", false},
+		{"[0-9]", "[0a-f]", true, "0", true},
+		{"[0-9]", "[0a-f]", true, "1", false},
+		{"[0-9]", "[0a-f]", true, "00", false},
 	}
 	for _, tt := range tests {
-		t.Run(tt.str, func(t *testing.T) {
-			a1, err1 := Compile(tt.pattern1)
-			a2, err2 := Compile(tt.pattern2)
+		t.Run(tt.example, func(t *testing.T) {
+			p1, err1 := Compile(tt.pattern1)
+			p2, err2 := Compile(tt.pattern2)
 			if err1 != nil {
 				t.Fatal(err1)
 			}
 			if err2 != nil {
 				t.Fatal(err2)
 			}
-			a := Intersect(a1, a2)
-			matches := a.Match(tt.str)
+			both := Intersect(p1, p2)
+			canMatch := both.CanMatch()
+			if canMatch != tt.canMatch {
+				t.Errorf("CanMatch() = %v, want %v", canMatch, tt.canMatch)
+			}
+			matches := both.Match(tt.example)
 			if matches != tt.matches {
 				t.Errorf("Match() = %v, want %v", matches, tt.matches)
 			}
-			canMatch := a.CanMatch()
-			if canMatch != tt.canMatch {
-				t.Errorf("CanMatch() = %v, want %v", canMatch, tt.canMatch)
+			if matches && !p1.Match(tt.example) {
+				t.Errorf("example %q doesn't match pattern1 %q", tt.example, tt.pattern1)
+			}
+			if matches && !p2.Match(tt.example) {
+				t.Errorf("example %q doesn't match pattern2 %q", tt.example, tt.pattern2)
 			}
 		})
 	}
