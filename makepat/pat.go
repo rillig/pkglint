@@ -68,7 +68,7 @@ func Compile(pattern string) (*Pattern, error) {
 
 func compileCharClass(p *Pattern, lex *textproc.Lexer, ch byte, s StateID) (StateID, error) {
 	negate := lex.SkipByte('^')
-	chars := make([]bool, 256)
+	var chars [256]bool
 	next := p.AddState(false)
 	for {
 		if lex.EOF() {
@@ -99,6 +99,11 @@ func compileCharClass(p *Pattern, lex *textproc.Lexer, ch byte, s StateID) (Stat
 		}
 	}
 
+	p.addTransitions(s, &chars, next)
+	return next, nil
+}
+
+func (p *Pattern) addTransitions(from StateID, chars *[256]bool, to StateID) {
 	start := 0
 	for start < len(chars) && !chars[start] {
 		start++
@@ -111,7 +116,7 @@ func compileCharClass(p *Pattern, lex *textproc.Lexer, ch byte, s StateID) (Stat
 		}
 
 		if start < end {
-			p.AddTransition(s, byte(start), byte(end-1), next)
+			p.AddTransition(from, byte(start), byte(end-1), to)
 		}
 
 		start = end
@@ -119,7 +124,6 @@ func compileCharClass(p *Pattern, lex *textproc.Lexer, ch byte, s StateID) (Stat
 			start++
 		}
 	}
-	return next, nil
 }
 
 func (p *Pattern) AddState(end bool) StateID {

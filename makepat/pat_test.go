@@ -2,6 +2,7 @@ package makepat
 
 import (
 	"netbsd.org/pkglint/intqa"
+	"netbsd.org/pkglint/textproc"
 	"reflect"
 	"testing"
 )
@@ -49,6 +50,52 @@ func Test_compileCharClass(t *testing.T) {
 				if got != tt.want {
 					t.Errorf("got %v, want %v", got, tt.want)
 				}
+			}
+		})
+	}
+}
+
+func Test_Pattern_addTransitions(t *testing.T) {
+	none := textproc.NewByteSet("")
+	numeric := textproc.NewByteSet("-+0-9.Ee")
+	all := none.Inverse()
+
+	tests := []struct {
+		name    string
+		bs      *textproc.ByteSet
+		example byte
+		want    bool
+	}{
+		{"none min", none, 0, false},
+		{"none max", none, 255, false},
+		{"all min", all, 0, true},
+		{"all max", all, 255, true},
+		{"numeric", numeric, '*', false},
+		{"numeric", numeric, '+', true},
+		{"numeric", numeric, ',', false},
+		{"numeric", numeric, '-', true},
+		{"numeric", numeric, '.', true},
+		{"numeric", numeric, '/', false},
+		{"numeric", numeric, '0', true},
+		{"numeric", numeric, '9', true},
+		{"numeric", numeric, ':', false},
+		{"numeric", numeric, 'D', false},
+		{"numeric", numeric, 'E', true},
+		{"numeric", numeric, 'F', false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var p Pattern
+			s0 := p.AddState(false)
+			s1 := p.AddState(true)
+			var chars [256]bool
+			for i := 0; i < 256; i++ {
+				chars[i] = tt.bs.Contains(byte(i))
+			}
+			p.addTransitions(s0, &chars, s1)
+			got := p.Match(string([]byte{tt.example}))
+			if got != tt.want {
+				t.Errorf("got %v, want %v", got, tt.want)
 			}
 		})
 	}
