@@ -252,7 +252,7 @@ func (p *Pattern) reachable() []bool {
 	return reachable
 }
 
-// relevant returns all states from which and end state is reachable.
+// relevant returns all states from which an end state is reachable.
 // In optimized patterns, each state is relevant.
 func (p *Pattern) relevant(reachable []bool) []bool {
 	relevant := make([]bool, len(p.states))
