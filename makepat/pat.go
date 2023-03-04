@@ -384,8 +384,10 @@ func Float() *Pattern {
 	p.addTransition(decDotDec, '0', '9', decDotDec)
 
 	decExp := p.addState(false)
-	decExpSign := p.addState(true)
+	decExpSign := p.addState(false)
 	decExpDec := p.addState(true)
+	p.addTransition(decDot, 'E', 'E', decExp)
+	p.addTransition(decDot, 'e', 'e', decExp)
 	p.addTransition(decDotDec, 'E', 'E', decExp)
 	p.addTransition(decDotDec, 'e', 'e', decExp)
 	p.addTransition(decExp, '+', '+', decExpSign)
@@ -397,6 +399,7 @@ func Float() *Pattern {
 	z := p.addState(false)
 	zx := p.addState(false)
 	p.addTransition(start, '0', '0', z)
+	p.addTransition(sign, '0', '0', z)
 	p.addTransition(z, 'X', 'X', zx)
 	p.addTransition(z, 'x', 'x', zx)
 
@@ -428,10 +431,13 @@ func Float() *Pattern {
 	hexExp := p.addState(false)
 	hexExpSign := p.addState(false)
 	hexExpDec := p.addState(true)
+	p.addTransition(hexDot, 'P', 'P', hexExp)
+	p.addTransition(hexDot, 'p', 'p', hexExp)
 	p.addTransition(hexDotHex, 'P', 'P', hexExp)
 	p.addTransition(hexDotHex, 'p', 'p', hexExp)
 	p.addTransition(hexExp, '+', '+', hexExpSign)
 	p.addTransition(hexExp, '-', '-', hexExpSign)
+	p.addTransition(hexExp, '0', '9', hexExpDec)
 	p.addTransition(hexExpSign, '0', '9', hexExpDec)
 	p.addTransition(hexExpDec, '0', '9', hexExpDec)
 

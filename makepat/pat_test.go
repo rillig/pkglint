@@ -399,6 +399,49 @@ func Test_CompileLimited(t *testing.T) {
 	}
 }
 
+func Test_Float(t *testing.T) {
+	tests := []struct {
+		example string
+		want    bool
+	}{
+		{"", false},
+		{".", false},
+		{"0x", false},
+		{"0xa", true},
+		{"+0xa", true},
+		{"-0xa", true},
+		{"0xa.", false},
+		{"0xa.a", false},
+		{"0xa.aa", false},
+		{"0xa.p", false},
+		{"0xa.p-1", true},
+		{"0xa.p1", true},
+		{"0xa.p11", true},
+		{"0xaa.", false},
+		{"1", true},
+		{"+1", true},
+		{"-1", true},
+		{"1.", true},
+		{"1.1", true},
+		{"1.11", true},
+		{"1.1e", false},
+		{"1.1e+", false},
+		{"1.1e+1", true},
+		{"1.1e+11", true},
+		{"1.1e-1", true},
+		{"1.e+1", true},
+		{"11", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.example, func(t *testing.T) {
+			if got := Float().Match(tt.example); got != tt.want {
+				t.Errorf("got %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func Test_bmin(t *testing.T) {
 	if bmin(0, 255) != 0 {
 		t.Error()
