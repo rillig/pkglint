@@ -86,8 +86,8 @@ func Test_Pattern_addTransitions(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var p Pattern
-			s0 := p.AddState(false)
-			s1 := p.AddState(true)
+			s0 := p.addState(false)
+			s1 := p.addState(true)
 			var chars [256]bool
 			for i := 0; i < 256; i++ {
 				chars[i] = tt.bs.Contains(byte(i))
@@ -101,11 +101,11 @@ func Test_Pattern_addTransitions(t *testing.T) {
 	}
 }
 
-func Test_Pattern_AddState(t *testing.T) {
+func Test_Pattern_addState(t *testing.T) {
 	var p Pattern
 
-	p.AddState(false)
-	p.AddState(true)
+	p.addState(false)
+	p.addState(true)
 
 	expected := Pattern{states: []state{{nil, false}, {nil, true}}}
 	if !reflect.DeepEqual(p, expected) {
@@ -113,13 +113,13 @@ func Test_Pattern_AddState(t *testing.T) {
 	}
 }
 
-func Test_Pattern_AddTransition(t *testing.T) {
+func Test_Pattern_addTransition(t *testing.T) {
 	var p Pattern
 
-	p.AddState(false)
-	p.AddState(true)
-	p.AddTransition(0, '0', '9', 1)
-	p.AddTransition(1, '0', '9', 0)
+	p.addState(false)
+	p.addState(true)
+	p.addTransition(0, '0', '9', 1)
+	p.addTransition(1, '0', '9', 0)
 
 	expected := Pattern{states: []state{
 		{[]transition{{'0', '9', 1}}, false},
@@ -277,12 +277,12 @@ func Test_Intersect(t *testing.T) {
 
 func Test_Pattern_optimized(t *testing.T) {
 	var p Pattern
-	p.AddState(false)
-	p.AddState(false)
-	p.AddState(false)
-	p.AddState(true)
-	p.AddTransition(0, '1', '1', 1)
-	p.AddTransition(1, '2', '2', 3)
+	p.addState(false)
+	p.addState(false)
+	p.addState(false)
+	p.addState(true)
+	p.addTransition(0, '1', '1', 1)
+	p.addTransition(1, '2', '2', 3)
 
 	opt := p.optimized()
 

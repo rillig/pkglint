@@ -28,7 +28,7 @@ type StateID uint16
 // from bmake.
 func Compile(pattern string) (*Pattern, error) {
 	var p Pattern
-	s := p.AddState(false)
+	s := p.addState(false)
 
 	lex := textproc.NewLexer(pattern)
 	for !lex.EOF() {
@@ -36,18 +36,18 @@ func Compile(pattern string) (*Pattern, error) {
 
 		switch ch {
 		case '*':
-			p.AddTransition(s, 0, 255, s)
+			p.addTransition(s, 0, 255, s)
 		case '?':
-			next := p.AddState(false)
-			p.AddTransition(s, 0, 255, next)
+			next := p.addState(false)
+			p.addTransition(s, 0, 255, next)
 			s = next
 		case '\\':
 			if lex.EOF() {
 				return nil, errors.New("unfinished escape sequence")
 			}
 			ch := lex.NextByte()
-			next := p.AddState(false)
-			p.AddTransition(s, ch, ch, next)
+			next := p.addState(false)
+			p.addTransition(s, ch, ch, next)
 			s = next
 		case '[':
 			next, err := compileCharClass(&p, lex, ch, s)
@@ -56,8 +56,8 @@ func Compile(pattern string) (*Pattern, error) {
 			}
 			s = next
 		default:
-			next := p.AddState(false)
-			p.AddTransition(s, ch, ch, next)
+			next := p.addState(false)
+			p.addTransition(s, ch, ch, next)
 			s = next
 		}
 	}
@@ -69,7 +69,7 @@ func Compile(pattern string) (*Pattern, error) {
 func compileCharClass(p *Pattern, lex *textproc.Lexer, ch byte, s StateID) (StateID, error) {
 	negate := lex.SkipByte('^')
 	var chars [256]bool
-	next := p.AddState(false)
+	next := p.addState(false)
 	for {
 		if lex.EOF() {
 			return 0, errors.New("unfinished character class")
@@ -116,7 +116,7 @@ func (p *Pattern) addTransitions(from StateID, chars *[256]bool, to StateID) {
 		}
 
 		if start < end {
-			p.AddTransition(from, byte(start), byte(end-1), to)
+			p.addTransition(from, byte(start), byte(end-1), to)
 		}
 
 		start = end
@@ -126,12 +126,12 @@ func (p *Pattern) addTransitions(from StateID, chars *[256]bool, to StateID) {
 	}
 }
 
-func (p *Pattern) AddState(end bool) StateID {
+func (p *Pattern) addState(end bool) StateID {
 	p.states = append(p.states, state{nil, end})
 	return StateID(len(p.states) - 1)
 }
 
-func (p *Pattern) AddTransition(from StateID, min, max byte, to StateID) {
+func (p *Pattern) addTransition(from StateID, min, max byte, to StateID) {
 	state := &p.states[from]
 	state.transitions = append(state.transitions, transition{min, max, to})
 }
@@ -190,7 +190,7 @@ func Intersect(p1, p2 *Pattern) *Pattern {
 		key := [2]StateID{s1, s2}
 		ns, ok := newState[key]
 		if !ok {
-			ns = res.AddState(p1.states[s1].end && p2.states[s2].end)
+			ns = res.addState(p1.states[s1].end && p2.states[s2].end)
 			newState[key] = ns
 		}
 		return ns
@@ -208,7 +208,7 @@ func Intersect(p1, p2 *Pattern) *Pattern {
 					if min <= max {
 						from := stateFor(StateID(i1), StateID(i2))
 						to := stateFor(t1.to, t2.to)
-						res.AddTransition(from, min, max, to)
+						res.addTransition(from, min, max, to)
 					}
 				}
 			}
@@ -303,14 +303,14 @@ func (p *Pattern) compressed(relevant []bool) *Pattern {
 	newIDs := make([]StateID, len(p.states))
 	for i, r := range relevant {
 		if r {
-			newIDs[i] = opt.AddState(p.states[i].end)
+			newIDs[i] = opt.addState(p.states[i].end)
 		}
 	}
 
 	for from, s := range p.states {
 		for _, t := range s.transitions {
 			if relevant[from] && relevant[t.to] {
-				opt.AddTransition(newIDs[from], t.min, t.max, newIDs[t.to])
+				opt.addTransition(newIDs[from], t.min, t.max, newIDs[t.to])
 			}
 		}
 	}
