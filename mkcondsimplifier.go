@@ -283,7 +283,7 @@ func (s *MkCondSimplifier) simplifyMatch(varuse *MkVarUse, fromEmpty bool, neg b
 	//
 	// The same reasoning applies to the variable name, even though the
 	// variable name typically only uses a restricted character set.
-	if !matches(varuse.Mod(), `^[*.:\w\[\]]+$`) {
+	if !matches(varuse.Mod(), `^[*+\-.:\w\[\]]+$`) {
 		return
 	}
 

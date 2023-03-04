@@ -885,16 +885,18 @@ func (s *Suite) Test_MkCondSimplifier_simplifyMatch(c *check.C) {
 	// numeric and evaluates to 0.0. Since make parses scientific
 	// notation such as 12345e-400, even numbers that contain nonzero
 	// digits may evaluate to false.
-	// TODO: Allow '-' in patterns.
 	t.testBeforeAndAfterPrefs(
 		".if !empty(IN_SCOPE_DEFINED:M[0-9]*)",
-		".if !empty(IN_SCOPE_DEFINED:M[0-9]*)",
-		nil...)
+		".if ${IN_SCOPE_DEFINED:M[0-9]*} != \"\"",
+		"NOTE: filename.mk:6: "+
+			"\"!empty(IN_SCOPE_DEFINED:M[0-9]*)\" "+
+			"can be simplified to "+
+			"\"${IN_SCOPE_DEFINED:M[0-9]*} != \\\"\\\"\".",
+		"AUTOFIX: filename.mk:6: "+
+			"Replacing \"!empty(IN_SCOPE_DEFINED:M[0-9]*)\" "+
+			"with \"${IN_SCOPE_DEFINED:M[0-9]*} != \\\"\\\"\".")
 
-	// Even though the pattern '[0-9]' from above is common, it is not
-	// replaced, but the equivalent pattern '[0123456789]' is. Since a
-	// range like [!-~] only affects the evaluation but not the parsing,
-	// '-' can be allowed.
+	// The pattern '[0123456789]' is equivalent to '[0-9]'.
 	t.testBeforeAndAfterPrefs(
 		".if !empty(IN_SCOPE_DEFINED:M[0123456789]*)",
 		".if ${IN_SCOPE_DEFINED:M[0123456789]*} != \"\"",

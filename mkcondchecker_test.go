@@ -256,6 +256,14 @@ func (s *Suite) Test_MkCondChecker_Check__contradicting_conditions(c *check.C) {
 				"!empty(MACHINE_PLATFORM:MNetBSD-9.99.*) && "+
 				"!empty(MACHINE_PLATFORM:MNetBSD-[1-9][0-9].*)",
 			".endif"),
+		"NOTE: filename.mk:5:"+
+			" \"!empty(MACHINE_PLATFORM:MNetBSD-9.99.*)\" "+
+			"can be simplified to "+
+			"\"${MACHINE_PLATFORM:MNetBSD-9.99.*}\".",
+		"NOTE: filename.mk:5: "+
+			"\"!empty(MACHINE_PLATFORM:MNetBSD-[1-9][0-9].*)\" "+
+			"can be simplified to "+
+			"\"${MACHINE_PLATFORM:MNetBSD-[1-9][0-9].*}\".",
 		"ERROR: filename.mk:5: The patterns \"NetBSD-9.99.*\" "+
 			"and \"NetBSD-[1-9][0-9].*\" cannot match at the same time.")
 
