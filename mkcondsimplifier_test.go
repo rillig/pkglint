@@ -3,6 +3,7 @@ package pkglint
 import (
 	"gopkg.in/check.v1"
 	"netbsd.org/pkglint/regex"
+	"testing"
 )
 
 type MkCondSimplifierTester struct {
@@ -877,6 +878,17 @@ func (s *Suite) Test_MkCondSimplifier_simplifyMatch(c *check.C) {
 		"AUTOFIX: filename.mk:6: "+
 			"Replacing \"!empty(IN_SCOPE_DEFINED:M[Nn][Oo])\" "+
 			"with \"${IN_SCOPE_DEFINED:tl} == no\".")
+
+	// When replacing the '!empty' with a plain expression, there's an
+	// edge case that differs in behavior. A condition evaluates to
+	// false if its expression value has a single word, that word is
+	// numeric and evaluates to 0.0. Since make parses scientific
+	// notation such as 12345e-400, even numbers that contain nonzero
+	// digits may evaluate to false.
+	t.testBeforeAndAfterPrefs(
+		".if !empty(IN_SCOPE_DEFINED:M[0-9]*)",
+		".if !empty(IN_SCOPE_DEFINED:M[0-9]*)",
+		nil...)
 }
 
 func (s *Suite) Test_MkCondSimplifier_isDefined(c *check.C) {
@@ -901,4 +913,41 @@ func (s *Suite) Test_MkCondSimplifier_isDefined(c *check.C) {
 	})
 	t.CheckOutputLines(
 		"WARN: filename.mk:3: UNDEFINED is used but not defined.")
+}
+
+func Test_MkCondSimplifier_mayMatchNumber(t *testing.T) {
+	tests := []struct {
+		pattern string
+		want    bool
+	}{
+		// The empty pattern matches only a single word, namely the
+		// empty string, and that word is not numeric. Except for the
+		// workaround in make's TryParseNumber, which treats the
+		// empty string as zero, for undocumented reasons.
+		{"", false},
+		// Can only match '0', whose numeric value is zero.
+		{"0", true},
+		// Can only match '1', whose numeric value is not zero.
+		{"1", true},
+		// Can match '0', '00000', and so on.
+		{"[0-9]", true},
+		// A pattern consisting of only nonzero digits cannot match a
+		// number whose numeric value is zero.
+		{"[1-9]", true},
+		// Can match '0', '0x0', '0e0', '0e1000'.
+		{"[0-9a-z]", true},
+		// Each number has at least one digit, for example, '.e+' is
+		// not syntactically valid.
+		{"[^0-9]", true},
+		// No word that ends in '.c' is numeric.
+		{"*.c", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.pattern, func(t *testing.T) {
+			var mk *MkCondSimplifier
+			if got := mk.mayMatchNumber(tt.pattern); got != tt.want {
+				t.Errorf("got %v for %q, want %v", got, tt.pattern, tt.want)
+			}
+		})
+	}
 }

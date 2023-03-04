@@ -369,6 +369,36 @@ func Test_Pattern_CanMatch(t *testing.T) {
 
 }
 
+func Test_CompileLimited(t *testing.T) {
+	tests := []struct {
+		limitedTo string
+		example   string
+		want      bool
+	}{
+		// The empty string always matches.
+		{"", "", true},
+		// The "e" and "d" are not allowed.
+		{"limit", "limited", false},
+		// All bytes are allowed, "e" and "d" would be allowed as well.
+		{"limited", "limit", true},
+		// Numeric strings consist of signs, digits, dots and 'e' only.
+		{"+-0123456789.Ee", "0.0", true},
+		{"+-0123456789.Ee", "e-e", true},
+		{"+-0123456789.Ee", "c-c", false},
+		// Ensure that the '+-0' is not interpreted as a byte range.
+		{"+-0123456789.Ee", "/", false},
+		{"abcdefghijklmnopqrstuvwxyz", "lowercase", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.example, func(t *testing.T) {
+			p := CompileLimited(tt.limitedTo)
+			if got := p.Match(tt.example); got != tt.want {
+				t.Errorf("got %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func Test_bmin(t *testing.T) {
 	if bmin(0, 255) != 0 {
 		t.Error()
