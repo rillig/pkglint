@@ -885,10 +885,52 @@ func (s *Suite) Test_MkCondSimplifier_simplifyMatch(c *check.C) {
 	// numeric and evaluates to 0.0. Since make parses scientific
 	// notation such as 12345e-400, even numbers that contain nonzero
 	// digits may evaluate to false.
+	// TODO: Allow '-' in patterns.
 	t.testBeforeAndAfterPrefs(
 		".if !empty(IN_SCOPE_DEFINED:M[0-9]*)",
 		".if !empty(IN_SCOPE_DEFINED:M[0-9]*)",
 		nil...)
+
+	// Even though the pattern '[0-9]' from above is common, it is not
+	// replaced, but the equivalent pattern '[0123456789]' is. Since a
+	// range like [!-~] only affects the evaluation but not the parsing,
+	// '-' can be allowed.
+	t.testBeforeAndAfterPrefs(
+		".if !empty(IN_SCOPE_DEFINED:M[0123456789]*)",
+		".if ${IN_SCOPE_DEFINED:M[0123456789]*} != \"\"",
+		"NOTE: filename.mk:6: "+
+			"\"!empty(IN_SCOPE_DEFINED:M[0123456789]*)\" "+
+			"can be simplified to "+
+			"\"${IN_SCOPE_DEFINED:M[0123456789]*} != \\\"\\\"\".",
+		"AUTOFIX: filename.mk:6: "+
+			"Replacing \"!empty(IN_SCOPE_DEFINED:M[0123456789]*)\" "+
+			"with \"${IN_SCOPE_DEFINED:M[0123456789]*} != \\\"\\\"\".")
+
+	// The 'e' may be part of a number, but there is no number that
+	// consists of letters only, therefore the '!= ""' is not necessary.
+	t.testBeforeAndAfterPrefs(
+		".if !empty(IN_SCOPE_DEFINED:M[abcdef]*)",
+		".if ${IN_SCOPE_DEFINED:M[abcdef]*}",
+		"NOTE: filename.mk:6: "+
+			"\"!empty(IN_SCOPE_DEFINED:M[abcdef]*)\" "+
+			"can be simplified to "+
+			"\"${IN_SCOPE_DEFINED:M[abcdef]*}\".",
+		"AUTOFIX: filename.mk:6: "+
+			"Replacing \"!empty(IN_SCOPE_DEFINED:M[abcdef]*)\" "+
+			"with \"${IN_SCOPE_DEFINED:M[abcdef]*}\".")
+
+	// The letters 'abcd' may form part of a hex number, but there is no
+	// number that starts with any of these letters.
+	t.testBeforeAndAfterPrefs(
+		".if !empty(IN_SCOPE_DEFINED:M[abcd]*)",
+		".if ${IN_SCOPE_DEFINED:M[abcd]*}",
+		"NOTE: filename.mk:6: "+
+			"\"!empty(IN_SCOPE_DEFINED:M[abcd]*)\" "+
+			"can be simplified to "+
+			"\"${IN_SCOPE_DEFINED:M[abcd]*}\".",
+		"AUTOFIX: filename.mk:6: "+
+			"Replacing \"!empty(IN_SCOPE_DEFINED:M[abcd]*)\" "+
+			"with \"${IN_SCOPE_DEFINED:M[abcd]*}\".")
 }
 
 func (s *Suite) Test_MkCondSimplifier_isDefined(c *check.C) {
@@ -938,14 +980,17 @@ func Test_MkCondSimplifier_mayMatchNumber(t *testing.T) {
 		{"[0-9a-z]", true},
 		// Each number has at least one digit, for example, '.e+' is
 		// not syntactically valid.
-		{"[^0-9]", true},
+		{"[^0-9]", false},
 		// No word that ends in '.c' is numeric.
 		{"*.c", false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.pattern, func(t *testing.T) {
-			var mk *MkCondSimplifier
-			if got := mk.mayMatchNumber(tt.pattern); got != tt.want {
+			got, err := (*MkCondSimplifier).mayMatchNumber(nil, tt.pattern)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got != tt.want {
 				t.Errorf("got %v for %q, want %v", got, tt.pattern, tt.want)
 			}
 		})

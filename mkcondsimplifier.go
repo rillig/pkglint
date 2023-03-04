@@ -287,9 +287,14 @@ func (s *MkCondSimplifier) simplifyMatch(varuse *MkVarUse, fromEmpty bool, neg b
 		return
 	}
 
+	mayMatchNumber, err := s.mayMatchNumber(pattern)
+	if err != nil {
+		return
+	}
+
 	fixedPart := varname + modsExceptLast + ":M" + pattern
 	from := condStr(neg, "!", "") + "empty(" + fixedPart + ")"
-	to := condStr(neg, "", "!") + "${" + fixedPart + "}"
+	to := condStr(neg, "", "!") + "${" + fixedPart + "}" + condStr(mayMatchNumber, " != \"\"", "")
 
 	fix := s.MkLine.Autofix()
 	fix.Notef("%q can be simplified to %q.", from, to)
@@ -320,7 +325,7 @@ func (s *MkCondSimplifier) isDefined(varname string, vartype *Vartype) bool {
 		vartype.IsDefinedIfInScope()
 }
 
-var numeric = makepat.CompileLimited("+-.0123456789eE")
+var numeric = makepat.Float()
 
 // In the conditional '.if ${EXPR}', the condition '${EXPR}' may evaluate to
 // a single word. If that word is numeric and evaluates to zero, the condition
@@ -333,14 +338,14 @@ var numeric = makepat.CompileLimited("+-.0123456789eE")
 // '${EXPR:Mpattern}', if the pattern can result in a numeric word, the
 // result must be compared with an empty string by adding '!= ""', to
 // preserve the exact behavior.
-func (*MkCondSimplifier) mayMatchNumber(pattern string) bool {
+func (*MkCondSimplifier) mayMatchNumber(pattern string) (bool, error) {
 	if pattern == "" {
-		return false
+		return false, nil
 	}
 	p, err := makepat.Compile(pattern)
 	if err != nil {
-		return true
+		return true, err
 	}
 	both := makepat.Intersect(p, numeric)
-	return both.CanMatch()
+	return both.CanMatch(), nil
 }

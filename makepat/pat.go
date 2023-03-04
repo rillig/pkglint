@@ -354,6 +354,90 @@ func CompileLimited(limitedTo string) *Pattern {
 	return &p
 }
 
+// Float creates a pattern that matches integer or floating point constants,
+// as in C99, both decimal and hex.
+func Float() *Pattern {
+	var p Pattern
+
+	// The states and transitions are taken from a manually constructed
+	// hand-drawn state diagram, based on the syntax rules from C99 6.4.4.
+
+	start := p.addState(false)
+	sign := p.addState(false)
+	p.addTransition(start, '+', '+', sign)
+	p.addTransition(start, '-', '-', sign)
+
+	dec := p.addState(true)
+	decDotUnfinished := p.addState(false)
+	decDot := p.addState(true)
+	decDotDec := p.addState(true)
+	p.addTransition(start, '0', '9', dec)
+	p.addTransition(sign, '0', '9', dec)
+	p.addTransition(dec, '0', '9', dec)
+	p.addTransition(start, '.', '.', decDotUnfinished)
+	p.addTransition(sign, '.', '.', decDotUnfinished)
+	p.addTransition(dec, '.', '.', decDot)
+	p.addTransition(start, '0', '9', decDotDec)
+	p.addTransition(sign, '0', '9', decDotDec)
+	p.addTransition(decDotUnfinished, '0', '9', decDotDec)
+	p.addTransition(decDot, '0', '9', decDotDec)
+	p.addTransition(decDotDec, '0', '9', decDotDec)
+
+	decExp := p.addState(false)
+	decExpSign := p.addState(true)
+	decExpDec := p.addState(true)
+	p.addTransition(decDotDec, 'E', 'E', decExp)
+	p.addTransition(decDotDec, 'e', 'e', decExp)
+	p.addTransition(decExp, '+', '+', decExpSign)
+	p.addTransition(decExp, '-', '-', decExpSign)
+	p.addTransition(decExp, '0', '9', decExpDec)
+	p.addTransition(decExpSign, '0', '9', decExpDec)
+	p.addTransition(decExpDec, '0', '9', decExpDec)
+
+	z := p.addState(false)
+	zx := p.addState(false)
+	p.addTransition(start, '0', '0', z)
+	p.addTransition(z, 'X', 'X', zx)
+	p.addTransition(z, 'x', 'x', zx)
+
+	hex := p.addState(true)
+	hexDotUnfinished := p.addState(false)
+	hexDot := p.addState(false)
+	hexDotHex := p.addState(false)
+	p.addTransition(zx, '0', '9', hex)
+	p.addTransition(zx, 'A', 'F', hex)
+	p.addTransition(zx, 'a', 'f', hex)
+	p.addTransition(hex, '0', '9', hex)
+	p.addTransition(hex, 'A', 'F', hex)
+	p.addTransition(hex, 'a', 'f', hex)
+	p.addTransition(zx, '.', '.', hexDotUnfinished)
+	p.addTransition(hex, '.', '.', hexDot)
+	p.addTransition(zx, '0', '9', hexDotHex)
+	p.addTransition(zx, 'A', 'F', hexDotHex)
+	p.addTransition(zx, 'a', 'f', hexDotHex)
+	p.addTransition(hexDotUnfinished, '0', '9', hexDotHex)
+	p.addTransition(hexDotUnfinished, 'A', 'F', hexDotHex)
+	p.addTransition(hexDotUnfinished, 'a', 'f', hexDotHex)
+	p.addTransition(hexDot, '0', '9', hexDotHex)
+	p.addTransition(hexDot, 'A', 'F', hexDotHex)
+	p.addTransition(hexDot, 'a', 'f', hexDotHex)
+	p.addTransition(hexDotHex, '0', '9', hexDotHex)
+	p.addTransition(hexDotHex, 'A', 'F', hexDotHex)
+	p.addTransition(hexDotHex, 'a', 'f', hexDotHex)
+
+	hexExp := p.addState(false)
+	hexExpSign := p.addState(false)
+	hexExpDec := p.addState(true)
+	p.addTransition(hexDotHex, 'P', 'P', hexExp)
+	p.addTransition(hexDotHex, 'p', 'p', hexExp)
+	p.addTransition(hexExp, '+', '+', hexExpSign)
+	p.addTransition(hexExp, '-', '-', hexExpSign)
+	p.addTransition(hexExpSign, '0', '9', hexExpDec)
+	p.addTransition(hexExpDec, '0', '9', hexExpDec)
+
+	return &p
+}
+
 func bmin(a, b byte) byte {
 	if a < b {
 		return a
