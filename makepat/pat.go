@@ -341,9 +341,9 @@ func (p *Pattern) CanMatch() bool {
 	return false
 }
 
-// Float creates a pattern that matches integer or floating point constants,
+// Number creates a pattern that matches integer or floating point constants,
 // as in C99, both decimal and hex.
-func Float() *Pattern {
+func Number() *Pattern {
 	// The states and transitions are taken from a manually constructed
 	// hand-drawn state diagram, based on the syntax rules from C99 6.4.4.
 
@@ -352,14 +352,14 @@ func Float() *Pattern {
 		sign
 
 		dec
-		decDotUnfinished
+		decDot
 		decFrac
 
-		z
-		zx
+		zero
+		zeroX
 
 		hex
-		hexDotUnfinished
+		hexDot
 		hexFrac
 
 		exp
@@ -374,18 +374,18 @@ func Float() *Pattern {
 					{'+', '+', sign},
 					{'-', '-', sign},
 					{'0', '9', dec},
-					{'.', '.', decDotUnfinished},
+					{'.', '.', decDot},
 					{'0', '9', decFrac},
-					{'0', '0', z},
+					{'0', '0', zero},
 				},
 				false,
 			},
 			sign: {
 				[]transition{
 					{'0', '9', dec},
-					{'.', '.', decDotUnfinished},
+					{'.', '.', decDot},
 					{'0', '9', decFrac},
-					{'0', '0', z},
+					{'0', '0', zero},
 				},
 				false,
 			},
@@ -396,7 +396,7 @@ func Float() *Pattern {
 				},
 				true,
 			},
-			decDotUnfinished: {
+			decDot: {
 				[]transition{
 					{'0', '9', decFrac},
 				},
@@ -410,19 +410,19 @@ func Float() *Pattern {
 				},
 				true,
 			},
-			z: {
+			zero: {
 				[]transition{
-					{'X', 'X', zx},
-					{'x', 'x', zx},
+					{'X', 'X', zeroX},
+					{'x', 'x', zeroX},
 				},
 				false,
 			},
-			zx: {
+			zeroX: {
 				[]transition{
 					{'0', '9', hex},
 					{'A', 'F', hex},
 					{'a', 'f', hex},
-					{'.', '.', hexDotUnfinished},
+					{'.', '.', hexDot},
 					{'0', '9', hexFrac},
 					{'A', 'F', hexFrac},
 					{'a', 'f', hexFrac},
@@ -438,7 +438,7 @@ func Float() *Pattern {
 				},
 				true,
 			},
-			hexDotUnfinished: {
+			hexDot: {
 				[]transition{
 					{'0', '9', hexFrac},
 					{'A', 'F', hexFrac},

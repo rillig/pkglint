@@ -369,7 +369,7 @@ func Test_Pattern_CanMatch(t *testing.T) {
 
 }
 
-func Test_Float(t *testing.T) {
+func Test_Number(t *testing.T) {
 	tests := []struct {
 		example string
 		want    bool
@@ -405,7 +405,7 @@ func Test_Float(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.example, func(t *testing.T) {
-			if got := Float().Match(tt.example); got != tt.want {
+			if got := Number().Match(tt.example); got != tt.want {
 				t.Errorf("got %v, want %v", got, tt.want)
 			}
 		})

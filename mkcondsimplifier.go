@@ -325,7 +325,7 @@ func (s *MkCondSimplifier) isDefined(varname string, vartype *Vartype) bool {
 		vartype.IsDefinedIfInScope()
 }
 
-var numeric = makepat.Float()
+var numeric = makepat.Number()
 
 // In the conditional '.if ${EXPR}', the condition '${EXPR}' may evaluate to
 // a single word. If that word is numeric and evaluates to zero, the condition
