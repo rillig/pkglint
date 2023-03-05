@@ -40,6 +40,9 @@ func (f *File) Text(n Node) string {
 	return f.text[n.Start():n.End()]
 }
 
+// A Node in an abstract syntax tree represents a structural element of the
+// file. Every single byte from the file must be represented in some node,
+// even whitespace, linebreaks and comments.
 type Node interface {
 	Start() Pos
 	End() Pos
@@ -84,9 +87,12 @@ type MkCond interface {
 type MkCondBinary struct {
 	Left   MkCond
 	OpText *Literal
-	Op     BoolOp
+	Op     MkCondBoolOp
 	Right  MkCond
 }
+
+func (b *MkCondBinary) Start() Pos { return b.Left.Start() }
+func (b *MkCondBinary) End() Pos   { return b.Right.End() }
 
 type MkCondParen struct {
 	Open   *Literal
@@ -108,16 +114,20 @@ type MkCondNot struct {
 func (n *MkCondNot) Start() Pos { return n.Exclam.Start() }
 func (n *MkCondNot) End() Pos   { return n.X.End() }
 
+// MkExpr represents an expression such as '$V', '${VAR:Mpattern}' or
+// '$(PARENTHESIZED)'.
 type MkExpr struct {
-	DollarOpen *Literal
-	Varname    *MkVarname
-	Modifiers  []MkExprModifier
-	Close      *Literal
+	Open      *Literal
+	Varname   *MkVarname
+	Modifiers []MkExprModifier
+	Close     *Literal
 }
 
-func (e *MkExpr) Start() Pos { return e.DollarOpen.Start() }
+func (e *MkExpr) Start() Pos { return e.Open.Start() }
 func (e *MkExpr) End() Pos   { return e.Close.End() }
 
+// MkExprModifier represents a single modifier in an expression, such as the
+// ':Mpattern' in the expression '${VAR:Ufallback:Mpattern:S,from,to,}'.
 type MkExprModifier interface {
 	Node
 	ModifierText()
@@ -125,14 +135,15 @@ type MkExprModifier interface {
 
 type MkVarname EscapableText // TODO
 
-type Parser interface {
-	Parse(rd io.Reader) (Node, error)
+type Reader interface {
+	Read(rd io.Reader) (Node, error)
 }
 
-type Formatter interface {
-	Format(wr io.Writer, n Node) error
+type Writer interface {
+	Write(wr io.Writer, n Node) error
 }
 
+// Editor allows manipulating the AST in-memory.
 type Editor interface {
 	Remove(Node)
 	Replace(Node, Node)
@@ -140,10 +151,10 @@ type Editor interface {
 	InsertAfter(Node, Node)
 }
 
-type CmpOp uint8
+type MkCondCompareOp uint8
 
 const (
-	LT CmpOp = iota + 1
+	LT MkCondCompareOp = iota + 1
 	LE
 	EQ
 	NE
@@ -151,17 +162,17 @@ const (
 	GT
 )
 
-func (op CmpOp) String() string { return [...]string{"<", "<=", "==", "!=", ">=", ">"}[op] }
+func (op MkCondCompareOp) String() string { return [...]string{"<", "<=", "==", "!=", ">=", ">"}[op] }
 
-type BoolOp uint8
+type MkCondBoolOp uint8
 
 const (
-	AND BoolOp = iota + 1
+	NOT MkCondBoolOp = iota + 1
+	AND
 	OR
-	NOT
 )
 
-func (op BoolOp) String() string { return [...]string{"&&", "||", "!"}[op] }
+func (op MkCondBoolOp) String() string { return [...]string{"&&", "||", "!"}[op] }
 
 type MkParser struct {
 	lex     *textproc.Lexer
@@ -275,13 +286,15 @@ func (l *MkAssignLine) Start() Pos { return l.S0.Start() }
 func (l *MkAssignLine) End() Pos   { return l.Comment.Start() }
 
 type MkMessageLine struct {
-	S0      *Space
 	Dot     *Literal
-	S1      *Space
+	S0      *Space
 	Message *EscapableText
-	S2      *Space
+	S1      *Space
 	Comment *EscapableText
 }
+
+func (l *MkMessageLine) Start() Pos { return l.S0.Start() }
+func (l *MkMessageLine) End() Pos   { return l.Comment.Start() }
 
 type MkDependencyLine struct {
 	S0      *Space
