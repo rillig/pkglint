@@ -103,8 +103,7 @@ qa_netbsd() {
     --exclude="/pkglint.cov" \
     --exclude="/pkglint.exe" \
     --exclude="/pkglint.test.exe" \
-    --exclude="/shell/" \
-    --exclude="/tools/" \
+    --exclude="/ast/" \
     --exclude="*.docx" \
     --exclude="/.idea/" \
     --exclude="/.vscode/" \
