@@ -341,21 +341,6 @@ func (p *Pattern) CanMatch() bool {
 	return false
 }
 
-// CompileLimited creates a pattern that matches all strings consisting of the
-// given bytes only. Such a pattern cannot be expressed in the string form.
-func CompileLimited(limitedTo string) *Pattern {
-	var p Pattern
-	s := p.addState(true)
-
-	var chars [256]bool
-	for _, b := range []byte(limitedTo) {
-		chars[b] = true
-	}
-
-	p.addTransitions(s, &chars, s)
-	return &p
-}
-
 // Float creates a pattern that matches integer or floating point constants,
 // as in C99, both decimal and hex.
 func Float() *Pattern {
