@@ -353,16 +353,14 @@ func Float() *Pattern {
 
 		dec
 		decDotUnfinished
-		decDot
-		decDotDec
+		decFrac
 
 		z
 		zx
 
 		hex
-		hexDot
 		hexDotUnfinished
-		hexDotHex
+		hexFrac
 
 		exp
 		expSign
@@ -377,7 +375,7 @@ func Float() *Pattern {
 					{'-', '-', sign},
 					{'0', '9', dec},
 					{'.', '.', decDotUnfinished},
-					{'0', '9', decDotDec},
+					{'0', '9', decFrac},
 					{'0', '0', z},
 				},
 				false,
@@ -386,7 +384,7 @@ func Float() *Pattern {
 				[]transition{
 					{'0', '9', dec},
 					{'.', '.', decDotUnfinished},
-					{'0', '9', decDotDec},
+					{'0', '9', decFrac},
 					{'0', '0', z},
 				},
 				false,
@@ -394,27 +392,19 @@ func Float() *Pattern {
 			dec: {
 				[]transition{
 					{'0', '9', dec},
-					{'.', '.', decDot},
+					{'.', '.', decFrac},
 				},
 				true,
 			},
 			decDotUnfinished: {
 				[]transition{
-					{'0', '9', decDotDec},
+					{'0', '9', decFrac},
 				},
 				false,
 			},
-			decDot: {
+			decFrac: {
 				[]transition{
-					{'0', '9', decDotDec},
-					{'E', 'E', exp},
-					{'e', 'e', exp},
-				},
-				true,
-			},
-			decDotDec: {
-				[]transition{
-					{'0', '9', decDotDec},
+					{'0', '9', decFrac},
 					{'E', 'E', exp},
 					{'e', 'e', exp},
 				},
@@ -433,9 +423,9 @@ func Float() *Pattern {
 					{'A', 'F', hex},
 					{'a', 'f', hex},
 					{'.', '.', hexDotUnfinished},
-					{'0', '9', hexDotHex},
-					{'A', 'F', hexDotHex},
-					{'a', 'f', hexDotHex},
+					{'0', '9', hexFrac},
+					{'A', 'F', hexFrac},
+					{'a', 'f', hexFrac},
 				},
 				false,
 			},
@@ -444,33 +434,23 @@ func Float() *Pattern {
 					{'0', '9', hex},
 					{'A', 'F', hex},
 					{'a', 'f', hex},
-					{'.', '.', hexDot},
+					{'.', '.', hexFrac},
 				},
 				true,
 			},
 			hexDotUnfinished: {
 				[]transition{
-					{'0', '9', hexDotHex},
-					{'A', 'F', hexDotHex},
-					{'a', 'f', hexDotHex},
+					{'0', '9', hexFrac},
+					{'A', 'F', hexFrac},
+					{'a', 'f', hexFrac},
 				},
 				false,
 			},
-			hexDot: {
+			hexFrac: {
 				[]transition{
-					{'0', '9', hexDotHex},
-					{'A', 'F', hexDotHex},
-					{'a', 'f', hexDotHex},
-					{'P', 'P', exp},
-					{'p', 'p', exp},
-				},
-				false,
-			},
-			hexDotHex: {
-				[]transition{
-					{'0', '9', hexDotHex},
-					{'A', 'F', hexDotHex},
-					{'a', 'f', hexDotHex},
+					{'0', '9', hexFrac},
+					{'A', 'F', hexFrac},
+					{'a', 'f', hexFrac},
 					{'P', 'P', exp},
 					{'p', 'p', exp},
 				},
