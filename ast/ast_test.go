@@ -8,10 +8,9 @@ import (
 )
 
 func Test(t *testing.T) {
-	fset := NewFileSet()
-	f := fset.Add("cond.mk", ""+
-		".\\\n"+
-		"\tif ${COND}\n"+
+	f := NewFile("" +
+		".\\\n" +
+		"\tif ${COND}\n" +
 		".endif\n")
 	par := NewMkParser(f)
 
@@ -27,4 +26,8 @@ func Test(t *testing.T) {
 	}
 
 	ast.Print(nil, line)
+
+	if want, got := ".\\\n\tif ${COND}\n", f.Text(line); got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
 }

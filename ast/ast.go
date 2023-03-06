@@ -6,38 +6,32 @@
 package ast
 
 import (
-	"io"
 	"netbsd.org/pkglint/textproc"
 	"strings"
 )
 
 type Pos uint32
 
+// NoPos marks a node that has been added to the tree in-memory,
+// that is, it doesn't correspond to any text from the file.
+const NoPos Pos = 0
+
 func (p Pos) Plus(offset int) Pos  { return Pos(int(p) + offset) }
 func (p Pos) PlusLen(s string) Pos { return p.Plus(len(s)) }
 
-const NoPos Pos = 0
-
-type FileSet struct {
-	files map[string]*File
-}
-
+// File stores the original text from the file, allowing the nodes to only
+// store the offset of their start and end, instead of referring to the string
+// directly.
 type File struct {
 	text string
 }
 
-func NewFileSet() *FileSet {
-	return &FileSet{map[string]*File{}}
-}
-
-func (fset *FileSet) Add(filename string, text string) *File {
-	file := File{"\000" + text}
-	fset.files[filename] = &file
-	return &file
+func NewFile(text string) *File {
+	return &File{text}
 }
 
 func (f *File) Text(n Node) string {
-	return f.text[n.Start():n.End()]
+	return f.text[n.Start()-1 : n.End()-1]
 }
 
 // A Node in an abstract syntax tree represents a structural element of the
@@ -123,6 +117,14 @@ type MkCondNot struct {
 func (n *MkCondNot) Start() Pos { return n.Exclam.Start() }
 func (n *MkCondNot) End() Pos   { return n.X.End() }
 
+type MkCondComparison struct {
+	// TODO: Actually model a comparison in detail.
+	Text *EscapableText
+}
+
+func (c *MkCondComparison) Start() Pos { return c.Text.Start() }
+func (c *MkCondComparison) End() Pos   { return c.Text.End() }
+
 // MkExpr represents an expression such as '$V', '${VAR:Mpattern}' or
 // '$(PARENTHESIZED)'.
 type MkExpr struct {
@@ -143,14 +145,6 @@ type MkExprModifier interface {
 }
 
 type MkVarname EscapableText // TODO
-
-type Reader interface {
-	Read(rd io.Reader) (Node, error)
-}
-
-type Writer interface {
-	Write(wr io.Writer, n Node) error
-}
 
 // Editor allows manipulating the AST in-memory.
 type Editor interface {
@@ -190,7 +184,6 @@ type MkParser struct {
 
 func NewMkParser(f *File) *MkParser {
 	lex := textproc.NewLexer(f.text)
-	lex.Skip(1)
 	return &MkParser{lex, len(f.text)}
 }
 
@@ -202,6 +195,7 @@ func (p *MkParser) ParseLine() MkLine {
 	cond := p.ParseMkCond()
 	s3 := p.ParseSpace()
 	comment := p.ParseComment()
+	endOfLine := p.ParseEndOfLine()
 
 	return &MkCondLine{
 		dot,
@@ -211,6 +205,7 @@ func (p *MkParser) ParseLine() MkLine {
 		cond,
 		s3,
 		comment,
+		endOfLine,
 	}
 }
 
@@ -225,8 +220,17 @@ func (p *MkParser) ParseDirective() *Literal {
 	return &Literal{pos, dir}
 }
 
-func (p *MkParser) ParseMkCond() *MkCond {
-	return nil
+func (p *MkParser) ParseMkCond() MkCond {
+	pos := p.Pos()
+	text := p.lex.NextBytesSet(textproc.Space.Inverse())
+	// TODO: Properly parse conditions.
+	return &MkCondComparison{
+		Text: &EscapableText{
+			start:       pos,
+			end:         p.Pos(),
+			LogicalText: text,
+		},
+	}
 }
 
 func (p *MkParser) ParseComment() *EscapableText {
@@ -250,6 +254,13 @@ again:
 	return Space{start, p.Pos(), sb.String()}
 }
 
+func (p *MkParser) ParseEndOfLine() Space {
+	lex := p.lex
+	start := p.Pos()
+	text := lex.NextString("\n")
+	return Space{start, p.Pos(), text}
+}
+
 func (p *MkParser) ParseLiteral(s string) *Literal {
 	lex := p.lex
 	start := p.Pos()
@@ -260,7 +271,7 @@ func (p *MkParser) ParseLiteral(s string) *Literal {
 }
 
 func (p *MkParser) Pos() Pos {
-	return Pos(p.textLen - len(p.lex.Rest()))
+	return Pos(1) + Pos(p.textLen) - Pos(len(p.lex.Rest()))
 }
 
 type MkLine interface {
@@ -272,23 +283,25 @@ type MkCondLine struct {
 	S0        Space
 	Directive *Literal
 	S1        Space
-	Cond      *MkCond
+	Cond      MkCond
 	S2        Space
 	Comment   *EscapableText
+	EndOfLine Space
 }
 
 func (l *MkCondLine) Start() Pos { return l.Dot.Start() }
-func (l *MkCondLine) End() Pos   { return l.Comment.End() }
+func (l *MkCondLine) End() Pos   { return l.EndOfLine.End() }
 
 type MkAssignLine struct {
-	S0      Space
-	Name    *MkVarname
-	S1      Space
-	Op      *Literal
-	S2      Space
-	Value   *MkString
-	S3      Space
-	Comment *EscapableText
+	S0        Space
+	Name      *MkVarname
+	S1        Space
+	Op        *Literal
+	S2        Space
+	Value     *MkString
+	S3        Space
+	Comment   *EscapableText
+	EndOfLine Space
 }
 
 func (l *MkAssignLine) Start() Pos { return l.S0.Start() }
