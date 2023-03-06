@@ -63,18 +63,27 @@ func (l *Literal) End() Pos   { return l.start.PlusLen(l.Text) }
 type EscapableText struct {
 	start Pos
 	end   Pos
-	Text  string
+	// The text with all escaping removed.
+	// The exact amount of escaping depends on the layer of the parser:
+	//
+	//  * '\#' and '\newline'
+	//  * '$$' in make strings
+	//  * '\$' in shell commands
+	//  * '\.' in sed commands
+	LogicalText string
 }
 
 func (t *EscapableText) Start() Pos { return t.start }
-func (t *EscapableText) End() Pos   { return t.start.PlusLen(t.Text) }
+func (t *EscapableText) End() Pos   { return t.start.PlusLen(t.LogicalText) }
 
 // Space represents whitespace. In case of backslash-newline sequences, the
 // represented text does not equal the text that is stored in the file.
 type Space struct {
 	start Pos
 	end   Pos
-	Text  string
+	// The text with all escaping removed.
+	// Consists only of whitespace.
+	LogicalText string
 }
 
 func (s *Space) Start() Pos { return s.start }
