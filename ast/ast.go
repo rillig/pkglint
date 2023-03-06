@@ -105,9 +105,9 @@ func (b *MkCondBinary) End() Pos   { return b.Right.End() }
 
 type MkCondParen struct {
 	Open   *Literal
-	Space1 *Space
+	Space1 Space
 	X      MkCond
-	Space2 *Space
+	Space2 Space
 	Close  *Literal
 }
 
@@ -233,7 +233,7 @@ func (p *MkParser) ParseComment() *EscapableText {
 	return nil
 }
 
-func (p *MkParser) ParseSpace() *Space {
+func (p *MkParser) ParseSpace() Space {
 	lex := p.lex
 	start := p.Pos()
 	var sb strings.Builder
@@ -247,7 +247,7 @@ again:
 		sb.WriteString(" ")
 		goto again
 	}
-	return &Space{start, p.Pos(), sb.String()}
+	return Space{start, p.Pos(), sb.String()}
 }
 
 func (p *MkParser) ParseLiteral(s string) *Literal {
@@ -269,11 +269,11 @@ type MkLine interface {
 
 type MkCondLine struct {
 	Dot       *Literal
-	S0        *Space
+	S0        Space
 	Directive *Literal
-	S1        *Space
+	S1        Space
 	Cond      *MkCond
-	S2        *Space
+	S2        Space
 	Comment   *EscapableText
 }
 
@@ -281,13 +281,13 @@ func (l *MkCondLine) Start() Pos { return l.Dot.Start() }
 func (l *MkCondLine) End() Pos   { return l.Comment.End() }
 
 type MkAssignLine struct {
-	S0      *Space
+	S0      Space
 	Name    *MkVarname
-	S1      *Space
+	S1      Space
 	Op      *Literal
-	S2      *Space
+	S2      Space
 	Value   *MkString
-	S3      *Space
+	S3      Space
 	Comment *EscapableText
 }
 
@@ -296,9 +296,9 @@ func (l *MkAssignLine) End() Pos   { return l.Comment.Start() }
 
 type MkMessageLine struct {
 	Dot     *Literal
-	S0      *Space
+	S0      Space
 	Message *EscapableText
-	S1      *Space
+	S1      Space
 	Comment *EscapableText
 }
 
@@ -306,13 +306,13 @@ func (l *MkMessageLine) Start() Pos { return l.S0.Start() }
 func (l *MkMessageLine) End() Pos   { return l.Comment.Start() }
 
 type MkDependencyLine struct {
-	S0      *Space
+	S0      Space
 	Targets []*MkWord
-	S1      *Space
+	S1      Space
 	Op      *Literal
-	S2      *Space
+	S2      Space
 	Sources []*MkWord
-	S3      *Space
+	S3      Space
 	Comment *EscapableText
 }
 
