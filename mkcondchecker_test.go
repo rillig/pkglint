@@ -656,6 +656,7 @@ func (s *Suite) Test_MkCondChecker_checkCompareWithNumVersion(c *check.C) {
 func (s *Suite) Test_MkCondChecker_checkCompareWithNumPython(c *check.C) {
 	t := s.Init(c)
 
+	t.SetUpCommandLine("--show-autofix")
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
 		"",
@@ -669,14 +670,16 @@ func (s *Suite) Test_MkCondChecker_checkCompareWithNumPython(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:3: "+
-			"Variable names starting with an underscore "+
-			"(_PYTHON_VERSION) are reserved "+
-			"for internal pkgsrc use.",
 		"ERROR: filename.mk:5: "+
-			"The Python version must not be compared numerically.",
+			"_PYTHON_VERSION must not be compared numerically.",
+		"AUTOFIX: filename.mk:5: "+
+			"Replacing \"${_PYTHON_VERSION} < 38\" "+
+			"with \"${PYTHON_VERSION} < 308\".",
 		"ERROR: filename.mk:6: "+
-			"The Python version must not be compared numerically.")
+			"_PYTHON_VERSION must not be compared numerically.",
+		"AUTOFIX: filename.mk:6: "+
+			"Replacing \"${_PYTHON_VERSION} < 310\" "+
+			"with \"${PYTHON_VERSION} < 310\".")
 }
 
 func (s *Suite) Test_MkCondChecker_checkCompareVarStrCompiler(c *check.C) {
