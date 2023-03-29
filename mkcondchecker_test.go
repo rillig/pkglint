@@ -628,7 +628,7 @@ func (s *Suite) Test_MkCondChecker_checkCompareWithNum(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: filename.mk:4: Numeric comparison > 6.5.",
-		"ERROR: filename.mk:4: The Python version must not be compared numerically.",
+		"ERROR: filename.mk:4: _PYTHON_VERSION must not be compared numerically.",
 		"WARN: filename.mk:4: _PYTHON_VERSION is used but not defined.")
 }
 
