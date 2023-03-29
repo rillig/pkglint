@@ -19,10 +19,10 @@ type state struct {
 
 type transition struct {
 	min, max byte
-	to       StateID
+	to       stateID
 }
 
-type StateID uint16
+type stateID uint16
 
 // Compile parses a pattern, including the error checking that is missing
 // from bmake.
@@ -66,7 +66,7 @@ func Compile(pattern string) (*Pattern, error) {
 	return &p, nil
 }
 
-func compileCharClass(p *Pattern, lex *textproc.Lexer, ch byte, s StateID) (StateID, error) {
+func compileCharClass(p *Pattern, lex *textproc.Lexer, ch byte, s stateID) (stateID, error) {
 	negate := lex.SkipByte('^')
 	var chars [256]bool
 	next := p.addState(false)
@@ -103,7 +103,7 @@ func compileCharClass(p *Pattern, lex *textproc.Lexer, ch byte, s StateID) (Stat
 	return next, nil
 }
 
-func (p *Pattern) addTransitions(from StateID, chars *[256]bool, to StateID) {
+func (p *Pattern) addTransitions(from stateID, chars *[256]bool, to stateID) {
 	start := 0
 	for start < len(chars) && !chars[start] {
 		start++
@@ -126,12 +126,12 @@ func (p *Pattern) addTransitions(from StateID, chars *[256]bool, to StateID) {
 	}
 }
 
-func (p *Pattern) addState(end bool) StateID {
+func (p *Pattern) addState(end bool) stateID {
 	p.states = append(p.states, state{nil, end})
-	return StateID(len(p.states) - 1)
+	return stateID(len(p.states) - 1)
 }
 
-func (p *Pattern) addTransition(from StateID, min, max byte, to StateID) {
+func (p *Pattern) addTransition(from stateID, min, max byte, to stateID) {
 	state := &p.states[from]
 	state.transitions = append(state.transitions, transition{min, max, to})
 }
@@ -182,12 +182,12 @@ func (p *Pattern) Match(s string) bool {
 func Intersect(p1, p2 *Pattern) *Pattern {
 	var res Pattern
 
-	newState := make(map[[2]StateID]StateID)
+	newState := make(map[[2]stateID]stateID)
 
 	// stateFor returns the state ID in the intersection,
 	// creating it if necessary.
-	stateFor := func(s1, s2 StateID) StateID {
-		key := [2]StateID{s1, s2}
+	stateFor := func(s1, s2 stateID) stateID {
+		key := [2]stateID{s1, s2}
 		ns, ok := newState[key]
 		if !ok {
 			ns = res.addState(p1.states[s1].end && p2.states[s2].end)
@@ -206,7 +206,7 @@ func Intersect(p1, p2 *Pattern) *Pattern {
 					min := bmax(t1.min, t2.min)
 					max := bmin(t1.max, t2.max)
 					if min <= max {
-						from := stateFor(StateID(i1), StateID(i2))
+						from := stateFor(stateID(i1), stateID(i2))
 						to := stateFor(t1.to, t2.to)
 						res.addTransition(from, min, max, to)
 					}
@@ -282,7 +282,7 @@ func (p *Pattern) relevant(reachable []bool) []bool {
 			changed = true
 			for from, st := range p.states {
 				for _, tr := range st.transitions {
-					if tr.to == StateID(to) && reachable[from] &&
+					if tr.to == stateID(to) && reachable[from] &&
 						progress[from] == 0 {
 						progress[from] = 1
 					}
@@ -302,7 +302,7 @@ func (p *Pattern) relevant(reachable []bool) []bool {
 func (p *Pattern) compressed(relevant []bool) *Pattern {
 	var opt Pattern
 
-	newIDs := make([]StateID, len(p.states))
+	newIDs := make([]stateID, len(p.states))
 	for i, r := range relevant {
 		if r {
 			newIDs[i] = opt.addState(p.states[i].end)
@@ -348,7 +348,7 @@ func Number() *Pattern {
 	// hand-drawn state diagram, based on the syntax rules from C99 6.4.4.
 
 	const (
-		start StateID = iota
+		start stateID = iota
 		sign
 
 		dec
