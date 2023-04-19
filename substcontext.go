@@ -2,8 +2,9 @@ package pkglint
 
 import "netbsd.org/pkglint/textproc"
 
-// SubstContext records the state of a block of variable assignments
-// that make up a SUBST class.
+// SubstContext records the state of one or more SUBST blocks.
+// Each SUBST block consists of variable assignments that define a text
+// replacement task.
 //
 // See mk/subst.mk.
 type SubstContext struct {
