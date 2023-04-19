@@ -278,8 +278,11 @@ func (ctx *SubstContext) activeId() string {
 	return ctx.active.id
 }
 
+// substScope describes a group of SUBST variables that all have the same ID.
+// The scope is merged together from several "basic blocks", to cover cases in
+// which there are conditionals between the variable assignments.
 type substScope struct {
-	defs []*substBlock
+	blocks []*substBlock
 }
 
 func newSubstScope() *substScope {
@@ -287,9 +290,9 @@ func newSubstScope() *substScope {
 }
 
 func (s *substScope) def(id string) *substBlock {
-	for _, def := range s.defs {
-		if def.id == id {
-			return def
+	for _, block := range s.blocks {
+		if block.id == id {
+			return block
 		}
 	}
 	return nil
@@ -297,7 +300,7 @@ func (s *substScope) def(id string) *substBlock {
 
 func (s *substScope) define(id string) {
 	assert(s.def(id) == nil)
-	s.defs = append(s.defs, newSubstBlock(id))
+	s.blocks = append(s.blocks, newSubstBlock(id))
 }
 
 func (s *substScope) isDone(id string) bool {
@@ -306,7 +309,7 @@ func (s *substScope) isDone(id string) bool {
 }
 
 func (s *substScope) emptyLine() {
-	for _, block := range s.defs {
+	for _, block := range s.blocks {
 		block.seenEmpty = true
 	}
 }
@@ -315,13 +318,13 @@ func (s *substScope) emptyLine() {
 // to an end.
 func (s *substScope) finish(diag Diagnoser) {
 	foreignOk := map[string]bool{}
-	for _, def := range s.defs {
+	for _, def := range s.blocks {
 		for allowed := range def.foreignAllowed {
 			foreignOk[allowed] = true
 		}
 	}
 
-	for _, block := range s.defs {
+	for _, block := range s.blocks {
 		block.finish(diag)
 
 		for _, mkline := range block.foreign {
@@ -334,7 +337,7 @@ func (s *substScope) finish(diag Diagnoser) {
 }
 
 func (s *substScope) prepareSubstClasses(diag Diagnoser) {
-	for _, block := range s.defs {
+	for _, block := range s.blocks {
 		if block.hasStarted() && !block.isComplete() {
 			diag.Warnf("Subst block %q should be finished "+
 				"before adding the next class to SUBST_CLASSES.",
@@ -344,13 +347,13 @@ func (s *substScope) prepareSubstClasses(diag Diagnoser) {
 }
 
 func (s *substScope) enter() {
-	for _, block := range s.defs {
+	for _, block := range s.blocks {
 		block.enter()
 	}
 }
 
 func (s *substScope) nextBranch(diag Diagnoser, isElse bool) {
-	for _, block := range s.defs {
+	for _, block := range s.blocks {
 		if block.isConditional() {
 			block.nextBranch(isElse)
 		} else {
@@ -360,7 +363,7 @@ func (s *substScope) nextBranch(diag Diagnoser, isElse bool) {
 }
 
 func (s *substScope) leave(diag Diagnoser) {
-	for _, block := range s.defs {
+	for _, block := range s.blocks {
 		if block.isConditional() {
 			block.leave()
 		} else {
@@ -709,6 +712,9 @@ func (b *substBlock) hasStarted() bool {
 	return false
 }
 
+// substCond stores which of the SUBST variables have been set in a specific
+// branch. At each '.endif' directive, the substCond of the branches are
+// merged.
 type substCond struct {
 	// Collects the parts of the SUBST block that have been defined in all
 	// branches that have been parsed completely.
