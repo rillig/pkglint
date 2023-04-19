@@ -12,6 +12,8 @@ import (
 // There are several types of lines.
 // The most common types in pkgsrc are variable assignments,
 // shell commands and directives like .if and .for.
+// The line types can be distinguished by IsVarassign,
+// IsDirective and so on.
 type MkLine struct {
 	*Line
 

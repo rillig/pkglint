@@ -52,6 +52,8 @@ func (loc *Location) File(rel RelPath) CurrPath {
 }
 
 // Line represents a line of text from a file.
+// In makefiles, a single "logical" line can consist of multiple "raw" lines,
+// which happens when a line ends with an odd number of backslashes.
 type Line struct {
 	Location Location
 	Basename RelPath // the last component of the Filename
