@@ -368,8 +368,12 @@ func (p *MkLexer) varUseModifier(varname string, closing byte) MkVarUseModifier 
 // The API of this method is tricky.
 // It is only extracted from varUseModifier to make the latter smaller.
 func (p *MkLexer) varUseModifierTs(
-	mod string, closing byte, lexer *textproc.Lexer, varname string,
-	mark textproc.LexerMark) MkVarUseModifier {
+	mod string,
+	closing byte,
+	lexer *textproc.Lexer,
+	varname string,
+	mark textproc.LexerMark,
+) MkVarUseModifier {
 
 	// See devel/bmake/files/var.c:/^ApplyModifier_ToSep/
 	sep := mod[2:] + p.varUseText(closing)

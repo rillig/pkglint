@@ -465,8 +465,8 @@ func (mklines *MkLines) checkLine(
 	vargroupsChecker *VargroupsChecker,
 	varalign *VaralignBlock,
 	substContext *SubstContext,
-	allowedTargets map[string]bool) {
-
+	allowedTargets map[string]bool,
+) {
 	ck := MkLineChecker{mklines, mkline}
 	ck.Check()
 	vargroupsChecker.Check(mkline)

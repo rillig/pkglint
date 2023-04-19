@@ -285,8 +285,12 @@ func (ck *Buildlink3Checker) checkVarassign(mkline *MkLine, pkgbase string) {
 	ck.checkVarassignPkgsrcdir(mkline, pkgbase, varname, value)
 }
 
-func (ck *Buildlink3Checker) checkVarassignPkgsrcdir(mkline *MkLine,
-	pkgbase string, varname string, value string) {
+func (ck *Buildlink3Checker) checkVarassignPkgsrcdir(
+	mkline *MkLine,
+	pkgbase string,
+	varname string,
+	value string,
+) {
 
 	if varname != "BUILDLINK_PKGSRCDIR."+pkgbase {
 		return

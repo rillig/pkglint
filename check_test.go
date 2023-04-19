@@ -266,9 +266,12 @@ func (t *Tester) SetUpTool(name, varname string, validity Validity) *Tool {
 //
 //	SetUpVarType("PKGPATH", BtPkgpath, DefinedIfInScope|NonemptyIfDefined,
 //	    "Makefile, *.mk: default, set, append, use, use-loadtime")
-func (t *Tester) SetUpVarType(varname string, basicType *BasicType,
-	options vartypeOptions, aclEntries ...string) {
-
+func (t *Tester) SetUpVarType(
+	varname string,
+	basicType *BasicType,
+	options vartypeOptions,
+	aclEntries ...string,
+) {
 	if len(aclEntries) == 0 {
 		aclEntries = []string{"Makefile, *.mk: default, set, append, use, use-loadtime"}
 	}

@@ -80,8 +80,12 @@ func (ck *AlternativesChecker) checkAlternativeAbs(alternative string, line *Lin
 	fix.Apply()
 }
 
-func (ck *AlternativesChecker) checkAlternativePlist(line *Line, alternative string,
-	plistFiles map[RelPath]*PlistLine, pkg *Package) {
+func (ck *AlternativesChecker) checkAlternativePlist(
+	line *Line,
+	alternative string,
+	plistFiles map[RelPath]*PlistLine,
+	pkg *Package,
+) {
 
 	relImplementation := strings.Replace(alternative, "@PREFIX@/", "", 1)
 	plistName := replaceAll(relImplementation, `@(\w+)@`, "${$1}")

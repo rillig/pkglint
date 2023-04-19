@@ -362,8 +362,11 @@ func (ck *MkVarUseChecker) checkPermissions(vuc *VarUseContext) {
 }
 
 func (ck *MkVarUseChecker) warnPermissions(
-	vucVartype *Vartype, varname string, vartype *Vartype, directly, indirectly bool) {
-
+	vucVartype *Vartype,
+	varname string,
+	vartype *Vartype,
+	directly, indirectly bool,
+) {
 	mkline := ck.MkLine
 
 	anyPerms := vartype.Union()
