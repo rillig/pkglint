@@ -7,7 +7,6 @@
 /cmd/pkglint/pkglint.exe
 /cmd/pkglint/pkglint.test.exe
 
-*yacc.go
 *yacc.log
 debug
 *.out
