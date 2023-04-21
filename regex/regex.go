@@ -6,8 +6,8 @@ package regex
 
 import (
 	"fmt"
+	"github.com/rillig/pkglint/v23/histogram"
 	"io"
-	"netbsd.org/pkglint/histogram"
 	"regexp"
 	"time"
 )

@@ -1,8 +1,8 @@
 package pkglint
 
 import (
+	"github.com/rillig/pkglint/v23/histogram"
 	"gopkg.in/check.v1"
-	"netbsd.org/pkglint/histogram"
 	"strings"
 )
 

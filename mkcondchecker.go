@@ -1,8 +1,8 @@
 package pkglint
 
 import (
-	"netbsd.org/pkglint/makepat"
-	"netbsd.org/pkglint/textproc"
+	"github.com/rillig/pkglint/v23/makepat"
+	"github.com/rillig/pkglint/v23/textproc"
 )
 
 // MkCondChecker checks conditions in Makefiles.

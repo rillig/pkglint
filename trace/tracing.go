@@ -123,7 +123,7 @@ func (t *Tracer) traceCall(args ...interface{}) func() {
 	functionName := "?"
 	if pc, _, _, ok := runtime.Caller(2); ok {
 		if fn := runtime.FuncForPC(pc); fn != nil {
-			functionName = strings.TrimPrefix(fn.Name(), "netbsd.org/pkglint.")
+			functionName = strings.TrimPrefix(fn.Name(), "github.com/rillig/pkglint/v23.")
 		}
 	}
 	indent := t.traceIndent()

@@ -1,6 +1,6 @@
 package pkglint
 
-import "netbsd.org/pkglint/textproc"
+import "github.com/rillig/pkglint/v23/textproc"
 
 type ShTokenizer struct {
 	parser *MkLexer

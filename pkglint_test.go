@@ -282,7 +282,7 @@ func (s *Suite) Test_Pkglint_Main__autofix_exitcode(c *check.C) {
 //	    PKGLINT_TESTCMDLINE="-r -Wall -Call -p -s -e" \
 //	gobco \
 //	    -test=-test.covermode=count
-//	    -test=-test.coverprofile="C:/Users/rillig/go/src/netbsd.org/pkglint/stats-go.txt"
+//	    -test=-test.coverprofile="C:/Users/rillig/go/src/github.com/rillig/pkglint/v23/stats-go.txt"
 //	    -test=-timeout=3600s \
 //	    -test=-check.f="^Test_Pkglint_Main__realistic" \
 //	    -stats="stats-gobco.json" \

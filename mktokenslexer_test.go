@@ -1,8 +1,8 @@
 package pkglint
 
 import (
+	"github.com/rillig/pkglint/v23/textproc"
 	"gopkg.in/check.v1"
-	"netbsd.org/pkglint/textproc"
 )
 
 // A slice of a single token behaves like textproc.Lexer.

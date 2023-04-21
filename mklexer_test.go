@@ -1,8 +1,8 @@
 package pkglint
 
 import (
+	"github.com/rillig/pkglint/v23/textproc"
 	"gopkg.in/check.v1"
-	"netbsd.org/pkglint/textproc"
 )
 
 func (s *Suite) Test_NewMkLexer__with_diag(c *check.C) {

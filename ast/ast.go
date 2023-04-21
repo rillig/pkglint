@@ -6,7 +6,7 @@
 package ast
 
 import (
-	"netbsd.org/pkglint/textproc"
+	"github.com/rillig/pkglint/v23/textproc"
 	"strings"
 )
 

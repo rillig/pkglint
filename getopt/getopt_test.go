@@ -1,8 +1,8 @@
 package getopt
 
 import (
+	"github.com/rillig/pkglint/v23/intqa"
 	"gopkg.in/check.v1"
-	"netbsd.org/pkglint/intqa"
 	"strings"
 	"testing"
 )

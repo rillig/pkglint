@@ -1,7 +1,7 @@
 package pkglint
 
 import (
-	"netbsd.org/pkglint/pkgver"
+	"github.com/rillig/pkglint/v23/pkgver"
 	"strings"
 )
 

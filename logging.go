@@ -2,9 +2,9 @@ package pkglint
 
 import (
 	"bytes"
+	"github.com/rillig/pkglint/v23/histogram"
+	"github.com/rillig/pkglint/v23/textproc"
 	"io"
-	"netbsd.org/pkglint/histogram"
-	"netbsd.org/pkglint/textproc"
 	"strings"
 )
 

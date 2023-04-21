@@ -14,7 +14,7 @@ package pkglint
 // used in the --autofix mode.
 
 import (
-	"netbsd.org/pkglint/regex"
+	"github.com/rillig/pkglint/v23/regex"
 	"strconv"
 	"strings"
 )

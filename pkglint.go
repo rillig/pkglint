@@ -2,11 +2,11 @@ package pkglint
 
 import (
 	"fmt"
+	"github.com/rillig/pkglint/v23/getopt"
+	"github.com/rillig/pkglint/v23/histogram"
+	"github.com/rillig/pkglint/v23/regex"
+	tracePkg "github.com/rillig/pkglint/v23/trace"
 	"io"
-	"netbsd.org/pkglint/getopt"
-	"netbsd.org/pkglint/histogram"
-	"netbsd.org/pkglint/regex"
-	tracePkg "netbsd.org/pkglint/trace"
 	"os"
 	"os/user"
 	"runtime"

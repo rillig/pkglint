@@ -3,10 +3,10 @@ package pkglint
 import (
 	"bytes"
 	"fmt"
+	"github.com/rillig/pkglint/v23/intqa"
+	"github.com/rillig/pkglint/v23/regex"
 	"io"
 	"io/ioutil"
-	"netbsd.org/pkglint/intqa"
-	"netbsd.org/pkglint/regex"
 	"os"
 	"regexp"
 	"sort"

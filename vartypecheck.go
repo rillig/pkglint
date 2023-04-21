@@ -1,9 +1,9 @@
 package pkglint
 
 import (
-	"netbsd.org/pkglint/pkgver"
-	"netbsd.org/pkglint/regex"
-	"netbsd.org/pkglint/textproc"
+	"github.com/rillig/pkglint/v23/pkgver"
+	"github.com/rillig/pkglint/v23/regex"
+	"github.com/rillig/pkglint/v23/textproc"
 	"path"
 	"strings"
 )

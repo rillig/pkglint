@@ -1,6 +1,6 @@
 package pkglint
 
-import "netbsd.org/pkglint/regex"
+import "github.com/rillig/pkglint/v23/regex"
 
 // LinesLexer records the state when checking a list of lines from top to bottom.
 type LinesLexer struct {

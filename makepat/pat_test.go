@@ -1,8 +1,8 @@
 package makepat
 
 import (
-	"netbsd.org/pkglint/intqa"
-	"netbsd.org/pkglint/textproc"
+	"github.com/rillig/pkglint/v23/intqa"
+	"github.com/rillig/pkglint/v23/textproc"
 	"reflect"
 	"testing"
 )

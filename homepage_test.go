@@ -3,10 +3,10 @@ package pkglint
 import (
 	"context"
 	"errors"
+	"github.com/rillig/pkglint/v23/regex"
 	"gopkg.in/check.v1"
 	"net"
 	"net/http"
-	"netbsd.org/pkglint/regex"
 	"strconv"
 	"syscall"
 	"time"

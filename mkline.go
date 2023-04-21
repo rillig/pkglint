@@ -2,8 +2,8 @@ package pkglint
 
 import (
 	"fmt"
-	"netbsd.org/pkglint/regex"
-	"netbsd.org/pkglint/textproc"
+	"github.com/rillig/pkglint/v23/regex"
+	"github.com/rillig/pkglint/v23/textproc"
 	"regexp"
 	"strings"
 )

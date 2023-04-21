@@ -1,7 +1,7 @@
 package pkglint
 
 import (
-	"netbsd.org/pkglint/regex"
+	"github.com/rillig/pkglint/v23/regex"
 	"strings"
 )
 

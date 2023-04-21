@@ -2,7 +2,7 @@ package makepat
 
 import (
 	"errors"
-	"netbsd.org/pkglint/textproc"
+	"github.com/rillig/pkglint/v23/textproc"
 )
 
 // Pattern is a compiled pattern like "*.c" or "NetBSD-??.[^0-9]".

@@ -2,8 +2,8 @@ package trace
 
 import (
 	"bytes"
+	"github.com/rillig/pkglint/v23/intqa"
 	"gopkg.in/check.v1"
-	"netbsd.org/pkglint/intqa"
 	"testing"
 )
 
@@ -40,9 +40,9 @@ func (s *Suite) Test_Tracer_Call__only_arguments(c *check.C) {
 	})
 
 	c.Check(output, check.Equals, ""+
-		"TRACE: + netbsd.org/pkglint/trace.(*Tracer).onlyArguments(\"arg0\", 1234)\n"+
+		"TRACE: + github.com/rillig/pkglint/v23/trace.(*Tracer).onlyArguments(\"arg0\", 1234)\n"+
 		"TRACE: 1   Running \"code\"\n"+
-		"TRACE: - netbsd.org/pkglint/trace.(*Tracer).onlyArguments(\"arg0\", 1234)\n")
+		"TRACE: - github.com/rillig/pkglint/v23/trace.(*Tracer).onlyArguments(\"arg0\", 1234)\n")
 }
 
 func (s *Suite) Test_Tracer_Call__arguments_and_result(c *check.C) {
@@ -53,9 +53,9 @@ func (s *Suite) Test_Tracer_Call__arguments_and_result(c *check.C) {
 	})
 
 	c.Check(output, check.Equals, ""+
-		"TRACE: + netbsd.org/pkglint/trace.(*Tracer).argumentsAndResult(\"arg0\", 1234)\n"+
+		"TRACE: + github.com/rillig/pkglint/v23/trace.(*Tracer).argumentsAndResult(\"arg0\", 1234)\n"+
 		"TRACE: 1   Running \"code\"\n"+
-		"TRACE: - netbsd.org/pkglint/trace.(*Tracer).argumentsAndResult(\"arg0\", 1234, \"=>\", \"the result\")\n")
+		"TRACE: - github.com/rillig/pkglint/v23/trace.(*Tracer).argumentsAndResult(\"arg0\", 1234, \"=>\", \"the result\")\n")
 }
 
 func (s *Suite) Test_Tracer_Call__arguments_and_result_wrong(c *check.C) {
@@ -66,9 +66,9 @@ func (s *Suite) Test_Tracer_Call__arguments_and_result_wrong(c *check.C) {
 	})
 
 	c.Check(output, check.Equals, ""+
-		"TRACE: + netbsd.org/pkglint/trace.(*Tracer).argumentsAndResultWrong(\"arg0\", 1234, \"\")\n"+
+		"TRACE: + github.com/rillig/pkglint/v23/trace.(*Tracer).argumentsAndResultWrong(\"arg0\", 1234, \"\")\n"+
 		"TRACE: 1   Running \"code\"\n"+
-		"TRACE: - netbsd.org/pkglint/trace.(*Tracer).argumentsAndResultWrong(\"arg0\", 1234, \"\")\n")
+		"TRACE: - github.com/rillig/pkglint/v23/trace.(*Tracer).argumentsAndResultWrong(\"arg0\", 1234, \"\")\n")
 }
 
 func (s *Suite) Test__fixed_argument_variants(c *check.C) {
@@ -83,14 +83,14 @@ func (s *Suite) Test__fixed_argument_variants(c *check.C) {
 	})
 
 	c.Check(output, check.Equals, ""+
-		"TRACE: + netbsd.org/pkglint/trace.(*Suite).Test__fixed_argument_variants.func1()\n"+
-		"TRACE: 1 + netbsd.org/pkglint/trace.(*Suite).Test__fixed_argument_variants.func1(\"x\")\n"+
-		"TRACE: 1 2 + netbsd.org/pkglint/trace.(*Suite).Test__fixed_argument_variants.func1(\"x\", \"y\")\n"+
+		"TRACE: + github.com/rillig/pkglint/v23/trace.(*Suite).Test__fixed_argument_variants.func1()\n"+
+		"TRACE: 1 + github.com/rillig/pkglint/v23/trace.(*Suite).Test__fixed_argument_variants.func1(\"x\")\n"+
+		"TRACE: 1 2 + github.com/rillig/pkglint/v23/trace.(*Suite).Test__fixed_argument_variants.func1(\"x\", \"y\")\n"+
 		"TRACE: 1 2 3   step a\n"+
 		"TRACE: 1 2 3   step a, b\n"+
-		"TRACE: 1 2 - netbsd.org/pkglint/trace.(*Suite).Test__fixed_argument_variants.func1(\"x\", \"y\")\n"+
-		"TRACE: 1 - netbsd.org/pkglint/trace.(*Suite).Test__fixed_argument_variants.func1(\"x\")\n"+
-		"TRACE: - netbsd.org/pkglint/trace.(*Suite).Test__fixed_argument_variants.func1()\n")
+		"TRACE: 1 2 - github.com/rillig/pkglint/v23/trace.(*Suite).Test__fixed_argument_variants.func1(\"x\", \"y\")\n"+
+		"TRACE: 1 - github.com/rillig/pkglint/v23/trace.(*Suite).Test__fixed_argument_variants.func1(\"x\")\n"+
+		"TRACE: - github.com/rillig/pkglint/v23/trace.(*Suite).Test__fixed_argument_variants.func1()\n")
 }
 
 func (s *Suite) Test_Tracer_Call__Stringer_arg(c *check.C) {
@@ -101,8 +101,8 @@ func (s *Suite) Test_Tracer_Call__Stringer_arg(c *check.C) {
 	})
 
 	c.Check(output, check.Equals, ""+
-		"TRACE: + netbsd.org/pkglint/trace.(*Suite).Test_Tracer_Call__Stringer_arg.func1(It's a string, It's a string)\n"+
-		"TRACE: - netbsd.org/pkglint/trace.(*Suite).Test_Tracer_Call__Stringer_arg.func1(It's a string, It's a string)\n")
+		"TRACE: + github.com/rillig/pkglint/v23/trace.(*Suite).Test_Tracer_Call__Stringer_arg.func1(It's a string, It's a string)\n"+
+		"TRACE: - github.com/rillig/pkglint/v23/trace.(*Suite).Test_Tracer_Call__Stringer_arg.func1(It's a string, It's a string)\n")
 }
 
 func (s *Suite) Test_Tracer_Call__GoStringer_arg(c *check.C) {
@@ -113,8 +113,8 @@ func (s *Suite) Test_Tracer_Call__GoStringer_arg(c *check.C) {
 	})
 
 	c.Check(output, check.Equals, ""+
-		"TRACE: + netbsd.org/pkglint/trace.(*Suite).Test_Tracer_Call__GoStringer_arg.func1(\"It's a string\", \"It's a string\")\n"+
-		"TRACE: - netbsd.org/pkglint/trace.(*Suite).Test_Tracer_Call__GoStringer_arg.func1(\"It's a string\", \"It's a string\")\n")
+		"TRACE: + github.com/rillig/pkglint/v23/trace.(*Suite).Test_Tracer_Call__GoStringer_arg.func1(\"It's a string\", \"It's a string\")\n"+
+		"TRACE: - github.com/rillig/pkglint/v23/trace.(*Suite).Test_Tracer_Call__GoStringer_arg.func1(\"It's a string\", \"It's a string\")\n")
 }
 
 func (s *Suite) Test_Tracer_traceCall__panic(c *check.C) {

@@ -2,9 +2,9 @@ package pkglint
 
 import (
 	"fmt"
+	"github.com/rillig/pkglint/v23/regex"
+	"github.com/rillig/pkglint/v23/textproc"
 	"hash/crc64"
-	"netbsd.org/pkglint/regex"
-	"netbsd.org/pkglint/textproc"
 	"path"
 	"reflect"
 	"regexp"

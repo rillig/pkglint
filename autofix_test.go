@@ -1,8 +1,8 @@
 package pkglint
 
 import (
+	"github.com/rillig/pkglint/v23/regex"
 	"gopkg.in/check.v1"
-	"netbsd.org/pkglint/regex"
 	"os"
 	"runtime"
 	"strings"

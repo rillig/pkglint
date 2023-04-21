@@ -2,9 +2,9 @@ package licenses
 
 import (
 	"encoding/json"
+	"github.com/rillig/pkglint/v23/intqa"
+	"github.com/rillig/pkglint/v23/textproc"
 	"gopkg.in/check.v1"
-	"netbsd.org/pkglint/intqa"
-	"netbsd.org/pkglint/textproc"
 	"strings"
 	"testing"
 )

@@ -1,6 +1,6 @@
 package pkglint
 
-import "netbsd.org/pkglint/licenses"
+import "github.com/rillig/pkglint/v23/licenses"
 
 type LicenseChecker struct {
 	MkLines *MkLines

@@ -12,7 +12,7 @@ file     cmd/pkglint/main.go
 go:func  main
 ```
 
-From there on, everything interesting happens in the `netbsd.org/pkglint` package.
+From there on, everything interesting happens in the `github.com/rillig/pkglint/v23` package.
 The below `Main` function already uses some implementation details (like `G.Logger.out` and `G.Logger.err`),
 therefore it is currently not possible to write that code outside of this package.
 
@@ -121,11 +121,11 @@ start  ^[\t]for !p\.Todo\.IsEmpty
 end    ^\t}
 ```
 
-The main work is done in `Pkglint.Check`:
+The main work is done in `Pkglint.Check` and `Pkglint.checkMode`:
 
 ```codewalk
 file     pkglint.go
-start    ^\tif isReg
+start    ^\tif isReg &&
 end      ^\t\}
 ```
 

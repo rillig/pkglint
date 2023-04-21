@@ -1,7 +1,7 @@
 package main
 
 import (
-	"netbsd.org/pkglint"
+	"github.com/rillig/pkglint/v23"
 	"os"
 )
 

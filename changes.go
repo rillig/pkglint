@@ -1,8 +1,8 @@
 package pkglint
 
 import (
-	"netbsd.org/pkglint/pkgver"
-	"netbsd.org/pkglint/textproc"
+	"github.com/rillig/pkglint/v23/pkgver"
+	"github.com/rillig/pkglint/v23/textproc"
 	"sort"
 	"strings"
 )

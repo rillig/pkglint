@@ -1,4 +1,4 @@
-module netbsd.org/pkglint/v23
+module github.com/rillig/pkglint/v23
 
 go 1.19
 

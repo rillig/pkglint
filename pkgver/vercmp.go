@@ -3,7 +3,7 @@ package pkgver
 // See pkgtools/pkg_install/files/lib/dewey.c
 
 import (
-	"netbsd.org/pkglint/textproc"
+	"github.com/rillig/pkglint/v23/textproc"
 	"strconv"
 	"strings"
 )
