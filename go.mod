@@ -1,4 +1,4 @@
-module github.com/rillig/pkglint
+module github.com/rillig/pkglint/v23
 
 go 1.19
 
