@@ -1,8 +1,9 @@
 #! /bin/bash
 set -eu
 
-srcdir="$HOME/git/pkglint"
-archivedir="$srcdir/archive"
+basedir="$HOME/git/pkglint"
+gosrcdir="$basedir/v23"
+archivedir="$basedir/archive"
 pkgsrcdir="$HOME/git/pkgsrc"
 gopath="${GOPATH:-"$HOME/go"}"
 
@@ -20,13 +21,13 @@ qa_genrunid() {
   if [ -n "${runid-}" ]; then
     return
   fi
-  timestamp="$(cd "$srcdir" && git show -s --format=%ai HEAD | awk -F '[- :]' '{print substr($1,3)$2$3"-"$4$5}')"
-  headcommit=$(cd "$srcdir" && git rev-parse --short HEAD)
-  if (cd "$srcdir" && git diff --quiet && git diff --cached --quiet); then
+  timestamp="$(cd "$basedir" && git show -s --format=%ai HEAD | awk -F '[- :]' '{print substr($1,3)$2$3"-"$4$5}')"
+  headcommit=$(cd "$basedir" && git rev-parse --short HEAD)
+  if (cd "$basedir" && git diff --quiet && git diff --cached --quiet); then
     runid="$timestamp-$headcommit"
   else
     runid="$timestamp-$headcommit-$(date +'%H%M%S')"
-    (cd "$srcdir" && git diff && git diff --cached) > "$archivedir/$runid.patch"
+    (cd "$basedir" && git diff && git diff --cached) > "$archivedir/$runid.patch"
   fi
 }
 
@@ -36,14 +37,15 @@ qa_notest() {
 
 qa_test() {
   qa_genrunid
-  (cd "$srcdir" && chmod 644 -- *.go)
+  cd "$gosrcdir" || exit 1
+  chmod 644 -- *.go */*.go
   step_msg "Formatting pkglint"
-  go fmt github.com/rillig/pkglint/v23/...
+  go fmt ./...
   step_msg "Generating source code"
-  go generate github.com/rillig/pkglint/v23/...
+  go generate ./...
   if [ $run_tests = yes ]; then
     step_msg "Testing pkglint"
-    go test -test.count 1 -v github.com/rillig/pkglint/v23/...
+    go test -test.count 1 -v ./...
   fi
 }
 
@@ -57,34 +59,26 @@ qa_install() {
 qa_analyze() {
   step_msg "Analyzing code style"
   # see https://github.com/golangci/golangci-lint
-  (cd "$srcdir" && golangci-lint run)
+  (cd "$gosrcdir" && golangci-lint run)
 }
 
 qa_gobco() {
   step_msg "Running gobco to measure code coverage"
   # see https://github.com/rillig/gobco
-  (cd "$srcdir" \
+  (cd "$gosrcdir" \
    && gobco > "$archivedir/gobco.txt.tmp" || true \
    && mv -f "$archivedir/gobco.txt.tmp" "$archivedir/gobco.txt")
 }
 
 qa_netbsd() {
   step_msg "Checking for release blockers"
-  if (cd "$srcdir" && grep -n "@beta" -- *.go); then
-    exit 1
-  fi
-  if (cd "$srcdir" && grep -n "@BMAKE@" -- *_test.go); then
-    exit 1
-  fi
-  if (cd "$srcdir" && grep -n "@VERSION@" -- *_test.go); then
-    exit 1
-  fi
-  if (cd "$srcdir" && grep -F -n "\$NetBSD\$" -- *_test.go); then
-    exit 1
-  fi
-  if (cd "$archivedir" && grep "Pkglint internal error" -- *.err); then
-    exit 1
-  fi
+  ok=yes
+  (cd "$gosrcdir" && grep -n "@beta" -- *.go */*.go) && ok=no
+  (cd "$gosrcdir" && grep -n "@BMAKE@" -- *_test.go) && ok=no
+  (cd "$gosrcdir" && grep -n "@VERSION@" -- *_test.go) && ok=no
+  (cd "$gosrcdir" && grep -F -n '$''NetBSD''$' -- *_test.go) && ok=no
+  (cd "$archivedir" && grep -n "Pkglint internal error" -- *.err) && ok=no
+  [ "$ok" = 'yes' ] || exit 1
 
   step_msg "Copying files to NetBSD VM"
   rsync -a --delete --rsync-path=/usr/pkg/bin/rsync \
@@ -113,7 +107,7 @@ qa_netbsd() {
     --exclude="mkalign*.go" \
     --exclude="go.mod" \
     --exclude="go.sum" \
-    "$srcdir/" netbsd:proj/pkgsrc/pkgtools/pkglint/files/
+    "$gosrcdir/" netbsd:proj/pkgsrc/pkgtools/pkglint/files/
 
   step_msg "Installing NetBSD package"
   cmd=". ./.bash_profile"
@@ -130,7 +124,7 @@ qa_netbsd() {
 qa_codewalk() {
   step_msg "Regenerating codewalk.md"
   # See https://github.com/rillig/go-codewalk
-  (cd "$srcdir" && codewalk codewalk.src.md codewalk.md)
+  (cd "$gosrcdir" && codewalk codewalk.src.md codewalk.md)
 }
 
 qa_pkgsrc() {
@@ -154,7 +148,7 @@ qa_cover_pkgsrc() {
   (
     native_pkgsrcdir="$(native_path "$pkgsrcdir")"
     native_archivedir="$(native_path "$archivedir")"
-    cd "$srcdir" \
+    cd "$gosrcdir" \
     && env \
       PKGLINT_TESTDIR="$native_pkgsrcdir" \
       PKGLINT_TESTCMDLINE="-r -Wall -Call -p -s -e" \
@@ -209,7 +203,6 @@ qa_diffs() {
   )
 }
 
-cd "$srcdir"
 case "$*" in
 "")
   set -- install pkgsrc diffs
