@@ -1771,7 +1771,6 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		"Makefile, Makefile.*, *.mk: set, use, use-loadtime")
 
 	reg.pkg("USE_CMAKE", BtYes)
-	reg.usr("USE_DESTDIR", BtYes)
 	reg.pkglist("USE_FEATURES", BtIdentifierDirect)
 	reg.pkg("USE_GAMESGROUP", BtYesNo)
 	reg.pkg("USE_GCC_RUNTIME", BtYesNo)

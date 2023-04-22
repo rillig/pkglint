@@ -134,7 +134,7 @@ func (mklines *MkLines) collectRationale() {
 
 	isUseful := func(mkline *MkLine) bool {
 		comment := trimHspace(mkline.Comment())
-		return comment != "" && !hasPrefix(comment, "$NetBSD")
+		return comment != "" && !hasPrefix(comment, "$"+"NetBSD")
 	}
 
 	isRealComment := func(mkline *MkLine) bool {

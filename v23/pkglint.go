@@ -711,7 +711,7 @@ func (p *Pkglint) checkRegCvsSubst(filename CurrPath) {
 	diag := NewLineWhole(filename)
 	diag.Errorf("The CVS keyword substitution must be the default one.")
 	diag.Explain(
-		"The CVS keyword \\$NetBSD\\$ is used throughout pkgsrc to record",
+		"The CVS keyword \\$"+"NetBSD\\$ is used throughout pkgsrc to record",
 		"changes to each file.",
 		"Based on this information, the bulk builds decide when a package",
 		"has to be rebuilt.",
