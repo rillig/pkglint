@@ -789,6 +789,35 @@ func (s *Suite) Test_MkAssignChecker_checkOpAppendOnly(c *check.C) {
 			"Assignments to \"CFLAGS\" should use \"+=\", not \"=\".")
 }
 
+// After including bsd.prefs.mk, all assignments to GCC_REQD should use '+=',
+// to make sure that each requirement reaches mk/compiler/gcc.mk, where the
+// requirements are evaluated.
+//
+// Before including bsd.prefs.mk, there is no need to use '+=', as GCC_REQD is
+// not supposed to be set via the command line, but only via mk.conf.
+func (s *Suite) Test_MkAssignChecker_checkOpAppendOnly__GCC_REQD(c *check.C) {
+	t := s.Init(c)
+	t.SetUpPackage("category/package",
+		"GCC_REQD=\t8\t# rationale for GCC 8",
+		"GCC_REQD=\t9\t# rationale for GCC 9",
+		"",
+		".include \"../../mk/bsd.prefs.mk\"",
+		"",
+		"GCC_REQD=\t10\t# rationale for GCC 10",
+		"GCC_REQD=\t11\t# rationale for GCC 11")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	t.CheckOutputLines(
+		"WARN: Makefile:20: Variable GCC_REQD is overwritten in line 21.",
+		"WARN: Makefile:21: Variable GCC_REQD is overwritten in line 25.",
+		"WARN: Makefile:25: Variable GCC_REQD is overwritten in line 26.",
+		"WARN: Makefile:25: Assignments to \"GCC_REQD\" should use \"+=\", not \"=\".",
+		"WARN: Makefile:26: Assignments to \"GCC_REQD\" should use \"+=\", not \"=\".")
+}
+
 func (s *Suite) Test_MkAssignChecker_checkRight(c *check.C) {
 	t := s.Init(c)
 

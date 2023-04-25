@@ -448,7 +448,7 @@ func (ck *MkAssignChecker) checkOpAppendOnly() {
 	switch varbase {
 	case
 		"CFLAGS",    // C
-		"OBJCFLAGS", // Objective C
+		"OBJCFLAGS", // Objective-C
 		"FFLAGS",    // Fortran
 		"RFLAGS",    // Ratfor
 		"LFLAGS",    // Lex
@@ -459,6 +459,9 @@ func (ck *MkAssignChecker) checkOpAppendOnly() {
 		"LDADD":     // Just for symmetry
 		break
 	default:
+		if hasSuffix(varbase, "_REQD") && ck.MkLines.Tools.SeenPrefs {
+			break
+		}
 		return
 	}
 

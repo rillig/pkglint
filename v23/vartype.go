@@ -145,6 +145,8 @@ const (
 	Unique
 
 	NoVartypeOptions = 0
+
+	// XXX: Maybe add "AppendOnly", see MkAssignChecker.checkOpAppendOnly.
 )
 
 type ACLEntry struct {
