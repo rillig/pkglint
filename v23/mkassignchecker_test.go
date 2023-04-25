@@ -793,8 +793,9 @@ func (s *Suite) Test_MkAssignChecker_checkOpAppendOnly(c *check.C) {
 // to make sure that each requirement reaches mk/compiler/gcc.mk, where the
 // requirements are evaluated.
 //
-// Before including bsd.prefs.mk, there is no need to use '+=', as GCC_REQD is
-// not supposed to be set via the command line, but only via mk.conf.
+// The operator '+=' should be used in all cases instead of '=', even at the
+// top of a package makefile when no other makefile has been included yet, to
+// allow that line to be used in copy-and-paste operations.
 func (s *Suite) Test_MkAssignChecker_checkOpAppendOnly__GCC_REQD(c *check.C) {
 	t := s.Init(c)
 	t.SetUpPackage("category/package",
@@ -814,6 +815,8 @@ func (s *Suite) Test_MkAssignChecker_checkOpAppendOnly__GCC_REQD(c *check.C) {
 		"WARN: Makefile:20: Variable GCC_REQD is overwritten in line 21.",
 		"WARN: Makefile:21: Variable GCC_REQD is overwritten in line 25.",
 		"WARN: Makefile:25: Variable GCC_REQD is overwritten in line 26.",
+		"WARN: Makefile:20: Assignments to \"GCC_REQD\" should use \"+=\", not \"=\".",
+		"WARN: Makefile:21: Assignments to \"GCC_REQD\" should use \"+=\", not \"=\".",
 		"WARN: Makefile:25: Assignments to \"GCC_REQD\" should use \"+=\", not \"=\".",
 		"WARN: Makefile:26: Assignments to \"GCC_REQD\" should use \"+=\", not \"=\".")
 }

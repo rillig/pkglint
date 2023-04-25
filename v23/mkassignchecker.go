@@ -459,7 +459,7 @@ func (ck *MkAssignChecker) checkOpAppendOnly() {
 		"LDADD":     // Just for symmetry
 		break
 	default:
-		if hasSuffix(varbase, "_REQD") && ck.MkLines.Tools.SeenPrefs {
+		if hasSuffix(varbase, "_REQD") {
 			break
 		}
 		return
