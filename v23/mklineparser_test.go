@@ -934,7 +934,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 		})
 
 	// At this stage, MkLine.split doesn't know that empty(...) takes
-	// a variable use. Instead it just sees ordinary characters and
+	// a variable use. Instead, it just sees ordinary characters and
 	// other uses of variables.
 	test(".if empty(${VAR.${tool}}:C/\\:.*$//:M${pattern})",
 		mkLineSplitResult{

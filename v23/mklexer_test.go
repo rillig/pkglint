@@ -882,7 +882,7 @@ func (s *Suite) Test_MkLexer_varUseModifierMatch(c *check.C) {
 	// If the variable uses parentheses instead of braces,
 	// the opening parenthesis is escaped by the second backslash
 	// and thus doesn't increase the nesting level.
-	// Nevertheless it is not unescaped. This is probably a bug in bmake.
+	// Nevertheless, it is not unescaped. This is probably a bug in bmake.
 	testParen("M\\\\(:rest", "M\\\\(", ":rest")
 	testParen("M(:nested):rest", "M(:nested)", ":rest")
 

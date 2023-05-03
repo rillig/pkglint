@@ -413,7 +413,7 @@ func (s *Suite) Test_MkLines_Check__unbalanced_directives(c *check.C) {
 
 	mklines.Check()
 
-	// As of November 2018 pkglint doesn't find that the inner .if is closed by an .endfor.
+	// As of November 2018, pkglint doesn't find that the inner .if is closed by an .endfor.
 	// This is checked by bmake, though.
 	//
 	// As soon as pkglint starts to analyze .if/.for as regular statements
@@ -775,7 +775,7 @@ func (s *Suite) Test_MkLines_ForEachEnd(c *check.C) {
 		MkCvsID)
 
 	// Calls to MkLines.ForEach cannot nest since they modify fields
-	// in the MkLines type. As of December 2019 there is no separation
+	// in the MkLines type. As of December 2019, there is no separation
 	// between:
 	//  - The MkLines as a collection of data
 	//  - An iterator over the MkLines

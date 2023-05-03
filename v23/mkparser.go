@@ -25,7 +25,7 @@ func (p *MkParser) Rest() string {
 // NewMkParser creates a new parser for the given text.
 //
 // If line is given, it is used for reporting parse errors and warnings.
-// Otherwise parsing is silent.
+// Otherwise, parsing is silent.
 //
 // The text argument is assumed to be after unescaping the # character,
 // which means the # is a normal character and does not introduce a Makefile comment.
@@ -528,7 +528,7 @@ func (w *MkCondWalker) Walk(cond *MkCond, callback *MkCondCallback) {
 		}
 		if callback.VarUse != nil {
 			// This is not really a VarUse, it's more a VarUseDefined.
-			// But in practice they are similar enough to be treated the same.
+			// But in practice, they are similar enough to be treated the same.
 			callback.VarUse(NewMkVarUse(cond.Defined))
 		}
 

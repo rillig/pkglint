@@ -553,7 +553,7 @@ func (s *ShSuite) Test_parseShellProgram__function_definition(c *check.C) {
 				AddSemicolon()).
 				Compound)))
 
-	// For some reason the POSIX grammar does not allow function bodies that consist of
+	// For some reason, the POSIX grammar does not allow function bodies that consist of
 	// a single command without braces or parentheses.
 }
 
@@ -596,7 +596,7 @@ func (s *ShSuite) Test_parseShellProgram__simple_command(c *check.C) {
 	// RUN is a special Make variable since it ends with a semicolon;
 	// therefore it needs to be split off before passing the rest of
 	// the command to the shell command parser.
-	// Otherwise it would be interpreted as a shell command,
+	// Otherwise, it would be interpreted as a shell command,
 	// and the real shell command would be its argument.
 	s.test("${RUN} subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\"",
 		b.List().AddCommand(b.SimpleCommand("${RUN}", "subdir=\"`unzip -c \"$$e\" install.rdf | awk '/re/ { print \"hello\" }'`\"")))

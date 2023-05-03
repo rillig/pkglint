@@ -239,7 +239,7 @@ func (s *Suite) Test_Autofix__show_autofix_and_source_continuation_line(c *check
 	// Using a tab for indentation preserves the exact layout in the output
 	// since in pkgsrc Makefiles, tabs are also used in the middle of the line
 	// to align the variable values. Using a single space for indentation would
-	// make some of the lines appear misaligned in the pkglint output although
+	// make some of the lines appear misaligned in the pkglint output, although
 	// they are correct in the Makefiles.
 	t.CheckOutputLines(
 		"WARN: ~/Makefile:3: Using \"old\" is deprecated.",

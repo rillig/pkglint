@@ -82,7 +82,7 @@ func (p MkLineParser) parseVarassign(line *Line, text string, splitResult mkLine
 func (p MkLineParser) MatchVarassign(line *Line, text string, splitResult *mkLineSplitResult) (bool, *mkLineAssign) {
 
 	// A commented variable assignment does not have leading whitespace.
-	// Otherwise line 1 of almost every Makefile fragment would need to
+	// Otherwise, line 1 of almost every Makefile fragment would need to
 	// be scanned for a variable assignment even though it only contains
 	// the $NetBSD CVS Id.
 	commented := splitResult.main == "" && splitResult.hasComment

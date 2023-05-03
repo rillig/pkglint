@@ -149,7 +149,7 @@ func (s *Suite) Test_MkAssignChecker_checkLeftNotUsed__procedure_call(c *check.C
 
 	mklines.Check()
 
-	// There is no warning for pkgbase although it looks unused as well.
+	// There is no warning for pkgbase, although it looks unused as well.
 	// The file pkg-build-options.mk is essentially a procedure call,
 	// and pkgbase is its parameter.
 	//

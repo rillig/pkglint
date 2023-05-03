@@ -22,7 +22,7 @@ func (s *Suite) Test_MkTokensLexer__single_plain_text_token(c *check.C) {
 }
 
 // When the MkTokensLexer is constructed, it gets a copy of the tokens array.
-// In theory it would be possible to change the tokens after starting lexing,
+// In theory, it would be possible to change the tokens after starting lexing,
 // but there is no practical case where that would be useful.
 //
 // Since each slice is a separate view on the underlying array, modifying the

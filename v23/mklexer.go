@@ -15,7 +15,7 @@ import (
 //
 // The pkglint parser had been built from scratch using naive assumptions
 // about how bmake parses these expressions. These assumptions do not hold
-// a strict test, but luckily the pkgsrc package developers don't explore
+// a strict test, but luckily, the pkgsrc package developers don't explore
 // these edge cases anyway.
 type MkLexer struct {
 	lexer *textproc.Lexer

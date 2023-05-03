@@ -297,7 +297,7 @@ func (ck *MkVarUseChecker) checkPermissions(vuc *VarUseContext) {
 
 	// Do not warn about unknown infrastructure variables.
 	// These have all permissions to prevent warnings when they are used.
-	// But when other variables are assigned to them it would seem as if
+	// But when other variables are assigned to them, it would seem as if
 	// these other variables could become evaluated at load time.
 	// And this is something that most variables do not allow.
 	if vuc.vartype != nil && vuc.vartype.basicType == BtUnknown {
@@ -321,7 +321,7 @@ func (ck *MkVarUseChecker) checkPermissions(vuc *VarUseContext) {
 		return
 	}
 
-	// At this point the variable must not be used at load time.
+	// At this point, the variable must not be used at load time.
 	// Now determine whether it is directly used at load time because
 	// the context already says so or, a little trickier, if it might
 	// be used at load time somewhere in the future because it is
@@ -332,13 +332,13 @@ func (ck *MkVarUseChecker) checkPermissions(vuc *VarUseContext) {
 		vuc.vartype.Union().Contains(aclpUseLoadtime)
 
 	if !directly && !indirectly && effPerms.Contains(aclpUse) {
-		// At this point the variable is either used at run time, or the
+		// At this point, the variable is either used at run time, or the
 		// time is not known.
 		return
 	}
 
 	if directly || indirectly {
-		// At this point the variable is used at load time although that
+		// At this point, the variable is used at load time although that
 		// is not allowed by the permissions. The variable could be a tool
 		// variable, and these tool variables have special rules.
 		tool := G.ToolByVarname(ck.MkLines, varname)

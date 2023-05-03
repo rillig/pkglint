@@ -998,7 +998,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__backticks(c *check.C) {
 // For some well-known directory variables like WRKDIR, PREFIX, LOCALBASE,
 // the :Q modifier can be safely removed since pkgsrc will never support
 // having special characters in these directory names.
-// For guessed variable types be cautious and don't autofix them.
+// For guessed variable types, be cautious and don't autofix them.
 func (s *Suite) Test_MkLine_VariableNeedsQuoting__only_remove_known(c *check.C) {
 	t := s.Init(c)
 

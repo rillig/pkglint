@@ -89,7 +89,7 @@ func (s *Suite) Test_MkLineChecker_Check__varuse_modifier_L(c *check.C) {
 	// This is because the :L modifier interprets everything before as an expression
 	// instead of a variable name.
 	//
-	// In line 3 the :L modifier is missing, therefore ${XKBBASE}/xkbcomp is the
+	// In line 3, the :L modifier is missing, therefore ${XKBBASE}/xkbcomp is the
 	// name of another variable, and that variable is not known. Only XKBBASE is known.
 	//
 	// In line 3, warn about the invalid "/" as part of the variable name.

@@ -140,7 +140,7 @@ func (mkline *MkLine) IsVarassign() bool {
 }
 
 // IsCommentedVarassign returns true for commented-out variable assignments.
-// In most cases these are treated as ordinary comments, but in some others
+// In most cases, these are treated as ordinary comments, but in some others
 // they are treated like variable assignments, just inactive ones.
 //
 // To qualify as a commented variable assignment, there must be no

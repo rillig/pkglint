@@ -21,7 +21,7 @@ func (s *Suite) Test_CheckFileAlternatives__ALTERNATIVES_SRC(c *check.C) {
 
 	// It's a strange situation, having an ALTERNATIVES file defined by
 	// the package but then referring to another package's file by means
-	// of ALTERNATIVES_SRC. As of February 2019 I don't remember if I
+	// of ALTERNATIVES_SRC. As of February 2019, I don't remember if I
 	// really had this case in mind when I initially wrote the code in
 	// CheckFileAlternatives.
 	t.SetUpPackage("category/package",

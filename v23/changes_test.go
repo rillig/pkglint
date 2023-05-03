@@ -423,7 +423,7 @@ func (s *Suite) Test_Changes_checkChangeVersion(c *check.C) {
 
 	G.Pkgsrc.changes.parseFile("CHANGES-2020", true)
 
-	// In line 3 there is no warning about the repeated addition since
+	// In line 3, there is no warning about the repeated addition since
 	// the multi-packages (Lua, PHP, Python) may add a package in
 	// several versions to the same PKGPATH.
 	t.CheckOutputLines(

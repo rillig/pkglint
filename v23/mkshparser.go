@@ -199,7 +199,7 @@ func (lex *ShellLexer) Lex(lval *shyySymType) (ttype int) {
 		case "done":
 			// lex.atCommandStart must stay true here because further "done" or "fi"
 			// may follow directly, without any semicolon.
-			// Ideally lex.atCommandStart would be a tri-state variable: yes, no, partly.
+			// Ideally, lex.atCommandStart would be a tri-state variable: yes, no, partly.
 			return tkDONE
 		case "in":
 			lex.atCommandStart = false

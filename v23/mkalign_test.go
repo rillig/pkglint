@@ -252,7 +252,7 @@ func (s *Suite) Test_MkAlignLine_IsCanonicalFollow(c *check.C) {
 	test("\tv\t\t\t\t\t\t......64", 16, true)
 
 	// This line already already overflows the right margin.
-	// On an 80-column display it is not decidable whether this line
+	// On an 80-column display, it is not decidable whether this line
 	// continues to the right or whether it stops there.
 	// It wouldn't hurt to make the line even longer.
 	// Still, it is ok to keep the indentation at a minimum.

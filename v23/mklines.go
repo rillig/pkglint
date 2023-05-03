@@ -19,7 +19,7 @@ type MkLines struct {
 	pkg *Package
 
 	// The extra scope in which all variable assignments are recorded.
-	// In most cases this is nil.
+	// In most cases, this is nil.
 	//
 	// When loading the package Makefile with all its included files,
 	// it is set to pkg.vars.
