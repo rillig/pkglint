@@ -757,7 +757,7 @@ func (s *Suite) Test_resolveVariableRefs__indeterminate(c *check.C) {
 
 	// VAR and PKGVAR are defined, but since they contain the result of
 	// a shell command, their value is indeterminate.
-	// Therefore they are not replaced.
+	// Therefore, they are not replaced.
 	t.CheckEquals(resolved, "${VAR} ${PKGVAR}")
 }
 
@@ -822,7 +822,7 @@ func (s *Suite) Test_CheckLinesDescr__variables(c *check.C) {
 			"are not expanded in the DESCR file.")
 
 	// Variables in parentheses are unusual in pkgsrc.
-	// Therefore they are not worth being mentioned.
+	// Therefore, they are not worth being mentioned.
 	test("$(PREFIX)", nil...)
 
 	// Variables that are not well-known in pkgsrc are not warned
@@ -1241,7 +1241,7 @@ func (s *Suite) Test_Pkglint_checkRegCvsSubst(c *check.C) {
 
 // The package Makefile is loaded via a different path
 // than direct command line arguments. Same for the patches.
-// Therefore these code paths must be tested separately.
+// Therefore, these code paths must be tested separately.
 func (s *Suite) Test_Pkglint_checkRegCvsSubst__full_package(c *check.C) {
 	t := s.Init(c)
 

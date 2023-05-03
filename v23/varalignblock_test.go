@@ -1101,7 +1101,7 @@ func (s *Suite) Test_VaralignBlock__var14_tab_value_var21_tab_cont_tab_value(c *
 // Line 1 is currently indented to column 25.
 // Line 2 is a continuation line with a very long variable name.
 // Line 2 is indented to column 38, which is much larger than 25.
-// Therefore line 2 is the outlier in this paragraph.
+// Therefore, line 2 is the outlier in this paragraph.
 // The initial line of the continuation line is empty.
 // It only contains a backslash, without the usual space to the left.
 // This space should be inserted to the left of the backslash.
@@ -1517,7 +1517,7 @@ func (s *Suite) Test_VaralignBlock__follow_up_indented_with_spaces(c *check.C) {
 // fix the whole block to use the indentation of the second-longest line.
 // In this case, all of the remaining lines have the same indentation
 // (as there is only 1 line at all).
-// Therefore this existing indentation is used instead of the minimum
+// Therefore, this existing indentation is used instead of the minimum
 // necessary, which would only be a single tab.
 func (s *Suite) Test_VaralignBlock__var_tabs24_value_var45_tab_value(c *check.C) {
 	vt := NewVaralignTester(s, c)
@@ -1629,7 +1629,7 @@ func (s *Suite) Test_VaralignBlock__var16_space_value_var16_space_value_var16_sp
 }
 
 // The indentation is deeper than necessary, but all lines agree on the same column.
-// Therefore this indentation depth is kept. It looks good and is probably due to
+// Therefore, this indentation depth is kept. It looks good and is probably due to
 // some other paragraphs in the file that are indented equally deep.
 //
 // As of December 2018, pkglint only looks at a single paragraph at a time,
@@ -1652,7 +1652,7 @@ func (s *Suite) Test_VaralignBlock__var_spaces24_value_var_tabs24_value(c *check
 	vt.Run()
 }
 
-// Both lines are indented to the same column. Therefore none of them is considered an outlier.
+// Both lines are indented to the same column. Therefore, none of them is considered an outlier.
 func (s *Suite) Test_VaralignBlock__var2_space_value_var2_tab_value(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -1716,7 +1716,7 @@ func (s *Suite) Test_VaralignBlock__var8_space_value_var2_tab_value(c *check.C) 
 
 // This space-indented line doesn't count as an outlier yet because it
 // is only a single tab away. The limit is two tabs.
-// Therefore both lines are indented with tabs.
+// Therefore, both lines are indented with tabs.
 func (s *Suite) Test_VaralignBlock__var15_space_value_var2_tab_value(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -1739,7 +1739,7 @@ func (s *Suite) Test_VaralignBlock__var15_space_value_var2_tab_value(c *check.C)
 
 // This space-indented line is an outlier since it is far enough from the
 // tab-indented line. The latter would require 2 tabs to align to the former.
-// Therefore the short line is not indented to the long line, in order to
+// Therefore, the short line is not indented to the long line, in order to
 // keep the indentation reasonably short for a large amount of the lines.
 func (s *Suite) Test_VaralignBlock__var16_space_value_var2_tab_value(c *check.C) {
 	vt := NewVaralignTester(s, c)
@@ -2294,7 +2294,7 @@ func (s *Suite) Test_VaralignBlock__realign_commented_multiline(c *check.C) {
 }
 
 // The VAR2 line is a continuation line that starts in column 9, just like
-// the VAR1 line. Therefore the alignment is correct.
+// the VAR1 line. Therefore, the alignment is correct.
 //
 // Its follow-up line is indented with effectively tab-tab-space, and
 // this relative indentation compared to the VAR2 line is preserved since
@@ -2347,7 +2347,7 @@ func (s *Suite) Test_VaralignBlock__long_line_followed_by_short_line_with_small_
 
 // Continuation lines that are indented 2 tabs are obviously not
 // space-constrained, otherwise they would use only a single tab.
-// Therefore they have to be aligned with the other values.
+// Therefore, they have to be aligned with the other values.
 func (s *Suite) Test_VaralignBlock__commented_cont_tab16(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(
@@ -2396,7 +2396,7 @@ func (s *Suite) Test_VaralignBlock__shift_already_long_line_to_the__right(c *che
 // to the variable values.
 //
 // This case may seem obvious, but in all other contexts, the whitespace
-// before the comment is ignored. Therefore the end of the line would be
+// before the comment is ignored. Therefore, the end of the line would be
 // after the "=" in these cases, and the alignment must take care to
 // include the whitespace.
 func (s *Suite) Test_VaralignBlock__eol_comment(c *check.C) {
@@ -2696,7 +2696,7 @@ func (s *Suite) Test_VaralignBlock__aligned(c *check.C) {
 		true)
 
 	// The indentation of the continuation line is neither 8 nor the
-	// indentation of the first line. Therefore the line is not aligned.
+	// indentation of the first line. Therefore, the line is not aligned.
 	test(
 		"#CONFIGURE_ENV+= value1 \\",
 		"#\t\tvalue2",

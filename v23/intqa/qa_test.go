@@ -212,7 +212,7 @@ func (s *Suite) Test_QAChecker_loadDecl(c *check.C) {
 		nil...)
 
 	// The TestMain method on a type is relevant, but violates the naming rule.
-	// Therefore it is ignored.
+	// Therefore, it is ignored.
 	load("file_test.go", "func (Suite) TestMain(*check.C) {}")
 
 	s.CheckTestees(

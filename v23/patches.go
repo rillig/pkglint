@@ -445,7 +445,7 @@ func (ck *PatchChecker) checkCanonicalPatchName(patched Path) {
 
 // isEmptyLine tests whether a line provides essentially no interesting content.
 // The focus here is on human-generated content that is intended for other human readers.
-// Therefore text that is typical for patch generators is considered empty as well.
+// Therefore, text that is typical for patch generators is considered empty as well.
 func (*PatchChecker) isEmptyLine(text string) bool {
 	return text == "" ||
 		hasPrefix(text, "index ") ||

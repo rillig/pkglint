@@ -403,7 +403,7 @@ func (ck *MkVarUseChecker) warnPermissions(
 
 	loadTimeExplanation := []string{
 		"Many variables, especially lists of something, get their values incrementally.",
-		"Therefore it is generally unsafe to rely on their",
+		"Therefore, it is generally unsafe to rely on their",
 		"value until it is clear that it will never change again.",
 		"This point is reached when the whole package Makefile is loaded and",
 		"execution of the shell commands starts; in some cases earlier.",
@@ -555,7 +555,7 @@ func (ck *MkVarUseChecker) warnToolLoadTime(varname string, tool *Tool) {
 		"Since any other .mk file can be included from anywhere else, there",
 		"is no guarantee that the tool is properly defined for using it at",
 		"load time (see above for the tricky rules).",
-		"Therefore the tools can only be used at run time,",
+		"Therefore, the tools can only be used at run time,",
 		"except in the package Makefile itself.")
 }
 
@@ -707,7 +707,7 @@ func (ck *MkVarUseChecker) warnMissingModifierQInWord() {
 		ck.use.varname)
 	mkline.Explain(
 		"This variable can contain spaces or other special characters.",
-		"Therefore it should be quoted by replacing ${VAR} with ${VAR:Q}.")
+		"Therefore, it should be quoted by replacing ${VAR} with ${VAR:Q}.")
 }
 
 func (ck *MkVarUseChecker) fixQuotingModifiers(correctMod string, mod string) {

@@ -162,7 +162,7 @@ func (*QAChecker) parseFuncDecl(filename string, decl *ast.FuncDecl) code {
 func (ck *QAChecker) addCode(code code, decl *ast.FuncDecl) {
 	if code.isTestScope() && code.isFunc() && code.Func == "TestMain" {
 		// This is not a test for Main, but a wrapper function of the test.
-		// Therefore it is completely ignored.
+		// Therefore, it is completely ignored.
 		// See https://golang.org/pkg/testing/#hdr-Main.
 		//
 		// Among others, this function is created by

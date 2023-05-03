@@ -459,7 +459,7 @@ func (s *Suite) Test_Tools__aliases_in_for_loop(c *check.C) {
 // This is something that pkglint cannot do right now, since the global tools
 // are loaded once for all packages.
 //
-// Therefore there is a workaround for USE_CMAKE.
+// Therefore, there is a workaround for USE_CMAKE.
 //
 // See mk/tools/cmake.mk.
 func (s *Suite) Test_Tools__cmake(c *check.C) {

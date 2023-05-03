@@ -315,7 +315,7 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 	test("#VAR=value", true, "VAR", "", "=", "#VAR=", "value", "", "")
 
 	// A single space is typically used for writing documentation, not for commenting out code.
-	// Therefore this line doesn't count as commented variable assignment.
+	// Therefore, this line doesn't count as commented variable assignment.
 	testInvalid("# VAR=value")
 
 	// Ensure that the alignment for the variable value is correct.
@@ -1179,7 +1179,7 @@ func (s *Suite) Test_MkLineParser_unescapeComment(c *check.C) {
 		"")
 
 	// An even number of backslashes does not escape the #.
-	// Therefore it starts a comment here.
+	// Therefore, it starts a comment here.
 	test("VAR2=\t\\\\#comment",
 		"VAR2=\t\\\\",
 		"#comment")

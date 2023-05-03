@@ -154,7 +154,7 @@ func (s *Suite) Test_Package__using_common_Makefile_overriding_DISTINFO_FILE(c *
 
 	// The DISTINFO_FILE definition from pinentry-fltk overrides
 	// the one from pinentry since it appears later.
-	// Therefore the patch is searched for at the right location.
+	// Therefore, the patch is searched for at the right location.
 	t.CheckOutputEmpty()
 }
 
@@ -967,7 +967,7 @@ func (s *Suite) Test_Package_parse__relative(c *check.C) {
 }
 
 // When a buildlink3.mk file is included, the corresponding builtin.mk
-// file is included by the pkgsrc infrastructure. Therefore all variables
+// file is included by the pkgsrc infrastructure. Therefore, all variables
 // declared in the builtin.mk file become known in the package.
 func (s *Suite) Test_Package_parse__builtin_mk(c *check.C) {
 	t := s.Init(c)
@@ -1178,7 +1178,7 @@ func (s *Suite) Test_Package_shouldDiveInto(c *check.C) {
 	}
 
 	// The variables that appear in these files are largely modeled by
-	// pkglint in the file vardefs.go. Therefore parsing these files again
+	// pkglint in the file vardefs.go. Therefore, parsing these files again
 	// doesn't make much sense.
 	test("Makefile", "../../mk/bsd.pkg.mk", false)
 	test("Makefile", "../../mk/bsd.prefs.mk", false)
@@ -1962,7 +1962,7 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__redundancy_in_infra(c *ch
 }
 
 // When a package defines PLIST_SRC, it may or may not use the
-// PLIST file from the package directory. Therefore the check
+// PLIST file from the package directory. Therefore, the check
 // is skipped completely.
 func (s *Suite) Test_Package_checkPlist__PLIST_SRC(c *check.C) {
 	t := s.Init(c)
@@ -3114,12 +3114,12 @@ func (s *Suite) Test_Package_pkgnameFromDistname(c *check.C) {
 	test("${DISTNAME:S|a|b|g}", "panama-0.13", "pbnbmb-0.13")
 
 	// The substitution succeeds, but the substituted value is missing
-	// the package version. Therefore it is discarded completely.
+	// the package version. Therefore, it is discarded completely.
 	test("${DISTNAME:S|^lib||}", "libncurses", "")
 
 	// The substitution does not have an effect.
 	// The substituted value is missing the package version.
-	// Therefore it is discarded completely.
+	// Therefore, it is discarded completely.
 	test("${DISTNAME:S|^lib||}", "mylib", "",
 		"NOTE: ~/category/package/Makefile:4: The modifier :S|^lib|| does not have an effect.")
 
@@ -3572,7 +3572,7 @@ func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__file_but_not_package
 
 // Several files from the pkgsrc infrastructure are named *.buildlink3.mk,
 // even though they don't follow the typical file format for buildlink3.mk
-// files. Therefore they are ignored by this check.
+// files. Therefore, they are ignored by this check.
 func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__infra_buildlink_file(c *check.C) {
 	t := s.Init(c)
 

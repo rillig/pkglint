@@ -633,7 +633,7 @@ func (s *Suite) Test_MkVarUseChecker_checkPermissions__explain(c *check.C) {
 		"WARN: options.mk:3: PKGBASE should not be used at load time in any file.",
 		"",
 		"\tMany variables, especially lists of something, get their values",
-		"\tincrementally. Therefore it is generally unsafe to rely on their",
+		"\tincrementally. Therefore, it is generally unsafe to rely on their",
 		"\tvalue until it is clear that it will never change again. This point",
 		"\tis reached when the whole package Makefile is loaded and execution",
 		"\tof the shell commands starts; in some cases earlier.",
@@ -889,7 +889,7 @@ func (s *Suite) Test_MkVarUseChecker_checkPermissions__assigned_to_infrastructur
 	// side of an assignment since pkglint assumes that the right-hand
 	// side may now be evaluated at load time.
 	//
-	// Therefore the check is skipped when such a variable appears at the
+	// Therefore, the check is skipped when such a variable appears at the
 	// left-hand side of an assignment.
 	//
 	// Even in this case involving an unknown infrastructure variable,
@@ -1263,7 +1263,7 @@ func (s *Suite) Test_MkVarUseChecker_checkQuoting(c *check.C) {
 	mklines.Check()
 
 	// For WRKSRC and GOPATH, no quoting is necessary since pkgsrc directories by
-	// definition don't contain special characters. Therefore they don't need the
+	// definition don't contain special characters. Therefore, they don't need the
 	// :Q, not even when used as part of a shell word.
 
 	// For PATH, the quoting is necessary because it may contain directories outside

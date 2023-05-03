@@ -212,7 +212,7 @@ func (ck *Buildlink3Checker) checkVarUse(varUse *MkVarUse, mkline *MkLine) {
 		mkline.Explain(
 			"The buildlink3.mk file of a package is only ever included",
 			"by other packages, never by the package itself.",
-			"Therefore it does not make sense to use the variable PKG_OPTIONS",
+			"Therefore, it does not make sense to use the variable PKG_OPTIONS",
 			"in this place since it contains the package options of a random",
 			"package that happens to include this file.",
 			"",

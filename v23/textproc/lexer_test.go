@@ -83,7 +83,7 @@ func (s *Suite) Test_Lexer_Skip(c *check.C) {
 	c.Check(lexer.Rest(), equals, " text")
 
 	// Skipping a fixed number of bytes only makes sense when the
-	// lexer has examined every one of them before. Therefore no
+	// lexer has examined every one of them before. Therefore, no
 	// extra check is done here, and panicking here is intentional.
 	c.Check(
 		func() { lexer.Skip(6) },

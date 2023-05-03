@@ -39,7 +39,7 @@ func (p *Paragraph) Align() {
 // values start in the same column. Variable assignments that are commented
 // out are also realigned.
 //
-// No warning or note is logged. Therefore this method must only be used to
+// No warning or note is logged. Therefore, this method must only be used to
 // realign the whole paragraph after one of its lines has been modified.
 func (p *Paragraph) AlignTo(column int) {
 	p.ForEach(func(mkline *MkLine) {

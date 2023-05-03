@@ -341,7 +341,7 @@ func (s *Suite) Test_MkLines_Check__indentation(c *check.C) {
 
 // The .include directives do not need to be indented. They have the
 // syntactical form of directives but cannot be nested in a single file.
-// Therefore they may be either indented at the correct indentation depth
+// Therefore, they may be either indented at the correct indentation depth
 // or not indented at all.
 func (s *Suite) Test_MkLines_Check__indentation_include(c *check.C) {
 	t := s.Init(c)
@@ -941,11 +941,11 @@ func (s *Suite) Test_MkLines_checkAll__PLIST_VARS_indirect(c *check.C) {
 	mklines.Check()
 
 	// As of November 2018, pkglint doesn't analyze the .if 0 block.
-	// Therefore it doesn't know that the option1 block will never match because of the 0.
+	// Therefore, it doesn't know that the option1 block will never match because of the 0.
 	// This is ok though since it could be a temporary workaround from the package maintainer.
 	//
 	// As of November 2018, pkglint doesn't analyze the .for loop.
-	// Therefore it doesn't know that an .if block for option3 is missing.
+	// Therefore, it doesn't know that an .if block for option3 is missing.
 	t.CheckOutputEmpty()
 }
 

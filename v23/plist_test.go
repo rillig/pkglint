@@ -582,7 +582,7 @@ func (s *Suite) Test_PlistChecker_checkLine(c *check.C) {
 		"$prefix/bin",
 
 		// This line does not count as a PLIST condition since it has
-		// a :Q modifier, which does not work in PLISTs. Therefore the
+		// a :Q modifier, which does not work in PLISTs. Therefore, the
 		// ${PLIST.man:Q} is considered part of the filename.
 		"${PLIST.man:Q}man/cat3/strlcpy.3",
 		"<<<<<<<<< merge conflict")

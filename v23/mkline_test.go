@@ -1206,7 +1206,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__uncovered_cases(c *check.C) {
 		"WARN: ~/Makefile:4: LINKER_RPATH_FLAG should not be used at load time in any file.",
 		"",
 		"\tMany variables, especially lists of something, get their values",
-		"\tincrementally. Therefore it is generally unsafe to rely on their",
+		"\tincrementally. Therefore, it is generally unsafe to rely on their",
 		"\tvalue until it is clear that it will never change again. This point",
 		"\tis reached when the whole package Makefile is loaded and execution",
 		"\tof the shell commands starts; in some cases earlier.",
@@ -1239,7 +1239,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__uncovered_cases(c *check.C) {
 		"WARN: ~/Makefile:6: PREFIX should not be used at load time in any file.",
 		"",
 		"\tMany variables, especially lists of something, get their values",
-		"\tincrementally. Therefore it is generally unsafe to rely on their",
+		"\tincrementally. Therefore, it is generally unsafe to rely on their",
 		"\tvalue until it is clear that it will never change again. This point",
 		"\tis reached when the whole package Makefile is loaded and execution",
 		"\tof the shell commands starts; in some cases earlier.",
@@ -1518,7 +1518,7 @@ func (s *Suite) Test_Indentation_Varnames__repetition(c *check.C) {
 }
 
 // Multiple-inclusion guards are too technical to be of any use on
-// the application level. Therefore they are filtered out early, in
+// the application level. Therefore, they are filtered out early, in
 // Indentation.AddVar.
 func (s *Suite) Test_Indentation_Varnames__guard(c *check.C) {
 	t := s.Init(c)
@@ -1574,7 +1574,7 @@ func (s *Suite) Test_Indentation_TrackAfter__lonely_else(c *check.C) {
 	mklines.Check()
 
 	// Surprisingly, pkglint doesn't report an error about this trivial bug.
-	// This will be caught by bmake, though. Therefore the only purpose of
+	// This will be caught by bmake, though. Therefore, the only purpose of
 	// this test is the branch coverage in the "top.mkline != nil" case.
 	t.CheckOutputEmpty()
 }

@@ -865,9 +865,9 @@ func (s *Suite) Test_VartypeCheck_Enum__use_match(c *check.C) {
 			"compared using the simpler \"${MACHINE_ARCH} == i386\" "+
 			"instead of matching against \":Mi386\".",
 		"",
-		"\tThis variable has a single value, not a list of values. Therefore it",
-		"\tfeels strange to apply list operators like :M and :N onto it. A more",
-		"\tdirect approach is to use the == and != operators.",
+		"\tThis variable has a single value, not a list of values. Therefore,",
+		"\tit feels strange to apply list operators like :M and :N onto it. A",
+		"\tmore direct approach is to use the == and != operators.",
 		"",
 		"\tAn entirely different case is when the pattern contains wildcards",
 		"\tlike *, ?, []. In such a case, using the :M or :N modifiers is",
@@ -1059,7 +1059,7 @@ func (s *Suite) Test_VartypeCheck_Filename(c *check.C) {
 		"Filename with spaces.docx")
 
 	// There's no guarantee that a filename only contains [A-Za-z0-9.].
-	// Therefore there are no useful checks in this situation.
+	// Therefore, there are no useful checks in this situation.
 	vt.Output(
 		"WARN: filename.mk:11: The filename pattern \"Filename with spaces.docx\" " +
 			"contains the invalid characters \"  \".")
@@ -1089,7 +1089,7 @@ func (s *Suite) Test_VartypeCheck_FilePattern(c *check.C) {
 		"FilePattern with spaces.docx")
 
 	// There's no guarantee that a filename only contains [A-Za-z0-9.].
-	// Therefore it might be necessary to allow all characters here.
+	// Therefore, it might be necessary to allow all characters here.
 	// TODO: Investigate whether this restriction is useful in practice.
 	vt.Output(
 		"WARN: filename.mk:11: The filename pattern \"FilePattern with spaces.docx\" " +
@@ -1118,7 +1118,7 @@ func (s *Suite) Test_VartypeCheck_FileMode(c *check.C) {
 		"u+rwx")
 
 	// There's no guarantee that a filename only contains [A-Za-z0-9.].
-	// Therefore there are no useful checks in this situation.
+	// Therefore, there are no useful checks in this situation.
 	vt.Output(
 		"WARN: filename.mk:11: Invalid file mode \"u+rwx\".")
 }

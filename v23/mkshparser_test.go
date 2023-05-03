@@ -689,7 +689,7 @@ func (s *ShSuite) Test_parseShellProgram__redirect_list(c *check.C) {
 
 func (s *ShSuite) Test_parseShellProgram__io_here(c *check.C) {
 	// In pkgsrc Makefiles, the IO here-documents cannot be used since
-	// all the text is joined into a single line. Therefore these test
+	// all the text is joined into a single line. Therefore, these test
 	// cases only show that pkglint can indeed not parse <<EOF
 	// redirections.
 	b := s.init(c)

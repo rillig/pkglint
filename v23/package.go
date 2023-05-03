@@ -93,7 +93,7 @@ func NewPackage(dir CurrPath) *Package {
 
 	// Package directory must be two subdirectories below the pkgsrc root.
 	// As of November 2019, it is technically possible to create packages
-	// on different levels, but that is not used at all. Therefore all
+	// on different levels, but that is not used at all. Therefore, all
 	// relative directories are in the form "../../category/package".
 	assert(pkgpath.Count() == 2)
 

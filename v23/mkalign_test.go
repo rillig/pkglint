@@ -244,7 +244,7 @@ func (s *Suite) Test_MkAlignLine_IsCanonicalFollow(c *check.C) {
 	// After indenting it, it is 72 characters wide,
 	// which is just beyond the maximum right border
 	// for lines without a continuation backslash.
-	// Therefore it counts as canonical.
+	// Therefore, it counts as canonical.
 	//
 	// XXX: Is it really worth having this rule?
 	//  It may be equally ok to just have the continuation

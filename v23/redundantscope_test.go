@@ -317,7 +317,7 @@ func (s *Suite) Test_RedundantScope__after_including_same_value(c *check.C) {
 	test("?=", "+=")
 
 	// VAR.def.evl introduces a subtle difference since := evaluates the variable immediately.
-	// Therefore the assignment is not redundant.
+	// Therefore, the assignment is not redundant.
 	test("?=", ":=")
 
 	test("=", "?=",
@@ -1343,7 +1343,7 @@ func (s *Suite) Test_RedundantScope__shell_then_assign(c *check.C) {
 
 	// Although the two variable assignments look very similar, they do
 	// something entirely different. The first executes the echo command,
-	// and the second just assigns a string. Therefore the actual variable
+	// and the second just assigns a string. Therefore, the actual variable
 	// values are different, and the second assignment is not redundant.
 	// It assigns a different value. Nevertheless, the shell command is
 	// redundant and can be removed since its result is never used.
@@ -1395,7 +1395,7 @@ func (s *Suite) Test_RedundantScope__conditionally_included_file(c *check.C) {
 	NewRedundantScope().Check(get("including.mk"))
 
 	// The assignment in including.mk:2 is only redundant if included.mk is actually included.
-	// Therefore both included.mk:2 nor including.mk:2 are relevant.
+	// Therefore, both included.mk:2 nor including.mk:2 are relevant.
 	t.CheckOutputEmpty()
 }
 
@@ -1541,7 +1541,7 @@ func (s *Suite) Test_RedundantScope_handleVarassign__overwrite_definition_from_i
 	// defined.
 	//
 	// The variable definition at included.mk didn't modify this include path.
-	// Therefore pkglint wrongly assumed that this variable was only ever
+	// Therefore, pkglint wrongly assumed that this variable was only ever
 	// accessed in including.mk and issued a warning.
 	//
 	// To fix this, the RedundantScope now remembers every access to the
@@ -1686,7 +1686,7 @@ func (s *Suite) Test_RedundantScope_checkAppendUnique__redundant_and_later_condi
 	// Even though the "chinese" category is conditional, pkglint can
 	// diagnose that everything that happens before that conditional
 	// assignment adds to the constant value of the variable.
-	// Therefore it flags the duplicate category "python".
+	// Therefore, it flags the duplicate category "python".
 	t.CheckOutputLines(
 		"NOTE: included.mk:2: Adding \"python\" to CATEGORIES is redundant " +
 			"because it will later be appended in line 3.")

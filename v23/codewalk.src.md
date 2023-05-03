@@ -80,7 +80,7 @@ end    ^\t\}$
 ```
 
 In this example, there are no command line options starting with a hyphen.
-Therefore the main part of `ParseCommandLine` can be skipped.
+Therefore, the main part of `ParseCommandLine` can be skipped.
 The one remaining command line argument is `DESCR`,
 and that is saved in `pkglint.Todo`, which contains all items that still need to be checked.
 The default use case for pkglint is to check the package from the
@@ -170,7 +170,7 @@ First, each line is checked on its own,
 and the final check is for too long files.
 Pkglint takes great care to output all diagnostics in a logical order,
 that is file by file, and top to bottom within each file.
-Therefore the checks for individual lines happen before the other check.
+Therefore, the checks for individual lines happen before the other check.
 
 The call to `SaveAutofixChanges` at the end looks a bit strange
 since none of the visible checks fixes anything.

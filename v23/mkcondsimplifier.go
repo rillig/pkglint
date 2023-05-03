@@ -110,7 +110,7 @@ func (s *MkCondSimplifier) simplifyWord(varuse *MkVarUse, fromEmpty bool, neg bo
 		varname, to, ":"+modifier.String()) // TODO: Quoted
 	fix.Explain(
 		"This variable has a single value, not a list of values.",
-		"Therefore it feels strange to apply list operators like :M and :N onto it.",
+		"Therefore, it feels strange to apply list operators like :M and :N onto it.",
 		"A more direct approach is to use the == and != operators.",
 		"",
 		"An entirely different case is when the pattern contains",
@@ -300,7 +300,7 @@ func (s *MkCondSimplifier) simplifyMatch(varuse *MkVarUse, fromEmpty bool, neg b
 	fix.Notef("%q can be simplified to %q.", from, to)
 	fix.Explain(
 		"This variable is guaranteed to be defined at this point.",
-		"Therefore it may occur on the left-hand side of a comparison",
+		"Therefore, it may occur on the left-hand side of a comparison",
 		"and doesn't have to be guarded by the function 'empty'.")
 	fix.Replace(from, to)
 	fix.Apply()

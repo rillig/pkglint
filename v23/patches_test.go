@@ -170,7 +170,7 @@ func (s *Suite) Test_CheckLinesPatch__wrong_header_order(c *check.C) {
 		"WARN: patch-WrongOrder:7: Unified diff headers should be first ---, then +++.")
 }
 
-// Context diffs are old and deprecated. Therefore pkglint doesn't check them thoroughly.
+// Context diffs are old and deprecated. Therefore, pkglint doesn't check them thoroughly.
 func (s *Suite) Test_CheckLinesPatch__context_diff(c *check.C) {
 	t := s.Init(c)
 

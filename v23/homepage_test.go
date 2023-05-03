@@ -264,7 +264,7 @@ func (s *Suite) Test_HomepageChecker_migrate(c *check.C) {
 		"")
 
 	// Since the URL contains a variable, it cannot be resolved.
-	// Therefore it is skipped without sending any HTTP request.
+	// Therefore, it is skipped without sending any HTTP request.
 	test(
 		"http://godoc.org/${GO_SRCPATH}",
 		false,

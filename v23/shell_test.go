@@ -1619,7 +1619,7 @@ func (s *Suite) Test_ShellLineChecker_checkWordQuoting(c *check.C) {
 
 	// This variable is typically defined by GNU Configure,
 	// which cannot handle directories with special characters.
-	// Therefore using it unquoted is considered safe.
+	// Therefore, using it unquoted is considered safe.
 	test(
 		"${PREFIX}/$$bindir/program",
 		nil...)
@@ -1831,7 +1831,7 @@ func (s *Suite) Test_ShellLineChecker_variableNeedsQuoting(c *check.C) {
 	test("$", false) // The PID is always an integer.
 
 	// In most cases, file and directory names don't contain special characters,
-	// and if they do, the package will probably not build. Therefore pkglint
+	// and if they do, the package will probably not build. Therefore, pkglint
 	// doesn't require them to be quoted, but doing so does not hurt.
 	test("d", false)    // Typically used for directories.
 	test("f", false)    // Typically used for files.

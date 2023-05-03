@@ -172,7 +172,7 @@ func (s *Suite) Test_distinfoLinesChecker_check__manual_patches(c *check.C) {
 }
 
 // PHP modules that are not PECL use the distinfo file from lang/php* but
-// their own patches directory. Therefore the distinfo file refers to missing
+// their own patches directory. Therefore, the distinfo file refers to missing
 // patches. Since this strange situation is caused by the pkgsrc
 // infrastructure, there is nothing a package author can do.
 //

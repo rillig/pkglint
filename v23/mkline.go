@@ -739,7 +739,7 @@ func (mkline *MkLine) VariableNeedsQuoting(mklines *MkLines, varuse *MkVarUse, v
 	if varuse.HasModifier("D") {
 		// The :D modifier discards the value of the original variable and
 		// replaces it with the expression from the :D modifier.
-		// Therefore the original variable does not need to be quoted.
+		// Therefore, the original variable does not need to be quoted.
 		return unknown
 	}
 

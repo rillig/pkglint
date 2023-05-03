@@ -466,7 +466,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord__N(c *check.C) {
 	// If PKGPATH is "negative-pattern", the condition is false.
 	// In all other cases, the condition is true.
 	//
-	// Therefore this condition cannot simply be transformed into
+	// Therefore, this condition cannot simply be transformed into
 	// ${PKGPATH} != negative-pattern, since that would produce a
 	// different result in the case where PKGPATH is empty.
 	//

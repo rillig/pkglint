@@ -12,7 +12,7 @@ package pkglint
 //
 // TODO: This scope is not only used for detecting redundancies. It also
 // provides information about whether the variables are constant or depend on
-// other variables. Therefore the name may change soon.
+// other variables. Therefore, the name may change soon.
 type RedundantScope struct {
 	vars        map[string]*redundantScopeVarinfo
 	includePath includePath

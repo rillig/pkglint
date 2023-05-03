@@ -235,7 +235,7 @@ func (cv *VartypeCheck) Comment() {
 			cv.Warnf("COMMENT should not start with the package name.")
 			cv.Explain(
 				"The COMMENT is usually displayed together with the package name.",
-				"Therefore it does not need to repeat the package name but should",
+				"Therefore, it does not need to repeat the package name but should",
 				"provide additional information instead.")
 		}
 	}
@@ -610,7 +610,7 @@ func (cv *VartypeCheck) FetchURL() {
 		cv.Warnf("The fetch URL %q should end with a slash.", fetchURL)
 		cv.Explain(
 			"The filename from DISTFILES is appended directly to this base URL.",
-			"Therefore it should typically end with a slash, or sometimes with",
+			"Therefore, it should typically end with a slash, or sometimes with",
 			"an equals sign or a colon.",
 			"",
 			"To specify a full URL directly, prefix it with a hyphen, such as in",
@@ -1637,7 +1637,7 @@ func (cv *VartypeCheck) WrksrcPathPattern() {
 		fix.Notef("The pathname patterns in %s don't need to mention ${WRKSRC}.", cv.Varname)
 		fix.Explain(
 			"These pathname patters are interpreted relative to ${WRKSRC} by definition.",
-			"Therefore that part can be left out.")
+			"Therefore, that part can be left out.")
 		fix.Replace("${WRKSRC}/", "")
 		fix.Apply()
 	}
@@ -1697,7 +1697,7 @@ func (cv *VartypeCheck) Yes() {
 			cv.Explain(
 				"This variable means \"yes\" if it is defined, and \"no\" if it is undefined.",
 				"Even when it has the value \"no\", this means \"yes\".",
-				"Therefore when it is defined, its value should correspond to its meaning.")
+				"Therefore, when it is defined, its value should correspond to its meaning.")
 		}
 	}
 }

@@ -315,7 +315,7 @@ func (s *Suite) Test_MkVarUseModifier_ChangesList(c *check.C) {
 }
 
 // Ensures that ChangesList cannot be called with an empty string as modifier.
-// Therefore it is safe to index text[0] without a preceding length check.
+// Therefore, it is safe to index text[0] without a preceding length check.
 func (s *Suite) Test_MkVarUseModifier_ChangesList__empty(c *check.C) {
 	t := s.Init(c)
 

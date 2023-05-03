@@ -189,7 +189,7 @@ func (ck *MkCondChecker) checkCompareVarStr(varuse *MkVarUse, op string, str str
 			mkLineChecker.checkVartype(varname, opUseMatch, pattern, "")
 
 			// After applying the :M or :N modifier, every expression may end up empty,
-			// regardless of its data type. Therefore there's no point in type-checking that case.
+			// regardless of its data type. Therefore, there's no point in type-checking that case.
 			if str != "" {
 				mkLineChecker.checkVartype(varname, opUseCompare, str, "")
 			}

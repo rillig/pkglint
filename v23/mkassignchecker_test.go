@@ -434,7 +434,7 @@ func (s *Suite) Test_MkAssignChecker_checkLeftUserSettable__vartype_nil(c *check
 	G.Check(".")
 
 	// TODO: As of June 2019, pkglint doesn't parse the "User-settable variables"
-	//  comment. Therefore it doesn't know that USER_SETTABLE is intended to be
+	//  comment. Therefore, it doesn't know that USER_SETTABLE is intended to be
 	//  used by other packages. There should be no warning.
 	t.CheckOutputLines(
 		"WARN: Makefile:20: USER_SETTABLE is defined but not used.")
@@ -529,7 +529,7 @@ func (s *Suite) Test_MkAssignChecker_checkLeftPermissions__license_default(c *ch
 
 	mklines.Check()
 
-	// LICENSE is a package-settable variable. Therefore bsd.prefs.mk
+	// LICENSE is a package-settable variable. Therefore, bsd.prefs.mk
 	// does not need to be included before setting a default for this
 	// variable. Including bsd.prefs.mk is only necessary when setting a
 	// default value for user-settable or system-defined variables.

@@ -234,7 +234,7 @@ func (reg *VarTypeRegistry) usrlist(varname string, basicType *BasicType) {
 }
 
 // A few variables from mk/defaults/mk.conf may be overridden by packages.
-// Therefore they need a separate definition of "user-settable".
+// Therefore, they need a separate definition of "user-settable".
 //
 // It is debatable whether packages should be allowed to override these
 // variables at all since then there are two competing sources for the

@@ -1029,7 +1029,7 @@ func (s *Suite) Test_Logger_TechFatalf__trace(c *check.C) {
 }
 
 // Technical errors are not diagnostics.
-// Therefore --gcc-output-format has no effect on them.
+// Therefore, --gcc-output-format has no effect on them.
 func (s *Suite) Test_Logger_TechErrorf__gcc_format(c *check.C) {
 	t := s.Init(c)
 
@@ -1221,7 +1221,7 @@ func (s *Suite) Test_Logger_ShowSummary__autofix_available_with_autofix_option(c
 	// Mentioning the --show-autofix option would be pointless here since the
 	// usual path goes from default mode via --show-autofix to --autofix.
 	// The usual "x warnings" would also be misleading since the warnings have just
-	// been fixed by the autofix feature. Therefore the output is completely empty.
+	// been fixed by the autofix feature. Therefore, the output is completely empty.
 	t.CheckOutputEmpty()
 }
 
