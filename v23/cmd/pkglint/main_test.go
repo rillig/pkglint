@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -41,7 +40,7 @@ func (s *Suite) Test_main(c *check.C) {
 	err = out.Close()
 	c.Assert(err, check.IsNil)
 
-	output, err := ioutil.ReadFile(out.Name())
+	output, err := os.ReadFile(out.Name())
 	c.Assert(err, check.IsNil)
 
 	c.Check(string(output), check.Matches, `^(@VERSION@|\d+(\.\d+)+(nb\d+)?)\n$`)

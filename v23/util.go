@@ -302,17 +302,17 @@ func isEmptyDir(filename CurrPath) bool {
 		return true
 	}
 
-	dirents, err := filename.ReadDir()
+	entries, err := filename.ReadDir()
 	if err != nil {
 		return true // XXX: Why not false?
 	}
 
-	for _, dirent := range dirents {
-		name := dirent.Name()
+	for _, entry := range entries {
+		name := entry.Name()
 		if isIgnoredFilename(name) {
 			continue
 		}
-		if dirent.IsDir() && isEmptyDir(filename.JoinNoClean(NewRelPathString(name))) {
+		if entry.IsDir() && isEmptyDir(filename.JoinNoClean(NewRelPathString(name))) {
 			continue
 		}
 		return false
@@ -321,15 +321,15 @@ func isEmptyDir(filename CurrPath) bool {
 }
 
 func getSubdirs(filename CurrPath) []RelPath {
-	dirents, err := filename.ReadDir()
+	entries, err := filename.ReadDir()
 	if err != nil {
 		G.Logger.TechFatalf(filename, "Cannot be read: %s", err)
 	}
 
 	var subdirs []RelPath
-	for _, dirent := range dirents {
-		name := dirent.Name()
-		if dirent.IsDir() && !isIgnoredFilename(name) && !isEmptyDir(filename.JoinNoClean(NewRelPathString(name))) {
+	for _, entry := range entries {
+		name := entry.Name()
+		if entry.IsDir() && !isIgnoredFilename(name) && !isEmptyDir(filename.JoinNoClean(NewRelPathString(name))) {
 			subdirs = append(subdirs, NewRelPathString(name))
 		}
 	}

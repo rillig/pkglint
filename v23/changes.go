@@ -18,14 +18,14 @@ type Changes struct {
 
 func (ch *Changes) load(src *Pkgsrc) {
 	docDir := src.File("doc")
-	files := src.ReadDir("doc")
-	if len(files) == 0 {
+	entries := src.ReadDir("doc")
+	if len(entries) == 0 {
 		G.Logger.TechFatalf(docDir, "Cannot be read for loading the package changes.")
 	}
 
 	var filenames []RelPath
-	for _, file := range files {
-		filename := file.Name()
+	for _, entry := range entries {
+		filename := entry.Name()
 		// Files before 2011 are too far in the past to be still relevant today.
 		if matches(filename, `^CHANGES-20\d\d$`) && filename >= "CHANGES-2011" {
 			filenames = append(filenames, NewRelPathString(filename))

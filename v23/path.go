@@ -1,7 +1,6 @@
 package pkglint
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -348,19 +347,19 @@ func (p CurrPath) Chmod(mode os.FileMode) error {
 	return os.Chmod(string(p), mode)
 }
 
-func (p CurrPath) ReadDir() ([]os.FileInfo, error) {
-	return ioutil.ReadDir(string(p))
+func (p CurrPath) ReadDir() ([]os.DirEntry, error) {
+	return os.ReadDir(string(p))
 }
 
 func (p CurrPath) ReadPaths() []CurrPath {
-	infos, err := p.ReadDir()
+	entries, err := p.ReadDir()
 	if err != nil {
 		return nil
 	}
 	var filenames []CurrPath
-	for _, info := range infos {
-		if !isIgnoredFilename(info.Name()) {
-			joined := p.JoinNoClean(NewRelPathString(info.Name())).CleanPath()
+	for _, entry := range entries {
+		if !isIgnoredFilename(entry.Name()) {
+			joined := p.JoinNoClean(NewRelPathString(entry.Name())).CleanPath()
 			filenames = append(filenames, joined)
 		}
 	}
@@ -370,12 +369,12 @@ func (p CurrPath) ReadPaths() []CurrPath {
 func (p CurrPath) Open() (*os.File, error) { return os.Open(string(p)) }
 
 func (p CurrPath) ReadString() (string, error) {
-	bytes, err := ioutil.ReadFile(string(p))
+	bytes, err := os.ReadFile(string(p))
 	return string(bytes), err
 }
 
 func (p CurrPath) WriteString(s string) error {
-	return ioutil.WriteFile(string(p), []byte(s), 0666)
+	return os.WriteFile(string(p), []byte(s), 0666)
 }
 
 // PkgsrcPath is a path relative to the pkgsrc root.

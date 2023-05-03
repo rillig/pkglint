@@ -7,7 +7,7 @@ import (
 	"go/parser"
 	"go/token"
 	"gopkg.in/check.v1"
-	"io/ioutil"
+	"io"
 	"path"
 	"strings"
 	"testing"
@@ -31,7 +31,7 @@ func (s *Suite) Init(c *check.C) *QAChecker {
 
 	s.c = c
 	s.ck = NewQAChecker(errorf)
-	s.ck.out = ioutil.Discard
+	s.ck.out = io.Discard
 	return s.ck
 }
 

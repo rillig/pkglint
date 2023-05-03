@@ -2,7 +2,6 @@ package pkglint
 
 import (
 	"gopkg.in/check.v1"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -1078,10 +1077,10 @@ func (s *Suite) Test_Pkglint_checkReg__readme_and_todo(c *check.C) {
 			if info.Mode().IsRegular() {
 				src := filepath.ToSlash(pathname)
 				dst := strings.Replace(src, "category/package", "wip/package", 1)
-				data, e := ioutil.ReadFile(src)
+				data, e := os.ReadFile(src)
 				t.CheckNil(e)
 				_ = os.MkdirAll(path.Dir(dst), 0700)
-				e = ioutil.WriteFile(dst, data, 0600)
+				e = os.WriteFile(dst, data, 0600)
 				t.CheckNil(e)
 			}
 			return err

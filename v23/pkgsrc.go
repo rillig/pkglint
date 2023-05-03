@@ -693,8 +693,8 @@ func (src *Pkgsrc) ListVersions(category PkgsrcPath, re regex.Pattern, repl stri
 
 	var names []string
 	dir := src.File(category)
-	for _, fileInfo := range src.ReadDir(category) {
-		name := fileInfo.Name()
+	for _, entry := range src.ReadDir(category) {
+		name := entry.Name()
 		if matches(name, re) && !isEmptyDir(dir.JoinNoClean(NewRelPathString(name))) {
 			names = append(names, name)
 		}
@@ -861,8 +861,8 @@ func (src *Pkgsrc) checkToplevelUnusedLicenses() {
 	}
 
 	licensesDir := src.File("licenses")
-	for _, licenseFile := range src.ReadDir("licenses") {
-		licenseName := licenseFile.Name()
+	for _, licenseEntry := range src.ReadDir("licenses") {
+		licenseName := licenseEntry.Name()
 		if !G.InterPackage.IsLicenseUsed(licenseName) {
 			licensePath := licensesDir.JoinNoClean(NewRelPathString(licenseName))
 			NewLineWhole(licensePath).Warnf("This license seems to be unused.")
@@ -903,18 +903,18 @@ func (src *Pkgsrc) IsOpsysVar(varbase string) bool {
 //
 // The result may contain empty directories that are left over from CVS.
 // For performance reasons, the caller needs to filter these out; see isEmptyDir.
-func (src *Pkgsrc) ReadDir(dirName PkgsrcPath) []os.FileInfo {
+func (src *Pkgsrc) ReadDir(dirName PkgsrcPath) []os.DirEntry {
 	dir := src.File(dirName)
-	files, err := dir.ReadDir()
+	entries, err := dir.ReadDir()
 	if err != nil {
 		return nil
 	}
 
-	var relevantFiles []os.FileInfo
-	for _, dirent := range files {
-		name := dirent.Name()
-		if !dirent.IsDir() || !isIgnoredFilename(name) {
-			relevantFiles = append(relevantFiles, dirent)
+	var relevantFiles []os.DirEntry
+	for _, entry := range entries {
+		name := entry.Name()
+		if !entry.IsDir() || !isIgnoredFilename(name) {
+			relevantFiles = append(relevantFiles, entry)
 		}
 	}
 

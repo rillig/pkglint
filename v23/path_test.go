@@ -948,16 +948,16 @@ func (s *Suite) Test_CurrPath_ReadDir(c *check.C) {
 	t.CreateFileLines(".git/info/exclude")
 	t.Chdir(".")
 
-	test := func(curr CurrPath, entries ...string) {
-		infos, err := curr.ReadDir()
+	test := func(curr CurrPath, entryNames ...string) {
+		entries, err := curr.ReadDir()
 		assertNil(err, "ReadDir")
 
 		var names []string
-		for _, info := range infos {
-			names = append(names, info.Name())
+		for _, entry := range entries {
+			names = append(names, entry.Name())
 		}
 
-		t.CheckDeepEquals(names, entries)
+		t.CheckDeepEquals(names, entryNames)
 	}
 
 	test(".",

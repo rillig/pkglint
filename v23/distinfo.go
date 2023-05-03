@@ -327,7 +327,7 @@ func (ck *distinfoLinesChecker) checkUnrecordedPatches() {
 	if ck.pkg == nil {
 		return
 	}
-	patchFiles, err := ck.pkg.File(ck.patchdir).ReadDir()
+	patchEntries, err := ck.pkg.File(ck.patchdir).ReadDir()
 	if err != nil {
 		if trace.Tracing {
 			trace.Stepf("Cannot read patchdir %q: %s", ck.patchdir, err)
@@ -335,9 +335,9 @@ func (ck *distinfoLinesChecker) checkUnrecordedPatches() {
 		return
 	}
 
-	for _, file := range patchFiles {
-		patchName := NewRelPathString(file.Name())
-		if file.Mode().IsRegular() && ck.infos[patchName].isPatch != yes && patchName.HasPrefixText("patch-") {
+	for _, entry := range patchEntries {
+		patchName := NewRelPathString(entry.Name())
+		if entry.Type().IsRegular() && ck.infos[patchName].isPatch != yes && patchName.HasPrefixText("patch-") {
 			line := NewLineWhole(ck.lines.Filename)
 			line.Errorf("Patch %q is not recorded. Run %q.",
 				line.Rel(ck.pkg.File(ck.patchdir.JoinNoClean(patchName))),

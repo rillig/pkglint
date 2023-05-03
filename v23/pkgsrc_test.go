@@ -869,11 +869,11 @@ func (s *Suite) Test_Pkgsrc_ReadDir(c *check.C) {
 	t.CreateFileLines("dir/CVS/Entries")
 	t.CreateFileLines("dir/empty/empty/empty/empty/CVS/Entries")
 
-	infos := G.Pkgsrc.ReadDir("dir")
+	entries := G.Pkgsrc.ReadDir("dir")
 
 	var names []string
-	for _, info := range infos {
-		names = append(names, info.Name())
+	for _, entry := range entries {
+		names = append(names, entry.Name())
 	}
 
 	t.CheckDeepEquals(names, []string{"aaa-subdir", "empty", "file", "subdir"})

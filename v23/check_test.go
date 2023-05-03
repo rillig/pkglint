@@ -6,7 +6,6 @@ import (
 	"github.com/rillig/pkglint/v23/intqa"
 	"github.com/rillig/pkglint/v23/regex"
 	"io"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"sort"
@@ -1327,7 +1326,7 @@ func (t *Tester) EnableTracingToLog() {
 // cannot check them.
 func (t *Tester) EnableSilentTracing() {
 	G.Logger.out = NewSeparatorWriter(&t.stdout)
-	trace.Out = ioutil.Discard
+	trace.Out = io.Discard
 	trace.Tracing = true
 }
 
