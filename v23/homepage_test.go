@@ -181,7 +181,7 @@ func (s *Suite) Test_HomepageChecker_migrate(c *check.C) {
 			[]interface{}{actualMigrate, actualFrom, actualTo},
 			[]interface{}{migrate, from, to})
 
-		for key, _ := range reachable {
+		for key := range reachable {
 			assertf(used[key], "Reachability of %q was not used.", key)
 			delete(reachable, key)
 		}

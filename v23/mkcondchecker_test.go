@@ -816,7 +816,7 @@ func (s *Suite) Test_MkCondChecker_collectFacts(c *check.C) {
 		}
 	})
 
-	for i, _ := range facts {
+	for i := range facts {
 		facts[i].Matches = nil // these would just complicate the comparison
 	}
 	t.CheckDeepEquals(facts, []VarFact{
