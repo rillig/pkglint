@@ -916,7 +916,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 		})
 
 	// The character [ prevents the following # from starting a comment, even
-	// outside of variable modifiers.
+	// outside variable modifiers.
 	test("COMMENT=\t[#] $$\\# $$# comment",
 		mkLineSplitResult{
 			main:       "COMMENT=\t[#] $$# $$",
@@ -1123,7 +1123,7 @@ func (s *Suite) Test_MkLineParser_unescapeComment(c *check.C) {
 		"")
 
 	// The character [ prevents the following # from starting a comment, even
-	// outside of variable modifiers.
+	// outside variable modifiers.
 	test("COMMENT=\t[#] $$\\# $$# comment",
 		"COMMENT=\t[#] $$# $$",
 		"# comment")

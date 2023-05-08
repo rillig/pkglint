@@ -254,9 +254,9 @@ func (lex *ShellLexer) Lex(lval *shyySymType) (ttype int) {
 		lex.atCommandStart = false
 
 		// Inside a case statement, ${PATTERNS:@p@ (${p}) continue ;; @} expands to
-		// a list of case-items, and after this list a new command starts.
-		// This is necessary to return a following "esac" as tkESAC instead of a
-		// simple word.
+		// a list of case-items, and after this list, a new command starts.
+		// This special handling is necessary to return the "esac" that follows as
+		// tkESAC instead of a simple word.
 		if lex.sinceCase >= 0 && len(lval.Word.Atoms) == 1 {
 			if varUse := lval.Word.Atoms[0].VarUse(); varUse != nil {
 				if len(varUse.modifiers) > 0 {

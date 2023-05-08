@@ -24,7 +24,7 @@ func (p *MkParser) Rest() string {
 
 // NewMkParser creates a new parser for the given text.
 //
-// If line is given, it is used for reporting parse errors and warnings.
+// If diag is given, it is used for reporting parse errors and warnings.
 // Otherwise, parsing is silent.
 //
 // The text argument is assumed to be after unescaping the # character,

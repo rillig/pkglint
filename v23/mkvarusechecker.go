@@ -281,7 +281,7 @@ func (ck *MkVarUseChecker) checkPermissions(vuc *VarUseContext) {
 	// This is the type of the variable that is being used. Not to
 	// be confused with vuc.vartype, which is the type of the
 	// context in which the variable is used (often a ShellCommand
-	// or, in an assignment, the type of the left hand side variable).
+	// or, in an assignment, the type of the left-hand side variable).
 	varname := ck.use.varname
 	vartype := ck.vartype
 	if vartype == nil {
@@ -338,7 +338,7 @@ func (ck *MkVarUseChecker) checkPermissions(vuc *VarUseContext) {
 	}
 
 	if directly || indirectly {
-		// At this point, the variable is used at load time although that
+		// At this point, the variable is used at load time, although that
 		// is not allowed by the permissions. The variable could be a tool
 		// variable, and these tool variables have special rules.
 		tool := G.ToolByVarname(ck.MkLines, varname)
@@ -606,7 +606,7 @@ func (ck *MkVarUseChecker) checkQuoting(vuc *VarUseContext) {
 	mod := varUse.Mod()
 
 	// In GNU configure scripts, a few variables need to be passed through
-	// the :M* modifier before they reach the configure scripts. Otherwise
+	// the :M* modifier before they reach the configure scripts. Otherwise,
 	// the leading or trailing spaces will lead to strange caching errors
 	// since the GNU configure scripts cannot handle these space characters.
 	//

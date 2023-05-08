@@ -1757,7 +1757,7 @@ func (s *Suite) Test_VaralignBlock__var16_space_value_var2_tab_value(c *check.C)
 	vt.Run()
 }
 
-// Short space-indented lines do not count as outliers. They are are aligned to the longer tab-indented line.
+// Short space-indented lines do not count as outliers. They are aligned to the longer tab-indented line.
 func (s *Suite) Test_VaralignBlock__var2_space_value_var9_tab_value(c *check.C) {
 	vt := NewVaralignTester(s, c)
 	vt.Input(

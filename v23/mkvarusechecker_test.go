@@ -1267,7 +1267,7 @@ func (s *Suite) Test_MkVarUseChecker_checkQuoting(c *check.C) {
 	// :Q, not even when used as part of a shell word.
 
 	// For PATH, the quoting is necessary because it may contain directories outside
-	// of pkgsrc, and these may contain special characters.
+	// pkgsrc, and these may contain special characters.
 
 	t.CheckOutputLines(
 		"WARN: ~/options.mk:7: The variable PATH should be quoted as part of a shell word.")

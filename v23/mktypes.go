@@ -115,7 +115,7 @@ func (m MkVarUseModifier) Subst(str string) (bool, string) {
 	return ok, result
 }
 
-// mkopSubst evaluates make(1)'s :S substitution operator.
+// EvalSubst evaluates make(1)'s :S substitution operator.
 // It does not resolve any variables.
 func (MkVarUseModifier) EvalSubst(s string, left bool, from string, right bool, to string, flags string) (ok bool, result string) {
 
@@ -135,7 +135,7 @@ func (MkVarUseModifier) EvalSubst(s string, left bool, from string, right bool, 
 	})
 }
 
-// MatchMatch tries to match the modifier to a :M or a :N pattern matching.
+// MatchMatch tries to match the modifier to an :M or an :N pattern matching.
 // Examples:
 //
 //	modifier    =>   ok     positive  pattern    exact

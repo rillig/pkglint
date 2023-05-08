@@ -195,7 +195,7 @@ func (mklines *MkLines) collectDocumentedVariables() {
 	//  "list of" and other types.
 
 	finish := func() {
-		// The commentLines include the the line containing the variable name,
+		// The commentLines include the line containing the variable name,
 		// leaving 2 of these 3 lines for the actual documentation.
 		if commentLines >= 3 && relevant {
 			scope.forEach(func(varname string, data *scopeVar) {
@@ -479,7 +479,7 @@ func (mklines *MkLines) checkLine(
 
 	case mkline.IsVarassign():
 		mklines.checkAllData.target = ""
-		mkline.Tokenize(mkline.Value(), true) // Just for the side-effect of the warnings.
+		mkline.Tokenize(mkline.Value(), true) // Just for the side effect of the warnings.
 
 		mklines.checkVarassignPlist(mkline)
 		varname := mkline.Varname()
@@ -499,7 +499,7 @@ func (mklines *MkLines) checkLine(
 		mklines.checkAllData.target = mkline.Targets()
 
 	case mkline.IsShellCommand():
-		mkline.Tokenize(mkline.ShellCommand(), true) // Just for the side-effect of the warnings.
+		mkline.Tokenize(mkline.ShellCommand(), true) // Just for the side effect of the warnings.
 	}
 
 	if mklines.checkAllData.postLine != nil {

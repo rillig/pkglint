@@ -51,7 +51,7 @@ func (ch *Changes) parseFile(filename CurrPath, direct bool) []*Change {
 	warn := direct || G.CheckGlobal && !G.Wip
 
 	// Each date in the file should be from the same year as the filename says.
-	// This check has been added in 2018.
+	// This check was added in 2018.
 	// For years earlier than 2018, pkglint doesn't care because it's not a big issue anyway.
 	year := ""
 	if _, yyyy := match1(filename.Base().String(), `-(\d\d\d\d)$`); yyyy >= "2018" {

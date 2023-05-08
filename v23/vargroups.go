@@ -141,7 +141,7 @@ func (ck *VargroupsChecker) checkGroupName(mkline *MkLine) {
 	}
 }
 
-// CheckVargroups checks that each variable that is used or defined
+// Check checks that each variable that is used or defined
 // somewhere in the file is also registered in the _VARGROUPS section,
 // in order to make it discoverable by "bmake show-all".
 //

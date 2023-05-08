@@ -1351,7 +1351,7 @@ func (pkg *Package) checkPkgnameRedundant(pkgnameLine *MkLine, pkgname string, d
 // typically "nb13" or an empty string.
 //
 // It is only used inside pkgsrc to mark changes that are
-// independent from the upstream package.
+// independent of the upstream package.
 func (pkg *Package) nbPart() string {
 	pkgrevision := pkg.vars.LastValue("PKGREVISION")
 	if rev, err := strconv.Atoi(pkgrevision); err == nil {
@@ -1757,7 +1757,7 @@ func (pkg *Package) Rel(filename CurrPath) PackagePath {
 	return NewPackagePath(G.Pkgsrc.Relpath(pkg.dir, filename))
 }
 
-// Returns whether the given file (relative to the package directory)
+// Includes returns whether the given file (relative to the package directory)
 // is included somewhere in the package, either directly or indirectly.
 func (pkg *Package) Includes(filename PackagePath) *MkLine {
 	mkline := pkg.unconditionalIncludes[filename]

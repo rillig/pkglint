@@ -1166,7 +1166,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__only_D_modifier(c *check.C) {
 	// Since the value of the BATCH variable does not appear in the output,
 	// there should be no warning saying that "BATCH should be quoted".
 	// If any, the variable PKGSRCDIR should be quoted, but that is a safe
-	// variable since it is a pkgsrc-specific directory and it appears as
+	// variable since it is a pkgsrc-specific directory, and it appears as
 	// part of a word, therefore it cannot result in an empty string.
 	t.CheckOutputEmpty()
 }

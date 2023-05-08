@@ -257,8 +257,8 @@ func (p *MkLexer) varUseModifier(varname string, closing byte) MkVarUseModifier 
 			"Q",  // Quote shell meta-characters
 			"R",  // Strip the file suffix, e.g. path/file.suffix => file
 			"T",  // Basename, e.g. path/file.suffix => file.suffix
-			"sh", // Evaluate the variable value as shell command
-			"tA", // Try to convert to absolute path
+			"sh", // Evaluate the variable value as a shell command
+			"tA", // Try to convert to an absolute path
 			"tW", // Causes the value to be treated as a single word
 			"tl", // To lowercase
 			"tu", // To uppercase

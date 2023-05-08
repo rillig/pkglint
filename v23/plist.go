@@ -776,6 +776,9 @@ func NewPlistRank(basename RelPath) *PlistRank {
 	return &rank
 }
 
+// MoreGeneric compares two pathnames from a PLIST to see which of them
+// applies to more platforms.
+//
 // The ranks among the files are:
 //
 //	PLIST

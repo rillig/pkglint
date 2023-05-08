@@ -396,7 +396,7 @@ func (s *Suite) Test_Package_load__variable_from_Makefile_used_in_builtin_mk(c *
 	G.Check(t.File("devel/binutils"))
 
 	// The BINUTILS_PREFIX from the Makefile is not used since the
-	// builtin.mk file is only parsed inside of buildlink3.mk, and
+	// builtin.mk file is only parsed inside buildlink3.mk, and
 	// that doesn't happen for the package itself, but only for those
 	// packages that depend on this package.
 	t.CheckOutputLines(
@@ -1184,7 +1184,7 @@ func (s *Suite) Test_Package_shouldDiveInto(c *check.C) {
 	test("Makefile", "../../mk/bsd.prefs.mk", false)
 	test("Makefile", "../../mk/bsd.fast.prefs.mk", false)
 
-	// All files that are included from outside of the pkgsrc infrastructure
+	// All files that are included from outside the pkgsrc infrastructure
 	// are relevant. This is typically mk/compiler.mk or the various
 	// mk/*.buildlink3.mk files.
 	test("Makefile", "Makefile.common", true)

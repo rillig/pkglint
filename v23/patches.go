@@ -411,7 +411,7 @@ func (ck *PatchChecker) checkCanonicalPatchName(patched Path) {
 	patch := ck.lines.BaseName.String()
 	if matches(patch, `^patch-[a-z][a-z]$`) {
 		// This naming scheme is only accepted for historic reasons.
-		// It has has absolutely no benefit.
+		// It has absolutely no benefit.
 		return
 	}
 	if matches(patch, `^patch-[A-Z]+-[0-9]+`) {

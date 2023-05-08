@@ -95,7 +95,7 @@ func (s *Suite) Test_CheckLinesPatch__no_comment_and_no_empty_lines(c *check.C) 
 	// These duplicate notes are actually correct. There should be an
 	// empty line above the documentation and one below it. Since there
 	// is no documentation yet, the line number for above and below is
-	// the same. Outside of the testing environment, this duplicate
+	// the same. Outside the testing environment, this duplicate
 	// diagnostic is suppressed; see LogVerbose.
 	t.CheckOutputLines(
 		"NOTE: ~/patch-WithoutEmptyLines:2: Empty line expected above this line.",

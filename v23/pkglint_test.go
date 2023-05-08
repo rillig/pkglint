@@ -376,7 +376,7 @@ func (s *Suite) Test_Pkglint_Check__outside(c *check.C) {
 	// when the first command line argument is valid but a following
 	// argument is outside the pkgsrc tree.
 	//
-	// If the first argument is already outside of any pkgsrc tree,
+	// If the first argument is already outside any pkgsrc tree,
 	// pkglint will exit with a fatal error message since it doesn't
 	// know where to load the infrastructure files from.
 	t.CheckOutputLines(

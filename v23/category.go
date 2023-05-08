@@ -160,7 +160,7 @@ func CheckdirCategory(dir CurrPath, recurse bool) {
 		}
 	}
 
-	// the pkgsrc-wip category Makefile defines its own targets for
+	// The pkgsrc-wip category Makefile defines its own targets for
 	// generating indexes and READMEs. Just skip them.
 	if !G.Wip {
 		mlex.SkipEmptyOrNote()

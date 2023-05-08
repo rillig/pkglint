@@ -164,7 +164,7 @@ func (s *Suite) Test_MkLines_Check__varuse_parameterized(c *check.C) {
 
 // When an ODE runtime loop is used to expand variables to shell commands,
 // pkglint only understands that there is a variable that is executed as
-// shell command.
+// a shell command.
 //
 // In this example, GCONF_SCHEMAS is a list of filenames, but pkglint doesn't know this
 // because there is no built-in rule saying *_SCHEMAS are filenames.
@@ -995,7 +995,7 @@ func (s *Suite) Test_MkLines_checkAll__defined_and_used_variables(c *check.C) {
 
 	mklines.Check()
 
-	// If there are variable involved in the definition of PLIST_VARS or PLIST.*,
+	// If there are variables involved in the definition of PLIST_VARS or PLIST.*,
 	// it becomes too difficult for pkglint to decide whether the IDs can still match.
 	// Therefore, in such a case, no diagnostics are logged at all.
 	t.CheckOutputEmpty()

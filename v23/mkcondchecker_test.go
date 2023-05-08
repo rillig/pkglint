@@ -387,7 +387,7 @@ func (s *Suite) Test_MkCondChecker_checkNotEmpty(c *check.C) {
 	test("!empty(VAR)",
 
 		// Only a few variables are suggested to use the simpler form,
-		// because of the side-effect when the variable is undefined.
+		// because of the side effect when the variable is undefined.
 		// VAR is not one of these variables.
 		nil...)
 
