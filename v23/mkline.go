@@ -279,7 +279,7 @@ func (mkline *MkLine) FirstLineContainsValue() bool {
 	text := mkline.raw[0].Orig()
 	parser := NewMkLineParser()
 	splitResult := parser.split(nil, text, true)
-	_, a := parser.MatchVarassign(mkline.Line, text, &splitResult)
+	_, a := parser.matchVarassign(mkline.Line, text, &splitResult)
 	return a.value != "\\"
 }
 

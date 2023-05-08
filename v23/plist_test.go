@@ -1477,7 +1477,7 @@ func (s *Suite) Test_plistLineSorter__unsortable(c *check.C) {
 		"TRACE: - CheckLinesPlist(\"~/PLIST\")")
 }
 
-func (s *Suite) Test_NewPlistLineSorter__only_comments(c *check.C) {
+func (s *Suite) Test_newPlistLineSorter__only_comments(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("PLIST",
@@ -1514,12 +1514,12 @@ func (s *Suite) Test_plistLineSorter_Sort(c *check.C) {
 	ck := PlistChecker{nil, nil, nil, "", Once{}, false}
 	plines := ck.newLines(lines)
 
-	sorter1 := NewPlistLineSorter(plines)
+	sorter1 := newPlistLineSorter(plines)
 	t.CheckEquals(sorter1.unsortable, lines.Lines[5])
 
 	cleanedLines := append(append(lines.Lines[0:5], lines.Lines[6:8]...), lines.Lines[9:]...) // Remove ${UNKNOWN} and @exec
 
-	sorter2 := NewPlistLineSorter((&PlistChecker{nil, nil, nil, "", Once{}, false}).
+	sorter2 := newPlistLineSorter((&PlistChecker{nil, nil, nil, "", Once{}, false}).
 		newLines(NewLines(lines.Filename, cleanedLines)))
 
 	t.CheckNil(sorter2.unsortable)

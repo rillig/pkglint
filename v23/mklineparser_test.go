@@ -207,7 +207,7 @@ func (s *Suite) Test_MkLineParser_parseVarassign__escaped_hash_in_value(c *check
 		"WARN: ~/Makefile:5: The # character starts a Makefile comment.")
 }
 
-func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
+func (s *Suite) Test_MkLineParser_matchVarassign(c *check.C) {
 	t := s.Init(c)
 
 	testLine := func(line *Line, commented bool, varname, spaceAfterVarname, op, align, value, spaceAfterValue, comment string, diagnostics ...string) {
@@ -221,7 +221,7 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 
 		parser := NewMkLineParser()
 		splitResult := parser.split(nil, text, true)
-		m, actual := parser.MatchVarassign(line, text, &splitResult)
+		m, actual := parser.matchVarassign(line, text, &splitResult)
 
 		assert(m)
 		expected := mkLineAssign{
@@ -253,7 +253,7 @@ func (s *Suite) Test_MkLineParser_MatchVarassign(c *check.C) {
 		line := t.NewLine("filename.mk", 123, text)
 		parser := NewMkLineParser()
 		splitResult := parser.split(nil, text, true)
-		m, _ := parser.MatchVarassign(line, text, &splitResult)
+		m, _ := parser.matchVarassign(line, text, &splitResult)
 		if m {
 			c.Errorf("Text %q matches variable assignment but shouldn't.", text)
 		}

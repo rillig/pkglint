@@ -75,7 +75,7 @@ func (ck *PlistChecker) Check(plainLines *Lines) {
 	ck.checkOmf(plines)
 	CheckLinesTrailingEmptyLines(plainLines)
 
-	sorter := NewPlistLineSorter(plines)
+	sorter := newPlistLineSorter(plines)
 	sorter.Sort()
 	if !sorter.autofixed {
 		SaveAutofixChanges(plainLines)
@@ -651,7 +651,7 @@ type plistLineSorter struct {
 	autofixed  bool         // Whether the newly sorted file has been written to disk
 }
 
-func NewPlistLineSorter(plines []*PlistLine) *plistLineSorter {
+func newPlistLineSorter(plines []*PlistLine) *plistLineSorter {
 	headerEnd := 0
 	for headerEnd < len(plines) && hasPrefix(plines[headerEnd].text, "@comment") {
 		headerEnd++

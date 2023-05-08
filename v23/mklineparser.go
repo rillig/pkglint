@@ -68,7 +68,7 @@ func (p MkLineParser) Parse(line *Line) *MkLine {
 }
 
 func (p MkLineParser) parseVarassign(line *Line, text string, splitResult mkLineSplitResult) *MkLine {
-	m, a := p.MatchVarassign(line, text, &splitResult)
+	m, a := p.matchVarassign(line, text, &splitResult)
 	if !m {
 		return nil
 	}
@@ -79,7 +79,7 @@ func (p MkLineParser) parseVarassign(line *Line, text string, splitResult mkLine
 	return &MkLine{line, splitResult, a}
 }
 
-func (p MkLineParser) MatchVarassign(line *Line, text string, splitResult *mkLineSplitResult) (bool, *mkLineAssign) {
+func (p MkLineParser) matchVarassign(line *Line, text string, splitResult *mkLineSplitResult) (bool, *mkLineAssign) {
 
 	// A commented variable assignment does not have leading whitespace.
 	// Otherwise, line 1 of almost every Makefile fragment would need to
