@@ -11,4 +11,4 @@ errors.
 ----
 
 For an introduction to programming and extending pkglint,
-see [The pkglint tour](codewalk.md).
+see [The pkglint tour](v23/codewalk.md).
