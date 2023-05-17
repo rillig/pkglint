@@ -818,11 +818,11 @@ type plistLineData struct {
 	rank *PlistRank
 }
 
-func (pl *PlistLines) Add(line *PlistLine, rank *PlistRank) {
+func (pl *PlistLines) Add(line *PlistLine, rank *PlistRank, checkDuplicatesAcrossRanks bool) {
 	path := line.Path()
 	for _, existing := range pl.all[path] {
 		switch {
-		case existing.rank == rank:
+		case !checkDuplicatesAcrossRanks, existing.rank == rank:
 			break
 		case existing.rank.MoreGeneric(rank):
 			line.Errorf("Path %s is already listed in %s.",

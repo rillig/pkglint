@@ -173,6 +173,9 @@ func (s *Suite) Test_CheckLinesPlist__sort_common(c *check.C) {
 			"should be sorted before \"bin/common_end2\".")
 }
 
+// When a package sets PLIST_SRC, any additional PLIST files may be
+// alternative to the default PLIST, so don't warn about duplicates
+// between files having different ranks.
 func (s *Suite) Test_CheckLinesPlist__PLIST_SRC(c *check.C) {
 	t := s.Init(c)
 
@@ -189,10 +192,7 @@ func (s *Suite) Test_CheckLinesPlist__PLIST_SRC(c *check.C) {
 
 	G.Check(".")
 
-	// FIXME: PLIST.other is mentioned in PLIST_SRC and is therefore
-	//  _alternative_ to the default PLIST.
-	t.CheckOutputLines(
-		"ERROR: PLIST.other:2: Path bin/program is already listed in PLIST:2.")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_PlistChecker__autofix(c *check.C) {
@@ -1646,12 +1646,12 @@ func (s *Suite) Test_PlistLines_Add(c *check.C) {
 
 	for _, line := range plistLines {
 		if line.HasPath() {
-			lines.Add(line, NewPlistRank(line.Line.Basename))
+			lines.Add(line, NewPlistRank(line.Line.Basename), true)
 		}
 	}
 	for _, line := range plistCommonLines {
 		if line.HasPath() {
-			lines.Add(line, NewPlistRank(line.Line.Basename))
+			lines.Add(line, NewPlistRank(line.Line.Basename), true)
 		}
 	}
 

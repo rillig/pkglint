@@ -540,10 +540,11 @@ func (pkg *Package) loadPlistDirs(plistFilename CurrPath) {
 			pkg.Plist.UnconditionalDirs[dirname] = pline
 		}
 	}
+	checkDuplicatesAcrossRanks := !pkg.vars.IsDefined("PLIST_SRC")
 	for _, plistLine := range plistLines {
 		if plistLine.HasPath() {
 			rank := NewPlistRank(plistLine.Line.Basename)
-			pkg.PlistLines.Add(plistLine, rank)
+			pkg.PlistLines.Add(plistLine, rank, checkDuplicatesAcrossRanks)
 		}
 		for _, cond := range plistLine.conditions {
 			pkg.Plist.Conditions[strings.TrimPrefix(cond, "PLIST.")] = true
