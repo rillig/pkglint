@@ -56,7 +56,7 @@ func (loc *Location) File(rel RelPath) CurrPath {
 // which happens when a line ends with an odd number of backslashes.
 type Line struct {
 	Location Location
-	Basename RelPath // the last component of the Filename
+	Basename RelPath // the basename from Location, for fast access
 
 	// the text of the line, without the trailing newline character;
 	// in Makefiles, also contains the text from the continuation lines,
