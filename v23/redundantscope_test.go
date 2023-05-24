@@ -29,7 +29,7 @@ func (s *Suite) Test_RedundantScope__single_file_default(c *check.C) {
 		"NOTE: file.mk:5: Default assignment of VAR.shl has no effect because of line 11.")
 }
 
-// In a single file, five variables get assigned are value and are later overridden
+// In a single file, five variables get assigned a value and are later overridden
 // with the same value using the five different assignments operators.
 func (s *Suite) Test_RedundantScope__single_file_assign(c *check.C) {
 	t := s.Init(c)
@@ -167,7 +167,7 @@ func (s *Suite) Test_RedundantScope__single_file_default_ref(c *check.C) {
 	// TODO: "VAR.evl: is overwritten later"
 }
 
-// In a single file, five variables get assigned are value and are later overridden
+// In a single file, five variables get assigned a value and are later overridden
 // with the same value using the five different assignments operators.
 func (s *Suite) Test_RedundantScope__single_file_assign_ref(c *check.C) {
 	t := s.Init(c)

@@ -112,7 +112,7 @@ func (s *RedundantScope) handleVarassign(mkline *MkLine, ind *Indentation) {
 			//   including.mk: VAR= initial value
 			//   included.mk:  VAR= overwriting     <-- you are here
 			//
-			// Because the included files is never wrong (by definition),
+			// Because the included file is never wrong (by definition),
 			// the including file gets the warning in this case.
 			s.onOverwrite(prevWrites[len(prevWrites)-1], mkline)
 		}
