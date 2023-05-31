@@ -265,8 +265,6 @@ func (s *Suite) Test_MkLineChecker_checkVartype__append_to_non_list(c *check.C) 
 		"WARN: filename.mk:2: The variable DISTNAME should not be appended to "+
 			"(only set, or given a default value) in this file.",
 		"WARN: filename.mk:2: The \"+=\" operator should only be used with lists, not with DISTNAME.",
-		"WARN: filename.mk:6: The \"+=\" operator should only "+
-			"be used with lists, not with GITHUB_SUBMODULES.",
 	)
 }
 

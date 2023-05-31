@@ -140,7 +140,7 @@ func (ck MkLineChecker) checkVartype(varname string, op MkOperator, value, comme
 	if op == opAssignAppend {
 		// XXX: MayBeAppendedTo also depends on the current file, see MkVarUseChecker.checkPermissions.
 		// These checks may be combined.
-		if vartype != nil && !vartype.MayBeAppendedTo() {
+		if vartype != nil && !vartype.MayBeAppendedTo() && !hasSuffix(varnameBase(varname), "S") {
 			mkline.Warnf("The \"+=\" operator should only be used with lists, not with %s.", varname)
 		}
 	}

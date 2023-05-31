@@ -508,7 +508,6 @@ func (src *Pkgsrc) initDeprecatedVars() {
 // at least prevent the "used but not defined" warnings.
 func (src *Pkgsrc) loadUntypedVars() {
 
-	// Setting guessed to false prevents the vartype.guessed case in MkLineChecker.CheckVaruse.
 	unknownType := NewVartype(BtUnknown, NoVartypeOptions, NewACLEntry("*", aclpAll))
 
 	define := func(varcanon string, mkline *MkLine) {
