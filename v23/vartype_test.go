@@ -164,9 +164,11 @@ func (s *Suite) Test_Vartype_MayBeAppendedTo(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
+	t.SetUpVarType("GITHUB_SUBMODULES", BtUnknown, NoVartypeOptions)
 
 	test := func(varname string, isAppendAllowed bool) {
 		vartype := G.Pkgsrc.VariableType(nil, varname)
+		t.AssertNotNil(vartype)
 
 		t.CheckEquals(vartype.MayBeAppendedTo(), isAppendAllowed)
 	}
@@ -193,6 +195,9 @@ func (s *Suite) Test_Vartype_MayBeAppendedTo(c *check.C) {
 	// come in pairs. A typical example is:
 	//  SUBST_SED.id+=  -e s,from,to,
 	test("SUBST_SED.id", true)
+
+	// FIXME: It's a list, as the name 'modules' says.
+	test("GITHUB_SUBMODULES", false)
 }
 
 func (s *Suite) Test_Vartype_String(c *check.C) {
