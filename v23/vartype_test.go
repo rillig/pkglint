@@ -196,7 +196,9 @@ func (s *Suite) Test_Vartype_MayBeAppendedTo(c *check.C) {
 	//  SUBST_SED.id+=  -e s,from,to,
 	test("SUBST_SED.id", true)
 
-	// FIXME: It's a list, as the name 'modules' says.
+	// This variable's actual type is a list, as the word 'modules'
+	// suggests, but pkglint doesn't know the meaning of that word.
+	// Instead,
 	test("GITHUB_SUBMODULES", false)
 }
 

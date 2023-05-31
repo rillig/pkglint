@@ -248,18 +248,26 @@ func (s *Suite) Test_MkLineChecker_checkVartype__append_to_non_list(c *check.C) 
 	t := s.Init(c)
 
 	t.SetUpVartypes()
+	t.SetUpVarType("GITHUB_SUBMODULES", BtUnknown, NoVartypeOptions)
+
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
 		"DISTNAME+=\tsuffix",
 		"COMMENT=\tComment for",
-		"COMMENT+=\tthe package")
+		"COMMENT+=\tthe package",
+		"",
+		"GITHUB_SUBMODULES+=\tmodule1 module2",
+	)
 
 	mklines.Check()
 
 	t.CheckOutputLines(
 		"WARN: filename.mk:2: The variable DISTNAME should not be appended to "+
 			"(only set, or given a default value) in this file.",
-		"WARN: filename.mk:2: The \"+=\" operator should only be used with lists, not with DISTNAME.")
+		"WARN: filename.mk:2: The \"+=\" operator should only be used with lists, not with DISTNAME.",
+		"WARN: filename.mk:6: The \"+=\" operator should only "+
+			"be used with lists, not with GITHUB_SUBMODULES.",
+	)
 }
 
 func (s *Suite) Test_MkLineChecker_checkVartype__no_tracing(c *check.C) {
