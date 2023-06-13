@@ -350,6 +350,25 @@ func (ck *MkAssignChecker) checkLeftRationale() {
 
 	mkline := ck.MkLine
 	varname := mkline.Varname()
+
+	if varname == "BUILD_DEPENDS" && !G.Infrastructure {
+		mkline.Warnf("BUILD_DEPENDS should be TOOL_DEPENDS.")
+		mkline.Explain(
+			"When cross-building a package,",
+			"BUILD_DEPENDS means that",
+			"the dependency is needed for the target platform.",
+			"These dependencies are handled by the buildlink",
+			"mechanism.",
+			"",
+			"TOOL_DEPENDS, on the other hand,",
+			"means that building the package",
+			"needs the dependency on the native platform.",
+			"",
+			"Either replace BUILD_DEPENDS with TOOL_DEPENDS,",
+			"or add a rationale explaining why BUILD_DEPENDS",
+			"is the correct choice in this particular case.")
+	}
+
 	vartype := G.Pkgsrc.VariableType(ck.MkLines, varname)
 	if vartype == nil || !vartype.NeedsRationale() {
 		return

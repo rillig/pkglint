@@ -674,6 +674,40 @@ func (s *Suite) Test_MkAssignChecker_checkLeftRationale(c *check.C) {
 		nil...)
 }
 
+// https://mail-index.netbsd.org/tech-pkg/2023/06/03/msg027632.html
+func (s *Suite) Test_MkAssignChecker_checkLeftRationale__BUILD_DEPENDS(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("devel/library")
+	t.SetUpPackage("category/package",
+		"BUILD_DEPENDS+=\tlibrary>=1.0:../../devel/library")
+	t.CreateFileLines("mk/infra.mk",
+		MkCvsID,
+		"BUILD_DEPENDS+=\tlibrary>=1.0:../../devel/library")
+	t.Chdir("category/package")
+	t.SetUpCommandLine("-Wall", "--explain")
+	t.FinishSetUp()
+
+	G.Check(".")
+	G.Check("../../mk/infra.mk")
+
+	t.CheckOutputLines(
+		"WARN: Makefile:20: BUILD_DEPENDS should be TOOL_DEPENDS.",
+		"",
+		"\tWhen cross-building a package, BUILD_DEPENDS means that the",
+		"\tdependency is needed for the target platform. These dependencies are",
+		"\thandled by the buildlink mechanism.",
+		"",
+		"\tTOOL_DEPENDS, on the other hand, means that building the package",
+		"\tneeds the dependency on the native platform.",
+		"",
+		"\tEither replace BUILD_DEPENDS with TOOL_DEPENDS, or add a rationale",
+		"\texplaining why BUILD_DEPENDS is the correct choice in this",
+		"\tparticular case.",
+		"",
+	)
+}
+
 func (s *Suite) Test_MkAssignChecker_checkOp(c *check.C) {
 	t := s.Init(c)
 

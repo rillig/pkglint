@@ -68,6 +68,12 @@ var (
 // if the --explain option is given. Otherwise it just records
 // that an explanation is available.
 func (l *Logger) Explain(explanation ...string) {
+	if G.Testing {
+		for _, e := range explanation {
+			assertf(!hasSuffix(e, " "), "Explanation %q must not have trailing space", e)
+		}
+	}
+
 	if l.suppressExpl {
 		return
 	}
