@@ -933,6 +933,38 @@ func (s *Suite) Test_MkCondSimplifier_simplifyMatch(c *check.C) {
 		"AUTOFIX: filename.mk:6: "+
 			"Replacing \"!empty(IN_SCOPE_DEFINED:M[abcd]*)\" "+
 			"with \"${IN_SCOPE_DEFINED:M[abcd]*}\".")
+
+	// The word '0.0' would evaluate to false,
+	// thus the comparison against "".
+	t.testBeforeAndAfterPrefs(
+		".if empty(IN_SCOPE_DEFINED:M[0-9].*)",
+		// TODO: Eliminate double negation.
+		".if !${IN_SCOPE_DEFINED:M[0-9].*} != \"\"",
+		"NOTE: filename.mk:6: "+
+			"\"empty(IN_SCOPE_DEFINED:M[0-9].*)\" "+
+			"can be simplified to "+
+			// TODO: Eliminate double negation.
+			"\"!${IN_SCOPE_DEFINED:M[0-9].*} != \\\"\\\"\".",
+		"AUTOFIX: filename.mk:6: "+
+			"Replacing \"empty(IN_SCOPE_DEFINED:M[0-9].*)\" "+
+			// TODO: Eliminate double negation.
+			"with \"!${IN_SCOPE_DEFINED:M[0-9].*} != \\\"\\\"\".")
+
+	// The word '1.0e-400' would evaluate to false,
+	// thus the comparison against "".
+	t.testBeforeAndAfterPrefs(
+		".if empty(IN_SCOPE_DEFINED:M[1-9].*)",
+		// TODO: Eliminate double negation.
+		".if !${IN_SCOPE_DEFINED:M[1-9].*} != \"\"",
+		"NOTE: filename.mk:6: "+
+			"\"empty(IN_SCOPE_DEFINED:M[1-9].*)\" "+
+			"can be simplified to "+
+			// TODO: Eliminate double negation.
+			"\"!${IN_SCOPE_DEFINED:M[1-9].*} != \\\"\\\"\".",
+		"AUTOFIX: filename.mk:6: "+
+			"Replacing \"empty(IN_SCOPE_DEFINED:M[1-9].*)\" "+
+			// TODO: Eliminate double negation.
+			"with \"!${IN_SCOPE_DEFINED:M[1-9].*} != \\\"\\\"\".")
 }
 
 func (s *Suite) Test_MkCondSimplifier_isDefined(c *check.C) {
@@ -985,6 +1017,10 @@ func Test_MkCondSimplifier_mayMatchNumber(t *testing.T) {
 		{"[^0-9]", false},
 		// No word that ends in '.c' is numeric.
 		{"*.c", false},
+		// Even though this pattern is supposed to match version
+		// numbers, the version number 0.0 would evaluate to false,
+		// but 0.0.0 would evaluate to true.
+		{"[0-9].*", true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.pattern, func(t *testing.T) {
