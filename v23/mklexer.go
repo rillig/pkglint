@@ -339,7 +339,7 @@ func (p *MkLexer) varUseModifier(varname string, closing byte) MkVarUseModifier 
 	lexer.Reset(mark)
 	modifier, modifierNoVar := p.varUseModifierSysV(closing)
 	if contains(modifier, "=") {
-		if contains(modifierNoVar, ":") {
+		if contains(modifierNoVar, ":") && !hasPrefix(modifier, "=:") {
 			unrealModifier := modifier[strings.Index(modifier, ":"):]
 			p.Warnf("The text %q looks like a modifier but isn't.", unrealModifier)
 			p.Explain(

@@ -759,10 +759,10 @@ func (s *Suite) Test_MkLexer_varUseModifier__eq_suffix_replacement(c *check.C) {
 	// a separator for parsing the outer modifier.
 	test("=${VAR:D/}}", "=${VAR:D/}", "}")
 
-	// FIXME: The ':' is meant as a literal ':', not as another modifier.
+	// This ':' is meant as a literal ':', not as another modifier,
+	// as replacing an empty string with an empty string wouldn't make sense.
 	test("=:${PYPKGSRCDIR}}", "=:${PYPKGSRCDIR}", "}",
-		"WARN: filename.mk:123: The text \":${PYPKGSRCDIR}\" "+
-			"looks like a modifier but isn't.")
+		nil...)
 }
 
 func (s *Suite) Test_MkLexer_varUseModifier__assigment(c *check.C) {
