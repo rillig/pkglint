@@ -792,6 +792,43 @@ func (s *Suite) Test_MkCondChecker_checkContradictions(c *check.C) {
 			"cannot match at the same time.")
 }
 
+func (s *Suite) Test_MkCondChecker_checkContradictions__if_else(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		".if !empty(PYTHON_FOR_BUILD_ONLY:M[tT][oO][oO][lL])",
+		".elif !empty(PYTHON_FOR_BUILD_ONLY:M[tT][eE][sS][tT])",
+		".else",
+		".  if !empty(PYTHON_FOR_BUILD_ONLY:M[yY][eE][sS])",
+		".  endif",
+		".endif")
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"NOTE: filename.mk:2: "+
+			"\"!empty(PYTHON_FOR_BUILD_ONLY:M[tT][oO][oO][lL])\" "+
+			"can be simplified to "+
+			"\"${PYTHON_FOR_BUILD_ONLY:U:tl} == tool\".",
+		"WARN: filename.mk:2: "+
+			"PYTHON_FOR_BUILD_ONLY should not be "+
+			"used at load time in any file.",
+		"NOTE: filename.mk:3: "+
+			"\"!empty(PYTHON_FOR_BUILD_ONLY:M[tT][eE][sS][tT])\" "+
+			"can be simplified to "+
+			"\"${PYTHON_FOR_BUILD_ONLY:U:tl} == test\".",
+		"NOTE: filename.mk:5: "+
+			"\"!empty(PYTHON_FOR_BUILD_ONLY:M[yY][eE][sS])\" "+
+			"can be simplified to "+
+			"\"${PYTHON_FOR_BUILD_ONLY:U:tl} == yes\".",
+		// FIXME: The two conditions are in separate branches.
+		"ERROR: filename.mk:5: "+
+			"The patterns \"[tT][oO][oO][lL]\" from line 2 "+
+			"and \"[yY][eE][sS]\" cannot match at the same time.")
+}
+
 func (s *Suite) Test_MkCondChecker_collectFacts(c *check.C) {
 	t := s.Init(c)
 
