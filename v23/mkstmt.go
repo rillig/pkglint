@@ -70,34 +70,45 @@ func ParseMkStmts(mklines *MkLines) MkStmt {
 	}
 
 	for _, mkline := range mklines.mklines {
-		kind := kind(mkline)
-		switch kind {
+		switch kind(mkline) {
 		case "if":
 			var cond MkStmtCond
 			cond.Conds = append(cond.Conds, mkline)
 			cond.Branches = append(cond.Branches, &MkStmtBlock{})
 			stack = append(stack, &cond)
 		case "elif":
-			cond := stack[len(stack)-1].(*MkStmtCond)
+			cond, ok := stack[len(stack)-1].(*MkStmtCond)
+			if !ok {
+				return nil
+			}
 			if len(cond.Conds) != len(cond.Branches) {
 				return nil
 			}
 			cond.Conds = append(cond.Conds, mkline)
 			cond.Branches = append(cond.Branches, &MkStmtBlock{})
 		case "else":
-			cond := stack[len(stack)-1].(*MkStmtCond)
+			cond, ok := stack[len(stack)-1].(*MkStmtCond)
+			if !ok {
+				return nil
+			}
 			if len(cond.Conds) != len(cond.Branches) {
 				return nil
 			}
 			cond.Branches = append(cond.Branches, &MkStmtBlock{})
 		case "endif":
-			cond := stack[len(stack)-1].(*MkStmtCond)
+			cond, ok := stack[len(stack)-1].(*MkStmtCond)
+			if !ok {
+				return nil
+			}
 			stack = stack[:len(stack)-1]
 			appendStmt(cond)
 		case "for":
 			stack = append(stack, &MkStmtLoop{mkline, &MkStmtBlock{}})
 		case "endfor":
-			loop := stack[len(stack)-1].(*MkStmtLoop)
+			loop, ok := stack[len(stack)-1].(*MkStmtLoop)
+			if !ok {
+				return nil
+			}
 			stack = stack[:len(stack)-1]
 			appendStmt(loop)
 		default:

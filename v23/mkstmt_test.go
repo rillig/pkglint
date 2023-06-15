@@ -84,3 +84,47 @@ func (s *Suite) Test_WalkMkStmt(c *check.C) {
 		"NOTE: Loop with head \"i in value\" and 0 body statements.",
 		"NOTE: filename.mk:6: Line.")
 }
+
+func (s *Suite) Test_WalkMkStmt__invalid(c *check.C) {
+	t := s.Init(c)
+
+	test := func(lines ...string) {
+		mklines := t.NewMkLines("filename.mk", lines...)
+		stmts := ParseMkStmts(mklines)
+		t.CheckNil(stmts)
+	}
+
+	// '.if' without '.endif'
+	test(MkCvsID,
+		".if 1")
+
+	// '.elif' without '.if'
+	test(MkCvsID,
+		".elif 2")
+
+	// '.else' without '.if'
+	test(MkCvsID,
+		".else")
+
+	// '.endif' without '.if
+	test(MkCvsID,
+		".endif")
+
+	// '.for' without '.endfor'
+	test(MkCvsID,
+		".for i in value")
+
+	// '.endfor' without '.for'
+	test(MkCvsID,
+		".endfor")
+
+	// '.if' ended by '.endfor'
+	test(MkCvsID,
+		".if 1",
+		".endfor")
+
+	// '.for' ended by '.endif'
+	test(MkCvsID,
+		".for i in value",
+		".endif")
+}
