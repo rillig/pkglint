@@ -113,6 +113,7 @@ func Test__qa(t *testing.T) {
 	ck.Configure("mkshparser.go", "*", "*", -intqa.EMissingTest)     // TODO
 	ck.Configure("mkshtypes.go", "*", "*", -intqa.EMissingTest)      // TODO
 	ck.Configure("mkshwalker.go", "*", "*", -intqa.EMissingTest)     // TODO
+	ck.Configure("mkstmt.go", "*", "isMkStmt", -intqa.EMissingTest)  //
 	ck.Configure("options.go", "*", "*", -intqa.EMissingTest)        // TODO
 	ck.Configure("package.go", "*", "*", -intqa.EMissingTest)        // TODO
 	ck.Configure("paragraph.go", "*", "*", -intqa.EMissingTest)      // TODO

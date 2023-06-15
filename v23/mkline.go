@@ -1095,7 +1095,9 @@ type Indentation struct {
 }
 
 type indentationLevel struct {
-	mkline          *MkLine  // The line in which the indentation started; the .if/.for
+	// The line in which the indentation started; the .if/.for,
+	// but not the .elif/.else
+	mkline          *MkLine
 	depth           int      // Number of space characters; always a multiple of 2
 	args            string   // The arguments from the .if or .for, or the latest .elif
 	argsLine        *MkLine  //
