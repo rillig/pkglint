@@ -79,7 +79,7 @@ func ParseMkStmts(mklines *MkLines) MkStmt {
 			if !ok {
 				return nil
 			}
-			if len(cond.Conds) != len(cond.Branches) {
+			if len(cond.Conds) > 0 && kind(cond.Conds[len(cond.Conds)-1]) == "else" {
 				return nil
 			}
 			cond.Conds = append(cond.Conds, mkline)
@@ -89,9 +89,10 @@ func ParseMkStmts(mklines *MkLines) MkStmt {
 			if !ok {
 				return nil
 			}
-			if len(cond.Conds) != len(cond.Branches) {
+			if len(cond.Conds) > 0 && kind(cond.Conds[len(cond.Conds)-1]) == "else" {
 				return nil
 			}
+			cond.Conds = append(cond.Conds, mkline)
 			cond.Branches = append(cond.Branches, &MkStmtBlock{})
 		case "endif":
 			cond, ok := stack[len(stack)-1].(*MkStmtCond)

@@ -24,6 +24,7 @@ func (s *Suite) Test_ParseMkStmts(c *check.C) {
 				[]*MkLine{
 					mklines.mklines[1],
 					mklines.mklines[3],
+					mklines.mklines[4],
 				},
 				[]*MkStmtBlock{
 					{
@@ -64,15 +65,17 @@ func (s *Suite) Test_WalkMkStmt(c *check.C) {
 				mkline.Notef("Line.")
 			},
 			Block: func(block *MkStmtBlock) {
-				line.Notef("Block with %d statements.", len(*block))
+				line.Notef("Block with %d %s.", len(*block),
+					condStr(len(*block) == 1, "statement", "statements"))
 			},
 			Cond: func(cond *MkStmtCond) {
-				line.Notef("Cond with %d conditions and %d branches.",
-					len(cond.Conds), len(cond.Branches))
+				line.Notef("Cond with %d %s.", len(cond.Branches),
+					condStr(len(cond.Branches) == 1, "branch", "branches"))
 			},
 			Loop: func(loop *MkStmtLoop) {
-				line.Notef("Loop with head %q and %d body statements.",
-					loop.Head.Args(), len(*loop.Body))
+				line.Notef("Loop with head %q and %d body %s.",
+					loop.Head.Args(), len(*loop.Body),
+					condStr(len(*loop.Body) == 1, "statement", "statements"))
 			},
 		})
 	}
@@ -81,11 +84,12 @@ func (s *Suite) Test_WalkMkStmt(c *check.C) {
 	t.CheckOutputLines(
 		"NOTE: Block with 2 statements.",
 		"NOTE: filename.mk:1: Line.",
-		"NOTE: Cond with 2 conditions and 3 branches.",
+		"NOTE: Cond with 3 branches.",
 		"NOTE: filename.mk:2: Line.",
 		"NOTE: filename.mk:3: Line.",
 		"NOTE: filename.mk:4: Line.",
-		"NOTE: Loop with head \"i in value\" and 1 body statements.",
+		"NOTE: filename.mk:5: Line.",
+		"NOTE: Loop with head \"i in value\" and 1 body statement.",
 		"NOTE: filename.mk:6: Line.",
 		"NOTE: filename.mk:7: Line.")
 }
