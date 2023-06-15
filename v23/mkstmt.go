@@ -13,9 +13,7 @@ type MkStmtLine struct {
 }
 
 // MkStmtBlock groups regular lines and nested conditions or loops.
-type MkStmtBlock struct {
-	Stmts []MkStmt
-}
+type MkStmtBlock []MkStmt
 
 // MkStmtCond is a single level of .if/.elif/.else/.endif.
 type MkStmtCond struct {
@@ -60,12 +58,12 @@ func ParseMkStmts(mklines *MkLines) MkStmt {
 	appendStmt := func(stmt MkStmt) {
 		switch top := stack[len(stack)-1].(type) {
 		case *MkStmtBlock:
-			top.Stmts = append(top.Stmts, stmt)
+			*top = append(*top, stmt)
 		case *MkStmtCond:
 			branch := top.Branches[len(top.Branches)-1]
-			branch.Stmts = append(branch.Stmts, stmt)
+			*branch = append(*branch, stmt)
 		case *MkStmtLoop:
-			top.Body.Stmts = append(top.Body.Stmts, stmt)
+			*top.Body = append(*top.Body, stmt)
 		}
 	}
 
@@ -131,7 +129,7 @@ func WalkMkStmt(stmt MkStmt, callback MkStmtCallback) {
 		if callback.Block != nil {
 			callback.Block(stmt)
 		}
-		for _, blockStmt := range stmt.Stmts {
+		for _, blockStmt := range *stmt {
 			WalkMkStmt(blockStmt, callback)
 		}
 	case *MkStmtCond:
@@ -142,7 +140,7 @@ func WalkMkStmt(stmt MkStmt, callback MkStmtCallback) {
 			if i < len(stmt.Conds) && callback.Line != nil {
 				callback.Line(stmt.Conds[i])
 			}
-			for _, branchStmt := range branch.Stmts {
+			for _, branchStmt := range *branch {
 				WalkMkStmt(branchStmt, callback)
 			}
 		}
@@ -153,7 +151,7 @@ func WalkMkStmt(stmt MkStmt, callback MkStmtCallback) {
 		if callback.Line != nil {
 			callback.Line(stmt.Head)
 		}
-		for _, bodyStmt := range stmt.Body.Stmts {
+		for _, bodyStmt := range *stmt.Body {
 			WalkMkStmt(bodyStmt, callback)
 		}
 	}

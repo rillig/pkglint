@@ -11,13 +11,14 @@ func (s *Suite) Test_ParseMkStmts(c *check.C) {
 		".elif 2",
 		".else",
 		".  for i in value",
+		".    info looping",
 		".  endfor",
 		".endif")
 
 	stmts := ParseMkStmts(mklines)
 
 	t.CheckDeepEquals(stmts,
-		&MkStmtBlock{[]MkStmt{
+		&MkStmtBlock{
 			&MkStmtLine{mklines.mklines[0]},
 			&MkStmtCond{
 				[]*MkLine{
@@ -25,19 +26,21 @@ func (s *Suite) Test_ParseMkStmts(c *check.C) {
 					mklines.mklines[3],
 				},
 				[]*MkStmtBlock{
-					{[]MkStmt{
+					{
 						&MkStmtLine{mklines.mklines[2]},
-					}},
+					},
 					{},
-					{[]MkStmt{
+					{
 						&MkStmtLoop{
 							mklines.mklines[5],
-							&MkStmtBlock{nil},
+							&MkStmtBlock{
+								&MkStmtLine{mklines.mklines[6]},
+							},
 						},
-					}},
+					},
 				},
 			},
-		}})
+		})
 }
 
 func (s *Suite) Test_WalkMkStmt(c *check.C) {
@@ -49,6 +52,7 @@ func (s *Suite) Test_WalkMkStmt(c *check.C) {
 		".elif 2",
 		".else",
 		".  for i in value",
+		".    info looping",
 		".  endfor",
 		".endif")
 
@@ -60,7 +64,7 @@ func (s *Suite) Test_WalkMkStmt(c *check.C) {
 				mkline.Notef("Line.")
 			},
 			Block: func(block *MkStmtBlock) {
-				line.Notef("Block with %d statements.", len(block.Stmts))
+				line.Notef("Block with %d statements.", len(*block))
 			},
 			Cond: func(cond *MkStmtCond) {
 				line.Notef("Cond with %d conditions and %d branches.",
@@ -68,7 +72,7 @@ func (s *Suite) Test_WalkMkStmt(c *check.C) {
 			},
 			Loop: func(loop *MkStmtLoop) {
 				line.Notef("Loop with head %q and %d body statements.",
-					loop.Head.Args(), len(loop.Body.Stmts))
+					loop.Head.Args(), len(*loop.Body))
 			},
 		})
 	}
@@ -81,8 +85,9 @@ func (s *Suite) Test_WalkMkStmt(c *check.C) {
 		"NOTE: filename.mk:2: Line.",
 		"NOTE: filename.mk:3: Line.",
 		"NOTE: filename.mk:4: Line.",
-		"NOTE: Loop with head \"i in value\" and 0 body statements.",
-		"NOTE: filename.mk:6: Line.")
+		"NOTE: Loop with head \"i in value\" and 1 body statements.",
+		"NOTE: filename.mk:6: Line.",
+		"NOTE: filename.mk:7: Line.")
 }
 
 func (s *Suite) Test_WalkMkStmt__invalid(c *check.C) {
