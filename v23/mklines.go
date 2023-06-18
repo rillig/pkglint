@@ -53,6 +53,8 @@ type mklinesCheckAll struct {
 
 	// Custom action that is run after checking each line
 	postLine func(mkline *MkLine)
+
+	conditions MkLinesConditions
 }
 
 func NewMkLines(lines *Lines, pkg *Package, extraScope *Scope) *MkLines {
@@ -703,3 +705,44 @@ func (mklines *MkLines) EOFLine() *MkLine {
 // Whole returns a virtual line that can be used for issuing diagnostics
 // and explanations, but not for text replacements.
 func (mklines *MkLines) Whole() *Line { return mklines.lines.Whole() }
+
+// MkLinesConditions collects the conditions from the .if and .elif
+// conditionals, to detect redundant or contradictory conditions.
+// It assumes that the condition variables do not change while processing the
+// file, which is true at least for OPSYS, MACHINE_PLATFORMS and other
+// system-provided variables.
+type MkLinesConditions struct {
+	levels []mkLinesConditionLevel
+}
+
+type mkLinesConditionLevel struct {
+	// The previous .if or .elif branches;
+	// their conditions are known to be false in the current branch.
+	skipped []*MkLine
+	// The current branch, either an .if, an .elif or an .else.
+	// Inside this branch, its condition is known to be true.
+	current *MkLine
+}
+
+func (c *MkLinesConditions) Add(mkline *MkLine) {
+	if mkline.IsDirective() {
+		directive := mkline.Directive()
+		switch {
+		case hasPrefix(directive, "if"):
+			level := mkLinesConditionLevel{nil, mkline}
+			c.levels = append(c.levels, level)
+
+		case hasPrefix(directive, "el") && len(c.levels) > 0:
+			level := &c.levels[len(c.levels)-1]
+			if level.current != nil {
+				level.skipped = append(level.skipped, level.current)
+			}
+			level.current = mkline
+
+		case directive == "endif":
+			if len(c.levels) > 0 {
+				c.levels = c.levels[:len(c.levels)-1]
+			}
+		}
+	}
+}

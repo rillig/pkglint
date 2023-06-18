@@ -230,7 +230,6 @@ func (s *Suite) Test_MkCondChecker_Check__comparing_PKGSRC_COMPILER_with_eqeq(c 
 func (s *Suite) Test_MkCondChecker_Check__contradicting_conditions(c *check.C) {
 	t := s.Init(c)
 
-	G.Experimental = true
 	t.SetUpPkgsrc()
 	t.FinishSetUp()
 
@@ -793,10 +792,11 @@ func (s *Suite) Test_MkCondChecker_checkContradictions(c *check.C) {
 			"cannot match at the same time.")
 }
 
+// A condition from a skipped .if or .elif branch does not contradict a
+// condition inside an .else branch.
 func (s *Suite) Test_MkCondChecker_checkContradictions__if_else(c *check.C) {
 	t := s.Init(c)
 
-	G.Experimental = true
 	t.SetUpVartypes()
 
 	mklines := t.NewMkLines("filename.mk",
@@ -824,11 +824,7 @@ func (s *Suite) Test_MkCondChecker_checkContradictions__if_else(c *check.C) {
 		"NOTE: filename.mk:5: "+
 			"\"!empty(PYTHON_FOR_BUILD_ONLY:M[yY][eE][sS])\" "+
 			"can be simplified to "+
-			"\"${PYTHON_FOR_BUILD_ONLY:U:tl} == yes\".",
-		// FIXME: The two conditions are in separate branches.
-		"ERROR: filename.mk:5: "+
-			"The patterns \"[tT][oO][oO][lL]\" from line 2 "+
-			"and \"[yY][eE][sS]\" cannot match at the same time.")
+			"\"${PYTHON_FOR_BUILD_ONLY:U:tl} == yes\".")
 }
 
 func (s *Suite) Test_MkCondChecker_collectFacts(c *check.C) {

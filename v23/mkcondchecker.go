@@ -76,9 +76,7 @@ func (ck *MkCondChecker) Check() {
 		Compare: ck.checkCompare,
 		VarUse:  checkVarUse})
 
-	if G.Experimental {
-		ck.checkContradictions()
-	}
+	ck.checkContradictions()
 }
 
 func (ck *MkCondChecker) checkNotEmpty(not *MkCond) {
@@ -294,22 +292,18 @@ func (ck *MkCondChecker) checkContradictions() {
 	mkline := ck.MkLine
 
 	byVarname := make(map[string][]VarFact)
-	levels := ck.MkLines.indentation.levels
-	if len(levels) == 0 {
-		goto skip // For .elif outside .if
-	}
-	for _, level := range levels[:len(levels)-1] {
-		if !level.mkline.NeedsCond() {
+	levels := ck.MkLines.checkAllData.conditions.levels
+	for _, level := range levels {
+		if !level.current.NeedsCond() || level.current == mkline {
 			continue
 		}
-		prevFacts := ck.collectFacts(level.mkline)
+		prevFacts := ck.collectFacts(level.current)
 		for _, prevFact := range prevFacts {
 			varname := prevFact.Varname
 			byVarname[varname] = append(byVarname[varname], prevFact)
 		}
 	}
 
-skip:
 	facts := ck.collectFacts(mkline)
 	for _, curr := range facts {
 		varname := curr.Varname
@@ -336,6 +330,10 @@ type VarFact struct {
 	Matches *makepat.Pattern
 }
 
+// collectFacts extracts those basic conditions that must definitely be true
+// to make the whole condition evaluate to true.
+// For example, in 'A && B', both A and B are facts, while in 'A || B',
+// neither is a fact.
 func (ck *MkCondChecker) collectFacts(mkline *MkLine) []VarFact {
 	var facts []VarFact
 

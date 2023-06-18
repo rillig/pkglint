@@ -436,6 +436,8 @@ func (ck MkLineChecker) checkDirective(forVars map[string]bool, ind *Indentation
 		ck.checkDirectiveEnd(ind)
 	}
 
+	ck.MkLines.checkAllData.conditions.Add(mkline)
+
 	needsArgument := false
 	switch directive {
 	case
