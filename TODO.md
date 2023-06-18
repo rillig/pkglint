@@ -33,18 +33,19 @@
 
 ### Test_VaralignBlock__tabbed_outlier
 
-~~~
+~~~text
 .if !empty(PKG_OPTIONS:Minspircd-sqloper)
 INSPIRCD_STORAGE_DRIVER?=	mysql
 MODULES+=		m_sqloper.cpp m_sqlutils.cpp
 HEADERS+=		m_sqlutils.h
 .endif
+~~~
 
-2: Breite 26, eingerückt mit Tab auf 33
-3: Breite 9, eingerückt mit Tabs auf 25
-4: Breite 9, eingerückt mit Tabs auf 25
+* 2: Breite 26, eingerückt mit Tab auf 33
+* 3: Breite 9, eingerückt mit Tabs auf 25
+* 4: Breite 9, eingerückt mit Tabs auf 25
 
-unschön?
+Unschön?
 Ja, die Einrückung ist nicht einheitlich: 2x25, 1x33.
 
 Möglichkeit 1: die 2x25 auf 33 erhöhen.
@@ -53,11 +54,13 @@ Möglichkeit 1: die 2x25 auf 33 erhöhen.
 * Die maximale Zeilenlänge wäre dann 53 + 8 = 61.
 * Das liegt unterhalb von 72, daher ist es akzeptabel.
 
+~~~text
 .if !empty(PKG_OPTIONS:Minspircd-sqloper)
 INSPIRCD_STORAGE_DRIVER?=	mysql
 MODULES+=			m_sqloper.cpp m_sqlutils.cpp
 HEADERS+=			m_sqlutils.h
 .endif
+~~~
 
 Möglichkeit 2: ist Zeile 2 ein Ausreißer?
 
@@ -72,6 +75,7 @@ Möglichkeit 2: ist Zeile 2 ein Ausreißer?
 * Zeile 2 wird mit Leerzeichen statt Tab eingerückt.
 * Zeilen 3 und 4 werden minimal eingerückt, also auf die 17.
 
+~~~text
 .if !empty(PKG_OPTIONS:Minspircd-sqloper)
 INSPIRCD_STORAGE_DRIVER?= mysql
 MODULES+=	m_sqloper.cpp m_sqlutils.cpp
