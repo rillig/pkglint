@@ -99,7 +99,7 @@ func (p *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) (exitC
 
 The code for setting up the tests looks similar to the main code:
 
-> from [check_test.go](check_test.go#L57):
+> from [check_test.go](check_test.go#L56):
 
 ```go
 func (s *Suite) SetUpTest(c *check.C) {
@@ -564,7 +564,7 @@ The definition for the `Line` type is:
 // which happens when a line ends with an odd number of backslashes.
 type Line struct {
 	Location Location
-	Basename RelPath // the last component of the Filename
+	Basename RelPath // the basename from Location, for fast access
 
 	// the text of the line, without the trailing newline character;
 	// in Makefiles, also contains the text from the continuation lines,
@@ -669,7 +669,7 @@ of paths:
 
 All these path types are defined in `path.go`:
 
-> from [path.go](path.go#L11):
+> from [path.go](path.go#L10):
 
 ```go
 // Path is a slash-separated path.
@@ -680,7 +680,7 @@ All these path types are defined in `path.go`:
 type Path string
 ```
 
-> from [path.go](path.go#L232):
+> from [path.go](path.go#L231):
 
 ```go
 // CurrPath is a path that is either absolute or relative to the current
@@ -689,7 +689,7 @@ type Path string
 type CurrPath string
 ```
 
-> from [path.go](path.go#L460):
+> from [path.go](path.go#L459):
 
 ```go
 // RelPath is a path that is relative to some base directory that is not
@@ -697,14 +697,14 @@ type CurrPath string
 type RelPath string
 ```
 
-> from [path.go](path.go#L381):
+> from [path.go](path.go#L380):
 
 ```go
 // PkgsrcPath is a path relative to the pkgsrc root.
 type PkgsrcPath string
 ```
 
-> from [path.go](path.go#L411):
+> from [path.go](path.go#L410):
 
 ```go
 // PackagePath is a path relative to the package directory. It is used
@@ -808,7 +808,7 @@ t.DisableTracing()
 To see how to setup complicated tests, have a look at the following test,
 which sets up a realistic environment to run the tests in.
 
-> from [pkglint_test.go](pkglint_test.go#L120):
+> from [pkglint_test.go](pkglint_test.go#L119):
 
 ```go
 // Demonstrates which infrastructure files are necessary to actually run
