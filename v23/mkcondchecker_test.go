@@ -230,6 +230,7 @@ func (s *Suite) Test_MkCondChecker_Check__comparing_PKGSRC_COMPILER_with_eqeq(c 
 func (s *Suite) Test_MkCondChecker_Check__contradicting_conditions(c *check.C) {
 	t := s.Init(c)
 
+	G.Experimental = true
 	t.SetUpPkgsrc()
 	t.FinishSetUp()
 
@@ -795,6 +796,7 @@ func (s *Suite) Test_MkCondChecker_checkContradictions(c *check.C) {
 func (s *Suite) Test_MkCondChecker_checkContradictions__if_else(c *check.C) {
 	t := s.Init(c)
 
+	G.Experimental = true
 	t.SetUpVartypes()
 
 	mklines := t.NewMkLines("filename.mk",

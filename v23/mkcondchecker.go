@@ -76,7 +76,9 @@ func (ck *MkCondChecker) Check() {
 		Compare: ck.checkCompare,
 		VarUse:  checkVarUse})
 
-	ck.checkContradictions()
+	if G.Experimental {
+		ck.checkContradictions()
+	}
 }
 
 func (ck *MkCondChecker) checkNotEmpty(not *MkCond) {
