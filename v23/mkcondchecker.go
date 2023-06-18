@@ -308,14 +308,14 @@ func (ck *MkCondChecker) checkContradictions() {
 	for _, curr := range facts {
 		varname := curr.Varname
 		for _, prev := range byVarname[varname] {
-			both := makepat.Intersect(prev.Matches, curr.Matches)
+			both := makepat.Intersect(prev.Pattern, curr.Pattern)
 			if !both.CanMatch() {
 				if prev.MkLine != mkline {
 					mkline.Errorf("The patterns %q from %s and %q cannot match at the same time.",
-						prev.Text, mkline.RelMkLine(prev.MkLine), curr.Text)
+						prev.PatternText, mkline.RelMkLine(prev.MkLine), curr.PatternText)
 				} else {
 					mkline.Errorf("The patterns %q and %q cannot match at the same time.",
-						prev.Text, curr.Text)
+						prev.PatternText, curr.PatternText)
 				}
 			}
 		}
@@ -323,11 +323,13 @@ func (ck *MkCondChecker) checkContradictions() {
 	}
 }
 
+// VarFact is a statement about a variable that is true in the current
+// conditional branch.
 type VarFact struct {
-	MkLine  *MkLine
-	Varname string
-	Text    string
-	Matches *makepat.Pattern
+	Varname     string
+	PatternText string
+	Pattern     *makepat.Pattern
+	MkLine      *MkLine
 }
 
 // collectFacts extracts those basic conditions that must definitely be true
@@ -357,7 +359,7 @@ func (ck *MkCondChecker) collectFacts(mkline *MkLine) []VarFact {
 			return
 		}
 
-		facts = append(facts, VarFact{mkline, use.varname, pattern, m})
+		facts = append(facts, VarFact{use.varname, pattern, m, mkline})
 	}
 
 	var collectCond func(cond *MkCond)

@@ -852,15 +852,15 @@ func (s *Suite) Test_MkCondChecker_collectFacts(c *check.C) {
 	})
 
 	for i := range facts {
-		facts[i].Matches = nil // these would just complicate the comparison
+		facts[i].Pattern = nil // these would just complicate the comparison
 	}
 	t.CheckDeepEquals(facts, []VarFact{
-		{mklines.mklines[0], "OPSYS", "one", nil},
-		{mklines.mklines[0], "OPSYS", "two", nil},
-		{mklines.mklines[1], "OS_VERSION", "three", nil},
-		{mklines.mklines[2], "OPSYS", "four", nil},
-		{mklines.mklines[4], "OPSYS", "five", nil},
-		{mklines.mklines[4], "OPSYS", "six", nil},
-		{mklines.mklines[4], "OPSYS", "seven", nil},
+		{"OPSYS", "one", nil, mklines.mklines[0]},
+		{"OPSYS", "two", nil, mklines.mklines[0]},
+		{"OS_VERSION", "three", nil, mklines.mklines[1]},
+		{"OPSYS", "four", nil, mklines.mklines[2]},
+		{"OPSYS", "five", nil, mklines.mklines[4]},
+		{"OPSYS", "six", nil, mklines.mklines[4]},
+		{"OPSYS", "seven", nil, mklines.mklines[4]},
 	})
 }
