@@ -11,7 +11,7 @@ func (s *Suite) Test_MkLines__quoting_LDFLAGS_for_GNU_configure(c *check.C) {
 
 	t.SetUpVartypes()
 	pkg := NewPackage(t.File("category/pkgbase"))
-	mklines := t.NewMkLinesPkg("Makefile", pkg, // XXX: Is in wrong directory.
+	mklines := t.NewMkLinesPkg("Makefile", pkg, // XXX: Is in the wrong directory.
 		MkCvsID,
 		"GNU_CONFIGURE=\tyes",
 		"CONFIGURE_ENV+=\tX_LIBS=${X11_LDFLAGS:Q}")
@@ -103,6 +103,30 @@ func (s *Suite) Test_MkLines__varuse_sh_modifier(c *check.C) {
 
 	// No warnings about defined but not used or vice versa
 	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_MkLines__directive_indentation(c *check.C) {
+	t := s.Init(c)
+
+	// FIXME: Line 2 is a multiple-inclusion guard,
+	// so the indentation must be one level to the left.
+	mklines := t.SetUpFileMkLines("filename.mk",
+		MkCvsID,
+		".if !defined(FILENAME_MK_)",
+		"FILENAME_MK_=",
+		".if 1",
+		".if 1",
+		".endif",
+		".endif",
+		".endif")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"NOTE: ~/filename.mk:4: This directive should be indented by 2 spaces.",
+		"NOTE: ~/filename.mk:5: This directive should be indented by 4 spaces.",
+		"NOTE: ~/filename.mk:6: This directive should be indented by 4 spaces.",
+		"NOTE: ~/filename.mk:7: This directive should be indented by 2 spaces.")
 }
 
 func (s *Suite) Test_MkLines_Check__unusual_target(c *check.C) {
@@ -287,7 +311,10 @@ func (s *Suite) Test_MkLines_Check__absolute_pathname_depending_on_OPSYS(c *chec
 		"WARN: games/heretic2-demo/Makefile:8: Unknown shell command \"/usr/bin/bsdtar\".")
 }
 
-func (s *Suite) Test_MkLines_Check__indentation(c *check.C) {
+// FIXME: Even though there is an unmatched '.endif',
+// and pkglint does not know where the erroneous directive is,
+// it complains about wrong indentation.
+func (s *Suite) Test_MkLines_Check__indentation__unmatched(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPkgsrc()
@@ -318,6 +345,115 @@ func (s *Suite) Test_MkLines_Check__indentation(c *check.C) {
 	t.CheckOutputLines(
 		"NOTE: options.mk:5: This directive should be indented by 0 spaces.",
 		"WARN: options.mk:5: GUARD_MK is used but not defined.",
+		"NOTE: options.mk:6: This directive should be indented by 0 spaces.",
+		"NOTE: options.mk:7: This directive should be indented by 2 spaces.",
+		"WARN: options.mk:7: FILES is used but not defined.",
+		"NOTE: options.mk:8: This directive should be indented by 4 spaces.",
+		"WARN: options.mk:8: GUARD2_MK is used but not defined.",
+		"NOTE: options.mk:9: This directive should be indented by 4 spaces.",
+		"NOTE: options.mk:10: This directive should be indented by 4 spaces.",
+		"NOTE: options.mk:11: This directive should be indented by 2 spaces.",
+		"NOTE: options.mk:12: This directive should be indented by 2 spaces.",
+		"WARN: options.mk:12: COND1 is used but not defined.",
+		"NOTE: options.mk:13: This directive should be indented by 2 spaces.",
+		"WARN: options.mk:13: COND2 is used but not defined.",
+		"NOTE: options.mk:14: This directive should be indented by 2 spaces.",
+		"ERROR: options.mk:14: \".else\" does not take arguments. If you meant \"else if\", use \".elif\".",
+		"NOTE: options.mk:15: This directive should be indented by 2 spaces.",
+		"NOTE: options.mk:16: This directive should be indented by 0 spaces.",
+		"NOTE: options.mk:17: This directive should be indented by 0 spaces.",
+		"NOTE: options.mk:18: This directive should be indented by 0 spaces.",
+		"ERROR: options.mk:18: Unmatched .endif.")
+}
+
+// Due to the '.include' in line 3, line 5 is not a multiple-inclusion guard,
+// so its inner directives are indented relative to it.
+// TODO: Make it so.
+func (s *Suite) Test_MkLines_Check__indentation__unguarded(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.Chdir("category/package")
+	t.FinishSetUp()
+	mklines := t.NewMkLines("options.mk",
+		MkCvsID,
+		"",
+		".include \"../../mk/bsd.prefs.mk\"",
+		"",
+		". if !defined(GUARD_MK)",
+		". if ${OPSYS} == ${OPSYS}",
+		".   for i in ${FILES}",
+		".     if !defined(GUARD2_MK)",
+		".     else",
+		".     endif",
+		".   endfor",
+		".   if ${COND1}",
+		".   elif ${COND2}",
+		".   else ${COND3}",
+		".   endif",
+		". endif",
+		". endif",
+		". endif")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"NOTE: options.mk:5: This directive should be indented by 0 spaces.",
+		"WARN: options.mk:5: GUARD_MK is used but not defined.",
+		"NOTE: options.mk:6: This directive should be indented by 0 spaces.",
+		"NOTE: options.mk:7: This directive should be indented by 2 spaces.",
+		"WARN: options.mk:7: FILES is used but not defined.",
+		"NOTE: options.mk:8: This directive should be indented by 4 spaces.",
+		"WARN: options.mk:8: GUARD2_MK is used but not defined.",
+		"NOTE: options.mk:9: This directive should be indented by 4 spaces.",
+		"NOTE: options.mk:10: This directive should be indented by 4 spaces.",
+		"NOTE: options.mk:11: This directive should be indented by 2 spaces.",
+		"NOTE: options.mk:12: This directive should be indented by 2 spaces.",
+		"WARN: options.mk:12: COND1 is used but not defined.",
+		"NOTE: options.mk:13: This directive should be indented by 2 spaces.",
+		"WARN: options.mk:13: COND2 is used but not defined.",
+		"NOTE: options.mk:14: This directive should be indented by 2 spaces.",
+		"ERROR: options.mk:14: \".else\" does not take arguments. If you meant \"else if\", use \".elif\".",
+		"NOTE: options.mk:15: This directive should be indented by 2 spaces.",
+		"NOTE: options.mk:16: This directive should be indented by 0 spaces.",
+		"NOTE: options.mk:17: This directive should be indented by 0 spaces.",
+		"NOTE: options.mk:18: This directive should be indented by 0 spaces.",
+		"ERROR: options.mk:18: Unmatched .endif.")
+}
+
+// Line 3 is a multiple-inclusion guard,
+// so its inner directives are indented at the same level.
+func (s *Suite) Test_MkLines_Check__indentation__guarded(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.Chdir("category/package")
+	t.FinishSetUp()
+	mklines := t.NewMkLines("options.mk",
+		MkCvsID,
+		"",
+		". if !defined(GUARD_MK)",
+		"",
+		".include \"../../mk/bsd.prefs.mk\"",
+		". if ${OPSYS} == ${OPSYS}",
+		".   for i in ${FILES}",
+		".     if !defined(GUARD2_MK)",
+		".     else",
+		".     endif",
+		".   endfor",
+		".   if ${COND1}",
+		".   elif ${COND2}",
+		".   else ${COND3}",
+		".   endif",
+		". endif",
+		". endif",
+		". endif")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"NOTE: options.mk:3: This directive should be indented by 0 spaces.",
+		"WARN: options.mk:3: GUARD_MK is used but not defined.",
 		"NOTE: options.mk:6: This directive should be indented by 0 spaces.",
 		"NOTE: options.mk:7: This directive should be indented by 2 spaces.",
 		"WARN: options.mk:7: FILES is used but not defined.",
