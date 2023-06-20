@@ -34,7 +34,7 @@ type MkStmtCallback struct {
 	Loop  func(loop *MkStmtLoop)
 }
 
-func ParseMkStmts(mklines *MkLines) MkStmt {
+func ParseMkStmts(mklines []*MkLine) MkStmt {
 
 	kind := func(mkline *MkLine) string {
 		if mkline.IsDirective() {
@@ -70,7 +70,7 @@ func ParseMkStmts(mklines *MkLines) MkStmt {
 		}
 	}
 
-	for _, mkline := range mklines.mklines {
+	for _, mkline := range mklines {
 		switch kind(mkline) {
 		case "if":
 			var cond MkStmtCond

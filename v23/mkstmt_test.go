@@ -15,7 +15,7 @@ func (s *Suite) Test_ParseMkStmts(c *check.C) {
 		".  endfor",
 		".endif")
 
-	stmts := ParseMkStmts(mklines)
+	stmts := ParseMkStmts(mklines.mklines)
 
 	t.CheckDeepEquals(stmts,
 		&MkStmtBlock{
@@ -57,7 +57,7 @@ func (s *Suite) Test_WalkMkStmt(c *check.C) {
 		".endif")
 
 	line := NewLineWhole("")
-	stmts := ParseMkStmts(mklines)
+	stmts := ParseMkStmts(mklines.mklines)
 	if stmts != nil {
 		WalkMkStmt(stmts, MkStmtCallback{
 			Line: func(mkline *MkLine) {
@@ -97,7 +97,7 @@ func (s *Suite) Test_WalkMkStmt__invalid(c *check.C) {
 
 	test := func(lines ...string) {
 		mklines := t.NewMkLines("filename.mk", lines...)
-		stmts := ParseMkStmts(mklines)
+		stmts := ParseMkStmts(mklines.mklines)
 		t.CheckNil(stmts)
 	}
 
