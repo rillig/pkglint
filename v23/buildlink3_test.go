@@ -1186,3 +1186,21 @@ func (s *Suite) Test_LoadBuildlink3Data(c *check.C) {
 		abiDependsLine: mklines.mklines[11],
 	})
 }
+
+func (s *Suite) Test_isBuildlink3Guard(c *check.C) {
+	t := s.Init(c)
+
+	test := func(text string, expected bool) {
+		mkline := t.NewMkLine("buildlink3.mk", 123, text)
+		actual := isBuildlink3Guard(mkline)
+		t.CheckEquals(actual, expected)
+	}
+
+	test(".if !defined(PKG_BUILDLINK3_MK)", true)
+
+	// Missing closing parenthesis.
+	test(".if !defined(PKG_BUILDLINK3_MK", false)
+
+	// Not the usual form.
+	test(".ifndef PKG_BUILDLINK3_MK", false)
+}

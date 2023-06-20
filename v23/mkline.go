@@ -1091,7 +1091,8 @@ func (vuc *VarUseContext) String() string {
 //	Except for .if with multiple-inclusion guard, which indents all inner directives by 0.
 //	Each .elif, .else, .endif, .endfor uses the outer indentation instead.
 type Indentation struct {
-	levels []indentationLevel
+	levels    []indentationLevel
+	guardLine *MkLine
 }
 
 type indentationLevel struct {
@@ -1114,7 +1115,9 @@ type indentationLevel struct {
 	guard bool
 }
 
-func NewIndentation() *Indentation { return &Indentation{} }
+func NewIndentation(guardLine *MkLine) *Indentation {
+	return &Indentation{nil, guardLine}
+}
 
 func (ind *Indentation) String() string {
 	var s strings.Builder
@@ -1255,11 +1258,7 @@ func (ind *Indentation) TrackBefore(mkline *MkLine) {
 	directive := mkline.Directive()
 	switch directive {
 	case "for", "if", "ifdef", "ifndef":
-		guard := false
-		if directive == "if" {
-			cond := mkline.Cond()
-			guard = cond != nil && cond.Not != nil && hasSuffix(cond.Not.Defined, "_MK")
-		}
+		guard := mkline == ind.guardLine || isBuildlink3Guard(mkline)
 		ind.Push(mkline, ind.Depth(directive), mkline.Args(), guard)
 	}
 }

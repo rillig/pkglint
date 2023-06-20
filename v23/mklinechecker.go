@@ -311,6 +311,9 @@ func (ck MkLineChecker) checkIncludeBuiltin() {
 }
 
 func (ck MkLineChecker) checkDirectiveIndentation(expectedDepth int) {
+	if ck.MkLines.stmts == nil {
+		return
+	}
 	mkline := ck.MkLine
 	indent := mkline.Indent()
 	if expected := strings.Repeat(" ", expectedDepth); indent != expected {

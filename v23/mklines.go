@@ -32,6 +32,8 @@ type MkLines struct {
 	plistVarSkip  bool               // True if any of the PLIST_VARS identifiers refers to a variable.
 	Tools         *Tools             // Tools defined in file scope.
 	indentation   *Indentation       // Indentation depth of preprocessing directives; only available during MkLines.ForEach.
+	stmts         MkStmt
+	guardLine     *MkLine
 	once          Once
 
 	// TODO: Consider extracting plistVarAdded, plistVarSet, plistVarSkip into an own type.
@@ -68,6 +70,9 @@ func NewMkLines(lines *Lines, pkg *Package, extraScope *Scope) *MkLines {
 		tools.Fallback(G.Pkgsrc.Tools)
 	}
 
+	stmts := ParseMkStmts(mklines)
+	guardLine := findGuardLine(stmts)
+
 	return &MkLines{
 		mklines,
 		lines,
@@ -80,6 +85,8 @@ func NewMkLines(lines *Lines, pkg *Package, extraScope *Scope) *MkLines {
 		false,
 		tools,
 		nil,
+		stmts,
+		guardLine,
 		Once{},
 		mklinesCheckAll{
 			target:   "",
@@ -130,6 +137,26 @@ func (mklines *MkLines) Check() {
 	mklines.checkAll()
 
 	SaveAutofixChanges(mklines.lines)
+}
+
+func findGuardLine(stmts MkStmt) *MkLine {
+	block, ok := stmts.(*MkStmtBlock)
+	if !ok || len(*block) != 1 {
+		return nil
+	}
+	stmtCond, ok := (*block)[0].(*MkStmtCond)
+	if !ok || len(stmtCond.Branches) != 1 {
+		return nil
+	}
+	mkline := stmtCond.Conds[0]
+	cond := mkline.Cond()
+	if cond == nil || cond.Not == nil {
+		return nil
+	}
+	if !matches(cond.Not.Defined, `^[A-Za-z_]\w*$`) {
+		return nil
+	}
+	return mkline
 }
 
 func (mklines *MkLines) collectRationale() {
@@ -340,7 +367,7 @@ func (mklines *MkLines) ForEachEnd(action func(mkline *MkLine) bool, atEnd func(
 	// ForEachEnd must not be called within itself.
 	assert(mklines.indentation == nil)
 
-	mklines.indentation = NewIndentation()
+	mklines.indentation = NewIndentation(mklines.guardLine)
 	mklines.Tools.SeenPrefs = false
 
 	result := true

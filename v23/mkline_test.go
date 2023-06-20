@@ -1388,7 +1388,7 @@ func (s *Suite) Test_VarUseContext_String(c *check.C) {
 func (s *Suite) Test_Indentation(c *check.C) {
 	t := s.Init(c)
 
-	ind := NewIndentation()
+	ind := NewIndentation(nil)
 
 	mkline := t.NewMkLine("dummy.mk", 5, ".if 0")
 
@@ -1481,7 +1481,7 @@ func (s *Suite) Test_Indentation_RememberUsedVariables(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("Makefile", 123, ".if ${PKGREVISION} > 0")
-	ind := NewIndentation()
+	ind := NewIndentation(nil)
 
 	ind.TrackBefore(mkline)
 	ind.RememberUsedVariables(mkline.Cond())

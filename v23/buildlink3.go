@@ -414,3 +414,13 @@ func LoadBuildlink3Data(mklines *MkLines) *Buildlink3Data {
 	}
 	return nil
 }
+
+func isBuildlink3Guard(mkline *MkLine) bool {
+	if mkline.Basename == "buildlink3.mk" && mkline.NeedsCond() {
+		cond := mkline.Cond()
+		if cond != nil && cond.Not != nil && hasSuffix(cond.Not.Defined, "_MK") {
+			return true
+		}
+	}
+	return false
+}
