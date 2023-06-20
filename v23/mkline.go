@@ -1083,7 +1083,7 @@ func (vuc *VarUseContext) String() string {
 
 // Indentation remembers the stack of preprocessing directives and their
 // indentation. By convention, each directive is indented by 2 spaces.
-// An excepting are multiple-inclusion guards, they don't increase the
+// An exception are multiple-inclusion guards, they don't increase the
 // indentation.
 //
 //	Indentation starts with 0 spaces.
