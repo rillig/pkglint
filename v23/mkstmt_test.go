@@ -19,7 +19,6 @@ func (s *Suite) Test_ParseMkStmts(c *check.C) {
 
 	t.CheckDeepEquals(stmts,
 		&MkStmtBlock{
-			&MkStmtLine{mklines.mklines[0]},
 			&MkStmtCond{
 				[]*MkLine{
 					mklines.mklines[1],
@@ -82,8 +81,7 @@ func (s *Suite) Test_WalkMkStmt(c *check.C) {
 	WalkMkStmt(stmts, MkStmtCallback{})
 
 	t.CheckOutputLines(
-		"NOTE: Block with 2 statements.",
-		"NOTE: filename.mk:1: Line.",
+		"NOTE: Block with 1 statement.",
 		"NOTE: Cond with 3 branches.",
 		"NOTE: filename.mk:2: Line.",
 		"NOTE: filename.mk:3: Line.",

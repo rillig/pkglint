@@ -50,6 +50,9 @@ func ParseMkStmts(mklines *MkLines) MkStmt {
 				return dir
 			}
 		}
+		if mkline.IsEmpty() || mkline.IsComment() {
+			return "ignore"
+		}
 		return ""
 	}
 
@@ -110,6 +113,8 @@ func ParseMkStmts(mklines *MkLines) MkStmt {
 			}
 			stack = stack[:len(stack)-1]
 			appendStmt(loop)
+		case "ignore":
+			// Do nothing.
 		default:
 			appendStmt(&MkStmtLine{mkline})
 		}
