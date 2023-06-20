@@ -1758,7 +1758,7 @@ func (pkg *Package) Rel(filename CurrPath) PackagePath {
 	return NewPackagePath(G.Pkgsrc.Relpath(pkg.dir, filename))
 }
 
-// Includes returns whether the given file (relative to the package directory)
+// Includes returns whether the given file
 // is included somewhere in the package, either directly or indirectly.
 func (pkg *Package) Includes(filename PackagePath) *MkLine {
 	mkline := pkg.unconditionalIncludes[filename]
