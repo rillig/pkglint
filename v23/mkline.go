@@ -262,6 +262,8 @@ func (mkline *MkLine) ValueAlign() string {
 	return parts.leadingComment + parts.varnameOp + parts.spaceBeforeValue
 }
 
+// Value applies to variable assignments and returns the right-hand side of
+// the assignment.
 func (mkline *MkLine) Value() string { return mkline.data.(*mkLineAssign).value }
 
 // FirstLineContainsValue returns whether the variable assignment of a

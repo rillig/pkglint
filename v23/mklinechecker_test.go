@@ -172,6 +172,22 @@ func (s *Suite) Test_MkLineChecker_checkText__WRKSRC(c *check.C) {
 		"WARN: ~/module.mk:3: WRKSRC is used but not defined.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkText__missing_dollar(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"CONFIGURE_ARGS+=\t--with-fltk={BUILDLINK_DIR:Q}/nonexistent")
+	mkline := mklines.mklines[1]
+
+	ck := NewMkLineChecker(mklines, mkline)
+	ck.checkText(mkline.Value())
+
+	// TODO: Warn about the missing '$'.
+	t.CheckOutputEmpty()
+}
+
 // In general, -Wl,-R should not appear in package Makefiles.
 // BUILDLINK_TRANSFORM is an exception to this since this command line option
 // is removed here from the compiler invocations.
