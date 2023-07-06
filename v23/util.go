@@ -965,6 +965,22 @@ func joinOxford(conn string, elements ...string) string {
 	return strings.Join(nonempty, ", ")
 }
 
+func hasBalancedBraces(text string) bool {
+	n := 0
+	for _, r := range text {
+		switch r {
+		case '{':
+			n++
+		case '}':
+			n--
+			if n < 0 {
+				return false
+			}
+		}
+	}
+	return n == 0
+}
+
 var pathMatchers = make(map[string]*pathMatcher)
 
 type pathMatcher struct {

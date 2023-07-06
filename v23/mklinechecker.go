@@ -87,6 +87,7 @@ func (ck MkLineChecker) checkText(text string) {
 
 	ck.checkTextWrksrcDotDot(text)
 	ck.checkTextRpath(text)
+	ck.checkTextMissingDollar(text)
 }
 
 func (ck MkLineChecker) checkTextWrksrcDotDot(text string) {
@@ -122,6 +123,27 @@ func (ck MkLineChecker) checkTextRpath(text string) {
 	// See VartypeCheck.LdFlag.
 	if m, flag := match1(text, `(-Wl,--rpath,|-Wl,-rpath-link,|-Wl,-rpath,|-Wl,-R\b)`); m {
 		mkline.Warnf("Please use ${COMPILER_RPATH_FLAG} instead of %q.", flag)
+	}
+}
+
+// checkTextMissingDollar checks for expressions that are missing the leading
+// '$', using simple heuristics.
+func (ck MkLineChecker) checkTextMissingDollar(text string) {
+	if !hasBalancedBraces(text) {
+		return
+	}
+	for i, r := range text {
+		if r != '{' || hasSuffix(text[:i], "$") {
+			continue
+		}
+		lex := NewMkLexer("$"+text[i:], nil)
+		start := lex.lexer.Mark()
+		expr := lex.VarUse()
+		if expr != nil && len(expr.modifiers) != 0 &&
+			(expr.varname == "" || textproc.Upper.Contains(expr.varname[0])) {
+			ck.MkLine.Warnf("Maybe missing '$' in expression %q.",
+				lex.lexer.Since(start)[1:])
+		}
 	}
 }
 

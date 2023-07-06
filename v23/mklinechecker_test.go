@@ -178,14 +178,22 @@ func (s *Suite) Test_MkLineChecker_checkText__missing_dollar(c *check.C) {
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
-		"CONFIGURE_ARGS+=\t--with-fltk={BUILDLINK_DIR:Q}/nonexistent")
-	mkline := mklines.mklines[1]
+		"CONFIGURE_ARGS+=\t--with-fltk={BUILDLINK_DIR:Q}/nonexistent",
+		"INDIRECT=\t{:Ufallback}",
+		"PRINT_PLIST_AWK+=\t{sub(\"^.*em:id=\\\"\", \"\");sub(\"\\\".*$$\",\"\");print $$0}")
 
-	ck := NewMkLineChecker(mklines, mkline)
-	ck.checkText(mkline.Value())
+	for _, mkline := range mklines.mklines {
+		if mkline.IsVarassign() {
+			ck := NewMkLineChecker(mklines, mkline)
+			ck.checkText(mkline.Value())
+		}
+	}
 
-	// TODO: Warn about the missing '$'.
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: filename.mk:2: "+
+			"Maybe missing '$' in expression \"{BUILDLINK_DIR:Q}\".",
+		"WARN: filename.mk:3: "+
+			"Maybe missing '$' in expression \"{:Ufallback}\".")
 }
 
 // In general, -Wl,-R should not appear in package Makefiles.
