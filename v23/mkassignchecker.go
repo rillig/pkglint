@@ -525,6 +525,7 @@ func (ck *MkAssignChecker) checkRight() {
 	ck.checkMisc()
 
 	ck.checkRightVaruse()
+	ck.checkRightConfigureArgs()
 }
 
 func (ck *MkAssignChecker) checkRightCategory() {
@@ -551,6 +552,46 @@ func (ck *MkAssignChecker) checkRightCategory() {
 		fix.Replace(primary+" "+categories[1], categories[1]+" "+primary)
 	}
 	fix.Apply()
+}
+
+// checkRightConfigureArgs checks that a package does not try to override GNU
+// configure options that are already handled by the infrastructure.
+func (ck *MkAssignChecker) checkRightConfigureArgs() {
+	pkg := ck.MkLines.pkg
+	if G.Pkgsrc == nil || pkg == nil || !pkg.vars.IsDefined("GNU_CONFIGURE") {
+		return
+	}
+	mkline := ck.MkLine
+	if mkline.Varname() != "CONFIGURE_ARGS" {
+		return
+	}
+	value := mkline.Value()
+	m, mkOpt := match1(value, `^(--[\w-]+)=?`)
+	if !m {
+		return
+	}
+	gnuConfigure := G.Pkgsrc.File("mk/configure/gnu-configure.mk")
+
+	action := func(gnuMkline *MkLine) bool {
+		if !gnuMkline.IsVarassign() || gnuMkline.Varname() != "CONFIGURE_ARGS" {
+			return true
+		}
+		m, gnuOpt := match1(gnuMkline.Value(), `^(--[\w-]+)=?`)
+		if !m || mkOpt != gnuOpt {
+			return true
+		}
+		mkline.Warnf("The option %q is already handled by %q.",
+			mkOpt, mkline.Rel(gnuConfigure))
+		mkline.Explain(
+			"Packages should not specify this option directly,",
+			"as the pkgsrc infrastructure may override its value",
+			"based on other variables.",
+			"See gnu-configure.mk for further details.")
+		return false
+	}
+
+	mklines := LoadMk(gnuConfigure, pkg, 0)
+	mklines.ForEachEnd(action, func(lastMkline *MkLine) {})
 }
 
 func (ck *MkAssignChecker) checkMisc() {

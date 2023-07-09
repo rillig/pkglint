@@ -1034,6 +1034,46 @@ func (s *Suite) Test_MkAssignChecker_checkRightCategory__other_file(c *check.C) 
 			"The primary category should be \"obscure\", not \"perl5\".")
 }
 
+func (s *Suite) Test_MkAssignChecker_checkRightConfigureArgs(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"GNU_CONFIGURE=\t\tyes",
+		"CONFIGURE_ARGS+=\t--prefix=custom",
+		"CONFIGURE_ARGS+=\t--build=build-platform",
+		"CONFIGURE_ARGS+=\t--host=host-platform",
+		"CONFIGURE_ARGS+=\t--infodir=info-dir",
+		"CONFIGURE_ARGS+=\t--mandir=man-dir",
+		"CONFIGURE_ARGS+=\t--quiet")
+	t.CreateFileLines("mk/configure/gnu-configure.mk",
+		MkCvsID,
+		"",
+		"CONFIGURE_ARGS+=\t--prefix=${GNU_CONFIGURE_PREFIX:Q}",
+		"CONFIGURE_ARGS+=\t--libdir=${GNU_CONFIGURE_LIBDIR}",
+		".if 1",
+		"CONFIGURE_ARGS+=\t--build=${NATIVE_MACHINE_GNU_PLATFORM:Q}",
+		".else",
+		"CONFIGURE_ARGS+=\t--build=${MACHINE_GNU_PLATFORM:Q}",
+		".endif",
+		"CONFIGURE_ARGS+=\t--enable-option-checking=yes",
+		"CONFIGURE_ARGS+=\t--quiet")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	t.CheckOutputLines(
+		"WARN: Makefile:21: "+
+			"The option \"--prefix\" is already handled "+
+			"by \"../../mk/configure/gnu-configure.mk\".",
+		"WARN: Makefile:22: "+
+			"The option \"--build\" is already handled "+
+			"by \"../../mk/configure/gnu-configure.mk\".",
+		"WARN: Makefile:26: "+
+			"The option \"--quiet\" is already handled "+
+			"by \"../../mk/configure/gnu-configure.mk\".")
+}
+
 func (s *Suite) Test_MkAssignChecker_checkMisc(c *check.C) {
 	t := s.Init(c)
 
