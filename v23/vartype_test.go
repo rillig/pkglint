@@ -164,7 +164,7 @@ func (s *Suite) Test_Vartype_MayBeAppendedTo(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
-	t.SetUpVarType("GITHUB_SUBMODULES", BtUnknown, NoVartypeOptions)
+	t.SetUpVarType("UNKNOWN_THINGS", BtUnknown, NoVartypeOptions)
 
 	test := func(varname string, isAppendAllowed bool) {
 		vartype := G.Pkgsrc.VariableType(nil, varname)
@@ -196,10 +196,9 @@ func (s *Suite) Test_Vartype_MayBeAppendedTo(c *check.C) {
 	//  SUBST_SED.id+=  -e s,from,to,
 	test("SUBST_SED.id", true)
 
-	// This variable's actual type is a list, as the word 'modules'
+	// This variable's actual type is a list, as the word 'things'
 	// suggests, but pkglint doesn't know the meaning of that word.
-	// Instead,
-	test("GITHUB_SUBMODULES", false)
+	test("UNKNOWN_THINGS", false)
 }
 
 func (s *Suite) Test_Vartype_String(c *check.C) {

@@ -435,6 +435,7 @@ var (
 	BtFilePattern            = &BasicType{"FilePattern", (*VartypeCheck).FilePattern}
 	BtFileMode               = &BasicType{"FileMode", (*VartypeCheck).FileMode}
 	BtGccReqd                = &BasicType{"GccReqd", (*VartypeCheck).GccReqd}
+	BtGitHubSubmodule        = &BasicType{"GitHubSubmodule", (*VartypeCheck).GitHubSubmodule}
 	BtGitTag                 = &BasicType{"GitTag", (*VartypeCheck).GitTag}
 	BtGoModuleFile           = &BasicType{"GoModuleFile", (*VartypeCheck).GoModuleFile}
 	BtHomepage               = &BasicType{"Homepage", (*VartypeCheck).Homepage}

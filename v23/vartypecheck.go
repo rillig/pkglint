@@ -683,6 +683,10 @@ func (cv *VartypeCheck) GccReqd() {
 	}
 }
 
+// GitHubSubmodule checks for a 4-word definition of a GitHub submodule.
+func (cv *VartypeCheck) GitHubSubmodule() {
+}
+
 // GitTag checks for a fixed reference to a Git commit.
 //
 // https://git-scm.com/docs/gitrevisions

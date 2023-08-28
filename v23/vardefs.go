@@ -1267,6 +1267,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.pkg("GITHUB_PROJECT", BtIdentifierIndirect)
 	reg.pkg("GITHUB_TAG", BtGitTag)
 	reg.pkg("GITHUB_RELEASE", BtFilename)
+	reg.pkglist("GITHUB_SUBMODULES", BtGitHubSubmodule)
 	reg.pkg("GITHUB_TYPE", enum("tag release"))
 	reg.pkgrat("GMAKE_REQD", BtVersion)
 	// Some packages need to set GNU_ARCH.i386 to either i486 or i586.

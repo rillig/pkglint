@@ -272,7 +272,6 @@ func (s *Suite) Test_MkLineChecker_checkVartype__append_to_non_list(c *check.C) 
 	t := s.Init(c)
 
 	t.SetUpVartypes()
-	t.SetUpVarType("GITHUB_SUBMODULES", BtUnknown, NoVartypeOptions)
 
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,

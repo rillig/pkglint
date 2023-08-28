@@ -1141,6 +1141,16 @@ func (s *Suite) Test_VartypeCheck_GccReqd(c *check.C) {
 		"WARN: filename.mk:7: GCC version numbers should only contain the major version (7).")
 }
 
+func (s *Suite) Test_VartypeCheck_GitHubSubmodule(c *check.C) {
+	vt := NewVartypeCheckTester(s.Init(c), BtGitHubSubmodule)
+
+	vt.Varname("GITHUB_SUBMODULES")
+	vt.Values("user project tag place")
+	vt.Values("user project tag")             // TODO: only 3 words, should be 4
+	vt.Values("user project tag place extra") // TODO: 5 words, should only be 4
+	vt.OutputEmpty()
+}
+
 func (s *Suite) Test_VartypeCheck_GitTag(c *check.C) {
 	vt := NewVartypeCheckTester(s.Init(c), BtGitTag)
 
