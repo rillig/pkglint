@@ -685,6 +685,19 @@ func (cv *VartypeCheck) GccReqd() {
 
 // GitHubSubmodule checks for a 4-word definition of a GitHub submodule.
 func (cv *VartypeCheck) GitHubSubmodule() {
+	fields := cv.MkLine.ValueFields(cv.Value)
+	if len(fields)%4 != 0 {
+		cv.Warnf("Appending to %s should happen "+
+			"in groups of 4 words each, not %d.",
+			cv.Varname, len(fields))
+		cv.Explain(
+			"Each group of 4 words contains of:",
+			"",
+			"\torganization",
+			"\tproject",
+			"\tcommit or tag",
+			"\tplace where to put the submodule")
+	}
 }
 
 // GitTag checks for a fixed reference to a Git commit.

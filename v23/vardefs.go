@@ -139,9 +139,12 @@ func (reg *VarTypeRegistry) pkgload(varname string, basicType *BasicType) {
 
 // A package-defined list may be defined and appended to in all Makefiles
 // except buildlink3.mk and builtin.mk. Simple assignment (instead of
-// appending) is also allowed. If this leads of an unconditional
+// appending) is also allowed. If this leads to an unconditional
 // assignment overriding a previous value, the redundancy check will
 // catch it.
+//
+// See pkglistbl3 for lists that may also be extended in buildlink3.mk, see
+// pkgappend for lists where each logical item consists of more than one word.
 func (reg *VarTypeRegistry) pkglist(varname string, basicType *BasicType) {
 	reg.DefineName(varname, basicType, List|PackageSettable, "pkglist")
 }
@@ -1267,7 +1270,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.pkg("GITHUB_PROJECT", BtIdentifierIndirect)
 	reg.pkg("GITHUB_TAG", BtGitTag)
 	reg.pkg("GITHUB_RELEASE", BtFilename)
-	reg.pkglist("GITHUB_SUBMODULES", BtGitHubSubmodule)
+	reg.pkgappend("GITHUB_SUBMODULES", BtGitHubSubmodule)
 	reg.pkg("GITHUB_TYPE", enum("tag release"))
 	reg.pkgrat("GMAKE_REQD", BtVersion)
 	// Some packages need to set GNU_ARCH.i386 to either i486 or i586.

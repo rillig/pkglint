@@ -1146,9 +1146,33 @@ func (s *Suite) Test_VartypeCheck_GitHubSubmodule(c *check.C) {
 
 	vt.Varname("GITHUB_SUBMODULES")
 	vt.Values("user project tag place")
-	vt.Values("user project tag")             // TODO: only 3 words, should be 4
-	vt.Values("user project tag place extra") // TODO: 5 words, should only be 4
-	vt.OutputEmpty()
+	vt.Values("user project tag")
+	vt.Values("user project tag place extra")
+
+	vt.Output(
+		"WARN: filename.mk:11: Appending to GITHUB_SUBMODULES "+
+			"should happen in groups of 4 words each, not 3.",
+		"WARN: filename.mk:21: Appending to GITHUB_SUBMODULES "+
+			"should happen in groups of 4 words each, not 5.")
+}
+
+func (s *Suite) Test_VartypeCheck_GitHubSubmodule__realistic(c *check.C) {
+	t := s.Init(c)
+	t.SetUpVartypes()
+
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"GITHUB_SUBMODULES+=\tuser project tag",
+		"GITHUB_SUBMODULES+=\tuser project tag place",
+		"GITHUB_SUBMODULES+=\tuser project tag place extra")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:2: Appending to GITHUB_SUBMODULES "+
+			"should happen in groups of 4 words each, not 3.",
+		"WARN: filename.mk:4: Appending to GITHUB_SUBMODULES "+
+			"should happen in groups of 4 words each, not 5.")
 }
 
 func (s *Suite) Test_VartypeCheck_GitTag(c *check.C) {
