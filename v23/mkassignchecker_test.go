@@ -1074,6 +1074,30 @@ func (s *Suite) Test_MkAssignChecker_checkRightConfigureArgs(c *check.C) {
 			"by \"../../mk/configure/gnu-configure.mk\".")
 }
 
+func (s *Suite) Test_MkAssignChecker_checkRightUseLanguages(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVarType("USE_LANGUAGES", enum("c c99 c11 c++14 fortran extra"),
+		List, "*.mk: append")
+	t.SetUpVarType("USE_CC_FEATURES", enum("c99 has_include"),
+		NoVartypeOptions, "*.mk: append")
+	t.SetUpVarType("USE_CXX_FEATURES", enum("c++14"),
+		NoVartypeOptions, "*.mk: append")
+
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"",
+		"USE_LANGUAGES+=\tc c99 c++14 fortran")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:3: The feature \"c99\" should be added "+
+			"to USE_CC_FEATURES instead of USE_LANGUAGES.",
+		"WARN: filename.mk:3: The feature \"c++14\" should be added "+
+			"to USE_CXX_FEATURES instead of USE_LANGUAGES.")
+}
+
 func (s *Suite) Test_MkAssignChecker_checkMisc(c *check.C) {
 	t := s.Init(c)
 

@@ -526,6 +526,7 @@ func (ck *MkAssignChecker) checkRight() {
 
 	ck.checkRightVaruse()
 	ck.checkRightConfigureArgs()
+	ck.checkRightUseLanguages()
 }
 
 func (ck *MkAssignChecker) checkRightCategory() {
@@ -592,6 +593,28 @@ func (ck *MkAssignChecker) checkRightConfigureArgs() {
 
 	mklines := LoadMk(gnuConfigure, pkg, 0)
 	mklines.ForEachEnd(action, func(lastMkline *MkLine) {})
+}
+
+func (ck *MkAssignChecker) checkRightUseLanguages() {
+	mkline := ck.MkLine
+	if mkline.Varname() != "USE_LANGUAGES" || G.Pkgsrc == nil {
+		return
+	}
+	cc := G.Pkgsrc.VariableType(ck.MkLines, "USE_CC_FEATURES").basicType
+	cxx := G.Pkgsrc.VariableType(ck.MkLines, "USE_CXX_FEATURES").basicType
+
+	for _, word := range mkline.Fields() {
+		if !containsVarUse(word) {
+			if cc.HasEnum(word) {
+				mkline.Warnf("The feature %q should be added "+
+					"to USE_CC_FEATURES instead of USE_LANGUAGES.", word)
+			}
+			if cxx.HasEnum(word) {
+				mkline.Warnf("The feature %q should be added "+
+					"to USE_CXX_FEATURES instead of USE_LANGUAGES.", word)
+			}
+		}
+	}
 }
 
 func (ck *MkAssignChecker) checkMisc() {
