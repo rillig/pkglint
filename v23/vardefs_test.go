@@ -47,6 +47,33 @@ func (s *Suite) Test_VarTypeRegistry_compilerLanguages(c *check.C) {
 	t.CheckEquals(enumValues, "empty-lang expr-lang gnu++14")
 }
 
+func (s *Suite) Test_VarTypeRegistry_gccFeatures(c *check.C) {
+	t := s.Init(c)
+
+	G.Testing = false // Just for code coverage
+	t.CreateFileLines("mk/compiler/gcc.mk",
+		MkCvsID,
+		"",
+		".if !empty(USE_CC_FEATURES:Mc11)",
+		".elif !empty(USE_CC_FEATURES:Manonymous-members)",
+		".endif",
+		"",
+		// Just for code coverage
+		".if ${OTHER} || ${USE_CC_FEATURES} \\",
+		" || ${USE_CC_FEATURES:O} || ${USE_CC_FEATURES:Mc99}",
+		".endif",
+		"",
+		// Just for code coverage
+		".if", // missing condition
+		".endif")
+	reg := NewVarTypeRegistry()
+
+	gccFeatures := reg.gccFeatures(G.Pkgsrc, "USE_CC_FEATURES")
+
+	enumValues := gccFeatures.AllowedEnums()
+	t.CheckEquals(enumValues, "anonymous-members c11 c99")
+}
+
 func (s *Suite) Test_VarTypeRegistry_enumFrom(c *check.C) {
 	t := s.Init(c)
 

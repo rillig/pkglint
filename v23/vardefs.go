@@ -316,6 +316,36 @@ func (reg *VarTypeRegistry) compilerLanguages(src *Pkgsrc) *BasicType {
 	return enum(joined)
 }
 
+func (reg *VarTypeRegistry) gccFeatures(src *Pkgsrc, varname string) *BasicType {
+	mklines := src.LoadMkExisting("mk/compiler/gcc.mk")
+
+	features := make(map[string]bool)
+	if mklines != nil {
+		for _, mkline := range mklines.mklines {
+
+			if mkline.IsDirective() && mkline.NeedsCond() && mkline.Cond() != nil {
+				mkline.Cond().Walk(&MkCondCallback{
+					VarUse: func(varuse *MkVarUse) {
+						if varuse.varname == varname && len(varuse.modifiers) == 1 {
+							ok, _, pattern, exact := varuse.modifiers[0].MatchMatch()
+							if ok && exact {
+								features[intern(pattern)] = true
+							}
+						}
+					},
+				})
+			}
+		}
+	}
+
+	joined := keysJoined(features)
+	if trace.Tracing {
+		trace.Stepf("Features from mk/compiler/gcc.mk: %s", joined)
+	}
+
+	return enum(joined)
+}
+
 // enumFrom parses all variable definitions for the given file,
 // and for all variables matching one of the varcanons, all values
 // are added as allowed values.
@@ -1780,6 +1810,8 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.pkg("USE_JAVA", enum("run yes build"))
 	reg.pkg("USE_JAVA2", javaVersions)
 	reg.pkglist("USE_LANGUAGES", reg.compilerLanguages(src))
+	reg.pkglist("USE_CC_FEATURES", reg.gccFeatures(src, "USE_CC_FEATURES"))
+	reg.pkglist("USE_CXX_FEATURES", reg.gccFeatures(src, "USE_CXX_FEATURES"))
 	reg.pkg("USE_LIBTOOL", BtYes)
 	reg.pkg("USE_MAKEINFO", BtYes)
 	reg.pkg("USE_MSGFMT_PLURALS", BtYes)
