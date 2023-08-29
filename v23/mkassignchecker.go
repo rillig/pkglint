@@ -604,16 +604,27 @@ func (ck *MkAssignChecker) checkRightUseLanguages() {
 	cxx := G.Pkgsrc.VariableType(ck.MkLines, "USE_CXX_FEATURES").basicType
 
 	for _, word := range mkline.Fields() {
-		if !containsVarUse(word) {
-			if cc.HasEnum(word) {
-				mkline.Warnf("The feature %q should be added "+
-					"to USE_CC_FEATURES instead of USE_LANGUAGES.", word)
-			}
-			if cxx.HasEnum(word) {
-				mkline.Warnf("The feature %q should be added "+
-					"to USE_CXX_FEATURES instead of USE_LANGUAGES.", word)
-			}
+		if containsVarUse(word) {
+			continue
 		}
+		var varname string
+		if cc.HasEnum(word) {
+			varname = "USE_CC_FEATURES"
+		} else if cxx.HasEnum(word) {
+			varname = "USE_CXX_FEATURES"
+		} else {
+			continue
+		}
+		mkline.Warnf("The feature %q should be added "+
+			"to %s instead of USE_LANGUAGES.", word, varname)
+		mkline.Explain(
+			"Specifying a C/C++ language version in USE_LANGUAGES",
+			"is deprecated.",
+			"Please set USE_CC_FEATURES (for C)",
+			"or USE_CXX_FEATURES (for C++).",
+			"If forcing a specific language version is necessary",
+			"for the build to succeed,",
+			"also set FORCE_C_STD or FORCE_CXX_STD.")
 	}
 }
 
