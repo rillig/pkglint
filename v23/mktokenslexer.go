@@ -5,11 +5,11 @@ import (
 	"strings"
 )
 
-// MkTokensLexer parses a sequence of variable uses (like ${VAR:Mpattern})
+// MkTokensLexer parses a sequence of expressions (like ${VAR:Mpattern})
 // interleaved with other text that is uninterpreted by bmake.
 type MkTokensLexer struct {
 	// The lexer for the current text-only token.
-	// If the current token is a variable use, the lexer will always return
+	// If the current token is an expression, the lexer will always return
 	// EOF internally. That is not visible from the outside though, as EOF is
 	// overridden in this type.
 	*textproc.Lexer
@@ -25,7 +25,7 @@ func NewMkTokensLexer(tokens []*MkToken) *MkTokensLexer {
 }
 
 func (m *MkTokensLexer) next() {
-	if len(m.tokens) > 0 && m.tokens[0].Varuse == nil {
+	if len(m.tokens) > 0 && m.tokens[0].Expr == nil {
 		m.Lexer = textproc.NewLexer(m.tokens[0].Text)
 		m.tokens = m.tokens[1:]
 	} else {
@@ -47,19 +47,19 @@ func (m *MkTokensLexer) Rest() string {
 }
 
 // Skip skips the next n bytes from the plain text.
-// If there is a variable use in the next n bytes, it panics; see SkipMixed.
+// If there is an expression in the next n bytes, it panics; see SkipMixed.
 func (m *MkTokensLexer) Skip(n int) bool {
 	return m.Lexer.Skip(n)
 }
 
-// SkipMixed skips the next n bytes, be they in plain text or in variable uses.
+// SkipMixed skips the next n bytes, be they plain text or expressions.
 // It is only used in very special situations.
 func (m *MkTokensLexer) SkipMixed(n int) bool {
 	result := n > 0
 	for n > 0 {
-		use := m.NextVarUse()
-		if use != nil {
-			n -= len(use.Text)
+		expr := m.NextExpr()
+		if expr != nil {
+			n -= len(expr.Text)
 			assert(n >= 0)
 		} else {
 			skip := imin(len(m.Lexer.Rest()), n)
@@ -70,10 +70,10 @@ func (m *MkTokensLexer) SkipMixed(n int) bool {
 	return result
 }
 
-// NextVarUse returns the next varuse token, unless there is some plain text
+// NextExpr returns the next expression token, unless there is some plain text
 // before it. In that case or at EOF, it returns nil.
-func (m *MkTokensLexer) NextVarUse() *MkToken {
-	if m.Lexer.EOF() && len(m.tokens) > 0 && m.tokens[0].Varuse != nil {
+func (m *MkTokensLexer) NextExpr() *MkToken {
+	if m.Lexer.EOF() && len(m.tokens) > 0 && m.tokens[0].Expr != nil {
 		token := m.tokens[0]
 		m.tokens = m.tokens[1:]
 		m.next()

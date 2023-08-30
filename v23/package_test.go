@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func (s *Suite) Test_Package__varuse_at_load_time(c *check.C) {
+func (s *Suite) Test_Package__expr_at_load_time(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPkgsrc()

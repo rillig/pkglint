@@ -146,7 +146,7 @@ func (scc *SimpleCommandChecker) handleTool() bool {
 		scc.mkline.Warnf("The %q tool is used but not added to USE_TOOLS.", command)
 	}
 
-	if tool != nil && tool.MustUseVarForm && !containsVarUse(command) {
+	if tool != nil && tool.MustUseVarForm && !containsExpr(command) {
 		scc.mkline.Warnf("Please use \"${%s}\" instead of %q.", tool.Varname, command)
 	}
 
@@ -159,12 +159,12 @@ func (scc *SimpleCommandChecker) handleCommandVariable() bool {
 	}
 
 	shellword := scc.strcmd.Name
-	varuse := NewMkLexer(shellword, nil).VarUse()
-	if varuse == nil {
+	expr := NewMkLexer(shellword, nil).Expr()
+	if expr == nil {
 		return false
 	}
 
-	varname := varuse.varname
+	varname := expr.varname
 
 	vartype := G.Pkgsrc.VariableType(scc.mklines, varname)
 	if vartype != nil && (vartype.basicType == BtShellCommand || vartype.basicType == BtPathname) {
@@ -245,7 +245,7 @@ func (scc *SimpleCommandChecker) checkAutoMkdirs() {
 	case cmdname == "${INSTALL}" && scc.strcmd.HasOption("-d"):
 		cmdname = "${INSTALL} -d"
 	case matches(cmdname, `^\$\{INSTALL_.*_DIR\}$`):
-		// TODO: Replace regex with proper VarUse.
+		// TODO: Replace regex with proper Expr.
 		break
 	default:
 		return
@@ -253,7 +253,7 @@ func (scc *SimpleCommandChecker) checkAutoMkdirs() {
 
 	containsIgnoredVar := func(arg string) bool {
 		for _, token := range scc.mkline.Tokenize(arg, false) {
-			if token.Varuse != nil && matches(token.Varuse.varname, `^[_.]*[a-z]`) {
+			if token.Expr != nil && matches(token.Expr.varname, `^[_.]*[a-z]`) {
 				return true
 			}
 		}
@@ -278,7 +278,7 @@ func (scc *SimpleCommandChecker) checkAutoMkdirs() {
 		autoMkdirs := false
 		if scc.mklines.pkg != nil {
 			plistLine := scc.mklines.pkg.Plist.UnconditionalDirs[prefixRel]
-			if plistLine != nil && !containsVarUse(plistLine.Line.Text) {
+			if plistLine != nil && !containsExpr(plistLine.Line.Text) {
 				autoMkdirs = true
 			}
 		}
@@ -392,9 +392,9 @@ type ShellLineChecker struct {
 	MkLines *MkLines
 	mkline  *MkLine
 
-	// checkVarUse is set to false when checking a single shell word
+	// checkExpr is set to false when checking a single shell word
 	// in order to skip duplicate warnings in variable assignments.
-	checkVarUse bool
+	checkExpr bool
 }
 
 func (ck *ShellLineChecker) checkSetE(list *MkShList, index int) {
@@ -544,7 +544,7 @@ func (ck *ShellLineChecker) checkPipeExitcode(pipeline *MkShPipeline) {
 
 var shellCommandsType = NewVartype(BtShellCommands, NoVartypeOptions, NewACLEntry("*", aclpAllRuntime))
 
-var shellCommandsVuc = &VarUseContext{shellCommandsType, VucUnknownTime, VucQuotPlain, false}
+var shellCommandsEctx = &ExprContext{shellCommandsType, EctxUnknownTime, EctxQuotPlain, false}
 
 func NewShellLineChecker(mklines *MkLines, mkline *MkLine) *ShellLineChecker {
 	assertNotNil(mklines)
@@ -718,12 +718,12 @@ func (ck *ShellLineChecker) CheckWord(token string, checkQuoting bool, time Tool
 
 	var line = ck.mkline.Line
 
-	// Delegate check for shell words consisting of a single variable use
+	// Delegate check for shell words consisting of a single expression
 	// to the MkLineChecker. Examples for these are ${VAR:Mpattern} or $@.
-	if varuse := ToVarUse(token); varuse != nil {
-		if ck.checkVarUse {
-			varUseChecker := NewMkVarUseChecker(varuse, ck.MkLines, ck.mkline)
-			varUseChecker.Check(shellCommandsVuc)
+	if expr := ToExpr(token); expr != nil {
+		if ck.checkExpr {
+			exprChecker := NewMkExprChecker(expr, ck.MkLines, ck.mkline)
+			exprChecker.Check(shellCommandsEctx)
 		}
 		return
 	}
@@ -765,13 +765,13 @@ outer:
 			continue
 
 			// Make(1) variables have the same syntax, no matter in which state the shell parser is currently.
-		case ck.checkVaruseToken(&atoms, quoting):
+		case ck.checkExprToken(&atoms, quoting):
 			continue
 
 		case quoting == shqPlain:
 			switch {
-			case atom.Type == shtShVarUse:
-				ck.checkShVarUsePlain(atom, checkQuoting)
+			case atom.Type == shtShExpr:
+				ck.checkShExprPlain(atom, checkQuoting)
 
 			case atom.Type == shtSubshell:
 				// Early return to avoid further parse errors.
@@ -858,7 +858,7 @@ func (ck *ShellLineChecker) unescapeBackticks(atoms *[]*ShAtom, quoting ShQuotin
 	return unescaped.String()
 }
 
-func (ck *ShellLineChecker) checkShVarUsePlain(atom *ShAtom, checkQuoting bool) {
+func (ck *ShellLineChecker) checkShExprPlain(atom *ShAtom, checkQuoting bool) {
 	shVarname := atom.ShVarname()
 
 	if shVarname == "@" {
@@ -898,14 +898,14 @@ func (ck *ShellLineChecker) variableNeedsQuoting(shVarname string) bool {
 	return !hasSuffix(shVarname, "dir") // Probably ok
 }
 
-func (ck *ShellLineChecker) checkVaruseToken(atoms *[]*ShAtom, quoting ShQuoting) bool {
-	varuse := (*atoms)[0].VarUse()
-	if varuse == nil {
+func (ck *ShellLineChecker) checkExprToken(atoms *[]*ShAtom, quoting ShQuoting) bool {
+	expr := (*atoms)[0].Expr()
+	if expr == nil {
 		return false
 	}
 
 	*atoms = (*atoms)[1:]
-	varname := varuse.varname
+	varname := expr.varname
 
 	if varname == "@" {
 		// No autofix here since it may be a simple typo.
@@ -916,17 +916,17 @@ func (ck *ShellLineChecker) checkVaruseToken(atoms *[]*ShAtom, quoting ShQuoting
 			"the same name, which has a completely different meaning.")
 
 		varname = ".TARGET"
-		varuse = NewMkVarUse(varname, varuse.modifiers...)
+		expr = NewMkExpr(varname, expr.modifiers...)
 	}
 
 	switch {
-	case quoting == shqPlain && varuse.IsQ():
+	case quoting == shqPlain && expr.IsQ():
 		// Fine.
 
 	case (quoting == shqSquot || quoting == shqDquot) && matches(varname, `^(?:.*DIR|.*FILE|.*PATH|.*_VAR|PREFIX|.*BASE|PKGNAME)$`):
 		// This is ok as long as these variables don't have embedded [$\\"'`].
 
-	case quoting != shqPlain && varuse.IsQ():
+	case quoting != shqPlain && expr.IsQ():
 		ck.Warnf("The :Q modifier should not be used inside quotes.")
 		ck.Explain(
 			"The :Q modifier is intended for embedding a string into a shell program.",
@@ -950,9 +950,9 @@ func (ck *ShellLineChecker) checkVaruseToken(atoms *[]*ShAtom, quoting ShQuoting
 			"a simple ${VAR:Q} without any surrounding quotes is correct.")
 	}
 
-	if ck.checkVarUse {
-		vuc := VarUseContext{shellCommandsType, VucUnknownTime, quoting.ToVarUseContext(), true}
-		NewMkVarUseChecker(varuse, ck.MkLines, ck.mkline).Check(&vuc)
+	if ck.checkExpr {
+		ectx := ExprContext{shellCommandsType, EctxUnknownTime, quoting.ToExprContext(), true}
+		NewMkExprChecker(expr, ck.MkLines, ck.mkline).Check(&ectx)
 	}
 
 	return true

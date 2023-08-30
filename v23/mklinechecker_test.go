@@ -6,7 +6,7 @@ import (
 )
 
 // PR pkg/46570, item 2
-func (s *Suite) Test_MkLineChecker__unclosed_varuse(c *check.C) {
+func (s *Suite) Test_MkLineChecker__unclosed_expr(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("Makefile",
@@ -60,7 +60,7 @@ func (s *Suite) Test_MkLineChecker_Check__buildlink3_include_prefs(c *check.C) {
 			"please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
 }
 
-func (s *Suite) Test_MkLineChecker_Check__warn_varuse_LOCALBASE(c *check.C) {
+func (s *Suite) Test_MkLineChecker_Check__warn_expr_LOCALBASE(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
@@ -74,7 +74,7 @@ func (s *Suite) Test_MkLineChecker_Check__warn_varuse_LOCALBASE(c *check.C) {
 		"WARN: options.mk:2: Please use PREFIX instead of LOCALBASE.")
 }
 
-func (s *Suite) Test_MkLineChecker_Check__varuse_modifier_L(c *check.C) {
+func (s *Suite) Test_MkLineChecker_Check__expr_modifier_L(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()

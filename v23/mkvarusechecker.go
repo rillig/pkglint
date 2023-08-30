@@ -5,51 +5,51 @@ import (
 	"strings"
 )
 
-type MkVarUseChecker struct {
-	use     *MkVarUse
+type MkExprChecker struct {
+	expr    *MkExpr
 	vartype *Vartype
 
 	MkLines *MkLines
 	MkLine  *MkLine
 }
 
-func NewMkVarUseChecker(use *MkVarUse, mklines *MkLines, mkline *MkLine) *MkVarUseChecker {
+func NewMkExprChecker(use *MkExpr, mklines *MkLines, mkline *MkLine) *MkExprChecker {
 	vartype := G.Pkgsrc.VariableType(mklines, use.varname)
 
-	return &MkVarUseChecker{use, vartype, mklines, mkline}
+	return &MkExprChecker{use, vartype, mklines, mkline}
 }
 
 // Check checks a single use of a variable in a specific context.
-func (ck *MkVarUseChecker) Check(vuc *VarUseContext) {
-	if ck.use.IsExpression() {
+func (ck *MkExprChecker) Check(ectx *ExprContext) {
+	if ck.expr.IsExpression() {
 		return
 	}
 
 	ck.checkUndefined()
-	ck.checkPermissions(vuc)
+	ck.checkPermissions(ectx)
 
-	ck.checkVarname(vuc.time)
+	ck.checkVarname(ectx.time)
 	ck.checkModifiers()
-	ck.checkAssignable(vuc)
-	ck.checkQuoting(vuc)
+	ck.checkAssignable(ectx)
+	ck.checkQuoting(ectx)
 
 	if G.Pkgsrc == nil {
-		goto checkVarUse
+		goto checkExpr
 	}
 	ck.checkToolsPlatform()
 	ck.checkBuildDefs()
 	ck.checkDeprecated()
 	ck.checkPkgBuildOptions()
 
-checkVarUse:
+checkExpr:
 	NewMkLineChecker(ck.MkLines, ck.MkLine).
-		checkTextVarUse(ck.use.varname, ck.vartype, vuc.time)
+		checkTextExpr(ck.expr.varname, ck.vartype, ectx.time)
 }
 
-func (ck *MkVarUseChecker) checkUndefined() {
-	varuse := ck.use
+func (ck *MkExprChecker) checkUndefined() {
+	expr := ck.expr
 	vartype := ck.vartype
-	varname := varuse.varname
+	varname := expr.varname
 
 	switch {
 	case !G.WarnExtra,
@@ -60,7 +60,7 @@ func (ck *MkVarUseChecker) checkUndefined() {
 		ck.MkLines.checkAllData.forVars[varname],
 		ck.MkLines.allVars.Mentioned(varname) != nil,
 		ck.MkLines.pkg != nil && ck.MkLines.pkg.vars.IsDefinedSimilar(varname),
-		containsVarUse(varname),
+		containsExpr(varname),
 		G.Project.Types().IsDefinedCanon(varname),
 		varname == "":
 		return
@@ -71,29 +71,29 @@ func (ck *MkVarUseChecker) checkUndefined() {
 	}
 }
 
-func (ck *MkVarUseChecker) checkModifiers() {
-	if len(ck.use.modifiers) == 0 {
+func (ck *MkExprChecker) checkModifiers() {
+	if len(ck.expr.modifiers) == 0 {
 		return
 	}
 
 	ck.checkModifiersSuffix()
 	ck.checkModifiersRange()
 
-	for _, mod := range ck.use.modifiers {
+	for _, mod := range ck.expr.modifiers {
 		ck.checkModifierLoop(mod)
 	}
 	// TODO: Investigate why :Q is not checked at this exact place.
 }
 
-func (ck *MkVarUseChecker) checkModifiersSuffix() {
-	varuse := ck.use
+func (ck *MkExprChecker) checkModifiersSuffix() {
+	expr := ck.expr
 	vartype := ck.vartype
 
-	if !varuse.modifiers[0].IsSuffixSubst() || vartype == nil || vartype.IsList() {
+	if !expr.modifiers[0].IsSuffixSubst() || vartype == nil || vartype.IsList() {
 		return
 	}
 
-	ck.MkLine.Warnf("The :from=to modifier should only be used with lists, not with %s.", varuse.varname)
+	ck.MkLine.Warnf("The :from=to modifier should only be used with lists, not with %s.", expr.varname)
 	ck.MkLine.Explain(
 		"Instead of (for example):",
 		"\tMASTER_SITES=\t${HOMEPAGE:=repository/}",
@@ -106,9 +106,9 @@ func (ck *MkVarUseChecker) checkModifiersSuffix() {
 
 // checkModifiersRange suggests to replace
 // ${VAR:S,^,__magic__,1:M__magic__*:S,^__magic__,,} with the simpler ${VAR:[1]}.
-func (ck *MkVarUseChecker) checkModifiersRange() {
-	varuse := ck.use
-	mods := varuse.modifiers
+func (ck *MkExprChecker) checkModifiersRange() {
+	expr := ck.expr
+	mods := expr.modifiers
 
 	if len(mods) != 3 {
 		return
@@ -131,16 +131,16 @@ func (ck *MkVarUseChecker) checkModifiersRange() {
 	}
 
 	fix := ck.MkLine.Autofix()
-	fix.Notef("The modifier %q can be written as %q.", varuse.Mod(), ":[1]")
+	fix.Notef("The modifier %q can be written as %q.", expr.Mod(), ":[1]")
 	fix.Explain(
 		"The range modifier is much easier to understand than the",
 		"complicated regular expressions, which were needed before",
 		"the year 2006.")
-	fix.Replace(varuse.Mod(), ":[1]")
+	fix.Replace(expr.Mod(), ":[1]")
 	fix.Apply()
 }
 
-func (ck *MkVarUseChecker) checkModifierLoop(mod MkVarUseModifier) {
+func (ck *MkExprChecker) checkModifierLoop(mod MkExprModifier) {
 	str := mod.String()
 	if !hasSuffix(str, "@") {
 		return
@@ -154,15 +154,15 @@ func (ck *MkVarUseChecker) checkModifierLoop(mod MkVarUseModifier) {
 		return
 	}
 	body := lex.Rest()
-	// TODO: Are MkVarUse interpreted the same in the before/after modifiers?
+	// TODO: Are MkExpr interpreted the same in the before/after modifiers?
 	if !matches(body, `^[-A-Za-z0-9 $();_{}]+$`) {
 		return
 	}
 	varnameUse := "${" + varname + "}"
 
 	n := 0
-	ck.MkLine.ForEachUsedText(str, VucRunTime, func(varUse *MkVarUse, time VucTime) {
-		if varUse.varname == varname {
+	ck.MkLine.ForEachUsedText(str, EctxRunTime, func(expr *MkExpr, time EctxTime) {
+		if expr.varname == varname {
 			n++
 		}
 	})
@@ -189,8 +189,8 @@ func (ck *MkVarUseChecker) checkModifierLoop(mod MkVarUseModifier) {
 	}
 }
 
-func (ck *MkVarUseChecker) checkVarname(time VucTime) {
-	varname := ck.use.varname
+func (ck *MkExprChecker) checkVarname(time EctxTime) {
+	varname := ck.expr.varname
 	if varname == "@" {
 		ck.MkLine.Warnf("Please use %q instead of %q.", "${.TARGET}", "$@")
 		ck.MkLine.Explain(
@@ -198,7 +198,7 @@ func (ck *MkVarUseChecker) checkVarname(time VucTime) {
 			"of the same name.")
 	}
 
-	if varname == "LOCALBASE" && !G.Infrastructure && time == VucRunTime {
+	if varname == "LOCALBASE" && !G.Infrastructure && time == EctxRunTime {
 		fix := ck.MkLine.Autofix()
 		fix.Warnf("Please use PREFIX instead of LOCALBASE.")
 		fix.ReplaceAfter("${", "LOCALBASE", "PREFIX")
@@ -208,7 +208,7 @@ func (ck *MkVarUseChecker) checkVarname(time VucTime) {
 	ck.checkVarnameBuildlink(varname)
 }
 
-func (ck *MkVarUseChecker) checkVarnameBuildlink(varname string) {
+func (ck *MkExprChecker) checkVarnameBuildlink(varname string) {
 	pkg := ck.MkLines.pkg
 	if pkg == nil {
 		return
@@ -220,7 +220,7 @@ func (ck *MkVarUseChecker) checkVarnameBuildlink(varname string) {
 
 	varparam := varnameParam(varname)
 	id := Buildlink3ID(varparam)
-	if pkg.bl3Data[id] != nil || containsVarUse(varparam) {
+	if pkg.bl3Data[id] != nil || containsExpr(varparam) {
 		return
 	}
 
@@ -263,7 +263,7 @@ func (ck *MkVarUseChecker) checkVarnameBuildlink(varname string) {
 // somewhere else.
 //
 // See MkAssignChecker.checkLeftPermissions.
-func (ck *MkVarUseChecker) checkPermissions(vuc *VarUseContext) {
+func (ck *MkExprChecker) checkPermissions(ectx *ExprContext) {
 	if !G.WarnPerm {
 		return
 	}
@@ -275,14 +275,14 @@ func (ck *MkVarUseChecker) checkPermissions(vuc *VarUseContext) {
 	}
 
 	if trace.Tracing {
-		defer trace.Call(vuc)()
+		defer trace.Call(ectx)()
 	}
 
 	// This is the type of the variable that is being used. Not to
-	// be confused with vuc.vartype, which is the type of the
+	// be confused with ectx.vartype, which is the type of the
 	// context in which the variable is used (often a ShellCommand
 	// or, in an assignment, the type of the left-hand side variable).
-	varname := ck.use.varname
+	varname := ck.expr.varname
 	vartype := ck.vartype
 	if vartype == nil {
 		if trace.Tracing {
@@ -300,7 +300,7 @@ func (ck *MkVarUseChecker) checkPermissions(vuc *VarUseContext) {
 	// But when other variables are assigned to them, it would seem as if
 	// these other variables could become evaluated at load time.
 	// And this is something that most variables do not allow.
-	if vuc.vartype != nil && vuc.vartype.basicType == BtUnknown {
+	if ectx.vartype != nil && ectx.vartype.basicType == BtUnknown {
 		return
 	}
 
@@ -311,7 +311,7 @@ func (ck *MkVarUseChecker) checkPermissions(vuc *VarUseContext) {
 
 	effPerms := vartype.EffectivePermissions(basename)
 	if effPerms.Contains(aclpUseLoadtime) {
-		if vuc.time == VucLoadTime {
+		if ectx.time == EctxLoadTime {
 			ck.checkUseAtLoadTime()
 		}
 
@@ -327,9 +327,9 @@ func (ck *MkVarUseChecker) checkPermissions(vuc *VarUseContext) {
 	// be used at load time somewhere in the future because it is
 	// assigned to another variable, and that variable is allowed
 	// to be used at load time.
-	directly := vuc.time == VucLoadTime
-	indirectly := !directly && vuc.vartype != nil &&
-		vuc.vartype.Union().Contains(aclpUseLoadtime)
+	directly := ectx.time == EctxLoadTime
+	indirectly := !directly && ectx.vartype != nil &&
+		ectx.vartype.Union().Contains(aclpUseLoadtime)
 
 	if !directly && !indirectly && effPerms.Contains(aclpUse) {
 		// At this point, the variable is either used at run time, or the
@@ -357,12 +357,12 @@ func (ck *MkVarUseChecker) checkPermissions(vuc *VarUseContext) {
 	}
 
 	if ck.MkLines.once.FirstTimeSlice("checkPermissions", varname) {
-		ck.warnPermissions(vuc.vartype, varname, vartype, directly, indirectly)
+		ck.warnPermissions(ectx.vartype, varname, vartype, directly, indirectly)
 	}
 }
 
-func (ck *MkVarUseChecker) warnPermissions(
-	vucVartype *Vartype,
+func (ck *MkExprChecker) warnPermissions(
+	ectxVartype *Vartype,
 	varname string,
 	vartype *Vartype,
 	directly, indirectly bool,
@@ -380,7 +380,7 @@ func (ck *MkVarUseChecker) warnPermissions(
 		// Some of the guessed variables may be used at load time. But since the
 		// variable type and these permissions are guessed, pkglint should not
 		// issue the following warning, since it is often wrong.
-		if vucVartype.IsGuessed() {
+		if ectxVartype.IsGuessed() {
 			return
 		}
 
@@ -436,7 +436,7 @@ func (ck *MkVarUseChecker) warnPermissions(
 	}
 }
 
-func (ck *MkVarUseChecker) explainPermissions(varname string, vartype *Vartype, intro ...string) {
+func (ck *MkExprChecker) explainPermissions(varname string, vartype *Vartype, intro ...string) {
 	if !G.Logger.Opts.Explain {
 		return
 	}
@@ -478,7 +478,7 @@ func (ck *MkVarUseChecker) explainPermissions(varname string, vartype *Vartype, 
 	ck.MkLine.Explain(expl...)
 }
 
-func (ck *MkVarUseChecker) checkUseAtLoadTime() {
+func (ck *MkExprChecker) checkUseAtLoadTime() {
 	if ck.vartype.IsAlwaysInScope() || ck.MkLines.Tools.SeenPrefs {
 		return
 	}
@@ -509,7 +509,7 @@ func (ck *MkVarUseChecker) checkUseAtLoadTime() {
 	currInclude := G.Pkgsrc.File(NewPkgsrcPath(NewPath(include)))
 
 	mkline.Warnf("To use %s at load time, .include %q first.",
-		ck.use.varname, mkline.Rel(currInclude))
+		ck.expr.varname, mkline.Rel(currInclude))
 	mkline.Explain(
 		"The user-settable variables and several other variables",
 		"from the pkgsrc infrastructure are only available",
@@ -520,7 +520,7 @@ func (ck *MkVarUseChecker) checkUseAtLoadTime() {
 
 // warnToolLoadTime logs a warning that the tool ${varname}
 // should not be used at load time.
-func (ck *MkVarUseChecker) warnToolLoadTime(varname string, tool *Tool) {
+func (ck *MkExprChecker) warnToolLoadTime(varname string, tool *Tool) {
 	// TODO: While using a tool by its variable name may be ok at load time,
 	//  doing the same with the plain name of a tool is never ok.
 	//  "VAR!= cat" is never guaranteed to call the correct cat.
@@ -559,19 +559,19 @@ func (ck *MkVarUseChecker) warnToolLoadTime(varname string, tool *Tool) {
 		"except in the package Makefile itself.")
 }
 
-func (ck *MkVarUseChecker) checkAssignable(vuc *VarUseContext) {
-	leftType := vuc.vartype
+func (ck *MkExprChecker) checkAssignable(ectx *ExprContext) {
+	leftType := ectx.vartype
 	if leftType == nil || leftType.basicType != BtPathname {
 		return
 	}
-	rightType := G.Pkgsrc.VariableType(ck.MkLines, ck.use.varname)
+	rightType := G.Pkgsrc.VariableType(ck.MkLines, ck.expr.varname)
 	if rightType == nil || rightType.basicType != BtShellCommand {
 		return
 	}
 
 	mkline := ck.MkLine
 	if mkline.Varcanon() == "PKG_SHELL.*" {
-		switch ck.use.varname {
+		switch ck.expr.varname {
 		case "SH", "BASH", "TOOLS_PLATFORM.sh":
 			return
 		}
@@ -579,7 +579,7 @@ func (ck *MkVarUseChecker) checkAssignable(vuc *VarUseContext) {
 
 	mkline.Warnf(
 		"Incompatible types: %s (type %q) cannot be assigned to type %q.",
-		ck.use.varname, rightType.basicType.name, leftType.basicType.name)
+		ck.expr.varname, rightType.basicType.name, leftType.basicType.name)
 	mkline.Explain(
 		"Shell commands often start with a pathname.",
 		"They could also start with a list of environment variable",
@@ -588,22 +588,22 @@ func (ck *MkVarUseChecker) checkAssignable(vuc *VarUseContext) {
 		"that are not filenames at all.")
 }
 
-// checkVarUseWords checks whether a variable use of the form ${VAR}
-// or ${VAR:modifiers} is allowed in a certain context.
-func (ck *MkVarUseChecker) checkQuoting(vuc *VarUseContext) {
-	if !G.WarnQuoting || vuc.quoting == VucQuotUnknown {
+// checkExprWords checks whether an expression of the form ${VAR}
+// or ${VAR:modifiers} (without ':Q') is allowed in a certain context.
+func (ck *MkExprChecker) checkQuoting(ectx *ExprContext) {
+	if !G.WarnQuoting || ectx.quoting == EctxQuotUnknown {
 		return
 	}
 
-	varUse := ck.use
+	expr := ck.expr
 	vartype := ck.vartype
 
-	needsQuoting := ck.MkLine.VariableNeedsQuoting(ck.MkLines, varUse, vartype, vuc)
+	needsQuoting := ck.MkLine.VariableNeedsQuoting(ck.MkLines, expr, vartype, ectx)
 	if needsQuoting == unknown {
 		return
 	}
 
-	mod := varUse.Mod()
+	mod := expr.Mod()
 
 	// In GNU configure scripts, a few variables need to be passed through
 	// the :M* modifier before they reach the configure scripts. Otherwise,
@@ -612,7 +612,7 @@ func (ck *MkVarUseChecker) checkQuoting(vuc *VarUseContext) {
 	//
 	// When doing checks outside a package, the :M* modifier is needed for safety.
 	needMstar := (ck.MkLines.pkg == nil || ck.MkLines.pkg.vars.IsDefined("GNU_CONFIGURE")) &&
-		matches(varUse.varname, `^(?:.*_)?(?:CFLAGS|CPPFLAGS|CXXFLAGS|FFLAGS|LDFLAGS|LIBS)$`)
+		matches(expr.varname, `^(?:.*_)?(?:CFLAGS|CPPFLAGS|CXXFLAGS|FFLAGS|LDFLAGS|LIBS)$`)
 
 	mkline := ck.MkLine
 	if mod == ":M*:Q" && !needMstar {
@@ -621,7 +621,7 @@ func (ck *MkVarUseChecker) checkQuoting(vuc *VarUseContext) {
 		}
 
 	} else if needsQuoting == yes {
-		ck.checkQuotingQM(mod, needMstar, vuc)
+		ck.checkQuotingQM(mod, needMstar, ectx)
 	}
 
 	if hasSuffix(mod, ":Q") && needsQuoting == no {
@@ -629,15 +629,15 @@ func (ck *MkVarUseChecker) checkQuoting(vuc *VarUseContext) {
 	}
 }
 
-func (ck *MkVarUseChecker) checkQuotingQM(mod string, needMstar bool, vuc *VarUseContext) {
+func (ck *MkExprChecker) checkQuotingQM(mod string, needMstar bool, ectx *ExprContext) {
 	vartype := ck.vartype
-	varname := ck.use.varname
+	varname := ck.expr.varname
 
 	modNoQ := strings.TrimSuffix(mod, ":Q")
 	modNoM := strings.TrimSuffix(modNoQ, ":M*")
 	correctMod := modNoM + condStr(needMstar, ":M*:Q", ":Q")
 
-	if correctMod == mod+":Q" && vuc.IsWordPart && !vartype.IsShell() {
+	if correctMod == mod+":Q" && ectx.IsWordPart && !vartype.IsShell() {
 
 		isSingleWordConstant := func() bool {
 			if ck.MkLines.pkg == nil {
@@ -664,22 +664,22 @@ func (ck *MkVarUseChecker) checkQuotingQM(mod string, needMstar bool, vuc *VarUs
 		}
 
 	} else if mod != correctMod {
-		if vuc.quoting == VucQuotPlain {
+		if ectx.quoting == EctxQuotPlain {
 			ck.fixQuotingModifiers(correctMod, mod)
 		} else {
 			ck.warnWrongQuotingModifiers(correctMod, mod)
 		}
 
-	} else if vuc.quoting != VucQuotPlain {
+	} else if ectx.quoting != EctxQuotPlain {
 		ck.warnModifierQInQuotes(mod)
 	}
 }
 
-func (ck *MkVarUseChecker) warnListVariableInWord() {
+func (ck *MkExprChecker) warnListVariableInWord() {
 	mkline := ck.MkLine
 
 	mkline.Warnf("The list variable %s should not be embedded in a word.",
-		ck.use.varname)
+		ck.expr.varname)
 	mkline.Explain(
 		"When a list variable has multiple elements, this expression expands",
 		"to something unexpected:",
@@ -700,18 +700,18 @@ func (ck *MkVarUseChecker) warnListVariableInWord() {
 		"To fix this, write ${LIBS:S,^,-l,}.")
 }
 
-func (ck *MkVarUseChecker) warnMissingModifierQInWord() {
+func (ck *MkExprChecker) warnMissingModifierQInWord() {
 	mkline := ck.MkLine
 
 	mkline.Warnf("The variable %s should be quoted as part of a shell word.",
-		ck.use.varname)
+		ck.expr.varname)
 	mkline.Explain(
 		"This variable can contain spaces or other special characters.",
 		"Therefore, it should be quoted by replacing ${VAR} with ${VAR:Q}.")
 }
 
-func (ck *MkVarUseChecker) fixQuotingModifiers(correctMod string, mod string) {
-	varname := ck.use.varname
+func (ck *MkExprChecker) fixQuotingModifiers(correctMod string, mod string) {
+	varname := ck.expr.varname
 
 	fix := ck.MkLine.Autofix()
 	fix.Warnf("Please use ${%s%s} instead of ${%s%s}.", varname, correctMod, varname, mod)
@@ -721,9 +721,9 @@ func (ck *MkVarUseChecker) fixQuotingModifiers(correctMod string, mod string) {
 	fix.Apply()
 }
 
-func (ck *MkVarUseChecker) warnWrongQuotingModifiers(correctMod string, mod string) {
+func (ck *MkExprChecker) warnWrongQuotingModifiers(correctMod string, mod string) {
 	mkline := ck.MkLine
-	varname := ck.use.varname
+	varname := ck.expr.varname
 
 	mkline.Warnf("Please use ${%s%s} instead of ${%s%s} and make sure"+
 		" the variable appears outside of any quoting characters.", varname, correctMod, varname, mod)
@@ -740,11 +740,11 @@ func (ck *MkVarUseChecker) warnWrongQuotingModifiers(correctMod string, mod stri
 		seeGuide("Echoing a string exactly as-is", "echo-literal"))
 }
 
-func (ck *MkVarUseChecker) warnModifierQInQuotes(mod string) {
+func (ck *MkExprChecker) warnModifierQInQuotes(mod string) {
 	mkline := ck.MkLine
 
 	mkline.Warnf("Please move ${%s%s} outside of any quoting characters.",
-		ck.use.varname, mod)
+		ck.expr.varname, mod)
 	mkline.Explain(
 		"The :Q modifier only works reliably when it is used outside of any",
 		"quoting characters like 'single' or \"double\" quotes or `backticks`.",
@@ -758,8 +758,8 @@ func (ck *MkVarUseChecker) warnModifierQInQuotes(mod string) {
 		seeGuide("Echoing a string exactly as-is", "echo-literal"))
 }
 
-func (ck *MkVarUseChecker) warnRedundantModifierQ(mod string) {
-	varname := ck.use.varname
+func (ck *MkExprChecker) warnRedundantModifierQ(mod string) {
+	varname := ck.expr.varname
 
 	bad := "${" + varname + mod + "}"
 	good := "${" + varname + strings.TrimSuffix(mod, ":Q") + "}"
@@ -781,12 +781,12 @@ func (ck *MkVarUseChecker) warnRedundantModifierQ(mod string) {
 	fix.Apply()
 }
 
-func (ck *MkVarUseChecker) checkToolsPlatform() {
+func (ck *MkExprChecker) checkToolsPlatform() {
 	if ck.MkLine.IsDirective() {
 		return
 	}
 
-	varname := ck.use.varname
+	varname := ck.expr.varname
 	if varnameCanon(varname) != "TOOLS_PLATFORM.*" {
 		return
 	}
@@ -815,8 +815,8 @@ func (ck *MkVarUseChecker) checkToolsPlatform() {
 	}
 }
 
-func (ck *MkVarUseChecker) checkBuildDefs() {
-	varname := ck.use.varname
+func (ck *MkExprChecker) checkBuildDefs() {
+	varname := ck.expr.varname
 
 	if !G.Pkgsrc.UserDefinedVars.IsDefined(varname) || G.Pkgsrc.IsBuildDef(varname) {
 		return
@@ -838,8 +838,8 @@ func (ck *MkVarUseChecker) checkBuildDefs() {
 		"user-settable variables, so please add your variable to it, too.")
 }
 
-func (ck *MkVarUseChecker) checkDeprecated() {
-	varname := ck.use.varname
+func (ck *MkExprChecker) checkDeprecated() {
+	varname := ck.expr.varname
 	instead := G.Project.Deprecated(varname)
 	if instead == "" {
 		return
@@ -848,12 +848,12 @@ func (ck *MkVarUseChecker) checkDeprecated() {
 	ck.MkLine.Warnf("Use of %q is deprecated. %s", varname, instead)
 }
 
-func (ck *MkVarUseChecker) checkPkgBuildOptions() {
+func (ck *MkExprChecker) checkPkgBuildOptions() {
 	pkg := ck.MkLines.pkg
 	if pkg == nil {
 		return
 	}
-	varname := ck.use.varname
+	varname := ck.expr.varname
 	if !hasPrefix(varname, "PKG_BUILD_OPTIONS.") {
 		return
 	}

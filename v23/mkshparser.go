@@ -258,9 +258,9 @@ func (lex *ShellLexer) Lex(lval *shyySymType) (ttype int) {
 		// This special handling is necessary to return the "esac" that follows as
 		// tkESAC instead of a simple word.
 		if lex.sinceCase >= 0 && len(lval.Word.Atoms) == 1 {
-			if varUse := lval.Word.Atoms[0].VarUse(); varUse != nil {
-				if len(varUse.modifiers) > 0 {
-					lastModifier := varUse.modifiers[len(varUse.modifiers)-1]
+			if expr := lval.Word.Atoms[0].Expr(); expr != nil {
+				if len(expr.modifiers) > 0 {
+					lastModifier := expr.modifiers[len(expr.modifiers)-1]
 					if lastModifier.HasPrefix("@") || lastModifier.HasPrefix("=") {
 						lex.atCommandStart = true
 					}

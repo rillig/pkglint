@@ -74,7 +74,7 @@ func (s *Suite) Test_MkLines__comparing_YesNo_variable_to_string(c *check.C) {
 			"not compared with \"no\".")
 }
 
-func (s *Suite) Test_MkLines__varuse_sh_modifier(c *check.C) {
+func (s *Suite) Test_MkLines__expr_sh_modifier(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
@@ -85,15 +85,15 @@ func (s *Suite) Test_MkLines__varuse_sh_modifier(c *check.C) {
 		"PLIST_SUBST+=\tQORE_VERSION=\"${qore-version:sh}\"")
 
 	var vars2 []string
-	mklines.mklines[1].ForEachUsed(func(varUse *MkVarUse, time VucTime) {
-		vars2 = append(vars2, varUse.varname)
+	mklines.mklines[1].ForEachUsed(func(expr *MkExpr, time EctxTime) {
+		vars2 = append(vars2, expr.varname)
 	})
 
 	t.CheckDeepEquals(vars2, []string{"SED"})
 
 	var vars3 []string
-	mklines.mklines[2].ForEachUsed(func(varUse *MkVarUse, time VucTime) {
-		vars3 = append(vars3, varUse.varname)
+	mklines.mklines[2].ForEachUsed(func(expr *MkExpr, time EctxTime) {
+		vars3 = append(vars3, expr.varname)
 	})
 
 	// qore-version, despite its unusual name, is a pretty normal Make variable.
@@ -174,7 +174,7 @@ func (s *Suite) Test_MkLines_Check__loop_variable_used_outside_loop(c *check.C) 
 // When VAR.param1 is defined or used, VAR.param2 is also regarded
 // as defined or used since often in pkgsrc, parameterized variables
 // are not referred to by their exact names but by VAR.${param}.
-func (s *Suite) Test_MkLines_Check__varuse_parameterized(c *check.C) {
+func (s *Suite) Test_MkLines_Check__expr_parameterized(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()

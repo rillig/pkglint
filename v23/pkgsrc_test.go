@@ -812,10 +812,10 @@ func (s *Suite) Test_Pkgsrc_guessVariableType__SKIP(c *check.C) {
 	t.CheckEquals(vartype.EffectivePermissions("filename.mk"), aclpAllRuntime)
 
 	// The permissions for MY_CHECK_SKIP say aclpAllRuntime, which excludes
-	// aclpUseLoadtime. Therefore, there should be a warning about the VarUse in
+	// aclpUseLoadtime. Therefore, there should be a warning about the Expr in
 	// the .if line. As of March 2019, pkglint skips the permissions check for
 	// guessed variables since that variable might have an entirely different
-	// meaning; see MkVarUseChecker.checkPermissions.
+	// meaning; see MkExprChecker.checkPermissions.
 	//
 	// There is no warning for the += operator in line 3 since the variable type
 	// (although guessed) is a list of things, and lists may be appended to.

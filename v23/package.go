@@ -441,7 +441,7 @@ func (pkg *Package) resolveIncludedFile(mkline *MkLine, includingFilename CurrPa
 	resolved := mkline.ResolveVarsInRelativePath(NewPackagePath(mkline.IncludedFile()), pkg)
 	includedText := resolveVariableRefs(resolved.String(), nil, pkg)
 	includedFile := NewRelPathString(includedText)
-	if containsVarUse(includedText) {
+	if containsExpr(includedText) {
 		if trace.Tracing && !includingFilename.ContainsPath("mk") {
 			trace.Stepf("%s:%s: Skipping unresolvable include file %q.",
 				mkline.Filename(), mkline.Linenos(), includedFile)
@@ -557,7 +557,7 @@ func (pkg *Package) check(filenames []CurrPath, mklines, allLines *MkLines) {
 	havePatches := false
 
 	for _, filename := range filenames {
-		if containsVarUse(filename.String()) {
+		if containsExpr(filename.String()) {
 			if trace.Tracing {
 				trace.Stepf("Skipping file %q because the name contains an unresolved variable.", filename)
 			}
@@ -641,7 +641,7 @@ func (pkg *Package) checkDistfilesInDistinfo(mklines *MkLines) {
 		resolved := resolveVariableRefs(mkline.Value(), nil, pkg)
 
 		for _, distfile := range mkline.ValueFields(resolved) {
-			if containsVarUse(distfile) {
+			if containsExpr(distfile) {
 				continue
 			}
 			if pkg.distinfoDistfiles[NewPath(distfile).Base()] {
@@ -810,7 +810,7 @@ func (pkg *Package) checkDistinfoExists() {
 		}
 	} else {
 		distinfoFile := pkg.File(pkg.DistinfoFile)
-		if !containsVarUse(distinfoFile.String()) && !distinfoFile.IsFile() {
+		if !containsExpr(distinfoFile.String()) && !distinfoFile.IsFile() {
 			line := NewLineWhole(distinfoFile)
 			line.Warnf("A package that downloads files should have a distinfo file.")
 			line.Explain(
@@ -1297,7 +1297,7 @@ func (pkg *Package) determineEffectivePkgVars() {
 
 	pkg.checkPkgnameRedundant(pkgnameLine, pkgname, distname)
 
-	if pkgname == "" && distnameLine != nil && !containsVarUse(distname) && !matchesPkgname(distname) {
+	if pkgname == "" && distnameLine != nil && !containsExpr(distname) && !matchesPkgname(distname) {
 		distnameLine.Warnf("As DISTNAME is not a valid package name, please define the PKGNAME explicitly.")
 	}
 
@@ -1305,7 +1305,7 @@ func (pkg *Package) determineEffectivePkgVars() {
 		distname = ""
 	}
 
-	if effname != "" && !containsVarUse(effname) {
+	if effname != "" && !containsExpr(effname) {
 		if m, m1, m2 := matchPkgname(effname); m {
 			pkg.EffectivePkgname = effname + pkg.nbPart()
 			pkg.EffectivePkgnameLine = pkgnameLine
@@ -1314,7 +1314,7 @@ func (pkg *Package) determineEffectivePkgVars() {
 		}
 	}
 
-	if pkg.EffectivePkgnameLine == nil && distname != "" && !containsVarUse(distname) {
+	if pkg.EffectivePkgnameLine == nil && distname != "" && !containsExpr(distname) {
 		if m, m1, m2 := matchPkgname(distname); m {
 			pkg.EffectivePkgname = distname + pkg.nbPart()
 			pkg.EffectivePkgnameLine = distnameLine
@@ -1371,17 +1371,17 @@ func (pkg *Package) pkgnameFromDistname(pkgname, distname string, diag Diagnoser
 
 	result := NewLazyStringBuilder(pkgname)
 	for _, token := range tokens {
-		if token.Varuse != nil {
-			if token.Varuse.varname != "DISTNAME" {
+		if token.Expr != nil {
+			if token.Expr.varname != "DISTNAME" {
 				return "", false
 			}
 
 			newDistname := distname
-			for _, mod := range token.Varuse.modifiers {
+			for _, mod := range token.Expr.modifiers {
 				if mod.IsToLower() {
 					newDistname = strings.ToLower(newDistname)
 				} else if ok, subst := mod.Subst(newDistname); ok {
-					if subst == newDistname && !containsVarUse(subst) {
+					if subst == newDistname && !containsExpr(subst) {
 						diag.Notef("The modifier :%s does not have an effect.", mod.String())
 					}
 					newDistname = subst

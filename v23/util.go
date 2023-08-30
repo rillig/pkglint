@@ -512,14 +512,14 @@ func toInt(s string, def int) int {
 	return def
 }
 
-func containsVarUse(s string) bool {
+func containsExpr(s string) bool {
 	if !contains(s, "$") {
 		return false
 	}
 	lex := NewMkLexer(s, nil)
 	tokens, _ := lex.MkTokens()
 	for _, token := range tokens {
-		if token.Varuse != nil {
+		if token.Expr != nil {
 			return true
 		}
 	}
@@ -533,7 +533,7 @@ func containsVarRefLong(s string) bool {
 	lex := NewMkLexer(s, nil)
 	tokens, _ := lex.MkTokens()
 	for _, token := range tokens {
-		if token.Varuse != nil && len(token.Text) > 2 {
+		if token.Expr != nil && len(token.Text) > 2 {
 			return true
 		}
 	}

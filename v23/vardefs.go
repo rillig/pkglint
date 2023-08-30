@@ -299,9 +299,9 @@ func (reg *VarTypeRegistry) compilerLanguages(src *Pkgsrc) *BasicType {
 
 			if mkline.IsDirective() && mkline.NeedsCond() && mkline.Cond() != nil {
 				mkline.Cond().Walk(&MkCondCallback{
-					VarUse: func(varuse *MkVarUse) {
-						if varuse.varname == "USE_LANGUAGES" && len(varuse.modifiers) == 1 {
-							ok, _, pattern, exact := varuse.modifiers[0].MatchMatch()
+					Expr: func(expr *MkExpr) {
+						if expr.varname == "USE_LANGUAGES" && len(expr.modifiers) == 1 {
+							ok, _, pattern, exact := expr.modifiers[0].MatchMatch()
 							if ok && exact {
 								languages[intern(pattern)] = true
 							}
@@ -328,9 +328,9 @@ func (reg *VarTypeRegistry) gccFeatures(src *Pkgsrc, varname string) *BasicType 
 
 			if mkline.IsDirective() && mkline.NeedsCond() && mkline.Cond() != nil {
 				mkline.Cond().Walk(&MkCondCallback{
-					VarUse: func(varuse *MkVarUse) {
-						if varuse.varname == varname && len(varuse.modifiers) == 1 {
-							ok, _, pattern, exact := varuse.modifiers[0].MatchMatch()
+					Expr: func(expr *MkExpr) {
+						if expr.varname == varname && len(expr.modifiers) == 1 {
+							ok, _, pattern, exact := expr.modifiers[0].MatchMatch()
 							if ok && exact {
 								features[intern(pattern)] = true
 							}

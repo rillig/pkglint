@@ -940,7 +940,7 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 		"${MASTER_SITE_GITHUB:S,^,-,:=project/archive/${DISTFILE}}")
 
 	// No warning that the part after the := must end with a slash,
-	// since there is another modifier in the variable use, in this case :S.
+	// since there is another modifier in the expression, in this case :S.
 	//
 	// That modifier adds a hyphen at the beginning (but pkglint doesn't
 	// inspect this), therefore the URL is not required to end with a slash anymore.
@@ -1011,7 +1011,7 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 	// The ${.TARGET} variable doesn't make sense at all in a URL.
 	// Other variables might, and there could be checks for them.
 	// As of December 2019 these are skipped completely,
-	// see containsVarUse in VartypeCheck.URL.
+	// see containsExpr in VartypeCheck.URL.
 	vt.Values(
 		"https://example.org/$@")
 

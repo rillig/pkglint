@@ -53,7 +53,7 @@ func (ck MkLineChecker) checkEmptyContinuation() {
 	}
 }
 
-func (ck MkLineChecker) checkTextVarUse(text string, vartype *Vartype, time VucTime) {
+func (ck MkLineChecker) checkTextExpr(text string, vartype *Vartype, time EctxTime) {
 	if !contains(text, "$") {
 		return
 	}
@@ -64,21 +64,21 @@ func (ck MkLineChecker) checkTextVarUse(text string, vartype *Vartype, time VucT
 
 	tokens, _ := NewMkLexer(text, nil).MkTokens()
 	for i, token := range tokens {
-		if token.Varuse == nil {
+		if token.Expr == nil {
 			continue
 		}
 		spaceLeft := i-1 < 0 || matches(tokens[i-1].Text, `[\t ]$`)
 		spaceRight := i+1 >= len(tokens) || matches(tokens[i+1].Text, `^[\t ]`)
 		isWordPart := !(spaceLeft && spaceRight)
-		vuc := VarUseContext{vartype, time, VucQuotPlain, isWordPart}
-		NewMkVarUseChecker(token.Varuse, ck.MkLines, ck.MkLine).Check(&vuc)
+		ectx := ExprContext{vartype, time, EctxQuotPlain, isWordPart}
+		NewMkExprChecker(token.Expr, ck.MkLines, ck.MkLine).Check(&ectx)
 	}
 }
 
 // checkText checks the given text (which is typically the right-hand side of a variable
 // assignment or a shell command).
 //
-// Note: checkTextVarUse cannot be called here since it needs to know the context where it is included.
+// Note: checkTextExpr cannot be called here since it needs to know the context where it is included.
 // Maybe that context should be added here as parameters.
 func (ck MkLineChecker) checkText(text string) {
 	if trace.Tracing {
@@ -138,7 +138,7 @@ func (ck MkLineChecker) checkTextMissingDollar(text string) {
 		}
 		lex := NewMkLexer("$"+text[i:], nil)
 		start := lex.lexer.Mark()
-		expr := lex.VarUse()
+		expr := lex.Expr()
 		if expr != nil && len(expr.modifiers) != 0 &&
 			(expr.varname == "" || textproc.Upper.Contains(expr.varname[0])) {
 			ck.MkLine.Warnf("Maybe missing '$' in expression %q.",
@@ -160,7 +160,7 @@ func (ck MkLineChecker) checkVartype(varname string, op MkOperator, value, comme
 	vartype := G.Pkgsrc.VariableType(ck.MkLines, varname)
 
 	if op == opAssignAppend {
-		// XXX: MayBeAppendedTo also depends on the current file, see MkVarUseChecker.checkPermissions.
+		// XXX: MayBeAppendedTo also depends on the current file, see MkExprChecker.checkPermissions.
 		// These checks may be combined.
 		if vartype != nil && !vartype.MayBeAppendedTo() && !hasSuffix(varnameBase(varname), "S") {
 			mkline.Warnf("The \"+=\" operator should only be used with lists, not with %s.", varname)
@@ -362,7 +362,7 @@ func (ck MkLineChecker) CheckRelativePath(pp PackagePath, rel RelPath, mustExist
 	}
 
 	resolvedPath := mkline.ResolveVarsInRelativePath(pp, ck.MkLines.pkg)
-	if containsVarUse(resolvedPath.String()) {
+	if containsExpr(resolvedPath.String()) {
 		return
 	}
 
@@ -439,7 +439,7 @@ func (ck MkLineChecker) CheckRelativePkgdir(rel RelPath, pkgdir PackagePath) {
 	// This strips any trailing slash.
 	pkgdir = mkline.ResolveVarsInRelativePath(pkgdir, ck.MkLines.pkg)
 
-	if !matches(pkgdir.String(), `^\.\./\.\./([^./][^/]*/[^./][^/]*)$`) && !containsVarUse(pkgdir.String()) {
+	if !matches(pkgdir.String(), `^\.\./\.\./([^./][^/]*/[^./][^/]*)$`) && !containsExpr(pkgdir.String()) {
 		mkline.Warnf("%q is not a valid relative package directory.", rel)
 		mkline.Explain(
 			"A relative pathname always starts with \"../../\", followed",
@@ -560,9 +560,9 @@ func (ck MkLineChecker) checkDirectiveFor(forVars map[string]bool, indentation *
 		// tree did not produce any different result whether guessed
 		// was true or false.
 		forLoopType := NewVartype(btForLoop, List, NewACLEntry("*", aclpAllRead))
-		forLoopContext := VarUseContext{forLoopType, VucLoadTime, VucQuotPlain, false}
-		mkline.ForEachUsed(func(varUse *MkVarUse, time VucTime) {
-			NewMkVarUseChecker(varUse, ck.MkLines, mkline).Check(&forLoopContext)
+		forLoopContext := ExprContext{forLoopType, EctxLoadTime, EctxQuotPlain, false}
+		mkline.ForEachUsed(func(expr *MkExpr, time EctxTime) {
+			NewMkExprChecker(expr, ck.MkLines, mkline).Check(&forLoopContext)
 		})
 	}
 }
@@ -596,7 +596,7 @@ func (ck MkLineChecker) checkDependencyTarget(target string, allowedTargets map[
 	if target == ".PHONY" || target == ".ORDER" || allowedTargets[target] {
 		return
 	}
-	if NewMkLexer(target, nil).VarUse() != nil {
+	if NewMkLexer(target, nil).Expr() != nil {
 		return
 	}
 

@@ -29,7 +29,7 @@ func (p *MkParser) Rest() string {
 //
 // The text argument is assumed to be after unescaping the # character,
 // which means the # is a normal character and does not introduce a Makefile comment.
-// For VarUse, this distinction is irrelevant.
+// For Expr, this distinction is irrelevant.
 func NewMkParser(diag Autofixer, text string) *MkParser {
 	mklex := NewMkLexer(text, diag)
 	return &MkParser{diag, mklex, mklex.lexer, diag != nil}
@@ -180,8 +180,8 @@ func (p *MkParser) mkCondCompare() *MkCond {
 func (p *MkParser) mkCondTerm() *MkCondTerm {
 	lexer := p.lexer
 
-	if rhs := p.mklex.VarUse(); rhs != nil {
-		return &MkCondTerm{Var: rhs}
+	if rhs := p.mklex.Expr(); rhs != nil {
+		return &MkCondTerm{Expr: rhs}
 	}
 
 	if lexer.PeekByte() != '"' {
@@ -190,9 +190,9 @@ func (p *MkParser) mkCondTerm() *MkCondTerm {
 
 	mark := lexer.Mark()
 	lexer.Skip(1)
-	if quotedRHS := p.mklex.VarUse(); quotedRHS != nil {
+	if quotedRHS := p.mklex.Expr(); quotedRHS != nil {
 		if lexer.SkipByte('"') {
-			return &MkCondTerm{Var: quotedRHS}
+			return &MkCondTerm{Expr: quotedRHS}
 		}
 	}
 	lexer.Reset(mark)
@@ -203,7 +203,7 @@ loop:
 	for {
 		m := lexer.Mark()
 		switch {
-		case p.mklex.VarUse() != nil,
+		case p.mklex.Expr() != nil,
 			lexer.NextBytesSet(textproc.Alnum) != "",
 			lexer.SkipBytesFunc(func(b byte) bool { return b != '"' && b != '\\' }):
 			rhsText.WriteString(lexer.Since(m))
@@ -243,15 +243,15 @@ func (p *MkParser) mkCondFunc() *MkCond {
 
 	case "empty":
 		if varname := p.mklex.Varname(); varname != "" {
-			modifiers := p.mklex.VarUseModifiers(varname, ')')
+			modifiers := p.mklex.ExprModifiers(varname, ')')
 			if lexer.SkipByte(')') {
-				return &MkCond{Empty: NewMkVarUse(varname, modifiers...)}
+				return &MkCond{Empty: NewMkExpr(varname, modifiers...)}
 			}
 		}
 
 	case "commands", "exists", "make", "target":
 		argMark := lexer.Mark()
-		for p.mklex.VarUse() != nil || lexer.SkipBytesFunc(func(b byte) bool { return b != '$' && b != ')' }) {
+		for p.mklex.Expr() != nil || lexer.SkipBytesFunc(func(b byte) bool { return b != '$' && b != ')' }) {
 		}
 		arg := lexer.Since(argMark)
 		if lexer.SkipByte(')') {
@@ -286,7 +286,7 @@ func (p *MkParser) PkgbasePattern() string {
 	start := lexer.Mark()
 
 	for {
-		if p.mklex.VarUse() != nil ||
+		if p.mklex.Expr() != nil ||
 			lexer.SkipRegexp(regcomp(`^[\w.*+,{}]+`)) ||
 			lexer.SkipRegexp(regcomp(`^\[[\w-]+\]`)) {
 			continue
@@ -321,9 +321,8 @@ func (*MkParser) isPkgbasePart(str string) bool {
 		return true
 	}
 
-	varUse := NewMkLexer(lexer.Rest(), nil).VarUse()
-	if varUse != nil {
-		return !contains(varUse.varname, "VER") && len(varUse.modifiers) == 0
+	if expr := NewMkLexer(lexer.Rest(), nil).Expr(); expr != nil {
+		return !contains(expr.varname, "VER") && len(expr.modifiers) == 0
 	}
 
 	return false
@@ -345,7 +344,7 @@ func (p *MkParser) DependencyPattern() *DependencyPattern {
 	parseVersion := func() string {
 		mark := lexer.Mark()
 
-		for p.mklex.VarUse() != nil {
+		for p.mklex.Expr() != nil {
 		}
 		if lexer.Since(mark) != "" {
 			return lexer.Since(mark)
@@ -404,7 +403,7 @@ func (p *MkParser) DependencyPattern() *DependencyPattern {
 	if lexer.SkipByte('-') && lexer.Rest() != "" {
 		versionMark := lexer.Mark()
 
-		for p.mklex.VarUse() != nil || lexer.SkipRegexp(regcomp(`^[\w\[\]*_.\-]+`)) {
+		for p.mklex.Expr() != nil || lexer.SkipRegexp(regcomp(`^[\w\[\]*_.\-]+`)) {
 		}
 
 		if !lexer.SkipString("{,nb*}") {
@@ -415,7 +414,7 @@ func (p *MkParser) DependencyPattern() *DependencyPattern {
 		return &dp
 	}
 
-	if ToVarUse(dp.Pkgbase) != nil {
+	if ToExpr(dp.Pkgbase) != nil {
 		return &dp
 	}
 
@@ -423,16 +422,15 @@ func (p *MkParser) DependencyPattern() *DependencyPattern {
 	return nil
 }
 
-// ToVarUse converts the given string into a MkVarUse, or returns nil
+// ToExpr converts the given string into a MkExpr, or returns nil
 // if there is a parse error or some trailing text.
-// Parse errors are silently ignored.
-func ToVarUse(str string) *MkVarUse {
+// Parse errors do not produce any warnings.
+func ToExpr(str string) *MkExpr {
 	p := NewMkLexer(str, nil)
-	varUse := p.VarUse()
-	if varUse == nil || !p.EOF() {
-		return nil
+	if expr := p.Expr(); expr != nil && p.EOF() {
+		return expr
 	}
-	return varUse
+	return nil
 }
 
 // MkCond is a condition in a Makefile, such as ${OPSYS} == NetBSD.
@@ -449,7 +447,7 @@ type MkCond struct {
 	Not *MkCond
 
 	Defined string
-	Empty   *MkVarUse
+	Empty   *MkExpr
 	Term    *MkCondTerm
 	Compare *MkCondCompare
 	Call    *MkCondCall
@@ -466,9 +464,9 @@ type MkCondCompare struct {
 	Right MkCondTerm
 }
 type MkCondTerm struct {
-	Str string
-	Num string
-	Var *MkVarUse
+	Str  string
+	Num  string
+	Expr *MkExpr
 }
 type MkCondCall struct {
 	Name string
@@ -481,18 +479,18 @@ type MkCondCallback struct {
 	And     func(conds []*MkCond)
 	Not     func(cond *MkCond)
 	Defined func(varname string)
-	Empty   func(empty *MkVarUse)
+	Empty   func(empty *MkExpr)
 	Compare func(left *MkCondTerm, op string, right *MkCondTerm)
 	Call    func(name string, arg string)
 	Paren   func(cond *MkCond)
 
-	// Var is called for every atomic expression that consists solely
-	// of a variable use, possibly enclosed in double quotes, but without
+	// Var is called for every terminal condition that consists solely
+	// of an expression, possibly enclosed in double quotes, but without
 	// any surrounding string literal parts.
-	Var func(varuse *MkVarUse)
+	Var func(expr *MkExpr)
 
-	// VarUse is called for each variable that is used in some expression.
-	VarUse func(varuse *MkVarUse)
+	// Expr is called for each variable that is used in some expression.
+	Expr func(expr *MkExpr)
 }
 
 func (cond *MkCond) Walk(callback *MkCondCallback) {
@@ -526,18 +524,18 @@ func (w *MkCondWalker) Walk(cond *MkCond, callback *MkCondCallback) {
 		if callback.Defined != nil {
 			callback.Defined(cond.Defined)
 		}
-		if callback.VarUse != nil {
-			// This is not really a VarUse, it's more a VarUseDefined.
+		if callback.Expr != nil {
+			// This is not really an Expr, it's more an ExprDefined.
 			// But in practice, they are similar enough to be treated the same.
-			callback.VarUse(NewMkVarUse(cond.Defined))
+			callback.Expr(NewMkExpr(cond.Defined))
 		}
 
-	case cond.Term != nil && cond.Term.Var != nil:
+	case cond.Term != nil && cond.Term.Expr != nil:
 		if callback.Var != nil {
-			callback.Var(cond.Term.Var)
+			callback.Var(cond.Term.Expr)
 		}
-		if callback.VarUse != nil {
-			callback.VarUse(cond.Term.Var)
+		if callback.Expr != nil {
+			callback.Expr(cond.Term.Expr)
 		}
 
 	case cond.Term != nil && cond.Term.Str != "":
@@ -547,8 +545,8 @@ func (w *MkCondWalker) Walk(cond *MkCond, callback *MkCondCallback) {
 		if callback.Empty != nil {
 			callback.Empty(cond.Empty)
 		}
-		if callback.VarUse != nil {
-			callback.VarUse(cond.Empty)
+		if callback.Expr != nil {
+			callback.Expr(cond.Empty)
 		}
 
 	case cond.Compare != nil:
@@ -576,9 +574,9 @@ func (w *MkCondWalker) Walk(cond *MkCond, callback *MkCondCallback) {
 
 func (w *MkCondWalker) walkAtom(atom *MkCondTerm, callback *MkCondCallback) {
 	switch {
-	case atom.Var != nil:
-		if callback.VarUse != nil {
-			callback.VarUse(atom.Var)
+	case atom.Expr != nil:
+		if callback.Expr != nil {
+			callback.Expr(atom.Expr)
 		}
 	case atom.Num != "":
 		break
@@ -588,11 +586,11 @@ func (w *MkCondWalker) walkAtom(atom *MkCondTerm, callback *MkCondCallback) {
 }
 
 func (w *MkCondWalker) walkStr(str string, callback *MkCondCallback) {
-	if callback.VarUse != nil {
+	if callback.Expr != nil {
 		tokens, _ := NewMkLexer(str, nil).MkTokens()
 		for _, token := range tokens {
-			if token.Varuse != nil {
-				callback.VarUse(token.Varuse)
+			if token.Expr != nil {
+				callback.Expr(token.Expr)
 			}
 		}
 	}

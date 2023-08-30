@@ -469,11 +469,11 @@ func emptyToNil(slice []string) []string {
 	return slice
 }
 
-func (s *Suite) Test_containsVarUse(c *check.C) {
+func (s *Suite) Test_containsExpr(c *check.C) {
 	t := s.Init(c)
 
 	test := func(str string, containsVar bool) {
-		t.CheckEquals(containsVarUse(str), containsVar)
+		t.CheckEquals(containsExpr(str), containsVar)
 	}
 
 	test("", false)

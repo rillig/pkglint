@@ -120,7 +120,7 @@ func (t *MkCondSimplifierTester) doTest(prefs bool, before, after string, diagno
 	t.ExpectDiagnosticsAutofix(action, diagnostics...)
 }
 
-func (s *Suite) Test_MkCondSimplifier_SimplifyVarUse(c *check.C) {
+func (s *Suite) Test_MkCondSimplifier_SimplifyExpr(c *check.C) {
 	t := NewMkCondSimplifierTester(c, s)
 
 	t.setUp()

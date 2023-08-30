@@ -802,7 +802,7 @@ shyydefault:
 		{
 			args := NewShToken("\"$$@\"",
 				&ShAtom{shtText, "\"", shqDquot, nil},
-				&ShAtom{shtShVarUse, "$$@", shqDquot, "@"},
+				&ShAtom{shtShExpr, "$$@", shqDquot, "@"},
 				&ShAtom{shtText, "\"", shqPlain, nil})
 			shyyVAL.For = &MkShFor{shyyDollar[2].Word.MkText, []*ShToken{args}, shyyDollar[4].List}
 		}

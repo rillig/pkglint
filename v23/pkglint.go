@@ -409,7 +409,7 @@ func (*Pkglint) findPkgsrcTopdir(dirname CurrPath) RelPath {
 func resolveVariableRefs(text string, mklines *MkLines, pkg *Package) string {
 	// TODO: How does this fit into the Scope type, which is newer than this function?
 
-	if !containsVarUse(text) {
+	if !containsExpr(text) {
 		return text
 	}
 
@@ -473,9 +473,9 @@ func CheckLinesDescr(lines *Lines) {
 		tokens, _ := NewMkLexer(line.Text, nil).MkTokens()
 		for _, token := range tokens {
 			switch {
-			case token.Varuse == nil,
+			case token.Expr == nil,
 				!hasPrefix(token.Text, "${"),
-				G.Pkgsrc.VariableType(nil, token.Varuse.varname) == nil:
+				G.Pkgsrc.VariableType(nil, token.Expr.varname) == nil:
 			default:
 				line.Notef("Variables like %q are not expanded in the DESCR file.",
 					token.Text)
@@ -775,8 +775,8 @@ func CheckLinesTrailingEmptyLines(lines *Lines) {
 func (p *Pkglint) Tool(mklines *MkLines, command string, time ToolTime) (tool *Tool, usable bool) {
 	tools := p.tools(mklines)
 
-	if varUse := ToVarUse(command); varUse != nil {
-		tool = tools.ByVarname(varUse.varname)
+	if expr := ToExpr(command); expr != nil {
+		tool = tools.ByVarname(expr.varname)
 	} else {
 		tool = tools.ByName(command)
 	}

@@ -725,7 +725,7 @@ func (s *Suite) Test_Buildlink3Checker_checkMainPart__comment_at_end_of_file(c *
 		"WARN: ~/category/package/buildlink3.mk:14: The file should end here.")
 }
 
-func (s *Suite) Test_Buildlink3Checker_checkVarUse__PKG_BUILD_OPTIONS(c *check.C) {
+func (s *Suite) Test_Buildlink3Checker_checkExpr__PKG_BUILD_OPTIONS(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpOption("option", "")
@@ -964,7 +964,7 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassignPkgsrcdir__var(c *check.C) 
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Buildlink3Checker_checkVaruseInPkgbase__PKGBASE_with_variable_PHP_PKG_PREFIX(c *check.C) {
+func (s *Suite) Test_Buildlink3Checker_checkExprInPkgbase__PKGBASE_with_variable_PHP_PKG_PREFIX(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPkgsrc()
@@ -1000,7 +1000,7 @@ func (s *Suite) Test_Buildlink3Checker_checkVaruseInPkgbase__PKGBASE_with_variab
 			"(also in other variables in this file).")
 }
 
-func (s *Suite) Test_Buildlink3Checker_checkVaruseInPkgbase__PKGBASE_with_variable_PYPKGPREFIX(c *check.C) {
+func (s *Suite) Test_Buildlink3Checker_checkExprInPkgbase__PKGBASE_with_variable_PYPKGPREFIX(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPkgsrc()
@@ -1036,7 +1036,7 @@ func (s *Suite) Test_Buildlink3Checker_checkVaruseInPkgbase__PKGBASE_with_variab
 			"(also in other variables in this file).")
 }
 
-func (s *Suite) Test_Buildlink3Checker_checkVaruseInPkgbase__PKGBASE_with_variable_RUBY_BASE(c *check.C) {
+func (s *Suite) Test_Buildlink3Checker_checkExprInPkgbase__PKGBASE_with_variable_RUBY_BASE(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPkgsrc()
@@ -1072,7 +1072,7 @@ func (s *Suite) Test_Buildlink3Checker_checkVaruseInPkgbase__PKGBASE_with_variab
 			"(also in other variables in this file).")
 }
 
-func (s *Suite) Test_Buildlink3Checker_checkVaruseInPkgbase__PKGBASE_with_variable_RUBY_PKGPREFIX(c *check.C) {
+func (s *Suite) Test_Buildlink3Checker_checkExprInPkgbase__PKGBASE_with_variable_RUBY_PKGPREFIX(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPkgsrc()
@@ -1108,7 +1108,7 @@ func (s *Suite) Test_Buildlink3Checker_checkVaruseInPkgbase__PKGBASE_with_variab
 			"(also in other variables in this file).")
 }
 
-func (s *Suite) Test_Buildlink3Checker_checkVaruseInPkgbase__PKGBASE_with_unknown_variable(c *check.C) {
+func (s *Suite) Test_Buildlink3Checker_checkExprInPkgbase__PKGBASE_with_unknown_variable(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPkgsrc()

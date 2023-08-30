@@ -92,7 +92,7 @@ func (ck *OptionsLinesChecker) collect() {
 func (ck *OptionsLinesChecker) handleUpperLine(mkline *MkLine, seenPkgOptionsVar bool) {
 
 	declare := func(option string) {
-		if containsVarUse(option) {
+		if containsExpr(option) {
 			ck.declaredArbitrary = true
 		} else {
 			ck.declaredOptions[option] = mkline
@@ -114,8 +114,8 @@ func (ck *OptionsLinesChecker) handleUpperLine(mkline *MkLine, seenPkgOptionsVar
 		}
 
 		for _, option := range mkline.ValueFields(mkline.Value()) {
-			if optionVarUse := ToVarUse(option); optionVarUse != nil {
-				forVars := ck.mklines.ExpandLoopVar(optionVarUse.varname)
+			if optionExpr := ToExpr(option); optionExpr != nil {
+				forVars := ck.mklines.ExpandLoopVar(optionExpr.varname)
 				for _, option := range forVars {
 					declare(option)
 				}
@@ -152,7 +152,7 @@ func (ck *OptionsLinesChecker) handleLowerLine(mkline *MkLine) {
 func (ck *OptionsLinesChecker) handleLowerCondition(mkline *MkLine, cond *MkCond) {
 
 	recordOption := func(option string) {
-		if containsVarUse(option) {
+		if containsExpr(option) {
 			ck.handledArbitrary = true
 			return
 		}
@@ -161,18 +161,18 @@ func (ck *OptionsLinesChecker) handleLowerCondition(mkline *MkLine, cond *MkCond
 		ck.optionsInDeclarationOrder = append(ck.optionsInDeclarationOrder, option)
 	}
 
-	recordVarUse := func(varuse *MkVarUse) {
-		if varuse.varname != "PKG_OPTIONS" || len(varuse.modifiers) != 1 {
+	recordExpr := func(expr *MkExpr) {
+		if expr.varname != "PKG_OPTIONS" || len(expr.modifiers) != 1 {
 			return
 		}
 
-		m, positive, pattern, exact := varuse.modifiers[0].MatchMatch()
+		m, positive, pattern, exact := expr.modifiers[0].MatchMatch()
 		if !m || !positive {
 			return
 		}
 
-		if optionVarUse := ToVarUse(pattern); optionVarUse != nil {
-			for _, option := range ck.mklines.ExpandLoopVar(optionVarUse.varname) {
+		if optionExpr := ToExpr(pattern); optionExpr != nil {
+			for _, option := range ck.mklines.ExpandLoopVar(optionExpr.varname) {
 				recordOption(option)
 			}
 
@@ -194,8 +194,8 @@ func (ck *OptionsLinesChecker) handleLowerCondition(mkline *MkLine, cond *MkCond
 	}
 
 	cond.Walk(&MkCondCallback{
-		Empty: recordVarUse,
-		Var:   recordVarUse})
+		Empty: recordExpr,
+		Var:   recordExpr})
 
 	if cond.Empty != nil && cond.Empty.varname == "PKG_OPTIONS" && mkline.HasElseBranch() {
 		mkline.Warnf("The positive branch of the .if/.else " +

@@ -89,7 +89,7 @@ func (s *Suite) Test_MkAssignChecker_checkLeft(c *check.C) {
 		MkCvsID,
 		"_VARNAME=\tvalue")
 	// Only to prevent "defined but not used".
-	mklines.allVars.Use("_VARNAME", mklines.mklines[1], VucRunTime)
+	mklines.allVars.Use("_VARNAME", mklines.mklines[1], EctxRunTime)
 
 	mklines.Check()
 
@@ -1287,7 +1287,7 @@ func (s *Suite) Test_MkAssignChecker_checkMiscRedundantInstallationDirs__absolut
 			"must be relative to ${PREFIX}.")
 }
 
-func (s *Suite) Test_MkAssignChecker_checkRightVaruse(c *check.C) {
+func (s *Suite) Test_MkAssignChecker_checkRightExpr(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
@@ -1303,7 +1303,7 @@ func (s *Suite) Test_MkAssignChecker_checkRightVaruse(c *check.C) {
 		"NOTE: module.mk:2: The :Q modifier isn't necessary for ${LOCALBASE} here.")
 }
 
-func (s *Suite) Test_MkAssignChecker_checkVaruseShell(c *check.C) {
+func (s *Suite) Test_MkAssignChecker_checkExprShell(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("filename.mk",

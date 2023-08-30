@@ -150,7 +150,7 @@ func (s *Suite) Test_MkCondChecker_Check__tracing(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLinesMatching(`^WARN|checkCompare`,
-		"TRACE: 1 2   checkCompareVarStr ${VAR:Mpattern1:Mpattern2} == comparison",
+		"TRACE: 1 2   checkCompareExprStr ${VAR:Mpattern1:Mpattern2} == comparison",
 		"WARN: filename.mk:2: VAR is used but not defined.")
 }
 
@@ -459,12 +459,12 @@ func (s *Suite) Test_MkCondChecker_checkEmpty(c *check.C) {
 func (s *Suite) Test_MkCondChecker_checkEmptyExpr(c *check.C) {
 	t := s.Init(c)
 
-	test := func(use *MkVarUse, diagnostics ...string) {
+	test := func(expr *MkExpr, diagnostics ...string) {
 		mklines := t.NewMkLines("filename.mk",
 			"# dummy")
 		ck := NewMkCondChecker(mklines.mklines[0], mklines)
 
-		ck.checkEmptyExpr(use)
+		ck.checkEmptyExpr(expr)
 
 		t.CheckOutput(diagnostics)
 	}
@@ -472,19 +472,19 @@ func (s *Suite) Test_MkCondChecker_checkEmptyExpr(c *check.C) {
 	// In some cases it makes sense to use indirection in a !empty(...)
 	// expression.
 	test(
-		NewMkVarUse("${PREFIX}"),
+		NewMkExpr("${PREFIX}"),
 
 		nil...)
 
 	// Typical examples for indirection are .for loops.
 	test(
-		NewMkVarUse("${var}"),
+		NewMkExpr("${var}"),
 
 		nil...)
 
 	// This one is obvious enough for pkglint.
 	test(
-		NewMkVarUse("${PREFIX:Mpattern}"),
+		NewMkExpr("${PREFIX:Mpattern}"),
 
 		"WARN: filename.mk:1: The empty() function takes a variable "+
 			"name as parameter, not a variable expression.")
@@ -506,8 +506,8 @@ func (s *Suite) Test_MkCondChecker_checkEmptyType(c *check.C) {
 
 		mklines.ForEach(func(mkline *MkLine) {
 			ck := NewMkCondChecker(mkline, mklines)
-			mkline.ForEachUsed(func(varUse *MkVarUse, time VucTime) {
-				ck.checkEmptyType(varUse)
+			mkline.ForEachUsed(func(expr *MkExpr, time EctxTime) {
+				ck.checkEmptyType(expr)
 			})
 		})
 
@@ -597,7 +597,7 @@ func (s *Suite) Test_MkCondChecker_checkCompare(c *check.C) {
 		"WARN: filename.mk:1: Invalid condition, unrecognized part: \"empty{VAR}\".")
 }
 
-func (s *Suite) Test_MkCondChecker_checkCompareVarStr__no_tracing(c *check.C) {
+func (s *Suite) Test_MkCondChecker_checkCompareExprStr__no_tracing(c *check.C) {
 	t := s.Init(c)
 	b := NewMkTokenBuilder()
 
@@ -607,9 +607,9 @@ func (s *Suite) Test_MkCondChecker_checkCompareVarStr__no_tracing(c *check.C) {
 	t.DisableTracing()
 
 	ck := NewMkCondChecker(mklines.mklines[0], mklines)
-	varUse := b.VarUse("DISTFILES", "Mpattern", "O", "u")
+	expr := b.Expr("DISTFILES", "Mpattern", "O", "u")
 	// TODO: mklines.ForEach
-	ck.checkCompareVarStr(varUse, "==", "distfile-1.0.tar.gz")
+	ck.checkCompareExprStr(expr, "==", "distfile-1.0.tar.gz")
 
 	t.CheckOutputEmpty()
 }
@@ -682,7 +682,7 @@ func (s *Suite) Test_MkCondChecker_checkCompareWithNumPython(c *check.C) {
 			"with \"${PYTHON_VERSION} < 310\".")
 }
 
-func (s *Suite) Test_MkCondChecker_checkCompareVarStrCompiler(c *check.C) {
+func (s *Suite) Test_MkCondChecker_checkCompareExprStrCompiler(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPkgsrc()

@@ -71,7 +71,7 @@ func (ck *HomepageChecker) checkBasedOnMasterSites() {
 	if sitename == "MASTER_SITES" && ck.MkLines.pkg != nil {
 		mkline := ck.MkLines.pkg.vars.FirstDefinition("MASTER_SITES")
 		if mkline != nil {
-			if !containsVarUse(mkline.Value()) {
+			if !containsExpr(mkline.Value()) {
 				masterSites := ck.MkLine.ValueFields(mkline.Value())
 				if len(masterSites) > 0 {
 					baseURL = masterSites[0]

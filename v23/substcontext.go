@@ -498,8 +498,8 @@ func (b *substBlock) varassignFilterCmd(mkline *MkLine) {
 }
 
 func (b *substBlock) varassignAllowForeign(mkline *MkLine) {
-	mkline.ForEachUsed(func(varUse *MkVarUse, time VucTime) {
-		b.allowVar(varUse.varname)
+	mkline.ForEachUsed(func(expr *MkExpr, time EctxTime) {
+		b.allowVar(expr.varname)
 	})
 }
 
@@ -591,12 +591,12 @@ func (*substBlock) extractVarname(token string) string {
 		return ""
 	}
 
-	varuse := parser.VarUse()
-	if varuse == nil || varuse.varname != varname {
+	expr := parser.Expr()
+	if expr == nil || expr.varname != varname {
 		return ""
 	}
 
-	switch varuse.Mod() {
+	switch expr.Mod() {
 	case "", ":Q":
 		break
 	default:

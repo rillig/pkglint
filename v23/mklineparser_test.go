@@ -651,8 +651,8 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 	t := s.Init(c)
 	b := NewMkTokenBuilder()
 
-	varuse := b.VaruseToken
-	varuseText := b.VaruseTextToken
+	expr := b.ExprToken
+	exprText := b.ExprTextToken
 	text := b.TextToken
 	tokens := b.Tokens
 
@@ -664,7 +664,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 		t.CheckDeepEquals([]interface{}{text, actual}, []interface{}{text, expected})
 	}
 
-	t.Use(text, varuse, varuseText, tokens)
+	t.Use(text, expr, exprText, tokens)
 
 	test(
 		"",
@@ -774,7 +774,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 	test("${TARGET}: ${SOURCES} # comment",
 		mkLineSplitResult{
 			main:               "${TARGET}: ${SOURCES}",
-			tokens:             tokens(varuse("TARGET"), text(": "), varuse("SOURCES")),
+			tokens:             tokens(expr("TARGET"), text(": "), expr("SOURCES")),
 			spaceBeforeComment: " ",
 			hasComment:         true,
 			comment:            " comment",
@@ -786,7 +786,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 	test("VAR=\t${OTHER:[#]} # comment",
 		mkLineSplitResult{
 			main:               "VAR=\t${OTHER:[#]}",
-			tokens:             tokens(text("VAR=\t"), varuse("OTHER", "[#]")),
+			tokens:             tokens(text("VAR=\t"), expr("OTHER", "[#]")),
 			spaceBeforeComment: " ",
 			hasComment:         true,
 			comment:            " comment",
@@ -796,7 +796,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 	test("VAR:=\t${VAR:M-*:[\\#]}",
 		mkLineSplitResult{
 			main:   "VAR:=\t${VAR:M-*:[#]}",
-			tokens: tokens(text("VAR:=\t"), varuse("VAR", "M-*", "[#]")),
+			tokens: tokens(text("VAR:=\t"), expr("VAR", "M-*", "[#]")),
 		})
 
 	// A backslash always escapes the next character, be it a # for a comment
@@ -829,26 +829,26 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 		})
 
 	// The backslash is only removed when it escapes a comment.
-	// In particular, it cannot be used to escape a dollar that starts a
-	// variable use.
+	// In particular, it cannot be used to escape a dollar that starts an
+	// expression.
 	test("VAR0=\t$T",
 		mkLineSplitResult{
 			main:   "VAR0=\t$T",
-			tokens: tokens(text("VAR0=\t"), varuseText("$T", "T")),
+			tokens: tokens(text("VAR0=\t"), exprText("$T", "T")),
 		},
 		"WARN: filename.mk:123: $T is ambiguous. Use ${T} if you mean a Make variable or $$T if you mean a shell variable.")
 
 	test("VAR1=\t\\$T",
 		mkLineSplitResult{
 			main:   "VAR1=\t\\$T",
-			tokens: tokens(text("VAR1=\t\\"), varuseText("$T", "T")),
+			tokens: tokens(text("VAR1=\t\\"), exprText("$T", "T")),
 		},
 		"WARN: filename.mk:123: $T is ambiguous. Use ${T} if you mean a Make variable or $$T if you mean a shell variable.")
 
 	test("VAR2=\t\\\\$T",
 		mkLineSplitResult{
 			main:   "VAR2=\t\\\\$T",
-			tokens: tokens(text("VAR2=\t\\\\"), varuseText("$T", "T")),
+			tokens: tokens(text("VAR2=\t\\\\"), exprText("$T", "T")),
 		},
 		"WARN: filename.mk:123: $T is ambiguous. Use ${T} if you mean a Make variable or $$T if you mean a shell variable.")
 
@@ -856,14 +856,14 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 	test("$$shellvar $${shellvar} \\${MKVAR} [] \\x",
 		mkLineSplitResult{
 			main:   "$$shellvar $${shellvar} \\${MKVAR} [] \\x",
-			tokens: tokens(text("$$shellvar $${shellvar} \\"), varuse("MKVAR"), text(" [] \\x")),
+			tokens: tokens(text("$$shellvar $${shellvar} \\"), expr("MKVAR"), text(" [] \\x")),
 		})
 
 	// Parse errors are recorded in the rest return value.
 	test("${UNCLOSED",
 		mkLineSplitResult{
 			main:   "${UNCLOSED",
-			tokens: tokens(varuseText("${UNCLOSED", "UNCLOSED")),
+			tokens: tokens(exprText("${UNCLOSED", "UNCLOSED")),
 		},
 		"WARN: filename.mk:123: Missing closing \"}\" for \"UNCLOSED\".")
 
@@ -874,7 +874,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 			main: "text before ${UNCLOSED",
 			tokens: tokens(
 				text("text before "),
-				varuseText("${UNCLOSED", "UNCLOSED")),
+				exprText("${UNCLOSED", "UNCLOSED")),
 			hasComment: true,
 			comment:    " comment",
 		},
@@ -889,7 +889,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 				text("text before "),
 				// It's a bit inconsistent that the varname includes the space
 				// but the text doesn't; anyway, it's an edge case.
-				varuseText("${UNCLOSED", "UNCLOSED ")),
+				exprText("${UNCLOSED", "UNCLOSED ")),
 			spaceBeforeComment: " ",
 			hasComment:         true,
 			comment:            " comment",
@@ -910,7 +910,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 			main: "Lonely $ character $",
 			tokens: tokens(
 				text("Lonely "),
-				varuseText("$ " /* instead of "${ }" */, " "),
+				exprText("$ " /* instead of "${ }" */, " "),
 				text("character "),
 				text("$")),
 		})
@@ -934,18 +934,18 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 		})
 
 	// At this stage, MkLine.split doesn't know that empty(...) takes
-	// a variable use. Instead, it just sees ordinary characters and
-	// other uses of variables.
+	// an expression. Instead, it just sees ordinary characters and
+	// other expressions.
 	test(".if empty(${VAR.${tool}}:C/\\:.*$//:M${pattern})",
 		mkLineSplitResult{
 			main: ".if empty(${VAR.${tool}}:C/\\:.*$//:M${pattern})",
 			tokens: tokens(
 				text(".if empty("),
-				varuse("VAR.${tool}"),
+				expr("VAR.${tool}"),
 				text(":C/\\:.*"),
 				text("$"),
 				text("//:M"),
-				varuse("pattern"),
+				expr("pattern"),
 				text(")")),
 		})
 
@@ -979,7 +979,7 @@ func (s *Suite) Test_MkLineParser_split__preserve_comment(c *check.C) {
 
 	tokens := b.Tokens
 	text := b.TextToken
-	varUse := b.VaruseToken
+	expr := b.ExprToken
 
 	test := func(text string, expected mkLineSplitResult, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, text)
@@ -1020,7 +1020,7 @@ func (s *Suite) Test_MkLineParser_split__preserve_comment(c *check.C) {
 	test("# ${VAR}",
 		mkLineSplitResult{
 			main:   "# ${VAR}",
-			tokens: tokens(text("# "), varUse("VAR"))})
+			tokens: tokens(text("# "), expr("VAR"))})
 
 	test("# ",
 		mkLineSplitResult{
@@ -1029,7 +1029,7 @@ func (s *Suite) Test_MkLineParser_split__preserve_comment(c *check.C) {
 			spaceBeforeComment: " "})
 }
 
-func (s *Suite) Test_MkLineParser_split__unclosed_varuse(c *check.C) {
+func (s *Suite) Test_MkLineParser_split__unclosed_expr(c *check.C) {
 	t := s.Init(c)
 	b := NewMkTokenBuilder()
 
@@ -1049,7 +1049,7 @@ func (s *Suite) Test_MkLineParser_split__unclosed_varuse(c *check.C) {
 			"EGDIRS=\t${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d",
 			b.Tokens(
 				b.TextToken("EGDIRS=\t"),
-				b.VaruseTextToken(
+				b.ExprTextToken(
 					"${EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d",
 					"EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d")),
 			"",
@@ -1142,8 +1142,8 @@ func (s *Suite) Test_MkLineParser_unescapeComment(c *check.C) {
 		"#comment")
 
 	// The backslash is only removed when it escapes a comment.
-	// In particular, it cannot be used to escape a dollar that starts a
-	// variable use.
+	// In particular, it cannot be used to escape a dollar that starts an
+	// expression.
 	test("VAR0=\t$T",
 		"VAR0=\t$T",
 		"")
@@ -1164,7 +1164,7 @@ func (s *Suite) Test_MkLineParser_unescapeComment(c *check.C) {
 		"${UNCLOSED",
 		"")
 
-	// In this early phase of parsing, unfinished variable uses are not
+	// In this early phase of parsing, unfinished expressions are not
 	// interpreted and do not influence the detection of the comment start.
 	test("text before ${UNCLOSED # comment",
 		"text before ${UNCLOSED ",

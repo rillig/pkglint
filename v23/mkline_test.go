@@ -4,7 +4,7 @@ import (
 	"gopkg.in/check.v1"
 )
 
-func (s *Suite) Test_MkLine__shell_varuse_in_backt_dquot(c *check.C) {
+func (s *Suite) Test_MkLine__shell_expr_in_backt_dquot(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
@@ -109,7 +109,7 @@ func (s *Suite) Test_MkLine_Cond(c *check.C) {
 
 	cond := mkline.Cond()
 
-	t.CheckEquals(cond.Compare.Left.Var.varname, "VAR")
+	t.CheckEquals(cond.Compare.Left.Expr.varname, "VAR")
 	t.CheckEquals(cond.Compare.Right.Str, "Value")
 	t.CheckEquals(mkline.Cond(), cond)
 }
@@ -351,7 +351,7 @@ func (s *Suite) Test_MkLine_ValueTokens(c *check.C) {
 	t := s.Init(c)
 	b := NewMkTokenBuilder()
 	text := b.TextToken
-	varUseText := b.VaruseTextToken
+	exprText := b.ExprTextToken
 	tokens := b.Tokens
 
 	test := func(value string, expected []*MkToken, diagnostics ...string) {
@@ -361,7 +361,7 @@ func (s *Suite) Test_MkLine_ValueTokens(c *check.C) {
 		t.CheckOutput(diagnostics)
 	}
 
-	t.Use(text, varUseText, tokens, test)
+	t.Use(text, exprText, tokens, test)
 
 	test("#empty",
 		tokens())
@@ -372,7 +372,7 @@ func (s *Suite) Test_MkLine_ValueTokens(c *check.C) {
 	test("value ${VAR} rest",
 		tokens(
 			text("value "),
-			varUseText("${VAR}", "VAR"),
+			exprText("${VAR}", "VAR"),
 			text(" rest")))
 
 	test("value # comment",
@@ -382,7 +382,7 @@ func (s *Suite) Test_MkLine_ValueTokens(c *check.C) {
 	test("value ${UNFINISHED",
 		tokens(
 			text("value "),
-			varUseText("${UNFINISHED", "UNFINISHED")),
+			exprText("${UNFINISHED", "UNFINISHED")),
 
 		"WARN: Makefile:1: Missing closing \"}\" for \"UNFINISHED\".")
 }
@@ -414,7 +414,7 @@ func (s *Suite) Test_MkLine_ValueTokens__caching(c *check.C) {
 	t.CheckDeepEquals(valueTokens,
 		b.Tokens(
 			b.TextToken("value "),
-			b.VaruseTextToken("${UNFINISHED", "UNFINISHED")))
+			b.ExprTextToken("${UNFINISHED", "UNFINISHED")))
 	t.CheckEquals(rest, "")
 	t.CheckOutputLines(
 		"WARN: Makefile:1: Missing closing \"}\" for \"UNFINISHED\".")
@@ -433,7 +433,7 @@ func (s *Suite) Test_MkLine_ValueTokens__caching_parse_error(c *check.C) {
 	mkline := t.NewMkLine("Makefile", 1, "PATH=\t${UNFINISHED")
 	valueTokens, rest := mkline.ValueTokens()
 
-	t.CheckDeepEquals(valueTokens, b.Tokens(b.VaruseTextToken("${UNFINISHED", "UNFINISHED")))
+	t.CheckDeepEquals(valueTokens, b.Tokens(b.ExprTextToken("${UNFINISHED", "UNFINISHED")))
 	t.CheckEquals(rest, "")
 	t.CheckOutputLines(
 		"WARN: Makefile:1: Missing closing \"}\" for \"UNFINISHED\".")
@@ -527,7 +527,7 @@ func (s *Suite) Test_MkLine_Fields__semicolons(c *check.C) {
 	t.CheckDeepEquals(words, []string{"word1", "word2;;;"})
 }
 
-func (s *Suite) Test_MkLine_Fields__varuse_with_embedded_space(c *check.C) {
+func (s *Suite) Test_MkLine_Fields__expr_with_embedded_space(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("filename.mk", 123, "VAR=\t${VAR:S/ /_/g}")
@@ -627,8 +627,8 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__unknown_rhs(c *check.C) {
 	mkline := t.NewMkLine("filename.mk", 1, "PKGNAME:= ${UNKNOWN}")
 	t.SetUpVartypes()
 
-	vuc := VarUseContext{G.Pkgsrc.VariableType(nil, "PKGNAME"), VucLoadTime, VucQuotUnknown, false}
-	nq := mkline.VariableNeedsQuoting(nil, NewMkVarUse("UNKNOWN"), nil, &vuc)
+	ectx := ExprContext{G.Pkgsrc.VariableType(nil, "PKGNAME"), EctxLoadTime, EctxQuotUnknown, false}
+	nq := mkline.VariableNeedsQuoting(nil, NewMkExpr("UNKNOWN"), nil, &ectx)
 
 	t.CheckEquals(nq, unknown)
 }
@@ -643,8 +643,8 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__append_URL_to_list_of_URLs(c *
 		"MASTER_SITES=\t${HOMEPAGE}")
 	mkline := mklines.mklines[1]
 
-	vuc := VarUseContext{G.Pkgsrc.Types().Canon("MASTER_SITES"), VucRunTime, VucQuotPlain, false}
-	nq := mkline.VariableNeedsQuoting(nil, NewMkVarUse("HOMEPAGE"), G.Pkgsrc.Types().Canon("HOMEPAGE"), &vuc)
+	ectx := ExprContext{G.Pkgsrc.Types().Canon("MASTER_SITES"), EctxRunTime, EctxQuotPlain, false}
+	nq := mkline.VariableNeedsQuoting(nil, NewMkExpr("HOMEPAGE"), G.Pkgsrc.Types().Canon("HOMEPAGE"), &ectx)
 
 	t.CheckEquals(nq, no)
 
@@ -947,7 +947,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__PKGNAME_and_URL_list_in_URL_li
 		MkCvsID,
 		"MASTER_SITES=\tftp://ftp.gtk.org/${PKGNAME}/ ${MASTER_SITE_GNOME:=subdir/}")
 
-	NewMkAssignChecker(mklines.mklines[1], mklines).checkRightVaruse()
+	NewMkAssignChecker(mklines.mklines[1], mklines).checkRightExpr()
 
 	t.CheckOutputEmpty() // Don't warn about missing :Q modifiers.
 }
@@ -962,7 +962,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__tool_in_CONFIGURE_ENV(c *check
 		"",
 		"CONFIGURE_ENV+=\tSYS_TAR_COMMAND_PATH=${TOOLS_TAR:Q}")
 
-	NewMkAssignChecker(mklines.mklines[2], mklines).checkRightVaruse()
+	NewMkAssignChecker(mklines.mklines[2], mklines).checkRightExpr()
 
 	// The TOOLS_* variables only contain the path to the tool,
 	// without any additional arguments that might be necessary
@@ -983,8 +983,8 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__backticks(c *check.C) {
 		"COMPILE_CMD=\tcc `${CAT} ${WRKDIR}/compileflags`",
 		"COMMENT_CMD=\techo `echo ${COMMENT}`")
 
-	NewMkAssignChecker(mklines.mklines[2], mklines).checkRightVaruse()
-	NewMkAssignChecker(mklines.mklines[3], mklines).checkRightVaruse()
+	NewMkAssignChecker(mklines.mklines[2], mklines).checkRightExpr()
+	NewMkAssignChecker(mklines.mklines[3], mklines).checkRightExpr()
 
 	// Both CAT and WRKDIR are safe from quoting, therefore no warnings.
 	// But COMMENT may contain arbitrary characters and therefore must
@@ -1070,8 +1070,8 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__tool_in_shell_command(c *check
 			"BASH (type \"ShellCommand\") cannot be assigned to type \"Pathname\".")
 }
 
-// This test provides code coverage for the "switch vuc.quoting" in the case
-// that vuc.quoting is VucQuotUnknown.
+// This test provides code coverage for the "switch ectx.quoting" in the case
+// that ectx.quoting is EctxQuotUnknown.
 //
 // It is not possible to construct this scenario by calling mklines.Check(),
 // therefore it is specially crafted.
@@ -1085,14 +1085,14 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__tool_in_unknown_quotes(c *chec
 		"\t:")
 	mkline := mklines.mklines[0]
 
-	varUse := NewMkVarUse("BASH")
+	expr := NewMkExpr("BASH")
 	vartype := G.Pkgsrc.VariableType(mklines, "BASH")
-	vuc := VarUseContext{
+	ectx := ExprContext{
 		vartype:    NewVartype(BtShellWord, NoVartypeOptions, NewACLEntry("*", aclpAll)),
-		time:       VucRunTime,
-		quoting:    VucQuotUnknown,
+		time:       EctxRunTime,
+		quoting:    EctxQuotUnknown,
 		IsWordPart: false}
-	needsQuoting := mkline.VariableNeedsQuoting(mklines, varUse, vartype, &vuc)
+	needsQuoting := mkline.VariableNeedsQuoting(mklines, expr, vartype, &ectx)
 
 	// This "yes" comes from the end of the "wantList != haveList" branch.
 	t.CheckEquals(needsQuoting, yes)
@@ -1286,8 +1286,8 @@ func (s *Suite) Test_MkLine_ForEachUsed(c *check.C) {
 
 	var varnames []string
 	for _, mkline := range mklines.mklines {
-		mkline.ForEachUsed(func(varUse *MkVarUse, time VucTime) {
-			varnames = append(varnames, time.String()+" "+varUse.varname)
+		mkline.ForEachUsed(func(expr *MkExpr, time EctxTime) {
+			varnames = append(varnames, time.String()+" "+expr.varname)
 		})
 	}
 
@@ -1349,7 +1349,7 @@ func (s *Suite) Test_MkLine_UnquoteShell(c *check.C) {
 
 	test("`", "`")
 
-	// Quotes inside a varuse are not unquoted.
+	// Quotes inside an expression are not unquoted.
 	test("${VAR}", "${VAR}")
 	test("${VAR:S,',',g}", "${VAR:S,',',g}")
 
@@ -1375,14 +1375,14 @@ func (s *Suite) Test_NewMkOperator(c *check.C) {
 	c.Check(func() { NewMkOperator("???") }, check.Panics, "Invalid operator: ???")
 }
 
-func (s *Suite) Test_VarUseContext_String(c *check.C) {
+func (s *Suite) Test_ExprContext_String(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
 	vartype := G.Pkgsrc.VariableType(nil, "PKGNAME")
-	vuc := VarUseContext{vartype, VucUnknownTime, VucQuotBackt, false}
+	ectx := ExprContext{vartype, EctxUnknownTime, EctxQuotBackt, false}
 
-	t.CheckEquals(vuc.String(), "(Pkgname (package-settable) time:unknown quoting:backt wordpart:false)")
+	t.CheckEquals(ectx.String(), "(Pkgname (package-settable) time:unknown quoting:backt wordpart:false)")
 }
 
 func (s *Suite) Test_Indentation(c *check.C) {

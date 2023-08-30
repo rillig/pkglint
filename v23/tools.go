@@ -254,17 +254,17 @@ func (tr *Tools) ParseToolLine(mklines *MkLines, mkline *MkLine, fromInfrastruct
 			}
 
 		case "_TOOLS_VARNAME.*":
-			if !containsVarUse(varparam) {
+			if !containsExpr(varparam) {
 				tr.Define(varparam, value, mkline)
 			}
 
 		case "TOOLS_PATH.*", "_TOOLS_DEPMETHOD.*":
-			if !containsVarUse(varparam) {
+			if !containsExpr(varparam) {
 				tr.Define(varparam, "", mkline)
 			}
 
 		case "TOOLS_ALIASES.*":
-			if containsVarUse(varparam) {
+			if containsExpr(varparam) {
 				break
 			}
 
@@ -274,9 +274,8 @@ func (tr *Tools) ParseToolLine(mklines *MkLines, mkline *MkLine, fromInfrastruct
 				if tr.IsValidToolName(alias) {
 					tr.addAlias(tool, alias)
 				} else {
-					varUse := ToVarUse(alias)
-					if varUse != nil {
-						for _, subAlias := range mklines.ExpandLoopVar(varUse.varname) {
+					if expr := ToExpr(alias); expr != nil {
+						for _, subAlias := range mklines.ExpandLoopVar(expr.varname) {
 							if tr.IsValidToolName(subAlias) {
 								tr.addAlias(tool, subAlias)
 							}
@@ -286,7 +285,7 @@ func (tr *Tools) ParseToolLine(mklines *MkLines, mkline *MkLine, fromInfrastruct
 			}
 
 		case "_TOOLS.*":
-			if !containsVarUse(varparam) {
+			if !containsExpr(varparam) {
 				tr.Define(varparam, "", mkline)
 				for _, tool := range mkline.ValueFields(value) {
 					tr.Define(tool, "", mkline)
@@ -318,7 +317,7 @@ func (tr *Tools) addAlias(tool *Tool, alias string) {
 // though, this assumption cannot be made and pkglint needs to be strict.
 func (tr *Tools) parseUseTools(mkline *MkLine, createIfAbsent bool, addToUseTools bool) {
 	value := mkline.Value()
-	if containsVarUse(value) {
+	if containsExpr(value) {
 		return
 	}
 

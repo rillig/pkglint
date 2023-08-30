@@ -6,8 +6,8 @@ type ShAtomType uint8
 
 const (
 	shtSpace    ShAtomType = iota
-	shtVaruse              // ${PREFIX}
-	shtShVarUse            // $${var:-pol}
+	shtExpr                // ${PREFIX}
+	shtShExpr              // $${var:-pol}
 	shtText                // while, cat, ENV=value
 	shtOperator            // (, ;, |
 	shtComment             // # ...
@@ -17,8 +17,8 @@ const (
 func (t ShAtomType) String() string {
 	return [...]string{
 		"space",
-		"varuse",
-		"shvaruse",
+		"expr",
+		"shexpr",
 		"text",
 		"operator",
 		"comment",
@@ -31,7 +31,7 @@ func (t ShAtomType) String() string {
 // but keywords, operators and separators don't.
 func (t ShAtomType) IsWord() bool {
 	switch t {
-	case shtVaruse, shtShVarUse, shtText:
+	case shtExpr, shtShExpr, shtText:
 		return true
 	}
 	return false
@@ -43,8 +43,8 @@ type ShAtom struct {
 	Quoting ShQuoting // The quoting state at the end of the token
 
 	//  * usually nil
-	//  * for shtVaruse a *MkVarUse
-	//  * for shtShVarUse a string
+	//  * for shtExpr a *MkExpr
+	//  * for shtShExpr a string
 	data interface{}
 }
 
@@ -52,17 +52,17 @@ func (atom *ShAtom) String() string {
 	if atom.Type == shtText && atom.Quoting == shqPlain {
 		return sprintf("%q", atom.MkText)
 	}
-	if atom.Type == shtVaruse {
-		varuse := atom.VarUse()
-		return sprintf("varuse(%q)", varuse.varname+varuse.Mod())
+	if atom.Type == shtExpr {
+		expr := atom.Expr()
+		return sprintf("expr(%q)", expr.varname+expr.Mod())
 	}
 	return sprintf("ShAtom(%v, %q, %s)", atom.Type, atom.MkText, atom.Quoting)
 }
 
-// VarUse returns a read access to a Makefile variable, or nil for plain shell tokens.
-func (atom *ShAtom) VarUse() *MkVarUse {
-	if atom.Type == shtVaruse {
-		return atom.data.(*MkVarUse)
+// Expr returns a read access to a Makefile variable, or nil for plain shell tokens.
+func (atom *ShAtom) Expr() *MkExpr {
+	if atom.Type == shtExpr {
+		return atom.data.(*MkExpr)
 	}
 	return nil
 }
@@ -105,18 +105,18 @@ func (q ShQuoting) String() string {
 	}[q]
 }
 
-func (q ShQuoting) ToVarUseContext() VucQuoting {
+func (q ShQuoting) ToExprContext() EctxQuoting {
 	switch q {
 	case shqPlain:
-		return VucQuotPlain
+		return EctxQuotPlain
 	case shqDquot:
-		return VucQuotDquot
+		return EctxQuotDquot
 	case shqSquot:
-		return VucQuotSquot
+		return EctxQuotSquot
 	case shqBackt:
-		return VucQuotBackt
+		return EctxQuotBackt
 	}
-	return VucQuotUnknown
+	return EctxQuotUnknown
 }
 
 // ShToken is an operator or a keyword or some text intermingled with variables.

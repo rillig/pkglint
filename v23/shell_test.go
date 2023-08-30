@@ -901,21 +901,21 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine(c *check.C) {
 		"WARN: filename.mk:1: Please switch to \"set -e\" mode "+
 			"before using a semicolon (after \"uname=`uname`\") to separate commands.")
 
-	test("echo ${PKGNAME:Q}", // VucQuotPlain
+	test("echo ${PKGNAME:Q}", // EctxQuotPlain
 		"NOTE: filename.mk:1: The :Q modifier isn't necessary for ${PKGNAME} here.")
 
-	test("echo \"${CFLAGS:Q}\"", // VucQuotDquot
+	test("echo \"${CFLAGS:Q}\"", // EctxQuotDquot
 
-		// ShellLineChecker.checkVaruseToken
+		// ShellLineChecker.checkExprToken
 		"WARN: filename.mk:1: The :Q modifier should not be used inside quotes.",
 
-		// ShellLineChecker.checkVaruseToken
-		//     MkLineChecker.CheckVaruse
-		//         MkVarUseChecker.checkQuoting
+		// ShellLineChecker.checkExprToken
+		//     MkLineChecker.CheckExpr
+		//         MkExprChecker.checkQuoting
 		"WARN: filename.mk:1: Please use ${CFLAGS:M*:Q} instead of ${CFLAGS:Q} "+
 			"and make sure the variable appears outside of any quoting characters.")
 
-	test("echo '${COMMENT:Q}'", // VucQuotSquot
+	test("echo '${COMMENT:Q}'", // EctxQuotSquot
 		"WARN: filename.mk:1: The :Q modifier should not be used inside quotes.",
 		"WARN: filename.mk:1: Please move ${COMMENT:Q} outside of any quoting characters.")
 
@@ -1451,7 +1451,7 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommand__case_patterns_from_vari
 
 	mklines.Check()
 
-	// TODO: Ensure that the shell word is really only one variable use.
+	// TODO: Ensure that the shell word is really only one expression.
 	// TODO: Ensure that the last modifier is :@@@.
 	// TODO: Ensure that the replacement is a well-formed case-item.
 	// TODO: Ensure that the replacement contains ";;" as the last shell token.
@@ -1464,7 +1464,7 @@ func (s *Suite) Test_ShellLineChecker_CheckWord(c *check.C) {
 	t.SetUpVartypes()
 
 	test := func(shellWord string, checkQuoting bool, diagnostics ...string) {
-		// See MkVarUseChecker.checkUndefined and MkAssignChecker.checkLeftNotUsed.
+		// See MkExprChecker.checkUndefined and MkAssignChecker.checkLeftNotUsed.
 		ck := t.NewShellLineChecker("\t echo " + shellWord)
 		ck.CheckWord(shellWord, checkQuoting, RunTime)
 		t.CheckOutput(diagnostics)
@@ -1772,7 +1772,7 @@ func (s *Suite) Test_ShellLineChecker_unescapeBackticks__dquotBacktDquot(c *chec
 		"WARN: dummy.mk:2: Double quotes inside backticks inside double quotes are error prone.")
 }
 
-func (s *Suite) Test_ShellLineChecker_checkShVarUsePlain__default_warning_level(c *check.C) {
+func (s *Suite) Test_ShellLineChecker_checkShExprPlain__default_warning_level(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine( /* none */ )
@@ -1795,7 +1795,7 @@ func (s *Suite) Test_ShellLineChecker_checkShVarUsePlain__default_warning_level(
 		"WARN: filename.mk:5: The $@ shell variable should only be used in double quotes.")
 }
 
-func (s *Suite) Test_ShellLineChecker_checkShVarUsePlain__Wall(c *check.C) {
+func (s *Suite) Test_ShellLineChecker_checkShExprPlain__Wall(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
@@ -2036,14 +2036,14 @@ func (s *Suite) Test_splitIntoShellTokens__unescaped_dollar_in_dquot(c *check.C)
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_splitIntoShellTokens__varuse_with_embedded_space_and_other_vars(c *check.C) {
+func (s *Suite) Test_splitIntoShellTokens__expr_with_embedded_space_and_other_vars(c *check.C) {
 	t := s.Init(c)
 
-	varuseWord := "${GCONF_SCHEMAS:@.s.@${INSTALL_DATA} ${WRKSRC}/src/common/dbus/${.s.} ${DESTDIR}${GCONF_SCHEMAS_DIR}/@}"
+	exprWord := "${GCONF_SCHEMAS:@.s.@${INSTALL_DATA} ${WRKSRC}/src/common/dbus/${.s.} ${DESTDIR}${GCONF_SCHEMAS_DIR}/@}"
 	line := t.NewLine("filename.mk", 1, "")
-	words, rest := splitIntoShellTokens(line, varuseWord)
+	words, rest := splitIntoShellTokens(line, exprWord)
 
-	t.CheckDeepEquals(words, []string{varuseWord})
+	t.CheckDeepEquals(words, []string{exprWord})
 	t.CheckEquals(rest, "")
 }
 
@@ -2060,7 +2060,7 @@ func (s *Suite) Test_splitIntoShellTokens__two_shell_variables(c *check.C) {
 	t.CheckEquals(rest, "")
 }
 
-func (s *Suite) Test_splitIntoShellTokens__varuse_with_embedded_space(c *check.C) {
+func (s *Suite) Test_splitIntoShellTokens__expr_with_embedded_space(c *check.C) {
 	t := s.Init(c)
 
 	line := t.NewLine("filename.mk", 1, "")
@@ -2099,7 +2099,7 @@ func (s *Suite) Test_splitIntoShellTokens__redirect(c *check.C) {
 	t.CheckEquals(rest, "")
 }
 
-func (s *Suite) Test_splitIntoShellTokens__varuse(c *check.C) {
+func (s *Suite) Test_splitIntoShellTokens__expr(c *check.C) {
 	t := s.Init(c)
 
 	test := func(text string, tokens ...string) {

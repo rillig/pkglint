@@ -173,11 +173,11 @@ func (ck *VargroupsChecker) checkDef(mkline *MkLine) {
 }
 
 func (ck *VargroupsChecker) checkUse(mkline *MkLine) {
-	mkline.ForEachUsed(func(varUse *MkVarUse, _ VucTime) { ck.checkUseVar(mkline, varUse) })
+	mkline.ForEachUsed(func(expr *MkExpr, _ EctxTime) { ck.checkUseVar(mkline, expr) })
 }
 
-func (ck *VargroupsChecker) checkUseVar(mkline *MkLine, varUse *MkVarUse) {
-	varname := varUse.varname
+func (ck *VargroupsChecker) checkUseVar(mkline *MkLine, expr *MkExpr) {
+	varname := expr.varname
 	delete(ck.unusedVars, varname)
 
 	if ck.ignore(varname) {
@@ -191,7 +191,7 @@ func (ck *VargroupsChecker) checkUseVar(mkline *MkLine, varUse *MkVarUse) {
 
 func (ck *VargroupsChecker) ignore(varname string) bool {
 	switch {
-	case containsVarUse(varname),
+	case containsExpr(varname),
 		hasSuffix(varname, "_MK"),
 		ck.registered[varname] != nil,
 		G.Pkgsrc.Tools.ExistsVar(varname),

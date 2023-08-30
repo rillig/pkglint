@@ -13,14 +13,14 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	cmp := func(left MkCondTerm, op string, right MkCondTerm) *MkCond {
 		return &MkCond{Compare: &MkCondCompare{left, op, right}}
 	}
-	cvar := func(name string, modifiers ...MkVarUseModifier) MkCondTerm {
-		return MkCondTerm{Var: b.VarUse(name, modifiers...)}
+	cvar := func(name string, modifiers ...MkExprModifier) MkCondTerm {
+		return MkCondTerm{Expr: b.Expr(name, modifiers...)}
 	}
 	cstr := func(s string) MkCondTerm { return MkCondTerm{Str: s} }
 	cnum := func(s string) MkCondTerm { return MkCondTerm{Num: s} }
 
-	termVar := func(varname string, mods ...MkVarUseModifier) *MkCond {
-		return &MkCond{Term: &MkCondTerm{Var: b.VarUse(varname, mods...)}}
+	termVar := func(varname string, mods ...MkExprModifier) *MkCond {
+		return &MkCond{Term: &MkCondTerm{Expr: b.Expr(varname, mods...)}}
 	}
 	termNum := func(num string) *MkCond {
 		return &MkCond{Term: &MkCondTerm{Num: num}}
@@ -35,8 +35,8 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	call := func(name string, arg string) *MkCond {
 		return &MkCond{Call: &MkCondCall{name, arg}}
 	}
-	empty := func(varname string, mods ...MkVarUseModifier) *MkCond {
-		return &MkCond{Empty: b.VarUse(varname, mods...)}
+	empty := func(varname string, mods ...MkExprModifier) *MkCond {
+		return &MkCond{Empty: b.Expr(varname, mods...)}
 	}
 	defined := func(varname string) *MkCond { return &MkCond{Defined: varname} }
 	paren := func(cond *MkCond) *MkCond { return &MkCond{Paren: cond} }
@@ -322,7 +322,7 @@ func (s *Suite) Test_MkParser_mkCondCompare(c *check.C) {
 		cond,
 		&MkCond{
 			Compare: &MkCondCompare{
-				Left:  MkCondTerm{Var: b.VarUse("PKGPATH")},
+				Left:  MkCondTerm{Expr: b.Expr("PKGPATH")},
 				Op:    "==",
 				Right: MkCondTerm{Str: "category/pack.age-3+"}}})
 
@@ -518,17 +518,17 @@ func (s *Suite) Test_MkCondWalker_Walk(c *check.C) {
 		"(((${NONEMPTY})))")
 	var events []string
 
-	varuseStr := func(varuse *MkVarUse) string {
-		strs := make([]string, 1+len(varuse.modifiers))
-		strs[0] = varuse.varname
-		for i, mod := range varuse.modifiers {
+	exprStr := func(expr *MkExpr) string {
+		strs := make([]string, 1+len(expr.modifiers))
+		strs[0] = expr.varname
+		for i, mod := range expr.modifiers {
 			strs[1+i] = mod.String()
 		}
 		return strings.Join(strs, ":")
 	}
 
 	addEvent := func(name string, args ...string) {
-		events = append(events, sprintf("%14s  %s", name, strings.Join(args, ", ")))
+		events = append(events, sprintf("%15s  %s", name, strings.Join(args, ", ")))
 	}
 
 	// XXX: Add callbacks for Or if needed.
@@ -544,18 +544,18 @@ func (s *Suite) Test_MkCondWalker_Walk(c *check.C) {
 		func(varname string) {
 			addEvent("defined", varname)
 		},
-		func(varuse *MkVarUse) {
-			addEvent("empty", varuseStr(varuse))
+		func(expr *MkExpr) {
+			addEvent("empty", exprStr(expr))
 		},
 		func(left *MkCondTerm, op string, right *MkCondTerm) {
-			assert(left.Var != nil)
+			assert(left.Expr != nil)
 			switch {
-			case right.Var != nil:
-				addEvent("compareVarVar", varuseStr(left.Var), varuseStr(right.Var))
+			case right.Expr != nil:
+				addEvent("compareExprExpr", exprStr(left.Expr), exprStr(right.Expr))
 			case right.Num != "":
-				addEvent("compareVarNum", varuseStr(left.Var), right.Num)
+				addEvent("compareExprNum", exprStr(left.Expr), right.Num)
 			default:
-				addEvent("compareVarStr", varuseStr(left.Var), right.Str)
+				addEvent("compareExprStr", exprStr(left.Expr), right.Str)
 			}
 		},
 		func(name string, arg string) {
@@ -564,37 +564,37 @@ func (s *Suite) Test_MkCondWalker_Walk(c *check.C) {
 		func(cond *MkCond) {
 			addEvent("paren")
 		},
-		func(varuse *MkVarUse) {
-			addEvent("var", varuseStr(varuse))
+		func(expr *MkExpr) {
+			addEvent("var", exprStr(expr))
 		},
-		func(varuse *MkVarUse) {
-			addEvent("varUse", varuseStr(varuse))
+		func(expr *MkExpr) {
+			addEvent("expr", exprStr(expr))
 		}})
 
 	t.CheckDeepEquals(events, []string{
-		" compareVarVar  VAR:Mmatch, OTHER",
-		"        varUse  VAR:Mmatch",
-		"        varUse  OTHER",
-		" compareVarStr  STR, Str",
-		"        varUse  STR",
-		" compareVarStr  VAR, ${PRE}text${POST}",
-		"        varUse  VAR",
-		"        varUse  PRE",
-		"        varUse  POST",
-		"           and  ",
-		" compareVarNum  NUM, 3",
-		"        varUse  NUM",
-		"       defined  VAR",
-		"        varUse  VAR",
-		"           not  ",
-		"          call  exists, file.mk",
-		"          call  exists, ${FILE}",
-		"        varUse  FILE",
-		"         paren  ",
-		"         paren  ",
-		"         paren  ",
-		"           var  NONEMPTY",
-		"        varUse  NONEMPTY"})
+		"compareExprExpr  VAR:Mmatch, OTHER",
+		"           expr  VAR:Mmatch",
+		"           expr  OTHER",
+		" compareExprStr  STR, Str",
+		"           expr  STR",
+		" compareExprStr  VAR, ${PRE}text${POST}",
+		"           expr  VAR",
+		"           expr  PRE",
+		"           expr  POST",
+		"            and  ",
+		" compareExprNum  NUM, 3",
+		"           expr  NUM",
+		"        defined  VAR",
+		"           expr  VAR",
+		"            not  ",
+		"           call  exists, file.mk",
+		"           call  exists, ${FILE}",
+		"           expr  FILE",
+		"          paren  ",
+		"          paren  ",
+		"          paren  ",
+		"            var  NONEMPTY",
+		"           expr  NONEMPTY"})
 }
 
 // Ensure that the code works even if none of the callbacks are set.

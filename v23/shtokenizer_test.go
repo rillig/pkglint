@@ -91,7 +91,7 @@ func (s *Suite) Test_ShTokenizer__fuzzing(c *check.C) {
 	fuzzer.Range('a', 'z', 5)
 
 	// This "real" line is necessary because the autofix
-	// in MkParser.varUseBrace checks this.
+	// in MkParser.exprBrace checks this.
 	line := t.NewLine("Makefile", 1, "\t:")
 
 	defer fuzzer.CheckOk()
@@ -140,7 +140,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 
 	operator := func(s string) *ShAtom { return atom(shtOperator, s) }
 	comment := func(s string) *ShAtom { return atom(shtComment, s) }
-	mkvar := func(varname string, modifiers ...MkVarUseModifier) *ShAtom {
+	mkvar := func(varname string, modifiers ...MkExprModifier) *ShAtom {
 		text := "${" + varname
 		for _, modifier := range modifiers {
 			escapedBackslash := strings.Replace(modifier.String(), "\\", "\\\\", -1)
@@ -148,10 +148,10 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 			text += ":" + escapedColon // TODO: modifier.Quoted
 		}
 		text += "}"
-		varuse := NewMkTokenBuilder().VarUse(varname, modifiers...)
-		return &ShAtom{shtVaruse, text, shqPlain, varuse}
+		expr := NewMkTokenBuilder().Expr(varname, modifiers...)
+		return &ShAtom{shtExpr, text, shqPlain, expr}
 	}
-	shvar := func(text, varname string) *ShAtom { return &ShAtom{shtShVarUse, text, shqPlain, varname} }
+	shvar := func(text, varname string) *ShAtom { return &ShAtom{shtShExpr, text, shqPlain, varname} }
 	text := func(s string) *ShAtom { return atom(shtText, s) }
 	whitespace := func(s string) *ShAtom { return atom(shtSpace, s) }
 
@@ -601,19 +601,19 @@ func (s *Suite) Test_ShTokenizer_ShAtom__internal_error(c *check.C) {
 		`^runtime error: index out of range.*`)
 }
 
-func (s *Suite) Test_ShTokenizer_shVarUse(c *check.C) {
+func (s *Suite) Test_ShTokenizer_shExpr(c *check.C) {
 	t := s.Init(c)
 
 	test := func(input string, output *ShAtom, rest string) {
 		tok := NewShTokenizer(nil, input)
-		actual := tok.shVarUse(shqPlain)
+		actual := tok.shExpr(shqPlain)
 
 		t.CheckDeepEquals(actual, output)
 		t.CheckEquals(tok.Rest(), rest)
 	}
 
 	shvar := func(text, varname string) *ShAtom {
-		return &ShAtom{shtShVarUse, text, shqPlain, varname}
+		return &ShAtom{shtShExpr, text, shqPlain, varname}
 	}
 
 	test("$", nil, "$")

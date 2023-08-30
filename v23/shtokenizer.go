@@ -24,8 +24,8 @@ func (p *ShTokenizer) ShAtom(quoting ShQuoting) *ShAtom {
 	lexer := p.parser.lexer
 	mark := lexer.Mark()
 
-	if varuse := p.parser.VarUse(); varuse != nil {
-		return &ShAtom{shtVaruse, lexer.Since(mark), quoting, varuse}
+	if expr := p.parser.Expr(); expr != nil {
+		return &ShAtom{shtExpr, lexer.Since(mark), quoting, expr}
 	}
 
 	// TODO: Most probably there is a more elegant way than the large switch block below.
@@ -280,7 +280,7 @@ func (p *ShTokenizer) shAtomDquotBacktSquot() *ShAtom {
 	return p.shAtomInternal(q, false, true)
 }
 
-// shAtomInternal reads the next shtText or shtShVarUse.
+// shAtomInternal reads the next shtText or shtShExpr.
 //
 // Examples:
 //
@@ -291,9 +291,9 @@ func (p *ShTokenizer) shAtomDquotBacktSquot() *ShAtom {
 //	text
 //	${var:=default}
 func (p *ShTokenizer) shAtomInternal(q ShQuoting, dquot, squot bool) *ShAtom {
-	if shVarUse := p.shVarUse(q); shVarUse != nil {
+	if shExpr := p.shExpr(q); shExpr != nil {
 		p.inWord = true
-		return shVarUse
+		return shExpr
 	}
 
 	lexer := p.parser.lexer
@@ -338,10 +338,10 @@ loop:
 	return nil
 }
 
-// shVarUse parses a use of a shell variable, like $$var or $${var:=value}.
+// shExpr parses a use of a shell variable, like $$var or $${var:=value}.
 //
 // See http://pubs.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html#tag_02_06_02
-func (p *ShTokenizer) shVarUse(q ShQuoting) *ShAtom {
+func (p *ShTokenizer) shExpr(q ShQuoting) *ShAtom {
 	lexer := p.parser.lexer
 	beforeDollar := lexer.Mark()
 
@@ -352,7 +352,7 @@ func (p *ShTokenizer) shVarUse(q ShQuoting) *ShAtom {
 	if lexer.TestByteSet(textproc.Digit) {
 		lexer.Skip(1)
 		text := lexer.Since(beforeDollar)
-		return &ShAtom{shtShVarUse, text, q, text[2:]}
+		return &ShAtom{shtShExpr, text, q, text[2:]}
 	}
 
 	brace := lexer.SkipByte('{')
@@ -376,7 +376,7 @@ func (p *ShTokenizer) shVarUse(q ShQuoting) *ShAtom {
 		}
 	}
 
-	return &ShAtom{shtShVarUse, lexer.Since(beforeDollar), q, shVarname}
+	return &ShAtom{shtShExpr, lexer.Since(beforeDollar), q, shVarname}
 }
 
 func (p *ShTokenizer) shOperator(q ShQuoting) *ShAtom {

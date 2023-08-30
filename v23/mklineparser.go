@@ -333,8 +333,8 @@ func (MkLineParser) split(diag Autofixer, text string, trimComment bool) mkLineS
 	for !lexer.EOF() {
 		mark := lexer.Mark()
 
-		if varUse := parser.VarUse(); varUse != nil {
-			tokens = append(tokens, &MkToken{lexer.Since(mark), varUse})
+		if expr := parser.Expr(); expr != nil {
+			tokens = append(tokens, &MkToken{lexer.Since(mark), expr})
 
 		} else if other := parseOther(); other != "" {
 			tokens = append(tokens, &MkToken{other, nil})

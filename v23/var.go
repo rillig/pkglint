@@ -146,7 +146,7 @@ func (v *Var) ValueInfra() string {
 // Indirect uses through other variables (such as VAR2=${VAR}, VAR3=${VAR2})
 // are not listed.
 //
-// Variable uses in the pkgsrc infrastructure are taken into account.
+// Expressions in the pkgsrc infrastructure are taken into account.
 func (v *Var) ReadLocations() []*MkLine {
 	return v.readLocations
 }
@@ -180,8 +180,8 @@ func (v *Var) Write(mkline *MkLine, conditional bool, conditionVarnames ...strin
 	}
 	v.conditionalVars.AddAll(conditionVarnames)
 
-	mkline.ForEachUsed(func(varUse *MkVarUse, time VucTime) {
-		v.refs.Add(varUse.varname)
+	mkline.ForEachUsed(func(expr *MkExpr, time EctxTime) {
+		v.refs.Add(expr.varname)
 	})
 	v.refs.AddAll(conditionVarnames)
 

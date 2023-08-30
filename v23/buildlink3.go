@@ -85,8 +85,8 @@ func (ck *Buildlink3Checker) checkFirstParagraph(mlex *MkLinesLexer) bool {
 	pkgbase := m[1]
 	pkgbaseLine := mlex.PreviousMkLine()
 
-	if containsVarUse(pkgbase) {
-		ck.checkVaruseInPkgbase(pkgbaseLine)
+	if containsExpr(pkgbase) {
+		ck.checkExprInPkgbase(pkgbaseLine)
 	}
 
 	ck.checkUniquePkgbase(pkgbase, pkgbaseLine)
@@ -139,7 +139,7 @@ func (ck *Buildlink3Checker) checkSecondParagraph(mlex *MkLinesLexer) bool {
 
 	// See pkgtools/createbuildlink/files/createbuildlink, keyword PKGUPPER
 	ucPkgbase := strings.ToUpper(strings.Replace(pkgbase, "-", "_", -1))
-	if ucPkgbase != pkgupper && !containsVarUse(pkgbase) {
+	if ucPkgbase != pkgupper && !containsExpr(pkgbase) {
 		pkgupperLine.Errorf("Package name mismatch between multiple-inclusion guard %q (expected %q) and package name %q (from %s).",
 			pkgupper, ucPkgbase, pkgbase, pkgupperLine.RelMkLine(ck.pkgbaseLine))
 	}
@@ -189,8 +189,8 @@ func (ck *Buildlink3Checker) checkMainPart(mlex *MkLinesLexer) bool {
 			indentLevel--
 		}
 
-		mkline.ForEachUsed(func(varUse *MkVarUse, time VucTime) {
-			ck.checkVarUse(varUse, mkline)
+		mkline.ForEachUsed(func(expr *MkExpr, time EctxTime) {
+			ck.checkExpr(expr, mkline)
 		})
 	}
 
@@ -205,8 +205,8 @@ func (ck *Buildlink3Checker) checkMainPart(mlex *MkLinesLexer) bool {
 	return true
 }
 
-func (ck *Buildlink3Checker) checkVarUse(varUse *MkVarUse, mkline *MkLine) {
-	varname := varUse.varname
+func (ck *Buildlink3Checker) checkExpr(expr *MkExpr, mkline *MkLine) {
+	varname := expr.varname
 	if varname == "PKG_OPTIONS" {
 		mkline.Errorf("PKG_OPTIONS is not available in buildlink3.mk files.")
 		mkline.Explain(
@@ -261,8 +261,8 @@ func (ck *Buildlink3Checker) checkVarassign(mkline *MkLine, pkgbase string) {
 	}
 
 	if doCheck {
-		if ck.abi != nil && ck.abi.Lower != "" && !containsVarUse(ck.abi.Lower) {
-			if ck.api != nil && ck.api.Lower != "" && !containsVarUse(ck.api.Lower) {
+		if ck.abi != nil && ck.abi.Lower != "" && !containsExpr(ck.abi.Lower) {
+			if ck.api != nil && ck.api.Lower != "" && !containsExpr(ck.api.Lower) {
 				if pkgver.Compare(ck.abi.Lower, ck.api.Lower) < 0 {
 					ck.abiLine.Warnf("ABI version %q should be at least API version %q (see %s).",
 						ck.abi.Lower, ck.api.Lower, ck.abiLine.RelMkLine(ck.apiLine))
@@ -295,7 +295,7 @@ func (ck *Buildlink3Checker) checkVarassignPkgsrcdir(
 	if varname != "BUILDLINK_PKGSRCDIR."+pkgbase {
 		return
 	}
-	if containsVarUse(value) {
+	if containsExpr(value) {
 		return
 	}
 
@@ -309,15 +309,15 @@ func (ck *Buildlink3Checker) checkVarassignPkgsrcdir(
 		varname, expected, value)
 }
 
-func (ck *Buildlink3Checker) checkVaruseInPkgbase(pkgbaseLine *MkLine) {
+func (ck *Buildlink3Checker) checkExprInPkgbase(pkgbaseLine *MkLine) {
 	tokens, _ := pkgbaseLine.ValueTokens()
 	for _, token := range tokens {
-		if token.Varuse == nil {
+		if token.Expr == nil {
 			continue
 		}
 
 		replacement := ""
-		switch token.Varuse.varname {
+		switch token.Expr.varname {
 		case "PYPKGPREFIX":
 			replacement = "py"
 		case "RUBY_BASE", "RUBY_PKGPREFIX":

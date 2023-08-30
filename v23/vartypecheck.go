@@ -397,7 +397,7 @@ func (cv *VartypeCheck) DependencyPattern() {
 		if defpat == nil || defpat.LowerOp == "" {
 			return
 		}
-		if containsVarUse(defpat.LowerOp) || containsVarUse(deppat.Lower) {
+		if containsExpr(defpat.LowerOp) || containsExpr(deppat.Lower) {
 			return
 		}
 		limit := condInt(defpat.LowerOp == ">=" && deppat.LowerOp == ">", 1, 0)
@@ -451,7 +451,7 @@ func (cv *VartypeCheck) DependencyWithPath() {
 		cv.MkLine.ExplainRelativeDirs()
 	}
 
-	if !containsVarUse(parts[1]) {
+	if !containsExpr(parts[1]) {
 		ck := MkLineChecker{cv.MkLines, cv.MkLine}
 		rel := NewRelPath(dependencyDir)
 		ck.CheckRelativePkgdir(rel, NewPackagePath(rel))
@@ -571,12 +571,12 @@ func (cv *VartypeCheck) FetchURL() {
 
 	tokens := cv.MkLine.Tokenize(url, false)
 	for _, token := range tokens {
-		varUse := token.Varuse
-		if varUse == nil {
+		expr := token.Expr
+		if expr == nil {
 			continue
 		}
 
-		name := varUse.varname
+		name := expr.varname
 		if !hasPrefix(name, "MASTER_SITE_") {
 			continue
 		}
@@ -587,11 +587,11 @@ func (cv *VartypeCheck) FetchURL() {
 			}
 		}
 
-		if len(varUse.modifiers) != 1 || !varUse.modifiers[0].HasPrefix("=") {
+		if len(expr.modifiers) != 1 || !expr.modifiers[0].HasPrefix("=") {
 			continue
 		}
 
-		subdir := varUse.modifiers[0].String()[1:]
+		subdir := expr.modifiers[0].String()[1:]
 		if !hasSuffix(subdir, "/") {
 			cv.Errorf("The subdirectory in %s must end with a slash.", name)
 		}
@@ -603,7 +603,7 @@ func (cv *VartypeCheck) FetchURL() {
 		hasSuffix(fetchURL, "="),
 		hasSuffix(fetchURL, ":"),
 		hasPrefix(fetchURL, "-"),
-		tokens[len(tokens)-1].Varuse != nil:
+		tokens[len(tokens)-1].Expr != nil:
 		break
 
 	default:
@@ -1109,7 +1109,7 @@ func (cv *VartypeCheck) Pkgname() {
 func (cv *VartypeCheck) PkgOptionsVar() {
 	cv.VariableName()
 
-	// TODO: Replace regex with proper VarUse.
+	// TODO: Replace regex with proper Expr.
 	if matches(cv.Value, `\$\{PKGBASE[:\}]`) {
 		cv.Errorf("PKGBASE must not be used in PKG_OPTIONS_VAR.")
 		cv.Explain(
@@ -1221,8 +1221,8 @@ func (cv *VartypeCheck) PrefixPathname() {
 		return
 	}
 
-	cv.MkLine.ForEachUsedText(cv.Value, VucRunTime, func(varUse *MkVarUse, time VucTime) {
-		varname := varUse.varname
+	cv.MkLine.ForEachUsedText(cv.Value, EctxRunTime, func(expr *MkExpr, time EctxTime) {
+		varname := expr.varname
 		if varname == "PKG_SYSCONFDIR" || varname == "VARBASE" {
 			cv.Errorf("%s must not be used in %s since it is not relative to PREFIX.",
 				varname, cv.Varname)
@@ -1348,7 +1348,7 @@ func (cv *VartypeCheck) SedCommands() {
 			}
 
 			// The :C modifier is similar enough for parsing.
-			ok, _, from, _, _ := MkVarUseModifier("C" + command[1:]).MatchSubst()
+			ok, _, from, _, _ := MkExprModifier("C" + command[1:]).MatchSubst()
 			if !ok {
 				return
 			}
@@ -1408,20 +1408,20 @@ func (cv *VartypeCheck) ShellCommand() {
 	}
 	setE := true
 	ck := NewShellLineChecker(cv.MkLines, cv.MkLine)
-	ck.checkVarUse = false
+	ck.checkExpr = false
 	ck.CheckShellCommand(cv.Value, &setE, RunTime)
 }
 
 // ShellCommands checks for zero or more shell commands, each terminated with a semicolon.
 func (cv *VartypeCheck) ShellCommands() {
 	ck := NewShellLineChecker(cv.MkLines, cv.MkLine)
-	ck.checkVarUse = false
+	ck.checkExpr = false
 	ck.CheckShellCommands(cv.Value, RunTime)
 }
 
 func (cv *VartypeCheck) ShellWord() {
 	ck := NewShellLineChecker(cv.MkLines, cv.MkLine)
-	ck.checkVarUse = false
+	ck.checkExpr = false
 	ck.CheckWord(cv.Value, true, RunTime)
 }
 
@@ -1488,7 +1488,7 @@ func (cv *VartypeCheck) URL() {
 	if value == "" && hasPrefix(cv.MkComment, "#") {
 		// Ok
 
-	} else if containsVarUse(value) {
+	} else if containsExpr(value) {
 		// No further checks
 
 	} else if m, host := match1(value, `^(?:https?|ftp|gopher)://([-0-9A-Za-z.]+)(?::\d+)?/[-#%&+,./0-9:;=?@A-Z_a-z~]*$`); m {

@@ -495,7 +495,7 @@ func (ck *PlistChecker) checkCond(pline *PlistLine, cond string) {
 		if varparam == cond {
 			return
 		}
-		if containsVarUse(varparam) {
+		if containsExpr(varparam) {
 			trace.Stepf(
 				"Skipping check for condition %q because PLIST_VARS "+
 					"contains the unresolved %q as part of %q.",
@@ -566,7 +566,7 @@ func (pline *PlistLine) HasPlainPath() bool {
 	text := pline.text
 	return text != "" &&
 		plistLineStart.Contains(text[0]) &&
-		!containsVarUse(text)
+		!containsExpr(text)
 }
 
 func (pline *PlistLine) Path() RelPath {

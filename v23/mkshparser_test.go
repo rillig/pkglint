@@ -966,8 +966,8 @@ func (b *MkShBuilder) CaseItem(patterns []*ShToken, action *MkShList, separator 
 	return &MkShCaseItem{patterns, action, separator, nil}
 }
 
-func (b *MkShBuilder) CaseItemVar(varUseText string) *MkShCaseItem {
-	return &MkShCaseItem{nil, nil, sepNone, b.Token(varUseText)}
+func (b *MkShBuilder) CaseItemVar(exprText string) *MkShCaseItem {
+	return &MkShCaseItem{nil, nil, sepNone, b.Token(exprText)}
 }
 
 func (b *MkShBuilder) While(cond, action *MkShList, redirects ...*MkShRedirection) *MkShCommand {

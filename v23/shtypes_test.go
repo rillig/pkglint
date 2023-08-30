@@ -23,7 +23,7 @@ func (s *Suite) Test_ShAtom_String(c *check.C) {
 	atoms := tokenizer.ShAtoms()
 
 	t.CheckEquals(len(atoms), 5)
-	t.CheckEquals(atoms[0].String(), "varuse(\"ECHO\")")
+	t.CheckEquals(atoms[0].String(), "expr(\"ECHO\")")
 	t.CheckEquals(atoms[1].String(), "ShAtom(space, \" \", plain)")
 	t.CheckEquals(atoms[2].String(), "ShAtom(text, \"\\\"\", d)")
 	t.CheckEquals(atoms[3].String(), "ShAtom(text, \"hello, world\", d)")
@@ -49,6 +49,6 @@ func (s *Suite) Test_ShToken_String(c *check.C) {
 	line := t.NewLine("filename.mk", 1, "")
 	tokenizer := NewShTokenizer(line, "${ECHO} \"hello, world\"")
 
-	t.CheckEquals(tokenizer.ShToken().String(), "ShToken([varuse(\"ECHO\")])")
+	t.CheckEquals(tokenizer.ShToken().String(), "ShToken([expr(\"ECHO\")])")
 	t.CheckEquals(tokenizer.ShToken().String(), "ShToken([ShAtom(text, \"\\\"\", d) ShAtom(text, \"hello, world\", d) \"\\\"\"])")
 }

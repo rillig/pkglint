@@ -300,9 +300,9 @@ func CheckLinesDescr(lines *Lines) {
 		tokens, _ := NewMkLexer(line.Text, nil).MkTokens()
 		for _, token := range tokens {
 			switch {
-			case token.Varuse == nil,
+			case token.Expr == nil,
 				!hasPrefix(token.Text, "${"),
-				G.Pkgsrc.VariableType(nil, token.Varuse.varname) == nil:
+				G.Pkgsrc.VariableType(nil, token.Expr.varname) == nil:
 			default:
 				line.Notef("Variables like %q are not expanded in the DESCR file.",
 					token.Text)
@@ -413,7 +413,7 @@ If that was too easy, have a look at the code that decides whether an
 expression such as `${CFLAGS}` needs to be quoted using the `:Q` modifier
 when it is used in a shell command:
 
-> from [mkline.go](mkline.go#L725):
+> from [mkline.go](mkline.go#L726):
 
 ```go
 // VariableNeedsQuoting determines whether the given variable needs the :Q
@@ -422,23 +422,23 @@ when it is used in a shell command:
 // This decision depends on many factors, such as whether the type of the
 // context is a list of things, whether the variable is a list, whether it
 // can contain only safe characters, and so on.
-func (mkline *MkLine) VariableNeedsQuoting(mklines *MkLines, varuse *MkVarUse, vartype *Vartype, vuc *VarUseContext) (needsQuoting YesNoUnknown) {
+func (mkline *MkLine) VariableNeedsQuoting(mklines *MkLines, expr *MkExpr, vartype *Vartype, ectx *ExprContext) (needsQuoting YesNoUnknown) {
 	if trace.Tracing {
-		defer trace.Call(varuse, vartype, vuc, trace.Result(&needsQuoting))()
+		defer trace.Call(expr, vartype, ectx, trace.Result(&needsQuoting))()
 	}
 
 	// TODO: Systematically test this function, each and every case, from top to bottom.
 	// TODO: Re-check the order of all these if clauses whether it really makes sense.
 
-	if varuse.HasModifier("D") {
+	if expr.HasModifier("D") {
 		// The :D modifier discards the value of the original variable and
 		// replaces it with the expression from the :D modifier.
 		// Therefore, the original variable does not need to be quoted.
 		return unknown
 	}
 
-	vucVartype := vuc.vartype
-	if vartype == nil || vucVartype == nil || vartype.basicType == BtUnknown {
+	ectxVartype := ectx.vartype
+	if vartype == nil || ectxVartype == nil || vartype.basicType == BtUnknown {
 		return unknown
 	}
 
@@ -449,20 +449,20 @@ func (mkline *MkLine) VariableNeedsQuoting(mklines *MkLines, varuse *MkVarUse, v
 			}
 			return no
 		}
-		if !vuc.IsWordPart {
+		if !ectx.IsWordPart {
 			return no
 		}
 	}
 
 	// A shell word may appear as part of a shell word, for example COMPILER_RPATH_FLAG.
-	if vuc.IsWordPart && vuc.quoting == VucQuotPlain {
+	if ectx.IsWordPart && ectx.quoting == EctxQuotPlain {
 		if !vartype.IsList() && vartype.basicType == BtShellWord {
 			return no
 		}
 	}
 
 	// Determine whether the context expects a list of shell words or not.
-	wantList := vucVartype.MayBeAppendedTo()
+	wantList := ectxVartype.MayBeAppendedTo()
 	haveList := vartype.MayBeAppendedTo()
 	if trace.Tracing {
 		trace.Stepf("wantList=%v, haveList=%v", wantList, haveList)
@@ -471,22 +471,22 @@ func (mkline *MkLine) VariableNeedsQuoting(mklines *MkLines, varuse *MkVarUse, v
 	// Both of these can be correct, depending on the situation:
 	// 1. echo ${PERL5:Q}
 	// 2. xargs ${PERL5}
-	if !vuc.IsWordPart && wantList && haveList {
+	if !ectx.IsWordPart && wantList && haveList {
 		return unknown
 	}
 
 	// Pkglint assumes that the tool definitions don't include very
 	// special characters, so they can safely be used inside any quotes.
-	if tool := G.ToolByVarname(mklines, varuse.varname); tool != nil {
-		switch vuc.quoting {
-		case VucQuotPlain:
-			if !vuc.IsWordPart {
+	if tool := G.ToolByVarname(mklines, expr.varname); tool != nil {
+		switch ectx.quoting {
+		case EctxQuotPlain:
+			if !ectx.IsWordPart {
 				return no
 			}
 			// XXX: Should there be a return here? It looks as if it could have been forgotten.
-		case VucQuotBackt:
+		case EctxQuotBackt:
 			return no
-		case VucQuotDquot, VucQuotSquot:
+		case EctxQuotDquot, EctxQuotSquot:
 			return unknown
 		}
 	}
@@ -495,25 +495,25 @@ func (mkline *MkLine) VariableNeedsQuoting(mklines *MkLines, varuse *MkVarUse, v
 	//
 	// An exception is in the case of backticks, because the whole backticks expression
 	// is parsed as a single shell word by pkglint. (XXX: This comment may be outdated.)
-	if vuc.IsWordPart && vucVartype.IsShell() && vuc.quoting != VucQuotBackt {
+	if ectx.IsWordPart && ectxVartype.IsShell() && ectx.quoting != EctxQuotBackt {
 		return yes
 	}
 
 	// SUBST_MESSAGE.perl= Replacing in ${REPLACE_PERL}
-	if vucVartype.basicType == BtMessage {
+	if ectxVartype.basicType == BtMessage {
 		return no
 	}
 
 	if wantList != haveList {
-		if vucVartype.basicType == BtFetchURL && vartype.basicType == BtHomepage {
+		if ectxVartype.basicType == BtFetchURL && vartype.basicType == BtHomepage {
 			return no
 		}
-		if vucVartype.basicType == BtHomepage && vartype.basicType == BtFetchURL {
+		if ectxVartype.basicType == BtHomepage && vartype.basicType == BtFetchURL {
 			return no // Just for HOMEPAGE=${MASTER_SITE_*:=subdir/}.
 		}
 
 		// .for dir in ${PATH:C,:, ,g}
-		for _, modifier := range varuse.modifiers {
+		for _, modifier := range expr.modifiers {
 			if modifier.ChangesList() {
 				return unknown
 			}
@@ -529,7 +529,7 @@ func (mkline *MkLine) VariableNeedsQuoting(mklines *MkLines, varuse *MkVarUse, v
 	}
 
 	if trace.Tracing {
-		trace.Step1("Don't know whether :Q is needed for %q", varuse.varname)
+		trace.Step1("Don't know whether :Q is needed for %q", expr.varname)
 	}
 	return unknown
 }
@@ -640,9 +640,9 @@ type ShellLineChecker struct {
 	MkLines *MkLines
 	mkline  *MkLine
 
-	// checkVarUse is set to false when checking a single shell word
+	// checkExpr is set to false when checking a single shell word
 	// in order to skip duplicate warnings in variable assignments.
-	checkVarUse bool
+	checkExpr bool
 }
 ```
 

@@ -30,7 +30,7 @@ func (ck *MkAssignChecker) checkLeft() {
 	}
 
 	if G.Pkgsrc == nil {
-		goto checkVarUse
+		goto checkExpr
 	}
 	ck.checkLeftNotUsed()
 	ck.checkLeftOpsys()
@@ -42,11 +42,11 @@ func (ck *MkAssignChecker) checkLeft() {
 	}
 	ck.checkLeftRationale()
 
-checkVarUse:
-	NewMkLineChecker(ck.MkLines, ck.MkLine).checkTextVarUse(
+checkExpr:
+	NewMkLineChecker(ck.MkLines, ck.MkLine).checkTextExpr(
 		varname,
 		NewVartype(BtVariableName, NoVartypeOptions, NewACLEntry("*", aclpAll)),
-		VucLoadTime)
+		EctxLoadTime)
 }
 
 // checkLeftNotUsed checks whether the left-hand side of a variable
@@ -267,7 +267,7 @@ func (ck *MkAssignChecker) checkLeftPermissions() {
 	// E.g. USE_TOOLS:= ${USE_TOOLS:Nunwanted-tool}
 	if op == opAssignEval && perms&aclpAppend != 0 {
 		tokens, _ := mkline.ValueTokens()
-		if len(tokens) == 1 && tokens[0].Varuse != nil && tokens[0].Varuse.varname == varname {
+		if len(tokens) == 1 && tokens[0].Expr != nil && tokens[0].Expr.varname == varname {
 			return
 		}
 	}
@@ -301,8 +301,8 @@ func (ck *MkAssignChecker) checkLeftPermissions() {
 				varname, needed.HumanString())
 		}
 
-		// XXX: explainPermissions doesn't really belong to MkVarUseChecker.
-		(&MkVarUseChecker{nil, nil, ck.MkLines, mkline}).
+		// XXX: explainPermissions doesn't really belong to MkExprChecker.
+		(&MkExprChecker{nil, nil, ck.MkLines, mkline}).
 			explainPermissions(varname, vartype)
 	}
 }
@@ -524,7 +524,7 @@ func (ck *MkAssignChecker) checkRight() {
 
 	ck.checkMisc()
 
-	ck.checkRightVaruse()
+	ck.checkRightExpr()
 	ck.checkRightConfigureArgs()
 	ck.checkRightUseLanguages()
 }
@@ -604,7 +604,7 @@ func (ck *MkAssignChecker) checkRightUseLanguages() {
 	cxx := G.Pkgsrc.VariableType(ck.MkLines, "USE_CXX_FEATURES").basicType
 
 	for _, word := range mkline.Fields() {
-		if containsVarUse(word) {
+		if containsExpr(word) {
 			continue
 		}
 		var varname string
@@ -655,7 +655,7 @@ func (ck *MkAssignChecker) checkMisc() {
 
 	switch varname {
 	case "DIST_SUBDIR", "WRKSRC", "MASTER_SITES":
-		// TODO: Replace regex with proper VarUse.
+		// TODO: Replace regex with proper Expr matching.
 		if m, revVarname := match1(value, `\$\{(PKGNAME|PKGVERSION)[:\}]`); m {
 			mkline.Warnf("%s should not be used in %s as it includes the PKGREVISION. "+
 				"Please use %[1]s_NOREV instead.", revVarname, varname)
@@ -729,10 +729,10 @@ func (ck *MkAssignChecker) checkMiscRedundantInstallationDirs() {
 	}
 }
 
-// checkRightVaruse checks that in a variable assignment,
-// each variable used on the right-hand side of the assignment operator
+// checkRightExpr checks that in a variable assignment,
+// each expression on the right-hand side of the assignment operator
 // has the correct data type and quoting.
-func (ck *MkAssignChecker) checkRightVaruse() {
+func (ck *MkAssignChecker) checkRightExpr() {
 	if trace.Tracing {
 		defer trace.Call0()()
 	}
@@ -740,9 +740,9 @@ func (ck *MkAssignChecker) checkRightVaruse() {
 	mkline := ck.MkLine
 	op := mkline.Op()
 
-	time := VucRunTime
+	time := EctxRunTime
 	if op == opAssignEval || op == opAssignShell {
-		time = VucLoadTime
+		time = EctxLoadTime
 	}
 
 	vartype := G.Pkgsrc.VariableType(ck.MkLines, mkline.Varname())
@@ -751,19 +751,19 @@ func (ck *MkAssignChecker) checkRightVaruse() {
 	}
 
 	if vartype != nil && vartype.IsShell() {
-		ck.checkVaruseShell(vartype, time)
+		ck.checkExprShell(vartype, time)
 	} else {
 		mkLineChecker := NewMkLineChecker(ck.MkLines, ck.MkLine)
-		mkLineChecker.checkTextVarUse(ck.MkLine.Value(), vartype, time)
+		mkLineChecker.checkTextExpr(ck.MkLine.Value(), vartype, time)
 	}
 }
 
-// checkVaruseShell checks that in a variable assignment, each variable
+// checkExprShell checks that in a variable assignment, each
 // expression on the right-hand side of the assignment operator has the
 // correct data type and quoting.
 //
-// See checkRightVaruse for non-shell variables.
-func (ck *MkAssignChecker) checkVaruseShell(vartype *Vartype, time VucTime) {
+// See checkRightExpr for non-shell variables.
+func (ck *MkAssignChecker) checkExprShell(vartype *Vartype, time EctxTime) {
 	if trace.Tracing {
 		defer trace.Call(vartype, time)()
 	}
@@ -781,10 +781,10 @@ func (ck *MkAssignChecker) checkVaruseShell(vartype *Vartype, time VucTime) {
 	mkline := ck.MkLine
 	atoms := NewShTokenizer(mkline.Line, mkline.Value()).ShAtoms()
 	for i, atom := range atoms {
-		if varuse := atom.VarUse(); varuse != nil {
+		if expr := atom.Expr(); expr != nil {
 			wordPart := isWordPart(atoms, i)
-			vuc := VarUseContext{vartype, time, atom.Quoting.ToVarUseContext(), wordPart}
-			NewMkVarUseChecker(varuse, ck.MkLines, mkline).Check(&vuc)
+			ectx := ExprContext{vartype, time, atom.Quoting.ToExprContext(), wordPart}
+			NewMkExprChecker(expr, ck.MkLines, mkline).Check(&ectx)
 		}
 	}
 }

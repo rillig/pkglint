@@ -13,32 +13,32 @@ type MkCondSimplifier struct {
 	MkLine  *MkLine
 }
 
-// SimplifyVarUse replaces an unnecessarily complex condition with
+// SimplifyExpr replaces an unnecessarily complex condition with
 // a simpler condition that's still equivalent.
 //
 // * fromEmpty is true for the form empty(VAR...), and false for ${VAR...}.
 //
 // * neg is true for the form !empty(VAR...), and false for empty(VAR...).
-func (s *MkCondSimplifier) SimplifyVarUse(varuse *MkVarUse, fromEmpty bool, neg bool) {
-	if s.simplifyYesNo(varuse, fromEmpty, neg) {
+func (s *MkCondSimplifier) SimplifyExpr(expr *MkExpr, fromEmpty bool, neg bool) {
+	if s.simplifyYesNo(expr, fromEmpty, neg) {
 		return
 	}
-	s.simplifyMatch(varuse, fromEmpty, neg)
-	s.simplifyWord(varuse, fromEmpty, neg)
+	s.simplifyMatch(expr, fromEmpty, neg)
+	s.simplifyWord(expr, fromEmpty, neg)
 }
 
 // simplifyWord simplifies a condition like '${VAR:Mword}' in the common case
 // where VAR is a single-word variable. This case can be written without any
 // list operators, as '${VAR} == word'.
-func (s *MkCondSimplifier) simplifyWord(varuse *MkVarUse, fromEmpty bool, neg bool) {
-	varname := varuse.varname
-	modifiers := varuse.modifiers
+func (s *MkCondSimplifier) simplifyWord(expr *MkExpr, fromEmpty bool, neg bool) {
+	varname := expr.varname
+	mods := expr.modifiers
 
-	n := len(modifiers)
+	n := len(mods)
 	if n == 0 {
 		return
 	}
-	modsExceptLast := NewMkVarUse("", modifiers[:n-1]...).Mod()
+	modsExceptLast := NewMkExpr("", mods[:n-1]...).Mod()
 	vartype := G.Pkgsrc.VariableType(s.MkLines, varname)
 	if vartype == nil || vartype.IsList() {
 		return
@@ -62,7 +62,7 @@ func (s *MkCondSimplifier) simplifyWord(varuse *MkVarUse, fromEmpty bool, neg bo
 			// For now, be conservative and don't suggest anything wrong.
 			return false, "", ""
 		}
-		uMod := condStr(!defined && !varuse.HasModifier("U"), ":U", "")
+		uMod := condStr(!defined && !expr.HasModifier("U"), ":U", "")
 
 		op := condStr(neg == positive, "==", "!=")
 
@@ -87,8 +87,8 @@ func (s *MkCondSimplifier) simplifyWord(varuse *MkVarUse, fromEmpty bool, neg bo
 		return true, from, to
 	}
 
-	modifier := modifiers[n-1]
-	ok, positive, pattern, exact := modifier.MatchMatch()
+	mod := mods[n-1]
+	ok, positive, pattern, exact := mod.MatchMatch()
 	if !ok || !positive && n != 1 {
 		return
 	}
@@ -107,7 +107,7 @@ func (s *MkCondSimplifier) simplifyWord(varuse *MkVarUse, fromEmpty bool, neg bo
 	fix := s.MkLine.Autofix()
 	fix.Notef("%s can be compared using the simpler \"%s\" "+
 		"instead of matching against %q.",
-		varname, to, ":"+modifier.String()) // TODO: Quoted
+		varname, to, ":"+mod.String()) // TODO: Quoted
 	fix.Explain(
 		"This variable has a single value, not a list of values.",
 		"Therefore, it feels strange to apply list operators like :M and :N onto it.",
@@ -122,7 +122,7 @@ func (s *MkCondSimplifier) simplifyWord(varuse *MkVarUse, fromEmpty bool, neg bo
 
 // simplifyYesNo replaces conditions of the form '${VAR:M[yY][eE][sS]}' with
 // the equivalent ${VAR:tl} == yes.
-func (s *MkCondSimplifier) simplifyYesNo(varuse *MkVarUse, fromEmpty bool, neg bool) (done bool) {
+func (s *MkCondSimplifier) simplifyYesNo(expr *MkExpr, fromEmpty bool, neg bool) (done bool) {
 
 	// TODO: Merge the common code from simplifyWord and simplifyYesNo.
 	//  Even better would be to manipulate the conditions in an AST
@@ -152,14 +152,14 @@ func (s *MkCondSimplifier) simplifyYesNo(varuse *MkVarUse, fromEmpty bool, neg b
 		return sb.String()
 	}
 
-	varname := varuse.varname
-	modifiers := varuse.modifiers
+	varname := expr.varname
+	mods := expr.modifiers
 
-	n := len(modifiers)
+	n := len(mods)
 	if n == 0 {
 		return
 	}
-	modsExceptLast := NewMkVarUse("", modifiers[:n-1]...).Mod()
+	modsExceptLast := NewMkExpr("", mods[:n-1]...).Mod()
 	vartype := G.Pkgsrc.VariableType(s.MkLines, varname)
 	if vartype == nil || vartype.IsList() {
 		return
@@ -172,7 +172,7 @@ func (s *MkCondSimplifier) simplifyYesNo(varuse *MkVarUse, fromEmpty bool, neg b
 			// Too many negations; maybe handle this case later.
 			return false, "", ""
 		}
-		uMod := condStr(!defined && !varuse.HasModifier("U"), ":U", "")
+		uMod := condStr(!defined && !expr.HasModifier("U"), ":U", "")
 
 		op := condStr(neg == positive, "==", "!=")
 
@@ -192,7 +192,7 @@ func (s *MkCondSimplifier) simplifyYesNo(varuse *MkVarUse, fromEmpty bool, neg b
 		return true, from, to
 	}
 
-	modifier := modifiers[n-1]
+	modifier := mods[n-1]
 	ok, positive, pattern, exact := modifier.MatchMatch()
 	if !ok || !positive && n != 1 || exact {
 		return
@@ -222,18 +222,18 @@ func (s *MkCondSimplifier) simplifyYesNo(varuse *MkVarUse, fromEmpty bool, neg b
 // * fromEmpty is true for the form empty(VAR...), and false for ${VAR...}.
 //
 // * neg is true for the form !empty(VAR...), and false for empty(VAR...).
-func (s *MkCondSimplifier) simplifyMatch(varuse *MkVarUse, fromEmpty bool, neg bool) {
-	varname := varuse.varname
-	modifiers := varuse.modifiers
+func (s *MkCondSimplifier) simplifyMatch(expr *MkExpr, fromEmpty bool, neg bool) {
+	varname := expr.varname
+	mods := expr.modifiers
 
-	n := len(modifiers)
+	n := len(mods)
 	if n == 0 {
 		return
 	}
-	modsExceptLast := NewMkVarUse("", modifiers[:n-1]...).Mod()
+	modsExceptLast := NewMkExpr("", mods[:n-1]...).Mod()
 	vartype := G.Pkgsrc.VariableType(s.MkLines, varname)
 
-	modifier := modifiers[n-1]
+	modifier := mods[n-1]
 	ok, positive, pattern, exact := modifier.MatchMatch()
 	if !ok || !positive && n != 1 {
 		return
@@ -283,7 +283,7 @@ func (s *MkCondSimplifier) simplifyMatch(varuse *MkVarUse, fromEmpty bool, neg b
 	//
 	// The same reasoning applies to the variable name, even though the
 	// variable name typically only uses a restricted character set.
-	if !matches(varuse.Mod(), `^[*+\-.:\w\[\]]+$`) {
+	if !matches(expr.Mod(), `^[*+\-.:\w\[\]]+$`) {
 		return
 	}
 

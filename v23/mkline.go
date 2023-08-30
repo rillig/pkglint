@@ -367,7 +367,7 @@ func (mkline *MkLine) SetConditionalVars(varnames []string) {
 	mkline.data = include
 }
 
-// Tokenize extracts variable uses and other text from the given text.
+// Tokenize extracts expressions and other text from the given text.
 //
 // When used in IsVarassign lines, the given text must have the format
 // after stripping the end-of-line comment. Such text is available from
@@ -380,7 +380,7 @@ func (mkline *MkLine) SetConditionalVars(varnames []string) {
 // Example:
 //
 //	input:  ${PREFIX}/bin abc
-//	output: [MkToken("${PREFIX}", MkVarUse("PREFIX")), MkToken("/bin abc")]
+//	output: [MkToken("${PREFIX}", MkExpr("PREFIX")), MkToken("/bin abc")]
 //
 // See ValueTokens, which is the tokenized version of Value.
 func (mkline *MkLine) Tokenize(text string, warn bool) []*MkToken {
@@ -417,7 +417,7 @@ func (mkline *MkLine) Tokenize(text string, warn bool) []*MkToken {
 //	   "words"
 //
 // Note that even though the first word contains a colon, it is not split
-// at that point since the colon is inside a variable use.
+// at that point since the colon is inside an expression.
 //
 // When several separators are adjacent, this results in empty words in the output.
 func (mkline *MkLine) ValueSplit(value string, separator string) []string {
@@ -436,7 +436,7 @@ func (mkline *MkLine) ValueSplit(value string, separator string) []string {
 	}
 
 	for _, token := range tokens {
-		if token.Varuse != nil {
+		if token.Expr != nil {
 			out(token.Text)
 			cont = true
 		} else {
@@ -472,7 +472,7 @@ var notSpace = textproc.Space.Inverse()
 //	   "'word three'"
 //
 // Note that even though the first word contains a space, it is not split
-// at that point since the space is inside a variable use. Shell tokens
+// at that point since the space is inside an expression. Shell tokens
 // such as semicolons are also treated as normal characters. Only double
 // and single quotes are interpreted.
 //
@@ -495,9 +495,8 @@ func (mkline *MkLine) ValueFields(value string) []string {
 	}
 
 	plain := func() {
-		varUse := lexer.NextVarUse()
-		if varUse != nil {
-			field.WriteString(varUse.Text)
+		if expr := lexer.NextExpr(); expr != nil {
+			field.WriteString(expr.Text)
 		} else {
 			field.WriteByte(lexer.NextByte())
 		}
@@ -559,7 +558,7 @@ func (mkline *MkLine) ValueFields(value string) []string {
 func (mkline *MkLine) ValueFieldsLiteral() []string {
 	return filterStr(
 		mkline.ValueFields(mkline.Value()),
-		func(s string) bool { return !containsVarUse(s) })
+		func(s string) bool { return !containsExpr(s) })
 }
 
 func (mkline *MkLine) ValueTokens() ([]*MkToken, string) {
@@ -619,7 +618,7 @@ func (*MkLine) WithoutMakeVariables(value string) string {
 	valueNovar := NewLazyStringBuilder(value)
 	tokens, _ := NewMkLexer(value, nil).MkTokens()
 	for _, token := range tokens {
-		if token.Varuse == nil {
+		if token.Expr == nil {
 			valueNovar.WriteString(token.Text)
 		}
 	}
@@ -628,7 +627,7 @@ func (*MkLine) WithoutMakeVariables(value string) string {
 
 func (mkline *MkLine) ResolveVarsInRelativePath(relativePath PackagePath, pkg *Package) PackagePath {
 	// TODO: Not every path is relative to the package directory.
-	if !containsVarUse(relativePath.String()) {
+	if !containsExpr(relativePath.String()) {
 		return relativePath.CleanPath()
 	}
 
@@ -670,10 +669,10 @@ func (mkline *MkLine) ResolveVarsInRelativePath(relativePath PackagePath, pkg *P
 	// TODO: Add test that suggests ${.PARSEDIR} in .include to be omitted.
 	tmp = tmp.Replace("${.PARSEDIR}", ".")
 
-	replaceLatest := func(varuse string, category PkgsrcPath, pattern regex.Pattern, replacement string) {
-		if tmp.ContainsText(varuse) {
+	replaceLatest := func(expr string, category PkgsrcPath, pattern regex.Pattern, replacement string) {
+		if tmp.ContainsText(expr) {
 			latest := G.Pkgsrc.Latest(category, pattern, replacement)
-			tmp = tmp.Replace(varuse, latest)
+			tmp = tmp.Replace(expr, latest)
 		}
 	}
 
@@ -730,23 +729,23 @@ var (
 // This decision depends on many factors, such as whether the type of the
 // context is a list of things, whether the variable is a list, whether it
 // can contain only safe characters, and so on.
-func (mkline *MkLine) VariableNeedsQuoting(mklines *MkLines, varuse *MkVarUse, vartype *Vartype, vuc *VarUseContext) (needsQuoting YesNoUnknown) {
+func (mkline *MkLine) VariableNeedsQuoting(mklines *MkLines, expr *MkExpr, vartype *Vartype, ectx *ExprContext) (needsQuoting YesNoUnknown) {
 	if trace.Tracing {
-		defer trace.Call(varuse, vartype, vuc, trace.Result(&needsQuoting))()
+		defer trace.Call(expr, vartype, ectx, trace.Result(&needsQuoting))()
 	}
 
 	// TODO: Systematically test this function, each and every case, from top to bottom.
 	// TODO: Re-check the order of all these if clauses whether it really makes sense.
 
-	if varuse.HasModifier("D") {
+	if expr.HasModifier("D") {
 		// The :D modifier discards the value of the original variable and
 		// replaces it with the expression from the :D modifier.
 		// Therefore, the original variable does not need to be quoted.
 		return unknown
 	}
 
-	vucVartype := vuc.vartype
-	if vartype == nil || vucVartype == nil || vartype.basicType == BtUnknown {
+	ectxVartype := ectx.vartype
+	if vartype == nil || ectxVartype == nil || vartype.basicType == BtUnknown {
 		return unknown
 	}
 
@@ -757,20 +756,20 @@ func (mkline *MkLine) VariableNeedsQuoting(mklines *MkLines, varuse *MkVarUse, v
 			}
 			return no
 		}
-		if !vuc.IsWordPart {
+		if !ectx.IsWordPart {
 			return no
 		}
 	}
 
 	// A shell word may appear as part of a shell word, for example COMPILER_RPATH_FLAG.
-	if vuc.IsWordPart && vuc.quoting == VucQuotPlain {
+	if ectx.IsWordPart && ectx.quoting == EctxQuotPlain {
 		if !vartype.IsList() && vartype.basicType == BtShellWord {
 			return no
 		}
 	}
 
 	// Determine whether the context expects a list of shell words or not.
-	wantList := vucVartype.MayBeAppendedTo()
+	wantList := ectxVartype.MayBeAppendedTo()
 	haveList := vartype.MayBeAppendedTo()
 	if trace.Tracing {
 		trace.Stepf("wantList=%v, haveList=%v", wantList, haveList)
@@ -779,22 +778,22 @@ func (mkline *MkLine) VariableNeedsQuoting(mklines *MkLines, varuse *MkVarUse, v
 	// Both of these can be correct, depending on the situation:
 	// 1. echo ${PERL5:Q}
 	// 2. xargs ${PERL5}
-	if !vuc.IsWordPart && wantList && haveList {
+	if !ectx.IsWordPart && wantList && haveList {
 		return unknown
 	}
 
 	// Pkglint assumes that the tool definitions don't include very
 	// special characters, so they can safely be used inside any quotes.
-	if tool := G.ToolByVarname(mklines, varuse.varname); tool != nil {
-		switch vuc.quoting {
-		case VucQuotPlain:
-			if !vuc.IsWordPart {
+	if tool := G.ToolByVarname(mklines, expr.varname); tool != nil {
+		switch ectx.quoting {
+		case EctxQuotPlain:
+			if !ectx.IsWordPart {
 				return no
 			}
 			// XXX: Should there be a return here? It looks as if it could have been forgotten.
-		case VucQuotBackt:
+		case EctxQuotBackt:
 			return no
-		case VucQuotDquot, VucQuotSquot:
+		case EctxQuotDquot, EctxQuotSquot:
 			return unknown
 		}
 	}
@@ -803,25 +802,25 @@ func (mkline *MkLine) VariableNeedsQuoting(mklines *MkLines, varuse *MkVarUse, v
 	//
 	// An exception is in the case of backticks, because the whole backticks expression
 	// is parsed as a single shell word by pkglint. (XXX: This comment may be outdated.)
-	if vuc.IsWordPart && vucVartype.IsShell() && vuc.quoting != VucQuotBackt {
+	if ectx.IsWordPart && ectxVartype.IsShell() && ectx.quoting != EctxQuotBackt {
 		return yes
 	}
 
 	// SUBST_MESSAGE.perl= Replacing in ${REPLACE_PERL}
-	if vucVartype.basicType == BtMessage {
+	if ectxVartype.basicType == BtMessage {
 		return no
 	}
 
 	if wantList != haveList {
-		if vucVartype.basicType == BtFetchURL && vartype.basicType == BtHomepage {
+		if ectxVartype.basicType == BtFetchURL && vartype.basicType == BtHomepage {
 			return no
 		}
-		if vucVartype.basicType == BtHomepage && vartype.basicType == BtFetchURL {
+		if ectxVartype.basicType == BtHomepage && vartype.basicType == BtFetchURL {
 			return no // Just for HOMEPAGE=${MASTER_SITE_*:=subdir/}.
 		}
 
 		// .for dir in ${PATH:C,:, ,g}
-		for _, modifier := range varuse.modifiers {
+		for _, modifier := range expr.modifiers {
 			if modifier.ChangesList() {
 				return unknown
 			}
@@ -837,60 +836,60 @@ func (mkline *MkLine) VariableNeedsQuoting(mklines *MkLines, varuse *MkVarUse, v
 	}
 
 	if trace.Tracing {
-		trace.Step1("Don't know whether :Q is needed for %q", varuse.varname)
+		trace.Step1("Don't know whether :Q is needed for %q", expr.varname)
 	}
 	return unknown
 }
 
 // ForEachUsed calls the action for each variable that is used in the line.
-func (mkline *MkLine) ForEachUsed(action func(varUse *MkVarUse, time VucTime)) {
+func (mkline *MkLine) ForEachUsed(action func(expr *MkExpr, time EctxTime)) {
 	switch {
 
 	case mkline.IsVarassign():
-		mkline.ForEachUsedText(mkline.Varname(), VucLoadTime, action)
+		mkline.ForEachUsedText(mkline.Varname(), EctxLoadTime, action)
 		mkline.ForEachUsedText(mkline.Value(), mkline.Op().Time(), action)
 
 	case mkline.IsDirective() && mkline.Directive() == "for":
-		mkline.ForEachUsedText(mkline.Args(), VucLoadTime, action)
+		mkline.ForEachUsedText(mkline.Args(), EctxLoadTime, action)
 
 	case mkline.IsDirective() && (mkline.Directive() == "if" || mkline.Directive() == "elif") && mkline.Cond() != nil:
 		mkline.Cond().Walk(&MkCondCallback{
-			VarUse: func(varuse *MkVarUse) {
-				mkline.ForEachUsedVarUse(varuse, VucLoadTime, action)
+			Expr: func(expr *MkExpr) {
+				mkline.ForEachUsedExpr(expr, EctxLoadTime, action)
 			}})
 
 	case mkline.IsShellCommand():
-		mkline.ForEachUsedText(mkline.ShellCommand(), VucRunTime, action)
+		mkline.ForEachUsedText(mkline.ShellCommand(), EctxRunTime, action)
 
 	case mkline.IsDependency():
-		mkline.ForEachUsedText(mkline.Targets(), VucLoadTime, action)
-		mkline.ForEachUsedText(mkline.Sources(), VucLoadTime, action)
+		mkline.ForEachUsedText(mkline.Targets(), EctxLoadTime, action)
+		mkline.ForEachUsedText(mkline.Sources(), EctxLoadTime, action)
 
 	case mkline.IsInclude():
-		mkline.ForEachUsedText(mkline.IncludedFile().String(), VucLoadTime, action)
+		mkline.ForEachUsedText(mkline.IncludedFile().String(), EctxLoadTime, action)
 	}
 }
 
-func (mkline *MkLine) ForEachUsedText(text string, time VucTime, action func(varUse *MkVarUse, time VucTime)) {
+func (mkline *MkLine) ForEachUsedText(text string, time EctxTime, action func(expr *MkExpr, time EctxTime)) {
 	if !contains(text, "$") {
 		return
 	}
 
 	tokens, _ := NewMkLexer(text, nil).MkTokens()
 	for _, token := range tokens {
-		if token.Varuse != nil {
-			mkline.ForEachUsedVarUse(token.Varuse, time, action)
+		if token.Expr != nil {
+			mkline.ForEachUsedExpr(token.Expr, time, action)
 		}
 	}
 }
 
-func (mkline *MkLine) ForEachUsedVarUse(varuse *MkVarUse, time VucTime, action func(varUse *MkVarUse, time VucTime)) {
-	varname := varuse.varname
-	if !varuse.IsExpression() {
-		action(varuse, time)
+func (mkline *MkLine) ForEachUsedExpr(expr *MkExpr, time EctxTime, action func(expr *MkExpr, time EctxTime)) {
+	varname := expr.varname
+	if !expr.IsExpression() {
+		action(expr, time)
 	}
 	mkline.ForEachUsedText(varname, time, action)
-	for _, mod := range varuse.modifiers {
+	for _, mod := range expr.modifiers {
 		mkline.ForEachUsedText(mod.String(), time, action)
 	}
 }
@@ -904,9 +903,8 @@ func (mkline *MkLine) UnquoteShell(str string, warn bool) string {
 	lexer := NewMkTokensLexer(mkline.Tokenize(str, false))
 
 	plain := func() {
-		varUse := lexer.NextVarUse()
-		if varUse != nil {
-			sb.WriteString(varUse.Text)
+		if expr := lexer.NextExpr(); expr != nil {
+			sb.WriteString(expr.Text)
 		} else {
 			sb.WriteByte(lexer.NextByte())
 		}
@@ -999,14 +997,14 @@ func (op MkOperator) String() string {
 
 // Time returns the time at which the right-hand side of the assignment is
 // evaluated.
-func (op MkOperator) Time() VucTime {
+func (op MkOperator) Time() EctxTime {
 	if op == opAssignShell || op == opAssignEval {
-		return VucLoadTime
+		return EctxLoadTime
 	}
-	return VucRunTime
+	return EctxRunTime
 }
 
-// VarUseContext defines the context in which a variable is defined
+// ExprContext defines the context in which a variable is defined
 // or used. Whether that is allowed depends on:
 //
 // * The variable's data type, as defined in vardefs.go.
@@ -1020,67 +1018,68 @@ func (op MkOperator) Time() VucTime {
 // operands of that statement should fit to the variable and are
 // checked against the variable type. For example, comparing OPSYS to
 // x86_64 doesn't make sense.
-type VarUseContext struct {
+type ExprContext struct {
 	vartype    *Vartype
-	time       VucTime
-	quoting    VucQuoting
+	time       EctxTime
+	quoting    EctxQuoting
 	IsWordPart bool // Example: LOCALBASE=${LOCALBASE}
 }
 
-// VucTime is the time at which a variable is used.
+// EctxTime is the time at which a variable is used.
 //
 // See ToolTime, which is the same except that there is no unknown.
-type VucTime uint8
+type EctxTime uint8
 
 const (
-	VucUnknownTime VucTime = iota
+	EctxUnknownTime EctxTime = iota
 
-	// VucLoadTime marks a variable use that happens directly when
+	// EctxLoadTime marks an expression that is evaluated directly when
 	// the Makefile fragment is loaded.
 	//
-	// When Makefiles are loaded, the operators := and != evaluate their
+	// When a makefile is loaded, the operators := and != evaluate their
 	// right-hand side, as well as the directives .if, .elif and .for.
 	// During loading, not all variables are available yet.
 	// Variable values are still subject to change, especially lists.
-	VucLoadTime
+	EctxLoadTime
 
-	// VucRunTime marks a variable use that happens after all files have been loaded.
+	// EctxRunTime marks an expression that is evaluated after all files
+	// have been loaded.
 	//
 	// At this time, all variables can be referenced.
 	//
 	// At this time, variable values don't change anymore.
 	// Well, except for the ::= modifier.
 	// But that modifier is usually not used in pkgsrc.
-	VucRunTime
+	EctxRunTime
 )
 
-func (t VucTime) String() string { return [...]string{"unknown", "load", "run"}[t] }
+func (t EctxTime) String() string { return [...]string{"unknown", "load", "run"}[t] }
 
-// VucQuoting describes in what level of quoting the variable is used.
+// EctxQuoting describes in what level of quoting the variable is used.
 // Depending on this context, the modifiers :Q or :M can be allowed or not.
 //
 // The shell tokenizer knows multi-level quoting modes (see ShQuoting),
 // but for deciding whether :Q is necessary or not, a single level is enough.
-type VucQuoting uint8
+type EctxQuoting uint8
 
 const (
-	VucQuotUnknown VucQuoting = iota
-	VucQuotPlain              // Example: echo LOCALBASE=${LOCALBASE}
-	VucQuotDquot              // Example: echo "The version is ${PKGVERSION}."
-	VucQuotSquot              // Example: echo 'The version is ${PKGVERSION}.'
-	VucQuotBackt              // Example: echo `sed 1q ${WRKSRC}/README`
+	EctxQuotUnknown EctxQuoting = iota
+	EctxQuotPlain               // Example: echo LOCALBASE=${LOCALBASE}
+	EctxQuotDquot               // Example: echo "The version is ${PKGVERSION}."
+	EctxQuotSquot               // Example: echo 'The version is ${PKGVERSION}.'
+	EctxQuotBackt               // Example: echo `sed 1q ${WRKSRC}/README`
 )
 
-func (q VucQuoting) String() string {
+func (q EctxQuoting) String() string {
 	return [...]string{"unknown", "plain", "dquot", "squot", "backt", "mk-for"}[q]
 }
 
-func (vuc *VarUseContext) String() string {
+func (ectx *ExprContext) String() string {
 	typename := "no-type"
-	if vuc.vartype != nil {
-		typename = vuc.vartype.String()
+	if ectx.vartype != nil {
+		typename = ectx.vartype.String()
 	}
-	return sprintf("(%s time:%s quoting:%s wordpart:%v)", typename, vuc.time, vuc.quoting, vuc.IsWordPart)
+	return sprintf("(%s time:%s quoting:%s wordpart:%v)", typename, ectx.time, ectx.quoting, ectx.IsWordPart)
 }
 
 // Indentation remembers the stack of preprocessing directives and their
@@ -1134,7 +1133,7 @@ func (ind *Indentation) String() string {
 
 func (ind *Indentation) RememberUsedVariables(cond *MkCond) {
 	cond.Walk(&MkCondCallback{
-		VarUse: func(varuse *MkVarUse) { ind.AddVar(varuse.varname) }})
+		Expr: func(expr *MkExpr) { ind.AddVar(expr.varname) }})
 }
 
 func (ind *Indentation) IsEmpty() bool {
@@ -1383,7 +1382,7 @@ func MatchMkInclude(text string) (m bool, indentation, directive string, filenam
 
 	mark := lexer.Mark()
 	for lexer.SkipBytesFunc(func(c byte) bool { return c != '"' && c != '$' }) ||
-		lexer.NextVarUse() != nil {
+		lexer.NextExpr() != nil {
 	}
 	enclosed := NewPath(lexer.Since(mark))
 

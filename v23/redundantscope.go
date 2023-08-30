@@ -42,7 +42,7 @@ func (s *RedundantScope) checkLine(mklines *MkLines, mkline *MkLine) {
 		s.handleVarassign(mkline, mklines.indentation)
 	}
 
-	s.handleVarUse(mkline)
+	s.handleExpr(mkline)
 }
 
 func (s *RedundantScope) updateIncludePath(mkline *MkLine) {
@@ -217,11 +217,11 @@ func (s *RedundantScope) checkAppendUnique(mkline *MkLine, info *redundantScopeV
 	}
 }
 
-func (s *RedundantScope) handleVarUse(mkline *MkLine) {
+func (s *RedundantScope) handleExpr(mkline *MkLine) {
 	switch {
 	case mkline.IsVarassign():
-		mkline.ForEachUsed(func(varUse *MkVarUse, time VucTime) {
-			varname := varUse.varname
+		mkline.ForEachUsed(func(expr *MkExpr, time EctxTime) {
+			varname := expr.varname
 			info := s.get(varname)
 			info.vari.Read(mkline)
 			info.lastAction = 1
@@ -229,15 +229,15 @@ func (s *RedundantScope) handleVarUse(mkline *MkLine) {
 		})
 
 	case mkline.IsDirective():
-		// TODO: Handle varuse for conditions and loops.
+		// TODO: Handle expr for conditions and loops.
 		break
 
 	case mkline.IsInclude(), mkline.IsSysinclude():
-		// TODO: Handle VarUse for includes, which may reference variables.
+		// TODO: Handle Expr for includes, which may reference variables.
 		break
 
 	case mkline.IsDependency():
-		// TODO: Handle VarUse for this case.
+		// TODO: Handle Expr for this case.
 	}
 }
 

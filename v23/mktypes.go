@@ -7,48 +7,48 @@ import (
 )
 
 // MkToken represents a contiguous string from a Makefile.
-// It is either a literal string or a variable use.
+// It is either a literal string or an expression.
 //
 // Example: /usr/share/${PKGNAME}/data consists of 3 tokens:
 //  1. MkToken{Text: "/usr/share/"}
-//  2. MkToken{Text: "${PKGNAME}", Varuse: NewMkVarUse("PKGNAME")}
+//  2. MkToken{Text: "${PKGNAME}", Expr: NewMkExpr("PKGNAME")}
 //  3. MkToken{Text: "/data"}
 type MkToken struct {
-	Text   string    // Used for both literal text and variable uses
-	Varuse *MkVarUse // For literal text, it is nil
+	Text string  // Used for both literal text and expressions
+	Expr *MkExpr // For literal text, it is nil
 }
 
-// MkVarUse represents a reference to a Make variable, with optional modifiers.
+// MkExpr represents a reference to a Make variable, with optional modifiers.
 //
 // For nested variable expressions, the variable name can contain references
-// to other variables. For example, ${TOOLS.${t}} is a MkVarUse with varname
+// to other variables. For example, ${TOOLS.${t}} is a MkExpr with varname
 // "TOOLS.${t}" and no modifiers.
 //
 // Example: ${PKGNAME}
 //
 // Example: ${PKGNAME:S/from/to/}
-type MkVarUse struct {
-	varname   string             // E.g. "PKGNAME", or "${BUILD_DEFS}"
-	modifiers []MkVarUseModifier // E.g. "Q", "S/from/to/"
+type MkExpr struct {
+	varname   string           // E.g. "PKGNAME", or "${BUILD_DEFS}"
+	modifiers []MkExprModifier // E.g. "Q", "S/from/to/"
 }
 
-func NewMkVarUse(varname string, modifiers ...MkVarUseModifier) *MkVarUse {
-	return &MkVarUse{varname, modifiers}
+func NewMkExpr(varname string, modifiers ...MkExprModifier) *MkExpr {
+	return &MkExpr{varname, modifiers}
 }
 
-func (vu *MkVarUse) String() string { return sprintf("${%s%s}", vu.varname, vu.Mod()) }
+func (vu *MkExpr) String() string { return sprintf("${%s%s}", vu.varname, vu.Mod()) }
 
-// MkVarUseModifier stores the text of the modifier, without the initial colon.
+// MkExprModifier stores the text of the modifier, without the initial colon.
 // Examples: "Q", "S,from,to,g"
-type MkVarUseModifier string
+type MkExprModifier string
 
-func (m MkVarUseModifier) String() string {
+func (m MkExprModifier) String() string {
 	return string(m)
 }
 
 // Quoted returns the source code representation of the modifier, quoting
 // all characters so that they are interpreted literally.
-func (m MkVarUseModifier) Quoted(end string) string {
+func (m MkExprModifier) Quoted(end string) string {
 	mod := string(m)
 	mod = strings.Replace(mod, ":", "\\:", -1)
 	mod = strings.Replace(mod, end, "\\"+end, -1)
@@ -57,28 +57,28 @@ func (m MkVarUseModifier) Quoted(end string) string {
 	return mod
 }
 
-func (m MkVarUseModifier) HasPrefix(prefix string) bool {
+func (m MkExprModifier) HasPrefix(prefix string) bool {
 	return hasPrefix(m.String(), prefix)
 }
 
-func (m MkVarUseModifier) IsQ() bool { return m == "Q" }
+func (m MkExprModifier) IsQ() bool { return m == "Q" }
 
-func (m MkVarUseModifier) IsSuffixSubst() bool {
+func (m MkExprModifier) IsSuffixSubst() bool {
 	// XXX: There are other cases
 	return m.HasPrefix("=")
 }
 
-func (m MkVarUseModifier) MatchSubst() (ok bool, regex bool, from string, to string, options string) {
+func (m MkExprModifier) MatchSubst() (ok bool, regex bool, from string, to string, options string) {
 	p := NewMkLexer(m.String(), nil)
-	return p.varUseModifierSubst('}')
+	return p.exprModifierSubst('}')
 }
 
 // Subst evaluates an S/from/to/ modifier.
 //
 // Example:
 //
-//	MkVarUseModifier{"S,name,file,g"}.Subst("distname-1.0") => "distfile-1.0"
-func (m MkVarUseModifier) Subst(str string) (bool, string) {
+//	MkExprModifier{"S,name,file,g"}.Subst("distname-1.0") => "distfile-1.0"
+func (m MkExprModifier) Subst(str string) (bool, string) {
 	// XXX: The call to MatchSubst is usually redundant because MatchSubst
 	//  is typically called directly before calling Subst.
 	//  This comes from a time when there was no boolean return value.
@@ -116,8 +116,8 @@ func (m MkVarUseModifier) Subst(str string) (bool, string) {
 }
 
 // EvalSubst evaluates make(1)'s :S substitution operator.
-// It does not resolve any variables.
-func (MkVarUseModifier) EvalSubst(s string, left bool, from string, right bool, to string, flags string) (ok bool, result string) {
+// It does not resolve any nested expressions.
+func (MkExprModifier) EvalSubst(s string, left bool, from string, right bool, to string, flags string) (ok bool, result string) {
 
 	if containsVarRefLong(from) || containsVarRefLong(to) {
 		return false, ""
@@ -145,7 +145,7 @@ func (MkVarUseModifier) EvalSubst(s string, left bool, from string, right bool, 
 //	:M${VAR}    =>   true   true      "${VAR}"   false
 //	:Npattern   =>   true   false     "pattern"  true
 //	:X          =>   false
-func (m MkVarUseModifier) MatchMatch() (ok bool, positive bool, pattern string, exact bool) {
+func (m MkExprModifier) MatchMatch() (ok bool, positive bool, pattern string, exact bool) {
 	if m.HasPrefix("M") || m.HasPrefix("N") {
 		str := m.String()
 		// See devel/bmake/files/str.c:^Str_Match
@@ -155,15 +155,15 @@ func (m MkVarUseModifier) MatchMatch() (ok bool, positive bool, pattern string, 
 	return false, false, "", false
 }
 
-func (m MkVarUseModifier) IsToLower() bool { return m == "tl" }
+func (m MkExprModifier) IsToLower() bool { return m == "tl" }
 
 // ChangesList returns true if applying this modifier to a variable
 // may change the expression from a list type to a non-list type
 // or vice versa.
-func (m MkVarUseModifier) ChangesList() bool {
+func (m MkExprModifier) ChangesList() bool {
 	text := m.String()
 
-	// See MkParser.varUseModifier for the meaning of these modifiers.
+	// See MkParser.exprModifier for the meaning of these modifiers.
 	switch text[0] {
 
 	case 'E', 'H', 'M', 'N', 'O', 'R', 'T':
@@ -191,7 +191,7 @@ func (m MkVarUseModifier) ChangesList() bool {
 	return true
 }
 
-func (vu *MkVarUse) Mod() string {
+func (vu *MkExpr) Mod() string {
 	var mod strings.Builder
 	for _, modifier := range vu.modifiers {
 		mod.WriteString(":")
@@ -202,7 +202,7 @@ func (vu *MkVarUse) Mod() string {
 
 // IsExpression returns whether the varname is interpreted as an expression
 // instead of a variable name (rare, only the modifiers :? and :L do this).
-func (vu *MkVarUse) IsExpression() bool {
+func (vu *MkExpr) IsExpression() bool {
 	if len(vu.modifiers) == 0 {
 		return false
 	}
@@ -210,12 +210,12 @@ func (vu *MkVarUse) IsExpression() bool {
 	return mod.String() == "L" || mod.HasPrefix("?")
 }
 
-func (vu *MkVarUse) IsQ() bool {
+func (vu *MkExpr) IsQ() bool {
 	mlen := len(vu.modifiers)
 	return mlen > 0 && vu.modifiers[mlen-1].IsQ()
 }
 
-func (vu *MkVarUse) HasModifier(prefix string) bool {
+func (vu *MkExpr) HasModifier(prefix string) bool {
 	for _, mod := range vu.modifiers {
 		if mod.HasPrefix(prefix) {
 			return true
