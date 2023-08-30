@@ -28,7 +28,7 @@ func (p *MkParser) Rest() string {
 // Otherwise, parsing is silent.
 //
 // The text argument is assumed to be after unescaping the # character,
-// which means the # is a normal character and does not introduce a Makefile comment.
+// which means the # is a normal character and does not introduce a makefile comment.
 // For Expr, this distinction is irrelevant.
 func NewMkParser(diag Autofixer, text string) *MkParser {
 	mklex := NewMkLexer(text, diag)
@@ -433,7 +433,7 @@ func ToExpr(str string) *MkExpr {
 	return nil
 }
 
-// MkCond is a condition in a Makefile, such as ${OPSYS} == NetBSD.
+// MkCond is a condition in a makefile, such as ${OPSYS} == NetBSD.
 //
 // The representation is somewhere between syntactic and semantic.
 // Unnecessary parentheses are omitted in this representation,
@@ -473,7 +473,7 @@ type MkCondCall struct {
 	Arg  string
 }
 
-// MkCondCallback defines the actions for walking a Makefile condition
+// MkCondCallback defines the actions for walking a makefile condition
 // using MkCondWalker.Walk.
 type MkCondCallback struct {
 	And     func(conds []*MkCond)

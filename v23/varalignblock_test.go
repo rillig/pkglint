@@ -2564,7 +2564,7 @@ func (s *Suite) Test_VaralignBlock__aligned(c *check.C) {
 		false)
 
 	// The second line is indented and therefore visually distinct from
-	// a Makefile assignment line. Everything's fine.
+	// a makefile assignment line. Everything's fine.
 	test(
 		"CONFIGURE_ENV+= \\",
 		"\tAWK=${AWK:Q}",

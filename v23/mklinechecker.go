@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// MkLineChecker provides checks for a single line from a Makefile fragment.
+// MkLineChecker provides checks for a single line from a makefile fragment.
 type MkLineChecker struct {
 	MkLines *MkLines
 	MkLine  *MkLine
@@ -279,7 +279,7 @@ func (ck MkLineChecker) checkInclude() {
 		mkline.Errorf("Other Makefiles must not be included directly.")
 		mkline.Explain(
 			"To include portions of another Makefile, extract the common parts",
-			"and put them into a Makefile.common or a Makefile fragment called",
+			"and put them into a Makefile.common or a makefile fragment called",
 			"module.mk or similar.",
 			"After that, both this one and the other package should include the newly created file.")
 

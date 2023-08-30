@@ -68,7 +68,7 @@ func (s *Suite) Test_MkLineParser_Parse__comment_or_not(c *check.C) {
 
 	t.CheckEquals(mklineVarassignUnescaped.Value(), "'s,")
 	t.CheckOutputLines(
-		"WARN: filename.mk:1: The # character starts a Makefile comment.")
+		"WARN: filename.mk:1: The # character starts a makefile comment.")
 }
 
 func (s *Suite) Test_MkLineParser_Parse__commented_lines(c *check.C) {
@@ -202,9 +202,9 @@ func (s *Suite) Test_MkLineParser_parseVarassign__escaped_hash_in_value(c *check
 	t.CheckEquals(parsed[4].Value(), "value\\\\\\\\")
 
 	t.CheckOutputLines(
-		"WARN: ~/Makefile:1: The # character starts a Makefile comment.",
-		"WARN: ~/Makefile:3: The # character starts a Makefile comment.",
-		"WARN: ~/Makefile:5: The # character starts a Makefile comment.")
+		"WARN: ~/Makefile:1: The # character starts a makefile comment.",
+		"WARN: ~/Makefile:3: The # character starts a makefile comment.",
+		"WARN: ~/Makefile:5: The # character starts a makefile comment.")
 }
 
 func (s *Suite) Test_MkLineParser_matchVarassign(c *check.C) {

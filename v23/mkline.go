@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// MkLine is a line from a Makefile fragment.
+// MkLine is a line from a makefile fragment.
 // There are several types of lines.
 // The most common types in pkgsrc are variable assignments,
 // shell commands and directives like .if and .for.
@@ -374,7 +374,7 @@ func (mkline *MkLine) SetConditionalVars(varnames []string) {
 // Value. A shell comment is therefore marked by a simple #, not an escaped
 // \# like in Makefiles.
 //
-// When used in IsShellCommand lines, # does not mark a Makefile comment
+// When used in IsShellCommand lines, # does not mark a makefile comment
 // and may thus still appear in the text. Therefore, # marks a shell comment.
 //
 // Example:
@@ -1034,7 +1034,7 @@ const (
 	EctxUnknownTime EctxTime = iota
 
 	// EctxLoadTime marks an expression that is evaluated directly when
-	// the Makefile fragment is loaded.
+	// the makefile fragment is loaded.
 	//
 	// When a makefile is loaded, the operators := and != evaluate their
 	// right-hand side, as well as the directives .if, .elif and .for.

@@ -11,7 +11,7 @@ type MkLineParser struct{}
 
 func NewMkLineParser() MkLineParser { return MkLineParser{} }
 
-// Parse parses the text of a Makefile line to see what kind of line
+// Parse parses the text of a makefile line to see what kind of line
 // it is: variable assignment, include, comment, etc.
 //
 // See devel/bmake/parse.c:/^Parse_File/
@@ -82,7 +82,7 @@ func (p MkLineParser) parseVarassign(line *Line, text string, splitResult mkLine
 func (p MkLineParser) matchVarassign(line *Line, text string, splitResult *mkLineSplitResult) (bool, *mkLineAssign) {
 
 	// A commented variable assignment does not have leading whitespace.
-	// Otherwise, line 1 of almost every Makefile fragment would need to
+	// Otherwise, line 1 of almost every makefile fragment would need to
 	// be scanned for a variable assignment even though it only contains
 	// the $NetBSD CVS Id.
 	commented := splitResult.main == "" && splitResult.hasComment
@@ -179,7 +179,7 @@ func (p MkLineParser) checkUnintendedComment(splitResult *mkLineSplitResult, a *
 		return
 	}
 
-	line.Warnf("The # character starts a Makefile comment.")
+	line.Warnf("The # character starts a makefile comment.")
 	line.Explain(
 		"In a variable assignment, an unescaped # starts a comment that",
 		"continues until the end of the line.",
@@ -279,7 +279,7 @@ func (p MkLineParser) parseMergeConflict(line *Line, splitResult mkLineSplitResu
 	return &MkLine{line, splitResult, nil}
 }
 
-// split parses a logical line from a Makefile (that is, after joining
+// split parses a logical line from a makefile (that is, after joining
 // the lines that end in a backslash) into two parts: the main part and the
 // comment.
 //
@@ -367,7 +367,7 @@ func (MkLineParser) split(diag Autofixer, text string, trimComment bool) mkLineS
 	return mkLineSplitResult{mainTrimmed, tokens, spaceBeforeComment, hasComment, "", comment}
 }
 
-// unescapeComment takes a Makefile line, as written in a file, and splits
+// unescapeComment takes a makefile line, as written in a file, and splits
 // it into the main part and the comment.
 //
 // The comment starts at the first #. Except if it is preceded by an odd number

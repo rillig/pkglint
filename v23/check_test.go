@@ -287,7 +287,7 @@ func (t *Tester) SetUpVarType(
 // SetUpFileLines creates a temporary file and writes the given lines to it.
 // The file is then read in, without interpreting line continuations.
 //
-// See SetUpFileMkLines for loading a Makefile fragment.
+// See SetUpFileMkLines for loading a makefile fragment.
 func (t *Tester) SetUpFileLines(filename RelPath, lines ...string) *Lines {
 	abs := t.CreateFileLines(filename, lines...)
 	return Load(abs, MustSucceed)
@@ -308,7 +308,7 @@ func (t *Tester) SetUpFileMkLinesPkg(filename RelPath, pkg *Package, lines ...st
 	return LoadMk(abs, pkg, MustSucceed)
 }
 
-// LoadMkInclude loads the given Makefile fragment and all the files it includes,
+// LoadMkInclude loads the given makefile fragment and all the files it includes,
 // merging all the lines into a single MkLines object.
 //
 // This is useful for testing code related to Package.readMakefile.
@@ -1083,7 +1083,7 @@ func (t *Tester) NewLinesAt(filename CurrPath, firstLine int, texts ...string) *
 }
 
 // NewMkLines returns a list of lines in Makefile format,
-// as if they were parsed from a Makefile fragment,
+// as if they were parsed from a makefile fragment,
 // taking continuation lines into account.
 //
 // No actual file is created for the lines;

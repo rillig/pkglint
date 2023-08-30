@@ -225,7 +225,7 @@ func (tr *Tools) Trace() {
 }
 
 // ParseToolLine updates the tool definitions according to the given
-// line from a Makefile.
+// line from a makefile.
 //
 // If fromInfrastructure is true, the tool is defined even when it is only
 // added to USE_TOOLS (which normally doesn't define anything). This way,
@@ -308,7 +308,7 @@ func (tr *Tools) addAlias(tool *Tool, alias string) {
 	tr.AliasOf[alias] = tool.Name
 }
 
-// parseUseTools interprets a "USE_TOOLS+=" line from a Makefile fragment.
+// parseUseTools interprets a "USE_TOOLS+=" line from a makefile fragment.
 // It determines the validity of the tool, i.e. in which places it may be used.
 //
 // If createIfAbsent is true and the tool is unknown, it is registered.

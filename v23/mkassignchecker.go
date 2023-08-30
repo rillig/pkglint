@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// MkAssignChecker checks a variable assignment line in a Makefile.
+// MkAssignChecker checks a variable assignment line in a makefile.
 type MkAssignChecker struct {
 	MkLine  *MkLine
 	MkLines *MkLines

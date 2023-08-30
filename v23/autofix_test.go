@@ -855,7 +855,7 @@ func (s *Suite) Test_Autofix_Delete(c *check.C) {
 		"-\tto be deleted")
 }
 
-// Deleting a line from a Makefile also deletes its continuation lines.
+// Deleting a line from a makefile also deletes its continuation lines.
 func (s *Suite) Test_Autofix_Delete__continuation_line(c *check.C) {
 	t := s.Init(c)
 

@@ -587,7 +587,7 @@ and these are handled specially.
 > from [mkline.go](mkline.go#L11):
 
 ```go
-// MkLine is a line from a Makefile fragment.
+// MkLine is a line from a makefile fragment.
 // There are several types of lines.
 // The most common types in pkgsrc are variable assignments,
 // shell commands and directives like .if and .for.
@@ -631,10 +631,10 @@ The `ShellLineChecker` type provides methods for checking shell commands and the
 > from [shell.go](shell.go#L386):
 
 ```go
-// ShellLineChecker checks either a line from a Makefile starting with a tab,
+// ShellLineChecker checks either a line from a makefile starting with a tab,
 // thereby containing shell commands to be executed.
 //
-// Or it checks a variable assignment line from a Makefile with a left-hand
+// Or it checks a variable assignment line from a makefile with a left-hand
 // side variable that is of some shell-like type; see Vartype.IsShell.
 type ShellLineChecker struct {
 	MkLines *MkLines

@@ -32,7 +32,7 @@ func (s *Suite) Test_MkLine__comment_in_comment(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:2: The # character starts a Makefile comment.")
+		"WARN: Makefile:2: The # character starts a makefile comment.")
 }
 
 func (s *Suite) Test_MkLine_Varparam(c *check.C) {
@@ -183,7 +183,7 @@ func (s *Suite) Test_MkLine_ValueSplit(c *check.C) {
 
 	// This warning refers to the #5 since it starts a word, but not to the C#.
 	t.CheckOutputLines(
-		"WARN: Makefile:1: The # character starts a Makefile comment.")
+		"WARN: Makefile:1: The # character starts a makefile comment.")
 
 	test("/bin",
 		"/bin")

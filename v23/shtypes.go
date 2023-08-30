@@ -59,7 +59,7 @@ func (atom *ShAtom) String() string {
 	return sprintf("ShAtom(%v, %q, %s)", atom.Type, atom.MkText, atom.Quoting)
 }
 
-// Expr returns a read access to a Makefile variable, or nil for plain shell tokens.
+// Expr returns a read access to a makefile variable, or nil for plain shell tokens.
 func (atom *ShAtom) Expr() *MkExpr {
 	if atom.Type == shtExpr {
 		return atom.data.(*MkExpr)

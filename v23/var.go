@@ -1,6 +1,6 @@
 package pkglint
 
-// Var describes a variable in a Makefile snippet.
+// Var describes a variable in a makefile snippet.
 //
 // It keeps track of all places where the variable is accessed or modified (see
 // ReadLocations, WriteLocations) and provides information for further static

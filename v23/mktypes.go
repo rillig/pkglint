@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// MkToken represents a contiguous string from a Makefile.
+// MkToken represents a contiguous string from a makefile.
 // It is either a literal string or an expression.
 //
 // Example: /usr/share/${PKGNAME}/data consists of 3 tokens:

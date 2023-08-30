@@ -2042,7 +2042,7 @@ func (s *Suite) Test_VartypeCheck_SedCommands(c *check.C) {
 	vt.Output(
 		"NOTE: filename.mk:1: Please always use \"-e\" in sed commands, even if there is only one substitution.",
 		"WARN: filename.mk:2: Each sed command should appear in an assignment of its own.",
-		"WARN: filename.mk:3: The # character starts a Makefile comment.",
+		"WARN: filename.mk:3: The # character starts a makefile comment.",
 		"ERROR: filename.mk:3: Invalid shell words \"\\\"s,\" in sed commands.",
 		"WARN: filename.mk:8: Unknown sed command \"1d\".",
 		"ERROR: filename.mk:9: The -e option to sed requires an argument.",
@@ -2263,7 +2263,7 @@ func (s *Suite) Test_VartypeCheck_Unknown(c *check.C) {
 	// This warning is produced as a side effect of parsing the lines.
 	// It is not specific to the BtUnknown type.
 	vt.Output(
-		"WARN: filename.mk:4: The # character starts a Makefile comment.")
+		"WARN: filename.mk:4: The # character starts a makefile comment.")
 }
 
 func (s *Suite) Test_VartypeCheck_URL(c *check.C) {
@@ -2712,7 +2712,7 @@ func (vt *VartypeCheckTester) Op(op MkOperator) {
 }
 
 // Values feeds each of the values to the actual check.
-// Each value is interpreted as if it were written verbatim into a Makefile line.
+// Each value is interpreted as if it were written verbatim into a makefile line.
 // That is, # starts a comment.
 //
 // For the opUseMatch operator, all colons and closing braces must be escaped.
