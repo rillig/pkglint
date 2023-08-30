@@ -5,6 +5,9 @@ import (
 	"strings"
 )
 
+// Checks for 'ALTERNATIVE' files, which allow the pkgsrc user to select from
+// several implementations of compatible binaries.
+
 func CheckFileAlternatives(filename CurrPath, pkg *Package) {
 	lines := Load(filename, NotEmpty|LogErrors)
 	if lines == nil {

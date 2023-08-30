@@ -5,6 +5,9 @@ import (
 	"strings"
 )
 
+// Functions to load plain text files, as well as makefiles with their line
+// continuations.
+
 type LoadOptions uint8
 
 const (

@@ -2,6 +2,8 @@ package pkglint
 
 import "github.com/rillig/pkglint/v23/licenses"
 
+// LicenseChecker checks a license expression in a makefile, which consists of
+// license names, parentheses and the combining operators 'AND' and 'OR'.
 type LicenseChecker struct {
 	MkLines *MkLines
 	MkLine  *MkLine

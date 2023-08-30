@@ -5,6 +5,10 @@ import (
 	"strings"
 )
 
+// Checks for 'buildlink3.mk' files, which manage those dependencies of a
+// package that provide C/C++ header files or shared libraries, to only
+// provide these files to packages that explicitly declare this dependency.
+
 type Buildlink3Checker struct {
 	mklines          *MkLines
 	pkgbase          string

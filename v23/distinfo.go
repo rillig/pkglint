@@ -11,6 +11,9 @@ import (
 	"strings"
 )
 
+// CheckLinesDistinfo checks a 'distinfo' file, which contains the checksums
+// of downloadable files, to ensure that the files have the same content as
+// when the package was defined.
 func CheckLinesDistinfo(pkg *Package, lines *Lines) {
 	if trace.Tracing {
 		defer trace.Call(lines.Filename)()

@@ -7,9 +7,9 @@ import (
 	"strings"
 )
 
-// Changes collects the doc/CHANGES-* files, which mainly contain package
-// updates, as well as other package modifications and changes to the pkgsrc
-// infrastructure.
+// Changes collects the entries from the doc/CHANGES-* files, which mainly
+// contain package updates, as well as other package modifications and changes
+// to the pkgsrc infrastructure.
 type Changes struct {
 	LastChange      map[PkgsrcPath]*Change
 	LastFreezeStart string // e.g. "2018-01-01", or ""

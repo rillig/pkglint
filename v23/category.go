@@ -5,6 +5,8 @@ import (
 	"strings"
 )
 
+// CheckdirCategory checks a category makefile, which lists the subdirectories
+// that contain the pkgsrc packages.
 func CheckdirCategory(dir CurrPath, recurse bool) {
 	if trace.Tracing {
 		defer trace.Call(dir)()

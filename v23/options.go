@@ -1,5 +1,8 @@
 package pkglint
 
+// Checks for 'options.mk' files, which define the options that are available
+// to a package, and the effects that these options have.
+
 func CheckLinesOptionsMk(mklines *MkLines, buildlinkID string) {
 	ck := OptionsLinesChecker{
 		mklines,

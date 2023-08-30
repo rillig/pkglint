@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// MkExprChecker checks a single expression in a line from a makefile.
 type MkExprChecker struct {
 	expr    *MkExpr
 	vartype *Vartype

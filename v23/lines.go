@@ -4,8 +4,17 @@ import (
 	"github.com/rillig/pkglint/v23/regex"
 )
 
+// Lines represents the lines of a text file. In plain text files, each line
+// corresponds to exactly one raw line; in makefiles, multiple raw lines may
+// be joined due to backslash continuation lines.
+//
+// See MkLines for the lines of a makefile, providing access to the different
+// kinds of makefile lines.
 type Lines struct {
 	Filename CurrPath
+	// BaseName is a separate field because it is used in many places to
+	// decide the permission of variables, to avoid looking at the full
+	// Filename each time.
 	BaseName RelPath
 	Lines    []*Line
 }
@@ -14,6 +23,7 @@ func NewLines(filename CurrPath, lines []*Line) *Lines {
 	return &Lines{filename, filename.Base(), lines}
 }
 
+// Len returns the number of logical lines in this file.
 func (ls *Lines) Len() int { return len(ls.Lines) }
 
 func (ls *Lines) LastLine() *Line { return ls.Lines[ls.Len()-1] }
