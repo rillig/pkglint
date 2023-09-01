@@ -807,12 +807,27 @@ func (ck *MkExprChecker) checkToolsPlatform() {
 		return
 	}
 
-	if len(tool.undefinedOn) > 0 {
-		ck.MkLine.Warnf("%s is undefined on %s.",
-			varname, joinCambridge("and", tool.undefinedOn...))
-	} else if len(tool.conditionalOn) > 0 {
+	conditional := false
+	slice := tool.undefinedOn
+	if len(slice) == 0 {
+		conditional = true
+		slice = tool.conditionalOn
+	}
+	if len(slice) == 0 {
+		return
+	}
+	if ck.MkLine.IsVarassign() {
+		param := varnameParam(ck.MkLine.Varname())
+		if param != "" && !containsStr(slice, param) {
+			return
+		}
+	}
+	if conditional {
 		ck.MkLine.Warnf("%s may be undefined on %s.",
 			varname, joinCambridge("and", tool.conditionalOn...))
+	} else {
+		ck.MkLine.Warnf("%s is undefined on %s.",
+			varname, joinCambridge("and", tool.undefinedOn...))
 	}
 }
 
