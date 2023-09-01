@@ -1499,13 +1499,20 @@ func (s *Suite) Test_MkExprChecker_checkToolsPlatform(c *check.C) {
 		"",
 		".if defined(TOOLS_PLATFORM.undefined)",
 		"\t${TOOLS_PLATFORM.undefined}",
-		".endif")
+		".endif",
+		"",
+		"CONFIGURE_ENV+=\t\tA=${TOOLS_PLATFORM.undefined:Q}",
+		"CONFIGURE_ENV.NetBSD+=\tA=${TOOLS_PLATFORM.undefined:Q}",
+		"CONFIGURE_ENV.SunOS+=\tA=${TOOLS_PLATFORM.undefined:Q}")
 
 	mklines.Check()
 
 	t.CheckOutputLines(
 		"WARN: filename.mk:15: TOOLS_PLATFORM.cond1 may be undefined on SunOS.",
-		"WARN: filename.mk:17: TOOLS_PLATFORM.undefined is undefined on SunOS.")
+		"WARN: filename.mk:17: TOOLS_PLATFORM.undefined is undefined on SunOS.",
+		"WARN: filename.mk:23: TOOLS_PLATFORM.undefined is undefined on SunOS.",
+		"WARN: filename.mk:24: TOOLS_PLATFORM.undefined is undefined on SunOS.",
+		"WARN: filename.mk:25: TOOLS_PLATFORM.undefined is undefined on SunOS.")
 }
 
 func (s *Suite) Test_MkExprChecker_checkBuildDefs(c *check.C) {
