@@ -1506,7 +1506,9 @@ func (s *Suite) Test_MkExprChecker_checkToolsPlatform(c *check.C) {
 		"CONFIGURE_ENV.SunOS+=\tA=${TOOLS_PLATFORM.cond1:Q}",
 		"CONFIGURE_ENV+=\t\tA=${TOOLS_PLATFORM.undefined:Q}",
 		"CONFIGURE_ENV.NetBSD+=\tA=${TOOLS_PLATFORM.undefined:Q}",
-		"CONFIGURE_ENV.SunOS+=\tA=${TOOLS_PLATFORM.undefined:Q}")
+		"CONFIGURE_ENV.SunOS+=\tA=${TOOLS_PLATFORM.undefined:Q}",
+		// TODO: warn
+		"CONFIGURE_ENV.any+=\tA=${TOOLS_PLATFORM.undefined:Q}")
 
 	mklines.Check()
 
