@@ -818,7 +818,8 @@ func (ck *MkExprChecker) checkToolsPlatform() {
 	}
 	if ck.MkLine.IsVarassign() {
 		param := varnameParam(ck.MkLine.Varname())
-		if param != "" && !containsStr(slice, param) {
+		if G.Pkgsrc.VariableType(nil, "OPSYS").basicType.HasEnum(param) &&
+			!containsStr(slice, param) {
 			return
 		}
 	}
