@@ -726,7 +726,7 @@ func (cv *VartypeCheck) GitTag() {
 func (cv *VartypeCheck) GoModuleFile() {
 	tag := cv.ValueNoVar
 
-	valid := textproc.NewByteSet("!0-9@A-Za-z-+._/")
+	valid := textproc.NewByteSet("!0-9@A-Za-z-+._/~")
 	invalid := invalidCharacters(tag, valid)
 	if invalid != "" {
 		cv.Warnf("Invalid characters %q in Go modules filename.", invalid)

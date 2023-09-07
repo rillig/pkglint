@@ -1212,7 +1212,6 @@ func (s *Suite) Test_VartypeCheck_GoModuleFile(c *check.C) {
 	)
 	vt.Output(
 		"WARN: filename.mk:2: Invalid characters \"< > < >\" in Go modules filename.",
-		"WARN: filename.mk:3: Invalid characters \"~\" in Go modules filename.",
 	)
 }
 
