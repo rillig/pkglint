@@ -1208,9 +1208,12 @@ func (s *Suite) Test_VartypeCheck_GoModuleFile(c *check.C) {
 	vt.Values(
 		"github.com/!azure/azure-pipeline-go/@v/v0.1.8.mod",
 		"github.com/<org>/<proj>",
+		"git.sr.ht/~user/gg/@v/v0.3.1.mod",
 	)
 	vt.Output(
-		"WARN: filename.mk:2: Invalid characters \"< > < >\" in Go modules filename.")
+		"WARN: filename.mk:2: Invalid characters \"< > < >\" in Go modules filename.",
+		"WARN: filename.mk:3: Invalid characters \"~\" in Go modules filename.",
+	)
 }
 
 func (s *Suite) Test_VartypeCheck_Homepage(c *check.C) {
