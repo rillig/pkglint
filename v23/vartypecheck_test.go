@@ -1197,7 +1197,7 @@ func (s *Suite) Test_VartypeCheck_GitTag(c *check.C) {
 		"WARN: filename.mk:1: The Git tag \"master\" refers to a moving target.",
 		"WARN: filename.mk:3: The Git tag \"refs/heads/devel\" refers to a moving target.",
 		"WARN: filename.mk:8: The git commit name \"123456\" is too short to be reliable.",
-		"WARN: filename.mk:10: Invalid characters \":\" in Git tag.",
+		"WARN: filename.mk:10: Invalid character \":\" in Git tag.",
 		"WARN: filename.mk:11: Invalid characters \": ;\" in Git tag.")
 }
 
@@ -1211,7 +1211,8 @@ func (s *Suite) Test_VartypeCheck_GoModuleFile(c *check.C) {
 		"git.sr.ht/~user/gg/@v/v0.3.1.mod",
 	)
 	vt.Output(
-		"WARN: filename.mk:2: Invalid characters \"< > < >\" in Go modules filename.",
+		"WARN: filename.mk:2: Go module \"github.com/<org>/<proj>\" " +
+			"contains invalid characters \"< > < >\".",
 	)
 }
 
@@ -1842,9 +1843,9 @@ func (s *Suite) Test_VartypeCheck_PlistIdentifier(c *check.C) {
 
 	vt.Output(
 		"ERROR: filename.mk:2: "+
-			"PLIST identifier \"gtk+\" contains invalid characters (+).",
+			"PLIST identifier \"gtk+\" contains invalid character \"+\".",
 		"ERROR: filename.mk:5: "+
-			"PLIST identifier \"package1.5\" contains invalid characters (.).")
+			"PLIST identifier \"package1.5\" contains invalid character \".\".")
 
 	vt.Op(opUseMatch)
 	vt.Values(
@@ -1857,9 +1858,9 @@ func (s *Suite) Test_VartypeCheck_PlistIdentifier(c *check.C) {
 
 	vt.Output(
 		"WARN: filename.mk:12: PLIST identifier pattern \"/\" "+
-			"contains invalid characters (/).",
+			"contains invalid character \"/\".",
 		"WARN: filename.mk:16: PLIST identifier pattern \"***+\" "+
-			"contains invalid characters (+).")
+			"contains invalid character \"+\".")
 }
 
 func (s *Suite) Test_VartypeCheck_PrefixPathname(c *check.C) {
@@ -2342,11 +2343,11 @@ func (s *Suite) Test_VartypeCheck_UserGroupName(c *check.C) {
 
 	vt.Output(
 		"WARN: filename.mk:1: User or group name \"user with spaces\" "+
-			"contains invalid characters: space space",
+			"contains invalid characters \"space space\".",
 		"WARN: filename.mk:2: User or group name \"user\\twith\\ttabs\" "+
-			"contains invalid characters: tab tab",
+			"contains invalid characters \"tab tab\".",
 		"WARN: filename.mk:5: User or group name \"domain\\\\user\" "+
-			"contains invalid characters: \\",
+			"contains invalid character \"\\\".",
 		"ERROR: filename.mk:8: User or group name \"-rf\" "+
 			"must not start with a hyphen.",
 		"ERROR: filename.mk:9: User or group name \"rf-\" "+

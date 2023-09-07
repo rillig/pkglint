@@ -101,9 +101,10 @@ func filterStr(slice []string, fn func(s string) bool) []string {
 	return result
 }
 
-func invalidCharacters(s string, valid *textproc.ByteSet) string {
+func invalidCharacters(s string, valid *textproc.ByteSet) (string, string) {
 	var unis strings.Builder
 
+	n := 0
 	for _, r := range s {
 		if r == rune(byte(r)) && valid.Contains(byte(r)) {
 			continue
@@ -121,9 +122,11 @@ func invalidCharacters(s string, valid *textproc.ByteSet) string {
 		default:
 			_, _ = fmt.Fprintf(&unis, "%U", r)
 		}
+		n++
 	}
 
-	return unis.String()
+	word := condStr(n > 1, "characters", condStr(n > 0, "character", ""))
+	return word, unis.String()
 }
 
 // intern returns an independent copy of the given string.

@@ -480,13 +480,13 @@ func (s *Suite) Test_Pkglint_Check(c *check.C) {
 	G.Check(t.File("."))
 
 	t.CheckOutputLines(
-		"WARN: ~/Makefile:2: Line contains invalid characters (U+0005).")
+		"WARN: ~/Makefile:2: Line contains invalid character \"U+0005\".")
 
 	G.Check(t.File("category"))
 
 	t.CheckOutputLines(
-		"WARN: ~/category/Makefile:3: Line contains invalid characters (U+0007).",
-		"WARN: ~/category/Makefile:3: COMMENT contains invalid characters (U+0007).")
+		"WARN: ~/category/Makefile:3: Line contains invalid character \"U+0007\".",
+		"WARN: ~/category/Makefile:3: COMMENT contains invalid character \"U+0007\".")
 
 	G.Check(t.File("category/package"))
 

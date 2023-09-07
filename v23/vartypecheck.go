@@ -707,9 +707,8 @@ func (cv *VartypeCheck) GitTag() {
 	tag := cv.ValueNoVar
 
 	valid := textproc.NewByteSet("0-9A-Za-z-+._/")
-	invalid := invalidCharacters(tag, valid)
-	if invalid != "" {
-		cv.Warnf("Invalid characters %q in Git tag.", invalid)
+	if word, invalid := invalidCharacters(tag, valid); word != "" {
+		cv.Warnf("Invalid %s \"%s\" in Git tag.", word, invalid)
 		return
 	}
 
@@ -724,12 +723,12 @@ func (cv *VartypeCheck) GitTag() {
 }
 
 func (cv *VartypeCheck) GoModuleFile() {
-	tag := cv.ValueNoVar
+	module := cv.ValueNoVar
 
 	valid := textproc.NewByteSet("!0-9@A-Za-z-+._/~")
-	invalid := invalidCharacters(tag, valid)
-	if invalid != "" {
-		cv.Warnf("Invalid characters %q in Go modules filename.", invalid)
+	if word, invalid := invalidCharacters(module, valid); invalid != "" {
+		cv.Warnf("Go module %q contains invalid %s \"%s\".",
+			module, word, invalid)
 		return
 	}
 }
@@ -1183,10 +1182,10 @@ func (cv *VartypeCheck) PlistIdentifier() {
 
 	if cv.Op == opUseMatch {
 		invalidPatternChars := textproc.NewByteSet("A-Za-z0-9-_*?[]")
-		invalid := invalidCharacters(cond, invalidPatternChars)
+		word, invalid := invalidCharacters(cond, invalidPatternChars)
 		if invalid != "" {
-			cv.Warnf("PLIST identifier pattern %q contains invalid characters (%s).",
-				cond, invalid)
+			cv.Warnf("PLIST identifier pattern %q contains invalid %s \"%s\".",
+				cond, word, invalid)
 			cv.Explain(
 				"PLIST identifiers must consist of [A-Za-z0-9-_] only.",
 				"In patterns, the characters *?[] are allowed additionally.")
@@ -1195,10 +1194,9 @@ func (cv *VartypeCheck) PlistIdentifier() {
 	}
 
 	invalidChars := textproc.NewByteSet("A-Za-z0-9-_")
-	invalid := invalidCharacters(cond, invalidChars)
-	if invalid != "" {
-		cv.Errorf("PLIST identifier %q contains invalid characters (%s).",
-			cond, invalid)
+	if word, invalid := invalidCharacters(cond, invalidChars); invalid != "" {
+		cv.Errorf("PLIST identifier %q contains invalid %s \"%s\".",
+			cond, word, invalid)
 		cv.Explain(
 			"PLIST identifiers must consist of [A-Za-z0-9-_] only.")
 		return
@@ -1522,10 +1520,10 @@ func (cv *VartypeCheck) UserGroupName() {
 	if value != cv.ValueNoVar {
 		return
 	}
-	invalid := invalidCharacters(value, textproc.NewByteSet("-0-9_a-z"))
+	word, invalid := invalidCharacters(value, textproc.NewByteSet("-0-9_a-z"))
 	if invalid != "" {
-		cv.Warnf("User or group name %q contains invalid characters: %s",
-			value, invalid)
+		cv.Warnf("User or group name %q contains invalid %s \"%s\".",
+			value, word, invalid)
 		return
 	}
 

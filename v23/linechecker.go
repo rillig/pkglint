@@ -28,12 +28,12 @@ func (ck LineChecker) CheckLength(maxLength int) {
 }
 
 func (ck LineChecker) CheckValidCharacters() {
-	invalid := invalidCharacters(ck.line.Text, textproc.XPrint)
+	word, invalid := invalidCharacters(ck.line.Text, textproc.XPrint)
 	if invalid == "" {
 		return
 	}
 
-	ck.line.Warnf("Line contains invalid characters (%s).", invalid)
+	ck.line.Warnf("Line contains invalid %s \"%s\".", word, invalid)
 }
 
 func (ck LineChecker) CheckTrailingWhitespace() {

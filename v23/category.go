@@ -28,10 +28,10 @@ func CheckdirCategory(dir CurrPath, recurse bool) {
 		mkline := mlex.PreviousMkLine()
 
 		valid := textproc.NewByteSet("- '(),/0-9A-Za-z")
-		invalid := invalidCharacters(mkline.Value(), valid)
+		word, invalid := invalidCharacters(mkline.Value(), valid)
 		if invalid != "" {
-			mkline.Warnf("%s contains invalid characters (%s).",
-				mkline.Varname(), invalid)
+			mkline.Warnf("%s contains invalid %s \"%s\".",
+				mkline.Varname(), word, invalid)
 		}
 
 	} else {

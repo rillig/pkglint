@@ -28,7 +28,7 @@ func (s *Suite) Test_LineChecker_CheckValidCharacters(c *check.C) {
 
 	t.ExpectDiagnosticsAutofix(
 		doTest,
-		"WARN: filename:32: Line contains invalid characters (U+00DC).")
+		"WARN: filename:32: Line contains invalid character \"U+00DC\".")
 }
 
 func (s *Suite) Test_LineChecker_CheckTrailingWhitespace(c *check.C) {

@@ -18,7 +18,7 @@ func (s *Suite) Test_CheckdirCategory__totally_broken(c *check.C) {
 
 	t.CheckOutputLines(
 		"ERROR: ~/archivers/Makefile:1: Expected \"# $"+"NetBSD$\".",
-		"WARN: ~/archivers/Makefile:4: Line contains invalid characters (U+2019).",
+		"WARN: ~/archivers/Makefile:4: Line contains invalid character \"U+2019\".",
 		"WARN: ~/archivers/Makefile:4: SUBDIR- is defined but not used.",
 		"NOTE: ~/archivers/Makefile:2: This variable value should be aligned to column 17 instead of 9.",
 		"NOTE: ~/archivers/Makefile:3: This variable value should be aligned with tabs, not spaces, to column 17 instead of 10.",
@@ -56,7 +56,7 @@ func (s *Suite) Test_CheckdirCategory__invalid_comment(c *check.C) {
 	CheckdirCategory(t.File("archivers"), true)
 
 	t.CheckOutputLines(
-		"WARN: ~/archivers/Makefile:3: COMMENT contains invalid characters (\\ $ $ $ $ \").")
+		"WARN: ~/archivers/Makefile:3: COMMENT contains invalid characters \"\\ $ $ $ $ \"\".")
 }
 
 // The pkgsrc-wip Makefile has a large section with special code below
