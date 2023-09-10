@@ -449,7 +449,8 @@ func (pkg *Package) checkIncludePath(mkline *MkLine, canonicalRel CurrPath) {
 }
 
 // resolveIncludedFile resolves Makefile variables such as ${PKGPATH} to
-// their actual values.
+// their actual values, returning an empty path if there are any expressions
+// left that cannot be resolved.
 func (pkg *Package) resolveIncludedFile(mkline *MkLine, includingFilename CurrPath) RelPath {
 
 	// TODO: Try to combine resolveVariableRefs and ResolveVarsInRelativePath.
@@ -483,9 +484,6 @@ func (pkg *Package) resolveIncludedFile(mkline *MkLine, includingFilename CurrPa
 }
 
 // shouldDiveInto decides whether to load the includedFile.
-//
-// The includingFile is relative to the current working directory,
-// the includedFile is taken directly from the .include directive.
 func (pkg *Package) shouldDiveInto(includingFile CurrPath, includedFile RelPath) bool {
 
 	if includedFile.HasSuffixPath("bsd.pkg.mk") || IsPrefs(includedFile) {
