@@ -282,7 +282,9 @@ func (pkg *Package) parse(mklines *MkLines, allLines *MkLines, includingFileForU
 	}
 
 	result := mklines.ForEachEnd(
-		func(mkline *MkLine) bool { return pkg.parseLine(mklines, mkline, allLines, main) },
+		func(mkline *MkLine) bool {
+			return pkg.parseLine(mklines, mkline, allLines, main)
+		},
 		func(mkline *MkLine) {})
 
 	if includingFileForUsedCheck != "" {
@@ -366,7 +368,6 @@ func (pkg *Package) parseLine(mklines *MkLines, mkline *MkLine, allLines *MkLine
 // error has already been logged.
 func (pkg *Package) loadIncluded(mkline *MkLine, includingFile CurrPath) (includedMklines *MkLines, skip bool) {
 	includedFile := pkg.resolveIncludedFile(mkline, includingFile)
-
 	if includedFile.IsEmpty() {
 		return nil, true
 	}
@@ -426,8 +427,9 @@ func (pkg *Package) loadIncluded(mkline *MkLine, includingFile CurrPath) (includ
 		"And if that doesn't exist, falls back to the current directory, which in the",
 		"case of a pkgsrc package is the package directory.",
 		"",
-		"This fallback mechanism is not necessary for pkgsrc, therefore it should not",
-		"be used. One less thing to learn for package developers.")
+		"This fallback mechanism is not necessary for pkgsrc,",
+		"therefore it should not be used.",
+		"One less thing to learn for package developers.")
 
 	return includedMklines, false
 }
