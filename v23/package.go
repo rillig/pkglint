@@ -416,12 +416,22 @@ func (pkg *Package) loadIncluded(mkline *MkLine, includingFile CurrPath) (includ
 
 	fullIncludedFallback := dirname.JoinNoClean(includedFile)
 	includedMklines = LoadMk(fullIncludedFallback, pkg, 0)
-	if includedMklines == nil {
-		return nil, false
+	if includedMklines != nil {
+		pkg.checkIncludePath(mkline, fullIncludedFallback)
+	}
+	return includedMklines, false
+}
+
+// checkIncludePath checks that the relative path in an '.include' directive
+// has the canonical form, see Pkgsrc.Relpath.
+// In particular, the path must not point outside the pkgsrc top directory.
+func (pkg *Package) checkIncludePath(mkline *MkLine, canonicalRel CurrPath) {
+	if containsExpr(mkline.IncludedFile().String()) {
+		return
 	}
 
 	mkline.Warnf("The path to the included file should be %q.",
-		mkline.Rel(fullIncludedFallback))
+		mkline.Rel(canonicalRel))
 	mkline.Explain(
 		"The .include directive first searches the file relative to the including file.",
 		"And if that doesn't exist, falls back to the current directory, which in the",
@@ -430,8 +440,6 @@ func (pkg *Package) loadIncluded(mkline *MkLine, includingFile CurrPath) (includ
 		"This fallback mechanism is not necessary for pkgsrc,",
 		"therefore it should not be used.",
 		"One less thing to learn for package developers.")
-
-	return includedMklines, false
 }
 
 // resolveIncludedFile resolves Makefile variables such as ${PKGPATH} to
