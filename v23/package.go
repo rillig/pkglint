@@ -430,6 +430,12 @@ func (pkg *Package) checkIncludePath(mkline *MkLine, canonicalRel CurrPath) {
 		return
 	}
 
+	// TODO: Remove this paragraph after 2023Q3 and fix the affected files
+	// from the pkgsrc infrastructure.
+	if !G.Testing && G.Pkgsrc.IsInfra(mkline.Filename()) {
+		return
+	}
+
 	mkline.Warnf("The path to the included file should be %q.",
 		mkline.Rel(canonicalRel))
 	mkline.Explain(
