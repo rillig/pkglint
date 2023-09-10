@@ -360,10 +360,10 @@ func (pkg *Package) parseLine(mklines *MkLines, mkline *MkLine, allLines *MkLine
 // loadIncluded loads the lines from the file given by the .include directive
 // in mkline.
 //
-// The returned lines may be nil in two different cases: if skip is true,
-// the included file is not processed further for whatever reason. But if
-// skip is false, the file could not be read and an appropriate error message
-// has already been logged.
+// Returning (nil, true) means that the file was deemed irrelevant.
+//
+// Returning (nil, false) means there was an error loading the file, and that
+// error has already been logged.
 func (pkg *Package) loadIncluded(mkline *MkLine, includingFile CurrPath) (includedMklines *MkLines, skip bool) {
 	includedFile := pkg.resolveIncludedFile(mkline, includingFile)
 
