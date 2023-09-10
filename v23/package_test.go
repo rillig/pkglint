@@ -1204,12 +1204,13 @@ func (s *Suite) Test_Package_shouldDiveInto(c *check.C) {
 	// Files other than the companion builtin.mk are ignored.
 	test("../../mk/pthread.buildlink3.mk", "pthread.internals.mk", false)
 
-	// Files that are included from within the pkgsrc infrastructure are not
-	// interesting since their content is largely modeled by pkglint in the
-	// file vardefs.go.
+	// Files from the pkgsrc infrastructure are largely modeled by pkglint in
+	// the file vardefs.go.
+	// But if an infrastructure file includes a non-infrastructure file, that
+	// file is relevant again.
 	test("../../mk/one.mk", "two.mk", false)
-	test("../../mk/one.mk", "../../mk/two.mk", false)
-	test("../../mk/one.mk", "../lang/go/version.mk", false)
+	test("../../mk/one.mk", "../../mk/two.mk", true)
+	test("../../mk/one.mk", "../lang/go/version.mk", true)
 
 	// wip/mk doesn't count as infrastructure since it is often used as a
 	// second layer, using the API of the main mk/ infrastructure.
@@ -3635,7 +3636,10 @@ func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__mk_dotdot_dotdot(c *
 	t.CheckDeepEquals(
 		keys(pkg.bl3),
 		[]string{"../../lang/ocaml/buildlink3.mk"})
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: x11/ocaml-graphics/../../mk/ocaml.mk:2: " +
+			"The path to the included file should be " +
+			"\"../lang/ocaml/buildlink3.mk\".")
 }
 
 // Ocaml packages include ../../mk/ocaml.mk.
@@ -3686,7 +3690,10 @@ func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__ocaml(c *check.C) {
 	// Up to 2020-02-15, pkglint reported a missing relative path in
 	// mk/ocaml.mk:2 since resolving relative paths had not used the
 	// correct base directory.
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: x11/ocaml-graphics/../../mk/ocaml.mk:2: " +
+			"The path to the included file should be " +
+			"\"../lang/ocaml/buildlink3.mk\".")
 }
 
 // Just for code coverage.

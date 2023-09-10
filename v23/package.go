@@ -479,7 +479,13 @@ func (pkg *Package) shouldDiveInto(includingFile CurrPath, includedFile RelPath)
 		return false
 	}
 
+	if includedFile.HasSuffixText(".buildlink3.mk") {
+		return true
+	}
 	if G.Pkgsrc.IsInfraMain(includingFile) {
+		if !G.Pkgsrc.IsInfra(includingFile.Dir().JoinNoClean(includedFile)) {
+			return true
+		}
 		return includingFile.HasSuffixText(".buildlink3.mk") &&
 			includedFile.HasSuffixText(".builtin.mk")
 	}
