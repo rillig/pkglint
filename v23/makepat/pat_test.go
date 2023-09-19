@@ -198,6 +198,8 @@ func Test_Pattern_Match(t *testing.T) {
 		{"*.c", "..c", true},
 		{"*.c", ".c.c", true},
 		{"*.c", "a.c.c", true},
+		{"[\x00-\xFF]", "\x00", true},
+		{"[\x00-\xFF]", "\xFF", true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.pattern+" "+tt.str, func(t *testing.T) {
