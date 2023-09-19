@@ -231,28 +231,26 @@ func (p *Pattern) optimized() *Pattern {
 func (p *Pattern) reachable() []bool {
 	reachable := make([]bool, len(p.states))
 
-	progress := make([]int, len(p.states)) // 0 = unseen, 1 = to do, 2 = done
+	progress := make([]progressState, len(p.states))
+	progress[0] = todo
 
-	progress[0] = 1
-
-	for {
-		changed := false
-		for i, pr := range progress {
-			if pr == 1 {
-				reachable[i] = true
-				progress[i] = 2
-				changed = true
-				for _, tr := range p.states[i].transitions {
-					if progress[tr.to] == 0 {
-						progress[tr.to] = 1
-					}
+again:
+	again := false
+	for i, pr := range progress {
+		if pr == todo {
+			reachable[i] = true
+			progress[i] = done
+			again = true
+			for _, tr := range p.states[i].transitions {
+				if progress[tr.to] == unseen {
+					progress[tr.to] = todo
 				}
 			}
 		}
+	}
 
-		if !changed {
-			break
-		}
+	if again {
+		goto again
 	}
 
 	return reachable
@@ -263,36 +261,35 @@ func (p *Pattern) reachable() []bool {
 func (p *Pattern) relevant(reachable []bool) []bool {
 	relevant := make([]bool, len(p.states))
 
-	progress := make([]int, len(p.states)) // 0 = unseen, 1 = to do, 2 = done
+	progress := make([]progressState, len(p.states))
 
 	for i, state := range p.states {
 		if state.end && reachable[i] {
-			progress[i] = 1
+			progress[i] = todo
 		}
 	}
 
-	for {
-		changed := false
-		for to, pr := range progress {
-			if pr != 1 {
-				continue
-			}
-			progress[to] = 2
-			relevant[to] = true
-			changed = true
-			for from, st := range p.states {
-				for _, tr := range st.transitions {
-					if tr.to == stateID(to) && reachable[from] &&
-						progress[from] == 0 {
-						progress[from] = 1
-					}
+again:
+	again := false
+	for to, pr := range progress {
+		if pr != todo {
+			continue
+		}
+		progress[to] = done
+		relevant[to] = true
+		again = true
+		for from, st := range p.states {
+			for _, tr := range st.transitions {
+				if tr.to == stateID(to) && reachable[from] &&
+					progress[from] == unseen {
+					progress[from] = todo
 				}
 			}
 		}
+	}
 
-		if !changed {
-			break
-		}
+	if again {
+		goto again
 	}
 
 	return relevant
@@ -340,6 +337,14 @@ func (p *Pattern) CanMatch() bool {
 	}
 	return false
 }
+
+type progressState uint8
+
+const (
+	unseen progressState = iota
+	todo
+	done
+)
 
 // Number creates a pattern that matches integer or floating point constants,
 // as in C99, both decimal and hex.
