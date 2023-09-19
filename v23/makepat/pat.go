@@ -345,7 +345,8 @@ func (p *Pattern) CanMatch() bool {
 // as in C99, both decimal and hex.
 func Number() *Pattern {
 	// The states and transitions are taken from a manually constructed
-	// hand-drawn state diagram, based on the syntax rules from C99 6.4.4.
+	// hand-drawn state diagram, based on the syntax rules from C99 6.4.4,
+	// but with the rules for decimal and octal integers merged.
 
 	const (
 		start stateID = iota
