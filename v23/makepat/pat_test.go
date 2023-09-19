@@ -29,7 +29,7 @@ func Test_Compile__errors(t *testing.T) {
 	}
 }
 
-func Test_compileCharClass(t *testing.T) {
+func Test_Pattern_compileCharClass(t *testing.T) {
 	tests := []struct {
 		pattern string
 		str     string

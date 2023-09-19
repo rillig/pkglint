@@ -50,7 +50,7 @@ func Compile(pattern string) (*Pattern, error) {
 			p.addTransition(s, ch, ch, next)
 			s = next
 		case '[':
-			next, err := compileCharClass(&p, lex, ch, s)
+			next, err := p.compileCharClass(lex, ch, s)
 			if err != nil {
 				return nil, err
 			}
@@ -66,7 +66,7 @@ func Compile(pattern string) (*Pattern, error) {
 	return &p, nil
 }
 
-func compileCharClass(p *Pattern, lex *textproc.Lexer, ch byte, s stateID) (stateID, error) {
+func (p *Pattern) compileCharClass(lex *textproc.Lexer, ch byte, s stateID) (stateID, error) {
 	negate := lex.SkipByte('^')
 	var chars [256]bool
 	next := p.addState(false)
