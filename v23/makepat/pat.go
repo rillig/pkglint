@@ -216,7 +216,7 @@ func Intersect(p1, p2 *Pattern) *Pattern {
 	}
 
 	// If the returned pattern is used more than once,
-	// consider calling .optimize first.
+	// consider calling .optimized first.
 	return &res
 }
 
