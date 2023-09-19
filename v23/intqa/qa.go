@@ -90,6 +90,11 @@ func NewQAChecker(errorf func(format string, args ...interface{})) *QAChecker {
 // Individual errors can be enabled by giving their constant and disabled
 // by negating them, such as -EMissingTestee. To reset everything, use
 // either EAll or ENone.
+//
+// To configure functions that are not methods, pass an empty string to
+// typeNames.
+//
+// To configure a type by itself, pass an empty string to funcNames.
 func (ck *QAChecker) Configure(filenames, typeNames, funcNames string, errors ...Error) {
 	ck.filters = append(ck.filters, filter{filenames, typeNames, funcNames, errors})
 }
