@@ -24,8 +24,8 @@ type transition struct {
 
 type stateID uint16
 
-// Compile parses a pattern, including the error checking that is missing
-// from bmake.
+// Compile parses a pattern, including the error checking that was added to
+// bmake in str.c 1.98 from 2023-06-23.
 func Compile(pattern string) (*Pattern, error) {
 	var p Pattern
 	s := p.addState(false)
