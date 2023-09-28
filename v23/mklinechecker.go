@@ -402,7 +402,7 @@ func (ck MkLineChecker) CheckRelativePath(pp PackagePath, rel RelPath, mustExist
 	}
 }
 
-// CheckRelativePkgdir checks a reference from one pkgsrc package to another.
+// CheckPackagePath checks a reference from one pkgsrc package to another.
 // These references should always have the form ../../category/package.
 //
 // When used in DEPENDS or similar variables, these directories could theoretically
@@ -410,10 +410,7 @@ func (ck MkLineChecker) CheckRelativePath(pp PackagePath, rel RelPath, mustExist
 // This, however, is not implemented in pkgsrc and suggestions regarding this topic
 // have not been made in the last two decades on the public mailing lists.
 // While being a bit redundant, the current scheme works well.
-//
-// When used in .include directives, the relative package directories must be written
-// with the leading ../.. anyway, so the benefit might not be too big at all.
-func (ck MkLineChecker) CheckRelativePkgdir(rel RelPath, pkgdir PackagePath) {
+func (ck MkLineChecker) CheckPackagePath(pkgdir PackagePath) {
 	// TODO: Not every path is relative to the package directory.
 	if trace.Tracing {
 		defer trace.Call(pkgdir)()
@@ -440,7 +437,7 @@ func (ck MkLineChecker) CheckRelativePkgdir(rel RelPath, pkgdir PackagePath) {
 	pkgdir = mkline.ResolveVarsInRelativePath(pkgdir, ck.MkLines.pkg)
 
 	if !matches(pkgdir.String(), `^\.\./\.\./([^./][^/]*/[^./][^/]*)$`) && !containsExpr(pkgdir.String()) {
-		mkline.Warnf("%q is not a valid relative package directory.", rel)
+		mkline.Warnf("%q is not a valid relative package directory.", pkgdir.String())
 		mkline.Explain(
 			"A relative pathname always starts with \"../../\", followed",
 			"by a category, a slash and a the directory name of the package.",

@@ -454,7 +454,7 @@ func (cv *VartypeCheck) DependencyWithPath() {
 	if !containsExpr(parts[1]) {
 		ck := MkLineChecker{cv.MkLines, cv.MkLine}
 		rel := NewRelPath(dependencyDir)
-		ck.CheckRelativePkgdir(rel, NewPackagePath(rel))
+		ck.CheckPackagePath(NewPackagePath(rel))
 	}
 
 	pkg := pathParts[len(pathParts)-1]
@@ -1288,8 +1288,7 @@ func (cv *VartypeCheck) RelativePkgDir() {
 	}
 
 	ck := MkLineChecker{cv.MkLines, cv.MkLine}
-	packagePath := NewPackagePathString(cv.Value)
-	ck.CheckRelativePkgdir(packagePath.AsRelPath(), packagePath)
+	ck.CheckPackagePath(NewPackagePathString(cv.Value))
 }
 
 // RelativePkgPath refers from one package directory to another file

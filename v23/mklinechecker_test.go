@@ -757,7 +757,7 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePath__wip_mk(c *check.C) {
 			"should look like \"../../category/package\", not \"../package\".")
 }
 
-func (s *Suite) Test_MkLineChecker_CheckRelativePkgdir(c *check.C) {
+func (s *Suite) Test_MkLineChecker_CheckPackagePath(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("other/package/Makefile")
@@ -769,7 +769,7 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePkgdir(c *check.C) {
 
 		checkRelativePkgdir := func(mkline *MkLine) {
 			ck := MkLineChecker{mklines, mkline}
-			ck.CheckRelativePkgdir(relativePkgdir.AsRelPath(), relativePkgdir)
+			ck.CheckPackagePath(relativePkgdir)
 		}
 
 		mklines.ForEach(checkRelativePkgdir)
