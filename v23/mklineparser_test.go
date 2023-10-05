@@ -122,7 +122,8 @@ func (s *Suite) Test_MkLineParser_parseVarassign__empty_multiline(c *check.C) {
 	// They don't agree on the exact whitespace in the line, though,
 	// but this doesn't matter in practice. To see the difference, run:
 	//  bmake -dA 2>&1 | grep 'ParseReadLine.*VAR'
-	// See devel/bmake/files/parse.c:/non-comment, non-blank line/
+	// See devel/bmake/files/parse.c:/non-comment, non-blank line/.
+	// See usr.bin/make/parse.c:/line == commentLineEnd/.
 	t.CheckEquals(mklines.mklines[0].Text, "VAR=   # nothing")
 	t.CheckEquals(mklines.mklines[2].Text, "VAR=\t1   # a single letter")
 
