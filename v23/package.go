@@ -454,8 +454,7 @@ func (pkg *Package) checkIncludePath(mkline *MkLine, canonicalRel CurrPath) {
 func (pkg *Package) resolveIncludedFile(mkline *MkLine, includingFilename CurrPath) RelPath {
 
 	// TODO: Try to combine resolveVariableRefs and ResolveVarsInRelativePath.
-	// TODO: Not every relative path is relative to the package directory.
-	resolved := mkline.ResolveVarsInRelativePath(NewPackagePath(mkline.IncludedFile()), pkg)
+	resolved := mkline.ResolveVarsInRelPath(mkline.IncludedFile(), pkg)
 	includedText := resolveVariableRefs(resolved.String(), nil, pkg)
 	includedFile := NewRelPathString(includedText)
 	if containsExpr(includedText) {

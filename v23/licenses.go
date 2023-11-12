@@ -50,9 +50,9 @@ func (lc *LicenseChecker) checkName(license string) {
 			if NewPath(value).IsAbs() {
 				mkline.Errorf("LICENSE_FILE must not be an absolute path.")
 			} else {
-				rel := NewPackagePathString(value)
-				relResolved := mkline.ResolveVarsInRelativePath(rel, lc.MkLines.pkg)
-				licenseFile = pkg.File(relResolved)
+				rel := NewRelPathString(value)
+				relResolved := mkline.ResolveVarsInRelPath(rel, lc.MkLines.pkg)
+				licenseFile = pkg.File(NewPackagePath(relResolved))
 			}
 		}
 	}

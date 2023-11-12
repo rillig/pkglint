@@ -625,10 +625,9 @@ func (*MkLine) WithoutMakeVariables(value string) string {
 	return valueNovar.String()
 }
 
-func (mkline *MkLine) ResolveVarsInRelativePath(relativePath PackagePath, pkg *Package) PackagePath {
-	// TODO: Not every path is relative to the package directory.
-	if !containsExpr(relativePath.String()) {
-		return relativePath.CleanPath()
+func (mkline *MkLine) ResolveVarsInRelPath(rel RelPath, pkg *Package) RelPath {
+	if !containsExpr(rel.String()) {
+		return rel.CleanPath()
 	}
 
 	var basedir CurrPath
@@ -638,7 +637,7 @@ func (mkline *MkLine) ResolveVarsInRelativePath(relativePath PackagePath, pkg *P
 		basedir = mkline.Filename().Dir()
 	}
 
-	tmp := relativePath
+	tmp := rel
 	if tmp.ContainsText("PKGSRCDIR") {
 		pkgsrcdir := G.Pkgsrc.Relpath(basedir, G.Pkgsrc.File("."))
 
@@ -695,8 +694,8 @@ func (mkline *MkLine) ResolveVarsInRelativePath(relativePath PackagePath, pkg *P
 
 	tmp = tmp.CleanPath()
 
-	if trace.Tracing && relativePath != tmp {
-		trace.Stepf("resolveVarsInRelativePath: %q => %q", relativePath, tmp)
+	if trace.Tracing && rel != tmp {
+		trace.Stepf("resolveVarsInRelativePath: %q => %q", rel, tmp)
 	}
 	return tmp
 }
