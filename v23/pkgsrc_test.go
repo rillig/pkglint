@@ -528,27 +528,6 @@ func (s *Suite) Test_Pkgsrc_Latest__not_found(c *check.C) {
 		"ERROR: ~/lang: Cannot find package versions of \"^python[0-9]+$\".")
 }
 
-// In 2017, PostgreSQL changed their versioning scheme to SemVer,
-// and since the pkgsrc directory contains the major version,
-// without any separating dots, the case of version 10 being
-// later than 95 needs to be handled specially.
-func (s *Suite) Test_Pkgsrc_ListVersions__postgresql(c *check.C) {
-	t := s.Init(c)
-
-	t.CreateFileLines("databases/postgresql95/Makefile")
-	t.CreateFileLines("databases/postgresql97/Makefile")
-	t.CreateFileLines("databases/postgresql10/Makefile")
-	t.CreateFileLines("databases/postgresql11/Makefile")
-
-	versions := G.Pkgsrc.ListVersions("databases", `^postgresql[0-9]+$`, "$0", true)
-
-	t.CheckDeepEquals(versions, []string{
-		"postgresql95",
-		"postgresql97",
-		"postgresql10",
-		"postgresql11"})
-}
-
 func (s *Suite) Test_Pkgsrc_ListVersions__ensure_transitive(c *check.C) {
 	t := s.Init(c)
 

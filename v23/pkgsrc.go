@@ -709,15 +709,11 @@ func (src *Pkgsrc) ListVersions(category PkgsrcPath, re regex.Pattern, repl stri
 	// In the pkgsrc directories, the major versions of packages are
 	// written without dots, which leads to ambiguities:
 	//
-	// databases/postgresql: 94 < 95 < 96 < 10 < 11
 	// lang/go: 19 < 110 < 111 < 2
 	keys := make(map[string]int)
 	for _, name := range names {
 		if m, pkgbase, versionStr := match2(name, `^(\D+)(\d+)$`); m {
 			version := toInt(versionStr, 0)
-			if pkgbase == "postgresql" && version < 60 {
-				version = 10 * version
-			}
 			if pkgbase == "go" {
 				major := toInt(versionStr[:1], 0)
 				minor := toInt(versionStr[1:], 0)
