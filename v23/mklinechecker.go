@@ -272,7 +272,7 @@ func (ck MkLineChecker) checkInclude() {
 	if G.Pkgsrc == nil {
 		return
 	}
-	ck.CheckRelativePath(NewPackagePath(includedFile), includedFile, mustExist)
+	ck.CheckRelativePath(includedFile, mustExist)
 
 	switch {
 	case includedFile.HasBase("Makefile"):
@@ -350,8 +350,7 @@ func (ck MkLineChecker) checkDirectiveIndentation(expectedDepth int) {
 
 // CheckRelativePath checks a relative path that leads to the directory of another package
 // or to a subdirectory thereof or a file within there.
-func (ck MkLineChecker) CheckRelativePath(pp PackagePath, rel RelPath, mustExist bool) {
-	// TODO: Not every path is relative to the package directory.
+func (ck MkLineChecker) CheckRelativePath(rel RelPath, mustExist bool) {
 	if trace.Tracing {
 		defer trace.Call(rel, mustExist)()
 	}
@@ -361,7 +360,7 @@ func (ck MkLineChecker) CheckRelativePath(pp PackagePath, rel RelPath, mustExist
 		mkline.Errorf("A main pkgsrc package must not depend on a pkgsrc-wip package.")
 	}
 
-	resolvedPath := NewPackagePath(mkline.ResolveVarsInRelPath(pp.AsRelPath(), ck.MkLines.pkg))
+	resolvedPath := NewPackagePath(mkline.ResolveVarsInRelPath(rel, ck.MkLines.pkg))
 	if containsExpr(resolvedPath.String()) {
 		return
 	}
@@ -418,7 +417,7 @@ func (ck MkLineChecker) CheckPackagePath(pkgdir PackagePath) {
 
 	mkline := ck.MkLine
 	makefile := pkgdir.JoinNoClean("Makefile")
-	ck.CheckRelativePath(makefile, makefile.AsRelPath(), true)
+	ck.CheckRelativePath(makefile.AsRelPath(), true)
 
 	if hasSuffix(pkgdir.String(), "/") {
 		mkline.Errorf("Relative package directories like %q must not end with a slash.", pkgdir.String())
