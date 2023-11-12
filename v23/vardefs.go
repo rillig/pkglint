@@ -1032,7 +1032,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.acllist("BUILDLINK_PASSTHRU_RPATHDIRS", BtPathname,
 		PackageSettable,
 		"Makefile, Makefile.*, *.mk: append")
-	reg.acl("BUILDLINK_PKGSRCDIR.*", BtRelativePkgDir,
+	reg.acl("BUILDLINK_PKGSRCDIR.*", BtPackageDir,
 		PackageSettable,
 		"buildlink3.mk: default, use-loadtime")
 	reg.acl("BUILDLINK_PREFIX.*", BtPathname,
@@ -1177,7 +1177,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.sys("DEVOSSAUDIO", BtPathname)
 	reg.sys("DEVOSSSOUND", BtPathname)
 	reg.pkglist("DISTFILES", BtFilename)
-	reg.pkg("DISTINFO_FILE", BtRelativePkgPath)
+	reg.pkg("DISTINFO_FILE", BtPackagePath)
 	reg.pkg("DISTNAME", BtFilename)
 	reg.pkg("DIST_SUBDIR", BtPathname)
 	reg.pkglist("DJB_BUILD_ARGS", BtShellWord)
@@ -1257,7 +1257,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.usr("FAM_DEFAULT", enum("fam gamin"))
 	reg.sys("FAM_TYPE", enum("fam gamin"))
 	reg.pkglist("FETCH_MESSAGE", BtShellWord)
-	reg.pkgload("FILESDIR", BtRelativePkgPath)
+	reg.pkgload("FILESDIR", BtPackagePath)
 	reg.pkglist("FILES_SUBST", BtShellWord)
 	reg.syslist("FILES_SUBST_SED", BtShellWord)
 	reg.pkglist("FIX_RPATH", BtVariableName)
@@ -1462,7 +1462,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.pkglist("OWN_DIRS_PERMS", BtPerms)
 	reg.sys("PAMBASE", BtPathname)
 	reg.usr("PAM_DEFAULT", enum("linux-pam openpam solaris-pam"))
-	reg.pkgload("PATCHDIR", BtRelativePkgPath)
+	reg.pkgload("PATCHDIR", BtPackagePath)
 	reg.pkglist("PATCHFILES", BtFilename)
 	reg.pkglist("PATCH_ARGS", BtShellWord)
 	reg.pkglist("PATCH_DIST_ARGS", BtShellWord)
@@ -1520,7 +1520,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		"special:pkgconfig-builtin.mk: use-loadtime")
 	reg.pkglist("PKGCONFIG_OVERRIDE", BtWrksrcPathPattern)
 	reg.pkg("PKGCONFIG_OVERRIDE_STAGE", BtStage)
-	reg.pkg("PKGDIR", BtRelativePkgDir)
+	reg.pkg("PKGDIR", BtPackageDir)
 	reg.sys("PKGDIRMODE", BtFileMode)
 	reg.sys("PKGLOCALEDIR", BtPathname)
 	reg.pkg("PKGNAME", BtPkgname)
@@ -1630,7 +1630,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.pkg("PKG_USE_KERBEROS", BtYes)
 	reg.pkgload("PLIST.*", BtYes)
 	reg.pkgloadlist("PLIST_VARS", BtPlistIdentifier)
-	reg.pkglist("PLIST_SRC", BtRelativePkgPath)
+	reg.pkglist("PLIST_SRC", BtPackagePath)
 	reg.pkglist("PLIST_SUBST", BtShellWord)
 	reg.pkg("PLIST_TYPE", enum("dynamic static"))
 	reg.pkglistbl3("PREPEND_PATH", BtPathname)

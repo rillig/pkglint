@@ -1953,9 +1953,9 @@ func (s *Suite) Test_VartypeCheck_RPkgVer(c *check.C) {
 	vt.OutputEmpty()
 }
 
-func (s *Suite) Test_VartypeCheck_RelativePkgDir(c *check.C) {
+func (s *Suite) Test_VartypeCheck_PackageDir(c *check.C) {
 	t := s.Init(c)
-	vt := NewVartypeCheckTester(t, BtRelativePkgDir)
+	vt := NewVartypeCheckTester(t, BtPackageDir)
 
 	t.CreateFileLines("category/other-package/Makefile")
 	t.Chdir("category/package")
@@ -1978,9 +1978,9 @@ func (s *Suite) Test_VartypeCheck_RelativePkgDir(c *check.C) {
 		"ERROR: filename.mk:6: The path \"/absolute\" must be relative.")
 }
 
-func (s *Suite) Test_VartypeCheck_RelativePkgPath(c *check.C) {
+func (s *Suite) Test_VartypeCheck_PackagePath(c *check.C) {
 	t := s.Init(c)
-	vt := NewVartypeCheckTester(t, BtRelativePkgPath)
+	vt := NewVartypeCheckTester(t, BtPackagePath)
 
 	t.CreateFileLines("category/other-package/Makefile")
 	t.Chdir("category/package")

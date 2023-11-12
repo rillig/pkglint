@@ -382,8 +382,8 @@ func (bt *BasicType) NeedsQ() bool {
 		BtPythonDependency,
 		BtRPkgName,
 		BtRPkgVer,
-		BtRelativePkgDir,
-		BtRelativePkgPath,
+		BtPackageDir,
+		BtPackagePath,
 		BtStage,
 		BtToolDependency, // ok since the [ tool is usually not mentioned.
 		BtToolName,       // ok since the [ tool is usually not mentioned.
@@ -466,8 +466,8 @@ var (
 	BtPythonDependency       = &BasicType{"PythonDependency", (*VartypeCheck).PythonDependency}
 	BtRPkgName               = &BasicType{"RPkgName", (*VartypeCheck).RPkgName}
 	BtRPkgVer                = &BasicType{"RPkgVer", (*VartypeCheck).RPkgVer}
-	BtRelativePkgDir         = &BasicType{"RelativePkgDir", (*VartypeCheck).RelativePkgDir}
-	BtRelativePkgPath        = &BasicType{"RelativePkgPath", (*VartypeCheck).RelativePkgPath}
+	BtPackageDir             = &BasicType{"PackageDir", (*VartypeCheck).PackageDir}
+	BtPackagePath            = &BasicType{"PackagePath", (*VartypeCheck).PackagePath}
 	BtRestricted             = &BasicType{"Restricted", (*VartypeCheck).Restricted}
 	BtSedCommands            = &BasicType{"SedCommands", (*VartypeCheck).SedCommands}
 	BtShellCommand           = &BasicType{"ShellCommand", nil}  // see func init below

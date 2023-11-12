@@ -1125,7 +1125,7 @@ func (cv *VartypeCheck) PkgOptionsVar() {
 
 // Pkgpath checks a directory name relative to the top-level pkgsrc directory.
 //
-// Despite its name, it is more similar to RelativePkgDir than to RelativePkgPath.
+// Despite its name, it is more similar to PackageDir than to PackagePath.
 func (cv *VartypeCheck) Pkgpath() {
 	cv.Pathname()
 
@@ -1279,9 +1279,9 @@ func (cv *VartypeCheck) RPkgVer() {
 	}
 }
 
-// RelativePkgDir refers from one package directory to another package
+// PackageDir refers from one package directory to another package
 // directory, e.g. ../../category/pkgbase.
-func (cv *VartypeCheck) RelativePkgDir() {
+func (cv *VartypeCheck) PackageDir() {
 	if NewPath(cv.Value).IsAbs() {
 		cv.Errorf("The path %q must be relative.", cv.Value)
 		return
@@ -1291,12 +1291,12 @@ func (cv *VartypeCheck) RelativePkgDir() {
 	ck.CheckPackagePath(NewPackagePathString(cv.Value))
 }
 
-// RelativePkgPath refers from one package directory to another file
+// PackagePath refers from one package directory to another file
 // or directory, e.g. ../../category/pkgbase,
 // ../../category/pkgbase/Makefile.
 //
-// See RelativePkgDir, which requires a directory, not a file.
-func (cv *VartypeCheck) RelativePkgPath() {
+// See PackageDir, which requires a directory, not a file.
+func (cv *VartypeCheck) PackagePath() {
 	if NewPath(cv.Value).IsAbs() {
 		cv.Errorf("The path %q must be relative.", cv.Value)
 		return

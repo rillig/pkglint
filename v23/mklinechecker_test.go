@@ -762,17 +762,17 @@ func (s *Suite) Test_MkLineChecker_CheckPackagePath(c *check.C) {
 
 	t.CreateFileLines("other/package/Makefile")
 
-	test := func(relativePkgdir PackagePath, diagnostics ...string) {
+	test := func(packagePath PackagePath, diagnostics ...string) {
 		// Must be in the filesystem because of directory references.
 		mklines := t.SetUpFileMkLines("category/package/Makefile",
 			"# dummy")
 
-		checkRelativePkgdir := func(mkline *MkLine) {
+		checkPackagePath := func(mkline *MkLine) {
 			ck := MkLineChecker{mklines, mkline}
-			ck.CheckPackagePath(relativePkgdir)
+			ck.CheckPackagePath(packagePath)
 		}
 
-		mklines.ForEach(checkRelativePkgdir)
+		mklines.ForEach(checkPackagePath)
 
 		t.CheckOutput(diagnostics)
 	}
