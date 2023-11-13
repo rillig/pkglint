@@ -401,7 +401,7 @@ func (ck MkLineChecker) CheckRelativePath(rel RelPath, mustExist bool) {
 	}
 }
 
-// CheckPackagePath checks a reference from one pkgsrc package to another.
+// CheckPackageDir checks a reference from one pkgsrc package to another.
 // These references should always have the form ../../category/package.
 //
 // When used in DEPENDS or similar variables, these directories could theoretically
@@ -409,7 +409,7 @@ func (ck MkLineChecker) CheckRelativePath(rel RelPath, mustExist bool) {
 // This, however, is not implemented in pkgsrc and suggestions regarding this topic
 // have not been made in the last two decades on the public mailing lists.
 // While being a bit redundant, the current scheme works well.
-func (ck MkLineChecker) CheckPackagePath(pkgdir PackagePath) {
+func (ck MkLineChecker) CheckPackageDir(pkgdir PackagePath) {
 	// TODO: Not every path is relative to the package directory.
 	if trace.Tracing {
 		defer trace.Call(pkgdir)()
