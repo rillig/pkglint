@@ -1302,9 +1302,8 @@ func (cv *VartypeCheck) PackagePath() {
 		return
 	}
 
-	packagePath := NewRelPathString(cv.Value)
 	ck := MkLineChecker{cv.MkLines, cv.MkLine}
-	ck.CheckRelativePath(packagePath, true)
+	ck.CheckRelativePath(NewRelPathString(cv.Value), true)
 }
 
 func (cv *VartypeCheck) Restricted() {
