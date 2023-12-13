@@ -316,7 +316,7 @@ func (mklines *MkLines) collectVariable(mkline *MkLine, infrastructure bool, add
 		}
 
 	case "PLIST_VARS":
-		for _, id := range mkline.ValueFields(resolveVariableRefs(mkline.Value(), mklines, nil)) {
+		for _, id := range mkline.ValueFields(resolveExprs(mkline.Value(), mklines, nil)) {
 			if trace.Tracing {
 				trace.Step1("PLIST.%s is added to PLIST_VARS.", id)
 			}
@@ -418,7 +418,7 @@ func (mklines *MkLines) collectPlistVars() {
 		if mkline.IsVarassign() {
 			switch mkline.Varcanon() {
 			case "PLIST_VARS":
-				for _, id := range mkline.ValueFields(resolveVariableRefs(mkline.Value(), mklines, nil)) {
+				for _, id := range mkline.ValueFields(resolveExprs(mkline.Value(), mklines, nil)) {
 					if containsExpr(id) {
 						mklines.plistVarSkip = true
 					} else {
@@ -539,7 +539,7 @@ func (mklines *MkLines) checkLine(
 func (mklines *MkLines) checkVarassignPlist(mkline *MkLine) {
 	switch mkline.Varcanon() {
 	case "PLIST_VARS":
-		for _, id := range mkline.ValueFields(resolveVariableRefs(mkline.Value(), mklines, nil)) {
+		for _, id := range mkline.ValueFields(resolveExprs(mkline.Value(), mklines, nil)) {
 			if !mklines.plistVarSkip && mklines.plistVarSet[id] == nil {
 				mkline.Warnf("%q is added to PLIST_VARS, but PLIST.%s is not defined in this file.", id, id)
 			}
@@ -696,7 +696,7 @@ func (mklines *MkLines) ExpandLoopVar(varname string) []string {
 		}
 
 		// TODO: If needed, add support for multi-variable .for loops.
-		resolved := resolveVariableRefs(mkline.Args(), mklines, nil)
+		resolved := resolveExprs(mkline.Args(), mklines, nil)
 		words := mkline.ValueFields(resolved)
 		if len(words) >= 3 && words[0] == varname && words[1] == "in" {
 			return words[2:]

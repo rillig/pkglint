@@ -537,7 +537,7 @@ func (s *Suite) Test_MkLine_Fields__expr_with_embedded_space(c *check.C) {
 	t.CheckDeepEquals(words, []string{"${VAR:S/ /_/g}"})
 }
 
-func (s *Suite) Test_MkLine_ResolveVarsInRelPath(c *check.C) {
+func (s *Suite) Test_MkLine_ResolveExprsInRelPath(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("lang/lua53/Makefile")
@@ -550,7 +550,7 @@ func (s *Suite) Test_MkLine_ResolveVarsInRelPath(c *check.C) {
 	var pkg *Package = nil
 
 	test := func(before RelPath, after RelPath) {
-		t.CheckEquals(mkline.ResolveVarsInRelPath(before, pkg), after)
+		t.CheckEquals(mkline.ResolveExprsInRelPath(before, pkg), after)
 	}
 
 	test("", ".")
@@ -573,7 +573,7 @@ func (s *Suite) Test_MkLine_ResolveVarsInRelPath(c *check.C) {
 	test("${PKGSRCDIR}", "../..")
 }
 
-func (s *Suite) Test_MkLine_ResolveVarsInRelPath__directory_depth(c *check.C) {
+func (s *Suite) Test_MkLine_ResolveExprsInRelPath__directory_depth(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
@@ -591,7 +591,7 @@ func (s *Suite) Test_MkLine_ResolveVarsInRelPath__directory_depth(c *check.C) {
 }
 
 // Just for code coverage
-func (s *Suite) Test_MkLine_ResolveVarsInRelPath__without_tracing(c *check.C) {
+func (s *Suite) Test_MkLine_ResolveExprsInRelPath__without_tracing(c *check.C) {
 	t := s.Init(c)
 
 	t.DisableTracing()
@@ -606,7 +606,7 @@ func (s *Suite) Test_MkLine_ResolveVarsInRelPath__without_tracing(c *check.C) {
 		"WARN: ~/buildlink3.mk:2: PKGPATH.multimedia/totem is used but not defined.")
 }
 
-func (s *Suite) Test_MkLine_ResolveVarsInRelPath__assertion(c *check.C) {
+func (s *Suite) Test_MkLine_ResolveExprsInRelPath__assertion(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
@@ -614,7 +614,7 @@ func (s *Suite) Test_MkLine_ResolveVarsInRelPath__assertion(c *check.C) {
 	mkline := t.NewMkLine("a/b/c/d/e/f/g.mk", 123, "")
 
 	t.ExpectPanic(
-		func() { mkline.ResolveVarsInRelPath("${PKGSRCDIR}", nil) },
+		func() { mkline.ResolveExprsInRelPath("${PKGSRCDIR}", nil) },
 		"Pkglint internal error: "+
 			"Relative path \"../../../../../..\" for \"a/b/c/d/e/f\" is too deep "+
 			"below the pkgsrc root \".\".")

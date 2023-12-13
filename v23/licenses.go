@@ -10,7 +10,7 @@ type LicenseChecker struct {
 }
 
 func (lc *LicenseChecker) Check(value string, op MkOperator) {
-	expanded := resolveVariableRefs(value, lc.MkLines, nil) // For ${PERL5_LICENSE}
+	expanded := resolveExprs(value, lc.MkLines, nil) // For ${PERL5_LICENSE}
 	cond := licenses.Parse(condStr(op == opAssignAppend, "append-placeholder ", "") + expanded)
 
 	if cond == nil {
@@ -51,7 +51,7 @@ func (lc *LicenseChecker) checkName(license string) {
 				mkline.Errorf("LICENSE_FILE must not be an absolute path.")
 			} else {
 				rel := NewRelPathString(value)
-				relResolved := mkline.ResolveVarsInRelPath(rel, lc.MkLines.pkg)
+				relResolved := mkline.ResolveExprsInRelPath(rel, lc.MkLines.pkg)
 				licenseFile = pkg.File(NewPackagePath(relResolved))
 			}
 		}

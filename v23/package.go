@@ -453,9 +453,9 @@ func (pkg *Package) checkIncludePath(mkline *MkLine, canonicalRel CurrPath) {
 // left that cannot be resolved.
 func (pkg *Package) resolveIncludedFile(mkline *MkLine, includingFilename CurrPath) RelPath {
 
-	// TODO: Try to combine resolveVariableRefs and ResolveVarsInRelativePath.
-	resolved := mkline.ResolveVarsInRelPath(mkline.IncludedFile(), pkg)
-	includedText := resolveVariableRefs(resolved.String(), nil, pkg)
+	// TODO: Try to combine resolveExprs and ResolveExprsInRelPath.
+	resolved := mkline.ResolveExprsInRelPath(mkline.IncludedFile(), pkg)
+	includedText := resolveExprs(resolved.String(), nil, pkg)
 	includedFile := NewRelPathString(includedText)
 	if containsExpr(includedText) {
 		if trace.Tracing && !includingFilename.ContainsPath("mk") {
@@ -657,7 +657,7 @@ func (pkg *Package) checkDistfilesInDistinfo(mklines *MkLines) {
 	for _, mkline := range distfiles.vari.WriteLocations() {
 		unreachable := newLazyBool(
 			func() bool { return mklines.IsUnreachable(mkline) })
-		resolved := resolveVariableRefs(mkline.Value(), nil, pkg)
+		resolved := resolveExprs(mkline.Value(), nil, pkg)
 
 		for _, distfile := range mkline.ValueFields(resolved) {
 			if containsExpr(distfile) {
@@ -1762,7 +1762,7 @@ func (pkg *Package) AutofixDistinfo(oldSha1, newSha1 string) {
 // Variables that are known in the package are resolved, e.g. ${PKGDIR}.
 func (pkg *Package) File(relativeFileName PackagePath) CurrPath {
 	joined := pkg.dir.JoinNoClean(NewRelPath(relativeFileName.AsPath()))
-	resolved := resolveVariableRefs(joined.String(), nil, pkg)
+	resolved := resolveExprs(joined.String(), nil, pkg)
 	return NewCurrPathString(resolved).CleanPath()
 }
 

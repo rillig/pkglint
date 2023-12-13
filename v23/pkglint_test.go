@@ -678,7 +678,7 @@ func (s *Suite) Test_Pkglint_checkdirPackage__nonexistent_DISTINFO_FILE(c *check
 
 // Pkglint must never be trapped in an endless loop, even when
 // resolving the value of a variable that refers back to itself.
-func (s *Suite) Test_resolveVariableRefs__circular_reference(c *check.C) {
+func (s *Suite) Test_resolveExprs__circular_reference(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("filename.mk", 1, "VAR=\t1:${VAR}+ 2:${VAR}")
@@ -687,14 +687,14 @@ func (s *Suite) Test_resolveVariableRefs__circular_reference(c *check.C) {
 
 	// TODO: It may be better to define MkLines.Resolve and Package.Resolve,
 	//  to clearly state the scope of the involved variables.
-	resolved := resolveVariableRefs("the a:${VAR} b:${VAR}", nil, pkg)
+	resolved := resolveExprs("the a:${VAR} b:${VAR}", nil, pkg)
 
 	// TODO: The ${VAR} after "b:" should also be expanded since there
 	//  is no recursion.
 	t.CheckEquals(resolved, "the a:1:${VAR}+ 2:${VAR} b:${VAR}")
 }
 
-func (s *Suite) Test_resolveVariableRefs__multilevel(c *check.C) {
+func (s *Suite) Test_resolveExprs__multilevel(c *check.C) {
 	t := s.Init(c)
 
 	mkline1 := t.NewMkLine("filename.mk", 10, "FIRST=\t${SECOND}")
@@ -708,12 +708,12 @@ func (s *Suite) Test_resolveVariableRefs__multilevel(c *check.C) {
 	// TODO: Add a similar test in which some of the variables are defined
 	//  conditionally or with differing values, just to see what pkglint does
 	//  in such a case.
-	resolved := resolveVariableRefs("you ${FIRST}", nil, pkg)
+	resolved := resolveExprs("you ${FIRST}", nil, pkg)
 
 	t.CheckEquals(resolved, "you got it")
 }
 
-func (s *Suite) Test_resolveVariableRefs__scope_precedence(c *check.C) {
+func (s *Suite) Test_resolveExprs__scope_precedence(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("filename.mk",
@@ -723,7 +723,7 @@ func (s *Suite) Test_resolveVariableRefs__scope_precedence(c *check.C) {
 	pkg := NewPackage(t.File("category/package"))
 	pkg.vars.Define("ORIGIN", t.NewMkLine("other.mk", 123, "ORIGIN=\tpackage"))
 
-	resolved := resolveVariableRefs("From ${ORIGIN}", mklines, pkg)
+	resolved := resolveExprs("From ${ORIGIN}", mklines, pkg)
 
 	t.CheckEquals(resolved, "From filename.mk")
 }
@@ -731,19 +731,19 @@ func (s *Suite) Test_resolveVariableRefs__scope_precedence(c *check.C) {
 // Usually, a dot in a variable name means a parameterized form.
 // In this case, it is part of a version number. Resolving these
 // variables from the scope works nevertheless.
-func (s *Suite) Test_resolveVariableRefs__special_chars(c *check.C) {
+func (s *Suite) Test_resolveExprs__special_chars(c *check.C) {
 	t := s.Init(c)
 
 	mkline := t.NewMkLine("filename.mk", 10, "_=x11")
 	pkg := NewPackage(t.File("category/pkg"))
 	pkg.vars.Define("GST_PLUGINS0.10_TYPE", mkline)
 
-	resolved := resolveVariableRefs("gst-plugins0.10-${GST_PLUGINS0.10_TYPE}/distinfo", nil, pkg)
+	resolved := resolveExprs("gst-plugins0.10-${GST_PLUGINS0.10_TYPE}/distinfo", nil, pkg)
 
 	t.CheckEquals(resolved, "gst-plugins0.10-x11/distinfo")
 }
 
-func (s *Suite) Test_resolveVariableRefs__indeterminate(c *check.C) {
+func (s *Suite) Test_resolveExprs__indeterminate(c *check.C) {
 	t := s.Init(c)
 
 	pkg := NewPackage(G.Pkgsrc.File("category/package"))
@@ -752,7 +752,7 @@ func (s *Suite) Test_resolveVariableRefs__indeterminate(c *check.C) {
 		"VAR!=\tcommand")
 	mklines.collectVariables(false, false)
 
-	resolved := resolveVariableRefs("${VAR} ${PKGVAR}", mklines, nil)
+	resolved := resolveExprs("${VAR} ${PKGVAR}", mklines, nil)
 
 	// VAR and PKGVAR are defined, but since they contain the result of
 	// a shell command, their value is indeterminate.

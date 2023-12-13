@@ -406,7 +406,7 @@ func (*Pkglint) findPkgsrcTopdir(dirname CurrPath) RelPath {
 	return ""
 }
 
-func resolveVariableRefs(text string, mklines *MkLines, pkg *Package) string {
+func resolveExprs(text string, mklines *MkLines, pkg *Package) string {
 	// TODO: How does this fit into the Scope type, which is newer than this function?
 
 	if !containsExpr(text) {
@@ -446,7 +446,7 @@ func resolveVariableRefs(text string, mklines *MkLines, pkg *Package) string {
 		replaced := replaceAllFunc(str, `\$\{([\w.\-]+)\}`, replace)
 		if replaced == str {
 			if trace.Tracing && str != text {
-				trace.Stepf("resolveVariableRefs %q => %q", text, replaced)
+				trace.Stepf("resolveExprs %q => %q", text, replaced)
 			}
 			return replaced
 		}

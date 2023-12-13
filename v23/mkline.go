@@ -625,7 +625,7 @@ func (*MkLine) WithoutMakeVariables(value string) string {
 	return valueNovar.String()
 }
 
-func (mkline *MkLine) ResolveVarsInRelPath(rel RelPath, pkg *Package) RelPath {
+func (mkline *MkLine) ResolveExprsInRelPath(rel RelPath, pkg *Package) RelPath {
 	if !containsExpr(rel.String()) {
 		return rel.CleanPath()
 	}
@@ -695,7 +695,7 @@ func (mkline *MkLine) ResolveVarsInRelPath(rel RelPath, pkg *Package) RelPath {
 	tmp = tmp.CleanPath()
 
 	if trace.Tracing && rel != tmp {
-		trace.Stepf("resolveVarsInRelativePath: %q => %q", rel, tmp)
+		trace.Stepf("resolveExprsInRelPath: %q => %q", rel, tmp)
 	}
 	return tmp
 }

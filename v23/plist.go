@@ -490,7 +490,7 @@ func (ck *PlistChecker) checkCond(pline *PlistLine, cond string) {
 	}
 
 	plistVars := vars.LastValue("PLIST_VARS")
-	resolvedPlistVars := resolveVariableRefs(plistVars, nil, ck.pkg)
+	resolvedPlistVars := resolveExprs(plistVars, nil, ck.pkg)
 	for _, varparam := range mkline.ValueFields(resolvedPlistVars) {
 		if varparam == cond {
 			return
