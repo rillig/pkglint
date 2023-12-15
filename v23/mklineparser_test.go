@@ -29,8 +29,8 @@ func (s *Suite) Test_MkLineParser_Parse__infrastructure(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: infra.mk:2: Makefile lines should not start with space characters.",
-		"ERROR: infra.mk:8: Unknown Makefile line format: \".ifmake target1\".",
-		"ERROR: infra.mk:9: Unknown Makefile line format: \".elifnmake target2\".")
+		"ERROR: infra.mk:8: Unknown makefile line format: \".ifmake target1\".",
+		"ERROR: infra.mk:9: Unknown makefile line format: \".elifnmake target2\".")
 
 	mklines.Check()
 
@@ -173,7 +173,7 @@ func (s *Suite) Test_MkLineParser_parseVarassign__varname_with_hash(c *check.C) 
 	t.CheckEquals(mkline2.Varname(), "VARNAME.#")
 
 	t.CheckOutputLines(
-		"ERROR: Makefile:123: Unknown Makefile line format: \"VARNAME.#=\\tvalue\".")
+		"ERROR: Makefile:123: Unknown makefile line format: \"VARNAME.#=\\tvalue\".")
 }
 
 // Ensures that pkglint parses escaped # characters in the same way as bmake.
@@ -802,7 +802,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 
 	// A backslash always escapes the next character, be it a # for a comment
 	// or something else. This makes it difficult to write a literal \# in a
-	// Makefile, but that's an edge case anyway.
+	// makefile, but that's an edge case anyway.
 	test("VAR0=\t#comment",
 		mkLineSplitResult{
 			main:   "VAR0=",
@@ -1131,7 +1131,7 @@ func (s *Suite) Test_MkLineParser_unescapeComment(c *check.C) {
 
 	// A backslash always escapes the next character, be it a # for a comment
 	// or something else. This makes it difficult to write a literal \# in a
-	// Makefile, but that's an edge case anyway.
+	// makefile, but that's an edge case anyway.
 	test("VAR0=\t#comment",
 		"VAR0=\t",
 		"#comment")

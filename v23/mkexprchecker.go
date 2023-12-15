@@ -233,7 +233,7 @@ func (ck *MkExprChecker) checkVarnameBuildlink(varname string) {
 		return
 	}
 
-	// Several packages contain Makefile fragments that are more related
+	// Several packages contain makefile fragments that are more related
 	// to the buildlink3.mk file than to the package Makefile.
 	// These may use the buildlink identifier from the package itself.
 	basename := ck.MkLine.Basename

@@ -63,7 +63,7 @@ func (p MkLineParser) Parse(line *Line) *MkLine {
 	}
 
 	// The %q is deliberate here since it shows possible strange characters.
-	line.Errorf("Unknown Makefile line format: %q.", text)
+	line.Errorf("Unknown makefile line format: %q.", text)
 	return &MkLine{line, splitResult, nil}
 }
 

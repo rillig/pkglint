@@ -899,12 +899,12 @@ func (s *Suite) Test_PatchChecker_checkAddedAbsPath(c *check.C) {
 		"/etc",
 		"ERROR: patch-file:8: Patches must not hard-code the pkgsrc PKG_SYSCONFDIR.")
 
-	// BSD-style Makefile
+	// BSD-style makefile
 	test(
 		"${PREFIX}/etc",
 		nil...)
 
-	// GNU automake-style Makefile
+	// GNU automake-style makefile
 	test(
 		"$(prefix)/etc",
 		nil...)
@@ -945,7 +945,7 @@ func (s *Suite) Test_PatchChecker_checkAddedAbsPath(c *check.C) {
 		"DIR=${DIR-/var/bytebench}",
 		"ERROR: patch-file:8: Patches must not hard-code the pkgsrc VARBASE.")
 
-	// Shell program or Makefile.
+	// Shell program or makefile.
 	// The placeholder will make this a relative path.
 	test(
 		"dir=@prefix@/etc",

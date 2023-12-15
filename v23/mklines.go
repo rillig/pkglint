@@ -2,7 +2,7 @@ package pkglint
 
 import "strings"
 
-// MkLines contains data for the Makefile (or *.mk) that is currently checked.
+// MkLines contains data for a makefile.
 type MkLines struct {
 	mklines []*MkLine
 	lines   *Lines
@@ -211,7 +211,7 @@ func (mklines *MkLines) UseVar(mkline *MkLine, varname string, time EctxTime) {
 }
 
 // collectDocumentedVariables collects the variables that are mentioned in the human-readable
-// documentation of the Makefile fragments from the pkgsrc infrastructure.
+// documentation of the makefile fragments from the pkgsrc infrastructure.
 //
 // Loosely based on mk/help/help.awk, revision 1.28, but much simpler.
 func (mklines *MkLines) collectDocumentedVariables() {

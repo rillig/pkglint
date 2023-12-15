@@ -1202,7 +1202,7 @@ func (s *Suite) Test_PlistChecker_checkCond(c *check.C) {
 // Because of the unresolvable variable in the package Makefile,
 // pkglint cannot be absolutely sure about the possible PLIST
 // conditions. Even though ${PLIST.plist} is missing the corresponding
-// PLIST_VARS+=plist in the Makefile, there is no warning about this.
+// PLIST_VARS+=plist in the makefile, there is no warning about this.
 //
 // As of January 2020, this case typically occurs when PLIST_VARS
 // is defined based on PKG_SUPPORTED_OPTIONS. Expanding that variable

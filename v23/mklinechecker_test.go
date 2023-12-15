@@ -437,7 +437,7 @@ func (s *Suite) Test_MkLineChecker_checkInclude(c *check.C) {
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/filename.mk:7: "+
-			"Unknown Makefile line format: \".include \\\"/absolute\\\"\".",
+			"Unknown makefile line format: \".include \\\"/absolute\\\"\".",
 		"ERROR: ~/category/package/filename.mk:3: "+
 			"\"../../pkgtools/x11-links/buildlink3.mk\" must not be included directly. "+
 			"Include \"../../mk/x11.buildlink3.mk\" instead.",
@@ -451,7 +451,7 @@ func (s *Suite) Test_MkLineChecker_checkInclude(c *check.C) {
 			"Include \"../../devel/intltool/buildlink3.mk\" instead.",
 		"ERROR: ~/category/package/filename.mk:8: "+
 			"The file bsd.pkg.mk must only be included by package Makefiles, "+
-			"not by other Makefile fragments.")
+			"not by other makefile fragments.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkInclude__Makefile(c *check.C) {

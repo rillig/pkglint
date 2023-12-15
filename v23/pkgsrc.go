@@ -929,7 +929,7 @@ func (src *Pkgsrc) LoadMkExisting(filename PkgsrcPath) *MkLines {
 	return src.LoadMk(filename, options)
 }
 
-// LoadMk loads the Makefile relative to the pkgsrc top directory.
+// LoadMk loads the makefile relative to the pkgsrc top directory.
 func (src *Pkgsrc) LoadMk(filename PkgsrcPath, options LoadOptions) *MkLines {
 	return LoadMk(src.File(filename), nil, options)
 }

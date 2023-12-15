@@ -129,7 +129,7 @@ func (q ShQuoting) ToExprContext() EctxQuoting {
 //
 // See http://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#tag_18_10_02
 type ShToken struct {
-	MkText string // The text as it appeared in the Makefile, after replacing `\#` with `#`
+	MkText string // The text as it appeared in the makefile, after replacing `\#` with `#`
 	Atoms  []*ShAtom
 }
 

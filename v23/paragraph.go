@@ -2,7 +2,7 @@ package pkglint
 
 import "strings"
 
-// Paragraph is a slice of Makefile lines that is surrounded by empty lines.
+// Paragraph is a slice of makefile lines that is surrounded by empty lines.
 //
 // All variable assignments in a paragraph should be aligned in the same column.
 type Paragraph struct {

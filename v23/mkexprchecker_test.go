@@ -1145,7 +1145,7 @@ func (s *Suite) Test_MkExprChecker_warnToolLoadTime(c *check.C) {
 }
 
 // This somewhat unrealistic case demonstrates how there can be a tool in a
-// Makefile that is not known to the global pkgsrc.
+// makefile that is not known to the global pkgsrc.
 //
 // This test covers the "pkgsrcTool != nil" condition.
 func (s *Suite) Test_MkExprChecker_warnToolLoadTime__local_tool(c *check.C) {

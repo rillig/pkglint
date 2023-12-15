@@ -73,7 +73,7 @@ func NewLine(filename CurrPath, lineno int, text string, rawLine *RawLine) *Line
 	return NewLineMulti(filename, lineno, text, []*RawLine{rawLine})
 }
 
-// NewLineMulti is for logical Makefile lines that end with backslash.
+// NewLineMulti is for logical makefile lines that end with backslash.
 func NewLineMulti(filename CurrPath, firstLine int, text string, rawLines []*RawLine) *Line {
 	return &Line{NewLocation(filename, firstLine), filename.Base(), text, rawLines, nil, Once{}}
 }

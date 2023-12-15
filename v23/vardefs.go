@@ -14,7 +14,7 @@ import (
 // See vartypecheck.go for how these types are checked.
 //
 // The permissions depend on the name of the file where the variable is
-// either assigned or used. There are several types of Makefile fragments
+// either assigned or used. There are several types of makefile fragments
 // in pkgsrc, and some of them have very specific tasks, like buildlink3.mk,
 // builtin.mk and options.mk.
 //

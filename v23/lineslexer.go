@@ -128,7 +128,7 @@ func (llex *LinesLexer) setIndex(index int) {
 
 func (llex *LinesLexer) next() { llex.setIndex(llex.index + 1) }
 
-// MkLinesLexer records the state when checking a list of Makefile lines from top to bottom.
+// MkLinesLexer records the state when checking a list of makefile lines from top to bottom.
 type MkLinesLexer struct {
 	mklines *MkLines
 	LinesLexer

@@ -46,7 +46,7 @@ type Package struct {
 	// The default dependencies from the buildlink3.mk files.
 	bl3Data map[Buildlink3ID]*Buildlink3Data
 
-	// Remembers the Makefile fragments that have already been included.
+	// Remembers the makefile fragments that have already been included.
 	// Typical keys are "../../category/package/buildlink3.mk".
 	//
 	// TODO: Include files with multiple-inclusion guard only once.
@@ -173,7 +173,7 @@ func (pkg *Package) load() ([]CurrPath, *MkLines, *MkLines) {
 		return !filename.ContainsPath(pkg.Pkgdir.AsPath())
 	}
 
-	// Determine the used variables and PLIST directories before checking any of the Makefile fragments.
+	// Determine the used variables and PLIST directories before checking any of the makefile fragments.
 	// TODO: Why is this code necessary? What effect does it have?
 	pkg.collectConditionalIncludes(mklines)
 	for _, filename := range files {
@@ -448,7 +448,7 @@ func (pkg *Package) checkIncludePath(mkline *MkLine, canonicalRel CurrPath) {
 		"One less thing to learn for package developers.")
 }
 
-// resolveIncludedFile resolves Makefile variables such as ${PKGPATH} to
+// resolveIncludedFile resolves makefile variables such as ${PKGPATH} to
 // their actual values, returning an empty path if there are any expressions
 // left that cannot be resolved.
 func (pkg *Package) resolveIncludedFile(mkline *MkLine, includingFilename CurrPath) RelPath {

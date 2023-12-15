@@ -61,7 +61,7 @@ func (s *Suite) Test_LineChecker_CheckTrailingWhitespace__tab(c *check.C) {
 		"AUTOFIX: Makefile:32: Replacing \"\\t\" with \"\".")
 }
 
-// Even though the logical text of the Makefile line ends with a space,
+// Even though the logical text of the makefile line ends with a space,
 // the check for trailing whitespace doesn't catch it.
 //
 // The check only looks at the actual lines, not at the logical text after

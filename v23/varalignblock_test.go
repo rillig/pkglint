@@ -1271,7 +1271,7 @@ func (s *Suite) Test_VaralignBlock__var_tab24_value_var20_tabs72_cont_tab_value_
 }
 
 // For escaped variable names, the number of actual characters in the
-// Makefile is relevant for indenting the source code. Therefore, the
+// makefile is relevant for indenting the source code. Therefore, the
 // parsed and unescaped mkline.Varname cannot be used here.
 func (s *Suite) Test_VaralignBlock__escaped_varname(c *check.C) {
 	vt := NewVaralignTester(s, c)
@@ -2978,8 +2978,8 @@ func (s *Suite) Test_VaralignBlock__unknown_line_format(c *check.C) {
 		".MAKEOVERRIDES+= VAR",
 		".endif")
 	vt.Diagnostics(
-		"ERROR: Makefile:1: Unknown Makefile line format: \".ifmake two\".",
-		"ERROR: Makefile:11: Unknown Makefile line format: \".ifmake four\".")
+		"ERROR: Makefile:1: Unknown makefile line format: \".ifmake two\".",
+		"ERROR: Makefile:11: Unknown makefile line format: \".ifmake four\".")
 	vt.Autofixes(
 		nil...)
 	vt.Fixed(

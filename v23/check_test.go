@@ -1046,7 +1046,7 @@ func (t *Tester) NewLine(filename CurrPath, lineno int, text string) *Line {
 	return NewLine(filename, lineno, text, &RawLine{text + "\n"})
 }
 
-// NewMkLine creates an in-memory line in the Makefile format with the given text.
+// NewMkLine creates an in-memory line in the makefile format with the given text.
 func (t *Tester) NewMkLine(filename CurrPath, lineno int, text string) *MkLine {
 	basename := filename.Base()
 	assertf(
@@ -1082,12 +1082,12 @@ func (t *Tester) NewLinesAt(filename CurrPath, firstLine int, texts ...string) *
 	return NewLines(filename, lines)
 }
 
-// NewMkLines returns a list of lines in Makefile format,
+// NewMkLines returns a list of lines in makefile format,
 // as if they were parsed from a makefile fragment,
 // taking continuation lines into account.
 //
 // No actual file is created for the lines;
-// see SetUpFileMkLines for loading Makefile fragments with line continuations.
+// see SetUpFileMkLines for loading makefile fragments with line continuations.
 //
 // After calling Tester.Chdir, NewMkLines creates the same object as
 // SetUpFileMkLines, just without anything being written to disk.

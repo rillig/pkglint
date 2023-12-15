@@ -245,7 +245,7 @@ file     mkline.go
 go:type  MkLine
 ```
 
-There are several types of lines in a `Makefile`:
+There are several types of lines in a makefile:
 
 * comments and empty lines (trivial)
 * variable assignments
@@ -264,7 +264,7 @@ or `MkLine.DirectiveComment()` (for directives only).
 ### ShellLineChecker
 
 The instructions for building and installing packages are written in shell commands,
-which are embedded in Makefile fragments.
+which are embedded in makefile fragments.
 The `ShellLineChecker` type provides methods for checking shell commands and their individual parts.
 
 ```codewalk

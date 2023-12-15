@@ -183,7 +183,7 @@ func (s *Suite) Test_Package__redundant_variable_in_unrelated_files(c *check.C) 
 // that are called Makefile.*, except Makefile.common, which occurs more
 // often.
 //
-// Using the file extension for variants of that Makefile is confusing,
+// Using the file extension for variants of that makefile is confusing,
 // therefore they should be renamed to *.mk.
 func (s *Suite) Test_Package__Makefile_files(c *check.C) {
 	t := s.Init(c)
@@ -438,7 +438,7 @@ func (s *Suite) Test_Package_load__buildlink3_mk_includes_other_mk(c *check.C) {
 		"")
 }
 
-// Demonstrates that Makefile fragments are handled differently,
+// Demonstrates that makefile fragments are handled differently,
 // depending on the directory they are in.
 func (s *Suite) Test_Package_load__extra_files(c *check.C) {
 	t := s.Init(c)
@@ -476,9 +476,9 @@ func (s *Suite) Test_Package_load__extra_files(c *check.C) {
 		// All *.mk files in the package directory are assumed
 		// to be BSD-style Makefiles, therefore the many warnings.
 		"WARN: gnu-style.mk:1: Please use curly braces {} instead of round parentheses () for CC.",
-		"ERROR: gnu-style.mk:1: Unknown Makefile line format: \"ifeq ($(CC),gcc)\".",
-		"ERROR: gnu-style.mk:3: Unknown Makefile line format: \"else\".",
-		"ERROR: gnu-style.mk:5: Unknown Makefile line format: \"endif\".",
+		"ERROR: gnu-style.mk:1: Unknown makefile line format: \"ifeq ($(CC),gcc)\".",
+		"ERROR: gnu-style.mk:3: Unknown makefile line format: \"else\".",
+		"ERROR: gnu-style.mk:5: Unknown makefile line format: \"endif\".",
 
 		"ERROR: distinfo: Patch \"patches/patch-Makefile.mk\" is not recorded. Run \""+confMake+" makepatchsum\".",
 
@@ -494,9 +494,9 @@ func (s *Suite) Test_Package_load__extra_files(c *check.C) {
 		//
 		// Therefore, the below lines contain two more diagnostics.
 		"WARN: gnu-style.mk:1: Please use curly braces {} instead of round parentheses () for CC.",
-		"ERROR: gnu-style.mk:1: Unknown Makefile line format: \"ifeq ($(CC),gcc)\".",
-		"ERROR: gnu-style.mk:3: Unknown Makefile line format: \"else\".",
-		"ERROR: gnu-style.mk:5: Unknown Makefile line format: \"endif\".",
+		"ERROR: gnu-style.mk:1: Unknown makefile line format: \"ifeq ($(CC),gcc)\".",
+		"ERROR: gnu-style.mk:3: Unknown makefile line format: \"else\".",
+		"ERROR: gnu-style.mk:5: Unknown makefile line format: \"endif\".",
 		"ERROR: gnu-style.mk:1: Expected \""+MkCvsID+"\".",
 		"WARN: gnu-style.mk:2: IS_GCC is defined but not used.",
 		"WARN: gnu-style.mk:2: Variable IS_GCC is overwritten in line 4.",
@@ -516,9 +516,9 @@ func (s *Suite) Test_Package_load__extra_files(c *check.C) {
 		// should therefore be placed in the files/ directory.
 		"WARN: ../../category/other/gnu-style.mk:1: "+
 			"Please use curly braces {} instead of round parentheses () for CC.",
-		"ERROR: ../../category/other/gnu-style.mk:1: Unknown Makefile line format: \"ifeq ($(CC),gcc)\".",
-		"ERROR: ../../category/other/gnu-style.mk:3: Unknown Makefile line format: \"else\".",
-		"ERROR: ../../category/other/gnu-style.mk:5: Unknown Makefile line format: \"endif\".",
+		"ERROR: ../../category/other/gnu-style.mk:1: Unknown makefile line format: \"ifeq ($(CC),gcc)\".",
+		"ERROR: ../../category/other/gnu-style.mk:3: Unknown makefile line format: \"else\".",
+		"ERROR: ../../category/other/gnu-style.mk:5: Unknown makefile line format: \"endif\".",
 		"ERROR: ../../category/other/gnu-style.mk:1: Expected \""+MkCvsID+"\".",
 		"WARN: ../../category/other/gnu-style.mk:2: IS_GCC is defined but not used.",
 		"WARN: ../../category/other/gnu-style.mk:2: Variable IS_GCC is overwritten in line 4.",

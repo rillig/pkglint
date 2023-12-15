@@ -12,7 +12,7 @@ type Autofixer interface {
 }
 
 // Autofix handles all modifications to a single line,
-// possibly spanning multiple physical lines in case of Makefile lines,
+// possibly spanning multiple physical lines in case of makefile lines,
 // describes them in a human-readable form and formats the output.
 // The modifications are kept in memory only,
 // until they are written to disk by SaveAutofixChanges.
