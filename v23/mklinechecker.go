@@ -306,9 +306,28 @@ func (ck MkLineChecker) checkInclude() {
 
 	case includedFile.HasSuffixPath("intltool/buildlink3.mk"):
 		mkline.Warnf("Please write \"USE_TOOLS+= intltool\" instead of this line.")
+
+	case includedFile.HasSuffixPath("lang/python/egg.mk"):
+		ck.checkIncludePythonWheel()
 	}
 
 	ck.checkIncludeBuiltin()
+}
+
+func (ck MkLineChecker) checkIncludePythonWheel() {
+	if pkg := ck.MkLines.pkg; pkg != nil {
+		accepted := pkg.vars.LastValue("PYTHON_VERSIONS_ACCEPTED")
+		incompat := pkg.vars.LastValue("PYTHON_VERSIONS_INCOMPATIBLE")
+		switch {
+		case contains(accepted, "3") && !contains(accepted, "2"),
+			contains(incompat, "27"):
+			mkline := ck.MkLine
+			mkline.Warnf("Python egg.mk is deprecated, use wheel.mk instead.")
+			mkline.Explain(
+				"https://packaging.python.org/en/latest/discussions/wheel-vs-egg/",
+				"describes the difference between the formats.")
+		}
+	}
 }
 
 func (ck MkLineChecker) checkIncludeBuiltin() {

@@ -508,6 +508,86 @@ func (s *Suite) Test_MkLineChecker_checkInclude__hacks(c *check.C) {
 			"Relative path \"../../category/package/nonexistent.mk\" does not exist.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkIncludePythonWheel__no_restrictions(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("lang/python/egg.mk",
+		MkCvsID)
+	t.SetUpPackage("devel/py-test")
+	t.FinishSetUp()
+	t.Chdir("devel/py-test")
+
+	G.Check(".")
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_MkLineChecker_checkIncludePythonWheel__not_Python_2(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("lang/python/egg.mk",
+		MkCvsID)
+	t.SetUpPackage("devel/py-test",
+		"PYTHON_VERSIONS_INCOMPATIBLE=\t27",
+		".include \"../../lang/python/egg.mk\"")
+	t.FinishSetUp()
+	t.Chdir("devel/py-test")
+
+	G.Check(".")
+
+	t.CheckOutputLines(
+		"WARN: Makefile:21: Python egg.mk is deprecated, use wheel.mk instead.")
+}
+
+func (s *Suite) Test_MkLineChecker_checkIncludePythonWheel__not_Python_3(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("lang/python/egg.mk",
+		MkCvsID)
+	t.SetUpPackage("devel/py-test",
+		"PYTHON_VERSIONS_INCOMPATIBLE=\t38\t# rationale",
+		".include \"../../lang/python/egg.mk\"")
+	t.FinishSetUp()
+	t.Chdir("devel/py-test")
+
+	G.Check(".")
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_MkLineChecker_checkIncludePythonWheel__only_Python_2(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("lang/python/egg.mk",
+		MkCvsID)
+	t.SetUpPackage("devel/py-test",
+		"PYTHON_VERSIONS_ACCEPTED=\t27\t# rationale",
+		".include \"../../lang/python/egg.mk\"")
+	t.FinishSetUp()
+	t.Chdir("devel/py-test")
+
+	G.Check(".")
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_MkLineChecker_checkIncludePythonWheel__only_Python_3(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("lang/python/egg.mk",
+		MkCvsID)
+	t.SetUpPackage("devel/py-test",
+		"PYTHON_VERSIONS_ACCEPTED=\t310 38\t# rationale",
+		".include \"../../lang/python/egg.mk\"")
+	t.FinishSetUp()
+	t.Chdir("devel/py-test")
+
+	G.Check(".")
+
+	t.CheckOutputLines(
+		"WARN: Makefile:21: Python egg.mk is deprecated, use wheel.mk instead.")
+}
+
 // A buildlink3.mk file may include its corresponding builtin.mk file directly.
 func (s *Suite) Test_MkLineChecker_checkIncludeBuiltin__buildlink3_mk(c *check.C) {
 	t := s.Init(c)
