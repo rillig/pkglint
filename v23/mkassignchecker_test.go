@@ -1196,11 +1196,11 @@ func (s *Suite) Test_MkAssignChecker_checkDecreasingVersions(c *check.C) {
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
-		"PYTHON_VERSIONS_ACCEPTED=\t36 __future__ # rationale",
-		"PYTHON_VERSIONS_ACCEPTED=\t36 -13 # rationale",
-		"PYTHON_VERSIONS_ACCEPTED=\t36 ${PKGVERSION_NOREV} # rationale",
-		"PYTHON_VERSIONS_ACCEPTED=\t36 37 # rationale",
-		"PYTHON_VERSIONS_ACCEPTED=\t37 36 27 25 # rationale")
+		"PYTHON_VERSIONS_ACCEPTED=\t38 __future__ # rationale",
+		"PYTHON_VERSIONS_ACCEPTED=\t38 -13 # rationale",
+		"PYTHON_VERSIONS_ACCEPTED=\t38 ${PKGVERSION_NOREV} # rationale",
+		"PYTHON_VERSIONS_ACCEPTED=\t38 39 # rationale",
+		"PYTHON_VERSIONS_ACCEPTED=\t39 38 27 25 # rationale")
 
 	// TODO: All but the last of the above assignments should be flagged as
 	//  redundant by RedundantScope; as of March 2019, that check is only
@@ -1214,19 +1214,19 @@ func (s *Suite) Test_MkAssignChecker_checkDecreasingVersions(c *check.C) {
 	// They all need to be fixed in the end.
 	t.CheckOutputLines(
 		"WARN: Makefile:2: \"__future__\" is not valid for PYTHON_VERSIONS_ACCEPTED. "+
-			"Use one of { 27 36 37 38 } instead.",
+			"Use one of { 27 38 39 310 311 312 } instead.",
 		"ERROR: Makefile:2: Value \"__future__\" for "+
 			"PYTHON_VERSIONS_ACCEPTED must be a positive integer.",
 		"WARN: Makefile:3: \"-13\" is not valid for PYTHON_VERSIONS_ACCEPTED. "+
-			"Use one of { 27 36 37 38 } instead.",
+			"Use one of { 27 38 39 310 311 312 } instead.",
 		"ERROR: Makefile:3: Value \"-13\" for "+
 			"PYTHON_VERSIONS_ACCEPTED must be a positive integer.",
 		"ERROR: Makefile:4: Value \"${PKGVERSION_NOREV}\" for "+
 			"PYTHON_VERSIONS_ACCEPTED must be a positive integer.",
 		"WARN: Makefile:5: The values for PYTHON_VERSIONS_ACCEPTED "+
-			"should be in decreasing order (37 before 36).",
+			"should be in decreasing order (39 before 38).",
 		"WARN: Makefile:6: \"25\" is not valid for PYTHON_VERSIONS_ACCEPTED. "+
-			"Use one of { 27 36 37 38 } instead.")
+			"Use one of { 27 38 39 310 311 312 } instead.")
 }
 
 func (s *Suite) Test_MkAssignChecker_checkMiscRedundantInstallationDirs__AUTO_MKDIRS_yes(c *check.C) {

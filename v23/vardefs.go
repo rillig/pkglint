@@ -1660,7 +1660,7 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		"special:pyversion.mk: set",
 		"*: use, use-loadtime")
 	// See lang/python/pyversion.mk
-	py := reg.enumFromDirs(src, "lang", `^python(\d+)$`, "$1", "27 36 37 38")
+	py := reg.enumFromDirs(src, "lang", `^python(\d+)$`, "$1", "27 38 39 310 311 312")
 	reg.pkg("PYTHON_FOR_BUILD_ONLY", enum("yes no test tool YES"))
 	reg.pkglistrat("PYTHON_VERSIONS_ACCEPTED", py)
 	reg.pkglistrat("PYTHON_VERSIONS_INCOMPATIBLE", py)
