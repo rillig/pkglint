@@ -317,46 +317,51 @@ func (ck MkLineChecker) checkInclude() {
 func (ck MkLineChecker) checkIncludePythonWheel() {
 	if pkg := ck.MkLines.pkg; pkg != nil {
 		accepted := pkg.vars.LastValue("PYTHON_VERSIONS_ACCEPTED")
+		if contains(accepted, "3") && !contains(accepted, "2") {
+			goto warn
+		}
 		incompat := pkg.vars.LastValue("PYTHON_VERSIONS_INCOMPATIBLE")
-		switch {
-		case contains(accepted, "3") && !contains(accepted, "2"),
-			contains(incompat, "27"):
-			mkline := ck.MkLine
-			mkline.Warnf("Python egg.mk is deprecated, use wheel.mk instead.")
-			mkline.Explain(
-				"https://packaging.python.org/en/latest/discussions/wheel-vs-egg/",
-				"describes the difference between the formats.",
-				"",
-				"To migrate a package from egg.mk to wheel.mk,",
-				"here's a rough guide:",
-				"",
-				"1. If the distfile contains pyproject.toml,",
-				"look for build requirements and add them as TOOL_DEPENDS",
-				"",
-				"2. If there is no pyproject.toml,",
-				"and there is only setup.py, add:",
-				"",
-				"\tTOOL_DEPENDS+=\t${PYPKGPREFIX}"+
-					"-setuptools-[0-9]*:../../devel/py-setuptools",
-				"\tTOOL_DEPENDS+=\t${PYPKGPREFIX}"+
-					"-wheel-[0-9]*:../../devel/py-wheel",
-				"",
-				"Generally, if setuptools is required to build,",
-				"wheel is also needed.",
-				"",
-				"wheel.mk also provides py-test as TEST_DEPENDS",
-				"and a test target (do-test),",
-				"so remove these if they have become redundant.",
-				"",
-				sprintf("Run %q,", bmake("package")),
-				"which will complain about mismatches in the PLIST.",
-				sprintf("Run %q", bmake("print-plist > PLIST")),
-				"to regenerate the PLIST from the actually installed files.",
-				"The typical differences are that the files in EGG_INFODIR",
-				"are replaced with files in WHEEL_INFODIR.",
-				"Also, there may be new files py.typed appearing.")
+		if contains(incompat, "27") {
+			goto warn
 		}
 	}
+	return
+
+warn:
+	mkline := ck.MkLine
+	mkline.Warnf("Python egg.mk is deprecated, use wheel.mk instead.")
+	mkline.Explain(
+		"https://packaging.python.org/en/latest/discussions/wheel-vs-egg/",
+		"describes the difference between the formats.",
+		"",
+		"To migrate a package from egg.mk to wheel.mk,",
+		"here's a rough guide:",
+		"",
+		"1. If the distfile contains pyproject.toml,",
+		"look for build requirements and add them as TOOL_DEPENDS",
+		"",
+		"2. If there is no pyproject.toml,",
+		"and there is only setup.py, add:",
+		"",
+		"\tTOOL_DEPENDS+=\t${PYPKGPREFIX}"+
+			"-setuptools-[0-9]*:../../devel/py-setuptools",
+		"\tTOOL_DEPENDS+=\t${PYPKGPREFIX}"+
+			"-wheel-[0-9]*:../../devel/py-wheel",
+		"",
+		"Generally, if setuptools is required to build,",
+		"wheel is also needed.",
+		"",
+		"wheel.mk also provides py-test as TEST_DEPENDS",
+		"and a test target (do-test),",
+		"so remove these if they have become redundant.",
+		"",
+		sprintf("Run %q,", bmake("package")),
+		"which will complain about mismatches in the PLIST.",
+		sprintf("Run %q", bmake("print-plist > PLIST")),
+		"to regenerate the PLIST from the actually installed files.",
+		"The typical differences are that the files in EGG_INFODIR",
+		"are replaced with files in WHEEL_INFODIR.",
+		"Also, there may be new files py.typed appearing.")
 }
 
 func (ck MkLineChecker) checkIncludeBuiltin() {
