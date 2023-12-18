@@ -398,7 +398,7 @@ func (cv *VartypeCheck) DependencyPattern() {
 		if defpat == nil || defpat.LowerOp == "" {
 			return
 		}
-		if containsExpr(defpat.LowerOp) || containsExpr(deppat.Lower) {
+		if containsExpr(defpat.Lower) || containsExpr(deppat.Lower) {
 			return
 		}
 		limit := condInt(defpat.LowerOp == ">=" && deppat.LowerOp == ">", 1, 0)
