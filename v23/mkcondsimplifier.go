@@ -332,7 +332,7 @@ var numeric = makepat.Number()
 // evaluates to false.
 //
 // There are several words that evaluate to zero, such as 0, .0, 0.0, 1e-400,
-// -1e-400, +1e400.
+// -1e-400, +1e-400.
 //
 // When simplifying the condition '!empty(EXPR:Mpattern)' to
 // '${EXPR:Mpattern}', if the pattern can result in a numeric word, the
