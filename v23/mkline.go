@@ -848,14 +848,8 @@ func (mkline *MkLine) ForEachUsed(action func(expr *MkExpr, time EctxTime)) {
 		mkline.ForEachUsedText(mkline.Varname(), EctxLoadTime, action)
 		mkline.ForEachUsedText(mkline.Value(), mkline.Op().Time(), action)
 
-	case mkline.IsDirective() && mkline.Directive() == "for":
-		mkline.ForEachUsedText(mkline.Args(), EctxLoadTime, action)
-
-	case mkline.IsDirective() && (mkline.Directive() == "if" || mkline.Directive() == "elif") && mkline.Cond() != nil:
-		mkline.Cond().Walk(&MkCondCallback{
-			Expr: func(expr *MkExpr) {
-				mkline.ForEachUsedExpr(expr, EctxLoadTime, action)
-			}})
+	case mkline.IsDirective():
+		mkline.forEachUsedDirective(action)
 
 	case mkline.IsShellCommand():
 		mkline.ForEachUsedText(mkline.ShellCommand(), EctxRunTime, action)
@@ -866,6 +860,20 @@ func (mkline *MkLine) ForEachUsed(action func(expr *MkExpr, time EctxTime)) {
 
 	case mkline.IsInclude():
 		mkline.ForEachUsedText(mkline.IncludedFile().String(), EctxLoadTime, action)
+	}
+}
+
+func (mkline *MkLine) forEachUsedDirective(action func(expr *MkExpr, time EctxTime)) {
+	switch mkline.Directive() {
+	case "for":
+		mkline.ForEachUsedText(mkline.Args(), EctxLoadTime, action)
+	case "if", "elif":
+		if cond := mkline.Cond(); cond != nil {
+			cond.Walk(&MkCondCallback{
+				Expr: func(expr *MkExpr) {
+					mkline.ForEachUsedExpr(expr, EctxLoadTime, action)
+				}})
+		}
 	}
 }
 
