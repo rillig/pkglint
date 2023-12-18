@@ -230,6 +230,8 @@ func (s *Suite) Test_BasicType_NeedsQ(c *check.C) {
 	// Typically safe, seldom used in practice.
 	test("DISTFILES", false)
 
+	test("GITHUB_TAG", false)
+
 	test("SUBST_CLASSES", false)
 	test("PLIST_VARS", false)
 
