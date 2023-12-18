@@ -618,10 +618,15 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern__API_ABI(c *check.C) {
 
 	t.SetUpPackage("category/package",
 		".include \"../../category/lib/buildlink3.mk\"",
-		"BUILDLINK_API_DEPENDS.lib+=\tlib>=1.0pkg")
+		"BUILDLINK_API_DEPENDS.lib+=\tlib>=1.0pkg",
+		".include \"../../category/indirect/buildlink3.mk\"",
+		"BUILDLINK_API_DEPENDS.indirect+=\tindirect>=${:U1.4api}")
 	t.SetUpPackage("category/lib")
 	t.CreateFileBuildlink3("category/lib/buildlink3.mk",
 		"BUILDLINK_ABI_DEPENDS.lib+=\tlib>=1.4abi")
+	t.CreateFileBuildlink3("category/indirect/buildlink3.mk",
+		"BUILDLINK_API_DEPENDS.indirect+=\tindirect>=${:U2.0}",
+		"BUILDLINK_ABI_DEPENDS.indirect+=\tindirect>=${:U2.2}")
 	t.Chdir("category/package")
 	t.FinishSetUp()
 
@@ -1623,10 +1628,14 @@ func (s *Suite) Test_VartypeCheck_PathPattern(c *check.C) {
 	vt.Values(
 		"/home/user/*",
 		"src/*&*",
+		"src/*&&*",
 		"src/*/*")
 
 	vt.Output(
-		"WARN: filename.mk:2: The pathname pattern \"src/*&*\" contains the invalid character \"&\".")
+		"WARN: filename.mk:2: The pathname pattern \"src/*&*\" "+
+			"contains the invalid character \"&\".",
+		"WARN: filename.mk:3: The pathname pattern \"src/*&&*\" "+
+			"contains the invalid characters \"&&\".")
 
 	vt.Op(opUseMatch)
 	vt.Values("any")
@@ -2489,6 +2498,38 @@ func (s *Suite) Test_VartypeCheck_WrkdirSubdirectory(c *check.C) {
 	vt.Output(
 		"NOTE: filename.mk:21: " +
 			"Setting WRKSRC to \"${WRKDIR}/package-1.0\" is redundant.")
+
+	// When the makefile is checked independent of a package, there
+	// cannot be any redundancy check.
+	vt.Package(nil)
+
+	vt.Values(
+		"${WRKDIR}/package-1.0")
+
+	vt.OutputEmpty()
+}
+
+// If the package has a non-constant DISTNAME, pkglint cannot reliably
+// determine the actual value of WRKSRC, therefore no redundancy note.
+func (s *Suite) Test_VartypeCheck_WrkdirSubdirectory__non_constant_DISTNAME(c *check.C) {
+	t := s.Init(c)
+	pkg := NewPackage(t.SetUpPackage("category/package",
+		"DISTNAME=\tpackage-1.0",
+		".if 1",
+		"DISTNAME=\tpackage-1.1",
+		".endif"))
+	t.FinishSetUp()
+	vt := NewVartypeCheckTester(t, BtWrkdirSubdirectory)
+	pkg.Check() // To initialize pkg.redundant.
+
+	vt.Package(pkg)
+	vt.Varname("WRKSRC")
+	vt.Op(opAssign)
+
+	vt.Values(
+		"${WRKDIR}/package-1.0")
+
+	vt.OutputEmpty()
 }
 
 func (s *Suite) Test_VartypeCheck_WrksrcPathPattern(c *check.C) {

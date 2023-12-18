@@ -157,7 +157,8 @@ func (cv *VartypeCheck) BasicRegularExpression() {
 		case lexer.SkipByte('\\'):
 			parseBackslash()
 
-		case lexer.Skip(1):
+		default:
+			lexer.Skip(1)
 		}
 	}
 }

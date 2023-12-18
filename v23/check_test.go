@@ -542,13 +542,16 @@ func (t *Tester) SetUpPackage(pkgpath RelPath, makefileLines ...string) CurrPath
 		mlines = append(mlines, "")
 	}
 
+	replaced := map[string]bool{}
 line:
 	for _, line := range makefileLines {
 		assert(!hasSuffix(line, "\\")) // Continuation lines are not yet supported.
 
 		if m, varname := match1(line, `^#?(\w+)[!+:?]?=`); m {
 			for i, existingLine := range mlines[:19] {
-				if hasPrefix(strings.TrimPrefix(existingLine, "#"), varname+"=") {
+				if hasPrefix(strings.TrimPrefix(existingLine, "#"), varname+"=") &&
+					!replaced[varname] {
+					replaced[varname] = true
 					mlines[i] = line
 					continue line
 				}
