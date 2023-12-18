@@ -26,21 +26,6 @@ func (s *Suite) Test_MkLineChecker__unclosed_expr(c *check.C) {
 		"WARN: Makefile:2: EGDIR/pam.d is used but not defined.")
 }
 
-func (s *Suite) Test_MkLineChecker_Check__url2pkg(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpVartypes()
-
-	mklines := t.NewMkLines("filename.mk",
-		MkCvsID,
-		"# url2pkg-marker")
-
-	mklines.Check()
-
-	t.CheckOutputLines(
-		"ERROR: filename.mk:2: This comment indicates unfinished work (url2pkg).")
-}
-
 func (s *Suite) Test_MkLineChecker_Check__buildlink3_include_prefs(c *check.C) {
 	t := s.Init(c)
 
@@ -124,6 +109,22 @@ func (s *Suite) Test_MkLineChecker_checkEmptyContinuation(c *check.C) {
 		"WARN: ~/filename.mk:3: This line looks empty but continues the previous line.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkTextExpr(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"VAR=\t${:U",
+		".info ${VAR}")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:2: Missing closing \"}\" for \"\".",
+		// FIXME: The variable VAR _is_ used in the .info directive.
+		"WARN: filename.mk:2: VAR is defined but not used.")
+}
+
 func (s *Suite) Test_MkLineChecker_checkText(c *check.C) {
 	t := s.Init(c)
 
@@ -172,28 +173,22 @@ func (s *Suite) Test_MkLineChecker_checkText__WRKSRC(c *check.C) {
 		"WARN: ~/module.mk:3: WRKSRC is used but not defined.")
 }
 
-func (s *Suite) Test_MkLineChecker_checkText__missing_dollar(c *check.C) {
+func (s *Suite) Test_MkLineChecker_checkTextWrksrcDotDot(c *check.C) {
 	t := s.Init(c)
-
 	t.SetUpVartypes()
+	t.SetUpTool("echo", "ECHO", AfterPrefsMk)
+
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
-		"CONFIGURE_ARGS+=\t--with-fltk={BUILDLINK_DIR:Q}/nonexistent",
-		"INDIRECT=\t{:Ufallback}",
-		"PRINT_PLIST_AWK+=\t{sub(\"^.*em:id=\\\"\", \"\");sub(\"\\\".*$$\",\"\");print $$0}")
+		"do-build:",
+		"\techo ${WRKSRC}/..")
 
-	for _, mkline := range mklines.mklines {
-		if mkline.IsVarassign() {
-			ck := NewMkLineChecker(mklines, mkline)
-			ck.checkText(mkline.Value())
-		}
-	}
+	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:2: "+
-			"Maybe missing '$' in expression \"{BUILDLINK_DIR:Q}\".",
-		"WARN: filename.mk:3: "+
-			"Maybe missing '$' in expression \"{:Ufallback}\".")
+		"WARN: filename.mk:3: " +
+			"Building the package should take place entirely " +
+			"inside ${WRKSRC}, not \"${WRKSRC}/..\".")
 }
 
 // In general, -Wl,-R should not appear in package Makefiles.
@@ -230,6 +225,30 @@ func (s *Suite) Test_MkLineChecker_checkTextRpath(c *check.C) {
 		// TODO: Remove duplicates.
 		"WARN: filename.mk:11: Please use ${COMPILER_RPATH_FLAG} instead of \"-Wl,--rpath,\".",
 		"WARN: filename.mk:11: Please use ${COMPILER_RPATH_FLAG} instead of \"-Wl,--rpath,\".")
+}
+
+func (s *Suite) Test_MkLineChecker_checkTextMissingDollar(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"CONFIGURE_ARGS+=\t--with-fltk={BUILDLINK_DIR:Q}/nonexistent",
+		"INDIRECT=\t{:Ufallback}",
+		"PRINT_PLIST_AWK+=\t{sub(\"^.*em:id=\\\"\", \"\");sub(\"\\\".*$$\",\"\");print $$0}")
+
+	for _, mkline := range mklines.mklines {
+		if mkline.IsVarassign() {
+			ck := NewMkLineChecker(mklines, mkline)
+			ck.checkText(mkline.Value())
+		}
+	}
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:2: "+
+			"Maybe missing '$' in expression \"{BUILDLINK_DIR:Q}\".",
+		"WARN: filename.mk:3: "+
+			"Maybe missing '$' in expression \"{:Ufallback}\".")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVartype__simple_type(c *check.C) {
@@ -367,6 +386,26 @@ func (s *Suite) Test_MkLineChecker_checkVartype__CFLAGS(c *check.C) {
 		"WARN: Makefile:2: Compiler flag \"%s\\\\\\\"\" has unbalanced double quotes.")
 }
 
+func (s *Suite) Test_MkLineChecker_CheckVartypeBasic(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"PKGREVISION=\tnone")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:2: "+
+			"The variable PKGREVISION should not be set "+
+			"in this file; it would be ok in Makefile.",
+		"ERROR: filename.mk:2: "+
+			"PKGREVISION must be a positive integer number.",
+		"ERROR: filename.mk:2: PKGREVISION only makes sense "+
+			"directly in the package Makefile.")
+}
+
 func (s *Suite) Test_MkLineChecker_checkShellCommand__indentation(c *check.C) {
 	t := s.Init(c)
 
@@ -411,6 +450,21 @@ func (s *Suite) Test_MkLineChecker_checkShellCommand__indentation(c *check.C) {
 		"        done",
 		"",
 		"                                        # comment, not a shell command")
+}
+
+func (s *Suite) Test_MkLineChecker_checkComment(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"# url2pkg-marker")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"ERROR: filename.mk:2: This comment indicates unfinished work (url2pkg).")
 }
 
 func (s *Suite) Test_MkLineChecker_checkInclude(c *check.C) {
@@ -1085,4 +1139,19 @@ func (s *Suite) Test_MkLineChecker_checkDependencyRule(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: category/package/filename.mk:8: Undeclared target \"target-3\".")
+}
+
+func (s *Suite) Test_MkLineChecker_checkDependencyTarget(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"",
+		"unknown-target:",
+		"\t:;")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:3: Undeclared target \"unknown-target\".")
 }

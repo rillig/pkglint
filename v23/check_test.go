@@ -107,7 +107,7 @@ func Test__qa(t *testing.T) {
 
 	ck.Configure("mkline.go", "*", "*", -intqa.EMissingTest)         // TODO
 	ck.Configure("mklineparser.go", "*", "*", -intqa.EMissingTest)   // TODO
-	ck.Configure("mklinechecker.go", "*", "*", -intqa.EMissingTest)  // TODO
+	ck.Configure("mklinechecker.go", "", "*", -intqa.EMissingTest)   // TODO
 	ck.Configure("mklines.go", "*", "*", -intqa.EMissingTest)        // TODO
 	ck.Configure("mkparser.go", "*", "*", -intqa.EMissingTest)       // TODO
 	ck.Configure("mkshparser.go", "*", "*", -intqa.EMissingTest)     // TODO
