@@ -121,7 +121,6 @@ func (s *Suite) Test_MkLineChecker_checkTextExpr(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: filename.mk:2: Missing closing \"}\" for \"\".",
-		// FIXME: The variable VAR _is_ used in the .info directive.
 		"WARN: filename.mk:2: VAR is defined but not used.")
 }
 

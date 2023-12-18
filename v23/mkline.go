@@ -865,7 +865,7 @@ func (mkline *MkLine) ForEachUsed(action func(expr *MkExpr, time EctxTime)) {
 
 func (mkline *MkLine) forEachUsedDirective(action func(expr *MkExpr, time EctxTime)) {
 	switch mkline.Directive() {
-	case "for":
+	case "error", "for", "info", "warning":
 		mkline.ForEachUsedText(mkline.Args(), EctxLoadTime, action)
 	case "if", "elif":
 		if cond := mkline.Cond(); cond != nil {
