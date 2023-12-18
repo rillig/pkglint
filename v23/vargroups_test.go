@@ -63,14 +63,17 @@ func (s *Suite) Test_VargroupsChecker__variable_reference(c *check.C) {
 		"_USER_VARS.group=\t${:Uparam:@param@VAR.${param}@}",
 		"_LISTED_VARS.group=\t${:Uparam:@param@VAR.${param}@}",
 		"",
-		"VAR.param=\tvalue")
+		"VAR.param=\t\tvalue",
+		"VAR.${:Uindirect}=\tvalue")
 
 	mklines.Check()
 
 	t.CheckOutputLines(
 		"WARN: Makefile:7: VAR.param is defined but not used.",
 		// TODO: Hmmm, that's going to be complicated to get right.
-		"WARN: Makefile:7: Variable VAR.param is defined but not mentioned in the _VARGROUPS section.")
+		"WARN: Makefile:7: Variable VAR.param is defined "+
+			"but not mentioned in the _VARGROUPS section.",
+		"WARN: Makefile:8: VAR.${:Uindirect} is defined but not used.")
 }
 
 func (s *Suite) Test_VargroupsChecker__public_underscore(c *check.C) {
