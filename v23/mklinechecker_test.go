@@ -120,8 +120,7 @@ func (s *Suite) Test_MkLineChecker_checkTextExpr(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:2: Missing closing \"}\" for \"\".",
-		"WARN: filename.mk:2: VAR is defined but not used.")
+		"WARN: filename.mk:2: Missing closing \"}\" for \"\".")
 }
 
 func (s *Suite) Test_MkLineChecker_checkText(c *check.C) {
