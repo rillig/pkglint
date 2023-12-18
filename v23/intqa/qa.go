@@ -334,6 +334,9 @@ func (ck *QAChecker) checkTesteesTest() {
 
 		testCode := code{testee.testFile(), "", testName, 0}
 		test := test{testCode, testee.fullName(), "", testee}
+		if !ck.isRelevant(testee.file, testee.Type, testee.Func, EMissingTest) {
+			continue
+		}
 		insertion := ck.insertionSuggestion(&test)
 
 		ck.addError(
@@ -482,12 +485,57 @@ func (ck *QAChecker) insertionSuggestion(newTest *test) string {
 			test.testee.order >= newTest.testee.order &&
 			test.file == testFile {
 
+			if test.isMethod() {
+				b, err := os.ReadFile(testFile)
+				if err != nil {
+					panic(err)
+				}
+				s := string(b)
+				i := strings.Index(s, "\nfunc (s *"+test.Type+") "+test.Func+"(")
+				for {
+					prev := strings.LastIndex(s[:i], "\n")
+					if prev != -1 && strings.HasPrefix(s[prev:], "\n//") {
+						i = prev
+					} else {
+						break
+					}
+				}
+				if i != -1 {
+					s = s[:i] + skeleton(test.Type, newTest.Func) + s[i:]
+					err = os.WriteFile(testFile, []byte(s), 0666)
+					if err != nil {
+						panic(err)
+					}
+					return fmt.Sprintf("Inserted it in %q, above %q.",
+						newTest.file, test.fullName())
+				}
+			}
+
 			return fmt.Sprintf("Insert it in %q, above %q.",
 				newTest.file, test.fullName())
 		}
 	}
 
-	return fmt.Sprintf("Insert it at the bottom of %q.", newTest.file)
+	b, err := os.ReadFile(testFile)
+	if err != nil {
+		panic(err)
+	}
+	err = os.WriteFile(testFile, []byte(string(b)+skeleton("Suite", newTest.Func)), 0666)
+	if err != nil {
+		panic(err)
+	}
+	return fmt.Sprintf("Inserted it at the bottom of %q.", newTest.file)
+}
+
+func skeleton(typeName, methodName string) string {
+	return "\n" +
+		"func (s *" + typeName + ") " + methodName + "(c *check.C) {\n" +
+		"\tt := s.Init(c)\n" +
+		"\n" +
+		"\t// TODO\n" +
+		"\n" +
+		"\tt.CheckOutputEmpty()\n" +
+		"}\n"
 }
 
 type filter struct {
