@@ -2783,6 +2783,22 @@ func (s *Suite) Test_Package_checkMesonPython(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_Package_checkMesonPython__include_tool_mk(c *check.C) {
+	t := s.Init(c)
+
+	t.CreateFileLines("devel/meson/build.mk")
+	t.CreateFileLines("lang/python/tool.mk")
+	t.SetUpPackage("category/package",
+		".include \"../../lang/python/tool.mk\"",
+		".include \"../../devel/meson/build.mk\"")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Package_checkMesonPython__missing_PYTHON_FOR_BUILD_ONLY(c *check.C) {
 	t := s.Init(c)
 

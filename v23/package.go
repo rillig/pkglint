@@ -1273,7 +1273,7 @@ func (pkg *Package) checkMesonPython(mklines *MkLines) {
 	}
 
 	for path := range pkg.unconditionalIncludes {
-		if path.ContainsPath("lang/python") {
+		if path.ContainsPath("lang/python") && !path.AsPath().HasSuffixPath("lang/python/tool.mk") {
 			goto warn
 		}
 	}
