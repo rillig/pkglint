@@ -739,7 +739,7 @@ func (pkg *Package) checkWipCommitMsg() {
 			"these changes are in the NEWS file, see",
 			"https://www.gnu.org/prep/standards/html_node/NEWS-File.html.",
 			"",
-			"See https://www.pkgsrc.org/wip/users/.")
+			"See https://www.pkgsrc.org/wip/users/#COMMIT_MSG.")
 		return
 	}
 }
