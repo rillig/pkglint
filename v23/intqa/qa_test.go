@@ -8,6 +8,7 @@ import (
 	"go/token"
 	"gopkg.in/check.v1"
 	"io"
+	"os"
 	"path"
 	"strings"
 	"testing"
@@ -138,16 +139,26 @@ func (s *Suite) Test_QAChecker_Check(c *check.C) {
 	ck.Configure("*", "*", "", -EMissingTest)
 	ck.Configure("*", "Suite", "*", -EMissingTest)
 
+	by, err := os.ReadFile("qa_test.go")
+	c.Check(err, check.IsNil)
+	defer func() {
+		err := os.WriteFile("qa_test.go", by, 0666)
+		c.Check(err, check.IsNil)
+	}()
+
 	ck.Check()
 
 	s.CheckErrors(
 		"Missing unit test \"Test_QAChecker_addCode\" for \"QAChecker.addCode\". "+
-			"Insert it in \"qa_test.go\", above \"Suite.Test_QAChecker_isTest\".",
+			"Inserted it in \"qa_test.go\", above \"Suite.Test_QAChecker_isTest\".",
 		"Missing unit test \"Test_QAChecker_relate\" for \"QAChecker.relate\". "+
-			"Insert it in \"qa_test.go\", above \"Suite.Test_QAChecker_checkTests\".",
+			"Inserted it in \"qa_test.go\", above \"Suite.Test_QAChecker_checkTests\".",
 		"Missing unit test \"Test_QAChecker_isRelevant\" for \"QAChecker.isRelevant\". "+
-			"Insert it in \"qa_test.go\", above \"Suite.Test_QAChecker_errorsMask\".")
-	s.CheckSummary("3 errors.")
+			"Inserted it in \"qa_test.go\", above \"Suite.Test_QAChecker_errorsMask\".",
+		"Missing unit test \"Test_skeleton\" for \"skeleton\". "+
+			"Inserted it in \"qa_test.go\", above \"Suite.Test_code_fullName\".",
+	)
+	s.CheckSummary("4 errors.")
 }
 
 func (s *Suite) Test_QAChecker_load__filtered_nothing(c *check.C) {
@@ -465,6 +476,11 @@ func (s *Suite) Test_QAChecker_checkTesteesTest(c *check.C) {
 	ck.addTest(code{"demo_test.go", "", "Test_OkType_Method", 0})
 	ck.relate()
 
+	_ = os.WriteFile("demo_test.go", []byte(""), 0666)
+	defer func() {
+		_ = os.Remove("demo_test.go")
+	}()
+
 	ck.checkTesteesTest()
 
 	s.CheckErrors(
@@ -475,7 +491,7 @@ func (s *Suite) Test_QAChecker_checkTesteesTest(c *check.C) {
 		"Missing unit test \"Test_Type_Method\" for \"Type.Method\". "+
 			"Insert it in \"demo_test.go\", above \"Test_OkType\".",
 		"Missing unit test \"Test_Bottom_Method\" for \"Bottom.Method\". "+
-			"Insert it at the bottom of \"demo_test.go\".")
+			"Inserted it at the bottom of \"demo_test.go\".")
 }
 
 func (s *Suite) Test_QAChecker_checkMethodsSameFile(c *check.C) {
@@ -600,6 +616,15 @@ func (s *Suite) Test_QAChecker_insertionSuggestion(c *check.C) {
 	ck.addTest(code{"file2_test.go", "", "Test_Func5", 6})
 	ck.relate()
 
+	_ = os.WriteFile("file1_test.go", nil, 0666)
+	_ = os.WriteFile("file2_test.go", nil, 0666)
+	_ = os.WriteFile("file3_test.go", nil, 0666)
+	defer func() {
+		_ = os.Remove("file3_test.go")
+		_ = os.Remove("file2_test.go")
+		_ = os.Remove("file1_test.go")
+	}()
+
 	testeeFor := func(name string) *testee {
 		for _, testee := range ck.testees {
 			if testee.fullName() == name {
@@ -620,7 +645,7 @@ func (s *Suite) Test_QAChecker_insertionSuggestion(c *check.C) {
 
 	test(
 		"file1_test.go", "Test_Type1",
-		"Insert it at the bottom of \"file1_test.go\".")
+		"Inserted it at the bottom of \"file1_test.go\".")
 
 	test(
 		"file2_test.go", "Test_Func4",
@@ -632,7 +657,7 @@ func (s *Suite) Test_QAChecker_insertionSuggestion(c *check.C) {
 
 	test(
 		"file2_test.go", "Test_Func6",
-		"Insert it at the bottom of \"file2_test.go\".")
+		"Inserted it at the bottom of \"file2_test.go\".")
 }
 
 func (s *Suite) Test_code_fullName(c *check.C) {
