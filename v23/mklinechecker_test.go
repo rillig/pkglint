@@ -886,7 +886,9 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePath__wip_mk(c *check.C) {
 		"WARN: ~/wip/package/Makefile:20: References to the pkgsrc-wip "+
 			"infrastructure should look like \"../../wip/mk\", not \"../mk\".",
 		"WARN: ~/wip/package/Makefile:21: References to other packages "+
-			"should look like \"../../category/package\", not \"../package\".")
+			"should look like \"../../category/package\", not \"../package\".",
+		"WARN: ~/wip/package/COMMIT_MSG: Every work-in-progress "+
+			"package should have a COMMIT_MSG file.")
 }
 
 func (s *Suite) Test_MkLineChecker_CheckPackageDir(c *check.C) {

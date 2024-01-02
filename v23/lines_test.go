@@ -128,7 +128,9 @@ func (s *Suite) Test_Lines_CheckCvsID__wip(c *check.C) {
 		"NOTE: ~/wip/package/file1.mk:1: Expected exactly \"# $"+"NetBSD$\".",
 		"ERROR: ~/wip/package/file3.mk:1: Expected \"# $"+"NetBSD$\".",
 		"ERROR: ~/wip/package/file4.mk:1: Expected \"# $"+"NetBSD$\".",
-		"ERROR: ~/wip/package/file5.mk:1: Expected \"# $"+"NetBSD$\".")
+		"ERROR: ~/wip/package/file5.mk:1: Expected \"# $"+"NetBSD$\".",
+		"WARN: ~/wip/package/COMMIT_MSG: Every work-in-progress "+
+			"package should have a COMMIT_MSG file.")
 
 	G.Logger.Opts.Autofix = true
 

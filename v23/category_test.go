@@ -504,6 +504,8 @@ func (s *Suite) Test_CheckPackageDirCollision__wip(c *check.C) {
 	G.Check(".")
 
 	t.CheckOutputLines(
+		"WARN: COMMIT_MSG: Every work-in-progress "+
+			"package should have a COMMIT_MSG file.",
 		"ERROR: ../../category/Makefile:5: "+
 			"On case-insensitive file systems, "+
 			"\"PACKAGE\" is the same as \"package\".",

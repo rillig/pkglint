@@ -147,8 +147,11 @@ func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates__wip(c *check.C) {
 	G.Check(pkg)
 
 	t.CheckOutputLines(
-		"WARN: ~/wip/package/Makefile:3: " +
-			"This package should be updated to 1.13 (cool new features; see ../../wip/TODO:5).")
+		"WARN: ~/wip/package/Makefile:3: "+
+			"This package should be updated to 1.13 "+
+			"(cool new features; see ../../wip/TODO:5).",
+		"WARN: ~/wip/package/COMMIT_MSG: Every work-in-progress "+
+			"package should have a COMMIT_MSG file.")
 }
 
 func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates__parse_errors(c *check.C) {

@@ -624,6 +624,7 @@ func (pkg *Package) check(filenames []CurrPath, mklines, allLines *MkLines) {
 
 	pkg.checkDistfilesInDistinfo(allLines)
 	pkg.checkPkgConfig(allLines)
+	pkg.checkWipCommitMsg()
 }
 
 func (pkg *Package) checkDescr(filenames []CurrPath, mklines *MkLines) {
@@ -701,6 +702,46 @@ func (pkg *Package) checkPkgConfig(allLines *MkLines) {
 		"the buildlink3.mk files.",
 		"Since this package does not include any such files, the buildlink3",
 		"directory will be empty and pkg-config will not find anything.")
+}
+
+func (pkg *Package) checkWipCommitMsg() {
+	if !G.Wip {
+		return
+	}
+	file := pkg.File("COMMIT_MSG")
+	lines := Load(file, NotEmpty)
+	if lines == nil {
+		line := NewLineWhole(file)
+		line.Warnf("Every work-in-progress package should have a COMMIT_MSG file.")
+		line.Explain(
+			"A wip package should have a file COMMIT_MSG",
+			"that contains exactly the text",
+			"that should be used for importing the package to main pkgsrc,",
+			"or for updating the main pkgsrc package from the wip version.",
+			"Someone with main pkgsrc write access should be able",
+			"to simply run 'cvs commit -F COMMIT_MSG'.",
+			"",
+			"Line 1 should have one of these forms:",
+			"\tcategory/pkgpath: Add foo version 1.2.3",
+			"\tcategory/pkgpath: Update foo to 4.5.6",
+			"",
+			"The next paragraph gives credit",
+			"to the work-in-progress packager, such as:",
+			"\tPackaged in wip by Alyssa P. Hacker",
+			"\tUpdate prepared in wip by Ben Bitdiddle",
+			"",
+			"The next paragraph describes the pkgsrc-specific",
+			"packaging changes, if any.",
+			"",
+			"The next paragraph summarizes the upstream changes",
+			"on a high level.",
+			"In packages following the GNU Coding Standards,",
+			"these changes are in the NEWS file, see",
+			"https://www.gnu.org/prep/standards/html_node/NEWS-File.html.",
+			"",
+			"See https://www.pkgsrc.org/wip/users/.")
+		return
+	}
 }
 
 func (pkg *Package) checkfilePackageMakefile(filename CurrPath, mklines *MkLines, allLines *MkLines) {

@@ -1094,14 +1094,24 @@ func (s *Suite) Test_Pkglint_checkReg__readme_and_todo(c *check.C) {
 
 	t.CheckOutputLines(
 		"ERROR: category/package/TODO: Packages in main pkgsrc must not have a TODO file.",
-		"1 error found.")
+		"WARN: wip/package/COMMIT_MSG: Every work-in-progress "+
+			"package should have a COMMIT_MSG file.",
+		"1 error and 1 warning found.",
+		"(Run \"pkglint -e category/package wip/package\" "+
+			"to show explanations.)",
+	)
 
 	t.Main("--import", "category/package", "wip/package")
 
 	t.CheckOutputLines(
 		"ERROR: category/package/TODO: Packages in main pkgsrc must not have a TODO file.",
 		"ERROR: wip/package/TODO: Must be cleaned up before committing the package.",
-		"2 errors found.")
+		"WARN: wip/package/COMMIT_MSG: Every work-in-progress "+
+			"package should have a COMMIT_MSG file.",
+		"2 errors and 1 warning found.",
+		"(Run \"pkglint -e --import category/package wip/package\" "+
+			"to show explanations.)",
+	)
 }
 
 func (s *Suite) Test_Pkglint_checkReg__unknown_file_in_patches(c *check.C) {
@@ -1195,7 +1205,9 @@ func (s *Suite) Test_Pkglint_checkReg__wip_commit_message(c *check.C) {
 
 	G.Check(".")
 
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: COMMIT_MSG: Every work-in-progress package " +
+			"should have a COMMIT_MSG file.")
 }
 
 func (s *Suite) Test_Pkglint_checkReg__file_ignored_by_CVS(c *check.C) {

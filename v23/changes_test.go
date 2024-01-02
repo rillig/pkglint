@@ -120,7 +120,12 @@ func (s *Suite) Test_Changes_parseFile__wip_suppresses_warnings(c *check.C) {
 	t.Main("-Cglobal", "-Wall", "wip/package")
 
 	t.CheckOutputLines(
-		"Looks fine.")
+		"WARN: ~/wip/package/COMMIT_MSG: Every work-in-progress "+
+			"package should have a COMMIT_MSG file.",
+		"1 warning found.",
+		"(Run \"pkglint -e -Cglobal -Wall ~/wip/package\" "+
+			"to show explanations.)",
+	)
 }
 
 // When a single package is checked, only the lines from doc/CHANGES
@@ -554,7 +559,13 @@ func (s *Suite) Test_Changes_checkRemovedAfterLastFreeze__wip(c *check.C) {
 	// write access to main pkgsrc, and therefore cannot fix doc/CHANGES.
 
 	t.CheckOutputLines(
-		"Looks fine.")
+		"WARN: ~/wip/package/COMMIT_MSG: Every work-in-progress "+
+			"package should have a COMMIT_MSG file.",
+		"",
+		"1 warning found.",
+		"(Run \"pkglint -e -Wall --source ~/wip/package\" "+
+			"to show explanations.)",
+	)
 }
 
 func (s *Suite) Test_Change_Version(c *check.C) {
