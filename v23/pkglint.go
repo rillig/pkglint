@@ -218,6 +218,8 @@ func (p *Pkglint) prepareMainLoop() {
 	if err == nil {
 		// On Windows, this is `Computername\Username`.
 		p.Username = replaceAll(currentUser.Username, `^.*\\`, "")
+	} else {
+		trace.Stepf("user.Current failed: %s", err)
 	}
 }
 
