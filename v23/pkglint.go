@@ -41,7 +41,7 @@ type Pkglint struct {
 	Infrastructure bool   // Is the currently checked file from the pkgsrc infrastructure?
 	Testing        bool   // Is pkglint in self-testing mode (only during development)?
 	Experimental   bool   // For experimental features, only enabled individually in tests
-	Username       string // For checking against OWNER and MAINTAINER
+	Username       string // For checking against OWNER and MAINTAINER; empty if unknown
 
 	cvsEntriesDir CurrPath // Cached to avoid I/O
 	cvsEntries    map[RelPath]CvsEntry
@@ -215,9 +215,10 @@ func (p *Pkglint) prepareMainLoop() {
 	}
 
 	currentUser, err := user.Current()
-	assertNil(err, "user.Current")
-	// On Windows, this is `Computername\Username`.
-	p.Username = replaceAll(currentUser.Username, `^.*\\`, "")
+	if err == nil {
+		// On Windows, this is `Computername\Username`.
+		p.Username = replaceAll(currentUser.Username, `^.*\\`, "")
+	}
 }
 
 func (p *Pkglint) ParseCommandLine(args []string) int {
