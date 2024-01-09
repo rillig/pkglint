@@ -1330,7 +1330,7 @@ warn:
 		"After building the package, it is typically independent from Python.",
 		"",
 		"To change the Python dependency to build-time,",
-		"set PYTHON_FOR_BUILD_ONLY=yes in the package Makefile.")
+		"set PYTHON_FOR_BUILD_ONLY=tool in the package Makefile.")
 }
 
 func (pkg *Package) determineEffectivePkgVars() {
