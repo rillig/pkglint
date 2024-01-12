@@ -62,7 +62,7 @@ func (ck *PatchChecker) Check(pkg *Package) {
 		if ck.llex.SkipRegexp(`^\*\*\*[\t ]([^\t ]+)(.*)$`) {
 			if ck.llex.SkipRegexp(`^---[\t ]([^\t ]+)(.*)$`) {
 				ck.checkBeginDiff(line, len(patchedFiles))
-				line.Warnf("Please use unified diffs (diff -u) for patches.")
+				line.Warnf("Use unified diffs (diff -u) for patches.")
 				return
 			}
 
@@ -399,11 +399,19 @@ func (ck *PatchChecker) checktextCvsID(text string) {
 		return
 	}
 	if m, tagname := match1(text, `\$(Author|Date|Header|Id|Locker|Log|Name|RCSfile|Revision|Source|State|NetBSD)(?::[^\$]*)?\$`); m {
+		line := ck.llex.PreviousLine()
 		if matches(text, `^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@(.*)$`) {
-			ck.llex.PreviousLine().Warnf("Found CVS tag \"$%s$\". Please remove it.", tagname)
+			line.Warnf("Remove the CVS tag \"$%s$\".", tagname)
 		} else {
-			ck.llex.PreviousLine().Warnf("Found CVS tag \"$%s$\". Please remove it by reducing the number of context lines using pkgdiff or \"diff -U[210]\".", tagname)
+			line.Warnf("Remove the CVS tag \"$%s$\" "+
+				"by reducing the number of context lines "+
+				"using pkgdiff or \"diff -U[210]\".", tagname)
 		}
+		line.Explain(
+			"When a patch contains CVS tags,",
+			"its checksum changes every time",
+			"the patch is checked in to CVS,",
+			"thus invalidating the distinfo.")
 	}
 }
 

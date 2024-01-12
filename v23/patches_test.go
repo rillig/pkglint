@@ -185,7 +185,7 @@ func (s *Suite) Test_CheckLinesPatch__context_diff(c *check.C) {
 
 	t.CheckOutputLines(
 		"ERROR: patch-ctx:4: Each patch must be documented.",
-		"WARN: patch-ctx:4: Please use unified diffs (diff -u) for patches.")
+		"WARN: patch-ctx:4: Use unified diffs (diff -u) for patches.")
 }
 
 func (s *Suite) Test_CheckLinesPatch__no_patch(c *check.C) {
@@ -307,7 +307,7 @@ func (s *Suite) Test_CheckLinesPatch__only_context_header_but_no_content(c *chec
 	// Context diffs are deprecated, therefore it is not worth
 	// adding extra code for checking them thoroughly.
 	t.CheckOutputLines(
-		"WARN: patch-context:5: Please use unified diffs (diff -u) for patches.")
+		"WARN: patch-context:5: Use unified diffs (diff -u) for patches.")
 }
 
 func (s *Suite) Test_CheckLinesPatch__no_newline_with_text_following(c *check.C) {
@@ -1062,9 +1062,9 @@ func (s *Suite) Test_PatchChecker_checktextCvsID(c *check.C) {
 	CheckLinesPatch(lines, nil)
 
 	t.CheckOutputLines(
-		"WARN: ~/patch-aa:7: Found CVS tag \"$"+"Id$\". Please remove it.",
-		"WARN: ~/patch-aa:8: Found CVS tag \"$"+"Id$\". Please remove it by reducing the number of context lines using pkgdiff or \"diff -U[210]\".",
-		"WARN: ~/patch-aa:11: Found CVS tag \"$"+"Author$\". Please remove it by reducing the number of context lines using pkgdiff or \"diff -U[210]\".")
+		"WARN: ~/patch-aa:7: Remove the CVS tag \"$"+"Id$\".",
+		"WARN: ~/patch-aa:8: Remove the CVS tag \"$"+"Id$\" by reducing the number of context lines using pkgdiff or \"diff -U[210]\".",
+		"WARN: ~/patch-aa:11: Remove the CVS tag \"$"+"Author$\" by reducing the number of context lines using pkgdiff or \"diff -U[210]\".")
 }
 
 func (s *Suite) Test_PatchChecker_checkCanonicalPatchName(c *check.C) {
