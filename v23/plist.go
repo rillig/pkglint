@@ -328,7 +328,7 @@ func (ck *PlistChecker) checkPathEtc(pline *PlistLine) {
 
 	pline.Errorf("Configuration files must not be registered in the PLIST.")
 	pline.Explain(
-		"Please use the CONF_FILES framework, which is described in mk/pkginstall/bsd.pkginstall.mk.")
+		"Use the CONF_FILES framework, which is described in mk/pkginstall/bsd.pkginstall.mk.")
 }
 
 func (ck *PlistChecker) checkPathInfo(pline *PlistLine) {
@@ -633,7 +633,7 @@ func (pline *PlistLine) warnImakeMannewsuffix() {
 	pline.Explain(
 		"This is the result of a print-PLIST call that has not been edited",
 		"manually by the package maintainer.",
-		"Please replace the IMAKE_MANNEWSUFFIX with:",
+		"Replace the IMAKE_MANNEWSUFFIX with:",
 		"",
 		"\tIMAKE_MAN_SUFFIX for programs,",
 		"\tIMAKE_LIBMAN_SUFFIX for library functions,",

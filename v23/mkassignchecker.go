@@ -620,7 +620,7 @@ func (ck *MkAssignChecker) checkRightUseLanguages() {
 		mkline.Explain(
 			"Specifying a C/C++ language version in USE_LANGUAGES",
 			"is deprecated.",
-			"Please set USE_CC_FEATURES (for C)",
+			"Set USE_CC_FEATURES (for C)",
 			"or USE_CXX_FEATURES (for C++).",
 			"If forcing a specific language version is necessary",
 			"for the build to succeed,",

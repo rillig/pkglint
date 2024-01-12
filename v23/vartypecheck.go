@@ -974,7 +974,7 @@ func (cv *VartypeCheck) Option() {
 			cv.Warnf("Undocumented option %q.", optname)
 			cv.Explain(
 				"This option is not documented in the mk/defaults/options.description file.",
-				"Please think of a brief but precise description and either",
+				"Think of a brief but precise description and either",
 				"update that file yourself or suggest a description for this option",
 				"on the tech-pkg@NetBSD.org mailing list.")
 		}
