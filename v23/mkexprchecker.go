@@ -750,7 +750,7 @@ func (ck *MkExprChecker) warnWrongQuotingModifiers(correctMod string, mod string
 func (ck *MkExprChecker) warnModifierQInQuotes(mod string) {
 	mkline := ck.MkLine
 
-	mkline.Warnf("Please move ${%s%s} outside of any quoting characters.",
+	mkline.Warnf("Move ${%s%s} outside of any quoting characters.",
 		ck.expr.varname, mod)
 	mkline.Explain(
 		"The :Q modifier only works reliably when it is used outside of any",

@@ -917,7 +917,7 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine(c *check.C) {
 
 	test("echo '${COMMENT:Q}'", // EctxQuotSquot
 		"WARN: filename.mk:1: The :Q modifier should not be used inside quotes.",
-		"WARN: filename.mk:1: Please move ${COMMENT:Q} outside of any quoting characters.")
+		"WARN: filename.mk:1: Move ${COMMENT:Q} outside of any quoting characters.")
 
 	test("echo target=$@ exitcode=$$? '$$' \"\\$$\"",
 		"WARN: filename.mk:1: Use \"${.TARGET}\" instead of \"$@\".",

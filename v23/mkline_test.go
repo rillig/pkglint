@@ -832,7 +832,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__LDFLAGS_in_single_quotes(c *ch
 	MkLineChecker{mklines, mklines.mklines[2]}.Check()
 
 	t.CheckOutputLines(
-		"WARN: x11/mlterm/Makefile:2: Please move ${LDFLAGS:M*:Q} outside of any quoting characters.")
+		"WARN: x11/mlterm/Makefile:2: Move ${LDFLAGS:M*:Q} outside of any quoting characters.")
 }
 
 // No quoting is necessary when lists of options are appended to each other.
