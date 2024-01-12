@@ -331,7 +331,7 @@ func (ck *Buildlink3Checker) checkExprInPkgbase(pkgbaseLine *MkLine) {
 		}
 
 		if replacement != "" {
-			pkgbaseLine.Warnf("Please use %q instead of %q (also in other variables in this file).",
+			pkgbaseLine.Warnf("Use %q instead of %q (also in other variables in this file).",
 				replacement, token.Text)
 		} else {
 			pkgbaseLine.Warnf(

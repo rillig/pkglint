@@ -996,7 +996,7 @@ func (s *Suite) Test_Buildlink3Checker_checkExprInPkgbase__PKGBASE_with_variable
 		"ERROR: x11/php-wxwidgets/buildlink3.mk:13: "+
 			"Identifiers for BUILDLINK_TREE must not refer to other variables.",
 		"WARN: x11/php-wxwidgets/buildlink3.mk:3: "+
-			"Please use \"php\" instead of \"${PHP_PKG_PREFIX}\" "+
+			"Use \"php\" instead of \"${PHP_PKG_PREFIX}\" "+
 			"(also in other variables in this file).")
 }
 
@@ -1032,7 +1032,7 @@ func (s *Suite) Test_Buildlink3Checker_checkExprInPkgbase__PKGBASE_with_variable
 		"ERROR: x11/py-wxwidgets/buildlink3.mk:13: "+
 			"Identifiers for BUILDLINK_TREE must not refer to other variables.",
 		"WARN: x11/py-wxwidgets/buildlink3.mk:3: "+
-			"Please use \"py\" instead of \"${PYPKGPREFIX}\" "+
+			"Use \"py\" instead of \"${PYPKGPREFIX}\" "+
 			"(also in other variables in this file).")
 }
 
@@ -1068,7 +1068,7 @@ func (s *Suite) Test_Buildlink3Checker_checkExprInPkgbase__PKGBASE_with_variable
 		"ERROR: x11/ruby1-wxwidgets/buildlink3.mk:13: "+
 			"Identifiers for BUILDLINK_TREE must not refer to other variables.",
 		"WARN: x11/ruby1-wxwidgets/buildlink3.mk:3: "+
-			"Please use \"ruby\" instead of \"${RUBY_BASE}\" "+
+			"Use \"ruby\" instead of \"${RUBY_BASE}\" "+
 			"(also in other variables in this file).")
 }
 
@@ -1104,7 +1104,7 @@ func (s *Suite) Test_Buildlink3Checker_checkExprInPkgbase__PKGBASE_with_variable
 		"ERROR: x11/ruby2-wxwidgets/buildlink3.mk:13: "+
 			"Identifiers for BUILDLINK_TREE must not refer to other variables.",
 		"WARN: x11/ruby2-wxwidgets/buildlink3.mk:3: "+
-			"Please use \"ruby\" instead of \"${RUBY_PKGPREFIX}\" "+
+			"Use \"ruby\" instead of \"${RUBY_PKGPREFIX}\" "+
 			"(also in other variables in this file).")
 }
 
