@@ -1211,7 +1211,7 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__shell_variables(c *
 		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Make variable or $$f if you mean a shell variable.",
 		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Make variable or $$f if you mean a shell variable.",
 		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Make variable or $$f if you mean a shell variable.",
-		"NOTE: Makefile:3: Please use the SUBST framework instead of ${SED} and ${MV}.",
+		"NOTE: Makefile:3: Use the SUBST framework instead of ${SED} and ${MV}.",
 		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Make variable or $$f if you mean a shell variable.",
 		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Make variable or $$f if you mean a shell variable.",
 		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Make variable or $$f if you mean a shell variable.",
@@ -1242,7 +1242,7 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__sed_and_mv(c *check
 	ck.CheckShellCommandLine(ck.mkline.ShellCommand())
 
 	t.CheckOutputLines(
-		"NOTE: filename.mk:1: Please use the SUBST framework instead of ${SED} and ${MV}.")
+		"NOTE: filename.mk:1: Use the SUBST framework instead of ${SED} and ${MV}.")
 }
 
 func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__sed_and_mv_explained(c *check.C) {
@@ -1257,7 +1257,7 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__sed_and_mv_explaine
 	ck.CheckShellCommandLine(ck.mkline.ShellCommand())
 
 	t.CheckOutputLines(
-		"NOTE: filename.mk:1: Please use the SUBST framework instead of ${SED} and ${MV}.",
+		"NOTE: filename.mk:1: Use the SUBST framework instead of ${SED} and ${MV}.",
 		"",
 		"\tUsing the SUBST framework instead of explicit commands is easier to",
 		"\tunderstand, since all the complexity of using sed and mv is hidden",

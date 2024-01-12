@@ -571,7 +571,7 @@ func (ck *ShellLineChecker) CheckShellCommandLine(shelltext string) {
 	// TODO: Add sed and mv in addition to ${SED} and ${MV}.
 	// TODO: Now that a shell command parser is available, be more precise in the condition.
 	if contains(shelltext, "${SED}") && contains(shelltext, "${MV}") {
-		line.Notef("Please use the SUBST framework instead of ${SED} and ${MV}.")
+		line.Notef("Use the SUBST framework instead of ${SED} and ${MV}.")
 		line.Explain(
 			"Using the SUBST framework instead of explicit commands is easier",
 			"to understand, since all the complexity of using sed and mv is",
