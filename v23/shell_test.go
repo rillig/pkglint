@@ -1223,7 +1223,7 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__shell_variables(c *
 	ck.CheckShellCommandLine("install -c manpage.1 ${PREFIX}/man/man1/manpage.1")
 
 	t.CheckOutputLines(
-		"WARN: Makefile:3: Please use ${PKGMANDIR} instead of \"man\".")
+		"WARN: Makefile:3: Use ${PKGMANDIR} instead of \"man\".")
 
 	ck.CheckShellCommandLine("cp init-script ${PREFIX}/etc/rc.d/service")
 
@@ -1572,7 +1572,7 @@ func (s *Suite) Test_ShellLineChecker_CheckWord__PKGMANDIR(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: chat/ircII/Makefile:2: Please use ${PKGMANDIR} instead of \"man\".",
+		"WARN: chat/ircII/Makefile:2: Use ${PKGMANDIR} instead of \"man\".",
 		"NOTE: chat/ircII/Makefile:2: This variable value should be aligned to column 25 instead of 17.",
 		"NOTE: chat/ircII/Makefile:3: This variable value should be aligned to column 25 instead of 17.")
 }

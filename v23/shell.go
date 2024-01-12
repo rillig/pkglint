@@ -729,7 +729,7 @@ func (ck *ShellLineChecker) CheckWord(token string, checkQuoting bool, time Tool
 	}
 
 	if matches(token, `\$\{PREFIX\}/man(?:$|/)`) {
-		line.Warnf("Please use ${PKGMANDIR} instead of \"man\".")
+		line.Warnf("Use ${PKGMANDIR} instead of \"man\".")
 	}
 
 	if contains(token, "etc/rc.d") {
