@@ -109,7 +109,7 @@ func (s *Suite) Test_SubstContext_varassign__multiple_classes_in_one_line_multip
 		"SUBST_VARS.three=       PREFIX")
 
 	t.CheckOutputLines(
-		"NOTE: filename.mk:1: Please add only one class at a time to SUBST_CLASSES.",
+		"NOTE: filename.mk:1: Add only one class at a time to SUBST_CLASSES.",
 		"WARN: filename.mk:9: Variable \"SUBST_STAGE.three\" "+
 			"does not match SUBST class \"two\".",
 		"WARN: filename.mk:9: Incomplete SUBST block: "+
@@ -177,7 +177,7 @@ func (s *Suite) Test_SubstContext_varassign__blocks_in_separate_paragraphs(c *ch
 		"SUBST_VARS.3=   VAR1")
 
 	t.CheckOutputLines(
-		"NOTE: filename.mk:1: Please add only one class at a time to SUBST_CLASSES.",
+		"NOTE: filename.mk:1: Add only one class at a time to SUBST_CLASSES.",
 		"WARN: filename.mk:EOF: Missing SUBST block for \"4\".")
 }
 
@@ -194,7 +194,7 @@ func (s *Suite) Test_SubstContext_varassign__typo_in_id(c *check.C) {
 		"SUBST_VARS.2=   VAR1")
 
 	t.CheckOutputLines(
-		"NOTE: filename.mk:1: Please add only one class at a time to SUBST_CLASSES.",
+		"NOTE: filename.mk:1: Add only one class at a time to SUBST_CLASSES.",
 		"WARN: filename.mk:2: Before defining SUBST_STAGE.x, "+
 			"the SUBST class should be declared using \"SUBST_CLASSES+= x\".",
 		"WARN: filename.mk:EOF: Missing SUBST block for \"1\".")
@@ -251,7 +251,7 @@ func (s *Suite) Test_SubstContext_varassign__interleaved(c *check.C) {
 	// It technically works but is not easy to read for humans.
 	t.CheckOutputLines(
 		"NOTE: filename.mk:1: " +
-			"Please add only one class at a time to SUBST_CLASSES.")
+			"Add only one class at a time to SUBST_CLASSES.")
 }
 
 func (s *Suite) Test_SubstContext_varassign__noop_ok(c *check.C) {
@@ -326,7 +326,7 @@ func (s *Suite) Test_SubstContext_varassignClasses__multiple_classes_in_one_line
 		"SUBST_FILES.two=        two.txt")
 
 	t.CheckOutputLines(
-		"NOTE: filename.mk:1: Please add only one class at a time to SUBST_CLASSES.",
+		"NOTE: filename.mk:1: Add only one class at a time to SUBST_CLASSES.",
 		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_SED.two, SUBST_VARS.two or SUBST_FILTER_CMD.two missing.")
 }
 
@@ -843,7 +843,7 @@ func (s *Suite) Test_SubstContext_activeId__SUBST_CLASSES_in_separate_paragraph(
 	ctx.Finish(NewLineEOF("filename.mk"))
 
 	t.CheckOutputLines(
-		"NOTE: filename.mk:1: Please add only one class at a time to SUBST_CLASSES.",
+		"NOTE: filename.mk:1: Add only one class at a time to SUBST_CLASSES.",
 		"WARN: filename.mk:EOF: Missing SUBST block for \"4\".")
 }
 
@@ -976,7 +976,7 @@ func (s *Suite) Test_substScope_finish__foreign_two_blocks_one_paragraph(c *chec
 
 	t.CheckOutputLines(
 		"NOTE: filename.mk:1: " +
-			"Please add only one class at a time to SUBST_CLASSES.")
+			"Add only one class at a time to SUBST_CLASSES.")
 }
 
 func (s *Suite) Test_substScope_finish__indirect_SUBST_FILES(c *check.C) {

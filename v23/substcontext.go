@@ -86,7 +86,7 @@ func (ctx *SubstContext) varassignClasses(mkline *MkLine) {
 	}
 
 	if len(ids) > 1 {
-		mkline.Notef("Please add only one class at a time to SUBST_CLASSES.")
+		mkline.Notef("Add only one class at a time to SUBST_CLASSES.")
 		mkline.Explain(
 			"This way, each substitution class forms a block in the package Makefile,",
 			"and to delete this block, it is not necessary to look anywhere else.")
