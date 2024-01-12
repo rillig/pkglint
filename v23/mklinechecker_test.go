@@ -1092,11 +1092,11 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveFor(c *check.C) {
 		// as required by the .for loop.
 
 		// This warning is correct since PATH is separated by colons, not by spaces.
-		"WARN: for.mk:5: Please use ${PATH:Q} instead of ${PATH}.",
+		"WARN: for.mk:5: Use ${PATH:Q} instead of ${PATH}.",
 
 		// This warning is also correct since the :M modifier doesn't
 		// turn a list into a non-list or vice versa.
-		"WARN: for.mk:8: Please use ${PATH:M*/bin:Q} instead of ${PATH:M*/bin}.")
+		"WARN: for.mk:8: Use ${PATH:M*/bin:Q} instead of ${PATH:M*/bin}.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirectiveFor__infrastructure(c *check.C) {

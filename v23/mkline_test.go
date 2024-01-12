@@ -702,7 +702,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_in_single_quotes(c *ch
 	NewMkAssignChecker(mklines.mklines[1], mklines).check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:2: Please use ${INSTALL:Q} instead of ${INSTALL} " +
+		"WARN: Makefile:2: Use ${INSTALL:Q} instead of ${INSTALL} " +
 			"and make sure the variable appears outside of any quoting characters.")
 }
 
@@ -789,9 +789,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__MASTER_SITES_and_HOMEPAGE(c *c
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:3: Please use ${PATH:Q} instead of ${PATH}.",
+		"WARN: Makefile:3: Use ${PATH:Q} instead of ${PATH}.",
 		"WARN: Makefile:4: HOMEPAGE should not be defined in terms of MASTER_SITEs.",
-		"WARN: Makefile:5: Please use ${BUILD_DIRS:Q} instead of ${BUILD_DIRS}.")
+		"WARN: Makefile:5: Use ${BUILD_DIRS:Q} instead of ${BUILD_DIRS}.")
 }
 
 // Before November 2018, pkglint did not parse $$(subshell) commands very well.
@@ -877,7 +877,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__LDADD_in_BUILDLINK_TRANSFORM(c
 
 	// Note: The :M* modifier is not necessary, since this is not a GNU Configure package.
 	t.CheckOutputLines(
-		"WARN: x11/qt5-qtbase/Makefile.common:1: Please use ${BUILDLINK_LDADD.dl:Q} instead of ${BUILDLINK_LDADD.dl:M*}.")
+		"WARN: x11/qt5-qtbase/Makefile.common:1: Use ${BUILDLINK_LDADD.dl:Q} instead of ${BUILDLINK_LDADD.dl:M*}.")
 }
 
 func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_in_message(c *check.C) {
@@ -1115,7 +1115,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__tool_in_quoted_word_part(c *ch
 	}
 
 	test("\t: x${TOOL}",
-		"WARN: ~/Makefile:2: Please use ${TOOL:Q} instead of ${TOOL}.")
+		"WARN: ~/Makefile:2: Use ${TOOL:Q} instead of ${TOOL}.")
 
 	test("\t: \"x${TOOL}\"")
 
@@ -1123,7 +1123,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__tool_in_quoted_word_part(c *ch
 
 	test("\t: `x${TOOL}`",
 		"WARN: ~/Makefile:2: Unknown shell command \"x${TOOL}\".",
-		"WARN: ~/Makefile:2: Please use ${TOOL:Q} instead of ${TOOL}.")
+		"WARN: ~/Makefile:2: Use ${TOOL:Q} instead of ${TOOL}.")
 }
 
 func (s *Suite) Test_MkLine_VariableNeedsQuoting__D_and_U_modifiers(c *check.C) {

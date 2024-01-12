@@ -1220,7 +1220,7 @@ func (s *Suite) Test_MkExprChecker_checkAssignable__shell_command_to_pathname(c 
 	})
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:1: Please use ${TOOLS_PLATFORM.sh:Q} " +
+		"WARN: filename.mk:1: Use ${TOOLS_PLATFORM.sh:Q} " +
 			"instead of ${TOOLS_PLATFORM.sh}.")
 }
 
@@ -1291,9 +1291,9 @@ func (s *Suite) Test_MkExprChecker_checkQuoting__mstar(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: ~/options.mk:2: Please use ${CFLAGS:M*:Q} instead of ${CFLAGS:Q}.",
+		"WARN: ~/options.mk:2: Use ${CFLAGS:M*:Q} instead of ${CFLAGS:Q}.",
 		"WARN: ~/options.mk:4: ADA_FLAGS is used but not defined.",
-		"WARN: ~/options.mk:6: Please use ${CFLAGS:M*:Q} instead of ${CFLAGS:Q}.")
+		"WARN: ~/options.mk:6: Use ${CFLAGS:M*:Q} instead of ${CFLAGS:Q}.")
 }
 
 func (s *Suite) Test_MkExprChecker_checkQuoting__mstar_not_needed(c *check.C) {
@@ -1414,9 +1414,9 @@ func (s *Suite) Test_MkExprChecker_checkQuotingQM(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:3: Please use ${CFLAGS:M*:Q} instead of ${CFLAGS:Q}.",
+		"WARN: filename.mk:3: Use ${CFLAGS:M*:Q} instead of ${CFLAGS:Q}.",
 		// XXX: Doesn't matter in this case since :N* results in an empty list.
-		"WARN: filename.mk:5: Please use ${CFLAGS:N*:M*:Q} instead of ${CFLAGS:N*:Q}.")
+		"WARN: filename.mk:5: Use ${CFLAGS:N*:M*:Q} instead of ${CFLAGS:N*:Q}.")
 }
 
 func (s *Suite) Test_MkExprChecker_fixQuotingModifiers(c *check.C) {
@@ -1437,8 +1437,8 @@ func (s *Suite) Test_MkExprChecker_fixQuotingModifiers(c *check.C) {
 
 	t.ExpectDiagnosticsAutofix(
 		test,
-		"WARN: ~/filename.mk:3: Please use ${CFLAGS:M*:Q} instead of ${CFLAGS:Q}.",
-		"WARN: ~/filename.mk:5: Please use ${CFLAGS:N*:M*:Q} instead of ${CFLAGS:N*:Q}.",
+		"WARN: ~/filename.mk:3: Use ${CFLAGS:M*:Q} instead of ${CFLAGS:Q}.",
+		"WARN: ~/filename.mk:5: Use ${CFLAGS:N*:M*:Q} instead of ${CFLAGS:N*:Q}.",
 		"AUTOFIX: ~/filename.mk:3: Replacing \"${CFLAGS:Q}\" with \"${CFLAGS:M*:Q}\".",
 		"AUTOFIX: ~/filename.mk:5: Replacing \"${CFLAGS:N*:Q}\" with \"${CFLAGS:N*:M*:Q}\".")
 }

@@ -912,7 +912,7 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine(c *check.C) {
 		// ShellLineChecker.checkExprToken
 		//     MkLineChecker.CheckExpr
 		//         MkExprChecker.checkQuoting
-		"WARN: filename.mk:1: Please use ${CFLAGS:M*:Q} instead of ${CFLAGS:Q} "+
+		"WARN: filename.mk:1: Use ${CFLAGS:M*:Q} instead of ${CFLAGS:Q} "+
 			"and make sure the variable appears outside of any quoting characters.")
 
 	test("echo '${COMMENT:Q}'", // EctxQuotSquot

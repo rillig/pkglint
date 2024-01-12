@@ -20,7 +20,7 @@ func (s *Suite) Test_MkLines__quoting_LDFLAGS_for_GNU_configure(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:3: Please use ${X11_LDFLAGS:M*:Q} instead of ${X11_LDFLAGS:Q}.")
+		"WARN: Makefile:3: Use ${X11_LDFLAGS:M*:Q} instead of ${X11_LDFLAGS:Q}.")
 }
 
 func (s *Suite) Test_MkLines__for_loop_multiple_variables(c *check.C) {
@@ -1228,7 +1228,7 @@ func (s *Suite) Test_MkLines_checkAll__shell_command_as_word_part_in_ENV_list(c 
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: x11/lablgtk1/Makefile:2: Please use ${CC:Q} instead of ${CC}.")
+		"WARN: x11/lablgtk1/Makefile:2: Use ${CC:Q} instead of ${CC}.")
 }
 
 func (s *Suite) Test_MkLines_checkAll__extra_warnings(c *check.C) {

@@ -721,7 +721,7 @@ func (ck *MkExprChecker) fixQuotingModifiers(correctMod string, mod string) {
 	varname := ck.expr.varname
 
 	fix := ck.MkLine.Autofix()
-	fix.Warnf("Please use ${%s%s} instead of ${%s%s}.", varname, correctMod, varname, mod)
+	fix.Warnf("Use ${%s%s} instead of ${%s%s}.", varname, correctMod, varname, mod)
 	fix.Explain(
 		seeGuide("Echoing a string exactly as-is", "echo-literal"))
 	fix.Replace("${"+varname+mod+"}", "${"+varname+correctMod+"}")
@@ -732,7 +732,7 @@ func (ck *MkExprChecker) warnWrongQuotingModifiers(correctMod string, mod string
 	mkline := ck.MkLine
 	varname := ck.expr.varname
 
-	mkline.Warnf("Please use ${%s%s} instead of ${%s%s} and make sure"+
+	mkline.Warnf("Use ${%s%s} instead of ${%s%s} and make sure"+
 		" the variable appears outside of any quoting characters.", varname, correctMod, varname, mod)
 	mkline.Explain(
 		"The :Q modifier only works reliably when it is used outside of any",

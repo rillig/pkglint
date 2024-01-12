@@ -193,7 +193,7 @@ func (s *Suite) Test_Autofix__lonely_source_2(c *check.C) {
 
 	t.CheckOutputLines(
 		">\tMAKE_FLAGS+=\tCFLAGS=${CFLAGS.${PKGSRC_COMPILER}}",
-		"WARN: print/tex-bibtex8/Makefile:23: Please use ${CFLAGS.${PKGSRC_COMPILER}:Q} instead of ${CFLAGS.${PKGSRC_COMPILER}}.",
+		"WARN: print/tex-bibtex8/Makefile:23: Use ${CFLAGS.${PKGSRC_COMPILER}:Q} instead of ${CFLAGS.${PKGSRC_COMPILER}}.",
 		"",
 		"\tSee the pkgsrc guide, section \"Echoing a string exactly as-is\":",
 		"\thttps://www.NetBSD.org/docs/pkgsrc/pkgsrc.html#echo-literal",
