@@ -1587,7 +1587,7 @@ func (cv *VartypeCheck) Version() {
 		const alnum = `(?:\w|\[[\d-]+\])`
 		if m, ver, suffix := match2(value, `^(`+digit+alnum+`*(?:\.`+alnum+`+)*)(\.\*|\*|)$`); m {
 			if suffix == "*" && ver != "[0-9]" {
-				cv.Warnf("Please use %q instead of %q as the version pattern.", ver+".*", ver+"*")
+				cv.Warnf("Use %q instead of %q as the version pattern.", ver+".*", ver+"*")
 				cv.Explain(
 					"For example, the version \"1*\" also matches \"10.0.0\", which is",
 					"probably not intended.")

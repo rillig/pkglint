@@ -1474,7 +1474,7 @@ func (s *Suite) Test_VartypeCheck_MachinePlatform(c *check.C) {
 			"rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 "+
 			"} for the hardware architecture part of MACHINE_PLATFORM.",
 		"WARN: filename.mk:5: \"FreeBSD*\" is not a valid platform pattern.",
-		"WARN: filename.mk:8: Please use \"[0-1].*\" instead of \"[0-1]*\" as the version pattern.")
+		"WARN: filename.mk:8: Use \"[0-1].*\" instead of \"[0-1]*\" as the version pattern.")
 }
 
 func (s *Suite) Test_VartypeCheck_MachinePlatformPattern(c *check.C) {
@@ -1523,7 +1523,7 @@ func (s *Suite) Test_VartypeCheck_MachinePlatformPattern(c *check.C) {
 			"rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 "+
 			"} for the hardware architecture part of ONLY_FOR_PLATFORM.",
 		"WARN: filename.mk:5: \"FreeBSD*\" is not a valid platform pattern.",
-		"WARN: filename.mk:8: Please use \"[0-1].*\" instead of \"[0-1]*\" as the version pattern.")
+		"WARN: filename.mk:8: Use \"[0-1].*\" instead of \"[0-1]*\" as the version pattern.")
 }
 
 func (s *Suite) Test_VartypeCheck_MailAddress(c *check.C) {
@@ -2421,8 +2421,8 @@ func (s *Suite) Test_VartypeCheck_Version(c *check.C) {
 	vt.Output(
 		"WARN: filename.mk:11: Invalid version number pattern \"a*\".",
 		"WARN: filename.mk:12: Invalid version number pattern \"1.2/456\".",
-		"WARN: filename.mk:13: Please use \"4.*\" instead of \"4*\" as the version pattern.",
-		"WARN: filename.mk:15: Please use \"1.[234].*\" instead of \"1.[234]*\" as the version pattern.")
+		"WARN: filename.mk:13: Use \"4.*\" instead of \"4*\" as the version pattern.",
+		"WARN: filename.mk:15: Use \"1.[234].*\" instead of \"1.[234]*\" as the version pattern.")
 }
 
 func (s *Suite) Test_VartypeCheck_WrapperReorder(c *check.C) {
