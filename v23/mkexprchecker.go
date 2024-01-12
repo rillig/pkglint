@@ -858,7 +858,7 @@ func (ck *MkExprChecker) checkBuildDefs() {
 		"All these configurations should be recorded in the binary package",
 		"so the package can be reliably rebuilt.",
 		"The BUILD_DEFS variable contains a list of all these",
-		"user-settable variables, so please add your variable to it, too.")
+		"user-settable variables, so add your variable to it, too.")
 }
 
 func (ck *MkExprChecker) checkDeprecated() {

@@ -177,7 +177,7 @@ func (ck *distinfoLinesChecker) checkAlgorithms(info distinfoFileInfo) {
 		line.Explain(
 			"If the patches directory looks correct, the patch may have been",
 			"removed without updating the distinfo file.",
-			"In such a case please update the distinfo file.",
+			"In such a case, update the distinfo file.",
 			"",
 			"In rare cases, pkglint cannot determine the correct location of the patches directory.",
 			"In that case, see the pkglint man page for contact information.")
