@@ -912,10 +912,10 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 		"${MASTER_SITE_OWN:=subdir/}")
 
 	vt.Output(
-		"WARN: filename.mk:1: Please use ${MASTER_SITE_GITHUB:=example/} "+
+		"WARN: filename.mk:1: Use ${MASTER_SITE_GITHUB:=example/} "+
 			"instead of \"https://github.com/example/\" "+
 			"and run \""+confMake+" help topic=github\" for further instructions.",
-		"WARN: filename.mk:2: Please use ${MASTER_SITE_GNU:=bison} "+
+		"WARN: filename.mk:2: Use ${MASTER_SITE_GNU:=bison} "+
 			"instead of \"http://ftp.gnu.org/pub/gnu/bison\".",
 		"ERROR: filename.mk:3: The subdirectory in MASTER_SITE_GNU must end with a slash.",
 		"ERROR: filename.mk:4: The site MASTER_SITE_INVALID does not exist.")
@@ -960,7 +960,7 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 	vt.Values(
 		"https://github.com/transmission/transmission-releases/raw/master/")
 	vt.Output(
-		"WARN: filename.mk:51: Please use ${MASTER_SITE_GITHUB:=transmission/} " +
+		"WARN: filename.mk:51: Use ${MASTER_SITE_GITHUB:=transmission/} " +
 			"instead of \"https://github.com/transmission/\" " +
 			"and run \"" + confMake + " help topic=github\" for further instructions.")
 
@@ -970,9 +970,9 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 		"-http://ftp.gnu.org/pub/gnu/bash/bash-5.0.tar.gz")
 
 	vt.Output(
-		"WARN: filename.mk:62: Please use ${MASTER_SITE_GNU:S,^,-,:=bash-5.0.tar.gz} "+
+		"WARN: filename.mk:62: Use ${MASTER_SITE_GNU:S,^,-,:=bash-5.0.tar.gz} "+
 			"instead of \"-http://ftp.gnu.org/pub/gnu/bash-5.0.tar.gz\".",
-		"WARN: filename.mk:63: Please use ${MASTER_SITE_GNU:S,^,-,:=bash/bash-5.0.tar.gz} "+
+		"WARN: filename.mk:63: Use ${MASTER_SITE_GNU:S,^,-,:=bash/bash-5.0.tar.gz} "+
 			"instead of \"-http://ftp.gnu.org/pub/gnu/bash/bash-5.0.tar.gz\".")
 
 	vt.Values(
@@ -1000,17 +1000,17 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 		"-https://ftp.gnu.org/pub/gnu/bash/bash-5.0.tar.gz")
 
 	vt.Output(
-		"WARN: filename.mk:81: Please use ${MASTER_SITE_GNU:=bash/} "+
+		"WARN: filename.mk:81: Use ${MASTER_SITE_GNU:=bash/} "+
 			"instead of \"http://ftp.gnu.org/pub/gnu/bash/\".",
-		"WARN: filename.mk:82: Please use ${MASTER_SITE_GNU:=bash/} "+
+		"WARN: filename.mk:82: Use ${MASTER_SITE_GNU:=bash/} "+
 			"instead of \"ftp://ftp.gnu.org/pub/gnu/bash/\".",
-		"WARN: filename.mk:83: Please use ${MASTER_SITE_GNU:=bash/} "+
+		"WARN: filename.mk:83: Use ${MASTER_SITE_GNU:=bash/} "+
 			"instead of \"https://ftp.gnu.org/pub/gnu/bash/\".",
-		"WARN: filename.mk:84: Please use ${MASTER_SITE_GNU:S,^,-,:=bash/bash-5.0.tar.gz} "+
+		"WARN: filename.mk:84: Use ${MASTER_SITE_GNU:S,^,-,:=bash/bash-5.0.tar.gz} "+
 			"instead of \"-http://ftp.gnu.org/pub/gnu/bash/bash-5.0.tar.gz\".",
-		"WARN: filename.mk:85: Please use ${MASTER_SITE_GNU:S,^,-,:=bash/bash-5.0.tar.gz} "+
+		"WARN: filename.mk:85: Use ${MASTER_SITE_GNU:S,^,-,:=bash/bash-5.0.tar.gz} "+
 			"instead of \"-ftp://ftp.gnu.org/pub/gnu/bash/bash-5.0.tar.gz\".",
-		"WARN: filename.mk:86: Please use ${MASTER_SITE_GNU:S,^,-,:=bash/bash-5.0.tar.gz} "+
+		"WARN: filename.mk:86: Use ${MASTER_SITE_GNU:S,^,-,:=bash/bash-5.0.tar.gz} "+
 			"instead of \"-https://ftp.gnu.org/pub/gnu/bash/bash-5.0.tar.gz\".")
 
 	// The ${.TARGET} variable doesn't make sense at all in a URL.
