@@ -966,9 +966,9 @@ func (s *Suite) Test_MkLineChecker_checkDirective(c *check.C) {
 			"If you meant \"else if\", use \".elif\".",
 		"ERROR: category/package/filename.mk:8: \".endif\" does not take arguments.",
 		"WARN: category/package/filename.mk:10: The \".ifdef\" directive is deprecated. "+
-			"Please use \".if defined(FNAME_MK)\" instead.",
+			"Use \".if defined(FNAME_MK)\" instead.",
 		"WARN: category/package/filename.mk:12: The \".ifndef\" directive is deprecated. "+
-			"Please use \".if !defined(FNAME_MK)\" instead.",
+			"Use \".if !defined(FNAME_MK)\" instead.",
 		"NOTE: category/package/filename.mk:17: Using \".undef\" after a \".for\" loop is unnecessary.")
 }
 

@@ -538,7 +538,7 @@ func (ck MkLineChecker) checkDirective(forVars map[string]bool, ind *Indentation
 		mkCondChecker.Check()
 
 	case directive == "ifdef" || directive == "ifndef":
-		mkline.Warnf("The \".%s\" directive is deprecated. Please use \".if %sdefined(%s)\" instead.",
+		mkline.Warnf("The \".%s\" directive is deprecated. Use \".if %sdefined(%s)\" instead.",
 			directive, condStr(directive == "ifdef", "", "!"), args)
 
 	case directive == "for":

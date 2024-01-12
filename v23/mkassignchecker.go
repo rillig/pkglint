@@ -663,7 +663,7 @@ func (ck *MkAssignChecker) checkMisc() {
 	}
 
 	if hasPrefix(varname, "SITES_") {
-		mkline.Warnf("SITES_* is deprecated. Please use SITES.* instead.")
+		mkline.Warnf("SITES_* is deprecated. Use SITES.* instead.")
 		// No autofix since it doesn't occur anymore.
 	}
 

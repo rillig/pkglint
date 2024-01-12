@@ -1146,7 +1146,7 @@ func (s *Suite) Test_MkAssignChecker_checkMisc(c *check.C) {
 	test(
 		"SITES_distfile.tar.gz=\t${MASTER_SITE_GITHUB:=user/}",
 		"WARN: filename.mk:2: SITES_distfile.tar.gz is defined but not used.",
-		"WARN: filename.mk:2: SITES_* is deprecated. Please use SITES.* instead.")
+		"WARN: filename.mk:2: SITES_* is deprecated. Use SITES.* instead.")
 
 	test(
 		"MASTER_SITES=\t\thttps://cdn.example.org/${PKGNAME}/",
