@@ -408,7 +408,7 @@ func (src *Pkgsrc) initDeprecatedVars() {
 
 		// February 2006
 		"TOOLS_DEPMETHOD":     "Use the :build or :run modifiers in USE_TOOLS instead.",
-		"MANDIR":              "Please use ${PREFIX}/${PKGMANDIR} instead.",
+		"MANDIR":              "Use ${PREFIX}/${PKGMANDIR} instead.",
 		"DOWNLOADED_DISTFILE": "Use the shell variable $$extract_file instead.",
 		"DECOMPRESS_CMD":      "Use EXTRACT_CMD instead.",
 
