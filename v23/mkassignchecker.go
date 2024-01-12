@@ -163,7 +163,7 @@ func (ck *MkAssignChecker) checkLeftBsdPrefs() {
 	if !ck.MkLines.once.FirstTime("include bsd.prefs.mk before using ?=") {
 		return
 	}
-	mkline.Warnf("Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
+	mkline.Warnf("Include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
 	mkline.Explain(
 		"The ?= operator is used to provide a default value to a variable.",
 		"In pkgsrc, many variables can be set by the pkgsrc user in the",

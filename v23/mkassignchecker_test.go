@@ -286,7 +286,7 @@ func (s *Suite) Test_MkAssignChecker_checkLeftBsdPrefs(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: module.mk:9: " +
-			"Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
+			"Include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
 }
 
 // Up to 2019-12-03, pkglint didn't issue a warning if a default assignment
@@ -305,7 +305,7 @@ func (s *Suite) Test_MkAssignChecker_checkLeftBsdPrefs__first_time(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: module.mk:4: Please include \"../../mk/bsd.prefs.mk\" "+
+		"WARN: module.mk:4: Include \"../../mk/bsd.prefs.mk\" "+
 			"before using \"?=\".",
 		"WARN: module.mk:4: The variable MYSQL_USER should not "+
 			"be given a default value by any package.")
@@ -322,7 +322,7 @@ func (s *Suite) Test_MkAssignChecker_checkLeftBsdPrefs__vartype_nil(c *check.C) 
 
 	t.CheckOutputLines(
 		"WARN: builtin.mk:2: VAR_SH is defined but not used.",
-		"WARN: builtin.mk:2: Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
+		"WARN: builtin.mk:2: Include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
 }
 
 func (s *Suite) Test_MkAssignChecker_checkLeftUserSettable(c *check.C) {
@@ -361,7 +361,7 @@ func (s *Suite) Test_MkAssignChecker_checkLeftUserSettable(c *check.C) {
 		"WARN: Makefile:20: Package sets user-defined \"ASSIGN_DIFF\" to \"pkg\", "+
 			"which differs from the default value \"default\" from mk/defaults/mk.conf.",
 		"NOTE: Makefile:22: Redundant definition for ASSIGN_SAME from mk/defaults/mk.conf.",
-		"WARN: Makefile:23: Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".",
+		"WARN: Makefile:23: Include \"../../mk/bsd.prefs.mk\" before using \"?=\".",
 		"WARN: Makefile:23: Package sets user-defined \"DEFAULT_DIFF\" to \"pkg\", "+
 			"which differs from the default value \"default\" from mk/defaults/mk.conf.",
 		"NOTE: Makefile:24: Redundant definition for DEFAULT_SAME from mk/defaults/mk.conf.",
@@ -486,7 +486,7 @@ func (s *Suite) Test_MkAssignChecker_checkLeftPermissions(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: options.mk:2: Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".",
+		"WARN: options.mk:2: Include \"../../mk/bsd.prefs.mk\" before using \"?=\".",
 		"WARN: options.mk:2: The variable PKG_DEVELOPER should not be given a default value by any package.",
 		"WARN: options.mk:3: The variable BUILD_DEFS should not be given a default value (only appended to) in this file.",
 		"WARN: options.mk:4: USE_TOOLS should not be used at load time in this file; "+

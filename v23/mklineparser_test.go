@@ -454,7 +454,7 @@ func (s *Suite) Test_MkLineParser_fixSpaceAfterVarname__autofix(c *check.C) {
 		"NOTE: ~/Makefile:5: Unnecessary space after variable name \"VARNAME+\".",
 
 		"WARN: ~/Makefile:5: "+
-			"Please include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
+			"Include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
 
 	t.SetUpCommandLine("-Wall", "--autofix")
 
