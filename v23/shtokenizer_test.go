@@ -515,7 +515,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 		operator(")"))
 
 	// Subshell with unbalanced parentheses. Many shells (and pkglint)
-	// fail this test, therefore please don't write code like this.
+	// fail this test, therefore nobody should write code like this.
 	//
 	// See NetBSD/src/build.sh, around line 160.
 	test("var=$$(case x in x) still-subshell;; esac);",
