@@ -625,7 +625,7 @@ func (mklines *MkLines) CheckUsedBy(relativeName PkgsrcPath) {
 
 	if !found {
 		fix := prevLine.Autofix()
-		fix.Warnf("Please add a line %q here.", expected)
+		fix.Warnf("Add a line %q here.", expected)
 		fix.Explain(
 			"Since Makefile.common files usually don't have any comments and",
 			"therefore not a clearly defined purpose, they should at least",

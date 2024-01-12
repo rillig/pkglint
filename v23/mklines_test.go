@@ -1348,7 +1348,7 @@ func (s *Suite) Test_MkLines_CheckUsedBy__show_autofix(c *check.C) {
 			"",
 			"VARNAME=\tvalue"),
 		diagnostics(
-			"WARN: Makefile.common:1: Please add a line \"# used by category/package\" here.",
+			"WARN: Makefile.common:1: Add a line \"# used by category/package\" here.",
 			"AUTOFIX: Makefile.common:1: Inserting a line \"# used by category/package\" below this line."))
 
 	// The "used by" comments may either start in line 2 or in line 3.
@@ -1359,7 +1359,7 @@ func (s *Suite) Test_MkLines_CheckUsedBy__show_autofix(c *check.C) {
 			"#",
 			"#"),
 		diagnostics(
-			"WARN: Makefile.common:1: Please add a line \"# used by category/package\" here.",
+			"WARN: Makefile.common:1: Add a line \"# used by category/package\" here.",
 			"AUTOFIX: Makefile.common:1: Inserting a line \"# used by category/package\" below this line."))
 
 	// TODO: What if there is an introductory comment first? That should stay at the top of the file.
@@ -1376,7 +1376,7 @@ func (s *Suite) Test_MkLines_CheckUsedBy__show_autofix(c *check.C) {
 			"# several lines"),
 		diagnostics(
 			"AUTOFIX: Makefile.common:4: Inserting a line \"\" below this line.",
-			"WARN: Makefile.common:4: Please add a line \"# used by category/package\" here.",
+			"WARN: Makefile.common:4: Add a line \"# used by category/package\" here.",
 			"AUTOFIX: Makefile.common:4: Inserting a line \"# used by category/package\" below this line."))
 
 	t.CheckEquals(G.Logger.autofixAvailable, true)
@@ -1421,7 +1421,7 @@ func (s *Suite) Test_MkLines_CheckUsedBy(c *check.C) {
 			"",
 			"# used by category/package2/Makefile"),
 		diagnostics(
-			"WARN: Makefile.common:6: Please add a line \"# used by category/package/Makefile\" here."))
+			"WARN: Makefile.common:6: Add a line \"# used by category/package/Makefile\" here."))
 
 	// There are two separate paragraphs with "used by" lines. The first of
 	// them is the interesting one. The new line is added to the first paragraph.
@@ -1433,7 +1433,7 @@ func (s *Suite) Test_MkLines_CheckUsedBy(c *check.C) {
 			"# used by category/package2"),
 		diagnostics(
 			"WARN: Makefile.common:4: There should only be a single \"used by\" paragraph per file.",
-			"WARN: Makefile.common:2: Please add a line \"# used by category/package\" here."))
+			"WARN: Makefile.common:2: Add a line \"# used by category/package\" here."))
 
 	// The empty comment also separates the two paragraphs, like in the
 	// previous test case.
@@ -1445,7 +1445,7 @@ func (s *Suite) Test_MkLines_CheckUsedBy(c *check.C) {
 			"# used by category/package2"),
 		diagnostics(
 			"WARN: Makefile.common:4: There should only be a single \"used by\" paragraph per file.",
-			"WARN: Makefile.common:2: Please add a line \"# used by category/package\" here."))
+			"WARN: Makefile.common:2: Add a line \"# used by category/package\" here."))
 
 	// Code coverage for hasOther being true and conflict being non-nil.
 	// Ensures that the warning is printed in the first wrong line.
@@ -1458,7 +1458,7 @@ func (s *Suite) Test_MkLines_CheckUsedBy(c *check.C) {
 			"# used by category/package2"),
 		diagnostics(
 			"WARN: Makefile.common:4: The \"used by\" lines should be in a separate paragraph.",
-			"WARN: Makefile.common:1: Please add a line \"# used by category/package\" here."))
+			"WARN: Makefile.common:1: Add a line \"# used by category/package\" here."))
 
 	// Code coverage for hasUsedBy being true and conflict being non-nil.
 	// Ensures that the warning is printed in the first wrong line.
@@ -1471,7 +1471,7 @@ func (s *Suite) Test_MkLines_CheckUsedBy(c *check.C) {
 			"# Unrelated comment 2."),
 		diagnostics(
 			"WARN: Makefile.common:4: The \"used by\" lines should be in a separate paragraph.",
-			"WARN: Makefile.common:1: Please add a line \"# used by category/package\" here."))
+			"WARN: Makefile.common:1: Add a line \"# used by category/package\" here."))
 
 	t.CheckEquals(G.Logger.autofixAvailable, true)
 }

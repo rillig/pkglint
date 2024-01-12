@@ -1044,7 +1044,7 @@ func (s *Suite) Test_Package_parse__include_Makefile_common_same_directory(c *ch
 
 	t.CheckOutputLines(
 		"WARN: ~/category/dependency/Makefile.common:1: " +
-			"Please add a line \"# used by category/package/Makefile\" here.")
+			"Add a line \"# used by category/package/Makefile\" here.")
 }
 
 func (s *Suite) Test_Package_parse__include_Makefile_common_explicit(c *check.C) {
@@ -1068,7 +1068,7 @@ func (s *Suite) Test_Package_parse__include_Makefile_common_explicit(c *check.C)
 
 	t.CheckOutputLines(
 		"WARN: ~/category/dependency/Makefile.common:1: " +
-			"Please add a line \"# used by category/package/Makefile\" here.")
+			"Add a line \"# used by category/package/Makefile\" here.")
 }
 
 func (s *Suite) Test_Package_parse__fallback_lookup_in_package_directory(c *check.C) {
