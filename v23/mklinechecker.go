@@ -305,7 +305,7 @@ func (ck MkLineChecker) checkInclude() {
 		fix.Apply()
 
 	case includedFile.HasSuffixPath("intltool/buildlink3.mk"):
-		mkline.Warnf("Please write \"USE_TOOLS+= intltool\" instead of this line.")
+		mkline.Warnf("Write \"USE_TOOLS+= intltool\" instead of this line.")
 
 	case includedFile.HasSuffixPath("lang/python/egg.mk"):
 		ck.checkIncludePythonWheel()

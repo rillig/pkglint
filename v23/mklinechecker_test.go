@@ -497,7 +497,7 @@ func (s *Suite) Test_MkLineChecker_checkInclude(c *check.C) {
 			"\"../../graphics/jpeg/buildlink3.mk\" must not be included directly. "+
 			"Include \"../../mk/jpeg.buildlink3.mk\" instead.",
 		"WARN: ~/category/package/filename.mk:5: "+
-			"Please write \"USE_TOOLS+= intltool\" instead of this line.",
+			"Write \"USE_TOOLS+= intltool\" instead of this line.",
 		"ERROR: ~/category/package/filename.mk:6: "+
 			"\"../../devel/intltool/builtin.mk\" must not be included directly. "+
 			"Include \"../../devel/intltool/buildlink3.mk\" instead.",
