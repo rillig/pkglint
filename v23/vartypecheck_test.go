@@ -1537,7 +1537,7 @@ func (s *Suite) Test_VartypeCheck_MailAddress(c *check.C) {
 		"user1@example.org,user2@example.org")
 
 	vt.Output(
-		"WARN: filename.mk:1: Please write \"NetBSD.org\" instead of \"netbsd.org\".",
+		"WARN: filename.mk:1: Write \"NetBSD.org\" instead of \"netbsd.org\".",
 		"ERROR: filename.mk:2: This mailing list address is obsolete. Use pkgsrc-users@NetBSD.org instead.",
 		"ERROR: filename.mk:3: This mailing list address is obsolete. Use pkgsrc-users@NetBSD.org instead.",
 		"WARN: filename.mk:4: \"user1@example.org,user2@example.org\" is not a valid mail address.")
@@ -2293,7 +2293,7 @@ func (s *Suite) Test_VartypeCheck_URL(c *check.C) {
 		"gopher://example.org/")
 
 	vt.Output(
-		"WARN: filename.mk:4: Please write NetBSD.org instead of www.netbsd.org.",
+		"WARN: filename.mk:4: Write NetBSD.org instead of www.netbsd.org.",
 		"NOTE: filename.mk:5: For consistency, please add a trailing slash to \"https://www.example.org\".")
 
 	vt.Values(

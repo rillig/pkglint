@@ -898,7 +898,7 @@ func (cv *VartypeCheck) MailAddress() {
 	}
 
 	if strings.EqualFold(domain, "NetBSD.org") && domain != "NetBSD.org" {
-		cv.Warnf("Please write \"NetBSD.org\" instead of %q.", domain)
+		cv.Warnf("Write \"NetBSD.org\" instead of %q.", domain)
 	}
 
 	if matches(value, `(?i)^(tech-pkg|packages)@NetBSD\.org$`) {
@@ -1492,7 +1492,7 @@ func (cv *VartypeCheck) URL() {
 		if matches(host, `(?i)\.NetBSD\.org$`) && !matches(host, `\.NetBSD\.org$`) {
 			prefix := host[:len(host)-len(".NetBSD.org")]
 			fix := cv.Autofix()
-			fix.Warnf("Please write NetBSD.org instead of %s.", host)
+			fix.Warnf("Write NetBSD.org instead of %s.", host)
 			fix.Replace(host, prefix+".NetBSD.org")
 			fix.Apply()
 		}
