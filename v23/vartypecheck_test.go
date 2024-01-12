@@ -1883,7 +1883,7 @@ func (s *Suite) Test_VartypeCheck_PrefixPathname(c *check.C) {
 
 	vt.Output(
 		"WARN: filename.mk:1: "+
-			"Please use \"${PKGMANDIR}/man1\" instead of \"man/man1\".",
+			"Use \"${PKGMANDIR}/man1\" instead of \"man/man1\".",
 		"ERROR: filename.mk:3: The pathname \"/absolute\" in PKGMANDIR "+
 			"must be relative to ${PREFIX}.")
 

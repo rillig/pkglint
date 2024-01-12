@@ -1231,7 +1231,7 @@ func (cv *VartypeCheck) PrefixPathname() {
 	if hasPrefix(cv.Value, "man/") && cv.Varname != "INSTALLATION_DIRS" {
 		from := "${PKGMANDIR}/" + cv.Value[4:]
 		fix := cv.Autofix()
-		fix.Warnf("Please use %q instead of %q.", from, cv.Value)
+		fix.Warnf("Use %q instead of %q.", from, cv.Value)
 		fix.Replace(cv.Value, from)
 		fix.Apply()
 	}
