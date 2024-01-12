@@ -591,8 +591,8 @@ func (s *Suite) Test_SimpleCommandChecker_checkPaxPe(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:4: Please use the -pp option to pax(1) instead of -pe.",
-		"WARN: Makefile:5: Please use the -pp option to pax(1) instead of -pe.")
+		"WARN: Makefile:4: Use the -pp option to pax(1) instead of -pe.",
+		"WARN: Makefile:5: Use the -pp option to pax(1) instead of -pe.")
 }
 
 func (s *Suite) Test_SimpleCommandChecker_checkEchoN(c *check.C) {

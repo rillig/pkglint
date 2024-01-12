@@ -105,7 +105,7 @@ func (scc *SimpleCommandChecker) checkInstallCommand(shellcmd string) {
 		line.Warnf("${CP} should not be used to install files.")
 		line.Explain(
 			"The ${CP} command is highly platform dependent and cannot overwrite read-only files.",
-			"Please use ${PAX} instead.",
+			"Use ${PAX} instead.",
 			"",
 			"For example, instead of:",
 			"\t${CP} -R ${WRKSRC}/* ${PREFIX}/foodir",
@@ -347,7 +347,7 @@ func (scc *SimpleCommandChecker) checkPaxPe() {
 	}
 
 	if (scc.strcmd.Name == "${PAX}" || scc.strcmd.Name == "pax") && scc.strcmd.HasOption("-pe") {
-		scc.Warnf("Please use the -pp option to pax(1) instead of -pe.")
+		scc.Warnf("Use the -pp option to pax(1) instead of -pe.")
 		scc.Explain(
 			"The -pe option tells pax to preserve the ownership of the files.",
 			"",
