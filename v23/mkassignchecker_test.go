@@ -1186,7 +1186,7 @@ func (s *Suite) Test_MkAssignChecker_checkMisc__multiple_inclusion_guards(c *che
 	// For multiple-inclusion guards, the meaning of the variable value
 	// is clear, therefore they are exempted from the warnings.
 	t.CheckOutputLines(
-		"NOTE: ~/other.mk:2: Please use \"# empty\", \"# none\" or \"# yes\" " +
+		"NOTE: ~/other.mk:2: Use \"# empty\", \"# none\" or \"# yes\" " +
 			"instead of \"# defined\".")
 }
 

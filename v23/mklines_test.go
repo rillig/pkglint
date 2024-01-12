@@ -1253,7 +1253,7 @@ func (s *Suite) Test_MkLines_checkAll__extra_warnings(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"NOTE: options.mk:5: Please use \"# empty\", \"# none\" or \"# yes\" instead of \"# defined\".",
+		"NOTE: options.mk:5: Use \"# empty\", \"# none\" or \"# yes\" instead of \"# defined\".",
 		"WARN: options.mk:7: Include \"../../mk/bsd.prefs.mk\" before using \"?=\".",
 		"WARN: options.mk:11: Building the package should take place entirely inside ${WRKSRC}, not \"${WRKSRC}/..\".",
 		"NOTE: options.mk:11: You can use \"../build\" instead of \"${WRKSRC}/../build\".")
