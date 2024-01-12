@@ -649,8 +649,8 @@ func (s *Suite) Test_MkExprChecker_checkPermissions__explain(c *check.C) {
 		"\t* in buildlink3.mk, it should not be accessed at all",
 		"\t* in any file, it may be used",
 		"",
-		"\tIf these rules seem to be incorrect, please ask on the",
-		"\ttech-pkg@NetBSD.org mailing list.",
+		"\tIf these rules seem to be incorrect, ask on the tech-pkg@NetBSD.org",
+		"\tmailing list.",
 		"",
 		"WARN: options.mk:4: The variable PYPKGPREFIX should not be set in this file; "+
 			"it would be ok in pyversion.mk only.",
@@ -662,8 +662,9 @@ func (s *Suite) Test_MkExprChecker_checkPermissions__explain(c *check.C) {
 		"\t* in pyversion.mk, it may be set",
 		"\t* in any file, it may be used at load time, or used",
 		"",
-		"\tIf these rules seem to be incorrect, please ask on the",
-		"\ttech-pkg@NetBSD.org mailing list.", "")
+		"\tIf these rules seem to be incorrect, ask on the tech-pkg@NetBSD.org",
+		"\tmailing list.",
+		"")
 }
 
 func (s *Suite) Test_MkExprChecker_checkPermissions__load_time_in_condition(c *check.C) {
@@ -1007,8 +1008,8 @@ func (s *Suite) Test_MkExprChecker_explainPermissions(c *check.C) {
 		// TODO: Add a check for infrastructure permissions
 		//  when the "infra:" prefix is added.
 		"",
-		"\tIf these rules seem to be incorrect, please ask on the",
-		"\ttech-pkg@NetBSD.org mailing list.",
+		"\tIf these rules seem to be incorrect, ask on the tech-pkg@NetBSD.org",
+		"\tmailing list.",
 		"")
 }
 

@@ -480,7 +480,7 @@ func (ck *MkExprChecker) explainPermissions(varname string, vartype *Vartype, in
 
 	expl = append(expl,
 		"",
-		"If these rules seem to be incorrect, please ask on the tech-pkg@NetBSD.org mailing list.")
+		"If these rules seem to be incorrect, ask on the tech-pkg@NetBSD.org mailing list.")
 
 	ck.MkLine.Explain(expl...)
 }
