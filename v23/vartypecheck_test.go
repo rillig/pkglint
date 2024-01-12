@@ -684,11 +684,11 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 		"WARN: ~/category/package/filename.mk:2: Dependency paths should have the form \"../../category/package\".",
 		"ERROR: ~/category/package/filename.mk:2: Relative path \"../perl5/Makefile\" does not exist.",
 		"WARN: ~/category/package/filename.mk:2: \"../perl5\" is not a valid relative package directory.",
-		"WARN: ~/category/package/filename.mk:2: Please use USE_TOOLS+=perl:run instead of this dependency.",
+		"WARN: ~/category/package/filename.mk:2: Use USE_TOOLS+=perl:run instead of this dependency.",
 		"ERROR: ~/category/package/filename.mk:3: Relative path \"../../lang/perl5/Makefile\" does not exist.",
-		"WARN: ~/category/package/filename.mk:3: Please use USE_TOOLS+=perl:run instead of this dependency.",
-		"WARN: ~/category/package/filename.mk:5: Please use USE_TOOLS+=msgfmt instead of this dependency.",
-		"WARN: ~/category/package/filename.mk:6: Please use USE_TOOLS+=gmake instead of this dependency.")
+		"WARN: ~/category/package/filename.mk:3: Use USE_TOOLS+=perl:run instead of this dependency.",
+		"WARN: ~/category/package/filename.mk:5: Use USE_TOOLS+=msgfmt instead of this dependency.",
+		"WARN: ~/category/package/filename.mk:6: Use USE_TOOLS+=gmake instead of this dependency.")
 
 	vt.Values(
 		"broken0.12.1:../../x11/alacarte", // missing version

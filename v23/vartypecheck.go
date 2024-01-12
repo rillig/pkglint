@@ -461,11 +461,11 @@ func (cv *VartypeCheck) DependencyWithPath() {
 	pkg := pathParts[len(pathParts)-1]
 	switch pkg {
 	case "gettext":
-		cv.Warnf("Please use USE_TOOLS+=msgfmt instead of this dependency.")
+		cv.Warnf("Use USE_TOOLS+=msgfmt instead of this dependency.")
 	case "perl5":
-		cv.Warnf("Please use USE_TOOLS+=perl:run instead of this dependency.")
+		cv.Warnf("Use USE_TOOLS+=perl:run instead of this dependency.")
 	case "gmake":
-		cv.Warnf("Please use USE_TOOLS+=gmake instead of this dependency.")
+		cv.Warnf("Use USE_TOOLS+=gmake instead of this dependency.")
 	}
 
 	cv.WithValue(pattern).DependencyPattern()
