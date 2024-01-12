@@ -42,7 +42,7 @@ func (s *Suite) Test_MkLineChecker_Check__buildlink3_include_prefs(c *check.C) {
 
 	t.CheckOutputLines(
 		"NOTE: ~/category/package/buildlink3.mk:2: For efficiency reasons, " +
-			"please include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
+			"include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
 }
 
 func (s *Suite) Test_MkLineChecker_Check__warn_expr_LOCALBASE(c *check.C) {
