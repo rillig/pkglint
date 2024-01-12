@@ -645,7 +645,7 @@ func (s *Suite) Test_ShellLineChecker_checkSetE__simple_commands(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:4: Please switch to \"set -e\" mode before using a semicolon " +
+		"WARN: Makefile:4: Switch to \"set -e\" mode before using a semicolon " +
 			"(after \"touch file\") to separate commands.")
 }
 
@@ -664,9 +664,9 @@ func (s *Suite) Test_ShellLineChecker_checkSetE__compound_commands(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon "+
+		"WARN: Makefile:3: Switch to \"set -e\" mode before using a semicolon "+
 			"(after \"touch file\") to separate commands.",
-		"WARN: Makefile:5: Please switch to \"set -e\" mode before using a semicolon "+
+		"WARN: Makefile:5: Switch to \"set -e\" mode before using a semicolon "+
 			"(after \"touch 1\") to separate commands.")
 }
 
@@ -683,7 +683,7 @@ func (s *Suite) Test_ShellLineChecker_checkSetE__no_tracing(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon " +
+		"WARN: Makefile:3: Switch to \"set -e\" mode before using a semicolon " +
 			"(after \"touch 1\") to separate commands.")
 }
 
@@ -715,14 +715,14 @@ func (s *Suite) Test_ShellLineChecker_canFail(c *check.C) {
 	}
 
 	test("socklen=`${GREP} 'expr' ${WRKSRC}/config.h`",
-		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon "+
+		"WARN: Makefile:3: Switch to \"set -e\" mode before using a semicolon "+
 			"(after \"socklen=`${GREP} 'expr' ${WRKSRC}/config.h`\") to separate commands.")
 
 	test("socklen=`${GREP} 'expr' ${WRKSRC}/config.h || ${TRUE}`",
 		nil...)
 
 	test("socklen=$$(expr 16)",
-		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon "+
+		"WARN: Makefile:3: Switch to \"set -e\" mode before using a semicolon "+
 			"(after \"socklen=$$(expr 16)\") to separate commands.")
 
 	test("socklen=$$(expr 16 || true)",
@@ -759,11 +759,11 @@ func (s *Suite) Test_ShellLineChecker_canFail(c *check.C) {
 		nil...)
 
 	test("${FAIL_MSG} \"Failure\"",
-		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon "+
+		"WARN: Makefile:3: Switch to \"set -e\" mode before using a semicolon "+
 			"(after \"${FAIL_MSG} \\\"Failure\\\"\") to separate commands.")
 
 	test("set -x",
-		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon "+
+		"WARN: Makefile:3: Switch to \"set -e\" mode before using a semicolon "+
 			"(after \"set -x\") to separate commands.")
 
 	test("echo 'input' | sed -e s,in,out,",
@@ -782,7 +782,7 @@ func (s *Suite) Test_ShellLineChecker_canFail(c *check.C) {
 		nil...)
 
 	test("gsed s,in,out, filename",
-		"WARN: Makefile:3: Please switch to \"set -e\" mode "+
+		"WARN: Makefile:3: Switch to \"set -e\" mode "+
 			"before using a semicolon (after \"gsed s,in,out, filename\") "+
 			"to separate commands.")
 
@@ -790,25 +790,25 @@ func (s *Suite) Test_ShellLineChecker_canFail(c *check.C) {
 		nil...)
 
 	test("ggrep pattern file...",
-		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon "+
+		"WARN: Makefile:3: Switch to \"set -e\" mode before using a semicolon "+
 			"(after \"ggrep pattern file...\") to separate commands.")
 
 	test("grep input",
 		nil...)
 
 	test("grep pattern file...",
-		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon "+
+		"WARN: Makefile:3: Switch to \"set -e\" mode before using a semicolon "+
 			"(after \"grep pattern file...\") to separate commands.")
 
 	test("touch file",
-		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon "+
+		"WARN: Makefile:3: Switch to \"set -e\" mode before using a semicolon "+
 			"(after \"touch file\") to separate commands.")
 
 	test("echo 'starting'",
 		nil...)
 
 	test("echo 'logging' > log",
-		"WARN: Makefile:3: Please switch to \"set -e\" mode before using a semicolon "+
+		"WARN: Makefile:3: Switch to \"set -e\" mode before using a semicolon "+
 			"(after \"echo 'logging'\") to separate commands.")
 
 	test("echo 'to stderr' 1>&2",
@@ -898,7 +898,7 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine(c *check.C) {
 
 	test("uname=`uname`; echo $$uname; echo; ${PREFIX}/bin/command",
 		"WARN: filename.mk:1: Unknown shell command \"uname\".",
-		"WARN: filename.mk:1: Please switch to \"set -e\" mode "+
+		"WARN: filename.mk:1: Switch to \"set -e\" mode "+
 			"before using a semicolon (after \"uname=`uname`\") to separate commands.")
 
 	test("echo ${PKGNAME:Q}", // EctxQuotPlain

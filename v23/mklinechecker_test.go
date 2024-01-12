@@ -429,7 +429,7 @@ func (s *Suite) Test_MkLineChecker_checkShellCommand__indentation(c *check.C) {
 		"WARN: ~/filename.mk:4: Unknown shell command \"echo\".",
 		"NOTE: ~/filename.mk:5--8: Shell programs should be indented with a single tab.",
 		"WARN: ~/filename.mk:5--8: Unknown shell command \"echo\".",
-		"WARN: ~/filename.mk:5--8: Please switch to \"set -e\" mode before using a semicolon "+
+		"WARN: ~/filename.mk:5--8: Switch to \"set -e\" mode before using a semicolon "+
 			"(after \"echo \\\"$$var\\\"\") to separate commands.",
 		"WARN: ~/filename.mk:5--8: Unknown shell command \"echo\".",
 

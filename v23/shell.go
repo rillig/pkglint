@@ -412,7 +412,7 @@ func (ck *ShellLineChecker) checkSetE(list *MkShList, index int) {
 		return
 	}
 
-	line.Warnf("Please switch to \"set -e\" mode before using a semicolon (after %q) to separate commands.",
+	line.Warnf("Switch to \"set -e\" mode before using a semicolon (after %q) to separate commands.",
 		NewStrCommand(command.Simple).String())
 	line.Explain(
 		"Normally, when a shell command fails (returns non-zero),",
