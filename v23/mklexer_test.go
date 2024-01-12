@@ -353,7 +353,7 @@ func (s *Suite) Test_MkLexer_Expr(c *check.C) {
 
 	test("$(GNUSTEP_USER_ROOT)",
 		exprText("$(GNUSTEP_USER_ROOT)", "GNUSTEP_USER_ROOT"),
-		"WARN: Test_MkLexer_Expr.mk:1: Please use curly braces {} instead of round parentheses () for GNUSTEP_USER_ROOT.")
+		"WARN: Test_MkLexer_Expr.mk:1: Use curly braces {} instead of round parentheses () for GNUSTEP_USER_ROOT.")
 
 	// Opening brace, closing parenthesis.
 	// Warnings are only printed for balanced expressions.
@@ -442,13 +442,13 @@ func (s *Suite) Test_MkLexer_exprBrace__autofix_parentheses(c *check.C) {
 	t.ExpectDiagnosticsAutofix(
 		test,
 
-		"WARN: ~/Makefile:2: Please use curly braces {} instead of round parentheses () for P1.",
-		"WARN: ~/Makefile:2: Please use curly braces {} instead of round parentheses () for P2.",
-		"WARN: ~/Makefile:2: Please use curly braces {} instead of round parentheses () for P3.",
-		"WARN: ~/Makefile:2: Please use curly braces {} instead of round parentheses () for C.",
-		"WARN: ~/Makefile:2: Please use curly braces {} instead of round parentheses () for B.$(C).",
-		"WARN: ~/Makefile:2: Please use curly braces {} instead of round parentheses () for A.$(B.$(C)).",
-		"WARN: ~/Makefile:2: Please use curly braces {} instead of round parentheses () for A.",
+		"WARN: ~/Makefile:2: Use curly braces {} instead of round parentheses () for P1.",
+		"WARN: ~/Makefile:2: Use curly braces {} instead of round parentheses () for P2.",
+		"WARN: ~/Makefile:2: Use curly braces {} instead of round parentheses () for P3.",
+		"WARN: ~/Makefile:2: Use curly braces {} instead of round parentheses () for C.",
+		"WARN: ~/Makefile:2: Use curly braces {} instead of round parentheses () for B.$(C).",
+		"WARN: ~/Makefile:2: Use curly braces {} instead of round parentheses () for A.$(B.$(C)).",
+		"WARN: ~/Makefile:2: Use curly braces {} instead of round parentheses () for A.",
 		"AUTOFIX: ~/Makefile:2: Replacing \"$(P1)\" with \"${P1}\".",
 		"AUTOFIX: ~/Makefile:2: Replacing \"$(P2)\" with \"${P2}\".",
 		"AUTOFIX: ~/Makefile:2: Replacing \"$(P3:Q)\" with \"${P3:Q}\".",
@@ -516,7 +516,7 @@ func (s *Suite) Test_MkLexer_exprText(c *check.C) {
 	test("a${INNER} b", "a${INNER} b")
 
 	test("a${${${${${$(NESTED)}}}}}", "a${${${${${$(NESTED)}}}}}",
-		"WARN: Makefile:20: Please use curly braces {} "+
+		"WARN: Makefile:20: Use curly braces {} "+
 			"instead of round parentheses () for NESTED.")
 
 	test("a)b", "a)b") // Since the closing character is '}', not ')'.
@@ -704,7 +704,7 @@ func (s *Suite) Test_MkLexer_exprModifier__malformed_in_parentheses(c *check.C) 
 
 	t.CheckOutputLines(
 		"WARN: filename.mk:123: Invalid variable modifier \"?yes\" for \"${VAR}\".",
-		"WARN: filename.mk:123: Please use curly braces {} instead of round parentheses () for ${VAR}.")
+		"WARN: filename.mk:123: Use curly braces {} instead of round parentheses () for ${VAR}.")
 }
 
 func (s *Suite) Test_MkLexer_exprModifier__expr_in_malformed_modifier(c *check.C) {

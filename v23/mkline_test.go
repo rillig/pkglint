@@ -456,7 +456,7 @@ func (s *Suite) Test_MkLine_ValueTokens__warnings(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:2: Please use curly braces {} instead of round parentheses () for ROUND.")
+		"WARN: Makefile:2: Use curly braces {} instead of round parentheses () for ROUND.")
 }
 
 func (s *Suite) Test_MkLine_Fields__varassign(c *check.C) {
@@ -1313,7 +1313,7 @@ func (s *Suite) Test_MkLine_ForEachUsed(c *check.C) {
 		"run @",
 		"run x"})
 	t.CheckOutputLines(
-		"WARN: Makefile:12: Please use curly braces {} instead of round parentheses () for ROUND_PARENTHESES.",
+		"WARN: Makefile:12: Use curly braces {} instead of round parentheses () for ROUND_PARENTHESES.",
 		"WARN: Makefile:14: $x is ambiguous. Use ${x} if you mean a Make variable or $$x if you mean a shell variable.")
 }
 

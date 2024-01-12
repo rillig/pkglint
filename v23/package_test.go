@@ -475,7 +475,7 @@ func (s *Suite) Test_Package_load__extra_files(c *check.C) {
 	t.CheckOutputLines(
 		// All *.mk files in the package directory are assumed
 		// to be BSD-style Makefiles, therefore the many warnings.
-		"WARN: gnu-style.mk:1: Please use curly braces {} instead of round parentheses () for CC.",
+		"WARN: gnu-style.mk:1: Use curly braces {} instead of round parentheses () for CC.",
 		"ERROR: gnu-style.mk:1: Unknown makefile line format: \"ifeq ($(CC),gcc)\".",
 		"ERROR: gnu-style.mk:3: Unknown makefile line format: \"else\".",
 		"ERROR: gnu-style.mk:5: Unknown makefile line format: \"endif\".",
@@ -493,7 +493,7 @@ func (s *Suite) Test_Package_load__extra_files(c *check.C) {
 		// data, not to perform the actual checks.
 		//
 		// Therefore, the below lines contain two more diagnostics.
-		"WARN: gnu-style.mk:1: Please use curly braces {} instead of round parentheses () for CC.",
+		"WARN: gnu-style.mk:1: Use curly braces {} instead of round parentheses () for CC.",
 		"ERROR: gnu-style.mk:1: Unknown makefile line format: \"ifeq ($(CC),gcc)\".",
 		"ERROR: gnu-style.mk:3: Unknown makefile line format: \"else\".",
 		"ERROR: gnu-style.mk:5: Unknown makefile line format: \"endif\".",
@@ -515,7 +515,7 @@ func (s *Suite) Test_Package_load__extra_files(c *check.C) {
 		// All files that belong to the package itself, and not to pkgsrc
 		// should therefore be placed in the files/ directory.
 		"WARN: ../../category/other/gnu-style.mk:1: "+
-			"Please use curly braces {} instead of round parentheses () for CC.",
+			"Use curly braces {} instead of round parentheses () for CC.",
 		"ERROR: ../../category/other/gnu-style.mk:1: Unknown makefile line format: \"ifeq ($(CC),gcc)\".",
 		"ERROR: ../../category/other/gnu-style.mk:3: Unknown makefile line format: \"else\".",
 		"ERROR: ../../category/other/gnu-style.mk:5: Unknown makefile line format: \"endif\".",

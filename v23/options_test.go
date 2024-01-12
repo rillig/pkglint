@@ -694,7 +694,7 @@ func (s *Suite) Test_CheckLinesOptionsMk__indirect_supported_options_parentheses
 
 	t.CheckOutputLines(
 		"WARN: ~/category/package/options.mk:5: "+
-			"Please use curly braces {} instead of round parentheses () for OPTIONS.",
+			"Use curly braces {} instead of round parentheses () for OPTIONS.",
 		"WARN: ~/category/package/options.mk:5: "+
 			"Option \"direct\" should be handled below in an .if block.")
 }

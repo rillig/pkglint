@@ -147,8 +147,15 @@ func (p *MkLexer) exprBrace(usingRoundParen bool) *MkExpr {
 			bracesExpr := string(edit)
 
 			fix := p.Autofix()
-			fix.Warnf("Please use curly braces {} instead of round parentheses () for %s.", varExpr)
+			fix.Warnf("Use curly braces {} instead of round parentheses () for %s.", varExpr)
 			fix.Replace(parenExpr, bracesExpr)
+			fix.Explain(
+				"BSD-style makefiles use curly braces almost exclusively.",
+				"GNU-style makefiles, on the other hand,",
+				"use round parentheses more often.",
+				"Using curly braces everywhere reduces surprises,",
+				"especially since the forms ${...} and $(...) are",
+				"visually similar.")
 			fix.Apply()
 		}
 
