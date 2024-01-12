@@ -3389,7 +3389,7 @@ func (s *Suite) Test_Package_checkOwnerMaintainer__maintainer_unequal(c *check.C
 
 	t.CheckOutputLines(
 		"NOTE: ~/category/package: " +
-			"Please only commit changes that maintainer@example.org would approve.")
+			"Only commit changes that maintainer@example.org would approve.")
 }
 
 func (s *Suite) Test_Package_checkOwnerMaintainer__maintainer_unequal_several_files(c *check.C) {
@@ -3409,7 +3409,7 @@ func (s *Suite) Test_Package_checkOwnerMaintainer__maintainer_unequal_several_fi
 	G.Check(".")
 
 	t.CheckOutputLines(
-		"NOTE: Please only commit changes " +
+		"NOTE: Only commit changes " +
 			"that maintainer@example.org would approve.")
 }
 
@@ -3481,7 +3481,7 @@ func (s *Suite) Test_Package_checkOwnerMaintainer__no_tracing(c *check.C) {
 	G.Check(pkg)
 
 	t.CheckOutputLines(
-		"NOTE: ~/category/package: Please only commit changes " +
+		"NOTE: ~/category/package: Only commit changes " +
 			"that maintainer@example.org would approve.")
 }
 
@@ -3507,7 +3507,7 @@ func (s *Suite) Test_Package_checkOwnerMaintainer__directory(c *check.C) {
 	// No warning for the patches directory, only for regular files.
 	t.CheckOutputLines(
 		"NOTE: ~/category/package: " +
-			"Please only commit changes that " +
+			"Only commit changes that " +
 			"maintainer@example.org would approve.")
 }
 
