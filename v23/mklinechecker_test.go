@@ -137,7 +137,7 @@ func (s *Suite) Test_MkLineChecker_checkText(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: ~/module.mk:2: Please use ${COMPILER_RPATH_FLAG} instead of \"-Wl,--rpath,\".",
+		"WARN: ~/module.mk:2: Use ${COMPILER_RPATH_FLAG} instead of \"-Wl,--rpath,\".",
 		"WARN: ~/module.mk:3: Use of \"GAMEGRP\" is deprecated. Use GAMES_GROUP instead.")
 }
 
@@ -212,17 +212,17 @@ func (s *Suite) Test_MkLineChecker_checkTextRpath(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:4: Please use ${COMPILER_RPATH_FLAG} instead of \"-Wl,-rpath,\".",
-		"WARN: filename.mk:7: Please use ${COMPILER_RPATH_FLAG} instead of \"-Wl,-rpath,\".",
+		"WARN: filename.mk:4: Use ${COMPILER_RPATH_FLAG} instead of \"-Wl,-rpath,\".",
+		"WARN: filename.mk:7: Use ${COMPILER_RPATH_FLAG} instead of \"-Wl,-rpath,\".",
 		// TODO: Remove duplicates.
-		"WARN: filename.mk:9: Please use ${COMPILER_RPATH_FLAG} instead of \"-Wl,-R\".",
-		"WARN: filename.mk:9: Please use ${COMPILER_RPATH_FLAG} instead of \"-Wl,-R\".",
+		"WARN: filename.mk:9: Use ${COMPILER_RPATH_FLAG} instead of \"-Wl,-R\".",
+		"WARN: filename.mk:9: Use ${COMPILER_RPATH_FLAG} instead of \"-Wl,-R\".",
 		// TODO: Remove duplicates.
-		"WARN: filename.mk:10: Please use ${COMPILER_RPATH_FLAG} instead of \"-Wl,-rpath,\".",
-		"WARN: filename.mk:10: Please use ${COMPILER_RPATH_FLAG} instead of \"-Wl,-rpath,\".",
+		"WARN: filename.mk:10: Use ${COMPILER_RPATH_FLAG} instead of \"-Wl,-rpath,\".",
+		"WARN: filename.mk:10: Use ${COMPILER_RPATH_FLAG} instead of \"-Wl,-rpath,\".",
 		// TODO: Remove duplicates.
-		"WARN: filename.mk:11: Please use ${COMPILER_RPATH_FLAG} instead of \"-Wl,--rpath,\".",
-		"WARN: filename.mk:11: Please use ${COMPILER_RPATH_FLAG} instead of \"-Wl,--rpath,\".")
+		"WARN: filename.mk:11: Use ${COMPILER_RPATH_FLAG} instead of \"-Wl,--rpath,\".",
+		"WARN: filename.mk:11: Use ${COMPILER_RPATH_FLAG} instead of \"-Wl,--rpath,\".")
 }
 
 func (s *Suite) Test_MkLineChecker_checkTextMissingDollar(c *check.C) {
