@@ -1136,12 +1136,12 @@ func (s *Suite) Test_MkAssignChecker_checkMisc(c *check.C) {
 	test(
 		"DIST_SUBDIR=\t\t${PKGNAME}",
 		"WARN: filename.mk:2: PKGNAME should not be used in DIST_SUBDIR "+
-			"as it includes the PKGREVISION. Please use PKGNAME_NOREV instead.")
+			"as it includes the PKGREVISION. Use PKGNAME_NOREV instead.")
 
 	test(
 		"WRKSRC=\t\t\t${PKGNAME}",
 		"WARN: filename.mk:2: PKGNAME should not be used in WRKSRC "+
-			"as it includes the PKGREVISION. Please use PKGNAME_NOREV instead.")
+			"as it includes the PKGREVISION. Use PKGNAME_NOREV instead.")
 
 	test(
 		"SITES_distfile.tar.gz=\t${MASTER_SITE_GITHUB:=user/}",
@@ -1151,12 +1151,12 @@ func (s *Suite) Test_MkAssignChecker_checkMisc(c *check.C) {
 	test(
 		"MASTER_SITES=\t\thttps://cdn.example.org/${PKGNAME}/",
 		"WARN: filename.mk:2: PKGNAME should not be used in MASTER_SITES "+
-			"as it includes the PKGREVISION. Please use PKGNAME_NOREV instead.")
+			"as it includes the PKGREVISION. Use PKGNAME_NOREV instead.")
 
 	test(
 		"MASTER_SITES=\t\thttps://cdn.example.org/distname-${PKGVERSION}/",
 		"WARN: filename.mk:2: PKGVERSION should not be used in MASTER_SITES "+
-			"as it includes the PKGREVISION. Please use PKGVERSION_NOREV instead.")
+			"as it includes the PKGREVISION. Use PKGVERSION_NOREV instead.")
 }
 
 func (s *Suite) Test_MkAssignChecker_checkMisc__multiple_inclusion_guards(c *check.C) {

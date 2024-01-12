@@ -658,7 +658,7 @@ func (ck *MkAssignChecker) checkMisc() {
 		// TODO: Replace regex with proper Expr matching.
 		if m, revVarname := match1(value, `\$\{(PKGNAME|PKGVERSION)[:\}]`); m {
 			mkline.Warnf("%s should not be used in %s as it includes the PKGREVISION. "+
-				"Please use %[1]s_NOREV instead.", revVarname, varname)
+				"Use %[1]s_NOREV instead.", revVarname, varname)
 		}
 	}
 
