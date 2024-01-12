@@ -1358,7 +1358,7 @@ func (pkg *Package) determineEffectivePkgVars() {
 	pkg.checkPkgnameRedundant(pkgnameLine, pkgname, distname)
 
 	if pkgname == "" && distnameLine != nil && !containsExpr(distname) && !matchesPkgname(distname) {
-		distnameLine.Warnf("As DISTNAME is not a valid package name, please define the PKGNAME explicitly.")
+		distnameLine.Warnf("As DISTNAME is not a valid package name, define the PKGNAME explicitly.")
 	}
 
 	if pkgname != "" {

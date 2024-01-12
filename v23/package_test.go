@@ -2890,7 +2890,7 @@ func (s *Suite) Test_Package_determineEffectivePkgVars__invalid_DISTNAME(c *chec
 
 	t.CheckOutputLines(
 		"WARN: ~/category/package/Makefile:3: " +
-			"As DISTNAME is not a valid package name, please define the PKGNAME explicitly.")
+			"As DISTNAME is not a valid package name, define the PKGNAME explicitly.")
 }
 
 func (s *Suite) Test_Package_determineEffectivePkgVars__indirect_DISTNAME(c *check.C) {
