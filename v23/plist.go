@@ -322,7 +322,7 @@ func (ck *PlistChecker) checkPathEtc(pline *PlistLine) {
 	if hasPrefix(pline.text, "etc/rc.d/") {
 		pline.Errorf("RCD_SCRIPTS must not be registered in the PLIST.")
 		pline.Explain(
-			"Please use the RCD_SCRIPTS framework, which is described in mk/pkginstall/bsd.pkginstall.mk.")
+			"Use the RCD_SCRIPTS framework, which is described in mk/pkginstall/bsd.pkginstall.mk.")
 		return
 	}
 

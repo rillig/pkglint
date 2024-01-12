@@ -1228,7 +1228,7 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__shell_variables(c *
 	ck.CheckShellCommandLine("cp init-script ${PREFIX}/etc/rc.d/service")
 
 	t.CheckOutputLines(
-		"WARN: Makefile:3: Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
+		"WARN: Makefile:3: Use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
 }
 
 func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__sed_and_mv(c *check.C) {

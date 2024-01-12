@@ -733,7 +733,7 @@ func (ck *ShellLineChecker) CheckWord(token string, checkQuoting bool, time Tool
 	}
 
 	if contains(token, "etc/rc.d") {
-		line.Warnf("Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
+		line.Warnf("Use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
 	}
 
 	ck.checkWordQuoting(token, checkQuoting, time)

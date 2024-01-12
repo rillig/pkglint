@@ -634,7 +634,7 @@ func (ck *MkAssignChecker) checkMisc() {
 	value := mkline.Value()
 
 	if contains(value, "/etc/rc.d") && mkline.Varname() != "RPMIGNOREPATH" {
-		mkline.Warnf("Please use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
+		mkline.Warnf("Use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
 	}
 
 	if varname == "PYTHON_VERSIONS_ACCEPTED" {

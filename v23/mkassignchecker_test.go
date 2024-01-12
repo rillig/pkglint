@@ -1117,7 +1117,7 @@ func (s *Suite) Test_MkAssignChecker_checkMisc(c *check.C) {
 
 	test(
 		"EGDIR=\t\t\t${PREFIX}/etc/rc.d",
-		"WARN: filename.mk:2: Please use the RCD_SCRIPTS mechanism "+
+		"WARN: filename.mk:2: Use the RCD_SCRIPTS mechanism "+
 			"to install rc.d scripts automatically "+
 			"to ${RCD_SCRIPTS_EXAMPLEDIR}.")
 
