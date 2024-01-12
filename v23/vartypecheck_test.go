@@ -397,9 +397,9 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern(c *check.C) {
 		"perl5-5.22.*",
 		"gtksourceview-sharp-2.0-[0-9]*")
 	vt.Output(
-		"WARN: filename.mk:11: Please use \"5.*\" instead of \"5*\" as the version pattern.",
-		"WARN: filename.mk:12: Please use \"perl5-[0-9]*\" instead of \"perl5-*\".",
-		"WARN: filename.mk:13: Please use \"5.22{,nb*}\" instead of \"5.22\" as the version pattern.",
+		"WARN: filename.mk:11: Use \"5.*\" instead of \"5*\" as the version pattern.",
+		"WARN: filename.mk:12: Use \"perl5-[0-9]*\" instead of \"perl5-*\".",
+		"WARN: filename.mk:13: Use \"5.22{,nb*}\" instead of \"5.22\" as the version pattern.",
 		"WARN: filename.mk:15: The version pattern \"2.0-[0-9]*\" should not contain a hyphen.")
 
 	// nb suffix

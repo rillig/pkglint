@@ -340,21 +340,21 @@ func (cv *VartypeCheck) DependencyPattern() {
 
 	} else if m, ver, suffix := match2(wildcard, `^(\d\w*(?:\.\w+)*)(\.\*|\{,nb\*\}|\{,nb\[0-9\]\*\}|\*|)$`); m {
 		if suffix == "" {
-			cv.Warnf("Please use %q instead of %q as the version pattern.", ver+"{,nb*}", ver)
+			cv.Warnf("Use %q instead of %q as the version pattern.", ver+"{,nb*}", ver)
 			cv.Explain(
 				"Without the \"{,nb*}\" suffix, this version pattern only matches",
 				"package versions that don't have a PKGREVISION (which is the part",
 				"after the \"nb\").")
 		}
 		if suffix == "*" {
-			cv.Warnf("Please use %q instead of %q as the version pattern.", ver+".*", ver+"*")
+			cv.Warnf("Use %q instead of %q as the version pattern.", ver+".*", ver+"*")
 			cv.Explain(
 				"For example, the version \"1*\" also matches \"10.0.0\", which is",
 				"probably not intended.")
 		}
 
 	} else if wildcard == "*" {
-		cv.Warnf("Please use \"%[1]s-[0-9]*\" instead of \"%[1]s-*\".", deppat.Pkgbase)
+		cv.Warnf("Use \"%[1]s-[0-9]*\" instead of \"%[1]s-*\".", deppat.Pkgbase)
 		cv.Explain(
 			"If you use a * alone, the package specification may match other",
 			"packages that have the same prefix but a longer name.",
