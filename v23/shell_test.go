@@ -611,7 +611,7 @@ func (s *Suite) Test_SimpleCommandChecker_checkEchoN(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:4: Please use ${ECHO_N} instead of \"echo -n\".")
+		"WARN: Makefile:4: Use ${ECHO_N} instead of \"echo -n\".")
 }
 
 // Before 2020-03-25, pkglint ran into a parse error since it didn't

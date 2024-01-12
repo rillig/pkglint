@@ -366,7 +366,7 @@ func (scc *SimpleCommandChecker) checkEchoN() {
 	}
 
 	if scc.strcmd.Name == "${ECHO}" && scc.strcmd.HasOption("-n") {
-		scc.Warnf("Please use ${ECHO_N} instead of \"echo -n\".")
+		scc.Warnf("Use ${ECHO_N} instead of \"echo -n\".")
 	}
 }
 
