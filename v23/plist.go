@@ -587,7 +587,7 @@ func (pline *PlistLine) CheckDirective(cmd, arg string) {
 		if m, dir := match1(arg, `^(?:rmdir|\$\{RMDIR\} %D/)(.*)`); m {
 			if !contains(dir, "true") && !contains(dir, "${TRUE}") {
 				fix := pline.Autofix()
-				fix.Warnf("Please remove this line. It is no longer necessary.")
+				fix.Warnf("Remove this line. It is no longer necessary.")
 				fix.Delete()
 				fix.Apply()
 			}
@@ -605,7 +605,7 @@ func (pline *PlistLine) CheckDirective(cmd, arg string) {
 		// Nothing to check.
 
 	case "dirrm":
-		pline.Warnf("@dirrm is obsolete. Please remove this line.")
+		pline.Warnf("@dirrm is obsolete. Remove this line.")
 		pline.Explain(
 			"Directories are removed automatically when they are empty.",
 			"When a package needs an empty directory, it can use the @pkgdir",

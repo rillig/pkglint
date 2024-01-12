@@ -40,7 +40,7 @@ func (s *Suite) Test_CheckLinesPlist(c *check.C) {
 		"WARN: PLIST:9: Packages that install libtool libraries should define USE_LIBTOOL.",
 		"WARN: PLIST:10: Preformatted manual page without unformatted one.",
 		"WARN: PLIST:11: IMAKE_MANNEWSUFFIX is not meant to appear in PLISTs.",
-		"WARN: PLIST:12: Please remove this line. It is no longer necessary.",
+		"WARN: PLIST:12: Remove this line. It is no longer necessary.",
 		"ERROR: PLIST:14: The package Makefile must include \"../../graphics/gnome-icon-theme/buildlink3.mk\".",
 		"WARN: PLIST:14: Packages that install icon theme files should set ICON_THEMES.",
 		"ERROR: PLIST:15: Packages that install hicolor icons "+
@@ -1468,9 +1468,9 @@ func (s *Suite) Test_PlistLine_CheckDirective(c *check.C) {
 	CheckLinesPlist(nil, lines)
 
 	t.CheckOutputLines(
-		"WARN: ~/PLIST:2: Please remove this line. It is no longer necessary.",
+		"WARN: ~/PLIST:2: Remove this line. It is no longer necessary.",
 		"ERROR: ~/PLIST:6: The ldconfig command must be used with \"||/usr/bin/true\".",
-		"WARN: ~/PLIST:9: @dirrm is obsolete. Please remove this line.",
+		"WARN: ~/PLIST:9: @dirrm is obsolete. Remove this line.",
 		"WARN: ~/PLIST:10: Invalid number of arguments for imake-man, should be 3.",
 		"WARN: ~/PLIST:11: IMAKE_MANNEWSUFFIX is not meant to appear in PLISTs.",
 		"WARN: ~/PLIST:13: Unknown PLIST directive \"@unknown\".")
