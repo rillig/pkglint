@@ -56,7 +56,7 @@ func (s *Suite) Test_MkLineChecker_Check__warn_expr_LOCALBASE(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: options.mk:2: Please use PREFIX instead of LOCALBASE.")
+		"WARN: options.mk:2: Use PREFIX instead of LOCALBASE.")
 }
 
 func (s *Suite) Test_MkLineChecker_Check__expr_modifier_L(c *check.C) {

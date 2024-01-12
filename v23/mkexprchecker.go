@@ -201,8 +201,14 @@ func (ck *MkExprChecker) checkVarname(time EctxTime) {
 
 	if varname == "LOCALBASE" && !G.Infrastructure && time == EctxRunTime {
 		fix := ck.MkLine.Autofix()
-		fix.Warnf("Please use PREFIX instead of LOCALBASE.")
+		fix.Warnf("Use PREFIX instead of LOCALBASE.")
 		fix.ReplaceAfter("${", "LOCALBASE", "PREFIX")
+		fix.Explain(
+			"LOCALBASE is the user-settable variable,",
+			"while PREFIX is the effective base directory,",
+			"as determined by the pkgsrc infrastructure.",
+			"While both variables contain the same directory,",
+			"only PREFIX should be used, for consistency.")
 		fix.Apply()
 	}
 

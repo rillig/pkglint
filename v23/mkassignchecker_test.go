@@ -1299,7 +1299,7 @@ func (s *Suite) Test_MkAssignChecker_checkRightExpr(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: module.mk:2: Please use PREFIX instead of LOCALBASE.",
+		"WARN: module.mk:2: Use PREFIX instead of LOCALBASE.",
 		"NOTE: module.mk:2: The :Q modifier isn't necessary for ${LOCALBASE} here.")
 }
 
