@@ -1503,7 +1503,7 @@ func (cv *VartypeCheck) URL() {
 			cv.Warnf("%q is not a valid URL. Only ftp, gopher, http, and https URLs are allowed here.", value)
 
 		case absPath == "":
-			cv.Notef("For consistency, please add a trailing slash to %q.", value)
+			cv.Notef("For consistency, add a trailing slash to %q.", value)
 
 		default:
 			cv.Warnf("%q is not a valid URL.", value)

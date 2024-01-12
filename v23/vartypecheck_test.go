@@ -2294,7 +2294,7 @@ func (s *Suite) Test_VartypeCheck_URL(c *check.C) {
 
 	vt.Output(
 		"WARN: filename.mk:4: Write NetBSD.org instead of www.netbsd.org.",
-		"NOTE: filename.mk:5: For consistency, please add a trailing slash to \"https://www.example.org\".")
+		"NOTE: filename.mk:5: For consistency, add a trailing slash to \"https://www.example.org\".")
 
 	vt.Values(
 		"",
