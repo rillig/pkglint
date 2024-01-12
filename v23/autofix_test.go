@@ -422,13 +422,13 @@ func (s *Suite) Test_Autofix_Explain__without_explain_option(c *check.C) {
 	line := t.NewLine("Makefile", 74, "line1")
 
 	fix := line.Autofix()
-	fix.Warnf("Please write row instead of line.")
+	fix.Warnf("Write row instead of line.")
 	fix.Replace("line", "row")
 	fix.Explain("Explanation")
 	fix.Apply()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:74: Please write row instead of line.")
+		"WARN: Makefile:74: Write row instead of line.")
 	t.CheckEquals(G.Logger.explanationsAvailable, true)
 }
 
@@ -439,13 +439,13 @@ func (s *Suite) Test_Autofix_Explain__default(c *check.C) {
 	line := t.NewLine("Makefile", 74, "line1")
 
 	fix := line.Autofix()
-	fix.Warnf("Please write row instead of line.")
+	fix.Warnf("Write row instead of line.")
 	fix.Replace("line", "row")
 	fix.Explain("Explanation")
 	fix.Apply()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:74: Please write row instead of line.",
+		"WARN: Makefile:74: Write row instead of line.",
 		"",
 		"\tExplanation",
 		"")
@@ -459,13 +459,13 @@ func (s *Suite) Test_Autofix_Explain__show_autofix(c *check.C) {
 	line := t.NewLine("Makefile", 74, "line1")
 
 	fix := line.Autofix()
-	fix.Warnf("Please write row instead of line.")
+	fix.Warnf("Write row instead of line.")
 	fix.Replace("line", "row")
 	fix.Explain("Explanation")
 	fix.Apply()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:74: Please write row instead of line.",
+		"WARN: Makefile:74: Write row instead of line.",
 		"AUTOFIX: Makefile:74: Replacing \"line\" with \"row\".",
 		"",
 		"\tExplanation",
@@ -480,7 +480,7 @@ func (s *Suite) Test_Autofix_Explain__autofix(c *check.C) {
 	line := t.NewLine("Makefile", 74, "line1")
 
 	fix := line.Autofix()
-	fix.Warnf("Please write row instead of line.")
+	fix.Warnf("Write row instead of line.")
 	fix.Replace("line", "row")
 	fix.Explain("Explanation")
 	fix.Apply()
@@ -918,7 +918,7 @@ func (s *Suite) Test_Autofix_Custom__in_memory(c *check.C) {
 
 	doFix := func(line *Line) {
 		fix := line.Autofix()
-		fix.Warnf("Please write in ALL-UPPERCASE.")
+		fix.Warnf("Write in ALL-UPPERCASE.")
 		fix.Custom(func(showAutofix, autofix bool) {
 			fix.Describef(0, "Converting to uppercase")
 			if showAutofix || autofix {
@@ -931,14 +931,14 @@ func (s *Suite) Test_Autofix_Custom__in_memory(c *check.C) {
 	doFix(lines.Lines[0])
 
 	t.CheckOutputLines(
-		"WARN: Makefile:1: Please write in ALL-UPPERCASE.")
+		"WARN: Makefile:1: Write in ALL-UPPERCASE.")
 
 	t.SetUpCommandLine("--show-autofix")
 
 	doFix(lines.Lines[1])
 
 	t.CheckOutputLines(
-		"WARN: Makefile:2: Please write in ALL-UPPERCASE.",
+		"WARN: Makefile:2: Write in ALL-UPPERCASE.",
 		"AUTOFIX: Makefile:2: Converting to uppercase")
 	t.CheckEquals(lines.Lines[1].Text, "LINE2")
 
