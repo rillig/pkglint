@@ -1390,7 +1390,7 @@ func (cv *VartypeCheck) SedCommands() {
 
 		case matches(token, `^["']?(\d+|/.*/)?s`):
 			// TODO: "prefix with" instead of "use".
-			cv.Notef("Please always use \"-e\" in sed commands, even if there is only one substitution.")
+			cv.Notef("Always use \"-e\" in sed commands, even if there is only one substitution.")
 			checkSedCommand(token)
 
 		default:

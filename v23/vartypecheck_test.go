@@ -2052,14 +2052,14 @@ func (s *Suite) Test_VartypeCheck_SedCommands(c *check.C) {
 		"-e s,...")                 // Syntactically invalid sed command.
 
 	vt.Output(
-		"NOTE: filename.mk:1: Please always use \"-e\" in sed commands, even if there is only one substitution.",
+		"NOTE: filename.mk:1: Always use \"-e\" in sed commands, even if there is only one substitution.",
 		"WARN: filename.mk:2: Each sed command should appear in an assignment of its own.",
 		"WARN: filename.mk:3: The # character starts a makefile comment.",
 		"ERROR: filename.mk:3: Invalid shell words \"\\\"s,\" in sed commands.",
 		"WARN: filename.mk:8: Unknown sed command \"1d\".",
 		"ERROR: filename.mk:9: The -e option to sed requires an argument.",
 		"WARN: filename.mk:10: Unknown sed command \"-i\".",
-		"NOTE: filename.mk:10: Please always use \"-e\" in sed commands, even if there is only one substitution.",
+		"NOTE: filename.mk:10: Always use \"-e\" in sed commands, even if there is only one substitution.",
 		// XXX: duplicate warning
 		"WARN: filename.mk:11: Unclosed shell variable starting at \"$${unclosedShellVar\".",
 		"WARN: filename.mk:11: Unclosed shell variable starting at \"$${unclosedShellVar\".")
