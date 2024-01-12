@@ -1185,7 +1185,7 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__echo(c *check.C) {
 	NewShellLineChecker(mklines, mkline).CheckShellCommandLine("echo \"hello, world\"")
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:3: Please use \"${ECHO}\" instead of \"echo\".")
+		"WARN: filename.mk:3: Use \"${ECHO}\" instead of \"echo\".")
 }
 
 func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__shell_variables(c *check.C) {

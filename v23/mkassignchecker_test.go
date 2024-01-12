@@ -762,8 +762,8 @@ func (s *Suite) Test_MkAssignChecker_checkOpShell(c *check.C) {
 	// being checked, therefore pkglint cannot decide whether the variable
 	// is used a load time.
 	t.CheckOutputLines(
-		"WARN: ~/category/package/standalone.mk:14: Please use \"${ECHO}\" instead of \"echo\".",
-		"WARN: ~/category/package/standalone.mk:15: Please use \"${ECHO}\" instead of \"echo\".")
+		"WARN: ~/category/package/standalone.mk:14: Use \"${ECHO}\" instead of \"echo\".",
+		"WARN: ~/category/package/standalone.mk:15: Use \"${ECHO}\" instead of \"echo\".")
 
 	t.SetUpCommandLine("-Wall", "--explain")
 	G.Check(t.File("category/package"))
@@ -802,8 +802,8 @@ func (s *Suite) Test_MkAssignChecker_checkOpShell(c *check.C) {
 		"\tby using it at the right-hand side of the := operator, or in an .if",
 		"\tor .for directive.",
 		"",
-		"WARN: ~/category/package/standalone.mk:14: Please use \"${ECHO}\" instead of \"echo\".",
-		"WARN: ~/category/package/standalone.mk:15: Please use \"${ECHO}\" instead of \"echo\".")
+		"WARN: ~/category/package/standalone.mk:14: Use \"${ECHO}\" instead of \"echo\".",
+		"WARN: ~/category/package/standalone.mk:15: Use \"${ECHO}\" instead of \"echo\".")
 }
 
 func (s *Suite) Test_MkAssignChecker_checkOpAppendOnly(c *check.C) {

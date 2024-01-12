@@ -147,7 +147,7 @@ func (scc *SimpleCommandChecker) handleTool() bool {
 	}
 
 	if tool != nil && tool.MustUseVarForm && !containsExpr(command) {
-		scc.mkline.Warnf("Please use \"${%s}\" instead of %q.", tool.Varname, command)
+		scc.mkline.Warnf("Use \"${%s}\" instead of %q.", tool.Varname, command)
 	}
 
 	return tool != nil

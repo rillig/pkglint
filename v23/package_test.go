@@ -987,7 +987,7 @@ func (s *Suite) Test_Package_parse__builtin_mk(c *check.C) {
 	G.Check(t.File("category/package"))
 
 	t.CheckOutputLines(
-		"WARN: ~/category/package/Makefile:23: Please use \"${ECHO}\" instead of \"echo\".",
+		"WARN: ~/category/package/Makefile:23: Use \"${ECHO}\" instead of \"echo\".",
 		"WARN: ~/category/package/Makefile:23: OTHER_VAR is used but not defined.")
 }
 
