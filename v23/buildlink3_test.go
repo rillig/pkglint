@@ -1142,7 +1142,7 @@ func (s *Suite) Test_Buildlink3Checker_checkExprInPkgbase__PKGBASE_with_unknown_
 		"WARN: buildlink3.mk:9: The variable LICENSE should be quoted as part of a shell word.",
 		"ERROR: buildlink3.mk:13: Identifiers for BUILDLINK_TREE must not refer to other variables.",
 		"WARN: buildlink3.mk:13: The variable LICENSE should be quoted as part of a shell word.",
-		"WARN: buildlink3.mk:3: Please replace \"${LICENSE}\" with a simple string "+
+		"WARN: buildlink3.mk:3: Replace \"${LICENSE}\" with a simple string "+
 			"(also in other variables in this file).")
 }
 
