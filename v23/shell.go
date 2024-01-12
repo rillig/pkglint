@@ -910,7 +910,7 @@ func (ck *ShellLineChecker) checkExprToken(atoms *[]*ShAtom, quoting ShQuoting) 
 	if varname == "@" {
 		// No autofix here since it may be a simple typo.
 		// Maybe the package developer meant the shell variable instead.
-		ck.Warnf("Please use \"${.TARGET}\" instead of \"$@\".")
+		ck.Warnf("Use \"${.TARGET}\" instead of \"$@\".")
 		ck.Explain(
 			"The variable $@ can easily be confused with the shell variable of",
 			"the same name, which has a completely different meaning.")

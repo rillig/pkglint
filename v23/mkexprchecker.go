@@ -193,7 +193,7 @@ func (ck *MkExprChecker) checkModifierLoop(mod MkExprModifier) {
 func (ck *MkExprChecker) checkVarname(time EctxTime) {
 	varname := ck.expr.varname
 	if varname == "@" {
-		ck.MkLine.Warnf("Please use %q instead of %q.", "${.TARGET}", "$@")
+		ck.MkLine.Warnf("Use %q instead of %q.", "${.TARGET}", "$@")
 		ck.MkLine.Explain(
 			"It is more readable and prevents confusion with the shell variable",
 			"of the same name.")

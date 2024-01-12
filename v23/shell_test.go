@@ -920,7 +920,7 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine(c *check.C) {
 		"WARN: filename.mk:1: Please move ${COMMENT:Q} outside of any quoting characters.")
 
 	test("echo target=$@ exitcode=$$? '$$' \"\\$$\"",
-		"WARN: filename.mk:1: Please use \"${.TARGET}\" instead of \"$@\".",
+		"WARN: filename.mk:1: Use \"${.TARGET}\" instead of \"$@\".",
 		"WARN: filename.mk:1: The $? shell variable is often not available in \"set -e\" mode.")
 
 	test("echo $$@",
@@ -1486,15 +1486,15 @@ func (s *Suite) Test_ShellLineChecker_CheckWord(c *check.C) {
 
 	// The unquoted $@ takes a different code path in pkglint than the quoted $@.
 	test("$@", false,
-		"WARN: filename.mk:1: Please use \"${.TARGET}\" instead of \"$@\".")
+		"WARN: filename.mk:1: Use \"${.TARGET}\" instead of \"$@\".")
 
 	// When $@ appears as part of a shell token, it takes another code path in pkglint.
 	test("-$@-", false,
-		"WARN: filename.mk:1: Please use \"${.TARGET}\" instead of \"$@\".")
+		"WARN: filename.mk:1: Use \"${.TARGET}\" instead of \"$@\".")
 
 	// The unquoted $@ takes a different code path in pkglint than the quoted $@.
 	test("\"$@\"", false,
-		"WARN: filename.mk:1: Please use \"${.TARGET}\" instead of \"$@\".")
+		"WARN: filename.mk:1: Use \"${.TARGET}\" instead of \"$@\".")
 
 	test("${COMMENT:Q}", true,
 		nil...)

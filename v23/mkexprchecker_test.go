@@ -437,7 +437,7 @@ func (s *Suite) Test_MkExprChecker_checkVarname(c *check.C) {
 
 	t.ExpectDiagnosticsAutofix(
 		doTest,
-		"WARN: filename.mk:1: Please use \"${.TARGET}\" instead of \"$@\".",
+		"WARN: filename.mk:1: Use \"${.TARGET}\" instead of \"$@\".",
 		"WARN: filename.mk:3: Please use PREFIX instead of LOCALBASE.",
 		"AUTOFIX: filename.mk:3: Replacing \"LOCALBASE\" with \"PREFIX\".")
 }
