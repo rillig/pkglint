@@ -818,7 +818,7 @@ func (s *Suite) Test_VartypeCheck_EmulPlatform(c *check.C) {
 			"hpcmips hpcsh hppa hppa64 "+
 			"i386 i586 i686 ia64 m68000 m68k m88k "+
 			"mips mips64 mips64eb mips64el mipseb mipsel mipsn32 "+
-			"mlrisc ns32k pc532 pmax powerpc powerpc64 rs6000 "+
+			"mlrisc ns32k pc532 pmax powerpc powerpc64 riscv64 rs6000 "+
 			"s390 sh3eb sh3el sparc sparc64 vax x86_64 "+
 			"} instead.",
 		"WARN: filename.mk:3: \"${LINUX}\" is not a valid emulation platform.")
@@ -1456,7 +1456,7 @@ func (s *Suite) Test_VartypeCheck_MachinePlatform(c *check.C) {
 			"earmv6hfeb earmv7 earmv7eb earmv7hf earmv7hfeb evbarm hpcmips hpcsh hppa hppa64 "+
 			"i386 i586 i686 ia64 m68000 m68k m88k "+
 			"mips mips64 mips64eb mips64el mipseb mipsel mipsn32 "+
-			"mlrisc ns32k pc532 pmax powerpc powerpc64 "+
+			"mlrisc ns32k pc532 pmax powerpc powerpc64 riscv64 "+
 			"rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 "+
 			"} for the hardware architecture part of MACHINE_PLATFORM.",
 		"WARN: filename.mk:3: The pattern \"netbsd\" cannot match any of "+
@@ -1470,7 +1470,7 @@ func (s *Suite) Test_VartypeCheck_MachinePlatform(c *check.C) {
 			"earmv6hfeb earmv7 earmv7eb earmv7hf earmv7hfeb evbarm hpcmips hpcsh hppa hppa64 "+
 			"i386 i586 i686 ia64 m68000 m68k m88k "+
 			"mips mips64 mips64eb mips64el mipseb mipsel mipsn32 "+
-			"mlrisc ns32k pc532 pmax powerpc powerpc64 "+
+			"mlrisc ns32k pc532 pmax powerpc powerpc64 riscv64 "+
 			"rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 "+
 			"} for the hardware architecture part of MACHINE_PLATFORM.",
 		"WARN: filename.mk:5: \"FreeBSD*\" is not a valid platform pattern.",
@@ -1505,7 +1505,7 @@ func (s *Suite) Test_VartypeCheck_MachinePlatformPattern(c *check.C) {
 			"earmv6hfeb earmv7 earmv7eb earmv7hf earmv7hfeb evbarm hpcmips hpcsh hppa hppa64 "+
 			"i386 i586 i686 ia64 m68000 m68k m88k "+
 			"mips mips64 mips64eb mips64el mipseb mipsel mipsn32 "+
-			"mlrisc ns32k pc532 pmax powerpc powerpc64 "+
+			"mlrisc ns32k pc532 pmax powerpc powerpc64 riscv64 "+
 			"rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 "+
 			"} for the hardware architecture part of ONLY_FOR_PLATFORM.",
 		"WARN: filename.mk:3: The pattern \"netbsd\" cannot match any of "+
@@ -1519,7 +1519,7 @@ func (s *Suite) Test_VartypeCheck_MachinePlatformPattern(c *check.C) {
 			"earmv6hfeb earmv7 earmv7eb earmv7hf earmv7hfeb evbarm hpcmips hpcsh hppa hppa64 "+
 			"i386 i586 i686 ia64 m68000 m68k m88k "+
 			"mips mips64 mips64eb mips64el mipseb mipsel mipsn32 "+
-			"mlrisc ns32k pc532 pmax powerpc powerpc64 "+
+			"mlrisc ns32k pc532 pmax powerpc powerpc64 riscv64 "+
 			"rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 "+
 			"} for the hardware architecture part of ONLY_FOR_PLATFORM.",
 		"WARN: filename.mk:5: \"FreeBSD*\" is not a valid platform pattern.",

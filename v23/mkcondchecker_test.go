@@ -85,7 +85,7 @@ func (s *Suite) Test_MkCondChecker_Check(c *check.C) {
 			"earmeb earmhf earmhfeb earmv4 earmv4eb earmv5 earmv5eb earmv6 earmv6eb earmv6hf earmv6hfeb "+
 			"earmv7 earmv7eb earmv7hf earmv7hfeb evbarm hpcmips hpcsh hppa hppa64 i386 i586 i686 ia64 "+
 			"m68000 m68k m88k mips mips64 mips64eb mips64el mipseb mipsel mipsn32 mlrisc ns32k pc532 pmax "+
-			"powerpc powerpc64 rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 "+
+			"powerpc powerpc64 riscv64 rs6000 s390 sh3eb sh3el sparc sparc64 vax x86_64 "+
 			"} for MACHINE_ARCH.",
 		"NOTE: filename.mk:4: MACHINE_ARCH can be "+
 			"compared using the simpler \"${MACHINE_ARCH} == x86\" "+
