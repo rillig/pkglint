@@ -30,6 +30,8 @@ func (ck *MkCondChecker) Check() {
 		return
 	}
 
+	ck.checkRedundantParentheses(cond)
+
 	checkExpr := func(expr *MkExpr) {
 		var vartype *Vartype // TODO: Insert a better type guess here.
 		// See Test_MkExprChecker_checkAssignable__shell_command_in_exists.
@@ -78,6 +80,17 @@ func (ck *MkCondChecker) Check() {
 		Expr:    checkExpr})
 
 	ck.checkContradictions()
+}
+
+func (ck *MkCondChecker) checkRedundantParentheses(cond *MkCond) {
+	if cond.Paren != nil {
+		fix := ck.MkLine.Autofix()
+		fix.Notef("Parentheses around the outermost condition are redundant.")
+		fix.Explain(
+			"BSD make does not require parentheses around conditions.",
+			"In this regard, it works like the C preprocessor.")
+		fix.Apply()
+	}
 }
 
 func (ck *MkCondChecker) checkAnd(conds []*MkCond) {

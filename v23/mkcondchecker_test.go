@@ -369,6 +369,51 @@ func (s *Suite) Test_MkCondChecker_Check__contradicting_conditions(c *check.C) {
 		"WARN: filename.mk:5: Invalid match pattern \"[2\".")
 }
 
+func (s *Suite) Test_MkCondChecker_checkRedundantParentheses(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	doTest := func(cond string) {
+		mklines := t.SetUpFileMkLines("filename.mk",
+			MkCvsID,
+			cond,
+			".endif")
+		mklines.Check()
+	}
+
+	test := func(cond string, diagnostics ...string) {
+		t.ExpectDiagnosticsAutofix(
+			func(autofix bool) { doTest(cond) },
+			diagnostics...)
+	}
+
+	test(
+		".if 1",
+		nil...)
+
+	test(
+		".if (1)",
+		"NOTE: filename.mk:2: Parentheses "+
+			"around the outermost condition are redundant.")
+
+	test(
+		".if (((((1)))))",
+		"NOTE: filename.mk:2: Parentheses "+
+			"around the outermost condition are redundant.")
+
+	test(
+		".if (1 && 2)",
+		"NOTE: filename.mk:2: Parentheses "+
+			"around the outermost condition are redundant.")
+
+	test(
+		".if (1) || 2",
+		nil...)
+}
+
 func (s *Suite) Test_MkCondChecker_checkAnd(c *check.C) {
 	t := s.Init(c)
 

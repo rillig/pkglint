@@ -706,6 +706,8 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord__complex(c *check.C) {
 		".if (((((${PREFS_DEFINED:Mpath})))))",
 		".if (((((${PREFS_DEFINED} == path)))))",
 
+		"NOTE: filename.mk:6: "+
+			"Parentheses around the outermost condition are redundant.",
 		"NOTE: filename.mk:6: PREFS_DEFINED can be "+
 			"compared using the simpler \"${PREFS_DEFINED} == path\" "+
 			"instead of matching against \":Mpath\".",
