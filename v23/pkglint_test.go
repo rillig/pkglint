@@ -1511,6 +1511,8 @@ func (s *Suite) Test_InterPackage_Bl3__same_identifier(c *check.C) {
 			"can be replaced with the simpler \"S,^,,\".",
 		"NOTE: category/package1/Makefile:4: The modifier \"@v@${v}@\" "+
 			"can be replaced with the simpler \"=\".",
+		"WARN: category/package2/DESCR: DESCR file is "+
+			"the same as \"../../category/package1/DESCR\".",
 		"NOTE: category/package2/Makefile:4: The modifier \"@v@${v}@\" "+
 			"can be replaced with the simpler \"S,^,,\".",
 		"NOTE: category/package2/Makefile:4: The modifier \"@v@${v}@\" "+

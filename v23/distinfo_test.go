@@ -721,6 +721,9 @@ func (s *Suite) Test_distinfoLinesChecker_checkGlobalDistfileMismatch(c *check.C
 		"ERROR: ~/category/package1/distinfo:5: "+
 			"Expected BLAKE2s, SHA512, Size checksums for \"patch-4.2.tar.gz\", got SHA512.",
 
+		"WARN: ~/category/package2/DESCR: DESCR file is the same "+
+			"as \"../../category/package1/DESCR\".",
+
 		"ERROR: ~/category/package2/distinfo:3: "+
 			"Expected BLAKE2s, SHA512, Size checksums for \"distfile-1.0.tar.gz\", got SHA512.",
 		"ERROR: ~/category/package2/distinfo:3: "+
@@ -734,7 +737,7 @@ func (s *Suite) Test_distinfoLinesChecker_checkGlobalDistfileMismatch(c *check.C
 			"The SHA512 hash for encoding-error.tar.gz contains a non-hex character.",
 
 		"WARN: ~/licenses/gnu-gpl-v2: This license seems to be unused.",
-		"8 errors and 1 warning found.",
+		"8 errors and 2 warnings found.",
 		t.Shquote("(Run \"pkglint -e -r -Wall -Call %s\" to show explanations.)", "."))
 
 	// Ensure that hex.DecodeString does not waste memory here.

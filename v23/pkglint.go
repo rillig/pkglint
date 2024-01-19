@@ -1,6 +1,7 @@
 package pkglint
 
 import (
+	"crypto/sha1"
 	"fmt"
 	"github.com/rillig/pkglint/v23/getopt"
 	"github.com/rillig/pkglint/v23/histogram"
@@ -635,6 +636,7 @@ func (p *Pkglint) checkReg(filename CurrPath, basename RelPath, depth int, pkg *
 	case basename.HasPrefixText("DESCR"):
 		if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
 			CheckLinesDescr(lines)
+			G.InterPackage.CheckDuplicateDescr(filename)
 		}
 
 	case basename == "distinfo":
@@ -864,17 +866,21 @@ func (p *Pkglint) Abs(filename CurrPath) CurrPath {
 	return filename.Clean()
 }
 
+// InterPackage collects data from the inter-package analysis.
+// It is most useful when running pkglint on a complete pkgsrc installation.
 type InterPackage struct {
 	hashes       map[string]*Hash    // Maps "alg:filename" => hash (inter-package check).
 	usedLicenses map[string]struct{} // Maps "license name" => true (inter-package check).
 	bl3Names     map[string]Location // Maps buildlink3 identifiers to their first occurrence.
+	descr        map[[sha1.Size]byte][]CurrPath
 }
 
 func (ip *InterPackage) Enable() {
 	*ip = InterPackage{
 		make(map[string]*Hash),
 		make(map[string]struct{}),
-		make(map[string]Location)}
+		make(map[string]Location),
+		make(map[[sha1.Size]byte][]CurrPath)}
 
 	// This is the only license that is added by an infrastructure file,
 	// mk/djbware.mk. The correct way to handle this situation would be
@@ -920,4 +926,31 @@ func (ip *InterPackage) Bl3(name string, loc *Location) *Location {
 
 	ip.bl3Names[name] = *loc
 	return nil
+}
+
+func (ip *InterPackage) CheckDuplicateDescr(filename CurrPath) {
+	descr := ip.descr
+	if descr == nil {
+		return
+	}
+	b, err := os.ReadFile(filename.String())
+	if err != nil {
+		return
+	}
+	h := sha1.Sum(b)
+	existing := descr[h]
+	descr[h] = append(existing, filename)
+	if len(existing) == 0 {
+		return
+	}
+	line := NewLineWhole(filename)
+	line.Warnf("DESCR file is the same as %q.",
+		line.Rel(existing[len(existing)-1]))
+	line.Explain(
+		"Each DESCR file should be unique,",
+		"to help the user choose the most appropriate package.",
+		"",
+		"If two packages really need the exact same DESCR file,",
+		"create a single DESCR file for both",
+		"and refer to it via DESCR_SRC.")
 }
