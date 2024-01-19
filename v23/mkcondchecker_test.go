@@ -369,6 +369,63 @@ func (s *Suite) Test_MkCondChecker_Check__contradicting_conditions(c *check.C) {
 		"WARN: filename.mk:5: Invalid match pattern \"[2\".")
 }
 
+func (s *Suite) Test_MkCondChecker_checkAnd(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	doTest := func(cond string) {
+		mklines := t.SetUpFileMkLines("filename.mk",
+			MkCvsID,
+			"A=",
+			"VAR=",
+			"varname=",
+			"",
+			cond,
+			".endif",
+			"VAR:=\t${A} ${VAR} ${varname}")
+		mklines.Check()
+	}
+
+	test := func(cond string, diagnostics ...string) {
+		t.ExpectDiagnosticsAutofix(
+			func(autofix bool) { doTest(cond) },
+			diagnostics...)
+	}
+
+	test(
+		".if defined(A) && !empty(A)",
+		"NOTE: filename.mk:6: Checking \"defined\" before \"!empty\" is redundant.",
+		"AUTOFIX: filename.mk:6: Replacing \"defined(A) && \" with \"\".")
+
+	// The condition is only redundant if the variable names are the same.
+	test(
+		".if defined(A) && !empty(VAR)",
+		nil...)
+
+	test(
+		".if defined(${varname}) && !empty(${varname})",
+		"NOTE: filename.mk:6: Checking \"defined\" before \"!empty\" is redundant.",
+		"AUTOFIX: filename.mk:6: Replacing \"defined(${varname}) && \" with \"\".")
+
+	test(
+		".if defined(VAR) && !empty(VAR:Mpattern)",
+		"NOTE: filename.mk:6: Checking \"defined\" before \"!empty\" is redundant.",
+		"AUTOFIX: filename.mk:6: Replacing \"defined(VAR) && \" with \"\".")
+
+	// No automatic fix, as the string "defined(A) && " occurs twice.
+	test(
+		".if defined(A) && 1 || defined(A) && !empty(A:Mpattern)",
+		"NOTE: filename.mk:6: Checking \"defined\" before \"!empty\" is redundant.")
+
+	// The redundancy requires a '&&', a '||' does not work.
+	test(
+		".if defined(VAR) || !empty(VAR:Mpattern)",
+		nil...)
+}
+
 func (s *Suite) Test_MkCondChecker_checkNotEmpty(c *check.C) {
 	t := s.Init(c)
 

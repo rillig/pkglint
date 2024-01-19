@@ -70,6 +70,7 @@ func (ck *MkCondChecker) Check() {
 	}
 
 	cond.Walk(&MkCondCallback{
+		And:     ck.checkAnd,
 		Not:     checkNot,
 		Empty:   checkEmpty,
 		Var:     checkVar,
@@ -77,6 +78,23 @@ func (ck *MkCondChecker) Check() {
 		Expr:    checkExpr})
 
 	ck.checkContradictions()
+}
+
+func (ck *MkCondChecker) checkAnd(conds []*MkCond) {
+	if len(conds) == 2 &&
+		conds[0].Defined != "" &&
+		conds[1].Not != nil &&
+		conds[1].Not.Empty != nil &&
+		conds[0].Defined == conds[1].Not.Empty.varname {
+		fix := ck.MkLine.Autofix()
+		fix.Notef("Checking \"defined\" before \"!empty\" is redundant.")
+		fix.Explain(
+			"The \"empty\" function treats an undefined variable",
+			"as empty, so there is no need to write the \"defined\"",
+			"explicitly.")
+		fix.Replace("defined("+conds[0].Defined+") && ", "")
+		fix.Apply()
+	}
 }
 
 func (ck *MkCondChecker) checkNotEmpty(not *MkCond) {
