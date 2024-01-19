@@ -940,12 +940,20 @@ func (ip *InterPackage) CheckDuplicateDescr(filename CurrPath) {
 	h := sha1.Sum(b)
 	existing := descr[h]
 	descr[h] = append(existing, filename)
-	if len(existing) == 0 {
+	var duplicate CurrPath
+	for _, e := range existing {
+		if e.Dir().Base() == filename.Dir().Base() &&
+			G.Pkgsrc.IsWip(filename) != G.Pkgsrc.IsWip(e) {
+			continue
+		}
+		duplicate = e
+	}
+	if duplicate.IsEmpty() {
 		return
 	}
 	line := NewLineWhole(filename)
 	line.Warnf("DESCR file is the same as %q.",
-		line.Rel(existing[len(existing)-1]))
+		line.Rel(duplicate))
 	line.Explain(
 		"Each DESCR file should be unique,",
 		"to help the user choose the most appropriate package.",
