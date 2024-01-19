@@ -177,7 +177,8 @@ func (s *Suite) Test_MkCondChecker_Check__comparison_with_shell_command(c *check
 
 // The :N modifier filters unwanted values. After this filter, any variable value
 // may be compared with the empty string, regardless of the variable type.
-// Effectively, the :N modifier changes the type from T to Option(T).
+// Effectively, the :N modifier changes the type from T to Option(T),
+// but that's something that the pkglint type system doesn't model.
 func (s *Suite) Test_MkCondChecker_Check__compare_pattern_with_empty(c *check.C) {
 	t := s.Init(c)
 
@@ -373,9 +374,9 @@ func (s *Suite) Test_MkCondChecker_checkNotEmpty(c *check.C) {
 
 	t.SetUpVartypes()
 
-	test := func(cond string, diagnostics ...string) {
+	test := func(line string, diagnostics ...string) {
 		mklines := t.NewMkLines("filename.mk",
-			".if "+cond)
+			line)
 		mkline := mklines.mklines[0]
 		ck := NewMkCondChecker(mkline, mklines)
 
@@ -384,7 +385,8 @@ func (s *Suite) Test_MkCondChecker_checkNotEmpty(c *check.C) {
 		t.CheckOutput(diagnostics)
 	}
 
-	test("!empty(VAR)",
+	test(
+		".if !empty(VAR)",
 
 		// Only a few variables are suggested to use the simpler form,
 		// because of the side effect when the variable is undefined.
@@ -392,7 +394,7 @@ func (s *Suite) Test_MkCondChecker_checkNotEmpty(c *check.C) {
 		nil...)
 
 	test(
-		"!empty(PKG_BUILD_OPTIONS.package:Moption)",
+		".if !empty(PKG_BUILD_OPTIONS.package:Moption)",
 
 		"NOTE: filename.mk:1: !empty(PKG_BUILD_OPTIONS.package:Moption) "+
 			"can be replaced with ${PKG_BUILD_OPTIONS.package:Moption}.")
@@ -459,12 +461,12 @@ func (s *Suite) Test_MkCondChecker_checkEmpty(c *check.C) {
 func (s *Suite) Test_MkCondChecker_checkEmptyExpr(c *check.C) {
 	t := s.Init(c)
 
-	test := func(expr *MkExpr, diagnostics ...string) {
+	test := func(expr string, diagnostics ...string) {
 		mklines := t.NewMkLines("filename.mk",
 			"# dummy")
 		ck := NewMkCondChecker(mklines.mklines[0], mklines)
 
-		ck.checkEmptyExpr(expr)
+		ck.checkEmptyExpr(NewMkExpr(expr))
 
 		t.CheckOutput(diagnostics)
 	}
@@ -472,20 +474,24 @@ func (s *Suite) Test_MkCondChecker_checkEmptyExpr(c *check.C) {
 	// In some cases it makes sense to use indirection in a !empty(...)
 	// expression.
 	test(
-		NewMkExpr("${PREFIX}"),
-
+		"VAR.${param}",
+		nil...)
+	test(
+		"${VARNAME}",
+		nil...)
+	test(
+		"${var}", // Typical of a .for loop variable.
 		nil...)
 
-	// Typical examples for indirection are .for loops.
+	// This is probably a typo, as the value of the PREFIX variable
+	// does not name another variable.
 	test(
-		NewMkExpr("${var}"),
-
+		"${PREFIX}",
 		nil...)
 
 	// This one is obvious enough for pkglint.
 	test(
-		NewMkExpr("${PREFIX:Mpattern}"),
-
+		"${PREFIX:Mpattern}",
 		"WARN: filename.mk:1: The empty() function takes a variable "+
 			"name as parameter, not a variable expression.")
 }
