@@ -412,6 +412,16 @@ func (s *Suite) Test_MkCondChecker_checkRedundantParentheses(c *check.C) {
 	test(
 		".if (1) || 2",
 		nil...)
+
+	test(
+		".if (!0)",
+		"NOTE: filename.mk:2: Parentheses "+
+			"around the outermost condition are redundant.")
+
+	test(
+		".if (!empty(${VARNAME:L}:Mpattern))",
+		"NOTE: filename.mk:2: Parentheses "+
+			"around the outermost condition are redundant.")
 }
 
 func (s *Suite) Test_MkCondChecker_checkAnd(c *check.C) {
