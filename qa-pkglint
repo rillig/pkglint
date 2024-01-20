@@ -80,7 +80,6 @@ qa_netbsd() {
   (cd "$archivedir" && grep -n "Pkglint internal error" -- *.err) && ok=no
   [ "$ok" = 'yes' ] || exit 1
 
-set -x
   pkgname=$(ssh netbsd "cd proj/pkgsrc/pkgtools/pkglint && env - PATH=/bin:/usr/bin PKGSRC_RUN_TEST=no \"\$HOME/minipkg/bin/bmake\" -v PKGNAME")
   step_msg "Creating archive"
   rm -rf "$archivedir/tmp"
