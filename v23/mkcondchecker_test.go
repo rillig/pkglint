@@ -59,7 +59,7 @@ func (s *Suite) Test_MkCondChecker_Check(c *check.C) {
 
 	test(".if !empty(${IS_BUILTIN.Xfixes:M[yY][eE][sS]})",
 		"WARN: filename.mk:4: The empty() function takes a variable name as parameter, "+
-			"not a variable expression.")
+			"not an expression.")
 
 	test(".if ${PKGSRC_COMPILER} == \"msvc\"",
 		"WARN: filename.mk:4: \"msvc\" is not valid for PKGSRC_COMPILER. "+
@@ -578,7 +578,7 @@ func (s *Suite) Test_MkCondChecker_checkEmptyExpr(c *check.C) {
 			"# dummy")
 		ck := NewMkCondChecker(mklines.mklines[0], mklines)
 
-		ck.checkEmptyExpr(NewMkExpr(expr))
+		ck.checkEmptyExpr(NewMkExpr(expr), false)
 
 		t.CheckOutput(diagnostics)
 	}
@@ -605,7 +605,7 @@ func (s *Suite) Test_MkCondChecker_checkEmptyExpr(c *check.C) {
 	test(
 		"${PREFIX:Mpattern}",
 		"WARN: filename.mk:1: The empty() function takes a variable "+
-			"name as parameter, not a variable expression.")
+			"name as parameter, not an expression.")
 }
 
 func (s *Suite) Test_MkCondChecker_checkEmptyType(c *check.C) {

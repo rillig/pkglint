@@ -138,31 +138,46 @@ func (ck *MkCondChecker) checkNotEmpty(not *MkCond) {
 // checkEmpty checks a condition of the form empty(VAR),
 // empty(VAR:Mpattern) or ${VAR:Mpattern} in an .if directive.
 func (ck *MkCondChecker) checkEmpty(expr *MkExpr, fromEmpty bool, neg bool) {
-	ck.checkEmptyExpr(expr)
+	ck.checkEmptyExpr(expr, neg)
 	ck.checkEmptyType(expr)
 
 	s := MkCondSimplifier{ck.MkLines, ck.MkLine}
 	s.SimplifyExpr(expr, fromEmpty, neg)
 }
 
-func (ck *MkCondChecker) checkEmptyExpr(expr *MkExpr) {
+func (ck *MkCondChecker) checkEmptyExpr(expr *MkExpr, neg bool) {
 	if !matches(expr.varname, `^\$.*:[MN]`) {
 		return
 	}
 
 	ck.MkLine.Warnf("The empty() function takes a variable name as parameter, " +
-		"not a variable expression.")
-	ck.MkLine.Explain(
-		"Instead of empty(${VARNAME:Mpattern}), you should write either of the following:",
-		"",
-		"\tempty(VARNAME:Mpattern)",
-		"\t${VARNAME:Mpattern} == \"\"",
-		"\t!${VARNAME:Mpattern}",
-		"",
-		"Instead of !empty(${VARNAME:Mpattern}), you should write either of the following:",
-		"",
-		"\t!empty(VARNAME:Mpattern)",
-		"\t${VARNAME:Mpattern}")
+		"not an expression.")
+	if neg {
+		ck.MkLine.Explain(
+			"Instead of !empty(${VARNAME:Mpattern}),",
+			"you should write either of the following:",
+			"",
+			"\t!empty(VARNAME:Mpattern)",
+			"\t${VARNAME:Mpattern} != \"\"",
+			"",
+			"If the pattern cannot match the number zero,",
+			"you can omit the '!= \"\"', resulting in:",
+			"",
+			"\t${VARNAME:Mpattern}")
+	} else {
+		ck.MkLine.Explain(
+			"Instead of empty(${VARNAME:Mpattern}),",
+			"you should write either of the following:",
+			"",
+			"\tempty(VARNAME:Mpattern)",
+			"\t${VARNAME:Mpattern} == \"\"",
+			"",
+			"If the pattern cannot match the number zero,",
+			"you can replace the '== \"\"' with a '!',",
+			"resulting in:",
+			"",
+			"\t!${VARNAME:Mpattern}")
+	}
 }
 
 func (ck *MkCondChecker) checkEmptyType(expr *MkExpr) {
