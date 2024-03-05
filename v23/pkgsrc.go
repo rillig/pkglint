@@ -893,11 +893,10 @@ func (src *Pkgsrc) IsOpsysVar(varbase string) bool {
 	return false
 }
 
-// ReadDir lists the files and subdirectories from the given directory
-// (relative to the pkgsrc root).
+// ReadDir lists the files and subdirectories from the given directory.
 //
-// The result may contain empty directories that are left over from CVS.
-// For performance reasons, the caller needs to filter these out; see isEmptyDir.
+// The result may contain empty directories that are left over from CVS,
+// for performance reasons; use isEmptyDir to filter them out.
 func (src *Pkgsrc) ReadDir(dirName PkgsrcPath) []os.DirEntry {
 	dir := src.File(dirName)
 	entries, err := dir.ReadDir()
