@@ -512,10 +512,9 @@ func (ck MkLineChecker) checkDirective(forVars map[string]bool, ind *Indentation
 
 	ck.MkLines.checkAllData.conditions.Add(mkline)
 
-	needsArgument := false
+	needsArgument := mkline.NeedsCond()
 	switch directive {
 	case
-		"if", "ifdef", "ifndef", "elif",
 		"for", "undef",
 		"error", "warning", "info",
 		"export", "export-env", "unexport", "unexport-env":

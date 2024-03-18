@@ -325,7 +325,8 @@ func (mkline *MkLine) Cond() *MkCond {
 // NeedsCond returns whether the directive requires a condition as argument.
 func (mkline *MkLine) NeedsCond() bool {
 	directive := mkline.Directive()
-	return directive == "if" || directive == "elif"
+	trimmed := strings.TrimPrefix(directive, "el")
+	return hasPrefix(trimmed, "if")
 }
 
 // DirectiveComment is the trailing end-of-line comment, typically at a deeply nested .endif or .endfor.

@@ -99,6 +99,24 @@ func (s *Suite) Test_Package__expr_at_load_time(c *check.C) {
 		"NOTE: ~/category/pkgbase/Makefile:26: Consider the :sh modifier instead of != for \"echo true=${TRUE:Q}\".")
 }
 
+func (s *Suite) Test_Package__ifndef_in_hacks_mk(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.CreateFileLines("category/package/hacks.mk",
+		MkCvsID,
+		".ifndef UNDEF",
+		".endif")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package"))
+
+	t.CheckOutputLines(
+		"WARN: ~/category/package/hacks.mk:2: " +
+			"The \".ifndef\" directive is deprecated. " +
+			"Use \".if !defined(UNDEF)\" instead.")
+}
+
 func (s *Suite) Test_Package__relative_included_filenames_in_same_directory(c *check.C) {
 	t := s.Init(c)
 

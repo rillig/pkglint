@@ -28,9 +28,7 @@ func (s *Suite) Test_MkLineParser_Parse__infrastructure(c *check.C) {
 	t.CheckEquals(mklines.mklines[3].Directive(), "export")
 
 	t.CheckOutputLines(
-		"WARN: infra.mk:2: Makefile lines should not start with space characters.",
-		"ERROR: infra.mk:8: Unknown makefile line format: \".ifmake target1\".",
-		"ERROR: infra.mk:9: Unknown makefile line format: \".elifnmake target2\".")
+		"WARN: infra.mk:2: Makefile lines should not start with space characters.")
 
 	mklines.Check()
 

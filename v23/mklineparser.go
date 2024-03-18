@@ -217,7 +217,8 @@ func (p MkLineParser) parseDirective(line *Line, splitResult mkLineSplitResult) 
 	directive := lexer.NextBytesSet(LowerDash)
 	switch directive {
 	case "if", "else", "elif", "endif",
-		"ifdef", "ifndef",
+		"ifdef", "ifndef", "elifdef", "elifndef",
+		"ifmake", "ifnmake", "elifmake", "elifnmake",
 		"for", "endfor", "undef",
 		"error", "warning", "info",
 		"export", "export-env", "unexport", "unexport-env":

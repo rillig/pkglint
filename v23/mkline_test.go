@@ -126,25 +126,11 @@ func (s *Suite) Test_MkLine_NeedsCond(c *check.C) {
 	}
 
 	test(".if 0", true)
-	test(".ifndef VAR", false) // FIXME
-	t.ExpectPanicMatches(      // FIXME
-		func() {
-			test(".ifmake target", true,
-				"ERROR: filename.mk:123: Unknown makefile line format: "+
-					"\".ifmake target\".")
-		},
-		`interface conversion: interface \{} is nil, `+
-			`not \*pkglint\.mkLineDirective`)
+	test(".ifndef VAR", true)
+	test(".ifmake target", true)
 	test(".else", false)
 	test(".elif 0", true)
-	t.ExpectPanicMatches( // FIXME
-		func() {
-			test(".elifnmake target", true,
-				"ERROR: filename.mk:123: Unknown makefile line format: "+
-					"\".elifnmake target\".")
-		},
-		`interface conversion: interface \{} is nil, `+
-			`not \*pkglint\.mkLineDirective`)
+	test(".elifnmake target", true)
 }
 
 func (s *Suite) Test_MkLine_IncludedFileFull(c *check.C) {
