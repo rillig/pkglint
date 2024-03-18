@@ -410,6 +410,12 @@ func (ck *MkCondChecker) collectFacts(mkline *MkLine) []VarFact {
 
 	var collectCond func(cond *MkCond)
 	collectCond = func(cond *MkCond) {
+		if cond == nil {
+			// TODO: This is a workaround for a panic in '.ifndef VARNAME'.
+			// Seen in net/wget/hacks.mk 1.1.
+			// The parser for conditions needs to accept bare words.
+			return
+		}
 		if cond.Term != nil {
 			collectExpr(cond.Term.Expr)
 		}
