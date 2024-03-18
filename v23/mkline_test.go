@@ -114,6 +114,39 @@ func (s *Suite) Test_MkLine_Cond(c *check.C) {
 	t.CheckEquals(mkline.Cond(), cond)
 }
 
+func (s *Suite) Test_MkLine_NeedsCond(c *check.C) {
+	t := s.Init(c)
+
+	test := func(text string, expected bool, expectedLines ...string) {
+		defer func() {
+			t.CheckOutput(expectedLines)
+		}()
+		mkline := t.NewMkLine("filename.mk", 123, text)
+		t.CheckEquals(mkline.NeedsCond(), expected)
+	}
+
+	test(".if 0", true)
+	test(".ifndef VAR", false) // FIXME
+	t.ExpectPanicMatches(      // FIXME
+		func() {
+			test(".ifmake target", true,
+				"ERROR: filename.mk:123: Unknown makefile line format: "+
+					"\".ifmake target\".")
+		},
+		`interface conversion: interface \{} is nil, `+
+			`not \*pkglint\.mkLineDirective`)
+	test(".else", false)
+	test(".elif 0", true)
+	t.ExpectPanicMatches( // FIXME
+		func() {
+			test(".elifnmake target", true,
+				"ERROR: filename.mk:123: Unknown makefile line format: "+
+					"\".elifnmake target\".")
+		},
+		`interface conversion: interface \{} is nil, `+
+			`not \*pkglint\.mkLineDirective`)
+}
+
 func (s *Suite) Test_MkLine_IncludedFileFull(c *check.C) {
 	t := s.Init(c)
 

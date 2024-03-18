@@ -999,7 +999,7 @@ func (t *Tester) ExpectFatalMatches(action func(), expected regex.Pattern) {
 }
 
 // ExpectPanic runs the given action and expects that this action calls
-// assert or assertf, or uses some other way to panic.
+// assert or assertf, or uses some other way to panic with a string.
 //
 // Usage:
 //
