@@ -943,7 +943,8 @@ func (src *Pkgsrc) Load(filename PkgsrcPath, options LoadOptions) *Lines {
 //
 // The relative path is built by going from the "from" directory up to the
 // pkgsrc root and from there to the "to" filename. This produces the form
-// "../../category/package" that is found in DEPENDS and .include lines.
+// "../../category/package" that is found in DEPENDS lines, as well as
+// .include lines from a package directory.
 //
 // This function should only be used if the relative path from one file to
 // another cannot be computed in another way. The preferred way is to take

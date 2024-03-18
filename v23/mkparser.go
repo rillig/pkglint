@@ -436,9 +436,8 @@ func ToExpr(str string) *MkExpr {
 // MkCond is a condition in a makefile, such as ${OPSYS} == NetBSD.
 //
 // The representation is somewhere between syntactic and semantic.
-// Unnecessary parentheses are omitted in this representation,
-// (TODO: double-check; the 'paren(paren(paren()))' tests contradict)
-// but !empty(VARNAME) is represented differently from ${VARNAME} != "".
+// The condition '!empty(VARNAME)' is represented differently from the
+// condition '${VARNAME} != ""'.
 // For higher level analysis, a unified representation might be better.
 // See MkParser.MkCond.
 type MkCond struct {

@@ -644,8 +644,9 @@ func (mkline *MkLine) ResolveExprsInRelPath(rel RelPath, pkg *Package) RelPath {
 
 		if G.Testing {
 			// Relative pkgsrc paths usually only contain two or three levels.
-			// A possible reason for reaching this assertion is a pkglint unit test
-			// that uses t.NewMkLines instead of the correct t.SetUpFileMkLines.
+			// If this assertion fails during a pkglint unit test,
+			// it is typically caused by calling t.NewMkLines
+			// instead of the correct t.SetUpFileMkLines.
 			assertf(!pkgsrcdir.ContainsPath("../../../../.."),
 				"Relative path %q for %q is too deep below the pkgsrc root %q.",
 				pkgsrcdir, basedir, G.Pkgsrc.File("."))
