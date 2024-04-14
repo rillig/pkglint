@@ -379,7 +379,7 @@ t.DisableTracing()
 
 ### Setting up a realistic pkgsrc environment
 
-To see how to setup complicated tests, have a look at the following test,
+To see how to set up complicated tests, have a look at the following test,
 which sets up a realistic environment to run the tests in.
 
 ```codewalk
