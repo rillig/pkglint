@@ -387,6 +387,21 @@ func (s *Suite) Test_Package__different_package_identifiers(c *check.C) {
 
 }
 
+func (s *Suite) Test_Package__TOOL_DEPENDS(c *check.C) {
+	t := s.Init(c)
+	t.SetUpPackage("category/package",
+		"TOOL_DEPENDS+=\tperl-[0-9]*:../../lang/perl5")
+	t.SetUpPackage("lang/perl5")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.checkdirPackage(".")
+
+	t.CheckOutputLines(
+		"WARN: Makefile:20: " +
+			"Use USE_TOOLS+=perl:run instead of this dependency.")
+}
+
 func (s *Suite) Test_NewPackage(c *check.C) {
 	t := s.Init(c)
 
