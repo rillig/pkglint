@@ -463,7 +463,11 @@ func (cv *VartypeCheck) DependencyWithPath() {
 	case "gettext":
 		cv.Warnf("Use USE_TOOLS+=msgfmt instead of this dependency.")
 	case "perl5":
-		cv.Warnf("Use USE_TOOLS+=perl:run instead of this dependency.")
+		if cv.Varname == "TOOL_DEPENDS" {
+			cv.Warnf("Use USE_TOOLS+=perl instead of this dependency.")
+		} else {
+			cv.Warnf("Use USE_TOOLS+=perl:run instead of this dependency.")
+		}
 	case "gmake":
 		cv.Warnf("Use USE_TOOLS+=gmake instead of this dependency.")
 	}

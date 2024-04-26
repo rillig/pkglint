@@ -399,7 +399,7 @@ func (s *Suite) Test_Package__TOOL_DEPENDS(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: Makefile:20: " +
-			"Use USE_TOOLS+=perl:run instead of this dependency.")
+			"Use USE_TOOLS+=perl instead of this dependency.")
 }
 
 func (s *Suite) Test_NewPackage(c *check.C) {
