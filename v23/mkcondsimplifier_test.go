@@ -796,6 +796,51 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord__defined_in_same_file(c *chec
 			"with \"${LATER_DIR:U} == pattern\".")
 }
 
+func (s *Suite) Test_MkCondSimplifier_simplifyWord__list_and_unknown(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVarType("SINGLE_WORD", BtYesNo, NoVartypeOptions, nil...)
+	t.SetUpVarType("UNKNOWN", BtUnknown, NoVartypeOptions, nil...)
+	t.SetUpVarType("LIST_OF_WORDS", BtYesNo, List, nil...)
+	t.CreateFileLines("mk/bsd.prefs.mk",
+		MkCvsID)
+	t.Chdir("category/package")
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"SINGLE_WORD=\tyes",
+		"LIST_OF_WORDS=\tyes",
+		"UNKNOWN=\tunknown",
+		"",
+		".include \"../../mk/bsd.prefs.mk\"",
+		"",
+		".if !empty(SINGLE_WORD:Myes)",
+		".endif",
+		".if !empty(LIST_OF_WORDS:Myes)",
+		".endif",
+		".if !empty(UNKNOWN:Myes)",
+		".endif")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		// FIXME: The preferred matching recipe is ':tl:Myes' now.
+		"WARN: filename.mk:8: SINGLE_WORD should be matched "+
+			"against \"[yY][eE][sS]\" or \"[nN][oO]\", "+
+			"not \"yes\".",
+		"NOTE: filename.mk:8: SINGLE_WORD can be compared "+
+			"using the simpler \"${SINGLE_WORD} == yes\" "+
+			"instead of matching against \":Myes\".",
+		// FIXME: The preferred matching recipe is ':tl:Myes' now.
+		"WARN: filename.mk:10: LIST_OF_WORDS should be matched "+
+			"against \"[yY][eE][sS]\" or \"[nN][oO]\", "+
+			"not \"yes\".",
+		// FIXME: UNKNOWN could be a list as well.
+		"NOTE: filename.mk:12: UNKNOWN can be compared "+
+			"using the simpler \"${UNKNOWN} == yes\" "+
+			"instead of matching against \":Myes\".",
+	)
+}
+
 // Show how patterns like ':M[yY][eE][sS]' are replaced with simpler
 // conditions.
 func (s *Suite) Test_MkCondSimplifier_simplifyYesNo(c *check.C) {
