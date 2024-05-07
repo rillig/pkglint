@@ -165,6 +165,9 @@ func Test__qa(t *testing.T) {
 	// When running gobco, it inserts the function 'GobcoCover'.
 	ck.Configure("*", "", "GobcoCover", -intqa.EMissingTest)
 
+	// Temporarily generated when generating code coverage reports.
+	ck.Configure("gobco_*", "*", "*", -intqa.EMissingTest)
+
 	ck.Check()
 }
 

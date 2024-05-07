@@ -342,8 +342,8 @@ func (ck *QAChecker) checkTesteesTest() {
 		ck.addError(
 			EMissingTest,
 			testee.code,
-			"Missing unit test %q for %q. %s",
-			testName, testee.fullName(), insertion)
+			"Missing unit test %q for %q in %q. %s",
+			testName, testee.fullName(), testee.file, insertion)
 	}
 }
 
@@ -518,7 +518,7 @@ func (ck *QAChecker) insertionSuggestion(newTest *test) string {
 
 	b, err := os.ReadFile(testFile)
 	if err != nil {
-		panic(err)
+		return fmt.Sprintf("Insert it in %q.", newTest.file)
 	}
 	err = os.WriteFile(testFile, []byte(string(b)+skeleton("Suite", newTest.Func)), 0666)
 	if err != nil {
