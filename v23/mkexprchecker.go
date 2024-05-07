@@ -88,9 +88,7 @@ func (ck *MkExprChecker) checkModifiers() {
 
 func (ck *MkExprChecker) checkModifiersSuffix() {
 	expr := ck.expr
-	vartype := ck.vartype
-
-	if !expr.modifiers[0].IsSuffixSubst() || vartype == nil || vartype.IsList() {
+	if !expr.modifiers[0].IsSuffixSubst() || ck.vartype.IsList() != no {
 		return
 	}
 
@@ -660,11 +658,11 @@ func (ck *MkExprChecker) checkQuotingQM(mod string, needMstar bool, ectx *ExprCo
 			return len(ck.MkLine.ValueFields(value)) == 1
 		}
 
-		if vartype.IsList() && isSingleWordConstant() {
+		if list := vartype.IsList() == yes; list && isSingleWordConstant() {
 			// Do not warn in this special case, which typically occurs
 			// for BUILD_DIRS or similar package-settable variables.
 
-		} else if vartype.IsList() {
+		} else if list {
 			ck.warnListVariableInWord()
 		} else {
 			ck.warnMissingModifierQInWord()

@@ -751,7 +751,7 @@ func (mkline *MkLine) VariableNeedsQuoting(mklines *MkLines, expr *MkExpr, varty
 	}
 
 	if !vartype.basicType.NeedsQ() {
-		if !vartype.IsList() {
+		if vartype.IsList() == no {
 			if vartype.IsGuessed() {
 				return unknown
 			}
@@ -764,7 +764,7 @@ func (mkline *MkLine) VariableNeedsQuoting(mklines *MkLines, expr *MkExpr, varty
 
 	// A shell word may appear as part of a shell word, for example COMPILER_RPATH_FLAG.
 	if ectx.IsWordPart && ectx.quoting == EctxQuotPlain {
-		if !vartype.IsList() && vartype.basicType == BtShellWord {
+		if vartype.IsList() == no && vartype.basicType == BtShellWord {
 			return no
 		}
 	}

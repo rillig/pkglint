@@ -25,7 +25,7 @@ func (s *MkCondSimplifier) SimplifyExpr(expr *MkExpr, fromEmpty bool, neg bool) 
 	}
 	s.simplifyMatch(expr, fromEmpty, neg)
 	vartype := G.Pkgsrc.VariableType(s.MkLines, expr.varname)
-	if vartype != nil && !vartype.IsList() && vartype.basicType != BtUnknown {
+	if vartype.IsList() == no {
 		s.simplifyWord(expr, fromEmpty, neg)
 	}
 }
@@ -43,7 +43,7 @@ func (s *MkCondSimplifier) simplifyWord(expr *MkExpr, fromEmpty bool, neg bool) 
 	}
 	modsExceptLast := NewMkExpr("", mods[:n-1]...).Mod()
 	vartype := G.Pkgsrc.VariableType(s.MkLines, varname)
-	if vartype == nil || vartype.IsList() {
+	if vartype.IsList() != no {
 		return
 	}
 
@@ -164,7 +164,7 @@ func (s *MkCondSimplifier) simplifyYesNo(expr *MkExpr, fromEmpty bool, neg bool)
 	}
 	modsExceptLast := NewMkExpr("", mods[:n-1]...).Mod()
 	vartype := G.Pkgsrc.VariableType(s.MkLines, varname)
-	if vartype == nil || vartype.IsList() {
+	if vartype.IsList() != no {
 		return
 	}
 

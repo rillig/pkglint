@@ -400,7 +400,7 @@ func (ck *MkCondChecker) collectFacts(mkline *MkLine) []VarFact {
 		}
 
 		vartype := G.Pkgsrc.VariableType(ck.MkLines, expr.varname)
-		if vartype == nil || vartype.IsList() {
+		if vartype.IsList() != no {
 			return
 		}
 

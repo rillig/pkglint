@@ -196,9 +196,9 @@ func (s *Suite) Test_Vartype_MayBeAppendedTo(c *check.C) {
 	//  SUBST_SED.id+=  -e s,from,to,
 	test("SUBST_SED.id", true)
 
-	// This variable's actual type is a list, as the word 'things'
-	// suggests, but pkglint doesn't know the meaning of that word.
-	test("UNKNOWN_THINGS", false)
+	// The plural 'things' in the variable name suggests that this variable
+	// is a list of things and thus may be appended to.
+	test("UNKNOWN_THINGS", true)
 }
 
 func (s *Suite) Test_Vartype_String(c *check.C) {

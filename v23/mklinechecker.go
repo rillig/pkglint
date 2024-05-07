@@ -178,7 +178,7 @@ func (ck MkLineChecker) checkVartype(varname string, op MkOperator, value, comme
 			trace.Step1("Unchecked use of !=: %q", value)
 		}
 
-	case !vartype.IsList():
+	case vartype.IsList() == no:
 		ck.CheckVartypeBasic(varname, vartype.basicType, op, value, comment, vartype.IsGuessed())
 
 	case value == "":

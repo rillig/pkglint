@@ -2795,10 +2795,10 @@ func (vt *VartypeCheckTester) Values(values ...string) {
 
 		// See MkLineChecker.checkVartype.
 		var lineValues []string
-		if vartype == nil || !vartype.IsList() {
-			lineValues = []string{effectiveValue}
-		} else {
+		if vartype.IsList() == yes {
 			lineValues = mkline.ValueFields(effectiveValue)
+		} else {
+			lineValues = []string{effectiveValue}
 		}
 
 		for _, lineValue := range lineValues {

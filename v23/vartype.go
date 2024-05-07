@@ -202,10 +202,16 @@ func (perms ACLPermissions) HumanString() string {
 		condStr(perms.Contains(aclpUse), "used", ""))
 }
 
-// IsList returns whether the type is a list of something.
-// A return value of false doesn't mean a single-word type,
-// it could also be BtUnknown.
-func (vt *Vartype) IsList() bool                { return vt.options&List != 0 }
+func (vt *Vartype) IsList() YesNoUnknown {
+	if vt == nil || vt.basicType == BtUnknown {
+		return unknown
+	}
+	if vt.options&List != 0 {
+		return yes
+	}
+	return no
+}
+
 func (vt *Vartype) IsGuessed() bool             { return vt.options&Guessed != 0 }
 func (vt *Vartype) IsPackageSettable() bool     { return vt.options&PackageSettable != 0 }
 func (vt *Vartype) IsUserSettable() bool        { return vt.options&UserSettable != 0 }
@@ -299,7 +305,7 @@ func (vt *Vartype) AlternativeFiles(perms ACLPermissions) string {
 }
 
 func (vt *Vartype) MayBeAppendedTo() bool {
-	if vt.IsList() {
+	if vt.IsList() != no {
 		return true
 	}
 
@@ -314,7 +320,7 @@ func (vt *Vartype) MayBeAppendedTo() bool {
 
 func (vt *Vartype) String() string {
 	var opts []string
-	if vt.IsList() {
+	if vt.IsList() == yes {
 		opts = append(opts, "list")
 	}
 	if vt.IsGuessed() {
