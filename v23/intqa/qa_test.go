@@ -149,13 +149,13 @@ func (s *Suite) Test_QAChecker_Check(c *check.C) {
 	ck.Check()
 
 	s.CheckErrors(
-		"Missing unit test \"Test_QAChecker_addCode\" for \"QAChecker.addCode\". "+
+		"Missing unit test \"Test_QAChecker_addCode\" for \"QAChecker.addCode\" in \"qa.go\". "+
 			"Inserted it in \"qa_test.go\", above \"Suite.Test_QAChecker_isTest\".",
-		"Missing unit test \"Test_QAChecker_relate\" for \"QAChecker.relate\". "+
+		"Missing unit test \"Test_QAChecker_relate\" for \"QAChecker.relate\" in \"qa.go\". "+
 			"Inserted it in \"qa_test.go\", above \"Suite.Test_QAChecker_checkTests\".",
-		"Missing unit test \"Test_QAChecker_isRelevant\" for \"QAChecker.isRelevant\". "+
+		"Missing unit test \"Test_QAChecker_isRelevant\" for \"QAChecker.isRelevant\" in \"qa.go\". "+
 			"Inserted it in \"qa_test.go\", above \"Suite.Test_QAChecker_errorsMask\".",
-		"Missing unit test \"Test_skeleton\" for \"skeleton\". "+
+		"Missing unit test \"Test_skeleton\" for \"skeleton\" in \"qa.go\". "+
 			"Inserted it in \"qa_test.go\", above \"Suite.Test_code_fullName\".",
 	)
 	s.CheckSummary("4 errors.")
@@ -484,13 +484,13 @@ func (s *Suite) Test_QAChecker_checkTesteesTest(c *check.C) {
 	ck.checkTesteesTest()
 
 	s.CheckErrors(
-		"Missing unit test \"Test_Type\" for \"Type\". "+
+		"Missing unit test \"Test_Type\" for \"Type\" in \"demo.go\". "+
 			"Insert it in \"demo_test.go\", above \"Test_OkType\".",
-		"Missing unit test \"Test_Func\" for \"Func\". "+
+		"Missing unit test \"Test_Func\" for \"Func\" in \"demo.go\". "+
 			"Insert it in \"demo_test.go\", above \"Test_OkType\".",
-		"Missing unit test \"Test_Type_Method\" for \"Type.Method\". "+
+		"Missing unit test \"Test_Type_Method\" for \"Type.Method\" in \"demo.go\". "+
 			"Insert it in \"demo_test.go\", above \"Test_OkType\".",
-		"Missing unit test \"Test_Bottom_Method\" for \"Bottom.Method\". "+
+		"Missing unit test \"Test_Bottom_Method\" for \"Bottom.Method\" in \"demo.go\". "+
 			"Inserted it at the bottom of \"demo_test.go\".")
 }
 
