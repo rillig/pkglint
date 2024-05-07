@@ -145,6 +145,8 @@ func (ck *MkCondChecker) checkEmpty(expr *MkExpr, fromEmpty bool, neg bool) {
 	s.SimplifyExpr(expr, fromEmpty, neg)
 }
 
+// checkEmptyExpr warns about 'empty(${VARNAME:Mpattern})', which should be
+// 'empty(VARNAME:Mpattern)' instead, without the '${...}'.
 func (ck *MkCondChecker) checkEmptyExpr(expr *MkExpr, neg bool) {
 	if !matches(expr.varname, `^\$.*:[MN]`) {
 		return
@@ -158,7 +160,7 @@ func (ck *MkCondChecker) checkEmptyExpr(expr *MkExpr, neg bool) {
 			"you should write either of the following:",
 			"",
 			"\t!empty(VARNAME:Mpattern)",
-			"\t${VARNAME:Mpattern} != \"\"",
+			"\t${VARNAME:U:Mpattern} != \"\"",
 			"",
 			"If the pattern cannot match the number zero,",
 			"you can omit the '!= \"\"', resulting in:",
@@ -180,6 +182,8 @@ func (ck *MkCondChecker) checkEmptyExpr(expr *MkExpr, neg bool) {
 	}
 }
 
+// checkEmptyType warns if there is a ':M' modifier in which the pattern
+// doesn't match the type of the expression.
 func (ck *MkCondChecker) checkEmptyType(expr *MkExpr) {
 	for _, modifier := range expr.modifiers {
 		ok, _, pattern, _ := modifier.MatchMatch()

@@ -202,6 +202,9 @@ func (perms ACLPermissions) HumanString() string {
 		condStr(perms.Contains(aclpUse), "used", ""))
 }
 
+// IsList returns whether the type is a list of something.
+// A return value of false doesn't mean a single-word type,
+// it could also be BtUnknown.
 func (vt *Vartype) IsList() bool                { return vt.options&List != 0 }
 func (vt *Vartype) IsGuessed() bool             { return vt.options&Guessed != 0 }
 func (vt *Vartype) IsPackageSettable() bool     { return vt.options&PackageSettable != 0 }

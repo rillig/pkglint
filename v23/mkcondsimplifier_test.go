@@ -834,10 +834,6 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord__list_and_unknown(c *check.C)
 		"WARN: filename.mk:10: LIST_OF_WORDS should be matched "+
 			"against \"[yY][eE][sS]\" or \"[nN][oO]\", "+
 			"not \"yes\".",
-		// FIXME: UNKNOWN could be a list as well.
-		"NOTE: filename.mk:12: UNKNOWN can be compared "+
-			"using the simpler \"${UNKNOWN} == yes\" "+
-			"instead of matching against \":Myes\".",
 	)
 }
 

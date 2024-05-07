@@ -24,7 +24,10 @@ func (s *MkCondSimplifier) SimplifyExpr(expr *MkExpr, fromEmpty bool, neg bool) 
 		return
 	}
 	s.simplifyMatch(expr, fromEmpty, neg)
-	s.simplifyWord(expr, fromEmpty, neg)
+	vartype := G.Pkgsrc.VariableType(s.MkLines, expr.varname)
+	if vartype != nil && !vartype.IsList() && vartype.basicType != BtUnknown {
+		s.simplifyWord(expr, fromEmpty, neg)
+	}
 }
 
 // simplifyWord simplifies a condition like '${VAR:Mword}' in the common case
