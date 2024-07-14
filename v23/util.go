@@ -292,7 +292,7 @@ func assert(cond bool) {
 // assertf checks that the condition is true. Otherwise, it terminates the
 // process with a fatal error message, prefixed with "Pkglint internal error".
 //
-// This method must only be used for programming errors.
+// This function must only be used for programming errors.
 // For runtime errors, use dummyLine.Fatalf.
 func assertf(cond bool, format string, args ...interface{}) {
 	if !cond {
