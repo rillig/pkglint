@@ -57,7 +57,6 @@ func (ch *Changes) parseFile(filename CurrPath, direct bool) []*Change {
 	if _, yyyy := match1(filename.Base().String(), `-(\d\d\d\d)$`); yyyy >= "2018" {
 		year = yyyy
 	}
-	thorough := direct || G.CheckGlobal || year >= "2020" // For performance reasons
 
 	latest := make(map[PkgsrcPath]*Change)
 
@@ -93,11 +92,7 @@ func (ch *Changes) parseFile(filename CurrPath, direct bool) []*Change {
 
 		changes = append(changes, change)
 
-		if !warn {
-			continue
-		}
-
-		if thorough {
+		if warn {
 			ch.checkChangeVersion(change, latest, line)
 			ch.checkChangeDate(filename, year, change, line, changes)
 		}
