@@ -513,3 +513,31 @@ func (s *Suite) Test_CheckPackageDirCollision__wip(c *check.C) {
 			"On case-insensitive file systems, "+
 			"\"Package\" is the same as \"package\".")
 }
+
+// Absolute "SUBDIR" entries are skipped.
+func (s *Suite) Test_CheckPackageDirCollision__abs(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.CreateFileLines("category/Makefile",
+		"# $NetBSD$",
+		"",
+		"COMMENT=\tComment for the category",
+		"",
+		"SUBDIR+=\tPACKAGE",
+		"SUBDIR+=\tPackage",
+		"SUBDIR+=\t/absolute", // Is ignored.
+		"",
+		".include \"../mk/misc/category.mk\"")
+	t.CreateFileLines("mk/misc/category.mk")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	t.CheckOutputLines(
+		"ERROR: ../Makefile:5: On case-insensitive file systems, "+
+			"\"PACKAGE\" is the same as \"package\".",
+		"ERROR: ../Makefile:6: On case-insensitive file systems, "+
+			"\"Package\" is the same as \"package\".")
+}

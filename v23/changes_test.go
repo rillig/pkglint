@@ -371,6 +371,30 @@ func (s *Suite) Test_Changes_parseLine(c *check.C) {
 	test("\tUpdated category/pkgpath to version 1.0 [author 2019-01-01]",
 		"WARN: doc/CHANGES-2019:123: Invalid doc/CHANGES line: "+
 			"\tUpdated category/pkgpath to version 1.0 [author 2019-01-01]")
+
+	test("\tAdded category/pkgpath version 1.4 alpha 3 [author 2019-01-01]",
+		"WARN: doc/CHANGES-2019:123: Invalid doc/CHANGES line: "+
+			"\tAdded category/pkgpath version 1.4 alpha 3 [author 2019-01-01]")
+
+	test("\tUpdated category/pkgpath to version 1.5 [author 2019-01-01]",
+		"WARN: doc/CHANGES-2019:123: Invalid doc/CHANGES line: "+
+			"\tUpdated category/pkgpath to version 1.5 [author 2019-01-01]")
+
+	test("\tDowngraded category/pkgpath to version 1.5 [author 2019-01-01]",
+		"WARN: doc/CHANGES-2019:123: Invalid doc/CHANGES line: "+
+			"\tDowngraded category/pkgpath to version 1.5 [author 2019-01-01]")
+
+	test("\tRemoved category/pkgpath version 1.5 due to eol [author 2019-01-01]",
+		"WARN: doc/CHANGES-2019:123: Invalid doc/CHANGES line: "+
+			"\tRemoved category/pkgpath version 1.5 due to eol [author 2019-01-01]")
+
+	test("\tRemoved category/pkgpath due to eol [author 2019-01-01]",
+		"WARN: doc/CHANGES-2019:123: Invalid doc/CHANGES line: "+
+			"\tRemoved category/pkgpath due to eol [author 2019-01-01]")
+
+	test("\tMoved category/pkgpath to somewhere else [author 2019-01-01]",
+		"WARN: doc/CHANGES-2019:123: Invalid doc/CHANGES line: "+
+			"\tMoved category/pkgpath to somewhere else [author 2019-01-01]")
 }
 
 func (s *Suite) Test_Changes_parseAuthorAndDate(c *check.C) {

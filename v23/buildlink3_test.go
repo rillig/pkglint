@@ -1198,9 +1198,15 @@ func (s *Suite) Test_isBuildlink3Guard(c *check.C) {
 
 	test(".if !defined(PKG_BUILDLINK3_MK)", true)
 
+	// Not the standard variable name pattern.
+	test(".if !defined(ALREADY_SEEN)", false)
+
 	// Missing closing parenthesis.
 	test(".if !defined(PKG_BUILDLINK3_MK", false)
 
 	// Not the usual form.
 	test(".ifndef PKG_BUILDLINK3_MK", false)
+
+	// Not a condition but a loop.
+	test(".for i in values", false)
 }
