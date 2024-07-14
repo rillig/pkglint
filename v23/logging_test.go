@@ -164,6 +164,24 @@ func (s *Suite) Test_Logger_Explain__line_wrapped_temporary_directory(c *check.C
 		"")
 }
 
+func (s *Suite) Test_Logger_Explain__trailing_space(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--explain")
+	filename := t.File("filename.mk")
+	mkline := t.NewMkLine(filename, 123, "")
+
+	mkline.Notef("Just a note to get the below explanation.")
+	t.ExpectAssertf(
+		func() {
+			G.Logger.Explain(
+				"Trailing space. ")
+		},
+		"Explanation \"Trailing space. \" must not have trailing space")
+	t.CheckOutputLines(
+		"NOTE: ~/filename.mk:123: Just a note to get the below explanation.")
+}
+
 // Diag filters duplicate messages, unlike Logf.
 func (s *Suite) Test_Logger_Diag__duplicates(c *check.C) {
 	t := s.Init(c)

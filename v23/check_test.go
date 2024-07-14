@@ -1030,6 +1030,18 @@ func (t *Tester) ExpectAssert(action func()) {
 	t.Check(action, check.Panics, "Pkglint internal error")
 }
 
+// ExpectAssert runs the given action and expects that this action calls
+// assertf, failing with the given message.
+//
+// Usage:
+//
+//	t.ExpectAssertf(
+//	    func() { /* do something that panics */ },
+//	    "expected message")
+func (t *Tester) ExpectAssertf(action func(), msg string) {
+	t.Check(action, check.Panics, "Pkglint internal error: "+msg)
+}
+
 // ExpectDiagnosticsAutofix first runs the given action with -Wall, and
 // then another time with -Wall --autofix.
 //

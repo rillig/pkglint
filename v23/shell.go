@@ -677,7 +677,7 @@ func (ck *ShellLineChecker) CheckShellCommand(shellcmd string, pSetE *bool, time
 		return
 	}
 	if err != nil {
-		line.Warnf("Pkglint ShellLine.CheckShellCommand: %s", err)
+		line.Warnf("Pkglint ShellLine.CheckShellCommand: %s", err.Error())
 		return
 	}
 
