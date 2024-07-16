@@ -74,6 +74,7 @@ func (s *Suite) Test_Pkglint_Main__help(c *check.C) {
 		"  Flags for -W, --warning:",
 		"    all       all of the following",
 		"    none      none of the following",
+		"    error     treat warnings as errors (disabled)",
 		"    extra     enable some extra warnings (disabled)",
 		"    perm      warn about unforeseen variable definition and use (disabled)",
 		"    quoting   warn about quoting issues (disabled)",
@@ -338,6 +339,52 @@ func (s *Suite) Test_Pkglint_Main__profiling_error(c *check.C) {
 	t.CheckEquals(exitcode, 1)
 	t.CheckOutputMatches(
 		`ERROR: pkglint\.pprof: Cannot create profiling file: open pkglint\.pprof: .*`)
+}
+
+func (s *Suite) Test_Pkglint_Main__Werror_no_warning(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.Chdir("category/package")
+
+	exitcode := t.Main("-Werror")
+
+	t.CheckEquals(exitcode, 0)
+	t.CheckOutputLines(
+		"Looks fine.")
+}
+
+func (s *Suite) Test_Pkglint_Main__Werror_warning(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"UNUSED=\tvalue")
+	t.Chdir("category/package")
+
+	exitcode := t.Main("-Werror")
+
+	t.CheckEquals(exitcode, 1)
+	t.CheckOutputLines(
+		"WARN: Makefile:20: UNUSED is defined but not used.",
+		"1 warning found.",
+		"(Run \"pkglint -e -Werror\" to show explanations.)")
+}
+
+func (s *Suite) Test_Pkglint_Main__Werror_error(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"DEPENDS+=\tother>=0:../../category/does-not-exist")
+	t.Chdir("category/package")
+
+	exitcode := t.Main("-Werror")
+
+	t.CheckEquals(exitcode, 1)
+	t.CheckOutputLines(
+		"ERROR: Makefile:20: Relative path "+
+			"\"../../category/does-not-exist/Makefile\" "+
+			"does not exist.",
+		"1 error found.")
 }
 
 // Branch coverage for Logger.Logf, the level != Fatal case.

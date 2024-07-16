@@ -23,6 +23,7 @@ const confVersion = "@VERSION@"
 type Pkglint struct {
 	CheckGlobal bool
 
+	WarnError,
 	WarnExtra,
 	WarnPerm,
 	WarnQuoting bool
@@ -131,6 +132,9 @@ func (p *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) (exitC
 	p.Pkgsrc.checkToplevelUnusedLicenses()
 
 	p.Logger.ShowSummary(args)
+	if p.WarnError && p.Logger.warnings != 0 {
+		return 1
+	}
 	if p.Logger.errors != 0 {
 		return 1
 	}
@@ -251,6 +255,7 @@ func (p *Pkglint) ParseCommandLine(args []string) int {
 
 	check.AddFlagVar("global", &p.CheckGlobal, false, "inter-package checks")
 
+	warn.AddFlagVar("error", &p.WarnError, false, "treat warnings as errors")
 	warn.AddFlagVar("extra", &p.WarnExtra, false, "enable some extra warnings")
 	warn.AddFlagVar("perm", &p.WarnPerm, false, "warn about unforeseen variable definition and use")
 	warn.AddFlagVar("quoting", &p.WarnQuoting, false, "warn about quoting issues")

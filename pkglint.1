@@ -8,7 +8,7 @@
 .\" Thomas Klausner <wiz@NetBSD.org>, 2012.
 .\" Roland Illig <rillig@NetBSD.org>, 2015-2020.
 .\"
-.Dd January 26, 2020
+.Dd July 16, 2024
 .Dt PKGLINT 1
 .Os
 .Sh NAME
@@ -101,6 +101,8 @@ Check inter-package consistency for distfile hashes and used licenses.
 Enable all warnings.
 .It Cm none
 Disable all warnings.
+.It Cm [no-]error
+Treat warnings as errors; only affects the exit status.
 .It Cm [no-]extra
 Emit some additional warnings that are not enabled by default.
 .It Cm [no-]perm
