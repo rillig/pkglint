@@ -204,9 +204,10 @@ func (s *Suite) Test_isIgnoredFilename(c *check.C) {
 	}
 
 	test("filename.mk", false)
-	test(".gitignore", false)
+	test(".github", true)
+	test(".gitignore", true)
 	test(".git", true)
-	test(".gitattributes", false)
+	test(".gitattributes", true)
 	test("CVS", true)
 	test(".svn", true)
 	test(".hg", true)

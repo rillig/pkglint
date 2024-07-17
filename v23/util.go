@@ -341,12 +341,22 @@ func getSubdirs(filename CurrPath) []RelPath {
 
 func isIgnoredFilename(filename string) bool {
 	switch filename {
-	case "CVS", ".svn", ".git", ".hg", ".idea":
+	case "CVS", ".svn", ".hg", ".idea":
+		return true
+	}
+	switch {
+
+	case hasPrefix(filename, ".#"):
+		// https://www.gnu.org/software/trans-coord/manual/cvs/cvs.html#cvsignore
+		return true
+	case hasPrefix(filename, ".git"):
+		return true
+	case hasSuffix(filename, "~"):
 		return true
 	}
 
-	// https://www.gnu.org/software/trans-coord/manual/cvs/cvs.html#cvsignore
-	return hasPrefix(filename, ".#") || hasSuffix(filename, "~")
+	return false
+
 }
 
 // Checks whether a file is already committed to the CVS repository.
