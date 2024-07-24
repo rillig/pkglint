@@ -176,13 +176,11 @@ func (p *Pkglint) setUpProfiling() func() {
 	assertNil(err, "Cannot start profiling")
 	atExit(pprof.StopCPUProfile)
 
-	p.res.Profiling()
 	p.Logger.histo = histogram.New()
 	p.loaded = histogram.New()
 	atExit(func() {
 		p.Logger.out.Write("")
 		p.Logger.histo.PrintStats(p.Logger.out.out, "loghisto", -1)
-		p.res.PrintStats(p.Logger.out.out)
 		p.loaded.PrintStats(p.Logger.out.out, "loaded", 10)
 		p.Logger.out.WriteLine(sprintf("fileCache: %d hits, %d misses", p.fileCache.hits, p.fileCache.misses))
 	})

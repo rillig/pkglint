@@ -6,33 +6,17 @@ package regex
 
 import (
 	"fmt"
-	"github.com/rillig/pkglint/v23/histogram"
-	"io"
 	"regexp"
-	"time"
 )
 
 type Pattern string
 
 type Registry struct {
-	res       map[Pattern]*regexp.Regexp
-	rematch   *histogram.Histogram
-	renomatch *histogram.Histogram
-	retime    *histogram.Histogram
-	profiling bool
+	res map[Pattern]*regexp.Regexp
 }
 
 func NewRegistry() Registry {
-	return Registry{make(map[Pattern]*regexp.Regexp), nil, nil, nil, false}
-}
-
-func (r *Registry) Profiling() {
-	if !r.profiling {
-		r.rematch = histogram.New()
-		r.renomatch = histogram.New()
-		r.retime = histogram.New()
-		r.profiling = true
-	}
+	return Registry{make(map[Pattern]*regexp.Regexp)}
 }
 
 func (r *Registry) Compile(re Pattern) *regexp.Regexp {
@@ -49,37 +33,11 @@ func (r *Registry) Compile(re Pattern) *regexp.Regexp {
 // This makes the regular expressions more readable.
 
 func (r *Registry) Match(s string, re Pattern) []string {
-	if !r.profiling {
-		return r.Compile(re).FindStringSubmatch(s)
-	}
-
-	before := time.Now()
-	immediatelyBefore := time.Now()
-	m := r.Compile(re).FindStringSubmatch(s)
-	after := time.Now()
-
-	delay := immediatelyBefore.UnixNano() - before.UnixNano()
-	timeTaken := after.UnixNano() - immediatelyBefore.UnixNano() - delay
-
-	r.retime.Add(string(re), int(timeTaken))
-	if m != nil {
-		r.rematch.Add(string(re), 1)
-	} else {
-		r.renomatch.Add(string(re), 1)
-	}
-	return m
+	return r.Compile(re).FindStringSubmatch(s)
 }
 
 func (r *Registry) Matches(s string, re Pattern) bool {
-	matches := r.Compile(re).MatchString(s)
-	if r.profiling {
-		if matches {
-			r.rematch.Add(string(re), 1)
-		} else {
-			r.renomatch.Add(string(re), 1)
-		}
-	}
-	return matches
+	return r.Compile(re).MatchString(s)
 }
 
 func (r *Registry) Match1(s string, re Pattern) (matched bool, m1 string) {
@@ -117,14 +75,6 @@ func (r *Registry) ReplaceFirst(s string, re Pattern, replacement string) ([]str
 		return mm, replaced
 	}
 	return nil, s
-}
-
-func (r *Registry) PrintStats(out io.Writer) {
-	if r.profiling {
-		r.rematch.PrintStats(out, "rematch", 10)
-		r.renomatch.PrintStats(out, "renomatch", 10)
-		r.retime.PrintStats(out, "retime", 10)
-	}
 }
 
 func (r *Registry) matchn(s string, re Pattern, n int) []string {
