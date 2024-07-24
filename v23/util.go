@@ -43,24 +43,40 @@ func sprintf(format string, args ...interface{}) string {
 func regcomp(re regex.Pattern) *regexp.Regexp {
 	return G.res.Compile(re)
 }
+
+// match returns whether s contains the pattern,
+// returning the capturing groups.
 func match(s string, re regex.Pattern) []string {
 	return G.res.Match(s, re)
 }
+
+// matches returns whether s contains the pattern.
 func matches(s string, re regex.Pattern) bool {
 	return G.res.Matches(s, re)
 }
+
+// match1 returns whether s contains the pattern,
+// returning the first capturing group.
 func match1(s string, re regex.Pattern) (matched bool, m1 string) {
 	return G.res.Match1(s, re)
 }
+
+// match2 returns whether s contains the pattern,
+// returning the first 2 capturing groups.
 func match2(s string, re regex.Pattern) (matched bool, m1, m2 string) {
 	return G.res.Match2(s, re)
 }
+
+// match3 returns whether s contains the pattern,
+// returning the first 3 capturing groups.
 func match3(s string, re regex.Pattern) (matched bool, m1, m2, m3 string) {
 	return G.res.Match3(s, re)
 }
+
 func replaceAll(s string, re regex.Pattern, repl string) string {
 	return G.res.Compile(re).ReplaceAllString(s, repl)
 }
+
 func replaceAllFunc(s string, re regex.Pattern, repl func(string) string) string {
 	return G.res.Compile(re).ReplaceAllStringFunc(s, repl)
 }
