@@ -221,6 +221,7 @@ func (s *Suite) Test_Path_HasPrefixPath(c *check.C) {
 	test("/root/", "/root", true)
 	test("/root/", "root", false)
 	test("/root/subdir", "/root", true)
+	test("filename", "/filename", false)
 	test("filename", ".", true)
 	test("filename", "./filename", true)
 	test("filename", "./file", false)
