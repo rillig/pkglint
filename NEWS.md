@@ -1,3 +1,7 @@
+# 23.6.0 (2024-07-24)
+
+Ignore all Git and GitHub files.
+
 # 23.5.0 (2024-07-16)
 
 Added the -Werror option, which treats warnings as errors.
