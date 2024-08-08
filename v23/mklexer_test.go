@@ -810,6 +810,23 @@ func (s *Suite) Test_MkLexer_exprModifier__assigment(c *check.C) {
 			"looks like a modifier but isn't.")
 }
 
+func (s *Suite) Test_MkLexer_exprModifier__assign_in_infrastructure(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.CreateFileLines("mk/infra.mk",
+		MkCvsID,
+		"INFRA_FILES+=\t${INFRA_FILE::=file}")
+	t.Chdir(".")
+	t.FinishSetUp()
+
+	G.Check("mk/infra.mk")
+	t.CheckOutputLines(
+		"ERROR: mk/infra.mk:2: Assignment modifiers like \":=\" must not be used at all.",
+		"ERROR: mk/infra.mk:2: Assignment modifiers like \":=\" must not be used at all.",
+	)
+}
+
 func (s *Suite) Test_MkLexer_exprModifierTs(c *check.C) {
 	t := s.Init(c)
 
