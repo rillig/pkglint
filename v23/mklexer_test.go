@@ -821,10 +821,7 @@ func (s *Suite) Test_MkLexer_exprModifier__assign_in_infrastructure(c *check.C) 
 	t.FinishSetUp()
 
 	G.Check("mk/infra.mk")
-	t.CheckOutputLines(
-		"ERROR: mk/infra.mk:2: Assignment modifiers like \":=\" must not be used at all.",
-		"ERROR: mk/infra.mk:2: Assignment modifiers like \":=\" must not be used at all.",
-	)
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLexer_exprModifierTs(c *check.C) {

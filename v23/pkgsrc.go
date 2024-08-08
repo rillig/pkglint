@@ -72,6 +72,8 @@ func NewPkgsrc(dir CurrPath) *Pkgsrc {
 // simple, since setting up a realistic pkgsrc environment requires
 // a lot of files.
 func (src *Pkgsrc) LoadInfrastructure() {
+	infra := G.Infrastructure
+	G.Infrastructure = true
 	src.Types().Init(src)
 	src.loadMasterSites()
 	src.loadPkgOptions()
@@ -82,6 +84,7 @@ func (src *Pkgsrc) LoadInfrastructure() {
 	src.initDeprecatedVars()
 	src.loadUntypedVars()
 	src.loadDefaultBuildDefs()
+	G.Infrastructure = infra
 }
 
 func (src *Pkgsrc) loadMasterSites() {

@@ -326,6 +326,9 @@ func (p *MkLexer) exprModifier(varname string, closing byte) MkExprModifier {
 			p.Errorf("Assignment to the empty variable is not possible.")
 			break
 		}
+		if G.Infrastructure {
+			goto skipWarning
+		}
 
 		p.Errorf("Assignment modifiers like %q must not be used at all.",
 			lexer.Since(mark))
@@ -338,6 +341,7 @@ func (p *MkLexer) exprModifier(varname string, closing byte) MkExprModifier {
 			"A similarly unpredictable mechanism are shell commands,",
 			"but even these have only local consequences.")
 
+	skipWarning:
 		p.exprText(closing)
 		return MkExprModifier(lexer.Since(mark))
 	}
