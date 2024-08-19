@@ -500,6 +500,9 @@ func (src *Pkgsrc) initDeprecatedVars() {
 
 		// June 2016
 		"USE_CROSSBASE": "Has been removed.",
+
+		// August 2024
+		"USE_CMAKE": "Include \"../../devel/cmake/build.mk\" instead.",
 	}
 }
 

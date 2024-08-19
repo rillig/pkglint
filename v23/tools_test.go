@@ -455,9 +455,11 @@ func (s *Suite) Test_Tools__aliases_in_for_loop(c *check.C) {
 }
 
 // The cmake tool is included conditionally. The condition is so simple that
-// pkglint could parse it but it depends on the particular package.
+// pkglint could parse it, but the condition depends on the particular
+// package.
+//
 // This is something that pkglint cannot do right now, since the global tools
-// are loaded once for all packages.
+// are loaded once for all packages, before inspecting the single package.
 //
 // Therefore, there is a workaround for USE_CMAKE.
 //
@@ -478,7 +480,10 @@ func (s *Suite) Test_Tools__cmake(c *check.C) {
 
 	G.Check(t.File("category/package"))
 
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile:20: " +
+			"Definition of USE_CMAKE is deprecated. " +
+			"Include \"../../devel/cmake/build.mk\" instead.")
 }
 
 func (s *Suite) Test_Tools__gmake(c *check.C) {
