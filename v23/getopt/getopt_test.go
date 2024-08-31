@@ -453,6 +453,21 @@ func (s *Suite) Test_Options_Help__partial(c *check.C) {
 		"  --long   Only long option\n")
 }
 
+func (s *Suite) Test_FlagGroup_AddFlagVarNoAll(c *check.C) {
+	opts := NewOptions()
+
+	var warnCommon, warnError bool
+	group := opts.AddFlagGroup('W', "warn", "warnings", "descr")
+	group.AddFlagVar("common", &warnCommon, false, "Enable common warnings")
+	group.AddFlagVarNoAll("error", &warnError, false, "Treat warnings as errors")
+
+	args, err := opts.Parse([]string{"program", "-Wall"})
+	c.Check(err, check.IsNil)
+	c.Check(args, check.IsNil)
+	c.Check(warnCommon, check.Equals, true)
+	c.Check(warnError, check.Equals, false)
+}
+
 func (s *Suite) Test__qa(c *check.C) {
 	ck := intqa.NewQAChecker(c.Errorf)
 	ck.Configure("*", "*", "*", -intqa.EMissingTest)

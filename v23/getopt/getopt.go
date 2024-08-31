@@ -350,10 +350,19 @@ type groupFlag struct {
 	name        string
 	value       *bool
 	description string
+	all         bool
 }
 
 func (fg *FlagGroup) AddFlagVar(name string, flag *bool, defval bool, description string) {
-	opt := groupFlag{name, flag, description}
+	opt := groupFlag{name, flag, description, true}
+	fg.flags = append(fg.flags, &opt)
+	*flag = defval
+}
+
+// AddFlagVarNoAll adds a flag to the group that is not affected by the "all"
+// or "none" options.
+func (fg *FlagGroup) AddFlagVarNoAll(name string, flag *bool, defval bool, description string) {
+	opt := groupFlag{name, flag, description, false}
 	fg.flags = append(fg.flags, &opt)
 	*flag = defval
 }
@@ -372,7 +381,9 @@ func (fg *FlagGroup) parseOpt(optionPrefix, argOpt string) error {
 
 	if argOpt == "none" || argOpt == "all" {
 		for _, opt := range fg.flags {
-			*opt.value = argOpt == "all"
+			if opt.all {
+				*opt.value = argOpt == "all"
+			}
 		}
 		return nil
 	}

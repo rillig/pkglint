@@ -351,7 +351,7 @@ func (s *Suite) Test_Pkglint_Main__Wall(c *check.C) {
 
 	exitcode := t.Main("-Wall")
 
-	t.CheckEquals(exitcode, 1) // FIXME
+	t.CheckEquals(exitcode, 0)
 	t.CheckOutputLines(
 		"WARN: Makefile:20: UNUSED is defined but not used.",
 		"1 warning found.",

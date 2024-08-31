@@ -253,7 +253,7 @@ func (p *Pkglint) ParseCommandLine(args []string) int {
 
 	check.AddFlagVar("global", &p.CheckGlobal, false, "inter-package checks")
 
-	warn.AddFlagVar("error", &p.WarnError, false, "treat warnings as errors")
+	warn.AddFlagVarNoAll("error", &p.WarnError, false, "treat warnings as errors")
 	warn.AddFlagVar("extra", &p.WarnExtra, false, "enable some extra warnings")
 	warn.AddFlagVar("perm", &p.WarnPerm, false, "warn about unforeseen variable definition and use")
 	warn.AddFlagVar("quoting", &p.WarnQuoting, false, "warn about quoting issues")
