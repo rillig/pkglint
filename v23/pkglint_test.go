@@ -341,6 +341,23 @@ func (s *Suite) Test_Pkglint_Main__profiling_error(c *check.C) {
 		`ERROR: pkglint\.pprof: Cannot create profiling file: open pkglint\.pprof: .*`)
 }
 
+// The option -Wall does not imply -Werror.
+func (s *Suite) Test_Pkglint_Main__Wall(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"UNUSED=\tvalue")
+	t.Chdir("category/package")
+
+	exitcode := t.Main("-Wall")
+
+	t.CheckEquals(exitcode, 1) // FIXME
+	t.CheckOutputLines(
+		"WARN: Makefile:20: UNUSED is defined but not used.",
+		"1 warning found.",
+		"(Run \"pkglint -e -Wall\" to show explanations.)")
+}
+
 func (s *Suite) Test_Pkglint_Main__Werror_no_warning(c *check.C) {
 	t := s.Init(c)
 
