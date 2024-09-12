@@ -1153,5 +1153,7 @@ func (s *Suite) Test_MkLineChecker_checkDependencyTarget(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:3: Undeclared target \"unknown-target\".")
+		"WARN: filename.mk:3: Undeclared target \"unknown-target\".",
+		"NOTE: filename.mk:4: A trailing semicolon "+
+			"at the end of a shell command line is redundant.")
 }

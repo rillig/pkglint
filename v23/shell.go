@@ -610,6 +610,14 @@ func (ck *ShellLineChecker) CheckShellCommandLine(shelltext string) {
 
 	ck.CheckShellCommand(lexer.Rest(), &setE, RunTime)
 	ck.checkMultiLineComment()
+	if hasSuffix(shelltext, ";") && !contains(shelltext, "#") {
+		fix := line.Autofix()
+		fix.Notef("A trailing semicolon at the end of a shell command line is redundant.")
+		if strings.Count(shelltext, ";") == 1 {
+			fix.Replace(";", "")
+		}
+		fix.Apply()
+	}
 }
 
 func (ck *ShellLineChecker) checkHiddenAndSuppress(hiddenAndSuppress, rest string) {

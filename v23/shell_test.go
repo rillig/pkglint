@@ -1347,6 +1347,22 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__install_option_d(c 
 		"NOTE: filename.mk:1: You can use \"INSTALLATION_DIRS+= dir2\" instead of \"${INSTALL} -d\".")
 }
 
+func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__trailing_semicolon(c *check.C) {
+	t := s.Init(c)
+	t.SetUpTool("mkdir", "", AfterPrefsMk)
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"do-configure:",
+		"\tmkdir -p dirname;")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"NOTE: Makefile:3: A trailing semicolon " +
+			"at the end of a shell command line is redundant.")
+}
+
 func (s *Suite) Test_ShellLineChecker_checkHiddenAndSuppress(c *check.C) {
 	t := s.Init(c)
 
