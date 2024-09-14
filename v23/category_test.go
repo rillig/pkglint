@@ -520,7 +520,7 @@ func (s *Suite) Test_CheckPackageDirCollision__abs(c *check.C) {
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("category/Makefile",
-		"# $NetBSD$",
+		MkCvsID,
 		"",
 		"COMMENT=\tComment for the category",
 		"",
