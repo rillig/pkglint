@@ -626,6 +626,20 @@ func (s *Suite) Test_MkLexer_exprModifier__S_parse_error(c *check.C) {
 		"WARN: filename.mk:123: Invalid variable modifier \"S,\" for \"VAR\".")
 }
 
+func (s *Suite) Test_MkLexer_exprModifier__indirect(c *check.C) {
+	t := s.Init(c)
+
+	line := t.NewLine("filename.mk", 123, "${VAR:${M_modifier}}")
+	p := NewMkLexer("${M_modifier}}", line)
+
+	modifier := p.exprModifier("VAR", '}')
+
+	t.CheckEquals(modifier, MkExprModifier("")) // FIXME
+	t.CheckEquals(p.Rest(), "}")
+	t.CheckOutputLines(
+		"WARN: filename.mk:123: Invalid variable modifier \"${M_modifier}\" for \"VAR\".")
+}
+
 func (s *Suite) Test_MkLexer_exprModifier__invalid_ts_modifier_with_warning(c *check.C) {
 	t := s.Init(c)
 
