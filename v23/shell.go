@@ -610,7 +610,7 @@ func (ck *ShellLineChecker) CheckShellCommandLine(shelltext string) {
 
 	ck.CheckShellCommand(lexer.Rest(), &setE, RunTime)
 	ck.checkMultiLineComment()
-	if hasSuffix(shelltext, ";") && !contains(shelltext, "#") {
+	if hasSuffix(shelltext, ";") && !hasSuffix(shelltext, "\\;") && !contains(shelltext, "#") {
 		fix := line.Autofix()
 		fix.Notef("A trailing semicolon at the end of a shell command line is redundant.")
 		if strings.Count(shelltext, ";") == 1 {

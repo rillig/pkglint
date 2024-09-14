@@ -1361,9 +1361,7 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__trailing_semicolon(
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"NOTE: Makefile:3: A trailing semicolon "+
-			"at the end of a shell command line is redundant.",
-		"NOTE: Makefile:4: A trailing semicolon "+
+		"NOTE: Makefile:3: A trailing semicolon " +
 			"at the end of a shell command line is redundant.")
 }
 
