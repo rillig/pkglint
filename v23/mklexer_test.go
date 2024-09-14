@@ -149,8 +149,6 @@ func (s *Suite) Test_MkLexer_Expr(c *check.C) {
 		testRest(input, expectedToken, "", diagnostics...)
 	}
 
-	t.Use(testRest, test, expr, exprText)
-
 	test("${VARIABLE}",
 		expr("VARIABLE"))
 
@@ -416,6 +414,13 @@ func (s *Suite) Test_MkLexer_Expr(c *check.C) {
 
 	test("${:!command!:Q}",
 		expr("", "!command!", "Q"))
+
+	test("${_BUILD_DEFS.${v}:U${${v}}:${_BUILD_INFO_MOD.${v}}:Q}",
+		b.ExprTextToken(
+			"${_BUILD_DEFS.${v}:U${${v}}:${_BUILD_INFO_MOD.${v}}:Q}",
+			// FIXME: The indirect modifier is missing.
+			"_BUILD_DEFS.${v}", "U${${v}}", "Q"),
+		"WARN: Test_MkLexer_Expr.mk:1: Invalid variable modifier \"${_BUILD_INFO_MOD.${v}}\" for \"_BUILD_DEFS.${v}\".")
 }
 
 // Pkglint can replace $(VAR) with ${VAR}. It doesn't look at all components
