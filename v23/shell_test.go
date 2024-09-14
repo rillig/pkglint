@@ -1350,16 +1350,20 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__install_option_d(c 
 func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__trailing_semicolon(c *check.C) {
 	t := s.Init(c)
 	t.SetUpTool("mkdir", "", AfterPrefsMk)
+	t.SetUpTool("find", "", AfterPrefsMk)
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
 		"do-configure:",
-		"\tmkdir -p dirname;")
+		"\tmkdir -p dirname;",
+		"\tfind . -name '*.h' -exec {} \\;")
 
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"NOTE: Makefile:3: A trailing semicolon " +
+		"NOTE: Makefile:3: A trailing semicolon "+
+			"at the end of a shell command line is redundant.",
+		"NOTE: Makefile:4: A trailing semicolon "+
 			"at the end of a shell command line is redundant.")
 }
 
