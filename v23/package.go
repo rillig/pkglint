@@ -866,7 +866,11 @@ func (pkg *Package) checkDistinfoExists() {
 	if !want {
 		distinfoFile := pkg.File(pkg.DistinfoFile)
 		if distinfoFile.IsFile() {
-			NewLineWhole(distinfoFile).Warnf("This file should not exist.")
+			line := NewLineWhole(distinfoFile)
+			line.Warnf("This file should not exist.")
+			line.Explain(
+				"This package neither downloads external files (distfiles),",
+				"nor has it any patches that would need to be validated.")
 		}
 	} else {
 		distinfoFile := pkg.File(pkg.DistinfoFile)
