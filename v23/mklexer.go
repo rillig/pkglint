@@ -359,8 +359,12 @@ func (p *MkLexer) exprModifier(varname string, closing byte) MkExprModifier {
 		}
 		return MkExprModifier(modifier)
 	}
-	if modifier != "" && modifierNoVar == "" {
-		return MkExprModifier(modifier)
+
+	lexer.Reset(mark)
+	if indirect := p.Expr(); indirect != nil {
+		if lexer.PeekByte() == ':' || lexer.PeekByte() == int(closing) {
+			return MkExprModifier(lexer.Since(mark))
+		}
 	}
 
 	// ${:!uname -a!:[2]}
