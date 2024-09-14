@@ -202,7 +202,7 @@ func (p *MkLexer) exprText(closing byte) string {
 //
 // This is used for the :from=to modifier.
 //
-// See devel/bmake/files/var.c:/eqFound = FALSE/
+// See devel/bmake/files/var.c:/eqFound = false/
 func (p *MkLexer) exprModifierSysV(closing byte) (string, string) {
 	lexer := p.lexer
 	start := lexer.Mark()
