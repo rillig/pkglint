@@ -634,10 +634,9 @@ func (s *Suite) Test_MkLexer_exprModifier__indirect(c *check.C) {
 
 	modifier := p.exprModifier("VAR", '}')
 
-	t.CheckEquals(modifier, MkExprModifier("")) // FIXME
+	t.CheckEquals(modifier, MkExprModifier("${M_modifier}"))
 	t.CheckEquals(p.Rest(), "}")
-	t.CheckOutputLines(
-		"WARN: filename.mk:123: Invalid variable modifier \"${M_modifier}\" for \"VAR\".")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLexer_exprModifier__invalid_ts_modifier_with_warning(c *check.C) {

@@ -359,6 +359,9 @@ func (p *MkLexer) exprModifier(varname string, closing byte) MkExprModifier {
 		}
 		return MkExprModifier(modifier)
 	}
+	if modifier != "" && modifierNoVar == "" {
+		return MkExprModifier(modifier)
+	}
 
 	// ${:!uname -a!:[2]}
 	lexer.Reset(mark)
