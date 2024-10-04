@@ -263,7 +263,15 @@ func (cv *VartypeCheck) Comment() {
 
 	if hasPrefix(value, "\"") && hasSuffix(value, "\"") ||
 		hasPrefix(value, "'") && hasSuffix(value, "'") {
-		cv.Warnf("COMMENT should not be enclosed in quotes.")
+		cv.Errorf("COMMENT must not be enclosed in quotes.")
+	}
+
+	if contains(value, "|") {
+		cv.Errorf("COMMENT must not contain \"|\".")
+		cv.Explain(
+			"The vertical bar is used as a separator",
+			"in the package summary,",
+			"where it cannot be escaped.")
 	}
 }
 

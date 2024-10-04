@@ -325,7 +325,8 @@ func (s *Suite) Test_VartypeCheck_Comment(c *check.C) {
 		"Converter converts between measurement units",
 		"Converter is a unit converter",
 		"\"Official\" office suite",
-		"'SQL injection fuzzer")
+		"'SQL injection fuzzer",
+		"TCR (Test && Commit || Revert) utility")
 
 	vt.Output(
 		"ERROR: filename.mk:2: COMMENT must be set.",
@@ -333,14 +334,15 @@ func (s *Suite) Test_VartypeCheck_Comment(c *check.C) {
 		"WARN: filename.mk:3: COMMENT should not end with a period.",
 		"WARN: filename.mk:4: COMMENT should start with a capital letter.",
 		"WARN: filename.mk:4: COMMENT should not be longer than 70 characters.",
-		"WARN: filename.mk:5: COMMENT should not be enclosed in quotes.",
-		"WARN: filename.mk:6: COMMENT should not be enclosed in quotes.",
+		"ERROR: filename.mk:5: COMMENT must not be enclosed in quotes.",
+		"ERROR: filename.mk:6: COMMENT must not be enclosed in quotes.",
 		"WARN: filename.mk:7: COMMENT should not contain \"is a\".",
 		"WARN: filename.mk:8: COMMENT should not contain \"is an\".",
 		"WARN: filename.mk:9: COMMENT should not contain \"is a\".",
 		"WARN: filename.mk:10: COMMENT should not start with the package name.",
 		"WARN: filename.mk:11: COMMENT should not start with the package name.",
-		"WARN: filename.mk:11: COMMENT should not contain \"is a\".")
+		"WARN: filename.mk:11: COMMENT should not contain \"is a\".",
+		"ERROR: filename.mk:14: COMMENT must not contain \"|\".")
 }
 
 func (s *Suite) Test_VartypeCheck_ConfFiles(c *check.C) {
