@@ -1,3 +1,16 @@
+# 23.8.0 (2024-10-04)
+
+Prohibit vertical bar in COMMENT, to avoid generating syntactically wrong
+INDEX files.
+
+Explain in which cases a `distinfo` file is not needed.
+
+Fix detection of redundant trailing semicolon at the end of a command line.
+A semicolon that is escaped is not redundant, this pattern is often found
+in `find` commands.
+
+Recognize indirect modifiers such as `${VAR:${M_indirect}}`.
+
 # 23.7.0 (2024-09-12)
 
 Allow the '::=' modifier family in the pkgsrc infrastructure.
