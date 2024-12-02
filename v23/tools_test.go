@@ -345,7 +345,7 @@ func (s *Suite) Test_Tools__tools_having_the_same_variable_name(c *check.C) {
 	t.DisableTracing()
 
 	t.CheckOutputLines(
-		"TRACE: + (*Tools).Trace()",
+		"TRACE: + Tools.Trace()",
 		"TRACE: 1   tool awk:AWK::AfterPrefsMk",
 		"TRACE: 1   tool echo:ECHO:var:AfterPrefsMk",
 		"TRACE: 1   tool echo -n:ECHO_N:var:AfterPrefsMk",
@@ -355,7 +355,7 @@ func (s *Suite) Test_Tools__tools_having_the_same_variable_name(c *check.C) {
 		"TRACE: 1   tool sed:SED::AfterPrefsMk",
 		"TRACE: 1   tool test:TEST:var:AfterPrefsMk",
 		"TRACE: 1   tool true:TRUE:var:AfterPrefsMk",
-		"TRACE: - (*Tools).Trace()")
+		"TRACE: - Tools.Trace()")
 
 	tools := NewTools()
 	tools.Fallback(G.Pkgsrc.Tools)
@@ -365,8 +365,8 @@ func (s *Suite) Test_Tools__tools_having_the_same_variable_name(c *check.C) {
 	t.DisableTracing()
 
 	t.CheckOutputLines(
-		"TRACE: + (*Tools).Trace()",
-		"TRACE: 1 + (*Tools).Trace()",
+		"TRACE: + Tools.Trace()",
+		"TRACE: 1 + Tools.Trace()",
 		"TRACE: 1 2   tool awk:AWK::AfterPrefsMk",
 		"TRACE: 1 2   tool echo:ECHO:var:AfterPrefsMk",
 		"TRACE: 1 2   tool echo -n:ECHO_N:var:AfterPrefsMk",
@@ -376,8 +376,8 @@ func (s *Suite) Test_Tools__tools_having_the_same_variable_name(c *check.C) {
 		"TRACE: 1 2   tool sed:SED::AfterPrefsMk",
 		"TRACE: 1 2   tool test:TEST:var:AfterPrefsMk",
 		"TRACE: 1 2   tool true:TRUE:var:AfterPrefsMk",
-		"TRACE: 1 - (*Tools).Trace()",
-		"TRACE: - (*Tools).Trace()")
+		"TRACE: 1 - Tools.Trace()",
+		"TRACE: - Tools.Trace()")
 }
 
 func (s *Suite) Test_Tools__var(c *check.C) {

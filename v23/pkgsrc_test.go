@@ -231,7 +231,7 @@ func (s *Suite) Test_Pkgsrc_loadTools(c *check.C) {
 	t.DisableTracing()
 
 	t.CheckOutputLines(
-		"TRACE: + (*Tools).Trace()",
+		"TRACE: + Tools.Trace()",
 		"TRACE: 1   tool bzcat:::Nowhere",
 		"TRACE: 1   tool bzip2:::Nowhere",
 		"TRACE: 1   tool chown:CHOWN::Nowhere",
@@ -247,7 +247,7 @@ func (s *Suite) Test_Pkgsrc_loadTools(c *check.C) {
 		"TRACE: 1   tool strip:::AtRunTime",
 		"TRACE: 1   tool test:TEST:var:AfterPrefsMk",
 		"TRACE: 1   tool true:TRUE:var:AfterPrefsMk",
-		"TRACE: - (*Tools).Trace()")
+		"TRACE: - Tools.Trace()")
 }
 
 // As a side-benefit, loadTools also loads the _BUILD_DEFS.

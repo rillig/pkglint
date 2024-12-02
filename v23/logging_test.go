@@ -1038,11 +1038,11 @@ func (s *Suite) Test_Logger_TechFatalf__trace(c *check.C) {
 
 	t.ExpectFatal(
 		outer,
-		"TRACE: + (*Suite).Test_Logger_TechFatalf__trace.func2()",
-		"TRACE: 1 + (*Suite).Test_Logger_TechFatalf__trace.func1()",
+		"TRACE: + Suite.Test_Logger_TechFatalf__trace.func2()",
+		"TRACE: 1 + Suite.Test_Logger_TechFatalf__trace.func1()",
 		"TRACE: 1 2   TechFatalf: filename: Cannot continue because of \"reason 1\" and \"reason 2\".",
-		"TRACE: 1 - (*Suite).Test_Logger_TechFatalf__trace.func1()",
-		"TRACE: - (*Suite).Test_Logger_TechFatalf__trace.func2()",
+		"TRACE: 1 - Suite.Test_Logger_TechFatalf__trace.func1()",
+		"TRACE: - Suite.Test_Logger_TechFatalf__trace.func2()",
 		"FATAL: filename: Cannot continue because of \"reason 1\" and \"reason 2\".")
 }
 

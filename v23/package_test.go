@@ -3655,10 +3655,10 @@ func (s *Suite) Test_Package_checkLinesBuildlink3Inclusion__package_but_not_file
 	// several packages have build dependencies that are not needed
 	// for building other packages. These cannot be flagged as warnings.
 	t.CheckOutputLines(
-		"TRACE: + (*Package).checkLinesBuildlink3Inclusion()",
+		"TRACE: + Package.checkLinesBuildlink3Inclusion()",
 		"TRACE: 1   ../../category/dependency/buildlink3.mk "+
 			"is included by the package but not by the buildlink3.mk file.",
-		"TRACE: - (*Package).checkLinesBuildlink3Inclusion()")
+		"TRACE: - Package.checkLinesBuildlink3Inclusion()")
 }
 
 // The file mk/ocaml.mk uses ../.. to reach PKGSRCDIR.

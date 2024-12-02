@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"regexp"
 	"runtime"
 	"strings"
 )
@@ -126,6 +127,7 @@ func (t *Tracer) traceCall(args ...interface{}) func() {
 			functionName = strings.TrimPrefix(fn.Name(), "github.com/rillig/pkglint/v23.")
 		}
 	}
+	functionName = regexp.MustCompile(`^\(\*(\w+)\)`).ReplaceAllString(functionName, "$1")
 	indent := t.traceIndent()
 	_, _ = fmt.Fprintf(t.Out, "TRACE: %s+ %s(%s)\n", indent, functionName, argsStr(withoutResults(args)))
 	t.depth++
