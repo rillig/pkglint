@@ -443,6 +443,16 @@ func (p *ShTokenizer) ShToken() *ShToken {
 		return nil
 	}
 
+	// Skip _ULIMIT_CMD, as it expands to text that can be empty.
+	//
+	// Adding a token for "zero or more shell commands, each terminated
+	// with a semicolon" would make the grammar more complicated than
+	// necessary. Instead, accept that pkglint cannot detect some syntax
+	// errors that are due to misplaced semicolons from this expression.
+	if curr.MkText == "${_ULIMIT_CMD}" {
+		return p.ShToken()
+	}
+
 	if !curr.Type.IsWord() && q != shqSubsh {
 		return NewShToken(curr.MkText, curr)
 	}

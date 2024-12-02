@@ -1304,22 +1304,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__ULIMIT_CMD(c *check.C) {
 
 	mklines.Check()
 
-	t.CheckOutputLines(
-		// FIXME
-		"WARN: ~/Makefile:4: Unknown shell command \"${_ULIMIT_CMD}${SETENV}\".",
-		// FIXME
-		"WARN: ~/Makefile:4: Use ${_ULIMIT_CMD:Q} instead of ${_ULIMIT_CMD}.",
-		// FIXME
-		"WARN: ~/Makefile:4: Use ${SETENV:Q} instead of ${SETENV}.",
-		// FIXME
-		"WARN: ~/Makefile:5: Unknown shell command \"${_ULIMIT_CMD}exit\".",
-		// FIXME
-		"WARN: ~/Makefile:5: Use ${_ULIMIT_CMD:Q} instead of ${_ULIMIT_CMD}.",
-		// FIXME
-		"WARN: ~/Makefile:6: Unknown shell command \"${_ULIMIT_CMD}\".",
-		// FIXME
-		"WARN: ~/Makefile:7: Unknown shell command \"${_ULIMIT_CMD}\".",
-	)
+	// No warnings about _ULIMIT_CMD being an unknown shell command.
+	// No attempt at adding a :Q modifier to either _ULIMIT_CMD or SETENV.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLine_ForEachUsed(c *check.C) {
