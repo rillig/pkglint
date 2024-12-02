@@ -1,3 +1,10 @@
+# 23.8.1 (2024-12-02)
+
+Fix wrong warning and autofix involving _ULIMIT_CMD, which was detected
+as an "unknown shell command".
+
+Reduce punctuation in the debug log when tracing function calls.
+
 # 23.8.0 (2024-10-04)
 
 Prohibit vertical bar in COMMENT, to avoid generating syntactically wrong
