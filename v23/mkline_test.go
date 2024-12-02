@@ -1284,6 +1284,44 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__uncovered_cases(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+// The commands from _ULIMIT_CMD do not affect the parsing of shell commands,
+// not even if they are glued to a second variable or another shell command.
+func (s *Suite) Test_MkLine_VariableNeedsQuoting__ULIMIT_CMD(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall")
+	t.SetUpVartypes()
+	t.SetUpTool("env", "SETENV", AfterPrefsMk)
+
+	mklines := t.SetUpFileMkLines("Makefile",
+		MkCvsID,
+		"",
+		"do-build:",
+		"\tcd ${WRKSRC} && ${_ULIMIT_CMD}${SETENV} ${MAKE_ENV} # ...",
+		"\tcd ${WRKSRC} && ${_ULIMIT_CMD}exit 0",
+		"\tcd ${WRKSRC} && ${_ULIMIT_CMD} ${SETENV} ${MAKE_ENV} # ...",
+		"\tcd ${WRKSRC} && ${_ULIMIT_CMD} exit 0")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		// FIXME
+		"WARN: ~/Makefile:4: Unknown shell command \"${_ULIMIT_CMD}${SETENV}\".",
+		// FIXME
+		"WARN: ~/Makefile:4: Use ${_ULIMIT_CMD:Q} instead of ${_ULIMIT_CMD}.",
+		// FIXME
+		"WARN: ~/Makefile:4: Use ${SETENV:Q} instead of ${SETENV}.",
+		// FIXME
+		"WARN: ~/Makefile:5: Unknown shell command \"${_ULIMIT_CMD}exit\".",
+		// FIXME
+		"WARN: ~/Makefile:5: Use ${_ULIMIT_CMD:Q} instead of ${_ULIMIT_CMD}.",
+		// FIXME
+		"WARN: ~/Makefile:6: Unknown shell command \"${_ULIMIT_CMD}\".",
+		// FIXME
+		"WARN: ~/Makefile:7: Unknown shell command \"${_ULIMIT_CMD}\".",
+	)
+}
+
 func (s *Suite) Test_MkLine_ForEachUsed(c *check.C) {
 	t := s.Init(c)
 
