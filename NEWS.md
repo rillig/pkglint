@@ -1,3 +1,7 @@
+# 23.9.1 (2024-12-07)
+
+Fix leftover bmake placeholder in test.
+
 # 23.9.0 (2024-12-07)
 
 Warn about `DISTINFO_FILE` and `PATCHDIR` that don't correspond.
