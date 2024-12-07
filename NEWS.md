@@ -1,3 +1,7 @@
+# 23.9.0 (2024-12-07)
+
+Warn about `DISTINFO_FILE` and `PATCHDIR` that don't correspond. 
+
 # 23.8.1 (2024-12-02)
 
 Fix wrong warning and autofix involving _ULIMIT_CMD, which was detected
