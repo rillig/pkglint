@@ -1,6 +1,6 @@
 # 23.9.0 (2024-12-07)
 
-Warn about `DISTINFO_FILE` and `PATCHDIR` that don't correspond. 
+Warn about `DISTINFO_FILE` and `PATCHDIR` that don't correspond.
 
 # 23.8.1 (2024-12-02)
 
