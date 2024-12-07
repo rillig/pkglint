@@ -1425,10 +1425,11 @@ func (s *Suite) Test_Package_check__DISTINFO_FILE_and_PATCHDIR(c *check.C) {
 			"DISTINFO_FILE \"${.CURDIR}/../../devel/ocaml-dune/distinfo\" "+
 			"has no corresponding PATCHDIR.",
 		"ERROR: devel/ocaml-dune-configurator/distinfo: "+
-			"Patch \"patches/patch-README\" is not recorded. Run \"@BMAKE@ makepatchsum\".",
+			"Patch \"patches/patch-README\" is not recorded. "+
+			sprintf("Run %q.", bmake("makepatchsum")),
 		"ERROR: devel/ocaml-dune-configurator/../../devel/ocaml-dune/distinfo: "+
 			"Patch \"../../devel/ocaml-dune-configurator/patches/patch-README\" is not recorded. "+
-			"Run \"@BMAKE@ makepatchsum\".",
+			sprintf("Run %q.", bmake("makepatchsum")),
 		"WARN: devel/ocaml-dune-configurator/../../devel/ocaml-dune/Makefile.common:4: "+
 			"DISTINFO_FILE \"${.CURDIR}/../../devel/ocaml-dune/distinfo\" "+
 			"has no corresponding PATCHDIR.",
