@@ -173,7 +173,13 @@ func (s *Suite) Test_Package__using_common_Makefile_overriding_DISTINFO_FILE(c *
 	// The DISTINFO_FILE definition from pinentry-fltk overrides
 	// the one from pinentry since it appears later.
 	// Therefore, the patch is searched for at the right location.
-	t.CheckOutputEmpty()
+	//
+	// Nevertheless, having a DISTINFO_FILE defined without the
+	// corresponding PATCHDIR creates an unneeded uncertainty.
+	t.CheckOutputLines(
+		"WARN: ~/security/pinentry-fltk/Makefile:21: " +
+			"DISTINFO_FILE \"${.CURDIR}/distinfo\" " +
+			"has no corresponding PATCHDIR.")
 }
 
 func (s *Suite) Test_Package__redundant_variable_in_unrelated_files(c *check.C) {
@@ -323,7 +329,10 @@ func (s *Suite) Test_Package__distinfo_from_other_package(c *check.C) {
 		"ERROR: x11/gst-x11/../../multimedia/gst-base/distinfo:3: "+
 			"SHA1 hash of ../../x11/gst-x11/patches/patch-aa differs "+
 			"(distinfo has 1234, patch file has 9a93207561abfef7e7550598c5a08f2c3226995b).",
-		"ERROR: x11/gst-x11/Makefile: Each package must have a DESCR file.")
+		"ERROR: x11/gst-x11/Makefile: Each package must have a DESCR file.",
+		"WARN: x11/gst-x11/../../multimedia/gst-base/plugins.mk:2: "+
+			"DISTINFO_FILE \"${.CURDIR}/../../multimedia/gst-base/distinfo\" "+
+			"has no corresponding PATCHDIR.")
 }
 
 func (s *Suite) Test_Package__case_insensitive(c *check.C) {
@@ -1387,6 +1396,43 @@ func (s *Suite) Test_Package_check__redundant_WRKSRC(c *check.C) {
 	t.CheckOutputLines(
 		"NOTE: ~/category/package/Makefile:20: " +
 			"Setting WRKSRC to \"${WRKDIR}/package-1.0\" is redundant.")
+}
+
+func (s *Suite) Test_Package_check__DISTINFO_FILE_and_PATCHDIR(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("devel/ocaml-dune",
+		".include \"Makefile.common\"")
+	t.CreateFileLines("devel/ocaml-dune/Makefile.common",
+		MkCvsID,
+		"# used by devel/ocaml-dune-configurator/Makefile",
+		"",
+		"DISTINFO_FILE=\t${.CURDIR}/../../devel/ocaml-dune/distinfo",
+		"# But PATCH_DIR is unset.")
+
+	t.SetUpPackage("devel/ocaml-dune-configurator",
+		".include \"../../devel/ocaml-dune/Makefile.common\"")
+	t.CreateFileDummyPatch("devel/ocaml-dune-configurator/patches/patch-README")
+
+	t.Chdir(".")
+	t.FinishSetUp()
+
+	G.Check("devel/ocaml-dune")
+	G.Check("devel/ocaml-dune-configurator")
+
+	t.CheckOutputLines(
+		"WARN: devel/ocaml-dune/Makefile.common:4: "+
+			"DISTINFO_FILE \"${.CURDIR}/../../devel/ocaml-dune/distinfo\" "+
+			"has no corresponding PATCHDIR.",
+		"ERROR: devel/ocaml-dune-configurator/distinfo: "+
+			"Patch \"patches/patch-README\" is not recorded. Run \"@BMAKE@ makepatchsum\".",
+		"ERROR: devel/ocaml-dune-configurator/../../devel/ocaml-dune/distinfo: "+
+			"Patch \"../../devel/ocaml-dune-configurator/patches/patch-README\" is not recorded. "+
+			"Run \"@BMAKE@ makepatchsum\".",
+		"WARN: devel/ocaml-dune-configurator/../../devel/ocaml-dune/Makefile.common:4: "+
+			"DISTINFO_FILE \"${.CURDIR}/../../devel/ocaml-dune/distinfo\" "+
+			"has no corresponding PATCHDIR.",
+	)
 }
 
 func (s *Suite) Test_Package_checkDescr__DESCR_SRC(c *check.C) {

@@ -622,6 +622,7 @@ func (pkg *Package) check(filenames []CurrPath, mklines, allLines *MkLines) {
 		pkg.checkDescr(filenames, mklines)
 	}
 
+	pkg.checkDistinfoFileAndPatchdir()
 	pkg.checkDistfilesInDistinfo(allLines)
 	pkg.checkPkgConfig(allLines)
 	pkg.checkWipCommitMsg()
@@ -637,6 +638,40 @@ func (pkg *Package) checkDescr(filenames []CurrPath, mklines *MkLines) {
 		return
 	}
 	mklines.Whole().Errorf("Each package must have a DESCR file.")
+}
+
+func (pkg *Package) checkDistinfoFileAndPatchdir() {
+	distLoc := pkg.vars.LastDefinition("DISTINFO_FILE")
+	patchLoc := pkg.vars.LastDefinition("PATCHDIR")
+	diag := distLoc
+	if distLoc != nil && patchLoc != nil {
+		dist := distLoc.Value()
+		patch := patchLoc.Value()
+		distSuff, patchSuff := trimCommonPrefix(dist, patch)
+		if !contains(distSuff, "/") && !contains(patchSuff, "/") {
+			return
+		}
+		distLoc.Warnf(
+			"DISTINFO_FILE %q does not match PATCHDIR %q from %s.",
+			dist, patch, distLoc.RelMkLine(patchLoc))
+	} else if distLoc != nil {
+		distLoc.Warnf("DISTINFO_FILE %q has no corresponding PATCHDIR.", distLoc.Value())
+	} else if patchLoc != nil {
+		patchLoc.Warnf("PATCHDIR %q has no corresponding DISTINFO_FILE.", patchLoc.Value())
+		diag = patchLoc
+	} else {
+		return
+	}
+	diag.Explain(
+		"The distinfo file records the checksums of all available patches.",
+		"Only those patches that are listed in the distinfo file are applied.",
+		"To make the relationship between the distinfo file",
+		"and the corresponding patches obvious,",
+		"both should be in the same package.",
+		"",
+		"A typical definition is:",
+		"\tDISTINFO_FILE=\t../../category/package/distinfo",
+		"\tPATCHDIR=\t../../category/package/patches")
 }
 
 func (pkg *Package) checkDistfilesInDistinfo(mklines *MkLines) {

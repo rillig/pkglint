@@ -815,7 +815,10 @@ func (s *Suite) Test_distinfoLinesChecker_checkPatchSha1__relative_path_in_disti
 		"WARN: ../../other/common/distinfo:4: Patch file \"patch-only-in-distinfo\" "+
 			"does not exist in directory \"../../devel/patches/patches\".",
 		"ERROR: ../../other/common/distinfo: Patch \"../../devel/patches/patches/patch-only-in-patches\" "+
-			"is not recorded. Run \""+confMake+" makepatchsum\".")
+			"is not recorded. Run \""+confMake+" makepatchsum\".",
+		"WARN: Makefile:20: "+
+			"DISTINFO_FILE \"../../other/common/distinfo\" does not match "+
+			"PATCHDIR \"../../devel/patches/patches\" from line 21.")
 }
 
 func (s *Suite) Test_distinfoLinesChecker_checkPatchSha1(c *check.C) {

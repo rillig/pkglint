@@ -295,11 +295,21 @@ func (s *Suite) Test_Logger_Diag__source_duplicates(c *check.C) {
 		"ERROR: ~/category/dependency/patches/patch-aa:3: "+
 			"Each patch must be documented.",
 		"",
+		">\tPATCHDIR=\t../../category/dependency/patches",
+		"WARN: ~/category/package1/Makefile:20: "+
+			"PATCHDIR \"../../category/dependency/patches\" "+
+			"has no corresponding DISTINFO_FILE.",
+		"",
 		"ERROR: ~/category/package2/distinfo: "+
 			"Patch \"../../category/dependency/patches/patch-aa\" is not recorded. "+
 			"Run \""+confMake+" makepatchsum\".",
 		"",
-		"3 errors found.",
+		">\tPATCHDIR=\t../../category/dependency/patches",
+		"WARN: ~/category/package2/Makefile:20: "+
+			"PATCHDIR \"../../category/dependency/patches\" "+
+			"has no corresponding DISTINFO_FILE.",
+		"",
+		"3 errors and 2 warnings found.",
 		t.Shquote("(Run \"pkglint -e --source -Wall %s %s\" to show explanations.)",
 			"category/package1", "category/package2"))
 }
