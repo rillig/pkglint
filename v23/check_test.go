@@ -471,7 +471,9 @@ func (t *Tester) SetUpCategory(name RelPath, pkgdir RelPath) {
 //
 // Returns the path to the package, ready to be used with Pkglint.Check.
 //
-// After calling this method, individual files can be overwritten as necessary.
+// After calling this method, Tester.CreateFileLines can be used to overwrite
+// individual files or to create additional files.
+//
 // At the end of the setup phase, t.FinishSetUp() must be called to load all
 // the files.
 //
