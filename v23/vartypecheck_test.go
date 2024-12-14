@@ -463,6 +463,7 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern(c *check.C) {
 		// These patterns are valid, assuming that DISTNAME is a valid PKGNAME.
 		"${DISTNAME}{,nb*}",
 		"${DISTNAME:S/-/-base-/}{,nb[0-9]*}",
+		"${RUBY_PKGPREFIX}-${DISTNAME}{,nb*}",
 
 		// A base version may have trailing version parts.
 		"atril>=${VERSION:R}.2")
@@ -475,7 +476,9 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern(c *check.C) {
 		"WARN: filename.mk:49: The nb version part should have the form \"{,nb*}\" or \"{,nb[0-9]*}\", not \"{nb*,}\".",
 		"WARN: filename.mk:50: Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.",
 		"WARN: filename.mk:51: The nb version part should have the form \"{,nb*}\" or \"{,nb[0-9]*}\", not \"{,nb[0-9]}\".",
-		"WARN: filename.mk:52: Dependency pattern \"${PYPKGPREFIX}-sphinx>=1.2.3nb1\" is followed by extra text \"*\".")
+		"WARN: filename.mk:52: Dependency pattern \"${PYPKGPREFIX}-sphinx>=1.2.3nb1\" is followed by extra text \"*\".",
+		// FIXME: that pattern is fine.
+		"WARN: filename.mk:56: Invalid dependency pattern \"${RUBY_PKGPREFIX}-${DISTNAME}{,nb*}\".")
 
 	// invalid dependency patterns
 	vt.Values(
