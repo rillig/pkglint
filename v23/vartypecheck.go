@@ -350,10 +350,10 @@ func (cv *VartypeCheck) DependencyPattern() {
 
 	} else if deppat == nil || rest != "" {
 		if rest != "" && rest != value {
-			cv.Warnf("Dependency pattern %q is followed by extra text %q.",
+			cv.Errorf("Dependency pattern %q is followed by extra text %q.",
 				value[:len(value)-len(rest)], rest)
 		} else {
-			cv.Warnf("Invalid dependency pattern %q.", value)
+			cv.Errorf("Invalid dependency pattern %q.", value)
 		}
 		cv.Explain(
 			"Typical dependency patterns have the following forms:",
@@ -471,7 +471,7 @@ func (cv *VartypeCheck) DependencyWithPath() {
 
 	parts := cv.MkLine.ValueSplit(value, ":")
 	if len(parts) != 2 {
-		cv.Warnf("Invalid dependency pattern with path %q.", value)
+		cv.Errorf("Invalid dependency pattern with path %q.", value)
 		cv.Explain(
 			"Examples for valid dependency patterns with path are:",
 			"  package-[0-9]*:../../category/package",

@@ -470,8 +470,8 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__invalid_dependency_patterns(c *chec
 	CheckLinesBuildlink3Mk(mklines)
 
 	t.CheckOutputLines(
-		"WARN: buildlink3.mk:9: Invalid dependency pattern \"hs-X11!=1.6.1\".",
-		"WARN: buildlink3.mk:10: Invalid dependency pattern \"hs-X11!=1.6.1.2nb2\".")
+		"ERROR: buildlink3.mk:9: Invalid dependency pattern \"hs-X11!=1.6.1\".",
+		"ERROR: buildlink3.mk:10: Invalid dependency pattern \"hs-X11!=1.6.1.2nb2\".")
 }
 
 func (s *Suite) Test_CheckLinesBuildlink3Mk__PKG_OPTIONS(c *check.C) {
@@ -804,9 +804,9 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__dependencies_with_path(c 
 	// Since these dependencies are malformed, pkglint does not process them further.
 	// Doing that would reveal that the ABI version should be higher than the API version.
 	t.CheckOutputLines(
-		"WARN: ~/category/package/buildlink3.mk:12: "+
+		"ERROR: ~/category/package/buildlink3.mk:12: "+
 			"Dependency pattern \"package>=1.0\" is followed by extra text \":../../category/package\".",
-		"WARN: ~/category/package/buildlink3.mk:13: "+
+		"ERROR: ~/category/package/buildlink3.mk:13: "+
 			"Dependency pattern \"package>=1.5\" is followed by extra text \":../../category/package\".")
 }
 

@@ -428,9 +428,9 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern(c *check.C) {
 		"{ssh{,6}-[0-9]*,openssh-[0-9]*}",
 		"libao-[a-z]*-[0-9]*")
 	vt.Output(
-		"WARN: filename.mk:32: Invalid dependency pattern \"seamonkey-<2.0\".",
-		"WARN: filename.mk:32: Dependency pattern \"seamonkey--bin\" is followed by extra text \"<2.0\".",
-		"WARN: filename.mk:32: Dependency pattern \"seamonkey--gtk1\" is followed by extra text \"<2.0\".")
+		"ERROR: filename.mk:32: Invalid dependency pattern \"seamonkey-<2.0\".",
+		"ERROR: filename.mk:32: Dependency pattern \"seamonkey--bin\" is followed by extra text \"<2.0\".",
+		"ERROR: filename.mk:32: Dependency pattern \"seamonkey--gtk1\" is followed by extra text \"<2.0\".")
 
 	// expressions
 	vt.Values(
@@ -469,12 +469,12 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern(c *check.C) {
 		"atril>=${VERSION:R}.2")
 
 	vt.Output(
-		"WARN: filename.mk:43: Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3\".",
-		"WARN: filename.mk:48: Invalid dependency pattern \"${PKGNAME_NOREV:S/jdk/jre/}*\".",
+		"ERROR: filename.mk:43: Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3\".",
+		"ERROR: filename.mk:48: Invalid dependency pattern \"${PKGNAME_NOREV:S/jdk/jre/}*\".",
 		"WARN: filename.mk:49: The nb version part should have the form \"{,nb*}\" or \"{,nb[0-9]*}\", not \"{nb*,}\".",
 		"WARN: filename.mk:50: Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.",
 		"WARN: filename.mk:51: The nb version part should have the form \"{,nb*}\" or \"{,nb[0-9]*}\", not \"{,nb[0-9]}\".",
-		"WARN: filename.mk:52: Dependency pattern \"${PYPKGPREFIX}-sphinx>=1.2.3nb1\" is followed by extra text \"*\".")
+		"ERROR: filename.mk:52: Dependency pattern \"${PYPKGPREFIX}-sphinx>=1.2.3nb1\" is followed by extra text \"*\".")
 
 	// invalid dependency patterns
 	vt.Values(
@@ -490,17 +490,17 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern(c *check.C) {
 		"package>=2.9.0,<3",
 		"package>=2.16>=0")
 	vt.Output(
-		"WARN: filename.mk:61: Invalid dependency pattern \"Perl\".",
-		"WARN: filename.mk:62: Invalid dependency pattern \"py-docs\".",
+		"ERROR: filename.mk:61: Invalid dependency pattern \"Perl\".",
+		"ERROR: filename.mk:62: Invalid dependency pattern \"py-docs\".",
 		"WARN: filename.mk:63: Only \"[0-9]*\" is allowed as the numeric part of a dependency, not \"[5.10-5.22]*\".",
 		"WARN: filename.mk:63: The version pattern \"[5.10-5.22]*\" should not contain a hyphen.",
-		"WARN: filename.mk:64: Dependency pattern \"package-1.0\" is followed by extra text \"|garbage\".",
-		"WARN: filename.mk:65: Dependency pattern \"package>=1.0\" is followed by extra text \":../../category/package\".",
+		"ERROR: filename.mk:64: Dependency pattern \"package-1.0\" is followed by extra text \"|garbage\".",
+		"ERROR: filename.mk:65: Dependency pattern \"package>=1.0\" is followed by extra text \":../../category/package\".",
 		// TODO: Mention that version numbers in a pkgbase must be appended directly, without hyphen.
-		"WARN: filename.mk:66: Dependency pattern \"package-1.0\" is followed by extra text \">=1.0.3\".",
-		"WARN: filename.mk:67: Invalid dependency pattern \"${RUBY_PKGPREFIX}-theme-[a-z0-9]*\".",
-		"WARN: filename.mk:68: Dependency pattern \"package>=2.9.0\" is followed by extra text \",<3\".",
-		"WARN: filename.mk:69: Dependency pattern \"package>=2.16\" is followed by extra text \">=0\".")
+		"ERROR: filename.mk:66: Dependency pattern \"package-1.0\" is followed by extra text \">=1.0.3\".",
+		"ERROR: filename.mk:67: Invalid dependency pattern \"${RUBY_PKGPREFIX}-theme-[a-z0-9]*\".",
+		"ERROR: filename.mk:68: Dependency pattern \"package>=2.9.0\" is followed by extra text \",<3\".",
+		"ERROR: filename.mk:69: Dependency pattern \"package>=2.16\" is followed by extra text \">=0\".")
 }
 
 func (s *Suite) Test_VartypeCheck_DependencyPattern__smaller_version(c *check.C) {
@@ -698,7 +698,7 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 		"gmake-[0-9]*:../../devel/gmake")
 
 	vt.Output(
-		"WARN: ~/category/package/filename.mk:1: Invalid dependency pattern with path \"Perl\".",
+		"ERROR: ~/category/package/filename.mk:1: Invalid dependency pattern with path \"Perl\".",
 		"WARN: ~/category/package/filename.mk:2: Dependency paths should have the form \"../../category/package\".",
 		"ERROR: ~/category/package/filename.mk:2: Relative path \"../perl5/Makefile\" does not exist.",
 		"WARN: ~/category/package/filename.mk:2: \"../perl5\" is not a valid relative package directory.",
@@ -719,14 +719,14 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 		"broken>:../../x11/alacarte")      // incomplete comparison
 
 	vt.Output(
-		"WARN: ~/category/package/filename.mk:11: Invalid dependency pattern \"broken0.12.1\".",
-		"WARN: ~/category/package/filename.mk:12: Invalid dependency pattern \"broken[0-9]*\".",
-		"WARN: ~/category/package/filename.mk:13: Invalid dependency pattern with path \"broken[0-9]*../../x11/alacarte\".",
-		"WARN: ~/category/package/filename.mk:14: Invalid dependency pattern \"broken>=\".",
-		"WARN: ~/category/package/filename.mk:15: Invalid dependency pattern \"broken=0\".",
-		"WARN: ~/category/package/filename.mk:16: Invalid dependency pattern \"broken=\".",
-		"WARN: ~/category/package/filename.mk:17: Invalid dependency pattern \"broken-\".",
-		"WARN: ~/category/package/filename.mk:18: Invalid dependency pattern \"broken>\".")
+		"ERROR: ~/category/package/filename.mk:11: Invalid dependency pattern \"broken0.12.1\".",
+		"ERROR: ~/category/package/filename.mk:12: Invalid dependency pattern \"broken[0-9]*\".",
+		"ERROR: ~/category/package/filename.mk:13: Invalid dependency pattern with path \"broken[0-9]*../../x11/alacarte\".",
+		"ERROR: ~/category/package/filename.mk:14: Invalid dependency pattern \"broken>=\".",
+		"ERROR: ~/category/package/filename.mk:15: Invalid dependency pattern \"broken=0\".",
+		"ERROR: ~/category/package/filename.mk:16: Invalid dependency pattern \"broken=\".",
+		"ERROR: ~/category/package/filename.mk:17: Invalid dependency pattern \"broken-\".",
+		"ERROR: ~/category/package/filename.mk:18: Invalid dependency pattern \"broken>\".")
 
 	vt.Values(
 		"${PYPKGPREFIX}-sqlite3:../../${MY_PKGPATH.py-sqlite3}",
@@ -738,9 +738,9 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 		"{${NETSCAPE_PREFERRED:C/:/,/g}}-[0-9]*:../../www/${NETSCAPE_PREFERRED:C/:.*//}")
 
 	vt.Output(
-		"WARN: ~/category/package/filename.mk:21: "+
+		"ERROR: ~/category/package/filename.mk:21: "+
 			"Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3\".",
-		"WARN: ~/category/package/filename.mk:22: "+
+		"ERROR: ~/category/package/filename.mk:22: "+
 			"Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3\".")
 
 	vt.Values(
@@ -794,7 +794,7 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 		"py-sqlite3>=0:")
 
 	vt.Output(
-		"WARN: ~/category/package/filename.mk:71: " +
+		"ERROR: ~/category/package/filename.mk:71: " +
 			"Invalid dependency pattern with path \"py-sqlite3>=0:\".")
 }
 
