@@ -384,25 +384,28 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern(c *check.C) {
 	vt.Varname("CONFLICTS")
 	vt.Op(opAssignAppend)
 
-	// comparison operators
+	// numeric version comparison operators
 	vt.Values(
 		"perl5>=5.22",
 		"libkipi>=0.1.5<4.0",
 		"gtk2+>=2.16")
 	vt.OutputEmpty()
 
-	// pattern matching
+	// textual pattern matching
 	vt.Values(
 		"perl-5*",
 		"perl5-*",
 		"perl-5.22",
 		"perl5-5.22.*",
-		"gtksourceview-sharp-2.0-[0-9]*")
+		"gtksourceview-sharp-2.0-[0-9]*",
+		"eboard-[0-9\\.]*")
 	vt.Output(
 		"WARN: filename.mk:11: Use \"5.*\" instead of \"5*\" as the version pattern.",
 		"WARN: filename.mk:12: Use \"perl5-[0-9]*\" instead of \"perl5-*\".",
 		"WARN: filename.mk:13: Use \"5.22{,nb*}\" instead of \"5.22\" as the version pattern.",
-		"WARN: filename.mk:15: The version pattern \"2.0-[0-9]*\" should not contain a hyphen.")
+		"WARN: filename.mk:15: The version pattern \"2.0-[0-9]*\" should not contain a hyphen.",
+		// FIXME: The '[' and ']' must not be separated.
+		"WARN: filename.mk:16: Dependency pattern \"eboard-[0-9\" is followed by extra text \"\\\\.]*\".")
 
 	// nb suffix
 	vt.Values(
@@ -429,7 +432,7 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern(c *check.C) {
 		"WARN: filename.mk:32: Dependency pattern \"seamonkey--bin\" is followed by extra text \"<2.0\".",
 		"WARN: filename.mk:32: Dependency pattern \"seamonkey--gtk1\" is followed by extra text \"<2.0\".")
 
-	// variables
+	// expressions
 	vt.Values(
 		"postgresql8[0-35-9]-${module}-[0-9]*",
 		"${_EMACS_CONFLICTS.${_EMACS_FLAVOR}}",
@@ -455,7 +458,12 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern(c *check.C) {
 		// The following pattern uses both ">=" and "*", which doesn't make sense.
 		"${PYPKGPREFIX}-sphinx>=1.2.3nb1*",
 
-		"{${NETSCAPE_PREFERRED:C/:/,/g}}-[0-9]*")
+		"{${NETSCAPE_PREFERRED:C/:/,/g}}-[0-9]*",
+
+		"${DISTNAME}{,nb*}",
+		"${DISTNAME:S/-/-base-/}{,nb[0-9]*}",
+
+		"atril>=${VERSION:R}.2")
 
 	vt.Output(
 		"WARN: filename.mk:43: Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3\".",
@@ -465,7 +473,12 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern(c *check.C) {
 		"WARN: filename.mk:49: The nb version part should have the form \"{,nb*}\" or \"{,nb[0-9]*}\", not \"{nb*,}\".",
 		"WARN: filename.mk:50: Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.",
 		"WARN: filename.mk:51: The nb version part should have the form \"{,nb*}\" or \"{,nb[0-9]*}\", not \"{,nb[0-9]}\".",
-		"WARN: filename.mk:52: Dependency pattern \"${PYPKGPREFIX}-sphinx>=1.2.3nb1\" is followed by extra text \"*\".")
+		"WARN: filename.mk:52: Dependency pattern \"${PYPKGPREFIX}-sphinx>=1.2.3nb1\" is followed by extra text \"*\".",
+		// FIXME: These patterns are valid, assuming that DISTNAME is a valid PKGNAME.
+		"WARN: filename.mk:54: Invalid dependency pattern \"${DISTNAME}{,nb*}\".",
+		"WARN: filename.mk:55: Invalid dependency pattern \"${DISTNAME:S/-/-base-/}{,nb[0-9]*}\".",
+		// FIXME: A base version may have trailing version parts.
+		"WARN: filename.mk:56: Dependency pattern \"atril>=${VERSION:R}\" is followed by extra text \".2\".")
 
 	// invalid dependency patterns
 	vt.Values(
@@ -477,7 +490,9 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern(c *check.C) {
 		"package-1.0>=1.0.3",
 		// This should be regarded as invalid since the [a-z0-9] might either
 		// continue the PKGBASE or start the version number.
-		"${RUBY_PKGPREFIX}-theme-[a-z0-9]*")
+		"${RUBY_PKGPREFIX}-theme-[a-z0-9]*",
+		"package>=2.9.0,<3",
+		"package>=2.16>=0")
 	vt.Output(
 		"WARN: filename.mk:61: Invalid dependency pattern \"Perl\".",
 		"WARN: filename.mk:62: Invalid dependency pattern \"py-docs\".",
@@ -487,7 +502,9 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern(c *check.C) {
 		"WARN: filename.mk:65: Dependency pattern \"package>=1.0\" is followed by extra text \":../../category/package\".",
 		// TODO: Mention that version numbers in a pkgbase must be appended directly, without hyphen.
 		"WARN: filename.mk:66: Dependency pattern \"package-1.0\" is followed by extra text \">=1.0.3\".",
-		"WARN: filename.mk:67: Invalid dependency pattern \"${RUBY_PKGPREFIX}-theme-[a-z0-9]*\".")
+		"WARN: filename.mk:67: Invalid dependency pattern \"${RUBY_PKGPREFIX}-theme-[a-z0-9]*\".",
+		"WARN: filename.mk:68: Dependency pattern \"package>=2.9.0\" is followed by extra text \",<3\".",
+		"WARN: filename.mk:69: Dependency pattern \"package>=2.16\" is followed by extra text \">=0\".")
 }
 
 func (s *Suite) Test_VartypeCheck_DependencyPattern__smaller_version(c *check.C) {
