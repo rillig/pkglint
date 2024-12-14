@@ -404,8 +404,8 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern(c *check.C) {
 		"WARN: filename.mk:12: Use \"perl5-[0-9]*\" instead of \"perl5-*\".",
 		"WARN: filename.mk:13: Use \"5.22{,nb*}\" instead of \"5.22\" as the version pattern.",
 		"WARN: filename.mk:15: The version pattern \"2.0-[0-9]*\" should not contain a hyphen.",
-		// FIXME: The '[' and ']' must not be separated.
-		"WARN: filename.mk:16: Dependency pattern \"eboard-[0-9\" is followed by extra text \"\\\\.]*\".")
+		"WARN: filename.mk:16: Only \"[0-9]*\" is allowed as the numeric part of a dependency, not \"[0-9\\.]*\".",
+		"WARN: filename.mk:16: The version pattern \"[0-9\\.]*\" should not contain a hyphen.")
 
 	// nb suffix
 	vt.Values(
@@ -460,9 +460,11 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern(c *check.C) {
 
 		"{${NETSCAPE_PREFERRED:C/:/,/g}}-[0-9]*",
 
+		// These patterns are valid, assuming that DISTNAME is a valid PKGNAME.
 		"${DISTNAME}{,nb*}",
 		"${DISTNAME:S/-/-base-/}{,nb[0-9]*}",
 
+		// A base version may have trailing version parts.
 		"atril>=${VERSION:R}.2")
 
 	vt.Output(
@@ -473,12 +475,7 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern(c *check.C) {
 		"WARN: filename.mk:49: The nb version part should have the form \"{,nb*}\" or \"{,nb[0-9]*}\", not \"{nb*,}\".",
 		"WARN: filename.mk:50: Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.",
 		"WARN: filename.mk:51: The nb version part should have the form \"{,nb*}\" or \"{,nb[0-9]*}\", not \"{,nb[0-9]}\".",
-		"WARN: filename.mk:52: Dependency pattern \"${PYPKGPREFIX}-sphinx>=1.2.3nb1\" is followed by extra text \"*\".",
-		// FIXME: These patterns are valid, assuming that DISTNAME is a valid PKGNAME.
-		"WARN: filename.mk:54: Invalid dependency pattern \"${DISTNAME}{,nb*}\".",
-		"WARN: filename.mk:55: Invalid dependency pattern \"${DISTNAME:S/-/-base-/}{,nb[0-9]*}\".",
-		// FIXME: A base version may have trailing version parts.
-		"WARN: filename.mk:56: Dependency pattern \"atril>=${VERSION:R}\" is followed by extra text \".2\".")
+		"WARN: filename.mk:52: Dependency pattern \"${PYPKGPREFIX}-sphinx>=1.2.3nb1\" is followed by extra text \"*\".")
 
 	// invalid dependency patterns
 	vt.Values(
@@ -496,7 +493,7 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern(c *check.C) {
 	vt.Output(
 		"WARN: filename.mk:61: Invalid dependency pattern \"Perl\".",
 		"WARN: filename.mk:62: Invalid dependency pattern \"py-docs\".",
-		"WARN: filename.mk:63: Only [0-9]* is allowed in the numeric part of a dependency.",
+		"WARN: filename.mk:63: Only \"[0-9]*\" is allowed as the numeric part of a dependency, not \"[5.10-5.22]*\".",
 		"WARN: filename.mk:63: The version pattern \"[5.10-5.22]*\" should not contain a hyphen.",
 		"WARN: filename.mk:64: Dependency pattern \"package-1.0\" is followed by extra text \"|garbage\".",
 		"WARN: filename.mk:65: Dependency pattern \"package>=1.0\" is followed by extra text \":../../category/package\".",

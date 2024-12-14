@@ -337,7 +337,9 @@ func (cv *VartypeCheck) DependencyPattern() {
 	deppat := parser.DependencyPattern()
 	rest := parser.Rest()
 
-	if deppat != nil && deppat.Wildcard == "" && (rest == "{,nb*}" || rest == "{,nb[0-9]*}") {
+	if deppat != nil &&
+		(deppat.LowerOp != "" || deppat.UpperOp != "") &&
+		(rest == "{,nb*}" || rest == "{,nb[0-9]*}") {
 		cv.Warnf("Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.")
 		cv.Explain(
 			"The \"{,nb*}\" extension is only necessary for dependencies of the",
@@ -366,15 +368,15 @@ func (cv *VartypeCheck) DependencyPattern() {
 	wildcard := deppat.Wildcard
 	if m, inside := match1(wildcard, `^\[(.*)\]\*$`); m {
 		if inside != "0-9" {
-			cv.Warnf("Only [0-9]* is allowed in the numeric part of a dependency.")
+			cv.Warnf("Only \"[0-9]*\" is allowed as the numeric part of a dependency, not \"%s\".", wildcard)
 			cv.Explain(
-				"The pattern -[0-9] means any version.",
-				"All other version patterns should be expressed using",
-				"the comparison operators like < or >= or even >=2<3.",
+				"The pattern \"[0-9]*\" means any version.",
+				"All other version patterns should be expressed using the",
+				"comparison operators, such as <5.2.3 or >=1.0 or >=2<3.",
 				"",
-				"Patterns like -[0-7] will only match the first digit of the version",
-				"number and will not do the correct thing when the package reaches",
-				"version 10.")
+				"Patterns like \"[0-7]*\" only match the first digit of the",
+				"version number and will do the wrong thing when the package",
+				"reaches version 10.")
 		}
 
 	} else if m, ver, suffix := match2(wildcard, `^(\d\w*(?:\.\w+)*)(\.\*|\{,nb\*\}|\{,nb\[0-9\]\*\}|\*|)$`); m {
@@ -403,7 +405,7 @@ func (cv *VartypeCheck) DependencyPattern() {
 
 	withoutCharClasses := replaceAll(wildcard, `\[[\d-]+\]`, "")
 	if contains(withoutCharClasses, "-") {
-		cv.Warnf("The version pattern %q should not contain a hyphen.", wildcard)
+		cv.Warnf("The version pattern \"%s\" should not contain a hyphen.", wildcard)
 		cv.Explain(
 			"Pkgsrc interprets package names with version numbers like this:",
 			"",

@@ -1,9 +1,6 @@
 package pkglint
 
-import (
-	"github.com/rillig/pkglint/v23/textproc"
-	"strings"
-)
+import "github.com/rillig/pkglint/v23/textproc"
 
 // MkParser wraps a MkLexer and provides methods for parsing
 // things related to Makefiles.
@@ -287,7 +284,7 @@ func (p *MkParser) PkgbasePattern() string {
 
 	for {
 		if p.mklex.Expr() != nil ||
-			lexer.SkipRegexp(regcomp(`^[\w.*+,{}]+`)) ||
+			(!hasPrefix(lexer.Rest(), "{,nb") && lexer.SkipRegexp(regcomp(`^[\w.*+,{}]+`))) ||
 			lexer.SkipRegexp(regcomp(`^\[[\w-]+\]`)) {
 			continue
 		}
@@ -300,13 +297,11 @@ func (p *MkParser) PkgbasePattern() string {
 	}
 
 	pkgbase := lexer.Since(start)
-	if strings.Count(pkgbase, "{") == strings.Count(pkgbase, "}") {
-		return pkgbase
+	if !hasBalancedBraces(pkgbase) { // as in "{ssh{,6}-[0-9]"
+		lexer.Reset(start)
+		return ""
 	}
-
-	// Unbalanced braces, as in "{ssh{,6}-[0-9]".
-	lexer.Reset(start)
-	return ""
+	return pkgbase
 }
 
 // isPkgbasePart returns whether str, when following a hyphen,
@@ -344,9 +339,9 @@ func (p *MkParser) DependencyPattern() *DependencyPattern {
 	parseVersion := func() string {
 		mark := lexer.Mark()
 
-		for p.mklex.Expr() != nil {
-		}
-		if lexer.Since(mark) != "" {
+		if p.mklex.Expr() != nil {
+			for p.mklex.Expr() != nil || lexer.SkipRegexp(regcomp(`^\.\w+`)) {
+			}
 			return lexer.Since(mark)
 		}
 
@@ -403,7 +398,9 @@ func (p *MkParser) DependencyPattern() *DependencyPattern {
 	if lexer.SkipByte('-') && lexer.Rest() != "" {
 		versionMark := lexer.Mark()
 
-		for p.mklex.Expr() != nil || lexer.SkipRegexp(regcomp(`^[\w\[\]*_.\-]+`)) {
+		for p.mklex.Expr() != nil ||
+			lexer.SkipRegexp(regcomp(`^\[[^\]]+]`)) ||
+			lexer.SkipRegexp(regcomp(`^[\w\[\]*_.\-]+`)) {
 		}
 
 		if !lexer.SkipString("{,nb*}") {
@@ -417,6 +414,9 @@ func (p *MkParser) DependencyPattern() *DependencyPattern {
 	}
 
 	if ToExpr(dp.Pkgbase) != nil {
+		if !lexer.SkipString("{,nb*}") {
+			lexer.SkipString("{,nb[0-9]*}")
+		}
 		return &dp
 	}
 
