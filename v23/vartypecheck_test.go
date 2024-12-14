@@ -470,15 +470,11 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern(c *check.C) {
 
 	vt.Output(
 		"WARN: filename.mk:43: Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3\".",
-		// This pattern is invalid because the variable name doesn't contain "VER".
-		"WARN: filename.mk:45: Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3-${PYSQLITE_REQD}\".",
 		"WARN: filename.mk:48: Invalid dependency pattern \"${PKGNAME_NOREV:S/jdk/jre/}*\".",
 		"WARN: filename.mk:49: The nb version part should have the form \"{,nb*}\" or \"{,nb[0-9]*}\", not \"{nb*,}\".",
 		"WARN: filename.mk:50: Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.",
 		"WARN: filename.mk:51: The nb version part should have the form \"{,nb*}\" or \"{,nb[0-9]*}\", not \"{,nb[0-9]}\".",
-		"WARN: filename.mk:52: Dependency pattern \"${PYPKGPREFIX}-sphinx>=1.2.3nb1\" is followed by extra text \"*\".",
-		// FIXME: that pattern is fine.
-		"WARN: filename.mk:56: Invalid dependency pattern \"${RUBY_PKGPREFIX}-${DISTNAME}{,nb*}\".")
+		"WARN: filename.mk:52: Dependency pattern \"${PYPKGPREFIX}-sphinx>=1.2.3nb1\" is followed by extra text \"*\".")
 
 	// invalid dependency patterns
 	vt.Values(

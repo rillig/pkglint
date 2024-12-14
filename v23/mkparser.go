@@ -413,7 +413,7 @@ func (p *MkParser) DependencyPattern() *DependencyPattern {
 		}
 	}
 
-	if ToExpr(dp.Pkgbase) != nil {
+	if hasPrefix(dp.Pkgbase, "$") && hasSuffix(dp.Pkgbase, "}") {
 		if !lexer.SkipString("{,nb*}") {
 			lexer.SkipString("{,nb[0-9]*}")
 		}
