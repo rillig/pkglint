@@ -1,3 +1,13 @@
+# 23.10.0 (2024-12-14)
+
+Check dependency patterns that include alternatives enclosed in braces,
+such as {ssh,openssh}>=0.
+
+Fix wrong warnings about invalid dependency patterns,
+include helpful details, turn the warnings into errors.
+
+Fix panic when guessing the type of a tool variable.
+
 # 23.9.1 (2024-12-07)
 
 Fix leftover bmake placeholder in test.
