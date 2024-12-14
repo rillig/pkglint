@@ -395,7 +395,7 @@ func (p *MkParser) DependencyPattern() *DependencyPattern {
 		return &dp
 	}
 
-	if lexer.SkipByte('-') && lexer.Rest() != "" {
+	if lexer.SkipByte('-') && lexer.Rest() != "" && lexer.PeekByte() != '-' {
 		versionMark := lexer.Mark()
 
 		for p.mklex.Expr() != nil ||

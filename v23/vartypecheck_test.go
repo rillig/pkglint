@@ -429,8 +429,8 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern(c *check.C) {
 		"libao-[a-z]*-[0-9]*")
 	vt.Output(
 		"ERROR: filename.mk:32: Invalid dependency pattern \"seamonkey-<2.0\".",
-		"ERROR: filename.mk:32: Dependency pattern \"seamonkey--bin\" is followed by extra text \"<2.0\".",
-		"ERROR: filename.mk:32: Dependency pattern \"seamonkey--gtk1\" is followed by extra text \"<2.0\".")
+		"ERROR: filename.mk:32: Invalid dependency pattern \"seamonkey--bin<2.0\".",
+		"ERROR: filename.mk:32: Invalid dependency pattern \"seamonkey--gtk1<2.0\".")
 
 	// expressions
 	vt.Values(
