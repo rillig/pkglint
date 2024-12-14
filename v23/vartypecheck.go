@@ -347,7 +347,12 @@ func (cv *VartypeCheck) DependencyPattern() {
 			"this is not necessary.")
 
 	} else if deppat == nil || rest != "" {
-		cv.Warnf("Invalid dependency pattern %q.", value)
+		if rest != "" && rest != value {
+			cv.Warnf("Dependency pattern %q is followed by extra text %q.",
+				value[:len(value)-len(rest)], rest)
+		} else {
+			cv.Warnf("Invalid dependency pattern %q.", value)
+		}
 		cv.Explain(
 			"Typical dependency patterns have the following forms:",
 			"",

@@ -411,7 +411,9 @@ func (p *MkParser) DependencyPattern() *DependencyPattern {
 		}
 
 		dp.Wildcard = lexer.Since(versionMark)
-		return &dp
+		if dp.Wildcard != "" {
+			return &dp
+		}
 	}
 
 	if ToExpr(dp.Pkgbase) != nil {

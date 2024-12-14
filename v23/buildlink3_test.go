@@ -801,13 +801,13 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__dependencies_with_path(c 
 
 	G.Check(t.File("category/package"))
 
-	// Since these dependencies are malformed, they are not processed further.
+	// Since these dependencies are malformed, pkglint does not process them further.
 	// Doing that would reveal that the ABI version should be higher than the API version.
 	t.CheckOutputLines(
 		"WARN: ~/category/package/buildlink3.mk:12: "+
-			"Invalid dependency pattern \"package>=1.0:../../category/package\".",
+			"Dependency pattern \"package>=1.0\" is followed by extra text \":../../category/package\".",
 		"WARN: ~/category/package/buildlink3.mk:13: "+
-			"Invalid dependency pattern \"package>=1.5:../../category/package\".")
+			"Dependency pattern \"package>=1.5\" is followed by extra text \":../../category/package\".")
 }
 
 func (s *Suite) Test_Buildlink3Checker_checkVarassign__abi_without_api(c *check.C) {

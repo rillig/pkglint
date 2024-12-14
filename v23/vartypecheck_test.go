@@ -426,8 +426,8 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern(c *check.C) {
 		"libao-[a-z]*-[0-9]*")
 	vt.Output(
 		"WARN: filename.mk:32: Invalid dependency pattern \"seamonkey-<2.0\".",
-		"WARN: filename.mk:32: Invalid dependency pattern \"seamonkey--bin<2.0\".",
-		"WARN: filename.mk:32: Invalid dependency pattern \"seamonkey--gtk1<2.0\".")
+		"WARN: filename.mk:32: Dependency pattern \"seamonkey--bin\" is followed by extra text \"<2.0\".",
+		"WARN: filename.mk:32: Dependency pattern \"seamonkey--gtk1\" is followed by extra text \"<2.0\".")
 
 	// variables
 	vt.Values(
@@ -465,7 +465,7 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern(c *check.C) {
 		"WARN: filename.mk:49: The nb version part should have the form \"{,nb*}\" or \"{,nb[0-9]*}\", not \"{nb*,}\".",
 		"WARN: filename.mk:50: Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.",
 		"WARN: filename.mk:51: The nb version part should have the form \"{,nb*}\" or \"{,nb[0-9]*}\", not \"{,nb[0-9]}\".",
-		"WARN: filename.mk:52: Invalid dependency pattern \"${PYPKGPREFIX}-sphinx>=1.2.3nb1*\".")
+		"WARN: filename.mk:52: Dependency pattern \"${PYPKGPREFIX}-sphinx>=1.2.3nb1\" is followed by extra text \"*\".")
 
 	// invalid dependency patterns
 	vt.Values(
@@ -483,11 +483,10 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern(c *check.C) {
 		"WARN: filename.mk:62: Invalid dependency pattern \"py-docs\".",
 		"WARN: filename.mk:63: Only [0-9]* is allowed in the numeric part of a dependency.",
 		"WARN: filename.mk:63: The version pattern \"[5.10-5.22]*\" should not contain a hyphen.",
-		"WARN: filename.mk:64: Invalid dependency pattern \"package-1.0|garbage\".",
-		// TODO: Mention that the path should be removed.
-		"WARN: filename.mk:65: Invalid dependency pattern \"package>=1.0:../../category/package\".",
+		"WARN: filename.mk:64: Dependency pattern \"package-1.0\" is followed by extra text \"|garbage\".",
+		"WARN: filename.mk:65: Dependency pattern \"package>=1.0\" is followed by extra text \":../../category/package\".",
 		// TODO: Mention that version numbers in a pkgbase must be appended directly, without hyphen.
-		"WARN: filename.mk:66: Invalid dependency pattern \"package-1.0>=1.0.3\".",
+		"WARN: filename.mk:66: Dependency pattern \"package-1.0\" is followed by extra text \">=1.0.3\".",
 		"WARN: filename.mk:67: Invalid dependency pattern \"${RUBY_PKGPREFIX}-theme-[a-z0-9]*\".")
 }
 
