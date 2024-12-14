@@ -769,7 +769,7 @@ func (src *Pkgsrc) VariableType(mklines *MkLines, varname string) (vartype *Vart
 			trace.Stepf("Use of tool %+v", tool)
 		}
 		perms := aclpUse
-		if tool.Validity == AfterPrefsMk && mklines.Tools.SeenPrefs {
+		if tool.Validity == AfterPrefsMk && mklines != nil && mklines.Tools.SeenPrefs {
 			perms |= aclpUseLoadtime
 		}
 		return NewVartype(BtShellCommand, NoVartypeOptions, NewACLEntry("*", perms))
