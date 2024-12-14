@@ -908,6 +908,30 @@ func (s *Suite) Test_shquote(c *check.C) {
 	test("~", "'~'")
 }
 
+func Test_expandCurlyBraces(t *testing.T) {
+	tests := []struct {
+		s    string
+		want []string
+	}{
+		{"}", []string{"}"}},
+		{"{}{}{}{}{}{}{}", []string{""}},
+		{"{}}", []string{"}"}},
+		{"{}{}{}{}{}{}{}}", []string{"}"}},
+		{"{thir,f{our,if}}teen", []string{"thirteen", "fourteen", "fifteen"}},
+		{"pkgname<=1.0", []string{"pkgname<=1.0"}},
+		{"{pkgname,pkgname-client}<=1.0", []string{"pkgname<=1.0", "pkgname-client<=1.0"}},
+		{"a{b,c,{d,e}}f", []string{"abf", "acf", "adf", "aef"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.s, func(t *testing.T) {
+			got := expandCurlyBraces(tt.s)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
 func (s *Suite) Test_LazyStringBuilder_WriteByte__exact_match(c *check.C) {
 	t := s.Init(c)
 

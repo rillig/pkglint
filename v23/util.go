@@ -1018,6 +1018,42 @@ func hasBalancedBraces(text string) bool {
 	return n == 0
 }
 
+// expandCurlyBraces expands "a{b,c}d" to ["abd", "acd"].
+// The braces in s must be balanced, see hasBalancedBraces.
+func expandCurlyBraces(s string) []string {
+
+	find := func(i int, b byte) int {
+		n := 0
+		for ; i < len(s); i++ {
+			switch {
+			case (s[i] == '}' || s[i] == b) && n == 0:
+				return i
+			case s[i] == '{':
+				n++
+			case s[i] == '}':
+				n--
+			}
+		}
+		return i
+	}
+
+	lbrace := strings.IndexByte(s, '{')
+	rbrace := find(lbrace+1, '}')
+	if lbrace == -1 || rbrace == len(s) {
+		return []string{s}
+	}
+
+	var expanded []string
+	pieceStart := lbrace + 1
+	for pieceStart < rbrace+1 {
+		pieceEnd := find(pieceStart, ',')
+		word := s[0:lbrace] + s[pieceStart:pieceEnd] + s[rbrace+1:]
+		expanded = append(expanded, expandCurlyBraces(word)...)
+		pieceStart = pieceEnd + 1
+	}
+	return expanded
+}
+
 var pathMatchers = make(map[string]*pathMatcher)
 
 type pathMatcher struct {
