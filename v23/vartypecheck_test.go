@@ -420,10 +420,14 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern(c *check.C) {
 	// alternative patterns, using braces or brackets
 	vt.Values(
 		"mpg123{,-esound,-nas}>=0.59.18",
+		"seamonkey-{,-bin,-gtk1}<2.0",
 		"mysql*-{client,server}-[0-9]*",
 		"{ssh{,6}-[0-9]*,openssh-[0-9]*}",
 		"libao-[a-z]*-[0-9]*")
-	vt.OutputEmpty()
+	vt.Output(
+		"WARN: filename.mk:32: Invalid dependency pattern \"seamonkey-<2.0\".",
+		"WARN: filename.mk:32: Invalid dependency pattern \"seamonkey--bin<2.0\".",
+		"WARN: filename.mk:32: Invalid dependency pattern \"seamonkey--gtk1<2.0\".")
 
 	// variables
 	vt.Values(
@@ -458,9 +462,9 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern(c *check.C) {
 		// This pattern is invalid because the variable name doesn't contain "VER".
 		"WARN: filename.mk:45: Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3-${PYSQLITE_REQD}\".",
 		"WARN: filename.mk:48: Invalid dependency pattern \"${PKGNAME_NOREV:S/jdk/jre/}*\".",
-		"WARN: filename.mk:49: Invalid dependency pattern \"dovecot>=${PKGVERSION_NOREV}{nb*,}\".",
+		"WARN: filename.mk:49: The nb version part should have the form \"{,nb*}\" or \"{,nb[0-9]*}\", not \"{nb*,}\".",
 		"WARN: filename.mk:50: Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.",
-		"WARN: filename.mk:51: Invalid dependency pattern \"ja-vflib-lib-${VFLIB_VERSION}{,nb[0-9]}*\".",
+		"WARN: filename.mk:51: The nb version part should have the form \"{,nb*}\" or \"{,nb[0-9]*}\", not \"{,nb[0-9]}\".",
 		"WARN: filename.mk:52: Invalid dependency pattern \"${PYPKGPREFIX}-sphinx>=1.2.3nb1*\".")
 
 	// invalid dependency patterns

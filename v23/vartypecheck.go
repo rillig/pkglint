@@ -301,6 +301,37 @@ func (cv *VartypeCheck) ConfFiles() {
 
 func (cv *VartypeCheck) DependencyPattern() {
 	value := cv.Value
+	valueNoVar := cv.ValueNoVar
+
+	if contains(valueNoVar, "{") {
+		switch {
+		case !hasBalancedBraces(value):
+			cv.Errorf("Dependency pattern %q must have balanced braces.", value)
+			return
+		default:
+			mainValue, nbPart := value, ""
+			if hasSuffix(value, "{,nb*}") {
+				mainValue, nbPart = value[:len(value)-6], value[len(value)-6:]
+			} else if hasSuffix(value, "{,nb[0-9]*}") {
+				mainValue, nbPart = value[:len(value)-11], value[len(value)-11:]
+			}
+
+			if contains(cv.MkLine.WithoutMakeVariables(mainValue), "{") {
+				if m, expr := match1(mainValue, `(\{[^{]*\bnb\b.*?})`); m {
+					cv.Warnf("The nb version part should have the form "+
+						"\"{,nb*}\" or \"{,nb[0-9]*}\", not %q.", expr)
+				}
+				if value != valueNoVar {
+					trace.Step1("Skipping checks for dependency pattern %q.", value)
+					return
+				}
+				for _, p := range expandCurlyBraces(mainValue) {
+					cv.WithValue(p + nbPart).DependencyPattern()
+				}
+				return
+			}
+		}
+	}
 
 	parser := NewMkParser(nil, value)
 	deppat := parser.DependencyPattern()
@@ -315,15 +346,10 @@ func (cv *VartypeCheck) DependencyPattern() {
 			"For dependency patterns using the comparison operators,",
 			"this is not necessary.")
 
-	} else if deppat == nil && contains(cv.ValueNoVar, "{") {
-		// Don't warn about complicated patterns like "{ssh{,6}>=0,openssh>=0}"
-		// that pkglint doesn't understand as of January 2019.
-		return
-
 	} else if deppat == nil || rest != "" {
 		cv.Warnf("Invalid dependency pattern %q.", value)
 		cv.Explain(
-			"Typical dependencies have the following forms:",
+			"Typical dependency patterns have the following forms:",
 			"",
 			"\tpackage>=2.5",
 			"\tpackage-[0-9]*",
