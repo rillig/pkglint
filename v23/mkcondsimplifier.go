@@ -14,7 +14,7 @@ type MkCondSimplifier struct {
 }
 
 // SimplifyExpr replaces an unnecessarily complex condition with
-// a simpler condition that's still equivalent.
+// a simpler equivalent condition.
 //
 // * fromEmpty is true for the form empty(VAR...), and false for ${VAR...}.
 //
@@ -253,8 +253,8 @@ func (s *MkCondSimplifier) simplifyMatch(expr *MkExpr, fromEmpty bool, neg bool)
 	}
 
 	// For now, only suggest the replacement if the pattern
-	// actually contains wildcards. This mainly affects
-	// PKG_OPTIONS in the second part of options.mk files.
+	// actually contains wildcards, thereby disabling the suggestion
+	// for PKG_OPTIONS in the second part of options.mk files.
 	// There are many of these, and the pkgsrc developers got
 	// used to using '!empty' for them.
 	if exact {

@@ -117,7 +117,7 @@ func (ck *MkCondChecker) checkNotEmpty(not *MkCond) {
 	//
 	// This applies especially to the ${VAR:Mpattern} form.
 	//
-	// See MkCondChecker.simplify.
+	// See MkCondSimplifier.
 	if !hasPrefix(not.Empty.varname, "PKG_BUILD_OPTIONS.") {
 		return
 	}
