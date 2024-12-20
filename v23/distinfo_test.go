@@ -655,6 +655,10 @@ func (s *Suite) Test_distinfoLinesChecker_checkUnrecordedPatches(c *check.C) {
 	t.CreateFileLines("patches/CVS/Entries")
 	t.CreateFileDummyPatch("patches/patch-aa")
 	t.CreateFileDummyPatch("patches/patch-src-Makefile")
+	t.CreateFileDummyPatch("patches/patch-src-Makefile.orig")
+	t.CreateFileDummyPatch("patches/patch-src-Makefile.rej")
+	t.CreateFileDummyPatch("patches/patch-src-Makefile~")
+	t.CreateFileDummyPatch("patches/patch-src-Makefile~1~")
 	t.SetUpFileLines("distinfo",
 		CvsID,
 		"",
@@ -668,7 +672,15 @@ func (s *Suite) Test_distinfoLinesChecker_checkUnrecordedPatches(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: distinfo:3: Distfiles without version number should be placed in a versioned DIST_SUBDIR.",
 		"ERROR: distinfo: Patch \"patches/patch-aa\" is not recorded. Run \""+confMake+" makepatchsum\".",
-		"ERROR: distinfo: Patch \"patches/patch-src-Makefile\" is not recorded. Run \""+confMake+" makepatchsum\".")
+		"ERROR: distinfo: Patch \"patches/patch-src-Makefile\" is not recorded. Run \""+confMake+" makepatchsum\".",
+		// FIXME: is ignored
+		"ERROR: distinfo: Patch \"patches/patch-src-Makefile.orig\" is not recorded. Run \""+confMake+" makepatchsum\".",
+		// FIXME: is ignored
+		"ERROR: distinfo: Patch \"patches/patch-src-Makefile.rej\" is not recorded. Run \""+confMake+" makepatchsum\".",
+		// FIXME: is ignored
+		"ERROR: distinfo: Patch \"patches/patch-src-Makefile~\" is not recorded. Run \""+confMake+" makepatchsum\".",
+		// FIXME: is ignored
+		"ERROR: distinfo: Patch \"patches/patch-src-Makefile~1~\" is not recorded. Run \""+confMake+" makepatchsum\".")
 }
 
 // When checking the complete pkgsrc tree, pkglint has all the information it
