@@ -340,12 +340,28 @@ func (ck *distinfoLinesChecker) checkUnrecordedPatches() {
 
 	for _, entry := range patchEntries {
 		patchName := NewRelPathString(entry.Name())
-		if entry.Type().IsRegular() && ck.infos[patchName].isPatch != yes && patchName.HasPrefixText("patch-") {
+		if entry.Type().IsRegular() && ck.infos[patchName].isPatch != yes && ck.isPatch(patchName) {
 			line := NewLineWhole(ck.lines.Filename)
 			line.Errorf("Patch %q is not recorded. Run %q.",
 				line.Rel(ck.pkg.File(ck.patchdir.JoinNoClean(patchName))),
 				bmake("makepatchsum"))
 		}
+	}
+}
+
+func (*distinfoLinesChecker) isPatch(filename RelPath) bool {
+	// See function is_patch in mk/checksum/distinfo.awk.
+	switch {
+	case filename.HasPrefixText("patch-local-"):
+		return false
+	case filename.HasSuffixText(".orig"),
+		filename.HasSuffixText(".rej"),
+		filename.HasSuffixText("~"):
+		return false
+	case filename.HasPrefixText("patch-"):
+		return true
+	default:
+		return false
 	}
 }
 

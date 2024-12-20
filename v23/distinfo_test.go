@@ -672,15 +672,28 @@ func (s *Suite) Test_distinfoLinesChecker_checkUnrecordedPatches(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: distinfo:3: Distfiles without version number should be placed in a versioned DIST_SUBDIR.",
 		"ERROR: distinfo: Patch \"patches/patch-aa\" is not recorded. Run \""+confMake+" makepatchsum\".",
-		"ERROR: distinfo: Patch \"patches/patch-src-Makefile\" is not recorded. Run \""+confMake+" makepatchsum\".",
-		// FIXME: is ignored
-		"ERROR: distinfo: Patch \"patches/patch-src-Makefile.orig\" is not recorded. Run \""+confMake+" makepatchsum\".",
-		// FIXME: is ignored
-		"ERROR: distinfo: Patch \"patches/patch-src-Makefile.rej\" is not recorded. Run \""+confMake+" makepatchsum\".",
-		// FIXME: is ignored
-		"ERROR: distinfo: Patch \"patches/patch-src-Makefile~\" is not recorded. Run \""+confMake+" makepatchsum\".",
-		// FIXME: is ignored
-		"ERROR: distinfo: Patch \"patches/patch-src-Makefile~1~\" is not recorded. Run \""+confMake+" makepatchsum\".")
+		"ERROR: distinfo: Patch \"patches/patch-src-Makefile\" is not recorded. Run \""+confMake+" makepatchsum\".")
+}
+
+func (s *Suite) Test_distinfoLinesChecker_isPatch(c *check.C) {
+	t := s.Init(c)
+
+	test := func(filename RelPath, want bool) {
+		t.CheckEquals((&distinfoLinesChecker{}).isPatch(filename), want)
+	}
+
+	test("patch-Makefile", true)
+	test("patch-local-Makefile", false)
+	test("patch-Makefile.orig", false)
+	test("patch-Makefile.rej", false)
+	test("patch-Makefile~", false)
+	test("other", false)
+
+	// Mentioned in is_patch in mk/checksum/distinfo.awk
+	// but not used in practice.
+	test("emul-linux-patch-Makefile", false)
+
+	t.CheckOutputEmpty()
 }
 
 // When checking the complete pkgsrc tree, pkglint has all the information it
