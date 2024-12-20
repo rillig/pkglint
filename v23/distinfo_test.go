@@ -671,8 +671,8 @@ func (s *Suite) Test_distinfoLinesChecker_checkUnrecordedPatches(c *check.C) {
 		"ERROR: distinfo: Patch \"patches/patch-src-Makefile\" is not recorded. Run \""+confMake+" makepatchsum\".")
 }
 
-// When checking the complete pkgsrc tree, pkglint has all information it needs
-// to check whether different packages use the same distfile but require
+// When checking the complete pkgsrc tree, pkglint has all the information it
+// needs to check whether different packages use the same distfile but require
 // different hashes for it.
 //
 // In such a case, typically one of the packages should put its distfiles into
