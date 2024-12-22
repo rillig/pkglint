@@ -962,7 +962,8 @@ func joinSkipEmpty(sep string, elements ...string) string {
 	return strings.Join(nonempty, sep)
 }
 
-// joinCambridge returns "first, second conn third".
+// joinCambridge returns "first, second conn third",
+// with no comma before the connector.
 // It is used when each element is a single word.
 // Empty elements are ignored completely.
 func joinCambridge(conn string, elements ...string) string {
@@ -984,7 +985,8 @@ func joinCambridge(conn string, elements ...string) string {
 	return strings.Join(parts, "")
 }
 
-// joinOxford returns "first, second, conn third".
+// joinOxford returns "first, second, conn third",
+// with a comma before the connector.
 // It is used when each element may consist of multiple words.
 // Empty elements are ignored completely.
 func joinOxford(conn string, elements ...string) string {
