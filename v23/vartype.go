@@ -435,7 +435,6 @@ var (
 	BtCFlag                  = &BasicType{"CFlag", (*VartypeCheck).CFlag}
 	BtComment                = &BasicType{"Comment", (*VartypeCheck).Comment}
 	BtConfFiles              = &BasicType{"ConfFiles", (*VartypeCheck).ConfFiles}
-	BtDependencyPattern      = &BasicType{"DependencyPattern", (*VartypeCheck).DependencyPattern}
 	BtDependencyWithPath     = &BasicType{"DependencyWithPath", (*VartypeCheck).DependencyWithPath}
 	BtDistSuffix             = &BasicType{"DistSuffix", (*VartypeCheck).DistSuffix}
 	BtEmulPlatform           = &BasicType{"EmulPlatform", (*VartypeCheck).EmulPlatform}
@@ -460,6 +459,7 @@ var (
 	BtMakeTarget             = &BasicType{"MakeTarget", (*VartypeCheck).MakeTarget}
 	BtMessage                = &BasicType{"Message", (*VartypeCheck).Message}
 	BtOption                 = &BasicType{"Option", (*VartypeCheck).Option}
+	BtPackagePattern         = &BasicType{"PackagePattern", (*VartypeCheck).PackagePattern}
 	BtPathlist               = &BasicType{"Pathlist", (*VartypeCheck).Pathlist}
 	BtPathPattern            = &BasicType{"PathPattern", (*VartypeCheck).PathPattern}
 	BtPathname               = &BasicType{"Pathname", (*VartypeCheck).Pathname}

@@ -1172,13 +1172,13 @@ func (s *Suite) Test_LoadBuildlink3Data(c *check.C) {
 		id:        "package",
 		prefix:    "${PREFIX}",
 		pkgsrcdir: "../../category/package",
-		apiDepends: &DependencyPattern{
+		apiDepends: &PackagePattern{
 			Pkgbase: "package",
 			LowerOp: ">=",
 			Lower:   "0",
 		},
 		apiDependsLine: mklines.mklines[7],
-		abiDepends: &DependencyPattern{
+		abiDepends: &PackagePattern{
 			Pkgbase: "package",
 			LowerOp: ">=",
 			Lower:   "0.1",

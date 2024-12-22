@@ -14,7 +14,7 @@ type Buildlink3Checker struct {
 	pkgbase          string
 	pkgbaseLine      *MkLine
 	abiLine, apiLine *MkLine
-	abi, api         *DependencyPattern
+	abi, api         *PackagePattern
 }
 
 func CheckLinesBuildlink3Mk(mklines *MkLines) {
@@ -242,8 +242,9 @@ func (ck *Buildlink3Checker) checkVarassign(mkline *MkLine, pkgbase string) {
 	if varname == "BUILDLINK_ABI_DEPENDS."+pkgbase {
 		ck.abiLine = mkline
 		parser := NewMkParser(nil, value)
-		if dp := parser.DependencyPattern(); dp != nil && parser.EOF() {
-			ck.abi = dp
+		pattern := ParsePackagePattern(parser)
+		if pattern != nil && parser.EOF() {
+			ck.abi = pattern
 		}
 		doCheck = true
 	}
@@ -251,8 +252,9 @@ func (ck *Buildlink3Checker) checkVarassign(mkline *MkLine, pkgbase string) {
 	if varname == "BUILDLINK_API_DEPENDS."+pkgbase {
 		ck.apiLine = mkline
 		parser := NewMkParser(nil, value)
-		if dp := parser.DependencyPattern(); dp != nil && parser.EOF() {
-			ck.api = dp
+		pattern := ParsePackagePattern(parser)
+		if pattern != nil && parser.EOF() {
+			ck.api = pattern
 		}
 		doCheck = true
 	}
@@ -355,9 +357,9 @@ type Buildlink3Data struct {
 	id             Buildlink3ID
 	prefix         Path
 	pkgsrcdir      PackagePath
-	apiDepends     *DependencyPattern
+	apiDepends     *PackagePattern
 	apiDependsLine *MkLine
-	abiDepends     *DependencyPattern
+	abiDepends     *PackagePattern
 	abiDependsLine *MkLine
 }
 
@@ -389,18 +391,18 @@ func LoadBuildlink3Data(mklines *MkLines) *Buildlink3Data {
 
 		if varbase == "BUILDLINK_API_DEPENDS" && varid == data.id {
 			p := NewMkParser(nil, mkline.Value())
-			dep := p.DependencyPattern()
-			if dep != nil && p.EOF() {
-				data.apiDepends = dep
+			pattern := ParsePackagePattern(p)
+			if pattern != nil && p.EOF() {
+				data.apiDepends = pattern
 				data.apiDependsLine = mkline
 			}
 		}
 
 		if varbase == "BUILDLINK_ABI_DEPENDS" && varid == data.id {
 			p := NewMkParser(nil, mkline.Value())
-			dep := p.DependencyPattern()
-			if dep != nil && p.EOF() {
-				data.abiDepends = dep
+			pattern := ParsePackagePattern(p)
+			if pattern != nil && p.EOF() {
+				data.abiDepends = pattern
 				data.abiDependsLine = mkline
 			}
 		}
