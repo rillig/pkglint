@@ -403,7 +403,7 @@ func (s *Suite) Test_VartypeCheck_DependencyPattern(c *check.C) {
 		"WARN: filename.mk:11: Use \"5.*\" instead of \"5*\" as the version pattern.",
 		"WARN: filename.mk:12: Use \"perl5-[0-9]*\" instead of \"perl5-*\".",
 		"WARN: filename.mk:13: Use \"5.22{,nb*}\" instead of \"5.22\" as the version pattern.",
-		"WARN: filename.mk:15: The version pattern \"2.0-[0-9]*\" should not contain a hyphen.",
+		"ERROR: filename.mk:15: Dependency pattern \"gtksourceview-sharp-2.0\" is followed by extra text \"-[0-9]*\".",
 		"WARN: filename.mk:16: Only \"[0-9]*\" is allowed as the numeric part of a dependency, not \"[0-9\\.]*\".",
 		"WARN: filename.mk:16: The version pattern \"[0-9\\.]*\" should not contain a hyphen.")
 

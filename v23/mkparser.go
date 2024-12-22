@@ -400,7 +400,7 @@ func (p *MkParser) DependencyPattern() *DependencyPattern {
 
 		for p.mklex.Expr() != nil ||
 			lexer.SkipRegexp(regcomp(`^\[[^\]]+]`)) ||
-			lexer.SkipRegexp(regcomp(`^[\w\[\]*_.\-]+`)) {
+			lexer.SkipRegexp(regcomp(`^[\w*._]+`)) {
 		}
 
 		if !lexer.SkipString("{,nb*}") {
