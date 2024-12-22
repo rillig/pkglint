@@ -499,5 +499,6 @@ func (s *Suite) Test_HomepageChecker_classifyNetworkError(c *check.C) {
 	test(syscall.ECONNRESET, "unknown network error: connection reset by peer")
 	test(errors.New("unknown"), "unknown network error: unknown")
 	test(&net.AddrError{"msg", "addr"}, "unknown network error: address addr: msg")
+	test(&net.DNSError{Err: "msg", Name: "name", IsNotFound: true}, "name not found")
 	test(&net.DNSError{Err: "msg", Name: "name"}, "unknown network error: lookup name: msg")
 }

@@ -338,25 +338,26 @@ func (*HomepageChecker) hasAnySuffix(s string, suffixes ...string) bool {
 }
 
 func (*HomepageChecker) classifyNetworkError(err error) string {
-	cause := err
 again:
-	if wrapper, ok := cause.(interface{ Unwrap() error }); ok {
-		cause = wrapper.Unwrap()
-		goto again
-	}
-
-	if cause, ok := cause.(*net.DNSError); ok && cause.IsNotFound {
+	if cause, ok := err.(*net.DNSError); ok && cause.IsNotFound {
 		return "name not found"
 	}
 
-	if cause, ok := cause.(syscall.Errno); ok {
+	if cause, ok := err.(syscall.Errno); ok {
 		if cause == 10061 || cause == syscall.ECONNREFUSED {
 			return "connection refused"
 		}
 	}
 
-	if cause, ok := cause.(net.Error); ok && cause.Timeout() {
+	if cause, ok := err.(net.Error); ok && cause.Timeout() {
 		return "timeout"
+	}
+
+	if wrapper, ok := err.(interface{ Unwrap() error }); ok {
+		if cause := wrapper.Unwrap(); cause != nil {
+			err = wrapper.Unwrap()
+			goto again
+		}
 	}
 
 	return sprintf("unknown network error: %s", err)

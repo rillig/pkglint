@@ -647,6 +647,32 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__algorithms_in
 			"got BLAKE2s, Size, SHA512.")
 }
 
+func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__wrong_order_and_SHA512_missing(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package")
+	t.CreateFileLines("category/package/distinfo",
+		CvsID,
+		"",
+		"Size (package-1.0.txt) = 13 bytes",
+		"BLAKE2s (package-1.0.txt) = ee494623e60caeda840ed7de4fb70db4a36bc92b445b09f12b9ed46094e9bd59")
+
+	t.CreateFileLines("distfiles/package-1.0.txt",
+		"hello, world")
+	t.FinishSetUp()
+
+	G.Check(t.File("category/package"))
+
+	// This case doesn't happen in practice, therefore there's no autofix for it.
+	t.CheckOutputLines(
+		"ERROR: ~/category/package/distinfo:3: "+
+			"Expected BLAKE2s, SHA512, Size checksums "+
+			"for \"package-1.0.txt\", got Size, BLAKE2s.",
+		"ERROR: ~/category/package/distinfo:3: "+
+			"Missing SHA512 hash for package-1.0.txt.",
+	)
+}
+
 func (s *Suite) Test_distinfoLinesChecker_checkUnrecordedPatches(c *check.C) {
 	t := s.Init(c)
 
@@ -930,17 +956,14 @@ func (s *Suite) Test_distinfoFileInfo_hasDistfileAlgorithms__code_coverage(c *ch
 		"SHA512 (dist-a.tar.gz) = 1234",
 		"Size (dist-a.tar.gz) = 1234",
 
-		"SHA1 (dist-b.tar.gz) = 1234",
 		"other (dist-b.tar.gz) = 1234",
 		"SHA512 (dist-b.tar.gz) = 1234",
 		"Size (dist-b.tar.gz) = 1234",
 
-		"SHA1 (dist-c.tar.gz) = 1234",
 		"BLAKE2s (dist-c.tar.gz) = 1234",
 		"other (dist-c.tar.gz) = 1234",
 		"Size (dist-c.tar.gz) = 1234",
 
-		"SHA1 (dist-d.tar.gz) = 1234",
 		"BLAKE2s (dist-d.tar.gz) = 1234",
 		"SHA512 (dist-d.tar.gz) = 1234",
 		"other (dist-d.tar.gz) = 1234")
@@ -953,11 +976,11 @@ func (s *Suite) Test_distinfoFileInfo_hasDistfileAlgorithms__code_coverage(c *ch
 		"ERROR: distinfo:3: Expected BLAKE2s, SHA512, Size checksums for "+
 			"\"dist-a.tar.gz\", got other, BLAKE2s, SHA512, Size.",
 		"ERROR: distinfo:7: Expected BLAKE2s, SHA512, Size checksums for "+
-			"\"dist-b.tar.gz\", got SHA1, other, SHA512, Size.",
-		"ERROR: distinfo:11: Expected BLAKE2s, SHA512, Size checksums for "+
-			"\"dist-c.tar.gz\", got SHA1, BLAKE2s, other, Size.",
-		"ERROR: distinfo:15: Expected BLAKE2s, SHA512, Size checksums for "+
-			"\"dist-d.tar.gz\", got SHA1, BLAKE2s, SHA512, other.")
+			"\"dist-b.tar.gz\", got other, SHA512, Size.",
+		"ERROR: distinfo:10: Expected BLAKE2s, SHA512, Size checksums for "+
+			"\"dist-c.tar.gz\", got BLAKE2s, other, Size.",
+		"ERROR: distinfo:13: Expected BLAKE2s, SHA512, Size checksums for "+
+			"\"dist-d.tar.gz\", got BLAKE2s, SHA512, other.")
 }
 
 func (s *Suite) Test_computePatchSha1Hex(c *check.C) {
