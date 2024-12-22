@@ -7,25 +7,21 @@ func (s *Suite) Test_NewNetBSDProject(c *check.C) {
 
 	project := NewNetBSDProject()
 
-	t.CheckNotNil(project.deprecated)
-	t.CheckEquals(0, len(project.deprecated))
+	t.CheckEquals(project.Types().IsDefinedCanon("PKGNAME"), false)
 }
 
 func (s *Suite) Test_NetBSDProject_Deprecated(c *check.C) {
 	t := s.Init(c)
 
-	project := NewNetBSDProject()
-	project.deprecated["DEPRECATED"] = "Use NEW_AND_SHINY instead."
-	G.Project = project
+	G.Pkgsrc = nil
+	G.Project = NewNetBSDProject()
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
 		"DEPRECATED=\t${DEPRECATED}")
 
 	mklines.Check()
 
-	t.CheckOutputLines(
-		"WARN: filename.mk:2: Definition of DEPRECATED is deprecated. Use NEW_AND_SHINY instead.",
-		"WARN: filename.mk:2: Use of \"DEPRECATED\" is deprecated. Use NEW_AND_SHINY instead.")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_NetBSDProject_Types(c *check.C) {

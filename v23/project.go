@@ -18,23 +18,17 @@ type Project interface {
 }
 
 type NetBSDProject struct {
-	deprecated map[string]string
-	types      VarTypeRegistry
+	types VarTypeRegistry
 }
 
 func NewNetBSDProject() *NetBSDProject {
 	return &NetBSDProject{
-		map[string]string{},
 		NewVarTypeRegistry(),
 	}
 }
 
-func (p NetBSDProject) Deprecated(varname string) string {
-	deprecated := p.deprecated
-	if instead := deprecated[varname]; instead != "" {
-		return instead
-	}
-	return deprecated[varnameCanon(varname)]
+func (p NetBSDProject) Deprecated(string) string {
+	return ""
 }
 
 func (p NetBSDProject) Types() *VarTypeRegistry {
