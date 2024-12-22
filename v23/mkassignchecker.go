@@ -582,8 +582,8 @@ func (ck *MkAssignChecker) checkRightConfigureArgs() {
 		if !m || mkOpt != gnuOpt {
 			continue
 		}
-		mkline.Warnf("The option %q is already handled by %q.",
-			mkOpt, mkline.Rel(gnuConfigure))
+		mkline.Warnf("The option %q is already handled by %s.",
+			mkOpt, mkline.RelMkLine(gnuMkline))
 		mkline.Explain(
 			"Packages should not specify this option directly,",
 			"as the pkgsrc infrastructure may override its value",

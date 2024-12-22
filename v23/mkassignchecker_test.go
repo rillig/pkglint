@@ -373,6 +373,9 @@ func (s *Suite) Test_MkAssignChecker_checkLeftUserSettable(c *check.C) {
 		"APPEND_DIRS=\tdefault",
 		"#COMMENTED_SAME?=\tdefault",
 		"#COMMENTED_DIFF?=\tdefault")
+	t.CreateFileLines("mk/infra.mk",
+		MkCvsID,
+		"ASSIGN_DIFF?=\tinfra")
 	t.Chdir("category/package")
 	t.FinishSetUp()
 
@@ -389,6 +392,11 @@ func (s *Suite) Test_MkAssignChecker_checkLeftUserSettable(c *check.C) {
 		"WARN: Makefile:26: Packages should not append to user-settable APPEND_DIRS.",
 		"WARN: Makefile:28: Package sets user-defined \"COMMENTED_DIFF\" to \"pkg\", "+
 			"which differs from the default value \"default\" from mk/defaults/mk.conf.")
+
+	// No warnings, as the pkgsrc infrastructure may override defaults.
+	G.Check("../../mk/infra.mk")
+
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkAssignChecker_checkLeftUserSettable__before_prefs(c *check.C) {
@@ -831,11 +839,14 @@ func (s *Suite) Test_MkAssignChecker_checkOpAppendOnly(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpVartypes()
-	mklines := t.NewMkLines("filename.mk",
+	t.CreateFileLines("mk/bsd.prefs.mk")
+	t.Chdir("category/package")
+	mklines := t.SetUpFileMkLines("filename.mk",
 		MkCvsID,
 		"",
 		"CFLAGS=\t\t-O2",
 		"CFLAGS.SunOS=\t-O0",
+		"OBJCFLAGS=\t-O0",
 		"FFLAGS=\t\t-O0",
 		"RFLAGS=\t\t-O0",
 		"LFLAGS=\t\t-v",
@@ -844,7 +855,11 @@ func (s *Suite) Test_MkAssignChecker_checkOpAppendOnly(c *check.C) {
 		"PFLAGS=\t\t-O0",
 		"YFLAGS=\t\t-Wall",
 		"LDADD=\t\t-lc",
-		"GCC_REQD=\t12.0")
+		"GCC_REQD=\t12.0",
+		"",
+		".include \"../../mk/bsd.prefs.mk\"",
+		"",
+		"CFLAGS.SunOS=\t-O1")
 
 	mklines.Check()
 
@@ -854,23 +869,26 @@ func (s *Suite) Test_MkAssignChecker_checkOpAppendOnly(c *check.C) {
 	//  there's no point having these variables declared at the pkgsrc level.
 	t.CheckOutputLines(
 		"WARN: filename.mk:3: Assignments to \"CFLAGS\" should use \"+=\", not \"=\".",
-		"WARN: filename.mk:5: FFLAGS is defined but not used.",
-		"WARN: filename.mk:5: Assignments to \"FFLAGS\" should use \"+=\", not \"=\".",
-		"WARN: filename.mk:6: RFLAGS is defined but not used.",
-		"WARN: filename.mk:6: Assignments to \"RFLAGS\" should use \"+=\", not \"=\".",
-		"WARN: filename.mk:7: LFLAGS is defined but not used.",
-		"WARN: filename.mk:7: Assignments to \"LFLAGS\" should use \"+=\", not \"=\".",
-		"WARN: filename.mk:8: Assignments to \"LDFLAGS\" should use \"+=\", not \"=\".",
-		"WARN: filename.mk:9: LINTFLAGS is defined but not used.",
-		"WARN: filename.mk:9: Assignments to \"LINTFLAGS\" should use \"+=\", not \"=\".",
-		"WARN: filename.mk:10: PFLAGS is defined but not used.",
-		"WARN: filename.mk:10: Assignments to \"PFLAGS\" should use \"+=\", not \"=\".",
-		"WARN: filename.mk:11: YFLAGS is defined but not used.",
-		"WARN: filename.mk:11: Assignments to \"YFLAGS\" should use \"+=\", not \"=\".",
-		"WARN: filename.mk:12: LDADD is defined but not used.",
-		"WARN: filename.mk:12: Assignments to \"LDADD\" should use \"+=\", not \"=\".",
-		"WARN: filename.mk:13: Setting variable GCC_REQD should have a rationale.",
-		"WARN: filename.mk:13: Assignments to \"GCC_REQD\" should use \"+=\", not \"=\".")
+		"WARN: filename.mk:5: OBJCFLAGS is defined but not used.",
+		"WARN: filename.mk:5: Assignments to \"OBJCFLAGS\" should use \"+=\", not \"=\".",
+		"WARN: filename.mk:6: FFLAGS is defined but not used.",
+		"WARN: filename.mk:6: Assignments to \"FFLAGS\" should use \"+=\", not \"=\".",
+		"WARN: filename.mk:7: RFLAGS is defined but not used.",
+		"WARN: filename.mk:7: Assignments to \"RFLAGS\" should use \"+=\", not \"=\".",
+		"WARN: filename.mk:8: LFLAGS is defined but not used.",
+		"WARN: filename.mk:8: Assignments to \"LFLAGS\" should use \"+=\", not \"=\".",
+		"WARN: filename.mk:9: Assignments to \"LDFLAGS\" should use \"+=\", not \"=\".",
+		"WARN: filename.mk:10: LINTFLAGS is defined but not used.",
+		"WARN: filename.mk:10: Assignments to \"LINTFLAGS\" should use \"+=\", not \"=\".",
+		"WARN: filename.mk:11: PFLAGS is defined but not used.",
+		"WARN: filename.mk:11: Assignments to \"PFLAGS\" should use \"+=\", not \"=\".",
+		"WARN: filename.mk:12: YFLAGS is defined but not used.",
+		"WARN: filename.mk:12: Assignments to \"YFLAGS\" should use \"+=\", not \"=\".",
+		"WARN: filename.mk:13: LDADD is defined but not used.",
+		"WARN: filename.mk:13: Assignments to \"LDADD\" should use \"+=\", not \"=\".",
+		"WARN: filename.mk:14: Setting variable GCC_REQD should have a rationale.",
+		"WARN: filename.mk:14: Assignments to \"GCC_REQD\" should use \"+=\", not \"=\".",
+		"WARN: filename.mk:18: Assignments to \"CFLAGS.SunOS\" should use \"+=\", not \"=\".")
 }
 
 // After including bsd.prefs.mk, all assignments to GCC_REQD should use '+=',
@@ -1099,6 +1117,7 @@ func (s *Suite) Test_MkAssignChecker_checkRightConfigureArgs(c *check.C) {
 	t.CreateFileLines("mk/configure/gnu-configure.mk",
 		MkCvsID,
 		"",
+		"HAS_CONFIGURE=\tyes",
 		"CONFIGURE_ARGS+=\t--prefix=${GNU_CONFIGURE_PREFIX:Q}",
 		"CONFIGURE_ARGS+=\t--libdir=${GNU_CONFIGURE_LIBDIR}",
 		".if 1",
@@ -1107,7 +1126,8 @@ func (s *Suite) Test_MkAssignChecker_checkRightConfigureArgs(c *check.C) {
 		"CONFIGURE_ARGS+=\t--build=${MACHINE_GNU_PLATFORM:Q}",
 		".endif",
 		"CONFIGURE_ARGS+=\t--enable-option-checking=yes",
-		"CONFIGURE_ARGS+=\t--quiet")
+		"CONFIGURE_ARGS+=\t--quiet",
+		"CONFIGURE_ARGS+=\t-q")
 	t.Chdir("category/package")
 	t.FinishSetUp()
 
@@ -1116,13 +1136,13 @@ func (s *Suite) Test_MkAssignChecker_checkRightConfigureArgs(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: Makefile:21: "+
 			"The option \"--prefix\" is already handled "+
-			"by \"../../mk/configure/gnu-configure.mk\".",
+			"by ../../mk/configure/gnu-configure.mk:4.",
 		"WARN: Makefile:22: "+
 			"The option \"--build\" is already handled "+
-			"by \"../../mk/configure/gnu-configure.mk\".",
+			"by ../../mk/configure/gnu-configure.mk:7.",
 		"WARN: Makefile:26: "+
 			"The option \"--quiet\" is already handled "+
-			"by \"../../mk/configure/gnu-configure.mk\".")
+			"by ../../mk/configure/gnu-configure.mk:12.")
 }
 
 func (s *Suite) Test_MkAssignChecker_checkRightUseLanguages(c *check.C) {
@@ -1138,15 +1158,32 @@ func (s *Suite) Test_MkAssignChecker_checkRightUseLanguages(c *check.C) {
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
 		"",
-		"USE_LANGUAGES+=\tc c99 c++14 fortran")
+		"USE_LANGUAGES+=\tc c99 c++14 fortran ${OTHER}")
 
 	mklines.Check()
 
 	t.CheckOutputLines(
+		"WARN: filename.mk:3: OTHER is used but not defined.",
 		"WARN: filename.mk:3: The feature \"c99\" should be added "+
 			"to USE_CC_FEATURES instead of USE_LANGUAGES.",
 		"WARN: filename.mk:3: The feature \"c++14\" should be added "+
 			"to USE_CXX_FEATURES instead of USE_LANGUAGES.")
+}
+
+func (s *Suite) Test_MkAssignChecker_checkRightUseLanguages__outside_pkgsrc(c *check.C) {
+	t := s.Init(c)
+	G.Project = NewNetBSDProject()
+	G.Pkgsrc = nil
+
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"",
+		"USE_LANGUAGES+=\tc c99 c++14 fortran")
+
+	mklines.Check()
+
+	// No warning, as USE_LANGUAGES is a pkgsrc-specific variable.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkAssignChecker_checkMisc(c *check.C) {

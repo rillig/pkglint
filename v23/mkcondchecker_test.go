@@ -479,6 +479,14 @@ func (s *Suite) Test_MkCondChecker_checkAnd(c *check.C) {
 	test(
 		".if defined(VAR) || !empty(VAR:Mpattern)",
 		nil...)
+
+	// Since the second condition is not 'empty', the defined-empty
+	// redundancy does not apply.
+	// There is an undetected contradiction, though, as the two
+	// conditions are opposite.
+	test(
+		".if defined(VAR) && !defined(VAR)",
+		nil...)
 }
 
 func (s *Suite) Test_MkCondChecker_checkNotEmpty(c *check.C) {
@@ -784,6 +792,8 @@ func (s *Suite) Test_MkCondChecker_checkCompareWithNumPython(c *check.C) {
 		".elif ${_PYTHON_VERSION} < 310",
 		".elif \"\" < 310",
 		".elif ${_PYTHON_VERSION} < 3.10",
+		".elif ${_PYTHON_VERSION} == 310",
+		".elif ${_PYTHON_VERSION} != 311",
 		".endif")
 
 	mklines.Check()
@@ -960,13 +970,18 @@ func (s *Suite) Test_MkCondChecker_collectFacts(c *check.C) {
 		".      endif",
 		".    endif",
 		".  endif",
+		".endif",
+		"",
+		".ifndef VARNAME",
 		".endif")
 	var facts []VarFact
 
 	mklines.ForEach(func(mkline *MkLine) {
-		ck := NewMkCondChecker(mkline, mklines)
-		if mkline.NeedsCond() {
-			facts = append(facts, ck.collectFacts(mkline)...)
+		if mkline.IsDirective() {
+			ck := NewMkCondChecker(mkline, mklines)
+			if mkline.NeedsCond() {
+				facts = append(facts, ck.collectFacts(mkline)...)
+			}
 		}
 	})
 
