@@ -783,6 +783,7 @@ func (s *Suite) Test_MkCondChecker_checkCompareWithNumPython(c *check.C) {
 		".if ${_PYTHON_VERSION} < 38",
 		".elif ${_PYTHON_VERSION} < 310",
 		".elif \"\" < 310",
+		".elif ${_PYTHON_VERSION} < 3.10",
 		".endif")
 
 	mklines.Check()

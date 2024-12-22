@@ -109,6 +109,13 @@ func (s *Suite) Test_WalkMkStmt__invalid(c *check.C) {
 	test(MkCvsID,
 		".elif 2")
 
+	// '.elif' after '.else'
+	test(MkCvsID,
+		".if 0",
+		".else",
+		".elif 0",
+		".endif")
+
 	// '.else' without '.if'
 	test(MkCvsID,
 		".else")

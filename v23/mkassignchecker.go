@@ -25,12 +25,12 @@ func (ck *MkAssignChecker) check() {
 // checkLeft checks everything to the left of the assignment operator.
 func (ck *MkAssignChecker) checkLeft() {
 	varname := ck.MkLine.Varname()
-	if G.Pkgsrc != nil && !ck.mayBeDefined(varname) {
-		ck.MkLine.Warnf("Variable names starting with an underscore (%s) are reserved for internal pkgsrc use.", varname)
-	}
-
 	if G.Pkgsrc == nil {
 		goto checkExpr
+	}
+
+	if !ck.mayBeDefined(varname) {
+		ck.MkLine.Warnf("Variable names starting with an underscore (%s) are reserved for internal pkgsrc use.", varname)
 	}
 	ck.checkLeftNotUsed()
 	ck.checkLeftOpsys()
@@ -571,15 +571,16 @@ func (ck *MkAssignChecker) checkRightConfigureArgs() {
 	if !m {
 		return
 	}
-	gnuConfigure := G.Pkgsrc.File("mk/configure/gnu-configure.mk")
 
-	action := func(gnuMkline *MkLine) bool {
+	gnuConfigure := G.Pkgsrc.File("mk/configure/gnu-configure.mk")
+	gnuConfigureMk := LoadMk(gnuConfigure, pkg, MustSucceed|NotEmpty)
+	for _, gnuMkline := range gnuConfigureMk.mklines {
 		if !gnuMkline.IsVarassign() || gnuMkline.Varname() != "CONFIGURE_ARGS" {
-			return true
+			continue
 		}
 		m, gnuOpt := match1(gnuMkline.Value(), `^(--[\w-]+)=?`)
 		if !m || mkOpt != gnuOpt {
-			return true
+			continue
 		}
 		mkline.Warnf("The option %q is already handled by %q.",
 			mkOpt, mkline.Rel(gnuConfigure))
@@ -587,12 +588,9 @@ func (ck *MkAssignChecker) checkRightConfigureArgs() {
 			"Packages should not specify this option directly,",
 			"as the pkgsrc infrastructure may override its value",
 			"based on other variables.",
-			"See gnu-configure.mk for further details.")
-		return false
+			"See mk/configure/gnu-configure.mk for further details.")
+		break
 	}
-
-	mklines := LoadMk(gnuConfigure, pkg, 0)
-	mklines.ForEachEnd(action, func(lastMkline *MkLine) {})
 }
 
 func (ck *MkAssignChecker) checkRightUseLanguages() {

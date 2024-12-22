@@ -32,6 +32,27 @@ func (s *Suite) Test_MkAssignChecker_check(c *check.C) {
 		"WARN: Makefile:2: ac_cv_libpari_libs is defined but not used.")
 }
 
+func (s *Suite) Test_MkAssignChecker_check__outside_pkgsrc(c *check.C) {
+	t := s.Init(c)
+	G.Project = NewNetBSDProject()
+	G.Pkgsrc = nil
+	t.CreateFileLines("filename.mk",
+		MkCvsID,
+		"_CPPFLAGS.${t:Z}+=\t${FIX_RPATH}")
+
+	G.Check(t.File("filename.mk"))
+
+	t.CheckOutputLines(
+		// No warning about _CPPFLAGS being infrastructure-only.
+		"WARN: ~/filename.mk:2: Invalid variable modifier \"Z\" for \"t\".",
+		// XXX: This may be overzealous outside pkgsrc,
+		// XXX: without knowing any further context.
+		"WARN: ~/filename.mk:2: t is used but not defined.",
+		// No warning about FIX_RPATH being deprecated.
+		"WARN: ~/filename.mk:2: FIX_RPATH is used but not defined.",
+	)
+}
+
 // Pkglint once interpreted all lists as consisting of shell tokens,
 // splitting this URL at the ampersand.
 func (s *Suite) Test_MkAssignChecker_check__URL_with_shell_special_characters(c *check.C) {
@@ -814,13 +835,42 @@ func (s *Suite) Test_MkAssignChecker_checkOpAppendOnly(c *check.C) {
 		MkCvsID,
 		"",
 		"CFLAGS=\t\t-O2",
-		"CFLAGS.SunOS=\t-O0")
+		"CFLAGS.SunOS=\t-O0",
+		"FFLAGS=\t\t-O0",
+		"RFLAGS=\t\t-O0",
+		"LFLAGS=\t\t-v",
+		"LDFLAGS=\t-lc",
+		"LINTFLAGS=\t-T",
+		"PFLAGS=\t\t-O0",
+		"YFLAGS=\t\t-Wall",
+		"LDADD=\t\t-lc",
+		"GCC_REQD=\t12.0")
 
 	mklines.Check()
 
+	// TODO: The "defined but not used" warnings are wrong, as these
+	//  variables could be used by the pkgsrc infrastructure.
+	//  Or, if they really aren't passed to the *-build targets,
+	//  there's no point having these variables declared at the pkgsrc level.
 	t.CheckOutputLines(
-		"WARN: filename.mk:3: " +
-			"Assignments to \"CFLAGS\" should use \"+=\", not \"=\".")
+		"WARN: filename.mk:3: Assignments to \"CFLAGS\" should use \"+=\", not \"=\".",
+		"WARN: filename.mk:5: FFLAGS is defined but not used.",
+		"WARN: filename.mk:5: Assignments to \"FFLAGS\" should use \"+=\", not \"=\".",
+		"WARN: filename.mk:6: RFLAGS is defined but not used.",
+		"WARN: filename.mk:6: Assignments to \"RFLAGS\" should use \"+=\", not \"=\".",
+		"WARN: filename.mk:7: LFLAGS is defined but not used.",
+		"WARN: filename.mk:7: Assignments to \"LFLAGS\" should use \"+=\", not \"=\".",
+		"WARN: filename.mk:8: Assignments to \"LDFLAGS\" should use \"+=\", not \"=\".",
+		"WARN: filename.mk:9: LINTFLAGS is defined but not used.",
+		"WARN: filename.mk:9: Assignments to \"LINTFLAGS\" should use \"+=\", not \"=\".",
+		"WARN: filename.mk:10: PFLAGS is defined but not used.",
+		"WARN: filename.mk:10: Assignments to \"PFLAGS\" should use \"+=\", not \"=\".",
+		"WARN: filename.mk:11: YFLAGS is defined but not used.",
+		"WARN: filename.mk:11: Assignments to \"YFLAGS\" should use \"+=\", not \"=\".",
+		"WARN: filename.mk:12: LDADD is defined but not used.",
+		"WARN: filename.mk:12: Assignments to \"LDADD\" should use \"+=\", not \"=\".",
+		"WARN: filename.mk:13: Setting variable GCC_REQD should have a rationale.",
+		"WARN: filename.mk:13: Assignments to \"GCC_REQD\" should use \"+=\", not \"=\".")
 }
 
 // After including bsd.prefs.mk, all assignments to GCC_REQD should use '+=',
@@ -1044,7 +1094,8 @@ func (s *Suite) Test_MkAssignChecker_checkRightConfigureArgs(c *check.C) {
 		"CONFIGURE_ARGS+=\t--host=host-platform",
 		"CONFIGURE_ARGS+=\t--infodir=info-dir",
 		"CONFIGURE_ARGS+=\t--mandir=man-dir",
-		"CONFIGURE_ARGS+=\t--quiet")
+		"CONFIGURE_ARGS+=\t--quiet",
+		"CONFIGURE_ARGS+=\t-q")
 	t.CreateFileLines("mk/configure/gnu-configure.mk",
 		MkCvsID,
 		"",

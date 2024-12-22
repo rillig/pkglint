@@ -1,6 +1,7 @@
 package pkglint
 
 import (
+	"errors"
 	"github.com/rillig/pkglint/v23/histogram"
 	"gopkg.in/check.v1"
 	"strings"
@@ -312,6 +313,32 @@ func (s *Suite) Test_Logger_Diag__source_duplicates(c *check.C) {
 		"3 errors and 2 warnings found.",
 		t.Shquote("(Run \"pkglint -e --source -Wall %s %s\" to show explanations.)",
 			"category/package1", "category/package2"))
+}
+
+func (s *Suite) Test_Logger_Diag__wrong_type(c *check.C) {
+	t := s.Init(c)
+
+	t.Check(
+		func() {
+			line := t.NewLine("filename.mk", 123, "")
+			line.Notef("Argument %s has wrong type.", NewCurrPathString("."))
+		},
+		check.PanicMatches,
+		`interface conversion: interface {} is pkglint.CurrPath, not pkglint.RelPath`)
+	t.Check(
+		func() {
+			line := t.NewLine("filename.mk", 123, "")
+			line.Notef("Argument %f has wrong type.", 1.0)
+		},
+		check.PanicMatches,
+		`interface conversion: interface {} is float64, not string`)
+	t.Check(
+		func() {
+			line := t.NewLine("filename.mk", 123, "")
+			line.Notef("Argument %s has wrong type.", errors.New("err"))
+		},
+		check.PanicMatches,
+		`interface conversion: interface {} is \*errors.errorString, not string`)
 }
 
 func (s *Suite) Test_Logger_FirstTime__not_verbose(c *check.C) {
