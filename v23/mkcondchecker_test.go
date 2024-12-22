@@ -131,7 +131,7 @@ func (s *Suite) Test_MkCondChecker_Check(c *check.C) {
 		"WARN: filename.mk:4: MASTER_SITES should not be used at load time in any file.")
 
 	test(".if !",
-		"WARN: filename.mk:4: Invalid condition, unrecognized part: \"\".")
+		"WARN: filename.mk:4: Invalid condition, unrecognized part \"\".")
 
 	// TODO: There should be another error for the '.elif' outside '.if'.
 	test(".elif 0",
@@ -700,7 +700,7 @@ func (s *Suite) Test_MkCondChecker_checkCompare(c *check.C) {
 
 	// This is a shorthand for defined(VAR), but it is not used in practice.
 	test(".if VAR",
-		"WARN: filename.mk:1: Invalid condition, unrecognized part: \"VAR\".")
+		"WARN: filename.mk:1: Invalid condition, unrecognized part \"VAR\".")
 
 	// Calling a function with braces instead of parentheses is syntactically
 	// invalid. Pkglint is stricter than bmake in this situation.
@@ -712,7 +712,7 @@ func (s *Suite) Test_MkCondChecker_checkCompare(c *check.C) {
 	//
 	// See https://mail-index.netbsd.org/tech-pkg/2019/07/07/msg021539.html
 	test(".if !empty{VAR}",
-		"WARN: filename.mk:1: Invalid condition, unrecognized part: \"empty{VAR}\".")
+		"WARN: filename.mk:1: Invalid condition, unrecognized part \"empty{VAR}\".")
 }
 
 func (s *Suite) Test_MkCondChecker_checkCompareExprStr__no_tracing(c *check.C) {

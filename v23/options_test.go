@@ -378,7 +378,7 @@ func (s *Suite) Test_CheckLinesOptionsMk__malformed_condition(c *check.C) {
 	CheckLinesOptionsMk(mklines, "")
 
 	t.CheckOutputLines(
-		"WARN: category/package/options.mk:15: Invalid condition, unrecognized part: \"${OPSYS} == 'Darwin'\".")
+		"WARN: category/package/options.mk:15: Invalid condition, unrecognized part \"${OPSYS} == 'Darwin'\".")
 }
 
 func (s *Suite) Test_CheckLinesOptionsMk__PLIST_VARS_based_on_PKG_SUPPORTED_OPTIONS(c *check.C) {
