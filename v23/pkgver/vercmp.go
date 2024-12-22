@@ -78,7 +78,6 @@ func newVersion(vstr string) *version {
 	return &v
 }
 
-//go:noinline
 func (v *version) add(i int) {
 	v.v = append(v.v, i)
 }
