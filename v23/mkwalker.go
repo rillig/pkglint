@@ -99,5 +99,7 @@ func (w *MkWalker) walkModifier(mod MkExprModifier, time EctxTime) {
 		w.WalkText(pattern, time)
 		return
 	}
-	w.Diag.Errorf("Modifier \"%s\" not implemented.", mod.String())
+	// XXX: Assume that all other modifiers behave similarly to each other.
+	// See the ApplyModifier_* functions in bmake's var.c for details.
+	w.WalkText(mod.String(), time)
 }

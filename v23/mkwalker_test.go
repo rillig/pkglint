@@ -117,7 +117,9 @@ func (s *Suite) Test_MkWalker_walkModifier(c *check.C) {
 	mklines := t.NewMkLines("filename.mk",
 		"MOD.S=\t${VAR:S<from$<to<}",
 		"MOD.S=\t${VAR:S<${from}$<${to}<}",
-	)
+		"MOD.M=\t${VAR:M${pattern}}",
+		"MOD.SysV=\t${VAR:${from}=${to}}",
+		"MOD.assign=\t${VAR::=${VALUE}}")
 
 	mklines.ForEach(func(mkline *MkLine) {
 		action := func(expr *MkExpr, time EctxTime) {
@@ -128,8 +130,16 @@ func (s *Suite) Test_MkWalker_walkModifier(c *check.C) {
 	})
 
 	t.CheckOutputLines(
+		"ERROR: filename.mk:5: Assignment modifiers like \":=\" must not be used at all.",
 		"NOTE: filename.mk:1: Expression \"${VAR:S<from$<to<}\" at \"run\" time.",
 		"NOTE: filename.mk:2: Expression \"${VAR:S<${from}$<${to}<}\" at \"run\" time.",
 		"NOTE: filename.mk:2: Expression \"${from}\" at \"run\" time.",
-		"NOTE: filename.mk:2: Expression \"${to}\" at \"run\" time.")
+		"NOTE: filename.mk:2: Expression \"${to}\" at \"run\" time.",
+		"NOTE: filename.mk:3: Expression \"${VAR:M${pattern}}\" at \"run\" time.",
+		"NOTE: filename.mk:3: Expression \"${pattern}\" at \"run\" time.",
+		"NOTE: filename.mk:4: Expression \"${VAR:${from}=${to}}\" at \"run\" time.",
+		"NOTE: filename.mk:4: Expression \"${from}\" at \"run\" time.",
+		"NOTE: filename.mk:4: Expression \"${to}\" at \"run\" time.",
+		"NOTE: filename.mk:5: Expression \"${VAR::=${VALUE}}\" at \"run\" time.",
+		"NOTE: filename.mk:5: Expression \"${VALUE}\" at \"run\" time.")
 }
