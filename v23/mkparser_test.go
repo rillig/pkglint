@@ -209,6 +209,9 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	test("(((((${VAR} == \"value\")))))",
 		paren(paren(paren(paren(paren(cmp(cvar("VAR"), "==", cstr("value"))))))))
 
+	test("empty()",
+		empty(""))
+
 	// TODO: ok "${q}text${q} == ${VAR}"
 	// TODO: fail "text${q} == ${VAR}"
 	// TODO: ok "${VAR} == ${q}text${q}"
@@ -218,10 +221,6 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	testRest("defined()",
 		nil,
 		"defined()")
-
-	testRest("empty()",
-		nil,
-		"empty()")
 
 	testRest("empty(UNFINISHED",
 		nil,

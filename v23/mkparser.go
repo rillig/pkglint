@@ -239,11 +239,10 @@ func (p *MkParser) mkCondFunc() *MkCond {
 		}
 
 	case "empty":
-		if varname := p.mklex.Varname(); varname != "" {
-			modifiers := p.mklex.ExprModifiers(varname, ')')
-			if lexer.SkipByte(')') {
-				return &MkCond{Empty: NewMkExpr(varname, modifiers...)}
-			}
+		varname := p.mklex.Varname()
+		modifiers := p.mklex.ExprModifiers(varname, ')')
+		if lexer.SkipByte(')') {
+			return &MkCond{Empty: NewMkExpr(varname, modifiers...)}
 		}
 
 	case "commands", "exists", "make", "target":
