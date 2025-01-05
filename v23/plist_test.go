@@ -1227,7 +1227,7 @@ func (s *Suite) Test_PlistChecker_checkCond__unresolvable_variable(c *check.C) {
 		"WARN: Makefile:20: "+
 			"PLIST identifier \"mk-only\" is not used in any PLIST file.",
 		"WARN: Makefile:20: "+
-			"UNRESOLVABLE is used but not defined.")
+			"Variable \"UNRESOLVABLE\" is used but not defined.")
 }
 
 func (s *Suite) Test_PlistChecker_checkCond__hacks_mk(c *check.C) {

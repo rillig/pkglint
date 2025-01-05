@@ -68,7 +68,7 @@ func (ck *MkExprChecker) checkUndefined() {
 	}
 
 	if ck.MkLines.once.FirstTimeSlice("used but not defined", varname) {
-		ck.MkLine.Warnf("%s is used but not defined.", varname)
+		ck.MkLine.Warnf("Variable \"%s\" is used but not defined.", varname)
 	}
 }
 

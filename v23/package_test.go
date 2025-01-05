@@ -1030,7 +1030,7 @@ func (s *Suite) Test_Package_parse__builtin_mk(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: ~/category/package/Makefile:23: Use \"${ECHO}\" instead of \"echo\".",
-		"WARN: ~/category/package/Makefile:23: OTHER_VAR is used but not defined.")
+		"WARN: ~/category/package/Makefile:23: Variable \"OTHER_VAR\" is used but not defined.")
 }
 
 // Ensures that the paths in Package.included are indeed relative to the
@@ -1539,7 +1539,7 @@ func (s *Suite) Test_Package_checkDistfilesInDistinfo__unresolvable(c *check.C) 
 	// skips that part of the variable. It still checks all other files that
 	// are listed somewhere in DISTFILES.
 	t.CheckOutputLines(
-		"WARN: Makefile:23: UNKNOWN is used but not defined.",
+		"WARN: Makefile:23: Variable \"UNKNOWN\" is used but not defined.",
 		"WARN: Makefile:23: Distfile \"missing-i386-1.0.tar.gz\" "+
 			"is not mentioned in distinfo.",
 		"WARN: Makefile:26: Distfile \"missing-all-1.0.tar.gz\" "+

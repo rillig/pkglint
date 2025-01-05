@@ -419,9 +419,9 @@ func (s *Suite) Test_Pkgsrc_loadUntypedVars(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:4: INFRA_MK is used but not defined.",
-		"WARN: filename.mk:5: _UNTYPED is used but not defined.",
-		"WARN: filename.mk:6: INDIRECT_param is used but not defined.")
+		"WARN: filename.mk:4: Variable \"INFRA_MK\" is used but not defined.",
+		"WARN: filename.mk:5: Variable \"_UNTYPED\" is used but not defined.",
+		"WARN: filename.mk:6: Variable \"INDIRECT_param\" is used but not defined.")
 }
 
 func (s *Suite) Test_Pkgsrc_loadUntypedVars__badly_named_directory(c *check.C) {
@@ -772,7 +772,7 @@ func (s *Suite) Test_Pkgsrc_VariableType__from_mk(c *check.C) {
 	// infrastructure.
 	t.CheckOutputLines(
 		"WARN: ~/category/package/Makefile:21: PKGSRC_UNKNOWN_ENV is defined but not used.",
-		"WARN: ~/category/package/Makefile:21: ABCPATH is used but not defined.",
+		"WARN: ~/category/package/Makefile:21: Variable \"ABCPATH\" is used but not defined.",
 		"2 warnings found.",
 		t.Shquote("(Run \"pkglint -e -Wall %s\" to show explanations.)", "category/package"))
 }

@@ -622,7 +622,7 @@ func (s *Suite) Test_MkLine_ResolveExprsInRelPath__without_tracing(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: ~/buildlink3.mk:2: PKGPATH.multimedia/totem is used but not defined.")
+		"WARN: ~/buildlink3.mk:2: Variable \"PKGPATH.multimedia/totem\" is used but not defined.")
 }
 
 func (s *Suite) Test_MkLine_ResolveExprsInRelPath__assertion(c *check.C) {
@@ -954,7 +954,7 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__list_in_list(c *check.C) {
 
 	// Don't warn about missing :Q modifiers.
 	t.CheckOutputLines(
-		"WARN: x11/eterm/Makefile:2: PIXMAP_FILES is used but not defined.")
+		"WARN: x11/eterm/Makefile:2: Variable \"PIXMAP_FILES\" is used but not defined.")
 }
 
 func (s *Suite) Test_MkLine_VariableNeedsQuoting__PKGNAME_and_URL_list_in_URL_list(c *check.C) {

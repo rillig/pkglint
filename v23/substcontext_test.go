@@ -352,7 +352,7 @@ func (s *Suite) Test_SubstContext_varassignClasses__indirect(c *check.C) {
 	t.CheckOutputLines(
 		"ERROR: filename.mk:2: Identifiers for SUBST_CLASSES "+
 			"must not refer to other variables.",
-		"WARN: filename.mk:2: VAR is used but not defined.")
+		"WARN: filename.mk:2: Variable \"VAR\" is used but not defined.")
 }
 
 func (s *Suite) Test_SubstContext_varassignOutsideBlock__assign(c *check.C) {

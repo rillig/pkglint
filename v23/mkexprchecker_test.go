@@ -22,7 +22,7 @@ func (s *Suite) Test_MkExprChecker_Check(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:3: UNKNOWN is used but not defined.")
+		"WARN: filename.mk:3: Variable \"UNKNOWN\" is used but not defined.")
 }
 
 // The ${VARNAME:=suffix} expression should only be used with lists.
@@ -113,7 +113,7 @@ func (s *Suite) Test_MkExprChecker_Check__defined_in_infrastructure(c *check.C) 
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: ~/category/package/module.mk:3: UNDEFINED is used but not defined.")
+		"WARN: ~/category/package/module.mk:3: Variable \"UNDEFINED\" is used but not defined.")
 }
 
 func (s *Suite) Test_MkExprChecker_Check__build_defs(c *check.C) {
@@ -223,7 +223,7 @@ func (s *Suite) Test_MkExprChecker_checkUndefined(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:4: UNKNOWN is used but not defined.")
+		"WARN: filename.mk:4: Variable \"UNKNOWN\" is used but not defined.")
 }
 
 // PR 46570, item "15. net/uucp/Makefile has a make loop"
@@ -245,7 +245,7 @@ func (s *Suite) Test_MkExprChecker_checkUndefined__indirect_variables(c *check.C
 	//
 	// It does warn about simple variable names though, like ${var} in this example.
 	t.CheckOutputLines(
-		"WARN: net/uucp/Makefile:2: var is used but not defined.")
+		"WARN: net/uucp/Makefile:2: Variable \"var\" is used but not defined.")
 }
 
 // Documented variables are declared as both defined and used since, as
@@ -313,7 +313,7 @@ func (s *Suite) Test_MkExprChecker_checkModifiersSuffix(c *check.C) {
 		"WARN: file.mk:2: The text \":Q\" looks like a modifier but isn't.",
 		"WARN: file.mk:2: The :from=to modifier should only be used with lists, not with HOMEPAGE.",
 		"WARN: file.mk:2: The text \":Q\" looks like a modifier but isn't.",
-		"WARN: file.mk:4: BIN_PROGRAMS is used but not defined.")
+		"WARN: file.mk:4: Variable \"BIN_PROGRAMS\" is used but not defined.")
 }
 
 func (s *Suite) Test_MkExprChecker_checkModifiersRange(c *check.C) {
@@ -1293,7 +1293,7 @@ func (s *Suite) Test_MkExprChecker_checkQuoting__mstar(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: ~/options.mk:2: Use ${CFLAGS:M*:Q} instead of ${CFLAGS:Q}.",
-		"WARN: ~/options.mk:4: ADA_FLAGS is used but not defined.",
+		"WARN: ~/options.mk:4: Variable \"ADA_FLAGS\" is used but not defined.",
 		"WARN: ~/options.mk:6: Use ${CFLAGS:M*:Q} instead of ${CFLAGS:Q}.")
 }
 
@@ -1560,7 +1560,7 @@ func (s *Suite) Test_MkExprChecker_checkDeprecated(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:3: USE_CROSSBASE is used but not defined.",
+		"WARN: filename.mk:3: Variable \"USE_CROSSBASE\" is used but not defined.",
 		"WARN: filename.mk:3: Use of \"USE_CROSSBASE\" is deprecated. "+
 			"Has been removed.")
 }

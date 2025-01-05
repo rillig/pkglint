@@ -303,7 +303,7 @@ func (s *Suite) Test_CheckLinesOptionsMk(c *check.C) {
 	CheckLinesOptionsMk(mklines, "")
 
 	t.CheckOutputLines(
-		"WARN: ~/category/package/options.mk:6: l is used but not defined.",
+		"WARN: ~/category/package/options.mk:6: Variable \"l\" is used but not defined.",
 		"WARN: ~/category/package/options.mk:18: Undocumented option \"undeclared\".",
 		"WARN: ~/category/package/options.mk:21: "+
 			"The positive branch of the .if/.else should be the one where the option is set.",
@@ -776,6 +776,6 @@ func (s *Suite) Test_OptionsLinesChecker_handleLowerCondition__foreign_variable(
 	G.Check(t.File("category/package"))
 
 	t.CheckOutputLines(
-		"WARN: ~/category/package/options.mk:8: OTHER_VARIABLE is used but not defined.",
+		"WARN: ~/category/package/options.mk:8: Variable \"OTHER_VARIABLE\" is used but not defined.",
 		"WARN: ~/category/package/options.mk:4: Option \"opt\" should be handled below in an .if block.")
 }

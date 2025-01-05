@@ -23,7 +23,7 @@ func (s *Suite) Test_MkLineChecker__unclosed_expr(c *check.C) {
 		"WARN: Makefile:2: Missing closing \"}\" for \"EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\".",
 		"WARN: Makefile:2: Invalid part \"/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\" after variable name \"EGDIR\".",
 		"WARN: Makefile:2: EGDIRS is defined but not used.",
-		"WARN: Makefile:2: EGDIR/pam.d is used but not defined.")
+		"WARN: Makefile:2: Variable \"EGDIR/pam.d\" is used but not defined.")
 }
 
 func (s *Suite) Test_MkLineChecker_Check__buildlink3_include_prefs(c *check.C) {
@@ -86,7 +86,7 @@ func (s *Suite) Test_MkLineChecker_Check__expr_modifier_L(c *check.C) {
 			"Invalid part \"/xkbcomp\" after variable name \"${XKBBASE}\".",
 		"WARN: x11/xkeyboard-config/Makefile:3: "+
 			"Invalid part \"/xkbcomp\" after variable name \"${XKBBASE}\".",
-		"WARN: x11/xkeyboard-config/Makefile:3: XKBBASE is used but not defined.")
+		"WARN: x11/xkeyboard-config/Makefile:3: Variable \"XKBBASE\" is used but not defined.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkEmptyContinuation(c *check.C) {
@@ -168,7 +168,7 @@ func (s *Suite) Test_MkLineChecker_checkText__WRKSRC(c *check.C) {
 		"\tprocess\":",
 		"\thttps://www.NetBSD.org/docs/pkgsrc/pkgsrc.html#build.builddirs",
 		"",
-		"WARN: ~/module.mk:3: WRKSRC is used but not defined.")
+		"WARN: ~/module.mk:3: Variable \"WRKSRC\" is used but not defined.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkTextWrksrcDotDot(c *check.C) {
@@ -782,7 +782,7 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation__multiline_indented
 	t.ExpectDiagnosticsAutofix(
 		doTest,
 		"NOTE: ~/options.mk:2: This directive should be indented by 0 spaces.",
-		"WARN: ~/options.mk:2--3: PLATFORM is used but not defined.",
+		"WARN: ~/options.mk:2--3: Variable \"PLATFORM\" is used but not defined.",
 		// If the indentation should ever change here, it is probably
 		// because MkLineParser.parseDirective has been changed to
 		// behave more like bmake, which preserves a bit more of the
@@ -827,7 +827,7 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePath(c *check.C) {
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/module.mk:2: A main pkgsrc package must not depend on a pkgsrc-wip package.",
 		"ERROR: ~/category/package/module.mk:3: A main pkgsrc package must not depend on a pkgsrc-wip package.",
-		"WARN: ~/category/package/module.mk:5: LATEST_PYTHON is used but not defined.",
+		"WARN: ~/category/package/module.mk:5: Variable \"LATEST_PYTHON\" is used but not defined.",
 		"WARN: ~/category/package/module.mk:11: References to other packages should "+
 			"look like \"../../category/package\", not \"../package\".",
 		"WARN: ~/category/package/module.mk:12: References to other packages should "+
@@ -1115,9 +1115,8 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveFor(c *check.C) {
 
 		// TODO: Why not? The variable is guaranteed to be defined at this point.
 		"WARN: for.mk:15: DISTFILES should not be used at load time in any file.",
-		// TODO: Make it clear that "/" is a variable name.
 		// FIXME: Do not treat "$/" as an expression.
-		"WARN: for.mk:15: / is used but not defined.")
+		"WARN: for.mk:15: Variable \"/\" is used but not defined.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirectiveFor__continuation(c *check.C) {
@@ -1154,9 +1153,9 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveFor__items(c *check.C) {
 
 	// TODO: Warn about $a and $0 being ambiguous.
 	t.CheckOutputLines(
-		"WARN: filename.mk:2: < is used but not defined.",
-		"WARN: filename.mk:2: a is used but not defined.",
-		"WARN: filename.mk:2: 0 is used but not defined.")
+		"WARN: filename.mk:2: Variable \"<\" is used but not defined.",
+		"WARN: filename.mk:2: Variable \"a\" is used but not defined.",
+		"WARN: filename.mk:2: Variable \"0\" is used but not defined.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirectiveFor__infrastructure(c *check.C) {

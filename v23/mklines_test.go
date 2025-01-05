@@ -184,7 +184,7 @@ func (s *Suite) Test_MkLines_Check__loop_variable_used_outside_loop(c *check.C) 
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:4: msg is used but not defined.")
+		"WARN: filename.mk:4: Variable \"msg\" is used but not defined.")
 }
 
 // For parameterized variables, the "defined but not used" and
@@ -205,7 +205,7 @@ func (s *Suite) Test_MkLines_Check__expr_parameterized(c *check.C) {
 
 	// No warnings about CONFIGURE_ARGS.* being defined but not used or vice versa.
 	t.CheckOutputLines(
-		"WARN: converters/wv2/Makefile:2: ICONV_TYPE is used but not defined.")
+		"WARN: converters/wv2/Makefile:2: Variable \"ICONV_TYPE\" is used but not defined.")
 }
 
 // When an ODE runtime loop is used to expand variables to shell commands,
@@ -366,11 +366,11 @@ func (s *Suite) Test_MkLines_Check__indentation_unmatched(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: options.mk:5: GUARD_MK is used but not defined.",
-		"WARN: options.mk:7: FILES is used but not defined.",
-		"WARN: options.mk:8: GUARD2_MK is used but not defined.",
-		"WARN: options.mk:12: COND1 is used but not defined.",
-		"WARN: options.mk:13: COND2 is used but not defined.",
+		"WARN: options.mk:5: Variable \"GUARD_MK\" is used but not defined.",
+		"WARN: options.mk:7: Variable \"FILES\" is used but not defined.",
+		"WARN: options.mk:8: Variable \"GUARD2_MK\" is used but not defined.",
+		"WARN: options.mk:12: Variable \"COND1\" is used but not defined.",
+		"WARN: options.mk:13: Variable \"COND2\" is used but not defined.",
 		"ERROR: options.mk:14: \".else\" does not take arguments. If you meant \"else if\", use \".elif\".",
 		"ERROR: options.mk:18: Unmatched .endif.")
 }
@@ -397,7 +397,7 @@ func (s *Suite) Test_MkLines_Check__indentation_unguarded(c *check.C) {
 
 	t.CheckOutputLines(
 		"NOTE: options.mk:5: This directive should be indented by 0 spaces.",
-		"WARN: options.mk:5: GUARD_MK is used but not defined.",
+		"WARN: options.mk:5: Variable \"GUARD_MK\" is used but not defined.",
 		"NOTE: options.mk:6: This directive should be indented by 2 spaces.",
 		"NOTE: options.mk:7: This directive should be indented by 2 spaces.",
 		"NOTE: options.mk:8: This directive should be indented by 0 spaces.")
@@ -440,11 +440,11 @@ func (s *Suite) Test_MkLines_Check__indentation_guarded(c *check.C) {
 
 	t.CheckOutputLines(
 		"NOTE: options.mk:3: This directive should be indented by 0 spaces.",
-		"WARN: options.mk:3: GUARD_MK is used but not defined.",
+		"WARN: options.mk:3: Variable \"GUARD_MK\" is used but not defined.",
 		"NOTE: options.mk:7: This directive should be indented by 0 spaces.",
 		"NOTE: options.mk:8: This directive should be indented by 2 spaces.",
 		"NOTE: options.mk:9: This directive should be indented by 4 spaces.",
-		"WARN: options.mk:9: GUARD2_MK is used but not defined.",
+		"WARN: options.mk:9: Variable \"GUARD2_MK\" is used but not defined.",
 		"NOTE: options.mk:10: This directive should be indented by 6 spaces.",
 		"NOTE: options.mk:11: This directive should be indented by 6 spaces.",
 		"NOTE: options.mk:12: This directive should be indented by 4 spaces.",
@@ -787,7 +787,7 @@ func (s *Suite) Test_MkLines_collectVariables__BUILTIN_FIND_FILES_VAR(c *check.C
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: ~/category/package/builtin.mk:8: H_UNDEF is used but not defined.")
+		"WARN: ~/category/package/builtin.mk:8: Variable \"H_UNDEF\" is used but not defined.")
 }
 
 func (s *Suite) Test_MkLines_collectVariables__no_tracing(c *check.C) {
@@ -1232,7 +1232,7 @@ func (s *Suite) Test_MkLines_checkAll__VERSION_as_word_part_in_MASTER_SITES(c *c
 	t.CheckOutputLines(
 		"WARN: geography/viking/Makefile:2: "+
 			"The list variable MASTER_SITE_SOURCEFORGE should not be embedded in a word.",
-		"WARN: geography/viking/Makefile:2: VERSION is used but not defined.")
+		"WARN: geography/viking/Makefile:2: Variable \"VERSION\" is used but not defined.")
 }
 
 func (s *Suite) Test_MkLines_checkAll__shell_command_as_word_part_in_ENV_list(c *check.C) {

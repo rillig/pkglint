@@ -83,7 +83,7 @@ func (s *Suite) Test_Tools__USE_TOOLS_predefined_sed(c *check.C) {
 	// G.Pkgsrc.loadTools, AWK is not known at all.
 	t.CheckOutputLines(
 		"WARN: ~/module.mk:5: Unknown shell command \"${AWK}\".",
-		"WARN: ~/module.mk:5: AWK is used but not defined.",
+		"WARN: ~/module.mk:5: Variable \"AWK\" is used but not defined.",
 		"2 warnings found.",
 		t.Shquote("(Run \"pkglint -e -Wall %s\" to show explanations.)", "module.mk"))
 }

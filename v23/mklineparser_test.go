@@ -34,7 +34,7 @@ func (s *Suite) Test_MkLineParser_Parse__infrastructure(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: infra.mk:2: USE_BUILTIN.${_pkg_:S/^-//} is defined but not used.",
-		"WARN: infra.mk:2: _pkg_ is used but not defined.",
+		"WARN: infra.mk:2: Variable \"_pkg_\" is used but not defined.",
 		"ERROR: infra.mk:5: \".export\" requires arguments.",
 		"NOTE: infra.mk:2: This variable value should be aligned to column 41 instead of 39.",
 		"ERROR: infra.mk:10: Unmatched .endif.")

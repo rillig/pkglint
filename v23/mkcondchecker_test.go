@@ -40,8 +40,8 @@ func (s *Suite) Test_MkCondChecker_Check(c *check.C) {
 
 	test(
 		".if ${A} != ${B}",
-		"WARN: filename.mk:4: A is used but not defined.",
-		"WARN: filename.mk:4: B is used but not defined.")
+		"WARN: filename.mk:4: Variable \"A\" is used but not defined.",
+		"WARN: filename.mk:4: Variable \"B\" is used but not defined.")
 
 	test(".if ${HOMEPAGE} == \"mailto:someone@example.org\"",
 		"WARN: filename.mk:4: \"mailto:someone@example.org\" is not a valid URL.",
@@ -95,16 +95,16 @@ func (s *Suite) Test_MkCondChecker_Check(c *check.C) {
 	// to the comparison operator, and not to one of its arguments.
 	test(".if !${VAR} == value",
 		"WARN: filename.mk:4: The ! should use parentheses or be merged into the comparison operator.",
-		"WARN: filename.mk:4: VAR is used but not defined.")
+		"WARN: filename.mk:4: Variable \"VAR\" is used but not defined.")
 
 	// Doesn't occur in practice since this string can never be empty.
 	test(".if !\"${VAR}str\"",
-		"WARN: filename.mk:4: VAR is used but not defined.")
+		"WARN: filename.mk:4: Variable \"VAR\" is used but not defined.")
 
 	// Doesn't occur in practice since !${VAR} && !${VAR2} is more idiomatic.
 	test(".if !\"${VAR}${VAR2}\"",
-		"WARN: filename.mk:4: VAR is used but not defined.",
-		"WARN: filename.mk:4: VAR2 is used but not defined.")
+		"WARN: filename.mk:4: Variable \"VAR\" is used but not defined.",
+		"WARN: filename.mk:4: Variable \"VAR2\" is used but not defined.")
 
 	// Just for code coverage; always evaluates to true.
 	test(".if \"string\"",
@@ -115,13 +115,13 @@ func (s *Suite) Test_MkCondChecker_Check(c *check.C) {
 		nil...)
 
 	test(".if ${VAR}",
-		"WARN: filename.mk:4: VAR is used but not defined.")
+		"WARN: filename.mk:4: Variable \"VAR\" is used but not defined.")
 
 	test(".if ${VAR} == 3",
-		"WARN: filename.mk:4: VAR is used but not defined.")
+		"WARN: filename.mk:4: Variable \"VAR\" is used but not defined.")
 
 	test(".if \"value\" == ${VAR}",
-		"WARN: filename.mk:4: VAR is used but not defined.")
+		"WARN: filename.mk:4: Variable \"VAR\" is used but not defined.")
 
 	test(".if ${MASTER_SITES:Mftp://*} == \"ftp://netbsd.org/\"",
 		"WARN: filename.mk:4: Invalid variable modifier \"//*\" for \"MASTER_SITES\".",
@@ -137,7 +137,7 @@ func (s *Suite) Test_MkCondChecker_Check(c *check.C) {
 
 	// TODO: Warn about the ambiguous $f.
 	test(".if empty(PERDITION_SKIP_DISABLE:M$f)",
-		"WARN: filename.mk:4: PERDITION_SKIP_DISABLE is used but not defined.")
+		"WARN: filename.mk:4: Variable \"PERDITION_SKIP_DISABLE\" is used but not defined.")
 
 	// FIXME
 	test(".if !empty(:!${ECHO} yes | ${TOOLS_PLATFORM.m4} -s 2>/dev/null||${ECHO}!)",
@@ -157,7 +157,7 @@ func (s *Suite) Test_MkCondChecker_Check__tracing(c *check.C) {
 
 	t.CheckOutputLinesMatching(`^WARN|checkCompare`,
 		"TRACE: 1 2   checkCompareExprStr ${VAR:Mpattern1:Mpattern2} == comparison",
-		"WARN: filename.mk:2: VAR is used but not defined.")
+		"WARN: filename.mk:2: Variable \"VAR\" is used but not defined.")
 }
 
 func (s *Suite) Test_MkCondChecker_Check__comparison_with_shell_command(c *check.C) {
@@ -698,7 +698,7 @@ func (s *Suite) Test_MkCondChecker_checkCompare(c *check.C) {
 	// As of July 2019, pkglint doesn't have specific checks for comparing
 	// variables to numbers.
 	test(".if ${VAR} > 0",
-		"WARN: filename.mk:1: VAR is used but not defined.")
+		"WARN: filename.mk:1: Variable \"VAR\" is used but not defined.")
 
 	// For string comparisons, the checks from vartypecheck.go are
 	// performed.
@@ -761,7 +761,7 @@ func (s *Suite) Test_MkCondChecker_checkCompareWithNum(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: filename.mk:4: Numeric comparison > 6.5.",
 		"ERROR: filename.mk:4: _PYTHON_VERSION must not be compared numerically.",
-		"WARN: filename.mk:4: _PYTHON_VERSION is used but not defined.")
+		"WARN: filename.mk:4: Variable \"_PYTHON_VERSION\" is used but not defined.")
 }
 
 func (s *Suite) Test_MkCondChecker_checkCompareWithNumVersion(c *check.C) {

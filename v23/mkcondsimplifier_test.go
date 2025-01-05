@@ -277,7 +277,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord__undefined(c *check.C) {
 		".if ${UNDEFINED:Mpattern}",
 		".if ${UNDEFINED:Mpattern}",
 
-		"WARN: filename.mk:6: UNDEFINED is used but not defined.")
+		"WARN: filename.mk:6: Variable \"UNDEFINED\" is used but not defined.")
 }
 
 // Show how different kinds of ':M'-style patterns are replaced with simpler
@@ -493,7 +493,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord__N(c *check.C) {
 		".if ${UNDEFINED:Nnegative-pattern}",
 		".if ${UNDEFINED:Nnegative-pattern}",
 
-		"WARN: filename.mk:6: UNDEFINED is used but not defined.")
+		"WARN: filename.mk:6: Variable \"UNDEFINED\" is used but not defined.")
 
 	t.testAfterPrefs(
 		".if !empty(LATER:Npattern)",
@@ -645,7 +645,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord__complex(c *check.C) {
 		".if ${PREFS_DEFINED:Mpattern} != ${OTHER}",
 		".if ${PREFS_DEFINED:Mpattern} != ${OTHER}",
 
-		"WARN: filename.mk:6: OTHER is used but not defined.")
+		"WARN: filename.mk:6: Variable \"OTHER\" is used but not defined.")
 
 	// The condition is also simplified if it doesn't use the '!empty'
 	// form but the implicit conversion to boolean.
@@ -1031,7 +1031,7 @@ func (s *Suite) Test_MkCondSimplifier_isDefined(c *check.C) {
 		}
 	})
 	t.CheckOutputLines(
-		"WARN: filename.mk:3: UNDEFINED is used but not defined.")
+		"WARN: filename.mk:3: Variable \"UNDEFINED\" is used but not defined.")
 }
 
 func Test_MkCondSimplifier_mayMatchNumber(t *testing.T) {

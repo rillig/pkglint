@@ -14,7 +14,7 @@ func (s *Suite) Test_NewMkAssignChecker(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: filename.mk:1: VAR is defined but not used.",
-		"WARN: filename.mk:1: OTHER is used but not defined.")
+		"WARN: filename.mk:1: Variable \"OTHER\" is used but not defined.")
 }
 
 func (s *Suite) Test_MkAssignChecker_check(c *check.C) {
@@ -47,9 +47,9 @@ func (s *Suite) Test_MkAssignChecker_check__outside_pkgsrc(c *check.C) {
 		"WARN: ~/filename.mk:2: Invalid variable modifier \"Z\" for \"t\".",
 		// XXX: This may be overzealous outside pkgsrc,
 		// XXX: without knowing any further context.
-		"WARN: ~/filename.mk:2: t is used but not defined.",
+		"WARN: ~/filename.mk:2: Variable \"t\" is used but not defined.",
 		// No warning about FIX_RPATH being deprecated.
-		"WARN: ~/filename.mk:2: FIX_RPATH is used but not defined.",
+		"WARN: ~/filename.mk:2: Variable \"FIX_RPATH\" is used but not defined.",
 	)
 }
 
@@ -223,7 +223,7 @@ func (s *Suite) Test_MkAssignChecker_checkLeftNotUsed__infra(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: ~/category/package/Makefile:22: UNUSED_INFRA is defined but not used.",
-		"WARN: ~/category/package/Makefile:22: UNDOCUMENTED is used but not defined.")
+		"WARN: ~/category/package/Makefile:22: Variable \"UNDOCUMENTED\" is used but not defined.")
 }
 
 // https://gnats.netbsd.org/56352
@@ -520,7 +520,7 @@ func (s *Suite) Test_MkAssignChecker_checkLeftPermissions(c *check.C) {
 		"WARN: options.mk:3: The variable BUILD_DEFS should not be given a default value (only appended to) in this file.",
 		"WARN: options.mk:4: USE_TOOLS should not be used at load time in this file; "+
 			"it would be ok in Makefile.common or builtin.mk, but not buildlink3.mk or *.",
-		"WARN: options.mk:5: MY_TOOLS is used but not defined.",
+		"WARN: options.mk:5: Variable \"MY_TOOLS\" is used but not defined.",
 		"WARN: options.mk:10: "+
 			"The variable SET_ONLY should not be given a default value "+
 			"(only set) in this file.",
@@ -1163,7 +1163,7 @@ func (s *Suite) Test_MkAssignChecker_checkRightUseLanguages(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:3: OTHER is used but not defined.",
+		"WARN: filename.mk:3: Variable \"OTHER\" is used but not defined.",
 		"WARN: filename.mk:3: The feature \"c99\" should be added "+
 			"to USE_CC_FEATURES instead of USE_LANGUAGES.",
 		"WARN: filename.mk:3: The feature \"c++14\" should be added "+
@@ -1404,7 +1404,7 @@ func (s *Suite) Test_MkAssignChecker_checkExprShell(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: filename.mk:1: Unknown shell command \"grep\".",
-		"WARN: filename.mk:1: EXAMPLE_FILES is used but not defined.")
+		"WARN: filename.mk:1: Variable \"EXAMPLE_FILES\" is used but not defined.")
 }
 
 func (s *Suite) Test_MkAssignChecker_mayBeDefined(c *check.C) {

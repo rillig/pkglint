@@ -307,7 +307,7 @@ func (s *Suite) Test_Scope_FirstUse(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: file.mk:2: VAR1 is defined but not used.",
-		"WARN: file.mk:2: USED is used but not defined.",
+		"WARN: file.mk:2: Variable \"USED\" is used but not defined.",
 		"WARN: file.mk:3: VAR2 is defined but not used.")
 }
 

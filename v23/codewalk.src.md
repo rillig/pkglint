@@ -398,7 +398,7 @@ warnings and how to repair them properly:
 * Load the standard variables using `t.SetUpVartypes()`
 * Define the corresponding tool using `t.SetUpTool("tool", "TOOL", AtRunTime)`
 
-#### %s is used but not defined
+#### Variable "%s" is used but not defined
 
 * Load the standard variables using `t.SetUpVartypes()`
 

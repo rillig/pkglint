@@ -69,7 +69,7 @@ func (s *Suite) Test_SimpleCommandChecker_checkCommandStart__unknown_default(c *
 
 	test("-Wall",
 		"WARN: Makefile:8: Unknown shell command \"${UNKNOWN_TOOL}\".",
-		"WARN: Makefile:8: UNKNOWN_TOOL is used but not defined.")
+		"WARN: Makefile:8: Variable \"UNKNOWN_TOOL\" is used but not defined.")
 }
 
 // Despite its name, the TOOLS_PATH.* name the whole shell command,
@@ -222,7 +222,7 @@ func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable__parameterized(c
 
 	t.CheckOutputLines(
 		"WARN: Makefile:8: Unknown shell command \"${UNKNOWN_TOOL}\".",
-		"WARN: Makefile:8: UNKNOWN_TOOL is used but not defined.")
+		"WARN: Makefile:8: Variable \"UNKNOWN_TOOL\" is used but not defined.")
 }
 
 func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable__followed_by_literal(c *check.C) {
@@ -407,7 +407,7 @@ func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs(c *check.C) {
 	// Directories from .for loops are too dynamic to be replaced with AUTO_MKDIRS.
 	// TODO: Expand simple .for loops.
 	test("${RUN} ${INSTALL_DATA_DIR} ${PREFIX}/${dir}",
-		"WARN: filename.mk:1: dir is used but not defined.")
+		"WARN: filename.mk:1: Variable \"dir\" is used but not defined.")
 
 	// A directory that is not found in the PLIST would not be created by AUTO_MKDIRS,
 	// therefore only INSTALLATION_DIRS is suggested.
@@ -955,7 +955,7 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine(c *check.C) {
 		"  cd \"${WRKDIR}/extensions/$$subdir\" && "+
 		"  ${UNZIP_CMD} -aqo $$e; "+
 		"done",
-		"WARN: filename.mk:1: XPI_FILES is used but not defined.",
+		"WARN: filename.mk:1: Variable \"XPI_FILES\" is used but not defined.",
 		"WARN: filename.mk:1: Double quotes inside backticks inside double quotes are error prone.",
 		"WARN: filename.mk:1: The exitcode of \"${UNZIP_CMD}\" at the left of the | operator is ignored.")
 
@@ -1021,7 +1021,7 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__strip(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: filename.mk:1: Unknown shell command \"${STRIP}\".",
-		"WARN: filename.mk:1: STRIP is used but not defined.")
+		"WARN: filename.mk:1: Variable \"STRIP\" is used but not defined.")
 
 	t.SetUpVartypes()
 
@@ -1216,7 +1216,7 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__shell_variables(c *
 		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Make variable or $$f if you mean a shell variable.",
 		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Make variable or $$f if you mean a shell variable.",
 		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Make variable or $$f if you mean a shell variable.",
-		"WARN: Makefile:3: f is used but not defined.",
+		"WARN: Makefile:3: Variable \"f\" is used but not defined.",
 		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Make variable or $$f if you mean a shell variable.",
 		"WARN: Makefile:3: $f is ambiguous. Use ${f} if you mean a Make variable or $$f if you mean a shell variable.")
 
@@ -1491,12 +1491,12 @@ func (s *Suite) Test_ShellLineChecker_CheckWord(c *check.C) {
 	// No warning for the outer variable since it is completely indirect.
 	// The inner variable ${list} must still be defined, though.
 	test("${${list}}", false,
-		"WARN: filename.mk:1: list is used but not defined.")
+		"WARN: filename.mk:1: Variable \"list\" is used but not defined.")
 
 	// No warning for variables that are partly indirect.
 	// TODO: Why not?
 	test("${SED_FILE.${id}}", false,
-		"WARN: filename.mk:1: id is used but not defined.")
+		"WARN: filename.mk:1: Variable \"id\" is used but not defined.")
 
 	// TODO: Since $@ refers to ${.TARGET} and not sh.argv, there is no point in checking for quotes.
 	//  The corresponding code in ShellLineChecker.CheckWord should be removed.
