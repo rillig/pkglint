@@ -86,14 +86,12 @@ func (s *Suite) Test_ParsePackagePattern(c *check.C) {
 	test("${DISTNAME:S/gnome-vfs/gnome-vfs2-${GNOME_VFS_NAME}/}",
 		PackagePattern{"${DISTNAME:S/gnome-vfs/gnome-vfs2-${GNOME_VFS_NAME}/}", "", "", "", "", ""})
 
+	test("rt-*-[0-9]*",
+		PackagePattern{"rt-*", "", "", "", "", "[0-9]*"})
+
 	// FIXME
 	testRest("${LUA_PKGPREFIX}-std-_debug-[0-9]*",
 		PackagePattern{"${LUA_PKGPREFIX}-std", "", "", "", "", "_debug"},
-		"-[0-9]*")
-
-	// FIXME
-	testRest("rt-*-[0-9]*",
-		PackagePattern{"rt", "", "", "", "", "*"},
 		"-[0-9]*")
 
 	testRest("gnome-control-center>=2.20.1{,nb*}",

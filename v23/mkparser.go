@@ -308,6 +308,13 @@ func (p *MkParser) PkgbasePattern() string {
 // continues the package base (as in "mysql-client"), or whether it
 // starts the version (as in "mysql-1.0").
 func (*MkParser) isPkgbasePart(str string) bool {
+	if hasPrefix(str, "*-") {
+		// A plain "*" should not be used in a package pattern,
+		// as the pattern "prefix-*" can both match "prefix-server-1.0"
+		// and "prefix-1.0", which serve different purposes.
+		return true
+	}
+
 	lexer := textproc.NewLexer(str)
 
 	lexer.SkipByte('{')
