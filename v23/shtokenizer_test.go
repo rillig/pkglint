@@ -31,9 +31,10 @@ func (s *Suite) Test_ShTokenizer__examples_from_fuzzing(c *check.C) {
 	// Covers shAtomBacktSquot: return nil
 	test(
 		"`'$`",
-		"WARN: filename.mk:2: Internal pkglint error in ShTokenizer.ShAtom at \"$`\" (quoting=bs).",
+		"WARN: filename.mk:2: Expression \"$`\" has unusual single-character variable name \"`\".",
+		"WARN: filename.mk:2: Expression \"$`\" has unusual single-character variable name \"`\".",
 		"WARN: filename.mk:2: Pkglint ShellLine.CheckShellCommand: splitIntoShellTokens couldn't parse \"`'$`\"",
-		"WARN: filename.mk:2: Internal pkglint error in MkLine.Tokenize at \"$`\".")
+		"WARN: filename.mk:2: Expression \"$`\" has unusual single-character variable name \"`\".")
 
 	// Covers shAtomDquotBacktSquot: return nil
 	test(
@@ -44,9 +45,10 @@ func (s *Suite) Test_ShTokenizer__examples_from_fuzzing(c *check.C) {
 	// XXX: Pkglint should parse unescaped dollar in the same way, everywhere.
 	test(
 		"\"`$|",
-		"WARN: filename.mk:2: Internal pkglint error in ShTokenizer.ShAtom at \"$|\" (quoting=db).",
+		"WARN: filename.mk:2: Expression \"$|\" has unusual single-character variable name \"|\".",
+		"WARN: filename.mk:2: Expression \"$|\" has unusual single-character variable name \"|\".",
 		"WARN: filename.mk:2: Pkglint ShellLine.CheckShellCommand: splitIntoShellTokens couldn't parse \"\\\"`$|\"",
-		"WARN: filename.mk:2: Internal pkglint error in MkLine.Tokenize at \"$|\".")
+		"WARN: filename.mk:2: Expression \"$|\" has unusual single-character variable name \"|\".")
 
 	// Covers shAtomDquotBacktDquot: return nil
 	// XXX: Pkglint should support unlimited nesting.
@@ -68,9 +70,10 @@ func (s *Suite) Test_ShTokenizer__examples_from_fuzzing(c *check.C) {
 	// Covers shAtomSubshSquot: return nil
 	test(
 		"$$('$)",
-		"WARN: filename.mk:2: Internal pkglint error in ShTokenizer.ShAtom at \"$)\" (quoting=Ss).",
+		"WARN: filename.mk:2: Expression \"$)\" has unusual single-character variable name \")\".",
+		"WARN: filename.mk:2: Expression \"$)\" has unusual single-character variable name \")\".",
 		"WARN: filename.mk:2: Invoking subshells via $(...) is not portable enough.",
-		"WARN: filename.mk:2: Internal pkglint error in MkLine.Tokenize at \"$)\".")
+		"WARN: filename.mk:2: Expression \"$)\" has unusual single-character variable name \")\".")
 
 	// Covers shAtomDquotBackt: case lexer.AdvanceRegexp("^#[^`]*")
 	test(

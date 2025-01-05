@@ -1049,24 +1049,9 @@ func (s *Suite) Test_MkLexer_exprModifierSubst(c *check.C) {
 	// Using the backslash as separator means that it cannot be used for anything
 	// else, not even for escaping other characters.
 	test("S\\.post1\\\\1}", false, ".post1", "", "1", "}")
-}
 
-func (s *Suite) Test_MkLexer_exprModifierSubst__space_as_separator(c *check.C) {
-	t := s.Init(c)
-	t.SetUpVarType("VAR", BtUnknown, List)
-
-	mklines := t.NewMkLines("Makefile",
-		MkCvsID,
-		".for ts in ${:!cat timestamps!}",
-		"VAR+=\t-D${ts:C [0-5][0-9]$ 00 } -D${ts} src/${NB_SRC_DIR}",
-		".endfor")
-
-	mklines.Check()
-
-	// FIXME: ' ' as separator is unusual but works.
-	t.CheckOutputLines(
-		"WARN: Makefile:3: Invalid variable modifier \"-D${ts} src/${NB_SRC_DIR}\" for \"ts\".",
-		"WARN: Makefile:3: Missing closing \"}\" for \"ts\".")
+	// Using ' ' as a separator for the ':C' modifier is unusual but works.
+	test("C [0-5][0-9]$ 00 } -D${ts}", true, "[0-5][0-9]$", "00", "", "} -D${ts}")
 }
 
 func (s *Suite) Test_MkLexer_exprModifierAt__missing_at_after_variable_name(c *check.C) {

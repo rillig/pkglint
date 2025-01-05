@@ -60,7 +60,8 @@ func (s *Suite) Test_MkLineParser_Parse__comment_or_not(c *check.C) {
 
 	t.CheckEquals(mklineCommandUnescaped.IsComment(), true)
 	t.CheckEquals(mklineCommandUnescaped.Comment(), " $ sha1 patches/patch-ac")
-	t.CheckOutputEmpty() // No warning about parsing the lonely dollar sign.
+	t.CheckOutputLines(
+		"WARN: filename.mk:1: Expression \"$ \" has unusual single-character variable name \" \".")
 
 	mklineVarassignUnescaped := t.NewMkLine("filename.mk", 1, "SED_CMD=\t's,#,hash,'")
 
@@ -912,7 +913,8 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 				exprText("$ " /* instead of "${ }" */, " "),
 				text("character "),
 				text("$")),
-		})
+		},
+		"WARN: filename.mk:123: Expression \"$ \" has unusual single-character variable name \" \".")
 
 	// The character [ prevents the following # from starting a comment, even
 	// outside variable modifiers.
@@ -932,9 +934,11 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 			comment:    "comment",
 		})
 
-	// At this stage, MkLine.split doesn't know that empty(...) takes
-	// an expression. Instead, it just sees ordinary characters and
-	// other expressions.
+	// MkLine.split doesn't know that empty(...) takes an expression.
+	// Instead, it just sees ordinary characters and other expressions.
+	//
+	// Thus, Mkline.split cannot be used for splitting directive lines,
+	// it can only be used on strings handled by bmake's Var_Subst.
 	test(".if empty(${VAR.${tool}}:C/\\:.*$//:M${pattern})",
 		mkLineSplitResult{
 			main: ".if empty(${VAR.${tool}}:C/\\:.*$//:M${pattern})",
@@ -942,11 +946,12 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 				text(".if empty("),
 				expr("VAR.${tool}"),
 				text(":C/\\:.*"),
-				text("$"),
-				text("//:M"),
+				exprText("$/", "/"),
+				text("/:M"),
 				expr("pattern"),
 				text(")")),
-		})
+		},
+		"WARN: filename.mk:123: Expression \"$/\" has unusual single-character variable name \"/\".")
 
 	test("   # comment after spaces",
 		mkLineSplitResult{

@@ -19,7 +19,7 @@ import (
 // these edge cases anyway.
 type MkLexer struct {
 	lexer *textproc.Lexer
-	diag  Autofixer
+	diag  Autofixer // optional
 }
 
 func NewMkLexer(text string, diag Autofixer) *MkLexer {
@@ -83,12 +83,13 @@ func (p *MkLexer) Expr() *MkExpr {
 		// This is an escaped dollar character and not an expression.
 		return nil
 
-	case '>', '!', '<', '%', '?', '*', '@', ' ':
+	case '>', '!', '<', '%', '?', '*', '@':
 		// These variable names are known to exist.
 		//
 		// Many others are also possible but not used in practice.
 		// In particular, when parsing the :C or :S modifier,
-		// the $ must not be interpreted as a variable name,
+		// a trailing $ in the 'from' modifier part
+		// must not be interpreted as starting an expression,
 		// even when it looks like $/ could refer to the "/" variable.
 		//
 		// Example:
@@ -103,7 +104,15 @@ func (p *MkLexer) Expr() *MkExpr {
 		return NewMkExpr(rest[1:2])
 
 	default:
-		return p.exprAlnum()
+		expr := p.exprAlnum()
+		if expr != nil {
+			return expr
+		}
+		if p.diag != nil {
+			p.diag.Warnf("Expression \"%s\" has unusual single-character variable name \"%s\".", rest[0:2], rest[1:2])
+		}
+		p.lexer.Skip(2)
+		return NewMkExpr(rest[1:2])
 	}
 }
 
@@ -479,6 +488,10 @@ func (p *MkLexer) exprModifierSubst(closing byte) (ok bool, regex bool, from str
 
 	skipOther := func() {
 		for {
+			if rest := p.Rest(); len(rest) >= 2 && rest[0] == '$' && rest[1] == separator {
+				return
+			}
+
 			switch {
 
 			case p.Expr() != nil:
