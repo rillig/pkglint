@@ -306,9 +306,9 @@ func (s *Suite) Test_Scope_FirstUse(c *check.C) {
 	t.CheckNil(scope.FirstUse("UNUSED"))
 
 	t.CheckOutputLines(
-		"WARN: file.mk:2: VAR1 is defined but not used.",
+		"WARN: file.mk:2: Variable \"VAR1\" is defined but not used.",
 		"WARN: file.mk:2: Variable \"USED\" is used but not defined.",
-		"WARN: file.mk:3: VAR2 is defined but not used.")
+		"WARN: file.mk:3: Variable \"VAR2\" is defined but not used.")
 }
 
 func (s *Suite) Test_Scope_LastValue(c *check.C) {
@@ -328,7 +328,7 @@ func (s *Suite) Test_Scope_LastValue(c *check.C) {
 	t.CheckEquals(mklines.allVars.LastValue("VAR"), "third (conditional)")
 
 	t.CheckOutputLines(
-		"WARN: file.mk:2: VAR is defined but not used.")
+		"WARN: file.mk:2: Variable \"VAR\" is defined but not used.")
 }
 
 // Up to 2020-01-06, pkglint wrongly returned "one" as the variable value,
@@ -375,7 +375,7 @@ func (s *Suite) Test_Scope_LastValueFound(c *check.C) {
 	t.CheckEquals(indeterminate, false) // TODO: why?
 
 	t.CheckOutputLines(
-		"WARN: file.mk:2: VAR is defined but not used.")
+		"WARN: file.mk:2: Variable \"VAR\" is defined but not used.")
 }
 
 // Scope.DefineAll copies only the variable definitions,

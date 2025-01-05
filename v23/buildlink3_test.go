@@ -424,7 +424,7 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__multiple_inclusion_wrong(c *check.C
 
 	t.CheckOutputLines(
 		"WARN: buildlink3.mk:5: Variable \"HS_X11_BUILDLINK3_MK\" is used but not defined.",
-		"WARN: buildlink3.mk:6: UNRELATED_BUILDLINK3_MK is defined but not used.",
+		"WARN: buildlink3.mk:6: Variable \"UNRELATED_BUILDLINK3_MK\" is defined but not used.",
 		"WARN: buildlink3.mk:6: This line should consist of the following text: HS_X11_BUILDLINK3_MK:=")
 }
 

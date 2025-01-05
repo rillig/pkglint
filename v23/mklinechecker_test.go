@@ -22,7 +22,7 @@ func (s *Suite) Test_MkLineChecker__unclosed_expr(c *check.C) {
 		"WARN: Makefile:2: Invalid part \"/dbus-1/system.d ${EGDIR/pam.d\" after variable name \"EGDIR\".",
 		"WARN: Makefile:2: Missing closing \"}\" for \"EGDIR/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\".",
 		"WARN: Makefile:2: Invalid part \"/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\" after variable name \"EGDIR\".",
-		"WARN: Makefile:2: EGDIRS is defined but not used.",
+		"WARN: Makefile:2: Variable \"EGDIRS\" is defined but not used.",
 		"WARN: Makefile:2: Variable \"EGDIR/pam.d\" is used but not defined.")
 }
 
@@ -323,8 +323,8 @@ func (s *Suite) Test_MkLineChecker_checkVartype__no_tracing(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:2: UNKNOWN is defined but not used.",
-		"WARN: filename.mk:3: CUR_DIR is defined but not used.")
+		"WARN: filename.mk:2: Variable \"UNKNOWN\" is defined but not used.",
+		"WARN: filename.mk:3: Variable \"CUR_DIR\" is defined but not used.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkVartype__one_per_line(c *check.C) {

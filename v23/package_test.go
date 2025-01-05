@@ -443,7 +443,7 @@ func (s *Suite) Test_Package_load__variable_from_Makefile_used_in_builtin_mk(c *
 	// packages that depend on this package.
 	t.CheckOutputLines(
 		"WARN: ~/devel/binutils/Makefile:20: " +
-			"BINUTILS_PREFIX is defined but not used.")
+			"Variable \"BINUTILS_PREFIX\" is defined but not used.")
 }
 
 func (s *Suite) Test_Package_load__buildlink3_mk_includes_other_mk(c *check.C) {
@@ -467,7 +467,7 @@ func (s *Suite) Test_Package_load__buildlink3_mk_includes_other_mk(c *check.C) {
 	// therefore the warning is ok.
 	t.CheckOutputLines(
 		"WARN: ~/multimedia/libav/available.mk:3: "+
-			"LIBAV_AVAILABLE is defined but not used.",
+			"Variable \"LIBAV_AVAILABLE\" is defined but not used.",
 		"",
 		"\tThis might be a simple typo.",
 		"",
@@ -540,7 +540,7 @@ func (s *Suite) Test_Package_load__extra_files(c *check.C) {
 		"ERROR: gnu-style.mk:3: Unknown makefile line format: \"else\".",
 		"ERROR: gnu-style.mk:5: Unknown makefile line format: \"endif\".",
 		"ERROR: gnu-style.mk:1: Expected \""+MkCvsID+"\".",
-		"WARN: gnu-style.mk:2: IS_GCC is defined but not used.",
+		"WARN: gnu-style.mk:2: Variable \"IS_GCC\" is defined but not used.",
 		"WARN: gnu-style.mk:2: Variable IS_GCC is overwritten in line 4.",
 
 		// There is no warning about files/gnu-style.mk since pkglint
@@ -562,7 +562,7 @@ func (s *Suite) Test_Package_load__extra_files(c *check.C) {
 		"ERROR: ../../category/other/gnu-style.mk:3: Unknown makefile line format: \"else\".",
 		"ERROR: ../../category/other/gnu-style.mk:5: Unknown makefile line format: \"endif\".",
 		"ERROR: ../../category/other/gnu-style.mk:1: Expected \""+MkCvsID+"\".",
-		"WARN: ../../category/other/gnu-style.mk:2: IS_GCC is defined but not used.",
+		"WARN: ../../category/other/gnu-style.mk:2: Variable \"IS_GCC\" is defined but not used.",
 		"WARN: ../../category/other/gnu-style.mk:2: Variable IS_GCC is overwritten in line 4.",
 
 		"ERROR: patches/patch-Makefile.mk: Contains no patch.",
@@ -2014,7 +2014,7 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__redundancy_in_infra(c *ch
 		"NOTE: category/package/redundant.mk:3: "+
 			"Definition of PKG_REDUNDANT is redundant because of line 2.",
 		"WARN: category/package/redundant.mk:2: "+
-			"PKG_REDUNDANT is defined but not used.")
+			"Variable \"PKG_REDUNDANT\" is defined but not used.")
 
 	G.Check("mk/redundant.mk")
 
@@ -2039,7 +2039,7 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__redundancy_in_infra(c *ch
 		"NOTE: category/package/redundant.mk:3: "+
 			"Definition of PKG_REDUNDANT is redundant because of line 2.",
 		"WARN: category/package/redundant.mk:2: "+
-			"PKG_REDUNDANT is defined but not used.")
+			"Variable \"PKG_REDUNDANT\" is defined but not used.")
 }
 
 // When a package defines PLIST_SRC, it may or may not use the

@@ -353,7 +353,7 @@ func (s *Suite) Test_Pkglint_Main__Wall(c *check.C) {
 
 	t.CheckEquals(exitcode, 0)
 	t.CheckOutputLines(
-		"WARN: Makefile:20: UNUSED is defined but not used.",
+		"WARN: Makefile:20: Variable \"UNUSED\" is defined but not used.",
 		"1 warning found.",
 		"(Run \"pkglint -e -Wall\" to show explanations.)")
 }
@@ -382,7 +382,7 @@ func (s *Suite) Test_Pkglint_Main__Werror_warning(c *check.C) {
 
 	t.CheckEquals(exitcode, 1)
 	t.CheckOutputLines(
-		"WARN: Makefile:20: UNUSED is defined but not used.",
+		"WARN: Makefile:20: Variable \"UNUSED\" is defined but not used.",
 		"1 warning found.",
 		"(Run \"pkglint -e -Werror\" to show explanations.)")
 }

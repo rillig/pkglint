@@ -19,7 +19,7 @@ func (s *Suite) Test_CheckdirCategory__totally_broken(c *check.C) {
 	t.CheckOutputLines(
 		"ERROR: ~/archivers/Makefile:1: Expected \"# $"+"NetBSD$\".",
 		"WARN: ~/archivers/Makefile:4: Line contains invalid character \"U+2019\".",
-		"WARN: ~/archivers/Makefile:4: SUBDIR- is defined but not used.",
+		"WARN: ~/archivers/Makefile:4: Variable \"SUBDIR-\" is defined but not used.",
 		"NOTE: ~/archivers/Makefile:2: This variable value should be aligned to column 17 instead of 9.",
 		"NOTE: ~/archivers/Makefile:3: This variable value should be aligned with tabs, not spaces, to column 17 instead of 10.",
 		"NOTE: ~/archivers/Makefile:4: This variable value should be aligned to column 17 instead of 9.",

@@ -480,9 +480,9 @@ func (s *Suite) Test_MkExprChecker_checkVarnameBuildlink(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: Makefile:20: Buildlink identifier \"library\" is not known in this package.",
 		"WARN: Makefile:22: Buildlink identifier \"package\" is not known in this package.",
-		"WARN: buildlink3.mk:12: BL3 is defined but not used.",
+		"WARN: buildlink3.mk:12: Variable \"BL3\" is defined but not used.",
 		"WARN: buildlink3.mk:12: Buildlink identifier \"unknown-bl3\" is not known in this package.",
-		"WARN: builtin.mk:2: BUILTIN is defined but not used.",
+		"WARN: builtin.mk:2: Variable \"BUILTIN\" is defined but not used.",
 		"WARN: builtin.mk:2: Buildlink identifier \"unknown-builtin\" is not known in this package.",
 		"WARN: options.mk:7: Buildlink identifier \"package\" is not known in this package.")
 }
@@ -1142,7 +1142,7 @@ func (s *Suite) Test_MkExprChecker_warnToolLoadTime(c *check.C) {
 			"bsd.prefs.mk has to be included before.",
 		"WARN: Makefile:6: Variable names starting with an underscore "+
 			"(_TOOLS_VARNAME.mk-tool) are reserved for internal pkgsrc use.",
-		"WARN: Makefile:6: _TOOLS_VARNAME.mk-tool is defined but not used.")
+		"WARN: Makefile:6: Variable \"_TOOLS_VARNAME.mk-tool\" is defined but not used.")
 }
 
 // This somewhat unrealistic case demonstrates how there can be a tool in a
@@ -1167,8 +1167,8 @@ func (s *Suite) Test_MkExprChecker_warnToolLoadTime__local_tool(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: ~/category/package/Makefile:5: Variable names starting with an underscore (_TOOLS_VARNAME.mk-tool) are reserved for internal pkgsrc use.",
-		"WARN: ~/category/package/Makefile:5: _TOOLS_VARNAME.mk-tool is defined but not used.",
-		"WARN: ~/category/package/Makefile:7: TOOL_OUTPUT is defined but not used.",
+		"WARN: ~/category/package/Makefile:5: Variable \"_TOOLS_VARNAME.mk-tool\" is defined but not used.",
+		"WARN: ~/category/package/Makefile:7: Variable \"TOOL_OUTPUT\" is defined but not used.",
 		"WARN: ~/category/package/Makefile:7: The tool ${MK_TOOL} cannot be used at load time.")
 }
 

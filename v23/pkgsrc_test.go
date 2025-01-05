@@ -771,7 +771,7 @@ func (s *Suite) Test_Pkgsrc_VariableType__from_mk(c *check.C) {
 	// and CPPPATH since these two variables are defined somewhere in the
 	// infrastructure.
 	t.CheckOutputLines(
-		"WARN: ~/category/package/Makefile:21: PKGSRC_UNKNOWN_ENV is defined but not used.",
+		"WARN: ~/category/package/Makefile:21: Variable \"PKGSRC_UNKNOWN_ENV\" is defined but not used.",
 		"WARN: ~/category/package/Makefile:21: Variable \"ABCPATH\" is used but not defined.",
 		"2 warnings found.",
 		t.Shquote("(Run \"pkglint -e -Wall %s\" to show explanations.)", "category/package"))

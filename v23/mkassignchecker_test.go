@@ -13,7 +13,7 @@ func (s *Suite) Test_NewMkAssignChecker(c *check.C) {
 	ck.check()
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:1: VAR is defined but not used.",
+		"WARN: filename.mk:1: Variable \"VAR\" is defined but not used.",
 		"WARN: filename.mk:1: Variable \"OTHER\" is used but not defined.")
 }
 
@@ -29,7 +29,7 @@ func (s *Suite) Test_MkAssignChecker_check(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:2: ac_cv_libpari_libs is defined but not used.")
+		"WARN: Makefile:2: Variable \"ac_cv_libpari_libs\" is defined but not used.")
 }
 
 func (s *Suite) Test_MkAssignChecker_check__outside_pkgsrc(c *check.C) {
@@ -138,8 +138,8 @@ func (s *Suite) Test_MkAssignChecker_checkLeft__infrastructure(c *check.C) {
 	G.Check(t.File("wip/mk/infra.mk"))
 
 	t.CheckOutputLines(
-		"WARN: ~/mk/infra.mk:2: _VARNAME is defined but not used.",
-		"WARN: ~/wip/mk/infra.mk:2: _CVS_ENV is defined but not used.")
+		"WARN: ~/mk/infra.mk:2: Variable \"_VARNAME\" is defined but not used.",
+		"WARN: ~/wip/mk/infra.mk:2: Variable \"_CVS_ENV\" is defined but not used.")
 }
 
 func (s *Suite) Test_MkAssignChecker_checkLeft__documented_underscore(c *check.C) {
@@ -179,7 +179,7 @@ func (s *Suite) Test_MkAssignChecker_checkLeftNotUsed__procedure_call(c *check.C
 	// This has the added benefit that the parameter is only evaluated
 	// once, especially if it contains references to other variables.
 	t.CheckOutputLines(
-		"WARN: ~/category/package/filename.mk:6: VAR is defined but not used.")
+		"WARN: ~/category/package/filename.mk:6: Variable \"VAR\" is defined but not used.")
 }
 
 func (s *Suite) Test_MkAssignChecker_checkLeftNotUsed__procedure_call_no_tracing(c *check.C) {
@@ -222,7 +222,7 @@ func (s *Suite) Test_MkAssignChecker_checkLeftNotUsed__infra(c *check.C) {
 	G.Check(t.File("category/package"))
 
 	t.CheckOutputLines(
-		"WARN: ~/category/package/Makefile:22: UNUSED_INFRA is defined but not used.",
+		"WARN: ~/category/package/Makefile:22: Variable \"UNUSED_INFRA\" is defined but not used.",
 		"WARN: ~/category/package/Makefile:22: Variable \"UNDOCUMENTED\" is used but not defined.")
 }
 
@@ -342,7 +342,7 @@ func (s *Suite) Test_MkAssignChecker_checkLeftBsdPrefs__vartype_nil(c *check.C) 
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: builtin.mk:2: VAR_SH is defined but not used.",
+		"WARN: builtin.mk:2: Variable \"VAR_SH\" is defined but not used.",
 		"WARN: builtin.mk:2: Include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
 }
 
@@ -466,7 +466,7 @@ func (s *Suite) Test_MkAssignChecker_checkLeftUserSettable__vartype_nil(c *check
 	//  comment. Therefore, it doesn't know that USER_SETTABLE is intended to be
 	//  used by other packages. There should be no warning.
 	t.CheckOutputLines(
-		"WARN: Makefile:20: USER_SETTABLE is defined but not used.")
+		"WARN: Makefile:20: Variable \"USER_SETTABLE\" is defined but not used.")
 }
 
 func (s *Suite) Test_MkAssignChecker_checkLeftPermissions__hacks_mk(c *check.C) {
@@ -869,22 +869,22 @@ func (s *Suite) Test_MkAssignChecker_checkOpAppendOnly(c *check.C) {
 	//  there's no point having these variables declared at the pkgsrc level.
 	t.CheckOutputLines(
 		"WARN: filename.mk:3: Assignments to \"CFLAGS\" should use \"+=\", not \"=\".",
-		"WARN: filename.mk:5: OBJCFLAGS is defined but not used.",
+		"WARN: filename.mk:5: Variable \"OBJCFLAGS\" is defined but not used.",
 		"WARN: filename.mk:5: Assignments to \"OBJCFLAGS\" should use \"+=\", not \"=\".",
-		"WARN: filename.mk:6: FFLAGS is defined but not used.",
+		"WARN: filename.mk:6: Variable \"FFLAGS\" is defined but not used.",
 		"WARN: filename.mk:6: Assignments to \"FFLAGS\" should use \"+=\", not \"=\".",
-		"WARN: filename.mk:7: RFLAGS is defined but not used.",
+		"WARN: filename.mk:7: Variable \"RFLAGS\" is defined but not used.",
 		"WARN: filename.mk:7: Assignments to \"RFLAGS\" should use \"+=\", not \"=\".",
-		"WARN: filename.mk:8: LFLAGS is defined but not used.",
+		"WARN: filename.mk:8: Variable \"LFLAGS\" is defined but not used.",
 		"WARN: filename.mk:8: Assignments to \"LFLAGS\" should use \"+=\", not \"=\".",
 		"WARN: filename.mk:9: Assignments to \"LDFLAGS\" should use \"+=\", not \"=\".",
-		"WARN: filename.mk:10: LINTFLAGS is defined but not used.",
+		"WARN: filename.mk:10: Variable \"LINTFLAGS\" is defined but not used.",
 		"WARN: filename.mk:10: Assignments to \"LINTFLAGS\" should use \"+=\", not \"=\".",
-		"WARN: filename.mk:11: PFLAGS is defined but not used.",
+		"WARN: filename.mk:11: Variable \"PFLAGS\" is defined but not used.",
 		"WARN: filename.mk:11: Assignments to \"PFLAGS\" should use \"+=\", not \"=\".",
-		"WARN: filename.mk:12: YFLAGS is defined but not used.",
+		"WARN: filename.mk:12: Variable \"YFLAGS\" is defined but not used.",
 		"WARN: filename.mk:12: Assignments to \"YFLAGS\" should use \"+=\", not \"=\".",
-		"WARN: filename.mk:13: LDADD is defined but not used.",
+		"WARN: filename.mk:13: Variable \"LDADD\" is defined but not used.",
 		"WARN: filename.mk:13: Assignments to \"LDADD\" should use \"+=\", not \"=\".",
 		"WARN: filename.mk:14: Setting variable GCC_REQD should have a rationale.",
 		"WARN: filename.mk:14: Assignments to \"GCC_REQD\" should use \"+=\", not \"=\".",
@@ -1219,7 +1219,7 @@ func (s *Suite) Test_MkAssignChecker_checkMisc(c *check.C) {
 		"_TOOLS_VARNAME.sed=\tSED",
 		"WARN: filename.mk:2: Variable names starting with an underscore "+
 			"(_TOOLS_VARNAME.sed) are reserved for internal pkgsrc use.",
-		"WARN: filename.mk:2: _TOOLS_VARNAME.sed is defined but not used.")
+		"WARN: filename.mk:2: Variable \"_TOOLS_VARNAME.sed\" is defined but not used.")
 
 	test(
 		"DIST_SUBDIR=\t\t${PKGNAME}",
@@ -1233,7 +1233,7 @@ func (s *Suite) Test_MkAssignChecker_checkMisc(c *check.C) {
 
 	test(
 		"SITES_distfile.tar.gz=\t${MASTER_SITE_GITHUB:=user/}",
-		"WARN: filename.mk:2: SITES_distfile.tar.gz is defined but not used.",
+		"WARN: filename.mk:2: Variable \"SITES_distfile.tar.gz\" is defined but not used.",
 		"WARN: filename.mk:2: SITES_* is deprecated. Use SITES.* instead.")
 
 	test(
@@ -1423,8 +1423,8 @@ func (s *Suite) Test_MkAssignChecker_mayBeDefined(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: filename.mk:3: _GOOD_PREFIX is defined but not used.",
+		"WARN: filename.mk:3: Variable \"_GOOD_PREFIX\" is defined but not used.",
 		"WARN: filename.mk:4: Variable names starting with an underscore (_BAD_PREFIX) are reserved for internal pkgsrc use.",
-		"WARN: filename.mk:4: _BAD_PREFIX is defined but not used.",
+		"WARN: filename.mk:4: Variable \"_BAD_PREFIX\" is defined but not used.",
 		"WARN: filename.mk:4: Variable _BAD_PREFIX is defined but not mentioned in the _VARGROUPS section.")
 }

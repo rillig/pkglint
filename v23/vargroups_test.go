@@ -69,11 +69,11 @@ func (s *Suite) Test_VargroupsChecker__variable_reference(c *check.C) {
 	mklines.Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:7: VAR.param is defined but not used.",
+		"WARN: Makefile:7: Variable \"VAR.param\" is defined but not used.",
 		// TODO: Hmmm, that's going to be complicated to get right.
 		"WARN: Makefile:7: Variable VAR.param is defined "+
 			"but not mentioned in the _VARGROUPS section.",
-		"WARN: Makefile:8: VAR.${:Uindirect} is defined but not used.")
+		"WARN: Makefile:8: Variable \"VAR.${:Uindirect}\" is defined but not used.")
 }
 
 func (s *Suite) Test_VargroupsChecker__public_underscore(c *check.C) {
@@ -241,7 +241,7 @@ func (s *Suite) Test_VargroupsChecker__ignore(c *check.C) {
 		"WARN: Makefile:5: \"[\" is not a valid variable name pattern.",
 		"WARN: Makefile:7: Variable names starting with an underscore (_UNDERSCORE) "+
 			"are reserved for internal pkgsrc use.",
-		"WARN: Makefile:7: _UNDERSCORE is defined but not used.",
+		"WARN: Makefile:7: Variable \"_UNDERSCORE\" is defined but not used.",
 		"WARN: Makefile:7: Variable _UNDERSCORE is defined but not mentioned in the _VARGROUPS section.",
 		"WARN: Makefile:11: Variable WRKOBJDIR is used but not mentioned in the _VARGROUPS section.")
 }
@@ -267,9 +267,9 @@ func (s *Suite) Test_VargroupsChecker__private_before_public(c *check.C) {
 			"before the private variable _PRIVATE1.",
 		"WARN: Makefile:5: Variable names starting with an underscore (_PRIVATE1) "+
 			"are reserved for internal pkgsrc use.",
-		"WARN: Makefile:5: _PRIVATE1 is defined but not used.",
+		"WARN: Makefile:5: Variable \"_PRIVATE1\" is defined but not used.",
 		"WARN: Makefile:6: Variable names starting with an underscore (_PRIVATE2) "+
 			"are reserved for internal pkgsrc use.",
-		"WARN: Makefile:6: _PRIVATE2 is defined but not used.",
-		"WARN: Makefile:7: PUBLIC is defined but not used.")
+		"WARN: Makefile:6: Variable \"_PRIVATE2\" is defined but not used.",
+		"WARN: Makefile:7: Variable \"PUBLIC\" is defined but not used.")
 }

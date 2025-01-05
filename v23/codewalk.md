@@ -1007,7 +1007,7 @@ warnings and how to repair them properly:
 
 * Load the standard variables using `t.SetUpVartypes()`
 
-#### %s is defined but not used
+#### Variable "%s" is defined but not used
 
 * Load the standard variables using `t.SetUpVartypes()`
 

@@ -85,7 +85,7 @@ func (ck *MkAssignChecker) checkLeftNotUsed() {
 		return
 	}
 
-	ck.MkLine.Warnf("%s is defined but not used.", varname)
+	ck.MkLine.Warnf("Variable \"%s\" is defined but not used.", varname)
 	ck.MkLine.Explain(
 		"This might be a simple typo.",
 		"",
