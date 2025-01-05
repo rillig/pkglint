@@ -417,6 +417,11 @@ func (s *Suite) Test_MkLexer_Expr(c *check.C) {
 
 	test("${_BUILD_DEFS.${v}:U${${v}}:${_BUILD_INFO_MOD.${v}}:Q}",
 		expr("_BUILD_DEFS.${v}", "U${${v}}", "${_BUILD_INFO_MOD.${v}}", "Q"))
+
+	test("${:!${UNAME} -s!:S/-//g:S/\\///g:C/^CYGWIN_.*$/Cygwin/}",
+		expr("", "!${UNAME} -s!", "S/-//g", "S/\\///g", "C/^CYGWIN_.*$/Cygwin/"),
+		// FIXME
+		"WARN: Test_MkLexer_Expr.mk:1: Expression \"$/\" has unusual single-character variable name \"/\".")
 }
 
 // Pkglint can replace $(VAR) with ${VAR}. It doesn't look at all components
