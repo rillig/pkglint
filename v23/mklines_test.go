@@ -133,6 +133,24 @@ func (s *Suite) Test_MkLines__directive_indentation(c *check.C) {
 		"NOTE: filename.mk:10: This directive should be indented by 2 spaces.")
 }
 
+func (s *Suite) Test_MkLines_Check__assignment_in_condition(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.FinishSetUp()
+
+	mklines := t.SetUpFileMkLines("Makefile",
+		MkCvsID,
+		".include \"mk/bsd.prefs.mk\"",
+		".if ${LOCALBASE::=value}",
+		".endif")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"ERROR: ~/Makefile:3: Assignment modifiers like \":=\" must not be used at all.")
+}
+
 func (s *Suite) Test_MkLines_Check__unusual_target(c *check.C) {
 	t := s.Init(c)
 

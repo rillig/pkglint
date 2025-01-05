@@ -48,9 +48,8 @@ func (s *Suite) Test_MkLineParser_Parse__condition_empty(c *check.C) {
 		".if empty(${_TOOLS_DEPMETHOD.${_t_}}:C/\\:.*$//:M${_dep_test})",
 		".endif")
 
-	// FIXME: The "$/" is not an expression, it's the end of a modifier part.
-	t.CheckOutputLines(
-		"WARN: filename.mk:2: Expression \"$/\" has unusual single-character variable name \"/\".")
+	// The "$/" is not an expression, it's the end of a modifier part.
+	t.CheckOutputEmpty()
 }
 
 // In variable assignments, a plain '#' introduces a line comment, unless
@@ -233,7 +232,8 @@ func (s *Suite) Test_MkLineParser_matchVarassign(c *check.C) {
 		_ = t.Output()
 
 		parser := NewMkLineParser()
-		splitResult := parser.split(nil, text, true)
+		splitResult := parser.split(text, true)
+		splitResult.tokens = parser.tokenize(splitResult.main, nil)
 		m, actual := parser.matchVarassign(line, text, &splitResult)
 
 		assert(m)
@@ -265,7 +265,8 @@ func (s *Suite) Test_MkLineParser_matchVarassign(c *check.C) {
 	testInvalid := func(text string, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, text)
 		parser := NewMkLineParser()
-		splitResult := parser.split(nil, text, true)
+		splitResult := parser.split(text, true)
+		splitResult.tokens = parser.tokenize(splitResult.main, nil)
 		m, _ := parser.matchVarassign(line, text, &splitResult)
 		if m {
 			c.Errorf("Text %q matches variable assignment but shouldn't.", text)
@@ -547,7 +548,8 @@ func (s *Suite) Test_MkLineParser_parseDirective(c *check.C) {
 	test := func(input, expectedIndent, expectedDirective, expectedArgs, expectedComment string, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, input)
 		parser := NewMkLineParser()
-		splitResult := parser.split(line, input, true)
+		splitResult := parser.split(input, true)
+		splitResult.tokens = parser.tokenize(splitResult.main, line)
 		mkline := parser.parseDirective(line, splitResult)
 		if !t.CheckNotNil(mkline) {
 			return
@@ -671,7 +673,9 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 
 	test := func(text string, expected mkLineSplitResult, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, text)
-		actual := NewMkLineParser().split(line, text, true)
+		parser := NewMkLineParser()
+		actual := parser.split(text, true)
+		actual.tokens = parser.tokenize(actual.main, line)
 
 		t.CheckOutput(diagnostics)
 		t.CheckDeepEquals([]interface{}{text, actual}, []interface{}{text, expected})
@@ -995,7 +999,9 @@ func (s *Suite) Test_MkLineParser_split__preserve_comment(c *check.C) {
 
 	test := func(text string, expected mkLineSplitResult, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, text)
-		actual := NewMkLineParser().split(line, text, false)
+		parser := NewMkLineParser()
+		actual := parser.split(text, false)
+		actual.tokens = parser.tokenize(actual.main, line)
 
 		t.CheckDeepEquals(actual, expected)
 		t.CheckOutput(diagnostics)
@@ -1048,7 +1054,9 @@ func (s *Suite) Test_MkLineParser_split__unclosed_expr(c *check.C) {
 	test := func(text string, expected mkLineSplitResult, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, text)
 
-		splitResult := NewMkLineParser().split(line, text, true)
+		parser := NewMkLineParser()
+		splitResult := parser.split(text, true)
+		splitResult.tokens = parser.tokenize(splitResult.main, line)
 
 		t.CheckDeepEquals(splitResult, expected)
 		t.CheckOutput(diagnostics)

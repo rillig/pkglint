@@ -31,22 +31,24 @@ func (p MkLineParser) Parse(line *Line) *MkLine {
 		lex := textproc.NewLexer(text)
 		lex.SkipHspace()
 
-		splitResult := p.split(line, lex.Rest(), false)
+		splitResult := p.split(lex.Rest(), false)
+		splitResult.tokens = p.tokenize(splitResult.main, line)
 		if lex.PeekByte() == '#' {
-			return p.parseCommentOrEmpty(line, p.split(line, lex.Rest(), true))
+			return p.parseCommentOrEmpty(line, p.split(lex.Rest(), true))
 		}
 		return p.parseShellcmd(line, splitResult)
 	}
 
-	splitResult := p.split(line, text, true)
+	splitResult := p.split(text, true)
+	if mkline := p.parseDirective(line, splitResult); mkline != nil {
+		return mkline
+	}
 
+	splitResult.tokens = p.tokenize(splitResult.main, line)
 	if mkline := p.parseVarassign(line, text, splitResult); mkline != nil {
 		return mkline
 	}
 	if mkline := p.parseCommentOrEmpty(line, splitResult); mkline != nil {
-		return mkline
-	}
-	if mkline := p.parseDirective(line, splitResult); mkline != nil {
 		return mkline
 	}
 	if mkline := p.parseInclude(line, splitResult); mkline != nil {
@@ -91,7 +93,8 @@ func (p MkLineParser) matchVarassign(line *Line, text string, splitResult *mkLin
 		if clex.SkipHspace() || clex.EOF() {
 			return false, nil
 		}
-		*splitResult = p.split(nil, text[1:], true)
+		*splitResult = p.split(text[1:], true)
+		splitResult.tokens = p.tokenize(splitResult.main, line)
 	}
 
 	lexer := NewMkTokensLexer(splitResult.tokens)
@@ -297,7 +300,7 @@ func (p MkLineParser) parseMergeConflict(line *Line, splitResult mkLineSplitResu
 // but hasComment will always be false, and comment will always be empty.
 // This behavior is useful for shell commands (which are indented with a
 // single tab).
-func (MkLineParser) split(diag Autofixer, text string, trimComment bool) mkLineSplitResult {
+func (MkLineParser) split(text string, trimComment bool) mkLineSplitResult {
 	assert(!hasPrefix(text, "\t"))
 
 	var mainWithSpaces, comment string
@@ -307,7 +310,18 @@ func (MkLineParser) split(diag Autofixer, text string, trimComment bool) mkLineS
 		mainWithSpaces = text
 	}
 
-	parser := NewMkLexer(rtrimHspace(mainWithSpaces), diag)
+	hasComment := comment != ""
+	if hasComment {
+		comment = comment[1:]
+	}
+
+	mainTrimmed := rtrimHspace(mainWithSpaces)
+	spaceBeforeComment := mainWithSpaces[len(mainTrimmed):]
+	return mkLineSplitResult{mainTrimmed, nil, spaceBeforeComment, hasComment, "", comment}
+}
+
+func (MkLineParser) tokenize(text string, diag Autofixer) []*MkToken {
+	parser := NewMkLexer(text, diag)
 	lexer := parser.lexer
 
 	parseOther := func() string {
@@ -346,14 +360,7 @@ func (MkLineParser) split(diag Autofixer, text string, trimComment bool) mkLineS
 		}
 	}
 
-	hasComment := comment != ""
-	if hasComment {
-		comment = comment[1:]
-	}
-
-	mainTrimmed := rtrimHspace(mainWithSpaces)
-	spaceBeforeComment := mainWithSpaces[len(mainTrimmed):]
-	return mkLineSplitResult{mainTrimmed, tokens, spaceBeforeComment, hasComment, "", comment}
+	return tokens
 }
 
 // unescapeComment takes a makefile line, as written in a file, and splits

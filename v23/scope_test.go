@@ -251,9 +251,7 @@ func (s *Suite) Test_Scope_FirstDefinition(c *check.C) {
 
 	t.CheckNil(scope.FirstDefinition("USED"))
 
-	t.CheckOutputLines(
-		"ERROR: fname.mk:4: Assignment modifiers like \":=\" " +
-			"must not be used at all.")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_Scope_LastDefinition(c *check.C) {

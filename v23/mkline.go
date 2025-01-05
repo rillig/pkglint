@@ -280,7 +280,8 @@ func (mkline *MkLine) FirstLineContainsValue() bool {
 	// Parsing the continuation marker as variable value is cheating but works well.
 	text := mkline.raw[0].Orig()
 	parser := NewMkLineParser()
-	splitResult := parser.split(nil, text, true)
+	splitResult := parser.split(text, true)
+	splitResult.tokens = parser.tokenize(splitResult.main, nil)
 	_, a := parser.matchVarassign(mkline.Line, text, &splitResult)
 	return a.value != "\\"
 }

@@ -124,8 +124,6 @@ func (s *Suite) Test_MkCondChecker_Check(c *check.C) {
 		"WARN: filename.mk:4: VAR is used but not defined.")
 
 	test(".if ${MASTER_SITES:Mftp://*} == \"ftp://netbsd.org/\"",
-		// XXX: duplicate diagnostic, see MkParser.MkCond.
-		"WARN: filename.mk:4: Invalid variable modifier \"//*\" for \"MASTER_SITES\".",
 		"WARN: filename.mk:4: Invalid variable modifier \"//*\" for \"MASTER_SITES\".",
 		"WARN: filename.mk:4: \"ftp\" is not a valid URL.",
 		"WARN: filename.mk:4: MASTER_SITES should not be used at load time in any file.")
