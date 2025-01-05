@@ -10,7 +10,7 @@ func (s *Suite) Test_NewMkWalker(c *check.C) {
 		mkline.Notef("Expression \"%s\" at \"%s\" time.", expr.String(), time.String())
 	}
 
-	walker := NewMkWalker(mkline, action)
+	walker := NewMkWalker(action)
 	walker.WalkLine(mkline)
 
 	t.CheckOutputLines(
@@ -35,7 +35,7 @@ func (s *Suite) Test_MkWalker_WalkLine(c *check.C) {
 		action := func(expr *MkExpr, time EctxTime) {
 			mkline.Notef("Expression \"%s\" at \"%s\" time.", expr.String(), time.String())
 		}
-		walker := NewMkWalker(mkline, action)
+		walker := NewMkWalker(action)
 		walker.WalkLine(mkline)
 	})
 
@@ -63,7 +63,7 @@ func (s *Suite) Test_MkWalker_WalkText(c *check.C) {
 		action := func(expr *MkExpr, time EctxTime) {
 			mkline.Notef("Expression \"%s\" at \"%s\" time.", expr.String(), time.String())
 		}
-		walker := NewMkWalker(mkline, action)
+		walker := NewMkWalker(action)
 		walker.WalkLine(mkline)
 	})
 
@@ -83,7 +83,7 @@ func (s *Suite) Test_MkWalker_walkDirective(c *check.C) {
 		action := func(expr *MkExpr, time EctxTime) {
 			mkline.Notef("Expression \"%s\" at \"%s\" time.", expr.String(), time.String())
 		}
-		walker := NewMkWalker(mkline, action)
+		walker := NewMkWalker(action)
 		walker.walkDirective(mkline)
 	})
 
@@ -102,7 +102,7 @@ func (s *Suite) Test_MkWalker_walkExpr(c *check.C) {
 		action := func(expr *MkExpr, time EctxTime) {
 			mkline.Notef("Expression \"%s\" at \"%s\" time.", expr.String(), time.String())
 		}
-		walker := NewMkWalker(mkline, action)
+		walker := NewMkWalker(action)
 		walker.WalkLine(mkline)
 	})
 
@@ -125,7 +125,7 @@ func (s *Suite) Test_MkWalker_walkModifier(c *check.C) {
 		action := func(expr *MkExpr, time EctxTime) {
 			mkline.Notef("Expression \"%s\" at \"%s\" time.", expr.String(), time.String())
 		}
-		walker := NewMkWalker(mkline, action)
+		walker := NewMkWalker(action)
 		walker.WalkLine(mkline)
 	})
 

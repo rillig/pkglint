@@ -845,12 +845,12 @@ func (mkline *MkLine) VariableNeedsQuoting(mklines *MkLines, expr *MkExpr, varty
 
 // ForEachUsed calls the action for each variable that is used in the line.
 func (mkline *MkLine) ForEachUsed(action func(expr *MkExpr, time EctxTime)) {
-	walker := NewMkWalker(mkline, action)
+	walker := NewMkWalker(action)
 	walker.WalkLine(mkline)
 }
 
 func (mkline *MkLine) ForEachUsedText(text string, time EctxTime, action func(expr *MkExpr, time EctxTime)) {
-	walker := NewMkWalker(mkline, action)
+	walker := NewMkWalker(action)
 	walker.WalkText(text, time)
 }
 

@@ -3,12 +3,11 @@ package pkglint
 // MkWalker walks through a makefile line or a text snippet from such a line,
 // visiting the expressions and their subexpressions.
 type MkWalker struct {
-	Diag Autofixer
 	Expr func(expr *MkExpr, time EctxTime)
 }
 
-func NewMkWalker(diag Autofixer, expr func(expr *MkExpr, time EctxTime)) *MkWalker {
-	return &MkWalker{diag, expr}
+func NewMkWalker(expr func(expr *MkExpr, time EctxTime)) *MkWalker {
+	return &MkWalker{expr}
 }
 
 // WalkLine calls the action for each variable that is used in the line.
