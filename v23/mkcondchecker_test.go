@@ -134,6 +134,14 @@ func (s *Suite) Test_MkCondChecker_Check(c *check.C) {
 	// TODO: There should be another error for the '.elif' outside '.if'.
 	test(".elif 0",
 		"ERROR: filename.mk:5: Unmatched .endif.")
+
+	// TODO: Warn about the ambiguous $f.
+	test(".if empty(PERDITION_SKIP_DISABLE:M$f)",
+		"WARN: filename.mk:4: PERDITION_SKIP_DISABLE is used but not defined.")
+
+	// FIXME
+	test(".if !empty(:!${ECHO} yes | ${TOOLS_PLATFORM.m4} -s 2>/dev/null||${ECHO}!)",
+		"WARN: filename.mk:4: Invalid condition, unrecognized part \"empty(:!${ECHO} yes | ${TOOLS_PLATFORM.m4} -s 2>/dev/null||${ECHO}!)\".")
 }
 
 func (s *Suite) Test_MkCondChecker_Check__tracing(c *check.C) {

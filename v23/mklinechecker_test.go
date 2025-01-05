@@ -1082,6 +1082,13 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveFor(c *check.C) {
 		".endfor",
 		"",
 		".for dir in ${PATH:M*/bin}",
+		".endfor",
+		"",
+		".for opt in $(PATH)", // Parentheses instead of braces.
+		".endfor",
+		"",
+		"DISTFILES=\t# none",
+		".for gem in ${DISTFILES:M*.gem:S/.gem$//g}",
 		".endfor")
 
 	mklines.Check()
@@ -1091,12 +1098,65 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveFor(c *check.C) {
 		// converts the colon-separated list into a space-separated list,
 		// as required by the .for loop.
 
-		// This warning is correct since PATH is separated by colons, not by spaces.
+		// FIXME: Do not suggest the ':Q' modifier, instead suggest to use spaces.
 		"WARN: for.mk:5: Use ${PATH:Q} instead of ${PATH}.",
 
-		// This warning is also correct since the :M modifier doesn't
-		// turn a list into a non-list or vice versa.
-		"WARN: for.mk:8: Use ${PATH:M*/bin:Q} instead of ${PATH:M*/bin}.")
+		// Applying the ':M' modifier with a pattern to a single-value
+		// variable can be useful, as a form of pattern matching.
+		// More probably though, the intention was to see whether the PATH
+		// has _any_ directory ending in "/bin", instead of testing only
+		// the last directory.
+		// FIXME: Do not suggest the ':Q' modifier, instead suggest to use spaces.
+		"WARN: for.mk:8: Use ${PATH:M*/bin:Q} instead of ${PATH:M*/bin}.",
+
+		// TODO: Warn about round parentheses instead of curly braces.
+		// FIXME: Do not suggest the ':Q' modifier, instead suggest to use spaces.
+		"WARN: for.mk:11: Use ${PATH:Q} instead of ${PATH}.",
+
+		// TODO: Why not? The variable is guaranteed to be defined at this point.
+		"WARN: for.mk:15: DISTFILES should not be used at load time in any file.",
+		// TODO: Make it clear that "/" is a variable name.
+		// FIXME: Do not treat "$/" as an expression.
+		"WARN: for.mk:15: / is used but not defined.")
+}
+
+func (s *Suite) Test_MkLineChecker_checkDirectiveFor__continuation(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"do-install:",
+		".for d in \\",
+		"    dir1 dir2 \\",
+		"    dir3 dir4 \\",
+		"    dir5 dir6 \\", // This line continuation is not intended
+		"\t: mkdir $d",
+		// This .for loop has an empty body.
+		".endfor")
+
+	mklines.Check()
+
+	// TODO: Warn about the unintended line continuation.
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_MkLineChecker_checkDirectiveFor__items(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		".for f in $< $a $0",
+		".endfor")
+
+	mklines.Check()
+
+	// TODO: Warn about $a and $0 being ambiguous.
+	t.CheckOutputLines(
+		"WARN: filename.mk:2: < is used but not defined.",
+		"WARN: filename.mk:2: a is used but not defined.",
+		"WARN: filename.mk:2: 0 is used but not defined.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirectiveFor__infrastructure(c *check.C) {

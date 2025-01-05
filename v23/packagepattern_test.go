@@ -80,8 +80,37 @@ func (s *Suite) Test_ParsePackagePattern(c *check.C) {
 	test("xulrunner10>=${MOZ_BRANCH}${MOZ_BRANCH_MINOR}",
 		PackagePattern{"xulrunner10", ">=", "${MOZ_BRANCH}${MOZ_BRANCH_MINOR}", "", "", ""})
 
+	test("${_EMACS_CONFLICTS.${_EMACS_FLAVOR}}",
+		PackagePattern{"${_EMACS_CONFLICTS.${_EMACS_FLAVOR}}", "", "", "", "", ""})
+
+	test("${DISTNAME:S/gnome-vfs/gnome-vfs2-${GNOME_VFS_NAME}/}",
+		PackagePattern{"${DISTNAME:S/gnome-vfs/gnome-vfs2-${GNOME_VFS_NAME}/}", "", "", "", "", ""})
+
+	// FIXME
+	testRest("${LUA_PKGPREFIX}-std-_debug-[0-9]*",
+		PackagePattern{"${LUA_PKGPREFIX}-std", "", "", "", "", "_debug"},
+		"-[0-9]*")
+
+	// FIXME
+	testRest("rt-*-[0-9]*",
+		PackagePattern{"rt", "", "", "", "", "*"},
+		"-[0-9]*")
+
 	testRest("gnome-control-center>=2.20.1{,nb*}",
-		PackagePattern{"gnome-control-center", ">=", "2.20.1", "", "", ""}, "{,nb*}")
+		PackagePattern{"gnome-control-center", ">=", "2.20.1", "", "", ""},
+		"{,nb*}")
+
+	testRest("R-jsonlite>=0.9.6*",
+		PackagePattern{"R-jsonlite", ">=", "0.9.6", "", "", ""},
+		"*")
+
+	testRest("tex-pst-3d-[0-9]*",
+		PackagePattern{"tex-pst", "", "", "", "", "3d"},
+		"-[0-9]*")
+
+	testRest("font-adobe-100dpi-[0-9]*",
+		PackagePattern{"font-adobe", "", "", "", "", "100dpi"},
+		"-[0-9]*")
 
 	testNil("pkgbase")
 
@@ -93,18 +122,11 @@ func (s *Suite) Test_ParsePackagePattern(c *check.C) {
 
 	testNil("pkgbase<=")
 
-	// TODO: support this edge case someday.
-	// "{ssh{,6}-[0-9]*,openssh-[0-9]*}" is not representable using the current data structure
-
-	// TODO: More test cases from current pkgsrc:
-	// R-jsonlite>=0.9.6*
-	//
-	// {ezmlm>=0.53,ezmlm-idx>=0.40}
-	// {samba>=2.0,ja-samba>=2.0}
-	// {mecab-ipadic>=2.7.0,mecab-jumandic>=5.1}
-	//
-	// ${_EMACS_CONFLICTS.${_EMACS_FLAVOR}}
-	// ${DISTNAME:S/gnome-vfs/gnome-vfs2-${GNOME_VFS_NAME}/}
+	// Package patterns with curly braces are handled by expandCurlyBraces.
+	testNil("{ezmlm>=0.53,ezmlm-idx>=0.40}")
+	testNil("{mecab-ipadic>=2.7.0,mecab-jumandic>=5.1}")
+	testNil("{samba>=2.0,ja-samba>=2.0}")
+	testNil("{ssh{,6}-[0-9]*,openssh-[0-9]*}")
 }
 
 func (s *Suite) Test_PackagePatternChecker_Check(c *check.C) {
