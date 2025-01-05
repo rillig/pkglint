@@ -419,9 +419,7 @@ func (s *Suite) Test_MkLexer_Expr(c *check.C) {
 		expr("_BUILD_DEFS.${v}", "U${${v}}", "${_BUILD_INFO_MOD.${v}}", "Q"))
 
 	test("${:!${UNAME} -s!:S/-//g:S/\\///g:C/^CYGWIN_.*$/Cygwin/}",
-		expr("", "!${UNAME} -s!", "S/-//g", "S/\\///g", "C/^CYGWIN_.*$/Cygwin/"),
-		// FIXME
-		"WARN: Test_MkLexer_Expr.mk:1: Expression \"$/\" has unusual single-character variable name \"/\".")
+		expr("", "!${UNAME} -s!", "S/-//g", "S/\\///g", "C/^CYGWIN_.*$/Cygwin/"))
 }
 
 // Pkglint can replace $(VAR) with ${VAR}. It doesn't look at all components
@@ -584,7 +582,8 @@ func (s *Suite) Test_MkLexer_ExprModifiers(c *check.C) {
 	test("${VAR:!command!}", expr("VAR", "!command!"))
 
 	test("${VAR:!command}", expr("VAR"),
-		"WARN: Makefile:20: Invalid variable modifier \"!command\" for \"VAR\".")
+		"ERROR: Makefile:20: Modifier \"command}\" is missing the delimiter \"!\".",
+		"WARN: Makefile:20: Missing closing \"}\" for \"VAR\".")
 
 	test("${VAR:command!}", expr("VAR"),
 		"WARN: Makefile:20: Invalid variable modifier \"command!\" for \"VAR\".")
@@ -607,13 +606,19 @@ func (s *Suite) Test_MkLexer_ExprModifiers(c *check.C) {
 func (s *Suite) Test_MkLexer_exprModifier(c *check.C) {
 	t := s.Init(c)
 
-	p := NewMkLexer("${VAR:R:E:Ox:tA:tW:tw}", nil)
+	mkline := t.NewMkLine("filename.mk", 123, "")
 
-	expr := p.Expr()
+	test := func(expr string, wantModifiers ...MkExprModifier) {
+		p := NewMkLexer(expr, mkline)
+		e := p.Expr()
+		if t.CheckNotNil(e) {
+			t.CheckDeepEquals(e.modifiers, wantModifiers)
+		}
+	}
 
-	t.CheckDeepEquals(
-		expr.modifiers,
-		[]MkExprModifier{"R", "E", "Ox", "tA", "tW", "tw"})
+	test("${VAR:R:E:Ox:tA:tW:tw}", "R", "E", "Ox", "tA", "tW", "tw")
+
+	test("${VAR:!cmd!}", "!cmd!")
 }
 
 func (s *Suite) Test_MkLexer_exprModifier__S_parse_error(c *check.C) {
@@ -1131,6 +1136,47 @@ func (s *Suite) Test_MkLexer_exprModifierAt(c *check.C) {
 	test("${PKG_GROUPS:@g@${g:Q}:${PKG_GID.${g}:Q}@:C/:*$//g}",
 		expr("PKG_GROUPS", "@g@${g:Q}:${PKG_GID.${g}:Q}@", "C/:*$//g"),
 		"")
+}
+
+func (s *Suite) Test_MkLexer_parseModifierPart(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("filename.mk", 123, "")
+
+	test := func(expr string, wantModifiers ...MkExprModifier) {
+		p := NewMkLexer(expr, mkline)
+		e := p.Expr()
+		if t.CheckNotNil(e) {
+			t.CheckDeepEquals(e.modifiers, wantModifiers)
+		}
+	}
+
+	test("${VAR:!cmd!}", "!cmd!")
+	t.CheckOutputEmpty()
+
+	test("${VAR:!cmd}", nil...)
+	t.CheckOutputLines(
+		"ERROR: filename.mk:123: Modifier \"cmd}\" is missing the delimiter \"!\".",
+		"WARN: filename.mk:123: Missing closing \"}\" for \"VAR\".")
+}
+
+func (s *Suite) Test_MkLexer_isEscapedModifierPart(c *check.C) {
+	t := s.Init(c)
+
+	mkline := t.NewMkLine("filename.mk", 123, "")
+
+	test := func(expr string, wantModifiers ...MkExprModifier) {
+		p := NewMkLexer(expr, mkline)
+		e := p.Expr()
+		if t.CheckNotNil(e) {
+			t.CheckDeepEquals(e.modifiers, wantModifiers)
+		}
+	}
+
+	test("${VAR:!cmd!}", "!cmd!")
+	t.CheckOutputEmpty()
+
+	test("${VAR:!cmd\\!!}", "!cmd\\!!")
 }
 
 func (s *Suite) Test_MkLexer_exprAlnum(c *check.C) {

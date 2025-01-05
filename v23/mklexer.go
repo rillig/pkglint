@@ -297,6 +297,12 @@ func (p *MkLexer) exprModifier(varname string, closing byte) MkExprModifier {
 		if ok, _, _, _, _ := p.exprModifierSubst(closing); ok {
 			return MkExprModifier(lexer.Since(mark))
 		}
+	case '!':
+		lexer.Skip(1)
+		if p.parseModifierPart('!', '!', false) {
+			return MkExprModifier(lexer.Since(mark))
+		}
+		return ""
 
 	case '@':
 		if p.exprModifierAt(lexer, varname) {
@@ -557,6 +563,49 @@ func (p *MkLexer) exprModifierAt(lexer *textproc.Lexer, varname string) bool {
 	}
 
 	return true
+}
+
+func (p *MkLexer) parseModifierPart(end1 byte, end2 byte, subst bool) bool {
+	rest := p.lexer.Rest()
+	b := byte(0)
+	for !p.lexer.EOF() {
+		b = byte(p.lexer.PeekByte())
+		if b == end1 || b == end2 {
+			break
+		}
+
+		if p.isEscapedModifierPart(end2, subst) {
+			p.lexer.Skip(2)
+		} else if b != '$' {
+			p.lexer.Skip(1)
+		} else if len(p.lexer.Rest()) >= 2 && p.lexer.Rest()[1] == end2 {
+			p.lexer.Skip(1)
+		} else {
+			p.Expr()
+		}
+	}
+
+	if b != end1 && b != end2 {
+		p.Errorf("Modifier \"%s\" is missing the delimiter \"%s\".", rest, string(end2))
+		return false
+	}
+
+	if end1 == end2 {
+		p.lexer.Skip(1)
+	}
+	return true
+}
+
+func (p *MkLexer) isEscapedModifierPart(end byte, subst bool) bool {
+	rest := p.lexer.Rest()
+	if len(rest) == 0 || rest[0] != '\\' || len(rest) == 1 {
+		return false
+	}
+	if rest[1] == end || rest[1] == '\\' || rest[1] == '$' {
+		return true
+	}
+	return rest[1] == '&' && subst
+
 }
 
 // exprAlnum parses a single-letter or single-digit expression, such as $i or
