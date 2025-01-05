@@ -781,7 +781,7 @@ func (ck *MkExprChecker) warnRedundantModifierQ(mod string) {
 		"\t* user and group names",
 		"\t* tool names and tool paths",
 		"\t* variable names",
-		"\t* package names (but not dependency patterns like pkg>=1.2)")
+		"\t* package names (but not package patterns like pkg>=1.2)")
 	fix.Replace(bad, good)
 	fix.Apply()
 }

@@ -368,7 +368,7 @@ func (s *Suite) Test_MkParser_PkgbasePattern(c *check.C) {
 	// Using the [a-z] pattern in the package base is only rarely seen in the wild.
 	test("pkgbase-[a-z]*-1.0", "pkgbase-[a-z]*", "-1.0")
 
-	// This is a valid dependency pattern, but it's more complicated
+	// This is a valid package pattern, but it's more complicated
 	// than the patterns pkglint can handle as of January 2019.
 	//
 	// This pattern doesn't have a single package base, which means it cannot be parsed at all.

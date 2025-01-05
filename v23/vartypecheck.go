@@ -308,9 +308,9 @@ func (cv *VartypeCheck) DependencyWithPath() {
 
 	parts := cv.MkLine.ValueSplit(value, ":")
 	if len(parts) != 2 {
-		cv.Errorf("Invalid dependency pattern with path %q.", value)
+		cv.Errorf("Invalid dependency pattern %q.", value)
 		cv.Explain(
-			"Examples for valid dependency patterns with path are:",
+			"Examples of valid dependency patterns are:",
 			"  package-[0-9]*:../../category/package",
 			"  package>=3.41:../../category/package",
 			"  package-2.718{,nb*}:../../category/package")

@@ -403,7 +403,7 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 		"gmake-[0-9]*:../../devel/gmake")
 
 	vt.Output(
-		"ERROR: ~/category/package/filename.mk:1: Invalid dependency pattern with path \"Perl\".",
+		"ERROR: ~/category/package/filename.mk:1: Invalid dependency pattern \"Perl\".",
 		"WARN: ~/category/package/filename.mk:2: Dependency paths should have the form \"../../category/package\".",
 		"ERROR: ~/category/package/filename.mk:2: Relative path \"../perl5/Makefile\" does not exist.",
 		"WARN: ~/category/package/filename.mk:2: \"../perl5\" is not a valid relative package directory.",
@@ -424,14 +424,14 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 		"broken>:../../x11/alacarte")      // incomplete comparison
 
 	vt.Output(
-		"ERROR: ~/category/package/filename.mk:11: Invalid dependency pattern \"broken0.12.1\".",
-		"ERROR: ~/category/package/filename.mk:12: Invalid dependency pattern \"broken[0-9]*\".",
-		"ERROR: ~/category/package/filename.mk:13: Invalid dependency pattern with path \"broken[0-9]*../../x11/alacarte\".",
-		"ERROR: ~/category/package/filename.mk:14: Invalid dependency pattern \"broken>=\".",
-		"ERROR: ~/category/package/filename.mk:15: Invalid dependency pattern \"broken=0\".",
-		"ERROR: ~/category/package/filename.mk:16: Invalid dependency pattern \"broken=\".",
-		"ERROR: ~/category/package/filename.mk:17: Invalid dependency pattern \"broken-\".",
-		"ERROR: ~/category/package/filename.mk:18: Invalid dependency pattern \"broken>\".")
+		"ERROR: ~/category/package/filename.mk:11: Invalid package pattern \"broken0.12.1\".",
+		"ERROR: ~/category/package/filename.mk:12: Invalid package pattern \"broken[0-9]*\".",
+		"ERROR: ~/category/package/filename.mk:13: Invalid dependency pattern \"broken[0-9]*../../x11/alacarte\".",
+		"ERROR: ~/category/package/filename.mk:14: Invalid package pattern \"broken>=\".",
+		"ERROR: ~/category/package/filename.mk:15: Invalid package pattern \"broken=0\".",
+		"ERROR: ~/category/package/filename.mk:16: Invalid package pattern \"broken=\".",
+		"ERROR: ~/category/package/filename.mk:17: Invalid package pattern \"broken-\".",
+		"ERROR: ~/category/package/filename.mk:18: Invalid package pattern \"broken>\".")
 
 	vt.Values(
 		"${PYPKGPREFIX}-sqlite3:../../${MY_PKGPATH.py-sqlite3}",
@@ -444,9 +444,9 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 
 	vt.Output(
 		"ERROR: ~/category/package/filename.mk:21: "+
-			"Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3\".",
+			"Invalid package pattern \"${PYPKGPREFIX}-sqlite3\".",
 		"ERROR: ~/category/package/filename.mk:22: "+
-			"Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3\".")
+			"Invalid package pattern \"${PYPKGPREFIX}-sqlite3\".")
 
 	vt.Values(
 		"gettext-[0-9]*:files/../../../databases/py-sqlite3")
@@ -500,7 +500,7 @@ func (s *Suite) Test_VartypeCheck_DependencyWithPath(c *check.C) {
 
 	vt.Output(
 		"ERROR: ~/category/package/filename.mk:71: " +
-			"Invalid dependency pattern with path \"py-sqlite3>=0:\".")
+			"Invalid dependency pattern \"py-sqlite3>=0:\".")
 }
 
 func (s *Suite) Test_VartypeCheck_DistSuffix(c *check.C) {

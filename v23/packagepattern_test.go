@@ -143,9 +143,9 @@ func (s *Suite) Test_PackagePatternChecker_Check(c *check.C) {
 		"{ssh{,6}-[0-9]*,openssh-[0-9]*}",
 		"libao-[a-z]*-[0-9]*")
 	vt.Output(
-		"ERROR: filename.mk:2: Invalid dependency pattern \"seamonkey-<2.0\".",
-		"ERROR: filename.mk:2: Invalid dependency pattern \"seamonkey--bin<2.0\".",
-		"ERROR: filename.mk:2: Invalid dependency pattern \"seamonkey--gtk1<2.0\".")
+		"ERROR: filename.mk:2: Invalid package pattern \"seamonkey-<2.0\".",
+		"ERROR: filename.mk:2: Invalid package pattern \"seamonkey--bin<2.0\".",
+		"ERROR: filename.mk:2: Invalid package pattern \"seamonkey--gtk1<2.0\".")
 
 	// expressions
 	vt.Values(
@@ -178,7 +178,7 @@ func (s *Suite) Test_PackagePatternChecker_checkSingle(c *check.C) {
 		"WARN: filename.mk:11: Use \"5.*\" instead of \"5*\" as the version pattern.",
 		"WARN: filename.mk:12: Use \"perl5-[0-9]*\" instead of \"perl5-*\".",
 		"WARN: filename.mk:13: Use \"5.22{,nb*}\" instead of \"5.22\" as the version pattern.",
-		"ERROR: filename.mk:15: Dependency pattern \"gtksourceview-sharp-2.0\" is followed by extra text \"-[0-9]*\".",
+		"ERROR: filename.mk:15: Package pattern \"gtksourceview-sharp-2.0\" is followed by extra text \"-[0-9]*\".",
 		"WARN: filename.mk:16: Only \"[0-9]*\" is allowed as the numeric part of a dependency, not \"[0-9\\.]*\".",
 		"WARN: filename.mk:16: The version pattern \"[0-9\\.]*\" should not contain a hyphen.")
 
@@ -230,14 +230,14 @@ func (s *Suite) Test_PackagePatternChecker_checkSingle(c *check.C) {
 		"atril>=${VERSION:R}.2")
 
 	vt.Output(
-		"ERROR: filename.mk:33: Invalid dependency pattern \"${PYPKGPREFIX}-sqlite3\".",
-		"ERROR: filename.mk:38: Invalid dependency pattern \"${PKGNAME_NOREV:S/jdk/jre/}*\".",
+		"ERROR: filename.mk:33: Invalid package pattern \"${PYPKGPREFIX}-sqlite3\".",
+		"ERROR: filename.mk:38: Invalid package pattern \"${PKGNAME_NOREV:S/jdk/jre/}*\".",
 		"WARN: filename.mk:39: The nb version part should have the form \"{,nb*}\" or \"{,nb[0-9]*}\", not \"{nb*,}\".",
 		"WARN: filename.mk:40: Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.",
 		"WARN: filename.mk:41: The nb version part should have the form \"{,nb*}\" or \"{,nb[0-9]*}\", not \"{,nb[0-9]}\".",
-		"ERROR: filename.mk:42: Dependency pattern \"${PYPKGPREFIX}-sphinx>=1.2.3nb1\" is followed by extra text \"*\".")
+		"ERROR: filename.mk:42: Package pattern \"${PYPKGPREFIX}-sphinx>=1.2.3nb1\" is followed by extra text \"*\".")
 
-	// invalid dependency patterns
+	// invalid package patterns
 	vt.Values(
 		"Perl",
 		"py-docs",
@@ -251,17 +251,17 @@ func (s *Suite) Test_PackagePatternChecker_checkSingle(c *check.C) {
 		"package>=2.9.0,<3",
 		"package>=2.16>=0")
 	vt.Output(
-		"ERROR: filename.mk:51: Invalid dependency pattern \"Perl\".",
-		"ERROR: filename.mk:52: Invalid dependency pattern \"py-docs\".",
+		"ERROR: filename.mk:51: Invalid package pattern \"Perl\".",
+		"ERROR: filename.mk:52: Invalid package pattern \"py-docs\".",
 		"WARN: filename.mk:53: Only \"[0-9]*\" is allowed as the numeric part of a dependency, not \"[5.10-5.22]*\".",
 		"WARN: filename.mk:53: The version pattern \"[5.10-5.22]*\" should not contain a hyphen.",
-		"ERROR: filename.mk:54: Dependency pattern \"package-1.0\" is followed by extra text \"|garbage\".",
-		"ERROR: filename.mk:55: Dependency pattern \"package>=1.0\" is followed by extra text \":../../category/package\".",
+		"ERROR: filename.mk:54: Package pattern \"package-1.0\" is followed by extra text \"|garbage\".",
+		"ERROR: filename.mk:55: Package pattern \"package>=1.0\" is followed by extra text \":../../category/package\".",
 		// TODO: Mention that version numbers in a pkgbase must be appended directly, without hyphen.
-		"ERROR: filename.mk:56: Dependency pattern \"package-1.0\" is followed by extra text \">=1.0.3\".",
-		"ERROR: filename.mk:57: Invalid dependency pattern \"${RUBY_PKGPREFIX}-theme-[a-z0-9]*\".",
-		"ERROR: filename.mk:58: Dependency pattern \"package>=2.9.0\" is followed by extra text \",<3\".",
-		"ERROR: filename.mk:59: Dependency pattern \"package>=2.16\" is followed by extra text \">=0\".")
+		"ERROR: filename.mk:56: Package pattern \"package-1.0\" is followed by extra text \">=1.0.3\".",
+		"ERROR: filename.mk:57: Invalid package pattern \"${RUBY_PKGPREFIX}-theme-[a-z0-9]*\".",
+		"ERROR: filename.mk:58: Package pattern \"package>=2.9.0\" is followed by extra text \",<3\".",
+		"ERROR: filename.mk:59: Package pattern \"package>=2.16\" is followed by extra text \">=0\".")
 }
 
 func (s *Suite) Test_PackagePatternChecker_checkDepends__smaller_version(c *check.C) {

@@ -119,7 +119,7 @@ type PackagePatternChecker struct {
 func (ck *PackagePatternChecker) Check(value string, valueNoVar string) {
 	if contains(valueNoVar, "{") {
 		if !hasBalancedBraces(value) {
-			ck.MkLine.Errorf("Dependency pattern %q must have balanced braces.", value)
+			ck.MkLine.Errorf("Package pattern %q must have balanced braces.", value)
 			return
 		}
 
@@ -136,7 +136,7 @@ func (ck *PackagePatternChecker) Check(value string, valueNoVar string) {
 					"\"{,nb*}\" or \"{,nb[0-9]*}\", not %q.", expr)
 			}
 			if value != valueNoVar {
-				trace.Step1("Skipping checks for dependency pattern %q.", value)
+				trace.Step1("Skipping checks for package pattern %q.", value)
 				return
 			}
 			for _, p := range expandCurlyBraces(mainValue) {
@@ -161,18 +161,18 @@ func (ck *PackagePatternChecker) checkSingle(value string) {
 			"The \"{,nb*}\" extension is only necessary for dependencies of the",
 			"form \"pkgbase-1.2\", since the pattern \"pkgbase-1.2\" doesn't match",
 			"the version \"pkgbase-1.2nb5\".",
-			"For dependency patterns using the comparison operators,",
+			"For package patterns using the comparison operators,",
 			"this is not necessary.")
 
 	} else if deppat == nil || rest != "" {
 		if rest != "" && rest != value {
-			ck.MkLine.Errorf("Dependency pattern %q is followed by extra text %q.",
+			ck.MkLine.Errorf("Package pattern %q is followed by extra text %q.",
 				value[:len(value)-len(rest)], rest)
 		} else {
-			ck.MkLine.Errorf("Invalid dependency pattern %q.", value)
+			ck.MkLine.Errorf("Invalid package pattern %q.", value)
 		}
 		ck.MkLine.Explain(
-			"Typical dependency patterns have the following forms:",
+			"Typical package patterns have the following forms:",
 			"",
 			"\tpackage>=2.5",
 			"\tpackage-[0-9]*",
