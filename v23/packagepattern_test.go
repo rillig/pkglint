@@ -89,7 +89,9 @@ func (s *Suite) Test_ParsePackagePattern(c *check.C) {
 	test("rt-*-[0-9]*",
 		PackagePattern{"rt-*", "", "", "", "", "[0-9]*"})
 
-	// FIXME
+	// The sequence "-_" should not occur in any package name,
+	// as package names are intended to be human-readable, and
+	// the underscore at the beginning of a word is too technical.
 	testRest("${LUA_PKGPREFIX}-std-_debug-[0-9]*",
 		PackagePattern{"${LUA_PKGPREFIX}-std", "", "", "", "", "_debug"},
 		"-[0-9]*")
