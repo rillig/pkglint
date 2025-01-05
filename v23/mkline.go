@@ -845,63 +845,13 @@ func (mkline *MkLine) VariableNeedsQuoting(mklines *MkLines, expr *MkExpr, varty
 
 // ForEachUsed calls the action for each variable that is used in the line.
 func (mkline *MkLine) ForEachUsed(action func(expr *MkExpr, time EctxTime)) {
-	switch {
-
-	case mkline.IsVarassign():
-		mkline.ForEachUsedText(mkline.Varname(), EctxLoadTime, action)
-		mkline.ForEachUsedText(mkline.Value(), mkline.Op().Time(), action)
-
-	case mkline.IsDirective():
-		mkline.forEachUsedDirective(action)
-
-	case mkline.IsShellCommand():
-		mkline.ForEachUsedText(mkline.ShellCommand(), EctxRunTime, action)
-
-	case mkline.IsDependency():
-		mkline.ForEachUsedText(mkline.Targets(), EctxLoadTime, action)
-		mkline.ForEachUsedText(mkline.Sources(), EctxLoadTime, action)
-
-	case mkline.IsInclude():
-		mkline.ForEachUsedText(mkline.IncludedFile().String(), EctxLoadTime, action)
-	}
-}
-
-func (mkline *MkLine) forEachUsedDirective(action func(expr *MkExpr, time EctxTime)) {
-	switch mkline.Directive() {
-	case "error", "for", "info", "warning":
-		mkline.ForEachUsedText(mkline.Args(), EctxLoadTime, action)
-	case "if", "elif":
-		if cond := mkline.Cond(); cond != nil {
-			cond.Walk(&MkCondCallback{
-				Expr: func(expr *MkExpr) {
-					mkline.ForEachUsedExpr(expr, EctxLoadTime, action)
-				}})
-		}
-	}
+	walker := NewMkWalker(mkline, action)
+	walker.WalkLine(mkline)
 }
 
 func (mkline *MkLine) ForEachUsedText(text string, time EctxTime, action func(expr *MkExpr, time EctxTime)) {
-	if !contains(text, "$") {
-		return
-	}
-
-	tokens, _ := NewMkLexer(text, nil).MkTokens()
-	for _, token := range tokens {
-		if token.Expr != nil {
-			mkline.ForEachUsedExpr(token.Expr, time, action)
-		}
-	}
-}
-
-func (mkline *MkLine) ForEachUsedExpr(expr *MkExpr, time EctxTime, action func(expr *MkExpr, time EctxTime)) {
-	varname := expr.varname
-	if !expr.IsExpression() {
-		action(expr, time)
-	}
-	mkline.ForEachUsedText(varname, time, action)
-	for _, mod := range expr.modifiers {
-		mkline.ForEachUsedText(mod.String(), time, action)
-	}
+	walker := NewMkWalker(mkline, action)
+	walker.WalkText(text, time)
 }
 
 // UnquoteShell removes one level of double and single quotes,

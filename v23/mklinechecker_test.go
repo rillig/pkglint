@@ -1114,9 +1114,7 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveFor(c *check.C) {
 		"WARN: for.mk:11: Use ${PATH:Q} instead of ${PATH}.",
 
 		// TODO: Why not? The variable is guaranteed to be defined at this point.
-		"WARN: for.mk:15: DISTFILES should not be used at load time in any file.",
-		// FIXME: Do not treat "$/" as an expression.
-		"WARN: for.mk:15: Variable \"/\" is used but not defined.")
+		"WARN: for.mk:15: DISTFILES should not be used at load time in any file.")
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirectiveFor__continuation(c *check.C) {
