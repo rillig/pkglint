@@ -40,6 +40,19 @@ func (s *Suite) Test_MkLineParser_Parse__infrastructure(c *check.C) {
 		"ERROR: infra.mk:10: Unmatched .endif.")
 }
 
+func (s *Suite) Test_MkLineParser_Parse__condition_empty(c *check.C) {
+	t := s.Init(c)
+
+	_ = t.NewMkLines("filename.mk",
+		MkCvsID,
+		".if empty(${_TOOLS_DEPMETHOD.${_t_}}:C/\\:.*$//:M${_dep_test})",
+		".endif")
+
+	// FIXME: The "$/" is not an expression, it's the end of a modifier part.
+	t.CheckOutputLines(
+		"WARN: filename.mk:2: Expression \"$/\" has unusual single-character variable name \"/\".")
+}
+
 // In variable assignments, a plain '#' introduces a line comment, unless
 // it is escaped by a backslash. In shell commands, on the other hand, it
 // is interpreted literally.
