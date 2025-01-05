@@ -459,7 +459,7 @@ If that was too easy, have a look at the code that decides whether an
 expression such as `${CFLAGS}` needs to be quoted using the `:Q` modifier
 when it is used in a shell command:
 
-> from [mkline.go](mkline.go#L727):
+> from [mkline.go](mkline.go#L728):
 
 ```go
 // VariableNeedsQuoting determines whether the given variable needs the :Q
