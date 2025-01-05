@@ -893,22 +893,17 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 		},
 		"WARN: filename.mk:123: Missing closing \"}\" for \"UNCLOSED\".")
 
-	// Even in case of parse errors, the space before the comment is parsed
-	// correctly.
 	test("text before ${UNCLOSED # comment",
 		mkLineSplitResult{
 			main: "text before ${UNCLOSED",
 			tokens: tokens(
 				text("text before "),
-				// It's a bit inconsistent that the varname includes the space
-				// but the text doesn't; anyway, it's an edge case.
-				exprText("${UNCLOSED", "UNCLOSED ")),
+				exprText("${UNCLOSED", "UNCLOSED")),
 			spaceBeforeComment: " ",
 			hasComment:         true,
 			comment:            " comment",
 		},
-		"WARN: filename.mk:123: Missing closing \"}\" for \"UNCLOSED \".",
-		"WARN: filename.mk:123: Invalid part \" \" after variable name \"UNCLOSED\".")
+		"WARN: filename.mk:123: Missing closing \"}\" for \"UNCLOSED\".")
 
 	// The dollar-space refers to a normal Make variable named " ".
 	// The lonely dollar at the very end refers to the variable named "",

@@ -307,7 +307,7 @@ func (MkLineParser) split(diag Autofixer, text string, trimComment bool) mkLineS
 		mainWithSpaces = text
 	}
 
-	parser := NewMkLexer(mainWithSpaces, diag)
+	parser := NewMkLexer(rtrimHspace(mainWithSpaces), diag)
 	lexer := parser.lexer
 
 	parseOther := func() string {
@@ -353,18 +353,6 @@ func (MkLineParser) split(diag Autofixer, text string, trimComment bool) mkLineS
 
 	mainTrimmed := rtrimHspace(mainWithSpaces)
 	spaceBeforeComment := mainWithSpaces[len(mainTrimmed):]
-	if spaceBeforeComment != "" {
-		tokenText := &tokens[len(tokens)-1].Text
-		*tokenText = rtrimHspace(*tokenText)
-		if *tokenText == "" {
-			if len(tokens) == 1 {
-				tokens = nil
-			} else {
-				tokens = tokens[:len(tokens)-1]
-			}
-		}
-	}
-
 	return mkLineSplitResult{mainTrimmed, tokens, spaceBeforeComment, hasComment, "", comment}
 }
 
