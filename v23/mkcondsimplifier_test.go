@@ -808,7 +808,11 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord__list_and_unknown(c *check.C)
 		"",
 		".if !empty(YES_NO:Myes)",
 		".endif",
+		".if !empty(YES_NO:tl:Myes)",
+		".endif",
 		".if !empty(YES_NO_LIST:Myes)",
+		".endif",
+		".if !empty(YES_NO_LIST:tl:Myes)",
 		".endif",
 		".if !empty(UNKNOWN:Myes)",
 		".endif")
@@ -823,8 +827,11 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord__list_and_unknown(c *check.C)
 		"NOTE: filename.mk:8: YES_NO can be compared "+
 			"using the simpler \"${YES_NO} == yes\" "+
 			"instead of matching against \":Myes\".",
+		"NOTE: filename.mk:10: YES_NO can be compared "+
+			"using the simpler \"${YES_NO:tl} == yes\" "+
+			"instead of matching against \":Myes\".",
 		// FIXME: The preferred matching recipe is ':tl:Myes' now.
-		"WARN: filename.mk:10: YES_NO_LIST should be matched "+
+		"WARN: filename.mk:12: YES_NO_LIST should be matched "+
 			"against \"[yY][eE][sS]\" or \"[nN][oO]\", "+
 			"not \"yes\".",
 	)
