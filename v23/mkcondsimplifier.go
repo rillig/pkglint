@@ -95,7 +95,7 @@ func (s *MkCondSimplifier) simplifyWord(expr *MkExpr, fromEmpty bool, neg bool) 
 	if !ok || !positive && n != 1 {
 		return
 	}
-	if !exact {
+	if !exact || pattern == "" {
 		return
 	}
 	if textproc.NewLexer(pattern).NextBytesSet(mkCondModifierPatternLiteral) != pattern {

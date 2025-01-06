@@ -407,18 +407,11 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord__patterns(c *check.C) {
 
 	// Matching for the empty pattern doesn't make sense,
 	// as the resulting string is always empty.
-	// Nevertheless, pkglint simplifies it.
-	// FIXME: This replacement does not preserve the behavior.
 	t.testBeforeAndAfterPrefs(
 		".if !empty(IN_SCOPE_DEFINED:M)",
-		".if ${IN_SCOPE_DEFINED} == \"\"",
+		".if !empty(IN_SCOPE_DEFINED:M)",
 
-		"NOTE: filename.mk:6: IN_SCOPE_DEFINED can be "+
-			"compared using the simpler "+"\"${IN_SCOPE_DEFINED} == \"\"\" "+
-			"instead of matching against \":M\".",
-		"AUTOFIX: filename.mk:6: "+
-			"Replacing \"!empty(IN_SCOPE_DEFINED:M)\" "+
-			"with \"${IN_SCOPE_DEFINED} == \\\"\\\"\".")
+		nil...)
 }
 
 // Show in which cases the ':N' modifier is replaced.
