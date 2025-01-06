@@ -1622,13 +1622,15 @@ func (cv *VartypeCheck) YesNo() {
 		case yes1, yes2, no1, no2:
 			break
 		default:
-			cv.Warnf("%s should be matched against %q or %q, not %q.", cv.Varname, yes1, no1, cv.Value)
+			cv.Warnf("%s should be matched against %q or %q, not %q.",
+				cv.Varname, yes1, no1, cv.Value)
 		}
 	} else if cv.Op == opUseCompare {
-		cv.Warnf("%s should be matched against %q or %q, not compared with %q.", cv.Varname, yes1, no1, cv.Value)
+		cv.Warnf("%s should be matched against %q or %q, not compared with %q.",
+			cv.Varname, yes1, no1, cv.Value)
 		cv.Explain(
-			"The yes/no value can be written in either upper or lower case, and",
-			"both forms are actually used.",
+			"The yes/no value can be written in either upper or lower case,",
+			"and both forms are actually used.",
 			"As long as this is the case, when checking the variable value,",
 			"both must be accepted.")
 	} else if !matches(cv.Value, `^(?:YES|yes|NO|no)$`) {
