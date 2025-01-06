@@ -792,23 +792,23 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord__defined_in_same_file(c *chec
 func (s *Suite) Test_MkCondSimplifier_simplifyWord__list_and_unknown(c *check.C) {
 	t := s.Init(c)
 
-	t.SetUpVarType("SINGLE_WORD", BtYesNo, NoVartypeOptions, nil...)
+	t.SetUpVarType("YES_NO", BtYesNo, NoVartypeOptions, nil...)
+	t.SetUpVarType("YES_NO_LIST", BtYesNo, List, nil...)
 	t.SetUpVarType("UNKNOWN", BtUnknown, NoVartypeOptions, nil...)
-	t.SetUpVarType("LIST_OF_WORDS", BtYesNo, List, nil...)
 	t.CreateFileLines("mk/bsd.prefs.mk",
 		MkCvsID)
 	t.Chdir("category/package")
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
-		"SINGLE_WORD=\tyes",
-		"LIST_OF_WORDS=\tyes",
+		"YES_NO=\t\tyes",
+		"YES_NO_LIST=\tyes",
 		"UNKNOWN=\tunknown",
 		"",
 		".include \"../../mk/bsd.prefs.mk\"",
 		"",
-		".if !empty(SINGLE_WORD:Myes)",
+		".if !empty(YES_NO:Myes)",
 		".endif",
-		".if !empty(LIST_OF_WORDS:Myes)",
+		".if !empty(YES_NO_LIST:Myes)",
 		".endif",
 		".if !empty(UNKNOWN:Myes)",
 		".endif")
@@ -817,14 +817,14 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord__list_and_unknown(c *check.C)
 
 	t.CheckOutputLines(
 		// FIXME: The preferred matching recipe is ':tl:Myes' now.
-		"WARN: filename.mk:8: SINGLE_WORD should be matched "+
+		"WARN: filename.mk:8: YES_NO should be matched "+
 			"against \"[yY][eE][sS]\" or \"[nN][oO]\", "+
 			"not \"yes\".",
-		"NOTE: filename.mk:8: SINGLE_WORD can be compared "+
-			"using the simpler \"${SINGLE_WORD} == yes\" "+
+		"NOTE: filename.mk:8: YES_NO can be compared "+
+			"using the simpler \"${YES_NO} == yes\" "+
 			"instead of matching against \":Myes\".",
 		// FIXME: The preferred matching recipe is ':tl:Myes' now.
-		"WARN: filename.mk:10: LIST_OF_WORDS should be matched "+
+		"WARN: filename.mk:10: YES_NO_LIST should be matched "+
 			"against \"[yY][eE][sS]\" or \"[nN][oO]\", "+
 			"not \"yes\".",
 	)
