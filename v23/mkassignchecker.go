@@ -479,7 +479,10 @@ func (ck *MkAssignChecker) checkOpAppendOnly() {
 		break
 	default:
 		if hasSuffix(varbase, "_REQD") {
-			break
+			vartype := G.Pkgsrc.VariableType(ck.MkLines, varname)
+			if vartype != nil && vartype.IsList() == yes {
+				break
+			}
 		}
 		return
 	}

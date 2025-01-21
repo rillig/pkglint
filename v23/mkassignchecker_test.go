@@ -779,10 +779,12 @@ func (s *Suite) Test_MkAssignChecker_checkOp__GMAKE_REQD(c *check.C) {
 	G.Check(".")
 
 	t.CheckOutputLines(
-		"WARN: Makefile:21: Assignments to \"GMAKE_REQD\" should use \"+=\", not \"=\".",
-		"WARN: Makefile:23: The variable GMAKE_REQD should not be appended to (only set, or given a default value) in this file.",
-		"WARN: Makefile:23: The \"+=\" operator should only be used with lists, not with GMAKE_REQD.",
-	)
+		"WARN: Makefile:23: "+
+			"The variable GMAKE_REQD should not be appended to "+
+			"(only set, or given a default value) in this file.",
+		"WARN: Makefile:23: "+
+			"The \"+=\" operator should only be used with lists, "+
+			"not with GMAKE_REQD.")
 }
 
 func (s *Suite) Test_MkAssignChecker_checkOpShell(c *check.C) {
