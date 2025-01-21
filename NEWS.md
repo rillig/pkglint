@@ -1,3 +1,23 @@
+# 23.11.0 (2025-01-21)
+
+Don't complain about ignored files in patches/.
+
+Don't check for deprecated variables outside pkgsrc.
+
+Warn about unusual single-character variables.
+
+Fix parsing of the ':!cmd!', ':S' and ':C' modifiers.
+
+Don't simplify unsatisfiable 'empty(VAR:M)' condition.
+
+Fix contradictory warnings about GMAKE_REQD, which is not a list,
+even though it follows the naming convention for list variables.
+
+Treat hyphens in package versions as errors, as the full package name
+"pkgbase-3g-7.4" is ambiguous, as the version could either start with
+"3g" or with "7", and depending on the context, either of these is
+used.
+
 # 23.10.0 (2024-12-14)
 
 Check dependency patterns that include alternatives enclosed in braces,
