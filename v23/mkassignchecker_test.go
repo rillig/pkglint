@@ -759,6 +759,32 @@ func (s *Suite) Test_MkAssignChecker_checkOp(c *check.C) {
 			"bsd.prefs.mk has to be included before.")
 }
 
+// The variable GMAKE_REQD is a single-value variable,
+// unlike most other REQD variables,
+// which are lists of version numbers, of which the highest one counts.
+//
+// See https://gnats.netbsd.org/59015.
+func (s *Suite) Test_MkAssignChecker_checkOp__GMAKE_REQD(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.SetUpPackage("category/package",
+		"# A single fixed version.",
+		"GMAKE_REQD=\t4.0",
+		"# Another version.",
+		"GMAKE_REQD+=\t4.0")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	t.CheckOutputLines(
+		"WARN: Makefile:21: Assignments to \"GMAKE_REQD\" should use \"+=\", not \"=\".",
+		"WARN: Makefile:23: The variable GMAKE_REQD should not be appended to (only set, or given a default value) in this file.",
+		"WARN: Makefile:23: The \"+=\" operator should only be used with lists, not with GMAKE_REQD.",
+	)
+}
+
 func (s *Suite) Test_MkAssignChecker_checkOpShell(c *check.C) {
 	t := s.Init(c)
 
