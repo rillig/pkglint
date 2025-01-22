@@ -603,6 +603,10 @@ func CheckFileMk(filename CurrPath, pkg *Package) {
 // deeper in the directory hierarchy, such as in files/ or patches/.
 func (p *Pkglint) checkReg(filename CurrPath, basename RelPath, depth int, pkg *Package) {
 
+	if depth == 2 && basename == "pkg-vulnerabilities" {
+		NewVulnerabilities().read(filename)
+	}
+
 	if depth == 3 && !p.Wip {
 		if basename.ContainsText("TODO") {
 			NewLineWhole(filename).Errorf("Packages in main pkgsrc must not have a %s file.", basename)
