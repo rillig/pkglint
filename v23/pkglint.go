@@ -605,6 +605,7 @@ func (p *Pkglint) checkReg(filename CurrPath, basename RelPath, depth int, pkg *
 
 	if depth == 2 && basename == "pkg-vulnerabilities" {
 		NewVulnerabilities().read(filename)
+		return
 	}
 
 	if depth == 3 && !p.Wip {
