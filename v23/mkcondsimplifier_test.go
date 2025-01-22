@@ -884,6 +884,22 @@ func (s *Suite) Test_MkCondSimplifier_simplifyYesNo(c *check.C) {
 
 		"WARN: filename.mk:6: VAR should be matched against "+
 			"\"[yY][eE][sS]\" or \"[nN][oO]\", not \"[Yy][Ee][s]\".")
+
+	// Repeating a character in a character list is redundant.
+	t.testAfterPrefs(
+		".if ${VAR:M[YY]}",
+		".if ${VAR:M[YY]}",
+
+		"WARN: filename.mk:6: VAR should be matched against "+
+			"\"[yY][eE][sS]\" or \"[nN][oO]\", not \"[YY]\".")
+
+	// Two lowercase characters in a character list are not case-insensitive.
+	t.testAfterPrefs(
+		".if ${VAR:M[ae]}",
+		".if ${VAR:M[ae]}",
+
+		"WARN: filename.mk:6: VAR should be matched against "+
+			"\"[yY][eE][sS]\" or \"[nN][oO]\", not \"[ae]\".")
 }
 
 func (s *Suite) Test_MkCondSimplifier_simplifyMatch(c *check.C) {
