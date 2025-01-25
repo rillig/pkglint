@@ -251,13 +251,9 @@ func (s *Suite) Test_VarorderChecker_Check__duplicate_in_comment(c *check.C) {
 
 	NewVarorderChecker(mklines).Check()
 
-	// FIXME: The duplicate HOMEPAGE is not an error since at most one
-	//  of them is active.
-	t.CheckOutputLines(
-		"WARN: Makefile:3: The canonical order of the variables is " +
-			"CATEGORIES, MASTER_SITES, " +
-			"empty line, " +
-			"MAINTAINER, HOMEPAGE, COMMENT, LICENSE.")
+	// The duplicate HOMEPAGE is not an error since at most one
+	// of them is active.
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_VarorderChecker_relevantLines__comments(c *check.C) {

@@ -116,24 +116,27 @@ func (ck *VarorderChecker) skip(interesting []*MkLine) bool {
 			continue
 		}
 
-		switch variable.repetition {
-		case optional:
-			if varcanon() == variable.name {
-				interesting = interesting[1:]
-			}
-		case once:
-			if varcanon() == variable.name {
-				interesting = interesting[1:]
-			} else if variable.name != "LICENSE" {
-				if trace.Tracing {
-					trace.Stepf("Wrong varorder because %s is missing.", variable.name)
+		commented := 0
+		uncommented := 0
+		for varcanon() == variable.name {
+			if interesting[0].IsComment() {
+				commented++
+			} else {
+				uncommented++
+				if uncommented > 1 && (variable.repetition == once || variable.repetition == optional) {
+					if trace.Tracing {
+						trace.Stepf("Wrong varorder because %s is duplicate.", variable.name)
+					}
+					return false
 				}
-				return false
 			}
-		default:
-			for varcanon() == variable.name {
-				interesting = interesting[1:]
+			interesting = interesting[1:]
+		}
+		if variable.repetition == once && commented == 0 && uncommented == 0 && variable.name != "LICENSE" {
+			if trace.Tracing {
+				trace.Stepf("Wrong varorder because %s is missing.", variable.name)
 			}
+			return false
 		}
 	}
 
