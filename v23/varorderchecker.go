@@ -7,7 +7,16 @@ import "strings"
 // The order itself is a little arbitrary but provides
 // at least a bit of consistency.
 type VarorderChecker struct {
-	mklines *MkLines
+	mklines  *MkLines
+	relevant map[string]bool
+}
+
+func NewVarorderChecker(mklines *MkLines) *VarorderChecker {
+	ck := VarorderChecker{mklines, map[string]bool{}}
+	for _, variable := range varorderVariables {
+		ck.relevant[variable.name] = true
+	}
+	return &ck
 }
 
 func (ck *VarorderChecker) Check() {
@@ -36,75 +45,72 @@ func (ck *VarorderChecker) Check() {
 		seeGuide("Package components, Makefile", "components.Makefile"))
 }
 
+// relevantLines returns the variable assignments and the empty lines
+// from the top of the makefile, until there is a different kind of line.
+// If there is another relevant variable assignment later in the file,
+// the makefile is not considered simple enough to enforce the order of the
+// variable assignments.
 func (ck *VarorderChecker) relevantLines() []*MkLine {
-	firstRelevant := -1
-	lastRelevant := -1
+	mklines := ck.mklines.mklines
 
-	relevantVars := make(map[string]bool)
-	for _, variable := range variables {
-		if variable.name != "" {
-			relevantVars[variable.name] = true
-		}
-	}
+	var relevantLines []*MkLine
 
-	firstIrrelevant := -1
-	for i, mkline := range ck.mklines.mklines {
-		switch {
-		case mkline.IsVarassignMaybeCommented():
-			varcanon := mkline.Varcanon()
-			if relevantVars[varcanon] {
-				if firstRelevant == -1 {
-					firstRelevant = i
-				}
-				if firstIrrelevant != -1 {
-					if trace.Tracing {
-						trace.Stepf("Skipping varorder because of line %s.",
-							ck.mklines.mklines[firstIrrelevant].Linenos())
-					}
-					return nil
-				}
-				lastRelevant = i
-			} else {
-				if firstIrrelevant == -1 {
-					firstIrrelevant = i
-				}
+	i := 0
+	for ; i < len(mklines); i++ {
+		mkline := mklines[i]
+		if mkline.IsVarassignMaybeCommented() {
+			if ck.relevant[mkline.Varcanon()] {
+				relevantLines = append(relevantLines, mkline)
 			}
-
-		case mkline.IsComment(), mkline.IsEmpty():
+		} else if mkline.IsEmpty() {
+			if len(relevantLines) > 0 &&
+				!relevantLines[len(relevantLines)-1].IsEmpty() {
+				relevantLines = append(relevantLines, mkline)
+			}
+		} else if mkline.IsComment() {
+			continue
+		} else {
 			break
-
-		default:
-			if firstIrrelevant == -1 {
-				firstIrrelevant = i
-			}
 		}
 	}
 
-	if firstRelevant == -1 {
-		return nil
+	for ; i < len(mklines); i++ {
+		switch mkline := mklines[i]; {
+		case mkline.IsVarassignMaybeCommented():
+			if ck.relevant[mkline.Varcanon()] {
+				return nil
+			}
+		case mkline.IsEmpty():
+		case mkline.IsComment():
+		case mkline.IsDependency():
+		case mkline.IsShellCommand():
+		case mkline.IsInclude():
+			if !mkline.IncludedFile().HasBase("buildlink3.mk") &&
+				!mkline.IncludedFile().ContainsPath("mk") {
+				return nil
+			}
+		case mkline.IsSysinclude():
+		}
 	}
-	return ck.mklines.mklines[firstRelevant : lastRelevant+1]
+
+	for len(relevantLines) > 0 && relevantLines[len(relevantLines)-1].IsEmpty() {
+		relevantLines = relevantLines[:len(relevantLines)-1]
+	}
+	return relevantLines
 }
 
-// If there are foreign variables, skip the whole check.
-// The check is only intended for the most simple packages.
-func (ck *VarorderChecker) skip(relevantLines []*MkLine) bool {
-	interesting := relevantLines
+func (ck *VarorderChecker) skip(interesting []*MkLine) bool {
 
 	varcanon := func() string {
-		for len(interesting) > 0 && interesting[0].IsComment() {
-			interesting = interesting[1:]
-		}
-
-		if len(interesting) > 0 && interesting[0].IsVarassign() {
+		if len(interesting) > 0 && interesting[0].IsVarassignMaybeCommented() {
 			return interesting[0].Varcanon()
 		}
 		return ""
 	}
 
-	for _, variable := range variables {
+	for _, variable := range varorderVariables {
 		if variable.name == "" {
-			for len(interesting) > 0 && (interesting[0].IsEmpty() || interesting[0].IsComment()) {
+			for len(interesting) > 0 && interesting[0].IsEmpty() {
 				interesting = interesting[1:]
 			}
 			continue
@@ -139,7 +145,7 @@ func (ck *VarorderChecker) skip(relevantLines []*MkLine) bool {
 // variables.
 func (ck *VarorderChecker) canonical(relevantLines []*MkLine) string {
 	var canonical []string
-	for _, variable := range variables {
+	for _, variable := range varorderVariables {
 		if variable.name == "" {
 			if canonical[len(canonical)-1] != "empty line" {
 				canonical = append(canonical, "empty line")
@@ -184,7 +190,7 @@ type varorderVariable struct {
 
 // See doc/Makefile-example.
 // See https://netbsd.org/docs/pkgsrc/pkgsrc.html#components.Makefile.
-var variables = []varorderVariable{
+var varorderVariables = []varorderVariable{
 	{"DISTNAME", optional},
 	{"PKGNAME", optional},
 	{"R_PKGNAME", optional},

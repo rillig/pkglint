@@ -2,90 +2,308 @@ package pkglint
 
 import "gopkg.in/check.v1"
 
-func (s *Suite) Test_VarorderChecker_Check__only_required_variables(c *check.C) {
+func (s *Suite) Test_NewVarorderChecker(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"",
+		"VAR=")
+
+	ck := NewVarorderChecker(mklines)
+
+	t.CheckEquals(ck.mklines, mklines)
+	t.CheckNotNil(ck.relevant)
+	t.CheckEquals(len(ck.relevant), 42)
+}
+
+func (s *Suite) Test_VarorderChecker_Check__missing_required(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
 		"",
-		"DISTNAME=9term",
-		"CATEGORIES=x11",
+		"DISTNAME=",
+		"CATEGORIES=",
 		"",
 		".include \"../../mk/bsd.pkg.mk\"")
 
-	(&VarorderChecker{mklines}).Check()
+	NewVarorderChecker(mklines).Check()
 
+	// TODO: Make the warning more specific,
+	//  mentioning that COMMENT and LICENSE are missing.
 	t.CheckOutputLines(
 		"WARN: Makefile:3: The canonical order of the variables is " +
 			"DISTNAME, CATEGORIES, empty line, COMMENT, LICENSE.")
 }
 
-func (s *Suite) Test_VarorderChecker_Check__with_optional_variables(c *check.C) {
+func (s *Suite) Test_VarorderChecker_Check__only_required(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
 		"",
-		"GITHUB_PROJECT=project",
-		"DISTNAME=9term",
-		"CATEGORIES=x11")
-
-	(&VarorderChecker{mklines}).Check()
-
-	// TODO: Make this warning more specific to the actual situation.
-
-	// Before 2022-03-11, the GitHub variables were allowed above DISTNAME,
-	// which allowed more variation than necessary and made the warning longer.
-	t.CheckOutputLines(
-		"WARN: Makefile:3: The canonical order of the variables is " +
-			"DISTNAME, CATEGORIES, GITHUB_PROJECT, empty line, " +
-			"COMMENT, LICENSE.")
-}
-
-// Ensure that comments and empty lines do not lead to panics.
-// This had been the case when the code accessed fields like Varname from the
-// MkLine without checking the line type before.
-func (s *Suite) Test_VarorderChecker_relevantLines__comments_do_not_crash(c *check.C) {
-	t := s.Init(c)
-
-	mklines := t.NewMkLines("Makefile",
-		MkCvsID,
+		"DISTNAME=",
+		"CATEGORIES=",
 		"",
-		"GITHUB_PROJECT=project",
+		"COMMENT=",
+		"LICENSE=",
 		"",
-		"# comment",
-		"",
-		"DISTNAME=9term",
-		"# comment",
-		"CATEGORIES=x11")
+		".include \"../../mk/bsd.pkg.mk\"")
 
-	(&VarorderChecker{mklines}).Check()
-
-	t.CheckOutputLines(
-		"WARN: Makefile:3: The canonical order of the variables is " +
-			"DISTNAME, CATEGORIES, GITHUB_PROJECT, empty line, " +
-			"COMMENT, LICENSE.")
-}
-
-func (s *Suite) Test_VarorderChecker_relevantLines__comments_are_ignored(c *check.C) {
-	t := s.Init(c)
-
-	mklines := t.NewMkLines("Makefile",
-		MkCvsID,
-		"",
-		"DISTNAME=\tdistname-1.0",
-		"CATEGORIES=\tsysutils",
-		"",
-		"MAINTAINER=\tpkgsrc-users@NetBSD.org",
-		"# comment",
-		"COMMENT=\tComment",
-		"LICENSE=\tgnu-gpl-v2")
-
-	(&VarorderChecker{mklines}).Check()
+	NewVarorderChecker(mklines).Check()
 
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_VarorderChecker_Check__all_optional(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"DISTNAME=",
+		"PKGNAME=",
+		"R_PKGNAME=",
+		"R_PKGVER=",
+		"PKGREVISION=",
+		"CATEGORIES=",
+		"GITHUB_PROJECT=",
+		"GITHUB_TAG=",
+		"GITHUB_RELEASE=",
+		"DIST_SUBDIR=",
+		"EXTRACT_SUFX=",
+		"",
+		"PATCH_SITES=",
+		"PATCH_SITE_SUBDIR=",
+		"PATCHFILES=",
+		"PATCH_DIST_ARGS=",
+		"PATCH_DIST_STRIP=",
+		"PATCH_DIST_CAT=",
+		"",
+		"MAINTAINER=",
+		"OWNER=",
+		"HOMEPAGE=",
+		"COMMENT=",
+		"LICENSE=",
+		"",
+		"LICENSE_FILE=",
+		"RESTRICTED=",
+		"NO_BIN_ON_CDROM=",
+		"NO_BIN_ON_FTP=",
+		"NO_SRC_ON_CDROM=",
+		"NO_SRC_ON_FTP=",
+		"",
+		"NOT_FOR_UNPRIVILEGED=",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	NewVarorderChecker(mklines).Check()
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_VarorderChecker_Check__all_many(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"CATEGORIES=",
+		"MASTER_SITES=",
+		"MASTER_SITES=",
+		"DISTFILES=",
+		"DISTFILES=",
+		"SITES.*=",
+		"SITES.*=",
+		"",
+		"COMMENT=",
+		"LICENSE=",
+		"",
+		"BROKEN_EXCEPT_ON_PLATFORM=",
+		"BROKEN_EXCEPT_ON_PLATFORM=",
+		"BROKEN_ON_PLATFORM=",
+		"BROKEN_ON_PLATFORM=",
+		"NOT_FOR_PLATFORM=",
+		"NOT_FOR_PLATFORM=",
+		"ONLY_FOR_PLATFORM=",
+		"ONLY_FOR_PLATFORM=",
+		"NOT_FOR_COMPILER=",
+		"NOT_FOR_COMPILER=",
+		"ONLY_FOR_COMPILER=",
+		"ONLY_FOR_COMPILER=",
+		"",
+		"BUILD_DEPENDS=",
+		"BUILD_DEPENDS=",
+		"TOOL_DEPENDS=",
+		"TOOL_DEPENDS=",
+		"DEPENDS=",
+		"DEPENDS=",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	NewVarorderChecker(mklines).Check()
+
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_VarorderChecker_Check__extra_empty_line(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"CATEGORIES=",
+		"MASTER_SITES=",
+		"",
+		"MAINTAINER=",
+		"HOMEPAGE=",
+		"COMMENT=",
+		"",
+		"LICENSE=",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	NewVarorderChecker(mklines).Check()
+
+	// TODO: Be more specific, mentioning that the empty line above
+	//  LICENSE should be removed.
+	t.CheckOutputLines(
+		"WARN: Makefile:3: The canonical order of the variables is " +
+			"CATEGORIES, MASTER_SITES, empty line, " +
+			"MAINTAINER, HOMEPAGE, COMMENT, LICENSE.")
+}
+
+func (s *Suite) Test_VarorderChecker_Check__swapped(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"CATEGORIES=",
+		"DIST_SUBDIR=",
+		"MASTER_SITES=",
+		"",
+		"MAINTAINER=",
+		"HOMEPAGE=",
+		"COMMENT=",
+		"LICENSE=",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	NewVarorderChecker(mklines).Check()
+
+	// TODO: Be more specific, mentioning that DIST_SUBDIR and
+	//  MASTER_SITES should be swapped.
+	t.CheckOutputLines(
+		"WARN: Makefile:3: The canonical order of the variables is " +
+			"CATEGORIES, MASTER_SITES, DIST_SUBDIR, empty line, " +
+			"MAINTAINER, HOMEPAGE, COMMENT, LICENSE.")
+}
+
+func (s *Suite) Test_VarorderChecker_Check__in_wrong_section(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"CATEGORIES=",
+		"MASTER_SITES=",
+		"",
+		"MAINTAINER=",
+		"HOMEPAGE=",
+		"COMMENT=",
+		"",
+		"DIST_SUBDIR=", // Is in the wrong section.
+		"WRKSRC=",
+		"INSTALLATION_DIRS=",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	NewVarorderChecker(mklines).Check()
+
+	// TODO: Be more specific, mentioning that DIST_SUBDIR should
+	//  be at the end of the first section, below MASTER_SITES.
+	t.CheckOutputLines(
+		"WARN: Makefile:3: The canonical order of the variables is " +
+			"CATEGORIES, MASTER_SITES, DIST_SUBDIR, empty line, " +
+			"MAINTAINER, HOMEPAGE, COMMENT, LICENSE.")
+}
+
+func (s *Suite) Test_VarorderChecker_Check__duplicate_in_comment(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"CATEGORIES=",
+		"MASTER_SITES=",
+		"",
+		"MAINTAINER=",
+		"#HOMEPAGE=",
+		"HOMEPAGE=",
+		"COMMENT=",
+		"LICENSE=",
+		"",
+		"CONFIGURE_ARGS=",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	NewVarorderChecker(mklines).Check()
+
+	// FIXME: The duplicate HOMEPAGE is not an error since at most one
+	//  of them is active.
+	t.CheckOutputLines(
+		"WARN: Makefile:3: The canonical order of the variables is " +
+			"CATEGORIES, MASTER_SITES, " +
+			"empty line, " +
+			"MAINTAINER, HOMEPAGE, COMMENT, LICENSE.")
+}
+
+func (s *Suite) Test_VarorderChecker_relevantLines__comments(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"# A comment at the beginning of a section.",
+		"CATEGORIES=     net",
+		"# A comment at the end of a section.",
+		"",
+		"# A comment between sections.",
+		"",
+		"# A second comment between sections.",
+		"",
+		"MAINTAINER=     maintainer@example.org",
+		"HOMEPAGE=       https://github.com/project/pkgbase/",
+		"COMMENT=        Comment",
+		"LICENSE=        gnu-gpl-v3",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	NewVarorderChecker(mklines).Check()
+
+	// The empty line between the comments is not treated as a section separator.
+	t.CheckOutputEmpty()
+}
+
+// A commented variable assignment is treated in the same way as an active
+// variable assignment, as the varorder check only ensures the correct
+// ordering, and not that each required variable is actually defined.
+// Ensuring that every package has a homepage would be a suitable runtime
+// check instead.
+//
+// The order of the variables LICENSE and COMMENT is intentionally
+// wrong to force the warning.
+//
+// Up to June 2019 (308099138a62) pkglint mentioned in the warning
+// each commented variable assignment, even repeatedly for the same
+// variable name.
+//
+// These variable assignments should be in the correct order, even
+// if they are commented out. It's not necessary though to list a
+// variable more than once.
 func (s *Suite) Test_VarorderChecker_relevantLines__commented_variable_assignment(c *check.C) {
 	t := s.Init(c)
 
@@ -93,201 +311,30 @@ func (s *Suite) Test_VarorderChecker_relevantLines__commented_variable_assignmen
 		MkCvsID,
 		"",
 		"DISTNAME=\tdistname-1.0",
-		"CATEGORIES=\tsysutils",
+		// CATEGORIES is missing to force the warning.
 		"",
 		"MAINTAINER=\tpkgsrc-users@NetBSD.org",
+		"#HOMEPAGE=\thttps://example.org/",
+		"#HOMEPAGE=\thttps://example.org/",
+		"#HOMEPAGE=\thttps://example.org/",
+		"#HOMEPAGE=\thttps://example.org/",
+		"#HOMEPAGE=\thttps://example.org/",
 		"#HOMEPAGE=\thttps://example.org/",
 		"COMMENT=\tComment",
 		"LICENSE=\tgnu-gpl-v2")
 
-	(&VarorderChecker{mklines}).Check()
-
-	t.CheckOutputEmpty()
-}
-
-func (s *Suite) Test_VarorderChecker_relevantLines__GITHUB_PROJECT_at_the_top(c *check.C) {
-	t := s.Init(c)
-
-	mklines := t.NewMkLines("Makefile",
-		MkCvsID,
-		"",
-		"GITHUB_PROJECT=\t\tautocutsel",
-		"DISTNAME=\t\tautocutsel-0.10.0",
-		"CATEGORIES=\t\tx11",
-		"MASTER_SITES=\t\t${MASTER_SITE_GITHUB:=sigmike/}",
-		"GITHUB_TAG=\t\t${PKGVERSION_NOREV}",
-		"",
-		"COMMENT=\tComment",
-		"LICENSE=\tgnu-gpl-v2")
-
-	(&VarorderChecker{mklines}).Check()
-
-	// Before 2022-03-11, the GitHub variables were allowed above DISTNAME,
-	// which allowed more variation than necessary and made the warning longer.
-	t.CheckOutputLines(
-		"WARN: Makefile:3: The canonical order of the variables is " +
-			"DISTNAME, CATEGORIES, MASTER_SITES, GITHUB_PROJECT, " +
-			"GITHUB_TAG, empty line, COMMENT, LICENSE.")
-}
-
-func (s *Suite) Test_VarorderChecker_relevantLines__GITHUB_PROJECT_at_the_bottom(c *check.C) {
-	t := s.Init(c)
-
-	mklines := t.NewMkLines("Makefile",
-		MkCvsID,
-		"",
-		"DISTNAME=\t\tautocutsel-0.10.0",
-		"CATEGORIES=\t\tx11",
-		"MASTER_SITES=\t\t${MASTER_SITE_GITHUB:=sigmike/}",
-		"GITHUB_PROJECT=\t\tautocutsel",
-		"GITHUB_TAG=\t\t${PKGVERSION_NOREV}",
-		"",
-		"COMMENT=\tComment",
-		"LICENSE=\tgnu-gpl-v2")
-
-	(&VarorderChecker{mklines}).Check()
-
-	t.CheckOutputEmpty()
-}
-
-// TODO: Add more tests like skip_if_there_are_directives for other line types.
-
-// https://mail-index.netbsd.org/tech-pkg/2017/01/18/msg017698.html
-func (s *Suite) Test_VarorderChecker_relevantLines__MASTER_SITES(c *check.C) {
-	t := s.Init(c)
-
-	mklines := t.NewMkLines("Makefile",
-		MkCvsID,
-		"",
-		"PKGNAME=\tpackage-1.0",
-		"CATEGORIES=\tcategory",
-		"MASTER_SITES=\thttp://example.org/",
-		"MASTER_SITES+=\thttp://mirror.example.org/",
-		"",
-		"COMMENT=\tComment",
-		"LICENSE=\tgnu-gpl-v2")
-
-	(&VarorderChecker{mklines}).Check()
-
-	// No warning that "MASTER_SITES appears too late"
-	t.CheckOutputEmpty()
-}
-
-func (s *Suite) Test_VarorderChecker_relevantLines__comment_at_end_of_section(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpVartypes()
-	mklines := t.NewMkLines("Makefile",
-		MkCvsID,
-		"",
-		"CATEGORIES=     net",
-		"SITES.*=        # none",
-		"# comment after the last variable of a section",
-		"",
-		"MAINTAINER=     maintainer@example.org",
-		"HOMEPAGE=       https://github.com/project/pkgbase/",
-		"COMMENT=        Comment",
-		"LICENSE=        gnu-gpl-v3",
-		"",
-		".include \"../../mk/bsd.pkg.mk\"")
-
-	t.EnableTracingToLog()
-	(&VarorderChecker{mklines}).Check()
-
-	// The varorder code is not skipped, not even because of the comment
-	// after SITES.*.
-	t.CheckOutputLinesMatching(`.*varorder.*`,
-		nil...)
-}
-
-func (s *Suite) Test_VarorderChecker_relevantLines__comments_between_sections(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpVartypes()
-	mklines := t.NewMkLines("Makefile",
-		MkCvsID,
-		"",
-		"CATEGORIES=     net",
-		"",
-		"# comment 1",
-		"",
-		"# comment 2",
-		"",
-		"MAINTAINER=     maintainer@example.org",
-		"HOMEPAGE=       https://github.com/project/pkgbase/",
-		"COMMENT=        Comment",
-		"LICENSE=        gnu-gpl-v3",
-		"",
-		".include \"../../mk/bsd.pkg.mk\"")
-
-	(&VarorderChecker{mklines}).Check()
-
-	// The empty line between the comments is not treated as a section separator.
-	t.CheckOutputEmpty()
-}
-
-func (s *Suite) Test_VarorderChecker_relevantLines__commented_varassign(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpVartypes()
-	mklines := t.NewMkLines("Makefile",
-		MkCvsID,
-		"",
-		"CATEGORIES=     net",
-		"#MASTER_SITES=  # none",
-		"",
-		"HOMEPAGE=       https://github.com/project/pkgbase/",
-		"#HOMEPAGE=      https://github.com/project/pkgbase/",
-		"#HOMEPAGE=      https://github.com/project/pkgbase/",
-		"#HOMEPAGE=      https://github.com/project/pkgbase/",
-		"#HOMEPAGE=      https://github.com/project/pkgbase/",
-		"LICENSE=        gnu-gpl-v3",
-		"COMMENT=        Comment",
-		"",
-		".include \"../../mk/bsd.pkg.mk\"")
-
-	(&VarorderChecker{mklines}).Check()
-
-	// The order of the variables LICENSE and COMMENT is intentionally
-	// wrong to force the warning.
-	//
-	// Up to June 2019 (308099138a62) pkglint mentioned in the warning
-	// each commented variable assignment, even repeatedly for the same
-	// variable name.
-	//
-	// These variable assignments should be in the correct order, even
-	// if they are commented out. It's not necessary though to list a
-	// variable more than once.
-	t.CheckOutputLines(
-		"WARN: Makefile:3: The canonical order of the variables is " +
-			"CATEGORIES, MASTER_SITES, empty line, HOMEPAGE, COMMENT, LICENSE.")
-}
-
-func (s *Suite) Test_VarorderChecker_relevantLines__DEPENDS(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpVartypes()
-	mklines := t.NewMkLines("Makefile",
-		MkCvsID,
-		"",
-		"CATEGORIES=     net",
-		"",
-		"COMMENT=        Comment",
-		"LICENSE=        license",
-		"MAINTAINER=     maintainer@example.org", // In wrong order
-		"",
-		"DEPENDS+=       dependency>=1.0:../../category/dependency",
-		"",
-		".include \"../../mk/bsd.pkg.mk\"")
-
-	(&VarorderChecker{mklines}).Check()
+	NewVarorderChecker(mklines).Check()
 
 	t.CheckOutputLines(
 		"WARN: Makefile:3: The canonical order of the variables is " +
-			"CATEGORIES, empty line, MAINTAINER, COMMENT, LICENSE, empty line, DEPENDS.")
+			"DISTNAME, CATEGORIES, " +
+			"empty line, " +
+			"MAINTAINER, HOMEPAGE, COMMENT, LICENSE.")
 }
 
-func (s *Suite) Test_VarorderChecker_skip__skip_because_of_foreign_variable(c *check.C) {
+// USE_TOOLS is not in the list of varorder variables and is thus skipped when
+// collecting the relevant lines.
+func (s *Suite) Test_VarorderChecker_relevantLines__foreign_variable(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("Makefile",
@@ -299,17 +346,22 @@ func (s *Suite) Test_VarorderChecker_skip__skip_because_of_foreign_variable(c *c
 		"",
 		"MAINTAINER=\tpkgsrc-users@NetBSD.org",
 		"#HOMEPAGE=\thttps://example.org/",
-		"COMMENT=\tComment",
 		"LICENSE=\tgnu-gpl-v2")
 
-	t.EnableTracingToLog()
-	(&VarorderChecker{mklines}).Check()
+	NewVarorderChecker(mklines).Check()
 
-	t.CheckOutputLinesMatching(`.*varorder.*`,
-		"TRACE:   Skipping varorder because of line 4.")
+	// TODO: Be more specific in the warning,
+	//  mentioning that COMMENT is missing.
+	t.CheckOutputLines(
+		"WARN: Makefile:3: The canonical order of the variables is " +
+			"DISTNAME, CATEGORIES, empty line, " +
+			"MAINTAINER, HOMEPAGE, COMMENT, LICENSE.")
 }
 
-func (s *Suite) Test_VarorderChecker_skip__skip_if_there_are_directives(c *check.C) {
+// Package makefiles that contain conditionals may have good reason to deviate
+// from the standard variable order, or may define a "once" variable twice, in
+// separate branches of the conditional.  Skip the check in these cases.
+func (s *Suite) Test_VarorderChecker_skip__directive(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("Makefile",
@@ -323,18 +375,16 @@ func (s *Suite) Test_VarorderChecker_skip__skip_if_there_are_directives(c *check
 		".endif",
 		"LICENSE=\tgnu-gpl-v2")
 
-	(&VarorderChecker{mklines}).Check()
+	NewVarorderChecker(mklines).Check()
 
 	// No warning about the missing COMMENT since the .if directive
 	// causes the whole check to be skipped.
 	t.CheckOutputEmpty()
-
-	// Just for code coverage.
-	t.DisableTracing()
-	(&VarorderChecker{mklines}).Check()
-	t.CheckOutputEmpty()
 }
 
+// This package does not declare its LICENSE.
+// Since this error is grave enough, skip the varorder check,
+// as its warning would look redundant.
 func (s *Suite) Test_VarorderChecker_skip__LICENSE(c *check.C) {
 	t := s.Init(c)
 
@@ -358,8 +408,8 @@ func (s *Suite) Test_VarorderChecker_skip__LICENSE(c *check.C) {
 
 	G.Check(t.File("x11/9term"))
 
-	// Since the error is grave enough, the warning about the correct position is suppressed.
-	// TODO: Knowing the correct position helps, though.
+	// TODO: Be more specific in the warning,
+	//  mentioning in which line the LICENSE should be inserted.
 	t.CheckOutputLines(
 		"ERROR: ~/x11/9term/Makefile: Each package must define its LICENSE.")
 }
@@ -387,7 +437,7 @@ func (s *Suite) Test_VarorderChecker_canonical__diagnostics(c *check.C) {
 		"",
 		".include \"../../mk/bsd.pkg.mk\"")
 
-	(&VarorderChecker{mklines}).Check()
+	NewVarorderChecker(mklines).Check()
 
 	t.CheckOutputLines(
 		"WARN: Makefile:3: The canonical order of the variables is " +
@@ -395,7 +445,7 @@ func (s *Suite) Test_VarorderChecker_canonical__diagnostics(c *check.C) {
 			"MASTER_SITES, GITHUB_PROJECT, DIST_SUBDIR, empty line, " +
 			"MAINTAINER, HOMEPAGE, COMMENT, LICENSE.")
 
-	// After moving the variables according to the warning:
+	// After ordering the variables according to the warning:
 	mklines = t.NewMkLines("Makefile",
 		MkCvsID,
 		"",
@@ -413,7 +463,7 @@ func (s *Suite) Test_VarorderChecker_canonical__diagnostics(c *check.C) {
 		"",
 		".include \"../../mk/bsd.pkg.mk\"")
 
-	(&VarorderChecker{mklines}).Check()
+	NewVarorderChecker(mklines).Check()
 
 	t.CheckOutputEmpty()
 }

@@ -859,7 +859,7 @@ func (pkg *Package) checkfilePackageMakefile(filename CurrPath, mklines *MkLines
 	}
 
 	if !pkg.seenInclude {
-		(&VarorderChecker{mklines}).Check()
+		NewVarorderChecker(mklines).Check()
 	}
 
 	pkg.checkMeson(mklines)
