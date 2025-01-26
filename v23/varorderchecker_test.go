@@ -215,9 +215,8 @@ func (s *Suite) Test_VarorderChecker_Check__once_repeated(c *check.C) {
 
 	NewVarorderChecker(mklines).Check()
 
-	// FIXME: wrong line, must be 7.
 	t.CheckOutputLines(
-		"WARN: Makefile:8: The variable \"CATEGORIES\" " +
+		"WARN: Makefile:7: The variable \"CATEGORIES\" " +
 			"should only occur once.")
 }
 
@@ -657,7 +656,7 @@ func (s *Suite) Test_VarorderChecker_check(c *check.C) {
 	NewVarorderChecker(mklines).Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:6: The variable \"CATEGORIES\" should only occur once.")
+		"WARN: Makefile:5: The variable \"CATEGORIES\" should only occur once.")
 }
 
 // This package does not declare its LICENSE.

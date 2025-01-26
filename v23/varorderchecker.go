@@ -109,18 +109,14 @@ func (ck *VarorderChecker) check(mklines []*MkLine, bottom *MkLine) {
 				commented++
 			} else {
 				uncommented++
+				if uncommented > 1 && v.repetition != many {
+					mkline := mklines[mi]
+					mkline.Warnf("The variable \"%s\" should only occur once.", v.canon)
+					ck.explain(mkline)
+					return
+				}
 			}
 			mi++
-		}
-
-		if uncommented > 1 && v.repetition != many {
-			mkline := bottom
-			if mi < mn {
-				mkline = mklines[mi]
-			}
-			mkline.Warnf("The variable \"%s\" should only occur once.", v.canon)
-			ck.explain(mkline)
-			return
 		}
 
 		if v.repetition == once && commented+uncommented == 0 &&
