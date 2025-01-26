@@ -82,7 +82,7 @@ func (ck *VarorderChecker) relevantLines() (relevant []*MkLine, bottom *MkLine) 
 }
 
 func (ck *VarorderChecker) check(mklines []*MkLine, bottom *MkLine) {
-	seen := map[string]*MkLine{}
+	location := map[string]*MkLine{}
 	mi, mn := 0, len(mklines)
 	for _, v := range varorderVariables {
 
@@ -129,22 +129,27 @@ func (ck *VarorderChecker) check(mklines []*MkLine, bottom *MkLine) {
 			if mi < mn {
 				mkline = mklines[mi]
 			}
-			mkline.Warnf("Missing assignment to \"%s\".", v.canon)
+			if mkline.IsVarassignMaybeCommented() && location[mkline.Varcanon()] != nil {
+				mkline.Warnf("Variable \"%s\" occurs too late, should be in %s.",
+					mkline.Varname(), mkline.RelMkLine(location[mkline.Varcanon()]))
+			} else {
+				mkline.Warnf("Missing assignment to \"%s\".", v.canon)
+			}
 			ck.explain(mkline)
 			return
 		}
 
 		if commented+uncommented == 0 && mi < mn &&
 			mklines[mi].IsVarassignMaybeCommented() &&
-			seen[mklines[mi].Varcanon()] != nil {
+			location[mklines[mi].Varcanon()] != nil {
 			mkline := mklines[mi]
 			mkline.Warnf("The variable \"%s\" is misplaced, should be in %s.",
-				mklines[mi].Varname(), mkline.RelMkLine(seen[mklines[mi].Varcanon()]))
+				mklines[mi].Varname(), mkline.RelMkLine(location[mklines[mi].Varcanon()]))
 			ck.explain(mkline)
 			return
 		}
 		if mi < mn {
-			seen[v.canon] = mklines[mi]
+			location[v.canon] = mklines[mi]
 		}
 	}
 }

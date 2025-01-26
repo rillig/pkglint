@@ -216,6 +216,30 @@ func (s *Suite) Test_VarorderChecker_Check__swapped_optional_middle(c *check.C) 
 			"should be in line 3.")
 }
 
+func (s *Suite) Test_VarorderChecker_Check__too_late(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"VERSION=",
+		"PKGNAME=",
+		"PKGREVISION=",
+		"DISTNAME=",
+		"CATEGORIES=",
+		"",
+		"COMMENT=",
+		"LICENSE=",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	NewVarorderChecker(mklines).Check()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:6: Variable \"DISTNAME\" occurs too late, " +
+			"should be in line 4.")
+}
+
 // Two optional variables from the same section occur in the wrong order.
 // The second of these variables should be placed at the end of the section.
 func (s *Suite) Test_VarorderChecker_Check__swapped_optional_end(c *check.C) {
