@@ -1,11 +1,8 @@
 package pkglint
 
-import "strings"
-
 // VarorderChecker checks that in simple package Makefiles,
-// the most common variables appear in a fixed order.
-// The order itself is a little arbitrary but provides
-// at least a bit of consistency.
+// the most common variables appear in a fixed order,
+// as detailed in the pkgsrc guide.
 type VarorderChecker struct {
 	mklines  *MkLines
 	relevant map[string]bool
@@ -14,7 +11,7 @@ type VarorderChecker struct {
 func NewVarorderChecker(mklines *MkLines) *VarorderChecker {
 	ck := VarorderChecker{mklines, map[string]bool{}}
 	for _, variable := range varorderVariables {
-		ck.relevant[variable.name] = true
+		ck.relevant[variable.canon] = true
 	}
 	return &ck
 }
@@ -25,24 +22,12 @@ func (ck *VarorderChecker) Check() {
 	//  since it is equally useful for PKG_OPTIONS in options.mk,
 	//  and it is related to SubstContext.
 
-	relevantLines := ck.relevantLines()
-
-	if len(relevantLines) == 0 || ck.skip(relevantLines) {
+	relevant, bottom := ck.relevantLines()
+	if len(relevant) == 0 {
 		return
 	}
 
-	// TODO: This leads to very long and complicated warnings.
-	//  Those parts that are correct should not be mentioned,
-	//  except if they are helpful for locating the mistakes.
-	mkline := relevantLines[0]
-	mkline.Warnf("The canonical order of the variables is %s.",
-		ck.canonical(relevantLines))
-	mkline.Explain(
-		"In simple package Makefiles, some common variables should be",
-		"arranged in a specific order.",
-		"",
-		"See doc/Makefile-example for an example Makefile.",
-		seeGuide("Package components, Makefile", "components.Makefile"))
+	ck.check(relevant, bottom)
 }
 
 // relevantLines returns the variable assignments and the empty lines
@@ -50,22 +35,19 @@ func (ck *VarorderChecker) Check() {
 // If there is another relevant variable assignment later in the file,
 // the makefile is not considered simple enough to enforce the order of the
 // variable assignments.
-func (ck *VarorderChecker) relevantLines() []*MkLine {
+func (ck *VarorderChecker) relevantLines() (relevant []*MkLine, bottom *MkLine) {
 	mklines := ck.mklines.mklines
-
-	var relevantLines []*MkLine
 
 	i := 0
 	for ; i < len(mklines); i++ {
 		mkline := mklines[i]
 		if mkline.IsVarassignMaybeCommented() {
 			if ck.relevant[mkline.Varcanon()] {
-				relevantLines = append(relevantLines, mkline)
+				relevant = append(relevant, mkline)
 			}
 		} else if mkline.IsEmpty() {
-			if len(relevantLines) > 0 &&
-				!relevantLines[len(relevantLines)-1].IsEmpty() {
-				relevantLines = append(relevantLines, mkline)
+			if len(relevant) > 0 && !relevant[len(relevant)-1].IsEmpty() {
+				relevant = append(relevant, mkline)
 			}
 		} else if mkline.IsComment() {
 			continue
@@ -73,109 +55,116 @@ func (ck *VarorderChecker) relevantLines() []*MkLine {
 			break
 		}
 	}
+	for len(relevant) > 0 && relevant[len(relevant)-1].IsEmpty() {
+		relevant = relevant[:len(relevant)-1]
+	}
+
+	if i == len(mklines) {
+		return nil, nil
+	}
+	bottom = mklines[i]
 
 	for ; i < len(mklines); i++ {
 		switch mkline := mklines[i]; {
 		case mkline.IsVarassignMaybeCommented():
 			if ck.relevant[mkline.Varcanon()] {
-				return nil
+				return nil, nil
 			}
-		case mkline.IsEmpty():
-		case mkline.IsComment():
-		case mkline.IsDependency():
-		case mkline.IsShellCommand():
 		case mkline.IsInclude():
 			if !mkline.IncludedFile().HasBase("buildlink3.mk") &&
 				!mkline.IncludedFile().ContainsPath("mk") {
-				return nil
+				return nil, nil
 			}
-		case mkline.IsSysinclude():
 		}
 	}
 
-	for len(relevantLines) > 0 && relevantLines[len(relevantLines)-1].IsEmpty() {
-		relevantLines = relevantLines[:len(relevantLines)-1]
-	}
-	return relevantLines
+	return
 }
 
-func (ck *VarorderChecker) skip(interesting []*MkLine) bool {
+func (ck *VarorderChecker) check(mklines []*MkLine, bottom *MkLine) {
+	seen := map[string]*MkLine{}
+	mi, mn := 0, len(mklines)
+	for _, v := range varorderVariables {
 
-	varcanon := func() string {
-		if len(interesting) > 0 && interesting[0].IsVarassignMaybeCommented() {
-			return interesting[0].Varcanon()
-		}
-		return ""
-	}
-
-	for _, variable := range varorderVariables {
-		if variable.name == "" {
-			for len(interesting) > 0 && interesting[0].IsEmpty() {
-				interesting = interesting[1:]
+		if v.canon == "" {
+			pi := mi
+			for mi < mn && mklines[mi].IsEmpty() {
+				mi++
+			}
+			if mi == pi && mi > 0 && mi < mn && !mklines[mi-1].IsEmpty() {
+				mkline := mklines[mi]
+				mkline.Warnf("Missing empty line.")
+				ck.explain(mkline)
+				return
 			}
 			continue
 		}
 
 		commented := 0
 		uncommented := 0
-		for varcanon() == variable.name {
-			if interesting[0].IsComment() {
+		for mi < mn &&
+			mklines[mi].IsVarassignMaybeCommented() &&
+			mklines[mi].Varcanon() == v.canon {
+			if mklines[mi].IsComment() {
 				commented++
 			} else {
 				uncommented++
-				if uncommented > 1 && (variable.repetition == once || variable.repetition == optional) {
-					if trace.Tracing {
-						trace.Stepf("Wrong varorder because %s is duplicate.", variable.name)
-					}
-					return false
-				}
 			}
-			interesting = interesting[1:]
+			mi++
 		}
-		if variable.repetition == once && commented == 0 && uncommented == 0 && variable.name != "LICENSE" {
-			if trace.Tracing {
-				trace.Stepf("Wrong varorder because %s is missing.", variable.name)
+
+		if uncommented > 1 && v.repetition != many {
+			mkline := bottom
+			if mi < mn {
+				mkline = mklines[mi]
 			}
+			mkline.Warnf("The variable \"%s\" should only occur once.", v.canon)
+			ck.explain(mkline)
+			return
+		}
+
+		if v.repetition == once && commented+uncommented == 0 &&
+			!(v.canon == "LICENSE" && ck.skipLicenseCheck(mklines)) {
+			mkline := bottom
+			if mi < mn {
+				mkline = mklines[mi]
+			}
+			mkline.Warnf("Missing assignment to \"%s\".", v.canon)
+			ck.explain(mkline)
+			return
+		}
+
+		if commented+uncommented == 0 && mi < mn &&
+			mklines[mi].IsVarassignMaybeCommented() &&
+			seen[mklines[mi].Varcanon()] != nil {
+			mkline := mklines[mi]
+			mkline.Warnf("The variable \"%s\" is misplaced, should be in %s.",
+				mklines[mi].Varname(), mkline.RelMkLine(seen[mklines[mi].Varcanon()]))
+			ck.explain(mkline)
+			return
+		}
+		if mi < mn {
+			seen[v.canon] = mklines[mi]
+		}
+	}
+}
+
+func (ck *VarorderChecker) skipLicenseCheck(mklines []*MkLine) bool {
+	for _, mkline := range mklines {
+		if mkline.IsVarassignMaybeCommented() && mkline.Varcanon() == "LICENSE" {
 			return false
 		}
 	}
-
-	return len(interesting) == 0
+	return true
 }
 
-// canonical returns the canonical ordering of the variables, mentioning all
-// the variables that occur in the relevant section, as well as the "once"
-// variables.
-func (ck *VarorderChecker) canonical(relevantLines []*MkLine) string {
-	var canonical []string
-	for _, variable := range varorderVariables {
-		if variable.name == "" {
-			if canonical[len(canonical)-1] != "empty line" {
-				canonical = append(canonical, "empty line")
-			}
-			continue
-		}
-
-		found := false
-		for _, mkline := range relevantLines {
-			if mkline.IsVarassignMaybeCommented() &&
-				mkline.Varcanon() == variable.name {
-
-				canonical = append(canonical, mkline.Varname())
-				found = true
-				break
-			}
-		}
-
-		if !found && variable.repetition == once {
-			canonical = append(canonical, variable.name)
-		}
-	}
-
-	if canonical[len(canonical)-1] == "empty line" {
-		canonical = canonical[:len(canonical)-1]
-	}
-	return strings.Join(canonical, ", ")
+func (*VarorderChecker) explain(mkline *MkLine) {
+	mkline.Explain(
+		"In simple package Makefiles, some common variables should be",
+		"arranged in a specific order.",
+		"",
+		"See doc/Makefile-example for an example Makefile.",
+		seeGuide("Package components, Makefile", "components.Makefile"))
 }
 
 type varorderRepetition uint8
@@ -187,7 +176,7 @@ const (
 )
 
 type varorderVariable struct {
-	name       string
+	canon      string
 	repetition varorderRepetition
 }
 

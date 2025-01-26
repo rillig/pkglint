@@ -17,27 +17,26 @@ func (s *Suite) Test_NewVarorderChecker(c *check.C) {
 	t.CheckEquals(len(ck.relevant), 42)
 }
 
-func (s *Suite) Test_VarorderChecker_Check__missing_required(c *check.C) {
+// None of the relevant variables is defined,
+// so the varorder check is skipped.
+func (s *Suite) Test_VarorderChecker_Check__none(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
 		"",
-		"DISTNAME=",
-		"CATEGORIES=",
+		"IRRELEVANT=",
 		"",
 		".include \"../../mk/bsd.pkg.mk\"")
 
 	NewVarorderChecker(mklines).Check()
 
-	// TODO: Make the warning more specific,
-	//  mentioning that COMMENT and LICENSE are missing.
-	t.CheckOutputLines(
-		"WARN: Makefile:3: The canonical order of the variables is " +
-			"DISTNAME, CATEGORIES, empty line, COMMENT, LICENSE.")
+	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_VarorderChecker_Check__only_required(c *check.C) {
+// All required variables are defined,
+// all optional variables are undefined.
+func (s *Suite) Test_VarorderChecker_Check__once(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("Makefile",
@@ -56,7 +55,9 @@ func (s *Suite) Test_VarorderChecker_Check__only_required(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_VarorderChecker_Check__all_optional(c *check.C) {
+// All required and optional variables are defined,
+// but all repeatable variables are undefined.
+func (s *Suite) Test_VarorderChecker_Check__once_and_optional(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("Makefile",
@@ -103,7 +104,9 @@ func (s *Suite) Test_VarorderChecker_Check__all_optional(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_VarorderChecker_Check__all_many(c *check.C) {
+// All required and repeatable variables are defined,
+// but all optional variables are undefined.
+func (s *Suite) Test_VarorderChecker_Check__once_and_many(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("Makefile",
@@ -147,6 +150,170 @@ func (s *Suite) Test_VarorderChecker_Check__all_many(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+// No test for a required variable at the beginning of a section,
+// as this constellation does not occur in varorderVariables.
+
+// A required variable in the middle of a section is missing.
+func (s *Suite) Test_VarorderChecker_Check__missing_once_middle(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"CATEGORIES=",
+		"",
+		// COMMENT is missing.
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	NewVarorderChecker(mklines).Check()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:5: Missing assignment to \"COMMENT\".")
+}
+
+// A required variable at the end of the section is missing.
+func (s *Suite) Test_VarorderChecker_Check__missing_once_end(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"CATEGORIES=",
+		"",
+		"COMMENT=",
+		// LICENSE is missing.
+		"",
+		"LICENSE=", // Too late.
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	NewVarorderChecker(mklines).Check()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:6: Missing assignment to \"LICENSE\".")
+}
+
+// Two optional variables from the same section occur in the wrong order.
+// Both variables should be placed in the middle of the section.
+func (s *Suite) Test_VarorderChecker_Check__swapped_optional_middle(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"R_PKGVER=",
+		"R_PKGNAME=", // Should be above R_PKGVER.
+		"CATEGORIES=",
+		"",
+		"COMMENT=",
+		"LICENSE=",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	NewVarorderChecker(mklines).Check()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:4: The variable \"R_PKGNAME\" is misplaced, " +
+			"should be in line 3.")
+}
+
+// Two optional variables from the same section occur in the wrong order.
+// The second of these variables should be placed at the end of the section.
+func (s *Suite) Test_VarorderChecker_Check__swapped_optional_end(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"CATEGORIES=",
+		"DIST_SUBDIR=",
+		"MASTER_SITES=",
+		"",
+		"MAINTAINER=",
+		"HOMEPAGE=",
+		"COMMENT=",
+		"LICENSE=",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	NewVarorderChecker(mklines).Check()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:5: The variable \"MASTER_SITES\" is misplaced, " +
+			"should be in line 4.")
+}
+
+// Two optional variables from different sections occur in the wrong order.
+func (s *Suite) Test_VarorderChecker_Check__swapped_across_sections(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"CATEGORIES=",
+		"",
+		"COMMENT=",
+		"LICENSE=",
+		"",
+		"NOT_FOR_UNPRIVILEGED=",
+		"",
+		"DISTNAME=",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	NewVarorderChecker(mklines).Check()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:10: The variable \"DISTNAME\" is misplaced, " +
+			"should be in line 3.")
+}
+
+// A variable is in the wrong place, it should be at the very top.
+func (s *Suite) Test_VarorderChecker_Check__move_to_top(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"CATEGORIES=",
+		"",
+		"COMMENT=",
+		"LICENSE=",
+		"",
+		"DISTNAME=", // Should be at the very top.
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	NewVarorderChecker(mklines).Check()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:8: The variable \"DISTNAME\" is misplaced, " +
+			"should be in line 3.")
+}
+
+// A variable is in the wrong place, it should be at the very bottom.
+func (s *Suite) Test_VarorderChecker_Check__move_to_bottom(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"CATEGORIES=",
+		"DEPENDS=", // Should be at the very bottom.
+		"",
+		"COMMENT=",
+		"LICENSE=",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	NewVarorderChecker(mklines).Check()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:4: Missing empty line.")
+}
+
+// In the middle of a section, there is an extra empty line.
+//
+// The sections are designed to be small enough to not need these empty lines.
 func (s *Suite) Test_VarorderChecker_Check__extra_empty_line(c *check.C) {
 	t := s.Init(c)
 
@@ -166,42 +333,34 @@ func (s *Suite) Test_VarorderChecker_Check__extra_empty_line(c *check.C) {
 
 	NewVarorderChecker(mklines).Check()
 
-	// TODO: Be more specific, mentioning that the empty line above
-	//  LICENSE should be removed.
 	t.CheckOutputLines(
-		"WARN: Makefile:3: The canonical order of the variables is " +
-			"CATEGORIES, MASTER_SITES, empty line, " +
-			"MAINTAINER, HOMEPAGE, COMMENT, LICENSE.")
+		"WARN: Makefile:9: Missing assignment to \"LICENSE\".")
 }
 
-func (s *Suite) Test_VarorderChecker_Check__swapped(c *check.C) {
+// Between two sections, there should be one empty line.
+//
+// The CATEGORIES variable is in a different section from COMMENT and
+// LICENSE, with an entirely optional section in-between.
+func (s *Suite) Test_VarorderChecker_Check__missing_empty_line(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
 		"",
 		"CATEGORIES=",
-		"DIST_SUBDIR=",
-		"MASTER_SITES=",
-		"",
-		"MAINTAINER=",
-		"HOMEPAGE=",
 		"COMMENT=",
+		// Empty line missing.
 		"LICENSE=",
 		"",
 		".include \"../../mk/bsd.pkg.mk\"")
 
 	NewVarorderChecker(mklines).Check()
 
-	// TODO: Be more specific, mentioning that DIST_SUBDIR and
-	//  MASTER_SITES should be swapped.
 	t.CheckOutputLines(
-		"WARN: Makefile:3: The canonical order of the variables is " +
-			"CATEGORIES, MASTER_SITES, DIST_SUBDIR, empty line, " +
-			"MAINTAINER, HOMEPAGE, COMMENT, LICENSE.")
+		"WARN: Makefile:4: Missing empty line.")
 }
 
-func (s *Suite) Test_VarorderChecker_Check__in_wrong_section(c *check.C) {
+func (s *Suite) Test_VarorderChecker_Check__commented_once(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("Makefile",
@@ -212,36 +371,8 @@ func (s *Suite) Test_VarorderChecker_Check__in_wrong_section(c *check.C) {
 		"",
 		"MAINTAINER=",
 		"HOMEPAGE=",
-		"COMMENT=",
-		"",
-		"DIST_SUBDIR=", // Is in the wrong section.
-		"WRKSRC=",
-		"INSTALLATION_DIRS=",
-		"",
-		".include \"../../mk/bsd.pkg.mk\"")
-
-	NewVarorderChecker(mklines).Check()
-
-	// TODO: Be more specific, mentioning that DIST_SUBDIR should
-	//  be at the end of the first section, below MASTER_SITES.
-	t.CheckOutputLines(
-		"WARN: Makefile:3: The canonical order of the variables is " +
-			"CATEGORIES, MASTER_SITES, DIST_SUBDIR, empty line, " +
-			"MAINTAINER, HOMEPAGE, COMMENT, LICENSE.")
-}
-
-func (s *Suite) Test_VarorderChecker_Check__duplicate_in_comment(c *check.C) {
-	t := s.Init(c)
-
-	mklines := t.NewMkLines("Makefile",
-		MkCvsID,
-		"",
-		"CATEGORIES=",
-		"MASTER_SITES=",
-		"",
-		"MAINTAINER=",
-		"#HOMEPAGE=",
-		"HOMEPAGE=",
+		"#COMMENT=",
+		"#COMMENT=",
 		"COMMENT=",
 		"LICENSE=",
 		"",
@@ -251,11 +382,40 @@ func (s *Suite) Test_VarorderChecker_Check__duplicate_in_comment(c *check.C) {
 
 	NewVarorderChecker(mklines).Check()
 
-	// The duplicate HOMEPAGE is not an error since at most one
-	// of them is active.
+	// The duplicate COMMENT is not an error since all but one assignment
+	// are commented out.
 	t.CheckOutputEmpty()
 }
 
+// A commented variable assignment satisfies an "optional" as well as a "once"
+// requirement.  There may be multiple commented variable assignments, as
+// they are not active.
+func (s *Suite) Test_VarorderChecker_Check__commented_optional(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"#CATEGORIES=",
+		"",
+		"MAINTAINER=",
+		"#HOMEPAGE=",
+		"#HOMEPAGE=",
+		"#HOMEPAGE=",
+		"COMMENT=",
+		"LICENSE=",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	NewVarorderChecker(mklines).Check()
+
+	// The duplicate COMMENT is not an error since all but one assignment
+	// are commented out.
+	t.CheckOutputEmpty()
+}
+
+// When extracting the relevant lines, comments are skipped,
+// but commented variable assignments are kept.
 func (s *Suite) Test_VarorderChecker_relevantLines__comments(c *check.C) {
 	t := s.Init(c)
 
@@ -264,112 +424,70 @@ func (s *Suite) Test_VarorderChecker_relevantLines__comments(c *check.C) {
 		MkCvsID,
 		"",
 		"# A comment at the beginning of a section.",
-		"CATEGORIES=     net",
+		"#CATEGORIES=",
 		"# A comment at the end of a section.",
 		"",
 		"# A comment between sections.",
 		"",
 		"# A second comment between sections.",
 		"",
-		"MAINTAINER=     maintainer@example.org",
-		"HOMEPAGE=       https://github.com/project/pkgbase/",
-		"COMMENT=        Comment",
-		"LICENSE=        gnu-gpl-v3",
+		"COMMENT=",
+		"LICENSE=",
 		"",
 		".include \"../../mk/bsd.pkg.mk\"")
 
 	NewVarorderChecker(mklines).Check()
 
-	// The empty line between the comments is not treated as a section separator.
+	// The empty line between the comments is not treated as a section
+	// separator, so no warning about an extra empty line.
 	t.CheckOutputEmpty()
-}
-
-// A commented variable assignment is treated in the same way as an active
-// variable assignment, as the varorder check only ensures the correct
-// ordering, and not that each required variable is actually defined.
-// Ensuring that every package has a homepage would be a suitable runtime
-// check instead.
-//
-// The order of the variables LICENSE and COMMENT is intentionally
-// wrong to force the warning.
-//
-// Up to June 2019 (308099138a62) pkglint mentioned in the warning
-// each commented variable assignment, even repeatedly for the same
-// variable name.
-//
-// These variable assignments should be in the correct order, even
-// if they are commented out. It's not necessary though to list a
-// variable more than once.
-func (s *Suite) Test_VarorderChecker_relevantLines__commented_variable_assignment(c *check.C) {
-	t := s.Init(c)
-
-	mklines := t.NewMkLines("Makefile",
-		MkCvsID,
-		"",
-		"DISTNAME=\tdistname-1.0",
-		// CATEGORIES is missing to force the warning.
-		"",
-		"MAINTAINER=\tpkgsrc-users@NetBSD.org",
-		"#HOMEPAGE=\thttps://example.org/",
-		"#HOMEPAGE=\thttps://example.org/",
-		"#HOMEPAGE=\thttps://example.org/",
-		"#HOMEPAGE=\thttps://example.org/",
-		"#HOMEPAGE=\thttps://example.org/",
-		"#HOMEPAGE=\thttps://example.org/",
-		"COMMENT=\tComment",
-		"LICENSE=\tgnu-gpl-v2")
-
-	NewVarorderChecker(mklines).Check()
-
-	t.CheckOutputLines(
-		"WARN: Makefile:3: The canonical order of the variables is " +
-			"DISTNAME, CATEGORIES, " +
-			"empty line, " +
-			"MAINTAINER, HOMEPAGE, COMMENT, LICENSE.")
 }
 
 // USE_TOOLS is not in the list of varorder variables and is thus skipped when
 // collecting the relevant lines.
-func (s *Suite) Test_VarorderChecker_relevantLines__foreign_variable(c *check.C) {
+func (s *Suite) Test_VarorderChecker_relevantLines__foreign(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
 		"",
-		"DISTNAME=\tdistname-1.0",
-		"USE_TOOLS+=gmake",
-		"CATEGORIES=\tsysutils",
+		"DISTNAME=",
+		"USE_TOOLS+=",
+		"CATEGORIES=",
 		"",
-		"MAINTAINER=\tpkgsrc-users@NetBSD.org",
-		"#HOMEPAGE=\thttps://example.org/",
-		"LICENSE=\tgnu-gpl-v2")
+		"MAINTAINER=",
+		"#HOMEPAGE=",
+		// COMMENT is missing to force a warning,
+		// showing that the varorder check is run.
+		"LICENSE=",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
 
 	NewVarorderChecker(mklines).Check()
 
-	// TODO: Be more specific in the warning,
-	//  mentioning that COMMENT is missing.
 	t.CheckOutputLines(
-		"WARN: Makefile:3: The canonical order of the variables is " +
-			"DISTNAME, CATEGORIES, empty line, " +
-			"MAINTAINER, HOMEPAGE, COMMENT, LICENSE.")
+		"WARN: Makefile:9: Missing assignment to \"COMMENT\".")
 }
 
-// Package makefiles that contain conditionals may have good reason to deviate
-// from the standard variable order, or may define a "once" variable twice, in
-// separate branches of the conditional.  Skip the check in these cases.
-func (s *Suite) Test_VarorderChecker_skip__directive(c *check.C) {
+// A package makefile that contains conditionals may have good reason to
+// deviate from the standard variable order, or may define a "once" variable
+// twice, in separate branches of the conditional.  Skip the check in these
+// cases, as covering all possible cases would become too complicated.
+func (s *Suite) Test_VarorderChecker_relevantLines__directive(c *check.C) {
 	t := s.Init(c)
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
 		"",
-		"DISTNAME=\tdistname-1.0",
-		"CATEGORIES=\tsysutils",
+		"DISTNAME=",
+		"CATEGORIES=",
 		"",
 		".if ${DISTNAME:Mdistname-*}",
-		"MAINTAINER=\tpkgsrc-users@NetBSD.org",
+		"MAINTAINER=",
 		".endif",
-		"LICENSE=\tgnu-gpl-v2")
+		"LICENSE=",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
 
 	NewVarorderChecker(mklines).Check()
 
@@ -378,10 +496,95 @@ func (s *Suite) Test_VarorderChecker_skip__directive(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+// A package that doesn't include bsd.pkg.mk in the last line of the package
+// makefile is not considered simple enough for the varorder check.
+func (s *Suite) Test_VarorderChecker_relevantLines__incomplete(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"DISTNAME=",
+		"CATEGORIES=",
+		"",
+		"LICENSE=")
+
+	NewVarorderChecker(mklines).Check()
+
+	t.CheckOutputEmpty()
+}
+
+// A package may include buildlink3.mk files at the end and still be
+// considered simple enough for the varorder check.
+func (s *Suite) Test_VarorderChecker_relevantLines__buildlink(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"DISTNAME=",
+		"CATEGORIES=",
+		"",
+		// COMMENT is missing to show that the varorder check is active.
+		"LICENSE=",
+		"",
+		".include \"../../category/package/buildlink3.mk\"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	NewVarorderChecker(mklines).Check()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:6: Missing assignment to \"COMMENT\".")
+}
+
+// A package that includes an arbitrary other makefile may define the
+// variables from the varorder check there, which is common for
+// Makefile.common files.  In such a case, skip the varorder check.
+func (s *Suite) Test_VarorderChecker_relevantLines__include(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"DISTNAME=",
+		"CATEGORIES=",
+		"",
+		// COMMENT is missing to show that the varorder check is skipped.
+		"LICENSE=",
+		"",
+		".include \"../../category/package/Makefile.common\"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	NewVarorderChecker(mklines).Check()
+
+	t.CheckOutputEmpty()
+}
+
+// A variable that is "once" or "optional" should not occur more than once.
+func (s *Suite) Test_VarorderChecker_check(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"DISTNAME=",
+		"CATEGORIES=",
+		"CATEGORIES=",
+		"",
+		"LICENSE=",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	NewVarorderChecker(mklines).Check()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:6: The variable \"CATEGORIES\" should only occur once.")
+}
+
 // This package does not declare its LICENSE.
-// Since this error is grave enough, skip the varorder check,
-// as its warning would look redundant.
-func (s *Suite) Test_VarorderChecker_skip__LICENSE(c *check.C) {
+// Since this error is grave enough, treat the LICENSE variable as optional,
+// to prevent issuing two very similar diagnostics.
+func (s *Suite) Test_VarorderChecker_skipLicenseCheck(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("mk/bsd.pkg.mk", "# dummy")
@@ -410,56 +613,27 @@ func (s *Suite) Test_VarorderChecker_skip__LICENSE(c *check.C) {
 		"ERROR: ~/x11/9term/Makefile: Each package must define its LICENSE.")
 }
 
-func (s *Suite) Test_VarorderChecker_canonical__diagnostics(c *check.C) {
+func (s *Suite) Test_VarorderChecker_explain(c *check.C) {
 	t := s.Init(c)
+	t.SetUpCommandLine("--explain")
 
-	t.SetUpVartypes()
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
 		"",
-		"CATEGORIES=     net",
-		"",
-		"COMMENT=        Comment",
-		"LICENSE=        gnu-gpl-v3",
-		"",
-		"GITHUB_PROJECT= pkgbase",
-		"DISTNAME=       v1.0",
-		"PKGNAME=        ${GITHUB_PROJECT}-${DISTNAME}",
-		"MASTER_SITES=   ${MASTER_SITE_GITHUB:=project/}",
-		"DIST_SUBDIR=    ${GITHUB_PROJECT}",
-		"",
-		"MAINTAINER=     maintainer@example.org",
-		"HOMEPAGE=       https://github.com/project/pkgbase/",
+		"CATEGORIES=",
 		"",
 		".include \"../../mk/bsd.pkg.mk\"")
 
 	NewVarorderChecker(mklines).Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:3: The canonical order of the variables is " +
-			"DISTNAME, PKGNAME, CATEGORIES, " +
-			"MASTER_SITES, GITHUB_PROJECT, DIST_SUBDIR, empty line, " +
-			"MAINTAINER, HOMEPAGE, COMMENT, LICENSE.")
-
-	// After ordering the variables according to the warning:
-	mklines = t.NewMkLines("Makefile",
-		MkCvsID,
+		"WARN: Makefile:5: Missing assignment to \"COMMENT\".",
 		"",
-		"DISTNAME=       v1.0",
-		"PKGNAME=        ${GITHUB_PROJECT}-${DISTNAME}",
-		"CATEGORIES=     net",
-		"MASTER_SITES=   ${MASTER_SITE_GITHUB:=project/}",
-		"GITHUB_PROJECT= pkgbase",
-		"DIST_SUBDIR=    ${GITHUB_PROJECT}",
+		"\tIn simple package Makefiles, some common variables should be",
+		"\tarranged in a specific order.",
 		"",
-		"MAINTAINER=     maintainer@example.org",
-		"HOMEPAGE=       https://github.com/project/pkgbase/",
-		"COMMENT=        Comment",
-		"LICENSE=        gnu-gpl-v3",
-		"",
-		".include \"../../mk/bsd.pkg.mk\"")
-
-	NewVarorderChecker(mklines).Check()
-
-	t.CheckOutputEmpty()
+		"\tSee doc/Makefile-example for an example Makefile. See the pkgsrc",
+		"\tguide, section \"Package components, Makefile\":",
+		"\thttps://www.NetBSD.org/docs/pkgsrc/pkgsrc.html#components.Makefile",
+		"")
 }
