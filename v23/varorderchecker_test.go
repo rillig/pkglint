@@ -216,6 +216,29 @@ func (s *Suite) Test_VarorderChecker_Check__swapped_optional_middle(c *check.C) 
 			"should be in line 3.")
 }
 
+func (s *Suite) Test_VarorderChecker_Check__too_early(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"GITHUB_PROJECT=",
+		"GITHUB_TAG=",
+		"DISTNAME=",
+		"PKGNAME=",
+		"CATEGORIES=",
+		"MASTER_SITES=",
+		"DIST_SUBDIR=",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	NewVarorderChecker(mklines).Check()
+
+	// FIXME: Rather warn that GITHUB_PROJECT occurs too early.
+	t.CheckOutputLines(
+		"WARN: Makefile:3: Missing assignment to \"CATEGORIES\".")
+}
+
 func (s *Suite) Test_VarorderChecker_Check__too_late(c *check.C) {
 	t := s.Init(c)
 
