@@ -119,7 +119,11 @@ qa_pkgsrc() {
     && { GODEBUG=gctrace=1 "$archivedir/$runid.exe" -s -pr -Wall -Call . wip 2> "$archivedir/$runid.err" || true; } \
     && : cp "pkglint.pprof" "$archivedir/$runid.pprof" \
     && : cp "pkglint.heapdump" "$archivedir/$runid.heapdump"
-    ) > "$archivedir/$runid.tmp" || true
+  ) > "$archivedir/$runid.tmp" || true
+  if grep "panic" "$archivedir/$runid.err" >/dev/null; then
+    printf '%s: pkglint crashed\n' "$0" 1>&2
+    exit 1
+  fi
   mv "$archivedir/$runid.tmp" "$archivedir/$runid.out"
 }
 
