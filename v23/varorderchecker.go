@@ -132,6 +132,9 @@ func (ck *VarorderChecker) check(mklines []*MkLine, bottom *MkLine) {
 			if mkline.IsVarassignMaybeCommented() && location[mkline.Varcanon()] != nil {
 				mkline.Warnf("Variable \"%s\" occurs too late, should be in %s.",
 					mkline.Varname(), mkline.RelMkLine(location[mkline.Varcanon()]))
+			} else if mi < mn && mkline.IsVarassignMaybeCommented() {
+				mkline.Warnf("Variable \"%s\" occurs too early, should be after \"%s\".",
+					mkline.Varname(), v.canon)
 			} else {
 				mkline.Warnf("Missing assignment to \"%s\".", v.canon)
 			}

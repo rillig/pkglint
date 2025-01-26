@@ -234,9 +234,9 @@ func (s *Suite) Test_VarorderChecker_Check__too_early(c *check.C) {
 
 	NewVarorderChecker(mklines).Check()
 
-	// FIXME: Rather warn that GITHUB_PROJECT occurs too early.
 	t.CheckOutputLines(
-		"WARN: Makefile:3: Missing assignment to \"CATEGORIES\".")
+		"WARN: Makefile:3: Variable \"GITHUB_PROJECT\" occurs too early, " +
+			"should be after \"CATEGORIES\".")
 }
 
 func (s *Suite) Test_VarorderChecker_Check__too_late(c *check.C) {
@@ -513,7 +513,8 @@ func (s *Suite) Test_VarorderChecker_relevantLines__foreign(c *check.C) {
 	NewVarorderChecker(mklines).Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:9: Missing assignment to \"COMMENT\".")
+		"WARN: Makefile:9: Variable \"LICENSE\" occurs too early, " +
+			"should be after \"COMMENT\".")
 }
 
 // A package makefile that contains conditionals may have good reason to
@@ -581,7 +582,8 @@ func (s *Suite) Test_VarorderChecker_relevantLines__buildlink(c *check.C) {
 	NewVarorderChecker(mklines).Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:6: Missing assignment to \"COMMENT\".")
+		"WARN: Makefile:6: Variable \"LICENSE\" occurs too early, " +
+			"should be after \"COMMENT\".")
 }
 
 // A package that includes an arbitrary other makefile may define the
