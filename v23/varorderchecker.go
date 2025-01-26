@@ -204,7 +204,7 @@ var varorderVariables = []varorderVariable{
 	{"", once},
 	{"PATCH_SITES", optional},
 	{"PATCH_SITE_SUBDIR", optional},
-	{"PATCHFILES", optional},
+	{"PATCHFILES", many},
 	{"PATCH_DIST_ARGS", optional},
 	{"PATCH_DIST_STRIP", optional},
 	{"PATCH_DIST_CAT", optional},
