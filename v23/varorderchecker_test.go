@@ -168,7 +168,8 @@ func (s *Suite) Test_VarorderChecker_Check__missing_once_middle(c *check.C) {
 	NewVarorderChecker(mklines).Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:5: Missing assignment to \"COMMENT\".")
+		"WARN: Makefile:5: The variable \"COMMENT\" " +
+			"should be defined here.")
 }
 
 // A required variable at the end of the section is missing.
@@ -189,7 +190,8 @@ func (s *Suite) Test_VarorderChecker_Check__missing_once_end(c *check.C) {
 	NewVarorderChecker(mklines).Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:6: Missing assignment to \"LICENSE\".")
+		"WARN: Makefile:6: The variable \"LICENSE\" " +
+			"should be defined here.")
 }
 
 // Two optional variables from the same section occur in the wrong order.
@@ -212,8 +214,8 @@ func (s *Suite) Test_VarorderChecker_Check__swapped_optional_middle(c *check.C) 
 	NewVarorderChecker(mklines).Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:4: The variable \"R_PKGNAME\" is misplaced, " +
-			"should be in line 3.")
+		"WARN: Makefile:4: The variable \"R_PKGNAME\" " +
+			"is misplaced, should be in line 3.")
 }
 
 func (s *Suite) Test_VarorderChecker_Check__too_early(c *check.C) {
@@ -235,8 +237,8 @@ func (s *Suite) Test_VarorderChecker_Check__too_early(c *check.C) {
 	NewVarorderChecker(mklines).Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:3: Variable \"GITHUB_PROJECT\" occurs too early, " +
-			"should be after \"CATEGORIES\".")
+		"WARN: Makefile:3: The variable \"GITHUB_PROJECT\" " +
+			"occurs too early, should be after \"CATEGORIES\".")
 }
 
 func (s *Suite) Test_VarorderChecker_Check__too_late(c *check.C) {
@@ -259,8 +261,8 @@ func (s *Suite) Test_VarorderChecker_Check__too_late(c *check.C) {
 	NewVarorderChecker(mklines).Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:6: Variable \"DISTNAME\" occurs too late, " +
-			"should be in line 4.")
+		"WARN: Makefile:6: The variable \"DISTNAME\" " +
+			"occurs too late, should be in line 4.")
 }
 
 // Two optional variables from the same section occur in the wrong order.
@@ -381,7 +383,8 @@ func (s *Suite) Test_VarorderChecker_Check__extra_empty_line(c *check.C) {
 	NewVarorderChecker(mklines).Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:9: Missing assignment to \"LICENSE\".")
+		"WARN: Makefile:9: The variable \"LICENSE\" " +
+			"should be defined here.")
 }
 
 // Between two sections, there should be one empty line.
@@ -513,8 +516,8 @@ func (s *Suite) Test_VarorderChecker_relevantLines__foreign(c *check.C) {
 	NewVarorderChecker(mklines).Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:9: Variable \"LICENSE\" occurs too early, " +
-			"should be after \"COMMENT\".")
+		"WARN: Makefile:9: The variable \"LICENSE\" " +
+			"occurs too early, should be after \"COMMENT\".")
 }
 
 // A package makefile that contains conditionals may have good reason to
@@ -582,8 +585,8 @@ func (s *Suite) Test_VarorderChecker_relevantLines__buildlink(c *check.C) {
 	NewVarorderChecker(mklines).Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:6: Variable \"LICENSE\" occurs too early, " +
-			"should be after \"COMMENT\".")
+		"WARN: Makefile:6: The variable \"LICENSE\" " +
+			"occurs too early, should be after \"COMMENT\".")
 }
 
 // A package that includes an arbitrary other makefile may define the
@@ -676,7 +679,8 @@ func (s *Suite) Test_VarorderChecker_explain(c *check.C) {
 	NewVarorderChecker(mklines).Check()
 
 	t.CheckOutputLines(
-		"WARN: Makefile:5: Missing assignment to \"COMMENT\".",
+		"WARN: Makefile:5: The variable \"COMMENT\" "+
+			"should be defined here.",
 		"",
 		"\tIn simple package Makefiles, some common variables should be",
 		"\tarranged in a specific order.",
