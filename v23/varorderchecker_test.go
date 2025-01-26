@@ -194,6 +194,33 @@ func (s *Suite) Test_VarorderChecker_Check__missing_once_end(c *check.C) {
 			"should be defined here.")
 }
 
+func (s *Suite) Test_VarorderChecker_Check__once_repeated(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"DISTNAME=",
+		"PKGNAME=",
+		"PKGREVISION=",
+		"CATEGORIES=",
+		"CATEGORIES=",
+		"#MASTER_SITES=",
+		"",
+		"MAINTAINER=",
+		"#HOMEPAGE=",
+		"COMMENT=",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	NewVarorderChecker(mklines).Check()
+
+	// FIXME: wrong line, must be 7.
+	t.CheckOutputLines(
+		"WARN: Makefile:8: The variable \"CATEGORIES\" " +
+			"should only occur once.")
+}
+
 // Two optional variables from the same section occur in the wrong order.
 // Both variables should be placed in the middle of the section.
 func (s *Suite) Test_VarorderChecker_Check__swapped_optional_middle(c *check.C) {
