@@ -152,6 +152,14 @@ func (ck *VarorderChecker) check(mklines []*MkLine, bottom *MkLine) {
 			location[v.canon] = mklines[mi]
 		}
 	}
+
+	for _, mkline := range mklines[mi:] {
+		if mkline.IsVarassignMaybeCommented() {
+			mkline.Warnf("The variable \"%s\" occurs too late, should be in %s.",
+				mkline.Varname(), mkline.RelMkLine(location[mkline.Varcanon()]))
+			ck.explain(mkline)
+		}
+	}
 }
 
 func (ck *VarorderChecker) skipLicenseCheck(mklines []*MkLine) bool {

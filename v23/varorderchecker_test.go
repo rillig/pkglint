@@ -339,8 +339,9 @@ func (s *Suite) Test_VarorderChecker_Check__swapped_bottom(c *check.C) {
 
 	NewVarorderChecker(mklines).Check()
 
-	// TODO: Warn that DEPENDS should occur after ONLY_FOR_PLATFORM.
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: Makefile:10: The variable \"ONLY_FOR_PLATFORM\" occurs too late, " +
+			"should be in line 8.")
 }
 
 // Two optional variables from different sections occur in the wrong order.
