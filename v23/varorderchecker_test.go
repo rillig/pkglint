@@ -319,6 +319,30 @@ func (s *Suite) Test_VarorderChecker_Check__swapped_optional_end(c *check.C) {
 			"should be in line 4.")
 }
 
+// Two optional variables from the bottom sections occur in the wrong order.
+func (s *Suite) Test_VarorderChecker_Check__swapped_bottom(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"CATEGORIES=",
+		"",
+		"COMMENT=",
+		"LICENSE=",
+		"",
+		"DEPENDS=",
+		"",
+		"ONLY_FOR_PLATFORM=",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	NewVarorderChecker(mklines).Check()
+
+	// TODO: Warn that DEPENDS should occur after ONLY_FOR_PLATFORM.
+	t.CheckOutputEmpty()
+}
+
 // Two optional variables from different sections occur in the wrong order.
 func (s *Suite) Test_VarorderChecker_Check__swapped_across_sections(c *check.C) {
 	t := s.Init(c)
