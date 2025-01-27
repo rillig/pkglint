@@ -617,6 +617,32 @@ func (s *Suite) Test_VarorderChecker_relevantLines__buildlink(c *check.C) {
 			"occurs too early, should be after \"COMMENT\".")
 }
 
+// A package may include an options.mk file and still be considered simple
+// enough for the varorder check, as package options don't usually affect
+// the fundamental variables from the varorder check.
+func (s *Suite) Test_VarorderChecker_relevantLines__options_mk(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"DISTNAME=",
+		"CATEGORIES=",
+		"",
+		// COMMENT is missing to show that the varorder check is active.
+		"LICENSE=",
+		"",
+		".include \"options.mk\"",
+		"",
+		".include \"../../mk/bsd.pkg.mk\"")
+
+	NewVarorderChecker(mklines).Check()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:6: The variable \"LICENSE\" " +
+			"occurs too early, should be after \"COMMENT\".")
+}
+
 // A package that includes an arbitrary other makefile may define the
 // variables from the varorder check there, which is common for
 // Makefile.common files.  In such a case, skip the varorder check.

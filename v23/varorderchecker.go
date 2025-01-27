@@ -72,6 +72,7 @@ func (ck *VarorderChecker) relevantLines() (relevant []*MkLine, bottom *MkLine) 
 			}
 		case mkline.IsInclude():
 			if !mkline.IncludedFile().HasBase("buildlink3.mk") &&
+				!mkline.IncludedFile().HasBase("options.mk") &&
 				!mkline.IncludedFile().ContainsPath("mk") {
 				return nil, nil
 			}
