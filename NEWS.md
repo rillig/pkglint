@@ -1,3 +1,11 @@
+# 23.12.0 (2025-01-27)
+
+Allow checking doc/pkg-vulnerabilities for malformed package patterns.
+
+In simple package makefiles, check for the order of common package variables.
+Be more specific about what to fix, and apply the check to more packages than
+before.
+
 # 23.11.0 (2025-01-21)
 
 Don't complain about ignored files in patches/.
