@@ -64,8 +64,8 @@ func (ck *VarorderChecker) relevantLines() (relevant []*MkLine, bottom *MkLine) 
 	}
 	bottom = mklines[i]
 
-	for ; i < len(mklines); i++ {
-		switch mkline := mklines[i]; {
+	for _, mkline := range mklines[i:] {
+		switch {
 		case mkline.IsVarassignMaybeCommented():
 			if ck.relevant[mkline.Varcanon()] {
 				return nil, nil
