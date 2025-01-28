@@ -1,3 +1,7 @@
+# 23.13.0 (2025-01-28)
+
+Check language version variables for Lua, PHP, Python and Ruby.
+
 # 23.12.0 (2025-01-27)
 
 Allow checking doc/pkg-vulnerabilities for malformed package patterns.
