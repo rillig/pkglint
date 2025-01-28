@@ -685,7 +685,8 @@ func (s *Suite) Test_Pkglint_checkdirPackage__filename_with_variable(c *check.C)
 	pkg := t.SetUpPackage("category/package",
 		".include \"../../mk/bsd.prefs.mk\"",
 		"",
-		"RUBY_VERSIONS_ACCEPTED=\t22 24 25", // As of 2018.
+		"# Needs a rationale.",
+		"RUBY_VERSIONS_ACCEPTED=\t31 32 33 34", // As of 2025.
 		".for rv in ${RUBY_VERSIONS_ACCEPTED}",
 		"RUBY_VER?=\t\t${rv}",
 		".endfor",
@@ -696,18 +697,20 @@ func (s *Suite) Test_Pkglint_checkdirPackage__filename_with_variable(c *check.C)
 	t.FinishSetUp()
 
 	// As of January 2019, pkglint cannot resolve the location of DISTINFO_FILE completely
-	// because the variable \"rv\" comes from a .for loop.
+	// because the variable "rv" comes from a .for loop.
 	//
 	// TODO: iterate over variables in simple .for loops like the above.
 	// TODO: when implementing the above, take care of deeply nested loops (42.zip).
 	G.Check(pkg)
 
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile:24: RUBY_VERSIONS_ACCEPTED should not be used at load time in any file.")
 
 	// Just for code coverage.
 	t.DisableTracing()
 	G.Check(pkg)
-	t.CheckOutputEmpty()
+	t.CheckOutputLines(
+		"WARN: ~/category/package/Makefile:24: RUBY_VERSIONS_ACCEPTED should not be used at load time in any file.")
 }
 
 func (s *Suite) Test_Pkglint_checkdirPackage__ALTERNATIVES(c *check.C) {

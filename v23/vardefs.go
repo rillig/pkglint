@@ -1368,6 +1368,17 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.sysloadbl3("LOWER_VENDOR", BtIdentifierDirect, NonemptyIfDefined)
 	reg.sysloadbl3list("LP64PLATFORMS", BtMachinePlatformPattern, DefinedIfInScope|NonemptyIfDefined)
 
+	// See lang/lua/luaversion.mk
+	lua := reg.enumFromDirs(src, "lang", `^lua(\d+)$`, "$1", "")
+	luaPkgPrefix := reg.enumFromDirs(src, "lang", `^lua\d+$`, "$0", "")
+	reg.usr("LUA_VERSION_DEFAULT", lua)
+	reg.sys("LUA_VERSION_REQD", lua)
+	reg.pkglistrat("LUA_VERSIONS_ACCEPTED", lua)
+	reg.pkglistrat("LUA_VERSIONS_INCOMPATIBLE", lua)
+	reg.acl("LUA_PKGPREFIX", luaPkgPrefix, SystemProvided,
+		"special:luaversion.mk: set",
+		"*: use, use-loadtime")
+
 	// See devel/bmake/files/main.c:/Var_Set."MACHINE_ARCH"/.
 	reg.sysloadbl3("MACHINE_ARCH", BtMachineArch, AlwaysInScope|DefinedIfInScope|NonemptyIfDefined)
 
@@ -1428,6 +1439,18 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.usr("MYSQL_VERSION_DEFAULT", BtVersion)
 	reg.sys("NATIVE_CC", BtShellCommand) // See mk/tools/tools.NetBSD.mk (and some others).
 	reg.sys("NM", BtShellCommand)
+
+	// See lang/nodejs/nodeversion.mk
+	node := reg.enumFromDirs(src, "lang", `^nodejs(\d+)$`, "$1", "")
+	reg.acl("NODE_VERSION_DEFAULT", node, UserSettable,
+		"special:nodeversion.mk: default",
+		"*: use, use-loadtime")
+	reg.acl("NODE_VERSION_REQD", node, SystemProvided,
+		"special:nodeversion.mk: default",
+		"*: use, use-loadtime")
+	reg.pkglistrat("NODE_VERSIONS_ACCEPTED", node)
+	reg.pkglistrat("NODE_VERSIONS_INCOMPATIBLE", node)
+
 	reg.sys("NONBINMODE", BtFileMode)
 	reg.pkglistrat("NOT_FOR_COMPILER", compilers)
 	reg.pkglistrat("NOT_FOR_BULK_PLATFORM", BtMachinePlatformPattern)
@@ -1506,12 +1529,18 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		reg.enumFrom(src, "mk/pgsql.buildlink3.mk", "postgresql11-client", "PGSQL_TYPE"))
 	reg.sys("PGPKGSRCDIR", BtPathname)
 	reg.sys("PHASE_MSG", BtShellCommand)
-	reg.usr("PHP_VERSION_REQD", BtVersion)
-	reg.acl("PHP_PKG_PREFIX",
-		reg.enumFromDirs(src, "lang", `^php(\d+)$`, "php$1", "php56 php71 php72 php73"),
-		SystemProvided,
+
+	// See lang/php/phpversion.mk
+	php := reg.enumFromDirs(src, "lang", `^php(\d+)$`, "$1", "")
+	phpPkgPrefix := reg.enumFromDirs(src, "lang", `^php\d+$`, "$0", "")
+	reg.usr("PHP_VERSION_DEFAULT", php)
+	reg.sys("PHP_VERSION_REQD", php)
+	reg.pkglistrat("PHP_VERSIONS_ACCEPTED", php)
+	reg.pkglistrat("PHP_VERSIONS_INCOMPATIBLE", php)
+	reg.acl("PHP_PKG_PREFIX", phpPkgPrefix, SystemProvided,
 		"special:phpversion.mk: set",
 		"*: use, use-loadtime")
+
 	reg.sys("PKGBASE", BtIdentifierDirect)
 	// Despite its name, this is actually a list of filenames.
 	reg.acllist("PKGCONFIG_FILE.*", BtPathname,
@@ -1654,18 +1683,21 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.pkglistbl3("PTHREAD_OPTS", enum("native optional require"))
 	reg.sysloadbl3("PTHREAD_TYPE", BtIdentifierDirect) // Or "native" or "none".
 	reg.pkg("PY_PATCHPLIST", BtYes)
+	reg.pkg("PYTHON_FOR_BUILD_ONLY", enum("yes no test tool YES"))
+
+	// See lang/python/pyversion.mk
+	py := reg.enumFromDirs(src, "lang", `^python(\d+)$`, "$1", "27 38 39 310 311 312")
+	pyPkgPrefix := reg.enumFromDirs(src, "lang", `^python(\d+)$`, "py$1", "py27 py39")
+	reg.usr("PYTHON_VERSION_DEFAULT", py)
+	reg.sys("PYTHON_VERSION_REQD", py)
+	reg.pkglistrat("PYTHON_VERSIONS_ACCEPTED", py)
+	reg.pkglistrat("PYTHON_VERSIONS_INCOMPATIBLE", py)
 	reg.acl("PYPKGPREFIX",
-		reg.enumFromDirs(src, "lang", `^python(\d+)$`, "py$1", "py27 py36"),
+		pyPkgPrefix,
 		SystemProvided,
 		"special:pyversion.mk: set",
 		"*: use, use-loadtime")
-	// See lang/python/pyversion.mk
-	py := reg.enumFromDirs(src, "lang", `^python(\d+)$`, "$1", "27 38 39 310 311 312")
-	reg.pkg("PYTHON_FOR_BUILD_ONLY", enum("yes no test tool YES"))
-	reg.pkglistrat("PYTHON_VERSIONS_ACCEPTED", py)
-	reg.pkglistrat("PYTHON_VERSIONS_INCOMPATIBLE", py)
-	reg.usr("PYTHON_VERSION_DEFAULT", py)
-	reg.sys("PYTHON_VERSION_REQD", py)
+
 	reg.pkglist("PYTHON_VERSIONED_DEPENDENCIES", BtPythonDependency)
 	reg.sys("RANLIB", BtShellCommand)
 	reg.pkglist("RCD_SCRIPTS", BtFilename)
@@ -1706,17 +1738,27 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.usr("ROOT_USER", BtUserGroupName)
 	reg.usr("ROOT_GROUP", BtUserGroupName)
 	reg.pkglist("RPMIGNOREPATH", BtPathPattern)
-	reg.acl("RUBY_BASE",
-		reg.enumFromDirs(src, "lang", `^ruby(\d+)$`, "ruby$1", "ruby22 ruby23 ruby24 ruby25"),
-		SystemProvided,
-		"special:rubyversion.mk: set",
+
+	// See lang/ruby/rubyversion.mk
+	ruby := reg.enumFromDirs(src, "lang", `^ruby(\d+)$`, "$1",
+		"31 32 33 34")
+	rubyPkgPrefix := reg.enumFromDirs(src, "lang", `^ruby\d+$`, "$0",
+		"ruby31 ruby32 ruby33 ruby34")
+	reg.acl("RUBY_VERSION_DEFAULT", ruby, UserSettable,
+		"special:rubyversion.mk: default",
 		"*: use, use-loadtime")
-	reg.usr("RUBY_VERSION_REQD", BtVersion)
-	reg.acl("RUBY_PKGPREFIX",
-		reg.enumFromDirs(src, "lang", `^ruby(\d+)$`, "ruby$1", "ruby22 ruby23 ruby24 ruby25"),
-		SystemProvided,
+	reg.acl("RUBY_VERSION_REQD", ruby, SystemProvided,
+		"special:rubyversion:mk: default",
+		"*: use, use-loadtime")
+	reg.pkglistrat("RUBY_VERSIONS_ACCEPTED", ruby)
+	reg.pkglistrat("RUBY_VERSIONS_INCOMPATIBLE", ruby)
+	reg.acl("RUBY_PKGPREFIX", rubyPkgPrefix, SystemProvided,
 		"special:rubyversion.mk: default, set, use",
 		"*: use, use-loadtime")
+	reg.acl("RUBY_BASE", rubyPkgPrefix, SystemProvided,
+		"special:rubyversion.mk: set",
+		"*: use, use-loadtime")
+
 	reg.sys("RUN", BtShellCommand, DefinedIfInScope|NonemptyIfDefined)
 	reg.sys("RUN_LDCONFIG", BtYesNo)
 	reg.pkg("R_PKGNAME", BtRPkgName)

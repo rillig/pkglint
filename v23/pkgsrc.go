@@ -681,7 +681,7 @@ func (src *Pkgsrc) Latest(category PkgsrcPath, re regex.Pattern, repl string) st
 //
 // Example:
 //
-//	ListVersions("lang", `^php[0-9]+$`, "php-$0")
+//	ListVersions("lang", `^php([0-9]+)$`, "php-$1")
 //	    => {"php-53", "php-56", "php-73"}
 func (src *Pkgsrc) ListVersions(category PkgsrcPath, re regex.Pattern, repl string, errorIfEmpty bool) []string {
 	if G.Testing {
@@ -690,7 +690,7 @@ func (src *Pkgsrc) ListVersions(category PkgsrcPath, re regex.Pattern, repl stri
 		assert(hasSuffix(string(re), "$"))
 	}
 
-	// XXX: Maybe convert cache key to a struct, to save allocations.
+	// XXX: Maybe convert the cache key to a struct, to save allocations.
 	cacheKey := category.String() + "/" + string(re) + " => " + repl
 	if latest, found := src.listVersions[cacheKey]; found {
 		return latest
