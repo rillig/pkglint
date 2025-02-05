@@ -464,7 +464,16 @@ func (cv *VartypeCheck) FetchURL() {
 			continue
 		}
 
-		if G.Pkgsrc.MasterSiteVarToURL[name] == "" {
+		if name == "MASTER_SITE_BACKUP" {
+			if !cv.MkLine.HasRationale() {
+				cv.Warnf("The site MASTER_SITE_BACKUP should not be used.")
+				cv.Explain(
+					"MASTER_SITE_BACKUP is hosted by NetBSD",
+					"and is only for backup purposes.",
+					"Each package should have a primary MASTER_SITE",
+					"outside the NetBSD Foundation.")
+			}
+		} else if G.Pkgsrc.MasterSiteVarToURL[name] == "" {
 			if cv.MkLines.pkg == nil || !cv.MkLines.pkg.vars.IsDefined(name) {
 				cv.Errorf("The site %s does not exist.", name)
 			}

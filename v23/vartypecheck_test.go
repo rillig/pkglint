@@ -756,10 +756,12 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 	vt.OutputEmpty()
 
 	vt.Varname("MASTER_SITES")
-	vt.Values("${MASTER_SITE_BACKUP}")
+	vt.Values(
+		"${MASTER_SITE_BACKUP}",
+		"${MASTER_SITE_BACKUP} # no alternative")
 
 	vt.Output(
-		"ERROR: filename.mk:111: The site MASTER_SITE_BACKUP does not exist.")
+		"WARN: filename.mk:111: The site MASTER_SITE_BACKUP should not be used.")
 }
 
 func (s *Suite) Test_VartypeCheck_FetchURL__without_package(c *check.C) {
@@ -2445,8 +2447,9 @@ type VartypeCheckTester struct {
 	pkg       *Package
 }
 
-// NewVartypeCheckTester starts the test with a filename of "filename", at line 1,
-// with "=" as the operator. The variable has to be initialized explicitly.
+// NewVartypeCheckTester starts the test with a filename of "filename.mk",
+// at line 1, with "=" as the operator. The variable has to be initialized
+// explicitly.
 func NewVartypeCheckTester(t *Tester, basicType *BasicType) *VartypeCheckTester {
 
 	// This is necessary to know whether the variable name is a list type
