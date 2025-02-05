@@ -754,6 +754,12 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 	vt.Values("-https://github.com/org/proj/archive/v1.0.0.tar.gz")
 
 	vt.OutputEmpty()
+
+	vt.Varname("MASTER_SITES")
+	vt.Values("${MASTER_SITE_BACKUP}")
+
+	vt.Output(
+		"ERROR: filename.mk:111: The site MASTER_SITE_BACKUP does not exist.")
 }
 
 func (s *Suite) Test_VartypeCheck_FetchURL__without_package(c *check.C) {
