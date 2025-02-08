@@ -1074,14 +1074,13 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveEnd__ifmake(c *check.C) {
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
-		".ifmake links",
+		".ifmake first",
+		".elifmake second",
 		".endif")
 
 	mklines.Check()
 
-	// FIXME: Either warn about ".ifmake" or don't error here.
-	t.CheckOutputLines(
-		"ERROR: Makefile:3: Unmatched .endif.")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_MkLineChecker_checkDirectiveFor(c *check.C) {

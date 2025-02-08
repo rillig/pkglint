@@ -1219,7 +1219,7 @@ func (ind *Indentation) TrackBefore(mkline *MkLine) {
 
 	directive := mkline.Directive()
 	switch directive {
-	case "for", "if", "ifdef", "ifndef":
+	case "for", "if", "ifdef", "ifndef", "ifmake", "ifnmake":
 		guard := mkline == ind.guardLine || isBuildlink3Guard(mkline)
 		ind.Push(mkline, ind.Depth(directive), mkline.Args(), guard)
 	}
