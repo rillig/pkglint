@@ -180,6 +180,12 @@ func (p *MkLexer) Varname() string {
 	lexer := p.lexer
 
 	mark := lexer.Mark()
+	if lexer.NextByteSet(builtInVariable) != -1 {
+		if b := lexer.PeekByte(); b == ':' || b == ')' || b == '}' {
+			return lexer.Since(mark)
+		}
+		lexer.Reset(mark)
+	}
 	lexer.SkipByte('.')
 	for lexer.NextBytesSet(VarbaseBytes) != "" || p.Expr() != nil {
 	}
@@ -675,3 +681,5 @@ func (p *MkLexer) Autofix() *Autofix {
 }
 
 func (p *MkLexer) HasDiag() bool { return p.diag != nil }
+
+var builtInVariable = textproc.NewByteSet(">!<%?*@")

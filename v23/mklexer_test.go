@@ -421,10 +421,8 @@ func (s *Suite) Test_MkLexer_Expr(c *check.C) {
 	test("${:!${UNAME} -s!:S/-//g:S/\\///g:C/^CYGWIN_.*$/Cygwin/}",
 		expr("", "!${UNAME} -s!", "S/-//g", "S/\\///g", "C/^CYGWIN_.*$/Cygwin/"))
 
-	// FIXME: Support the built-in variable name "<".
 	test("${<:T}",
-		expr("<", "T"),
-		"WARN: Test_MkLexer_Expr.mk:1: Invalid part \"<\" after variable name \"\".")
+		expr("<", "T"))
 }
 
 // Pkglint can replace $(VAR) with ${VAR}. It doesn't look at all components
@@ -497,8 +495,7 @@ func (s *Suite) Test_MkLexer_Varname(c *check.C) {
 
 	testRest("VARNAME/rest", "VARNAME", "/rest")
 
-	// FIXME: Support the built-in variable name "<".
-	testRest("<:T", "", "<:T")
+	testRest("<:T", "<", ":T")
 }
 
 func (s *Suite) Test_MkLexer_exprText(c *check.C) {
