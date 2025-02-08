@@ -1069,6 +1069,21 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveEnd__unbalanced(c *check.C) {
 		"ERROR: filename.mk:4: Unmatched .endif.")
 }
 
+func (s *Suite) Test_MkLineChecker_checkDirectiveEnd__ifmake(c *check.C) {
+	t := s.Init(c)
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		".ifmake links",
+		".endif")
+
+	mklines.Check()
+
+	// FIXME: Either warn about ".ifmake" or don't error here.
+	t.CheckOutputLines(
+		"ERROR: Makefile:3: Unmatched .endif.")
+}
+
 func (s *Suite) Test_MkLineChecker_checkDirectiveFor(c *check.C) {
 	t := s.Init(c)
 
