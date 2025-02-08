@@ -11,7 +11,7 @@ import (
 // MkLine is a line from a makefile fragment.
 // There are several types of lines.
 // The most common types in pkgsrc are variable assignments,
-// shell commands and directives like .if and .for.
+// shell commands, and directives like .if and .for.
 // The line types can be distinguished by IsVarassign,
 // IsDirective and so on.
 type MkLine struct {
@@ -22,7 +22,8 @@ type MkLine struct {
 	// One of the following mkLine* types.
 	//
 	// For the larger of these types, a pointer is used instead of a direct
-	// struct because of https://github.com/golang/go/issues/28045.
+	// struct because of https://github.com/golang/go/issues/28045;
+	// last checked against go1.23.1 in January 2025.
 	data interface{}
 }
 
