@@ -740,7 +740,7 @@ func (ck *ShellLineChecker) CheckWord(token string, checkQuoting bool, time Tool
 		line.Warnf("Use ${PKGMANDIR} instead of \"man\".")
 	}
 
-	if contains(token, "etc/rc.d") {
+	if G.Pkgsrc != nil && contains(token, "etc/rc.d") {
 		line.Warnf("Use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
 	}
 

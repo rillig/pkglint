@@ -243,7 +243,10 @@ func (ck MkLineChecker) checkShellCommand() {
 	}
 
 	ck.checkText(shellCommand)
-	NewShellLineChecker(ck.MkLines, mkline).CheckShellCommandLine(shellCommand)
+	if G.Pkgsrc != nil {
+		ck := NewShellLineChecker(ck.MkLines, mkline)
+		ck.CheckShellCommandLine(shellCommand)
+	}
 }
 
 func (ck MkLineChecker) checkComment() {
@@ -588,7 +591,7 @@ func (ck MkLineChecker) checkDirectiveFor(forVars map[string]bool, indentation *
 	if m, vars, _ := match2(args, `^([^\t ]+(?:[\t ]*[^\t ]+)*?)[\t ]+in[\t ]+(.*)$`); m {
 		for _, forvar := range strings.Fields(vars) {
 			indentation.AddVar(forvar)
-			if !G.Infrastructure && hasPrefix(forvar, "_") {
+			if G.Pkgsrc != nil && !G.Infrastructure && hasPrefix(forvar, "_") {
 				mkline.Warnf("Variable names starting with an underscore (%s) are reserved for internal pkgsrc use.", forvar)
 			}
 
@@ -616,6 +619,9 @@ func (ck MkLineChecker) checkDirectiveFor(forVars map[string]bool, indentation *
 }
 
 func (ck MkLineChecker) checkDependencyRule(allowedTargets map[string]bool) {
+	if G.Pkgsrc == nil {
+		return
+	}
 	mkline := ck.MkLine
 	targets := mkline.ValueFields(mkline.Targets())
 	sources := mkline.ValueFields(mkline.Sources())
