@@ -1333,6 +1333,9 @@ func MatchMkInclude(text string) (m bool, indentation, directive string, filenam
 		directive = lexer.NextString("sinclude")
 	}
 	if directive == "" {
+		directive = lexer.NextString("-include")
+	}
+	if directive == "" {
 		return false, "", "", ""
 	}
 

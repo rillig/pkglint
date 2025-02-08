@@ -614,12 +614,10 @@ func (s *Suite) Test_MkLineParser_parseInclude__dash_include(c *check.C) {
 	line := t.NewLine("filename.mk", 123, ".-include\t\"${.PARSEDIR}/defs.mk\"")
 	p := NewMkLineParser()
 
-	p.Parse(line)
+	mkline := p.Parse(line)
 
-	// TODO: Support "-include" as well.
-	t.CheckOutputLines(
-		"ERROR: filename.mk:123:" +
-			" Unknown makefile line format: \".-include\\t\\\"${.PARSEDIR}/defs.mk\\\"\".")
+	t.CheckEquals(mkline.IsInclude(), true)
+	t.CheckEquals(mkline.IncludedFile(), NewRelPathString("${.PARSEDIR}/defs.mk"))
 }
 
 func (s *Suite) Test_MkLineParser_parseSysinclude(c *check.C) {
