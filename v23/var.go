@@ -1,5 +1,7 @@
 package pkglint
 
+import "strings"
+
 // Var describes a variable in a makefile snippet.
 //
 // It keeps track of all places where the variable is accessed or modified (see
@@ -26,10 +28,10 @@ type Var struct {
 	//  2 = constant and read; further writes will make it non-constant
 	//  3 = not constant anymore
 	constantState uint8
-	constantValue string
+	constantValue strings.Builder
 
-	value      string
-	valueInfra string
+	value      strings.Builder
+	valueInfra strings.Builder
 
 	readLocations  []*MkLine
 	writeLocations []*MkLine
@@ -41,7 +43,18 @@ type Var struct {
 }
 
 func NewVar(name string) *Var {
-	return &Var{name, 0, "", "", "", nil, nil, false, NewStringSet(), NewStringSet()}
+	return &Var{
+		name,
+		0,
+		strings.Builder{},
+		strings.Builder{},
+		strings.Builder{},
+		nil,
+		nil,
+		false,
+		NewStringSet(),
+		NewStringSet(),
+	}
 }
 
 // IsConditional returns whether the variable value depends on other variables.
@@ -108,7 +121,7 @@ func (v *Var) IsConstant() bool {
 // for determining the constant value.
 func (v *Var) ConstantValue() string {
 	assert(v.IsConstant())
-	return v.constantValue
+	return v.constantValue.String()
 }
 
 // Value returns the (approximated) value of the variable, taking into account
@@ -120,7 +133,7 @@ func (v *Var) ConstantValue() string {
 //
 // See IsConstant and ConstantValue for more reliable information.
 func (v *Var) Value() string {
-	return v.value
+	return v.value.String()
 }
 
 // ValueInfra returns the (approximated) value of the variable, taking into
@@ -134,7 +147,7 @@ func (v *Var) Value() string {
 // See IsConstant and ConstantValue for more reliable information, but these
 // ignore assignments from the infrastructure.
 func (v *Var) ValueInfra() string {
-	return v.valueInfra
+	return v.valueInfra.String()
 }
 
 // ReadLocations returns the locations where the variable is read, such as
@@ -193,7 +206,7 @@ func (v *Var) Write(mkline *MkLine, conditional bool, conditionVarnames ...strin
 	v.updateConstantValue(mkline)
 }
 
-func (v *Var) update(mkline *MkLine, update *string) {
+func (v *Var) update(mkline *MkLine, update *strings.Builder) {
 	firstWrite := len(v.writeLocations) == 1
 	if v.IsConditional() && !firstWrite {
 		return
@@ -202,15 +215,18 @@ func (v *Var) update(mkline *MkLine, update *string) {
 	value := mkline.Value()
 	switch mkline.Op() {
 	case opAssign, opAssignEval:
-		*update = value
+		update.Reset()
+		update.WriteString(value)
 
 	case opAssignDefault:
 		if firstWrite {
-			*update = value
+			update.Reset()
+			update.WriteString(value)
 		}
 
 	case opAssignAppend:
-		*update += " " + value
+		update.WriteByte(' ')
+		update.WriteString(value)
 
 	default:
 		// Ignore these for now.
@@ -228,21 +244,22 @@ func (v *Var) updateConstantValue(mkline *MkLine) {
 	// influence whether the variable is considered constant. (Except
 	// for the := operator.)
 	//
-	// Strictly speaking, the referenced variables must be still
+	// Strictly speaking, the referenced variables must still
 	// be constant at the end of loading the complete package.
 	// (And even after that, because of the ::= modifier. But luckily
 	// almost no one knows that modifier.)
 
 	if v.IsConditional() {
 		v.constantState = 3
-		v.constantValue = ""
+		v.constantValue.Reset()
 		return
 	}
 
 	value := mkline.Value()
 	switch mkline.Op() {
 	case opAssign:
-		v.constantValue = value
+		v.constantValue.Reset()
+		v.constantValue.WriteString(value)
 
 	case opAssignEval:
 		if value != mkline.WithoutMakeVariables(value) {
@@ -257,25 +274,27 @@ func (v *Var) updateConstantValue(mkline *MkLine) {
 			// Because this sounds complicated to implement, the variable
 			// is marked as non-constant for now.
 			v.constantState = 3
-			v.constantValue = ""
+			v.constantValue.Reset()
 		} else {
-			v.constantValue = value
+			v.constantValue.Reset()
+			v.constantValue.WriteString(value)
 		}
 
 	case opAssignDefault:
 		if v.constantState == 0 {
-			v.constantValue = value
+			v.constantValue.Reset()
+			v.constantValue.WriteString(value)
 		}
 
 	case opAssignAppend:
 		if v.constantState != 0 {
-			v.constantValue += " "
+			v.constantValue.WriteByte(' ')
 		}
-		v.constantValue += value
+		v.constantValue.WriteString(value)
 
 	default:
 		v.constantState = 3
-		v.constantValue = ""
+		v.constantValue.Reset()
 	}
 
 	v.constantState |= 1

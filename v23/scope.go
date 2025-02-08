@@ -1,6 +1,9 @@
 package pkglint
 
-import "sort"
+import (
+	"sort"
+	"strings"
+)
 
 // Scope remembers which variables are defined and which are used
 // in a certain scope, such as a package or a file.
@@ -24,7 +27,7 @@ type Scope struct {
 type scopeVar struct {
 	firstDef       *MkLine
 	lastDef        *MkLine
-	value          string
+	value          strings.Builder
 	used           *MkLine
 	fallback       string
 	usedAtLoadTime bool
@@ -94,18 +97,19 @@ func (s *Scope) def(name string, mkline *MkLine) {
 		value := mkline.Value()
 		if trace.Tracing {
 			trace.Stepf("Scope.Define.append %s: %s = %q + %q",
-				mkline.String(), name, v.value, value)
+				mkline.String(), name, abbreviate(v.value.String()), value)
 		}
-		v.value += " " + value
+		v.append(value)
 	case opAssignDefault:
-		if v.value == "" && !v.indeterminate {
-			v.value = mkline.Value()
+		if v.value.Len() == 0 && !v.indeterminate {
+			v.value.WriteString(mkline.Value())
 		}
 	case opAssignShell:
-		v.value = ""
+		v.value.Reset()
 		v.indeterminate = true
 	default:
-		v.value = mkline.Value()
+		v.value.Reset()
+		v.value.WriteString(mkline.Value())
 	}
 }
 
@@ -294,7 +298,7 @@ func (s *Scope) LastValueFound(varname string) (value string, found bool, indete
 		return
 	}
 
-	value = v.value
+	value = v.value.String()
 	found = v.firstDef != nil && v.firstDef.IsVarassign()
 	indeterminate = v.indeterminate
 	if found {
@@ -323,4 +327,9 @@ func (s *Scope) forEach(action func(varname string, data *scopeVar)) {
 	for _, key := range keys {
 		action(key, s.vs[key])
 	}
+}
+
+func (v *scopeVar) append(s string) {
+	v.value.WriteByte(' ')
+	v.value.WriteString(s)
 }

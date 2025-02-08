@@ -212,6 +212,13 @@ func replaceOnce(s, from, to string) (ok bool, replaced string) {
 	return false, s
 }
 
+func abbreviate(s string) string {
+	if len(s) <= 200 {
+		return s
+	}
+	return s[:10] + "[...]" + s[len(s)-10:]
+}
+
 func isHspace(ch byte) bool {
 	return ch == ' ' || ch == '\t'
 }

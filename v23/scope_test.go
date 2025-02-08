@@ -85,7 +85,7 @@ func (s *Suite) Test_Scope_Define(c *check.C) {
 		t.CheckDeepEquals(
 			[]interface{}{actualFound, actualIndeterminate, actualValue},
 			[]interface{}{found, indeterminate, value})
-		t.CheckEquals(scope.vs["BUILD_DIRS"].value, value)
+		t.CheckEquals(scope.vs["BUILD_DIRS"].value.String(), value)
 	}
 
 	test("BUILD_DIRS?=\tdefault",
@@ -410,10 +410,20 @@ func (s *Suite) Test_Scope_forEach(c *check.C) {
 
 	var result []string
 	scope.forEach(func(varname string, data *scopeVar) {
-		result = append(result, varname+"="+data.value)
+		result = append(result, varname+"="+data.value.String())
 	})
 
 	t.CheckDeepEquals(result, []string{
 		"USED=",
 		"VAR=${USED}"})
+}
+
+func (s *Suite) Test_scopeVar_append(c *check.C) {
+	t := s.Init(c)
+
+	var v scopeVar
+	v.append("first")
+	v.append("second")
+
+	t.CheckEquals(v.value.String(), " first second")
 }
