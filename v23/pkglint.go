@@ -110,7 +110,9 @@ func (p *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) (exitC
 
 	defer func() {
 		if r := recover(); r != nil {
-			_ = r.(pkglintFatal)
+			if _, ok := r.(pkglintFatal); !ok {
+				panic(r)
+			}
 			exitCode = 1
 		}
 	}()
