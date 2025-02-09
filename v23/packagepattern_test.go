@@ -22,6 +22,25 @@ func (s *Suite) Test_ParsePackagePattern(c *check.C) {
 		}
 	}
 
+	testBraced := func(bracedPatterns string, expected ...PackagePattern) {
+		var actual []PackagePattern
+		for _, pattern := range expandCurlyBraces(bracedPatterns) {
+			parser := NewMkParser(nil, pattern)
+			pp := ParsePackagePattern(parser)
+			if t.CheckNotNil(pp) {
+				t.CheckEquals(parser.Rest(), "")
+				actual = append(actual, *pp)
+			}
+		}
+		t.CheckDeepEquals(actual, expected)
+
+		// Ensure that the failed parsing attempt is side-effect-free.
+		parser := NewMkParser(nil, bracedPatterns)
+		pp := ParsePackagePattern(parser)
+		t.CheckNil(pp)
+		t.CheckEquals(parser.Rest(), bracedPatterns)
+	}
+
 	test := func(pattern string, expected PackagePattern) {
 		testRest(pattern, expected, "")
 	}
@@ -56,20 +75,8 @@ func (s *Suite) Test_ParsePackagePattern(c *check.C) {
 	test("${_EMACS_REQD}",
 		PackagePattern{"${_EMACS_REQD}", "", "", "", "", ""})
 
-	test("{gcc46,gcc46-libs}>=4.6.0",
-		PackagePattern{"{gcc46,gcc46-libs}", ">=", "4.6.0", "", "", ""})
-
 	test("perl5-*",
 		PackagePattern{"perl5", "", "", "", "", "*"})
-
-	test("verilog{,-current}-[0-9]*",
-		PackagePattern{"verilog{,-current}", "", "", "", "", "[0-9]*"})
-
-	test("mpg123{,-esound,-nas}>=0.59.18",
-		PackagePattern{"mpg123{,-esound,-nas}", ">=", "0.59.18", "", "", ""})
-
-	test("mysql*-{client,server}-[0-9]*",
-		PackagePattern{"mysql*-{client,server}", "", "", "", "", "[0-9]*"})
 
 	test("postgresql8[0-35-9]-${module}-[0-9]*",
 		PackagePattern{"postgresql8[0-35-9]-${module}", "", "", "", "", "[0-9]*"})
@@ -126,10 +133,32 @@ func (s *Suite) Test_ParsePackagePattern(c *check.C) {
 	testNil("pkgbase<=")
 
 	// Package patterns with curly braces are handled by expandCurlyBraces.
-	testNil("{ezmlm>=0.53,ezmlm-idx>=0.40}")
-	testNil("{mecab-ipadic>=2.7.0,mecab-jumandic>=5.1}")
-	testNil("{samba>=2.0,ja-samba>=2.0}")
-	testNil("{ssh{,6}-[0-9]*,openssh-[0-9]*}")
+
+	testBraced("{ezmlm>=0.53,ezmlm-idx>=0.40}",
+		PackagePattern{"ezmlm", ">=", "0.53", "", "", ""},
+		PackagePattern{"ezmlm-idx", ">=", "0.40", "", "", ""})
+
+	testBraced("{samba>=2.0,ja-samba>=2.0}",
+		PackagePattern{"samba", ">=", "2.0", "", "", ""},
+		PackagePattern{"ja-samba", ">=", "2.0", "", "", ""})
+
+	testBraced("{ssh{,6}-[0-9]*,openssh-[0-9]*}",
+		PackagePattern{"ssh", "", "", "", "", "[0-9]*"},
+		PackagePattern{"ssh6", "", "", "", "", "[0-9]*"},
+		PackagePattern{"openssh", "", "", "", "", "[0-9]*"})
+
+	testBraced("verilog{,-current}-[0-9]*",
+		PackagePattern{"verilog", "", "", "", "", "[0-9]*"},
+		PackagePattern{"verilog-current", "", "", "", "", "[0-9]*"})
+
+	testBraced("mpg123{,-esound,-nas}>=0.59.18",
+		PackagePattern{"mpg123", ">=", "0.59.18", "", "", ""},
+		PackagePattern{"mpg123-esound", ">=", "0.59.18", "", "", ""},
+		PackagePattern{"mpg123-nas", ">=", "0.59.18", "", "", ""})
+
+	testBraced("mysql*-{client,server}-[0-9]*",
+		PackagePattern{"mysql*-client", "", "", "", "", "[0-9]*"},
+		PackagePattern{"mysql*-server", "", "", "", "", "[0-9]*"})
 }
 
 func (s *Suite) Test_PackagePatternChecker_Check(c *check.C) {

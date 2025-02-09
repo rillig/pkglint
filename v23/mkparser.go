@@ -289,7 +289,7 @@ func (p *MkParser) PkgbasePattern() string {
 			if lexer.SkipString("fuse-ntfs-3g") {
 				continue // Historical mistake in naming the package.
 			}
-			if lexer.SkipRegexp(regcomp(`^[\w.*+,{}]+`)) {
+			if lexer.SkipRegexp(regcomp(`^[\w.*+]+`)) {
 				continue
 			}
 		}

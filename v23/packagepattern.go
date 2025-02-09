@@ -7,11 +7,11 @@ import "github.com/rillig/pkglint/v23/pkgver"
 //
 // Examples are "pkg>=1<2" or "pkg-[0-9]*".
 //
-// Patterns like "{ssh>=1,openssh>=6}" are typically expanded by
+// Patterns like "{ssh>=1,openssh>=6}" need to be expanded by
 // expandCurlyBraces before being split into their components,
 // as the alternatives from inside the braces may span multiple components.
 type PackagePattern struct {
-	Pkgbase  string // "freeciv-client", "{gcc48,gcc48-libs}", "${EMACS_REQD}"
+	Pkgbase  string // "freeciv-client", "${EMACS_REQD}"
 	LowerOp  string // ">=", ">"
 	Lower    string // "2.5.0", "${PYVER}"
 	UpperOp  string // "<", "<="
