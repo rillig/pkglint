@@ -282,9 +282,18 @@ func (p *MkParser) PkgbasePattern() string {
 	start := lexer.Mark()
 
 	for {
-		if p.mklex.Expr() != nil ||
-			(!hasPrefix(lexer.Rest(), "{,nb") && lexer.SkipRegexp(regcomp(`^[\w.*+,{}]+`))) ||
-			lexer.SkipRegexp(regcomp(`^\[[\w-]+\]`)) {
+		if p.mklex.Expr() != nil {
+			continue
+		}
+		if !hasPrefix(lexer.Rest(), "{,nb") {
+			if lexer.SkipString("fuse-ntfs-3g") {
+				continue // Historical mistake in naming the package.
+			}
+			if lexer.SkipRegexp(regcomp(`^[\w.*+,{}]+`)) {
+				continue
+			}
+		}
+		if lexer.SkipRegexp(regcomp(`^\[[\w-]+\]`)) {
 			continue
 		}
 
