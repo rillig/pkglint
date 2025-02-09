@@ -99,6 +99,26 @@ func (s *Suite) Test_MkLineParser_Parse__commented_lines(c *check.C) {
 	test("\t\t# the comment")
 }
 
+func (s *Suite) Test_MkLineParser_Parse__invalid_lines(c *check.C) {
+	t := s.Init(c)
+
+	_ = t.NewMkLines("filename.mk",
+		MkCvsID,
+		"",
+		"invalid line",
+		"<<<<<<<< merge conflict",
+		">>>>>>>> merge conflict",
+		"\xa0 badly encoded non-breaking space",
+		"\x00 embedded null byte")
+
+	t.CheckOutputLines(
+		"ERROR: filename.mk:3: Unknown makefile line format: \"invalid line\".",
+		"ERROR: filename.mk:4: Unknown makefile line format: \"<<<<<<<< merge conflict\".",
+		"ERROR: filename.mk:5: Unknown makefile line format: \">>>>>>>> merge conflict\".",
+		"ERROR: filename.mk:6: Unknown makefile line format: \"\\xa0 badly encoded non-breaking space\".",
+		"ERROR: filename.mk:7: Unknown makefile line format: \"\\x00 embedded null byte\".")
+}
+
 func (s *Suite) Test_MkLineParser_parseVarassign(c *check.C) {
 	t := s.Init(c)
 
@@ -654,23 +674,6 @@ func (s *Suite) Test_MkLineParser_parseDependency__space(c *check.C) {
 	t.CheckEquals(mkline.Sources(), "source")
 	t.CheckOutputLines(
 		"NOTE: test.mk:101: Space before colon in dependency line.")
-}
-
-func (s *Suite) Test_MkLineParser_parseMergeConflict(c *check.C) {
-	t := s.Init(c)
-
-	mkline := t.NewMkLine("test.mk", 101,
-		"<<<<<<<<<<<<<<<<<")
-
-	// Merge conflicts are of neither type.
-	t.CheckEquals(mkline.IsVarassign(), false)
-	t.CheckEquals(mkline.IsDirective(), false)
-	t.CheckEquals(mkline.IsInclude(), false)
-	t.CheckEquals(mkline.IsEmpty(), false)
-	t.CheckEquals(mkline.IsComment(), false)
-	t.CheckEquals(mkline.IsDependency(), false)
-	t.CheckEquals(mkline.IsShellCommand(), false)
-	t.CheckEquals(mkline.IsSysinclude(), false)
 }
 
 func (s *Suite) Test_MkLineParser_split(c *check.C) {

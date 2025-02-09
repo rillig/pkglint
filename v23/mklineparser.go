@@ -60,9 +60,6 @@ func (p MkLineParser) Parse(line *Line) *MkLine {
 	if mkline := p.parseDependency(line, splitResult); mkline != nil {
 		return mkline
 	}
-	if mkline := p.parseMergeConflict(line, splitResult); mkline != nil {
-		return mkline
-	}
 
 	// The %q is deliberate here since it shows possible strange characters.
 	line.Errorf("Unknown makefile line format: %q.", text)
@@ -273,14 +270,6 @@ func (p MkLineParser) parseDependency(line *Line, splitResult mkLineSplitResult)
 		line.Notef("Space before colon in dependency line.")
 	}
 	return &MkLine{line, splitResult, mkLineDependency{targets, sources}}
-}
-
-func (p MkLineParser) parseMergeConflict(line *Line, splitResult mkLineSplitResult) *MkLine {
-	if !matches(line.Text, `^(<<<<<<<|=======|>>>>>>>)`) {
-		return nil
-	}
-
-	return &MkLine{line, splitResult, nil}
 }
 
 // split parses a logical line from a makefile (that is, after joining
