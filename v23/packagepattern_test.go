@@ -294,6 +294,14 @@ func (s *Suite) Test_PackagePatternChecker_checkSingle(c *check.C) {
 		"ERROR: filename.mk:57: Invalid package pattern \"${RUBY_PKGPREFIX}-theme-[a-z0-9]*\".",
 		"ERROR: filename.mk:58: Package pattern \"package>=2.9.0\" is followed by extra text \",<3\".",
 		"ERROR: filename.mk:59: Package pattern \"package>=2.16\" is followed by extra text \">=0\".")
+
+	vt.Values(
+		"package>=1<2",
+		"package>=2<1",
+		"package>=2<${HIGH}",
+		"package>=${LOW}<${HIGH}")
+	vt.Output(
+		"ERROR: filename.mk:62: The lower bound \"2\" is greater than the upper bound \"1\".")
 }
 
 func (s *Suite) Test_PackagePatternChecker_checkDepends__smaller_version(c *check.C) {

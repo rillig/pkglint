@@ -181,6 +181,12 @@ func (ck *PackagePatternChecker) checkSingle(value string) {
 		return
 	}
 
+	if pp.Lower != "" && pp.Upper != "" &&
+		!containsExpr(pp.Lower) && !containsExpr(pp.Upper) &&
+		pkgver.Compare(pp.Lower, pp.Upper) > 0 {
+		ck.MkLine.Errorf("The lower bound \"%s\" is greater than the upper bound \"%s\".", pp.Lower, pp.Upper)
+	}
+
 	wildcard := pp.Wildcard
 	if m, inside := match1(wildcard, `^\[(.*)\]\*$`); m {
 		if inside != "0-9" {
