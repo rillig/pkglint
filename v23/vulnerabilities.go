@@ -50,14 +50,14 @@ func (vs *Vulnerabilities) read(filename CurrPath) {
 		}
 		for _, pat := range expandCurlyBraces(pattern) {
 			parser := NewMkParser(nil, pat)
-			deppat := ParsePackagePattern(parser)
+			pp := ParsePackagePattern(parser)
 			rest := parser.Rest()
 
 			switch {
-			case deppat == nil && contains(pattern, "{"):
+			case pp == nil && contains(pattern, "{"):
 				line.Errorf("Package pattern \"%s\" expands to the invalid package pattern \"%s\".", pattern, pat)
 				continue
-			case deppat == nil:
+			case pp == nil:
 				line.Errorf("Invalid package pattern \"%s\".", pat)
 				continue
 			case hasPrefix(rest, "-") && contains(pattern, "{"):
@@ -76,8 +76,8 @@ func (vs *Vulnerabilities) read(filename CurrPath) {
 				continue
 			}
 
-			vs.byPkgbase[deppat.Pkgbase] = append(vs.byPkgbase[deppat.Pkgbase],
-				Vulnerability{line, deppat, kindOfExploit, url})
+			vs.byPkgbase[pp.Pkgbase] = append(vs.byPkgbase[pp.Pkgbase],
+				Vulnerability{line, pp, kindOfExploit, url})
 		}
 	}
 }

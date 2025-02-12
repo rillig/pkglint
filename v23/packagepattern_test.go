@@ -7,17 +7,17 @@ func (s *Suite) Test_ParsePackagePattern(c *check.C) {
 
 	testRest := func(pattern string, expected PackagePattern, rest string) {
 		parser := NewMkParser(nil, pattern)
-		dp := ParsePackagePattern(parser)
-		if t.CheckNotNil(dp) {
-			t.CheckEquals(*dp, expected)
+		pp := ParsePackagePattern(parser)
+		if t.CheckNotNil(pp) {
+			t.CheckEquals(*pp, expected)
 			t.CheckEquals(parser.Rest(), rest)
 		}
 	}
 
 	testNil := func(pattern string) {
 		parser := NewMkParser(nil, pattern)
-		dp := ParsePackagePattern(parser)
-		if t.CheckNil(dp) {
+		pp := ParsePackagePattern(parser)
+		if t.CheckNil(pp) {
 			t.CheckEquals(parser.Rest(), pattern)
 		}
 	}

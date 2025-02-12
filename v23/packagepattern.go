@@ -39,10 +39,10 @@ func ParsePackagePattern(p *MkParser) *PackagePattern {
 		return ""
 	}
 
-	var dp PackagePattern
+	var pp PackagePattern
 	mark := lexer.Mark()
-	dp.Pkgbase = p.PkgbasePattern()
-	if dp.Pkgbase == "" {
+	pp.Pkgbase = p.PkgbasePattern()
+	if pp.Pkgbase == "" {
 		return nil
 	}
 
@@ -55,8 +55,8 @@ func ParsePackagePattern(p *MkParser) *PackagePattern {
 	if op != "" {
 		version := parseVersion()
 		if version != "" {
-			dp.LowerOp = op
-			dp.Lower = version
+			pp.LowerOp = op
+			pp.Lower = version
 		} else {
 			lexer.Reset(mark2)
 		}
@@ -70,15 +70,15 @@ func ParsePackagePattern(p *MkParser) *PackagePattern {
 	if op != "" {
 		version := parseVersion()
 		if version != "" {
-			dp.UpperOp = op
-			dp.Upper = version
+			pp.UpperOp = op
+			pp.Upper = version
 		} else {
 			lexer.Reset(mark2)
 		}
 	}
 
-	if dp.LowerOp != "" || dp.UpperOp != "" {
-		return &dp
+	if pp.LowerOp != "" || pp.UpperOp != "" {
+		return &pp
 	}
 
 	if lexer.SkipByte('-') && lexer.Rest() != "" && lexer.PeekByte() != '-' {
@@ -93,17 +93,17 @@ func ParsePackagePattern(p *MkParser) *PackagePattern {
 			lexer.SkipString("{,nb[0-9]*}")
 		}
 
-		dp.Wildcard = lexer.Since(versionMark)
-		if dp.Wildcard != "" {
-			return &dp
+		pp.Wildcard = lexer.Since(versionMark)
+		if pp.Wildcard != "" {
+			return &pp
 		}
 	}
 
-	if hasPrefix(dp.Pkgbase, "$") && hasSuffix(dp.Pkgbase, "}") {
+	if hasPrefix(pp.Pkgbase, "$") && hasSuffix(pp.Pkgbase, "}") {
 		if !lexer.SkipString("{,nb*}") {
 			lexer.SkipString("{,nb[0-9]*}")
 		}
-		return &dp
+		return &pp
 	}
 
 	lexer.Reset(mark)
@@ -150,11 +150,11 @@ func (ck *PackagePatternChecker) Check(value string, valueNoVar string) {
 
 func (ck *PackagePatternChecker) checkSingle(value string) {
 	parser := NewMkParser(nil, value)
-	deppat := ParsePackagePattern(parser)
+	pp := ParsePackagePattern(parser)
 	rest := parser.Rest()
 
-	if deppat != nil &&
-		(deppat.LowerOp != "" || deppat.UpperOp != "") &&
+	if pp != nil &&
+		(pp.LowerOp != "" || pp.UpperOp != "") &&
 		(rest == "{,nb*}" || rest == "{,nb[0-9]*}") {
 		ck.MkLine.Warnf("Dependency patterns of the form pkgbase>=1.0 don't need the \"{,nb*}\" extension.")
 		ck.MkLine.Explain(
@@ -164,7 +164,7 @@ func (ck *PackagePatternChecker) checkSingle(value string) {
 			"For package patterns using the comparison operators,",
 			"this is not necessary.")
 
-	} else if deppat == nil || rest != "" {
+	} else if pp == nil || rest != "" {
 		if rest != "" && rest != value {
 			ck.MkLine.Errorf("Package pattern %q is followed by extra text %q.",
 				value[:len(value)-len(rest)], rest)
@@ -181,7 +181,7 @@ func (ck *PackagePatternChecker) checkSingle(value string) {
 		return
 	}
 
-	wildcard := deppat.Wildcard
+	wildcard := pp.Wildcard
 	if m, inside := match1(wildcard, `^\[(.*)\]\*$`); m {
 		if inside != "0-9" {
 			ck.MkLine.Warnf("Only \"[0-9]*\" is allowed as the numeric part of a dependency, not \"%s\".", wildcard)
@@ -211,7 +211,7 @@ func (ck *PackagePatternChecker) checkSingle(value string) {
 		}
 
 	} else if wildcard == "*" {
-		ck.MkLine.Warnf("Use \"%[1]s-[0-9]*\" instead of \"%[1]s-*\".", deppat.Pkgbase)
+		ck.MkLine.Warnf("Use \"%[1]s-[0-9]*\" instead of \"%[1]s-*\".", pp.Pkgbase)
 		ck.MkLine.Explain(
 			"If you use a * alone, the package specification may match other",
 			"packages that have the same prefix but a longer name.",
@@ -232,24 +232,24 @@ func (ck *PackagePatternChecker) checkSingle(value string) {
 	}
 
 	ck.checkDepends(
-		deppat,
+		pp,
 		"BUILDLINK_API_DEPENDS.",
 		func(data *Buildlink3Data) *PackagePattern { return data.apiDepends },
 		func(data *Buildlink3Data) *MkLine { return data.apiDependsLine })
 	ck.checkDepends(
-		deppat,
+		pp,
 		"BUILDLINK_ABI_DEPENDS.",
 		func(data *Buildlink3Data) *PackagePattern { return data.abiDepends },
 		func(data *Buildlink3Data) *MkLine { return data.abiDependsLine })
 }
 
 func (ck *PackagePatternChecker) checkDepends(
-	deppat *PackagePattern,
+	pp *PackagePattern,
 	prefix string,
 	depends func(data *Buildlink3Data) *PackagePattern,
 	dependsLine func(data *Buildlink3Data) *MkLine,
 ) {
-	if deppat.LowerOp == "" {
+	if pp.LowerOp == "" {
 		return
 	}
 	pkg := ck.MkLines.pkg
@@ -268,13 +268,13 @@ func (ck *PackagePatternChecker) checkDepends(
 	if defpat == nil || defpat.LowerOp == "" {
 		return
 	}
-	if containsExpr(defpat.Lower) || containsExpr(deppat.Lower) {
+	if containsExpr(defpat.Lower) || containsExpr(pp.Lower) {
 		return
 	}
-	limit := condInt(defpat.LowerOp == ">=" && deppat.LowerOp == ">", 1, 0)
-	if pkgver.Compare(deppat.Lower, defpat.Lower) < limit {
+	limit := condInt(defpat.LowerOp == ">=" && pp.LowerOp == ">", 1, 0)
+	if pkgver.Compare(pp.Lower, defpat.Lower) < limit {
 		ck.MkLine.Notef("The requirement %s%s is already guaranteed by the %s%s from %s.",
-			deppat.LowerOp, deppat.Lower, defpat.LowerOp, defpat.Lower,
+			pp.LowerOp, pp.Lower, defpat.LowerOp, defpat.Lower,
 			ck.MkLine.RelMkLine(dependsLine(data)))
 	}
 }
