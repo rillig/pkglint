@@ -1,6 +1,6 @@
 package pkglint
 
-// Vulnerabilities collects the vulnerabilites from the
+// Vulnerabilities collects the vulnerabilities from the
 // doc/pkg-vulnerabilities file.
 type Vulnerabilities struct {
 	byPkgbase map[string][]Vulnerability
