@@ -31,6 +31,7 @@ func (s *Suite) Test_Compare(c *check.C) {
 		{"1.0.1a"},
 		{"1.0.1z"},
 		{"1.0.11", "1.0k"},
+		{"1.2", "1.2nb0", "1.2nb17nb0"},
 		{"2.0pre", "2.0rc"},
 		{"2.0", "2.0pl"},
 		{"2.0.1nb4"},
@@ -88,6 +89,8 @@ func Test_newVersion(t *testing.T) {
 		{"1.1.1dnb2", version{[]int{1, 0, 1, 0, 1, 0, 4}, 2}},
 		{"1.0.1z", version{[]int{1, 0, 0, 0, 1, 0, 26}, 0}},
 		{"0pre20160620", version{[]int{0, -1, 20160620}, 0}},
+		{"1.2nb0", version{[]int{1, 0, 2}, 0}},
+		{"1.2nb5nb7", version{[]int{1, 0, 2}, 7}},
 		{"3.5.DEV1710", version{[]int{3, 0, 5, 0, 0, 4, 0, 5, 0, 22, 1710}, 0}},
 
 		// In the following edge case, the "nb" and "beta" overlap.
