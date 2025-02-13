@@ -245,8 +245,8 @@ func (ck *Buildlink3Checker) checkVarassign(mkline *MkLine, pkgbase string) {
 		pattern := ParsePackagePattern(parser)
 		if pattern != nil && parser.EOF() {
 			ck.abi = pattern
+			doCheck = true
 		}
-		doCheck = true
 	}
 
 	if varname == "BUILDLINK_API_DEPENDS."+pkgbase {
@@ -255,26 +255,22 @@ func (ck *Buildlink3Checker) checkVarassign(mkline *MkLine, pkgbase string) {
 		pattern := ParsePackagePattern(parser)
 		if pattern != nil && parser.EOF() {
 			ck.api = pattern
-		}
-		doCheck = true
-	}
-
-	if doCheck && ck.abi != nil && ck.api != nil && ck.abi.Pkgbase != ck.api.Pkgbase {
-		if !hasPrefix(ck.api.Pkgbase, "{") {
-			ck.abiLine.Warnf("Package name mismatch between ABI %q and API %q (from %s).",
-				ck.abi.Pkgbase, ck.api.Pkgbase, ck.abiLine.RelMkLine(ck.apiLine))
+			doCheck = true
 		}
 	}
 
-	if doCheck {
-		if ck.abi != nil && ck.abi.Lower != "" && !containsExpr(ck.abi.Lower) {
-			if ck.api != nil && ck.api.Lower != "" && !containsExpr(ck.api.Lower) {
-				if pkgver.Compare(ck.abi.Lower, ck.api.Lower) < 0 {
-					ck.abiLine.Warnf("ABI version %q should be at least API version %q (see %s).",
-						ck.abi.Lower, ck.api.Lower, ck.abiLine.RelMkLine(ck.apiLine))
-				}
-			}
-		}
+	if doCheck && ck.abi != nil && ck.api != nil &&
+		ck.abi.Pkgbase != ck.api.Pkgbase {
+		ck.abiLine.Warnf("Package name mismatch between ABI %q and API %q (from %s).",
+			ck.abi.Pkgbase, ck.api.Pkgbase, ck.abiLine.RelMkLine(ck.apiLine))
+	}
+
+	if doCheck && ck.abi != nil && ck.api != nil &&
+		ck.abi.Lower != "" && ck.api.Lower != "" &&
+		!containsExpr(ck.abi.Lower) && !containsExpr(ck.api.Lower) &&
+		pkgver.Compare(ck.abi.Lower, ck.api.Lower) < 0 {
+		ck.abiLine.Warnf("ABI version %q should be at least API version %q (see %s).",
+			ck.abi.Lower, ck.api.Lower, ck.abiLine.RelMkLine(ck.apiLine))
 	}
 
 	if varparam := mkline.Varparam(); varparam != "" && varparam != pkgbase {
