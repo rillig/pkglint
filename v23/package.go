@@ -743,6 +743,9 @@ func (pkg *Package) checkWipCommitMsg() {
 	if !G.Wip {
 		return
 	}
+	if pkg.File("TODO").IsFile() {
+		return
+	}
 	file := pkg.File("COMMIT_MSG")
 	lines := Load(file, NotEmpty)
 	if lines == nil {

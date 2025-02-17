@@ -1163,11 +1163,7 @@ func (s *Suite) Test_Pkglint_checkReg__readme_and_todo(c *check.C) {
 
 	t.CheckOutputLines(
 		"ERROR: category/package/TODO: Packages in main pkgsrc must not have a TODO file.",
-		"WARN: wip/package/COMMIT_MSG: Every work-in-progress "+
-			"package should have a COMMIT_MSG file.",
-		"1 error and 1 warning found.",
-		"(Run \"pkglint -e category/package wip/package\" "+
-			"to show explanations.)",
+		"1 error found.",
 	)
 
 	t.Main("--import", "category/package", "wip/package")
@@ -1175,11 +1171,7 @@ func (s *Suite) Test_Pkglint_checkReg__readme_and_todo(c *check.C) {
 	t.CheckOutputLines(
 		"ERROR: category/package/TODO: Packages in main pkgsrc must not have a TODO file.",
 		"ERROR: wip/package/TODO: Must be cleaned up before committing the package.",
-		"WARN: wip/package/COMMIT_MSG: Every work-in-progress "+
-			"package should have a COMMIT_MSG file.",
-		"2 errors and 1 warning found.",
-		"(Run \"pkglint -e --import category/package wip/package\" "+
-			"to show explanations.)",
+		"2 errors found.",
 	)
 }
 
