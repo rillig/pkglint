@@ -74,7 +74,9 @@ func (p *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) (exitC
 
 	defer func() {
 		if r := recover(); r != nil {
-			_ = r.(pkglintFatal)
+			if _, ok := r.(pkglintFatal); !ok {
+				panic(r)
+			}
 			exitCode = 1
 		}
 	}()
@@ -174,7 +176,7 @@ func main() {
 func (p *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) (exitCode int) {
 ```
 
-> from [pkglint.go](pkglint.go#L118):
+> from [pkglint.go](pkglint.go#L120):
 
 ```go
 	if exitcode := p.ParseCommandLine(args); exitcode != -1 {
@@ -189,7 +191,7 @@ and that is saved in `pkglint.Todo`, which contains all items that still need to
 The default use case for pkglint is to check the package from the
 current working directory, therefore this is done if no arguments are given.
 
-> from [pkglint.go](pkglint.go#L280):
+> from [pkglint.go](pkglint.go#L282):
 
 ```go
 	for _, arg := range remainingArgs {
@@ -210,7 +212,7 @@ In this example run, the first and only argument is `DESCR`.
 From there, the pkgsrc root is usually reachable via `../../`,
 and this is what pkglint tries.
 
-> from [pkglint.go](pkglint.go#L196):
+> from [pkglint.go](pkglint.go#L198):
 
 ```go
 	firstDir := p.Todo.Front()
@@ -242,7 +244,7 @@ one after another. When pkglint is called with the `-r` option,
 some entries may be added to the `Todo` list,
 but that doesn't happen in this simple example run.
 
-> from [pkglint.go](pkglint.go#L128):
+> from [pkglint.go](pkglint.go#L130):
 
 ```go
 	for !p.Todo.IsEmpty() {
@@ -252,7 +254,7 @@ but that doesn't happen in this simple example run.
 
 The main work is done in `Pkglint.Check` and `Pkglint.checkMode`:
 
-> from [pkglint.go](pkglint.go#L325):
+> from [pkglint.go](pkglint.go#L327):
 
 ```go
 	if isReg && p.Pkgsrc == nil {
@@ -265,7 +267,7 @@ Since `DESCR` is a regular file, the next function to call is `checkReg`.
 For directories, the next function would depend on the depth from the
 pkgsrc root directory.
 
-> from [pkglint.go](pkglint.go#L601):
+> from [pkglint.go](pkglint.go#L603):
 
 ```go
 // checkReg checks the given regular file.
@@ -276,7 +278,7 @@ func (p *Pkglint) checkReg(filename CurrPath, basename RelPath, depth int, pkg *
 
 The relevant part of `Pkglint.checkReg` is:
 
-> from [pkglint.go](pkglint.go#L631):
+> from [pkglint.go](pkglint.go#L638):
 
 ```go
 	case basename == "buildlink3.mk":
@@ -311,7 +313,7 @@ The actual checks usually work on `Line` objects instead of files
 because the lines offer nice methods for logging the diagnostics
 and for automatically fixing the text (in pkglint's `--autofix` mode).
 
-> from [pkglint.go](pkglint.go#L474):
+> from [pkglint.go](pkglint.go#L476):
 
 ```go
 func CheckLinesDescr(lines *Lines) {
@@ -459,7 +461,7 @@ If that was too easy, have a look at the code that decides whether an
 expression such as `${CFLAGS}` needs to be quoted using the `:Q` modifier
 when it is used in a shell command:
 
-> from [mkline.go](mkline.go#L728):
+> from [mkline.go](mkline.go#L729):
 
 ```go
 // VariableNeedsQuoting determines whether the given variable needs the :Q
@@ -636,7 +638,7 @@ and these are handled specially.
 // MkLine is a line from a makefile fragment.
 // There are several types of lines.
 // The most common types in pkgsrc are variable assignments,
-// shell commands and directives like .if and .for.
+// shell commands, and directives like .if and .for.
 // The line types can be distinguished by IsVarassign,
 // IsDirective and so on.
 type MkLine struct {
@@ -647,7 +649,8 @@ type MkLine struct {
 	// One of the following mkLine* types.
 	//
 	// For the larger of these types, a pointer is used instead of a direct
-	// struct because of https://github.com/golang/go/issues/28045.
+	// struct because of https://github.com/golang/go/issues/28045;
+	// last checked against go1.23.1 in January 2025.
 	data interface{}
 }
 ```

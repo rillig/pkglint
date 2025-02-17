@@ -1,3 +1,24 @@
+# 23.14.0 (2025-02-17)
+
+Fix wrong warnings about MASTER_SITE_BACKUP being not known.
+
+Reduce the amount of log data when tracing variables that repeatedly
+use `+=` to append to a variable.
+
+Support the `.-include` directive, the `.ifmake` directive and the
+built-in `<` variable, to be able to check standalone makefiles
+outside pkgsrc.
+
+Complain about merge conflicts in makefiles, which were silently ignored
+before.
+
+Complain about package patterns whose bounds contradict each other,
+such as `pkgbase>=2<1`, as these never match and are probably typos.
+
+Do not warn about pkgsrc-wip packages that are missing a COMMIT_MSG file,
+as long as they have a TODO file, as it is fine to have work-in-progress
+packages in pkgsrc-wip.
+
 # 23.13.0 (2025-01-28)
 
 Check language version variables for Lua, PHP, Python and Ruby.
