@@ -306,41 +306,6 @@ func (s *Suite) Test_Pkglint_Main__realistic(c *check.C) {
 	}
 }
 
-func (s *Suite) Test_Pkglint_Main__profiling(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpPkgsrc()
-	t.Chdir(".")
-
-	t.Main("--profiling")
-
-	// Pkglint always writes the profiling data into the current directory.
-	// TODO: Make the location of the profiling log a mandatory parameter.
-	t.CheckEquals(NewCurrPath("pkglint.pprof").IsFile(), true)
-
-	err := os.Remove("pkglint.pprof")
-	t.CheckNil(err)
-
-	// Everything but the first few lines of output is not easily testable
-	// or not interesting enough, since that info includes the exact timing
-	// that the top time-consuming regular expressions took.
-	firstOutput := strings.Split(t.Output(), "\n")[0]
-	t.CheckEquals(firstOutput, "ERROR: Makefile: Cannot be read.")
-}
-
-func (s *Suite) Test_Pkglint_Main__profiling_error(c *check.C) {
-	t := s.Init(c)
-
-	t.Chdir(".")
-	t.CreateFileLines("pkglint.pprof/file")
-
-	exitcode := t.Main("--profiling")
-
-	t.CheckEquals(exitcode, 1)
-	t.CheckOutputMatches(
-		`ERROR: pkglint\.pprof: Cannot create profiling file: open pkglint\.pprof: .*`)
-}
-
 // The option -Wall does not imply -Werror.
 func (s *Suite) Test_Pkglint_Main__Wall(c *check.C) {
 	t := s.Init(c)
