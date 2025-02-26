@@ -1459,11 +1459,9 @@ func (s *Suite) Test_Package_check__nonexistent_PATCHDIR(c *check.C) {
 	G.Check("category/pkg-common")
 	G.Check("category/package")
 
-	// FIXME: It's fine to have a nonexistent PATCHDIR,
+	// It's fine to have a nonexistent PATCHDIR,
 	// as long as it matches DISTINFO_FILE.
-	t.CheckOutputLines(
-		"ERROR: category/pkg-common/Makefile.common:5: " +
-			"Relative path \"${.CURDIR}/../../category/pkg-common/patches\" does not exist.")
+	t.CheckOutputEmpty()
 }
 
 func (s *Suite) Test_Package_checkDescr__DESCR_SRC(c *check.C) {

@@ -1199,6 +1199,13 @@ func (cv *VartypeCheck) PackagePath() {
 		return
 	}
 
+	if cv.Varname == "PATCHDIR" && cv.MkLines.pkg != nil {
+		distinfoFile := cv.MkLines.pkg.vars.LastValue("DISTINFO_FILE")
+		if distinfoFile != "" && NewPath(cv.Value).Dir() == NewPath(distinfoFile).Dir() {
+			return
+		}
+	}
+
 	ck := MkLineChecker{cv.MkLines, cv.MkLine}
 	ck.CheckRelativePath(NewRelPathString(cv.Value), true)
 }
