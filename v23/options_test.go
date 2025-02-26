@@ -387,7 +387,8 @@ func (s *Suite) Test_CheckLinesOptionsMk__PLIST_VARS_based_on_PKG_SUPPORTED_OPTI
 	t.SetUpOption("one", "")
 	t.SetUpOption("two", "")
 	t.SetUpOption("three", "")
-	t.SetUpPackage("category/package")
+	t.SetUpPackage("category/package",
+		".include \"options.mk\"")
 	t.CreateFileLines("mk/bsd.options.mk")
 	t.SetUpFileMkLines("category/package/options.mk",
 		MkCvsID,
@@ -433,7 +434,8 @@ func (s *Suite) Test_CheckLinesOptionsMk__PLIST_VARS_based_on_groups(c *check.C)
 	t.SetUpOption("opt-two", "")
 	t.SetUpOption("req-one", "")
 	t.SetUpOption("req-two", "")
-	t.SetUpPackage("category/package")
+	t.SetUpPackage("category/package",
+		".include \"options.mk\"")
 	t.CreateFileLines("mk/bsd.options.mk")
 	t.SetUpFileMkLines("category/package/options.mk",
 		MkCvsID,

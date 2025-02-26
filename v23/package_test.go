@@ -371,7 +371,9 @@ func (s *Suite) Test_Package__different_package_identifiers(c *check.C) {
 
 	t.SetUpPackage("category/package",
 		"DISTNAME=\tdistname-1.0",
-		"PKGNAME=\tpkgname-1.0")
+		"PKGNAME=\tpkgname-1.0",
+		"",
+		".include \"options.mk\"")
 	t.CreateFileLines("mk/bsd.options.mk")
 	t.CreateFileLines("category/package/options.mk",
 		MkCvsID,
@@ -2042,6 +2044,27 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__redundancy_in_infra(c *ch
 			"Variable \"PKG_REDUNDANT\" is defined but not used.")
 }
 
+func (s *Suite) Test_Package_checkfilePackageMakefile__options_mk_not_included(c *check.C) {
+	t := s.Init(c)
+	t.SetUpPackage("category/package")
+	t.CreateFileLines("mk/bsd.options.mk",
+		MkCvsID)
+	t.CreateFileLines("category/package/options.mk",
+		MkCvsID,
+		"",
+		"PKG_OPTIONS_VAR=\tPKG_OPTIONS.package",
+		"PKG_SUPPORTED_OPTIONS=\t# none",
+		"",
+		".include \"../../mk/bsd.options.mk\"")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	t.CheckOutputLines(
+		"ERROR: Makefile: A package's options.mk file must be included by the package.")
+}
+
 // When a package defines PLIST_SRC, it may or may not use the
 // PLIST file from the package directory. Therefore, the check
 // is skipped completely.
@@ -3359,6 +3382,7 @@ func (s *Suite) Test_Package_checkIncludeConditionally__conditional_and_uncondit
 
 	t.SetUpOption("zlib", "")
 	t.SetUpPackage("category/package",
+		".include \"options.mk\"",
 		".include \"../../mk/bsd.prefs.mk\"",
 		".include \"../../devel/zlib/buildlink3.mk\"",
 		".if ${OPSYS} == \"Linux\"",
@@ -3386,10 +3410,10 @@ func (s *Suite) Test_Package_checkIncludeConditionally__conditional_and_uncondit
 	G.checkdirPackage(".")
 
 	t.CheckOutputLines(
-		"WARN: Makefile:21: \"../../devel/zlib/buildlink3.mk\" is included "+
+		"WARN: Makefile:22: \"../../devel/zlib/buildlink3.mk\" is included "+
 			"unconditionally here "+
 			"and conditionally in options.mk:9 (depending on PKG_OPTIONS).",
-		"WARN: Makefile:23: \"../../sysutils/coreutils/buildlink3.mk\" is included "+
+		"WARN: Makefile:24: \"../../sysutils/coreutils/buildlink3.mk\" is included "+
 			"conditionally here (depending on OPSYS) and "+
 			"unconditionally in options.mk:11.")
 }
@@ -3463,6 +3487,8 @@ func (s *Suite) Test_Package_checkIncludeConditionally__conditionally_no_variabl
 
 	t.SetUpOption("zlib", "")
 	t.SetUpPackage("category/package",
+		".include \"options.mk\"",
+		"",
 		".include \"../../devel/zlib/buildlink3.mk\"",
 		".if exists(/usr/include)",
 		".include \"../../sysutils/coreutils/buildlink3.mk\"",
@@ -3489,10 +3515,10 @@ func (s *Suite) Test_Package_checkIncludeConditionally__conditionally_no_variabl
 	G.checkdirPackage(".")
 
 	t.CheckOutputLines(
-		"WARN: Makefile:20: \"../../devel/zlib/buildlink3.mk\" "+
+		"WARN: Makefile:22: \"../../devel/zlib/buildlink3.mk\" "+
 			"is included unconditionally here "+
 			"and conditionally in options.mk:9.",
-		"WARN: Makefile:22: \"../../sysutils/coreutils/buildlink3.mk\" "+
+		"WARN: Makefile:24: \"../../sysutils/coreutils/buildlink3.mk\" "+
 			"is included conditionally here "+
 			"and unconditionally in options.mk:11.")
 }

@@ -455,6 +455,8 @@ func (s *Suite) Test_MkExprChecker_checkVarnameBuildlink(c *check.C) {
 		"CONFIGURE_ARGS+=\t--with-package=${BUILDLINK_PREFIX.package}",
 		"CONFIGURE_ARGS+=\t--with-package=${BUILDLINK_PREFIX.${PKGBASE}}",
 		"",
+		".include \"options.mk\"",
+		"",
 		".include \"../../category/library/buildlink3.mk\"")
 	t.CreateFileLines("category/package/options.mk",
 		MkCvsID,

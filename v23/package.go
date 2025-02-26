@@ -820,6 +820,10 @@ func (pkg *Package) checkfilePackageMakefile(filename CurrPath, mklines *MkLines
 	pkg.determineEffectivePkgVars()
 	pkg.checkPossibleDowngrade()
 
+	if !pkg.included.Seen("options.mk") && pkg.File("options.mk").Exists() {
+		pkg.Makefile.Whole().Errorf("A package's options.mk file must be included by the package.")
+	}
+
 	if !vars.IsDefined("COMMENT") {
 		NewLineWhole(filename).Warnf("Each package should define a COMMENT.")
 	}
