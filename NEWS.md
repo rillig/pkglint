@@ -1,3 +1,10 @@
+# 23.15.0 (2025-02-26)
+
+Complain if a package has an options.mk file but doesn't included it.
+
+Don't complain about pointing PATCHDIR to a nonexistent directory
+as long as PATCHDIR and DISTINFO_FILE match.
+
 # 23.14.0 (2025-02-17)
 
 Fix wrong warnings about MASTER_SITE_BACKUP being not known.
