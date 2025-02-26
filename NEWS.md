@@ -1,3 +1,11 @@
+# 23.15.1 (2025-02-26)
+
+Remove leftover tests that failed after removing the undocumented profiling
+option.
+
+Still require PATCHDIR to be well-formed; the directory it points to just
+doesn't have to exist.
+
 # 23.15.0 (2025-02-26)
 
 Complain if a package has an options.mk file but doesn't included it.
