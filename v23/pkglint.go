@@ -10,9 +10,6 @@ import (
 	"io"
 	"os"
 	"os/user"
-	"runtime"
-	"runtime/debug"
-	"runtime/pprof"
 	"strings"
 )
 
@@ -144,53 +141,13 @@ func (p *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) (exitC
 }
 
 func (p *Pkglint) setUpProfiling() func() {
-
-	var cleanups []func()
-	atExit := func(cleanup func()) {
-		cleanups = append(cleanups, cleanup)
-	}
-
-	atExit(func() {
-		p.fileCache.table = nil
-		p.fileCache.mapping = nil
-		runtime.GC()
-
-		fd, err := os.Create("pkglint.heapdump")
-		assertNil(err, "heapDump.create")
-
-		debug.WriteHeapDump(fd.Fd())
-
-		err = fd.Close()
-		assertNil(err, "heapDump.close")
-
-		G = unusablePkglint() // Free all memory.
-		runtime.GC()          // For detecting possible memory leaks; see qa-pkglint.
-	})
-
-	f, err := os.Create("pkglint.pprof")
-	if err != nil {
-		p.Logger.TechErrorf("pkglint.pprof", "Cannot create profiling file: %s", err)
-		panic(pkglintFatal{})
-	}
-	atExit(func() { assertNil(f.Close(), "") })
-
-	err = pprof.StartCPUProfile(f)
-	assertNil(err, "Cannot start profiling")
-	atExit(pprof.StopCPUProfile)
-
 	p.Logger.histo = histogram.New()
 	p.loaded = histogram.New()
-	atExit(func() {
+	return func() {
 		p.Logger.out.Write("")
 		p.Logger.histo.PrintStats(p.Logger.out.out, "loghisto", -1)
 		p.loaded.PrintStats(p.Logger.out.out, "loaded", 10)
 		p.Logger.out.WriteLine(sprintf("fileCache: %d hits, %d misses", p.fileCache.hits, p.fileCache.misses))
-	})
-
-	return func() {
-		for i := range cleanups {
-			cleanups[len(cleanups)-1-i]()
-		}
 	}
 }
 
