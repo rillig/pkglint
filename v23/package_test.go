@@ -1400,7 +1400,7 @@ func (s *Suite) Test_Package_check__redundant_WRKSRC(c *check.C) {
 			"Setting WRKSRC to \"${WRKDIR}/package-1.0\" is redundant.")
 }
 
-func (s *Suite) Test_Package_check__DISTINFO_FILE_and_PATCHDIR(c *check.C) {
+func (s *Suite) Test_Package_check__DISTINFO_FILE_without_PATCHDIR(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("devel/ocaml-dune",
@@ -1436,6 +1436,34 @@ func (s *Suite) Test_Package_check__DISTINFO_FILE_and_PATCHDIR(c *check.C) {
 			"DISTINFO_FILE \"${.CURDIR}/../../devel/ocaml-dune/distinfo\" "+
 			"has no corresponding PATCHDIR.",
 	)
+}
+
+func (s *Suite) Test_Package_check__nonexistent_PATCHDIR(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/pkg-common",
+		".include \"Makefile.common\"")
+	t.CreateFileLines("category/pkg-common/Makefile.common",
+		MkCvsID,
+		"# used by category/package/Makefile",
+		"",
+		"DISTINFO_FILE=\t${.CURDIR}/../../category/pkg-common/distinfo",
+		"PATCHDIR=\t${.CURDIR}/../../category/pkg-common/patches")
+
+	t.SetUpPackage("category/package",
+		".include \"../../category/pkg-common/Makefile.common\"")
+
+	t.Chdir(".")
+	t.FinishSetUp()
+
+	G.Check("category/pkg-common")
+	G.Check("category/package")
+
+	// FIXME: It's fine to have a nonexistent PATCHDIR,
+	// as long as it matches DISTINFO_FILE.
+	t.CheckOutputLines(
+		"ERROR: category/pkg-common/Makefile.common:5: " +
+			"Relative path \"${.CURDIR}/../../category/pkg-common/patches\" does not exist.")
 }
 
 func (s *Suite) Test_Package_checkDescr__DESCR_SRC(c *check.C) {
