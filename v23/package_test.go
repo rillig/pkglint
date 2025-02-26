@@ -2088,7 +2088,7 @@ func (s *Suite) Test_Package_checkfilePackageMakefile__options_mk_not_included(c
 	G.Check(".")
 
 	t.CheckOutputLines(
-		"ERROR: Makefile: A package's options.mk file must be included by the package.")
+		"ERROR: Makefile: Each package must include its own options.mk file.")
 }
 
 // When a package defines PLIST_SRC, it may or may not use the

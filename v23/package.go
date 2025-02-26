@@ -821,7 +821,17 @@ func (pkg *Package) checkfilePackageMakefile(filename CurrPath, mklines *MkLines
 	pkg.checkPossibleDowngrade()
 
 	if !pkg.included.Seen("options.mk") && pkg.File("options.mk").Exists() {
-		pkg.Makefile.Whole().Errorf("A package's options.mk file must be included by the package.")
+		mkline := pkg.Makefile.Whole()
+		mkline.Errorf("Each package must include its own options.mk file.")
+		mkline.Explain(
+			"When a package defines an options.mk file,",
+			"that means that the package has some",
+			"build-time options.",
+			"To make these options available to the pkgsrc user,",
+			"either the package Makefile or some other makefile",
+			"that is included by the package Makefile must have",
+			"this line:",
+			"\t.include \"options.mk\"")
 	}
 
 	if !vars.IsDefined("COMMENT") {
