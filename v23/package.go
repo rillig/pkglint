@@ -819,20 +819,7 @@ func (pkg *Package) checkfilePackageMakefile(filename CurrPath, mklines *MkLines
 
 	pkg.determineEffectivePkgVars()
 	pkg.checkPossibleDowngrade()
-
-	if !pkg.included.Seen("options.mk") && pkg.File("options.mk").Exists() {
-		mkline := pkg.Makefile.Whole()
-		mkline.Errorf("Each package must include its own options.mk file.")
-		mkline.Explain(
-			"When a package defines an options.mk file,",
-			"that means that the package has some",
-			"build-time options.",
-			"To make these options available to the pkgsrc user,",
-			"either the package Makefile or some other makefile",
-			"that is included by the package Makefile must have",
-			"this line:",
-			"\t.include \"options.mk\"")
-	}
+	pkg.checkOptionsMk()
 
 	if !vars.IsDefined("COMMENT") {
 		NewLineWhole(filename).Warnf("Each package should define a COMMENT.")
@@ -1331,6 +1318,27 @@ func (pkg *Package) checkPossibleDowngrade() {
 				sprintf("%q,", bmake("cce")),
 				"which is the abbreviation for commit-changes-entry.")
 		}
+	}
+}
+
+func (pkg *Package) checkOptionsMk() {
+	for f := range pkg.included.m {
+		if f.AsPath().HasBase("options.mk") {
+			return
+		}
+	}
+	if pkg.File("options.mk").Exists() {
+		mkline := pkg.Makefile.Whole()
+		mkline.Errorf("Each package must include its own options.mk file.")
+		mkline.Explain(
+			"When a package defines an options.mk file,",
+			"that means that the package has some",
+			"build-time options.",
+			"To make these options available to the pkgsrc user,",
+			"either the package Makefile or some other makefile",
+			"that is included by the package Makefile must have",
+			"this line:",
+			"\t.include \"options.mk\"")
 	}
 }
 
