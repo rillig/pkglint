@@ -1,3 +1,9 @@
+# 23.15.2 (2025-03-05)
+
+Fix the wrong error message about a package not including its own options.mk
+when that file is included via a more complicated path, for example, from
+Makefile.common.
+
 # 23.15.1 (2025-02-26)
 
 Remove leftover tests that failed after removing the undocumented profiling
