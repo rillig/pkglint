@@ -237,24 +237,11 @@ func (ck *PackagePatternChecker) checkSingle(value string) {
 			"must be omitted, so the full package name becomes \"foo2.0-2.1.x\".")
 	}
 
-	ck.checkDepends(
-		pp,
-		"BUILDLINK_API_DEPENDS.",
-		func(data *Buildlink3Data) *PackagePattern { return data.apiDepends },
-		func(data *Buildlink3Data) *MkLine { return data.apiDependsLine })
-	ck.checkDepends(
-		pp,
-		"BUILDLINK_ABI_DEPENDS.",
-		func(data *Buildlink3Data) *PackagePattern { return data.abiDepends },
-		func(data *Buildlink3Data) *MkLine { return data.abiDependsLine })
+	ck.checkDepends(pp, "BUILDLINK_API_DEPENDS.", true)
+	ck.checkDepends(pp, "BUILDLINK_ABI_DEPENDS.", false)
 }
 
-func (ck *PackagePatternChecker) checkDepends(
-	pp *PackagePattern,
-	prefix string,
-	depends func(data *Buildlink3Data) *PackagePattern,
-	dependsLine func(data *Buildlink3Data) *MkLine,
-) {
+func (ck *PackagePatternChecker) checkDepends(pp *PackagePattern, prefix string, api bool) {
 	if pp.LowerOp == "" {
 		return
 	}
@@ -270,7 +257,10 @@ func (ck *PackagePatternChecker) checkDepends(
 	if data == nil {
 		return
 	}
-	defpat := depends(data)
+	defpat := data.abiDepends
+	if api {
+		defpat = data.apiDepends
+	}
 	if defpat == nil || defpat.LowerOp == "" {
 		return
 	}
@@ -279,8 +269,12 @@ func (ck *PackagePatternChecker) checkDepends(
 	}
 	limit := condInt(defpat.LowerOp == ">=" && pp.LowerOp == ">", 1, 0)
 	if pkgver.Compare(pp.Lower, defpat.Lower) < limit {
+		dependsLine := data.abiDependsLine
+		if api {
+			dependsLine = data.apiDependsLine
+		}
 		ck.MkLine.Notef("The requirement %s%s is already guaranteed by the %s%s from %s.",
 			pp.LowerOp, pp.Lower, defpat.LowerOp, defpat.Lower,
-			ck.MkLine.RelMkLine(dependsLine(data)))
+			ck.MkLine.RelMkLine(dependsLine))
 	}
 }
