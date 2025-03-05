@@ -382,6 +382,11 @@ func (pkg *Package) loadIncluded(mkline *MkLine, includingFile CurrPath) (includ
 		return nil, true
 	}
 
+	// XXX: Depending on the current working directory, the filename
+	// that is added to pkg.included differs. When running pkglint
+	// from the pkgsrc root directory resolves relative paths, while
+	// running pkglint from the package directory keeps the "../.."
+	// prefix.
 	relIncludedFile := NewPackagePath(G.Pkgsrc.Relpath(pkg.dir, fullIncluded))
 	if !pkg.included.FirstTime(relIncludedFile) {
 		return nil, true
