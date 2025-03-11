@@ -1,3 +1,8 @@
+# 23.15.3 (2025-03-11)
+
+Fix a wrong note about WRKSRC being redundantly defined when the definition
+was in fact necessary. This only affects packages that define GITHUB_TAG.
+
 # 23.15.2 (2025-03-05)
 
 Fix the wrong error message about a package not including its own options.mk
