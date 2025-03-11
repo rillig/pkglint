@@ -1530,6 +1530,9 @@ func (cv *VartypeCheck) WrkdirSubdirectory() {
 	cv.Pathname()
 
 	if hasPrefix(cv.Value, "${WRKDIR}/") && cv.MkLines.pkg != nil {
+		if cv.MkLines.pkg.vars.IsDefined("GITHUB_TAG") {
+			return
+		}
 		distname := cv.MkLines.pkg.redundant.get("DISTNAME").vari
 		if distname.IsConstant() && cv.Value[10:] == distname.ConstantValue() {
 			fix := cv.Autofix()

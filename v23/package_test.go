@@ -1400,6 +1400,20 @@ func (s *Suite) Test_Package_check__redundant_WRKSRC(c *check.C) {
 			"Setting WRKSRC to \"${WRKDIR}/package-1.0\" is redundant.")
 }
 
+func (s *Suite) Test_Package_check__redundant_WRKSRC_GitHub(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"GITHUB_TAG=\tv1.2.3",
+		"WRKSRC=\t\t${WRKDIR}/package-1.0")
+
+	t.Main("-q", "category/package")
+
+	// No note about WRKSRC being redundantly defined, as GITHUB_TAG
+	// results in a different default value for WRKSRC.
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Package_check__DISTINFO_FILE_without_PATCHDIR(c *check.C) {
 	t := s.Init(c)
 

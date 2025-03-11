@@ -2238,7 +2238,7 @@ func (s *Suite) Test_VartypeCheck_WrkdirSubdirectory(c *check.C) {
 		"NOTE: filename.mk:21: " +
 			"Setting WRKSRC to \"${WRKDIR}/package-1.0\" is redundant.")
 
-	// When the makefile is checked independent of a package, there
+	// When the makefile is checked independently of a package, there
 	// cannot be any redundancy check.
 	vt.Package(nil)
 
