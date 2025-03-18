@@ -421,93 +421,7 @@ func (cv *VartypeCheck) Enum(allowedValues map[string]bool, basicType *BasicType
 }
 
 func (cv *VartypeCheck) FetchURL() {
-	fetchURL := cv.Value
-	url := strings.TrimPrefix(fetchURL, "-")
-	hyphen := condStr(len(fetchURL) > len(url), "-", "")
-	hyphenSubst := condStr(hyphen != "", ":S,^,-,", "")
-
-	cv.WithValue(url).URL()
-
-	trimURL := url[len(url)-len(replaceAll(url, `^\w+://`, "")):]
-	protoLen := len(url) - len(trimURL)
-
-	for trimSiteURL, siteName := range G.Pkgsrc.MasterSiteURLToVar {
-		if !hasPrefix(trimURL, trimSiteURL) {
-			continue
-		}
-		if siteName == "MASTER_SITE_GITHUB" &&
-			hasPrefix(cv.Varname, "SITES.") {
-			continue
-		}
-
-		subdir := trimURL[len(trimSiteURL):]
-		if hasPrefix(trimURL, "github.com/") {
-			subdir = strings.SplitAfter(subdir, "/")[0]
-			commonPrefix := hyphen + url[:protoLen+len(trimSiteURL)+len(subdir)]
-			cv.Warnf("Use ${%s%s:=%s} instead of %q and run %q for further instructions.",
-				siteName, hyphenSubst, subdir, commonPrefix, bmakeHelp("github"))
-		} else {
-			cv.Warnf("Use ${%s%s:=%s} instead of %q.", siteName, hyphenSubst, subdir, hyphen+url)
-		}
-		return
-	}
-
-	tokens := cv.MkLine.Tokenize(url, false)
-	for _, token := range tokens {
-		expr := token.Expr
-		if expr == nil {
-			continue
-		}
-
-		name := expr.varname
-		if !hasPrefix(name, "MASTER_SITE_") {
-			continue
-		}
-
-		if name == "MASTER_SITE_BACKUP" {
-			if !cv.MkLine.HasRationale() {
-				cv.Warnf("The site MASTER_SITE_BACKUP should not be used.")
-				cv.Explain(
-					"MASTER_SITE_BACKUP is hosted by NetBSD",
-					"and is only for backup purposes.",
-					"Each package should have a primary MASTER_SITE",
-					"outside the NetBSD Foundation.")
-			}
-		} else if G.Pkgsrc.MasterSiteVarToURL[name] == "" {
-			if cv.MkLines.pkg == nil || !cv.MkLines.pkg.vars.IsDefined(name) {
-				cv.Errorf("The site %s does not exist.", name)
-			}
-		}
-
-		if len(expr.modifiers) != 1 || !expr.modifiers[0].HasPrefix("=") {
-			continue
-		}
-
-		subdir := expr.modifiers[0].String()[1:]
-		if !hasSuffix(subdir, "/") {
-			cv.Errorf("The subdirectory in %s must end with a slash.", name)
-		}
-	}
-
-	switch {
-	case cv.Op == opUseMatch,
-		hasSuffix(fetchURL, "/"),
-		hasSuffix(fetchURL, "="),
-		hasSuffix(fetchURL, ":"),
-		hasPrefix(fetchURL, "-"),
-		tokens[len(tokens)-1].Expr != nil:
-		break
-
-	default:
-		cv.Warnf("The fetch URL %q should end with a slash.", fetchURL)
-		cv.Explain(
-			"The filename from DISTFILES is appended directly to this base URL.",
-			"Therefore, it should typically end with a slash, or sometimes with",
-			"an equals sign or a colon.",
-			"",
-			"To specify a full URL directly, prefix it with a hyphen, such as in",
-			"-https://example.org/distfile-1.0.tar.gz.")
-	}
+	NewUrlChecker(cv).CheckFetchURL(cv.Value)
 }
 
 // Filename checks that filenames use only limited special characters.
@@ -1384,38 +1298,7 @@ func (cv *VartypeCheck) Unknown() {
 }
 
 func (cv *VartypeCheck) URL() {
-	value := cv.Value
-
-	if value == "" && hasPrefix(cv.MkComment, "#") {
-		// Ok
-
-	} else if containsExpr(value) {
-		// No further checks
-
-	} else if m, host := match1(value, `^(?:https?|ftp|gopher)://([-0-9A-Za-z.]+)(?::\d+)?/[-#%&+,./0-9:;=?@A-Z_a-z~]*$`); m {
-		if matches(host, `(?i)\.NetBSD\.org$`) && !matches(host, `\.NetBSD\.org$`) {
-			prefix := host[:len(host)-len(".NetBSD.org")]
-			fix := cv.Autofix()
-			fix.Warnf("Write NetBSD.org instead of %s.", host)
-			fix.Replace(host, prefix+".NetBSD.org")
-			fix.Apply()
-		}
-
-	} else if m, scheme, _, absPath := match3(value, `^([0-9A-Za-z]+)://([^/]+)(.*)$`); m {
-		switch {
-		case scheme != "ftp" && scheme != "http" && scheme != "https" && scheme != "gopher":
-			cv.Warnf("%q is not a valid URL. Only ftp, gopher, http, and https URLs are allowed here.", value)
-
-		case absPath == "":
-			cv.Notef("For consistency, add a trailing slash to %q.", value)
-
-		default:
-			cv.Warnf("%q is not a valid URL.", value)
-		}
-
-	} else {
-		cv.Warnf("%q is not a valid URL.", value)
-	}
+	NewUrlChecker(cv).CheckURL(cv.Value)
 }
 
 func (cv *VartypeCheck) UserGroupName() {
