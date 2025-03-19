@@ -107,7 +107,7 @@ func Test_Pattern_addState(t *testing.T) {
 	p.addState(false)
 	p.addState(true)
 
-	expected := Pattern{states: []state{{nil, false}, {nil, true}}}
+	expected := Pattern{[]state{{nil, false}, {nil, true}}}
 	if !reflect.DeepEqual(p, expected) {
 		t.Errorf("%#v", p)
 	}
@@ -121,9 +121,10 @@ func Test_Pattern_addTransition(t *testing.T) {
 	p.addTransition(0, '0', '9', 1)
 	p.addTransition(1, '0', '9', 0)
 
-	expected := Pattern{states: []state{
+	expected := Pattern{[]state{
 		{[]transition{{'0', '9', 1}}, false},
-		{[]transition{{'0', '9', 0}}, true}}}
+		{[]transition{{'0', '9', 0}}, true},
+	}}
 	if !reflect.DeepEqual(p, expected) {
 		t.Errorf("%#v", p)
 	}

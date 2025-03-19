@@ -13,7 +13,7 @@ type MkAssignChecker struct {
 }
 
 func NewMkAssignChecker(mkLine *MkLine, mkLines *MkLines) *MkAssignChecker {
-	return &MkAssignChecker{MkLine: mkLine, MkLines: mkLines}
+	return &MkAssignChecker{mkLine, mkLines}
 }
 
 func (ck *MkAssignChecker) check() {

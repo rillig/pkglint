@@ -12,7 +12,7 @@ type MkLineChecker struct {
 }
 
 func NewMkLineChecker(mkLines *MkLines, mkLine *MkLine) MkLineChecker {
-	return MkLineChecker{MkLines: mkLines, MkLine: mkLine}
+	return MkLineChecker{mkLines, mkLine}
 }
 
 func (ck MkLineChecker) Check() {

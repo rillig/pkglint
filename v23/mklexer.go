@@ -56,14 +56,14 @@ func (p *MkLexer) MkToken() *MkToken {
 
 	mark := lexer.Mark()
 	if expr := p.Expr(); expr != nil {
-		return &MkToken{Text: lexer.Since(mark), Expr: expr}
+		return &MkToken{lexer.Since(mark), expr}
 	}
 
 	for lexer.SkipBytesFunc(func(b byte) bool { return b != '$' }) || lexer.SkipString("$$") {
 	}
 	text := lexer.Since(mark)
 	if text != "" {
-		return &MkToken{Text: text}
+		return &MkToken{text, nil}
 	}
 	return nil
 }

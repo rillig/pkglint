@@ -18,11 +18,11 @@ func (b MkTokenBuilder) ExprToken(varname string, modifiers ...MkExprModifier) *
 		text.WriteString(modifier.String()) // TODO: Quoted
 	}
 	text.WriteString("}")
-	return &MkToken{Text: text.String(), Expr: b.Expr(varname, modifiers...)}
+	return &MkToken{text.String(), b.Expr(varname, modifiers...)}
 }
 
 func (b MkTokenBuilder) ExprTextToken(text, varname string, modifiers ...MkExprModifier) *MkToken {
-	return &MkToken{Text: text, Expr: b.Expr(varname, modifiers...)}
+	return &MkToken{text, b.Expr(varname, modifiers...)}
 }
 
 func (MkTokenBuilder) TextToken(text string) *MkToken {

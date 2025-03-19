@@ -14,7 +14,7 @@ type MkCondChecker struct {
 }
 
 func NewMkCondChecker(mkLine *MkLine, mkLines *MkLines) *MkCondChecker {
-	return &MkCondChecker{MkLine: mkLine, MkLines: mkLines}
+	return &MkCondChecker{mkLine, mkLines}
 }
 
 func (ck *MkCondChecker) Check() {
