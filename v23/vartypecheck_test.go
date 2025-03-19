@@ -640,7 +640,7 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 			"and run \""+confMake+" help topic=github\" for further instructions.",
 		"WARN: filename.mk:2: Use ${MASTER_SITE_GNU:=bison} "+
 			"instead of \"http://ftp.gnu.org/pub/gnu/bison\".",
-		"ERROR: filename.mk:3: The subdirectory in MASTER_SITE_GNU must end with a slash.",
+		"ERROR: filename.mk:3: The fetch URL \"${MASTER_SITE_GNU:=bison}\" must end with a slash.",
 		"ERROR: filename.mk:4: The site MASTER_SITE_INVALID does not exist.")
 
 	// PR 46570, keyword gimp-fix-ca
@@ -648,8 +648,8 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 		"https://example.org/download.cgi?filename=filename&sha1=12341234")
 
 	vt.Output(
-		"WARN: filename.mk:11: The fetch URL \"https://example.org/download.cgi" +
-			"?filename=filename&sha1=12341234\" should end with a slash.")
+		"ERROR: filename.mk:11: The fetch URL \"https://example.org/download.cgi" +
+			"?filename=filename&sha1=12341234\" must end with a slash.")
 
 	vt.Values(
 		"http://example.org/distfiles/",
@@ -657,12 +657,12 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 		"http://example.org/download?filename=<distfile>;version=<version>")
 
 	vt.Output(
-		"WARN: filename.mk:22: The fetch URL \"http://example.org/download"+
-			"?filename=distfile;version=1.0\" should end with a slash.",
+		"ERROR: filename.mk:22: The fetch URL \"http://example.org/download"+
+			"?filename=distfile;version=1.0\" must end with a slash.",
 		"WARN: filename.mk:23: \"http://example.org/download"+
 			"?filename=<distfile>;version=<version>\" is not a valid URL.",
-		"WARN: filename.mk:23: The fetch URL \"http://example.org/download"+
-			"?filename=<distfile>;version=<version>\" should end with a slash.")
+		"ERROR: filename.mk:23: The fetch URL \"http://example.org/download"+
+			"?filename=<distfile>;version=<version>\" must end with a slash.")
 
 	vt.Values(
 		"${MASTER_SITE_GITHUB:S,^,-,:=project/archive/${DISTFILE}}")
@@ -707,10 +707,10 @@ func (s *Suite) Test_VartypeCheck_FetchURL(c *check.C) {
 		"https://example.org/$$")
 
 	vt.Output(
-		"WARN: filename.mk:71: The fetch URL \"https://example.org/pub\" should end with a slash.",
-		"WARN: filename.mk:75: The fetch URL \"https://example.org/download?\" should end with a slash.",
+		"ERROR: filename.mk:71: The fetch URL \"https://example.org/pub\" must end with a slash.",
+		"ERROR: filename.mk:75: The fetch URL \"https://example.org/download?\" must end with a slash.",
 		"WARN: filename.mk:76: \"https://example.org/$$\" is not a valid URL.",
-		"WARN: filename.mk:76: The fetch URL \"https://example.org/$$\" should end with a slash.")
+		"ERROR: filename.mk:76: The fetch URL \"https://example.org/$$\" must end with a slash.")
 
 	// The transport protocol doesn't matter for matching the MASTER_SITEs.
 	// See url2pkg.py, function adjust_site_from_sites_mk.

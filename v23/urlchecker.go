@@ -70,15 +70,6 @@ func (ck *UrlChecker) CheckFetchURL(fetchURL string) {
 				ck.mkline.Errorf("The site %s does not exist.", name)
 			}
 		}
-
-		if len(expr.modifiers) != 1 || !expr.modifiers[0].HasPrefix("=") {
-			continue
-		}
-
-		subdir := expr.modifiers[0].String()[1:]
-		if !hasSuffix(subdir, "/") {
-			ck.mkline.Errorf("The subdirectory in %s must end with a slash.", name)
-		}
 	}
 
 	switch {
@@ -86,12 +77,11 @@ func (ck *UrlChecker) CheckFetchURL(fetchURL string) {
 		hasSuffix(fetchURL, "/"),
 		hasSuffix(fetchURL, "="),
 		hasSuffix(fetchURL, ":"),
-		hasPrefix(fetchURL, "-"),
-		tokens[len(tokens)-1].Expr != nil:
+		hasPrefix(fetchURL, "-"):
 		break
 
-	default:
-		ck.mkline.Warnf("The fetch URL %q should end with a slash.", fetchURL)
+	case ck.endsWithSlash(tokens) == no:
+		ck.mkline.Errorf("The fetch URL %q must end with a slash.", fetchURL)
 		ck.mkline.Explain(
 			"The filename from DISTFILES is appended directly to this base URL.",
 			"Therefore, it should typically end with a slash, or sometimes with",
@@ -135,4 +125,67 @@ func (ck *UrlChecker) CheckURL(url string) {
 	} else {
 		ck.mkline.Warnf("%q is not a valid URL.", value)
 	}
+}
+
+// endsWithSlash determines whether each word of expr ends with "/".
+func (ck *UrlChecker) endsWithSlash(tokens []*MkToken) YesNoUnknown {
+	last := tokens[len(tokens)-1]
+	if last.Expr == nil {
+		if hasSuffix(last.Text, "/") {
+			return yes
+		}
+		return no
+	}
+
+	for i := range last.Expr.modifiers {
+		mod := last.Expr.modifiers[len(last.Expr.modifiers)-1-i]
+		str := mod.String()
+		switch {
+		case hasPrefix(str, "="):
+			if hasSuffix(str, "/") {
+				return yes
+			}
+			if !hasSuffix(str, "}") {
+				return no
+			}
+		case hasPrefix(str, "S"):
+			ok, _, from, to, _ := mod.MatchSubst()
+			if !ok {
+				return unknown
+			}
+			if from == "^" && to == "-" {
+				return unknown // Does not need a trailing slash.
+			}
+			if !hasSuffix(from, "$") && !hasSuffix(to, "$") {
+				continue
+			}
+		}
+		return unknown
+	}
+
+	varname := last.Expr.varname
+	switch varname {
+	case "DISTNAME":
+		return no
+	case "PKGNAME", "PKGNAME_NOREV", "PKGVERSION", "PKGVERSION_NOREV":
+		return no
+	case "MASTER_SITES":
+		return yes
+	case "HOMEPAGE":
+		homepage := ck.mklines.allVars.LastValue(varname)
+		if hasSuffix(homepage, "/") {
+			return yes
+		}
+		if hasSuffix(homepage, "}") {
+			return unknown
+		}
+		if homepage != "" {
+			return no
+		}
+	}
+	if hasPrefix(varname, "MASTER_SITE_") {
+		return yes
+	}
+
+	return unknown
 }
