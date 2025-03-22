@@ -478,62 +478,11 @@ func CheckLinesDescr(lines *Lines) {
 	SaveAutofixChanges(lines)
 }
 
-func CheckLinesMessage(lines *Lines, pkg *Package) {
-	if trace.Tracing {
-		defer trace.Call(lines.Filename)()
-	}
-
-	// For now, skip all checks when the MESSAGE may be built from multiple
-	// files.
-	//
-	// If the need arises, some of these checks may be activated again, but
-	// that requires more sophisticated code.
-	if pkg != nil && pkg.vars.IsDefined("MESSAGE_SRC") {
-		return
-	}
-
-	explanation := func() []string {
-		return []string{
-			"A MESSAGE file should consist of a header line, having 75 \"=\"",
-			"characters, followed by a line containing only the CVS Id, then an",
-			"empty line, your text and finally the footer line, which is the",
-			"same as the header line."}
-	}
-
-	if lines.Len() < 3 {
-		line := lines.LastLine()
-		line.Warnf("File too short.")
-		line.Explain(explanation()...)
-		return
-	}
-
-	hline := "==========================================================================="
-	if line := lines.Lines[0]; line.Text != hline {
-		fix := line.Autofix()
-		fix.Warnf("Expected a line of exactly 75 \"=\" characters.")
-		fix.Explain(explanation()...)
-		fix.InsertAbove(hline)
-		fix.Apply()
-		lines.CheckCvsID(0, ``, "")
-	} else {
-		lines.CheckCvsID(1, ``, "")
-	}
-	for _, line := range lines.Lines {
-		ck := LineChecker{line}
-		ck.CheckLength(80)
-		ck.CheckTrailingWhitespace()
-		ck.CheckValidCharacters()
-	}
-	if lastLine := lines.LastLine(); lastLine.Text != hline {
-		fix := lastLine.Autofix()
-		fix.Warnf("Expected a line of exactly 75 \"=\" characters.")
-		fix.Explain(explanation()...)
-		fix.InsertBelow(hline)
-		fix.Apply()
-	}
-	CheckLinesTrailingEmptyLines(lines)
-
-	SaveAutofixChanges(lines)
+func CheckFileMessage(filename CurrPath) {
+	line := NewLineWhole(filename)
+	line.Errorf("MESSAGE files are obsolete.")
+	line.Explain(
+		seeGuide("Files affecting the binary package", "components.optional.bin"))
 }
 
 func CheckFileMk(filename CurrPath, pkg *Package) {
@@ -615,9 +564,7 @@ func (p *Pkglint) checkReg(filename CurrPath, basename RelPath, depth int, pkg *
 		CheckFileOther(filename)
 
 	case basename.HasPrefixText("MESSAGE"):
-		if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
-			CheckLinesMessage(lines, pkg)
-		}
+		CheckFileMessage(filename)
 
 	case basename == "options.mk":
 		if mklines := LoadMk(filename, pkg, NotEmpty|LogErrors); mklines != nil {

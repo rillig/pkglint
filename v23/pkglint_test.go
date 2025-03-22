@@ -234,6 +234,8 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 	t.Main("-Wall", "-Call", "sysutils/checkperms")
 
 	t.CheckOutputLines(
+		"ERROR: ~/sysutils/checkperms/MESSAGE: "+
+			"MESSAGE files are obsolete.",
 		"NOTE: ~/sysutils/checkperms/Makefile:3: "+
 			"Package version \"1.11\" is greater than the latest \"1.10\" "+
 			"from ../../doc/CHANGES-2018:5.",
@@ -245,7 +247,7 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 			"(distinfo has asdfasdf, patch file has bcfb79696cb6bf4d2222a6d78a530e11bf1c0cea).",
 		"WARN: ~/sysutils/checkperms/patches/patch-checkperms.c:12: Premature end of patch hunk "+
 			"(expected 1 line to be deleted and 0 lines to be added).",
-		"3 errors, 2 warnings and 1 note found.",
+		"4 errors, 2 warnings and 1 note found.",
 		t.Shquote("(Run \"pkglint -e -Wall -Call %s\" to show explanations.)", "sysutils/checkperms"),
 		t.Shquote("(Run \"pkglint -fs -Wall -Call %s\" to show what can be fixed automatically.)", "sysutils/checkperms"),
 		t.Shquote("(Run \"pkglint -F -Wall -Call %s\" to automatically fix some issues.)", "sysutils/checkperms"))
@@ -892,96 +894,24 @@ func (s *Suite) Test_CheckLinesDescr__TODO(c *check.C) {
 		nil...)
 }
 
-func (s *Suite) Test_CheckLinesMessage__one_line_of_text(c *check.C) {
+func (s *Suite) Test_CheckFileMessage(c *check.C) {
 	t := s.Init(c)
 
-	lines := t.NewLines("MESSAGE",
-		"one line")
-
-	CheckLinesMessage(lines, nil)
-
-	t.CheckOutputLines(
-		"WARN: MESSAGE:1: File too short.")
-}
-
-func (s *Suite) Test_CheckLinesMessage__one_hline(c *check.C) {
-	t := s.Init(c)
-
-	lines := t.NewLines("MESSAGE",
-		strings.Repeat("=", 75))
-
-	CheckLinesMessage(lines, nil)
-
-	t.CheckOutputLines(
-		"WARN: MESSAGE:1: File too short.")
-}
-
-func (s *Suite) Test_CheckLinesMessage__malformed(c *check.C) {
-	t := s.Init(c)
-
-	lines := t.NewLines("MESSAGE",
-		"1",
-		"2",
-		"3",
-		"4",
-		"5")
-
-	CheckLinesMessage(lines, nil)
-
-	t.CheckOutputLines(
-		"WARN: MESSAGE:1: Expected a line of exactly 75 \"=\" characters.",
-		"ERROR: MESSAGE:1: Expected \"$"+"NetBSD$\".",
-		"WARN: MESSAGE:5: Expected a line of exactly 75 \"=\" characters.")
-}
-
-func (s *Suite) Test_CheckLinesMessage__autofix(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpCommandLine("-Wall", "--autofix")
-	lines := t.SetUpFileLines("MESSAGE",
-		"1",
-		"2",
-		"3",
-		"4",
-		"5")
-
-	CheckLinesMessage(lines, nil)
-
-	t.CheckOutputLines(
-		"AUTOFIX: ~/MESSAGE:1: Inserting a line \"=============================="+
-			"=============================================\" above this line.",
-		"AUTOFIX: ~/MESSAGE:1: Inserting a line \"$"+"NetBSD$\" above this line.",
-		"AUTOFIX: ~/MESSAGE:5: Inserting a line \"=============================="+
-			"=============================================\" below this line.")
-	t.CheckFileLines("MESSAGE",
-		"===========================================================================",
-		CvsID,
-		"1",
-		"2",
-		"3",
-		"4",
-		"5",
-		"===========================================================================")
-}
-
-func (s *Suite) Test_CheckLinesMessage__common(c *check.C) {
-	t := s.Init(c)
-
-	hline := strings.Repeat("=", 75)
-	t.SetUpPackage("category/package",
-		"MESSAGE_SRC=\t../../category/package/MESSAGE.common",
-		"MESSAGE_SRC+=\t${.CURDIR}/MESSAGE")
-	t.CreateFileLines("category/package/MESSAGE.common",
-		hline,
-		CvsID,
-		"common line")
+	t.SetUpPackage("category/package")
 	t.CreateFileLines("category/package/MESSAGE",
-		hline)
+		"See the documentation.")
+	t.Chdir("category/package")
+	t.SetUpCommandLine("--explain")
+	t.FinishSetUp()
 
-	t.Main("category/package")
+	G.Check(".")
 
 	t.CheckOutputLines(
-		"Looks fine.")
+		"ERROR: MESSAGE: MESSAGE files are obsolete.",
+		"",
+		"\tSee the pkgsrc guide, section \"Files affecting the binary package\":",
+		"\thttps://www.NetBSD.org/docs/pkgsrc/pkgsrc.html#components.optional.bin",
+		"")
 }
 
 func (s *Suite) Test_CheckFileMk__enoent(c *check.C) {
@@ -1027,7 +957,7 @@ func (s *Suite) Test_Pkglint_checkReg__file_not_found(c *check.C) {
 		"ERROR: buildlink3.mk: Cannot be read.",
 		"ERROR: DESCR: Cannot be read.",
 		"ERROR: distinfo: Cannot be read.",
-		"ERROR: MESSAGE: Cannot be read.",
+		"ERROR: MESSAGE: MESSAGE files are obsolete.",
 		"ERROR: patches/patch-aa: Cannot be read.",
 		"ERROR: PLIST: Cannot be read.")
 }
