@@ -3219,6 +3219,27 @@ func (s *Suite) Test_Package_checkOwnerMaintainer__url2pkg(c *check.C) {
 			"\"INSERT_YOUR_MAIL_ADDRESS_HERE\" is not a valid mail address.")
 }
 
+func (s *Suite) Test_Package_checkOwnerMaintainer__Makefile_common(c *check.C) {
+	t := s.Init(c)
+
+	G.Username = "example-user"
+	t.SetUpPackage("category/package",
+		"#MAINTAINER=\tunset",
+		".include \"Makefile.common\"")
+	t.CreateFileLines("category/package/Makefile.common",
+		MkCvsID,
+		"MAINTAINER?=\tsomeone-else@example.org")
+	t.CreateFileLines("category/package/CVS/Entries",
+		"/Makefile//modified//")
+	t.Chdir("category/package")
+	t.FinishSetUp()
+
+	G.Check(".")
+
+	t.CheckOutputLines(
+		"NOTE: Only commit changes that someone-else@example.org would approve.")
+}
+
 func (s *Suite) Test_Package_checkFreeze(c *check.C) {
 	t := s.Init(c)
 
