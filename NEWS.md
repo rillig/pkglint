@@ -1,3 +1,9 @@
+# 23.16.0 (2025-04-02)
+
+Mark MESSAGE files as obsolete, see the pkgsrc guide for details.
+
+Detect fetch URLs with missing trailing slash in more cases.
+
 # 23.15.3 (2025-03-11)
 
 Fix a wrong note about WRKSRC being redundantly defined when the definition
