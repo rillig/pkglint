@@ -36,6 +36,10 @@ type MkLines struct {
 	guardLine     *MkLine
 	once          Once
 
+	warnedAboutBsdPrefsMk        OnceBool
+	warnedAboutDefaultAssignment OnceBool
+	calledCheckAll               OnceBool
+
 	// TODO: Consider extracting plistVarAdded, plistVarSet, plistVarSkip into an own type.
 	// TODO: Describe where each of the above fields is valid.
 
@@ -88,6 +92,9 @@ func NewMkLines(lines *Lines, pkg *Package, extraScope *Scope) *MkLines {
 		stmts,
 		guardLine,
 		Once{},
+		OnceBool{},
+		OnceBool{},
+		OnceBool{},
 		mklinesCheckAll{
 			target:   "",
 			vars:     NewScope(),
@@ -440,7 +447,7 @@ func (mklines *MkLines) collectPlistVars() {
 func (mklines *MkLines) checkAll() {
 	// checkAll must only be called once, even during tests, since it
 	// doesn't clean up all its effects on mklines.
-	assert(mklines.once.FirstTime("checkAll"))
+	assert(mklines.calledCheckAll.FirstTime())
 
 	allowedTargets := map[string]bool{
 		"pre-fetch": true, "do-fetch": true, "post-fetch": true,

@@ -503,7 +503,7 @@ func (ck *MkExprChecker) checkUseAtLoadTime() {
 		return
 	}
 
-	if !ck.MkLines.once.FirstTime("bsd.prefs.mk") {
+	if !ck.MkLines.warnedAboutBsdPrefsMk.FirstTime() {
 		return
 	}
 

@@ -160,7 +160,7 @@ func (ck *MkAssignChecker) checkLeftBsdPrefs() {
 		return
 	}
 
-	if !ck.MkLines.once.FirstTime("include bsd.prefs.mk before using ?=") {
+	if !ck.MkLines.warnedAboutDefaultAssignment.FirstTime() {
 		return
 	}
 	mkline.Warnf("Include \"../../mk/bsd.prefs.mk\" before using \"?=\".")
