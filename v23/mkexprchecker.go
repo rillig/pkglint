@@ -879,7 +879,7 @@ func (ck *MkExprChecker) checkPkgBuildOptions() {
 		return
 	}
 	param := varnameParam(varname)
-	if pkg.seenPkgbase.Seen(param) {
+	if _, seen := pkg.seenPkgbase[param]; seen {
 		return
 	}
 

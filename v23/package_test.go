@@ -592,10 +592,11 @@ func (s *Suite) Test_Package_loadBuildlink3Pkgbase(c *check.C) {
 	pkg.Check()
 
 	t.CheckOutputEmpty()
-	seenPkgbase := pkg.seenPkgbase
-	t.CheckLen(seenPkgbase.seen, 2)
-	t.CheckEquals(seenPkgbase.Seen("lib"), true)
-	t.CheckEquals(seenPkgbase.Seen("package"), true)
+	t.CheckLen(pkg.seenPkgbase, 2)
+	_, seenLib := pkg.seenPkgbase["lib"]
+	t.CheckEquals(seenLib, true)
+	_, seenPackage := pkg.seenPkgbase["package"]
+	t.CheckEquals(seenPackage, true)
 }
 
 func (s *Suite) Test_Package_loadPackageMakefile__dump(c *check.C) {

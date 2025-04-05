@@ -60,7 +60,7 @@ type Package struct {
 	seenInclude bool
 
 	// The identifiers for which PKG_BUILD_OPTIONS is defined.
-	seenPkgbase Once
+	seenPkgbase map[string]struct{}
 
 	// During both load() and check(), tells whether bsd.prefs.mk has
 	// already been loaded directly or indirectly.
@@ -110,6 +110,7 @@ func NewPackage(dir CurrPath) *Package {
 		bl3:                   make(map[PackagePath]*MkLine),
 		bl3Data:               make(map[Buildlink3ID]*Buildlink3Data),
 		included:              NewIncludedMap(),
+		seenPkgbase:           make(map[string]struct{}),
 		conditionalIncludes:   make(map[PackagePath]*MkLine),
 		unconditionalIncludes: make(map[PackagePath]*MkLine),
 	}
@@ -198,7 +199,7 @@ func (pkg *Package) loadBuildlink3Pkgbase(filename CurrPath, fragmentMklines *Mk
 	}
 	fragmentMklines.ForEach(func(mkline *MkLine) {
 		if mkline.IsVarassign() && mkline.Varname() == "pkgbase" {
-			pkg.seenPkgbase.FirstTime(mkline.Value())
+			pkg.seenPkgbase[mkline.Value()] = struct{}{}
 		}
 	})
 }
@@ -353,7 +354,7 @@ func (pkg *Package) parseLine(mklines *MkLines, mkline *MkLine, allLines *MkLine
 		}
 
 		if varname == "pkgbase" {
-			pkg.seenPkgbase.FirstTime(mkline.Value())
+			pkg.seenPkgbase[mkline.Value()] = struct{}{}
 		}
 	}
 	return true
