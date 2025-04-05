@@ -553,7 +553,10 @@ func (pkg *Package) loadPlistDirs(plistFilename CurrPath) {
 		make(map[RelPath]*PlistLine),
 		make(map[RelPath]*PlistLine),
 		"",
-		Once{},
+		OnceBool{},
+		OnceBool{},
+		OnceBool{},
+		OnceStrings{},
 		false}
 	plistLines := ck.Load(lines)
 

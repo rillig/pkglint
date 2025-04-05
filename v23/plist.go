@@ -33,12 +33,15 @@ func CheckLinesPlist(pkg *Package, lines *Lines) {
 }
 
 type PlistChecker struct {
-	pkg             *Package
-	allFiles        map[RelPath]*PlistLine
-	allDirs         map[RelPath]*PlistLine
-	lastFname       RelPath
-	once            Once
-	nonAsciiAllowed bool
+	pkg                         *Package
+	allFiles                    map[RelPath]*PlistLine
+	allDirs                     map[RelPath]*PlistLine
+	lastFname                   RelPath
+	warnedAboutLibtool          OnceBool
+	warnedAboutHicolorIconTheme OnceBool
+	warnedAboutIconThemes       OnceBool
+	warnedAboutCond             OnceStrings
+	nonAsciiAllowed             bool
 }
 
 func NewPlistChecker(pkg *Package) *PlistChecker {
@@ -47,7 +50,10 @@ func NewPlistChecker(pkg *Package) *PlistChecker {
 		make(map[RelPath]*PlistLine),
 		make(map[RelPath]*PlistLine),
 		"",
-		Once{},
+		OnceBool{},
+		OnceBool{},
+		OnceBool{},
+		OnceStrings{},
 		false}
 }
 
@@ -373,7 +379,7 @@ func (ck *PlistChecker) checkPathLib(pline *PlistLine, rel RelPath) {
 	}
 
 	if basename.HasSuffixText(".la") && !pkg.vars.IsDefined("USE_LIBTOOL") {
-		if ck.once.FirstTime("USE_LIBTOOL") {
+		if ck.warnedAboutLibtool.FirstTime() {
 			pline.Warnf("Packages that install libtool libraries should define USE_LIBTOOL.")
 		}
 	}
@@ -444,7 +450,7 @@ func (ck *PlistChecker) checkPathShareIcons(pline *PlistLine) {
 
 	if hasPrefix(text, "share/icons/hicolor/") && pkg.Pkgpath != "graphics/hicolor-icon-theme" {
 		f := "../../graphics/hicolor-icon-theme/buildlink3.mk"
-		if !pkg.included.Seen(NewPackagePathString(f)) && ck.once.FirstTime("hicolor-icon-theme") {
+		if !pkg.included.Seen(NewPackagePathString(f)) && ck.warnedAboutHicolorIconTheme.FirstTime() {
 			pline.Errorf("Packages that install hicolor icons must include %q in the Makefile.", f)
 		}
 	}
@@ -467,7 +473,7 @@ func (ck *PlistChecker) checkPathShareIcons(pline *PlistLine) {
 		}
 	}
 
-	if contains(text[12:], "/") && !pkg.vars.IsDefined("ICON_THEMES") && ck.once.FirstTime("ICON_THEMES") {
+	if contains(text[12:], "/") && !pkg.vars.IsDefined("ICON_THEMES") && ck.warnedAboutIconThemes.FirstTime() {
 		pline.Warnf("Packages that install icon theme files should set ICON_THEMES.")
 	}
 }
@@ -485,7 +491,7 @@ func (ck *PlistChecker) checkPathCond(pline *PlistLine) {
 func (ck *PlistChecker) checkCond(pline *PlistLine, cond string) {
 	vars := ck.pkg.vars
 	mkline := vars.LastDefinition("PLIST_VARS")
-	if mkline == nil || ck.once.SeenSlice("cond", cond) {
+	if mkline == nil || ck.warnedAboutCond.Seen(cond) {
 		return
 	}
 
@@ -504,7 +510,7 @@ func (ck *PlistChecker) checkCond(pline *PlistLine, cond string) {
 		}
 	}
 
-	assert(ck.once.FirstTimeSlice("cond", cond))
+	assert(ck.warnedAboutCond.FirstTime(cond))
 	pline.Warnf(
 		"Condition %q should be added to PLIST_VARS in the package Makefile.",
 		cond)

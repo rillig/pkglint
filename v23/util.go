@@ -662,6 +662,28 @@ func (o *OnceBool) FirstTime() bool {
 	return true
 }
 
+// OnceStrings helps execute a piece of code only once per string.
+type OnceStrings struct {
+	done map[string]struct{}
+}
+
+// FirstTime returns true if it is called for the first time.
+func (o *OnceStrings) FirstTime(s string) bool {
+	if _, done := o.done[s]; done {
+		return false
+	}
+	if o.done == nil {
+		o.done = map[string]struct{}{}
+	}
+	o.done[s] = struct{}{}
+	return true
+}
+
+func (o *OnceStrings) Seen(s string) bool {
+	_, seen := o.done[s]
+	return seen
+}
+
 // The MIT License (MIT)
 //
 // # Copyright (c) 2015 Frits van Bommel
