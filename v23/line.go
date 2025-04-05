@@ -63,9 +63,13 @@ type Line struct {
 	// joined by single spaces
 	Text string
 
-	raw  []*RawLine // contains the original text including trailing newline
-	fix  *Autofix   // any changes that pkglint would like to apply to the line
-	once Once
+	raw []*RawLine // contains the original text including trailing newline
+	fix *Autofix   // any changes that pkglint would like to apply to the line
+
+	warnedAboutFileGlobbingAsterisk bool
+	warnedAboutFileGlobbingQuestion bool
+	warnedAboutFileGlobbingBracket  bool
+	warnedAboutSetE                 bool
 }
 
 func NewLine(filename CurrPath, lineno int, text string, rawLine *RawLine) *Line {
@@ -75,7 +79,7 @@ func NewLine(filename CurrPath, lineno int, text string, rawLine *RawLine) *Line
 
 // NewLineMulti is for logical makefile lines that end with backslash.
 func NewLineMulti(filename CurrPath, firstLine int, text string, rawLines []*RawLine) *Line {
-	return &Line{NewLocation(filename, firstLine), filename.Base(), text, rawLines, nil, Once{}}
+	return &Line{NewLocation(filename, firstLine), filename.Base(), text, rawLines, nil, false, false, false, false}
 }
 
 // NewLineEOF creates a dummy line for logging, with the "line number" EOF.

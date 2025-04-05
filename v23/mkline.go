@@ -909,17 +909,28 @@ outer:
 }
 
 func (mkline *MkLine) checkFileGlobbing(ch int, str string) {
-	if !(ch == '*' || ch == '?' || ch == '[') {
-		return
-	}
-
-	chStr := string(rune(ch))
-	if !mkline.once.FirstTimeSlice("unintended file globbing", chStr) {
+	switch ch {
+	case '*':
+		if mkline.warnedAboutFileGlobbingAsterisk {
+			return
+		}
+		mkline.warnedAboutFileGlobbingAsterisk = true
+	case '?':
+		if mkline.warnedAboutFileGlobbingQuestion {
+			return
+		}
+		mkline.warnedAboutFileGlobbingQuestion = true
+	case '[':
+		if mkline.warnedAboutFileGlobbingBracket {
+			return
+		}
+		mkline.warnedAboutFileGlobbingBracket = true
+	default:
 		return
 	}
 
 	mkline.Warnf("The %q in the word %q may lead to unintended file globbing.",
-		chStr, str)
+		string(rune(ch)), str)
 	mkline.Explain(
 		"To fix this, enclose the word in \"double\" or 'single' quotes.")
 }
