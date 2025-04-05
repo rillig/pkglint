@@ -765,7 +765,7 @@ func (cv *VartypeCheck) Option() {
 		return
 	}
 
-	if !cv.MkLines.once.FirstTimeSlice("option:", optname) {
+	if !cv.MkLines.warnedAboutOption.FirstTime(optname) {
 		return
 	}
 

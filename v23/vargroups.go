@@ -167,7 +167,7 @@ func (ck *VargroupsChecker) checkDef(mkline *MkLine) {
 		return
 	}
 
-	if ck.mklines.once.FirstTimeSlice("_VARGROUPS", "def", varname) {
+	if ck.mklines.warnedAboutVargroupsDef.FirstTime(varname) {
 		mkline.Warnf("Variable %s is defined but not mentioned in the _VARGROUPS section.", varname)
 	}
 }
@@ -184,7 +184,7 @@ func (ck *VargroupsChecker) checkUseVar(mkline *MkLine, expr *MkExpr) {
 		return
 	}
 
-	if ck.mklines.once.FirstTimeSlice("_VARGROUPS", "use", varname) {
+	if ck.mklines.warnedAboutVargroupsUse.FirstTime(varname) {
 		mkline.Warnf("Variable %s is used but not mentioned in the _VARGROUPS section.", varname)
 	}
 }

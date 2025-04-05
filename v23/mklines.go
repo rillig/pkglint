@@ -34,11 +34,17 @@ type MkLines struct {
 	indentation   *Indentation       // Indentation depth of preprocessing directives; only available during MkLines.ForEach.
 	stmts         MkStmt
 	guardLine     *MkLine
-	once          Once
 
 	warnedAboutBsdPrefsMk        OnceBool
 	warnedAboutDefaultAssignment OnceBool
 	calledCheckAll               OnceBool
+	warnedAboutDefinedNotUsed    OnceStrings
+	warnedAboutUsedNotDefined    OnceStrings
+	warnedAboutPermissions       OnceStrings
+	warnedAboutBuildDefs         OnceStrings
+	warnedAboutVargroupsDef      OnceStrings
+	warnedAboutVargroupsUse      OnceStrings
+	warnedAboutOption            OnceStrings
 
 	// TODO: Consider extracting plistVarAdded, plistVarSet, plistVarSkip into an own type.
 	// TODO: Describe where each of the above fields is valid.
@@ -91,10 +97,16 @@ func NewMkLines(lines *Lines, pkg *Package, extraScope *Scope) *MkLines {
 		nil,
 		stmts,
 		guardLine,
-		Once{},
 		OnceBool{},
 		OnceBool{},
 		OnceBool{},
+		OnceStrings{},
+		OnceStrings{},
+		OnceStrings{},
+		OnceStrings{},
+		OnceStrings{},
+		OnceStrings{},
+		OnceStrings{},
 		mklinesCheckAll{
 			target:   "",
 			vars:     NewScope(),

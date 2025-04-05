@@ -81,7 +81,7 @@ func (ck *MkAssignChecker) checkLeftNotUsed() {
 		return
 	}
 
-	if !ck.MkLines.once.FirstTimeSlice("defined but not used: ", varname) {
+	if !ck.MkLines.warnedAboutDefinedNotUsed.FirstTime(varname) {
 		return
 	}
 

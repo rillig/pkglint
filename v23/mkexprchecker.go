@@ -67,7 +67,7 @@ func (ck *MkExprChecker) checkUndefined() {
 		return
 	}
 
-	if ck.MkLines.once.FirstTimeSlice("used but not defined", varname) {
+	if ck.MkLines.warnedAboutUsedNotDefined.FirstTime(varname) {
 		ck.MkLine.Warnf("Variable \"%s\" is used but not defined.", varname)
 	}
 }
@@ -361,7 +361,7 @@ func (ck *MkExprChecker) checkPermissions(ectx *ExprContext) {
 		}
 	}
 
-	if ck.MkLines.once.FirstTimeSlice("checkPermissions", varname) {
+	if ck.MkLines.warnedAboutPermissions.FirstTime(varname) {
 		ck.warnPermissions(ectx.vartype, varname, vartype, directly, indirectly)
 	}
 }
@@ -845,7 +845,7 @@ func (ck *MkExprChecker) checkBuildDefs() {
 	if ck.MkLines.buildDefs[varname] {
 		return
 	}
-	if !ck.MkLines.once.FirstTimeSlice("BUILD_DEFS", varname) {
+	if !ck.MkLines.warnedAboutBuildDefs.FirstTime(varname) {
 		return
 	}
 
