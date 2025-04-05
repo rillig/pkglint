@@ -81,7 +81,7 @@ type Package struct {
 
 	IgnoreMissingPatches bool // In distinfo, don't warn about patches that cannot be found.
 
-	Once Once
+	warnedAboutConditionalInclusion OnceStringSlices
 
 	// Contains the basenames of the distfiles that are mentioned in distinfo,
 	// for example "package-1.0.tar.gz", even if that file is in a DIST_SUBDIR.
@@ -1589,7 +1589,7 @@ func (pkg *Package) checkIncludeConditionally(mkline *MkLine, indentation *Inden
 
 	if indentation.IsConditional() {
 		if other := pkg.unconditionalIncludes[key]; other != nil {
-			if !pkg.Once.FirstTimeSlice("checkIncludeConditionally", mkline.String(), other.String()) {
+			if !pkg.warnedAboutConditionalInclusion.FirstTimeSlice(mkline.String(), other.String()) {
 				return
 			}
 
@@ -1605,7 +1605,7 @@ func (pkg *Package) checkIncludeConditionally(mkline *MkLine, indentation *Inden
 
 	} else {
 		if other := pkg.conditionalIncludes[key]; other != nil {
-			if !pkg.Once.FirstTimeSlice("checkIncludeConditionally", other.String(), mkline.String()) {
+			if !pkg.warnedAboutConditionalInclusion.FirstTimeSlice(other.String(), mkline.String()) {
 				return
 			}
 
@@ -1740,7 +1740,7 @@ func NewPlistContent() PlistContent {
 
 // IncludedMap remembers which files the package Makefile has included,
 // including indirect files.
-// See Once.
+// See OnceStrings.
 type IncludedMap struct {
 	m     map[PackagePath]struct{}
 	Trace bool

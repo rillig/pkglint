@@ -878,7 +878,7 @@ func (t *Tester) Main(args ...string) int {
 	// Reset the logger, for tests where t.Main is called multiple times.
 	G.Logger.errors = 0
 	G.Logger.warnings = 0
-	G.Logger.logged = Once{}
+	G.Logger.logged = OnceStringSlices{}
 
 	argv := []string{"pkglint"}
 	for _, arg := range args {
@@ -1144,7 +1144,7 @@ func (t *Tester) Output() string {
 	t.stdout.Reset()
 	t.stderr.Reset()
 	if G.isUsable() {
-		G.Logger.logged = Once{}
+		G.Logger.logged = OnceStringSlices{}
 		if G.Logger.out != nil { // Necessary because Main resets the G variable.
 			G.Logger.out.state = 0 // Prevent an empty line at the beginning of the next output.
 			G.Logger.err.state = 0

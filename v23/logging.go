@@ -30,8 +30,8 @@ type Logger struct {
 	prevLine     *Line
 
 	verbose   bool // allow duplicate diagnostics, even in the same line
-	logged    Once
-	explained Once
+	logged    OnceStringSlices
+	explained OnceStringSlices
 	histo     *histogram.Histogram
 
 	errors                int

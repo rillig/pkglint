@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/rillig/pkglint/v23/regex"
 	"github.com/rillig/pkglint/v23/textproc"
-	"hash/crc64"
 	"path"
 	"reflect"
 	"regexp"
@@ -584,51 +583,19 @@ func containsVarRefLong(s string) bool {
 	return false
 }
 
-// Once remembers with which arguments its FirstTime method has been called
+// OnceStringSlices remembers with which arguments its FirstTime method has been called
 // and only returns true on each first call.
-type Once struct {
-	seen map[uint64]struct{}
-
-	// Only used during testing, to trace the actual arguments,
-	// since hashing is a one-way function.
-	Trace bool
+type OnceStringSlices struct {
+	seen map[string]struct{}
 }
 
-func (o *Once) FirstTimeSlice(whats ...string) bool {
-	key := o.keyStrings(whats)
-	firstTime := o.check(key)
-	if firstTime && o.Trace {
-		G.Logger.out.WriteLine("FirstTime: " + strings.Join(whats, ", "))
-	}
-	return firstTime
-}
-
-func (o *Once) SeenSlice(whats ...string) bool {
-	_, seen := o.seen[o.keyStrings(whats)]
-	return seen
-}
-
-func (*Once) keyString(what string) uint64 {
-	return crc64.Checksum([]byte(what), crc64.MakeTable(crc64.ECMA))
-}
-
-func (*Once) keyStrings(whats []string) uint64 {
-	crc := crc64.New(crc64.MakeTable(crc64.ECMA))
-	for i, what := range whats {
-		if i != 0 {
-			_, _ = crc.Write([]byte{0})
-		}
-		_, _ = crc.Write([]byte(what))
-	}
-	return crc.Sum64()
-}
-
-func (o *Once) check(key uint64) bool {
+func (o *OnceStringSlices) FirstTimeSlice(whats ...string) bool {
+	key := strings.Join(whats, "\000")
 	if _, ok := o.seen[key]; ok {
 		return false
 	}
 	if o.seen == nil {
-		o.seen = make(map[uint64]struct{})
+		o.seen = make(map[string]struct{})
 	}
 	o.seen[key] = struct{}{}
 	return true
