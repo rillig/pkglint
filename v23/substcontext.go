@@ -13,12 +13,17 @@ type SubstContext struct {
 
 	scopes []*substScope
 
-	once Once
+	once OnceStrings
 	pkg  *Package
 }
 
 func NewSubstContext(pkg *Package) *SubstContext {
-	return &SubstContext{nil, []*substScope{newSubstScope()}, Once{}, pkg}
+	return &SubstContext{
+		nil,
+		[]*substScope{newSubstScope()},
+		OnceStrings{},
+		pkg,
+	}
 }
 
 func (ctx *SubstContext) Process(mkline *MkLine) {
@@ -769,7 +774,7 @@ func (c *substCond) addSeen(part substSeen) {
 
 // substSeen contains all variables that depend on a particular SUBST
 // class ID. These variables can be set in conditional branches, and
-// pkglint keeps track whether they are set in all branches or only
+// pkglint keeps track of whether they are set in all branches or only
 // in some of them.
 type substSeen uint8
 

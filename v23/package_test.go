@@ -2794,12 +2794,12 @@ func (s *Suite) Test_Package_nbPart(c *check.C) {
 func (s *Suite) Test_Package_pkgnameFromDistname(c *check.C) {
 	t := s.Init(c)
 
-	var once Once
+	var once OnceBool
 	test := func(pkgname, distname, expectedPkgname string, diagnostics ...string) {
 		t.SetUpPackage("category/package",
 			"PKGNAME=\t"+pkgname,
 			"DISTNAME=\t"+distname)
-		if once.FirstTime("called") {
+		if once.FirstTime() {
 			t.FinishSetUp()
 		}
 

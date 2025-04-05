@@ -506,9 +506,7 @@ func (s *Suite) Test_Once(c *check.C) {
 
 	var once Once
 
-	t.CheckEquals(once.FirstTime("str"), true)
-	t.CheckEquals(once.FirstTime("str"), false)
-	t.CheckEquals(once.FirstTimeSlice("str"), false)
+	t.CheckEquals(once.FirstTimeSlice("str"), true)
 	t.CheckEquals(once.FirstTimeSlice("str", "str2"), true)
 	t.CheckEquals(once.FirstTimeSlice("str", "str2"), false)
 }
@@ -519,9 +517,7 @@ func (s *Suite) Test_Once__trace(c *check.C) {
 	var once Once
 	once.Trace = true
 
-	t.CheckEquals(once.FirstTime("str"), true)
-	t.CheckEquals(once.FirstTime("str"), false)
-	t.CheckEquals(once.FirstTimeSlice("str"), false)
+	t.CheckEquals(once.FirstTimeSlice("str"), true)
 	t.CheckEquals(once.FirstTimeSlice("str", "str2"), true)
 	t.CheckEquals(once.FirstTimeSlice("str", "str2"), false)
 

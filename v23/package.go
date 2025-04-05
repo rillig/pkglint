@@ -1055,7 +1055,7 @@ func (pkg *Package) checkGnuConfigureUseLanguages() {
 // USE_LANGUAGES, as these would be ignored by the pkgsrc infrastructure.
 func (pkg *Package) checkUseLanguagesCompilerMk(mklines *MkLines) {
 
-	var seen Once
+	var seen OnceStrings
 
 	handleVarassign := func(mkline *MkLine) {
 		if mkline.Varname() != "USE_LANGUAGES" {

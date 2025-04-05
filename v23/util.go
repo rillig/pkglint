@@ -594,15 +594,6 @@ type Once struct {
 	Trace bool
 }
 
-func (o *Once) FirstTime(what string) bool {
-	key := o.keyString(what)
-	firstTime := o.check(key)
-	if firstTime && o.Trace {
-		G.Logger.out.WriteLine("FirstTime: " + what)
-	}
-	return firstTime
-}
-
 func (o *Once) FirstTimeSlice(whats ...string) bool {
 	key := o.keyStrings(whats)
 	firstTime := o.check(key)
@@ -610,11 +601,6 @@ func (o *Once) FirstTimeSlice(whats ...string) bool {
 		G.Logger.out.WriteLine("FirstTime: " + strings.Join(whats, ", "))
 	}
 	return firstTime
-}
-
-func (o *Once) Seen(what string) bool {
-	_, seen := o.seen[o.keyString(what)]
-	return seen
 }
 
 func (o *Once) SeenSlice(whats ...string) bool {
