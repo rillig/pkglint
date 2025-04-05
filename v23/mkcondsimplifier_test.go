@@ -31,9 +31,8 @@ func (t *MkCondSimplifierTester) setUp() {
 	// For simplifying the expressions, it is necessary to know whether
 	// a variable can be undefined. Undefined variables need the
 	// :U modifier or must be enclosed in double quotes, otherwise
-	// bmake will complain about a "Malformed conditional". That error
-	// message is not entirely precise since the expression
-	// is syntactically valid, it's just the evaluation that fails.
+	// bmake will complain that "Variable XYZ is undefined", or, misleadingly
+	// before 2025-04-04, about a "Malformed conditional".
 	//
 	// Some variables such as MACHINE_ARCH are in scope from the very
 	// beginning.
