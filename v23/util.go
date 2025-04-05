@@ -648,6 +648,20 @@ func (o *Once) check(key uint64) bool {
 	return true
 }
 
+// OnceBool helps execute a piece of code only once.
+type OnceBool struct {
+	done bool
+}
+
+// FirstTime returns true if it is called for the first time.
+func (o *OnceBool) FirstTime() bool {
+	if o.done {
+		return false
+	}
+	o.done = true
+	return true
+}
+
 // The MIT License (MIT)
 //
 // # Copyright (c) 2015 Frits van Bommel

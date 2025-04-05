@@ -909,22 +909,10 @@ outer:
 }
 
 func (mkline *MkLine) checkFileGlobbing(ch int, str string) {
-	switch ch {
-	case '*':
-		if mkline.warnedAboutFileGlobbingAsterisk {
-			return
-		}
-		mkline.warnedAboutFileGlobbingAsterisk = true
-	case '?':
-		if mkline.warnedAboutFileGlobbingQuestion {
-			return
-		}
-		mkline.warnedAboutFileGlobbingQuestion = true
-	case '[':
-		if mkline.warnedAboutFileGlobbingBracket {
-			return
-		}
-		mkline.warnedAboutFileGlobbingBracket = true
+	switch {
+	case ch == '*' && mkline.warnedAboutFileGlobbingAsterisk.FirstTime():
+	case ch == '?' && mkline.warnedAboutFileGlobbingQuestion.FirstTime():
+	case ch == '[' && mkline.warnedAboutFileGlobbingBracket.FirstTime():
 	default:
 		return
 	}

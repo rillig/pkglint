@@ -408,10 +408,9 @@ func (ck *ShellLineChecker) checkSetE(list *MkShList, index int) {
 	}
 
 	line := ck.mkline.Line
-	if line.warnedAboutSetE {
+	if !line.warnedAboutSetE.FirstTime() {
 		return
 	}
-	line.warnedAboutSetE = true
 
 	line.Warnf("Switch to \"set -e\" mode before using a semicolon (after %q) to separate commands.",
 		NewStrCommand(command.Simple).String())
