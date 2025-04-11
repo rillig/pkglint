@@ -52,9 +52,8 @@ type Pkglint struct {
 	fileCache *FileCache
 	interner  StringInterner
 
-	// cwd is the absolute path to the current working
-	// directory. It is used for speeding up Relpath and abspath.
-	// There is no other use for it.
+	// cwd is the absolute path to the current working directory.
+	// It is used exclusively for speeding up Relpath and abspath.
 	cwd CurrPath
 
 	InterPackage InterPackage
@@ -163,7 +162,7 @@ func (p *Pkglint) prepareMainLoop() {
 		// If the first argument to pkglint is not inside a pkgsrc tree,
 		// pkglint doesn't know where to load the infrastructure files from.
 		if isFile {
-			// Allow this mode nevertheless, for checking the basic syntax
+			// Allow this mode, nevertheless, for checking the basic syntax
 			// and for formatting individual makefiles outside pkgsrc.
 		} else {
 			G.Logger.TechFatalf(firstDir, "Must be inside a pkgsrc tree.")
@@ -247,9 +246,7 @@ func (p *Pkglint) ParseCommandLine(args []string) int {
 }
 
 // Check checks a directory entry, which can be a regular file,
-// a directory or a symlink (only allowed for the working directory).
-//
-// This is the method that is called for each command line argument.
+// a directory, or a symlink (only allowed for the working directory).
 //
 // It sets up all the global state (infrastructure, wip) for accurately
 // classifying the entry.
@@ -507,7 +504,7 @@ func CheckFileMk(filename CurrPath, pkg *Package) {
 }
 
 // checkReg checks the given regular file.
-// depth is 3 for files in the package directory, and 4 or more for files
+// The depth is 3 for files in a package directory, and 4 or more for files
 // deeper in the directory hierarchy, such as in files/ or patches/.
 func (p *Pkglint) checkReg(filename CurrPath, basename RelPath, depth int, pkg *Package) {
 
@@ -675,14 +672,14 @@ func (p *Pkglint) checkExecutable(filename CurrPath, mode os.FileMode) {
 }
 
 func CheckLinesTrailingEmptyLines(lines *Lines) {
-	max := lines.Len()
+	n := lines.Len()
 
-	last := max
+	last := n
 	for last > 1 && lines.Lines[last-1].Text == "" {
 		last--
 	}
 
-	if last != max {
+	if last != n {
 		lines.Lines[last].Notef("Trailing empty lines.")
 	}
 }
