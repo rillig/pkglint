@@ -3241,6 +3241,28 @@ func (s *Suite) Test_Package_checkOwnerMaintainer__Makefile_common(c *check.C) {
 		"NOTE: Only commit changes that someone-else@example.org would approve.")
 }
 
+func (s *Suite) Test_Package_checkPolicyUpdateLimited(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPackage("category/package",
+		"POLICY_UPDATE_LIMITED=\tabi bootstrap")
+	t.Chdir("category/package")
+
+	t.Main("-q")
+
+	t.CheckOutputEmpty()
+
+	t.CreateFileLines("CVS/Entries",
+		"/Makefile//modified//")
+	G.fileCache.Evict("CVS/Entries")
+	G.cvsEntriesDir = "" // Invalidate the CVS cache.
+
+	t.Main("-q")
+
+	t.CheckOutputLines(
+		"WARN: Changes to this package require extensive testing.")
+}
+
 func (s *Suite) Test_Package_checkFreeze(c *check.C) {
 	t := s.Init(c)
 

@@ -1662,6 +1662,9 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.pkglist("PLIST_SRC", BtPackagePath)
 	reg.pkglist("PLIST_SUBST", BtShellWord)
 	reg.pkg("PLIST_TYPE", enum("dynamic static"))
+
+	reg.pkglist("POLICY_UPDATE_LIMITED", enum("abi bootstrap"))
+
 	reg.pkglistbl3("PREPEND_PATH", BtPathname)
 
 	// PREFIX is indeed defined late, in bsd.pkg.use.mk, included by bsd.pkg.mk.

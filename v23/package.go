@@ -82,6 +82,7 @@ type Package struct {
 	IgnoreMissingPatches bool // In distinfo, don't warn about patches that cannot be found.
 
 	warnedAboutConditionalInclusion OnceStringSlices
+	checkedPolicyUpdateLimited      OnceBool
 
 	// Contains the basenames of the distfiles that are mentioned in distinfo,
 	// for example "package-1.0.tar.gz", even if that file is in a DIST_SUBDIR.
@@ -616,6 +617,7 @@ func (pkg *Package) check(filenames []CurrPath, mklines, allLines *MkLines) {
 			haveDistinfo = true
 		}
 		pkg.checkOwnerMaintainer(filename)
+		pkg.checkPolicyUpdateLimited()
 		pkg.checkFreeze(filename)
 	}
 
@@ -1483,6 +1485,30 @@ func (pkg *Package) checkOwnerMaintainer(filename CurrPath) {
 	line.Explain(
 		"See the pkgsrc guide, section \"Package components\",",
 		"keyword \"maintainer\", for more information.")
+}
+
+func (pkg *Package) checkPolicyUpdateLimited() {
+	if !pkg.checkedPolicyUpdateLimited.FirstTime() {
+		return
+	}
+
+	varname := "POLICY_UPDATE_LIMITED"
+	limits := pkg.vars.LastValue(varname)
+	if limits == "" {
+		return
+	}
+	mkline := pkg.vars.LastDefinition(varname)
+	if containsExpr(limits) {
+		mkline.Errorf("The value for \"%s\" must be given directly.", varname)
+		return
+	}
+
+	if isLocallyModified(mkline.Filename()) {
+		line := NewLineWhole(pkg.File("."))
+		line.Warnf("Changes to this package require extensive testing.")
+		line.Explain(
+			seeGuide("pkgsrc Policies", "policies"))
+	}
 }
 
 func (pkg *Package) checkFreeze(filename CurrPath) {
