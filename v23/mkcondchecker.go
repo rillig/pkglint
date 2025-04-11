@@ -127,10 +127,12 @@ func (ck *MkCondChecker) checkNotEmpty(not *MkCond) {
 	to := not.Empty.String()
 	fix.Notef("%s can be replaced with %s.", from, to)
 	fix.Explain(
-		"Besides being simpler to read, the expression will also fail",
-		"quickly with a \"Malformed conditional\" or a",
-		"\"Variable XYZ is undefined\" error from bmake",
+		"Besides being simpler to read, the expression will also",
+		"fail fast with a \"Variable XYZ is undefined\" or",
+		"(in bmake<=20250404)",
+		"a \"Malformed conditional\" error from bmake",
 		"if it should ever be undefined at this point.",
+		"",
 		"Before querying a PKG_BUILD_OPTIONS variable,",
 		"that variable has to be defined by setting \"pkgbase\"",
 		"and then calling \"mk/pkg-build-options.mk\".")
