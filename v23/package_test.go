@@ -3254,8 +3254,6 @@ func (s *Suite) Test_Package_checkPolicyUpdateLimited(c *check.C) {
 
 	t.CreateFileLines("CVS/Entries",
 		"/Makefile//modified//")
-	G.fileCache.Evict("CVS/Entries")
-	G.cvsEntriesDir = "" // Invalidate the CVS cache.
 
 	t.Main("-q")
 

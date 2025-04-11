@@ -591,6 +591,7 @@ func (t *Tester) CreateFileLines(filename RelPath, lines ...string) CurrPath {
 	t.AssertNil(abs.WriteString(content.String()))
 
 	G.fileCache.Evict(abs)
+	G.cvsEntriesDir = ""
 
 	return abs
 }
