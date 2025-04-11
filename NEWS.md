@@ -1,3 +1,8 @@
+# 23.17.0 (2025-04-11)
+
+In packages that define POLICY_UPDATE_LIMITED, warn before committing
+that the package requires extensive testing.
+
 # 23.16.0 (2025-04-02)
 
 Mark MESSAGE files as obsolete, see the pkgsrc guide for details.
