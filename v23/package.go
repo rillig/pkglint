@@ -1615,7 +1615,7 @@ func (pkg *Package) checkIncludeConditionally(mkline *MkLine, indentation *Inden
 
 	if indentation.IsConditional() {
 		if other := pkg.unconditionalIncludes[key]; other != nil {
-			if !pkg.warnedAboutConditionalInclusion.FirstTimeSlice(mkline.String(), other.String()) {
+			if !pkg.warnedAboutConditionalInclusion.FirstTime(mkline.String(), other.String()) {
 				return
 			}
 
@@ -1631,7 +1631,7 @@ func (pkg *Package) checkIncludeConditionally(mkline *MkLine, indentation *Inden
 
 	} else {
 		if other := pkg.conditionalIncludes[key]; other != nil {
-			if !pkg.warnedAboutConditionalInclusion.FirstTimeSlice(other.String(), mkline.String()) {
+			if !pkg.warnedAboutConditionalInclusion.FirstTime(other.String(), mkline.String()) {
 				return
 			}
 

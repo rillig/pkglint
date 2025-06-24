@@ -83,7 +83,7 @@ func (l *Logger) Explain(explanation ...string) {
 		return
 	}
 
-	if !l.explained.FirstTimeSlice(explanation...) {
+	if !l.explained.FirstTime(explanation...) {
 		return
 	}
 
@@ -163,7 +163,7 @@ func (l *Logger) FirstTime(filename CurrPath, linenos, msg string) bool {
 		return true
 	}
 
-	if !l.logged.FirstTimeSlice(filename.Clean().String(), linenos, msg) {
+	if !l.logged.FirstTime(filename.Clean().String(), linenos, msg) {
 		l.suppressDiag = true
 		l.suppressExpl = true
 		return false

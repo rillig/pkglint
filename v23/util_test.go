@@ -501,14 +501,14 @@ func (s *Suite) Test_containsExpr(c *check.C) {
 	test("$$VAR", false)   // An escaped dollar character.
 }
 
-func (s *Suite) Test_OnceStringSlices(c *check.C) {
+func (s *Suite) Test_OncePerStringSlice(c *check.C) {
 	t := s.Init(c)
 
 	var once OncePerStringSlice
 
-	t.CheckEquals(once.FirstTimeSlice("str"), true)
-	t.CheckEquals(once.FirstTimeSlice("str", "str2"), true)
-	t.CheckEquals(once.FirstTimeSlice("str", "str2"), false)
+	t.CheckEquals(once.FirstTime("str"), true)
+	t.CheckEquals(once.FirstTime("str", "str2"), true)
+	t.CheckEquals(once.FirstTime("str", "str2"), false)
 }
 
 func (s *Suite) Test_naturalLess(c *check.C) {

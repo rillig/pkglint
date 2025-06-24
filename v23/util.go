@@ -589,7 +589,7 @@ type OncePerStringSlice struct {
 	seen map[string]struct{}
 }
 
-func (o *OncePerStringSlice) FirstTimeSlice(whats ...string) bool {
+func (o *OncePerStringSlice) FirstTime(whats ...string) bool {
 	key := strings.Join(whats, "\000")
 	if _, ok := o.seen[key]; ok {
 		return false
