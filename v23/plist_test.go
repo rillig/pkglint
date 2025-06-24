@@ -1538,10 +1538,10 @@ func (s *Suite) Test_plistLineSorter_Sort(c *check.C) {
 		nil,
 		nil,
 		"",
-		OnceBool{},
-		OnceBool{},
-		OnceBool{},
-		OnceStrings{},
+		Once{},
+		Once{},
+		Once{},
+		OncePerString{},
 		false,
 	}
 	plines := ck.newLines(lines)
@@ -1556,10 +1556,10 @@ func (s *Suite) Test_plistLineSorter_Sort(c *check.C) {
 		nil,
 		nil,
 		"",
-		OnceBool{},
-		OnceBool{},
-		OnceBool{},
-		OnceStrings{},
+		Once{},
+		Once{},
+		Once{},
+		OncePerString{},
 		false,
 	}).
 		newLines(NewLines(lines.Filename, cleanedLines)))

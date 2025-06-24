@@ -66,10 +66,10 @@ type Line struct {
 	raw []*RawLine // contains the original text including trailing newline
 	fix *Autofix   // any changes that pkglint would like to apply to the line
 
-	warnedAboutFileGlobbingAsterisk OnceBool
-	warnedAboutFileGlobbingQuestion OnceBool
-	warnedAboutFileGlobbingBracket  OnceBool
-	warnedAboutSetE                 OnceBool
+	warnedAboutFileGlobbingAsterisk Once
+	warnedAboutFileGlobbingQuestion Once
+	warnedAboutFileGlobbingBracket  Once
+	warnedAboutSetE                 Once
 }
 
 func NewLine(filename CurrPath, lineno int, text string, rawLine *RawLine) *Line {
@@ -85,10 +85,10 @@ func NewLineMulti(filename CurrPath, firstLine int, text string, rawLines []*Raw
 		text,
 		rawLines,
 		nil,
-		OnceBool{},
-		OnceBool{},
-		OnceBool{},
-		OnceBool{},
+		Once{},
+		Once{},
+		Once{},
+		Once{},
 	}
 }
 

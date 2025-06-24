@@ -35,16 +35,16 @@ type MkLines struct {
 	stmts         MkStmt
 	guardLine     *MkLine
 
-	warnedAboutBsdPrefsMk        OnceBool
-	warnedAboutDefaultAssignment OnceBool
-	calledCheckAll               OnceBool
-	warnedAboutDefinedNotUsed    OnceStrings
-	warnedAboutUsedNotDefined    OnceStrings
-	warnedAboutPermissions       OnceStrings
-	warnedAboutBuildDefs         OnceStrings
-	warnedAboutVargroupsDef      OnceStrings
-	warnedAboutVargroupsUse      OnceStrings
-	warnedAboutOption            OnceStrings
+	warnedAboutBsdPrefsMk        Once
+	warnedAboutDefaultAssignment Once
+	calledCheckAll               Once
+	warnedAboutDefinedNotUsed    OncePerString
+	warnedAboutUsedNotDefined    OncePerString
+	warnedAboutPermissions       OncePerString
+	warnedAboutBuildDefs         OncePerString
+	warnedAboutVargroupsDef      OncePerString
+	warnedAboutVargroupsUse      OncePerString
+	warnedAboutOption            OncePerString
 
 	// TODO: Consider extracting plistVarAdded, plistVarSet, plistVarSkip into an own type.
 	// TODO: Describe where each of the above fields is valid.
@@ -97,16 +97,16 @@ func NewMkLines(lines *Lines, pkg *Package, extraScope *Scope) *MkLines {
 		nil,
 		stmts,
 		guardLine,
-		OnceBool{},
-		OnceBool{},
-		OnceBool{},
-		OnceStrings{},
-		OnceStrings{},
-		OnceStrings{},
-		OnceStrings{},
-		OnceStrings{},
-		OnceStrings{},
-		OnceStrings{},
+		Once{},
+		Once{},
+		Once{},
+		OncePerString{},
+		OncePerString{},
+		OncePerString{},
+		OncePerString{},
+		OncePerString{},
+		OncePerString{},
+		OncePerString{},
 		mklinesCheckAll{
 			target:   "",
 			vars:     NewScope(),

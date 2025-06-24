@@ -37,10 +37,10 @@ type PlistChecker struct {
 	allFiles                    map[RelPath]*PlistLine
 	allDirs                     map[RelPath]*PlistLine
 	lastFname                   RelPath
-	warnedAboutLibtool          OnceBool
-	warnedAboutHicolorIconTheme OnceBool
-	warnedAboutIconThemes       OnceBool
-	warnedAboutCond             OnceStrings
+	warnedAboutLibtool          Once
+	warnedAboutHicolorIconTheme Once
+	warnedAboutIconThemes       Once
+	warnedAboutCond             OncePerString
 	nonAsciiAllowed             bool
 }
 
@@ -50,10 +50,10 @@ func NewPlistChecker(pkg *Package) *PlistChecker {
 		make(map[RelPath]*PlistLine),
 		make(map[RelPath]*PlistLine),
 		"",
-		OnceBool{},
-		OnceBool{},
-		OnceBool{},
-		OnceStrings{},
+		Once{},
+		Once{},
+		Once{},
+		OncePerString{},
 		false}
 }
 

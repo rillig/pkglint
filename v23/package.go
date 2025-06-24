@@ -81,8 +81,8 @@ type Package struct {
 
 	IgnoreMissingPatches bool // In distinfo, don't warn about patches that cannot be found.
 
-	warnedAboutConditionalInclusion OnceStringSlices
-	checkedPolicyUpdateLimited      OnceBool
+	warnedAboutConditionalInclusion OncePerStringSlice
+	checkedPolicyUpdateLimited      Once
 
 	// Contains the basenames of the distfiles that are mentioned in distinfo,
 	// for example "package-1.0.tar.gz", even if that file is in a DIST_SUBDIR.
@@ -554,10 +554,10 @@ func (pkg *Package) loadPlistDirs(plistFilename CurrPath) {
 		make(map[RelPath]*PlistLine),
 		make(map[RelPath]*PlistLine),
 		"",
-		OnceBool{},
-		OnceBool{},
-		OnceBool{},
-		OnceStrings{},
+		Once{},
+		Once{},
+		Once{},
+		OncePerString{},
 		false}
 	plistLines := ck.Load(lines)
 
@@ -1057,7 +1057,7 @@ func (pkg *Package) checkGnuConfigureUseLanguages() {
 // USE_LANGUAGES, as these would be ignored by the pkgsrc infrastructure.
 func (pkg *Package) checkUseLanguagesCompilerMk(mklines *MkLines) {
 
-	var seen OnceStrings
+	var seen OncePerString
 
 	handleVarassign := func(mkline *MkLine) {
 		if mkline.Varname() != "USE_LANGUAGES" {
@@ -1766,7 +1766,7 @@ func NewPlistContent() PlistContent {
 
 // IncludedMap remembers which files the package Makefile has included,
 // including indirect files.
-// See OnceStrings.
+// See OncePerString.
 type IncludedMap struct {
 	m     map[PackagePath]struct{}
 	Trace bool

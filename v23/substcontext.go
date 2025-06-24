@@ -13,7 +13,7 @@ type SubstContext struct {
 
 	scopes []*substScope
 
-	once OnceStrings
+	once OncePerString
 	pkg  *Package
 }
 
@@ -21,7 +21,7 @@ func NewSubstContext(pkg *Package) *SubstContext {
 	return &SubstContext{
 		nil,
 		[]*substScope{newSubstScope()},
-		OnceStrings{},
+		OncePerString{},
 		pkg,
 	}
 }

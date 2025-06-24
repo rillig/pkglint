@@ -504,7 +504,7 @@ func (s *Suite) Test_containsExpr(c *check.C) {
 func (s *Suite) Test_OnceStringSlices(c *check.C) {
 	t := s.Init(c)
 
-	var once OnceStringSlices
+	var once OncePerStringSlice
 
 	t.CheckEquals(once.FirstTimeSlice("str"), true)
 	t.CheckEquals(once.FirstTimeSlice("str", "str2"), true)

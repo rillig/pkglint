@@ -583,13 +583,13 @@ func containsVarRefLong(s string) bool {
 	return false
 }
 
-// OnceStringSlices remembers with which arguments its FirstTime method has been called
-// and only returns true on each first call.
-type OnceStringSlices struct {
+// OncePerStringSlice remembers with which arguments its FirstTime method has
+// been called and only returns true on each first call.
+type OncePerStringSlice struct {
 	seen map[string]struct{}
 }
 
-func (o *OnceStringSlices) FirstTimeSlice(whats ...string) bool {
+func (o *OncePerStringSlice) FirstTimeSlice(whats ...string) bool {
 	key := strings.Join(whats, "\000")
 	if _, ok := o.seen[key]; ok {
 		return false
@@ -601,13 +601,13 @@ func (o *OnceStringSlices) FirstTimeSlice(whats ...string) bool {
 	return true
 }
 
-// OnceBool helps execute a piece of code only once.
-type OnceBool struct {
+// Once helps execute a piece of code only once.
+type Once struct {
 	done bool
 }
 
 // FirstTime returns true if it is called for the first time.
-func (o *OnceBool) FirstTime() bool {
+func (o *Once) FirstTime() bool {
 	if o.done {
 		return false
 	}
@@ -615,13 +615,13 @@ func (o *OnceBool) FirstTime() bool {
 	return true
 }
 
-// OnceStrings helps execute a piece of code only once per string.
-type OnceStrings struct {
+// OncePerString helps execute a piece of code only once per string.
+type OncePerString struct {
 	done map[string]struct{}
 }
 
 // FirstTime returns true if it is called for the first time.
-func (o *OnceStrings) FirstTime(s string) bool {
+func (o *OncePerString) FirstTime(s string) bool {
 	if _, done := o.done[s]; done {
 		return false
 	}
@@ -632,7 +632,7 @@ func (o *OnceStrings) FirstTime(s string) bool {
 	return true
 }
 
-func (o *OnceStrings) Seen(s string) bool {
+func (o *OncePerString) Seen(s string) bool {
 	_, seen := o.done[s]
 	return seen
 }
