@@ -1,3 +1,8 @@
+# 23.18.0 (2025-07-13)
+
+For packages that use Meson as their build system and also require Python
+at runtime, do not warn that Python is usually only necessary at build time.
+
 # 23.17.0 (2025-04-11)
 
 In packages that define POLICY_UPDATE_LIMITED, warn before committing
