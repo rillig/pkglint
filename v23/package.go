@@ -1098,13 +1098,14 @@ func (pkg *Package) checkUseLanguagesCompilerMk(mklines *MkLines) {
 // GNU autotools or another build system, before being migrated to Meson.
 func (pkg *Package) checkMeson(mklines *MkLines) {
 
-	if pkg.Includes("../../devel/meson/build.mk") == nil {
+	mkline := pkg.Includes("../../devel/meson/build.mk")
+	if mkline == nil {
 		return
 	}
 
 	pkg.checkMesonGnuMake(mklines)
 	pkg.checkMesonConfigureArgs()
-	pkg.checkMesonPython(mklines)
+	pkg.checkMesonPython(mklines, mkline)
 }
 
 func (pkg *Package) checkMesonGnuMake(mklines *MkLines) {
@@ -1134,9 +1135,12 @@ func (pkg *Package) checkMesonConfigureArgs() {
 		"CONFIGURE_ARGS are typically not needed anymore.")
 }
 
-func (pkg *Package) checkMesonPython(mklines *MkLines) {
+func (pkg *Package) checkMesonPython(mklines *MkLines, mkline *MkLine) {
 
 	if mklines.allVars.IsDefined("PYTHON_FOR_BUILD_ONLY") {
+		return
+	}
+	if mklines.allVars.IsDefined("REPLACE_PYTHON") {
 		return
 	}
 
@@ -1148,7 +1152,6 @@ func (pkg *Package) checkMesonPython(mklines *MkLines) {
 	return
 
 warn:
-	mkline := NewLineWhole(pkg.File("."))
 	mkline.Warnf("Meson packages usually need Python only at build time.")
 	mkline.Explain(
 		"The Meson build system is implemented in Python,",

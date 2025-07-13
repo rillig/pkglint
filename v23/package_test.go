@@ -2505,7 +2505,7 @@ func (s *Suite) Test_Package_checkMesonPython__missing_PYTHON_FOR_BUILD_ONLY(c *
 	G.Check(".")
 
 	t.CheckOutputLines(
-		"WARN: Meson packages usually need Python only at build time.")
+		"WARN: Makefile:21: Meson packages usually need Python only at build time.")
 }
 
 // PKGNAME is stronger than DISTNAME.
