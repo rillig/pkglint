@@ -1,3 +1,8 @@
+# 23.19.0 (2025-08-15)
+
+Don't complain about using the current Node.js version in
+NODE_VERSIONS_ACCEPTED.
+
 # 23.18.0 (2025-07-13)
 
 For packages that use Meson as their build system and also require Python
