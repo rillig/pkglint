@@ -37,7 +37,7 @@ const liyyErrCode = 2
 const liyyInitialStackSize = 16
 
 //line yacctab:1
-var liyyExca = [...]int{
+var liyyExca = [...]int8{
 	-1, 1,
 	1, -1,
 	-2, 0,
@@ -47,47 +47,47 @@ const liyyPrivate = 57344
 
 const liyyLast = 15
 
-var liyyAct = [...]int{
+var liyyAct = [...]int8{
 	6, 7, 3, 11, 4, 1, 0, 5, 2, 9,
 	10, 6, 7, 0, 8,
 }
 
-var liyyPact = [...]int{
+var liyyPact = [...]int16{
 	0, -1000, 6, -1000, -1000, 0, 0, 0, -5, -1000,
 	-1000, -1000,
 }
 
-var liyyPgo = [...]int{
+var liyyPgo = [...]int8{
 	0, 5, 8, 2,
 }
 
-var liyyR1 = [...]int{
+var liyyR1 = [...]int8{
 	0, 1, 2, 2, 2, 3, 3,
 }
 
-var liyyR2 = [...]int{
+var liyyR2 = [...]int8{
 	0, 1, 1, 3, 3, 1, 3,
 }
 
-var liyyChk = [...]int{
+var liyyChk = [...]int16{
 	-1000, -1, -2, -3, 4, 7, 5, 6, -2, -3,
 	-3, 8,
 }
 
-var liyyDef = [...]int{
+var liyyDef = [...]int8{
 	0, -2, 1, 2, 5, 0, 0, 0, 0, 3,
 	4, 6,
 }
 
-var liyyTok1 = [...]int{
+var liyyTok1 = [...]int8{
 	1,
 }
 
-var liyyTok2 = [...]int{
+var liyyTok2 = [...]int8{
 	2, 3, 4, 5, 6, 7, 8,
 }
 
-var liyyTok3 = [...]int{
+var liyyTok3 = [...]int8{
 	0,
 }
 
@@ -169,9 +169,9 @@ func liyyErrorMessage(state, lookAhead int) string {
 	expected := make([]int, 0, 4)
 
 	// Look for shiftable tokens.
-	base := liyyPact[state]
+	base := int(liyyPact[state])
 	for tok := TOKSTART; tok-1 < len(liyyToknames); tok++ {
-		if n := base + tok; n >= 0 && n < liyyLast && liyyChk[liyyAct[n]] == tok {
+		if n := base + tok; n >= 0 && n < liyyLast && int(liyyChk[int(liyyAct[n])]) == tok {
 			if len(expected) == cap(expected) {
 				return res
 			}
@@ -181,13 +181,13 @@ func liyyErrorMessage(state, lookAhead int) string {
 
 	if liyyDef[state] == -2 {
 		i := 0
-		for liyyExca[i] != -1 || liyyExca[i+1] != state {
+		for liyyExca[i] != -1 || int(liyyExca[i+1]) != state {
 			i += 2
 		}
 
 		// Look for tokens that we accept or reduce.
 		for i += 2; liyyExca[i] >= 0; i += 2 {
-			tok := liyyExca[i]
+			tok := int(liyyExca[i])
 			if tok < TOKSTART || liyyExca[i+1] == 0 {
 				continue
 			}
@@ -218,30 +218,30 @@ func liyylex1(lex liyyLexer, lval *liyySymType) (char, token int) {
 	token = 0
 	char = lex.Lex(lval)
 	if char <= 0 {
-		token = liyyTok1[0]
+		token = int(liyyTok1[0])
 		goto out
 	}
 	if char < len(liyyTok1) {
-		token = liyyTok1[char]
+		token = int(liyyTok1[char])
 		goto out
 	}
 	if char >= liyyPrivate {
 		if char < liyyPrivate+len(liyyTok2) {
-			token = liyyTok2[char-liyyPrivate]
+			token = int(liyyTok2[char-liyyPrivate])
 			goto out
 		}
 	}
 	for i := 0; i < len(liyyTok3); i += 2 {
-		token = liyyTok3[i+0]
+		token = int(liyyTok3[i+0])
 		if token == char {
-			token = liyyTok3[i+1]
+			token = int(liyyTok3[i+1])
 			goto out
 		}
 	}
 
 out:
 	if token == 0 {
-		token = liyyTok2[1] /* unknown char */
+		token = int(liyyTok2[1]) /* unknown char */
 	}
 	if liyyDebug >= 3 {
 		__yyfmt__.Printf("lex %s(%d)\n", liyyTokname(token), uint(char))
@@ -296,7 +296,7 @@ liyystack:
 	liyyS[liyyp].yys = liyystate
 
 liyynewstate:
-	liyyn = liyyPact[liyystate]
+	liyyn = int(liyyPact[liyystate])
 	if liyyn <= liyyFlag {
 		goto liyydefault /* simple state */
 	}
@@ -307,8 +307,8 @@ liyynewstate:
 	if liyyn < 0 || liyyn >= liyyLast {
 		goto liyydefault
 	}
-	liyyn = liyyAct[liyyn]
-	if liyyChk[liyyn] == liyytoken { /* valid shift */
+	liyyn = int(liyyAct[liyyn])
+	if int(liyyChk[liyyn]) == liyytoken { /* valid shift */
 		liyyrcvr.char = -1
 		liyytoken = -1
 		liyyVAL = liyyrcvr.lval
@@ -321,7 +321,7 @@ liyynewstate:
 
 liyydefault:
 	/* default state action */
-	liyyn = liyyDef[liyystate]
+	liyyn = int(liyyDef[liyystate])
 	if liyyn == -2 {
 		if liyyrcvr.char < 0 {
 			liyyrcvr.char, liyytoken = liyylex1(liyylex, &liyyrcvr.lval)
@@ -330,18 +330,18 @@ liyydefault:
 		/* look through exception table */
 		xi := 0
 		for {
-			if liyyExca[xi+0] == -1 && liyyExca[xi+1] == liyystate {
+			if liyyExca[xi+0] == -1 && int(liyyExca[xi+1]) == liyystate {
 				break
 			}
 			xi += 2
 		}
 		for xi += 2; ; xi += 2 {
-			liyyn = liyyExca[xi+0]
+			liyyn = int(liyyExca[xi+0])
 			if liyyn < 0 || liyyn == liyytoken {
 				break
 			}
 		}
-		liyyn = liyyExca[xi+1]
+		liyyn = int(liyyExca[xi+1])
 		if liyyn < 0 {
 			goto ret0
 		}
@@ -363,10 +363,10 @@ liyydefault:
 
 			/* find a state where "error" is a legal shift action */
 			for liyyp >= 0 {
-				liyyn = liyyPact[liyyS[liyyp].yys] + liyyErrCode
+				liyyn = int(liyyPact[liyyS[liyyp].yys]) + liyyErrCode
 				if liyyn >= 0 && liyyn < liyyLast {
-					liyystate = liyyAct[liyyn] /* simulate a shift of "error" */
-					if liyyChk[liyystate] == liyyErrCode {
+					liyystate = int(liyyAct[liyyn]) /* simulate a shift of "error" */
+					if int(liyyChk[liyystate]) == liyyErrCode {
 						goto liyystack
 					}
 				}
@@ -402,7 +402,7 @@ liyydefault:
 	liyypt := liyyp
 	_ = liyypt // guard against "declared and not used"
 
-	liyyp -= liyyR2[liyyn]
+	liyyp -= int(liyyR2[liyyn])
 	// liyyp is now the index of $0. Perform the default action. Iff the
 	// reduced production is ε, $1 is possibly out of range.
 	if liyyp+1 >= len(liyyS) {
@@ -413,16 +413,16 @@ liyydefault:
 	liyyVAL = liyyS[liyyp+1]
 
 	/* consult goto table to find next state */
-	liyyn = liyyR1[liyyn]
-	liyyg := liyyPgo[liyyn]
+	liyyn = int(liyyR1[liyyn])
+	liyyg := int(liyyPgo[liyyn])
 	liyyj := liyyg + liyyS[liyyp].yys + 1
 
 	if liyyj >= liyyLast {
-		liyystate = liyyAct[liyyg]
+		liyystate = int(liyyAct[liyyg])
 	} else {
-		liyystate = liyyAct[liyyj]
-		if liyyChk[liyystate] != -liyyn {
-			liyystate = liyyAct[liyyg]
+		liyystate = int(liyyAct[liyyj])
+		if int(liyyChk[liyystate]) != -liyyn {
+			liyystate = int(liyyAct[liyyg])
 		}
 	}
 	// dummy call; replaced with literal code

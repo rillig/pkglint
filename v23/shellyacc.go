@@ -118,7 +118,7 @@ const shyyErrCode = 2
 const shyyInitialStackSize = 16
 
 //line yacctab:1
-var shyyExca = [...]int{
+var shyyExca = [...]int16{
 	-1, 0,
 	1, 3,
 	-2, 94,
@@ -144,7 +144,7 @@ const shyyPrivate = 57344
 
 const shyyLast = 345
 
-var shyyAct = [...]int{
+var shyyAct = [...]uint8{
 	4, 121, 7, 139, 3, 5, 135, 134, 48, 115,
 	12, 14, 64, 49, 9, 102, 103, 111, 97, 8,
 	98, 94, 84, 147, 153, 153, 125, 25, 110, 124,
@@ -182,7 +182,7 @@ var shyyAct = [...]int{
 	38, 40, 42, 45, 43,
 }
 
-var shyyPact = [...]int{
+var shyyPact = [...]int16{
 	105, -1000, -1000, -1000, 161, 92, -1000, 91, 82, -1000,
 	76, 197, -1000, -1000, 313, 313, 259, 221, -1000, -1000,
 	-1000, -1000, -1000, -1000, -1000, -1000, -1000, 105, 105, 128,
@@ -202,7 +202,7 @@ var shyyPact = [...]int{
 	14, -1000, 105, 92, -1000, -1000, -1000, -1000,
 }
 
-var shyyPgo = [...]int{
+var shyyPgo = [...]uint8{
 	0, 187, 186, 4, 185, 167, 2, 15, 19, 14,
 	91, 10, 11, 160, 8, 9, 155, 154, 12, 153,
 	152, 150, 1, 149, 148, 147, 7, 6, 146, 145,
@@ -210,7 +210,7 @@ var shyyPgo = [...]int{
 	0, 5,
 }
 
-var shyyR1 = [...]int{
+var shyyR1 = [...]int8{
 	0, 1, 2, 2, 8, 8, 8, 9, 9, 10,
 	10, 11, 11, 11, 11, 11, 12, 12, 12, 12,
 	12, 12, 12, 5, 3, 3, 6, 6, 20, 20,
@@ -224,7 +224,7 @@ var shyyR1 = [...]int{
 	15,
 }
 
-var shyyR2 = [...]int{
+var shyyR2 = [...]int8{
 	0, 1, 1, 0, 1, 4, 4, 1, 2, 1,
 	4, 1, 1, 2, 1, 2, 1, 1, 1, 1,
 	1, 1, 1, 3, 2, 3, 1, 3, 4, 6,
@@ -238,7 +238,7 @@ var shyyR2 = [...]int{
 	2,
 }
 
-var shyyChk = [...]int{
+var shyyChk = [...]int16{
 	-1000, -1, -2, -3, -40, -41, 6, -6, -8, -9,
 	-10, 39, -11, -16, -12, -19, -17, 4, -4, -5,
 	-20, -23, -21, -28, -29, -37, 5, 37, 35, 34,
@@ -258,7 +258,7 @@ var shyyChk = [...]int{
 	-3, -40, -14, -41, -40, -40, -22, -40,
 }
 
-var shyyDef = [...]int{
+var shyyDef = [...]int8{
 	-2, -2, 1, 2, 0, 93, 91, 24, 26, 4,
 	7, 0, 9, 11, 12, 14, 62, 64, 16, 17,
 	18, 19, 20, 21, 22, 66, 67, 94, 94, 0,
@@ -278,18 +278,18 @@ var shyyDef = [...]int{
 	52, 43, 94, -2, 45, 46, 53, -2,
 }
 
-var shyyTok1 = [...]int{
+var shyyTok1 = [...]int8{
 	1,
 }
 
-var shyyTok2 = [...]int{
+var shyyTok2 = [...]int8{
 	2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
 	12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
 	22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
 	32, 33, 34, 35, 36, 37, 38, 39, 40,
 }
 
-var shyyTok3 = [...]int{
+var shyyTok3 = [...]int8{
 	0,
 }
 
@@ -371,9 +371,9 @@ func shyyErrorMessage(state, lookAhead int) string {
 	expected := make([]int, 0, 4)
 
 	// Look for shiftable tokens.
-	base := shyyPact[state]
+	base := int(shyyPact[state])
 	for tok := TOKSTART; tok-1 < len(shyyToknames); tok++ {
-		if n := base + tok; n >= 0 && n < shyyLast && shyyChk[shyyAct[n]] == tok {
+		if n := base + tok; n >= 0 && n < shyyLast && int(shyyChk[int(shyyAct[n])]) == tok {
 			if len(expected) == cap(expected) {
 				return res
 			}
@@ -383,13 +383,13 @@ func shyyErrorMessage(state, lookAhead int) string {
 
 	if shyyDef[state] == -2 {
 		i := 0
-		for shyyExca[i] != -1 || shyyExca[i+1] != state {
+		for shyyExca[i] != -1 || int(shyyExca[i+1]) != state {
 			i += 2
 		}
 
 		// Look for tokens that we accept or reduce.
 		for i += 2; shyyExca[i] >= 0; i += 2 {
-			tok := shyyExca[i]
+			tok := int(shyyExca[i])
 			if tok < TOKSTART || shyyExca[i+1] == 0 {
 				continue
 			}
@@ -420,30 +420,30 @@ func shyylex1(lex shyyLexer, lval *shyySymType) (char, token int) {
 	token = 0
 	char = lex.Lex(lval)
 	if char <= 0 {
-		token = shyyTok1[0]
+		token = int(shyyTok1[0])
 		goto out
 	}
 	if char < len(shyyTok1) {
-		token = shyyTok1[char]
+		token = int(shyyTok1[char])
 		goto out
 	}
 	if char >= shyyPrivate {
 		if char < shyyPrivate+len(shyyTok2) {
-			token = shyyTok2[char-shyyPrivate]
+			token = int(shyyTok2[char-shyyPrivate])
 			goto out
 		}
 	}
 	for i := 0; i < len(shyyTok3); i += 2 {
-		token = shyyTok3[i+0]
+		token = int(shyyTok3[i+0])
 		if token == char {
-			token = shyyTok3[i+1]
+			token = int(shyyTok3[i+1])
 			goto out
 		}
 	}
 
 out:
 	if token == 0 {
-		token = shyyTok2[1] /* unknown char */
+		token = int(shyyTok2[1]) /* unknown char */
 	}
 	if shyyDebug >= 3 {
 		__yyfmt__.Printf("lex %s(%d)\n", shyyTokname(token), uint(char))
@@ -498,7 +498,7 @@ shyystack:
 	shyyS[shyyp].yys = shyystate
 
 shyynewstate:
-	shyyn = shyyPact[shyystate]
+	shyyn = int(shyyPact[shyystate])
 	if shyyn <= shyyFlag {
 		goto shyydefault /* simple state */
 	}
@@ -509,8 +509,8 @@ shyynewstate:
 	if shyyn < 0 || shyyn >= shyyLast {
 		goto shyydefault
 	}
-	shyyn = shyyAct[shyyn]
-	if shyyChk[shyyn] == shyytoken { /* valid shift */
+	shyyn = int(shyyAct[shyyn])
+	if int(shyyChk[shyyn]) == shyytoken { /* valid shift */
 		shyyrcvr.char = -1
 		shyytoken = -1
 		shyyVAL = shyyrcvr.lval
@@ -523,7 +523,7 @@ shyynewstate:
 
 shyydefault:
 	/* default state action */
-	shyyn = shyyDef[shyystate]
+	shyyn = int(shyyDef[shyystate])
 	if shyyn == -2 {
 		if shyyrcvr.char < 0 {
 			shyyrcvr.char, shyytoken = shyylex1(shyylex, &shyyrcvr.lval)
@@ -532,18 +532,18 @@ shyydefault:
 		/* look through exception table */
 		xi := 0
 		for {
-			if shyyExca[xi+0] == -1 && shyyExca[xi+1] == shyystate {
+			if shyyExca[xi+0] == -1 && int(shyyExca[xi+1]) == shyystate {
 				break
 			}
 			xi += 2
 		}
 		for xi += 2; ; xi += 2 {
-			shyyn = shyyExca[xi+0]
+			shyyn = int(shyyExca[xi+0])
 			if shyyn < 0 || shyyn == shyytoken {
 				break
 			}
 		}
-		shyyn = shyyExca[xi+1]
+		shyyn = int(shyyExca[xi+1])
 		if shyyn < 0 {
 			goto ret0
 		}
@@ -565,10 +565,10 @@ shyydefault:
 
 			/* find a state where "error" is a legal shift action */
 			for shyyp >= 0 {
-				shyyn = shyyPact[shyyS[shyyp].yys] + shyyErrCode
+				shyyn = int(shyyPact[shyyS[shyyp].yys]) + shyyErrCode
 				if shyyn >= 0 && shyyn < shyyLast {
-					shyystate = shyyAct[shyyn] /* simulate a shift of "error" */
-					if shyyChk[shyystate] == shyyErrCode {
+					shyystate = int(shyyAct[shyyn]) /* simulate a shift of "error" */
+					if int(shyyChk[shyystate]) == shyyErrCode {
 						goto shyystack
 					}
 				}
@@ -604,7 +604,7 @@ shyydefault:
 	shyypt := shyyp
 	_ = shyypt // guard against "declared and not used"
 
-	shyyp -= shyyR2[shyyn]
+	shyyp -= int(shyyR2[shyyn])
 	// shyyp is now the index of $0. Perform the default action. Iff the
 	// reduced production is ε, $1 is possibly out of range.
 	if shyyp+1 >= len(shyyS) {
@@ -615,16 +615,16 @@ shyydefault:
 	shyyVAL = shyyS[shyyp+1]
 
 	/* consult goto table to find next state */
-	shyyn = shyyR1[shyyn]
-	shyyg := shyyPgo[shyyn]
+	shyyn = int(shyyR1[shyyn])
+	shyyg := int(shyyPgo[shyyn])
 	shyyj := shyyg + shyyS[shyyp].yys + 1
 
 	if shyyj >= shyyLast {
-		shyystate = shyyAct[shyyg]
+		shyystate = int(shyyAct[shyyg])
 	} else {
-		shyystate = shyyAct[shyyj]
-		if shyyChk[shyystate] != -shyyn {
-			shyystate = shyyAct[shyyg]
+		shyystate = int(shyyAct[shyyj])
+		if int(shyyChk[shyystate]) != -shyyn {
+			shyystate = int(shyyAct[shyyg])
 		}
 	}
 	// dummy call; replaced with literal code
