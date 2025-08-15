@@ -1441,7 +1441,8 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 	reg.sys("NM", BtShellCommand)
 
 	// See lang/nodejs/nodeversion.mk
-	node := reg.enumFromDirs(src, "lang", `^nodejs(\d+)$`, "$1", "")
+	node := reg.enumFrom(src, "lang/nodejs/nodeversion.mk", "24",
+		"NODE_VERSIONS_ACCEPTED")
 	reg.acl("NODE_VERSION_DEFAULT", node, UserSettable,
 		"special:nodeversion.mk: default",
 		"*: use, use-loadtime")
