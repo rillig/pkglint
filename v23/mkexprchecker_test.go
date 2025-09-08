@@ -1312,8 +1312,8 @@ func (s *Suite) Test_MkExprChecker_checkQuoting__mstar_not_needed(c *check.C) {
 	G.Check(pkg)
 
 	t.CheckOutputLines(
-		"NOTE: ~/category/package/Makefile:20: The :M* modifier is not needed here.",
-		"NOTE: ~/category/package/Makefile:21: The :M* modifier is not needed here.")
+		"NOTE: ~/category/package/Makefile:20: The :M* modifier is only needed for GNU configure.",
+		"NOTE: ~/category/package/Makefile:21: The :M* modifier is only needed for GNU configure.")
 }
 
 func (s *Suite) Test_MkExprChecker_checkQuoting__q_not_needed(c *check.C) {

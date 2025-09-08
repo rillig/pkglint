@@ -610,19 +610,22 @@ func (ck *MkExprChecker) checkQuoting(ectx *ExprContext) {
 
 	mod := expr.Mod()
 
-	// In GNU configure scripts, a few variables need to be passed through
-	// the :M* modifier before they reach the configure scripts. Otherwise,
-	// the leading or trailing spaces will lead to strange caching errors
-	// since the GNU configure scripts cannot handle these space characters.
-	//
-	// When doing checks outside a package, the :M* modifier is needed for safety.
+	// When doing checks outside a package, the :M* modifier is needed
+	// just in case the file is used in a package using GNU configure.
 	needMstar := (ck.MkLines.pkg == nil || ck.MkLines.pkg.vars.IsDefined("GNU_CONFIGURE")) &&
 		matches(expr.varname, `^(?:.*_)?(?:CFLAGS|CPPFLAGS|CXXFLAGS|FFLAGS|LDFLAGS|LIBS)$`)
 
 	mkline := ck.MkLine
 	if mod == ":M*:Q" && !needMstar {
 		if !vartype.IsGuessed() {
-			mkline.Notef("The :M* modifier is not needed here.")
+			mkline.Notef("The :M* modifier is only needed for GNU configure.")
+			mkline.Explain(
+				"In GNU configure scripts, the FLAGS and LIBS variables",
+				"need to be passed through the :M* modifier",
+				"before they reach the configure scripts.",
+				"Otherwise, the leading or trailing spaces will lead to",
+				"strange caching errors since the GNU configure scripts",
+				"cannot handle these space characters.")
 		}
 
 	} else if needsQuoting == yes {
