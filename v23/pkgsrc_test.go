@@ -357,6 +357,32 @@ func (s *Suite) Test_Pkgsrc_loadToolsPlatform__redundant(c *check.C) {
 	t.FinishSetUp()
 }
 
+func (s *Suite) Test_Pkgsrc_loadToolsPlatform__Linux(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+	t.CreateFileLines("mk/tools/tools.Linux.mk",
+		".for _path in ${_LINUX_BINPATHS}",
+		".  if exists(${_path}/autopoint)",
+		"TOOLS_PLATFORM.autopoint?=\t${_path}/autopoint",
+		".  endif",
+		".endfor",
+		"",
+		".if exists(/bin/single-tool)",
+		"TOOLS_PLATFORM.single-tool?=\t/bin/single-tool",
+		".endif")
+	t.Chdir(".")
+	t.FinishSetUp()
+
+	// Even when the tool is searched for in several directories, this
+	// still does not guarantee that it actually exists. For "cp" and
+	// other common tools, that may be the case, but exotic tools
+	// like "autopoint" cannot be expected to be installed by the
+	// base system.
+	t.CheckDeepEquals(G.Pkgsrc.Tools.ByName("autopoint").conditionalOn, []string{"Linux"})
+	t.CheckDeepEquals(G.Pkgsrc.Tools.ByName("single-tool").conditionalOn, []string{"Linux"})
+}
+
 func (s *Suite) Test_Pkgsrc_initDeprecatedVars(c *check.C) {
 	t := s.Init(c)
 
