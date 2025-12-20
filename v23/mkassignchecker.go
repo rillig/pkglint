@@ -453,6 +453,9 @@ func (ck *MkAssignChecker) checkOpShell() {
 		"or .for directive.")
 }
 
+// checkOpAppendOnly checks that certain predefined variables are not
+// overwritten, but only get additional values appended to.
+//
 // https://gnats.netbsd.org/56352
 func (ck *MkAssignChecker) checkOpAppendOnly() {
 
@@ -480,7 +483,7 @@ func (ck *MkAssignChecker) checkOpAppendOnly() {
 	default:
 		if hasSuffix(varbase, "_REQD") {
 			vartype := G.Pkgsrc.VariableType(ck.MkLines, varname)
-			if vartype != nil && vartype.IsList() == yes {
+			if vartype.IsList() == yes {
 				break
 			}
 		}

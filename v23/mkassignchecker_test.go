@@ -919,6 +919,27 @@ func (s *Suite) Test_MkAssignChecker_checkOpAppendOnly(c *check.C) {
 		"WARN: filename.mk:18: Assignments to \"CFLAGS.SunOS\" should use \"+=\", not \"=\".")
 }
 
+func (s *Suite) Test_MkAssignChecker_checkOpAppendOnly__outside_pkgsrc(c *check.C) {
+	t := s.Init(c)
+	t.Chdir(".")
+
+	mklines := t.SetUpFileMkLines("filename.mk",
+		MkCvsID,
+		"",
+		"CFLAGS=\t\t-O2",
+		"GCC_REQD=\t12.0")
+
+	G.Pkgsrc = nil
+	G.Project = NewNetBSDProject()
+
+	mklines.Check()
+
+	// No warning for GCC_REQD, as pkglint is run outside pkgsrc,
+	// and GCC_REQD is specific to pkgsrc.
+	t.CheckOutputLines(
+		"WARN: filename.mk:3: Assignments to \"CFLAGS\" should use \"+=\", not \"=\".")
+}
+
 // After including bsd.prefs.mk, all assignments to GCC_REQD should use '+=',
 // to make sure that each requirement reaches mk/compiler/gcc.mk, where the
 // requirements are evaluated.
