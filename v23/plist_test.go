@@ -546,20 +546,6 @@ func (s *Suite) Test_PlistChecker_collectFilesAndDirs(c *check.C) {
 		[]string{"bin/program", "man/man1/program.1"})
 }
 
-func (s *Suite) Test_PlistPathChecker_collectPath(c *check.C) {
-	t := s.Init(c)
-
-	line := t.NewLine("PLIST", 1, "a/b/c/program")
-	ck := NewPlistChecker(nil)
-
-	ck.pathChecker.collectPath("a/b/c/program", &PlistLine{line, nil, line.Text})
-
-	t.CheckDeepEquals(keys(ck.pathChecker.allDirs),
-		[]string{"a", "a/b", "a/b/c"})
-	t.CheckDeepEquals(keys(ck.pathChecker.allFiles),
-		[]string{"a/b/c/program"})
-}
-
 func (s *Suite) Test_PlistChecker_collectDirective(c *check.C) {
 	t := s.Init(c)
 
@@ -617,6 +603,20 @@ func (s *Suite) Test_PlistChecker_checkLine(c *check.C) {
 		"WARN: PLIST:10: PLISTs should not contain empty lines.",
 		"WARN: PLIST:11: PLISTs should not contain empty lines.",
 		"ERROR: PLIST:14: Invalid line type: <<<<<<<<< merge conflict")
+}
+
+func (s *Suite) Test_PlistPathChecker_collectPath(c *check.C) {
+	t := s.Init(c)
+
+	line := t.NewLine("PLIST", 1, "a/b/c/program")
+	ck := NewPlistChecker(nil)
+
+	ck.pathChecker.collectPath("a/b/c/program", &PlistLine{line, nil, line.Text})
+
+	t.CheckDeepEquals(keys(ck.pathChecker.allDirs),
+		[]string{"a", "a/b", "a/b/c"})
+	t.CheckDeepEquals(keys(ck.pathChecker.allFiles),
+		[]string{"a/b/c/program"})
 }
 
 func (s *Suite) Test_PlistPathChecker_Check__PKGMANDIR(c *check.C) {
@@ -706,80 +706,6 @@ func (s *Suite) Test_PlistPathChecker_checkPathMisc__unwanted_entries(c *check.C
 		"ERROR: ~/PLIST:10: Paths in PLIST files must be canonical (t/non-canonical/${VAR}).",
 		"ERROR: ~/PLIST:11: Paths in PLIST files must be canonical (t/non-canonical${VAR}).",
 		"ERROR: ~/PLIST:12: Paths in PLIST files must be canonical (t/non-canonical).")
-}
-
-func (s *Suite) Test_PlistAsciiChecker_Check(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpCommandLine("-Wall", "--explain")
-	lines := t.NewLines("PLIST",
-		PlistCvsID,
-
-		"dir1/fr\xFCher", // German, "back then", encoded in ISO 8859-1
-
-		// Subsequent non-ASCII filenames do not generate further messages
-		// since these filenames typically appear in groups, and issuing
-		// too many warnings quickly gets boring.
-		"dir1/\u00C4thernetz", // German
-
-		// This ASCII-only pathname enables the check again.
-		"dir2/aaa",
-		"dir2/\u0633\u0644\u0627\u0645", // Arabic: salaam
-
-		"dir2/\uC548\uB148", // Korean: annyeong
-
-		// This ASCII-only pathname enables the check again.
-		"dir3/ascii-only",
-
-		// Any comment suppresses the check for the next contiguous
-		// sequence of non-ASCII filenames.
-		"@comment The next file is non-ASCII on purpose.",
-		"dir3/\U0001F603", // Smiling face with open mouth
-
-		// This ASCII-only pathname enables the check again.
-		"sbin/iconv",
-
-		"sbin/\U0001F603", // Smiling face with open mouth
-
-		// Directives other than comments do not allow non-ASCII.
-		"unicode/00FC/reset",
-		"@exec true",
-		"unicode/00FC/\u00FC", // u-umlaut
-	)
-
-	CheckLinesPlist(nil, lines)
-
-	t.CheckOutputLines(
-		"WARN: PLIST:2: Non-ASCII filename \"dir1/fr<0xFC>her\".",
-		"",
-		"\tThe great majority of filenames installed by pkgsrc packages are",
-		"\tASCII-only. Filenames containing non-ASCII characters can cause",
-		"\tvarious problems since their name may already be different when",
-		"\tanother character encoding is set in the locale.",
-		"",
-		"\tTo mark a filename as intentionally non-ASCII, insert a PLIST",
-		"\t@comment with a convincing reason directly above this line. That",
-		"\tcomment will allow this line and the lines directly below it to",
-		"\tcontain non-ASCII filenames.",
-		"",
-		"WARN: PLIST:5: Non-ASCII filename \"dir2/<U+0633><U+0644><U+0627><U+0645>\".",
-		"WARN: PLIST:11: Non-ASCII filename \"sbin/<U+1F603>\".",
-		"WARN: PLIST:14: Non-ASCII filename \"unicode/00FC/<U+00FC>\".")
-}
-
-func (s *Suite) Test_PlistChecker_checkSorted(c *check.C) {
-	t := s.Init(c)
-
-	lines := t.NewLines("PLIST",
-		PlistCvsID,
-		"bin/program2",
-		"bin/program1")
-
-	CheckLinesPlist(nil, lines)
-
-	t.CheckOutputLines(
-		"WARN: PLIST:3: \"bin/program1\" should be " +
-			"sorted before \"bin/program2\".")
 }
 
 func (s *Suite) Test_PlistPathChecker_checkDuplicate(c *check.C) {
@@ -1303,6 +1229,80 @@ func (s *Suite) Test_PlistPathChecker_checkOmf__ok(c *check.C) {
 	t.ExpectDiagnosticsAutofix(
 		func(bool) { G.checkdirPackage(".") },
 		nil...)
+}
+
+func (s *Suite) Test_PlistAsciiChecker_Check(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--explain")
+	lines := t.NewLines("PLIST",
+		PlistCvsID,
+
+		"dir1/fr\xFCher", // German, "back then", encoded in ISO 8859-1
+
+		// Subsequent non-ASCII filenames do not generate further messages
+		// since these filenames typically appear in groups, and issuing
+		// too many warnings quickly gets boring.
+		"dir1/\u00C4thernetz", // German
+
+		// This ASCII-only pathname enables the check again.
+		"dir2/aaa",
+		"dir2/\u0633\u0644\u0627\u0645", // Arabic: salaam
+
+		"dir2/\uC548\uB148", // Korean: annyeong
+
+		// This ASCII-only pathname enables the check again.
+		"dir3/ascii-only",
+
+		// Any comment suppresses the check for the next contiguous
+		// sequence of non-ASCII filenames.
+		"@comment The next file is non-ASCII on purpose.",
+		"dir3/\U0001F603", // Smiling face with open mouth
+
+		// This ASCII-only pathname enables the check again.
+		"sbin/iconv",
+
+		"sbin/\U0001F603", // Smiling face with open mouth
+
+		// Directives other than comments do not allow non-ASCII.
+		"unicode/00FC/reset",
+		"@exec true",
+		"unicode/00FC/\u00FC", // u-umlaut
+	)
+
+	CheckLinesPlist(nil, lines)
+
+	t.CheckOutputLines(
+		"WARN: PLIST:2: Non-ASCII filename \"dir1/fr<0xFC>her\".",
+		"",
+		"\tThe great majority of filenames installed by pkgsrc packages are",
+		"\tASCII-only. Filenames containing non-ASCII characters can cause",
+		"\tvarious problems since their name may already be different when",
+		"\tanother character encoding is set in the locale.",
+		"",
+		"\tTo mark a filename as intentionally non-ASCII, insert a PLIST",
+		"\t@comment with a convincing reason directly above this line. That",
+		"\tcomment will allow this line and the lines directly below it to",
+		"\tcontain non-ASCII filenames.",
+		"",
+		"WARN: PLIST:5: Non-ASCII filename \"dir2/<U+0633><U+0644><U+0627><U+0645>\".",
+		"WARN: PLIST:11: Non-ASCII filename \"sbin/<U+1F603>\".",
+		"WARN: PLIST:14: Non-ASCII filename \"unicode/00FC/<U+00FC>\".")
+}
+
+func (s *Suite) Test_PlistSortChecker_Check(c *check.C) {
+	t := s.Init(c)
+
+	lines := t.NewLines("PLIST",
+		PlistCvsID,
+		"bin/program2",
+		"bin/program1")
+
+	CheckLinesPlist(nil, lines)
+
+	t.CheckOutputLines(
+		"WARN: PLIST:3: \"bin/program1\" should be " +
+			"sorted before \"bin/program2\".")
 }
 
 func (s *Suite) Test_PlistLine_Autofix(c *check.C) {

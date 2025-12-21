@@ -33,16 +33,13 @@ func CheckLinesPlist(pkg *Package, lines *Lines) {
 }
 
 type PlistChecker struct {
-	// For checking that the paths are sorted.
-	lastFname RelPath
-
 	pathChecker  PlistPathChecker
 	asciiChecker PlistAsciiChecker
+	sortChecker  PlistSortChecker
 }
 
 func NewPlistChecker(pkg *Package) *PlistChecker {
 	return &PlistChecker{
-		"",
 		PlistPathChecker{
 			pkg,
 			make(map[RelPath]*PlistLine),
@@ -52,7 +49,13 @@ func NewPlistChecker(pkg *Package) *PlistChecker {
 			Once{},
 			OncePerString{},
 		},
-		PlistAsciiChecker{}}
+		PlistAsciiChecker{
+			false,
+		},
+		PlistSortChecker{
+			"",
+		},
+	}
 }
 
 func (ck *PlistChecker) Load(lines *Lines) []*PlistLine {
@@ -124,19 +127,6 @@ func (ck *PlistChecker) collectFilesAndDirs(plines []*PlistLine) {
 	}
 }
 
-func (ck *PlistPathChecker) collectPath(rel RelPath, pline *PlistLine) {
-
-	// TODO: What about paths containing variables?
-	//  Are they intended to be collected as well?
-
-	if prev := ck.allFiles[rel]; prev == nil || stringSliceLess(pline.conditions, prev.conditions) {
-		ck.allFiles[rel] = pline
-	}
-	for dir := rel.Dir(); dir != "."; dir = dir.Dir() {
-		ck.allDirs[dir] = pline
-	}
-}
-
 func (ck *PlistChecker) collectDirective(pline *PlistLine) {
 	m, dirname := match1(pline.text, `^@exec \$\{MKDIR\} %D/(.*)$`)
 	if !m || NewPath(dirname).IsAbs() {
@@ -158,7 +148,7 @@ func (ck *PlistChecker) checkLine(pline *PlistLine) {
 
 	} else if plistLineStart.Contains(text[0]) {
 		ck.asciiChecker.Check(pline)
-		ck.checkSorted(pline)
+		ck.sortChecker.Check(pline)
 		ck.pathChecker.checkDuplicate(pline)
 		ck.pathChecker.Check(pline, pline.Path())
 
@@ -185,6 +175,19 @@ type PlistPathChecker struct {
 	warnedAboutHicolorIconTheme Once
 	warnedAboutIconThemes       Once
 	warnedAboutCond             OncePerString
+}
+
+func (ck *PlistPathChecker) collectPath(rel RelPath, pline *PlistLine) {
+
+	// TODO: What about paths containing variables?
+	//  Are they intended to be collected as well?
+
+	if prev := ck.allFiles[rel]; prev == nil || stringSliceLess(pline.conditions, prev.conditions) {
+		ck.allFiles[rel] = pline
+	}
+	for dir := rel.Dir(); dir != "."; dir = dir.Dir() {
+		ck.allDirs[dir] = pline
+	}
 }
 
 func (ck *PlistPathChecker) Check(pline *PlistLine, rel RelPath) {
@@ -263,53 +266,6 @@ func (ck *PlistPathChecker) checkPathMisc(rel RelPath, pline *PlistLine) {
 	} else if canonical := rel.Clean(); canonical != rel {
 		pline.Errorf("Paths in PLIST files must be canonical (%s).", canonical)
 	}
-}
-
-type PlistAsciiChecker struct {
-	nonAsciiAllowed bool
-}
-
-func (ck *PlistAsciiChecker) Check(pline *PlistLine) {
-	text := pline.text
-
-	lex := textproc.NewLexer(text)
-	lex.SkipBytesFunc(func(b byte) bool { return b >= ' ' && b <= '~' })
-	ascii := lex.EOF()
-
-	switch {
-	case !ck.nonAsciiAllowed && !ascii:
-		ck.nonAsciiAllowed = true
-
-		pline.Warnf("Non-ASCII filename %q.", escapePrintable(text))
-		pline.Explain(
-			"The great majority of filenames installed by pkgsrc packages",
-			"are ASCII-only. Filenames containing non-ASCII characters",
-			"can cause various problems since their name may already be",
-			"different when another character encoding is set in the locale.",
-			"",
-			"To mark a filename as intentionally non-ASCII, insert a PLIST",
-			"@comment with a convincing reason directly above this line.",
-			"That comment will allow this line and the lines directly",
-			"below it to contain non-ASCII filenames.")
-
-	case ck.nonAsciiAllowed && ascii:
-		ck.nonAsciiAllowed = false
-	}
-}
-
-func (ck *PlistChecker) checkSorted(pline *PlistLine) {
-	if !pline.HasPlainPath() {
-		return
-	}
-
-	rel := pline.Path()
-	if ck.lastFname != "" && ck.lastFname > rel && !G.Logger.Opts.Autofix {
-		pline.Warnf("%q should be sorted before %q.", rel.String(), ck.lastFname.String())
-		pline.Explain(
-			"The files in the PLIST should be sorted alphabetically.",
-			"This allows human readers to quickly see whether a file is included or not.")
-	}
-	ck.lastFname = rel
 }
 
 func (ck *PlistPathChecker) checkDuplicate(pline *PlistLine) {
@@ -553,6 +509,57 @@ func (ck *PlistPathChecker) checkOmf(plines []*PlistLine) {
 		fix.Delete()
 	}
 	fix.Apply()
+}
+
+type PlistAsciiChecker struct {
+	nonAsciiAllowed bool
+}
+
+func (ck *PlistAsciiChecker) Check(pline *PlistLine) {
+	text := pline.text
+
+	lex := textproc.NewLexer(text)
+	lex.SkipBytesFunc(func(b byte) bool { return b >= ' ' && b <= '~' })
+	ascii := lex.EOF()
+
+	switch {
+	case !ck.nonAsciiAllowed && !ascii:
+		ck.nonAsciiAllowed = true
+
+		pline.Warnf("Non-ASCII filename %q.", escapePrintable(text))
+		pline.Explain(
+			"The great majority of filenames installed by pkgsrc packages",
+			"are ASCII-only. Filenames containing non-ASCII characters",
+			"can cause various problems since their name may already be",
+			"different when another character encoding is set in the locale.",
+			"",
+			"To mark a filename as intentionally non-ASCII, insert a PLIST",
+			"@comment with a convincing reason directly above this line.",
+			"That comment will allow this line and the lines directly",
+			"below it to contain non-ASCII filenames.")
+
+	case ck.nonAsciiAllowed && ascii:
+		ck.nonAsciiAllowed = false
+	}
+}
+
+type PlistSortChecker struct {
+	lastFname RelPath
+}
+
+func (ck *PlistSortChecker) Check(pline *PlistLine) {
+	if !pline.HasPlainPath() {
+		return
+	}
+
+	rel := pline.Path()
+	if ck.lastFname != "" && ck.lastFname > rel && !G.Logger.Opts.Autofix {
+		pline.Warnf("%q should be sorted before %q.", rel.String(), ck.lastFname.String())
+		pline.Explain(
+			"The files in the PLIST should be sorted alphabetically.",
+			"This allows human readers to quickly see whether a file is included or not.")
+	}
+	ck.lastFname = rel
 }
 
 type PlistLine struct {
