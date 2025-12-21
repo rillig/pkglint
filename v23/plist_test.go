@@ -708,7 +708,7 @@ func (s *Suite) Test_PlistChecker_checkPathMisc__unwanted_entries(c *check.C) {
 		"ERROR: ~/PLIST:12: Paths in PLIST files must be canonical (t/non-canonical).")
 }
 
-func (s *Suite) Test_PlistChecker_checkPathNonAscii(c *check.C) {
+func (s *Suite) Test_PlistAsciiChecker_Check(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("-Wall", "--explain")

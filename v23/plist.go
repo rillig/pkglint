@@ -48,7 +48,7 @@ type PlistChecker struct {
 	warnedAboutIconThemes       Once
 	warnedAboutCond             OncePerString
 
-	nonAsciiAllowed bool
+	asciiChecker PlistAsciiChecker
 }
 
 func NewPlistChecker(pkg *Package) *PlistChecker {
@@ -61,7 +61,7 @@ func NewPlistChecker(pkg *Package) *PlistChecker {
 		Once{},
 		Once{},
 		OncePerString{},
-		false}
+		PlistAsciiChecker{}}
 }
 
 func (ck *PlistChecker) Load(lines *Lines) []*PlistLine {
@@ -166,12 +166,13 @@ func (ck *PlistChecker) checkLine(pline *PlistLine) {
 		fix.Apply()
 
 	} else if plistLineStart.Contains(text[0]) {
+		ck.asciiChecker.Check(pline)
 		ck.checkPath(pline, pline.Path())
 
 	} else if m, cmd, arg := match2(text, `^@([a-z-]+)[\t ]*(.*)`); m {
 		pline.CheckDirective(cmd, arg)
 		if cmd == "comment" && pline.Line.Location.lineno > 1 {
-			ck.nonAsciiAllowed = true
+			ck.asciiChecker.nonAsciiAllowed = true
 		}
 
 	} else {
@@ -180,7 +181,6 @@ func (ck *PlistChecker) checkLine(pline *PlistLine) {
 }
 
 func (ck *PlistChecker) checkPath(pline *PlistLine, rel RelPath) {
-	ck.checkPathNonAscii(pline)
 	ck.checkSorted(pline)
 	ck.checkDuplicate(pline)
 
@@ -261,7 +261,11 @@ func (ck *PlistChecker) checkPathMisc(rel RelPath, pline *PlistLine) {
 	}
 }
 
-func (ck *PlistChecker) checkPathNonAscii(pline *PlistLine) {
+type PlistAsciiChecker struct {
+	nonAsciiAllowed bool
+}
+
+func (ck *PlistAsciiChecker) Check(pline *PlistLine) {
 	text := pline.text
 
 	lex := textproc.NewLexer(text)
