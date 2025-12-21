@@ -33,15 +33,22 @@ func CheckLinesPlist(pkg *Package, lines *Lines) {
 }
 
 type PlistChecker struct {
-	pkg                         *Package
-	allFiles                    map[RelPath]*PlistLine
-	allDirs                     map[RelPath]*PlistLine
-	lastFname                   RelPath
+	pkg *Package
+
+	// The files and directories from this PLIST file and from related
+	// PLIST files, to detect duplicates.
+	allFiles map[RelPath]*PlistLine
+	allDirs  map[RelPath]*PlistLine
+
+	// For checking that the paths are sorted.
+	lastFname RelPath
+
 	warnedAboutLibtool          Once
 	warnedAboutHicolorIconTheme Once
 	warnedAboutIconThemes       Once
 	warnedAboutCond             OncePerString
-	nonAsciiAllowed             bool
+
+	nonAsciiAllowed bool
 }
 
 func NewPlistChecker(pkg *Package) *PlistChecker {
@@ -58,13 +65,14 @@ func NewPlistChecker(pkg *Package) *PlistChecker {
 }
 
 func (ck *PlistChecker) Load(lines *Lines) []*PlistLine {
-	plines := ck.newLines(lines)
+	plines := extractPlistConditions(lines)
 	ck.collectFilesAndDirs(plines)
 
 	if lines.BaseName == "PLIST.common_end" {
 		commonLines := Load(lines.Filename.TrimSuffix("_end"), NotEmpty)
 		if commonLines != nil {
-			ck.collectFilesAndDirs(ck.newLines(commonLines))
+			commonPlines := extractPlistConditions(commonLines)
+			ck.collectFilesAndDirs(commonPlines)
 		}
 	}
 
@@ -88,7 +96,7 @@ func (ck *PlistChecker) Check(plainLines *Lines) {
 	}
 }
 
-func (*PlistChecker) newLines(lines *Lines) []*PlistLine {
+func extractPlistConditions(lines *Lines) []*PlistLine {
 	plines := make([]*PlistLine, lines.Len())
 	for i, line := range lines.Lines {
 		var conditions []string

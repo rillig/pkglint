@@ -499,7 +499,7 @@ func (s *Suite) Test_PlistChecker_Check(c *check.C) {
 		"WARN: PLIST:1: The bin/ directory should not have subdirectories.")
 }
 
-func (s *Suite) Test_PlistChecker_newLines(c *check.C) {
+func (s *Suite) Test_extractPlistConditions(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("PLIST",
@@ -508,7 +508,7 @@ func (s *Suite) Test_PlistChecker_newLines(c *check.C) {
 		"${PLIST.abs}${PLIST.abs2}/bin/conditional-absolute",
 		"${PLIST.mod:Q}invalid")
 
-	plistLines := (*PlistChecker)(nil).newLines(lines)
+	plistLines := extractPlistConditions(lines)
 
 	// The invalid condition in line 4 is silently skipped when the
 	// lines are parsed. The actual check happens later.
@@ -535,9 +535,9 @@ func (s *Suite) Test_PlistChecker_collectFilesAndDirs(c *check.C) {
 		"/absolute",
 		"${PLIST.cond}/absolute",
 		"@exec ${MKDIR} %D//absolute")
-	ck := NewPlistChecker(nil)
-	plistLines := ck.newLines(lines)
+	plistLines := extractPlistConditions(lines)
 
+	ck := NewPlistChecker(nil)
 	ck.collectFilesAndDirs(plistLines)
 
 	t.CheckDeepEquals(keys(ck.allDirs),
@@ -1533,15 +1533,14 @@ func (s *Suite) Test_plistLineSorter_Sort(c *check.C) {
 		"${PLIST.linux}${PLIST.x86_64}lib/lib-linux-x86_64.so", // Double condition, see graphics/graphviz
 		"lib/after.la",
 		"@exec echo \"after lib/after.la\"")
-	var ck PlistChecker
-	plines := ck.newLines(lines)
+	plines := extractPlistConditions(lines)
 
 	sorter1 := newPlistLineSorter(plines)
 	t.CheckEquals(sorter1.unsortable, lines.Lines[5])
 
 	cleanedLines := append(append(lines.Lines[0:5], lines.Lines[6:8]...), lines.Lines[9:]...) // Remove ${UNKNOWN} and @exec
 
-	lines2 := ck.newLines(NewLines(lines.Filename, cleanedLines))
+	lines2 := extractPlistConditions(NewLines(lines.Filename, cleanedLines))
 	sorter2 := newPlistLineSorter(lines2)
 
 	t.CheckNil(sorter2.unsortable)
