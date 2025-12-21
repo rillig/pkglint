@@ -446,9 +446,9 @@ func (s *Suite) Test_NewPlistChecker(c *check.C) {
 
 	ck := NewPlistChecker(pkg)
 
-	t.CheckEquals(ck.pkg, pkg)
-	t.CheckNotNil(ck.allDirs)
-	t.CheckNotNil(ck.allFiles)
+	t.CheckEquals(ck.pathChecker.pkg, pkg)
+	t.CheckNotNil(ck.pathChecker.allDirs)
+	t.CheckNotNil(ck.pathChecker.allFiles)
 }
 
 func (s *Suite) Test_PlistChecker_Load__common_end(c *check.C) {
@@ -477,12 +477,12 @@ func (s *Suite) Test_PlistChecker_Load__common_end(c *check.C) {
 	// But the files and directories from PLIST.common are registered,
 	// to check for duplicates and to make these lists available to
 	// the package being checked, for cross-validation.
-	t.CheckNil(ck.allFiles["bin/plist"])
+	t.CheckNil(ck.pathChecker.allFiles["bin/plist"])
 	t.CheckEquals(
-		ck.allFiles["bin/plist_common"].Line.String(),
+		ck.pathChecker.allFiles["bin/plist_common"].Line.String(),
 		"PLIST.common:2: bin/plist_common")
 	t.CheckEquals(
-		ck.allFiles["bin/plist_common_end"].Line.String(),
+		ck.pathChecker.allFiles["bin/plist_common_end"].Line.String(),
 		"PLIST.common_end:2: bin/plist_common_end")
 }
 
@@ -540,23 +540,23 @@ func (s *Suite) Test_PlistChecker_collectFilesAndDirs(c *check.C) {
 	ck := NewPlistChecker(nil)
 	ck.collectFilesAndDirs(plistLines)
 
-	t.CheckDeepEquals(keys(ck.allDirs),
+	t.CheckDeepEquals(keys(ck.pathChecker.allDirs),
 		[]string{"bin", "man", "man/man1"})
-	t.CheckDeepEquals(keys(ck.allFiles),
+	t.CheckDeepEquals(keys(ck.pathChecker.allFiles),
 		[]string{"bin/program", "man/man1/program.1"})
 }
 
-func (s *Suite) Test_PlistChecker_collectPath(c *check.C) {
+func (s *Suite) Test_PlistPathChecker_collectPath(c *check.C) {
 	t := s.Init(c)
 
 	line := t.NewLine("PLIST", 1, "a/b/c/program")
 	ck := NewPlistChecker(nil)
 
-	ck.collectPath("a/b/c/program", &PlistLine{line, nil, line.Text})
+	ck.pathChecker.collectPath("a/b/c/program", &PlistLine{line, nil, line.Text})
 
-	t.CheckDeepEquals(keys(ck.allDirs),
+	t.CheckDeepEquals(keys(ck.pathChecker.allDirs),
 		[]string{"a", "a/b", "a/b/c"})
-	t.CheckDeepEquals(keys(ck.allFiles),
+	t.CheckDeepEquals(keys(ck.pathChecker.allFiles),
 		[]string{"a/b/c/program"})
 }
 
@@ -569,8 +569,8 @@ func (s *Suite) Test_PlistChecker_collectDirective(c *check.C) {
 
 		ck.collectDirective(&PlistLine{line, nil, line.Text})
 
-		t.CheckDeepEquals(keys(ck.allDirs), dirs)
-		t.CheckLen(keys(ck.allFiles), 0)
+		t.CheckDeepEquals(keys(ck.pathChecker.allDirs), dirs)
+		t.CheckLen(keys(ck.pathChecker.allFiles), 0)
 	}
 
 	test("@exec ${MKDIR} %D/a/b/c",
@@ -619,7 +619,7 @@ func (s *Suite) Test_PlistChecker_checkLine(c *check.C) {
 		"ERROR: PLIST:14: Invalid line type: <<<<<<<<< merge conflict")
 }
 
-func (s *Suite) Test_PlistChecker_checkPath__PKGMANDIR(c *check.C) {
+func (s *Suite) Test_PlistPathChecker_Check__PKGMANDIR(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("PLIST",
@@ -632,7 +632,7 @@ func (s *Suite) Test_PlistChecker_checkPath__PKGMANDIR(c *check.C) {
 		"NOTE: PLIST:2: PLIST files should use \"man/\" instead of \"${PKGMANDIR}\".")
 }
 
-func (s *Suite) Test_PlistChecker_checkPathMisc__python_egg(c *check.C) {
+func (s *Suite) Test_PlistPathChecker_checkPathMisc__python_egg(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("PLIST",
@@ -645,7 +645,7 @@ func (s *Suite) Test_PlistChecker_checkPathMisc__python_egg(c *check.C) {
 		"WARN: PLIST:2: Include \"../../lang/python/egg.mk\" instead of listing .egg-info files directly.")
 }
 
-func (s *Suite) Test_PlistChecker_checkPathMisc__python_egg_autofix(c *check.C) {
+func (s *Suite) Test_PlistPathChecker_checkPathMisc__python_egg_autofix(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpCommandLine("--show-autofix")
@@ -674,7 +674,7 @@ func (s *Suite) Test_PlistChecker_checkPathMisc__python_egg_autofix(c *check.C) 
 			"with \"${PYSITELIB}/${EGG_INFODIR}\".")
 }
 
-func (s *Suite) Test_PlistChecker_checkPathMisc__unwanted_entries(c *check.C) {
+func (s *Suite) Test_PlistPathChecker_checkPathMisc__unwanted_entries(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("PLIST",
@@ -782,7 +782,7 @@ func (s *Suite) Test_PlistChecker_checkSorted(c *check.C) {
 			"sorted before \"bin/program2\".")
 }
 
-func (s *Suite) Test_PlistChecker_checkDuplicate(c *check.C) {
+func (s *Suite) Test_PlistPathChecker_checkDuplicate(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("PLIST",
@@ -797,7 +797,7 @@ func (s *Suite) Test_PlistChecker_checkDuplicate(c *check.C) {
 			"already appeared in line 2.")
 }
 
-func (s *Suite) Test_PlistChecker_checkDuplicate__OPSYS(c *check.C) {
+func (s *Suite) Test_PlistPathChecker_checkDuplicate__OPSYS(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
@@ -868,7 +868,7 @@ func (s *Suite) Test_PlistChecker_checkDuplicate__OPSYS(c *check.C) {
 		"ERROR: PLIST.common_end:3: Path bin/conditional is already listed in PLIST.common:3.")
 }
 
-func (s *Suite) Test_PlistChecker_checkPathBin(c *check.C) {
+func (s *Suite) Test_PlistPathChecker_checkPathBin(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("PLIST",
@@ -882,7 +882,7 @@ func (s *Suite) Test_PlistChecker_checkPathBin(c *check.C) {
 		"WARN: PLIST:3: The bin/ directory should not have subdirectories.")
 }
 
-func (s *Suite) Test_PlistChecker_checkPathEtc(c *check.C) {
+func (s *Suite) Test_PlistPathChecker_checkPathEtc(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.NewLines("PLIST",
@@ -895,7 +895,7 @@ func (s *Suite) Test_PlistChecker_checkPathEtc(c *check.C) {
 		"ERROR: PLIST:2: Configuration files must not be registered in the PLIST.")
 }
 
-func (s *Suite) Test_PlistChecker_checkPathInfo(c *check.C) {
+func (s *Suite) Test_PlistPathChecker_checkPathInfo(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
@@ -911,7 +911,7 @@ func (s *Suite) Test_PlistChecker_checkPathInfo(c *check.C) {
 		"WARN: PLIST:2: Packages that install info files should set INFO_FILES in the Makefile.")
 }
 
-func (s *Suite) Test_PlistChecker_checkPathInfo__with_package(c *check.C) {
+func (s *Suite) Test_PlistPathChecker_checkPathInfo__with_package(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package",
@@ -927,7 +927,7 @@ func (s *Suite) Test_PlistChecker_checkPathInfo__with_package(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_PlistChecker_checkPathInfo__without_package(c *check.C) {
+func (s *Suite) Test_PlistPathChecker_checkPathInfo__without_package(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("PLIST",
@@ -939,7 +939,7 @@ func (s *Suite) Test_PlistChecker_checkPathInfo__without_package(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_PlistChecker_checkPathLib(c *check.C) {
+func (s *Suite) Test_PlistPathChecker_checkPathLib(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("PLIST",
@@ -963,7 +963,7 @@ func (s *Suite) Test_PlistChecker_checkPathLib(c *check.C) {
 			"Use ${PKGLOCALEDIR}/locale and set USE_PKGLOCALEDIR instead.")
 }
 
-func (s *Suite) Test_PlistChecker_checkPathLib__libiconv(c *check.C) {
+func (s *Suite) Test_PlistPathChecker_checkPathLib__libiconv(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("converters/libiconv")
@@ -978,7 +978,7 @@ func (s *Suite) Test_PlistChecker_checkPathLib__libiconv(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_PlistChecker_checkPathLib__libtool(c *check.C) {
+func (s *Suite) Test_PlistPathChecker_checkPathLib__libtool(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package",
@@ -994,7 +994,7 @@ func (s *Suite) Test_PlistChecker_checkPathLib__libtool(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_PlistChecker_checkPathMan(c *check.C) {
+func (s *Suite) Test_PlistPathChecker_checkPathMan(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("PLIST",
@@ -1012,7 +1012,7 @@ func (s *Suite) Test_PlistChecker_checkPathMan(c *check.C) {
 		"WARN: ~/PLIST:5: Unknown section \"x\" for manual page.")
 }
 
-func (s *Suite) Test_PlistChecker_checkPathMan__gz(c *check.C) {
+func (s *Suite) Test_PlistPathChecker_checkPathMan__gz(c *check.C) {
 	t := s.Init(c)
 
 	pkg := NewPackage(t.File("category/package"))
@@ -1032,7 +1032,7 @@ func (s *Suite) Test_PlistChecker_checkPathMan__gz(c *check.C) {
 		"AUTOFIX: PLIST:2: Replacing \".gz\" with \"\".")
 }
 
-func (s *Suite) Test_PlistChecker_checkPathShare(c *check.C) {
+func (s *Suite) Test_PlistPathChecker_checkPathShare(c *check.C) {
 	t := s.Init(c)
 
 	lines := t.SetUpFileLines("PLIST",
@@ -1057,7 +1057,7 @@ func (s *Suite) Test_PlistChecker_checkPathShare(c *check.C) {
 		"WARN: ~/PLIST:7: Man pages should be installed into man/, not share/man/.")
 }
 
-func (s *Suite) Test_PlistChecker_checkPathShareIcons__using_gnome_icon_theme(c *check.C) {
+func (s *Suite) Test_PlistPathChecker_checkPathShareIcons__using_gnome_icon_theme(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileBuildlink3("graphics/gnome-icon-theme/buildlink3.mk")
@@ -1085,7 +1085,7 @@ func (s *Suite) Test_PlistChecker_checkPathShareIcons__using_gnome_icon_theme(c 
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_PlistChecker_checkPathShareIcons__gnome_icon_theme_itself(c *check.C) {
+func (s *Suite) Test_PlistPathChecker_checkPathShareIcons__gnome_icon_theme_itself(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileBuildlink3("graphics/gnome-icon-theme/buildlink3.mk",
@@ -1104,7 +1104,7 @@ func (s *Suite) Test_PlistChecker_checkPathShareIcons__gnome_icon_theme_itself(c
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_PlistChecker_checkPathShareIcons(c *check.C) {
+func (s *Suite) Test_PlistPathChecker_checkPathShareIcons(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("graphics/hicolor-icon-theme")
@@ -1130,7 +1130,7 @@ func (s *Suite) Test_PlistChecker_checkPathShareIcons(c *check.C) {
 			"Packages that install icon theme files should set ICON_THEMES.")
 }
 
-func (s *Suite) Test_PlistChecker_checkPathShareIcons__hicolor_ok(c *check.C) {
+func (s *Suite) Test_PlistPathChecker_checkPathShareIcons__hicolor_ok(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package",
@@ -1148,7 +1148,7 @@ func (s *Suite) Test_PlistChecker_checkPathShareIcons__hicolor_ok(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_PlistChecker_checkPathCond(c *check.C) {
+func (s *Suite) Test_PlistPathChecker_checkPathCond(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package",
@@ -1176,7 +1176,7 @@ func (s *Suite) Test_PlistChecker_checkPathCond(c *check.C) {
 			"in the package Makefile.")
 }
 
-func (s *Suite) Test_PlistChecker_checkCond(c *check.C) {
+func (s *Suite) Test_PlistPathChecker_checkCond(c *check.C) {
 	t := s.Init(c)
 
 	pkg := t.SetUpPackage("category/package",
@@ -1209,7 +1209,7 @@ func (s *Suite) Test_PlistChecker_checkCond(c *check.C) {
 // typically contains ${_o_} and ${_opt_}.
 //
 // See audio/cmus for an example package.
-func (s *Suite) Test_PlistChecker_checkCond__unresolvable_variable(c *check.C) {
+func (s *Suite) Test_PlistPathChecker_checkCond__unresolvable_variable(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package",
@@ -1230,7 +1230,7 @@ func (s *Suite) Test_PlistChecker_checkCond__unresolvable_variable(c *check.C) {
 			"Variable \"UNRESOLVABLE\" is used but not defined.")
 }
 
-func (s *Suite) Test_PlistChecker_checkCond__hacks_mk(c *check.C) {
+func (s *Suite) Test_PlistPathChecker_checkCond__hacks_mk(c *check.C) {
 	t := s.Init(c)
 
 	t.SetUpPackage("category/package")
@@ -1253,7 +1253,7 @@ func (s *Suite) Test_PlistChecker_checkCond__hacks_mk(c *check.C) {
 			"in the package Makefile.")
 }
 
-func (s *Suite) Test_PlistChecker_checkOmf__autofix(c *check.C) {
+func (s *Suite) Test_PlistPathChecker_checkOmf__autofix(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("mk/omf-scrollkeeper.mk",
@@ -1270,7 +1270,7 @@ func (s *Suite) Test_PlistChecker_checkOmf__autofix(c *check.C) {
 		"AUTOFIX: Makefile:20: Deleting this line.")
 }
 
-func (s *Suite) Test_PlistChecker_checkOmf__rationale(c *check.C) {
+func (s *Suite) Test_PlistPathChecker_checkOmf__rationale(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("mk/omf-scrollkeeper.mk",
@@ -1286,7 +1286,7 @@ func (s *Suite) Test_PlistChecker_checkOmf__rationale(c *check.C) {
 			"their PLIST may include omf-scrollkeeper.mk.")
 }
 
-func (s *Suite) Test_PlistChecker_checkOmf__ok(c *check.C) {
+func (s *Suite) Test_PlistPathChecker_checkOmf__ok(c *check.C) {
 	t := s.Init(c)
 
 	t.CreateFileLines("mk/omf-scrollkeeper.mk",

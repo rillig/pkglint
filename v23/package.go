@@ -552,10 +552,10 @@ func (pkg *Package) loadPlistDirs(plistFilename CurrPath) {
 	ck := NewPlistChecker(pkg)
 	plistLines := ck.Load(lines)
 
-	for filename, pline := range ck.allFiles {
+	for filename, pline := range ck.pathChecker.allFiles {
 		pkg.Plist.Files[filename] = pline
 	}
-	for dirname, pline := range ck.allDirs {
+	for dirname, pline := range ck.pathChecker.allDirs {
 		if len(pline.conditions) == 0 {
 			pkg.Plist.UnconditionalDirs[dirname] = pline
 		}
