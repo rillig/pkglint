@@ -73,20 +73,19 @@ func (ck *PlistChecker) Load(lines *Lines) []*PlistLine {
 	return plines
 }
 
-func (ck *PlistChecker) Check(plainLines *Lines) {
-	plines := ck.Load(plainLines)
+func (ck *PlistChecker) Check(lines *Lines) {
+	plines := ck.Load(lines)
 
 	for _, pline := range plines {
 		ck.checkLine(pline)
 		pline.CheckTrailingWhitespace()
 	}
 	ck.pathChecker.checkOmf(plines)
-	CheckLinesTrailingEmptyLines(plainLines)
+	CheckLinesTrailingEmptyLines(lines)
 
-	sorter := newPlistLineSorter(plines)
-	sorter.Sort()
-	if !sorter.autofixed {
-		SaveAutofixChanges(plainLines)
+	autofixed := ck.sortChecker.Sort(plines)
+	if !autofixed {
+		SaveAutofixChanges(lines)
 	}
 }
 
@@ -562,6 +561,81 @@ func (ck *PlistSortChecker) Check(pline *PlistLine) {
 	ck.lastFname = rel
 }
 
+// Sort takes the PLIST lines, sorts them if necessary and writes the
+// sorted lines back to disk.
+func (ck *PlistSortChecker) Sort(plines []*PlistLine) (autofixed bool) {
+
+	headerEnd := 0
+	for headerEnd < len(plines) && hasPrefix(plines[headerEnd].text, "@comment") {
+		headerEnd++
+	}
+
+	footerStart := len(plines)
+	for footerStart > headerEnd && hasPrefix(plines[footerStart-1].text, "@") {
+		footerStart--
+	}
+
+	header := plines[0:headerEnd]           // Does not take part in sorting
+	middle := plines[headerEnd:footerStart] // Only this part is sorted
+	footer := plines[footerStart:]          // Does not take part in sorting, typically contains @exec or @pkgdir
+	var unsortable *Line                    // Some lines are so difficult to sort that only humans can do that
+
+	for _, pline := range middle {
+		if unsortable == nil && (hasPrefix(pline.text, "@") || contains(pline.text, "$")) {
+			unsortable = pline.Line
+		}
+	}
+
+	if line := unsortable; line != nil {
+		if trace.Tracing {
+			trace.Stepf("%s: This line prevents pkglint from sorting the PLIST automatically.", line)
+		}
+		return
+	}
+
+	if !G.Logger.shallBeLogged("%q should be sorted before %q.") {
+		return
+	}
+	if len(middle) == 0 {
+		return
+	}
+	firstLine := middle[0].Line
+
+	changed := false
+	sort.SliceStable(middle, func(i, j int) bool {
+		mi := middle[i]
+		mj := middle[j]
+		less := mi.text < mj.text ||
+			mi.text == mj.text && stringSliceLess(mi.conditions, mj.conditions)
+		if i < j != less {
+			changed = true
+		}
+		return less
+	})
+
+	if !changed {
+		return
+	}
+
+	fix := firstLine.Autofix()
+	fix.Notef(SilentAutofixFormat)
+	fix.Describef(0, "Sorting the whole file.")
+	fix.Apply()
+
+	var lines []*Line
+	for _, pline := range header {
+		lines = append(lines, pline.Line)
+	}
+	for _, pline := range middle {
+		lines = append(lines, pline.Line)
+	}
+	for _, pline := range footer {
+		lines = append(lines, pline.Line)
+	}
+
+	return SaveAutofixChanges(NewLines(lines[0].Filename(), lines))
+}
+
 type PlistLine struct {
 	Line *Line
 	// XXX: Why "PLIST.docs" and not simply "docs"?
@@ -669,89 +743,6 @@ func (pline *PlistLine) warnImakeMannewsuffix() {
 		"\tIMAKE_FILEMAN_SUFFIX for file formats,",
 		"\tIMAKE_GAMEMAN_SUFFIX for games,",
 		"\tIMAKE_MISCMAN_SUFFIX for other man pages.")
-}
-
-type plistLineSorter struct {
-	header     []*PlistLine // Does not take part in sorting
-	middle     []*PlistLine // Only this part is sorted
-	footer     []*PlistLine // Does not take part in sorting, typically contains @exec or @pkgdir
-	unsortable *Line        // Some lines are so difficult to sort that only humans can do that
-	changed    bool         // Whether the sorting actually changed something
-	autofixed  bool         // Whether the newly sorted file has been written to disk
-}
-
-func newPlistLineSorter(plines []*PlistLine) *plistLineSorter {
-	headerEnd := 0
-	for headerEnd < len(plines) && hasPrefix(plines[headerEnd].text, "@comment") {
-		headerEnd++
-	}
-
-	footerStart := len(plines)
-	for footerStart > headerEnd && hasPrefix(plines[footerStart-1].text, "@") {
-		footerStart--
-	}
-
-	header := plines[0:headerEnd]
-	middle := plines[headerEnd:footerStart]
-	footer := plines[footerStart:]
-	var unsortable *Line
-
-	for _, pline := range middle {
-		if unsortable == nil && (hasPrefix(pline.text, "@") || contains(pline.text, "$")) {
-			unsortable = pline.Line
-		}
-	}
-	return &plistLineSorter{header, middle, footer, unsortable, false, false}
-}
-
-func (s *plistLineSorter) Sort() {
-	if line := s.unsortable; line != nil {
-		if trace.Tracing {
-			trace.Stepf("%s: This line prevents pkglint from sorting the PLIST automatically.", line)
-		}
-		return
-	}
-
-	if !G.Logger.shallBeLogged("%q should be sorted before %q.") {
-		return
-	}
-	if len(s.middle) == 0 {
-		return
-	}
-	firstLine := s.middle[0].Line
-
-	sort.SliceStable(s.middle, func(i, j int) bool {
-		mi := s.middle[i]
-		mj := s.middle[j]
-		less := mi.text < mj.text ||
-			mi.text == mj.text && stringSliceLess(mi.conditions, mj.conditions)
-		if i < j != less {
-			s.changed = true
-		}
-		return less
-	})
-
-	if !s.changed {
-		return
-	}
-
-	fix := firstLine.Autofix()
-	fix.Notef(SilentAutofixFormat)
-	fix.Describef(0, "Sorting the whole file.")
-	fix.Apply()
-
-	var lines []*Line
-	for _, pline := range s.header {
-		lines = append(lines, pline.Line)
-	}
-	for _, pline := range s.middle {
-		lines = append(lines, pline.Line)
-	}
-	for _, pline := range s.footer {
-		lines = append(lines, pline.Line)
-	}
-
-	s.autofixed = SaveAutofixChanges(NewLines(lines[0].Filename(), lines))
 }
 
 type PlistRank struct {

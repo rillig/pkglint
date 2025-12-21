@@ -195,6 +195,18 @@ func (s *Suite) Test_CheckLinesPlist__PLIST_SRC(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_CheckLinesPlist__only_comments(c *check.C) {
+	t := s.Init(c)
+
+	lines := t.NewLines("PLIST",
+		PlistCvsID,
+		"@comment intentionally left empty")
+
+	CheckLinesPlist(nil, lines)
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_PlistChecker__autofix(c *check.C) {
 	t := s.Init(c)
 
@@ -1290,6 +1302,29 @@ func (s *Suite) Test_PlistAsciiChecker_Check(c *check.C) {
 		"WARN: PLIST:14: Non-ASCII filename \"unicode/00FC/<U+00FC>\".")
 }
 
+func (s *Suite) Test_PlistSortChecker__unsortable(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--show-autofix")
+	lines := t.SetUpFileLines("PLIST",
+		PlistCvsID,
+		"bin/program${OPSYS}",
+		"@exec true",
+		"bin/program1")
+
+	t.EnableTracingToLog()
+	CheckLinesPlist(nil, lines)
+
+	t.CheckOutputLines(
+		"TRACE: + CheckLinesPlist(\"~/PLIST\")",
+		"TRACE: 1 + Lines.CheckCvsID(\"@comment \", \"@comment \")",
+		"TRACE: 1 - Lines.CheckCvsID(\"@comment \", \"@comment \")",
+		"TRACE: 1   ~/PLIST:2: bin/program${OPSYS}: This line prevents pkglint from sorting the PLIST automatically.",
+		"TRACE: 1 + SaveAutofixChanges()",
+		"TRACE: 1 - SaveAutofixChanges()",
+		"TRACE: - CheckLinesPlist(\"~/PLIST\")")
+}
+
 func (s *Suite) Test_PlistSortChecker_Check(c *check.C) {
 	t := s.Init(c)
 
@@ -1303,6 +1338,69 @@ func (s *Suite) Test_PlistSortChecker_Check(c *check.C) {
 	t.CheckOutputLines(
 		"WARN: PLIST:3: \"bin/program1\" should be " +
 			"sorted before \"bin/program2\".")
+}
+
+func (s *Suite) Test_PlistSortChecker_Sort(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--autofix")
+	lines := t.SetUpFileLines("PLIST",
+		PlistCvsID,
+		"@comment Do not remove",
+		"A",
+		"b",
+		"CCC",
+		"lib/${UNKNOWN}.la",
+		"C",
+		"ddd",
+		"@exec echo \"after ddd\"", // Makes the PLIST unsortable
+		"sbin/program",
+		"${PLIST.one}bin/program",
+		"man/man1/program.1",
+		"${PLIST.two}bin/program2",
+		"lib/before.la",
+		"${PLIST.linux}${PLIST.x86_64}lib/lib-linux-x86_64.so", // Double condition, see graphics/graphviz
+		"lib/after.la",
+		"@exec echo \"after lib/after.la\"")
+	plines := extractPlistConditions(lines)
+
+	var sorter1 PlistSortChecker
+	t.EnableTracingToLog()
+	sorter1.Sort(plines)
+	t.DisableTracing()
+	t.CheckOutputLines(
+		"TRACE:   ~/PLIST:6: lib/${UNKNOWN}.la: " +
+			"This line prevents pkglint from sorting the PLIST automatically.")
+
+	var cleanedLines []*Line
+	cleanedLines = append(cleanedLines, lines.Lines[0:5]...)
+	// Omit the ${UNKNOWN} line.
+	cleanedLines = append(cleanedLines, lines.Lines[6:8]...)
+	// Omit the @exec line.
+	cleanedLines = append(cleanedLines, lines.Lines[9:]...)
+
+	lines2 := extractPlistConditions(NewLines(lines.Filename, cleanedLines))
+	var sorter2 PlistSortChecker
+	sorter2.Sort(lines2)
+
+	t.CheckOutputLines(
+		"AUTOFIX: ~/PLIST:3: Sorting the whole file.")
+	t.CheckFileLines("PLIST",
+		PlistCvsID,
+		"@comment Do not remove", // The header ends here
+		"A",
+		"C",
+		"CCC",
+		"b",
+		"${PLIST.one}bin/program", // Conditional lines are ignored during sorting
+		"${PLIST.two}bin/program2",
+		"ddd",
+		"lib/after.la",
+		"lib/before.la",
+		"${PLIST.linux}${PLIST.x86_64}lib/lib-linux-x86_64.so",
+		"man/man1/program.1",
+		"sbin/program",
+		"@exec echo \"after lib/after.la\"") // The footer starts here
 }
 
 func (s *Suite) Test_PlistLine_Autofix(c *check.C) {
@@ -1474,97 +1572,6 @@ func (s *Suite) Test_PlistLine_CheckDirective(c *check.C) {
 		"WARN: ~/PLIST:10: Invalid number of arguments for imake-man, should be 3.",
 		"WARN: ~/PLIST:11: IMAKE_MANNEWSUFFIX is not meant to appear in PLISTs.",
 		"WARN: ~/PLIST:13: Unknown PLIST directive \"@unknown\".")
-}
-
-func (s *Suite) Test_plistLineSorter__unsortable(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpCommandLine("-Wall", "--show-autofix")
-	lines := t.SetUpFileLines("PLIST",
-		PlistCvsID,
-		"bin/program${OPSYS}",
-		"@exec true",
-		"bin/program1")
-
-	t.EnableTracingToLog()
-	CheckLinesPlist(nil, lines)
-
-	t.CheckOutputLines(
-		"TRACE: + CheckLinesPlist(\"~/PLIST\")",
-		"TRACE: 1 + Lines.CheckCvsID(\"@comment \", \"@comment \")",
-		"TRACE: 1 - Lines.CheckCvsID(\"@comment \", \"@comment \")",
-		"TRACE: 1   ~/PLIST:2: bin/program${OPSYS}: This line prevents pkglint from sorting the PLIST automatically.",
-		"TRACE: 1 + SaveAutofixChanges()",
-		"TRACE: 1 - SaveAutofixChanges()",
-		"TRACE: - CheckLinesPlist(\"~/PLIST\")")
-}
-
-func (s *Suite) Test_newPlistLineSorter__only_comments(c *check.C) {
-	t := s.Init(c)
-
-	lines := t.NewLines("PLIST",
-		PlistCvsID,
-		"@comment intentionally left empty")
-
-	CheckLinesPlist(nil, lines)
-
-	t.CheckOutputEmpty()
-}
-
-func (s *Suite) Test_plistLineSorter_Sort(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpCommandLine("--autofix")
-	lines := t.SetUpFileLines("PLIST",
-		PlistCvsID,
-		"@comment Do not remove",
-		"A",
-		"b",
-		"CCC",
-		"lib/${UNKNOWN}.la",
-		"C",
-		"ddd",
-		"@exec echo \"after ddd\"", // Makes the PLIST unsortable
-		"sbin/program",
-		"${PLIST.one}bin/program",
-		"man/man1/program.1",
-		"${PLIST.two}bin/program2",
-		"lib/before.la",
-		"${PLIST.linux}${PLIST.x86_64}lib/lib-linux-x86_64.so", // Double condition, see graphics/graphviz
-		"lib/after.la",
-		"@exec echo \"after lib/after.la\"")
-	plines := extractPlistConditions(lines)
-
-	sorter1 := newPlistLineSorter(plines)
-	t.CheckEquals(sorter1.unsortable, lines.Lines[5])
-
-	cleanedLines := append(append(lines.Lines[0:5], lines.Lines[6:8]...), lines.Lines[9:]...) // Remove ${UNKNOWN} and @exec
-
-	lines2 := extractPlistConditions(NewLines(lines.Filename, cleanedLines))
-	sorter2 := newPlistLineSorter(lines2)
-
-	t.CheckNil(sorter2.unsortable)
-
-	sorter2.Sort()
-
-	t.CheckOutputLines(
-		"AUTOFIX: ~/PLIST:3: Sorting the whole file.")
-	t.CheckFileLines("PLIST",
-		PlistCvsID,
-		"@comment Do not remove", // The header ends here
-		"A",
-		"C",
-		"CCC",
-		"b",
-		"${PLIST.one}bin/program", // Conditional lines are ignored during sorting
-		"${PLIST.two}bin/program2",
-		"ddd",
-		"lib/after.la",
-		"lib/before.la",
-		"${PLIST.linux}${PLIST.x86_64}lib/lib-linux-x86_64.so",
-		"man/man1/program.1",
-		"sbin/program",
-		"@exec echo \"after lib/after.la\"") // The footer starts here
 }
 
 func (s *Suite) Test_NewPlistRank(c *check.C) {
