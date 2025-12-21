@@ -549,16 +549,7 @@ func (pkg *Package) collectConditionalIncludes(mklines *MkLines) {
 
 func (pkg *Package) loadPlistDirs(plistFilename CurrPath) {
 	lines := Load(plistFilename, MustSucceed)
-	ck := PlistChecker{
-		pkg,
-		make(map[RelPath]*PlistLine),
-		make(map[RelPath]*PlistLine),
-		"",
-		Once{},
-		Once{},
-		Once{},
-		OncePerString{},
-		false}
+	ck := NewPlistChecker(pkg)
 	plistLines := ck.Load(lines)
 
 	for filename, pline := range ck.allFiles {

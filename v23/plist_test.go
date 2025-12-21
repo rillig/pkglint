@@ -1533,17 +1533,7 @@ func (s *Suite) Test_plistLineSorter_Sort(c *check.C) {
 		"${PLIST.linux}${PLIST.x86_64}lib/lib-linux-x86_64.so", // Double condition, see graphics/graphviz
 		"lib/after.la",
 		"@exec echo \"after lib/after.la\"")
-	ck := PlistChecker{
-		nil,
-		nil,
-		nil,
-		"",
-		Once{},
-		Once{},
-		Once{},
-		OncePerString{},
-		false,
-	}
+	var ck PlistChecker
 	plines := ck.newLines(lines)
 
 	sorter1 := newPlistLineSorter(plines)
@@ -1551,18 +1541,8 @@ func (s *Suite) Test_plistLineSorter_Sort(c *check.C) {
 
 	cleanedLines := append(append(lines.Lines[0:5], lines.Lines[6:8]...), lines.Lines[9:]...) // Remove ${UNKNOWN} and @exec
 
-	sorter2 := newPlistLineSorter((&PlistChecker{
-		nil,
-		nil,
-		nil,
-		"",
-		Once{},
-		Once{},
-		Once{},
-		OncePerString{},
-		false,
-	}).
-		newLines(NewLines(lines.Filename, cleanedLines)))
+	lines2 := ck.newLines(NewLines(lines.Filename, cleanedLines))
+	sorter2 := newPlistLineSorter(lines2)
 
 	t.CheckNil(sorter2.unsortable)
 
