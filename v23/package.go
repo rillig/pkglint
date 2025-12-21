@@ -562,7 +562,7 @@ func (pkg *Package) loadPlistDirs(plistFilename CurrPath) {
 	}
 	checkDuplicatesAcrossRanks := !pkg.vars.IsDefined("PLIST_SRC")
 	for _, plistLine := range plistLines {
-		if plistLine.HasPath() {
+		if plistLine.IsPath() {
 			rank := NewPlistRank(plistLine.Line.Basename)
 			pkg.PlistLines.Add(plistLine, rank, checkDuplicatesAcrossRanks)
 		}

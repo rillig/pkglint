@@ -109,17 +109,12 @@ func extractPlistConditions(lines *Lines) []*PlistLine {
 	return plines
 }
 
-var plistPathStart = textproc.NewByteSet("$0-9A-Za-z")
-
 func (ck *PlistChecker) collectFilesAndDirs(plines []*PlistLine) {
 	for _, pline := range plines {
-		text := pline.text
 		switch {
-		case text == "":
-			break
-		case plistPathStart.Contains(text[0]):
-			ck.pathChecker.collectPath(NewRelPathString(text), pline)
-		case text[0] == '@':
+		case pline.IsPath():
+			ck.pathChecker.collectPath(pline.Path(), pline)
+		case pline.IsDirective():
 			ck.collectDirective(pline)
 		}
 	}
@@ -136,21 +131,19 @@ func (ck *PlistChecker) collectDirective(pline *PlistLine) {
 }
 
 func (ck *PlistChecker) checkLine(pline *PlistLine) {
-	text := pline.text
-
-	if text == "" {
+	if pline.text == "" {
 		fix := pline.Autofix()
 		fix.Warnf("PLISTs should not contain empty lines.")
 		fix.Delete()
 		fix.Apply()
 
-	} else if plistPathStart.Contains(text[0]) {
+	} else if pline.IsPath() {
 		ck.asciiChecker.Check(pline)
 		ck.sortChecker.Check(pline)
 		ck.pathChecker.checkDuplicate(pline)
 		ck.pathChecker.Check(pline, pline.Path())
 
-	} else if m, cmd, arg := match2(text, `^@([a-z-]+)[\t ]*(.*)`); m {
+	} else if m, cmd, arg := match2(pline.text, `^@([a-z-]+)[\t ]*(.*)`); m {
 		pline.CheckDirective(cmd, arg)
 		if cmd == "comment" && pline.Line.Location.lineno > 1 {
 			ck.asciiChecker.nonAsciiAllowed = true
@@ -267,7 +260,7 @@ func (ck *PlistPathChecker) checkPathMisc(rel RelPath, pline *PlistLine) {
 }
 
 func (ck *PlistPathChecker) checkDuplicate(pline *PlistLine) {
-	if !pline.HasPlainPath() {
+	if !pline.IsPlainPath() {
 		return
 	}
 
@@ -546,7 +539,7 @@ type PlistSortChecker struct {
 }
 
 func (ck *PlistSortChecker) Check(pline *PlistLine) {
-	if !pline.HasPlainPath() {
+	if !pline.IsPlainPath() {
 		return
 	}
 
@@ -663,20 +656,23 @@ func (pline *PlistLine) RelLine(other *Line) string {
 	return pline.Line.RelLine(other)
 }
 
-func (pline *PlistLine) HasPath() bool {
+var plistPathStart = textproc.NewByteSet("$0-9A-Za-z")
+
+func (pline *PlistLine) IsPath() bool {
 	return pline.text != "" && plistPathStart.Contains(pline.text[0])
 }
 
-func (pline *PlistLine) HasPlainPath() bool {
-	text := pline.text
-	return text != "" &&
-		plistPathStart.Contains(text[0]) &&
-		!containsExpr(text)
+func (pline *PlistLine) IsPlainPath() bool {
+	return pline.IsPath() && !containsExpr(pline.text)
 }
 
 func (pline *PlistLine) Path() RelPath {
-	assert(pline.HasPath())
+	assert(pline.IsPath())
 	return NewRelPathString(pline.text)
+}
+
+func (pline *PlistLine) IsDirective() bool {
+	return hasPrefix(pline.text, "@")
 }
 
 func (pline *PlistLine) CheckTrailingWhitespace() {

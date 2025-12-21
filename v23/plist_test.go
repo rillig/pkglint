@@ -1474,11 +1474,11 @@ func (s *Suite) Test_PlistLine_RelLine(c *check.C) {
 		"WARN: PLIST:2: Warning, see line 2.")
 }
 
-func (s *Suite) Test_PlistLine_HasPath(c *check.C) {
+func (s *Suite) Test_PlistLine_IsPath(c *check.C) {
 	t := s.Init(c)
 
 	test := func(text string, hasPath bool) {
-		t.CheckEquals((&PlistLine{text: text}).HasPath(), hasPath)
+		t.CheckEquals((&PlistLine{text: text}).IsPath(), hasPath)
 	}
 
 	test("abc", true)
@@ -1495,11 +1495,11 @@ func (s *Suite) Test_PlistLine_HasPath(c *check.C) {
 	test("bin/${VAR}", true)
 }
 
-func (s *Suite) Test_PlistLine_HasPlainPath(c *check.C) {
+func (s *Suite) Test_PlistLine_IsPlainPath(c *check.C) {
 	t := s.Init(c)
 
 	test := func(text string, hasPlainPath bool) {
-		t.CheckEquals((&PlistLine{text: text}).HasPlainPath(), hasPlainPath)
+		t.CheckEquals((&PlistLine{text: text}).IsPlainPath(), hasPlainPath)
 	}
 
 	test("abc", true)
@@ -1525,6 +1525,20 @@ func (s *Suite) Test_PlistLine_Path(c *check.C) {
 
 	t.ExpectAssert(
 		func() { (&PlistLine{text: "/absolute"}).Path() })
+}
+
+func (s *Suite) Test_PlistLine_IsDirective(c *check.C) {
+	t := s.Init(c)
+
+	t.CheckEquals(
+		(&PlistLine{text: "@exec echo done"}).IsDirective(),
+		true)
+	t.CheckEquals(
+		(&PlistLine{text: "bin/program"}).IsDirective(),
+		false)
+	t.CheckEquals(
+		(&PlistLine{text: "${BINDIR}/program"}).IsDirective(),
+		false)
 }
 
 func (s *Suite) Test_PlistLine_CheckTrailingWhitespace(c *check.C) {
@@ -1651,12 +1665,12 @@ func (s *Suite) Test_PlistLines_Add(c *check.C) {
 	lines := NewPlistLines()
 
 	for _, line := range plistLines {
-		if line.HasPath() {
+		if line.IsPath() {
 			lines.Add(line, NewPlistRank(line.Line.Basename), true)
 		}
 	}
 	for _, line := range plistCommonLines {
-		if line.HasPath() {
+		if line.IsPath() {
 			lines.Add(line, NewPlistRank(line.Line.Basename), true)
 		}
 	}
