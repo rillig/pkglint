@@ -203,8 +203,7 @@ func (s *Suite) Test_Lexer_NextBytesSet(c *check.C) {
 	c.Check(lexer.NextBytesSet(AlnumU), equals, "90_")
 	c.Check(lexer.NextBytesSet(Space), equals, " \t")
 	c.Check(lexer.NextBytesSet(Alnum), equals, "string")
-	c.Check(lexer.NextBytesSet(Hspace), equals, "\t\t ")
-	c.Check(lexer.NextBytesSet(Space), equals, "\n")
+	c.Check(lexer.NextBytesSet(Space), equals, "\t\t \n")
 }
 
 func (s *Suite) Test_Lexer_SkipRegexp(c *check.C) {

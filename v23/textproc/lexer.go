@@ -287,6 +287,5 @@ var (
 	Upper  = NewByteSet("A-Z")        // The uppercase letters from A to Z
 	Lower  = NewByteSet("a-z")        // The lowercase letters from a to z
 	Space  = NewByteSet("\t\n ")      // Tab, newline, space
-	Hspace = NewByteSet("\t ")        // Tab, space
 	XPrint = NewByteSet("\n\t -~")    // Printable ASCII, plus tab and newline
 )
