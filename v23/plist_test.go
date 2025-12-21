@@ -463,6 +463,19 @@ func (s *Suite) Test_NewPlistChecker(c *check.C) {
 	t.CheckNotNil(ck.pathChecker.allFiles)
 }
 
+func (s *Suite) Test_PlistChecker_Check(c *check.C) {
+	t := s.Init(c)
+
+	lines := t.NewLines("PLIST",
+		"bin/subdir/program")
+	ck := NewPlistChecker(nil)
+
+	ck.Check(lines)
+
+	t.CheckOutputLines(
+		"WARN: PLIST:1: The bin/ directory should not have subdirectories.")
+}
+
 func (s *Suite) Test_PlistChecker_Load__common_end(c *check.C) {
 	t := s.Init(c)
 
@@ -496,19 +509,6 @@ func (s *Suite) Test_PlistChecker_Load__common_end(c *check.C) {
 	t.CheckEquals(
 		ck.pathChecker.allFiles["bin/plist_common_end"].Line.String(),
 		"PLIST.common_end:2: bin/plist_common_end")
-}
-
-func (s *Suite) Test_PlistChecker_Check(c *check.C) {
-	t := s.Init(c)
-
-	lines := t.NewLines("PLIST",
-		"bin/subdir/program")
-	ck := NewPlistChecker(nil)
-
-	ck.Check(lines)
-
-	t.CheckOutputLines(
-		"WARN: PLIST:1: The bin/ directory should not have subdirectories.")
 }
 
 func (s *Suite) Test_extractPlistConditions(c *check.C) {

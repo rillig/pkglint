@@ -58,21 +58,6 @@ func NewPlistChecker(pkg *Package) *PlistChecker {
 	}
 }
 
-func (ck *PlistChecker) Load(lines *Lines) []*PlistLine {
-	plines := extractPlistConditions(lines)
-	ck.collectFilesAndDirs(plines)
-
-	if lines.BaseName == "PLIST.common_end" {
-		commonLines := Load(lines.Filename.TrimSuffix("_end"), NotEmpty)
-		if commonLines != nil {
-			commonPlines := extractPlistConditions(commonLines)
-			ck.collectFilesAndDirs(commonPlines)
-		}
-	}
-
-	return plines
-}
-
 func (ck *PlistChecker) Check(lines *Lines) {
 	plines := ck.Load(lines)
 
@@ -87,6 +72,21 @@ func (ck *PlistChecker) Check(lines *Lines) {
 	if !autofixed {
 		SaveAutofixChanges(lines)
 	}
+}
+
+func (ck *PlistChecker) Load(lines *Lines) []*PlistLine {
+	plines := extractPlistConditions(lines)
+	ck.collectFilesAndDirs(plines)
+
+	if lines.BaseName == "PLIST.common_end" {
+		commonLines := Load(lines.Filename.TrimSuffix("_end"), NotEmpty)
+		if commonLines != nil {
+			commonPlines := extractPlistConditions(commonLines)
+			ck.collectFilesAndDirs(commonPlines)
+		}
+	}
+
+	return plines
 }
 
 func extractPlistConditions(lines *Lines) []*PlistLine {
@@ -109,16 +109,15 @@ func extractPlistConditions(lines *Lines) []*PlistLine {
 	return plines
 }
 
-var plistLineStart = textproc.NewByteSet("$0-9A-Za-z")
+var plistPathStart = textproc.NewByteSet("$0-9A-Za-z")
 
 func (ck *PlistChecker) collectFilesAndDirs(plines []*PlistLine) {
-
 	for _, pline := range plines {
 		text := pline.text
 		switch {
 		case text == "":
 			break
-		case plistLineStart.Contains(text[0]):
+		case plistPathStart.Contains(text[0]):
 			ck.pathChecker.collectPath(NewRelPathString(text), pline)
 		case text[0] == '@':
 			ck.collectDirective(pline)
@@ -145,7 +144,7 @@ func (ck *PlistChecker) checkLine(pline *PlistLine) {
 		fix.Delete()
 		fix.Apply()
 
-	} else if plistLineStart.Contains(text[0]) {
+	} else if plistPathStart.Contains(text[0]) {
 		ck.asciiChecker.Check(pline)
 		ck.sortChecker.Check(pline)
 		ck.pathChecker.checkDuplicate(pline)
@@ -638,9 +637,12 @@ func (ck *PlistSortChecker) Sort(plines []*PlistLine) (autofixed bool) {
 
 type PlistLine struct {
 	Line *Line
+	// e.g. PLIST.docs
+	//
 	// XXX: Why "PLIST.docs" and not simply "docs"?
-	conditions []string // e.g. PLIST.docs
-	text       string   // Line.Text without any conditions of the form ${PLIST.cond}
+	conditions []string
+	// Line.Text without any conditions of the form ${PLIST.cond}
+	text string
 }
 
 // Autofix returns the autofix instance belonging to the line.
@@ -662,13 +664,13 @@ func (pline *PlistLine) RelLine(other *Line) string {
 }
 
 func (pline *PlistLine) HasPath() bool {
-	return pline.text != "" && plistLineStart.Contains(pline.text[0])
+	return pline.text != "" && plistPathStart.Contains(pline.text[0])
 }
 
 func (pline *PlistLine) HasPlainPath() bool {
 	text := pline.text
 	return text != "" &&
-		plistLineStart.Contains(text[0]) &&
+		plistPathStart.Contains(text[0]) &&
 		!containsExpr(text)
 }
 
