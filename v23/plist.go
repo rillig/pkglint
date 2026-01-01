@@ -96,7 +96,7 @@ func extractPlistConditions(lines *Lines) []*PlistLine {
 		text := line.Text
 
 		for hasPrefix(text, "${PLIST.") /* just for performance */ {
-			if m, cond, rest := match2(text, `^(?:\$\{(PLIST\.[\w-.]+)\})(.*)`); m {
+			if m, cond, rest := match2(text, `^\$\{(PLIST\.[\w-.]+)\}(.*)`); m {
 				conditions = append(conditions, cond)
 				text = rest
 			} else {
@@ -753,18 +753,6 @@ type PlistRank struct {
 var defaultPlistRank = &PlistRank{0, "", "", ""}
 
 func NewPlistRank(basename RelPath) *PlistRank {
-	isOpsys := func(s string) bool {
-		return G.Pkgsrc.VariableType(nil, "OPSYS").basicType.HasEnum(s)
-	}
-	isArch := func(s string) bool {
-		return G.Pkgsrc.VariableType(nil, "MACHINE_ARCH").basicType.HasEnum(s)
-	}
-	isEmulOpsys := func(s string) bool {
-		return G.Pkgsrc.VariableType(nil, "EMUL_OPSYS").basicType.HasEnum(s)
-	}
-	isEmulArch := func(s string) bool {
-		return G.Pkgsrc.VariableType(nil, "EMUL_ARCH").basicType.HasEnum(s)
-	}
 
 	switch basename {
 	case "PLIST":
@@ -776,22 +764,26 @@ func NewPlistRank(basename RelPath) *PlistRank {
 	}
 
 	parts := strings.Split(basename.String()[6:], "-")
-	rank := PlistRank{3, "", "", ""}
-	if isOpsys(parts[0]) {
-		rank.Opsys = parts[0]
+	opsys := ""
+	if G.Pkgsrc.VariableType(nil, "OPSYS").basicType.HasEnum(parts[0]) {
+		opsys = parts[0]
 		parts = parts[1:]
 	}
-	if len(parts) > 0 && isArch(parts[0]) {
-		rank.Arch = parts[0]
+	arch := ""
+	if len(parts) > 0 &&
+		G.Pkgsrc.VariableType(nil, "MACHINE_ARCH").basicType.HasEnum(parts[0]) {
+		arch = parts[0]
 		parts = parts[1:]
 	}
-	if len(parts) >= 2 && isEmulOpsys(parts[0]) && isEmulArch(parts[1]) {
-		rank.Opsys = parts[0]
-		rank.Arch = parts[1]
+	if len(parts) >= 2 &&
+		G.Pkgsrc.VariableType(nil, "EMUL_OPSYS").basicType.HasEnum(parts[0]) &&
+		G.Pkgsrc.VariableType(nil, "EMUL_ARCH").basicType.HasEnum(parts[1]) {
+		opsys = parts[0]
+		arch = parts[1]
 		parts = parts[2:]
 	}
-	rank.Rest = strings.Join(parts, "-")
-	return &rank
+	rest := strings.Join(parts, "-")
+	return &PlistRank{3, opsys, arch, rest}
 }
 
 // MoreGeneric compares two pathnames from a PLIST to see which of them
@@ -805,8 +797,8 @@ func NewPlistRank(basename RelPath) *PlistRank {
 //	-> { PLIST.OPSYS, PLIST.ARCH }
 //	-> { PLIST.OPSYS.ARCH, PLIST.EMUL_PLATFORM }
 //
-// Files are a later level must not mention files that are already
-// mentioned at an earlier level.
+// Files at a more specific level must not mention files that are already
+// mentioned at a more generic level.
 func (r *PlistRank) MoreGeneric(other *PlistRank) bool {
 	if r.Rank != 3 && other.Rank != 3 {
 		return r.Rank < other.Rank
