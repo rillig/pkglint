@@ -573,14 +573,15 @@ func (ck *PlistSortChecker) Sort(lines []*Line, plines []*PlistLine) {
 	var unsortable *Line                    // Some lines are so difficult to sort that only humans can do that
 
 	for _, pline := range middle {
-		if unsortable == nil && (hasPrefix(pline.text, "@") || contains(pline.text, "$")) {
+		if pline.IsDirective() || contains(pline.text, "$") {
 			unsortable = pline.Line
+			break
 		}
 	}
 
-	if line := unsortable; line != nil {
+	if unsortable != nil {
 		if trace.Tracing {
-			trace.Stepf("%s: This line prevents pkglint from sorting the PLIST automatically.", line)
+			trace.Stepf("%s: This line prevents pkglint from sorting the PLIST automatically.", unsortable)
 		}
 		return
 	}
