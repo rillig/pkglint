@@ -68,10 +68,8 @@ func (ck *PlistChecker) Check(lines *Lines) {
 	ck.pathChecker.checkOmf(plines)
 	CheckLinesTrailingEmptyLines(lines)
 
-	autofixed := ck.sortChecker.Sort(plines)
-	if !autofixed {
-		SaveAutofixChanges(lines)
-	}
+	ck.sortChecker.Sort(lines.Lines, plines)
+	SaveAutofixChanges(lines)
 }
 
 func (ck *PlistChecker) Load(lines *Lines) []*PlistLine {
@@ -553,9 +551,11 @@ func (ck *PlistSortChecker) Check(pline *PlistLine) {
 	ck.lastFname = rel
 }
 
-// Sort takes the PLIST lines, sorts them if necessary and writes the
-// sorted lines back to disk.
-func (ck *PlistSortChecker) Sort(plines []*PlistLine) (autofixed bool) {
+// Sort sorts the given lines in-place.
+//
+// Since sorting the lines happens after all other checks,
+// the order of the plines is not updated.
+func (ck *PlistSortChecker) Sort(lines []*Line, plines []*PlistLine) {
 
 	headerEnd := 0
 	for headerEnd < len(plines) && hasPrefix(plines[headerEnd].text, "@comment") {
@@ -601,6 +601,7 @@ func (ck *PlistSortChecker) Sort(plines []*PlistLine) (autofixed bool) {
 			mi.text == mj.text && stringSliceLess(mi.conditions, mj.conditions)
 		if i < j != less {
 			changed = true
+			mi.Line.Autofix().modified = true
 		}
 		return less
 	})
@@ -614,18 +615,14 @@ func (ck *PlistSortChecker) Sort(plines []*PlistLine) (autofixed bool) {
 	fix.Describef(0, "Sorting the whole file.")
 	fix.Apply()
 
-	var lines []*Line
-	for _, pline := range header {
-		lines = append(lines, pline.Line)
-	}
-	for _, pline := range middle {
-		lines = append(lines, pline.Line)
-	}
-	for _, pline := range footer {
-		lines = append(lines, pline.Line)
-	}
+	var sorted []*PlistLine
+	sorted = append(sorted, header...)
+	sorted = append(sorted, middle...)
+	sorted = append(sorted, footer...)
 
-	return SaveAutofixChanges(NewLines(lines[0].Filename(), lines))
+	for i, pline := range sorted {
+		lines[i] = pline.Line
+	}
 }
 
 type PlistLine struct {

@@ -243,6 +243,7 @@ func (s *Suite) Test_PlistChecker__autofix(c *check.C) {
 		"NOTE: ~/PLIST:6: PLIST files should use \"man/\" instead of \"${PKGMANDIR}\".")
 
 	t.SetUpCommandLine("-Wall", "--autofix")
+	lines = Load(t.File("PLIST"), 0)
 	CheckLinesPlist(nil, lines)
 
 	t.CheckOutputLines(
@@ -298,7 +299,7 @@ func (s *Suite) Test_PlistChecker__remove_same_entries(c *check.C) {
 		"ERROR: ~/PLIST:8: Duplicate filename \"bin/true\", already appeared in line 3.")
 
 	t.SetUpCommandLine("-Wall", "--autofix")
-
+	lines = Load(t.File("PLIST"), MustSucceed|NotEmpty)
 	CheckLinesPlist(nil, lines)
 
 	t.CheckOutputLines(
@@ -1366,22 +1367,32 @@ func (s *Suite) Test_PlistSortChecker_Sort(c *check.C) {
 
 	var sorter1 PlistSortChecker
 	t.EnableTracingToLog()
-	sorter1.Sort(plines)
+	sorter1.Sort(lines.Lines, plines)
 	t.DisableTracing()
 	t.CheckOutputLines(
 		"TRACE:   ~/PLIST:6: lib/${UNKNOWN}.la: " +
 			"This line prevents pkglint from sorting the PLIST automatically.")
 
-	var cleanedLines []*Line
-	cleanedLines = append(cleanedLines, lines.Lines[0:5]...)
-	// Omit the ${UNKNOWN} line.
-	cleanedLines = append(cleanedLines, lines.Lines[6:8]...)
-	// Omit the @exec line.
-	cleanedLines = append(cleanedLines, lines.Lines[9:]...)
-
-	lines2 := extractPlistConditions(NewLines(lines.Filename, cleanedLines))
+	lines = t.SetUpFileLines("PLIST",
+		PlistCvsID,
+		"@comment Do not remove",
+		"A",
+		"b",
+		"CCC",
+		"C",
+		"ddd",
+		"sbin/program",
+		"${PLIST.one}bin/program",
+		"man/man1/program.1",
+		"${PLIST.two}bin/program2",
+		"lib/before.la",
+		"${PLIST.linux}${PLIST.x86_64}lib/lib-linux-x86_64.so", // Double condition, see graphics/graphviz
+		"lib/after.la",
+		"@exec echo \"after lib/after.la\"")
+	lines2 := extractPlistConditions(lines)
 	var sorter2 PlistSortChecker
-	sorter2.Sort(lines2)
+	sorter2.Sort(lines.Lines, lines2)
+	SaveAutofixChanges(lines)
 
 	t.CheckOutputLines(
 		"AUTOFIX: ~/PLIST:3: Sorting the whole file.")
