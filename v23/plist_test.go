@@ -1326,6 +1326,63 @@ func (s *Suite) Test_PlistSortChecker__unsortable(c *check.C) {
 		"TRACE: - CheckLinesPlist(\"~/PLIST\")")
 }
 
+// Two lines start with the same placeholder, but the remaining text is
+// not sorted correctly.
+func (s *Suite) Test_PlistSortChecker__placeholder_unsorted(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--show-autofix")
+	lines := t.SetUpFileLines("PLIST",
+		PlistCvsID,
+		"bin/rabbiter",
+		"${RUBY_VENDORLIB}/rabbiter.rb",
+		// TODO: warn that version.rb belongs below gettext.rb.
+		"${RUBY_VENDORLIB}/rabbiter/version.rb",
+		"${RUBY_VENDORLIB}/rabbiter/gettext.rb",
+		"share/locale/ja/LC_MESSAGES/rabbiter.mo")
+
+	CheckLinesPlist(nil, lines)
+
+	t.CheckOutputEmpty()
+}
+
+// There are two lines containing ${GEM_HOME}, and they are far apart.
+// But assuming that ${GEM_EXTSDIR} and ${GEM_LIBDIR} are both
+// subdirectories of ${GEM_HOME}, they are correctly sorted.
+func (s *Suite) Test_PlistSortChecker__placeholder_prefix(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--show-autofix")
+	lines := t.SetUpFileLines("PLIST",
+		PlistCvsID,
+		"${GEM_HOME}/cache/${GEM_NAME}.gem",
+		"${GEM_EXTSDIR}/gem.build_complete",
+		"${GEM_LIBDIR}/COPYING.LIB",
+		"${GEM_LIBDIR}/test/test-source-view.rb",
+		"${GEM_HOME}/specifications/${GEM_NAME}.gemspec")
+
+	CheckLinesPlist(nil, lines)
+
+	t.CheckOutputEmpty()
+}
+
+// If ${B} is "${A}/file1", the resulting PLIST is in correct order.
+// This combination is unlikely, though.
+func (s *Suite) Test_PlistSortChecker__placeholder_impossible(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--show-autofix")
+	lines := t.SetUpFileLines("PLIST",
+		PlistCvsID,
+		"${A}/file",
+		"${B}/file",
+		"${A}/file2")
+
+	CheckLinesPlist(nil, lines)
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_PlistSortChecker_Check(c *check.C) {
 	t := s.Init(c)
 
