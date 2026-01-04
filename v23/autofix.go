@@ -285,16 +285,15 @@ func (fix *Autofix) Apply() {
 	// or Autofix.Notef before calling Apply.
 	assert(fix.level != nil)
 
-	reset := func() {
+	defer func() {
 		if len(fix.actions) > 0 {
 			fix.modified = true
 		}
 
 		fix.autofixShortTerm = autofixShortTerm{}
-	}
+	}()
 
 	if !(G.Logger.Relevant(fix.diagFormat) && (len(fix.actions) > 0 || !G.Logger.IsAutofix())) {
-		reset()
 		return
 	}
 
@@ -331,8 +330,6 @@ func (fix *Autofix) Apply() {
 	if logDiagnostic && len(fix.explanation) > 0 {
 		line.Explain(fix.explanation...)
 	}
-
-	reset()
 }
 
 func (fix *Autofix) setDiag(level *LogLevel, format string, args []interface{}) {
