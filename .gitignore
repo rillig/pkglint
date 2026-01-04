@@ -10,3 +10,5 @@
 *yacc.log
 debug
 *.out
+/v23/pkglint
+/v23/pkglint.exe
