@@ -423,22 +423,30 @@ func (ck *PatchChecker) checkCanonicalPatchName(patched Path) {
 		return
 	}
 	if matches(patch, `^patch-[A-Z]+-[0-9]+`) {
+		// For CVE entries and security advisories.
 		return
 	}
 
 	// The patch name only needs to correspond very roughly to the patched file.
 	// There are varying schemes in use that transform a filename to a patch name.
-	normalize := func(s string) string {
-		return strings.ToLower(replaceAll(s, `[^A-Za-z0-9]+`, "*"))
+	normalize := func(s string) Path {
+		return NewPath(strings.ToLower(replaceAll(s, `[^A-Za-z0-9]+`, "/")))
 	}
 
 	patchedNorm := normalize(patched.Clean().String())
 	patchNorm := normalize(strings.TrimPrefix(patch, "patch-"))
-	if patchNorm == patchedNorm {
+	if patchedNorm == patchNorm {
 		return
 	}
-	if hasSuffix(patchedNorm, patchNorm) && patchNorm == normalize(patched.Base().String()) {
-		return
+	if patchedNorm.HasSuffixPath(patchNorm) {
+		patchLen := len(patchNorm.Parts())
+		if patchLen >= 2 {
+			return
+		}
+		patchedLen := len(patchedNorm.Parts())
+		if patchLen+2 >= patchedLen {
+			return
+		}
 	}
 
 	// See pkgtools/pkgdiff/files/mkpatches, function patch_name.
