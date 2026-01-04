@@ -780,9 +780,9 @@ func (p *Pkglint) Abs(filename CurrPath) CurrPath {
 // InterPackage collects data from the inter-package analysis.
 // It is most useful when running pkglint on a complete pkgsrc installation.
 type InterPackage struct {
-	hashes       map[string]*Hash    // Maps "alg:filename" => hash (inter-package check).
-	usedLicenses map[string]struct{} // Maps "license name" => true (inter-package check).
-	bl3Names     map[string]Location // Maps buildlink3 identifiers to their first occurrence.
+	hashes       map[string]*Hash
+	usedLicenses map[string]struct{}
+	bl3Names     map[string]Location
 	descr        map[[sha1.Size]byte][]CurrPath
 }
 
@@ -835,7 +835,7 @@ func (ip *InterPackage) Bl3(name string, loc *Location) *Location {
 		return &prev
 	}
 
-	ip.bl3Names[name] = *loc
+	ip.bl3Names[intern(name)] = *loc
 	return nil
 }
 
