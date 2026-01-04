@@ -1142,6 +1142,17 @@ func (s *Suite) Test_PatchChecker_checkCanonicalPatchName(c *check.C) {
 		"WARN: patch-c: The patch file should be named \"patch-src_subdir_file.c\" "+
 			"to match the patched file \"./src/subdir/file.c\".")
 
+	// FIXME: Allow the "vendor" part to be omitted from the patch name,
+	// as the remaining name is still descriptive enough.
+	test(
+		"patch-libc-0.2.168_src_unix_bsd_netbsdlike_netbsd_mod.rs",
+		"vendor/libc-0.2.168/src/unix/bsd/netbsdlike/netbsd/mod.rs",
+		"WARN: patch-libc-0.2.168_src_unix_bsd_netbsdlike_netbsd_mod.rs: "+
+			"The patch file should be named "+
+			"\"patch-vendor_libc-0.2.168_src_unix_bsd_netbsdlike_netbsd_mod.rs\" "+
+			"to match the patched file "+
+			"\"vendor/libc-0.2.168/src/unix/bsd/netbsdlike/netbsd/mod.rs\".")
+
 	// Allow existing patches to differ in case.
 	// Most packages won't have files that could conflict on a
 	// case-insensitive filesystem anyway.
