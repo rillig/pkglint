@@ -641,13 +641,18 @@ func (ck *ShellLineChecker) checkHiddenAndSuppress(hiddenAndSuppress, rest strin
 		if len(tokens) > 0 {
 			cmd := tokens[0]
 			switch cmd {
-			case "${DELAYED_ERROR_MSG}", "${DELAYED_WARNING_MSG}",
+			case "${DELAYED_ERROR_MSG}",
+				"${DELAYED_WARNING_MSG}",
 				"${DO_NADA}",
-				"${ECHO}", "${ECHO_MSG}", "${ECHO_N}", "${ERROR_CAT}", "${ERROR_MSG}",
+				"${ECHO}", "echo", "${ECHO_N}",
+				"${ECHO_MSG}",
+				"${ERROR_CAT}", "${ERROR_MSG}",
 				"${FAIL_MSG}",
 				"${INFO_MSG}",
-				"${PHASE_MSG}", "${PRINTF}",
-				"${SHCOMMENT}", "${STEP_MSG}",
+				"${PHASE_MSG}",
+				"${PRINTF}", "printf",
+				"${SHCOMMENT}",
+				"${STEP_MSG}",
 				"${WARNING_CAT}", "${WARNING_MSG}":
 				break
 			default:
