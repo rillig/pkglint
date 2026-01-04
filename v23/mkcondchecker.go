@@ -143,22 +143,23 @@ func (ck *MkCondChecker) checkNotEmpty(not *MkCond) {
 // checkEmpty checks a condition of the form empty(VAR),
 // empty(VAR:Mpattern) or ${VAR:Mpattern} in an .if directive.
 func (ck *MkCondChecker) checkEmpty(expr *MkExpr, fromEmpty bool, neg bool) {
-	ck.checkEmptyExpr(expr, neg)
+	ck.checkEmptyExpr(expr, fromEmpty, neg)
 	ck.checkEmptyType(expr)
 
 	s := MkCondSimplifier{ck.MkLines, ck.MkLine}
 	s.SimplifyExpr(expr, fromEmpty, neg)
 }
 
-// checkEmptyExpr warns about 'empty(${VARNAME:Mpattern})', which should be
-// 'empty(VARNAME:Mpattern)' instead, without the '${...}'.
-func (ck *MkCondChecker) checkEmptyExpr(expr *MkExpr, neg bool) {
-	if !matches(expr.varname, `^\$.*:[MN]`) {
+// checkEmptyExpr warns about 'empty(${EXPR})', which should be
+// 'empty(EXPR)' instead, without the '${...}'.
+func (ck *MkCondChecker) checkEmptyExpr(expr *MkExpr, fromEmpty bool, neg bool) {
+	if !(fromEmpty && isExpr(expr.varname) && len(expr.modifiers) == 0) {
 		return
 	}
 
-	ck.MkLine.Warnf("The empty() function takes a variable name as parameter, " +
-		"not an expression.")
+	ck.MkLine.Warnf("The empty() function "+
+		"takes a variable name plus optional modifiers as parameter, "+
+		"not the expression %q.", expr.varname)
 	if neg {
 		ck.MkLine.Explain(
 			"Instead of !empty(${VARNAME:Mpattern}),",

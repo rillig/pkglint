@@ -555,6 +555,11 @@ func toInt(s string, def int) int {
 	return def
 }
 
+func isExpr(s string) bool {
+	lex := NewMkLexer(s, nil)
+	return lex.Expr() != nil && lex.EOF()
+}
+
 func containsExpr(s string) bool {
 	if !contains(s, "$") {
 		return false

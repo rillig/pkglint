@@ -58,8 +58,9 @@ func (s *Suite) Test_MkCondChecker_Check(c *check.C) {
 			"\"${IS_BUILTIN.Xfixes:U:tl} == yes\".")
 
 	test(".if !empty(${IS_BUILTIN.Xfixes:M[yY][eE][sS]})",
-		"WARN: filename.mk:4: The empty() function takes a variable name as parameter, "+
-			"not an expression.")
+		"WARN: filename.mk:4: The empty() function "+
+			"takes a variable name plus optional modifiers as parameter, "+
+			"not the expression \"${IS_BUILTIN.Xfixes:M[yY][eE][sS]}\".")
 
 	test(".if ${PKGSRC_COMPILER} == \"msvc\"",
 		"WARN: filename.mk:4: \"msvc\" is not valid for PKGSRC_COMPILER. "+
@@ -468,6 +469,9 @@ func (s *Suite) Test_MkCondChecker_checkAnd(c *check.C) {
 	test(
 		".if defined(${varname}) && !empty(${varname})",
 		"NOTE: filename.mk:6: Checking \"defined\" before \"!empty\" is redundant.",
+		"WARN: filename.mk:6: The empty() function "+
+			"takes a variable name plus optional modifiers as parameter, "+
+			"not the expression \"${varname}\".",
 		"AUTOFIX: filename.mk:6: Replacing \"defined(${varname}) && \" with \"\".")
 
 	test(
@@ -591,34 +595,49 @@ func (s *Suite) Test_MkCondChecker_checkEmptyExpr(c *check.C) {
 			"# dummy")
 		ck := NewMkCondChecker(mklines.mklines[0], mklines)
 
-		ck.checkEmptyExpr(NewMkExpr(expr), false)
+		ck.checkEmptyExpr(NewMkExpr(expr), true, false)
 
 		t.CheckOutput(diagnostics)
 	}
 
 	// In some cases it makes sense to use indirection in a !empty(...)
-	// expression.
+	// expression. To avoid confusion, it is better to replace
+	// "!empty(X)" with ${X:U} != "" in such a case.
 	test(
 		"VAR.${param}",
 		nil...)
 	test(
 		"${VARNAME}",
-		nil...)
+		"WARN: filename.mk:1: The empty() function "+
+			"takes a variable name plus optional modifiers as parameter, "+
+			"not the expression \"${VARNAME}\".")
+
+	// When looping over a list of variable names, it is fine to query
+	// whether that referenced variable is empty or not. To avoid
+	// confusion, it is better to replace "!empty(X)" with ${X:U} != ""
+	// in such a case.
 	test(
-		"${var}", // Typical of a .for loop variable.
-		nil...)
+		"${var}",
+		"WARN: filename.mk:1: The empty() function "+
+			"takes a variable name plus optional modifiers as parameter, "+
+			"not the expression \"${var}\".")
 
 	// This is probably a typo, as the value of the PREFIX variable
 	// does not name another variable.
 	test(
 		"${PREFIX}",
-		nil...)
+		"WARN: filename.mk:1: The empty() function "+
+			"takes a variable name plus optional modifiers as parameter, "+
+			"not the expression \"${PREFIX}\".")
 
-	// This one is obvious enough for pkglint.
+	// This is obviously a mistake, due to the ":M" modifier, as it
+	// may result in an empty value or in a list of values, and
+	// variable names should really not contain whitespace.
 	test(
 		"${PREFIX:Mpattern}",
-		"WARN: filename.mk:1: The empty() function takes a variable "+
-			"name as parameter, not an expression.")
+		"WARN: filename.mk:1: The empty() function "+
+			"takes a variable name plus optional modifiers as parameter, "+
+			"not the expression \"${PREFIX:Mpattern}\".")
 }
 
 func (s *Suite) Test_MkCondChecker_checkEmptyType(c *check.C) {
