@@ -83,7 +83,9 @@ func (s *Suite) SetUpTest(c *check.C) {
 
 func (s *Suite) TearDownTest(c *check.C) {
 	t := s.Tester
-	t.c = nil // No longer usable; see https://github.com/go-check/check/issues/22
+	// The previous c is no longer usable,
+	// see https://github.com/go-check/check/issues/22.
+	t.c = c
 
 	err := os.Chdir(t.prevdir.String())
 	assertNil(err, "Cannot chdir back to previous dir: %s", err)
@@ -1442,7 +1444,14 @@ func (t *Tester) ReportUncheckedOutput() {
 		_, _ = fmt.Fprintf(&msg, "\t%q%s\n", line, condStr(i == len(lines)-1, ")", ","))
 	}
 	_, _ = fmt.Fprintf(&msg, "\n")
-	_, _ = os.Stderr.WriteString(msg.String())
+	_, _ = os.Stdout.WriteString(msg.String())
+
+	// Failing an assertion during shutdown ignores all following tests,
+	// which is unexpected behavior, but the main point is that the
+	// overall test fails in some way.
+	//
+	// See https://github.com/go-check/check/issues/65.
+	t.CheckEquals("Output", "")
 }
 
 // SplitStringsBool unpacks the given varargs into a string slice and a bool.

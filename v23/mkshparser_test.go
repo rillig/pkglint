@@ -68,7 +68,8 @@ func (s *ShSuite) SetUpTest(*check.C) {
 	G = unusablePkglint()
 }
 
-func (s *ShSuite) TearDownTest(*check.C) {
+func (s *ShSuite) TearDownTest(c *check.C) {
+	s.t.c = c
 	s.t.ReportUncheckedOutput()
 	G = unusablePkglint()
 }
