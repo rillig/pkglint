@@ -4,6 +4,7 @@ import (
 	"github.com/rillig/pkglint/v23/regex"
 	"github.com/rillig/pkglint/v23/textproc"
 	"path"
+	"strconv"
 	"strings"
 )
 
@@ -474,18 +475,37 @@ func (cv *VartypeCheck) FileMode() {
 func (cv *VartypeCheck) GccReqd() {
 	cv.Version()
 
-	if m, major := match1(cv.Value, `^([5-9])\.\d+$`); m {
-		fix := cv.Autofix()
+	if m, n1, n2, n3 := match3(cv.Value, `^([1-9]\d*)(?:\.(\d+)(?:\.(\d+))?)?$`); m {
+		major, _ := strconv.Atoi(n1)
+		minor, _ := strconv.Atoi(n2)
+		patch, _ := strconv.Atoi(n3)
 
-		fix.Warnf("GCC version numbers should only contain the major version (%s).", major)
+		if major < 5 && patch == 0 {
+			return
+		}
+		if major >= 5 && minor == 0 && patch == 0 {
+			return
+		}
+		var mainVersion string
+		if major < 5 {
+			mainVersion = sprintf("%d.%d", major, minor)
+		} else {
+			mainVersion = sprintf("%d", major)
+		}
+
+		fix := cv.Autofix()
+		fix.Warnf("GCC version numbers should only contain the major version (%s).",
+			mainVersion)
 		fix.Explain(
 			"For GCC up to 4.x, the major version consists of the first and",
 			"second number, such as 4.8.",
 			"",
-			"Starting with GCC >= 5, the major version is only the first number",
-			"such as 5 or 7.")
-		fix.Replace(cv.Value, major)
+			"Starting with GCC 5, the major version is only the first number",
+			"such as 5, 7 or 15.")
+		fix.Replace(cv.Value, mainVersion)
 		fix.Apply()
+	} else {
+		cv.Errorf("GCC version numbers must have the format major[.minor[.patch]].")
 	}
 }
 

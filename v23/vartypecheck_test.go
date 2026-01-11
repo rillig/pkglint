@@ -871,10 +871,22 @@ func (s *Suite) Test_VartypeCheck_GccReqd(c *check.C) {
 		"4.8",
 		"5.1",
 		"6",
-		"7.3")
+		"7.3",
+		"10.0",
+		"10.1",
+		"10.1.3",
+		"12.5.0",
+		"14.3.0",
+		"${INDIRECT}")
 	vt.Output(
+		"WARN: filename.mk:2: GCC version numbers should only contain the major version (3.1).",
 		"WARN: filename.mk:5: GCC version numbers should only contain the major version (5).",
-		"WARN: filename.mk:7: GCC version numbers should only contain the major version (7).")
+		"WARN: filename.mk:7: GCC version numbers should only contain the major version (7).",
+		"WARN: filename.mk:9: GCC version numbers should only contain the major version (10).",
+		"WARN: filename.mk:10: GCC version numbers should only contain the major version (10).",
+		"WARN: filename.mk:11: GCC version numbers should only contain the major version (12).",
+		"WARN: filename.mk:12: GCC version numbers should only contain the major version (14).",
+		"ERROR: filename.mk:13: GCC version numbers must have the format major[.minor[.patch]].")
 }
 
 func (s *Suite) Test_VartypeCheck_GitHubSubmodule(c *check.C) {
