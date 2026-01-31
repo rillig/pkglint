@@ -346,8 +346,39 @@ func (fix *Autofix) Apply() {
 		G.Logger.writeSource(line)
 	}
 
-	if logDiagnostic && len(fix.explanation) > 0 {
-		line.Explain(fix.explanation...)
+	if logDiagnostic {
+		explanation := fix.explanation
+		keywords := fix.rationaleKeywords
+		switch {
+		case len(keywords) == 1:
+			explanation = append(explanation,
+				"",
+				"To suppress this diagnostic, add a comment",
+				sprintf("containing the word %q", keywords[0]),
+				"at the end of this line or in the line above.")
+		case len(keywords) > 0:
+			var kws []string
+			for _, keyword := range keywords {
+				kws = append(kws, sprintf("%q", keyword))
+			}
+			joinedKeywords := joinCambridge("or", kws...)
+			explanation = append(explanation,
+				"",
+				"To suppress this diagnostic, add a comment",
+				sprintf("containing one of the words %s", joinedKeywords),
+				"at the end of this line or in the line above.")
+		case fix.rationaleMkline != nil:
+			explanation = append(explanation,
+				"",
+				"To suppress this diagnostic, add a comment",
+				"at the end of this line or in the line above.")
+		}
+		if len(explanation) > 0 {
+			if explanation[0] == "" {
+				explanation = explanation[1:]
+			}
+			line.Explain(explanation...)
+		}
 	}
 }
 

@@ -1232,6 +1232,106 @@ func (s *Suite) Test_Autofix_Apply__text_after_replacing(c *check.C) {
 	t.CheckEquals(mkline.Value(), "value")
 }
 
+func (s *Suite) Test_Autofix_Apply__explain_rationale_no_keywords(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--explain")
+	mkline := t.NewMkLine("filename.mk", 123, "# comment")
+
+	fix := mkline.Autofix()
+	fix.Rationale(mkline)
+	fix.Notef("Just a demo.")
+	fix.Explain(
+		"Explanation.")
+	fix.Replace("comment", "replaced")
+	fix.Apply()
+
+	t.CheckOutputLines(
+		"NOTE: filename.mk:123: Just a demo.",
+		"",
+		"\tExplanation.",
+		"",
+		"\tTo suppress this diagnostic, add a comment at the end of this line",
+		"\tor in the line above.",
+		"",
+	)
+}
+
+func (s *Suite) Test_Autofix_Apply__explain_rationale_single_keyword(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--explain")
+	mkline := t.NewMkLine("filename.mk", 123, "# comment")
+
+	fix := mkline.Autofix()
+	fix.Rationale(mkline, "keyword")
+	fix.Notef("Just a demo.")
+	fix.Explain(
+		"Explanation.")
+	fix.Replace("comment", "replaced")
+	fix.Apply()
+
+	t.CheckOutputLines(
+		"NOTE: filename.mk:123: Just a demo.",
+		"",
+		"\tExplanation.",
+		"",
+		"\tTo suppress this diagnostic, add a comment containing the word",
+		"\t\"keyword\" at the end of this line or in the line above.",
+		"",
+	)
+}
+
+func (s *Suite) Test_Autofix_Apply__explain_rationale_keywords(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--explain")
+	mkline := t.NewMkLine("filename.mk", 123, "# comment")
+
+	fix := mkline.Autofix()
+	fix.Rationale(mkline, "keyword1", "keyword2")
+	fix.Notef("Just a demo.")
+	fix.Explain(
+		"Explanation.")
+	fix.Replace("comment", "replaced")
+	fix.Apply()
+
+	t.CheckOutputLines(
+		"NOTE: filename.mk:123: Just a demo.",
+		"",
+		"\tExplanation.",
+		"",
+		"\tTo suppress this diagnostic, add a comment containing one of the",
+		"\twords \"keyword1\" or \"keyword2\" at the end of this line or in the",
+		"\tline above.",
+		"",
+	)
+}
+
+// Even if the diagnostic has no explanation on its own,
+// the information about suppressing the diagnostic is useful to be explained.
+func (s *Suite) Test_Autofix_Apply__rationale_without_primary_explanation(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("-Wall", "--explain")
+	mkline := t.NewMkLine("filename.mk", 123, "# comment")
+
+	fix := mkline.Autofix()
+	fix.Rationale(mkline, "keyword1", "keyword2")
+	fix.Notef("Just a demo.")
+	fix.Replace("comment", "replaced")
+	fix.Apply()
+
+	t.CheckOutputLines(
+		"NOTE: filename.mk:123: Just a demo.",
+		"",
+		"\tTo suppress this diagnostic, add a comment containing one of the",
+		"\twords \"keyword1\" or \"keyword2\" at the end of this line or in the",
+		"\tline above.",
+		"",
+	)
+}
+
 // Just for branch coverage.
 func (s *Suite) Test_Autofix_setDiag__no_testing_mode(c *check.C) {
 	t := s.Init(c)
