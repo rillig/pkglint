@@ -1,3 +1,22 @@
+# 23.20.0 (2026-01-31)
+
+Warn on the condition "empty(${EXPR})" in .if directives,
+as typically "empty(EXPR)" is intended.
+
+Do not warn when a plain command "echo" or "printf" is not hidden,
+as these commands are typically uninteresting.
+
+Allow patch files to have abbreviated names. Previously, the only valid
+names were the full path or the basename, now each possible suffix path
+is valid.
+
+Explain when and why the ":M*" modifier is necessary.
+
+For GCC_REQD, allow only major versions such as 4.8 or 8 or 15.
+
+Allow distinfo files with variant names, like distinfo-binutils or 
+distinfo-linux.
+
 # 23.19.0 (2025-08-15)
 
 Don't complain about using the current Node.js version in
