@@ -374,18 +374,16 @@ func (ck *MkAssignChecker) checkLeftRationale() {
 		return
 	}
 
-	if mkline.HasRationale() {
-		return
-	}
-
 	if varname == "PYTHON_VERSIONS_INCOMPATIBLE" && mkline.Value() == "27" {
 		// No warning since it is rather common that a modern Python
 		// package supports all Python versions starting with 3.0.
 		return
 	}
 
-	mkline.Warnf("Setting variable %s should have a rationale.", varname)
-	mkline.Explain(
+	fix := mkline.Autofix()
+	fix.Rationale(mkline)
+	fix.Warnf("Setting variable %s should have a rationale.", varname)
+	fix.Explain(
 		"Since this variable prevents the package from being built in some situations,",
 		"the reasons for this restriction should be documented.",
 		"Otherwise it becomes too difficult to check whether these restrictions still apply",
@@ -399,6 +397,7 @@ func (ck *MkAssignChecker) checkLeftRationale() {
 		"* if it's a dependency, is the dependency too old or too new?",
 		"* in which situations does a crash occur, if any?",
 		"* has it been reported upstream?")
+	fix.Apply()
 }
 
 func (ck *MkAssignChecker) checkOp() {

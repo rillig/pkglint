@@ -485,9 +485,6 @@ func (ck *PlistPathChecker) checkOmf(plines []*PlistLine) {
 	if mkline == nil {
 		return
 	}
-	if mkline.HasRationale() {
-		return
-	}
 
 	for _, pline := range plines {
 		if hasSuffix(pline.text, ".omf") {
@@ -496,6 +493,7 @@ func (ck *PlistPathChecker) checkOmf(plines []*PlistLine) {
 	}
 
 	fix := mkline.Autofix()
+	fix.Rationale(mkline)
 	fix.Errorf("Only packages that have .omf files in their PLIST may include omf-scrollkeeper.mk.")
 	fix.Delete()
 	fix.Apply()

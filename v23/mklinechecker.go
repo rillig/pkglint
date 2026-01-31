@@ -374,14 +374,14 @@ func (ck MkLineChecker) checkIncludeBuiltin() {
 	switch {
 	case includedFile == "builtin.mk",
 		!includedFile.HasSuffixPath("builtin.mk"),
-		mkline.Basename == "hacks.mk",
-		mkline.HasRationale("builtin", "include", "included", "including"):
+		mkline.Basename == "hacks.mk":
 		return
 	}
 
 	includeInstead := includedFile.Dir().JoinNoClean("buildlink3.mk")
 
 	fix := mkline.Autofix()
+	fix.Rationale(mkline, "builtin", "include", "included", "including")
 	fix.Errorf("%q must not be included directly. Include %q instead.",
 		includedFile, includeInstead)
 	fix.Replace("builtin.mk", "buildlink3.mk")

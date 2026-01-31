@@ -1215,6 +1215,8 @@ func (s *Suite) Test_PlistPathChecker_checkOmf__rationale(c *check.C) {
 	t.CreateFileLines("mk/omf-scrollkeeper.mk",
 		MkCvsID)
 	t.SetUpPackage("category/package",
+		".include \"../../mk/omf-scrollkeeper.mk\"",
+		"",
 		".include \"../../mk/omf-scrollkeeper.mk\" # needs to stay")
 	t.Chdir("category/package")
 	t.FinishSetUp()

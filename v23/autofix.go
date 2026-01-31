@@ -29,6 +29,9 @@ type Autofix struct {
 
 // autofixShortTerm is the part of the Autofix that is reset after each call to Apply.
 type autofixShortTerm struct {
+	rationaleKeywords []string
+	rationaleMkline   *MkLine
+
 	// Human-readable description of the actual autofix actions.
 	// There can be more than one action in cases where a follow-up
 	// fix is necessary.
@@ -67,6 +70,14 @@ func NewAutofix(line *Line) *Autofix {
 		texts[i] = rawLine.orignl
 	}
 	return &Autofix{line, nil, texts, nil, false, autofixShortTerm{}}
+}
+
+// Rationale allows to suppress the diagnostic with a rationale,
+// which is a comment at the end of the line or in the line above,
+// see MkLine.HasRationale.
+func (fix *Autofix) Rationale(mkline *MkLine, keywords ...string) {
+	fix.rationaleKeywords = keywords
+	fix.rationaleMkline = mkline
 }
 
 // Errorf remembers the error for logging it later when Apply is called.
@@ -293,8 +304,16 @@ func (fix *Autofix) Apply() {
 		fix.autofixShortTerm = autofixShortTerm{}
 	}()
 
-	if !(G.Logger.Relevant(fix.diagFormat) && (len(fix.actions) > 0 || !G.Logger.IsAutofix())) {
+	if !G.Logger.Relevant(fix.diagFormat) {
 		return
+	}
+	if G.Logger.IsAutofix() && len(fix.actions) == 0 {
+		return
+	}
+	if fix.rationaleMkline != nil {
+		if fix.rationaleMkline.HasRationale(fix.rationaleKeywords...) {
+			return
+		}
 	}
 
 	logDiagnostic := true

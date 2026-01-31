@@ -363,6 +363,14 @@ func (s *Suite) Test_NewAutofix(c *check.C) {
 	t.CheckDeepEquals(fix2, fix)
 }
 
+func (s *Suite) Test_Autofix_Rationale(c *check.C) {
+	t := s.Init(c)
+
+	// TODO
+
+	t.CheckOutputEmpty()
+}
+
 func (s *Suite) Test_Autofix_Errorf(c *check.C) {
 	t := s.Init(c)
 

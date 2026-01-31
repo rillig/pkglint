@@ -57,14 +57,15 @@ func (ck *UrlChecker) CheckFetchURL(fetchURL string) {
 		}
 
 		if name == "MASTER_SITE_BACKUP" {
-			if !ck.mkline.HasRationale() {
-				ck.mkline.Warnf("The site MASTER_SITE_BACKUP should not be used.")
-				ck.mkline.Explain(
-					"MASTER_SITE_BACKUP is hosted by NetBSD",
-					"and is only for backup purposes.",
-					"Each package should have a primary MASTER_SITE",
-					"outside the NetBSD Foundation.")
-			}
+			fix := ck.mkline.Autofix()
+			fix.Rationale(ck.mkline)
+			fix.Warnf("The site MASTER_SITE_BACKUP should not be used.")
+			fix.Explain(
+				"MASTER_SITE_BACKUP is hosted by NetBSD",
+				"and is only for backup purposes.",
+				"Each package should have a primary MASTER_SITE",
+				"outside the NetBSD Foundation.")
+			fix.Apply()
 		} else if G.Pkgsrc.MasterSiteVarToURL[name] == "" {
 			if ck.mklines.pkg == nil || !ck.mklines.pkg.vars.IsDefined(name) {
 				ck.mkline.Errorf("The site %s does not exist.", name)
