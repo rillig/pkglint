@@ -203,12 +203,12 @@ func Intersect(p1, p2 *Pattern) *Pattern {
 		for i2, s2 := range p2.states {
 			for _, t1 := range s1.transitions {
 				for _, t2 := range s2.transitions {
-					min := bmax(t1.min, t2.min)
-					max := bmin(t1.max, t2.max)
-					if min <= max {
+					minByte := max(t1.min, t2.min)
+					maxByte := min(t1.max, t2.max)
+					if minByte <= maxByte {
 						from := stateFor(stateID(i1), stateID(i2))
 						to := stateFor(t1.to, t2.to)
-						res.addTransition(from, min, max, to)
+						res.addTransition(from, minByte, maxByte, to)
 					}
 				}
 			}
@@ -484,18 +484,4 @@ func Number() *Pattern {
 			},
 		},
 	}
-}
-
-func bmin(a, b byte) byte {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-func bmax(a, b byte) byte {
-	if a > b {
-		return a
-	}
-	return b
 }

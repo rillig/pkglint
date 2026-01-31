@@ -3931,7 +3931,7 @@ func (s *Suite) Test_varalignLine_alignValueMultiFollow(c *check.C) {
 
 		doTest := func(autofix bool) {
 			info, mkline := newLine(before, column, indentDiff)
-			width := imax(column, info.valueColumn()+indentDiff)
+			width := max(column, info.valueColumn()+indentDiff)
 
 			info.alignValueMultiFollow(width)
 

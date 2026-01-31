@@ -62,7 +62,7 @@ func (m *MkTokensLexer) SkipMixed(n int) bool {
 			n -= len(expr.Text)
 			assert(n >= 0)
 		} else {
-			skip := imin(len(m.Lexer.Rest()), n)
+			skip := min(len(m.Lexer.Rest()), n)
 			assert(m.Lexer.Skip(skip))
 			n -= skip
 		}

@@ -99,20 +99,6 @@ func (s *Suite) Test_condInt(c *check.C) {
 	t.CheckEquals(condInt(false, 123, 456), 456)
 }
 
-func (s *Suite) Test_imax(c *check.C) {
-	t := s.Init(c)
-
-	t.CheckEquals(imax(2, 5), 5)
-	t.CheckEquals(imax(5, 2), 5)
-}
-
-func (s *Suite) Test_imin(c *check.C) {
-	t := s.Init(c)
-
-	t.CheckEquals(imin(2, 5), 2)
-	t.CheckEquals(imin(5, 2), 2)
-}
-
 func (s *Suite) Test_assertNil(c *check.C) {
 	t := s.Init(c)
 

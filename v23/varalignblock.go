@@ -339,11 +339,11 @@ func (info *varalignLine) realignDetails(newWidth int, indentDiff *optInt, isMul
 			indentDiff.set(diff)
 		}
 
-		width := imax(oldWidth+indentDiff.get(), 8)
+		width := max(oldWidth+indentDiff.get(), 8)
 		info.alignValueMultiFollow(width)
 
 	case info.rawIndex > 0:
-		width := imax(newWidth, info.valueColumn()+indentDiff.get())
+		width := max(newWidth, info.valueColumn()+indentDiff.get())
 		info.alignValueMultiFollow(width)
 
 	default:
@@ -494,7 +494,7 @@ func (l *varalignMkLine) rightMargin() (ok bool, margin int) {
 		col := columns[i]
 		if col == columns[i+1] {
 			ok := columns[0] == columns[len(columns)-1] && col <= 72
-			return ok, imin(col, 72)
+			return ok, min(col, 72)
 		}
 	}
 
@@ -620,7 +620,7 @@ func (info *varalignLine) alignFollow(newSpace string) {
 
 	continuationColumn := 0
 	if info.spaceBeforeContinuation() != " " {
-		continuationColumn = imin(72, info.continuationColumn())
+		continuationColumn = min(72, info.continuationColumn())
 	}
 
 	fix := info.fixer.Autofix()
@@ -857,7 +857,7 @@ func (p *varalignParts) isCanonicalFollow() bool {
 }
 
 func (p *varalignParts) isTooLongFor(valueColumn int) bool {
-	column := tabWidthAppend(imax(valueColumn, 8), p.value)
+	column := tabWidthAppend(max(valueColumn, 8), p.value)
 	if p.isContinuation() {
 		column += 2
 	}

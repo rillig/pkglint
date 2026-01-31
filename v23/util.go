@@ -178,7 +178,7 @@ func rtrimHspace(str string) string {
 }
 
 func trimCommonPrefix(a, b string) (string, string) {
-	i, n := 0, imin(len(a), len(b))
+	i, n := 0, min(len(a), len(b))
 	for i < n && a[i] == b[i] {
 		i++
 	}
@@ -266,20 +266,6 @@ func forEachStringMkLine(m map[string]*MkLine, action func(s string, mkline *MkL
 	for _, key := range keys {
 		action(key, m[key])
 	}
-}
-
-func imax(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
-func imin(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }
 
 // assertNil ensures that the given error is nil.
@@ -669,7 +655,7 @@ func naturalLess(str1, str2 string) bool {
 
 	idx := 0
 	len1, len2 := len(str1), len(str2)
-	minLen := len1 + len2 - imax(len1, len2)
+	minLen := len1 + len2 - max(len1, len2)
 	for idx < minLen {
 		c1, c2 := str1[idx], str2[idx]
 		dig1, dig2 := isDigit(c1), isDigit(c2)
