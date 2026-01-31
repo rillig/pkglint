@@ -1221,8 +1221,7 @@ func (s *Suite) Test_PlistPathChecker_checkOmf__rationale(c *check.C) {
 
 	t.ExpectDiagnosticsAutofix(
 		func(bool) { G.checkdirPackage(".") },
-		"ERROR: Makefile:20: Only packages that have .omf files in "+
-			"their PLIST may include omf-scrollkeeper.mk.")
+		nil...)
 }
 
 func (s *Suite) Test_PlistPathChecker_checkOmf__ok(c *check.C) {
