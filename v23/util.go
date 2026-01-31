@@ -298,7 +298,7 @@ func assertNotNil(obj interface{}) {
 // process with a fatal error message, prefixed with "Pkglint internal error".
 //
 // This method must only be used for programming errors.
-// For runtime errors, use dummyLine.Fatalf.
+// For runtime errors, use Logger.TechFatalf.
 func assert(cond bool) {
 	if !cond {
 		panic("Pkglint internal error")
@@ -309,7 +309,7 @@ func assert(cond bool) {
 // process with a fatal error message, prefixed with "Pkglint internal error".
 //
 // This function must only be used for programming errors.
-// For runtime errors, use dummyLine.Fatalf.
+// For runtime errors, use Logger.TechFatalf.
 func assertf(cond bool, format string, args ...interface{}) {
 	if !cond {
 		panic("Pkglint internal error: " + sprintf(format, args...))
