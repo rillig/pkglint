@@ -552,7 +552,7 @@ func (s *Suite) Test_Pkglint_Check__invalid_files_before_import(c *check.C) {
 func (s *Suite) Test_Pkglint_checkMode__neither_file_nor_directory(c *check.C) {
 	t := s.Init(c)
 
-	G.checkMode("/dev/null", os.ModeDevice)
+	G.checkMode(ClassifyFile("/dev/null"), os.ModeDevice)
 
 	t.CheckOutputLines(
 		"ERROR: /dev/null: No such file or directory.")
@@ -946,12 +946,12 @@ func (s *Suite) Test_Pkglint_checkReg__file_not_found(c *check.C) {
 
 	t.Chdir(".")
 
-	G.checkReg("buildlink3.mk", "buildlink3.mk", 3, nil)
-	G.checkReg("DESCR", "DESCR", 3, nil)
-	G.checkReg("distinfo", "distinfo", 3, nil)
-	G.checkReg("MESSAGE", "MESSAGE", 3, nil)
-	G.checkReg("patches/patch-aa", "patch-aa", 3, nil)
-	G.checkReg("PLIST", "PLIST", 3, nil)
+	G.checkReg(ClassifyFile("buildlink3.mk"), "buildlink3.mk", 3, nil)
+	G.checkReg(ClassifyFile("DESCR"), "DESCR", 3, nil)
+	G.checkReg(ClassifyFile("distinfo"), "distinfo", 3, nil)
+	G.checkReg(ClassifyFile("MESSAGE"), "MESSAGE", 3, nil)
+	G.checkReg(TypedFile{PatchFile, "patches/patch-aa"}, "patch-aa", 3, nil)
+	G.checkReg(ClassifyFile("PLIST"), "PLIST", 3, nil)
 
 	t.CheckOutputLines(
 		"ERROR: buildlink3.mk: Cannot be read.",
@@ -969,7 +969,7 @@ func (s *Suite) Test_Pkglint_checkReg__no_tracing(c *check.C) {
 	t.Chdir(".")
 	t.DisableTracing()
 
-	G.checkReg("patches/manual-aa", "manual-aa", 4, nil)
+	G.checkReg(TypedFile{PatchFile, "patches/manual-aa"}, "manual-aa", 4, nil)
 
 	t.CheckOutputEmpty()
 }
@@ -1075,7 +1075,7 @@ func (s *Suite) Test_Pkglint_checkReg__unknown_file_in_patches(c *check.C) {
 
 	t.CreateFileDummyPatch("category/Makefile/patches/index")
 
-	G.checkReg(t.File("category/Makefile/patches/index"), "index", 4, nil)
+	G.checkReg(TypedFile{PatchFile, t.File("category/Makefile/patches/index")}, "index", 4, nil)
 
 	t.CheckOutputLines(
 		"WARN: ~/category/Makefile/patches/index: " +
@@ -1090,7 +1090,7 @@ func (s *Suite) Test_Pkglint_checkReg__patch_for_makefile_fragment(c *check.C) {
 	t.CreateFileDummyPatch("category/package/patches/patch-compiler.mk")
 	t.Chdir("category/package")
 
-	G.checkReg(t.File("patches/patch-compiler.mk"), "patch-compiler.mk", 4, nil)
+	G.checkReg(ClassifyFile(t.File("patches/patch-compiler.mk")), "patch-compiler.mk", 4, nil)
 
 	t.CheckOutputEmpty()
 }
@@ -1100,7 +1100,7 @@ func (s *Suite) Test_Pkglint_checkReg__file_in_files(c *check.C) {
 
 	t.CreateFileLines("category/package/files/index")
 
-	G.checkReg(t.File("category/package/files/index"), "index", 4, nil)
+	G.checkReg(ClassifyFile(t.File("category/package/files/index")), "index", 4, nil)
 
 	// These files are ignored since they could contain anything.
 	t.CheckOutputEmpty()
@@ -1112,8 +1112,8 @@ func (s *Suite) Test_Pkglint_checkReg__spec(c *check.C) {
 	t.CreateFileLines("category/package/spec")
 	t.CreateFileLines("regress/package/spec")
 
-	G.checkReg(t.File("category/package/spec"), "spec", 3, nil)
-	G.checkReg(t.File("regress/package/spec"), "spec", 3, nil)
+	G.checkReg(ClassifyFile(t.File("category/package/spec")), "spec", 3, nil)
+	G.checkReg(ClassifyFile(t.File("regress/package/spec")), "spec", 3, nil)
 
 	t.CheckOutputLines(
 		"WARN: ~/category/package/spec: Only packages in regress/ may have spec files.")

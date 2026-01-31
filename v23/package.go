@@ -141,7 +141,7 @@ func (pkg *Package) Check() {
 	pkg.check(files, mklines, allLines)
 }
 
-func (pkg *Package) load() ([]CurrPath, *MkLines, *MkLines) {
+func (pkg *Package) load() ([]TypedFile, *MkLines, *MkLines) {
 	// Load the package Makefile and all included files,
 	// to collect all used and defined variables and similar data.
 	mklines, allLines := pkg.loadPackageMakefile()
@@ -149,38 +149,47 @@ func (pkg *Package) load() ([]CurrPath, *MkLines, *MkLines) {
 		return nil, nil, nil
 	}
 
-	files := pkg.File(".").ReadPaths()
-	if pkg.Pkgdir != "." && pkg.Rel(pkg.File(pkg.Pkgdir)) != "." {
-		files = append(files, pkg.File(pkg.Pkgdir).ReadPaths()...)
+	var files []TypedFile
+	for _, p := range pkg.File(".").ReadPaths() {
+		files = append(files, ClassifyFile(p))
 	}
-	files = append(files, pkg.File(pkg.Patchdir).ReadPaths()...)
+	if pkg.Pkgdir != "." && pkg.Rel(pkg.File(pkg.Pkgdir)) != "." {
+		for _, p := range pkg.File(pkg.Pkgdir).ReadPaths() {
+			files = append(files, ClassifyFile(p))
+		}
+	}
+	for _, p := range pkg.File(pkg.Patchdir).ReadPaths() {
+		files = append(files, TypedFile{PatchFile, p})
+	}
 	defaultDistinfoFile := NewPackagePathString(pkg.vars.create("DISTINFO_FILE").fallback)
 	if pkg.DistinfoFile != defaultDistinfoFile {
 		resolved := func(p PackagePath) PkgsrcPath { return G.Pkgsrc.Rel(pkg.File(p)) }
 		if resolved(pkg.DistinfoFile) != resolved(defaultDistinfoFile) {
-			files = append(files, pkg.File(pkg.DistinfoFile))
+			file := pkg.File(pkg.DistinfoFile)
+			files = append(files, TypedFile{DistinfoFile, file})
 		}
 	}
 
 	isRelevantMk := func(filename CurrPath, basename RelPath) bool {
-		if !hasPrefix(basename.String(), "Makefile.") && !filename.HasSuffixText(".mk") {
+		switch {
+		case basename == "Makefile":
 			return false
-		}
-		if filename.Dir().HasBase("patches") {
+		case pkg.Pkgdir == ".":
+			return true
+		case filename.ContainsPath(pkg.Pkgdir.AsPath()):
 			return false
-		}
-		if pkg.Pkgdir == "." {
+		default:
 			return true
 		}
-		return !filename.ContainsPath(pkg.Pkgdir.AsPath())
 	}
 
 	// Determine the used variables and PLIST directories before checking any of the makefile fragments.
 	// TODO: Why is this code necessary? What effect does it have?
 	pkg.collectConditionalIncludes(mklines)
-	for _, filename := range files {
+	for _, tf := range files {
+		filename := tf.path
 		basename := filename.Base()
-		if isRelevantMk(filename, basename) {
+		if tf.kind == MkFile && isRelevantMk(filename, basename) {
 			fragmentMklines := LoadMk(filename, pkg, MustSucceed)
 			pkg.collectConditionalIncludes(fragmentMklines)
 			pkg.loadBuildlink3Pkgbase(filename, fragmentMklines)
@@ -572,11 +581,12 @@ func (pkg *Package) loadPlistDirs(plistFilename CurrPath) {
 	}
 }
 
-func (pkg *Package) check(filenames []CurrPath, mklines, allLines *MkLines) {
+func (pkg *Package) check(tfs []TypedFile, mklines, allLines *MkLines) {
 	haveDistinfo := false
 	havePatches := false
 
-	for _, filename := range filenames {
+	for _, tf := range tfs {
+		filename := tf.path
 		if containsExpr(filename.String()) {
 			if trace.Tracing {
 				trace.Stepf("Skipping file %q because the name contains an unresolved variable.", filename)
@@ -599,7 +609,7 @@ func (pkg *Package) check(filenames []CurrPath, mklines, allLines *MkLines) {
 			pkg.checkfilePackageMakefile(filename, mklines, allLines)
 
 		default:
-			pkg.checkDirent(filename, st.Mode())
+			pkg.checkDirent(tf, st.Mode())
 		}
 
 		if filename.ContainsText("/patches/patch-") {
@@ -621,7 +631,7 @@ func (pkg *Package) check(filenames []CurrPath, mklines, allLines *MkLines) {
 				sprintf("%q.", bmake("makepatchsum")))
 		}
 
-		pkg.checkDescr(filenames, mklines)
+		pkg.checkDescr(tfs, mklines)
 	}
 
 	pkg.checkDistinfoFileAndPatchdir()
@@ -630,9 +640,9 @@ func (pkg *Package) check(filenames []CurrPath, mklines, allLines *MkLines) {
 	pkg.checkWipCommitMsg()
 }
 
-func (pkg *Package) checkDescr(filenames []CurrPath, mklines *MkLines) {
-	for _, filename := range filenames {
-		if filename.HasBase("DESCR") {
+func (pkg *Package) checkDescr(tfs []TypedFile, mklines *MkLines) {
+	for _, tf := range tfs {
+		if tf.path.HasBase("DESCR") {
 			return
 		}
 	}
@@ -1393,15 +1403,16 @@ func (pkg *Package) checkUpdate() {
 
 // checkDirent checks a directory entry based on its filename and its mode
 // (regular file, directory, symlink).
-func (pkg *Package) checkDirent(dirent CurrPath, mode os.FileMode) {
+func (pkg *Package) checkDirent(tf TypedFile, mode os.FileMode) {
 	// TODO: merge duplicate code in Pkglint.checkMode
 
+	dirent := tf.path
 	basename := dirent.Base()
 
 	switch {
 
 	case mode.IsRegular():
-		G.checkReg(dirent, basename, G.Pkgsrc.Rel(dirent).Count(), pkg)
+		G.checkReg(tf, basename, G.Pkgsrc.Rel(dirent).Count(), pkg)
 
 	case basename.HasPrefixText("work"):
 		if G.Import {

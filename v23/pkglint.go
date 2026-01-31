@@ -261,10 +261,12 @@ func (p *Pkglint) Check(dirent CurrPath) {
 		return
 	}
 
-	p.checkMode(dirent, st.Mode())
+	p.checkMode(ClassifyFile(dirent), st.Mode())
 }
 
-func (p *Pkglint) checkMode(dirent CurrPath, mode os.FileMode) {
+func (p *Pkglint) checkMode(tf TypedFile, mode os.FileMode) {
+	dirent := tf.path
+
 	// TODO: merge duplicate code in Package.checkDirent
 	isDir := mode.IsDir()
 	isReg := mode.IsRegular()
@@ -298,7 +300,7 @@ func (p *Pkglint) checkMode(dirent CurrPath, mode os.FileMode) {
 
 	if isReg {
 		p.checkExecutable(dirent, mode)
-		p.checkReg(dirent, dirent.Base(), pkgsrcRel.Count(), nil)
+		p.checkReg(tf, dirent.Base(), pkgsrcRel.Count(), nil)
 		return
 	}
 
@@ -506,7 +508,8 @@ func CheckFileMk(filename CurrPath, pkg *Package) {
 // checkReg checks the given regular file.
 // The depth is 3 for files in a package directory, and 4 or more for files
 // deeper in the directory hierarchy, such as in files/ or patches/.
-func (p *Pkglint) checkReg(filename CurrPath, basename RelPath, depth int, pkg *Package) {
+func (p *Pkglint) checkReg(tf TypedFile, basename RelPath, depth int, pkg *Package) {
+	filename := tf.path
 
 	if depth == 2 && basename == "pkg-vulnerabilities" {
 		NewVulnerabilities().read(filename)
@@ -552,7 +555,7 @@ func (p *Pkglint) checkReg(filename CurrPath, basename RelPath, depth int, pkg *
 			G.InterPackage.CheckDuplicateDescr(filename)
 		}
 
-	case basename == "distinfo":
+	case tf.kind == DistinfoFile:
 		if lines := Load(filename, NotEmpty|LogErrors); lines != nil {
 			CheckLinesDistinfo(pkg, lines)
 		}
@@ -585,7 +588,7 @@ func (p *Pkglint) checkReg(filename CurrPath, basename RelPath, depth int, pkg *
 	case filename.Dir().HasBase("patches"):
 		NewLineWhole(filename).Warnf("Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
 
-	case (basename.HasPrefixText("Makefile") || basename.HasSuffixText(".mk")) &&
+	case tf.kind == MkFile &&
 		!G.Pkgsrc.Rel(filename).AsPath().ContainsPath("files"):
 		CheckFileMk(filename, pkg)
 

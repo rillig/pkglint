@@ -2977,10 +2977,10 @@ func (s *Suite) Test_Package_checkDirent__errors(c *check.C) {
 	t.FinishSetUp()
 
 	pkg := NewPackage(t.File("category/package"))
-	pkg.checkDirent(t.File("category/package/options.mk"), 0444)
-	pkg.checkDirent(t.File("category/package/files/subdir"), 0555|os.ModeDir)
-	pkg.checkDirent(t.File("category/package/files/subdir/subsub"), 0555|os.ModeDir)
-	pkg.checkDirent(t.File("category/package/files"), 0555|os.ModeDir)
+	pkg.checkDirent(ClassifyFile(t.File("category/package/options.mk")), 0444)
+	pkg.checkDirent(ClassifyFile(t.File("category/package/files/subdir")), 0555|os.ModeDir)
+	pkg.checkDirent(ClassifyFile(t.File("category/package/files/subdir/subsub")), 0555|os.ModeDir)
+	pkg.checkDirent(ClassifyFile(t.File("category/package/files")), 0555|os.ModeDir)
 
 	t.CheckOutputLines(
 		"ERROR: ~/category/package/options.mk: Cannot be read.",
@@ -3002,9 +3002,9 @@ func (s *Suite) Test_Package_checkDirent__file_selection(c *check.C) {
 	t.FinishSetUp()
 
 	pkg := NewPackage(t.File("category/package"))
-	pkg.checkDirent(t.File("doc/CHANGES-2018"), 0444)
-	pkg.checkDirent(t.File("category/package/buildlink3.mk"), 0444)
-	pkg.checkDirent(t.File("category/package/unexpected.txt"), 0444)
+	pkg.checkDirent(ClassifyFile(t.File("doc/CHANGES-2018")), 0444)
+	pkg.checkDirent(ClassifyFile(t.File("category/package/buildlink3.mk")), 0444)
+	pkg.checkDirent(ClassifyFile(t.File("category/package/unexpected.txt")), 0444)
 
 	t.CheckOutputLines(
 		"NOTE: ~/category/package/buildlink3.mk:2: Trailing empty lines.",
@@ -3022,12 +3022,12 @@ func (s *Suite) Test_Package_checkDirent__skipped(c *check.C) {
 	t.Chdir("category/package")
 	pkg := NewPackage(".")
 
-	pkg.checkDirent("work", os.ModeSymlink)
-	pkg.checkDirent("work.i386", os.ModeSymlink)
-	pkg.checkDirent("work.hostname", os.ModeSymlink)
-	pkg.checkDirent("other", os.ModeSymlink)
+	pkg.checkDirent(ClassifyFile("work"), os.ModeSymlink)
+	pkg.checkDirent(ClassifyFile("work.i386"), os.ModeSymlink)
+	pkg.checkDirent(ClassifyFile("work.hostname"), os.ModeSymlink)
+	pkg.checkDirent(ClassifyFile("other"), os.ModeSymlink)
 
-	pkg.checkDirent("device", os.ModeDevice)
+	pkg.checkDirent(ClassifyFile("device"), os.ModeDevice)
 
 	t.CheckOutputLines(
 		"WARN: other: Invalid symlink name.",

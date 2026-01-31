@@ -281,3 +281,24 @@ func (s *Suite) Test_matchContinuationLine(c *check.C) {
 	t.CheckEquals(trailingWhitespace, "   ")
 	t.CheckEquals(continuation, "\\")
 }
+
+func (s *Suite) Test_ClassifyFile(c *check.C) {
+	t := s.Init(c)
+
+	test := func(path CurrPath, wantKind TypedFileKind) {
+		tf := ClassifyFile(path)
+		t.CheckEquals(tf.kind, wantKind)
+	}
+
+	test("Makefile", MkFile)
+	test("Makefile.common", MkFile)
+	test("module.mk", MkFile)
+
+	test("distinfo", DistinfoFile)
+
+	// Patch files are not classified by this function, as they only
+	// occur in special directories called "patches".
+	test("patches/patch-aa", OtherFile)
+
+	test("README", OtherFile)
+}

@@ -163,3 +163,30 @@ func matchContinuationLine(text string) (leadingWhitespace, result, trailingWhit
 	result = text[leadingEnd:trailingStart]
 	return
 }
+
+type TypedFile struct {
+	kind TypedFileKind
+	path CurrPath
+}
+
+type TypedFileKind uint8
+
+const (
+	OtherFile TypedFileKind = iota
+	MkFile
+	DistinfoFile
+	PatchFile
+)
+
+func ClassifyFile(path CurrPath) TypedFile {
+	kind := OtherFile
+	switch {
+	case path.HasBase("distinfo"):
+		kind = DistinfoFile
+	case path.HasBase("Makefile"),
+		path.Base().HasPrefixText("Makefile."),
+		path.HasSuffixText(".mk"):
+		kind = MkFile
+	}
+	return TypedFile{kind, path}
+}
