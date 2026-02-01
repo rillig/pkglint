@@ -82,11 +82,11 @@ func (p *Pattern) compileCharClass(lex *textproc.Lexer, ch byte, s stateID) (sta
 			if lex.EOF() {
 				return 0, errors.New("unfinished character range")
 			}
-			max := lex.NextByte()
-			if ch > max {
-				ch, max = max, ch
+			maxByte := lex.NextByte()
+			if ch > maxByte {
+				ch, maxByte = maxByte, ch
 			}
-			for i := int(ch); i <= int(max); i++ {
+			for i := int(ch); i <= int(maxByte); i++ {
 				chars[i] = true
 			}
 		} else {
