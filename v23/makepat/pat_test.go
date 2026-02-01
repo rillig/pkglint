@@ -415,24 +415,6 @@ func Test_Number(t *testing.T) {
 	}
 }
 
-func Test_bmin(t *testing.T) {
-	if bmin(0, 255) != 0 {
-		t.Error()
-	}
-	if bmin(128, 127) != 127 {
-		t.Error()
-	}
-}
-
-func Test_bmax(t *testing.T) {
-	if bmax(0, 255) != 255 {
-		t.Error()
-	}
-	if bmax(128, 127) != 128 {
-		t.Error()
-	}
-}
-
 func Test(t *testing.T) {
 	ck := intqa.NewQAChecker(t.Errorf)
 	ck.Configure("*", "*", "", -intqa.EMissingTest)
