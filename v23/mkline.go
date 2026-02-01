@@ -479,7 +479,7 @@ var notSpace = textproc.Space.Inverse()
 // such as semicolons are also treated as normal characters. Only double
 // and single quotes are interpreted.
 //
-// Compare devel/bmake/files/str.c, function brk_string.
+// Compare devel/bmake/files/str.c, function Str_Words.
 //
 // See UnquoteShell.
 func (mkline *MkLine) ValueFields(value string) []string {
