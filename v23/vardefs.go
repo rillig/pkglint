@@ -1763,7 +1763,6 @@ func (reg *VarTypeRegistry) Init(src *Pkgsrc) {
 		"special:rubyversion.mk: set",
 		"*: use, use-loadtime")
 
-	reg.sys("RUN", BtShellCommand, DefinedIfInScope|NonemptyIfDefined)
 	reg.sys("RUN_LDCONFIG", BtYesNo)
 	reg.pkg("R_PKGNAME", BtRPkgName)
 	reg.pkg("R_PKGVER", BtRPkgVer)

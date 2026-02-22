@@ -608,6 +608,14 @@ func (ck *ShellLineChecker) CheckShellCommandLine(shelltext string) {
 	lexer.SkipHspace()
 	lexer.SkipString("${_ULIMIT_CMD}") // It brings its own semicolon, just like ${RUN}.
 
+	if contains(lexer.Rest(), "${RUN}") {
+		line.Errorf("The expression \"${RUN}\" must only occur at the beginning of a shell command line.")
+		line.Explain(
+			"The expression ${RUN} expands to special instructions for make",
+			"that are only valid at the beginning of a shell command line,",
+			"even before any \"@\" character.")
+	}
+
 	ck.CheckShellCommand(lexer.Rest(), &setE, RunTime)
 	ck.checkMultiLineComment()
 	if hasSuffix(shelltext, ";") && !hasSuffix(shelltext, "\\;") && !contains(shelltext, "#") {

@@ -637,9 +637,7 @@ func (s *Suite) Test_ShellLineChecker__RUN(c *check.C) {
 		MkCvsID,
 		"pre-configure:",
 		"\t${RUN} echo good",
-		// TODO: @ cannot be combined with RUN.
-		"\t@${RUN} echo good",
-		// TODO: RUN must only occur at the beginning of a shell command line.
+		"\t@${RUN} echo bad",
 		"\tcd build && ${RUN} echo bad",
 		"\tcd ${RUN}",
 	)
@@ -648,8 +646,13 @@ func (s *Suite) Test_ShellLineChecker__RUN(c *check.C) {
 
 	t.CheckOutputLines(
 		"WARN: Makefile:4: The shell command \"${RUN}\" should not be hidden.",
+		"ERROR: Makefile:5: The expression \"${RUN}\" must only occur "+
+			"at the beginning of a shell command line.",
 		"WARN: Makefile:5: Unknown shell command \"${RUN}\".",
-		"WARN: Makefile:5: Variable \"RUN\" is used but not defined.")
+		"WARN: Makefile:5: Variable \"RUN\" is used but not defined.",
+		"ERROR: Makefile:6: The expression \"${RUN}\" must only occur "+
+			"at the beginning of a shell command line.",
+	)
 }
 
 func (s *Suite) Test_ShellLineChecker_checkSetE__simple_commands(c *check.C) {
