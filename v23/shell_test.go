@@ -629,6 +629,29 @@ func (s *Suite) Test_ShellLineChecker__skip_ULIMIT_CMD(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
+func (s *Suite) Test_ShellLineChecker__RUN(c *check.C) {
+	t := s.Init(c)
+	t.SetUpTool("echo", "", AfterPrefsMk)
+
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"pre-configure:",
+		"\t${RUN} echo good",
+		// TODO: @ cannot be combined with RUN.
+		"\t@${RUN} echo good",
+		// TODO: RUN must only occur at the beginning of a shell command line.
+		"\tcd build && ${RUN} echo bad",
+		"\tcd ${RUN}",
+	)
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:4: The shell command \"${RUN}\" should not be hidden.",
+		"WARN: Makefile:5: Unknown shell command \"${RUN}\".",
+		"WARN: Makefile:5: Variable \"RUN\" is used but not defined.")
+}
+
 func (s *Suite) Test_ShellLineChecker_checkSetE__simple_commands(c *check.C) {
 	t := s.Init(c)
 
