@@ -107,29 +107,31 @@ func (s *Suite) TearDownTest(c *check.C) {
 func Test__qa(t *testing.T) {
 	ck := intqa.NewQAChecker(t.Errorf)
 
-	ck.Configure("mkline.go", "*", "*", -intqa.EMissingTest)         // TODO
-	ck.Configure("mklineparser.go", "*", "*", -intqa.EMissingTest)   // TODO
-	ck.Configure("mklinechecker.go", "", "*", -intqa.EMissingTest)   // TODO
-	ck.Configure("mklines.go", "*", "*", -intqa.EMissingTest)        // TODO
-	ck.Configure("mkparser.go", "*", "*", -intqa.EMissingTest)       // TODO
-	ck.Configure("mkshparser.go", "*", "*", -intqa.EMissingTest)     // TODO
-	ck.Configure("mkshtypes.go", "*", "*", -intqa.EMissingTest)      // TODO
-	ck.Configure("mkshwalker.go", "*", "*", -intqa.EMissingTest)     // TODO
-	ck.Configure("mkstmt.go", "*", "isMkStmt", -intqa.EMissingTest)  //
-	ck.Configure("options.go", "*", "*", -intqa.EMissingTest)        // TODO
-	ck.Configure("package.go", "*", "*", -intqa.EMissingTest)        // TODO
-	ck.Configure("paragraph.go", "*", "*", -intqa.EMissingTest)      // TODO
-	ck.Configure("patches.go", "*", "*", -intqa.EMissingTest)        // TODO
-	ck.Configure("pkglint.go", "*", "*", -intqa.EMissingTest)        // TODO
-	ck.Configure("pkgsrc.go", "*", "*", -intqa.EMissingTest)         // TODO
-	ck.Configure("redundantscope.go", "*", "*", -intqa.EMissingTest) // TODO
-	ck.Configure("shell.go", "*", "*", -intqa.EMissingTest)          // TODO
-	ck.Configure("shtokenizer.go", "*", "*", -intqa.EMissingTest)    // TODO
-	ck.Configure("shtypes.go", "*", "*", -intqa.EMissingTest)        // TODO
-	ck.Configure("substcontext.go", "*", "*", -intqa.EMissingTest)   // TODO
-	ck.Configure("tools.go", "*", "*", -intqa.EMissingTest)          // TODO
-	ck.Configure("util.go", "*", "*", -intqa.EMissingTest)           // TODO
-	ck.Configure("var.go", "*", "*", -intqa.EMissingTest)            // TODO
+	ck.Configure("mkline.go", "*", "*", -intqa.EMissingTest)               // TODO
+	ck.Configure("mklineparser.go", "*", "*", -intqa.EMissingTest)         // TODO
+	ck.Configure("mklinechecker.go", "", "*", -intqa.EMissingTest)         // TODO
+	ck.Configure("mklines.go", "*", "*", -intqa.EMissingTest)              // TODO
+	ck.Configure("mkparser.go", "*", "*", -intqa.EMissingTest)             // TODO
+	ck.Configure("mkshparser.go", "*", "*", -intqa.EMissingTest)           // TODO
+	ck.Configure("mkshtypes.go", "*", "*", -intqa.EMissingTest)            // TODO
+	ck.Configure("mkshwalker.go", "*", "*", -intqa.EMissingTest)           // TODO
+	ck.Configure("mkstmt.go", "*", "isMkStmt", -intqa.EMissingTest)        //
+	ck.Configure("options.go", "*", "*", -intqa.EMissingTest)              // TODO
+	ck.Configure("package.go", "*", "*", -intqa.EMissingTest)              // TODO
+	ck.Configure("paragraph.go", "*", "*", -intqa.EMissingTest)            // TODO
+	ck.Configure("patches.go", "*", "*", -intqa.EMissingTest)              // TODO
+	ck.Configure("pkglint.go", "*", "*", -intqa.EMissingTest)              // TODO
+	ck.Configure("pkgsrc.go", "*", "*", -intqa.EMissingTest)               // TODO
+	ck.Configure("redundantscope.go", "*", "*", -intqa.EMissingTest)       // TODO
+	ck.Configure("shell.go", "*", "*", -intqa.EMissingTest)                // TODO
+	ck.Configure("shelllinechecker.go", "*", "*", -intqa.EMissingTest)     // TODO
+	ck.Configure("shtokenizer.go", "*", "*", -intqa.EMissingTest)          // TODO
+	ck.Configure("shtypes.go", "*", "*", -intqa.EMissingTest)              // TODO
+	ck.Configure("simplecommandchecker.go", "*", "*", -intqa.EMissingTest) // TODO
+	ck.Configure("substcontext.go", "*", "*", -intqa.EMissingTest)         // TODO
+	ck.Configure("tools.go", "*", "*", -intqa.EMissingTest)                // TODO
+	ck.Configure("util.go", "*", "*", -intqa.EMissingTest)                 // TODO
+	ck.Configure("var.go", "*", "*", -intqa.EMissingTest)                  // TODO
 
 	ck.Configure("varalignblock.go", "*", "*", -intqa.EMissingTest)            // TODO
 	ck.Configure("varalignblock.go", "varalignLine", "*", +intqa.EMissingTest) // TODO: remove as redundant
