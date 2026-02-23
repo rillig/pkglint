@@ -1241,10 +1241,9 @@ func (cv *VartypeCheck) ShellCommand() {
 	if cv.Op == opUseMatch || cv.Op == opUseCompare || cv.Op == opAssignAppend {
 		return
 	}
-	setE := true
 	ck := NewShellLineChecker(cv.MkLines, cv.MkLine)
 	ck.checkExpr = false
-	ck.CheckShellCommand(cv.Value, &setE, RunTime)
+	ck.CheckShellCommand(cv.Value, true, RunTime)
 }
 
 // ShellCommands checks for zero or more shell commands, each terminated with a semicolon.

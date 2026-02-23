@@ -554,8 +554,7 @@ func NewShellLineChecker(mklines *MkLines, mkline *MkLine) *ShellLineChecker {
 // CheckShellCommands checks for a list of shell commands, of which each one
 // is terminated with a semicolon. These are used in GENERATE_PLIST.
 func (ck *ShellLineChecker) CheckShellCommands(shellcmds string, time ToolTime) {
-	setE := true
-	ck.CheckShellCommand(shellcmds, &setE, time)
+	ck.CheckShellCommand(shellcmds, true, time)
 	if !hasSuffix(shellcmds, ";") {
 		ck.mkline.Warnf("This shell command list should end with a semicolon.")
 	}
@@ -616,7 +615,7 @@ func (ck *ShellLineChecker) CheckShellCommandLine(shelltext string) {
 			"even before any \"@\" character.")
 	}
 
-	ck.CheckShellCommand(lexer.Rest(), &setE, RunTime)
+	ck.CheckShellCommand(lexer.Rest(), setE, RunTime)
 	ck.checkMultiLineComment()
 	if hasSuffix(shelltext, ";") && !hasSuffix(shelltext, "\\;") && !contains(shelltext, "#") {
 		fix := line.Autofix()
@@ -685,7 +684,7 @@ func (ck *ShellLineChecker) checkHiddenAndSuppress(hiddenAndSuppress, rest strin
 	}
 }
 
-func (ck *ShellLineChecker) CheckShellCommand(shellcmd string, pSetE *bool, time ToolTime) {
+func (ck *ShellLineChecker) CheckShellCommand(shellcmd string, setE bool, time ToolTime) {
 	if trace.Tracing {
 		defer trace.Call0()()
 	}
@@ -708,11 +707,11 @@ func (ck *ShellLineChecker) CheckShellCommand(shellcmd string, pSetE *bool, time
 		scc.Check()
 		// TODO: Implement getopt parsing for StrCommand.
 		if scc.strcmd.Name == "set" && scc.strcmd.AnyArgMatches(`^-.*e`) {
-			*pSetE = true
+			setE = true
 		}
 	}
 	walker.Callback.AndOr = func(andor *MkShAndOr) {
-		if G.WarnExtra && !*pSetE && walker.Current().Index != 0 {
+		if G.WarnExtra && !setE && walker.Current().Index != 0 {
 			ck.checkSetE(walker.Parent(1).(*MkShList), walker.Current().Index)
 		}
 	}
@@ -779,9 +778,7 @@ outer:
 		case atom.Quoting == shqBackt || atom.Quoting == shqDquotBackt:
 			backtCommand := ck.unescapeBackticks(&atoms, quoting)
 			if backtCommand != "" {
-				// TODO: Wrap the setE into a struct.
-				setE := true
-				ck.CheckShellCommand(backtCommand, &setE, time)
+				ck.CheckShellCommand(backtCommand, true, time)
 			}
 			continue
 
