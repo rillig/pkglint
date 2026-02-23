@@ -397,155 +397,6 @@ type ShellLineChecker struct {
 	checkExpr bool
 }
 
-func (ck *ShellLineChecker) checkSetE(list *MkShList, index int) {
-	if trace.Tracing {
-		defer trace.Call0()()
-	}
-
-	command := list.AndOrs[index-1].Pipes[0].Cmds[0]
-	if command.Simple == nil || !ck.canFail(command) {
-		return
-	}
-
-	line := ck.mkline.Line
-	if !line.warnedAboutSetE.FirstTime() {
-		return
-	}
-
-	line.Warnf("Switch to \"set -e\" mode before using a semicolon (after %q) to separate commands.",
-		NewStrCommand(command.Simple).String())
-	line.Explain(
-		"Normally, when a shell command fails (returns non-zero),",
-		"the remaining commands are still executed.",
-		"For example, the following commands would remove",
-		"all files from the HOME directory:",
-		"",
-		"\tcd \"$HOME\"; cd /nonexistent; rm -rf *",
-		"",
-		"In \"set -e\" mode, the shell stops when a command fails.",
-		"",
-		"To fix this warning, you can:",
-		"",
-		"* insert ${RUN} at the beginning of the line",
-		"  (which among other things does \"set -e\")",
-		"* insert \"set -e\" explicitly at the beginning of the line",
-		"* use \"&&\" instead of \";\" to separate the commands")
-}
-
-// canFail returns true if the given shell command can fail.
-// Most shell commands can fail for various reasons, such as missing
-// files or invalid arguments.
-//
-// Commands that can fail:
-//
-//	echo "hello" > file
-//	sed 's,$, world,,' < input > output
-//	find . -print
-//	wc -l *
-//
-// Commands that cannot fail:
-//
-//	echo "hello"
-//	sed 's,$, world,,'
-//	wc -l
-func (ck *ShellLineChecker) canFail(cmd *MkShCommand) bool {
-	simple := cmd.Simple
-	if simple == nil {
-		return true
-	}
-
-	if simple.Name == nil {
-		for _, assignment := range simple.Assignments {
-			text := assignment.MkText
-			if contains(text, "`") || contains(text, "$(") {
-				if !contains(text, "|| ${TRUE}") && !contains(text, "|| true") {
-					return true
-				}
-			}
-		}
-		return false
-	}
-
-	for _, redirect := range simple.Redirections {
-		if !hasSuffix(redirect.Op, "&") {
-			return true
-		}
-	}
-
-	cmdName := simple.Name.MkText
-	switch cmdName {
-	case "${ECHO_MSG}", "${PHASE_MSG}", "${STEP_MSG}",
-		"${INFO_MSG}", "${WARNING_MSG}", "${ERROR_MSG}",
-		"${WARNING_CAT}", "${ERROR_CAT}",
-		"${DO_NADA}":
-		return false
-	case "${FAIL_MSG}":
-		return true
-	case "set":
-	}
-
-	tool, _ := G.Tool(ck.MkLines, cmdName, RunTime)
-	if tool == nil {
-		return true
-	}
-
-	toolName := tool.Name
-	args := simple.Args
-	argc := len(args)
-	switch toolName {
-	case "basename", "dirname", "echo", "env", "printf", "tr":
-		return false
-	case "sed", "gsed":
-		if argc == 2 && args[0].MkText == "-e" {
-			return false
-		}
-		return argc != 1
-	case "grep", "ggrep":
-		return argc != 1
-	}
-
-	return true
-}
-
-func (ck *ShellLineChecker) checkPipeExitcode(pipeline *MkShPipeline) {
-	if trace.Tracing {
-		defer trace.Call0()()
-	}
-
-	canFail := func() (bool, string) {
-		for _, cmd := range pipeline.Cmds[:len(pipeline.Cmds)-1] {
-			if ck.canFail(cmd) {
-				if cmd.Simple != nil && cmd.Simple.Name != nil {
-					return true, cmd.Simple.Name.MkText
-				}
-				return true, ""
-			}
-		}
-		return false, ""
-	}
-
-	if G.WarnExtra && len(pipeline.Cmds) > 1 {
-		if canFail, cmd := canFail(); canFail {
-			if cmd != "" {
-				ck.Warnf("The exitcode of %q at the left of the | operator is ignored.", cmd)
-			} else {
-				ck.Warnf("The exitcode of the command at the left of the | operator is ignored.")
-			}
-			ck.Explain(
-				"In a shell command like \"cat *.txt | grep keyword\", if the command",
-				"on the left side of the \"|\" fails, this failure is ignored.",
-				"",
-				"If you need to detect the failure of the left-hand-side command, use",
-				"temporary files to save the output of the command.",
-				"A good place to create those files is in ${WRKDIR}.")
-		}
-	}
-}
-
-var shellCommandsType = NewVartype(BtShellCommands, NoVartypeOptions, NewACLEntry("*", aclpAllRuntime))
-
-var shellCommandsEctx = &ExprContext{shellCommandsType, EctxUnknownTime, EctxQuotPlain, false}
-
 func NewShellLineChecker(mklines *MkLines, mkline *MkLine) *ShellLineChecker {
 	assertNotNil(mklines)
 	return &ShellLineChecker{mklines, mkline, true}
@@ -684,48 +535,9 @@ func (ck *ShellLineChecker) checkHiddenAndSuppress(hiddenAndSuppress, rest strin
 	}
 }
 
-func (ck *ShellLineChecker) CheckShellCommand(shellcmd string, setE bool, time ToolTime) {
-	if trace.Tracing {
-		defer trace.Call0()()
-	}
+var shellCommandsType = NewVartype(BtShellCommands, NoVartypeOptions, NewACLEntry("*", aclpAllRuntime))
 
-	line := ck.mkline.Line
-	program, err := parseShellProgram(line, shellcmd)
-	// XXX: This code is duplicated in checkWordQuoting.
-	if err != nil && contains(shellcmd, "$$(") { // Hack until the shell parser can handle subshells.
-		line.Warnf("Invoking subshells via $(...) is not portable enough.")
-		return
-	}
-	if err != nil {
-		line.Warnf("Pkglint ShellLine.CheckShellCommand: %s", err.Error())
-		return
-	}
-
-	walker := NewMkShWalker()
-	walker.Callback.SimpleCommand = func(command *MkShSimpleCommand) {
-		scc := NewSimpleCommandChecker(command, time, ck.mkline, ck.MkLines)
-		scc.Check()
-		// TODO: Implement getopt parsing for StrCommand.
-		if scc.strcmd.Name == "set" && scc.strcmd.AnyArgMatches(`^-.*e`) {
-			setE = true
-		}
-	}
-	walker.Callback.AndOr = func(andor *MkShAndOr) {
-		if G.WarnExtra && !setE && walker.Current().Index != 0 {
-			ck.checkSetE(walker.Parent(1).(*MkShList), walker.Current().Index)
-		}
-	}
-	walker.Callback.Pipeline = func(pipeline *MkShPipeline) {
-		ck.checkPipeExitcode(pipeline)
-	}
-	walker.Callback.Word = func(word *ShToken) {
-		// TODO: Try to replace false with true here; it had been set to false
-		//  in 2016 for no apparent reason.
-		ck.CheckWord(word.MkText, false, time)
-	}
-
-	walker.Walk(program)
-}
+var shellCommandsEctx = &ExprContext{shellCommandsType, EctxUnknownTime, EctxQuotPlain, false}
 
 func (ck *ShellLineChecker) CheckWord(token string, checkQuoting bool, time ToolTime) {
 	if trace.Tracing {
@@ -813,6 +625,194 @@ outer:
 		ck.Warnf("Internal pkglint error in ShellLine.CheckWord at %q (quoting=%s), rest: %s",
 			token, quoting.String(), tok.Rest())
 	}
+}
+
+func (ck *ShellLineChecker) CheckShellCommand(shellcmd string, setE bool, time ToolTime) {
+	if trace.Tracing {
+		defer trace.Call0()()
+	}
+
+	line := ck.mkline.Line
+	program, err := parseShellProgram(line, shellcmd)
+	// XXX: This code is duplicated in checkWordQuoting.
+	if err != nil && contains(shellcmd, "$$(") { // Hack until the shell parser can handle subshells.
+		line.Warnf("Invoking subshells via $(...) is not portable enough.")
+		return
+	}
+	if err != nil {
+		line.Warnf("Pkglint ShellLine.CheckShellCommand: %s", err.Error())
+		return
+	}
+
+	walker := NewMkShWalker()
+	walker.Callback.SimpleCommand = func(command *MkShSimpleCommand) {
+		scc := NewSimpleCommandChecker(command, time, ck.mkline, ck.MkLines)
+		scc.Check()
+		// TODO: Implement getopt parsing for StrCommand.
+		if scc.strcmd.Name == "set" && scc.strcmd.AnyArgMatches(`^-.*e`) {
+			setE = true
+		}
+	}
+	walker.Callback.AndOr = func(andor *MkShAndOr) {
+		if G.WarnExtra && !setE && walker.Current().Index != 0 {
+			ck.checkSetE(walker.Parent(1).(*MkShList), walker.Current().Index)
+		}
+	}
+	walker.Callback.Pipeline = func(pipeline *MkShPipeline) {
+		ck.checkPipeExitcode(pipeline)
+	}
+	walker.Callback.Word = func(word *ShToken) {
+		// TODO: Try to replace false with true here; it had been set to false
+		//  in 2016 for no apparent reason.
+		ck.CheckWord(word.MkText, false, time)
+	}
+
+	walker.Walk(program)
+}
+
+func (ck *ShellLineChecker) checkSetE(list *MkShList, index int) {
+	if trace.Tracing {
+		defer trace.Call0()()
+	}
+
+	command := list.AndOrs[index-1].Pipes[0].Cmds[0]
+	if command.Simple == nil || !ck.canFail(command) {
+		return
+	}
+
+	line := ck.mkline.Line
+	if !line.warnedAboutSetE.FirstTime() {
+		return
+	}
+
+	line.Warnf("Switch to \"set -e\" mode before using a semicolon (after %q) to separate commands.",
+		NewStrCommand(command.Simple).String())
+	line.Explain(
+		"Normally, when a shell command fails (returns non-zero),",
+		"the remaining commands are still executed.",
+		"For example, the following commands would remove",
+		"all files from the HOME directory:",
+		"",
+		"\tcd \"$HOME\"; cd /nonexistent; rm -rf *",
+		"",
+		"In \"set -e\" mode, the shell stops when a command fails.",
+		"",
+		"To fix this warning, you can:",
+		"",
+		"* insert ${RUN} at the beginning of the line",
+		"  (which among other things does \"set -e\")",
+		"* insert \"set -e\" explicitly at the beginning of the line",
+		"* use \"&&\" instead of \";\" to separate the commands")
+}
+
+func (ck *ShellLineChecker) checkPipeExitcode(pipeline *MkShPipeline) {
+	if trace.Tracing {
+		defer trace.Call0()()
+	}
+
+	canFail := func() (bool, string) {
+		for _, cmd := range pipeline.Cmds[:len(pipeline.Cmds)-1] {
+			if ck.canFail(cmd) {
+				if cmd.Simple != nil && cmd.Simple.Name != nil {
+					return true, cmd.Simple.Name.MkText
+				}
+				return true, ""
+			}
+		}
+		return false, ""
+	}
+
+	if G.WarnExtra && len(pipeline.Cmds) > 1 {
+		if canFail, cmd := canFail(); canFail {
+			if cmd != "" {
+				ck.Warnf("The exitcode of %q at the left of the | operator is ignored.", cmd)
+			} else {
+				ck.Warnf("The exitcode of the command at the left of the | operator is ignored.")
+			}
+			ck.Explain(
+				"In a shell command like \"cat *.txt | grep keyword\", if the command",
+				"on the left side of the \"|\" fails, this failure is ignored.",
+				"",
+				"If you need to detect the failure of the left-hand-side command, use",
+				"temporary files to save the output of the command.",
+				"A good place to create those files is in ${WRKDIR}.")
+		}
+	}
+}
+
+// canFail returns true if the given shell command can fail.
+// Most shell commands can fail for various reasons, such as missing
+// files or invalid arguments.
+//
+// Commands that can fail:
+//
+//	echo "hello" > file
+//	sed 's,$, world,,' < input > output
+//	find . -print
+//	wc -l *
+//
+// Commands that cannot fail:
+//
+//	echo "hello"
+//	sed 's,$, world,,'
+//	wc -l
+func (ck *ShellLineChecker) canFail(cmd *MkShCommand) bool {
+	simple := cmd.Simple
+	if simple == nil {
+		return true
+	}
+
+	if simple.Name == nil {
+		for _, assignment := range simple.Assignments {
+			text := assignment.MkText
+			if contains(text, "`") || contains(text, "$(") {
+				if !contains(text, "|| ${TRUE}") && !contains(text, "|| true") {
+					return true
+				}
+			}
+		}
+		return false
+	}
+
+	for _, redirect := range simple.Redirections {
+		if !hasSuffix(redirect.Op, "&") {
+			return true
+		}
+	}
+
+	cmdName := simple.Name.MkText
+	switch cmdName {
+	case "${ECHO_MSG}", "${PHASE_MSG}", "${STEP_MSG}",
+		"${INFO_MSG}", "${WARNING_MSG}", "${ERROR_MSG}",
+		"${WARNING_CAT}", "${ERROR_CAT}",
+		"${DO_NADA}":
+		return false
+	case "${FAIL_MSG}":
+		return true
+	case "set":
+	}
+
+	tool, _ := G.Tool(ck.MkLines, cmdName, RunTime)
+	if tool == nil {
+		return true
+	}
+
+	toolName := tool.Name
+	args := simple.Args
+	argc := len(args)
+	switch toolName {
+	case "basename", "dirname", "echo", "env", "printf", "tr":
+		return false
+	case "sed", "gsed":
+		if argc == 2 && args[0].MkText == "-e" {
+			return false
+		}
+		return argc != 1
+	case "grep", "ggrep":
+		return argc != 1
+	}
+
+	return true
 }
 
 // unescapeBackticks takes a backticks expression like `echo \\"hello\\"` and

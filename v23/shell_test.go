@@ -655,246 +655,6 @@ func (s *Suite) Test_ShellLineChecker__RUN(c *check.C) {
 	)
 }
 
-func (s *Suite) Test_ShellLineChecker_checkSetE__simple_commands(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpTool("echo", "", AtRunTime)
-	t.SetUpTool("rm", "", AtRunTime)
-	t.SetUpTool("touch", "", AtRunTime)
-	mklines := t.NewMkLines("Makefile",
-		MkCvsID,
-		"pre-configure:",
-		"\techo 1; echo 2; echo 3",
-		"\techo 1; touch file; rm file",
-		"\techo 1; var=value; echo 3")
-
-	mklines.Check()
-
-	t.CheckOutputLines(
-		"WARN: Makefile:4: Switch to \"set -e\" mode before using a semicolon " +
-			"(after \"touch file\") to separate commands.")
-}
-
-func (s *Suite) Test_ShellLineChecker_checkSetE__compound_commands(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpTool("echo", "", AtRunTime)
-	t.SetUpTool("touch", "", AtRunTime)
-	mklines := t.NewMkLines("Makefile",
-		MkCvsID,
-		"pre-configure:",
-		"\ttouch file; for f in file; do echo \"$$f\"; done",
-		"\tfor f in file; do echo \"$$f\"; done; touch file",
-		"\ttouch 1; touch 2; touch 3; touch 4")
-
-	mklines.Check()
-
-	t.CheckOutputLines(
-		"WARN: Makefile:3: Switch to \"set -e\" mode before using a semicolon "+
-			"(after \"touch file\") to separate commands.",
-		"WARN: Makefile:5: Switch to \"set -e\" mode before using a semicolon "+
-			"(after \"touch 1\") to separate commands.")
-}
-
-func (s *Suite) Test_ShellLineChecker_checkSetE__no_tracing(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpTool("touch", "", AtRunTime)
-	mklines := t.NewMkLines("Makefile",
-		MkCvsID,
-		"pre-configure:",
-		"\ttouch 1; touch 2")
-	t.DisableTracing()
-
-	mklines.Check()
-
-	t.CheckOutputLines(
-		"WARN: Makefile:3: Switch to \"set -e\" mode before using a semicolon " +
-			"(after \"touch 1\") to separate commands.")
-}
-
-func (s *Suite) Test_ShellLineChecker_canFail(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpVartypes()
-	t.SetUpTool("basename", "", AtRunTime)
-	t.SetUpTool("dirname", "", AtRunTime)
-	t.SetUpTool("echo", "", AtRunTime)
-	t.SetUpTool("env", "", AtRunTime)
-	t.SetUpTool("ggrep", "", AtRunTime)
-	t.SetUpTool("grep", "GREP", AtRunTime)
-	t.SetUpTool("sed", "", AtRunTime)
-	t.SetUpTool("gsed", "", AtRunTime)
-	t.SetUpTool("touch", "", AtRunTime)
-	t.SetUpTool("tr", "tr", AtRunTime)
-	t.SetUpTool("true", "TRUE", AtRunTime)
-
-	test := func(cmd string, diagnostics ...string) {
-		mklines := t.NewMkLines("Makefile",
-			MkCvsID,
-			"pre-configure:",
-			"\t"+cmd+" ; echo 'done.'")
-
-		mklines.Check()
-
-		t.CheckOutput(diagnostics)
-	}
-
-	test("socklen=`${GREP} 'expr' ${WRKSRC}/config.h`",
-		"WARN: Makefile:3: Switch to \"set -e\" mode before using a semicolon "+
-			"(after \"socklen=`${GREP} 'expr' ${WRKSRC}/config.h`\") to separate commands.")
-
-	test("socklen=`${GREP} 'expr' ${WRKSRC}/config.h || ${TRUE}`",
-		nil...)
-
-	test("socklen=$$(expr 16)",
-		"WARN: Makefile:3: Switch to \"set -e\" mode before using a semicolon "+
-			"(after \"socklen=$$(expr 16)\") to separate commands.")
-
-	test("socklen=$$(expr 16 || true)",
-		nil...)
-
-	test("socklen=$$(expr 16 || ${TRUE})",
-		nil...)
-
-	test("${ECHO_MSG} \"Message\"",
-		nil...)
-
-	test("${PHASE_MSG} \"Message\"",
-		nil...)
-
-	test("${STEP_MSG} \"Message\"",
-		nil...)
-
-	test("${INFO_MSG} \"Message\"",
-		nil...)
-
-	test("${WARNING_MSG} \"Message\"",
-		nil...)
-
-	test("${ERROR_MSG} \"Message\"",
-		nil...)
-
-	test("${WARNING_CAT} \"Message\"",
-		nil...)
-
-	test("${ERROR_CAT} \"Message\"",
-		nil...)
-
-	test("${DO_NADA} \"Message\"",
-		nil...)
-
-	test("${FAIL_MSG} \"Failure\"",
-		"WARN: Makefile:3: Switch to \"set -e\" mode before using a semicolon "+
-			"(after \"${FAIL_MSG} \\\"Failure\\\"\") to separate commands.")
-
-	test("set -x",
-		"WARN: Makefile:3: Switch to \"set -e\" mode before using a semicolon "+
-			"(after \"set -x\") to separate commands.")
-
-	test("echo 'input' | sed -e s,in,out,",
-		nil...)
-
-	test("sed -e s,in,out,",
-		nil...)
-
-	test("sed s,in,out,",
-		nil...)
-
-	test("gsed -e s,in,out,",
-		nil...)
-
-	test("gsed s,in,out,",
-		nil...)
-
-	test("gsed s,in,out, filename",
-		"WARN: Makefile:3: Switch to \"set -e\" mode "+
-			"before using a semicolon (after \"gsed s,in,out, filename\") "+
-			"to separate commands.")
-
-	test("ggrep input",
-		nil...)
-
-	test("ggrep pattern file...",
-		"WARN: Makefile:3: Switch to \"set -e\" mode before using a semicolon "+
-			"(after \"ggrep pattern file...\") to separate commands.")
-
-	test("grep input",
-		nil...)
-
-	test("grep pattern file...",
-		"WARN: Makefile:3: Switch to \"set -e\" mode before using a semicolon "+
-			"(after \"grep pattern file...\") to separate commands.")
-
-	test("touch file",
-		"WARN: Makefile:3: Switch to \"set -e\" mode before using a semicolon "+
-			"(after \"touch file\") to separate commands.")
-
-	test("echo 'starting'",
-		nil...)
-
-	test("echo 'logging' > log",
-		"WARN: Makefile:3: Switch to \"set -e\" mode before using a semicolon "+
-			"(after \"echo 'logging'\") to separate commands.")
-
-	test("echo 'to stderr' 1>&2",
-		nil...)
-
-	test("echo 'hello' | tr -d 'aeiou'",
-		nil...)
-
-	test("env | grep '^PATH='",
-		nil...)
-
-	test("basename dir/file",
-		nil...)
-
-	test("dirname dir/file",
-		nil...)
-
-	test("tr A-Z a-z",
-		nil...)
-}
-
-func (s *Suite) Test_ShellLineChecker_checkPipeExitcode(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpVartypes()
-	t.SetUpTool("cat", "", AtRunTime)
-	t.SetUpTool("echo", "", AtRunTime)
-	t.SetUpTool("printf", "", AtRunTime)
-	t.SetUpTool("sed", "", AtRunTime)
-	t.SetUpTool("right-side", "", AtRunTime)
-	mklines := t.NewMkLines("Makefile",
-		"\t echo | right-side",
-		"\t sed s,s,s, | right-side",
-		"\t printf | sed s,s,s, | right-side ",
-		"\t cat | right-side",
-		"\t cat | echo | right-side",
-		"\t echo | cat | right-side",
-		"\t sed s,s,s, filename | right-side",
-		"\t sed s,s,s < input | right-side",
-		"\t ./unknown | right-side",
-		"\t var=value | right-side",
-		"\t if :; then :; fi | right-side",
-		"\t var=`cat file` | right-side")
-
-	for _, mkline := range mklines.mklines {
-		ck := NewShellLineChecker(mklines, mkline)
-		ck.CheckShellCommandLine(mkline.ShellCommand())
-	}
-
-	t.CheckOutputLines(
-		"WARN: Makefile:4: The exitcode of \"cat\" at the left of the | operator is ignored.",
-		"WARN: Makefile:5: The exitcode of \"cat\" at the left of the | operator is ignored.",
-		"WARN: Makefile:6: The exitcode of \"cat\" at the left of the | operator is ignored.",
-		"WARN: Makefile:7: The exitcode of \"sed\" at the left of the | operator is ignored.",
-		"WARN: Makefile:8: The exitcode of \"sed\" at the left of the | operator is ignored.",
-		"WARN: Makefile:9: The exitcode of \"./unknown\" at the left of the | operator is ignored.",
-		"WARN: Makefile:11: The exitcode of the command at the left of the | operator is ignored.",
-		"WARN: Makefile:12: The exitcode of the command at the left of the | operator is ignored.")
-}
-
 func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine(c *check.C) {
 	t := s.Init(c)
 
@@ -1457,53 +1217,6 @@ func (s *Suite) Test_ShellLineChecker_checkHiddenAndSuppress__no_tracing(c *chec
 		"WARN: Makefile:4: The shell command \"ls\" should not be hidden.")
 }
 
-func (s *Suite) Test_ShellLineChecker_CheckShellCommand__subshell(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpTool("echo", "ECHO", AtRunTime)
-	t.SetUpTool("expr", "EXPR", AtRunTime)
-	mklines := t.NewMkLines("Makefile",
-		MkCvsID,
-		"",
-		"pre-configure:",
-		"\t@(echo ok)",
-		"\techo $$(uname -r); echo $$(expr 4 '*' $$(echo 1024))",
-		"\t@(echo nb$$(uname -r) $$(${EXPR} 4 \\* $$(echo 1024)))")
-
-	mklines.Check()
-
-	// XXX: Fix the parse errors (nested subshells).
-	// XXX: Fix the duplicate diagnostic in line 6.
-	// TODO: "(" is not a shell command, it's an operator.
-	t.CheckOutputLines(
-		"WARN: Makefile:4: The shell command \"(\" should not be hidden.",
-		"WARN: Makefile:5: Internal pkglint error in ShTokenizer.ShAtom at \"$$(echo 1024))\" (quoting=S).",
-		"WARN: Makefile:5: Invoking subshells via $(...) is not portable enough.",
-		"WARN: Makefile:6: Internal pkglint error in ShTokenizer.ShAtom at \"$$(echo 1024)))\" (quoting=S).",
-		"WARN: Makefile:6: The shell command \"(\" should not be hidden.",
-		"WARN: Makefile:6: Internal pkglint error in ShTokenizer.ShAtom at \"$$(echo 1024)))\" (quoting=S).",
-		"WARN: Makefile:6: Invoking subshells via $(...) is not portable enough.")
-}
-
-func (s *Suite) Test_ShellLineChecker_CheckShellCommand__case_patterns_from_variable(c *check.C) {
-	t := s.Init(c)
-
-	t.SetUpVartypes()
-	mklines := t.NewMkLines("Makefile",
-		MkCvsID,
-		"",
-		"pre-configure:",
-		"\tcase $$file in ${CHECK_PERMS_SKIP:@pattern@${pattern}) ;;@} *) continue; esac")
-
-	mklines.Check()
-
-	// TODO: Ensure that the shell word is really only one expression.
-	// TODO: Ensure that the last modifier is :@@@.
-	// TODO: Ensure that the replacement is a well-formed case-item.
-	// TODO: Ensure that the replacement contains ";;" as the last shell token.
-	t.CheckOutputEmpty()
-}
-
 func (s *Suite) Test_ShellLineChecker_CheckWord(c *check.C) {
 	t := s.Init(c)
 
@@ -1693,6 +1406,293 @@ func (s *Suite) Test_ShellLineChecker_checkWordQuoting(c *check.C) {
 
 	test(
 		"``",
+		nil...)
+}
+
+func (s *Suite) Test_ShellLineChecker_CheckShellCommand__subshell(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpTool("echo", "ECHO", AtRunTime)
+	t.SetUpTool("expr", "EXPR", AtRunTime)
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"pre-configure:",
+		"\t@(echo ok)",
+		"\techo $$(uname -r); echo $$(expr 4 '*' $$(echo 1024))",
+		"\t@(echo nb$$(uname -r) $$(${EXPR} 4 \\* $$(echo 1024)))")
+
+	mklines.Check()
+
+	// XXX: Fix the parse errors (nested subshells).
+	// XXX: Fix the duplicate diagnostic in line 6.
+	// TODO: "(" is not a shell command, it's an operator.
+	t.CheckOutputLines(
+		"WARN: Makefile:4: The shell command \"(\" should not be hidden.",
+		"WARN: Makefile:5: Internal pkglint error in ShTokenizer.ShAtom at \"$$(echo 1024))\" (quoting=S).",
+		"WARN: Makefile:5: Invoking subshells via $(...) is not portable enough.",
+		"WARN: Makefile:6: Internal pkglint error in ShTokenizer.ShAtom at \"$$(echo 1024)))\" (quoting=S).",
+		"WARN: Makefile:6: The shell command \"(\" should not be hidden.",
+		"WARN: Makefile:6: Internal pkglint error in ShTokenizer.ShAtom at \"$$(echo 1024)))\" (quoting=S).",
+		"WARN: Makefile:6: Invoking subshells via $(...) is not portable enough.")
+}
+
+func (s *Suite) Test_ShellLineChecker_CheckShellCommand__case_patterns_from_variable(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"",
+		"pre-configure:",
+		"\tcase $$file in ${CHECK_PERMS_SKIP:@pattern@${pattern}) ;;@} *) continue; esac")
+
+	mklines.Check()
+
+	// TODO: Ensure that the shell word is really only one expression.
+	// TODO: Ensure that the last modifier is :@@@.
+	// TODO: Ensure that the replacement is a well-formed case-item.
+	// TODO: Ensure that the replacement contains ";;" as the last shell token.
+	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_ShellLineChecker_checkSetE__simple_commands(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpTool("echo", "", AtRunTime)
+	t.SetUpTool("rm", "", AtRunTime)
+	t.SetUpTool("touch", "", AtRunTime)
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"pre-configure:",
+		"\techo 1; echo 2; echo 3",
+		"\techo 1; touch file; rm file",
+		"\techo 1; var=value; echo 3")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:4: Switch to \"set -e\" mode before using a semicolon " +
+			"(after \"touch file\") to separate commands.")
+}
+
+func (s *Suite) Test_ShellLineChecker_checkSetE__compound_commands(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpTool("echo", "", AtRunTime)
+	t.SetUpTool("touch", "", AtRunTime)
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"pre-configure:",
+		"\ttouch file; for f in file; do echo \"$$f\"; done",
+		"\tfor f in file; do echo \"$$f\"; done; touch file",
+		"\ttouch 1; touch 2; touch 3; touch 4")
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:3: Switch to \"set -e\" mode before using a semicolon "+
+			"(after \"touch file\") to separate commands.",
+		"WARN: Makefile:5: Switch to \"set -e\" mode before using a semicolon "+
+			"(after \"touch 1\") to separate commands.")
+}
+
+func (s *Suite) Test_ShellLineChecker_checkSetE__no_tracing(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpTool("touch", "", AtRunTime)
+	mklines := t.NewMkLines("Makefile",
+		MkCvsID,
+		"pre-configure:",
+		"\ttouch 1; touch 2")
+	t.DisableTracing()
+
+	mklines.Check()
+
+	t.CheckOutputLines(
+		"WARN: Makefile:3: Switch to \"set -e\" mode before using a semicolon " +
+			"(after \"touch 1\") to separate commands.")
+}
+
+func (s *Suite) Test_ShellLineChecker_checkPipeExitcode(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	t.SetUpTool("cat", "", AtRunTime)
+	t.SetUpTool("echo", "", AtRunTime)
+	t.SetUpTool("printf", "", AtRunTime)
+	t.SetUpTool("sed", "", AtRunTime)
+	t.SetUpTool("right-side", "", AtRunTime)
+	mklines := t.NewMkLines("Makefile",
+		"\t echo | right-side",
+		"\t sed s,s,s, | right-side",
+		"\t printf | sed s,s,s, | right-side ",
+		"\t cat | right-side",
+		"\t cat | echo | right-side",
+		"\t echo | cat | right-side",
+		"\t sed s,s,s, filename | right-side",
+		"\t sed s,s,s < input | right-side",
+		"\t ./unknown | right-side",
+		"\t var=value | right-side",
+		"\t if :; then :; fi | right-side",
+		"\t var=`cat file` | right-side")
+
+	for _, mkline := range mklines.mklines {
+		ck := NewShellLineChecker(mklines, mkline)
+		ck.CheckShellCommandLine(mkline.ShellCommand())
+	}
+
+	t.CheckOutputLines(
+		"WARN: Makefile:4: The exitcode of \"cat\" at the left of the | operator is ignored.",
+		"WARN: Makefile:5: The exitcode of \"cat\" at the left of the | operator is ignored.",
+		"WARN: Makefile:6: The exitcode of \"cat\" at the left of the | operator is ignored.",
+		"WARN: Makefile:7: The exitcode of \"sed\" at the left of the | operator is ignored.",
+		"WARN: Makefile:8: The exitcode of \"sed\" at the left of the | operator is ignored.",
+		"WARN: Makefile:9: The exitcode of \"./unknown\" at the left of the | operator is ignored.",
+		"WARN: Makefile:11: The exitcode of the command at the left of the | operator is ignored.",
+		"WARN: Makefile:12: The exitcode of the command at the left of the | operator is ignored.")
+}
+
+func (s *Suite) Test_ShellLineChecker_canFail(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpVartypes()
+	t.SetUpTool("basename", "", AtRunTime)
+	t.SetUpTool("dirname", "", AtRunTime)
+	t.SetUpTool("echo", "", AtRunTime)
+	t.SetUpTool("env", "", AtRunTime)
+	t.SetUpTool("ggrep", "", AtRunTime)
+	t.SetUpTool("grep", "GREP", AtRunTime)
+	t.SetUpTool("sed", "", AtRunTime)
+	t.SetUpTool("gsed", "", AtRunTime)
+	t.SetUpTool("touch", "", AtRunTime)
+	t.SetUpTool("tr", "tr", AtRunTime)
+	t.SetUpTool("true", "TRUE", AtRunTime)
+
+	test := func(cmd string, diagnostics ...string) {
+		mklines := t.NewMkLines("Makefile",
+			MkCvsID,
+			"pre-configure:",
+			"\t"+cmd+" ; echo 'done.'")
+
+		mklines.Check()
+
+		t.CheckOutput(diagnostics)
+	}
+
+	test("socklen=`${GREP} 'expr' ${WRKSRC}/config.h`",
+		"WARN: Makefile:3: Switch to \"set -e\" mode before using a semicolon "+
+			"(after \"socklen=`${GREP} 'expr' ${WRKSRC}/config.h`\") to separate commands.")
+
+	test("socklen=`${GREP} 'expr' ${WRKSRC}/config.h || ${TRUE}`",
+		nil...)
+
+	test("socklen=$$(expr 16)",
+		"WARN: Makefile:3: Switch to \"set -e\" mode before using a semicolon "+
+			"(after \"socklen=$$(expr 16)\") to separate commands.")
+
+	test("socklen=$$(expr 16 || true)",
+		nil...)
+
+	test("socklen=$$(expr 16 || ${TRUE})",
+		nil...)
+
+	test("${ECHO_MSG} \"Message\"",
+		nil...)
+
+	test("${PHASE_MSG} \"Message\"",
+		nil...)
+
+	test("${STEP_MSG} \"Message\"",
+		nil...)
+
+	test("${INFO_MSG} \"Message\"",
+		nil...)
+
+	test("${WARNING_MSG} \"Message\"",
+		nil...)
+
+	test("${ERROR_MSG} \"Message\"",
+		nil...)
+
+	test("${WARNING_CAT} \"Message\"",
+		nil...)
+
+	test("${ERROR_CAT} \"Message\"",
+		nil...)
+
+	test("${DO_NADA} \"Message\"",
+		nil...)
+
+	test("${FAIL_MSG} \"Failure\"",
+		"WARN: Makefile:3: Switch to \"set -e\" mode before using a semicolon "+
+			"(after \"${FAIL_MSG} \\\"Failure\\\"\") to separate commands.")
+
+	test("set -x",
+		"WARN: Makefile:3: Switch to \"set -e\" mode before using a semicolon "+
+			"(after \"set -x\") to separate commands.")
+
+	test("echo 'input' | sed -e s,in,out,",
+		nil...)
+
+	test("sed -e s,in,out,",
+		nil...)
+
+	test("sed s,in,out,",
+		nil...)
+
+	test("gsed -e s,in,out,",
+		nil...)
+
+	test("gsed s,in,out,",
+		nil...)
+
+	test("gsed s,in,out, filename",
+		"WARN: Makefile:3: Switch to \"set -e\" mode "+
+			"before using a semicolon (after \"gsed s,in,out, filename\") "+
+			"to separate commands.")
+
+	test("ggrep input",
+		nil...)
+
+	test("ggrep pattern file...",
+		"WARN: Makefile:3: Switch to \"set -e\" mode before using a semicolon "+
+			"(after \"ggrep pattern file...\") to separate commands.")
+
+	test("grep input",
+		nil...)
+
+	test("grep pattern file...",
+		"WARN: Makefile:3: Switch to \"set -e\" mode before using a semicolon "+
+			"(after \"grep pattern file...\") to separate commands.")
+
+	test("touch file",
+		"WARN: Makefile:3: Switch to \"set -e\" mode before using a semicolon "+
+			"(after \"touch file\") to separate commands.")
+
+	test("echo 'starting'",
+		nil...)
+
+	test("echo 'logging' > log",
+		"WARN: Makefile:3: Switch to \"set -e\" mode before using a semicolon "+
+			"(after \"echo 'logging'\") to separate commands.")
+
+	test("echo 'to stderr' 1>&2",
+		nil...)
+
+	test("echo 'hello' | tr -d 'aeiou'",
+		nil...)
+
+	test("env | grep '^PATH='",
+		nil...)
+
+	test("basename dir/file",
+		nil...)
+
+	test("dirname dir/file",
+		nil...)
+
+	test("tr A-Z a-z",
 		nil...)
 }
 
