@@ -1865,6 +1865,27 @@ func (s *Suite) Test_ShellLineChecker_checkShExprPlain__Wall(c *check.C) {
 		"WARN: filename.mk:5: The $@ shell variable should only be used in double quotes.")
 }
 
+func (s *Suite) Test_ShellLineChecker_checkShExprPlain__dollarQuestion(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpTool("tool", "", AtRunTime)
+
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"",
+		"do-configure:",
+		"\tif tool $$? != 0; then \\",
+		"\t\ttool bad; \\",
+		"\tfi",
+	)
+
+	mklines.Check()
+
+	// FIXME: Only warn if there is actually a "set -e" command around.
+	t.CheckOutputLines(
+		"WARN: filename.mk:4--6: The $? shell variable is often not available in \"set -e\" mode.")
+}
+
 func (s *Suite) Test_ShellLineChecker_variableNeedsQuoting(c *check.C) {
 	t := s.Init(c)
 
