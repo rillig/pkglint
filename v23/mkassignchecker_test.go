@@ -808,19 +808,20 @@ func (s *Suite) Test_MkAssignChecker_checkOpShell(c *check.C) {
 		"",
 		"MUST_BE_EARLY!=\techo 123 # must be evaluated early",
 		"",
-		"show-package-allVars: .PHONY",
-		"\techo OS_NAME=${OS_NAME:Q}",
-		"\techo MUST_BE_EARLY=${MUST_BE_EARLY:Q}")
+		"# Is fine to be evaluated at parse time.",
+		"PARSE_TIME_WITH_RATIONALE!=\techo 123",
+		"",
+		"use-variables: .PHONY",
+		"\t: ${OS_NAME:Q}",
+		"\t: ${PARSE_TIME_WITH_RATIONALE:Q}",
+		"\t: ${MUST_BE_EARLY:Q}")
 	t.FinishSetUp()
 
 	G.Check(t.File("category/package/standalone.mk"))
 
-	// There is no warning about any variable since no package is currently
-	// being checked, therefore pkglint cannot decide whether the variable
-	// is used a load time.
-	t.CheckOutputLines(
-		"WARN: ~/category/package/standalone.mk:14: Use \"${ECHO}\" instead of \"echo\".",
-		"WARN: ~/category/package/standalone.mk:15: Use \"${ECHO}\" instead of \"echo\".")
+	// When checking a standalone file, there is no warning about any variable
+	// since pkglint cannot decide whether the variable is used a load time.
+	t.CheckOutputEmpty()
 
 	t.SetUpCommandLine("-Wall", "--explain")
 	G.Check(t.File("category/package"))
@@ -859,8 +860,7 @@ func (s *Suite) Test_MkAssignChecker_checkOpShell(c *check.C) {
 		"\tby using it at the right-hand side of the := operator, or in an .if",
 		"\tor .for directive.",
 		"",
-		"WARN: ~/category/package/standalone.mk:14: Use \"${ECHO}\" instead of \"echo\".",
-		"WARN: ~/category/package/standalone.mk:15: Use \"${ECHO}\" instead of \"echo\".")
+		"NOTE: ~/category/package/standalone.mk:14: Consider the :sh modifier instead of != for \"echo 123\".")
 }
 
 func (s *Suite) Test_MkAssignChecker_checkOpAppendOnly(c *check.C) {
