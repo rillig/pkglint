@@ -412,9 +412,6 @@ func (ck *MkAssignChecker) checkOpShell() {
 	case mkline.Op() != opAssignShell:
 		return
 
-	case mkline.HasComment():
-		return
-
 	case mkline.Basename == "builtin.mk":
 		// These are typically USE_BUILTIN.* and BUILTIN_VERSION.*.
 		// Authors of builtin.mk files usually know what they're doing.
@@ -424,8 +421,10 @@ func (ck *MkAssignChecker) checkOpShell() {
 		return
 	}
 
-	mkline.Notef("Consider the :sh modifier instead of != for %q.", mkline.Value())
-	mkline.Explain(
+	fix := mkline.Autofix()
+	fix.Rationale(mkline)
+	fix.Notef("Consider the :sh modifier instead of != for %q.", mkline.Value())
+	fix.Explain(
 		"For variable assignments using the != operator, the shell command",
 		"is run every time the file is parsed.",
 		"In some cases this is too early, and the command may not yet be installed.",
@@ -450,6 +449,7 @@ func (ck *MkAssignChecker) checkOpShell() {
 		"of the line, or force the variable to be evaluated at load time,",
 		"by using it at the right-hand side of the := operator, or in an .if",
 		"or .for directive.")
+	fix.Apply()
 }
 
 // checkOpAppendOnly checks that certain predefined variables are not

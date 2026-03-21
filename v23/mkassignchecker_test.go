@@ -860,7 +860,9 @@ func (s *Suite) Test_MkAssignChecker_checkOpShell(c *check.C) {
 		"\tby using it at the right-hand side of the := operator, or in an .if",
 		"\tor .for directive.",
 		"",
-		"NOTE: ~/category/package/standalone.mk:14: Consider the :sh modifier instead of != for \"echo 123\".")
+		"\tTo suppress this diagnostic, add a comment at the end of this line",
+		"\tor in the line above.",
+		"")
 }
 
 func (s *Suite) Test_MkAssignChecker_checkOpAppendOnly(c *check.C) {
