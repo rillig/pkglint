@@ -856,12 +856,9 @@ func (s *Suite) Test_MkAssignChecker_checkOpShell(c *check.C) {
 		"\t\tLATE_YEAR=      ${date +%Y:L:sh}",
 		"",
 		"\tTo suppress this note, provide an explanation in a comment at the",
-		"\tend of the line, or force the variable to be evaluated at load time,",
-		"\tby using it at the right-hand side of the := operator, or in an .if",
-		"\tor .for directive.",
-		"",
-		"\tTo suppress this note, add a comment at the end of this line or in",
-		"\tthe line above.",
+		"\tend of the line or in the line above, or force the variable to be",
+		"\tevaluated at load time, by using it at the right-hand side of the :=",
+		"\toperator, or in an .if or .for directive.",
 		"")
 }
 

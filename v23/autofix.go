@@ -29,8 +29,9 @@ type Autofix struct {
 
 // autofixShortTerm is the part of the Autofix that is reset after each call to Apply.
 type autofixShortTerm struct {
-	rationaleKeywords []string
-	rationaleMkline   *MkLine
+	rationaleKeywords            []string
+	rationaleMkline              *MkLine
+	suppressRationaleExplanation bool
 
 	// Human-readable description of the actual autofix actions.
 	// There can be more than one action in cases where a follow-up
@@ -78,6 +79,13 @@ func NewAutofix(line *Line) *Autofix {
 func (fix *Autofix) Rationale(mkline *MkLine, keywords ...string) {
 	fix.rationaleKeywords = keywords
 	fix.rationaleMkline = mkline
+}
+
+// SuppressRationaleExplanation skips the standard text for suppressing
+// a diagnostic. To be used in cases where the explanation already contains
+// such an explanation with more details or alternatives.
+func (fix *Autofix) SuppressRationaleExplanation() {
+	fix.suppressRationaleExplanation = true
 }
 
 // Errorf remembers the error for logging it later when Apply is called.
@@ -359,6 +367,8 @@ func (fix *Autofix) Apply() {
 			diagType = "note"
 		}
 		switch {
+		case fix.suppressRationaleExplanation:
+			break
 		case len(keywords) == 1:
 			explanation = append(explanation,
 				"",

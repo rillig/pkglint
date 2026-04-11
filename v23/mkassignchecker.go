@@ -445,10 +445,12 @@ func (ck *MkAssignChecker) checkOpShell() {
 		"\t# or, in a single line:",
 		"\tLATE_YEAR=      ${date +%Y:L:sh}",
 		"",
-		"To suppress this note, provide an explanation in a comment at the end",
-		"of the line, or force the variable to be evaluated at load time,",
+		"To suppress this note, provide an explanation",
+		"in a comment at the end of the line or in the line above,",
+		"or force the variable to be evaluated at load time,",
 		"by using it at the right-hand side of the := operator, or in an .if",
 		"or .for directive.")
+	fix.SuppressRationaleExplanation()
 	fix.Apply()
 }
 

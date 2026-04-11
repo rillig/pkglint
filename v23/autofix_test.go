@@ -366,9 +366,45 @@ func (s *Suite) Test_NewAutofix(c *check.C) {
 func (s *Suite) Test_Autofix_Rationale(c *check.C) {
 	t := s.Init(c)
 
-	// TODO
+	mklines := t.NewMkLines("filename.mk",
+		MkCvsID,
+		"",
+		"# pkglint: suppress this warning",
+		"UNUSED:=\t${UNDEFINED}")
+	mklines.collectRationale()
 
+	mkline := mklines.mklines[3]
+	fix := mkline.Autofix()
+	fix.Warnf("This is a warning.")
+	fix.Rationale(mkline, "suppress")
+	fix.Apply()
+
+	// No warning, since the code in question provides a rationale.
 	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_Autofix_SuppressRationaleExplanation(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--explain")
+
+	mkline := t.NewMkLine("filename.mk", 123, "UNUSED:=\t${UNDEFINED}")
+
+	fix := mkline.Autofix()
+	fix.Warnf("This is a warning.")
+	fix.Rationale(mkline, "suppress")
+	fix.Explain(
+		"To suppress this warning, add a standard rationale,",
+		"or remove the unused and undefined variables.")
+	fix.SuppressRationaleExplanation()
+	fix.Apply()
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:123: This is a warning.",
+		"",
+		"\tTo suppress this warning, add a standard rationale, or remove the",
+		"\tunused and undefined variables.",
+		"")
 }
 
 func (s *Suite) Test_Autofix_Errorf(c *check.C) {
