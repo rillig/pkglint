@@ -1251,8 +1251,8 @@ func (s *Suite) Test_Autofix_Apply__explain_rationale_no_keywords(c *check.C) {
 		"",
 		"\tExplanation.",
 		"",
-		"\tTo suppress this diagnostic, add a comment at the end of this line",
-		"\tor in the line above.",
+		"\tTo suppress this note, add a comment at the end of this line or in",
+		"\tthe line above.",
 		"",
 	)
 }
@@ -1276,8 +1276,8 @@ func (s *Suite) Test_Autofix_Apply__explain_rationale_single_keyword(c *check.C)
 		"",
 		"\tExplanation.",
 		"",
-		"\tTo suppress this diagnostic, add a comment containing the word",
-		"\t\"keyword\" at the end of this line or in the line above.",
+		"\tTo suppress this note, add a comment containing the word \"keyword\"",
+		"\tat the end of this line or in the line above.",
 		"",
 	)
 }
@@ -1301,9 +1301,9 @@ func (s *Suite) Test_Autofix_Apply__explain_rationale_keywords(c *check.C) {
 		"",
 		"\tExplanation.",
 		"",
-		"\tTo suppress this diagnostic, add a comment containing one of the",
-		"\twords \"keyword1\" or \"keyword2\" at the end of this line or in the",
-		"\tline above.",
+		"\tTo suppress this note, add a comment containing one of the words",
+		"\t\"keyword1\" or \"keyword2\" at the end of this line or in the line",
+		"\tabove.",
 		"",
 	)
 }
@@ -1325,9 +1325,9 @@ func (s *Suite) Test_Autofix_Apply__rationale_without_primary_explanation(c *che
 	t.CheckOutputLines(
 		"NOTE: filename.mk:123: Just a demo.",
 		"",
-		"\tTo suppress this diagnostic, add a comment containing one of the",
-		"\twords \"keyword1\" or \"keyword2\" at the end of this line or in the",
-		"\tline above.",
+		"\tTo suppress this note, add a comment containing one of the words",
+		"\t\"keyword1\" or \"keyword2\" at the end of this line or in the line",
+		"\tabove.",
 		"",
 	)
 }

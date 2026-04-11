@@ -349,11 +349,20 @@ func (fix *Autofix) Apply() {
 	if logDiagnostic {
 		explanation := fix.explanation
 		keywords := fix.rationaleKeywords
+		diagType := "diagnostic"
+		switch fix.level {
+		case Error:
+			diagType = "error message"
+		case Warn:
+			diagType = "warning"
+		case Note:
+			diagType = "note"
+		}
 		switch {
 		case len(keywords) == 1:
 			explanation = append(explanation,
 				"",
-				"To suppress this diagnostic, add a comment",
+				sprintf("To suppress this %s, add a comment", diagType),
 				sprintf("containing the word %q", keywords[0]),
 				"at the end of this line or in the line above.")
 		case len(keywords) > 0:
@@ -364,13 +373,13 @@ func (fix *Autofix) Apply() {
 			joinedKeywords := joinCambridge("or", kws...)
 			explanation = append(explanation,
 				"",
-				"To suppress this diagnostic, add a comment",
+				sprintf("To suppress this %s, add a comment", diagType),
 				sprintf("containing one of the words %s", joinedKeywords),
 				"at the end of this line or in the line above.")
 		case fix.rationaleMkline != nil:
 			explanation = append(explanation,
 				"",
-				"To suppress this diagnostic, add a comment",
+				sprintf("To suppress this %s, add a comment", diagType),
 				"at the end of this line or in the line above.")
 		}
 		if len(explanation) > 0 {

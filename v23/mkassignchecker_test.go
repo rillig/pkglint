@@ -860,8 +860,8 @@ func (s *Suite) Test_MkAssignChecker_checkOpShell(c *check.C) {
 		"\tby using it at the right-hand side of the := operator, or in an .if",
 		"\tor .for directive.",
 		"",
-		"\tTo suppress this diagnostic, add a comment at the end of this line",
-		"\tor in the line above.",
+		"\tTo suppress this note, add a comment at the end of this line or in",
+		"\tthe line above.",
 		"")
 }
 
