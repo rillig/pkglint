@@ -97,7 +97,7 @@ func (s *Scope) def(name string, mkline *MkLine) {
 		value := mkline.Value()
 		if trace.Tracing {
 			trace.Stepf("Scope.Define.append %s: %s = %q + %q",
-				mkline.String(), name, abbreviate(v.value.String()), value)
+				mkline.String(), name, shorten(v.value.String(), 50), value)
 		}
 		v.append(value)
 	case opAssignDefault:

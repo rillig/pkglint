@@ -211,13 +211,6 @@ func replaceOnce(s, from, to string) (ok bool, replaced string) {
 	return false, s
 }
 
-func abbreviate(s string) string {
-	if len(s) <= 200 {
-		return s
-	}
-	return s[:10] + "[...]" + s[len(s)-10:]
-}
-
 func isHspace(ch byte) bool {
 	return ch == ' ' || ch == '\t'
 }
@@ -500,6 +493,9 @@ func alignmentAfter(prefix string, width int) string {
 }
 
 func shorten(s string, maxChars int) string {
+	if len(s) <= maxChars {
+		return s
+	}
 	codePoints := 0
 	for i := range s {
 		if codePoints >= maxChars {
