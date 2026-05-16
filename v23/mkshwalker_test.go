@@ -21,8 +21,7 @@ func (w *MkShWalker) Path() string {
 			typeName = "[]" + elementType.Elem().Elem().Name()
 		}
 		abbreviated := strings.TrimPrefix(typeName, "MkSh")
-		if level.Index == -1 {
-			// TODO: This form should also be used if index == 0 and len == 1.
+		if level.Index == -1 || (level.Index == 0 && level.Length == 1) {
 			path = append(path, abbreviated)
 		} else {
 			path = append(path, sprintf("%s[%d]", abbreviated, level.Index))
@@ -129,14 +128,14 @@ func (s *Suite) Test_MkShWalker_Walk(c *check.C) {
 		"        Pipeline with 1 commands",
 		"         Command ",
 		"   SimpleCommand condition",
-		"            Path List.AndOr[0].Pipeline[0].Command[0].CompoundCommand.If.List[0].AndOr[0].Pipeline[0].Command[0].SimpleCommand",
+		"            Path List.AndOr[0].Pipeline.Command.CompoundCommand.If.List[0].AndOr.Pipeline.Command.SimpleCommand",
 		"            Word condition",
 		"            List with 1 andOrs",
 		"           AndOr with 1 pipelines",
 		"        Pipeline with 1 commands",
 		"         Command ",
 		"   SimpleCommand action",
-		"            Path List.AndOr[0].Pipeline[0].Command[0].CompoundCommand.If.List[1].AndOr[0].Pipeline[0].Command[0].SimpleCommand",
+		"            Path List.AndOr[0].Pipeline.Command.CompoundCommand.If.List[1].AndOr.Pipeline.Command.SimpleCommand",
 		"            Word action",
 		"            List with 1 andOrs",
 		"           AndOr with 1 pipelines",
@@ -153,15 +152,15 @@ func (s *Suite) Test_MkShWalker_Walk(c *check.C) {
 		"        Pipeline with 1 commands",
 		"         Command ",
 		"   SimpleCommand case-item-action",
-		"            Path List.AndOr[0].Pipeline[0].Command[0].CompoundCommand.If."+
-			"List[2].AndOr[0].Pipeline[0].Command[0].CompoundCommand.Case.CaseItem[0]."+
-			"List.AndOr[0].Pipeline[0].Command[0].SimpleCommand",
+		"            Path List.AndOr[0].Pipeline.Command.CompoundCommand.If."+
+			"List[2].AndOr.Pipeline.Command.CompoundCommand.Case.CaseItem."+
+			"List.AndOr.Pipeline.Command.SimpleCommand",
 		"            Word case-item-action",
 		"           AndOr with 1 pipelines",
 		"        Pipeline with 1 commands",
 		"         Command ",
 		"   SimpleCommand set -e",
-		"            Path List.AndOr[1].Pipeline[0].Command[0].SimpleCommand",
+		"            Path List.AndOr[1].Pipeline.Command.SimpleCommand",
 		"            Word set",
 		"           Words with 1 words",
 		"            Word -e",
@@ -169,7 +168,7 @@ func (s *Suite) Test_MkShWalker_Walk(c *check.C) {
 		"        Pipeline with 1 commands",
 		"         Command ",
 		"   SimpleCommand cd ${WRKSRC}/locale",
-		"            Path List.AndOr[2].Pipeline[0].Command[0].SimpleCommand",
+		"            Path List.AndOr[2].Pipeline.Command.SimpleCommand",
 		"            Word cd",
 		"           Words with 1 words",
 		"            Word ${WRKSRC}/locale",
@@ -186,7 +185,7 @@ func (s *Suite) Test_MkShWalker_Walk(c *check.C) {
 		"        Pipeline with 1 commands",
 		"         Command ",
 		"   SimpleCommand [ \"$${lang}\" = \"wxstd.po\" ]",
-		"            Path List.AndOr[3].Pipeline[0].Command[0].CompoundCommand.For.List.AndOr[0].Pipeline[0].Command[0].SimpleCommand",
+		"            Path List.AndOr[3].Pipeline.Command.CompoundCommand.For.List.AndOr[0].Pipeline[0].Command.SimpleCommand",
 		"            Word [",
 		"           Words with 4 words",
 		"            Word \"$${lang}\"",
@@ -196,13 +195,13 @@ func (s *Suite) Test_MkShWalker_Walk(c *check.C) {
 		"        Pipeline with 1 commands",
 		"         Command ",
 		"   SimpleCommand continue",
-		"            Path List.AndOr[3].Pipeline[0].Command[0].CompoundCommand.For.List.AndOr[0].Pipeline[1].Command[0].SimpleCommand",
+		"            Path List.AndOr[3].Pipeline.Command.CompoundCommand.For.List.AndOr[0].Pipeline[1].Command.SimpleCommand",
 		"            Word continue",
 		"           AndOr with 1 pipelines",
 		"        Pipeline with 1 commands",
 		"         Command ",
 		"   SimpleCommand ${TOOLS_PATH.msgfmt} -c -o \"$${lang%.po}.mo\" \"$${lang}\"",
-		"            Path List.AndOr[3].Pipeline[0].Command[0].CompoundCommand.For.List.AndOr[1].Pipeline[0].Command[0].SimpleCommand",
+		"            Path List.AndOr[3].Pipeline.Command.CompoundCommand.For.List.AndOr[1].Pipeline.Command.SimpleCommand",
 		"            Word ${TOOLS_PATH.msgfmt}",
 		"           Words with 4 words",
 		"            Word -c",
@@ -219,7 +218,7 @@ func (s *Suite) Test_MkShWalker_Walk(c *check.C) {
 		"        Pipeline with 1 commands",
 		"         Command ",
 		"   SimpleCommand :",
-		"            Path List.AndOr[4].Pipeline[0].Command[0].CompoundCommand.Loop.List[0].AndOr[0].Pipeline[0].Command[0].SimpleCommand",
+		"            Path List.AndOr[4].Pipeline.Command.CompoundCommand.Loop.List[0].AndOr.Pipeline.Command.SimpleCommand",
 		"            Word :",
 		"            List with 1 andOrs",
 		"           AndOr with 1 pipelines",
@@ -232,9 +231,9 @@ func (s *Suite) Test_MkShWalker_Walk(c *check.C) {
 		"        Pipeline with 1 commands",
 		"         Command ",
 		"   SimpleCommand :",
-		"            Path List.AndOr[4].Pipeline[0].Command[0].CompoundCommand.Loop."+
-			"List[1].AndOr[0].Pipeline[0].Command[0].FunctionDefinition.CompoundCommand."+
-			"List.AndOr[0].Pipeline[0].Command[0].SimpleCommand",
+		"            Path List.AndOr[4].Pipeline.Command.CompoundCommand.Loop."+
+			"List[1].AndOr.Pipeline.Command.FunctionDefinition.CompoundCommand."+
+			"List.AndOr.Pipeline.Command.SimpleCommand",
 		"            Word :",
 		"       Redirects with 1 redirects",
 		"        Redirect >&",
@@ -250,24 +249,24 @@ func (s *Suite) Test_MkShWalker_Walk(c *check.C) {
 		"         Command ",
 		"   SimpleCommand echo 'hello world'",
 		"            Word echo",
-		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.ShToken",
+		"            Path List.AndOr.Pipeline.Command.SimpleCommand.ShToken",
 		"           Words with 1 words",
 		"            Word 'hello world'",
-		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.[]ShToken[1].ShToken[0]",
+		"            Path List.AndOr.Pipeline.Command.SimpleCommand.[]ShToken[1].ShToken",
 		"       Redirects with 3 redirects",
-		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.[]MkShRedirection",
+		"            Path List.AndOr.Pipeline.Command.SimpleCommand.[]MkShRedirection",
 		"        Redirect >",
-		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.[]MkShRedirection.Redirection[0]",
+		"            Path List.AndOr.Pipeline.Command.SimpleCommand.[]MkShRedirection.Redirection[0]",
 		"            Word /dev/null",
-		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.[]MkShRedirection.Redirection[0].ShToken[0]",
+		"            Path List.AndOr.Pipeline.Command.SimpleCommand.[]MkShRedirection.Redirection[0].ShToken[0]",
 		"        Redirect >&",
-		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.[]MkShRedirection.Redirection[1]",
+		"            Path List.AndOr.Pipeline.Command.SimpleCommand.[]MkShRedirection.Redirection[1]",
 		"            Word 1",
-		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.[]MkShRedirection.Redirection[1].ShToken[1]",
+		"            Path List.AndOr.Pipeline.Command.SimpleCommand.[]MkShRedirection.Redirection[1].ShToken[1]",
 		"        Redirect <",
-		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.[]MkShRedirection.Redirection[2]",
+		"            Path List.AndOr.Pipeline.Command.SimpleCommand.[]MkShRedirection.Redirection[2]",
 		"            Word /dev/random",
-		"            Path List.AndOr[0].Pipeline[0].Command[0].SimpleCommand.[]MkShRedirection.Redirection[2].ShToken[2]")
+		"            Path List.AndOr.Pipeline.Command.SimpleCommand.[]MkShRedirection.Redirection[2].ShToken[2]")
 }
 
 func (s *Suite) Test_MkShWalker_Walk__empty_callback(c *check.C) {
@@ -308,7 +307,7 @@ func (s *Suite) Test_MkShWalker_Walk__assertion(c *check.C) {
 	walker := NewMkShWalker()
 
 	// This callback intentionally breaks the assertion.
-	walker.Callback.Word = func(word *ShToken) { walker.push(0, "extra word") }
+	walker.Callback.Word = func(word *ShToken) { walker.push(0, 1, "extra word") }
 
 	t.ExpectAssert(func() { walker.Walk(list) })
 }
@@ -316,11 +315,11 @@ func (s *Suite) Test_MkShWalker_Walk__assertion(c *check.C) {
 // Just for code coverage, to keep the main code symmetrical.
 func (s *Suite) Test_MkShWalker_walkCommand__empty(c *check.C) {
 	walker := NewMkShWalker()
-	walker.walkCommand(0, &MkShCommand{})
+	walker.walkCommand(0, 1, &MkShCommand{})
 }
 
 // Just for code coverage, to keep the main code symmetrical.
 func (s *Suite) Test_MkShWalker_walkCompoundCommand__empty(c *check.C) {
 	walker := NewMkShWalker()
-	walker.walkCompoundCommand(0, &MkShCompoundCommand{})
+	walker.walkCompoundCommand(&MkShCompoundCommand{})
 }

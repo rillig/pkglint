@@ -48,7 +48,8 @@ type MkShWalkerPathElement struct {
 	//
 	// TODO: It might be worth defining negative indexes to correspond
 	//  to the fields "Cond", "Action", "Else", etc.
-	Index int
+	Index  int
+	Length int
 
 	Element interface{}
 }
@@ -60,56 +61,56 @@ func NewMkShWalker() *MkShWalker {
 // Walk calls the given callback for each node of the parsed shell program,
 // in visiting order from large to small.
 func (w *MkShWalker) Walk(list *MkShList) {
-	w.walkList(-1, list)
+	w.walkList(-1, -1, list)
 
 	// The calls to w.push and w.pop must be balanced.
 	assert(len(w.Context) == 0)
 }
 
-func (w *MkShWalker) walkList(index int, list *MkShList) {
-	w.push(index, list)
+func (w *MkShWalker) walkList(index int, length int, list *MkShList) {
+	w.push(index, length, list)
 
 	if callback := w.Callback.List; callback != nil {
 		callback(list)
 	}
 
 	for i, andor := range list.AndOrs {
-		w.walkAndOr(i, andor)
+		w.walkAndOr(i, len(list.AndOrs), andor)
 	}
 
 	w.pop()
 }
 
-func (w *MkShWalker) walkAndOr(index int, andor *MkShAndOr) {
-	w.push(index, andor)
+func (w *MkShWalker) walkAndOr(index int, length int, andor *MkShAndOr) {
+	w.push(index, length, andor)
 
 	if callback := w.Callback.AndOr; callback != nil {
 		callback(andor)
 	}
 
 	for i, pipeline := range andor.Pipes {
-		w.walkPipeline(i, pipeline)
+		w.walkPipeline(i, len(andor.Pipes), pipeline)
 	}
 
 	w.pop()
 }
 
-func (w *MkShWalker) walkPipeline(index int, pipeline *MkShPipeline) {
-	w.push(index, pipeline)
+func (w *MkShWalker) walkPipeline(index int, length int, pipeline *MkShPipeline) {
+	w.push(index, length, pipeline)
 
 	if callback := w.Callback.Pipeline; callback != nil {
 		callback(pipeline)
 	}
 
 	for i, command := range pipeline.Cmds {
-		w.walkCommand(i, command)
+		w.walkCommand(i, len(pipeline.Cmds), command)
 	}
 
 	w.pop()
 }
 
-func (w *MkShWalker) walkCommand(index int, command *MkShCommand) {
-	w.push(index, command)
+func (w *MkShWalker) walkCommand(index int, length int, command *MkShCommand) {
+	w.push(index, length, command)
 
 	if callback := w.Callback.Command; callback != nil {
 		callback(command)
@@ -117,37 +118,37 @@ func (w *MkShWalker) walkCommand(index int, command *MkShCommand) {
 
 	switch {
 	case command.Simple != nil:
-		w.walkSimpleCommand(-1, command.Simple)
+		w.walkSimpleCommand(command.Simple)
 	case command.Compound != nil:
-		w.walkCompoundCommand(-1, command.Compound)
+		w.walkCompoundCommand(command.Compound)
 		w.walkRedirects(command.Redirects)
 	case command.FuncDef != nil:
-		w.walkFunctionDefinition(-1, command.FuncDef)
+		w.walkFunctionDefinition(command.FuncDef)
 		w.walkRedirects(command.Redirects)
 	}
 
 	w.pop()
 }
 
-func (w *MkShWalker) walkSimpleCommand(index int, command *MkShSimpleCommand) {
-	w.push(index, command)
+func (w *MkShWalker) walkSimpleCommand(command *MkShSimpleCommand) {
+	w.push(-1, -1, command)
 
 	if callback := w.Callback.SimpleCommand; callback != nil {
 		callback(command)
 	}
 
-	w.walkWords(0, command.Assignments)
+	w.walkWords(0, 2, command.Assignments)
 	if command.Name != nil {
-		w.walkWord(-1, command.Name)
+		w.walkWord(-1, -1, command.Name)
 	}
-	w.walkWords(1, command.Args)
+	w.walkWords(1, 2, command.Args)
 	w.walkRedirects(command.Redirections)
 
 	w.pop()
 }
 
-func (w *MkShWalker) walkCompoundCommand(index int, command *MkShCompoundCommand) {
-	w.push(index, command)
+func (w *MkShWalker) walkCompoundCommand(command *MkShCompoundCommand) {
+	w.push(-1, -1, command)
 
 	if callback := w.Callback.CompoundCommand; callback != nil {
 		callback(command)
@@ -155,7 +156,7 @@ func (w *MkShWalker) walkCompoundCommand(index int, command *MkShCompoundCommand
 
 	switch {
 	case command.Brace != nil:
-		w.walkList(-1, command.Brace)
+		w.walkList(-1, -1, command.Brace)
 	case command.Case != nil:
 		w.walkCase(command.Case)
 	case command.For != nil:
@@ -165,28 +166,28 @@ func (w *MkShWalker) walkCompoundCommand(index int, command *MkShCompoundCommand
 	case command.Loop != nil:
 		w.walkLoop(command.Loop)
 	case command.Subshell != nil:
-		w.walkList(-1, command.Subshell)
+		w.walkList(-1, -1, command.Subshell)
 	}
 
 	w.pop()
 }
 
 func (w *MkShWalker) walkCase(caseClause *MkShCase) {
-	w.push(-1, caseClause)
+	w.push(-1, -1, caseClause)
 
 	if callback := w.Callback.Case; callback != nil {
 		callback(caseClause)
 	}
 
-	w.walkWord(-1, caseClause.Word)
+	w.walkWord(-1, -1, caseClause.Word)
 	for i, caseItem := range caseClause.Cases {
-		w.push(i, caseItem)
+		w.push(i, len(caseClause.Cases), caseItem)
 		if callback := w.Callback.CaseItem; callback != nil {
 			callback(caseItem)
 		}
-		w.walkWords(-1, caseItem.Patterns)
+		w.walkWords(-1, -1, caseItem.Patterns)
 		if caseItem.Action != nil {
-			w.walkList(-1, caseItem.Action)
+			w.walkList(-1, -1, caseItem.Action)
 		}
 		w.pop()
 	}
@@ -194,70 +195,71 @@ func (w *MkShWalker) walkCase(caseClause *MkShCase) {
 	w.pop()
 }
 
-func (w *MkShWalker) walkFunctionDefinition(index int, funcdef *MkShFunctionDefinition) {
-	w.push(index, funcdef)
+func (w *MkShWalker) walkFunctionDefinition(funcdef *MkShFunctionDefinition) {
+	w.push(-1, -1, funcdef)
 
 	if callback := w.Callback.FunctionDefinition; callback != nil {
 		callback(funcdef)
 	}
 
-	w.walkCompoundCommand(-1, funcdef.Body)
+	w.walkCompoundCommand(funcdef.Body)
 
 	w.pop()
 }
 
 func (w *MkShWalker) walkIf(ifClause *MkShIf) {
-	w.push(-1, ifClause)
+	w.push(-1, -1, ifClause)
 
 	if callback := w.Callback.If; callback != nil {
 		callback(ifClause)
 	}
 
 	// TODO: Replace these indices with proper field names; see MkShWalkerPathElement.Index.
+	length := len(ifClause.Conds) + condInt(ifClause.Else != nil, 1, 0)
 	for i, cond := range ifClause.Conds {
-		w.walkList(2*i, cond)
-		w.walkList(2*i+1, ifClause.Actions[i])
+		w.walkList(2*i, length, cond)
+		w.walkList(2*i+1, length, ifClause.Actions[i])
 	}
 	if ifClause.Else != nil {
-		w.walkList(2*len(ifClause.Conds), ifClause.Else)
+		w.walkList(2*len(ifClause.Conds), length, ifClause.Else)
 	}
 
 	w.pop()
 }
 
 func (w *MkShWalker) walkLoop(loop *MkShLoop) {
-	w.push(-1, loop)
+	w.push(-1, -1, loop)
 
 	if callback := w.Callback.Loop; callback != nil {
 		callback(loop)
 	}
 
-	w.walkList(0, loop.Cond)
-	w.walkList(1, loop.Action)
+	w.walkList(0, 2, loop.Cond)
+	w.walkList(1, 2, loop.Action)
 
 	w.pop()
 }
 
-func (w *MkShWalker) walkWords(index int, words []*ShToken) {
+func (w *MkShWalker) walkWords(index int, length int, words []*ShToken) {
 	if len(words) == 0 {
 		return
 	}
 
-	w.push(index, words)
+	w.push(index, length, words)
 
 	if callback := w.Callback.Words; callback != nil {
 		callback(words)
 	}
 
 	for i, word := range words {
-		w.walkWord(i, word)
+		w.walkWord(i, len(words), word)
 	}
 
 	w.pop()
 }
 
-func (w *MkShWalker) walkWord(index int, word *ShToken) {
-	w.push(index, word)
+func (w *MkShWalker) walkWord(index int, length int, word *ShToken) {
+	w.push(index, length, word)
 
 	if callback := w.Callback.Word; callback != nil {
 		callback(word)
@@ -271,19 +273,19 @@ func (w *MkShWalker) walkRedirects(redirects []*MkShRedirection) {
 		return
 	}
 
-	w.push(-1, redirects)
+	w.push(-1, -1, redirects)
 
 	if callback := w.Callback.Redirects; callback != nil {
 		callback(redirects)
 	}
 
 	for i, redirect := range redirects {
-		w.push(i, redirect)
+		w.push(i, len(redirects), redirect)
 		if callback := w.Callback.Redirect; callback != nil {
 			callback(redirect)
 		}
 
-		w.walkWord(i, redirect.Target)
+		w.walkWord(i, len(redirects), redirect.Target)
 		w.pop()
 	}
 
@@ -291,7 +293,7 @@ func (w *MkShWalker) walkRedirects(redirects []*MkShRedirection) {
 }
 
 func (w *MkShWalker) walkFor(forClause *MkShFor) {
-	w.push(-1, forClause)
+	w.push(-1, -1, forClause)
 
 	if callback := w.Callback.For; callback != nil {
 		callback(forClause)
@@ -300,8 +302,8 @@ func (w *MkShWalker) walkFor(forClause *MkShFor) {
 		callback(forClause.Varname)
 	}
 
-	w.walkWords(-1, forClause.Values)
-	w.walkList(-1, forClause.Body)
+	w.walkWords(-1, -1, forClause.Values)
+	w.walkList(-1, -1, forClause.Body)
 
 	w.pop()
 }
@@ -323,8 +325,8 @@ func (w *MkShWalker) Parent(steps int) interface{} {
 	return nil
 }
 
-func (w *MkShWalker) push(index int, element interface{}) {
-	w.Context = append(w.Context, MkShWalkerPathElement{index, element})
+func (w *MkShWalker) push(index int, length int, element interface{}) {
+	w.Context = append(w.Context, MkShWalkerPathElement{index, length, element})
 }
 
 func (w *MkShWalker) pop() {
