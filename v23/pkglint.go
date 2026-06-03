@@ -621,7 +621,7 @@ func (p *Pkglint) checkReg(tf TypedFile, basename RelPath, depth int, pkg *Packa
 }
 
 func (p *Pkglint) checkRegCvsSubst(filename CurrPath) {
-	entries := G.loadCvsEntries(filename)
+	entries := G.loadCvsEntries(filename.Dir())
 	entry, found := entries[filename.Base()]
 	if !found || entry.Options == "" {
 		return
@@ -721,8 +721,8 @@ func (p *Pkglint) tools(mklines *MkLines) *Tools {
 	}
 }
 
-func (p *Pkglint) loadCvsEntries(filename CurrPath) map[RelPath]CvsEntry {
-	dir := filename.Dir().Clean()
+func (p *Pkglint) loadCvsEntries(dir CurrPath) map[RelPath]CvsEntry {
+	dir = dir.Clean()
 	if dir == p.cvsEntriesDir {
 		return p.cvsEntries
 	}

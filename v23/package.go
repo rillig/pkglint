@@ -585,6 +585,7 @@ func (pkg *Package) check(tfs []TypedFile, mklines, allLines *MkLines) {
 	haveDistinfo := false
 	havePatches := false
 
+	pkg.checkCvsExists()
 	for _, tf := range tfs {
 		filename := tf.path
 		if containsExpr(filename.String()) {
@@ -638,6 +639,35 @@ func (pkg *Package) check(tfs []TypedFile, mklines, allLines *MkLines) {
 	pkg.checkDistfilesInDistinfo(allLines)
 	pkg.checkPkgConfig(allLines)
 	pkg.checkWipCommitMsg()
+}
+
+func (pkg *Package) checkCvsExists() {
+	pkg.checkCvsExistsDir(".")
+	if pkg.Pkgdir != "." {
+		pkg.checkCvsExistsDir(pkg.Pkgdir)
+	}
+	pkg.checkCvsExistsDir(pkg.Patchdir)
+	pkg.checkCvsExistsDir(pkg.Filesdir)
+}
+
+func (pkg *Package) checkCvsExistsDir(d PackagePath) {
+	dir := pkg.File(d)
+	entries := G.loadCvsEntries(dir)
+	names := map[string]bool{}
+	for path := range entries {
+		names[path.String()] = true
+	}
+	for _, path := range keysSorted(names) {
+		f := dir.JoinNoClean(NewRelPathString(path))
+		if !f.Exists() {
+			line := NewLineWhole(f)
+			line.Warnf("Is recorded in CVS but doesn't exist.")
+			line.Explain(
+				"If the file has been removed recently,",
+				"it should also be removed from CVS.",
+				"Otherwise, it will be restored on the next \"cvs update\".")
+		}
+	}
 }
 
 func (pkg *Package) checkDescr(tfs []TypedFile, mklines *MkLines) {

@@ -370,7 +370,7 @@ func isIgnoredFilename(filename string) bool {
 
 // Checks whether a file is already committed to the CVS repository.
 func isCommitted(filename CurrPath) bool {
-	entries := G.loadCvsEntries(filename)
+	entries := G.loadCvsEntries(filename.Dir())
 	_, found := entries[filename.Base()]
 	return found
 }
@@ -381,7 +381,7 @@ func isCommitted(filename CurrPath) bool {
 // There is no corresponding test for Git (as used by pkgsrc-wip) since that
 // is more difficult to implement than simply reading a CVS/Entries file.
 func isLocallyModified(filename CurrPath) bool {
-	entries := G.loadCvsEntries(filename)
+	entries := G.loadCvsEntries(filename.Dir())
 	entry, found := entries[filename.Base()]
 	if !found {
 		return false
