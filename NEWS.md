@@ -1,3 +1,18 @@
+# 23.21.0 (2026-06-03)
+
+Warn about removed files that are still in CVS.
+
+Allow the note about the "!=" assignment operator to be suppressed using
+the standard rationale. Previously, the comment needed to be on the same
+line, the line above didn't work.
+
+Only allow ${RUN} at the beginning of a shell execution line, as that
+variable expands to a "@".
+
+Explain how to suppress diagnostics.
+
+Allow the error about omf-scrollkeeper.mk to be suppressed.
+
 # 23.20.0 (2026-01-31)
 
 Warn on the condition "empty(${EXPR})" in .if directives,
