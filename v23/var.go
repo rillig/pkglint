@@ -23,10 +23,10 @@ import "strings"
 type Var struct {
 	Name string
 
-	//  0 = neither written nor read
-	//  1 = constant
-	//  2 = constant and read; further writes will make it non-constant
-	//  3 = not constant anymore
+	//  0 = neither written nor read.
+	//  1 = constant.
+	//  2 = constant and read; further writes will make it non-constant.
+	//  3 = not constant anymore.
 	constantState uint8
 	constantValue strings.Builder
 
