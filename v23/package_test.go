@@ -1516,8 +1516,6 @@ func (s *Suite) Test_Package_checkCvsExistsDir(c *check.C) {
 	pkg.checkCvsExistsDir(".")
 
 	t.CheckOutputLines(
-		// FIXME: removed-from-cvs is fine.
-		"WARN: removed-from-cvs: Is recorded in CVS but doesn't exist.",
 		"WARN: removed-locally: Is recorded in CVS but doesn't exist.")
 }
 

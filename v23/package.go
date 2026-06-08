@@ -3,6 +3,7 @@ package pkglint
 import (
 	"github.com/rillig/pkglint/v23/pkgver"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -653,12 +654,17 @@ func (pkg *Package) checkCvsExists() {
 func (pkg *Package) checkCvsExistsDir(d PackagePath) {
 	dir := pkg.File(d)
 	entries := G.loadCvsEntries(dir)
-	names := map[string]bool{}
-	for path := range entries {
-		names[path.String()] = true
+
+	var names []RelPath
+	for _, cvsEntry := range entries {
+		if !cvsEntry.IsRemoved() {
+			names = append(names, cvsEntry.Name)
+		}
 	}
-	for _, path := range keysSorted(names) {
-		f := dir.JoinNoClean(NewRelPathString(path))
+	sort.Slice(names, func(i, j int) bool { return names[i] < names[j] })
+
+	for _, name := range names {
+		f := dir.JoinNoClean(name)
 		if !f.Exists() {
 			line := NewLineWhole(f)
 			line.Warnf("Is recorded in CVS but doesn't exist.")

@@ -368,7 +368,8 @@ func isIgnoredFilename(filename string) bool {
 
 }
 
-// Checks whether a file is already committed to the CVS repository.
+// Checks whether a file is already committed to the CVS repository
+// or at least added via "cvs add".
 func isCommitted(filename CurrPath) bool {
 	entries := G.loadCvsEntries(filename.Dir())
 	_, found := entries[filename.Base()]
@@ -411,6 +412,10 @@ type CvsEntry struct {
 	Timestamp string
 	Options   string
 	TagDate   string
+}
+
+func (c *CvsEntry) IsRemoved() bool {
+	return hasPrefix(c.Revision, "-")
 }
 
 // Returns the number of columns that a string occupies when printed with
