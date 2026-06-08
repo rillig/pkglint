@@ -5,6 +5,7 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"time"
 )
 
 func (s *Suite) Test_Package__expr_at_load_time(c *check.C) {
@@ -1477,6 +1478,47 @@ func (s *Suite) Test_Package_check__nonexistent_PATCHDIR(c *check.C) {
 	// It's fine to have a nonexistent PATCHDIR,
 	// as long as it matches DISTINFO_FILE.
 	t.CheckOutputEmpty()
+}
+
+func (s *Suite) Test_Package_checkCvsExistsDir(c *check.C) {
+	t := s.Init(c)
+
+	mtime := func(filename CurrPath) string {
+		st, err := filename.Stat()
+		assertNil(err, "stat %q", filename)
+		return st.ModTime().UTC().Format(time.ANSIC)
+	}
+
+	t.Chdir("category/package")
+	t.CreateFileLines("added-locally",
+		"line 1")
+	t.CreateFileLines("added-in-cvs",
+		"line 1")
+	t.CreateFileLines("unchanged",
+		"line 1")
+	t.CreateFileLines("changed",
+		"line 1")
+	t.CreateFileLines("CVS/Entries",
+		// A locally added file is not recorded in CVS/Entries.
+		// Added locally and registered in CVS.
+		"/added-in-cvs/0/dummy timestamp//",
+		// Checked out from CVS and still the same.
+		"/unchanged/1.3/"+mtime("unchanged")+"//",
+		// Checked out from CVS, locally modified.
+		"/changed/1.3/modified//",
+		// Removed locally, but CVS still thinks it should be there.
+		"/removed-locally/1.3/modified//",
+		// Removed locally and in CVS.
+		"/removed-from-cvs/-1.3/modified//",
+	)
+
+	pkg := NewPackage(".")
+	pkg.checkCvsExistsDir(".")
+
+	t.CheckOutputLines(
+		// FIXME: removed-from-cvs is fine.
+		"WARN: removed-from-cvs: Is recorded in CVS but doesn't exist.",
+		"WARN: removed-locally: Is recorded in CVS but doesn't exist.")
 }
 
 func (s *Suite) Test_Package_checkDescr__DESCR_SRC(c *check.C) {
