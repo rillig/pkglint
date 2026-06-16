@@ -1,3 +1,7 @@
+# 23.21.1 (2026-06-16)
+
+Fix wrong warning about files that are still in CVS. (Since 23.21.0.)
+
 # 23.21.0 (2026-06-03)
 
 Warn about removed files that are still in CVS.
