@@ -357,13 +357,13 @@ func (fix *Autofix) Apply() {
 	if logDiagnostic {
 		explanation := fix.explanation
 		keywords := fix.rationaleKeywords
-		diagType := "diagnostic"
+		var diagType string
 		switch fix.level {
 		case Error:
 			diagType = "error message"
 		case Warn:
 			diagType = "warning"
-		case Note:
+		default:
 			diagType = "note"
 		}
 		switch {

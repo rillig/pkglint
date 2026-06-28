@@ -43,9 +43,6 @@ func (s *MkCondSimplifier) simplifyWord(expr *MkExpr, fromEmpty bool, neg bool) 
 	}
 	modsExceptLast := NewMkExpr("", mods[:n-1]...).Mod()
 	vartype := G.Pkgsrc.VariableType(s.MkLines, varname)
-	if vartype.IsList() != no {
-		return
-	}
 
 	// replace constructs the state before and after the autofix.
 	// The before state is constructed to ensure that only very simple
@@ -79,7 +76,6 @@ func (s *MkCondSimplifier) simplifyWord(expr *MkExpr, fromEmpty bool, neg bool) 
 			condStr(fromEmpty, ")", "}"))
 
 		needsQuotes := textproc.NewLexer(pattern).NextBytesSet(mkCondStringLiteralUnquoted) != pattern ||
-			pattern == "" ||
 			matches(pattern, `^\d+\.?\d*$`)
 		quote := condStr(needsQuotes, "\"", "")
 
@@ -168,10 +164,6 @@ func (s *MkCondSimplifier) simplifyYesNo(expr *MkExpr, fromEmpty bool, neg bool)
 	// replace constructs the state before and after the autofix.
 	replace := func(positive bool, pattern, lower string) (bool, string, string) {
 		defined := s.isDefined(varname, vartype)
-		if !defined && !positive {
-			// Too many negations; maybe handle this case later.
-			return false, "", ""
-		}
 		uMod := condStr(!defined && !expr.HasModifier("U"), ":U", "")
 
 		op := condStr(neg == positive, "==", "!=")

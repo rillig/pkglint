@@ -65,6 +65,8 @@ func (t *MkCondSimplifierTester) setUp() {
 		"*.mk: use")
 	// UNDEFINED is also used in the following tests, but is obviously
 	// not defined here.
+	t.SetUpVarType("IN_SCOPE_LIST", btAnything, List,
+		"*.mk: use, use-loadtime")
 }
 
 func (t *MkCondSimplifierTester) testBeforePrefs(before, after string, diagnostics ...string) {
@@ -409,6 +411,14 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord__patterns(c *check.C) {
 	t.testBeforeAndAfterPrefs(
 		".if !empty(IN_SCOPE_DEFINED:M)",
 		".if !empty(IN_SCOPE_DEFINED:M)",
+
+		nil...)
+
+	// A list variable cannot be replaced with "==",
+	// as that would not split the variable value into words.
+	t.testAfterPrefs(
+		".if !empty(IN_SCOPE_LIST:Mpattern)",
+		".if !empty(IN_SCOPE_LIST:Mpattern)",
 
 		nil...)
 }
@@ -874,6 +884,29 @@ func (s *Suite) Test_MkCondSimplifier_simplifyYesNo(c *check.C) {
 			"Replacing \"${VAR:M[Yy][Ee][Ss]}\" "+
 			"with \"${VAR:tl} == yes\".")
 
+	// If the original expression contains a ":U" modifier,
+	// the replacement needs it as well.
+	t.testAfterPrefs(
+		".if ${VAR:U:M[Yy][Ee][Ss]}",
+		".if ${VAR:U:tl} == yes",
+
+		"NOTE: filename.mk:6: "+
+			"\"${VAR:U:M[Yy][Ee][Ss]}\" "+
+			"can be simplified to "+
+			"\"${VAR:U:tl} == yes\".",
+		"AUTOFIX: filename.mk:6: "+
+			"Replacing \"${VAR:U:M[Yy][Ee][Ss]}\" "+
+			"with \"${VAR:U:tl} == yes\".")
+
+	// The :U modifier might occur after the :M modifier,
+	// which has the same effect but is less often seen,
+	// thus there is no need to simplify it.
+	t.testAfterPrefs(
+		".if ${VAR:M[Yy][Ee][Ss]:U}",
+		".if ${VAR:M[Yy][Ee][Ss]:U}",
+
+		nil...)
+
 	// The last letter only has the lowercase form, therefore the pattern
 	// does not match the word 'YES'. Therefore, don't replace it with
 	// ':tl', as that would match the word 'YES'.
@@ -1023,6 +1056,12 @@ func (s *Suite) Test_MkCondSimplifier_simplifyMatch(c *check.C) {
 			"Replacing \"empty(IN_SCOPE_DEFINED:M[1-9].*)\" "+
 			// TODO: Eliminate double negation.
 			"with \"!${IN_SCOPE_DEFINED:M[1-9].*} != \\\"\\\"\".")
+
+	t.testBeforeAndAfterPrefs(
+		".if empty(IN_SCOPE_DEFINED:M[1-9)",
+		".if empty(IN_SCOPE_DEFINED:M[1-9)",
+
+		nil...)
 }
 
 func (s *Suite) Test_MkCondSimplifier_isDefined(c *check.C) {
