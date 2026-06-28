@@ -415,6 +415,18 @@ func (s *Suite) Test_MkExprChecker_checkModifierLoop(c *check.C) {
 		"NOTE: filename.mk:2: The modifier \"@p@${p}) continue;; @\" "+
 			"can be replaced with the simpler \"=) continue;; \".",
 		"AUTOFIX: filename.mk:2: Replacing \"@p@${p}) continue;; @\" with \"=) continue;; \".")
+
+	// If the modifier does not start with "@", there is nothing to simplify.
+	test("${VAR:M@}", "${VAR:M@}",
+		nil...)
+
+	// If the variable name is empty, there is nothing to simplify.
+	test("${VAR:@@body@}", "${VAR:@@body@}",
+		"WARN: filename.mk:2: Invalid variable modifier \"@@body@\" for \"VAR\".")
+
+	// If the variable name is not alphanumeric, there is nothing to simplify.
+	test("${VAR:@.var.@body@}", "${VAR:@.var.@body@}",
+		nil...)
 }
 
 func (s *Suite) Test_MkExprChecker_checkVarname(c *check.C) {
