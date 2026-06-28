@@ -28,6 +28,37 @@ func (s *Suite) Test_trimHspace(c *check.C) {
 	t.CheckEquals(trimHspace(" \t a b\t \t"), "a b")
 }
 
+func (s *Suite) Test_trimCommonPrefix(c *check.C) {
+	t := s.Init(c)
+
+	test := func(a, b, trimmedA, trimmedB string) {
+		ta, tb := trimCommonPrefix(a, b)
+		t.CheckEquals(ta, trimmedA)
+		t.CheckEquals(tb, trimmedB)
+	}
+
+	test("", "",
+		"", "")
+
+	test("equal", "equal",
+		"", "")
+
+	test("prefixA", "prefixB",
+		"A", "B")
+
+	test("ASuffix", "BSuffix",
+		"ASuffix", "BSuffix")
+
+	test("PreMiddlePost", "PreCenterPost",
+		"MiddlePost", "CenterPost")
+
+	test("", "b",
+		"", "b")
+
+	test("a", "",
+		"a", "")
+}
+
 func (s *Suite) Test_trimCommon(c *check.C) {
 	t := s.Init(c)
 

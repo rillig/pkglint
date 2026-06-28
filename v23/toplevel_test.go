@@ -115,6 +115,17 @@ func (s *Suite) Test_CheckdirToplevel__indentation(c *check.C) {
 		t.Shquote("(Run \"pkglint -F -Wall %s\" to automatically fix some issues.)", "."))
 }
 
+func (s *Suite) Test_CheckdirToplevel__absent(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpPkgsrc()
+
+	t.Main("-q", ".")
+
+	t.CheckOutputLines(
+		"ERROR: ~/Makefile: Cannot be read.")
+}
+
 func (s *Suite) Test_Toplevel_checkSubdir__sorting_x11(c *check.C) {
 	t := s.Init(c)
 
