@@ -4,7 +4,7 @@ package pkglint
 // in source code order, no matter in which order they were generated.
 //
 // The typical workflow is:
-// First, Add is called to collect the diagnostics.
+// First, add is called to collect the diagnostics.
 // Then Emit is called for each line that might be affected.
 // Finally, AssertEmpty ensures that all diagnostics have been emitted.
 type Diagnostics struct {
@@ -22,12 +22,21 @@ func (d *Diagnostics) Defer(line *Line) Diagnoser {
 	return &DeferredDiagnoser{d, line}
 }
 
-// Add remembers a diagnostic as belonging to a particular line.
-func (d *Diagnostics) Add(line *Line, level *LogLevel, format string, args ...interface{}) {
+// add remembers a diagnostic as belonging to a particular line.
+func (d *Diagnostics) add(line *Line, level *LogLevel, format string, args ...interface{}) {
 	if d.diagnostics == nil {
 		d.diagnostics = make(map[*Line][]Diagnostic)
 	}
 	d.diagnostics[line] = append(d.diagnostics[line], Diagnostic{level, format, args, nil})
+}
+
+// explain adds an explanation to the previously added diagnostic.
+func (d *Diagnostics) explain(line *Line, explanation ...string) {
+	diagnostics := d.diagnostics[line]
+	assertf(len(diagnostics) > 0, "explanation without corresponding diagnostic")
+	last := &diagnostics[len(diagnostics)-1]
+	last.explanation = append(last.explanation, explanation...)
+	d.diagnostics[line] = diagnostics
 }
 
 // Emit outputs the diagnostics for the line, in creation order.
@@ -57,20 +66,17 @@ type DeferredDiagnoser struct {
 }
 
 func (d *DeferredDiagnoser) Errorf(format string, args ...interface{}) {
-	d.diagnostics.Add(d.line, Error, format, args...)
+	d.diagnostics.add(d.line, Error, format, args...)
 }
 
 func (d *DeferredDiagnoser) Warnf(format string, args ...interface{}) {
-	d.diagnostics.Add(d.line, Warn, format, args...)
+	d.diagnostics.add(d.line, Warn, format, args...)
 }
 
 func (d *DeferredDiagnoser) Notef(format string, args ...interface{}) {
-	d.diagnostics.Add(d.line, Note, format, args...)
+	d.diagnostics.add(d.line, Note, format, args...)
 }
 
 func (d *DeferredDiagnoser) Explain(explanation ...string) {
-	diagnostics := d.diagnostics.diagnostics[d.line]
-	last := &diagnostics[len(diagnostics)-1]
-	last.explanation = append(last.explanation, explanation...)
-	d.diagnostics.diagnostics[d.line] = diagnostics
+	d.diagnostics.explain(d.line, explanation...)
 }

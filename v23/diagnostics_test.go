@@ -21,19 +21,44 @@ func (s *Suite) Test_Diagnostics_Defer(c *check.C) {
 	)
 }
 
-func (s *Suite) Test_Diagnostics_Add(c *check.C) {
+func (s *Suite) Test_Diagnostics_add(c *check.C) {
 	t := s.Init(c)
 
 	line1 := t.NewLine("filename.mk", 1, "Line 1")
 	line2 := t.NewLine("filename.mk", 2, "Line 2")
 
 	var d Diagnostics
-	d.Add(line1, Error, "Line must contain %q.", "error text")
-	d.Add(line2, Warn, "Line should contain %q.", "warning text")
-	d.Add(line1, Note, "Line could contain %q.", "note text")
+	d.add(line1, Error, "Line must contain %q.", "error text")
+	d.add(line2, Warn, "Line should contain %q.", "warning text")
+	d.add(line1, Note, "Line could contain %q.", "note text")
 
 	t.CheckEquals(len(d.diagnostics[line1]), 2)
 	t.CheckEquals(len(d.diagnostics[line2]), 1)
+}
+
+func (s *Suite) Test_Diagnostics_explain(c *check.C) {
+	t := s.Init(c)
+
+	t.SetUpCommandLine("--explain")
+
+	line1 := t.NewLine("filename.mk", 1, "Line 1")
+
+	var d Diagnostics
+	t.ExpectPanic(func() {
+		d.explain(line1, "Explanation 1.")
+	}, "Pkglint internal error: explanation without corresponding diagnostic")
+	d.add(line1, Warn, "Line should contain \"%s\".", "warning text")
+	d.explain(line1, "Explanation 1.")
+
+	d.Emit(line1)
+	d.AssertEmpty()
+
+	t.CheckOutputLines(
+		"WARN: filename.mk:1: Line should contain \"warning text\".",
+		"",
+		"\tExplanation 1.",
+		"",
+	)
 }
 
 func (s *Suite) Test_Diagnostics_Emit(c *check.C) {
@@ -43,9 +68,12 @@ func (s *Suite) Test_Diagnostics_Emit(c *check.C) {
 	line2 := t.NewLine("filename.mk", 2, "Line 2")
 
 	var d Diagnostics
-	d.Add(line1, Error, "Line must contain %q.", "error text")
-	d.Add(line2, Warn, "Line should contain %q.", "warning text")
-	d.Add(line1, Note, "Line could contain %q.", "note text")
+	d.add(line1, Error, "Line must contain %q.", "error text")
+	d.add(line2, Warn, "Line should contain %q.", "warning text")
+	d.add(line1, Note, "Line could contain %q.", "note text")
+	d.add(line1, Error, "Line must equal %q.", "replacement")
+
+	t.SetUpCommandLine("--only", "contain")
 
 	for _, line := range []*Line{line1, line2} {
 		d.Emit(line)
@@ -68,9 +96,9 @@ func (s *Suite) Test_Diagnostics_AssertEmpty(c *check.C) {
 	line2 := t.NewLine("filename.mk", 2, "Line 2")
 
 	var d Diagnostics
-	d.Add(line1, Error, "Line must contain %q.", "error text")
-	d.Add(line2, Warn, "Line should contain %q.", "warning text")
-	d.Add(line1, Note, "Line could contain %q.", "note text")
+	d.add(line1, Error, "Line must contain %q.", "error text")
+	d.add(line2, Warn, "Line should contain %q.", "warning text")
+	d.add(line1, Note, "Line could contain %q.", "note text")
 
 	d.Emit(line1)
 	// But not d.Emit(line2)
