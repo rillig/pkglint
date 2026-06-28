@@ -176,6 +176,7 @@ func (p *MkLexer) exprBrace(usingRoundParen bool) *MkExpr {
 	return NewMkExpr(varExpr, modifiers...)
 }
 
+// Varname reads a variable name such as "VAR", "VAR.param", "VAR.${param}".
 func (p *MkLexer) Varname() string {
 	lexer := p.lexer
 
@@ -375,7 +376,7 @@ func (p *MkLexer) exprModifier(varname string, closing byte) MkExprModifier {
 			unrealModifier := modifier[strings.Index(modifier, ":"):]
 			p.Warnf("The text %q looks like a modifier but isn't.", unrealModifier)
 			p.Explain(
-				"The :from=to modifier consumes all the text until the end of the variable.",
+				"The :from=to modifier consumes all the text until the end of the expression.",
 				"There cannot be any further modifiers after it.")
 		}
 		return MkExprModifier(modifier)
@@ -388,13 +389,8 @@ func (p *MkLexer) exprModifier(varname string, closing byte) MkExprModifier {
 		}
 	}
 
-	// ${:!uname -a!:[2]}
 	lexer.Reset(mark)
 	modifier = p.exprText(closing)
-	if hasPrefix(modifier, "!") && hasSuffix(modifier, "!") {
-		return MkExprModifier(modifier)
-	}
-
 	if modifier != "" {
 		p.Warnf("Invalid variable modifier %q for %q.", modifier, varname)
 	}

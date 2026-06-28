@@ -423,6 +423,21 @@ func (s *Suite) Test_MkLexer_Expr(c *check.C) {
 
 	test("${<:T}",
 		expr("<", "T"))
+
+	test("$(@)",
+		exprText("$(@)", "@"),
+		"WARN: Test_MkLexer_Expr.mk:1: Use curly braces {} "+
+			"instead of round parentheses () for @.")
+
+	test("${@}",
+		exprText("${@}", "@"))
+
+	test("${VAR:${M_indirect}}",
+		expr("VAR", "${M_indirect}"))
+
+	test("${VAR:${M_indirect}!cmd!}",
+		exprText("${VAR:${M_indirect}!cmd!}", "VAR"),
+		"WARN: Test_MkLexer_Expr.mk:1: Invalid variable modifier \"${M_indirect}!cmd!\" for \"VAR\".")
 }
 
 // Pkglint can replace $(VAR) with ${VAR}. It doesn't look at all components
