@@ -44,48 +44,6 @@ func (s *MkCondSimplifier) simplifyWord(expr *MkExpr, fromEmpty bool, neg bool) 
 	modsExceptLast := NewMkExpr("", mods[:n-1]...).Mod()
 	vartype := G.Pkgsrc.VariableType(s.MkLines, varname)
 
-	// replace constructs the state before and after the autofix.
-	// The before state is constructed to ensure that only very simple
-	// patterns get replaced automatically.
-	//
-	// Before putting any cases involving special characters into
-	// production, there need to be more tests for the edge cases.
-	replace := func(positive bool, pattern string) (bool, string, string) {
-		defined := s.isDefined(varname, vartype)
-		if !defined && !positive {
-			// TODO: This is a double negation, maybe even triple.
-			//  There is an :N pattern, and the variable may be undefined.
-			//  If it is indeed undefined, should the whole condition
-			//  evaluate to true or false?
-			//  The cases to be distinguished are: undefined, empty, filled.
-
-			// For now, be conservative and don't suggest anything wrong.
-			return false, "", ""
-		}
-		uMod := condStr(!defined && !expr.HasModifier("U"), ":U", "")
-
-		op := condStr(neg == positive, "==", "!=")
-
-		from := sprintf("%s%s%s%s%s%s%s",
-			condStr(neg != fromEmpty, "", "!"),
-			condStr(fromEmpty, "empty(", "${"),
-			varname,
-			modsExceptLast,
-			condStr(positive, ":M", ":N"),
-			pattern,
-			condStr(fromEmpty, ")", "}"))
-
-		needsQuotes := textproc.NewLexer(pattern).NextBytesSet(mkCondStringLiteralUnquoted) != pattern ||
-			matches(pattern, `^\d+\.?\d*$`)
-		quote := condStr(needsQuotes, "\"", "")
-
-		to := sprintf(
-			"${%s%s%s} %s %s%s%s",
-			varname, uMod, modsExceptLast, op, quote, pattern, quote)
-
-		return true, from, to
-	}
-
 	mod := mods[n-1]
 	ok, positive, pattern, exact := mod.MatchMatch()
 	if !ok || !positive && n != 1 || !exact || pattern == "" {
@@ -95,10 +53,38 @@ func (s *MkCondSimplifier) simplifyWord(expr *MkExpr, fromEmpty bool, neg bool) 
 		return
 	}
 
-	ok, from, to := replace(positive, pattern)
-	if !ok {
+	defined := s.isDefined(varname, vartype)
+	if !defined && !positive {
+		// TODO: This is a double negation, maybe even triple.
+		//  There is an :N pattern, and the variable may be undefined.
+		//  If it is indeed undefined, should the whole condition
+		//  evaluate to true or false?
+		//  The cases to be distinguished are: undefined, empty, filled.
+
+		// For now, be conservative and don't suggest anything wrong.
 		return
 	}
+
+	uMod := condStr(!defined && !expr.HasModifier("U"), ":U", "")
+
+	op := condStr(neg == positive, "==", "!=")
+
+	from := sprintf("%s%s%s%s%s%s%s",
+		condStr(neg != fromEmpty, "", "!"),
+		condStr(fromEmpty, "empty(", "${"),
+		varname,
+		modsExceptLast,
+		condStr(positive, ":M", ":N"),
+		pattern,
+		condStr(fromEmpty, ")", "}"))
+
+	needsQuotes := textproc.NewLexer(pattern).NextBytesSet(mkCondStringLiteralUnquoted) != pattern ||
+		matches(pattern, `^\d+\.?\d*$`)
+	quote := condStr(needsQuotes, "\"", "")
+
+	to := sprintf(
+		"${%s%s%s} %s %s%s%s",
+		varname, uMod, modsExceptLast, op, quote, pattern, quote)
 
 	fix := s.MkLine.Autofix()
 	fix.Notef("%s can be compared using the simpler \"%s\" "+
@@ -161,29 +147,6 @@ func (s *MkCondSimplifier) simplifyYesNo(expr *MkExpr, fromEmpty bool, neg bool)
 		return
 	}
 
-	// replace constructs the state before and after the autofix.
-	replace := func(positive bool, pattern, lower string) (bool, string, string) {
-		defined := s.isDefined(varname, vartype)
-		uMod := condStr(!defined && !expr.HasModifier("U"), ":U", "")
-
-		op := condStr(neg == positive, "==", "!=")
-
-		from := sprintf("%s%s%s%s%s%s%s",
-			condStr(neg != fromEmpty, "", "!"),
-			condStr(fromEmpty, "empty(", "${"),
-			varname,
-			modsExceptLast,
-			condStr(positive, ":M", ":N"),
-			pattern,
-			condStr(fromEmpty, ")", "}"))
-
-		to := sprintf(
-			"${%s%s%s:tl} %s %s",
-			varname, uMod, modsExceptLast, op, lower)
-
-		return true, from, to
-	}
-
 	modifier := mods[n-1]
 	ok, positive, pattern, exact := modifier.MatchMatch()
 	if !ok || !positive && n != 1 || exact {
@@ -194,10 +157,23 @@ func (s *MkCondSimplifier) simplifyYesNo(expr *MkExpr, fromEmpty bool, neg bool)
 		return
 	}
 
-	ok, from, to := replace(positive, pattern, lower)
-	if !ok {
-		return
-	}
+	defined := s.isDefined(varname, vartype)
+	uMod := condStr(!defined && !expr.HasModifier("U"), ":U", "")
+
+	op := condStr(neg == positive, "==", "!=")
+
+	from := sprintf("%s%s%s%s%s%s%s",
+		condStr(neg != fromEmpty, "", "!"),
+		condStr(fromEmpty, "empty(", "${"),
+		varname,
+		modsExceptLast,
+		condStr(positive, ":M", ":N"),
+		pattern,
+		condStr(fromEmpty, ")", "}"))
+
+	to := sprintf(
+		"${%s%s%s:tl} %s %s",
+		varname, uMod, modsExceptLast, op, lower)
 
 	fix := s.MkLine.Autofix()
 	fix.Notef("\"%s\" can be simplified to \"%s\".", from, to)
