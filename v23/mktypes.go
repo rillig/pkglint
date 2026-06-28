@@ -36,7 +36,7 @@ func NewMkExpr(varname string, modifiers ...MkExprModifier) *MkExpr {
 	return &MkExpr{varname, modifiers}
 }
 
-func (vu *MkExpr) String() string { return sprintf("${%s%s}", vu.varname, vu.Mod()) }
+func (e *MkExpr) String() string { return "${" + e.varname + e.Mod() + "}" }
 
 // MkExprModifier stores the text of the modifier, without the initial colon.
 // Examples: "Q", "S,from,to,g"
@@ -191,10 +191,10 @@ func (m MkExprModifier) ChangesList() bool {
 	return true
 }
 
-func (vu *MkExpr) Mod() string {
+func (e *MkExpr) Mod() string {
 	var mod strings.Builder
-	for _, modifier := range vu.modifiers {
-		mod.WriteString(":")
+	for _, modifier := range e.modifiers {
+		mod.WriteByte(':')
 		mod.WriteString(modifier.String())
 	}
 	return mod.String()
@@ -202,21 +202,21 @@ func (vu *MkExpr) Mod() string {
 
 // IsExpression returns whether the varname is interpreted as an expression
 // instead of a variable name (rare, only the modifiers :? and :L do this).
-func (vu *MkExpr) IsExpression() bool {
-	if len(vu.modifiers) == 0 {
+func (e *MkExpr) IsExpression() bool {
+	if len(e.modifiers) == 0 {
 		return false
 	}
-	mod := vu.modifiers[0]
+	mod := e.modifiers[0]
 	return mod.String() == "L" || mod.HasPrefix("?")
 }
 
-func (vu *MkExpr) IsQ() bool {
-	mlen := len(vu.modifiers)
-	return mlen > 0 && vu.modifiers[mlen-1].IsQ()
+func (e *MkExpr) IsQ() bool {
+	mlen := len(e.modifiers)
+	return mlen > 0 && e.modifiers[mlen-1].IsQ()
 }
 
-func (vu *MkExpr) HasModifier(prefix string) bool {
-	for _, mod := range vu.modifiers {
+func (e *MkExpr) HasModifier(prefix string) bool {
+	for _, mod := range e.modifiers {
 		if mod.HasPrefix(prefix) {
 			return true
 		}

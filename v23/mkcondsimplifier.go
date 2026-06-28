@@ -69,14 +69,13 @@ func (s *MkCondSimplifier) simplifyWord(expr *MkExpr, fromEmpty bool, neg bool) 
 
 	op := condStr(neg == positive, "==", "!=")
 
-	from := sprintf("%s%s%s%s%s%s%s",
-		condStr(neg != fromEmpty, "", "!"),
-		condStr(fromEmpty, "empty(", "${"),
-		varname,
-		modsExceptLast,
-		condStr(positive, ":M", ":N"),
-		pattern,
-		condStr(fromEmpty, ")", "}"))
+	from := condStr(neg != fromEmpty, "", "!") +
+		condStr(fromEmpty, "empty(", "${") +
+		varname +
+		modsExceptLast +
+		condStr(positive, ":M", ":N") +
+		pattern +
+		condStr(fromEmpty, ")", "}")
 
 	needsQuotes := textproc.NewLexer(pattern).NextBytesSet(mkCondStringLiteralUnquoted) != pattern ||
 		matches(pattern, `^\d+\.?\d*$`)
@@ -160,16 +159,15 @@ func (s *MkCondSimplifier) simplifyYesNo(expr *MkExpr, fromEmpty bool, neg bool)
 	defined := s.isDefined(varname, vartype)
 	uMod := condStr(!defined && !expr.HasModifier("U"), ":U", "")
 
-	op := condStr(neg == positive, "==", "!=")
+	op := condStr(neg, "==", "!=")
 
-	from := sprintf("%s%s%s%s%s%s%s",
-		condStr(neg != fromEmpty, "", "!"),
-		condStr(fromEmpty, "empty(", "${"),
-		varname,
-		modsExceptLast,
-		condStr(positive, ":M", ":N"),
-		pattern,
-		condStr(fromEmpty, ")", "}"))
+	from := condStr(neg != fromEmpty, "", "!") +
+		condStr(fromEmpty, "empty(", "${") +
+		varname +
+		modsExceptLast +
+		":M" +
+		pattern +
+		condStr(fromEmpty, ")", "}")
 
 	to := sprintf(
 		"${%s%s%s:tl} %s %s",

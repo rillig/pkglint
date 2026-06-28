@@ -854,7 +854,7 @@ func (s *Suite) Test_MkCondSimplifier_simplifyYesNo(c *check.C) {
 	t.setUp()
 	t.SetUpVarType("VAR", BtYesNo, AlwaysInScope|DefinedIfInScope,
 		"*.mk: use, use-loadtime")
-	t.allowedVariableNames = `VAR`
+	t.allowedVariableNames = `VAR|PREFS_DEFINED`
 
 	// The most common pattern for testing YesNo variables lists the
 	// lowercase letters before the uppercase letters.
@@ -906,6 +906,22 @@ func (s *Suite) Test_MkCondSimplifier_simplifyYesNo(c *check.C) {
 		".if ${VAR:M[Yy][Ee][Ss]:U}",
 
 		nil...)
+
+	// Before including bsd.prefs.mk, the variable may be undefined,
+	// thus the condition needs the :U modifier. Since the expression
+	// already includes it, it does not need to be doubled.
+	t.testBeforePrefs(
+		".if ${PREFS_DEFINED:U:M[Yy][Ee][Ss]}",
+		".if ${PREFS_DEFINED:U:tl} == yes",
+
+		"NOTE: filename.mk:6: "+
+			"\"${PREFS_DEFINED:U:M[Yy][Ee][Ss]}\" can be "+
+			"simplified to \"${PREFS_DEFINED:U:tl} == yes\".",
+		"WARN: filename.mk:6: To use PREFS_DEFINED at load time, "+
+			".include \"../../mk/bsd.prefs.mk\" first.",
+		"AUTOFIX: filename.mk:6: "+
+			"Replacing \"${PREFS_DEFINED:U:M[Yy][Ee][Ss]}\" "+
+			"with \"${PREFS_DEFINED:U:tl} == yes\".")
 
 	// The last letter only has the lowercase form, therefore the pattern
 	// does not match the word 'YES'. Therefore, don't replace it with
@@ -1057,9 +1073,20 @@ func (s *Suite) Test_MkCondSimplifier_simplifyMatch(c *check.C) {
 			// TODO: Eliminate double negation.
 			"with \"!${IN_SCOPE_DEFINED:M[1-9].*} != \\\"\\\"\".")
 
+	// If there is a syntax error in the pattern of the :M modifier,
+	// nothing is replaced.
 	t.testBeforeAndAfterPrefs(
 		".if empty(IN_SCOPE_DEFINED:M[1-9)",
 		".if empty(IN_SCOPE_DEFINED:M[1-9)",
+
+		nil...)
+
+	// The pattern contains "/", which does not belong to the known
+	// special characters that are safe for this transformation,
+	// so nothing is replaced.
+	t.testBeforeAndAfterPrefs(
+		".if !empty(IN_SCOPE_DEFINED:M*/*)",
+		".if !empty(IN_SCOPE_DEFINED:M*/*)",
 
 		nil...)
 }
