@@ -268,7 +268,7 @@ which are embedded in makefile fragments.
 The `ShellLineChecker` type provides methods for checking shell commands and their individual parts.
 
 ```codewalk
-file     shell.go
+file     shelllinechecker.go
 go:type  ShellLineChecker
 ```
 
