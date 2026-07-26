@@ -552,13 +552,15 @@ func containsExpr(s string) bool {
 		return false
 	}
 	lex := NewMkLexer(s, nil)
-	tokens, _ := lex.MkTokens()
-	for _, token := range tokens {
+	for {
+		token := lex.MkToken()
+		if token == nil {
+			return false
+		}
 		if token.Expr != nil {
 			return true
 		}
 	}
-	return false
 }
 
 func containsVarRefLong(s string) bool {
