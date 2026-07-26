@@ -204,7 +204,7 @@ func (p *MkLexer) Varname() string {
 // text as the "variable name" and effectively interpret it as the variable
 // value instead.
 //
-// See devel/bmake/files/var.c:/^VarGetPattern/
+// See devel/bmake/files/var.c:/^ParseModifierPart/
 func (p *MkLexer) exprText(closing byte) string {
 	lexer := p.lexer
 	start := lexer.Mark()
@@ -552,7 +552,15 @@ func (p *MkLexer) exprModifierAt(lexer *textproc.Lexer, varname string) bool {
 	lexer.Skip(1 /* the initial @ */)
 
 	loopVar := lexer.NextBytesSet(AlnumDot)
-	if loopVar == "" || !lexer.SkipByte('@') {
+	if loopVar == "" {
+		return false
+	}
+	if !lexer.SkipByte('@') {
+		if !lexer.EOF() {
+			invalid := lexer.Rest()[:1]
+			p.Warnf("Modifier ${%s:@%s@...@} has invalid character \"%s\" in variable name.",
+				varname, loopVar, invalid)
+		}
 		return false
 	}
 

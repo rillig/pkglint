@@ -1096,6 +1096,7 @@ func (s *Suite) Test_MkLexer_exprModifierAt__missing_at_after_variable_name(c *c
 	t.CheckDeepEquals(expr, b.Expr("VAR"))
 	t.CheckEquals(p.Rest(), "")
 	t.CheckOutputLines(
+		"WARN: filename.mk:123: Modifier ${VAR:@varname@...@} has invalid character \"}\" in variable name.",
 		"WARN: filename.mk:123: Invalid variable modifier \"@varname\" for \"VAR\".")
 }
 

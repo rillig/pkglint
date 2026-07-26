@@ -427,6 +427,15 @@ func (s *Suite) Test_MkExprChecker_checkModifierLoop(c *check.C) {
 	// If the variable name is not alphanumeric, there is nothing to simplify.
 	test("${VAR:@.var.@body@}", "${VAR:@.var.@body@}",
 		nil...)
+
+	test("${VAR:@slash/var@body@}", "${VAR:@slash/var@body@}",
+		"WARN: filename.mk:2: Modifier ${VAR:@slash@...@} has invalid character \"/\" in variable name.",
+		"WARN: filename.mk:2: Invalid variable modifier \"@slash/var@body@\" for \"VAR\".")
+
+	test("${VAR:@colon:var@body@}", "${VAR:@colon:var@body@}",
+		"WARN: filename.mk:2: Modifier ${VAR:@colon@...@} has invalid character \":\" in variable name.",
+		"WARN: filename.mk:2: Invalid variable modifier \"@colon\" for \"VAR\".",
+		"WARN: filename.mk:2: Invalid variable modifier \"var@body@\" for \"VAR\".")
 }
 
 func (s *Suite) Test_MkExprChecker_checkVarname(c *check.C) {
