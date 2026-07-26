@@ -563,18 +563,20 @@ func containsExpr(s string) bool {
 	}
 }
 
-func containsVarRefLong(s string) bool {
+func containsExprLong(s string) bool {
 	if !contains(s, "$") {
 		return false
 	}
 	lex := NewMkLexer(s, nil)
-	tokens, _ := lex.MkTokens()
-	for _, token := range tokens {
+	for {
+		token := lex.MkToken()
+		if token == nil {
+			return false
+		}
 		if token.Expr != nil && len(token.Text) > 2 {
 			return true
 		}
 	}
-	return false
 }
 
 // OncePerStringSlice remembers with which arguments its FirstTime method has

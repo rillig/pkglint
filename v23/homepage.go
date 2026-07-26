@@ -148,7 +148,7 @@ func (ck *HomepageChecker) checkHttp() {
 // corresponding http URL is, the homepage is changed back to http.
 func (ck *HomepageChecker) migrate(url string) (bool, string, string) {
 	m, scheme, host := match2(url, `(https?)://([A-Za-z0-9-.]+)(?:/|$)?`)
-	if !m || containsVarRefLong(url) {
+	if !m || containsExprLong(url) {
 		return false, "", ""
 	}
 
@@ -293,7 +293,7 @@ func (ck *HomepageChecker) checkReachable() {
 func (ck *HomepageChecker) isReachableOnline(url string) YesNoUnknown {
 	switch {
 	case !G.Network,
-		containsVarRefLong(url),
+		containsExprLong(url),
 		!matches(url, `^https?://[A-Za-z0-9-.]+(?::[0-9]+)?/[!-~]*$`):
 		return unknown
 	}

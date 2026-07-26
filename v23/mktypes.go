@@ -119,7 +119,7 @@ func (m MkExprModifier) Subst(str string) (bool, string) {
 // It does not resolve any nested expressions.
 func (MkExprModifier) EvalSubst(s string, left bool, from string, right bool, to string, flags string) (ok bool, result string) {
 
-	if containsVarRefLong(from) || containsVarRefLong(to) {
+	if containsExprLong(from) || containsExprLong(to) {
 		return false, ""
 	}
 
