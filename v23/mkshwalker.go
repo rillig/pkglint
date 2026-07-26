@@ -51,7 +51,7 @@ type MkShWalkerPathElement struct {
 	Index  int
 	Length int
 
-	Element interface{}
+	Element any
 }
 
 func NewMkShWalker() *MkShWalker {
@@ -317,7 +317,7 @@ func (w *MkShWalker) Current() MkShWalkerPathElement {
 // Parent returns an ancestor element from the currently visited path.
 // Parent(0) is the element that is currently visited,
 // Parent(1) is its direct parent, and so on.
-func (w *MkShWalker) Parent(steps int) interface{} {
+func (w *MkShWalker) Parent(steps int) any {
 	index := len(w.Context) - 1 - steps
 	if index >= 0 {
 		return w.Context[index].Element
@@ -325,7 +325,7 @@ func (w *MkShWalker) Parent(steps int) interface{} {
 	return nil
 }
 
-func (w *MkShWalker) push(index int, length int, element interface{}) {
+func (w *MkShWalker) push(index int, length int, element any) {
 	w.Context = append(w.Context, MkShWalkerPathElement{index, length, element})
 }
 

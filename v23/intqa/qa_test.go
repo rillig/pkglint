@@ -26,7 +26,7 @@ func Test(t *testing.T) {
 }
 
 func (s *Suite) Init(c *check.C) *QAChecker {
-	errorf := func(format string, args ...interface{}) {
+	errorf := func(format string, args ...any) {
 		s.summary = fmt.Sprintf(format, args...)
 	}
 

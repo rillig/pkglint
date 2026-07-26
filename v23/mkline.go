@@ -24,7 +24,7 @@ type MkLine struct {
 	// For the larger of these types, a pointer is used instead of a direct
 	// struct because of https://github.com/golang/go/issues/28045;
 	// last checked against go1.23.1 in January 2025.
-	data interface{}
+	data any
 }
 
 type mkLineAssign struct {

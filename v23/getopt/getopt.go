@@ -278,7 +278,7 @@ optchar:
 func (o *Options) Help(out io.Writer, generalUsage string) {
 	wr := tabwriter.NewWriter(out, 1, 0, 2, ' ', tabwriter.TabIndent)
 
-	rowf := func(format string, args ...interface{}) {
+	rowf := func(format string, args ...any) {
 		_, _ = fmt.Fprintf(wr, format, args...)
 		_, _ = io.WriteString(wr, "\n")
 	}
@@ -339,7 +339,7 @@ type option struct {
 	longName    string
 	argsName    string
 	description string
-	data        interface{}
+	data        any
 }
 
 type FlagGroup struct {

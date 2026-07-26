@@ -178,8 +178,8 @@ func (s *Suite) Test_HomepageChecker_migrate(c *check.C) {
 		actualMigrate, actualFrom, actualTo := ck.migrate(url)
 
 		t.CheckDeepEquals(
-			[]interface{}{actualMigrate, actualFrom, actualTo},
-			[]interface{}{migrate, from, to})
+			[]any{actualMigrate, actualFrom, actualTo},
+			[]any{migrate, from, to})
 
 		for key := range reachable {
 			assertf(used[key], "Reachability of %q was not used.", key)

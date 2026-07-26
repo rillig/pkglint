@@ -20,10 +20,10 @@ type Tracer struct {
 // Result marks an argument of Tracer.Call as a result of that function.
 // It is only logged when exiting from the function but not when entering it.
 type Result struct {
-	pointer interface{}
+	pointer any
 }
 
-func (t *Tracer) Stepf(format string, args ...interface{}) {
+func (t *Tracer) Stepf(format string, args ...any) {
 	if t.Tracing {
 		msg := fmt.Sprintf(format, args...)
 		_, _ = io.WriteString(t.Out, fmt.Sprintf("TRACE: %s  %s\n", t.traceIndent(), msg))
@@ -79,19 +79,19 @@ func (t *Tracer) Call2(arg1, arg2 string) func() {
 //	 if trace.Tracing {
 //	     defer trace.Call(arg1, arg2, trace.Result(result1), trace.Result(result2))()
 //	}
-func (t *Tracer) Call(args ...interface{}) func() {
+func (t *Tracer) Call(args ...any) func() {
 	return t.traceCall(args...)
 }
 
 // https://stackoverflow.com/questions/13476349/check-for-nil-and-nil-interface-in-go
-func isNil(a interface{}) bool {
+func isNil(a any) bool {
 	defer func() {
 		_ = recover()
 	}()
 	return a == nil || reflect.ValueOf(a).IsNil()
 }
 
-func argsStr(args []interface{}) string {
+func argsStr(args []any) string {
 	var rv strings.Builder
 	for _, arg := range args {
 		if rv.Len() > 0 {
@@ -116,7 +116,7 @@ func (t *Tracer) traceIndent() string {
 	return indent.String()
 }
 
-func (t *Tracer) traceCall(args ...interface{}) func() {
+func (t *Tracer) traceCall(args ...any) func() {
 	if !t.Tracing {
 		panic("Internal pkglint error: calls to trace.Call must only occur in tracing mode")
 	}
@@ -141,14 +141,14 @@ func (t *Tracer) traceCall(args ...interface{}) func() {
 // Result marks an argument as a result and is only logged when the function returns.
 //
 // Usage: defer trace.Call(arg1, arg2, tracing.Result(&result1), tracing.Result(&result2))()
-func (t *Tracer) Result(rv interface{}) Result {
+func (t *Tracer) Result(rv any) Result {
 	if reflect.ValueOf(rv).Kind() != reflect.Ptr {
 		panic(fmt.Sprintf("Result must be called with a pointer to the result, not %#v.", rv))
 	}
 	return Result{rv}
 }
 
-func withoutResults(args []interface{}) []interface{} {
+func withoutResults(args []any) []any {
 	for i, arg := range args {
 		if _, ok := arg.(Result); ok {
 			return args[0:i]
@@ -157,10 +157,10 @@ func withoutResults(args []interface{}) []interface{} {
 	return args
 }
 
-func withResults(args []interface{}) []interface{} {
+func withResults(args []any) []any {
 	for i, arg := range args {
 		if _, ok := arg.(Result); ok {
-			var awr []interface{}
+			var awr []any
 			awr = append(awr, args[0:i]...)
 			awr = append(awr, "=>")
 			for _, res := range args[i:] {

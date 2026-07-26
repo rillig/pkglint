@@ -14,7 +14,7 @@ type Diagnostics struct {
 type Diagnostic struct {
 	level       *LogLevel
 	format      string
-	arguments   []interface{}
+	arguments   []any
 	explanation []string
 }
 
@@ -23,7 +23,7 @@ func (d *Diagnostics) Defer(line *Line) Diagnoser {
 }
 
 // add remembers a diagnostic as belonging to a particular line.
-func (d *Diagnostics) add(line *Line, level *LogLevel, format string, args ...interface{}) {
+func (d *Diagnostics) add(line *Line, level *LogLevel, format string, args ...any) {
 	if d.diagnostics == nil {
 		d.diagnostics = make(map[*Line][]Diagnostic)
 	}
@@ -65,15 +65,15 @@ type DeferredDiagnoser struct {
 	line        *Line
 }
 
-func (d *DeferredDiagnoser) Errorf(format string, args ...interface{}) {
+func (d *DeferredDiagnoser) Errorf(format string, args ...any) {
 	d.diagnostics.add(d.line, Error, format, args...)
 }
 
-func (d *DeferredDiagnoser) Warnf(format string, args ...interface{}) {
+func (d *DeferredDiagnoser) Warnf(format string, args ...any) {
 	d.diagnostics.add(d.line, Warn, format, args...)
 }
 
-func (d *DeferredDiagnoser) Notef(format string, args ...interface{}) {
+func (d *DeferredDiagnoser) Notef(format string, args ...any) {
 	d.diagnostics.add(d.line, Note, format, args...)
 }
 

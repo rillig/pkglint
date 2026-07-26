@@ -640,10 +640,10 @@ type PlistLine struct {
 // See Line.Autofix for usage details.
 func (pline *PlistLine) Autofix() *Autofix { return pline.Line.Autofix() }
 
-func (pline *PlistLine) Errorf(format string, args ...interface{}) {
+func (pline *PlistLine) Errorf(format string, args ...any) {
 	pline.Line.Errorf(format, args...)
 }
-func (pline *PlistLine) Warnf(format string, args ...interface{}) {
+func (pline *PlistLine) Warnf(format string, args ...any) {
 	pline.Line.Warnf(format, args...)
 }
 func (pline *PlistLine) Explain(explanation ...string) {

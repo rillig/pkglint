@@ -40,7 +40,7 @@ func (ck *MkCondChecker) Check() {
 	}
 
 	// Skip subconditions that have already been handled as part of the !(...).
-	done := make(map[interface{}]bool)
+	done := make(map[any]bool)
 
 	checkNot := func(not *MkCond) {
 		empty := not.Empty

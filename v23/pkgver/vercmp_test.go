@@ -54,9 +54,9 @@ func (s *Suite) Test_Compare(c *check.C) {
 		expected := icmp(i, j)
 		if actual != expected {
 			c.Check(
-				[]interface{}{i, iVersion, j, jVersion, op(actual)},
+				[]any{i, iVersion, j, jVersion, op(actual)},
 				check.DeepEquals,
-				[]interface{}{i, iVersion, j, jVersion, op(expected)})
+				[]any{i, iVersion, j, jVersion, op(expected)})
 		}
 	}
 

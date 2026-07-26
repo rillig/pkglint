@@ -575,8 +575,8 @@ func (s *Suite) Test_MkLineParser_parseDirective(c *check.C) {
 		}
 
 		t.CheckDeepEquals(
-			[]interface{}{mkline.Indent(), mkline.Directive(), mkline.Args(), mkline.DirectiveComment()},
-			[]interface{}{expectedIndent, expectedDirective, expectedArgs, expectedComment})
+			[]any{mkline.Indent(), mkline.Directive(), mkline.Args(), mkline.DirectiveComment()},
+			[]any{expectedIndent, expectedDirective, expectedArgs, expectedComment})
 		t.CheckOutput(diagnostics)
 	}
 
@@ -692,7 +692,7 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 		actual.tokens = parser.tokenize(actual.main, line)
 
 		t.CheckOutput(diagnostics)
-		t.CheckDeepEquals([]interface{}{text, actual}, []interface{}{text, expected})
+		t.CheckDeepEquals([]any{text, actual}, []any{text, expected})
 	}
 
 	t.Use(text, expr, exprText, tokens)
@@ -1106,8 +1106,8 @@ func (s *Suite) Test_MkLineParser_unescapeComment(c *check.C) {
 	test := func(text string, main, comment string) {
 		aMain, aComment := NewMkLineParser().unescapeComment(text)
 		t.CheckDeepEquals(
-			[]interface{}{text, aMain, aComment},
-			[]interface{}{text, main, comment})
+			[]any{text, aMain, aComment},
+			[]any{text, main, comment})
 	}
 
 	test("",

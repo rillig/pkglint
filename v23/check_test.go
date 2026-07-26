@@ -635,7 +635,7 @@ func (t *Tester) CreateFileBuildlink3Id(filename RelPath, id string, customLines
 
 	width := tabWidthSlice("BUILDLINK_API_DEPENDS.", id, "+=\t")
 
-	aligned := func(format string, args ...interface{}) string {
+	aligned := func(format string, args ...any) string {
 		msg := sprintf(format, args...)
 		for tabWidth(msg) < width {
 			msg += "\t"
@@ -759,7 +759,7 @@ func (t *Tester) Remove(filename RelPath) {
 //
 //	.include "version.mk"
 func (t *Tester) SetUpHierarchy() (
-	include func(filename RelPath, args ...interface{}) *MkLines,
+	include func(filename RelPath, args ...any) *MkLines,
 	get func(path RelPath) *MkLines) {
 
 	files := map[RelPath]*MkLines{}
@@ -778,7 +778,7 @@ func (t *Tester) SetUpHierarchy() (
 		}
 	}
 
-	include = func(filename RelPath, args ...interface{}) *MkLines {
+	include = func(filename RelPath, args ...any) *MkLines {
 		var lines []*Line
 		lineno := 1
 		relFilename := basedir.Rel(filename.AsPath())
@@ -904,57 +904,57 @@ func (t *Tester) Main(args ...string) int {
 	return G.Main(&t.stdout, &t.stderr, argv)
 }
 
-func (t *Tester) AssertNil(obj interface{}) {
+func (t *Tester) AssertNil(obj any) {
 	t.c.Assert(obj, check.IsNil)
 }
 
-func (t *Tester) AssertNotNil(obj interface{}) {
+func (t *Tester) AssertNotNil(obj any) {
 	t.c.Assert(obj, check.NotNil)
 }
 
-func (t *Tester) AssertEquals(actual, expected interface{}) {
+func (t *Tester) AssertEquals(actual, expected any) {
 	t.c.Assert(actual, check.Equals, expected)
 }
 
 // Check delegates a check to the check.Check function.
 // Thereby, there is no need to distinguish between c.Check and t.Check
 // in the test code.
-func (t *Tester) Check(obj interface{}, checker check.Checker, args ...interface{}) bool {
+func (t *Tester) Check(obj any, checker check.Checker, args ...any) bool {
 	return t.c.Check(obj, checker, args...)
 }
 
-func (t *Tester) CheckNil(obj interface{}) bool {
+func (t *Tester) CheckNil(obj any) bool {
 	return t.c.Check(obj, check.IsNil)
 }
 
-func (t *Tester) CheckNotNil(obj interface{}) bool {
+func (t *Tester) CheckNotNil(obj any) bool {
 	return t.c.Check(obj, check.NotNil)
 }
 
-func (t *Tester) CheckEquals(actual interface{}, expected interface{}) bool {
+func (t *Tester) CheckEquals(actual any, expected any) bool {
 	return t.c.Check(actual, check.Equals, expected)
 }
 
-func (t *Tester) CheckEqualsf(actual interface{}, expected interface{}, format string, args ...interface{}) bool {
+func (t *Tester) CheckEqualsf(actual any, expected any, format string, args ...any) bool {
 	return t.c.Check(actual, check.Equals, expected,
 		check.Commentf(format, args...))
 }
 
-func (t *Tester) CheckDeepEquals(actual interface{}, expected interface{}) bool {
+func (t *Tester) CheckDeepEquals(actual any, expected any) bool {
 	return t.c.Check(actual, check.DeepEquals, expected)
 }
 
-func (t *Tester) CheckDeepEqualsf(actual interface{}, expected interface{}, format string, args ...interface{}) bool {
+func (t *Tester) CheckDeepEqualsf(actual any, expected any, format string, args ...any) bool {
 	return t.c.Check(actual, check.DeepEquals, expected,
 		check.Commentf(format, args...))
 }
 
-func (t *Tester) CheckLen(obj interface{}, expected int) bool {
+func (t *Tester) CheckLen(obj any, expected int) bool {
 	return t.c.Check(obj, check.HasLen, expected)
 }
 
 // InternalErrorf reports a consistency error in the tests.
-func (t *Tester) InternalErrorf(format string, args ...interface{}) {
+func (t *Tester) InternalErrorf(format string, args ...any) {
 	// It is not possible to panic here since check.v1 would then
 	// ignore all subsequent tests.
 	_, _ = fmt.Fprintf(os.Stderr, "In %s: %s\n", t.testName, sprintf(format, args...))
@@ -1414,7 +1414,7 @@ func (t *Tester) CheckDotColumns(lines ...string) {
 // This means that the test cases that follow do not have to use each of them,
 // and this in turn allows uninteresting test cases to be deleted during
 // development.
-func (t *Tester) Use(...interface{}) {}
+func (t *Tester) Use(...any) {}
 
 // Shquote renders the given paths into the message, adding shell quoting
 // around the paths if necessary.
@@ -1422,7 +1422,7 @@ func (t *Tester) Use(...interface{}) {}
 // It is typically used to check the advertisement lines at the very end
 // of the pkglint output. ("Run \"pkglint -e %s\" to show explanations.")
 func (t *Tester) Shquote(format string, rels ...RelPath) string {
-	var subs []interface{}
+	var subs []any
 	for _, rel := range rels {
 		quoted := shquote(t.tmpdir.JoinClean(rel).String())
 		subs = append(subs, strings.Replace(quoted, t.tmpdir.String(), "~", -1))
@@ -1457,7 +1457,7 @@ func (t *Tester) ReportUncheckedOutput() {
 }
 
 // SplitStringsBool unpacks the given varargs into a string slice and a bool.
-func (t *Tester) SplitStringsBool(data []interface{}) ([]string, bool) {
+func (t *Tester) SplitStringsBool(data []any) ([]string, bool) {
 	var strs []string
 	for _, text := range data[:len(data)-1] {
 		strs = append(strs, text.(string))

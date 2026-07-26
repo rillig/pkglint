@@ -26,10 +26,10 @@ type VartypeCheck struct {
 	Guessed    bool   // Whether the type definition is guessed (based on the variable name) or explicitly defined (see vardefs.go).
 }
 
-func (cv *VartypeCheck) Errorf(format string, args ...interface{}) { cv.MkLine.Errorf(format, args...) }
-func (cv *VartypeCheck) Warnf(format string, args ...interface{})  { cv.MkLine.Warnf(format, args...) }
-func (cv *VartypeCheck) Notef(format string, args ...interface{})  { cv.MkLine.Notef(format, args...) }
-func (cv *VartypeCheck) Explain(explanation ...string)             { cv.MkLine.Explain(explanation...) }
+func (cv *VartypeCheck) Errorf(format string, args ...any) { cv.MkLine.Errorf(format, args...) }
+func (cv *VartypeCheck) Warnf(format string, args ...any)  { cv.MkLine.Warnf(format, args...) }
+func (cv *VartypeCheck) Notef(format string, args ...any)  { cv.MkLine.Notef(format, args...) }
+func (cv *VartypeCheck) Explain(explanation ...string)     { cv.MkLine.Explain(explanation...) }
 
 // Autofix returns the autofix instance belonging to the line.
 //

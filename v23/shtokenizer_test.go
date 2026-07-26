@@ -182,7 +182,7 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 	dquotBacktSquot := q(shqDquotBacktSquot)
 
 	// Ignore unused functions; useful for deleting some of the tests during debugging.
-	use := func(args ...interface{}) {}
+	use := func(args ...any) {}
 	use(testRest, test, atoms)
 	use(operator, comment, mkvar, text, whitespace)
 	use(space, semicolon, pipe, subshell, shvar)

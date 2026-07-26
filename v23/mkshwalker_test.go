@@ -53,7 +53,7 @@ func (s *Suite) Test_MkShWalker_Walk(c *check.C) {
 		walker := NewMkShWalker()
 		var commands []string
 
-		add := func(kind string, format string, args ...interface{}) {
+		add := func(kind string, format string, args ...any) {
 			if format != "" && !contains(format, "%") {
 				panic(format)
 			}

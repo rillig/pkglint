@@ -15,7 +15,7 @@ var _ = check.Suite(new(Suite))
 
 func Test(t *testing.T) { check.TestingT(t) }
 
-func (t *Tracer) onlyArguments(args ...interface{}) {
+func (t *Tracer) onlyArguments(args ...any) {
 	defer t.Call(args...)()
 	t.Stepf("Running %q", "code")
 }

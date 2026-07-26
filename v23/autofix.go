@@ -43,7 +43,7 @@ type autofixShortTerm struct {
 	// In --autofix mode it is suppressed if there were no actual actions.
 	level       *LogLevel
 	diagFormat  string
-	diagArgs    []interface{}
+	diagArgs    []any
 	explanation []string
 }
 
@@ -89,17 +89,17 @@ func (fix *Autofix) SuppressRationaleExplanation() {
 }
 
 // Errorf remembers the error for logging it later when Apply is called.
-func (fix *Autofix) Errorf(format string, args ...interface{}) {
+func (fix *Autofix) Errorf(format string, args ...any) {
 	fix.setDiag(Error, format, args)
 }
 
 // Warnf remembers the warning for logging it later when Apply is called.
-func (fix *Autofix) Warnf(format string, args ...interface{}) {
+func (fix *Autofix) Warnf(format string, args ...any) {
 	fix.setDiag(Warn, format, args)
 }
 
 // Notef remembers the note for logging it later when Apply is called.
-func (fix *Autofix) Notef(format string, args ...interface{}) {
+func (fix *Autofix) Notef(format string, args ...any) {
 	fix.setDiag(Note, format, args)
 }
 
@@ -274,7 +274,7 @@ func (fix *Autofix) Custom(fixer func(showAutofix, autofix bool)) {
 // Describef can be called from within an Autofix.Custom call to remember a
 // description of the actual fix for logging it later when Apply is called.
 // Describef may be called multiple times before calling Apply.
-func (fix *Autofix) Describef(rawIndex int, format string, args ...interface{}) {
+func (fix *Autofix) Describef(rawIndex int, format string, args ...any) {
 	msg := sprintf(format, args...)
 	lineno := fix.line.Location.Lineno(rawIndex)
 	fix.actions = append(fix.actions, autofixAction{msg, lineno})
@@ -401,7 +401,7 @@ func (fix *Autofix) Apply() {
 	}
 }
 
-func (fix *Autofix) setDiag(level *LogLevel, format string, args []interface{}) {
+func (fix *Autofix) setDiag(level *LogLevel, format string, args []any) {
 	if G.Testing && format != SilentAutofixFormat {
 		assertf(
 			hasSuffix(format, "."),

@@ -647,19 +647,19 @@ func (p *MkLexer) Rest() string {
 	return p.lexer.Rest()
 }
 
-func (p *MkLexer) Errorf(format string, args ...interface{}) {
+func (p *MkLexer) Errorf(format string, args ...any) {
 	if p.HasDiag() {
 		p.diag.Errorf(format, args...)
 	}
 }
 
-func (p *MkLexer) Warnf(format string, args ...interface{}) {
+func (p *MkLexer) Warnf(format string, args ...any) {
 	if p.HasDiag() {
 		p.diag.Warnf(format, args...)
 	}
 }
 
-func (p *MkLexer) Notef(format string, args ...interface{}) {
+func (p *MkLexer) Notef(format string, args ...any) {
 	if p.HasDiag() {
 		p.diag.Notef(format, args...)
 	}

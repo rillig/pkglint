@@ -41,7 +41,7 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 	defined := func(varname string) *MkCond { return &MkCond{Defined: varname} }
 	paren := func(cond *MkCond) *MkCond { return &MkCond{Paren: cond} }
 
-	toJSON := func(obj interface{}) string {
+	toJSON := func(obj any) string {
 		var sb strings.Builder
 		encoder := json.NewEncoder(&sb)
 		encoder.SetIndent("", "  ")

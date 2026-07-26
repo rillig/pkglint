@@ -157,8 +157,8 @@ func (s *Suite) Test_MkExprModifier_Subst(c *check.C) {
 		actualOk, actualResult := m.Subst(str)
 
 		t.CheckDeepEquals(
-			[]interface{}{actualOk, actualResult},
-			[]interface{}{ok, result})
+			[]any{actualOk, actualResult},
+			[]any{ok, result})
 	}
 
 	test("???", "anything", false, "")
@@ -264,8 +264,8 @@ func (s *Suite) Test_MkExprModifier_MatchMatch(c *check.C) {
 	test := func(mod MkExprModifier, positive bool, pattern string, exact bool) {
 		actualOk, actualPositive, actualPattern, actualExact := mod.MatchMatch()
 		t.CheckDeepEquals(
-			[]interface{}{actualOk, actualPositive, actualPattern, actualExact},
-			[]interface{}{true, positive, pattern, exact})
+			[]any{actualOk, actualPositive, actualPattern, actualExact},
+			[]any{true, positive, pattern, exact})
 	}
 
 	testFail("")

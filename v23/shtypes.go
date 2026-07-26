@@ -45,7 +45,7 @@ type ShAtom struct {
 	//  * usually nil
 	//  * for shtExpr a *MkExpr
 	//  * for shtShExpr a string
-	data interface{}
+	data any
 }
 
 func (atom *ShAtom) String() string {

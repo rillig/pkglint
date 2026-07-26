@@ -651,7 +651,7 @@ func (ck *ShellLineChecker) warnMultiLineComment(rawIndex int, raw *RawLine) {
 		"\t${:D this is commented out}")
 }
 
-func (ck *ShellLineChecker) Warnf(format string, args ...interface{}) {
+func (ck *ShellLineChecker) Warnf(format string, args ...any) {
 	ck.mkline.Warnf(format, args...)
 }
 

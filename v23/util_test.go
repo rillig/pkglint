@@ -542,8 +542,8 @@ func (s *Suite) Test_naturalLess(c *check.C) {
 		expected := i < j
 		if actual != expected {
 			t.CheckDeepEquals(
-				[]interface{}{i, ie, j, je, actual},
-				[]interface{}{i, ie, j, je, expected})
+				[]any{i, ie, j, je, actual},
+				[]any{i, ie, j, je, expected})
 		}
 	}
 
@@ -787,8 +787,8 @@ func (s *Suite) Test_stringSliceLess(c *check.C) {
 		expected := i < j
 		if actual != expected {
 			t.CheckDeepEquals(
-				[]interface{}{i, iElement, j, jElement, actual},
-				[]interface{}{i, iElement, j, jElement, expected})
+				[]any{i, iElement, j, jElement, actual},
+				[]any{i, iElement, j, jElement, expected})
 		}
 	}
 
@@ -1040,7 +1040,7 @@ func (s *Suite) Test_LazyStringBuilder_Reset(c *check.C) {
 // and then returns them sorted.
 //
 // It is only available during tests since it uses reflection.
-func keys(m interface{}) []string {
+func keys(m any) []string {
 	var keys []string
 	for _, key := range reflect.ValueOf(m).MapKeys() {
 		switch key := key.Interface().(type) {
@@ -1078,18 +1078,18 @@ func (s *Suite) Test_interval(c *check.C) {
 }
 
 type relation struct {
-	idx           map[interface{}]int
-	elements      []interface{}
-	pairs         []struct{ a, b interface{} }
+	idx           map[any]int
+	elements      []any
+	pairs         []struct{ a, b any }
 	reflexive     bool
 	transitive    bool
 	antisymmetric bool
 	onError       func(s string)
 }
 
-func (r *relation) add(a interface{}, b interface{}) {
+func (r *relation) add(a any, b any) {
 	if r.idx == nil {
-		r.idx = make(map[interface{}]int)
+		r.idx = make(map[any]int)
 	}
 	if _, ok := r.idx[a]; !ok {
 		r.idx[a] = len(r.idx)
@@ -1099,10 +1099,10 @@ func (r *relation) add(a interface{}, b interface{}) {
 		r.idx[b] = len(r.idx)
 		r.elements = append(r.elements, b)
 	}
-	r.pairs = append(r.pairs, struct{ a, b interface{} }{a, b})
+	r.pairs = append(r.pairs, struct{ a, b any }{a, b})
 }
 
-func (r *relation) check(actual func(interface{}, interface{}) bool) {
+func (r *relation) check(actual func(any, any) bool) {
 	n := len(r.idx)
 	rel := make([][]bool, n)
 	for i := 0; i < n; i++ {

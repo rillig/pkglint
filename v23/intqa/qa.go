@@ -53,7 +53,7 @@ const (
 //
 // Each of the variable parts may be omitted.
 type QAChecker struct {
-	errorf func(format string, args ...interface{})
+	errorf func(format string, args ...any)
 
 	filters []filter
 	order   int
@@ -68,7 +68,7 @@ type QAChecker struct {
 // NewQAChecker creates a new checker.
 // By default, all errors are enabled;
 // call Configure to disable them selectively.
-func NewQAChecker(errorf func(format string, args ...interface{})) *QAChecker {
+func NewQAChecker(errorf func(format string, args ...any)) *QAChecker {
 	ck := QAChecker{errorf: errorf, out: os.Stderr}
 
 	// For test fixtures from https://gopkg.in/check/v1.
@@ -456,7 +456,7 @@ func (ck *QAChecker) checkOrder() {
 	}
 }
 
-func (ck *QAChecker) addError(e Error, c code, format string, args ...interface{}) bool {
+func (ck *QAChecker) addError(e Error, c code, format string, args ...any) bool {
 	relevant := ck.isRelevant(c.file, c.Type, c.Func, e)
 	if relevant {
 		ck.errors = append(ck.errors, fmt.Sprintf(format, args...))
@@ -610,7 +610,7 @@ func matches(subj string, pattern string) bool {
 }
 
 // sortedKeys returns the sorted keys from an arbitrary map.
-func sortedKeys(m interface{}) []string {
+func sortedKeys(m any) []string {
 	var keys []string
 	for _, key := range reflect.ValueOf(m).MapKeys() {
 		keys = append(keys, key.Interface().(string))

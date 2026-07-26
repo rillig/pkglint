@@ -561,8 +561,8 @@ func (s *Suite) Test_MkLexer_exprModifierSysV(c *check.C) {
 		actualMod, actualModNoVar := lex.exprModifierSysV(closing)
 
 		t.CheckDeepEquals(
-			[]interface{}{actualMod, actualModNoVar, lex.Rest()},
-			[]interface{}{mod, modNoVar, rest})
+			[]any{actualMod, actualModNoVar, lex.Rest()},
+			[]any{mod, modNoVar, rest})
 		t.CheckOutput(diagnostics)
 	}
 
@@ -880,8 +880,8 @@ func (s *Suite) Test_MkLexer_exprModifierTs(c *check.C) {
 		actualMod := lex.exprModifierTs(alnum, closing, lex.lexer, "VAR", mark)
 
 		t.CheckDeepEquals(
-			[]interface{}{actualMod, lex.Rest()},
-			[]interface{}{mod, rest})
+			[]any{actualMod, lex.Rest()},
+			[]any{mod, rest})
 		t.CheckOutput(diagnostics)
 	}
 
@@ -1017,8 +1017,8 @@ func (s *Suite) Test_MkLexer_exprModifierSubst(c *check.C) {
 		ok, actualRegex, actualFrom, actualTo, actualOptions := p.exprModifierSubst('}')
 
 		t.CheckDeepEquals(
-			[]interface{}{ok, actualRegex, actualFrom, actualTo, actualOptions, p.Rest()},
-			[]interface{}{true, regex, from, to, options, rest})
+			[]any{ok, actualRegex, actualFrom, actualTo, actualOptions, p.Rest()},
+			[]any{true, regex, from, to, options, rest})
 		t.CheckOutput(diagnostics)
 	}
 
@@ -1031,8 +1031,8 @@ func (s *Suite) Test_MkLexer_exprModifierSubst(c *check.C) {
 			return
 		}
 		t.CheckDeepEquals(
-			[]interface{}{ok, regex, from, to, options, p.Rest()},
-			[]interface{}{false, false, "", "", "", rest})
+			[]any{ok, regex, from, to, options, p.Rest()},
+			[]any{false, false, "", "", "", rest})
 		t.CheckOutput(diagnostics)
 	}
 

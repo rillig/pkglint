@@ -171,15 +171,15 @@ func (line *Line) IsCvsID(prefixRe regex.Pattern) (found bool, expanded bool) {
 	return m, exp != ""
 }
 
-func (line *Line) Errorf(format string, args ...interface{}) {
+func (line *Line) Errorf(format string, args ...any) {
 	G.Logger.Diag(line, Error, format, args...)
 }
 
-func (line *Line) Warnf(format string, args ...interface{}) {
+func (line *Line) Warnf(format string, args ...any) {
 	G.Logger.Diag(line, Warn, format, args...)
 }
 
-func (line *Line) Notef(format string, args ...interface{}) {
+func (line *Line) Notef(format string, args ...any) {
 	G.Logger.Diag(line, Note, format, args...)
 }
 

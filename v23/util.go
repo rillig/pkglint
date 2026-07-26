@@ -36,7 +36,7 @@ func hasPrefix(s, prefix string) bool {
 func hasSuffix(s, suffix string) bool {
 	return strings.HasSuffix(s, suffix)
 }
-func sprintf(format string, args ...interface{}) string {
+func sprintf(format string, args ...any) string {
 	return fmt.Sprintf(format, args...)
 }
 func regcomp(re regex.Pattern) *regexp.Regexp {
@@ -268,13 +268,13 @@ func forEachStringMkLine(m map[string]*MkLine, action func(s string, mkline *MkL
 //
 // Other than Assertf, this method does not require any comparison operator in the calling code.
 // This makes it possible to get 100% branch coverage for cases that "really can never fail".
-func assertNil(err error, format string, args ...interface{}) {
+func assertNil(err error, format string, args ...any) {
 	if err != nil {
 		panic("Pkglint internal error: " + sprintf(format, args...) + ": " + err.Error())
 	}
 }
 
-func assertNotNil(obj interface{}) {
+func assertNotNil(obj any) {
 
 	// https://stackoverflow.com/questions/13476349/check-for-nil-and-nil-interface-in-go
 	isNil := func() bool {
@@ -303,7 +303,7 @@ func assert(cond bool) {
 //
 // This function must only be used for programming errors.
 // For runtime errors, use Logger.TechFatalf.
-func assertf(cond bool, format string, args ...interface{}) {
+func assertf(cond bool, format string, args ...any) {
 	if !cond {
 		panic("Pkglint internal error: " + sprintf(format, args...))
 	}
@@ -1310,16 +1310,16 @@ func (b *bag) opt(index int) int {
 	return 0
 }
 
-func (b *bag) key(index int) interface{} { return b.entries[index].key }
+func (b *bag) key(index int) any { return b.entries[index].key }
 
-func (b *bag) add(key interface{}, count int) {
+func (b *bag) add(key any, count int) {
 	b.entries = append(b.entries, bagEntry{key, count})
 }
 
 func (b *bag) len() int { return len(b.entries) }
 
 type bagEntry struct {
-	key   interface{}
+	key   any
 	count int
 }
 

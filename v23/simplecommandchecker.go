@@ -366,13 +366,13 @@ func (scc *SimpleCommandChecker) checkEchoN() {
 	}
 }
 
-func (scc *SimpleCommandChecker) Errorf(format string, args ...interface{}) {
+func (scc *SimpleCommandChecker) Errorf(format string, args ...any) {
 	scc.mkline.Errorf(format, args...)
 }
-func (scc *SimpleCommandChecker) Warnf(format string, args ...interface{}) {
+func (scc *SimpleCommandChecker) Warnf(format string, args ...any) {
 	scc.mkline.Warnf(format, args...)
 }
-func (scc *SimpleCommandChecker) Notef(format string, args ...interface{}) {
+func (scc *SimpleCommandChecker) Notef(format string, args ...any) {
 	scc.mkline.Notef(format, args...)
 }
 func (scc *SimpleCommandChecker) Explain(explanation ...string) {

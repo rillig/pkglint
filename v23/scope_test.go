@@ -83,8 +83,8 @@ func (s *Suite) Test_Scope_Define(c *check.C) {
 		actualValue, actualFound, actualIndeterminate := scope.LastValueFound("BUILD_DIRS")
 
 		t.CheckDeepEquals(
-			[]interface{}{actualFound, actualIndeterminate, actualValue},
-			[]interface{}{found, indeterminate, value})
+			[]any{actualFound, actualIndeterminate, actualValue},
+			[]any{found, indeterminate, value})
 		t.CheckEquals(scope.vs["BUILD_DIRS"].value.String(), value)
 	}
 

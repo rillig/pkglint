@@ -1632,8 +1632,8 @@ func (s *Suite) Test_MatchMkInclude(c *check.C) {
 		splitResult.tokens = parser.tokenize(splitResult.main, nil)
 		m, indent, directive, args := MatchMkInclude(splitResult.main)
 		t.CheckDeepEquals(
-			[]interface{}{m, indent, directive, args, condStr(splitResult.hasComment, "#", "") + splitResult.comment},
-			[]interface{}{true, expectedIndent, expectedDirective, expectedFilename, expectedComment})
+			[]any{m, indent, directive, args, condStr(splitResult.hasComment, "#", "") + splitResult.comment},
+			[]any{true, expectedIndent, expectedDirective, expectedFilename, expectedComment})
 	}
 
 	testFail := func(input string) {

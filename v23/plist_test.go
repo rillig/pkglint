@@ -1709,7 +1709,7 @@ func (s *Suite) Test_PlistRank_MoreGeneric(c *check.C) {
 	rel.antisymmetric = true
 	rel.onError = func(s string) { c.Error(s) }
 
-	rel.check(func(a, b interface{}) bool { return a.(*PlistRank).MoreGeneric(b.(*PlistRank)) })
+	rel.check(func(a, b any) bool { return a.(*PlistRank).MoreGeneric(b.(*PlistRank)) })
 }
 
 func (s *Suite) Test_NewPlistLines(c *check.C) {

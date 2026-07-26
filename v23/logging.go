@@ -13,9 +13,9 @@ import (
 //
 // For convenience, it is implemented by several types in pkglint.
 type Diagnoser interface {
-	Errorf(format string, args ...interface{})
-	Warnf(format string, args ...interface{})
-	Notef(format string, args ...interface{})
+	Errorf(format string, args ...any)
+	Warnf(format string, args ...any)
+	Notef(format string, args ...any)
 	Explain(explanation ...string)
 }
 
@@ -110,7 +110,7 @@ func (l *Logger) Explain(explanation ...string) {
 // and duplicates are suppressed unless the --log-verbose command line option is given.
 //
 // See Logf for logging arbitrary messages.
-func (l *Logger) Diag(line *Line, level *LogLevel, format string, args ...interface{}) {
+func (l *Logger) Diag(line *Line, level *LogLevel, format string, args ...any) {
 	if G.Testing {
 		for _, arg := range args {
 			switch arg.(type) {
@@ -335,7 +335,7 @@ func (l *Logger) Logf(level *LogLevel, filename CurrPath, lineno, format, msg st
 // TechFatalf logs a technical error on the error output and quits pkglint.
 //
 // For diagnostics, use Logf instead.
-func (l *Logger) TechFatalf(location CurrPath, format string, args ...interface{}) {
+func (l *Logger) TechFatalf(location CurrPath, format string, args ...any) {
 	loc := location.String() + condStr(location.IsEmpty(), "", ": ")
 	msg := sprintf(format, args...)
 	all := sprintf("FATAL: %s%s\n", loc, msg)
@@ -351,7 +351,7 @@ func (l *Logger) TechFatalf(location CurrPath, format string, args ...interface{
 // TechErrorf logs a technical error on the error output.
 //
 // For diagnostics, use Logf instead.
-func (l *Logger) TechErrorf(location CurrPath, format string, args ...interface{}) {
+func (l *Logger) TechErrorf(location CurrPath, format string, args ...any) {
 	loc := location.String() + condStr(location.IsEmpty(), "", ": ")
 	msg := sprintf(format, args...)
 	all := sprintf("ERROR: %s%s\n", loc, msg)

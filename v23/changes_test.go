@@ -648,8 +648,8 @@ func (s *Suite) Test_Change_IsAbove(c *check.C) {
 		expected := i < j
 		if actual != expected {
 			t.CheckDeepEquals(
-				[]interface{}{i, *chi, j, *chj, actual},
-				[]interface{}{i, *chi, j, *chj, expected})
+				[]any{i, *chi, j, *chj, actual},
+				[]any{i, *chi, j, *chj, expected})
 		}
 	}
 

@@ -2532,7 +2532,7 @@ func (s *Suite) Test_VaralignBlock__empty_value(c *check.C) {
 func (s *Suite) Test_VaralignBlock__aligned(c *check.C) {
 	t := s.Init(c)
 
-	test := func(data ...interface{}) {
+	test := func(data ...any) {
 		lines, expected := t.SplitStringsBool(data)
 		t.CheckDotColumns(lines...)
 
@@ -3463,8 +3463,8 @@ func (s *Suite) Test_varalignMkLine_rightMargin(c *check.C) {
 		for _, mkinfo := range block.mkinfos {
 			actualCommon, actualMargin := mkinfo.rightMargin()
 			t.CheckDeepEquals(
-				[]interface{}{actualCommon, actualMargin},
-				[]interface{}{common, expectedRightMargin})
+				[]any{actualCommon, actualMargin},
+				[]any{common, expectedRightMargin})
 		}
 	}
 
