@@ -1807,7 +1807,6 @@ func NewPlistContent() PlistContent {
 
 // IncludedMap remembers which files the package Makefile has included,
 // including indirect files.
-// See OncePerString.
 type IncludedMap struct {
 	m     map[PackagePath]struct{}
 	Trace bool
