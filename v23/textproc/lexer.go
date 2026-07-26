@@ -269,7 +269,7 @@ func NewByteSet(chars string) *ByteSet {
 // are not in the given set.
 func (bs *ByteSet) Inverse() *ByteSet {
 	var inv ByteSet
-	for i := 0; i < 256; i++ {
+	for i := range 256 {
 		inv.bits[i] = !bs.Contains(byte(i))
 	}
 	return &inv

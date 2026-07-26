@@ -110,7 +110,7 @@ func argsStr(args []any) string {
 
 func (t *Tracer) traceIndent() string {
 	var indent strings.Builder
-	for i := 0; i < t.depth; i++ {
+	for i := range t.depth {
 		_, _ = fmt.Fprintf(&indent, "%d ", i+1)
 	}
 	return indent.String()

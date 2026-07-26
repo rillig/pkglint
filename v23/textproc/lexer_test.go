@@ -349,7 +349,7 @@ func (s *Suite) Test_NewByteSet(c *check.C) {
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
 		"abcdefghijklmnopqrstuvwxyz" +
 		"0123456789_\xFC"
-	for i := 0; i < 256; i++ {
+	for i := range 256 {
 		c.Check(
 			set.Contains(byte(i)),
 			equals,
@@ -364,7 +364,7 @@ func (s *Suite) Test_NewByteSet__range_hyphen_beginning(c *check.C) {
 	set := NewByteSet("---a-z")
 
 	var actual strings.Builder
-	for i := 0; i < 256; i++ {
+	for i := range 256 {
 		if set.Contains(byte(i)) {
 			actual.WriteByte(byte(i))
 		}
@@ -381,7 +381,7 @@ func (s *Suite) Test_NewByteSet__range_hyphen_middle(c *check.C) {
 	set := NewByteSet("x---a")
 
 	var actual strings.Builder
-	for i := 0; i < 256; i++ {
+	for i := range 256 {
 		if set.Contains(byte(i)) {
 			actual.WriteByte(byte(i))
 		}
@@ -396,7 +396,7 @@ func (s *Suite) Test_NewByteSet__hyphen_beginning(c *check.C) {
 	set := NewByteSet("-ax")
 
 	var actual strings.Builder
-	for i := 0; i < 256; i++ {
+	for i := range 256 {
 		if set.Contains(byte(i)) {
 			actual.WriteByte(byte(i))
 		}
@@ -411,7 +411,7 @@ func (s *Suite) Test_NewByteSet__hyphen_after_range(c *check.C) {
 	set := NewByteSet("+-+-")
 
 	var actual strings.Builder
-	for i := 0; i < 256; i++ {
+	for i := range 256 {
 		if set.Contains(byte(i)) {
 			actual.WriteByte(byte(i))
 		}
@@ -426,7 +426,7 @@ func (s *Suite) Test_NewByteSet__hyphen_end(c *check.C) {
 	set := NewByteSet("ax-")
 
 	var actual strings.Builder
-	for i := 0; i < 256; i++ {
+	for i := range 256 {
 		if set.Contains(byte(i)) {
 			actual.WriteByte(byte(i))
 		}
@@ -439,7 +439,7 @@ func (s *Suite) Test_ByteSet_Inverse(c *check.C) {
 	set := NewByteSet("A-Za-z0-9_\xFC")
 	inverse := set.Inverse()
 
-	for i := 0; i < 256; i++ {
+	for i := range 256 {
 		c.Check(
 			inverse.Contains(byte(i)),
 			equals,

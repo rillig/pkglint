@@ -30,7 +30,7 @@ func Compare(left, right string) int {
 	rv := newVersion(right)
 
 	m := imax(len(lv.v), len(rv.v))
-	for i := 0; i < m; i++ {
+	for i := range m {
 		if c := icmp(lv.field(i), rv.field(i)); c != 0 {
 			return c
 		}

@@ -59,7 +59,7 @@ func (f *Fuzzer) addChar(r rune, weight int) {
 
 func (f *Fuzzer) Generate(length int) string {
 	rs := make([]rune, length)
-	for i := 0; i < length; i++ {
+	for i := range length {
 		rs[i] = f.randomChar()
 	}
 	f.last = string(rs)

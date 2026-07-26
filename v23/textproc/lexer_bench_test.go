@@ -34,7 +34,7 @@ type ByteSetBool struct {
 
 func NewByteSetBool(other *ByteSet) *ByteSetBool {
 	var s ByteSetBool
-	for i := 0; i < 256; i++ {
+	for i := range 256 {
 		s.bits[i] = other.Contains(byte(i))
 	}
 	return &s
@@ -45,7 +45,7 @@ func (s *ByteSetBool) Contains(b byte) bool { return s.bits[b] }
 func Benchmark_ByteSetBool_Contains(b *testing.B) {
 	set := NewByteSetBool(AlnumU)
 	var sum int
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		if set.Contains(byte(i)) {
 			sum++
 		}
@@ -72,7 +72,7 @@ func (s *ByteSetUint8) Contains(b byte) bool { return s.bits[b/8]&(1<<(b%8)) != 
 func Benchmark_ByteSetUint8_Contains(b *testing.B) {
 	set := NewByteSetUint8(AlnumU)
 	var sum int
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		if set.Contains(byte(i)) {
 			sum++
 		}
@@ -99,7 +99,7 @@ func (s *ByteSetUint16) Contains(b byte) bool { return s.bits[b/16]&(1<<(b%16)) 
 func Benchmark_ByteSet16_Contains(b *testing.B) {
 	set := NewByteSetUint16(AlnumU)
 	var sum int
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		if set.Contains(byte(i)) {
 			sum++
 		}
@@ -126,7 +126,7 @@ func (s *ByteSetUint64) Contains(b byte) bool { return s.bits[b/64]&(1<<(b%64)) 
 func Benchmark_ByteSet64_Contains(b *testing.B) {
 	set := NewByteSetUint64(AlnumU)
 	var sum int
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		if set.Contains(byte(i)) {
 			sum++
 		}
@@ -136,7 +136,7 @@ func Benchmark_ByteSet64_Contains(b *testing.B) {
 
 func Benchmark_Direct_Compare(b *testing.B) {
 	var sum int
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		i := byte(i)
 		if 'A' <= i && i <= 'Z' || 'a' <= i && i <= 'z' || '0' <= i && i <= '9' || i == '_' {
 			sum++
@@ -147,7 +147,7 @@ func Benchmark_Direct_Compare(b *testing.B) {
 
 func Benchmark_Direct_Compare_binary_search(b *testing.B) {
 	var sum int
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		i := byte(i)
 		if i >= 'A' {
 			if i >= 'a' {
@@ -168,7 +168,7 @@ func Benchmark_Direct_Compare_binary_search(b *testing.B) {
 
 func Benchmark_Direct_Compare_reverse(b *testing.B) {
 	var sum int
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		i := byte(i)
 		if i == '_' || '0' <= i && i <= '9' || 'a' <= i && i <= 'z' || 'A' <= i && i <= 'Z' {
 			sum++
@@ -179,7 +179,7 @@ func Benchmark_Direct_Compare_reverse(b *testing.B) {
 
 func Benchmark_Direct_Compare_fold_case(b *testing.B) {
 	var sum int
-	for i := 0; i < b.N; i++ {
+	for i := range b.N {
 		i := byte(i)
 		if 'A' <= i&^0x20 && i&^0x20 <= 'Z' || '0' <= i && i <= '9' || i == '_' {
 			sum++

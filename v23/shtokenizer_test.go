@@ -98,7 +98,7 @@ func (s *Suite) Test_ShTokenizer__fuzzing(c *check.C) {
 	line := t.NewLine("Makefile", 1, "\t:")
 
 	defer fuzzer.CheckOk()
-	for i := 0; i < 1000; i++ {
+	for range 1000 {
 		tokenizer := NewShTokenizer(line, fuzzer.Generate(50))
 		tokenizer.ShAtoms()
 		t.Output() // Discard the output, only react on panics.

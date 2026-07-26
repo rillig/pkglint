@@ -137,7 +137,7 @@ func (p Path) ContainsText(contained string) bool {
 // components, use ContainsPathCanonical instead.
 func (p Path) ContainsPath(sub Path) bool {
 	limit := len(p) - len(sub)
-	for i := 0; i <= limit; i++ {
+	for i := range limit + 1 {
 		if (i == 0 || p[i-1] == '/') && p[i:].HasPrefixPath(sub) {
 			return true
 		}

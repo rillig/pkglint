@@ -89,7 +89,7 @@ func Test_Pattern_addTransitions(t *testing.T) {
 			s0 := p.addState(false)
 			s1 := p.addState(true)
 			var chars [256]bool
-			for i := 0; i < 256; i++ {
+			for i := range 256 {
 				chars[i] = tt.bs.Contains(byte(i))
 			}
 			p.addTransitions(s0, &chars, s1)

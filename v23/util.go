@@ -931,7 +931,7 @@ func stringSliceLess(a, b []string) bool {
 		limit = len(b)
 	}
 
-	for i := 0; i < limit; i++ {
+	for i := range limit {
 		if a[i] != b[i] {
 			return a[i] < b[i]
 		}

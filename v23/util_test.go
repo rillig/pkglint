@@ -427,55 +427,55 @@ const reMkIncludeBenchmark = `^\.([\t ]*)(s?include)[\t ]+\"([^\"]+)\"[\t ]*(?:#
 const reMkIncludeBenchmarkPositive = `^\.([\t ]*)(s?include)[\t ]+\"(.+)\"[\t ]*(?:#.*)?$`
 
 func Benchmark_match3_buildlink3(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		match3(".include \"../../category/package/buildlink3.mk\"", reMkIncludeBenchmark)
 	}
 }
 
 func Benchmark_match3_bsd_pkg_mk(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		match3(".include \"../../mk/bsd.pkg.mk\"", reMkIncludeBenchmark)
 	}
 }
 
 func Benchmark_match3_same_dir(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		match3(".include \"options.mk\"", reMkIncludeBenchmark)
 	}
 }
 
 func Benchmark_match3_bsd_pkg_mk_comment(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		match3(".include \"../../mk/bsd.pkg.mk\"          # infrastructure     ", reMkIncludeBenchmark)
 	}
 }
 
 func Benchmark_match3_buildlink3_positive(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		match3(".include \"../../category/package/buildlink3.mk\"", reMkIncludeBenchmarkPositive)
 	}
 }
 
 func Benchmark_match3_bsd_pkg_mk_positive(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		match3(".include \"../../mk/bsd.pkg.mk\"", reMkIncludeBenchmarkPositive)
 	}
 }
 
 func Benchmark_match3_same_dir_positive(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		match3(".include \"options.mk\"", reMkIncludeBenchmarkPositive)
 	}
 }
 
 func Benchmark_match3_bsd_pkg_mk_comment_positive(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		match3(".include \"../../mk/bsd.pkg.mk\"          # infrastructure     ", reMkIncludeBenchmarkPositive)
 	}
 }
 
 func Benchmark_match3_explicit(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		MatchMkInclude(".include \"../../mk/bsd.pkg.mk\"          # infrastructure     ")
 	}
 }
@@ -1105,12 +1105,12 @@ func (r *relation) add(a any, b any) {
 func (r *relation) check(actual func(any, any) bool) {
 	n := len(r.idx)
 	rel := make([][]bool, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		rel[i] = make([]bool, n)
 	}
 
 	if r.reflexive {
-		for i := 0; i < n; i++ {
+		for i := range n {
 			rel[i][i] = true
 		}
 	}
@@ -1122,9 +1122,9 @@ func (r *relation) check(actual func(any, any) bool) {
 	if r.transitive {
 		for {
 			changed := false
-			for i := 0; i < n; i++ {
-				for j := 0; j < n; j++ {
-					for k := 0; k < n; k++ {
+			for i := range n {
+				for j := range n {
+					for k := range n {
 						if rel[i][j] && rel[j][k] && !rel[i][k] {
 							rel[i][k] = true
 							changed = true
@@ -1139,8 +1139,8 @@ func (r *relation) check(actual func(any, any) bool) {
 	}
 
 	if r.antisymmetric {
-		for i := 0; i < n; i++ {
-			for j := 0; j < n; j++ {
+		for i := range n {
+			for j := range n {
 				if i != j && rel[i][j] && rel[j][i] {
 					r.onError(sprintf(
 						"the antisymmetric relation must not contain "+
@@ -1151,8 +1151,8 @@ func (r *relation) check(actual func(any, any) bool) {
 		}
 	}
 
-	for i := 0; i < n; i++ {
-		for j := 0; j < n; j++ {
+	for i := range n {
+		for j := range n {
 			ei := r.elements[i]
 			ej := r.elements[j]
 			actualRel := actual(ei, ej)
