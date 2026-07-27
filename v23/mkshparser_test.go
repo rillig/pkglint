@@ -59,7 +59,6 @@ func (s *Suite) Test_parseShellProgram__parse_error_for_dollar(c *check.C) {
 
 type ShSuite struct {
 	t *Tester
-	c *check.C
 }
 
 var _ = check.Suite(&ShSuite{})
@@ -69,7 +68,7 @@ func (s *ShSuite) SetUpTest(*check.C) {
 }
 
 func (s *ShSuite) TearDownTest(c *check.C) {
-	s.t.c = c
+	s.t.backend = c
 	s.t.ReportUncheckedOutput()
 	ResetGlobals()
 }
@@ -713,9 +712,8 @@ func (s *ShSuite) Test_parseShellProgram__io_here(c *check.C) {
 }
 
 func (s *ShSuite) init(c *check.C) *MkShBuilder {
-	s.c = c
 	tmpdir := NewCurrPath("The ShSuite tests don't need a temporary directory")
-	s.t = &Tester{c: c, testName: c.TestName(), tmpdir: tmpdir}
+	s.t = &Tester{backend: c, testName: c.TestName(), tmpdir: tmpdir}
 	G = NewPkglint(&s.t.stdout, &s.t.stderr)
 	return NewMkShBuilder()
 }

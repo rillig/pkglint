@@ -46,15 +46,15 @@ func (s *Suite) Init(c *check.C) *Tester {
 	// see https://github.com/go-check/check/issues/22.
 
 	t := s.Tester // Has been initialized by SetUpTest
-	if t.c != nil {
+	if t.backend != nil {
 		panic("Suite.Init must only be called once.")
 	}
-	t.c = c
+	t.backend = c
 	return t
 }
 
 func (s *Suite) SetUpTest(c *check.C) {
-	t := Tester{c: c, testName: c.TestName()}
+	t := Tester{backend: c, testName: c.TestName()}
 	s.Tester = &t
 
 	G = NewPkglint(&t.stdout, &t.stderr)
@@ -64,7 +64,7 @@ func (s *Suite) SetUpTest(c *check.C) {
 	G.Pkgsrc = NewPkgsrc(t.File("."))
 	G.Project = G.Pkgsrc
 
-	t.c = c
+	t.backend = c
 	t.SetUpCommandLine("-Wall")    // To catch duplicate warnings
 	G.Todo.Pop()                   // The "." was inserted by default.
 	t.seenSetUpCommandLine = false // This default call doesn't count.
@@ -78,14 +78,14 @@ func (s *Suite) SetUpTest(c *check.C) {
 	t.prevdir = NewCurrPathString(prevdir)
 
 	// No longer usable; see https://github.com/go-check/check/issues/22
-	t.c = nil
+	t.backend = nil
 }
 
 func (s *Suite) TearDownTest(c *check.C) {
 	t := s.Tester
 	// The previous c is no longer usable,
 	// see https://github.com/go-check/check/issues/22.
-	t.c = c
+	t.backend = c
 
 	err := os.Chdir(t.prevdir.String())
 	assertNil(err, "Cannot chdir back to previous dir: %s", err)
@@ -184,7 +184,7 @@ func Test(t *testing.T) { check.TestingT(t) }
 // all the test methods, which makes it difficult to find
 // a method by auto-completion.
 type Tester struct {
-	c        *check.C
+	backend  *check.C
 	testName string
 	argv     []string // from the last invocation of Tester.SetUpCommandLine
 
@@ -216,7 +216,7 @@ func (t *Tester) SetUpCommandLine(args ...string) {
 	exitcode := G.ParseCommandLine(argv)
 	if exitcode != -1 && exitcode != 0 {
 		t.CheckOutputEmpty()
-		t.c.Fatalf("Cannot parse command line: %#v", args)
+		t.backend.Fatalf("Cannot parse command line: %#v", args)
 	}
 
 	// Duplicate diagnostics often mean that the checking code is run
@@ -672,7 +672,7 @@ func (t *Tester) CreateFileBuildlink3Id(filename RelPath, id string, customLines
 // Calls to Tester.Chdir change the base directory for the relative filename.
 func (t *Tester) File(filename RelPath) CurrPath {
 	if t.tmpdir.IsEmpty() {
-		t.tmpdir = NewCurrPathSlash(t.c.MkDir())
+		t.tmpdir = NewCurrPathSlash(t.backend.MkDir())
 	}
 	if t.cwd != "" {
 		return NewCurrPath(filename.Clean().AsPath())
@@ -711,7 +711,7 @@ func (t *Tester) Chdir(dirname RelPath) {
 		// the resulting Lines and MkLines variables will use relative filenames,
 		// and these will point to different areas in the file system. This is
 		// usually not indented and therefore prevented.
-		t.c.Fatalf("Chdir must only be called once per test; already in %q.", t.cwd)
+		t.backend.Fatalf("Chdir must only be called once per test; already in %q.", t.cwd)
 	}
 
 	absDirName := t.File(dirname)
@@ -905,52 +905,52 @@ func (t *Tester) Main(args ...string) int {
 }
 
 func (t *Tester) AssertNil(obj any) {
-	t.c.Assert(obj, check.IsNil)
+	t.backend.Assert(obj, check.IsNil)
 }
 
 func (t *Tester) AssertNotNil(obj any) {
-	t.c.Assert(obj, check.NotNil)
+	t.backend.Assert(obj, check.NotNil)
 }
 
 func (t *Tester) AssertEquals(actual, expected any) {
-	t.c.Assert(actual, check.Equals, expected)
+	t.backend.Assert(actual, check.Equals, expected)
 }
 
 // Check delegates a check to the check.Check function.
 // Thereby, there is no need to distinguish between c.Check and t.Check
 // in the test code.
 func (t *Tester) Check(obj any, checker check.Checker, args ...any) bool {
-	return t.c.Check(obj, checker, args...)
+	return t.backend.Check(obj, checker, args...)
 }
 
 func (t *Tester) CheckNil(obj any) bool {
-	return t.c.Check(obj, check.IsNil)
+	return t.backend.Check(obj, check.IsNil)
 }
 
 func (t *Tester) CheckNotNil(obj any) bool {
-	return t.c.Check(obj, check.NotNil)
+	return t.backend.Check(obj, check.NotNil)
 }
 
 func (t *Tester) CheckEquals(actual any, expected any) bool {
-	return t.c.Check(actual, check.Equals, expected)
+	return t.backend.Check(actual, check.Equals, expected)
 }
 
 func (t *Tester) CheckEqualsf(actual any, expected any, format string, args ...any) bool {
-	return t.c.Check(actual, check.Equals, expected,
+	return t.backend.Check(actual, check.Equals, expected,
 		check.Commentf(format, args...))
 }
 
 func (t *Tester) CheckDeepEquals(actual any, expected any) bool {
-	return t.c.Check(actual, check.DeepEquals, expected)
+	return t.backend.Check(actual, check.DeepEquals, expected)
 }
 
 func (t *Tester) CheckDeepEqualsf(actual any, expected any, format string, args ...any) bool {
-	return t.c.Check(actual, check.DeepEquals, expected,
+	return t.backend.Check(actual, check.DeepEquals, expected,
 		check.Commentf(format, args...))
 }
 
 func (t *Tester) CheckLen(obj any, expected int) bool {
-	return t.c.Check(obj, check.HasLen, expected)
+	return t.backend.Check(obj, check.HasLen, expected)
 }
 
 // InternalErrorf reports a consistency error in the tests.

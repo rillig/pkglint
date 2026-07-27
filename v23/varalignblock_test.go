@@ -130,7 +130,7 @@ func (vt *VaralignTester) run(autofix bool) {
 }
 
 func (vt *VaralignTester) checkTestName() {
-	testName := vt.tester.c.TestName()
+	testName := vt.tester.backend.TestName()
 	if !matches(testName, `__(lead|var)\d*_`) {
 		return
 	}
