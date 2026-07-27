@@ -98,7 +98,7 @@ func (s *Suite) TearDownTest(c *check.C) {
 	t.tmpdir = ""
 	t.DisableTracing()
 
-	G = unusablePkglint()
+	ResetGlobals()
 }
 
 // Ensures that all test names follow a common naming scheme:

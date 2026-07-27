@@ -73,10 +73,6 @@ func NewPkglint(stdout io.Writer, stderr io.Writer) Pkglint {
 	return p
 }
 
-// unusablePkglint returns a pkglint object that crashes as early as possible.
-// This is to ensure that tests are properly initialized and shut down.
-func unusablePkglint() Pkglint { return Pkglint{} }
-
 type Hash struct {
 	hash     []byte
 	location Location
@@ -87,9 +83,17 @@ type pkglintFatal struct{}
 // G is the abbreviation for "global state";
 // this and the tracer are the only global variables in this Go package.
 var (
-	G     = NewPkglint(os.Stdout, os.Stderr)
+	G     Pkglint
 	trace tracePkg.Tracer
 )
+
+// ResetGlobals stores all-zero values in the global variables,
+// making them fail-fast on access.
+// This is to ensure that tests are properly initialized and shut down.
+func ResetGlobals() {
+	G = Pkglint{}
+	trace = tracePkg.Tracer{}
+}
 
 // Main runs the main program with the given arguments.
 // args[0] is the program name.

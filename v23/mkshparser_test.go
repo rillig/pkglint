@@ -65,13 +65,13 @@ type ShSuite struct {
 var _ = check.Suite(&ShSuite{})
 
 func (s *ShSuite) SetUpTest(*check.C) {
-	G = unusablePkglint()
+	ResetGlobals()
 }
 
 func (s *ShSuite) TearDownTest(c *check.C) {
 	s.t.c = c
 	s.t.ReportUncheckedOutput()
-	G = unusablePkglint()
+	ResetGlobals()
 }
 
 func (s *ShSuite) Test_parseShellProgram__program(c *check.C) {
