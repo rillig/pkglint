@@ -184,7 +184,7 @@ func Test(t *testing.T) { check.TestingT(t) }
 // all the test methods, which makes it difficult to find
 // a method by auto-completion.
 type Tester struct {
-	c        *check.C // Only usable during the test method itself
+	c        *check.C
 	testName string
 	argv     []string // from the last invocation of Tester.SetUpCommandLine
 
@@ -225,7 +225,7 @@ func (t *Tester) SetUpCommandLine(args ...string) {
 	// It also reveals diagnostics that are logged multiple times per
 	// line and thus can easily get annoying to the pkgsrc developers.
 	//
-	// To avoid running a check multiple times, see Line.once or MkLines.once.
+	// To avoid running a check multiple times, see Once.
 	G.Logger.verbose = true
 
 	t.seenSetUpCommandLine = true
