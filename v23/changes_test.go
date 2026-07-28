@@ -398,6 +398,56 @@ func (s *Suite) Test_Changes_parseLine(c *check.C) {
 			"\tMoved category/pkgpath to somewhere else [author 2019-01-01]")
 }
 
+func Test_validDate(t *testing.T) {
+	tests := []struct {
+		date string
+		want bool
+	}{
+
+		{"2019-00-01", false}, // month 00
+		{"2019-13-01", false}, // month 13
+
+		{"2019-01-00", false}, // day 00
+		{"2019-01-32", false}, // day 32
+
+		{"2019-01-31", true},
+		{"2019-01-32", false},
+		{"2019-02-28", true},  // non-leap
+		{"2019-02-29", false}, // non-leap
+		{"2020-02-29", true},  // leap
+		{"2019-02-30", false}, // leap
+		{"2019-03-31", true},
+		{"2019-03-32", false},
+		{"2019-04-30", true},
+		{"2019-04-31", false},
+		{"2019-05-31", true},
+		{"2019-05-32", false},
+		{"2019-06-30", true},
+		{"2019-06-31", false},
+		{"2019-07-31", true},
+		{"2019-07-32", false},
+		{"2019-08-31", true},
+		{"2019-08-32", false},
+		{"2019-09-30", true},
+		{"2019-09-31", false},
+		{"2019-10-31", true},
+		{"2019-10-32", false},
+		{"2019-11-30", true},
+		{"2019-11-31", false},
+		{"2019-12-31", true},
+		{"2019-12-32", false},
+	}
+	for _, test := range tests {
+		t.Run(test.date, func(t *testing.T) {
+			have := validDate(test.date)
+			if have != test.want {
+				t.Errorf("want %#v, have %#v for %s",
+					test.want, have, test.date)
+			}
+		})
+	}
+}
+
 func Test_Changes_parseAuthorAndDate(t *testing.T) {
 	tests := []struct {
 		dateAndAuthor string
@@ -423,8 +473,6 @@ func Test_Changes_parseAuthorAndDate(t *testing.T) {
 		{"[author 2019-01-0x]", "", ""}, // bad digit 'x' in day
 		{"[author 2019-01-00]", "", ""}, // bad day '00'
 		{"[author 2019-01-32]", "", ""}, // bad day '32'
-		// No leap year detection, to keep the code fast.
-		{"[author 2019-02-29]", "author", "2019-02-29"}, // 2019 is not a leap year.
 
 		{"[author 2019-01-01", "", ""},  // missing trailing ']'
 		{"[author 2019-01-01+", "", ""}, // trailing '+' instead of ']'

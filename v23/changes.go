@@ -177,6 +177,14 @@ func (*Changes) parseLine(line *Line, warn bool) *Change {
 	return invalid()
 }
 
+func validDate(date string) bool {
+	dd := date[9] + 10*date[8] - 17
+	mm := date[6] + 10*date[5] - 17
+	return mm <= 11 && (dd <= 27 ||
+		dd-27 <= uint8(uint(0b111011101111101110110011)>>(2*mm)%4) ||
+		mm == 1 && dd == 28 && (2*date[2]+date[3])%4 == 0)
+}
+
 // parseAuthorAndDate parses the author and date from a line in doc/CHANGES.
 func (*Changes) parseAuthorAndDate(author, date string) (string, string) {
 	alex := textproc.NewLexer(author)
@@ -198,13 +206,10 @@ func (*Changes) parseAuthorAndDate(author, date string) (string, string) {
 		date[4] == '-' &&
 		isDigit(date[5]) &&
 		isDigit(date[6]) &&
-		10*(date[5]-'0')+(date[6]-'0') >= 1 &&
-		10*(date[5]-'0')+(date[6]-'0') <= 12 &&
 		date[7] == '-' &&
 		isDigit(date[8]) &&
 		isDigit(date[9]) &&
-		10*(date[8]-'0')+(date[9]-'0') >= 1 &&
-		10*(date[8]-'0')+(date[9]-'0') <= 31 &&
+		validDate(date) &&
 		date[10] == ']' {
 		date = date[:10]
 		return author, date
