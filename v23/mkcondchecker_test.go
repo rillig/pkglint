@@ -638,6 +638,11 @@ func (s *Suite) Test_MkCondChecker_checkEmptyExpr(c *check.C) {
 		"WARN: filename.mk:1: The empty() function "+
 			"takes a variable name plus optional modifiers as parameter, "+
 			"not the expression \"${PREFIX:Mpattern}\".")
+
+	// Two expressions in a row are less common, so don't warn.
+	test(
+		"${VAR1}${VAR2}",
+		nil...)
 }
 
 func (s *Suite) Test_MkCondChecker_checkEmptyType(c *check.C) {

@@ -537,6 +537,9 @@ func Test_containsExpr(t *testing.T) {
 		{"$$(VAR)", false}, // An escaped dollar character; probably a subshell.
 		{"$${VAR}", false}, // An escaped dollar character; probably a shell variable.
 		{"$$VAR", false},   // An escaped dollar character.
+
+		{"before ${VAR}", true},
+		{"${VAR} after", true},
 	}
 	for _, test := range tests {
 		t.Run(test.s, func(t *testing.T) {
