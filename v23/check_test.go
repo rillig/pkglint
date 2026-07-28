@@ -190,9 +190,7 @@ func newTester(backend testerBackend) *Tester {
 	// in all cases. The latter cannot be ensured at compile time.
 	t.EnableSilentTracing()
 
-	prevdir, err := os.Getwd()
-	assertNil(err, "Cannot get current working directory: %s", err)
-	t.prevdir = NewCurrPathString(prevdir)
+	t.prevdir = G.cwd
 	return &t
 }
 
