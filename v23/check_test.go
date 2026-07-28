@@ -7,6 +7,7 @@ import (
 	"github.com/rillig/pkglint/v23/regex"
 	"io"
 	"os"
+	"reflect"
 	"regexp"
 	"sort"
 	"strconv"
@@ -49,56 +50,24 @@ func (s *Suite) Init(c *check.C) *Tester {
 	if t.backend != nil {
 		panic("Suite.Init must only be called once.")
 	}
-	t.backend = c
+	t.backend = &testerBackendCheck{c}
 	return t
 }
 
 func (s *Suite) SetUpTest(c *check.C) {
-	t := Tester{backend: c, testName: c.TestName()}
-	s.Tester = &t
-
-	G = NewPkglint(&t.stdout, &t.stderr)
-	G.Testing = true
-	trace.Out = &t.stdout
-
-	G.Pkgsrc = NewPkgsrc(t.File("."))
-	G.Project = G.Pkgsrc
-
-	t.backend = c
-	t.SetUpCommandLine("-Wall")    // To catch duplicate warnings
-	G.Todo.Pop()                   // The "." was inserted by default.
-	t.seenSetUpCommandLine = false // This default call doesn't count.
-
-	// To improve code coverage and ensure that trace.Result works
-	// in all cases. The latter cannot be ensured at compile time.
-	t.EnableSilentTracing()
-
-	prevdir, err := os.Getwd()
-	assertNil(err, "Cannot get current working directory: %s", err)
-	t.prevdir = NewCurrPathString(prevdir)
+	s.Tester = newTester(&testerBackendCheck{c})
 
 	// No longer usable; see https://github.com/go-check/check/issues/22
-	t.backend = nil
+	s.Tester.backend = nil
 }
 
 func (s *Suite) TearDownTest(c *check.C) {
 	t := s.Tester
 	// The previous c is no longer usable,
 	// see https://github.com/go-check/check/issues/22.
-	t.backend = c
+	t.backend = &testerBackendCheck{c}
 
-	err := os.Chdir(t.prevdir.String())
-	assertNil(err, "Cannot chdir back to previous dir: %s", err)
-
-	if t.seenSetupPkgsrc > 0 && !t.seenFinish && !t.seenMain {
-		t.InternalErrorf("After t.SetupPkgsrc(), either t.FinishSetUp() or t.Main() must be called.")
-	}
-
-	t.ReportUncheckedOutput()
-	t.tmpdir = ""
-	t.DisableTracing()
-
-	ResetGlobals()
+	t.Done()
 }
 
 // Ensures that all test names follow a common naming scheme:
@@ -184,7 +153,7 @@ func Test(t *testing.T) { check.TestingT(t) }
 // all the test methods, which makes it difficult to find
 // a method by auto-completion.
 type Tester struct {
-	backend  *check.C
+	backend  testerBackend
 	testName string
 	argv     []string // from the last invocation of Tester.SetUpCommandLine
 
@@ -198,6 +167,48 @@ type Tester struct {
 	seenSetupPkgsrc      int
 	seenFinish           bool
 	seenMain             bool
+}
+
+func NewTester(t *testing.T) *Tester {
+	return newTester(&testerBackendBuiltin{t: t})
+}
+
+func newTester(backend testerBackend) *Tester {
+	t := Tester{backend: backend, testName: backend.TestName()}
+	G = NewPkglint(&t.stdout, &t.stderr)
+	G.Testing = true
+	trace.Out = &t.stdout
+
+	G.Pkgsrc = NewPkgsrc(t.File("."))
+	G.Project = G.Pkgsrc
+
+	t.SetUpCommandLine("-Wall")    // To catch duplicate warnings
+	G.Todo.Pop()                   // The "." was inserted by default.
+	t.seenSetUpCommandLine = false // This default call doesn't count.
+
+	// To improve code coverage and ensure that trace.Result works
+	// in all cases. The latter cannot be ensured at compile time.
+	t.EnableSilentTracing()
+
+	prevdir, err := os.Getwd()
+	assertNil(err, "Cannot get current working directory: %s", err)
+	t.prevdir = NewCurrPathString(prevdir)
+	return &t
+}
+
+func (t *Tester) Done() {
+	err := os.Chdir(t.prevdir.String())
+	assertNil(err, "Cannot chdir back to previous dir: %s", err)
+
+	if t.seenSetupPkgsrc > 0 && !t.seenFinish && !t.seenMain {
+		t.InternalErrorf("After t.SetupPkgsrc(), either t.FinishSetUp() or t.Main() must be called.")
+	}
+
+	t.ReportUncheckedOutput()
+	t.tmpdir = ""
+	t.DisableTracing()
+
+	ResetGlobals()
 }
 
 // SetUpCommandLine simulates a command line for the remainder of the test.
@@ -905,15 +916,15 @@ func (t *Tester) Main(args ...string) int {
 }
 
 func (t *Tester) AssertNil(obj any) {
-	t.backend.Assert(obj, check.IsNil)
+	t.backend.AssertNil(obj)
 }
 
 func (t *Tester) AssertNotNil(obj any) {
-	t.backend.Assert(obj, check.NotNil)
+	t.backend.AssertNotNil(obj)
 }
 
 func (t *Tester) AssertEquals(actual, expected any) {
-	t.backend.Assert(actual, check.Equals, expected)
+	t.backend.AssertEquals(actual, expected)
 }
 
 // Check delegates a check to the check.Check function.
@@ -924,24 +935,23 @@ func (t *Tester) Check(obj any, checker check.Checker, args ...any) bool {
 }
 
 func (t *Tester) CheckNil(obj any) bool {
-	return t.backend.Check(obj, check.IsNil)
+	return t.backend.CheckNil(obj)
 }
 
 func (t *Tester) CheckNotNil(obj any) bool {
-	return t.backend.Check(obj, check.NotNil)
+	return t.backend.CheckNotNil(obj)
 }
 
 func (t *Tester) CheckEquals(actual any, expected any) bool {
-	return t.backend.Check(actual, check.Equals, expected)
+	return t.backend.CheckEquals(actual, expected)
 }
 
 func (t *Tester) CheckEqualsf(actual any, expected any, format string, args ...any) bool {
-	return t.backend.Check(actual, check.Equals, expected,
-		check.Commentf(format, args...))
+	return t.backend.CheckEqualsf(actual, expected, format, args...)
 }
 
 func (t *Tester) CheckDeepEquals(actual any, expected any) bool {
-	return t.backend.Check(actual, check.DeepEquals, expected)
+	return t.backend.CheckDeepEquals(actual, expected)
 }
 
 func (t *Tester) CheckDeepEqualsf(actual any, expected any, format string, args ...any) bool {
@@ -999,7 +1009,7 @@ func (t *Tester) ExpectFatalMatches(action func(), expected regex.Pattern) {
 			panic("Expected a pkglint fatal error but didn't get one.")
 		} else if _, ok := r.(pkglintFatal); ok {
 			pattern := `^(?:` + string(expected) + `)$`
-			t.Check(t.Output(), check.Matches, pattern)
+			t.backend.Check(t.Output(), check.Matches, pattern)
 		} else {
 			panic(r)
 		}
@@ -1017,14 +1027,14 @@ func (t *Tester) ExpectFatalMatches(action func(), expected regex.Pattern) {
 //	    func() { /* do something that panics */ },
 //	    "runtime error: path not found")
 func (t *Tester) ExpectPanic(action func(), expectedMessage string) {
-	t.Check(action, check.Panics, expectedMessage)
+	t.backend.Check(action, check.Panics, expectedMessage)
 }
 
 // ExpectPanicMatches runs the given action and expects that this action
 // calls assert or assertf, or uses some other way to panic.
 // The expectedMessage is anchored on both ends.
 func (t *Tester) ExpectPanicMatches(action func(), expectedMessage regex.Pattern) {
-	t.Check(action, check.PanicMatches, string(expectedMessage))
+	t.backend.Check(action, check.PanicMatches, string(expectedMessage))
 }
 
 // ExpectAssert runs the given action and expects that this action calls assert.
@@ -1034,7 +1044,7 @@ func (t *Tester) ExpectPanicMatches(action func(), expectedMessage regex.Pattern
 //	t.ExpectAssert(
 //	    func() { /* do something that panics */ })
 func (t *Tester) ExpectAssert(action func()) {
-	t.Check(action, check.Panics, "Pkglint internal error")
+	t.backend.Check(action, check.Panics, "Pkglint internal error")
 }
 
 // ExpectAssert runs the given action and expects that this action calls
@@ -1046,7 +1056,7 @@ func (t *Tester) ExpectAssert(action func()) {
 //	    func() { /* do something that panics */ },
 //	    "expected message")
 func (t *Tester) ExpectAssertf(action func(), msg string) {
-	t.Check(action, check.Panics, "Pkglint internal error: "+msg)
+	t.backend.Check(action, check.Panics, "Pkglint internal error: "+msg)
 }
 
 // ExpectDiagnosticsAutofix first runs the given action with -Wall, and
@@ -1453,7 +1463,7 @@ func (t *Tester) ReportUncheckedOutput() {
 	// overall test fails in some way.
 	//
 	// See https://github.com/go-check/check/issues/65.
-	t.CheckEquals("Output", "")
+	t.CheckEquals("some unchecked output", "")
 }
 
 // SplitStringsBool unpacks the given varargs into a string slice and a bool.
@@ -1463,4 +1473,165 @@ func (t *Tester) SplitStringsBool(data []any) ([]string, bool) {
 		strs = append(strs, text.(string))
 	}
 	return strs, data[len(data)-1].(bool)
+}
+
+type testerBackend interface {
+	Fatalf(format string, args ...any)
+	MkDir() string
+	AssertNil(obj any)
+	AssertNotNil(obj any)
+	AssertEquals(actual, expected any)
+	Check(obj any, checker check.Checker, args ...any) bool
+	CheckNil(obj any) bool
+	CheckNotNil(obj any) bool
+	CheckEquals(actual any, expected any) bool
+	CheckEqualsf(actual any, expected any, format string, args ...any) bool
+	CheckDeepEquals(actual any, expected any) bool
+	TestName() string
+}
+
+var _ testerBackend = &testerBackendBuiltin{}
+
+type testerBackendBuiltin struct {
+	t      *testing.T
+	tmpdir string
+}
+
+func (b testerBackendBuiltin) Fatalf(format string, args ...any) {
+	b.t.Fatalf(format, args...)
+}
+
+func (b testerBackendBuiltin) MkDir() string {
+	if b.tmpdir == "" {
+		b.tmpdir = b.t.TempDir()
+	}
+	return b.tmpdir
+}
+
+func (b testerBackendBuiltin) AssertNil(obj any) {
+	if obj == nil {
+		return
+	}
+	b.t.Fatalf("want nil, have %#v", obj)
+}
+
+func (b testerBackendBuiltin) AssertNotNil(obj any) {
+	if obj != nil {
+		return
+	}
+	b.t.Fatalf("want nonnil, have %#v", obj)
+}
+
+func (b testerBackendBuiltin) AssertEquals(actual, expected any) {
+	if actual == expected {
+		return
+	}
+	b.t.Fatalf("want %#v, have %#v", expected, actual)
+}
+
+func (b testerBackendBuiltin) Check(_ any, _ check.Checker, _ ...any) bool {
+	panic("the native tester backend does not support Check")
+}
+
+func (b testerBackendBuiltin) CheckNil(obj any) bool {
+	if obj == nil {
+		return true
+	}
+	b.t.Errorf("want nil, have %#v", obj)
+	return false
+}
+
+func (b testerBackendBuiltin) CheckNotNil(obj any) bool {
+	if obj != nil {
+		return true
+	}
+	b.t.Errorf("want nonnil, have %#v", obj)
+	return false
+}
+
+func (b testerBackendBuiltin) CheckEquals(actual any, expected any) bool {
+	if actual == expected {
+		return true
+	}
+	b.t.Errorf("want %#v, have %#v", expected, actual)
+	return false
+}
+
+func (b testerBackendBuiltin) CheckEqualsf(actual any, expected any, format string, args ...any) bool {
+	if actual == expected {
+		return true
+	}
+	b.t.Errorf(format, args...)
+	return false
+}
+
+func (b testerBackendBuiltin) CheckDeepEquals(actual any, expected any) bool {
+	if reflect.DeepEqual(actual, expected) {
+		return true
+	}
+	b.t.Errorf("want %v, have %v", expected, actual)
+	return false
+}
+
+func (b testerBackendBuiltin) TestName() string {
+	return b.t.Name()
+}
+
+var _ testerBackend = &testerBackendCheck{}
+
+type testerBackendCheck struct {
+	c *check.C
+}
+
+func (b testerBackendCheck) Fatalf(format string, args ...any) {
+	b.c.Fatalf(format, args...)
+}
+
+func (b testerBackendCheck) MkDir() string {
+	return b.c.MkDir()
+}
+
+func (b testerBackendCheck) Assert(obj any, checker check.Checker, args ...any) {
+	b.c.Assert(obj, checker, args...)
+}
+
+func (b testerBackendCheck) AssertNil(obj any) {
+	b.c.Assert(obj, check.IsNil)
+}
+
+func (b testerBackendCheck) AssertNotNil(obj any) {
+	b.c.Assert(obj, check.NotNil)
+}
+
+func (b testerBackendCheck) AssertEquals(actual, expected any) {
+	b.c.Assert(actual, check.Equals, expected)
+}
+
+func (b testerBackendCheck) Check(obj any, checker check.Checker, args ...any) bool {
+	return b.c.Check(obj, checker, args...)
+}
+
+func (b testerBackendCheck) CheckNil(obj any) bool {
+	return b.c.Check(obj, check.IsNil)
+}
+
+func (b testerBackendCheck) CheckNotNil(obj any) bool {
+	return b.c.Check(obj, check.NotNil)
+}
+
+func (b testerBackendCheck) CheckEquals(actual any, expected any) bool {
+	return b.c.Check(actual, check.Equals, expected)
+}
+
+func (b testerBackendCheck) CheckEqualsf(actual any, expected any, format string, args ...any) bool {
+	return b.c.Check(actual, check.Equals, expected,
+		check.Commentf(format, args...))
+}
+
+func (b testerBackendCheck) CheckDeepEquals(actual any, expected any) bool {
+	return b.c.Check(actual, check.DeepEquals, expected)
+}
+
+func (b testerBackendCheck) TestName() string {
+	return b.c.TestName()
 }

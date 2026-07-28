@@ -487,35 +487,68 @@ func emptyToNil(slice []string) []string {
 	return slice
 }
 
-func (s *Suite) Test_containsExpr(c *check.C) {
-	t := s.Init(c)
+func Test_isExpr(t *testing.T) {
+	tests := []struct {
+		s    string
+		want bool
+	}{
+		{"", false},
+		{"$", false}, // A syntax error.
 
-	test := func(str string, containsVar bool) {
-		t.CheckEquals(containsExpr(str), containsVar)
+		{"${VAR}", true},
+		{"before ${VAR}", false},
+		{"${VAR} after", false},
 	}
+	for _, test := range tests {
+		t.Run(test.s, func(t *testing.T) {
+			tt := NewTester(t)
+			have := isExpr(test.s)
+			if have != test.want {
+				t.Errorf("want %v, have %v for %q", test.want, have, test.s)
+			}
+			tt.Done()
+		})
+	}
+}
 
-	test("", false)
-	test("$", false) // A syntax error.
+func Test_containsExpr(t *testing.T) {
+	tests := []struct {
+		s    string
+		want bool
+	}{
+		{"", false},
+		{"$", false}, // A syntax error.
 
-	// See the bmake manual page.
-	test("$>", true) // .ALLSRC
-	test("$!", true) // .ARCHIVE
-	test("$<", true) // .IMPSRC
-	test("$%", true) // .MEMBER
-	test("$?", true) // .OODATE
-	test("$*", true) // .PREFIX
-	test("$@", true) // .TARGET
+		// See the bmake manual page.
+		{"$>", true}, // .ALLSRC
+		{"$!", true}, // .ARCHIVE
+		{"$<", true}, // .IMPSRC
+		{"$%", true}, // .MEMBER
+		{"$?", true}, // .OODATE
+		{"$*", true}, // .PREFIX
+		{"$@", true}, // .TARGET
 
-	test("$V", true)
-	test("$v", true)
-	test("${Var}", true)
-	test("${VAR.${param}}", true)
-	test("$(VAR)", true)
+		{"$V", true},
+		{"$v", true},
+		{"${Var}", true},
+		{"${VAR.${param}}", true},
+		{"$(VAR)", true},
 
-	test("$$", false)      // An escaped dollar character.
-	test("$$(VAR)", false) // An escaped dollar character; probably a subshell.
-	test("$${VAR}", false) // An escaped dollar character; probably a shell variable.
-	test("$$VAR", false)   // An escaped dollar character.
+		{"$$", false},      // An escaped dollar character.
+		{"$$(VAR)", false}, // An escaped dollar character; probably a subshell.
+		{"$${VAR}", false}, // An escaped dollar character; probably a shell variable.
+		{"$$VAR", false},   // An escaped dollar character.
+	}
+	for _, test := range tests {
+		t.Run(test.s, func(t *testing.T) {
+			tt := NewTester(t)
+			have := containsExpr(test.s)
+			if have != test.want {
+				t.Errorf("have %v, want %v for %q", have, test.want, test.s)
+			}
+			tt.Done()
+		})
+	}
 }
 
 func (s *Suite) Test_OncePerStringSlice(c *check.C) {

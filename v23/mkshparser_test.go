@@ -68,7 +68,7 @@ func (s *ShSuite) SetUpTest(*check.C) {
 }
 
 func (s *ShSuite) TearDownTest(c *check.C) {
-	s.t.backend = c
+	s.t.backend = &testerBackendCheck{c}
 	s.t.ReportUncheckedOutput()
 	ResetGlobals()
 }
@@ -713,7 +713,7 @@ func (s *ShSuite) Test_parseShellProgram__io_here(c *check.C) {
 
 func (s *ShSuite) init(c *check.C) *MkShBuilder {
 	tmpdir := NewCurrPath("The ShSuite tests don't need a temporary directory")
-	s.t = &Tester{backend: c, testName: c.TestName(), tmpdir: tmpdir}
+	s.t = &Tester{backend: &testerBackendCheck{c}, testName: c.TestName(), tmpdir: tmpdir}
 	G = NewPkglint(&s.t.stdout, &s.t.stderr)
 	return NewMkShBuilder()
 }
