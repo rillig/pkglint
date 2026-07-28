@@ -1,6 +1,9 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import (
+	"gopkg.in/check.v1"
+	"testing"
+)
 
 // This test ensures that CheckLinesBuildlink3Mk really checks for
 // buildlink3.mk files that are included by the buildlink3.mk file
@@ -1187,26 +1190,32 @@ func (s *Suite) Test_LoadBuildlink3Data(c *check.C) {
 	})
 }
 
-func (s *Suite) Test_isBuildlink3Guard(c *check.C) {
-	t := s.Init(c)
+func Test_isBuildlink3Guard(t *testing.T) {
+	tests := []struct {
+		line string
+		want bool
+	}{
+		{".if !defined(PKG_BUILDLINK3_MK)", true},
 
-	test := func(text string, expected bool) {
-		mkline := t.NewMkLine("buildlink3.mk", 123, text)
-		actual := isBuildlink3Guard(mkline)
-		t.CheckEquals(actual, expected)
+		// Not the standard variable name pattern.
+		{".if !defined(ALREADY_SEEN)", false},
+
+		// Missing closing parenthesis.
+		{".if !defined(PKG_BUILDLINK3_MK", false},
+
+		// Not the usual form.
+		{".ifndef PKG_BUILDLINK3_MK", false},
+
+		// Not a condition but a loop.
+		{".for i in values", false},
 	}
-
-	test(".if !defined(PKG_BUILDLINK3_MK)", true)
-
-	// Not the standard variable name pattern.
-	test(".if !defined(ALREADY_SEEN)", false)
-
-	// Missing closing parenthesis.
-	test(".if !defined(PKG_BUILDLINK3_MK", false)
-
-	// Not the usual form.
-	test(".ifndef PKG_BUILDLINK3_MK", false)
-
-	// Not a condition but a loop.
-	test(".for i in values", false)
+	for _, test := range tests {
+		t.Run(test.line, func(t *testing.T) {
+			tt := NewTester(t)
+			mkline := tt.NewMkLine("buildlink3.mk", 123, test.line)
+			have := isBuildlink3Guard(mkline)
+			tt.CheckEquals(have, test.want)
+			tt.Done()
+		})
+	}
 }
