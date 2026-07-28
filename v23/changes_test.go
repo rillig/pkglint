@@ -3,6 +3,7 @@ package pkglint
 import (
 	"gopkg.in/check.v1"
 	"strings"
+	"testing"
 )
 
 func (s *Suite) Test_Changes_load(c *check.C) {
@@ -397,43 +398,50 @@ func (s *Suite) Test_Changes_parseLine(c *check.C) {
 			"\tMoved category/pkgpath to somewhere else [author 2019-01-01]")
 }
 
-func (s *Suite) Test_Changes_parseAuthorAndDate(c *check.C) {
-	t := s.Init(c)
+func Test_Changes_parseAuthorAndDate(t *testing.T) {
+	tests := []struct {
+		dateAndAuthor string
+		wantAuthor    string
+		wantDate      string
+	}{
+		{"[author 20!9-01-01]", "", ""}, // bad digit '!' in year
+		{"[author x019-01-01]", "", ""}, // bad digit 'x' in year
+		{"[author 2x19-01-01]", "", ""}, // bad digit 'x' in year
+		{"[author 20x9-01-01]", "", ""}, // bad digit 'x' in year
+		{"[author 201x-01-01]", "", ""}, // bad digit 'x' in year
 
-	test := func(dateAndAuthor string, expectedAuthor, expectedDate string) {
-		fields := strings.Split(dateAndAuthor, " ")
-		authorIn, dateIn := fields[0], fields[1]
-		author, date := (*Changes).parseAuthorAndDate(nil, authorIn, dateIn)
-		t.CheckEquals(author, expectedAuthor)
-		t.CheckEquals(date, expectedDate)
+		{"[author 2019/01-01]", "", ""}, // bad separator '/'
+
+		{"[author 2019-x0-01]", "", ""}, // bad digit 'x' in month
+		{"[author 2019-0x-01]", "", ""}, // bad digit 'x' in month
+		{"[author 2019-00-01]", "", ""}, // bad month '00'
+		{"[author 2019-13-01]", "", ""}, // bad month '13'
+
+		{"[author 2019-01/01]", "", ""}, // bad separator '/'
+
+		{"[author 2019-01-x0]", "", ""}, // bad digit 'x' in day
+		{"[author 2019-01-0x]", "", ""}, // bad digit 'x' in day
+		{"[author 2019-01-00]", "", ""}, // bad day '00'
+		{"[author 2019-01-32]", "", ""}, // bad day '32'
+		// No leap year detection, to keep the code fast.
+		{"[author 2019-02-29]", "author", "2019-02-29"}, // 2019 is not a leap year.
+
+		{"[author 2019-01-01", "", ""},  // missing trailing ']'
+		{"[author 2019-01-01+", "", ""}, // trailing '+' instead of ']'
+
+		{"[author 2019-01-01]", "author", "2019-01-01"},
 	}
-
-	test("[author 20!9-01-01]", "", "") // bad digit '!' in year
-	test("[author x019-01-01]", "", "") // bad digit 'x' in year
-	test("[author 2x19-01-01]", "", "") // bad digit 'x' in year
-	test("[author 20x9-01-01]", "", "") // bad digit 'x' in year
-	test("[author 201x-01-01]", "", "") // bad digit 'x' in year
-
-	test("[author 2019/01-01]", "", "") // bad separator '/'
-
-	test("[author 2019-x0-01]", "", "") // bad digit 'x' in month
-	test("[author 2019-0x-01]", "", "") // bad digit 'x' in month
-	test("[author 2019-00-01]", "", "") // bad month '00'
-	test("[author 2019-13-01]", "", "") // bad month '13'
-
-	test("[author 2019-01/01]", "", "") // bad separator '/'
-
-	test("[author 2019-01-x0]", "", "") // bad digit 'x' in day
-	test("[author 2019-01-0x]", "", "") // bad digit 'x' in day
-	test("[author 2019-01-00]", "", "") // bad day '00'
-	test("[author 2019-01-32]", "", "") // bad day '32'
-	// No leap year detection, to keep the code fast.
-	test("[author 2019-02-29]", "author", "2019-02-29") // 2019 is not a leap year.
-
-	test("[author 2019-01-01", "", "")  // missing trailing ']'
-	test("[author 2019-01-01+", "", "") // trailing '+' instead of ']'
-
-	test("[author 2019-01-01]", "author", "2019-01-01")
+	for _, test := range tests {
+		t.Run(test.dateAndAuthor, func(rt *testing.T) {
+			t := NewTester(rt)
+			fields := strings.Split(test.dateAndAuthor, " ")
+			authorIn, dateIn := fields[0], fields[1]
+			author, date := (*Changes).parseAuthorAndDate(nil, authorIn, dateIn)
+			t.CheckEquals(author, test.wantAuthor)
+			t.CheckEquals(date, test.wantDate)
+			t.Done()
+		})
+	}
 }
 
 func (s *Suite) Test_Changes_checkChangeVersion(c *check.C) {
