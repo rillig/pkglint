@@ -1210,12 +1210,12 @@ func Test_isBuildlink3Guard(t *testing.T) {
 		{".for i in values", false},
 	}
 	for _, test := range tests {
-		t.Run(test.line, func(t *testing.T) {
-			tt := NewTester(t)
-			mkline := tt.NewMkLine("buildlink3.mk", 123, test.line)
+		t.Run(test.line, func(rt *testing.T) {
+			t := NewTester(rt)
+			mkline := t.NewMkLine("buildlink3.mk", 123, test.line)
 			have := isBuildlink3Guard(mkline)
-			tt.CheckEquals(have, test.want)
-			tt.Done()
+			t.CheckEquals(have, test.want)
+			t.Done()
 		})
 	}
 }

@@ -499,13 +499,13 @@ func Test_isExpr(t *testing.T) {
 		{"${VAR} after", false},
 	}
 	for _, test := range tests {
-		t.Run(test.s, func(t *testing.T) {
-			tt := NewTester(t)
+		t.Run(test.s, func(rt *testing.T) {
+			t := NewTester(rt)
 			have := isExpr(test.s)
 			if have != test.want {
-				t.Errorf("want %v, have %v for %q", test.want, have, test.s)
+				rt.Errorf("want %v, have %v for %q", test.want, have, test.s)
 			}
-			tt.Done()
+			t.Done()
 		})
 	}
 }
@@ -542,13 +542,13 @@ func Test_containsExpr(t *testing.T) {
 		{"${VAR} after", true},
 	}
 	for _, test := range tests {
-		t.Run(test.s, func(t *testing.T) {
-			tt := NewTester(t)
+		t.Run(test.s, func(rt *testing.T) {
+			t := NewTester(rt)
 			have := containsExpr(test.s)
 			if have != test.want {
-				t.Errorf("have %v, want %v for %q", have, test.want, test.s)
+				rt.Errorf("have %v, want %v for %q", have, test.want, test.s)
 			}
-			tt.Done()
+			t.Done()
 		})
 	}
 }
