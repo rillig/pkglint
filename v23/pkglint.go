@@ -103,10 +103,8 @@ func ResetGlobals() {
 // One of these options is trace.Tracing, which is connected to --debug.
 //
 // It also discards the -Wall option that is used by default in other tests.
-func (p *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) (exitCode int) {
-	G.Logger.out = NewSeparatorWriter(stdout)
-	G.Logger.err = NewSeparatorWriter(stderr)
-	trace.Out = stdout
+func (p *Pkglint) Main(args []string) (exitCode int) {
+	trace.Out = p.Logger.out.out
 
 	defer func() {
 		if r := recover(); r != nil {

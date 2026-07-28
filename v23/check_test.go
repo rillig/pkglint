@@ -893,6 +893,8 @@ func (t *Tester) Main(args ...string) int {
 	G.Logger.errors = 0
 	G.Logger.warnings = 0
 	G.Logger.logged = OncePerStringSlice{}
+	G.Logger.out = NewSeparatorWriter(&t.stdout)
+	G.Logger.err = NewSeparatorWriter(&t.stderr)
 
 	argv := []string{"pkglint"}
 	for _, arg := range args {
@@ -910,7 +912,7 @@ func (t *Tester) Main(args ...string) int {
 		}
 	}
 
-	return G.Main(&t.stdout, &t.stderr, argv)
+	return G.Main(argv)
 }
 
 func (t *Tester) AssertNil(obj any) {

@@ -23,7 +23,9 @@ func (s *Suite) Test_Pkglint_Main(c *check.C) {
 	t.FinishSetUp()
 
 	runMain := func(out *os.File, commandLine ...string) {
-		exitCode := G.Main(out, out, commandLine)
+		G = NewPkglint(out, out)
+		G.Testing = true
+		exitCode := G.Main(commandLine)
 		t.CheckEquals(exitCode, 0)
 	}
 
@@ -304,7 +306,8 @@ func (s *Suite) Test_Pkglint_Main__realistic(c *check.C) {
 
 	cmdline := os.Getenv("PKGLINT_TESTCMDLINE")
 	if cmdline != "" {
-		G.Main(os.Stdout, os.Stderr, append([]string{"pkglint"}, strings.Fields(cmdline)...))
+		G = NewPkglint(os.Stdout, os.Stderr)
+		G.Main(append([]string{"pkglint"}, strings.Fields(cmdline)...))
 	}
 }
 
