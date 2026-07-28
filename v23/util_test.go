@@ -28,35 +28,34 @@ func (s *Suite) Test_trimHspace(c *check.C) {
 	t.CheckEquals(trimHspace(" \t a b\t \t"), "a b")
 }
 
-func (s *Suite) Test_trimCommonPrefix(c *check.C) {
-	t := s.Init(c)
-
-	test := func(a, b, trimmedA, trimmedB string) {
-		ta, tb := trimCommonPrefix(a, b)
-		t.CheckEquals(ta, trimmedA)
-		t.CheckEquals(tb, trimmedB)
+func Test_trimCommonPrefix(t *testing.T) {
+	tests := []struct {
+		a     string
+		b     string
+		wantA string
+		wantB string
+	}{
+		{"", "", "", ""},
+		{"equal", "equal", "", ""},
+		{"prefixA", "prefixB", "A", "B"},
+		{"ASuffix", "BSuffix", "ASuffix", "BSuffix"},
+		{"PreMiddlePost", "PreCenterPost", "MiddlePost", "CenterPost"},
+		{"", "b", "", "b"},
+		{"a", "", "a", ""},
 	}
-
-	test("", "",
-		"", "")
-
-	test("equal", "equal",
-		"", "")
-
-	test("prefixA", "prefixB",
-		"A", "B")
-
-	test("ASuffix", "BSuffix",
-		"ASuffix", "BSuffix")
-
-	test("PreMiddlePost", "PreCenterPost",
-		"MiddlePost", "CenterPost")
-
-	test("", "b",
-		"", "b")
-
-	test("a", "",
-		"a", "")
+	for _, test := range tests {
+		t.Run(test.a+"+"+test.b, func(t *testing.T) {
+			haveA, haveB := trimCommonPrefix(test.a, test.b)
+			if haveA != test.wantA {
+				t.Errorf("want %#v, have %#v for %#v and %#v",
+					test.wantA, haveA, test.a, test.b)
+			}
+			if haveB != test.wantB {
+				t.Errorf("want %#v, have %#v for %#v and %#v",
+					test.wantB, haveB, test.a, test.b)
+			}
+		})
+	}
 }
 
 func (s *Suite) Test_trimCommon(c *check.C) {
