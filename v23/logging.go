@@ -124,6 +124,8 @@ func (l *Logger) Diag(line *Line, level *LogLevel, format string, args ...any) {
 				// To log an error, call TechFatalF instead.
 				_ = arg.(string)
 			default:
+				// Only the types listed above are allowed as
+				// arguments in diagnostics.
 				_ = arg.(string)
 			}
 		}
