@@ -6,6 +6,7 @@ import (
 	"os"
 	"runtime"
 	"strings"
+	"testing"
 )
 
 func (s *Suite) Test_NewPath(c *check.C) {
@@ -16,96 +17,158 @@ func (s *Suite) Test_NewPath(c *check.C) {
 	c.Check(NewPath("\\"), check.Not(check.Equals), NewPath("/"))
 }
 
-func (s *Suite) Test_Path_String(c *check.C) {
-	t := s.Init(c)
+func Test_Path_String(t *testing.T) {
+	tests := []struct {
+		path string
+	}{
+		{""},
+		{"filename"},
+		{"a/b"},
 
-	test := func(p Path) {
-		t.CheckEquals(p.String(), string(p))
+		// No normalization takes place in Path(string).
+		// That's what NewPathSlash is for.
+		{"c\\d"},
 	}
-
-	test("")
-	test("filename")
-	test("a/b")
-
-	// No normalization takes place here.
-	// That's what NewPathSlash is for.
-	test("c\\d")
+	for _, test := range tests {
+		t.Run(test.path, func(t *testing.T) {
+			p := Path(test.path)
+			have := p.String()
+			if have != test.path || have != string(p) {
+				t.Errorf("want %#v, have %#v", test.path, have)
+			}
+		})
+	}
 }
 
-func (s *Suite) Test_Path_GoString(c *check.C) {
-	t := s.Init(c)
-
-	test := func(p Path, s string) {
-		t.CheckEquals(p.GoString(), s)
+func Test_Path_GoString(t *testing.T) {
+	tests := []struct {
+		path string
+		want string
+	}{
+		{"", "\"\""},
+		{"filename", "\"filename\""},
+		{"a/b", "\"a/b\""},
+		{"c\\d", "\"c\\\\d\""},
 	}
-
-	test("", "\"\"")
-	test("filename", "\"filename\"")
-	test("a/b", "\"a/b\"")
-	test("c\\d", "\"c\\\\d\"")
+	for _, test := range tests {
+		t.Run(test.path, func(t *testing.T) {
+			p := Path(test.path)
+			have := p.GoString()
+			if have != test.want {
+				t.Errorf("want %#v, have %#v for %#v",
+					test.want, have, test.path)
+			}
+		})
+	}
 }
 
-func (s *Suite) Test_Path_IsEmpty(c *check.C) {
-	t := s.Init(c)
-
-	test := func(p Path, isEmpty bool) {
-		t.CheckEquals(p.IsEmpty(), isEmpty)
+func Test_Path_IsEmpty(t *testing.T) {
+	tests := []struct {
+		path string
+		want bool
+	}{
+		{"", true},
+		{".", false},
+		{"/", false},
 	}
-
-	test("", true)
-	test(".", false)
-	test("/", false)
+	for _, test := range tests {
+		t.Run(test.path, func(t *testing.T) {
+			p := Path(test.path)
+			have := p.IsEmpty()
+			if have != test.want {
+				t.Errorf("want %#v, have %#v for %#v",
+					test.want, have, test.path)
+			}
+		})
+	}
 }
 
-func (s *Suite) Test_Path_Dir(c *check.C) {
-	t := s.Init(c)
-
-	test := func(p, dir Path) {
-		t.CheckEquals(p.Dir(), dir)
+func Test_Path_Dir(t *testing.T) {
+	tests := []struct {
+		path string
+		want Path
+	}{
+		{"", "."},
+		// Dir only works textual, it does not know about "..".
+		{".", "."},
+		// Dir only works textual, it does not know about "..".
+		{"dir/..", "dir"},
+		{"././././", "."},
+		{"/", "/"}, // ?
+		{"/root", "/"},
+		{"filename", "."},
+		{"dir/filename", "dir"},
+		{"dir/./file", "dir"},
+		{"./file", "."},
 	}
-
-	test("", ".")
-	test("././././", ".")
-	test("/root", "/")
-	test("filename", ".")
-	test("dir/filename", "dir")
-	test("dir/filename\\with\\backslash", "dir")
-	test("dir/./file", "dir")
-	test("./file", ".")
+	for _, test := range tests {
+		t.Run(test.path, func(t *testing.T) {
+			p := Path(test.path)
+			have := p.Dir()
+			if have != test.want {
+				t.Errorf("want %#v, have %#v for %#v",
+					test.want, have, test.path)
+			}
+		})
+	}
 }
 
-func (s *Suite) Test_Path_Base(c *check.C) {
-	t := s.Init(c)
-
-	test := func(p Path, base RelPath) {
-		t.CheckEquals(p.Base(), base)
+func Test_Path_Base(t *testing.T) {
+	tests := []struct {
+		path string
+		want RelPath
+	}{
+		// That's a bit surprising
+		{"", "."},
+		// Base only works textual, it does not know about "..".
+		{".", "."},
+		// Base only works textual, it does not know about "..".
+		{"dir/..", ".."},
+		{"././././", "."},
+		// {"/", "/"}, // Panics because "/" is not relative.
+		{"/root", "root"},
+		{"filename", "filename"},
+		{"dir/filename", "filename"},
+		{"dir/./file", "file"},
+		{"./file", "file"},
+		{"dir/filename\\with\\backslash", "filename\\with\\backslash"},
 	}
-
-	test("", ".") // That's a bit surprising
-	test("././././", ".")
-	test("/root", "root")
-	test("filename", "filename")
-	test("dir/filename", "filename")
-	test("dir/filename\\with\\backslash", "filename\\with\\backslash")
+	for _, test := range tests {
+		t.Run(test.path, func(t *testing.T) {
+			p := Path(test.path)
+			have := p.Base()
+			if have != test.want {
+				t.Errorf("want %#v, have %#v for %#v",
+					test.want, have, test.path)
+			}
+		})
+	}
 }
 
-func (s *Suite) Test_Path_Split(c *check.C) {
-	t := s.Init(c)
-
-	test := func(p, dir, base string) {
-		actualDir, actualBase := NewPath(p).Split()
-
-		t.CheckDeepEquals(
-			[]string{actualDir.String(), actualBase},
-			[]string{dir, base})
+func Test_Path_Split(t *testing.T) {
+	tests := []struct {
+		path     string
+		wantDir  Path
+		wantBase string
+	}{
+		{"", "", ""},
+		{"././././", "././././", ""},
+		{"/root", "/", "root"},
+		{"filename", "", "filename"},
+		{"dir/filename", "dir/", "filename"},
+		{"dir/filename\\with\\backslash", "dir/", "filename\\with\\backslash"},
+		{"/", "/", ""},
 	}
-
-	test("", "", "")
-	test("././././", "././././", "")
-	test("/root", "/", "root")
-	test("filename", "", "filename")
-	test("dir/filename", "dir/", "filename")
-	test("dir/filename\\with\\backslash", "dir/", "filename\\with\\backslash")
+	for _, test := range tests {
+		t.Run(test.path, func(t *testing.T) {
+			p := NewPath(test.path)
+			haveDir, haveBase := p.Split()
+			if haveDir != test.wantDir || haveBase != test.wantBase {
+				t.Errorf("want %#v|%#v, have %#v|%#v for %#v",
+					test.wantDir, test.wantBase, haveDir, haveBase, test.path)
+			}
+		})
+	}
 }
 
 func (s *Suite) Test_Path_Parts(c *check.C) {
@@ -423,99 +486,125 @@ func (s *Suite) Test_Path_CleanDot(c *check.C) {
 	test("a//b", "a/b")
 }
 
-func (s *Suite) Test_Path_CleanPath(c *check.C) {
-	t := s.Init(c)
+func Test_Path_CleanPath(t *testing.T) {
+	tests := []struct {
+		path string
+		want Path
+	}{
+		{"simple/path", "simple/path"},
+		{"/absolute/path", "/absolute/path"},
 
-	test := func(from, to Path) {
-		t.CheckEquals(from.CleanPath(), to)
+		// Single dot components are removed, unless it's the only component of the path.
+		{"./././.", "."},
+		{"./././", "."},
+		{"dir/multi/././/file", "dir/multi/file"},
+		{"dir/", "dir"},
+
+		// Components like aa/bb/../.. are removed, but not in the initial part of the path,
+		// and only if they are not followed by another "..".
+		{"dir/../dir/../dir/../dir/subdir/../../Makefile", "dir/../dir/../dir/../Makefile"},
+		{"111/222/../../333/444/../../555/666/../../777/888/9", "111/222/../../777/888/9"},
+		{"1/2/3/../../4/5/6/../../7/8/9/../../../../10", "1/2/3/../../4/7/8/9/../../../../10"},
+		{"cat/pkg.v1/../../cat/pkg.v2/Makefile", "cat/pkg.v1/../../cat/pkg.v2/Makefile"},
+		{"aa/../../../../../a/b/c/d", "aa/../../../../../a/b/c/d"},
+		{"aa/bb/../../../../a/b/c/d", "aa/bb/../../../../a/b/c/d"},
+		{"aa/bb/cc/../../../a/b/c/d", "aa/bb/cc/../../../a/b/c/d"},
+		{"aa/bb/cc/dd/../../a/b/c/d", "aa/bb/a/b/c/d"},
+		{"aa/bb/cc/dd/ee/../a/b/c/d", "aa/bb/cc/dd/ee/../a/b/c/d"},
+		{"../../../../../a/b/c/d", "../../../../../a/b/c/d"},
+		{"aa/../../../../a/b/c/d", "aa/../../../../a/b/c/d"},
+		{"aa/bb/../../../a/b/c/d", "aa/bb/../../../a/b/c/d"},
+		{"aa/bb/cc/../../a/b/c/d", "aa/bb/cc/../../a/b/c/d"},
+		{"aa/bb/cc/dd/../a/b/c/d", "aa/bb/cc/dd/../a/b/c/d"},
+		{"aa/../cc/../../a/b/c/d", "aa/../cc/../../a/b/c/d"},
+
+		// The initial 2 components of the path are typically category/package, when
+		// pkglint is called from the pkgsrc top-level directory.
+		// This path serves as the context and therefore is always kept.
+		{"aa/bb/../../cc/dd/../../ee/ff", "aa/bb/../../ee/ff"},
+		{"aa/bb/../../cc/dd/../..", "aa/bb/../.."},
+		{"aa/bb/cc/dd/../..", "aa/bb"},
+		{"aa/bb/../../cc/dd/../../ee/ff/buildlink3.mk", "aa/bb/../../ee/ff/buildlink3.mk"},
+		{"./aa/bb/../../cc/dd/../../ee/ff/buildlink3.mk", "aa/bb/../../ee/ff/buildlink3.mk"},
+
+		{"../.", ".."},
+		{"../././././././.", ".."},
+		{".././././././././", ".."},
+
+		{
+			"x11/kde-runtime4/../../misc/kdepimlibs4/../../databases/openldap-client/buildlink3.mk",
+			"x11/kde-runtime4/../../databases/openldap-client/buildlink3.mk"},
 	}
-
-	test("simple/path", "simple/path")
-	test("/absolute/path", "/absolute/path")
-
-	// Single dot components are removed, unless it's the only component of the path.
-	test("./././.", ".")
-	test("./././", ".")
-	test("dir/multi/././/file", "dir/multi/file")
-	test("dir/", "dir")
-
-	test("dir/", "dir")
-
-	// Components like aa/bb/../.. are removed, but not in the initial part of the path,
-	// and only if they are not followed by another "..".
-	test("dir/../dir/../dir/../dir/subdir/../../Makefile", "dir/../dir/../dir/../Makefile")
-	test("111/222/../../333/444/../../555/666/../../777/888/9", "111/222/../../777/888/9")
-	test("1/2/3/../../4/5/6/../../7/8/9/../../../../10", "1/2/3/../../4/7/8/9/../../../../10")
-	test("cat/pkg.v1/../../cat/pkg.v2/Makefile", "cat/pkg.v1/../../cat/pkg.v2/Makefile")
-	test("aa/../../../../../a/b/c/d", "aa/../../../../../a/b/c/d")
-	test("aa/bb/../../../../a/b/c/d", "aa/bb/../../../../a/b/c/d")
-	test("aa/bb/cc/../../../a/b/c/d", "aa/bb/cc/../../../a/b/c/d")
-	test("aa/bb/cc/dd/../../a/b/c/d", "aa/bb/a/b/c/d")
-	test("aa/bb/cc/dd/ee/../a/b/c/d", "aa/bb/cc/dd/ee/../a/b/c/d")
-	test("../../../../../a/b/c/d", "../../../../../a/b/c/d")
-	test("aa/../../../../a/b/c/d", "aa/../../../../a/b/c/d")
-	test("aa/bb/../../../a/b/c/d", "aa/bb/../../../a/b/c/d")
-	test("aa/bb/cc/../../a/b/c/d", "aa/bb/cc/../../a/b/c/d")
-	test("aa/bb/cc/dd/../a/b/c/d", "aa/bb/cc/dd/../a/b/c/d")
-	test("aa/../cc/../../a/b/c/d", "aa/../cc/../../a/b/c/d")
-
-	// The initial 2 components of the path are typically category/package, when
-	// pkglint is called from the pkgsrc top-level directory.
-	// This path serves as the context and therefore is always kept.
-	test("aa/bb/../../cc/dd/../../ee/ff", "aa/bb/../../ee/ff")
-	test("aa/bb/../../cc/dd/../..", "aa/bb/../..")
-	test("aa/bb/cc/dd/../..", "aa/bb")
-	test("aa/bb/../../cc/dd/../../ee/ff/buildlink3.mk", "aa/bb/../../ee/ff/buildlink3.mk")
-	test("./aa/bb/../../cc/dd/../../ee/ff/buildlink3.mk", "aa/bb/../../ee/ff/buildlink3.mk")
-
-	test("../.", "..")
-	test("../././././././.", "..")
-	test(".././././././././", "..")
-
-	test(
-		"x11/kde-runtime4/../../misc/kdepimlibs4/../../databases/openldap-client/buildlink3.mk",
-		"x11/kde-runtime4/../../databases/openldap-client/buildlink3.mk")
+	for _, test := range tests {
+		t.Run(test.path, func(t *testing.T) {
+			p := NewPath(test.path)
+			have := p.CleanPath()
+			if have != test.want {
+				t.Errorf("want %#v, have %#v for %#v",
+					test.want, have, test.path)
+			}
+		})
+	}
 }
 
-func (s *Suite) Test_Path_IsAbs(c *check.C) {
-	t := s.Init(c)
-
-	test := func(p Path, abs bool) {
-		t.CheckEquals(p.IsAbs(), abs)
+func Test_Path_IsAbs(t *testing.T) {
+	tests := []struct {
+		path string
+		want bool
+	}{
+		{"", false},
+		{".", false},
+		{"a/b", false},
+		{"/a", true},
+		{"C:/", true},
+		{"c:/", true},
+		{"c::", false},
+		{"c:relative", false},
 	}
-
-	test("", false)
-	test(".", false)
-	test("a/b", false)
-	test("/a", true)
-	test("C:/", true)
-	test("c:/", true)
-	test("c::", false)
-	test("c:relative", false)
+	for _, test := range tests {
+		t.Run(test.path, func(t *testing.T) {
+			p := NewPath(test.path)
+			have := p.IsAbs()
+			if have != test.want {
+				t.Errorf("want %#v, have %#v for %#v",
+					test.want, have, test.path)
+			}
+		})
+	}
 }
 
-func (s *Suite) Test_Path_Rel(c *check.C) {
-	t := s.Init(c)
+func Test_Path_Rel(t *testing.T) {
+	tests := []struct {
+		base  string
+		other Path
+		want  RelPath
+	}{
+		{"a/b/c", "d/e/f/file", "../../../d/e/f/file"},
+		{".", ".", "."},
 
-	test := func(base Path, other Path, result RelPath) {
-		t.CheckEquals(base.Rel(other), result)
+		// The trailing dot marks the difference between a file and a directory.
+		// This is the same behavior as with filepath.Rel.
+		{"a/b/c", ".", "../../../."},
+
+		// Intermediate dotdot components are removed.
+		{"a/../b", "c/../d", "../d"},
+
+		{".", "dir/file", "dir/file"},
+		// XXX: maybe the /. is missing at the end
+		{".", "dir/subdir/", "dir/subdir"},
+		// XXX: maybe the /. is missing at the end
+		{".", "dir/subdir/.", "dir/subdir"},
 	}
-
-	test("a/b/c", "d/e/f/file", "../../../d/e/f/file")
-	test(".", ".", ".")
-
-	// The trailing dot marks the difference between a file and a directory.
-	// This is the same behavior as with filepath.Rel.
-	test("a/b/c", ".", "../../../.")
-
-	// Intermediate dotdot components are removed.
-	test("a/../b", "c/../d", "../d")
-
-	test(".", "dir/file", "dir/file")
-	// XXX: maybe the /. is missing at the end
-	test(".", "dir/subdir/", "dir/subdir")
-	// XXX: maybe the /. is missing at the end
-	test(".", "dir/subdir/.", "dir/subdir")
+	for _, test := range tests {
+		t.Run(test.base+","+test.other.String(), func(t *testing.T) {
+			p := NewPath(test.base)
+			have := p.Rel(test.other)
+			if have != test.want {
+				t.Errorf("want %#v, have %#v for %#v + %#v",
+					test.want, have, test.base, test.other)
+			}
+		})
+	}
 }
 
 func (s *Suite) Test_NewCurrPath(c *check.C) {
