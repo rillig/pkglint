@@ -2,12 +2,14 @@ package pkglint
 
 import (
 	"encoding/json"
-	"gopkg.in/check.v1"
 	"strings"
+	"testing"
 )
 
-func (s *Suite) Test_MkParser_MkCond(c *check.C) {
-	t := s.Init(c)
+func Test_MkParser_MkCond(t *testing.T) {
+	tt := NewTester(t)
+	defer tt.Done()
+
 	b := NewMkTokenBuilder()
 
 	cmp := func(left MkCondTerm, op string, right MkCondTerm) *MkCond {
@@ -46,18 +48,18 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 		encoder := json.NewEncoder(&sb)
 		encoder.SetIndent("", "  ")
 		err := encoder.Encode(obj)
-		t.AssertNil(err)
+		tt.AssertNil(err)
 		return sb.String()
 	}
 
 	testRest := func(input string, expectedTree *MkCond, expectedRest string) {
 		// As of July 2019, p.MkCond does not emit warnings;
 		// this is left to MkCondChecker.Check.
-		line := t.NewLine("filename.mk", 1, ".if "+input)
+		line := tt.NewLine("filename.mk", 1, ".if "+input)
 		p := NewMkParser(line, input)
 		actualTree := p.MkCond()
-		t.CheckDeepEquals(toJSON(actualTree), toJSON(expectedTree))
-		t.CheckEquals(p.Rest(), expectedRest)
+		tt.CheckDeepEquals(toJSON(actualTree), toJSON(expectedTree))
+		tt.CheckEquals(p.Rest(), expectedRest)
 	}
 	test := func(input string, expectedTree *MkCond) {
 		testRest(input, expectedTree, "")
@@ -308,100 +310,120 @@ func (s *Suite) Test_MkParser_MkCond(c *check.C) {
 		"")
 }
 
-func (s *Suite) Test_MkParser_mkCondCompare(c *check.C) {
-	t := s.Init(c)
+func Test_MkParser_mkCondCompare(t *testing.T) {
+	tt := NewTester(t)
+	defer tt.Done()
+
 	b := NewMkTokenBuilder()
 
-	mkline := t.NewMkLine("Makefile", 123, ".if ${PKGPATH} == category/pack.age-3+")
+	mkline := tt.NewMkLine("Makefile", 123, ".if ${PKGPATH} == category/pack.age-3+")
 	p := NewMkParser(mkline.Line, mkline.Args())
 	cond := p.MkCond()
 
-	t.CheckEquals(p.Rest(), "")
-	t.CheckDeepEquals(
+	tt.CheckEquals(p.Rest(), "")
+	tt.CheckDeepEquals(
 		cond,
 		&MkCond{
 			Compare: &MkCondCompare{
 				Left:  MkCondTerm{Expr: b.Expr("PKGPATH")},
 				Op:    "==",
 				Right: MkCondTerm{Str: "category/pack.age-3+"}}})
-
-	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkParser_PkgbasePattern(c *check.C) {
-	t := s.Init(c)
+func Test_MkParser_PkgbasePattern(t *testing.T) {
+	tests := []struct {
+		pattern  string
+		want     string
+		wantRest string
+	}{
+		{"fltk", "fltk", ""},
+		{"fltk-", "fltk", "-"},
+		{"fltk|", "fltk", "|"},
+		{"boost-build-1.59.*", "boost-build", "-1.59.*"},
+		{"${PHP_PKG_PREFIX}-pdo-5.*", "${PHP_PKG_PREFIX}-pdo", "-5.*"},
+		{"${PYPKGPREFIX}-metakit-[0-9]*", "${PYPKGPREFIX}-metakit", "-[0-9]*"},
 
-	test := func(pattern, expected, rest string) {
-		parser := NewMkParser(nil, pattern)
+		{"pkgbase-[0-9]*", "pkgbase", "-[0-9]*"},
 
-		actual := parser.PkgbasePattern()
+		{"pkgbase-client-[0-9]*", "pkgbase-client", "-[0-9]*"},
 
-		t.CheckEquals(actual, expected)
-		t.CheckEquals(parser.Rest(), rest)
+		{"pkgbase-${VARIANT}-[0-9]*", "pkgbase-${VARIANT}", "-[0-9]*"},
+
+		{"pkgbase-${VERSION}-[0-9]*", "pkgbase", "-${VERSION}-[0-9]*"},
+
+		// This PKGNAME pattern is the one from bsd.pkg.mk.
+		// The pattern assumes that the version number does not contain a hyphen,
+		// which feels a bit too simple.
+		//
+		// Since variable substitutions are more common for version numbers
+		// than for parts of the package name, pkglint treats the PKGNAME
+		// as a version number.
+		{"pkgbase-${PKGNAME:C/^.*-//}-[0-9]*", "pkgbase", "-${PKGNAME:C/^.*-//}-[0-9]*"},
+
+		// Using the [a-z] pattern in the package base is only rarely seen in the wild.
+		{"pkgbase-[a-z]*-1.0", "pkgbase-[a-z]*", "-1.0"},
+
+		// This is a valid package pattern, but it's more complicated
+		// than the patterns pkglint can handle as of January 2019.
+		//
+		// This pattern doesn't have a single package base, which means it cannot be parsed at all.
+		{"{ssh{,6}-[0-9]*,openssh-[0-9]*}", "", "{ssh{,6}-[0-9]*,openssh-[0-9]*}"},
 	}
+	for _, test := range tests {
+		t.Run(test.pattern, func(t *testing.T) {
+			tt := NewTester(t)
+			defer tt.Done()
 
-	test("fltk", "fltk", "")
-	test("fltk-", "fltk", "-")
-	test("fltk|", "fltk", "|")
-	test("boost-build-1.59.*", "boost-build", "-1.59.*")
-	test("${PHP_PKG_PREFIX}-pdo-5.*", "${PHP_PKG_PREFIX}-pdo", "-5.*")
-	test("${PYPKGPREFIX}-metakit-[0-9]*", "${PYPKGPREFIX}-metakit", "-[0-9]*")
+			parser := NewMkParser(nil, test.pattern)
 
-	test("pkgbase-[0-9]*", "pkgbase", "-[0-9]*")
-
-	test("pkgbase-client-[0-9]*", "pkgbase-client", "-[0-9]*")
-
-	test("pkgbase-${VARIANT}-[0-9]*", "pkgbase-${VARIANT}", "-[0-9]*")
-
-	test("pkgbase-${VERSION}-[0-9]*", "pkgbase", "-${VERSION}-[0-9]*")
-
-	// This PKGNAME pattern is the one from bsd.pkg.mk.
-	// The pattern assumes that the version number does not contain a hyphen,
-	// which feels a bit too simple.
-	//
-	// Since variable substitutions are more common for version numbers
-	// than for parts of the package name, pkglint treats the PKGNAME
-	// as a version number.
-	test("pkgbase-${PKGNAME:C/^.*-//}-[0-9]*", "pkgbase", "-${PKGNAME:C/^.*-//}-[0-9]*")
-
-	// Using the [a-z] pattern in the package base is only rarely seen in the wild.
-	test("pkgbase-[a-z]*-1.0", "pkgbase-[a-z]*", "-1.0")
-
-	// This is a valid package pattern, but it's more complicated
-	// than the patterns pkglint can handle as of January 2019.
-	//
-	// This pattern doesn't have a single package base, which means it cannot be parsed at all.
-	test("{ssh{,6}-[0-9]*,openssh-[0-9]*}", "", "{ssh{,6}-[0-9]*,openssh-[0-9]*}")
-}
-
-func (s *Suite) Test_MkParser_isPkgbasePart(c *check.C) {
-	t := s.Init(c)
-
-	test := func(str string, expected bool) {
-		actual := (*MkParser)(nil).isPkgbasePart(str)
-
-		t.CheckEquals(actual, expected)
+			have := parser.PkgbasePattern()
+			haveRest := parser.Rest()
+			if have != test.want || haveRest != test.wantRest {
+				t.Errorf("want %#v, %#v, have %#v, %#v for %#v",
+					test.want, test.wantRest, have, haveRest, test.pattern)
+			}
+		})
 	}
-
-	test("X11", true)
-	test("client", true)
-	test("${PKGNAME}", true)
-	test("[a-z]", true)
-	test("{client,server}", true)
-
-	test("1.2", false)
-	test("[0-9]*", false)
-	test("{5.[1-7].*,6.[0-9]*}", false)
-	test("${PKGVERSION}", false)
-	test("${PKGNAME:C/^.*-//}", false)
-	test(">=1.0", false)
-	test("_client", false) // The combination foo-_client looks strange.
 }
 
-func (s *Suite) Test_MkCondWalker_Walk(c *check.C) {
-	t := s.Init(c)
+func Test_MkParser_isPkgbasePart(t *testing.T) {
+	tests := []struct {
+		str  string
+		want bool
+	}{
+		{"X11", true},
+		{"client", true},
+		{"${PKGNAME}", true},
+		{"[a-z]", true},
+		{"{client,server}", true},
 
-	mkline := t.NewMkLine("Makefile", 4, ""+
+		{"1.2", false},
+		{"[0-9]*", false},
+		{"{5.[1-7].*,6.[0-9]*}", false},
+		{"${PKGVERSION}", false},
+		{"${PKGNAME:C/^.*-//}", false},
+		{">=1.0", false},
+		{"_client", false}, // The combination foo-_client looks strange.
+	}
+	for _, test := range tests {
+		t.Run(test.str, func(t *testing.T) {
+			tt := NewTester(t)
+			defer tt.Done()
+
+			have := (*MkParser)(nil).isPkgbasePart(test.str)
+			if have != test.want {
+				t.Errorf("want %#v, have %#v for %#v",
+					test.want, have, test.str)
+			}
+		})
+	}
+}
+
+func Test_MkCondWalker_Walk(t *testing.T) {
+	tt := NewTester(t)
+	defer tt.Done()
+
+	mkline := tt.NewMkLine("Makefile", 4, ""+
 		".if ${VAR:Mmatch} == ${OTHER} || "+
 		"${STR} == Str || "+
 		"${VAR} == \"${PRE}text${POST}\" || "+
@@ -465,7 +487,7 @@ func (s *Suite) Test_MkCondWalker_Walk(c *check.C) {
 			addEvent("expr", exprStr(expr))
 		}})
 
-	t.CheckDeepEquals(events, []string{
+	tt.CheckDeepEquals(events, []string{
 		"compareExprExpr  VAR:Mmatch, OTHER",
 		"           expr  VAR:Mmatch",
 		"           expr  OTHER",
@@ -493,10 +515,11 @@ func (s *Suite) Test_MkCondWalker_Walk(c *check.C) {
 
 // Ensure that the code works even if none of the callbacks are set.
 // This is only for code coverage.
-func (s *Suite) Test_MkCondWalker_Walk__empty_callbacks(c *check.C) {
-	t := s.Init(c)
+func Test_MkCondWalker_Walk__empty_callbacks(t *testing.T) {
+	tt := NewTester(t)
+	defer tt.Done()
 
-	mkline := t.NewMkLine("Makefile", 4, ""+
+	mkline := tt.NewMkLine("Makefile", 4, ""+
 		".if ${VAR:Mmatch} == ${OTHER} || "+
 		"${STR} == Str || "+
 		"${VAR} == \"${PRE}text${POST}\" || "+
@@ -507,6 +530,4 @@ func (s *Suite) Test_MkCondWalker_Walk__empty_callbacks(c *check.C) {
 		"(((${NONEMPTY})))")
 
 	mkline.Cond().Walk(&MkCondCallback{})
-
-	t.CheckOutputEmpty()
 }
