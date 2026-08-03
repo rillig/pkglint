@@ -2,25 +2,19 @@ package main
 
 import (
 	"os"
+	"regexp"
 	"testing"
-
-	"gopkg.in/check.v1"
 )
-
-type Suite struct{}
-
-func Test(t *testing.T) {
-	check.Suite(new(Suite))
-	check.TestingT(t)
-}
 
 // This test goes into great lengths to bring the code coverage to 100%.
 // Without this test, the main function would be a trivial one-liner.
 // To make that one-liner testable, the call to os.Exit must be mockable.
-func (s *Suite) Test_main(c *check.C) {
-	tmpdir := c.MkDir()
+func Test_main(t *testing.T) {
+	tmpdir := t.TempDir()
 	out, err := os.Create(tmpdir + "/out")
-	c.Assert(err, check.IsNil)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	prevStdout := os.Stdout
 	prevArgs := os.Args
@@ -33,15 +27,26 @@ func (s *Suite) Test_main(c *check.C) {
 
 	os.Stdout = out
 	os.Args = []string{"pkglint", "--version"}
-	exit = func(code int) { c.Check(code, check.Equals, 0) }
+	exit = func(code int) {
+		if code != 0 {
+			t.Fatalf("unexpectedly exited with %#v", code)
+		}
+	}
 
 	main()
 
 	err = out.Close()
-	c.Assert(err, check.IsNil)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	output, err := os.ReadFile(out.Name())
-	c.Assert(err, check.IsNil)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	c.Check(string(output), check.Matches, `^(@VERSION@|\d+(\.\d+)+(nb\d+)?)\n$`)
+	re := regexp.MustCompile(`^(@VERSION@|\d+(\.\d+)+(nb\d+)?)\n$`)
+	if !re.Match(output) {
+		t.Errorf("want %#v, have %#v", re, output)
+	}
 }
