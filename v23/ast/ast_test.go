@@ -25,7 +25,10 @@ func Test(t *testing.T) {
 		fmt.Println("other", reflect.ValueOf(line).Type().Name())
 	}
 
-	ast.Print(nil, line)
+	err := ast.Print(nil, line)
+	if err != nil {
+		panic(err)
+	}
 
 	if want, got := ".\\\n\tif ${COND}\n", f.Text(line); got != want {
 		t.Errorf("got %q, want %q", got, want)
