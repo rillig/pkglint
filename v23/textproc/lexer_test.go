@@ -2,491 +2,704 @@ package textproc
 
 import (
 	"github.com/rillig/pkglint/v23/intqa"
-	"gopkg.in/check.v1"
 	"regexp"
 	"strings"
 	"testing"
 	"unicode"
 )
 
-type Suite struct{}
-
-var equals = check.Equals
-
-func Test(t *testing.T) {
-	check.Suite(new(Suite))
-	check.TestingT(t)
-}
-
-func (s *Suite) Test_NewLexer(c *check.C) {
+func Test_NewLexer(t *testing.T) {
 	lexer := NewLexer("text")
 
-	c.Check(lexer.rest, equals, "text")
+	if have, want := lexer.rest, "text"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 }
 
-func (s *Suite) Test_Lexer_Rest__initial(c *check.C) {
+func Test_Lexer_Rest__initial(t *testing.T) {
 	lexer := NewLexer("text")
 
-	c.Check(lexer.Rest(), equals, "text")
+	if have, want := lexer.Rest(), "text"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 }
 
-func (s *Suite) Test_Lexer_Rest__end(c *check.C) {
+func Test_Lexer_Rest__end(t *testing.T) {
 	lexer := NewLexer("")
 
-	c.Check(lexer.Rest(), equals, "")
+	if have, want := lexer.rest, ""; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 }
 
-func (s *Suite) Test_Lexer_EOF__initial(c *check.C) {
+func Test_Lexer_EOF__initial(t *testing.T) {
 	lexer := NewLexer("text")
 
-	c.Check(lexer.EOF(), equals, false)
+	if lexer.EOF() {
+		t.Errorf("unfinished lexer is at EOF")
+	}
 }
 
-func (s *Suite) Test_Lexer_EOF__end(c *check.C) {
+func Test_Lexer_EOF__end(t *testing.T) {
 	lexer := NewLexer("")
 
-	c.Check(lexer.EOF(), equals, true)
+	if !lexer.EOF() {
+		t.Errorf("empty lexer is not at EOF")
+	}
 }
 
-func (s *Suite) Test_Lexer_PeekByte(c *check.C) {
+func Test_Lexer_PeekByte(t *testing.T) {
 	lexer := NewLexer("text")
 
-	c.Check(lexer.PeekByte(), equals, int('t'))
+	if have, want := lexer.PeekByte(), int('t'); have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 
-	c.Check(lexer.NextString("text"), equals, "text")
+	if have, want := lexer.NextString("text"), "text"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 
-	c.Check(lexer.PeekByte(), equals, -1)
+	if have, want := lexer.PeekByte(), -1; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 }
 
-func (s *Suite) Test_Lexer_TestByteSet(c *check.C) {
+func Test_Lexer_TestByteSet(t *testing.T) {
 	lexer := NewLexer("text")
 
-	c.Check(lexer.TestByteSet(Upper), equals, false)
-	c.Check(lexer.TestByteSet(Lower), equals, true)
-	c.Check(lexer.TestByteSet(NewByteSet("t")), equals, true)
+	if lexer.TestByteSet(Upper) {
+		t.Errorf("upper")
+	}
+	if !lexer.TestByteSet(Lower) {
+		t.Errorf("lower")
+	}
+	if !lexer.TestByteSet(NewByteSet("t")) {
+		t.Errorf("t")
+	}
 
-	c.Check(lexer.NextString("text"), equals, "text")
+	if have, want := lexer.NextString("text"), "text"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 
-	c.Check(lexer.TestByteSet(Upper), equals, false)
-	c.Check(lexer.TestByteSet(Lower), equals, false)
+	if lexer.TestByteSet(Upper) {
+		t.Errorf("upper")
+	}
+	if lexer.TestByteSet(Lower) {
+		t.Errorf("lower")
+	}
 }
 
-func (s *Suite) Test_Lexer_Skip(c *check.C) {
+func Test_Lexer_Skip(t *testing.T) {
 	lexer := NewLexer("example text")
 
-	c.Check(lexer.Skip(7), equals, true)
+	if !lexer.Skip(7) {
+		t.Error("skip 7")
+	}
 
-	c.Check(lexer.Rest(), equals, " text")
+	if have := lexer.Rest(); have != " text" {
+		t.Errorf("rest %#v", have)
+	}
 
-	c.Check(lexer.Skip(0), equals, false)
+	if lexer.Skip(0) {
+		t.Error("skip 0")
+	}
 
-	c.Check(lexer.Rest(), equals, " text")
+	if have := lexer.Rest(); have != " text" {
+		t.Errorf("rest %#v", have)
+	}
 
 	// Skipping a fixed number of bytes only makes sense when the
 	// lexer has examined every one of them before. Therefore, no
 	// extra check is done here, and panicking here is intentional.
-	c.Check(
-		func() { lexer.Skip(6) },
-		check.PanicMatches,
-		`runtime error: slice bounds out of range.*`)
+	var p error
+	func() {
+		defer func() {
+			p = recover().(error)
+		}()
+		lexer.Skip(6)
+	}()
+	if have := p.Error(); !regexp.MustCompile(`runtime error: slice bounds out of range.*`).MatchString(have) {
+		t.Errorf("%#v", have)
+	}
 }
 
-func (s *Suite) Test_Lexer_NextString(c *check.C) {
+func Test_Lexer_NextString(t *testing.T) {
 	lexer := NewLexer("text")
 
-	c.Check(lexer.NextString("te"), equals, "te")
-	c.Check(lexer.NextString("st"), equals, "") // Did not match.
-	c.Check(lexer.NextString("xt"), equals, "xt")
+	if have, want := lexer.NextString("te"), "te"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextString("st") /* Does not match */, ""; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextString("xt"), "xt"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 }
 
-func (s *Suite) Test_Lexer_NextString__EOF(c *check.C) {
+func Test_Lexer_NextString__EOF(t *testing.T) {
 	lexer := NewLexer("text")
 	lexer.NextString("text")
 
-	c.Check(lexer.EOF(), equals, true)
+	if !lexer.EOF() {
+		t.Error("want EOF")
+	}
 }
 
-func (s *Suite) Test_Lexer_SkipString(c *check.C) {
+func Test_Lexer_SkipString(t *testing.T) {
 	lexer := NewLexer("text")
 
-	c.Check(lexer.SkipString("te"), equals, true)
-	c.Check(lexer.SkipString("st"), equals, false)
-	c.Check(lexer.SkipString("xt"), equals, true)
+	if !lexer.SkipString("te") {
+		t.Error("want true")
+	}
+	if lexer.SkipString("st") {
+		t.Error("want false")
+	}
+	if !lexer.SkipString("xt") {
+		t.Error("want true")
+	}
 }
 
-func (s *Suite) Test_Lexer_SkipHspace(c *check.C) {
+func Test_Lexer_SkipHspace(t *testing.T) {
 	lexer := NewLexer("spaces   \t \t  and tabs\n\t ")
 
-	c.Check(lexer.NextString("spaces"), equals, "spaces")
-	c.Check(lexer.SkipHspace(), equals, true)
-	c.Check(lexer.Rest(), equals, "and tabs\n\t ")
-	c.Check(lexer.SkipHspace(), equals, false) // No space left.
-	c.Check(lexer.NextString("and tabs"), equals, "and tabs")
-	c.Check(lexer.SkipHspace(), equals, false) // Newline is not a horizontal space.
-	c.Check(lexer.NextString("\n"), equals, "\n")
-	c.Check(lexer.SkipHspace(), equals, true)
+	if have, want := lexer.NextString("spaces"), "spaces"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if !lexer.SkipHspace() {
+		t.Error("want true")
+	}
+	if have, want := lexer.Rest(), "and tabs\n\t "; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have := lexer.SkipHspace(); have { // No space left.
+		t.Error("want false")
+	}
+	if have, want := lexer.NextString("and tabs"), "and tabs"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have := lexer.SkipHspace(); have { // Newline is not a horizontal space.
+		t.Error("want false")
+	}
+	if have, want := lexer.NextString("\n"), "\n"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if !lexer.SkipHspace() {
+		t.Error("want true")
+	}
 }
 
-func (s *Suite) Test_Lexer_NextHspace(c *check.C) {
+func Test_Lexer_NextHspace(t *testing.T) {
 	lexer := NewLexer("spaces   \t \t  and tabs\n\t ")
 
-	c.Check(lexer.NextString("spaces"), equals, "spaces")
-	c.Check(lexer.NextHspace(), equals, "   \t \t  ")
-	c.Check(lexer.NextHspace(), equals, "") // No space left.
-	c.Check(lexer.NextString("and tabs"), equals, "and tabs")
-	c.Check(lexer.NextHspace(), equals, "") // Newline is not a horizontal space.
-	c.Check(lexer.NextString("\n"), equals, "\n")
-	c.Check(lexer.NextHspace(), equals, "\t ")
+	if have, want := lexer.NextString("spaces"), "spaces"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextHspace(), "   \t \t  "; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextHspace(), ""; have != want { // No space left.
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextString("and tabs"), "and tabs"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextHspace(), ""; have != want { // Newline is not a horizontal space.
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextString("\n"), "\n"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextHspace(), "\t "; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 }
 
-func (s *Suite) Test_Lexer_SkipByte(c *check.C) {
+func Test_Lexer_SkipByte(t *testing.T) {
 	lexer := NewLexer("byte")
 
-	c.Check(lexer.SkipByte('b'), equals, true)
-	c.Check(lexer.SkipByte('b'), equals, false) // The b is already chopped off.
-	c.Check(lexer.SkipByte('y'), equals, true)
-	c.Check(lexer.SkipByte('t'), equals, true)
-	c.Check(lexer.SkipByte('e'), equals, true)
-	c.Check(lexer.SkipByte(0), equals, false) // This is not a C string.
+	if !lexer.SkipByte('b') {
+		t.Error("want true")
+	}
+	if have := lexer.SkipByte('b'); have { // The b is already chopped off.
+		t.Error("want false")
+	}
+	if !lexer.SkipByte('y') {
+		t.Error("want true")
+	}
+	if !lexer.SkipByte('t') {
+		t.Error("want true")
+	}
+	if !lexer.SkipByte('e') {
+		t.Error("want true")
+	}
+	if have := lexer.SkipByte(0); have { // This is not a C string.
+		t.Error("want false")
+	}
 }
 
-func (s *Suite) Test_Lexer_NextByte(c *check.C) {
+func Test_Lexer_NextByte(t *testing.T) {
 	lexer := NewLexer("byte")
 
-	c.Check(lexer.NextByte(), equals, byte('b'))
-	c.Check(lexer.NextByte(), equals, byte('y'))
-	c.Check(lexer.NextByte(), equals, byte('t'))
-	c.Check(lexer.NextByte(), equals, byte('e'))
-	c.Check(lexer.NextByte, check.PanicMatches, "^runtime error: index out of range.*")
+	if have, want := lexer.NextByte(), byte('b'); have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextByte(), byte('y'); have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextByte(), byte('t'); have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextByte(), byte('e'); have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+
+	var p error
+	func() {
+		defer func() {
+			p = recover().(error)
+		}()
+		lexer.NextByte()
+	}()
+	if !regexp.MustCompile(`^runtime error: index out of range.*`).MatchString(p.Error()) {
+		t.Error(p)
+	}
 }
 
-func (s *Suite) Test_Lexer_SkipBytesFunc(c *check.C) {
+func Test_Lexer_SkipBytesFunc(t *testing.T) {
 	lexer := NewLexer("an alphanumerical string")
 
-	c.Check(lexer.SkipBytesFunc(func(b byte) bool { return 'A' <= b && b <= 'Z' }), equals, false)
-	c.Check(lexer.SkipBytesFunc(func(b byte) bool { return !unicode.IsSpace(rune(b)) }), equals, true)
-	c.Check(lexer.SkipHspace(), equals, true)
-	c.Check(lexer.SkipBytesFunc(func(b byte) bool { return 'a' <= b && b <= 'z' }), equals, true)
-	c.Check(lexer.SkipBytesFunc(func(b byte) bool { return true }), equals, true)
+	if lexer.SkipBytesFunc(func(b byte) bool { return 'A' <= b && b <= 'Z' }) {
+		t.Error("want false")
+	}
+	if !lexer.SkipBytesFunc(func(b byte) bool { return !unicode.IsSpace(rune(b)) }) {
+		t.Error("want true")
+	}
+	if !lexer.SkipHspace() {
+		t.Error("want true")
+	}
+	if !lexer.SkipBytesFunc(func(b byte) bool { return 'a' <= b && b <= 'z' }) {
+		t.Error("want true")
+	}
+	if !lexer.SkipBytesFunc(func(b byte) bool { return true }) {
+		t.Error("want true")
+	}
 }
 
-func (s *Suite) Test_Lexer_NextBytesFunc(c *check.C) {
+func Test_Lexer_NextBytesFunc(t *testing.T) {
 	lexer := NewLexer("an alphanumerical string")
 
-	c.Check(lexer.NextBytesFunc(func(b byte) bool { return 'A' <= b && b <= 'Z' }), equals, "")
-	c.Check(lexer.NextBytesFunc(func(b byte) bool { return !unicode.IsSpace(rune(b)) }), equals, "an")
-	c.Check(lexer.NextHspace(), equals, " ")
-	c.Check(lexer.NextBytesFunc(func(b byte) bool { return 'a' <= b && b <= 'z' }), equals, "alphanumerical")
-	c.Check(lexer.NextBytesFunc(func(b byte) bool { return true }), equals, " string")
+	if have, want := lexer.NextBytesFunc(func(b byte) bool { return 'A' <= b && b <= 'Z' }), ""; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextBytesFunc(func(b byte) bool { return !unicode.IsSpace(rune(b)) }), "an"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextHspace(), " "; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextBytesFunc(func(b byte) bool { return 'a' <= b && b <= 'z' }), "alphanumerical"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextBytesFunc(func(b byte) bool { return true }), " string"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 }
 
-func (s *Suite) Test_Lexer_NextByteSet(c *check.C) {
+func Test_Lexer_NextByteSet(t *testing.T) {
 	lexer := NewLexer("an a\n")
 
-	c.Check(lexer.NextByteSet(Alnum), equals, int('a'))
-	c.Check(lexer.NextByteSet(Alnum), equals, int('n'))
-	c.Check(lexer.NextByteSet(Space), equals, int(' '))
-	c.Check(lexer.NextByteSet(Space), equals, -1)
-	c.Check(lexer.NextByteSet(Alnum), equals, int('a'))
-	c.Check(lexer.NextByteSet(Space), equals, int('\n'))
-	c.Check(lexer.NextByteSet(Alnum), equals, -1)
+	if have, want := lexer.NextByteSet(Alnum), int('a'); have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextByteSet(Alnum), int('n'); have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextByteSet(Space), int(' '); have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextByteSet(Space), -1; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextByteSet(Alnum), int('a'); have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextByteSet(Space), int('\n'); have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextByteSet(Alnum), -1; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 }
 
-func (s *Suite) Test_Lexer_NextBytesSet(c *check.C) {
+func Test_Lexer_NextBytesSet(t *testing.T) {
 	lexer := NewLexer("an alphanumerical 90_ \tstring\t\t \n")
 
-	c.Check(lexer.NextBytesSet(Alnum), equals, "an")
-	c.Check(lexer.NextBytesSet(Alnum), equals, "")
-	c.Check(lexer.NextBytesSet(Space), equals, " ")
-	c.Check(lexer.NextBytesSet(Alnum), equals, "alphanumerical")
-	c.Check(lexer.NextBytesSet(Space), equals, " ")
-	c.Check(lexer.NextBytesSet(AlnumU), equals, "90_")
-	c.Check(lexer.NextBytesSet(Space), equals, " \t")
-	c.Check(lexer.NextBytesSet(Alnum), equals, "string")
-	c.Check(lexer.NextBytesSet(Space), equals, "\t\t \n")
+	if have, want := lexer.NextBytesSet(Alnum), "an"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextBytesSet(Alnum), ""; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextBytesSet(Space), " "; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextBytesSet(Alnum), "alphanumerical"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextBytesSet(Space), " "; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextBytesSet(AlnumU), "90_"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextBytesSet(Space), " \t"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextBytesSet(Alnum), "string"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextBytesSet(Space), "\t\t \n"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 }
 
-func (s *Suite) Test_Lexer_SkipRegexp(c *check.C) {
+func Test_Lexer_SkipRegexp(t *testing.T) {
 	lexer := NewLexer("an alphanumerical 90_ \tstring\t\t \n")
 
-	c.Check(lexer.SkipRegexp(regexp.MustCompile(`^\w+`)), equals, true)
-	c.Check(lexer.Rest(), equals, " alphanumerical 90_ \tstring\t\t \n")
-	c.Check(lexer.SkipRegexp(regexp.MustCompile(`^.+`)), equals, true)
-	c.Check(lexer.Rest(), equals, "\n")
-	c.Check(lexer.SkipRegexp(regexp.MustCompile(`^.+`)), equals, false)
+	if !lexer.SkipRegexp(regexp.MustCompile(`^\w+`)) {
+		t.Error("want true")
+	}
+	if have, want := lexer.Rest(), " alphanumerical 90_ \tstring\t\t \n"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if !lexer.SkipRegexp(regexp.MustCompile(`^.+`)) {
+		t.Error("want true")
+	}
+	if have, want := lexer.Rest(), "\n"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if lexer.SkipRegexp(regexp.MustCompile(`^.+`)) {
+		t.Error("want false")
+	}
 	// This call returns false since the matched string was empty.
-	c.Check(lexer.SkipRegexp(regexp.MustCompile(`^.*`)), equals, false)
-	c.Check(lexer.Rest(), equals, "\n")
+	if lexer.SkipRegexp(regexp.MustCompile(`^.*`)) {
+		t.Error("want false")
+	}
+	if have, want := lexer.Rest(), "\n"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 }
 
-func (s *Suite) Test_Lexer_SkipRegexp__panic(c *check.C) {
+func Test_Lexer_SkipRegexp__panic(t *testing.T) {
 	lexer := NewLexer("an alphanumerical 90_ \tstring\t\t \n")
 
-	c.Check(
-		func() { lexer.SkipRegexp(regexp.MustCompile(`\w+`)) },
-		check.Panics,
-		"Lexer.SkipRegexp: regular expression \"\\\\w+\" must have prefix \"^\".")
+	var p string
+	func() {
+		defer func() {
+			p = recover().(string)
+		}()
+		lexer.SkipRegexp(regexp.MustCompile(`\w+`))
+	}()
+	if p != "Lexer.SkipRegexp: regular expression \"\\\\w+\" must have prefix \"^\"." {
+		t.Error(p)
+	}
 }
 
-func (s *Suite) Test_Lexer_NextRegexp(c *check.C) {
+func Test_Lexer_NextRegexp(t *testing.T) {
 	lexer := NewLexer("an alphanumerical 90_ \tstring\t\t \n")
 
-	c.Check(lexer.NextRegexp(regexp.MustCompile(`^\w+`))[0], equals, "an")
-	c.Check(lexer.NextRegexp(regexp.MustCompile(`^[\w ]+`))[0], equals, " alphanumerical 90_ ")
-	c.Check(lexer.NextRegexp(regexp.MustCompile(`^.+`))[0], equals, "\tstring\t\t ")
-	c.Check(lexer.NextRegexp(regexp.MustCompile(`^.+`)), check.IsNil)
-	c.Check(lexer.NextRegexp(regexp.MustCompile(`^.*`))[0], equals, "")
-	c.Check(lexer.Rest(), equals, "\n")
+	if have, want := lexer.NextRegexp(regexp.MustCompile(`^\w+`))[0], "an"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextRegexp(regexp.MustCompile(`^[\w ]+`))[0], " alphanumerical 90_ "; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextRegexp(regexp.MustCompile(`^.+`))[0], "\tstring\t\t "; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have := lexer.NextRegexp(regexp.MustCompile(`^.+`)); have != nil {
+		t.Errorf("want nil, have %#v", have)
+	}
+	if have, want := lexer.NextRegexp(regexp.MustCompile(`^.*`))[0], ""; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.Rest(), "\n"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 }
 
-func (s *Suite) Test_Lexer_NextRegexp__panic(c *check.C) {
+func Test_Lexer_NextRegexp__panic(t *testing.T) {
 	lexer := NewLexer("an alphanumerical 90_ \tstring\t\t \n")
 
-	c.Check(
-		func() { lexer.NextRegexp(regexp.MustCompile(`\w+`)) },
-		check.Panics,
-		"Lexer.NextRegexp: regular expression \"\\\\w+\" must have prefix \"^\".")
+	var p string
+	func() {
+		defer func() {
+			p = recover().(string)
+		}()
+		lexer.NextRegexp(regexp.MustCompile(`\w+`))
+	}()
+	if p != "Lexer.NextRegexp: regular expression \"\\\\w+\" must have prefix \"^\"." {
+		t.Error(p)
+	}
 }
 
-func (s *Suite) Test_Lexer_Mark__beginning(c *check.C) {
+func Test_Lexer_Mark__beginning(t *testing.T) {
 	lexer := NewLexer("text")
 
 	mark := lexer.Mark()
-	c.Check(lexer.NextString("text"), equals, "text")
+	if have, want := lexer.NextString("text"), "text"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 
-	c.Check(lexer.Rest(), equals, "")
+	if have, want := lexer.Rest(), ""; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 
 	lexer.Reset(mark)
 
-	c.Check(lexer.Rest(), equals, "text")
+	if have, want := lexer.Rest(), "text"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 }
 
-func (s *Suite) Test_Lexer_Mark__middle(c *check.C) {
+func Test_Lexer_Mark__middle(t *testing.T) {
 	lexer := NewLexer("text")
 	lexer.NextString("te")
 
 	mark := lexer.Mark()
-	c.Check(lexer.NextString("x"), equals, "x")
+	if have, want := lexer.NextString("x"), "x"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 
-	c.Check(lexer.Rest(), equals, "t")
+	if have, want := lexer.Rest(), "t"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 
 	lexer.Reset(mark)
 
-	c.Check(lexer.Rest(), equals, "xt")
+	if have, want := lexer.Rest(), "xt"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 }
 
 // Demonstrates that multiple marks can be taken at the same time and that
 // the lexer can be reset to any of them in any order.
-func (s *Suite) Test_Lexer_Reset__multiple(c *check.C) {
+func Test_Lexer_Reset__multiple(t *testing.T) {
 	lexer := NewLexer("text")
 
 	mark0 := lexer.Mark()
-	c.Check(lexer.NextString("te"), equals, "te")
+	if have, want := lexer.NextString("te"), "te"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 	mark2 := lexer.Mark()
-	c.Check(lexer.NextString("x"), equals, "x")
+	if have, want := lexer.NextString("x"), "x"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 	mark3 := lexer.Mark()
-	c.Check(lexer.NextString("t"), equals, "t")
+	if have, want := lexer.NextString("t"), "t"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 	mark4 := lexer.Mark()
 
-	c.Check(lexer.Rest(), equals, "")
+	if have, want := lexer.Rest(), ""; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 
 	lexer.Reset(mark0)
 
-	c.Check(lexer.Rest(), equals, "text")
+	if have, want := lexer.Rest(), "text"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 
 	lexer.Reset(mark3)
 
-	c.Check(lexer.Rest(), equals, "t")
+	if have, want := lexer.Rest(), "t"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 
 	lexer.Reset(mark2)
 
-	c.Check(lexer.Rest(), equals, "xt")
+	if have, want := lexer.Rest(), "xt"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 
 	lexer.Reset(mark4)
 
-	c.Check(lexer.Rest(), equals, "")
+	if have, want := lexer.Rest(), ""; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 }
 
-func (s *Suite) Test_Lexer_Since(c *check.C) {
+func Test_Lexer_Since(t *testing.T) {
 	lexer := NewLexer("text")
 	mark := lexer.Mark()
 
-	c.Check(lexer.NextString("te"), equals, "te")
-	c.Check(lexer.NextString("st"), equals, "") // Did not match.
-	c.Check(lexer.Since(mark), equals, "te")
-	c.Check(lexer.NextString("xt"), equals, "xt")
-	c.Check(lexer.Since(mark), equals, "text")
+	if have, want := lexer.NextString("te"), "te"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextString("st"), ""; have != want { // Did not match.
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.Since(mark), "te"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.NextString("xt"), "xt"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.Since(mark), "text"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 }
 
-func (s *Suite) Test_Lexer_Copy(c *check.C) {
+func Test_Lexer_Copy(t *testing.T) {
 	lexer := NewLexer("text")
 	copied := lexer.Copy()
 
-	c.Check(copied.Rest(), equals, lexer.Rest())
+	if have, want := copied.Rest(), lexer.Rest(); have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 
 	copied.NextString("te")
 
-	c.Check(copied.Rest(), equals, "xt")
-	c.Check(lexer.Rest(), equals, "text") // The original is not yet affected.
+	if have, want := copied.Rest(), "xt"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have, want := lexer.Rest(), "text"; have != want { // The original is not yet affected.
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 }
 
-func (s *Suite) Test_Lexer_Commit(c *check.C) {
+func Test_Lexer_Commit(t *testing.T) {
 	lexer := NewLexer("text")
 	copied := lexer.Copy()
 	copied.NextString("te")
 
-	c.Check(lexer.Rest(), equals, "text") // The original is not yet affected.
+	if have, want := lexer.Rest(), "text"; have != want { // The original is not yet affected.
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 
 	lexer.Commit(copied)
 
-	c.Check(lexer.Rest(), equals, "xt")
+	if have, want := lexer.Rest(), "xt"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 }
 
-func (s *Suite) Test_NewByteSet(c *check.C) {
+func Test_NewByteSet(t *testing.T) {
 	set := NewByteSet("A-Za-z0-9_\xFC")
 
 	expected := "" +
+		"0123456789" +
 		"ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
+		"_" +
 		"abcdefghijklmnopqrstuvwxyz" +
-		"0123456789_\xFC"
-	for i := range 256 {
-		c.Check(
-			set.Contains(byte(i)),
-			equals,
-			strings.IndexByte(expected, byte(i)) != -1)
+		"\xFC"
+	if have, want := set.String(), expected; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
 	}
 }
 
 // Demonstrates how to specify a byte set that includes a hyphen,
 // since that character is also used for byte ranges.
 // The hyphen is written as ---, which is a range from hyphen to hyphen.
-func (s *Suite) Test_NewByteSet__range_hyphen_beginning(c *check.C) {
+func Test_NewByteSet__range_hyphen_beginning(t *testing.T) {
 	set := NewByteSet("---a-z")
 
-	var actual strings.Builder
-	for i := range 256 {
-		if set.Contains(byte(i)) {
-			actual.WriteByte(byte(i))
-		}
+	if have, want := set.String(), "-abcdefghijklmnopqrstuvwxyz"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
 	}
-
-	c.Check(actual.String(), equals, "-abcdefghijklmnopqrstuvwxyz")
 }
 
 // The byte set "x---a" is interpreted as 3 parts: "x--", "-", "a".
 //
 // The range "x--" is empty since U+0078 'x' comes later in Unicode than
 // U+002D '-'.
-func (s *Suite) Test_NewByteSet__range_hyphen_middle(c *check.C) {
+func Test_NewByteSet__range_hyphen_middle(t *testing.T) {
 	set := NewByteSet("x---a")
 
-	var actual strings.Builder
-	for i := range 256 {
-		if set.Contains(byte(i)) {
-			actual.WriteByte(byte(i))
-		}
+	if have, want := set.String(), "-a"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
 	}
-
-	c.Check(actual.String(), equals, "-a")
 }
 
 // When a hyphen is listed at the very beginning, it is not considered part
 // of a byte range but interpreted literally.
-func (s *Suite) Test_NewByteSet__hyphen_beginning(c *check.C) {
+func Test_NewByteSet__hyphen_beginning(t *testing.T) {
 	set := NewByteSet("-ax")
 
-	var actual strings.Builder
-	for i := range 256 {
-		if set.Contains(byte(i)) {
-			actual.WriteByte(byte(i))
-		}
+	if have, want := set.String(), "-ax"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
 	}
-
-	c.Check(actual.String(), equals, "-ax")
 }
 
 // When a hyphen is listed directly after a range ('+-+' in this case),
 // it is interpreted literally.
-func (s *Suite) Test_NewByteSet__hyphen_after_range(c *check.C) {
+func Test_NewByteSet__hyphen_after_range(t *testing.T) {
 	set := NewByteSet("+-+-")
 
-	var actual strings.Builder
-	for i := range 256 {
-		if set.Contains(byte(i)) {
-			actual.WriteByte(byte(i))
-		}
+	if have, want := set.String(), "+-"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
 	}
-
-	c.Check(actual.String(), equals, "+-")
 }
 
 // When a hyphen is listed at the very end, it is not considered part
 // of a byte range but interpreted literally.
-func (s *Suite) Test_NewByteSet__hyphen_end(c *check.C) {
+func Test_NewByteSet__hyphen_end(t *testing.T) {
 	set := NewByteSet("ax-")
 
-	var actual strings.Builder
-	for i := range 256 {
-		if set.Contains(byte(i)) {
-			actual.WriteByte(byte(i))
-		}
+	if have, want := set.String(), "-ax"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
 	}
-
-	c.Check(actual.String(), equals, "-ax")
 }
 
-func (s *Suite) Test_ByteSet_Inverse(c *check.C) {
+func Test_ByteSet_Inverse(t *testing.T) {
 	set := NewByteSet("A-Za-z0-9_\xFC")
 	inverse := set.Inverse()
 
 	for i := range 256 {
-		c.Check(
-			inverse.Contains(byte(i)),
-			equals,
-			!set.Contains(byte(i)))
+		if inverse.Contains(byte(i)) == set.Contains(byte(i)) {
+			t.Errorf("equal at %#v", i)
+		}
 	}
 }
 
-func (s *Suite) Test_ByteSet_Contains(c *check.C) {
+func Test_ByteSet_Contains(t *testing.T) {
 	set := NewByteSet("A-Za-z0-9_\xFC")
 
-	c.Check(set.Contains(0x00), equals, false)
-	c.Check(set.Contains('-'), equals, false)
-	c.Check(set.Contains('A'), equals, true)
-	c.Check(set.Contains('Z'), equals, true)
-	c.Check(set.Contains('['), equals, false)
-	c.Check(set.Contains(0xFC), equals, true)
-	c.Check(set.Contains(0xFD), equals, false)
+	if have, want := set.String(), "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz\xFC"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 }
 
-func (s *Suite) Test__XPrint(c *check.C) {
+func Test__XPrint(t *testing.T) {
 	set := XPrint
 
-	c.Check(set.Contains(0x00), equals, false)
-	c.Check(set.Contains(0x08), equals, false)
-	c.Check(set.Contains('\t'), equals, true)
-	c.Check(set.Contains('\n'), equals, true)
-	c.Check(set.Contains('\v'), equals, false)
-	c.Check(set.Contains(' '), equals, true)
-	c.Check(set.Contains('~'), equals, true)
-	c.Check(set.Contains(0x7F), equals, false)
-	c.Check(set.Contains(0xA0), equals, false)
+	if have, want := set.String(), "\t\n !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 }
 
-func (s *Suite) Test__Alpha(c *check.C) {
+func Test__Alpha(t *testing.T) {
 	set := Alpha
 
-	c.Check(set.Contains(0x00), equals, false)
-	c.Check(set.Contains('@'), equals, false)
-	c.Check(set.Contains('A'), equals, true)
-	c.Check(set.Contains('Z'), equals, true)
-	c.Check(set.Contains('`'), equals, false)
-	c.Check(set.Contains('a'), equals, true)
-	c.Check(set.Contains('z'), equals, true)
+	if have, want := set.String(), "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 }
 
-func (s *Suite) Test__qa(c *check.C) {
-	ck := intqa.NewQAChecker(c.Errorf)
+func Test__qa(t *testing.T) {
+	ck := intqa.NewQAChecker(t.Errorf)
 	ck.Configure("*", "*", "*", -intqa.EMissingTest)
 	ck.Check()
+}
+
+func (bs *ByteSet) String() string {
+	var actual strings.Builder
+	for i := range 256 {
+		if bs.Contains(byte(i)) {
+			actual.WriteByte(byte(i))
+		}
+	}
+	return actual.String()
 }
