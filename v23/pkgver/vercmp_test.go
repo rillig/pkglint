@@ -2,19 +2,11 @@ package pkgver
 
 import (
 	"github.com/rillig/pkglint/v23/intqa"
-	"gopkg.in/check.v1"
 	"reflect"
 	"testing"
 )
 
-type Suite struct{}
-
-func Test(t *testing.T) {
-	check.Suite(&Suite{})
-	check.TestingT(t)
-}
-
-func (s *Suite) Test_Compare(c *check.C) {
+func Test_Compare(t *testing.T) {
 	var versions = [][]string{
 		{"0pre20160620"},
 		{"0"},
@@ -46,17 +38,15 @@ func (s *Suite) Test_Compare(c *check.C) {
 	}
 
 	op := func(cmp int) string {
-		return [...]string{"<0", "==0", ">0"}[cmp+1]
+		return [...]string{"<", "=", ">"}[cmp+1]
 	}
 
 	test := func(i int, iVersion string, j int, jVersion string) {
 		actual := icmp(Compare(iVersion, jVersion), 0)
 		expected := icmp(i, j)
 		if actual != expected {
-			c.Check(
-				[]any{i, iVersion, j, jVersion, op(actual)},
-				check.DeepEquals,
-				[]any{i, iVersion, j, jVersion, op(expected)})
+			t.Errorf("want %#v %s %#v, have %s (at %#v, %#v)",
+				iVersion, op(actual), jVersion, op(expected), i, j)
 		}
 	}
 
@@ -116,13 +106,8 @@ func Test_newVersion(t *testing.T) {
 	}
 }
 
-func (s *Suite) Test_newVersion(c *check.C) {
-	// See Test_newVersion.
-	_ = c
-}
-
-func (s *Suite) Test__qa(c *check.C) {
-	ck := intqa.NewQAChecker(c.Errorf)
+func Test__qa(t *testing.T) {
+	ck := intqa.NewQAChecker(t.Errorf)
 	ck.Configure("*", "*", "*", -intqa.EMissingTest)
 	ck.Check()
 }
