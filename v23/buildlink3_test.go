@@ -1,15 +1,13 @@
 package pkglint
 
-import (
-	"gopkg.in/check.v1"
-	"testing"
-)
+import "testing"
 
 // This test ensures that CheckLinesBuildlink3Mk really checks for
 // buildlink3.mk files that are included by the buildlink3.mk file
 // but not by the package.
-func (s *Suite) Test_CheckLinesBuildlink3Mk__package(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesBuildlink3Mk__package(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("category/dependency1/buildlink3.mk",
 		MkCvsID)
@@ -30,8 +28,9 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__package(c *check.C) {
 			"by this file but not by the package.")
 }
 
-func (s *Suite) Test_CheckLinesBuildlink3Mk__unfinished_url2pkg(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesBuildlink3Mk__unfinished_url2pkg(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.CreateFileLines("x11/Xbae/Makefile")
@@ -67,8 +66,9 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__unfinished_url2pkg(c *check.C) {
 //
 // Since then, pkglint also looks at files from mk/ when they are directly
 // included, and therefore finds the default definition for PKGNAME.
-func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch_Haskell_incomplete(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesBuildlink3Mk__name_mismatch_Haskell_incomplete(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("x11/hs-X11",
 		"DISTNAME=\tX11-1.0")
@@ -102,8 +102,9 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch_Haskell_incomplete(c 
 //
 // Since then, pkglint also looks at files from mk/ when they are directly
 // included, and therefore finds the default definition for PKGNAME.
-func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch_Haskell_complete(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesBuildlink3Mk__name_mismatch_Haskell_complete(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("mk/haskell.mk",
 		MkCvsID,
@@ -134,8 +135,9 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch_Haskell_complete(c *c
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch__Perl(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesBuildlink3Mk__name_mismatch__Perl(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("x11/p5-gtk2",
 		"DISTNAME=\tGtk2-1.0",
@@ -167,8 +169,9 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch__Perl(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch__lib(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesBuildlink3Mk__name_mismatch__lib(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("converters/libiconv")
 	t.CreateFileLines("converters/libiconv/buildlink3.mk",
@@ -199,8 +202,9 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch__lib(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch__version_ok(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesBuildlink3Mk__name_mismatch__version_ok(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("editors/emacs25",
 		"PKGNAME=\temacs25-25.0")
@@ -232,8 +236,9 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch__version_ok(c *check.
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch__version_bad(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesBuildlink3Mk__name_mismatch__version_bad(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("editors/emacs-client",
 		"PKGNAME=\temacs-client-22.0")
@@ -261,8 +266,9 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch__version_bad(c *check
 			"and \"emacs-client\" from Makefile:4.")
 }
 
-func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch_multiple_inclusion(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesBuildlink3Mk__name_mismatch_multiple_inclusion(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("buildlink3.mk",
@@ -285,8 +291,9 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch_multiple_inclusion(c 
 		"WARN: buildlink3.mk:9: Definition of BUILDLINK_API_DEPENDS is missing.")
 }
 
-func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch_abi_api(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesBuildlink3Mk__name_mismatch_abi_api(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("buildlink3.mk",
@@ -313,8 +320,9 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__name_mismatch_abi_api(c *check.C) {
 		"WARN: buildlink3.mk:10: Only buildlink variables for \"hs-X11\", not \"hs-X12\" may be set in this file.")
 }
 
-func (s *Suite) Test_CheckLinesBuildlink3Mk__abi_api_versions(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesBuildlink3Mk__abi_api_versions(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("buildlink3.mk",
@@ -338,8 +346,9 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__abi_api_versions(c *check.C) {
 		"WARN: buildlink3.mk:9: ABI version \"1.6.0\" should be at least API version \"1.6.1\" (see line 8).")
 }
 
-func (s *Suite) Test_CheckLinesBuildlink3Mk__missing_BUILDLINK_TREE_at_beginning(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesBuildlink3Mk__missing_BUILDLINK_TREE_at_beginning(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("buildlink3.mk",
@@ -357,8 +366,9 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__missing_BUILDLINK_TREE_at_beginning
 
 // In buildlink3.mk files, there is no need to place any comments
 // in the autogenerated code, therefore this warning is justified.
-func (s *Suite) Test_CheckLinesBuildlink3Mk__missing_BUILDLINK_TREE_at_end(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesBuildlink3Mk__missing_BUILDLINK_TREE_at_end(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("buildlink3.mk",
@@ -383,8 +393,9 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__missing_BUILDLINK_TREE_at_end(c *ch
 		"WARN: buildlink3.mk:13: This line should consist of the following text: BUILDLINK_TREE+=\t-hs-X11")
 }
 
-func (s *Suite) Test_CheckLinesBuildlink3Mk__DEPMETHOD_placement(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesBuildlink3Mk__DEPMETHOD_placement(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("buildlink3.mk",
@@ -410,8 +421,9 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__DEPMETHOD_placement(c *check.C) {
 		"WARN: buildlink3.mk:3: This line belongs inside the .ifdef block.")
 }
 
-func (s *Suite) Test_CheckLinesBuildlink3Mk__multiple_inclusion_wrong(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesBuildlink3Mk__multiple_inclusion_wrong(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("buildlink3.mk",
@@ -431,8 +443,9 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__multiple_inclusion_wrong(c *check.C
 		"WARN: buildlink3.mk:6: This line should consist of the following text: HS_X11_BUILDLINK3_MK:=")
 }
 
-func (s *Suite) Test_CheckLinesBuildlink3Mk__missing_endif(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesBuildlink3Mk__missing_endif(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("buildlink3.mk",
@@ -450,8 +463,9 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__missing_endif(c *check.C) {
 		"NOTE: buildlink3.mk:6: Empty line expected below this line.")
 }
 
-func (s *Suite) Test_CheckLinesBuildlink3Mk__invalid_dependency_patterns(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesBuildlink3Mk__invalid_dependency_patterns(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("buildlink3.mk",
@@ -477,8 +491,9 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__invalid_dependency_patterns(c *chec
 		"ERROR: buildlink3.mk:10: Invalid package pattern \"hs-X11!=1.6.1.2nb2\".")
 }
 
-func (s *Suite) Test_CheckLinesBuildlink3Mk__PKG_OPTIONS(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesBuildlink3Mk__PKG_OPTIONS(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpOption("option", "")
 	t.SetUpPkgsrc()
@@ -497,8 +512,9 @@ func (s *Suite) Test_CheckLinesBuildlink3Mk__PKG_OPTIONS(c *check.C) {
 }
 
 // Just for branch coverage.
-func (s *Suite) Test_Buildlink3Checker_Check__no_tracing(c *check.C) {
-	t := s.Init(c)
+func Test_Buildlink3Checker_Check__no_tracing(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileBuildlink3("category/package/buildlink3.mk")
@@ -510,8 +526,9 @@ func (s *Suite) Test_Buildlink3Checker_Check__no_tracing(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Buildlink3Checker_checkFirstParagraph__comment_before_tree(c *check.C) {
-	t := s.Init(c)
+func Test_Buildlink3Checker_checkFirstParagraph__comment_before_tree(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.SetUpPackage("category/package")
@@ -539,8 +556,9 @@ func (s *Suite) Test_Buildlink3Checker_checkFirstParagraph__comment_before_tree(
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Buildlink3Checker_checkUniquePkgbase(c *check.C) {
-	t := s.Init(c)
+func Test_Buildlink3Checker_checkUniquePkgbase(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	G.InterPackage.Enable()
 
@@ -592,8 +610,9 @@ func (s *Suite) Test_Buildlink3Checker_checkUniquePkgbase(c *check.C) {
 		nil...)
 }
 
-func (s *Suite) Test_Buildlink3Checker_checkUniquePkgbase__chdir(c *check.C) {
-	t := s.Init(c)
+func Test_Buildlink3Checker_checkUniquePkgbase__chdir(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	G.InterPackage.Enable()
 	t.Chdir("lang/php56")
@@ -616,8 +635,9 @@ func (s *Suite) Test_Buildlink3Checker_checkUniquePkgbase__chdir(c *check.C) {
 		nil...)
 }
 
-func (s *Suite) Test_Buildlink3Checker_checkSecondParagraph__missing_mkbase(c *check.C) {
-	t := s.Init(c)
+func Test_Buildlink3Checker_checkSecondParagraph__missing_mkbase(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		"DISTNAME=\t# empty",
@@ -635,8 +655,9 @@ func (s *Suite) Test_Buildlink3Checker_checkSecondParagraph__missing_mkbase(c *c
 		"WARN: ~/category/package/Makefile:4: \"\" is not a valid package name.")
 }
 
-func (s *Suite) Test_Buildlink3Checker_checkPkgbaseMismatch(c *check.C) {
-	t := s.Init(c)
+func Test_Buildlink3Checker_checkPkgbaseMismatch(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileBuildlink3Id("category/package/buildlink3.mk", "unrelated")
@@ -650,8 +671,9 @@ func (s *Suite) Test_Buildlink3Checker_checkPkgbaseMismatch(c *check.C) {
 			"in this file and \"package\" from Makefile:3.")
 }
 
-func (s *Suite) Test_Buildlink3Checker_checkMainPart__if_else_endif(c *check.C) {
-	t := s.Init(c)
+func Test_Buildlink3Checker_checkMainPart__if_else_endif(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileBuildlink3("category/package/buildlink3.mk",
@@ -670,8 +692,9 @@ func (s *Suite) Test_Buildlink3Checker_checkMainPart__if_else_endif(c *check.C) 
 // The buildlink3 checker does not use MkLines.ForEach since that would make
 // the code more difficult to understand. Without MkLines.ForEach, it has to
 // keep track of the nesting depth of .if directives itself.
-func (s *Suite) Test_Buildlink3Checker_checkMainPart__nested_if(c *check.C) {
-	t := s.Init(c)
+func Test_Buildlink3Checker_checkMainPart__nested_if(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.Chdir("category/package")
@@ -701,8 +724,9 @@ func (s *Suite) Test_Buildlink3Checker_checkMainPart__nested_if(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Buildlink3Checker_checkMainPart__comment_at_end_of_file(c *check.C) {
-	t := s.Init(c)
+func Test_Buildlink3Checker_checkMainPart__comment_at_end_of_file(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.SetUpFileMkLines("category/package/buildlink3.mk",
@@ -728,8 +752,9 @@ func (s *Suite) Test_Buildlink3Checker_checkMainPart__comment_at_end_of_file(c *
 		"WARN: ~/category/package/buildlink3.mk:14: The file should end here.")
 }
 
-func (s *Suite) Test_Buildlink3Checker_checkExpr__PKG_BUILD_OPTIONS(c *check.C) {
-	t := s.Init(c)
+func Test_Buildlink3Checker_checkExpr__PKG_BUILD_OPTIONS(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpOption("option", "")
 	t.SetUpPkgsrc()
@@ -765,8 +790,9 @@ func (s *Suite) Test_Buildlink3Checker_checkExpr__PKG_BUILD_OPTIONS(c *check.C) 
 // different than the pkg_* tools.
 // In all but two cases this works, this is one of the exceptions.
 // The "{totem,totem-xine}" cannot be parsed, therefore the check is skipped.
-func (s *Suite) Test_Buildlink3Checker_checkVarassign__abi_api_versions_brace(c *check.C) {
-	t := s.Init(c)
+func Test_Buildlink3Checker_checkVarassign__abi_api_versions_brace(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.CreateFileLines("multimedia/totem/Makefile")
@@ -793,8 +819,9 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__abi_api_versions_brace(c 
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Buildlink3Checker_checkVarassign__dependencies_with_path(c *check.C) {
-	t := s.Init(c)
+func Test_Buildlink3Checker_checkVarassign__dependencies_with_path(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileBuildlink3("category/package/buildlink3.mk",
@@ -813,8 +840,9 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__dependencies_with_path(c 
 			"Package pattern \"package>=1.5\" is followed by extra text \":../../category/package\".")
 }
 
-func (s *Suite) Test_Buildlink3Checker_checkVarassign__abi_without_api(c *check.C) {
-	t := s.Init(c)
+func Test_Buildlink3Checker_checkVarassign__abi_without_api(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	// t.CreateFileBuildlink3() cannot be used here since it always adds an API line.
@@ -842,8 +870,9 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__abi_without_api(c *check.
 		"WARN: ~/category/package/buildlink3.mk:13: Definition of BUILDLINK_API_DEPENDS is missing.")
 }
 
-func (s *Suite) Test_Buildlink3Checker_checkVarassign__abi_and_api_with_variables(c *check.C) {
-	t := s.Init(c)
+func Test_Buildlink3Checker_checkVarassign__abi_and_api_with_variables(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileBuildlink3("category/package/buildlink3.mk",
@@ -860,8 +889,9 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__abi_and_api_with_variable
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Buildlink3Checker_checkVarassign__api_with_variable(c *check.C) {
-	t := s.Init(c)
+func Test_Buildlink3Checker_checkVarassign__api_with_variable(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileBuildlink3("category/package/buildlink3.mk",
@@ -877,8 +907,9 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__api_with_variable(c *chec
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Buildlink3Checker_checkVarassign__abi_and_api_with_pattern(c *check.C) {
-	t := s.Init(c)
+func Test_Buildlink3Checker_checkVarassign__abi_and_api_with_pattern(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileBuildlink3("category/package/buildlink3.mk",
@@ -893,8 +924,9 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__abi_and_api_with_pattern(
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Buildlink3Checker_checkVarassign__api_with_pattern(c *check.C) {
-	t := s.Init(c)
+func Test_Buildlink3Checker_checkVarassign__api_with_pattern(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileBuildlink3("category/package/buildlink3.mk",
@@ -909,8 +941,9 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__api_with_pattern(c *check
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Buildlink3Checker_checkVarassign__other_variables(c *check.C) {
-	t := s.Init(c)
+func Test_Buildlink3Checker_checkVarassign__other_variables(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileBuildlink3("category/package/buildlink3.mk",
@@ -931,8 +964,9 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassign__other_variables(c *check.
 			"not \"other\" may be set in this file.")
 }
 
-func (s *Suite) Test_Buildlink3Checker_checkVarassignPkgsrcdir(c *check.C) {
-	t := s.Init(c)
+func Test_Buildlink3Checker_checkVarassignPkgsrcdir(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.SetUpPackage("category/other-package")
@@ -951,8 +985,9 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassignPkgsrcdir(c *check.C) {
 }
 
 // An indirect BUILDLINK_PKGSRCDIR is used in editors/emacs, among others.
-func (s *Suite) Test_Buildlink3Checker_checkVarassignPkgsrcdir__var(c *check.C) {
-	t := s.Init(c)
+func Test_Buildlink3Checker_checkVarassignPkgsrcdir__var(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.SetUpPackage("category/other-package")
@@ -967,8 +1002,9 @@ func (s *Suite) Test_Buildlink3Checker_checkVarassignPkgsrcdir__var(c *check.C) 
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Buildlink3Checker_checkExprInPkgbase__PKGBASE_with_variable_PHP_PKG_PREFIX(c *check.C) {
-	t := s.Init(c)
+func Test_Buildlink3Checker_checkExprInPkgbase__PKGBASE_with_variable_PHP_PKG_PREFIX(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.Chdir(".")
@@ -1003,8 +1039,9 @@ func (s *Suite) Test_Buildlink3Checker_checkExprInPkgbase__PKGBASE_with_variable
 			"(also in other variables in this file).")
 }
 
-func (s *Suite) Test_Buildlink3Checker_checkExprInPkgbase__PKGBASE_with_variable_PYPKGPREFIX(c *check.C) {
-	t := s.Init(c)
+func Test_Buildlink3Checker_checkExprInPkgbase__PKGBASE_with_variable_PYPKGPREFIX(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.Chdir(".")
@@ -1039,8 +1076,9 @@ func (s *Suite) Test_Buildlink3Checker_checkExprInPkgbase__PKGBASE_with_variable
 			"(also in other variables in this file).")
 }
 
-func (s *Suite) Test_Buildlink3Checker_checkExprInPkgbase__PKGBASE_with_variable_RUBY_BASE(c *check.C) {
-	t := s.Init(c)
+func Test_Buildlink3Checker_checkExprInPkgbase__PKGBASE_with_variable_RUBY_BASE(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.Chdir(".")
@@ -1075,8 +1113,9 @@ func (s *Suite) Test_Buildlink3Checker_checkExprInPkgbase__PKGBASE_with_variable
 			"(also in other variables in this file).")
 }
 
-func (s *Suite) Test_Buildlink3Checker_checkExprInPkgbase__PKGBASE_with_variable_RUBY_PKGPREFIX(c *check.C) {
-	t := s.Init(c)
+func Test_Buildlink3Checker_checkExprInPkgbase__PKGBASE_with_variable_RUBY_PKGPREFIX(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.Chdir(".")
@@ -1111,8 +1150,9 @@ func (s *Suite) Test_Buildlink3Checker_checkExprInPkgbase__PKGBASE_with_variable
 			"(also in other variables in this file).")
 }
 
-func (s *Suite) Test_Buildlink3Checker_checkExprInPkgbase__PKGBASE_with_unknown_variable(c *check.C) {
-	t := s.Init(c)
+func Test_Buildlink3Checker_checkExprInPkgbase__PKGBASE_with_unknown_variable(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.Chdir(".")
@@ -1149,8 +1189,9 @@ func (s *Suite) Test_Buildlink3Checker_checkExprInPkgbase__PKGBASE_with_unknown_
 			"(also in other variables in this file).")
 }
 
-func (s *Suite) Test_LoadBuildlink3Data(c *check.C) {
-	t := s.Init(c)
+func Test_LoadBuildlink3Data(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileBuildlink3("category/package/buildlink3.mk",
 		"BUILDLINK_ABI_DEPENDS.package+=\tpackage>=0.1",
