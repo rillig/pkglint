@@ -4,20 +4,24 @@ import (
 	"encoding/json"
 	"github.com/rillig/pkglint/v23/intqa"
 	"github.com/rillig/pkglint/v23/textproc"
-	"gopkg.in/check.v1"
+	"reflect"
 	"strings"
 	"testing"
 )
 
-type Suite struct{}
-
-func (s *Suite) Test_Parse(c *check.C) {
+func Test_Parse(t *testing.T) {
 	test := func(cond string, expected string) {
-		c.Check(toJSON(Parse(cond)), check.Equals, expected)
+		have := toJSON(Parse(cond))
+		if have != expected {
+			t.Error(expected, have)
+		}
 	}
 
 	testDeep := func(cond string, expected *Condition) {
-		c.Check(Parse(cond), check.DeepEquals, expected)
+		have := Parse(cond)
+		if !reflect.DeepEqual(have, expected) {
+			t.Error(expected, have)
+		}
 	}
 
 	testDeep("gnu-gpl-v2", NewName("gnu-gpl-v2"))
@@ -51,42 +55,44 @@ func (s *Suite) Test_Parse(c *check.C) {
 	test("a AND b OR c AND d", "{And:true,Or:true,Children:[{Name:a},{Name:b},{Name:c},{Name:d}]}")
 	test("((a AND (b AND c)))", "{Paren:{Children:[{Paren:{And:true,Children:[{Name:a},{Paren:{And:true,Children:[{Name:b},{Name:c}]}}]}}]}}")
 
-	c.Check(Parse("a AND b OR c AND d").String(), check.Equals, "a MIXED b MIXED c MIXED d")
-
-	c.Check(Parse("AND artistic"), check.IsNil)
-
-	c.Check(Parse("invalid/character"), check.IsNil)
+	if have, want := Parse("a AND b OR c AND d").String(), "a MIXED b MIXED c MIXED d"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+	if have := Parse("AND artistic"); have != nil {
+		t.Errorf("have %#v", have)
+	}
+	if have := Parse("invalid/character"); have != nil {
+		t.Errorf("have %#v", have)
+	}
 }
 
-func (s *Suite) Test_Condition_String(c *check.C) {
-	c.Check(
-		NewName("a").String(),
-		check.Equals,
-		"a")
+func Test_Condition_String(t *testing.T) {
+	if have, want := NewName("a").String(), "a"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 
-	c.Check(
-		NewAnd(NewName("a"), NewName("b")).String(),
-		check.Equals,
-		"a AND b")
+	if have, want := NewAnd(NewName("a"), NewName("b")).String(), "a AND b"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 
-	c.Check(
-		NewOr(NewName("a"), NewName("b")).String(),
-		check.Equals,
-		"a OR b")
+	if have, want := NewOr(NewName("a"), NewName("b")).String(), "a OR b"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 
-	c.Check(
-		NewAnd(
-			NewParen(NewOr(NewName("a"), NewName("b"))),
-			NewParen(NewOr(NewName("c"), NewName("d")))).String(),
-		check.Equals,
-		"(a OR b) AND (c OR d)")
+	if have, want := NewAnd(
+		NewParen(NewOr(NewName("a"), NewName("b"))),
+		NewParen(NewOr(NewName("c"), NewName("d")))).String(), "(a OR b) AND (c OR d)"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 
 	mixed := NewAnd(NewName("a"), NewName("b"), NewName("c"))
 	mixed.Or = true
-	c.Check(mixed.String(), check.Equals, "a MIXED b MIXED c")
+	if have, want := mixed.String(), "a MIXED b MIXED c"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 }
 
-func (s *Suite) Test_Condition_Walk(c *check.C) {
+func Test_Condition_Walk(t *testing.T) {
 	condition := Parse("(a OR b) AND (c AND d)")
 
 	var out []string
@@ -107,23 +113,31 @@ func (s *Suite) Test_Condition_Walk(c *check.C) {
 		}
 	})
 
-	c.Check(out, check.DeepEquals, []string{"a", "b", "OR", "()", "c", "d", "AND", "()", "AND"})
+	if have, want := out, []string{"a", "b", "OR", "()", "c", "d", "AND", "()", "AND"}; !reflect.DeepEqual(have, want) {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 }
 
-func (s *Suite) Test_licenseLexer_Lex(c *check.C) {
+func Test_licenseLexer_Lex(t *testing.T) {
 
 	test := func(text string, tokenType int) {
 		lexer := &licenseLexer{lexer: textproc.NewLexer(text)}
 		var token liyySymType
 		lex := lexer.Lex(&token)
-		c.Check(lex, check.Equals, tokenType)
+		if have, want := lex, tokenType; have != want {
+			t.Errorf("want %#v, have %#v", want, have)
+		}
 	}
 	testName := func(text string, name string) {
 		lexer := &licenseLexer{lexer: textproc.NewLexer(text)}
 		var token liyySymType
 		lex := lexer.Lex(&token)
-		c.Check(lex, check.Equals, ltNAME)
-		c.Check(token.Node.Name, check.Equals, name)
+		if have, want := lex, ltNAME; have != want {
+			t.Errorf("want %#v, have %#v", want, have)
+		}
+		if have, want := token.Node.Name, name; have != want {
+			t.Errorf("want %#v, have %#v", want, have)
+		}
 	}
 
 	test("", 0)
@@ -161,13 +175,8 @@ func toJSON(cond *Condition) string {
 	return strings.Replace(string(jsonStr), "\"", "", -1)
 }
 
-func Test(t *testing.T) {
-	check.Suite(new(Suite))
-	check.TestingT(t)
-}
-
-func (s *Suite) Test__qa(c *check.C) {
-	ck := intqa.NewQAChecker(c.Errorf)
+func Test__qa(t *testing.T) {
+	ck := intqa.NewQAChecker(t.Errorf)
 	ck.Configure("*", "*", "*", -intqa.EMissingTest)
 	ck.Check()
 }
