@@ -3,17 +3,8 @@ package trace
 import (
 	"bytes"
 	"github.com/rillig/pkglint/v23/intqa"
-	"gopkg.in/check.v1"
 	"testing"
 )
-
-type Suite struct {
-	Tracer Tracer
-}
-
-var _ = check.Suite(new(Suite))
-
-func Test(t *testing.T) { check.TestingT(t) }
 
 func (t *Tracer) onlyArguments(args ...any) {
 	defer t.Call(args...)()
@@ -32,49 +23,55 @@ func (t *Tracer) argumentsAndResultWrong(arg0 string, arg1 int) (result string) 
 	return "the result"
 }
 
-func (s *Suite) Test_Tracer_Call__only_arguments(c *check.C) {
-	tracer := &s.Tracer
+func Test_Tracer_Call__only_arguments(t *testing.T) {
+	var tracer Tracer
 
-	output := s.captureTracingOutput(func() {
+	output := captureTracingOutput(&tracer, func() {
 		tracer.onlyArguments("arg0", 1234)
 	})
 
-	c.Check(output, check.Equals, ""+
+	if have, want := output, ""+
 		"TRACE: + github.com/rillig/pkglint/v23/trace.(*Tracer).onlyArguments(\"arg0\", 1234)\n"+
 		"TRACE: 1   Running \"code\"\n"+
-		"TRACE: - github.com/rillig/pkglint/v23/trace.(*Tracer).onlyArguments(\"arg0\", 1234)\n")
+		"TRACE: - github.com/rillig/pkglint/v23/trace.(*Tracer).onlyArguments(\"arg0\", 1234)\n"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 }
 
-func (s *Suite) Test_Tracer_Call__arguments_and_result(c *check.C) {
-	tracer := &s.Tracer
+func Test_Tracer_Call__arguments_and_result(t *testing.T) {
+	var tracer Tracer
 
-	output := s.captureTracingOutput(func() {
+	output := captureTracingOutput(&tracer, func() {
 		tracer.argumentsAndResult("arg0", 1234)
 	})
 
-	c.Check(output, check.Equals, ""+
+	if have, want := output, ""+
 		"TRACE: + github.com/rillig/pkglint/v23/trace.(*Tracer).argumentsAndResult(\"arg0\", 1234)\n"+
 		"TRACE: 1   Running \"code\"\n"+
-		"TRACE: - github.com/rillig/pkglint/v23/trace.(*Tracer).argumentsAndResult(\"arg0\", 1234, \"=>\", \"the result\")\n")
+		"TRACE: - github.com/rillig/pkglint/v23/trace.(*Tracer).argumentsAndResult(\"arg0\", 1234, \"=>\", \"the result\")\n"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 }
 
-func (s *Suite) Test_Tracer_Call__arguments_and_result_wrong(c *check.C) {
-	tracer := &s.Tracer
+func Test_Tracer_Call__arguments_and_result_wrong(t *testing.T) {
+	var tracer Tracer
 
-	output := s.captureTracingOutput(func() {
+	output := captureTracingOutput(&tracer, func() {
 		tracer.argumentsAndResultWrong("arg0", 1234)
 	})
 
-	c.Check(output, check.Equals, ""+
+	if have, want := output, ""+
 		"TRACE: + github.com/rillig/pkglint/v23/trace.(*Tracer).argumentsAndResultWrong(\"arg0\", 1234, \"\")\n"+
 		"TRACE: 1   Running \"code\"\n"+
-		"TRACE: - github.com/rillig/pkglint/v23/trace.(*Tracer).argumentsAndResultWrong(\"arg0\", 1234, \"\")\n")
+		"TRACE: - github.com/rillig/pkglint/v23/trace.(*Tracer).argumentsAndResultWrong(\"arg0\", 1234, \"\")\n"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 }
 
-func (s *Suite) Test__fixed_argument_variants(c *check.C) {
-	tracer := &s.Tracer
+func Test__fixed_argument_variants(t *testing.T) {
+	var tracer Tracer
 
-	output := s.captureTracingOutput(func() {
+	output := captureTracingOutput(&tracer, func() {
 		defer tracer.Call0()()
 		defer tracer.Call1("x")()
 		defer tracer.Call2("x", "y")()
@@ -82,62 +79,78 @@ func (s *Suite) Test__fixed_argument_variants(c *check.C) {
 		tracer.Step2("step %s, %s", "a", "b")
 	})
 
-	c.Check(output, check.Equals, ""+
-		"TRACE: + github.com/rillig/pkglint/v23/trace.(*Suite).Test__fixed_argument_variants.func1()\n"+
-		"TRACE: 1 + github.com/rillig/pkglint/v23/trace.(*Suite).Test__fixed_argument_variants.func1(\"x\")\n"+
-		"TRACE: 1 2 + github.com/rillig/pkglint/v23/trace.(*Suite).Test__fixed_argument_variants.func1(\"x\", \"y\")\n"+
+	if have, want := output, ""+
+		"TRACE: + github.com/rillig/pkglint/v23/trace.Test__fixed_argument_variants.func1()\n"+
+		"TRACE: 1 + github.com/rillig/pkglint/v23/trace.Test__fixed_argument_variants.func1(\"x\")\n"+
+		"TRACE: 1 2 + github.com/rillig/pkglint/v23/trace.Test__fixed_argument_variants.func1(\"x\", \"y\")\n"+
 		"TRACE: 1 2 3   step a\n"+
 		"TRACE: 1 2 3   step a, b\n"+
-		"TRACE: 1 2 - github.com/rillig/pkglint/v23/trace.(*Suite).Test__fixed_argument_variants.func1(\"x\", \"y\")\n"+
-		"TRACE: 1 - github.com/rillig/pkglint/v23/trace.(*Suite).Test__fixed_argument_variants.func1(\"x\")\n"+
-		"TRACE: - github.com/rillig/pkglint/v23/trace.(*Suite).Test__fixed_argument_variants.func1()\n")
+		"TRACE: 1 2 - github.com/rillig/pkglint/v23/trace.Test__fixed_argument_variants.func1(\"x\", \"y\")\n"+
+		"TRACE: 1 - github.com/rillig/pkglint/v23/trace.Test__fixed_argument_variants.func1(\"x\")\n"+
+		"TRACE: - github.com/rillig/pkglint/v23/trace.Test__fixed_argument_variants.func1()\n"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 }
 
-func (s *Suite) Test_Tracer_Call__Stringer_arg(c *check.C) {
-	tracer := &s.Tracer
+func Test_Tracer_Call__Stringer_arg(t *testing.T) {
+	var tracer Tracer
 
-	output := s.captureTracingOutput(func() {
+	output := captureTracingOutput(&tracer, func() {
 		defer tracer.Call(stringer{}, &stringer{})()
 	})
 
-	c.Check(output, check.Equals, ""+
-		"TRACE: + github.com/rillig/pkglint/v23/trace.(*Suite).Test_Tracer_Call__Stringer_arg.func1(It's a string, It's a string)\n"+
-		"TRACE: - github.com/rillig/pkglint/v23/trace.(*Suite).Test_Tracer_Call__Stringer_arg.func1(It's a string, It's a string)\n")
+	if have, want := output, ""+
+		"TRACE: + github.com/rillig/pkglint/v23/trace.Test_Tracer_Call__Stringer_arg.func1(It's a string, It's a string)\n"+
+		"TRACE: - github.com/rillig/pkglint/v23/trace.Test_Tracer_Call__Stringer_arg.func1(It's a string, It's a string)\n"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 }
 
-func (s *Suite) Test_Tracer_Call__GoStringer_arg(c *check.C) {
-	tracer := &s.Tracer
+func Test_Tracer_Call__GoStringer_arg(t *testing.T) {
+	var tracer Tracer
 
-	output := s.captureTracingOutput(func() {
+	output := captureTracingOutput(&tracer, func() {
 		defer tracer.Call(goStringer{}, &goStringer{})()
 	})
 
-	c.Check(output, check.Equals, ""+
-		"TRACE: + github.com/rillig/pkglint/v23/trace.(*Suite).Test_Tracer_Call__GoStringer_arg.func1(\"It's a string\", \"It's a string\")\n"+
-		"TRACE: - github.com/rillig/pkglint/v23/trace.(*Suite).Test_Tracer_Call__GoStringer_arg.func1(\"It's a string\", \"It's a string\")\n")
+	if have, want := output, ""+
+		"TRACE: + github.com/rillig/pkglint/v23/trace.Test_Tracer_Call__GoStringer_arg.func1(\"It's a string\", \"It's a string\")\n"+
+		"TRACE: - github.com/rillig/pkglint/v23/trace.Test_Tracer_Call__GoStringer_arg.func1(\"It's a string\", \"It's a string\")\n"; have != want {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 }
 
-func (s *Suite) Test_Tracer_traceCall__panic(c *check.C) {
-	tracer := &s.Tracer
+func Test_Tracer_traceCall__panic(t *testing.T) {
+	var tracer Tracer
 
-	c.Check(
-		func() { tracer.traceCall() },
-		check.Panics,
-		"Internal pkglint error: calls to trace.Call must only occur in tracing mode")
+	var p any
+	func() {
+		defer func() {
+			p = recover()
+		}()
+		tracer.traceCall()
+	}()
+	if p != "Internal pkglint error: calls to trace.Call must only occur in tracing mode" {
+		t.Error(p)
+	}
 }
 
-func (s *Suite) Test_Tracer_Result__panic(c *check.C) {
-	tracer := &s.Tracer
+func Test_Tracer_Result__panic(t *testing.T) {
+	var tracer Tracer
 
-	c.Check(
-		func() { tracer.Result("invalid argument") },
-		check.Panics,
-		"Result must be called with a pointer to the result, not \"invalid argument\".")
+	var p any
+	func() {
+		defer func() {
+			p = recover()
+		}()
+		tracer.Result("invalid argument")
+	}()
+	if p != "Result must be called with a pointer to the result, not \"invalid argument\"." {
+		t.Error(p)
+	}
 }
 
-func (s *Suite) captureTracingOutput(action func()) string {
-	tracer := &s.Tracer
-
+func captureTracingOutput(tracer *Tracer, action func()) string {
 	out := bytes.Buffer{}
 	tracer.Out = &out
 	tracer.Tracing = true
