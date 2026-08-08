@@ -2,14 +2,15 @@ package pkglint
 
 import (
 	"github.com/rillig/pkglint/v23/regex"
-	"gopkg.in/check.v1"
 	"os"
 	"runtime"
 	"strings"
+	"testing"
 )
 
-func (s *Suite) Test_Autofix__default_also_updates_line(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix__default_also_updates_line(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--source")
 	mklines := t.SetUpFileMkLines("Makefile",
@@ -35,8 +36,9 @@ func (s *Suite) Test_Autofix__default_also_updates_line(c *check.C) {
 	t.CheckEquals(fix.modified, true)
 }
 
-func (s *Suite) Test_Autofix__show_autofix_modifies_line(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix__show_autofix_modifies_line(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--source", "--show-autofix")
 	mklines := t.SetUpFileMkLines("Makefile",
@@ -69,8 +71,9 @@ func (s *Suite) Test_Autofix__show_autofix_modifies_line(c *check.C) {
 	t.CheckEquals(fix.modified, true)
 }
 
-func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix__multiple_fixes(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	newRawLines := func(texts ...string) []*RawLine {
 		var rawLines []*RawLine
@@ -141,8 +144,9 @@ func (s *Suite) Test_Autofix__multiple_fixes(c *check.C) {
 
 // Up to 2018-11-25, pkglint in some cases logged only the source without
 // a corresponding warning.
-func (s *Suite) Test_Autofix__lonely_source(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix__lonely_source(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--source")
 	G.Logger.verbose = false // For realistic conditions; otherwise all diagnostics are logged.
@@ -175,8 +179,9 @@ func (s *Suite) Test_Autofix__lonely_source(c *check.C) {
 
 // Up to 2018-11-26, pkglint in some cases logged only the source without
 // a corresponding warning.
-func (s *Suite) Test_Autofix__lonely_source_2(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix__lonely_source_2(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--source", "--explain")
 	G.Logger.verbose = false // For realistic conditions; otherwise all diagnostics are logged.
@@ -220,8 +225,9 @@ func (s *Suite) Test_Autofix__lonely_source_2(c *check.C) {
 		"")
 }
 
-func (s *Suite) Test_Autofix__show_autofix_and_source_continuation_line(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix__show_autofix_and_source_continuation_line(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--show-autofix", "--source")
 	mklines := t.SetUpFileMkLines("Makefile",
@@ -256,8 +262,9 @@ func (s *Suite) Test_Autofix__show_autofix_and_source_continuation_line(c *check
 // This is typical when an autofix is provided for simple scenarios,
 // but the code actually found is a little more complicated, like needing
 // special escaping for some of the characters or containing linebreaks.
-func (s *Suite) Test_Autofix__show_unfixable_diagnostics_in_default_mode(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix__show_unfixable_diagnostics_in_default_mode(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--source")
 	lines := t.NewLines("Makefile",
@@ -292,8 +299,9 @@ func (s *Suite) Test_Autofix__show_unfixable_diagnostics_in_default_mode(c *chec
 
 // Demonstrates that the --show-autofix option only shows those diagnostics
 // that would be fixed.
-func (s *Suite) Test_Autofix__suppress_unfixable_warnings_with_show_autofix(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix__suppress_unfixable_warnings_with_show_autofix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--show-autofix", "--source")
 	lines := t.NewLines("Makefile",
@@ -327,8 +335,9 @@ func (s *Suite) Test_Autofix__suppress_unfixable_warnings_with_show_autofix(c *c
 }
 
 // If an Autofix doesn't do anything, it nevertheless logs the diagnostics.
-func (s *Suite) Test_Autofix__noop_replace(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix__noop_replace(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("Makefile", 14, "Original text")
 
@@ -351,8 +360,9 @@ func (s *Suite) Test_Autofix__noop_replace(c *check.C) {
 
 // Contrary to Line.Autofix(), the NewAutofix constructor does not check
 // whether the previous autofix is already finished, since it cannot know.
-func (s *Suite) Test_NewAutofix(c *check.C) {
-	t := s.Init(c)
+func Test_NewAutofix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("filename.mk", 123, "")
 
@@ -363,8 +373,9 @@ func (s *Suite) Test_NewAutofix(c *check.C) {
 	t.CheckDeepEquals(fix2, fix)
 }
 
-func (s *Suite) Test_Autofix_Rationale(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Rationale(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
@@ -383,8 +394,9 @@ func (s *Suite) Test_Autofix_Rationale(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Autofix_SuppressRationaleExplanation(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_SuppressRationaleExplanation(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--explain")
 
@@ -407,8 +419,9 @@ func (s *Suite) Test_Autofix_SuppressRationaleExplanation(c *check.C) {
 		"")
 }
 
-func (s *Suite) Test_Autofix_Errorf(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Errorf(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("DESCR", 1, "Description of the package")
 
@@ -420,8 +433,9 @@ func (s *Suite) Test_Autofix_Errorf(c *check.C) {
 		"ERROR: DESCR:1: Error.")
 }
 
-func (s *Suite) Test_Autofix_Warnf__duplicate(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Warnf__duplicate(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("DESCR", 1, "Description of the package")
 
@@ -430,8 +444,9 @@ func (s *Suite) Test_Autofix_Warnf__duplicate(c *check.C) {
 	t.ExpectAssert(func() { fix.Warnf("Warning 2.") })
 }
 
-func (s *Suite) Test_Autofix_Notef(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Notef(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("DESCR", 1, "Description of the package")
 
@@ -443,8 +458,9 @@ func (s *Suite) Test_Autofix_Notef(c *check.C) {
 		"NOTE: DESCR:1: Note.")
 }
 
-func (s *Suite) Test_Autofix_Silent(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Silent(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--show-autofix")
 
@@ -460,8 +476,9 @@ func (s *Suite) Test_Autofix_Silent(c *check.C) {
 	t.CheckEquals(line.fix.texts[0], "Description of the replaced package\n")
 }
 
-func (s *Suite) Test_Autofix_Explain__without_explain_option(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Explain__without_explain_option(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("Makefile", 74, "line1")
 
@@ -476,8 +493,9 @@ func (s *Suite) Test_Autofix_Explain__without_explain_option(c *check.C) {
 	t.CheckEquals(G.Logger.explanationsAvailable, true)
 }
 
-func (s *Suite) Test_Autofix_Explain__default(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Explain__default(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--explain")
 	line := t.NewLine("Makefile", 74, "line1")
@@ -496,8 +514,9 @@ func (s *Suite) Test_Autofix_Explain__default(c *check.C) {
 	t.CheckEquals(G.Logger.explanationsAvailable, true)
 }
 
-func (s *Suite) Test_Autofix_Explain__show_autofix(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Explain__show_autofix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--show-autofix", "--explain")
 	line := t.NewLine("Makefile", 74, "line1")
@@ -517,8 +536,9 @@ func (s *Suite) Test_Autofix_Explain__show_autofix(c *check.C) {
 	t.CheckEquals(G.Logger.explanationsAvailable, true)
 }
 
-func (s *Suite) Test_Autofix_Explain__autofix(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Explain__autofix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--autofix", "--explain")
 	line := t.NewLine("Makefile", 74, "line1")
@@ -534,8 +554,9 @@ func (s *Suite) Test_Autofix_Explain__autofix(c *check.C) {
 	t.CheckEquals(G.Logger.explanationsAvailable, false) // Not necessary.
 }
 
-func (s *Suite) Test_Autofix_Explain__SilentAutofixFormat(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Explain__SilentAutofixFormat(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--explain")
 	line := t.NewLine("example.txt", 1, "Text")
@@ -547,8 +568,9 @@ func (s *Suite) Test_Autofix_Explain__SilentAutofixFormat(c *check.C) {
 
 // To combine a silent diagnostic with an explanation, two separate autofixes
 // are necessary.
-func (s *Suite) Test_Autofix_Explain__silent_with_diagnostic(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Explain__silent_with_diagnostic(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--explain")
 	line := t.NewLine("example.txt", 1, "Text")
@@ -574,8 +596,9 @@ func (s *Suite) Test_Autofix_Explain__silent_with_diagnostic(c *check.C) {
 	t.CheckEquals(fix.RawText(), "above\nText\nbelow\n")
 }
 
-func (s *Suite) Test_Autofix_Replace(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Replace(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	doTest := func(bool) {
 		line := t.NewLine("filename.mk", 123, "text")
@@ -591,8 +614,9 @@ func (s *Suite) Test_Autofix_Replace(c *check.C) {
 		"AUTOFIX: filename.mk:123: Replacing \"text\" with \"replacement\".")
 }
 
-func (s *Suite) Test_Autofix_ReplaceAfter__autofix_in_continuation_line(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_ReplaceAfter__autofix_in_continuation_line(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--autofix", "--source")
 	mklines := t.SetUpFileMkLines("Makefile",
@@ -613,8 +637,9 @@ func (s *Suite) Test_Autofix_ReplaceAfter__autofix_in_continuation_line(c *check
 		"\tcontinuation 2")
 }
 
-func (s *Suite) Test_Autofix_ReplaceAfter__autofix_several_times_in_continuation_line(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_ReplaceAfter__autofix_several_times_in_continuation_line(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--autofix", "--source")
 	mklines := t.SetUpFileMkLines("Makefile",
@@ -633,8 +658,9 @@ func (s *Suite) Test_Autofix_ReplaceAfter__autofix_several_times_in_continuation
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Autofix_ReplaceAfter__autofix_one_time(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_ReplaceAfter__autofix_one_time(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--autofix", "--source")
 	mklines := t.SetUpFileMkLines("Makefile",
@@ -651,8 +677,9 @@ func (s *Suite) Test_Autofix_ReplaceAfter__autofix_one_time(c *check.C) {
 // When an autofix replaces text, it does not touch those
 // lines that have been inserted before since these are
 // usually already correct.
-func (s *Suite) Test_Autofix_ReplaceAfter__after_inserting_a_line(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_ReplaceAfter__after_inserting_a_line(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--show-autofix")
 	line := t.NewLine("filename", 5, "initial text")
@@ -677,8 +704,9 @@ func (s *Suite) Test_Autofix_ReplaceAfter__after_inserting_a_line(c *check.C) {
 		"AUTOFIX: filename:5: Replacing \"i\" with \"I\".")
 }
 
-func (s *Suite) Test_Autofix_ReplaceAfter__replace_once(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_ReplaceAfter__replace_once(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	doTest := func(autofix bool) {
 		mklines := t.NewMkLines("filename.mk",
@@ -698,8 +726,9 @@ func (s *Suite) Test_Autofix_ReplaceAfter__replace_once(c *check.C) {
 	// ### is meant.
 }
 
-func (s *Suite) Test_Autofix_ReplaceAfter__replace_once_escaped(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_ReplaceAfter__replace_once_escaped(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	doTest := func(autofix bool) {
 		G.Logger.Opts.ShowSource = true
@@ -730,8 +759,9 @@ func (s *Suite) Test_Autofix_ReplaceAfter__replace_once_escaped(c *check.C) {
 		"+\tVAR=\tvalue \\#\\#\\# # comment replaced")
 }
 
-func (s *Suite) Test_Autofix_ReplaceAt(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_ReplaceAt(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mainPart := func(texts []string, rawIndex int, column int, from, to string) {
 		mklines := t.NewMkLines("filename.mk", texts...)
@@ -816,8 +846,9 @@ func (s *Suite) Test_Autofix_ReplaceAt(c *check.C) {
 		0, 20, "?", "+=")
 }
 
-func (s *Suite) Test_Autofix_ReplaceAt__only(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_ReplaceAt__only(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--only", "specific", "--autofix")
 	mklines := t.SetUpFileMkLines("filename.mk",
@@ -846,8 +877,9 @@ func (s *Suite) Test_Autofix_ReplaceAt__only(c *check.C) {
 		"# remark")
 }
 
-func (s *Suite) Test_Autofix_InsertAbove(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_InsertAbove(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--show-autofix", "--source")
 	line := t.NewLine("Makefile", 30, "original")
@@ -864,8 +896,9 @@ func (s *Suite) Test_Autofix_InsertAbove(c *check.C) {
 		">\toriginal")
 }
 
-func (s *Suite) Test_Autofix_InsertBelow(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_InsertBelow(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	doTest := func(bool) {
 		line := t.NewLine("DESCR", 1, "Description of the package")
@@ -882,8 +915,9 @@ func (s *Suite) Test_Autofix_InsertBelow(c *check.C) {
 		"AUTOFIX: DESCR:1: Inserting a line \"below\" below this line.")
 }
 
-func (s *Suite) Test_Autofix_Delete(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Delete(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--show-autofix", "--source")
 	line := t.NewLine("Makefile", 30, "to be deleted")
@@ -900,8 +934,9 @@ func (s *Suite) Test_Autofix_Delete(c *check.C) {
 }
 
 // Deleting a line from a makefile also deletes its continuation lines.
-func (s *Suite) Test_Autofix_Delete__continuation_line(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Delete__continuation_line(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--show-autofix", "--source")
 	mklines := t.SetUpFileMkLines("Makefile",
@@ -923,8 +958,9 @@ func (s *Suite) Test_Autofix_Delete__continuation_line(c *check.C) {
 		"-\tcontinued")
 }
 
-func (s *Suite) Test_Autofix_Delete__combined_with_insert(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Delete__combined_with_insert(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--show-autofix", "--source")
 	line := t.NewLine("Makefile", 30, "to be deleted")
@@ -952,8 +988,9 @@ func (s *Suite) Test_Autofix_Delete__combined_with_insert(c *check.C) {
 // Since this custom fix only operates on the text of the current line,
 // it can handle both the --show-autofix and the --autofix cases using
 // the same code.
-func (s *Suite) Test_Autofix_Custom__in_memory(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Custom__in_memory(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("Makefile",
 		"line1",
@@ -995,8 +1032,9 @@ func (s *Suite) Test_Autofix_Custom__in_memory(c *check.C) {
 	t.CheckEquals(lines.Lines[2].Text, "LINE3")
 }
 
-func (s *Suite) Test_Autofix_Describef(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Describef(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	doTest := func(bool) {
 		line := t.NewLine("DESCR", 123, "Description of the package")
@@ -1020,8 +1058,9 @@ func (s *Suite) Test_Autofix_Describef(c *check.C) {
 // With the default command line options, this warning is printed.
 // With the --show-autofix option this warning is NOT printed since it
 // cannot be fixed automatically.
-func (s *Suite) Test_Autofix_Apply__show_autofix_option(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Apply__show_autofix_option(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--show-autofix")
 
@@ -1044,8 +1083,9 @@ func (s *Suite) Test_Autofix_Apply__show_autofix_option(c *check.C) {
 		"WARN: filename:3: This autofix doesn't match.")
 }
 
-func (s *Suite) Test_Autofix_Apply__autofix_option(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Apply__autofix_option(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--autofix")
 	line := t.NewLine("filename", 5, "text")
@@ -1059,8 +1099,9 @@ func (s *Suite) Test_Autofix_Apply__autofix_option(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Autofix_Apply__autofix_and_show_autofix_options_no_match(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Apply__autofix_and_show_autofix_options_no_match(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--autofix", "--show-autofix")
 	line := t.NewLine("filename", 5, "text")
@@ -1078,8 +1119,9 @@ func (s *Suite) Test_Autofix_Apply__autofix_and_show_autofix_options_no_match(c 
 
 // Demonstrates how to filter log messages.
 // The --autofix option can restrict the fixes to exactly one group or topic.
-func (s *Suite) Test_Autofix_Apply__only(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Apply__only(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--autofix", "--source", "--only", "interesting")
 	line := t.NewLine("Makefile", 27, "The old song")
@@ -1100,8 +1142,9 @@ func (s *Suite) Test_Autofix_Apply__only(c *check.C) {
 		"+\tThe new2 song")
 }
 
-func (s *Suite) Test_Autofix_Apply__panic(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Apply__panic(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("filename", 123, "text")
 
@@ -1131,8 +1174,9 @@ func (s *Suite) Test_Autofix_Apply__panic(c *check.C) {
 // even when combining normal warnings and autofix warnings.
 //
 // Up to 2018-10-27, pkglint didn't insert the required empty line in this case.
-func (s *Suite) Test_Autofix_Apply__explanation_followed_by_note(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Apply__explanation_followed_by_note(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--source")
 	line := t.NewLine("README.txt", 123, "text")
@@ -1153,8 +1197,9 @@ func (s *Suite) Test_Autofix_Apply__explanation_followed_by_note(c *check.C) {
 
 // The --autofix option normally suppresses the diagnostics and just logs
 // the actual fixes. Adding the --show-autofix option logs both.
-func (s *Suite) Test_Autofix_Apply__autofix_and_show_autofix_options(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Apply__autofix_and_show_autofix_options(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--autofix", "--show-autofix")
 	line := t.NewLine("filename", 5, "text")
@@ -1172,8 +1217,9 @@ func (s *Suite) Test_Autofix_Apply__autofix_and_show_autofix_options(c *check.C)
 // In --autofix mode or --show-autofix mode, those errors that have
 // been automatically fixed are not counted, and the others are filtered
 // out, therefore the exitcode stays at 0.
-func (s *Suite) Test_Autofix_Apply__anyway_error(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Apply__anyway_error(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--autofix")
 	mklines := t.SetUpFileMkLines("filename.mk",
@@ -1191,8 +1237,9 @@ func (s *Suite) Test_Autofix_Apply__anyway_error(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Autofix_Apply__source_autofix_no_change(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Apply__source_autofix_no_change(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--autofix", "--source")
 	lines := t.SetUpFileLines("filename",
@@ -1217,8 +1264,9 @@ func (s *Suite) Test_Autofix_Apply__source_autofix_no_change(c *check.C) {
 
 // Ensures that without explanations, the separator between the individual
 // diagnostics are generated.
-func (s *Suite) Test_Autofix_Apply__source_without_explain(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Apply__source_without_explain(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--source", "--explain", "--show-autofix")
 	line := t.NewLine("filename", 5, "text")
@@ -1247,8 +1295,9 @@ func (s *Suite) Test_Autofix_Apply__source_without_explain(c *check.C) {
 // After fixing part of a line, the whole line needs to be parsed again.
 //
 // As of May 2019, this is not done yet.
-func (s *Suite) Test_Autofix_Apply__text_after_replacing(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Apply__text_after_replacing(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--autofix")
 	mkline := t.NewMkLine("filename.mk", 123, "VAR=\tvalue")
@@ -1268,8 +1317,9 @@ func (s *Suite) Test_Autofix_Apply__text_after_replacing(c *check.C) {
 	t.CheckEquals(mkline.Value(), "value")
 }
 
-func (s *Suite) Test_Autofix_Apply__explain_rationale_no_keywords(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Apply__explain_rationale_no_keywords(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--explain")
 	mkline := t.NewMkLine("filename.mk", 123, "# comment")
@@ -1293,8 +1343,9 @@ func (s *Suite) Test_Autofix_Apply__explain_rationale_no_keywords(c *check.C) {
 	)
 }
 
-func (s *Suite) Test_Autofix_Apply__explain_rationale_single_keyword(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Apply__explain_rationale_single_keyword(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--explain")
 	mkline := t.NewMkLine("filename.mk", 123, "# comment")
@@ -1318,8 +1369,9 @@ func (s *Suite) Test_Autofix_Apply__explain_rationale_single_keyword(c *check.C)
 	)
 }
 
-func (s *Suite) Test_Autofix_Apply__explain_rationale_keywords(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Apply__explain_rationale_keywords(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--explain")
 	mkline := t.NewMkLine("filename.mk", 123, "# comment")
@@ -1346,8 +1398,9 @@ func (s *Suite) Test_Autofix_Apply__explain_rationale_keywords(c *check.C) {
 
 // Even if the diagnostic has no explanation on its own,
 // the information about suppressing the diagnostic is useful to be explained.
-func (s *Suite) Test_Autofix_Apply__rationale_without_primary_explanation(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_Apply__rationale_without_primary_explanation(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--explain")
 	mkline := t.NewMkLine("filename.mk", 123, "# comment")
@@ -1369,8 +1422,9 @@ func (s *Suite) Test_Autofix_Apply__rationale_without_primary_explanation(c *che
 }
 
 // Just for branch coverage.
-func (s *Suite) Test_Autofix_setDiag__no_testing_mode(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_setDiag__no_testing_mode(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("file.mk", 123, "text")
 
@@ -1385,8 +1439,9 @@ func (s *Suite) Test_Autofix_setDiag__no_testing_mode(c *check.C) {
 		"NOTE: file.mk:123: Note.")
 }
 
-func (s *Suite) Test_Autofix_setDiag__bad_call_sequence(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_setDiag__bad_call_sequence(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("file.mk", 123, "text")
 	fix := line.Autofix()
@@ -1405,8 +1460,9 @@ func (s *Suite) Test_Autofix_setDiag__bad_call_sequence(c *check.C) {
 // happen often.
 //
 // This covers the "action.lineno < first" condition.
-func (s *Suite) Test_Autofix_affectedLinenos__reverse(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_affectedLinenos__reverse(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(diagnostics ...string) {
 		mklines := t.NewMkLines("filename.mk",
@@ -1441,8 +1497,9 @@ func (s *Suite) Test_Autofix_affectedLinenos__reverse(c *check.C) {
 }
 
 // Since the diagnostic doesn't contain the string "few", nothing happens.
-func (s *Suite) Test_Autofix_skip(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_skip(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--only", "few", "--autofix")
 
@@ -1478,8 +1535,9 @@ func (s *Suite) Test_Autofix_skip(c *check.C) {
 		"666\n")
 }
 
-func (s *Suite) Test_Autofix_assertRealLine(c *check.C) {
-	t := s.Init(c)
+func Test_Autofix_assertRealLine(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := NewLineEOF("filename.mk")
 	fix := line.Autofix()
@@ -1488,8 +1546,9 @@ func (s *Suite) Test_Autofix_assertRealLine(c *check.C) {
 	t.ExpectAssert(func() { fix.Replace("from", "to") })
 }
 
-func (s *Suite) Test_SaveAutofixChanges__file_removed(c *check.C) {
-	t := s.Init(c)
+func Test_SaveAutofixChanges__file_removed(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--autofix")
 	lines := t.SetUpFileLines("subdir/file.txt",
@@ -1508,8 +1567,9 @@ func (s *Suite) Test_SaveAutofixChanges__file_removed(c *check.C) {
 		`ERROR: ~/subdir/file.txt.pkglint.tmp: Cannot write: .*`)
 }
 
-func (s *Suite) Test_SaveAutofixChanges__file_busy_Windows(c *check.C) {
-	t := s.Init(c)
+func Test_SaveAutofixChanges__file_busy_Windows(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	if runtime.GOOS != "windows" {
 		return
@@ -1541,8 +1601,9 @@ func (s *Suite) Test_SaveAutofixChanges__file_busy_Windows(c *check.C) {
 // process takes the file and replaces it with a directory of the same name.
 //
 // 100% code coverage sometimes requires creativity. :)
-func (s *Suite) Test_SaveAutofixChanges__cannot_overwrite(c *check.C) {
-	t := s.Init(c)
+func Test_SaveAutofixChanges__cannot_overwrite(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--autofix")
 	lines := t.SetUpFileLines("file.txt",
@@ -1563,8 +1624,9 @@ func (s *Suite) Test_SaveAutofixChanges__cannot_overwrite(c *check.C) {
 		`ERROR: ~/file.txt.pkglint.tmp: Cannot overwrite with autofixed content: .*`)
 }
 
-func (s *Suite) Test_SaveAutofixChanges(c *check.C) {
-	t := s.Init(c)
+func Test_SaveAutofixChanges(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--autofix")
 	lines := t.SetUpFileLines("example.txt",
@@ -1589,8 +1651,9 @@ func (s *Suite) Test_SaveAutofixChanges(c *check.C) {
 		"line3 := value3")
 }
 
-func (s *Suite) Test_SaveAutofixChanges__no_changes_necessary(c *check.C) {
-	t := s.Init(c)
+func Test_SaveAutofixChanges__no_changes_necessary(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--autofix")
 	lines := t.SetUpFileLines("DESCR",

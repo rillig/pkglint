@@ -1027,14 +1027,31 @@ func (t *Tester) ExpectFatalMatches(action func(), expected regex.Pattern) {
 //	    func() { /* do something that panics */ },
 //	    "runtime error: path not found")
 func (t *Tester) ExpectPanic(action func(), expectedMessage string) {
-	t.backend.Check(action, check.Panics, expectedMessage)
+	var p any
+	func() {
+		defer func() {
+			p = recover()
+		}()
+		action()
+	}()
+	t.backend.CheckEquals(p.(string), expectedMessage)
 }
 
 // ExpectPanicMatches runs the given action and expects that this action
 // calls assert or assertf, or uses some other way to panic.
 // The expectedMessage is anchored on both ends.
 func (t *Tester) ExpectPanicMatches(action func(), expectedMessage regex.Pattern) {
-	t.backend.Check(action, check.PanicMatches, string(expectedMessage))
+	var p any
+	func() {
+		defer func() {
+			p = recover()
+		}()
+		action()
+	}()
+	msg := p.(error).Error()
+	if !regexp.MustCompile(string(expectedMessage)).MatchString(msg) {
+		t.backend.CheckEquals(msg, string(expectedMessage))
+	}
 }
 
 // ExpectAssert runs the given action and expects that this action calls assert.
@@ -1044,7 +1061,14 @@ func (t *Tester) ExpectPanicMatches(action func(), expectedMessage regex.Pattern
 //	t.ExpectAssert(
 //	    func() { /* do something that panics */ })
 func (t *Tester) ExpectAssert(action func()) {
-	t.backend.Check(action, check.Panics, "Pkglint internal error")
+	var p any
+	func() {
+		defer func() {
+			p = recover()
+		}()
+		action()
+	}()
+	t.backend.CheckEquals(p, "Pkglint internal error")
 }
 
 // ExpectAssert runs the given action and expects that this action calls
@@ -1535,6 +1559,9 @@ func (b testerBackendBuiltin) Check(_ any, _ check.Checker, _ ...any) bool {
 
 func (b testerBackendBuiltin) CheckNil(obj any) bool {
 	if obj == nil {
+		return true
+	}
+	if reflect.ValueOf(obj).IsNil() {
 		return true
 	}
 	b.t.Errorf("want nil, have %#v", obj)
