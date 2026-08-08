@@ -1,9 +1,10 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import "testing"
 
-func (s *Suite) Test_CheckFileAlternatives__empty(c *check.C) {
-	t := s.Init(c)
+func Test_CheckFileAlternatives__empty(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.Chdir("category/package")
 	t.CreateFileLines("ALTERNATIVES")
@@ -16,8 +17,9 @@ func (s *Suite) Test_CheckFileAlternatives__empty(c *check.C) {
 		"ERROR: ALTERNATIVES: Must not be empty.")
 }
 
-func (s *Suite) Test_CheckFileAlternatives__ALTERNATIVES_SRC(c *check.C) {
-	t := s.Init(c)
+func Test_CheckFileAlternatives__ALTERNATIVES_SRC(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	// It's a strange situation, having an ALTERNATIVES file defined by
 	// the package but then referring to another package's file by means
@@ -38,8 +40,9 @@ func (s *Suite) Test_CheckFileAlternatives__ALTERNATIVES_SRC(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_AlternativesChecker_Check__PLIST(c *check.C) {
-	t := s.Init(c)
+func Test_AlternativesChecker_Check__PLIST(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.Chdir("category/package")
@@ -85,8 +88,9 @@ func (s *Suite) Test_AlternativesChecker_Check__PLIST(c *check.C) {
 		"AUTOFIX: ALTERNATIVES:4: Replacing \"bin/vim\" with \"@PREFIX@/bin/vim\".")
 }
 
-func (s *Suite) Test_AlternativesChecker_checkLine(c *check.C) {
-	t := s.Init(c)
+func Test_AlternativesChecker_checkLine(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.Chdir("category/package")
@@ -109,8 +113,9 @@ func (s *Suite) Test_AlternativesChecker_checkLine(c *check.C) {
 			"must be relative to PREFIX.")
 }
 
-func (s *Suite) Test_AlternativesChecker_checkLine__absolute(c *check.C) {
-	t := s.Init(c)
+func Test_AlternativesChecker_checkLine__absolute(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("ALTERNATIVES",
 		"relative @PREFIX@/bin/echo",
@@ -125,8 +130,9 @@ func (s *Suite) Test_AlternativesChecker_checkLine__absolute(c *check.C) {
 			"must be relative to PREFIX.")
 }
 
-func (s *Suite) Test_AlternativesChecker_checkLine__PLIST(c *check.C) {
-	t := s.Init(c)
+func Test_AlternativesChecker_checkLine__PLIST(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.Chdir("category/package")
@@ -147,8 +153,9 @@ func (s *Suite) Test_AlternativesChecker_checkLine__PLIST(c *check.C) {
 			"must not appear in the PLIST.")
 }
 
-func (s *Suite) Test_AlternativesChecker_checkLine__dir(c *check.C) {
-	t := s.Init(c)
+func Test_AlternativesChecker_checkLine__dir(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("ALTERNATIVES",
 		"in/typo @PREFIX@/bin/typo",
@@ -167,8 +174,9 @@ func (s *Suite) Test_AlternativesChecker_checkLine__dir(c *check.C) {
 			"must be in \"bin\" or \"sbin\".")
 }
 
-func (s *Suite) Test_AlternativesChecker_checkAlternativeAbs(c *check.C) {
-	t := s.Init(c)
+func Test_AlternativesChecker_checkAlternativeAbs(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.Chdir("category/package")
@@ -189,8 +197,9 @@ func (s *Suite) Test_AlternativesChecker_checkAlternativeAbs(c *check.C) {
 // in the package's PLIST files. It may appear there conditionally,
 // assuming that manual testing will reveal inconsistencies. Or
 // that this scenario is an edge case anyway.
-func (s *Suite) Test_AlternativesChecker_checkAlternativePlist__conditional(c *check.C) {
-	t := s.Init(c)
+func Test_AlternativesChecker_checkAlternativePlist__conditional(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.Chdir("category/package")
@@ -214,8 +223,9 @@ func (s *Suite) Test_AlternativesChecker_checkAlternativePlist__conditional(c *c
 // Manual pages must not be listed in the ALTERNATIVES file.
 // Instead, they are handled automatically based on the program in bin/ or
 // sbin/.
-func (s *Suite) Test_AlternativesChecker_checkAlternativePlist__PKGMANDIR(c *check.C) {
-	t := s.Init(c)
+func Test_AlternativesChecker_checkAlternativePlist__PKGMANDIR(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("category/package/ALTERNATIVES",
