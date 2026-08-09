@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/rillig/pkglint/v23/intqa"
 	"github.com/rillig/pkglint/v23/regex"
+	"go/ast"
 	"io"
 	"os"
 	"reflect"
@@ -930,7 +931,11 @@ func (t *Tester) CheckDeepEquals(actual any, expected any) bool {
 	if reflect.DeepEqual(actual, expected) {
 		return true
 	}
-	t.t.Errorf("have %#v, want %#v", actual, expected)
+	var actualStr, expectedStr strings.Builder
+	_ = ast.Fprint(&actualStr, nil, actual, ast.NotNilFilter)
+	_ = ast.Fprint(&expectedStr, nil, expected, ast.NotNilFilter)
+	t.t.Errorf("\nhave:\n%s\nwant:\n%s",
+		actualStr.String(), expectedStr.String())
 	return false
 }
 

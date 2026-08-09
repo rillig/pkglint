@@ -918,6 +918,7 @@ func Test_expandCurlyBraces(t *testing.T) {
 		{"pkgname<=1.0", []string{"pkgname<=1.0"}},
 		{"{pkgname,pkgname-client}<=1.0", []string{"pkgname<=1.0", "pkgname-client<=1.0"}},
 		{"a{b,c,{d,e}}f", []string{"abf", "acf", "adf", "aef"}},
+		{"{unclosed", []string{"{unclosed"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.s, func(t *testing.T) {

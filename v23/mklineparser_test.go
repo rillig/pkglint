@@ -580,43 +580,89 @@ func Test_MkLineParser_parseCommentOrEmpty__empty(tt *testing.T) {
 }
 
 func Test_MkLineParser_parseDirective(tt *testing.T) {
-	t := NewTester(tt)
-	defer t.Done()
-
-	test := func(input, expectedIndent, expectedDirective, expectedArgs, expectedComment string, diagnostics ...string) {
-		line := t.NewLine("filename.mk", 123, input)
-		parser := NewMkLineParser()
-		splitResult := parser.split(input, true)
-		splitResult.tokens = parser.tokenize(splitResult.main, line)
-		mkline := parser.parseDirective(line, splitResult)
-		if !t.CheckNotNil(mkline) {
-			return
-		}
-
-		t.CheckDeepEquals(
-			[]any{mkline.Indent(), mkline.Directive(), mkline.Args(), mkline.DirectiveComment()},
-			[]any{expectedIndent, expectedDirective, expectedArgs, expectedComment})
-		t.CheckOutput(diagnostics)
+	tests := []struct {
+		line            string
+		wantIndent      string
+		wantDirective   string
+		wantArgs        string
+		wantComment     string
+		wantDiagnostics []string
+	}{
+		{".if ${VAR} == value",
+			"", "if", "${VAR} == value", "", nil},
+		{".  else # comment",
+			"  ", "else", "", "comment", nil},
+		{".  elif cond # comment",
+			"  ", "elif", "cond", "comment", nil},
+		{".\tendif # comment",
+			"\t", "endif", "", "comment", nil},
+		{".  ifdef VAR # comment",
+			"  ", "ifdef", "VAR", "comment", nil},
+		{".  ifndef VAR # comment",
+			"  ", "ifndef", "VAR", "comment", nil},
+		{".  elifdef VAR # comment",
+			"  ", "elifdef", "VAR", "comment", nil},
+		{".  elifndef VAR # comment",
+			"  ", "elifndef", "VAR", "comment", nil},
+		{".  ifmake target # comment",
+			"  ", "ifmake", "target", "comment", nil},
+		{".  ifnmake target # comment",
+			"  ", "ifnmake", "target", "comment", nil},
+		{".  elifmake target # comment",
+			"  ", "elifmake", "target", "comment", nil},
+		{".  elifnmake target # comment",
+			"  ", "elifnmake", "target", "comment", nil},
+		{".  for var in values # comment",
+			"  ", "for", "var in values", "comment", nil},
+		{".  endfor # comment",
+			"  ", "endfor", "", "comment", nil},
+		{".  undef VAR # comment",
+			"  ", "undef", "VAR", "comment", nil},
+		{".  error msg # comment",
+			"  ", "error", "msg", "comment", nil},
+		{".  warning msg # comment",
+			"  ", "warning", "msg", "comment", nil},
+		{".  info msg # comment",
+			"  ", "info", "msg", "comment", nil},
+		{".  export VAR # comment",
+			"  ", "export", "VAR", "comment", nil},
+		{".  export-env # comment",
+			"  ", "export-env", "", "comment", nil},
+		{".  unexport VAR # comment",
+			"  ", "unexport", "VAR", "comment", nil},
+		{".  unexport-env # comment",
+			"  ", "unexport-env", "", "comment", nil},
+		// The "#" starts the comment.
+		{".if ${VAR} == \"#\"",
+			"", "if", "${VAR} == \"", "\"", nil},
+		// The "#" is part of the modifier.
+		{".if ${VAR:[#]}",
+			"", "if", "${VAR:[#]}", "", nil},
+		{".if ${VAR} == \\",
+			"", "if", "${VAR} == \\", "", nil},
+		{".if ${VAR",
+			"", "if", "${VAR", "",
+			[]string{"WARN: filename.mk:123: Missing closing \"}\" for \"VAR\"."}},
 	}
+	for _, test := range tests {
+		tt.Run(test.line, func(tt *testing.T) {
+			t := NewTester(tt)
+			defer t.Done()
+			line := t.NewLine("filename.mk", 123, test.line)
+			parser := NewMkLineParser()
+			splitResult := parser.split(test.line, true)
+			splitResult.tokens = parser.tokenize(splitResult.main, line)
+			mkline := parser.parseDirective(line, splitResult)
+			if !t.CheckNotNil(mkline) {
+				return
+			}
 
-	test(".if ${VAR} == value",
-		"", "if", "${VAR} == value", "")
-
-	test(".\tendif # comment",
-		"\t", "endif", "", "comment")
-
-	test(".if ${VAR} == \"#\"",
-		"", "if", "${VAR} == \"", "\"")
-
-	test(".if ${VAR:[#]}",
-		"", "if", "${VAR:[#]}", "")
-
-	test(".if ${VAR} == \\",
-		"", "if", "${VAR} == \\", "")
-
-	test(".if ${VAR",
-		"", "if", "${VAR", "",
-		"WARN: filename.mk:123: Missing closing \"}\" for \"VAR\".")
+			t.CheckDeepEquals(
+				[]any{mkline.Indent(), mkline.Directive(), mkline.Args(), mkline.DirectiveComment()},
+				[]any{test.wantIndent, test.wantDirective, test.wantArgs, test.wantComment})
+			t.CheckOutput(test.wantDiagnostics)
+		})
+	}
 }
 
 func Test_MkLineParser_parseDirective__escaped_hash(tt *testing.T) {
@@ -668,12 +714,20 @@ func Test_MkLineParser_parseSysinclude(tt *testing.T) {
 	mkline := t.NewMkLine("test.mk", 101,
 		".    include <subdir.mk> # sysinclude comment")
 
+	t.CheckEquals(mkline.IsInclude(), false)
 	t.CheckEquals(mkline.IsSysinclude(), true)
 	t.CheckEquals(mkline.Indent(), "    ")
 	t.CheckEquals(mkline.MustExist(), true)
 	t.CheckEquals(mkline.IncludedFile(), NewRelPathString("subdir.mk"))
 
+	mkline = t.NewMkLine("test.mk", 101,
+		".  sinclude <subdir.mk> # sysinclude comment")
+
 	t.CheckEquals(mkline.IsInclude(), false)
+	t.CheckEquals(mkline.IsSysinclude(), true)
+	t.CheckEquals(mkline.Indent(), "  ")
+	t.CheckEquals(mkline.MustExist(), false)
+	t.CheckEquals(mkline.IncludedFile(), NewRelPathString("subdir.mk"))
 }
 
 func Test_MkLineParser_parseDependency(tt *testing.T) {

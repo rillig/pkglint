@@ -14,7 +14,8 @@ func Test_ParseMkStmts(tt *testing.T) {
 		".  for i in value",
 		".    info looping",
 		".  endfor",
-		".endif")
+		".endif",
+		"VAR=\tvalue")
 
 	stmts := ParseMkStmts(mklines.mklines)
 
@@ -41,6 +42,7 @@ func Test_ParseMkStmts(tt *testing.T) {
 					},
 				},
 			},
+			&MkStmtLine{mklines.mklines[9]},
 		})
 }
 
