@@ -42,7 +42,7 @@ func (s *QATester) Done() {
 
 func (s *QATester) CheckTestees(testees ...*testee) {
 	if !reflect.DeepEqual(s.ck.testees, testees) {
-		s.t.Errorf("want %#v, have %#v", testees, s.ck.testees)
+		s.t.Errorf("have %#v, want %#v", s.ck.testees, testees)
 	}
 	s.ck.testees = nil
 }
@@ -53,7 +53,7 @@ func (s *QATester) newTestee(filename, typeName, funcName string, order int) *te
 
 func (s *QATester) CheckTests(tests ...*test) {
 	if !reflect.DeepEqual(s.ck.tests, tests) {
-		s.t.Errorf("want %#v, have %#v", tests, s.ck.tests)
+		s.t.Errorf("have %#v, want %#v", s.ck.tests, tests)
 	}
 	s.ck.tests = nil
 }
@@ -65,7 +65,7 @@ func (*QATester) newTest(filename, typeName, funcName string, order int, testeeN
 
 func (s *QATester) CheckErrors(errors ...string) {
 	if !reflect.DeepEqual(s.ck.errors, errors) {
-		s.t.Errorf("want %#v, have %#v", errors, s.ck.errors)
+		s.t.Errorf("have %#v, want %#v", s.ck.errors, errors)
 	}
 	s.ck.errors = nil
 }
@@ -281,7 +281,7 @@ func Test_QAChecker_load__panic(tt *testing.T) {
 		ck.load("does-not-exist")
 	}()
 	if have, want := p.(error).Error(), `^open does-not-exist\b.*`; !regexp.MustCompile(want).MatchString(have) {
-		tt.Errorf("want %#v, have %#v", want, have)
+		tt.Errorf("have %#v, want %#v", have, want)
 	}
 }
 
@@ -356,7 +356,7 @@ func Test_QAChecker_parseFuncDecl(tt *testing.T) {
 		fn := file.Decls[0].(*ast.FuncDecl)
 		actual := (*QAChecker).parseFuncDecl(nil, filename, fn)
 		if have, want := actual, (code{filename, typeName, funcName, 0}); have != want {
-			tt.Errorf("want %#v, have %#v", want, have)
+			tt.Errorf("have %#v, want %#v", have, want)
 		}
 	}
 
@@ -387,7 +387,7 @@ func Test_QAChecker_isTest(tt *testing.T) {
 	test := func(filename, typeName, funcName string, isTest bool) {
 		code := code{filename, typeName, funcName, 0}
 		if have := (*QAChecker).isTest(nil, code, nil); have != isTest {
-			tt.Errorf("want %#v, have %#v", isTest, have)
+			tt.Errorf("have %#v, want %#v", have, isTest)
 		}
 	}
 
@@ -400,7 +400,7 @@ func Test_QAChecker_isTest(tt *testing.T) {
 		fn := file.Decls[0].(*ast.FuncDecl)
 		code := (*QAChecker).parseFuncDecl(nil, filename, fn)
 		if have := (*QAChecker).isTest(nil, code, fn); have != isTest {
-			tt.Errorf("want %#v, have %#v", isTest, have)
+			tt.Errorf("have %#v, want %#v", have, isTest)
 		}
 	}
 
@@ -498,7 +498,7 @@ func Test_QAChecker_nextOrder(tt *testing.T) {
 
 	for i := 0; i < 5; i++ {
 		if have := ck.nextOrder(); have != i {
-			tt.Errorf("want %#v, have %#v", i, have)
+			tt.Errorf("have %#v, want %#v", have, i)
 		}
 	}
 }
@@ -676,16 +676,16 @@ func Test_QAChecker_errorsMask(tt *testing.T) {
 	ck := s.ck
 
 	if have, want := ck.errorsMask(0, EAll), ^uint64(0); have != want {
-		tt.Errorf("want %#v, have %#v", want, have)
+		tt.Errorf("have %#v, want %#v", have, want)
 	}
 	if have, want := ck.errorsMask(12345, ENone), uint64(0); have != want {
-		tt.Errorf("want %#v, have %#v", want, have)
+		tt.Errorf("have %#v, want %#v", have, want)
 	}
 	if have, want := ck.errorsMask(12345, ENone, EMissingTest), uint64(8); have != want {
-		tt.Errorf("want %#v, have %#v", want, have)
+		tt.Errorf("have %#v, want %#v", have, want)
 	}
 	if have, want := ck.errorsMask(2, EMissingTest), uint64(10); have != want {
-		tt.Errorf("want %#v, have %#v", want, have)
+		tt.Errorf("have %#v, want %#v", have, want)
 	}
 }
 
@@ -747,7 +747,7 @@ func Test_QAChecker_print__empty(tt *testing.T) {
 	ck.print()
 
 	if have, want := out.String(), ""; have != want {
-		tt.Errorf("want %#v, have %#v", want, have)
+		tt.Errorf("have %#v, want %#v", have, want)
 	}
 }
 
@@ -762,7 +762,7 @@ func Test_QAChecker_print__1_error(tt *testing.T) {
 	ck.print()
 
 	if have, want := out.String(), "1\n"; have != want {
-		tt.Errorf("want %#v, have %#v", want, have)
+		tt.Errorf("have %#v, want %#v", have, want)
 	}
 	s.CheckErrors("1")
 	s.CheckSummary("1 error.")
@@ -780,7 +780,7 @@ func Test_QAChecker_print__2_errors(tt *testing.T) {
 	ck.print()
 
 	if have, want := out.String(), "1\n2\n"; have != want {
-		tt.Errorf("want %#v, have %#v", want, have)
+		tt.Errorf("have %#v, want %#v", have, want)
 	}
 	s.CheckErrors("1", "2")
 	s.CheckSummary("2 errors.")
@@ -824,7 +824,7 @@ func Test_QAChecker_insertionSuggestion(tt *testing.T) {
 		actual := ck.insertionSuggestion(
 			&test{code{testFile, "", testName, 0}, testName, "", testee})
 		if have, want := actual, msg; have != want {
-			tt.Errorf("want %#v, have %#v", want, have)
+			tt.Errorf("have %#v, want %#v", have, want)
 		}
 	}
 
@@ -850,7 +850,7 @@ func Test_code_fullName(tt *testing.T) {
 	test := func(typeName, funcName, fullName string) {
 		code := code{"filename", typeName, funcName, 0}
 		if have, want := code.fullName(), fullName; have != want {
-			tt.Errorf("want %#v, have %#v", want, have)
+			tt.Errorf("have %#v, want %#v", have, want)
 		}
 	}
 
@@ -864,7 +864,7 @@ func Test_code_isFunc(tt *testing.T) {
 	test := func(typeName, funcName string, isFunc bool) {
 		code := code{"filename", typeName, funcName, 0}
 		if have, want := code.isFunc(), isFunc; have != want {
-			tt.Errorf("want %#v, have %#v", want, have)
+			tt.Errorf("have %#v, want %#v", have, want)
 		}
 	}
 
@@ -878,7 +878,7 @@ func Test_code_isType(tt *testing.T) {
 	test := func(typeName, funcName string, isType bool) {
 		code := code{"filename", typeName, funcName, 0}
 		if have, want := code.isType(), isType; have != want {
-			tt.Errorf("want %#v, have %#v", want, have)
+			tt.Errorf("have %#v, want %#v", have, want)
 		}
 	}
 
@@ -892,7 +892,7 @@ func Test_code_isMethod(tt *testing.T) {
 	test := func(typeName, funcName string, isMethod bool) {
 		code := code{"filename", typeName, funcName, 0}
 		if have, want := code.isMethod(), isMethod; have != want {
-			tt.Errorf("want %#v, have %#v", want, have)
+			tt.Errorf("have %#v, want %#v", have, want)
 		}
 	}
 
@@ -906,7 +906,7 @@ func Test_code_isTestScope(tt *testing.T) {
 	test := func(filename string, isTestScope bool) {
 		code := code{filename, "", "", 0}
 		if have, want := code.isTestScope(), isTestScope; have != want {
-			tt.Errorf("want %#v, have %#v", want, have)
+			tt.Errorf("have %#v, want %#v", have, want)
 		}
 	}
 
@@ -922,7 +922,7 @@ func Test_code_testFile(tt *testing.T) {
 	test := func(filename string, testFile string) {
 		code := code{filename, "", "", 0}
 		if have, want := code.testFile(), testFile; have != want {
-			tt.Errorf("want %#v, have %#v", want, have)
+			tt.Errorf("have %#v, want %#v", have, want)
 		}
 	}
 
@@ -953,7 +953,7 @@ func Test_isCamelCase(tt *testing.T) {
 		tt.Run(test.s, func(t *testing.T) {
 			have := isCamelCase(test.s)
 			if have != test.want {
-				tt.Errorf("want %#v, have %#v for %#v", test.want, have, test.s)
+				tt.Errorf("have %#v, want %#v for %#v", have, test.want, test.s)
 			}
 		})
 	}
@@ -975,7 +975,7 @@ func Test_join(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			if have := join(test.a, test.sep, test.b); have != test.want {
-				t.Errorf("want %#v, have %#v", test.want, have)
+				t.Errorf("have %#v, want %#v", have, test.want)
 			}
 		})
 	}
@@ -994,7 +994,7 @@ func Test_matches(tt *testing.T) {
 	for _, test := range tests {
 		tt.Run(test.s+" "+test.pattern, func(t *testing.T) {
 			if have := matches(test.s, test.pattern); have != test.want {
-				t.Errorf("want %#v, have %#v", test.want, have)
+				t.Errorf("have %#v, want %#v", have, test.want)
 			}
 		})
 	}
@@ -1022,7 +1022,7 @@ func Test_sortedKeys(tt *testing.T) {
 	have := sortedKeys(m)
 	want := []string{"first", "fourth", "second", "third"}
 	if !reflect.DeepEqual(have, want) {
-		tt.Errorf("want %#v, have %#v", want, have)
+		tt.Errorf("have %#v, want %#v", have, want)
 	}
 }
 

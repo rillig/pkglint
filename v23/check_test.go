@@ -877,28 +877,28 @@ func (t *Tester) AssertNil(obj any) {
 	if obj == nil {
 		return
 	}
-	t.t.Fatalf("want nil, have %#v", obj)
+	t.t.Fatalf("have %#v, want nil", obj)
 }
 
 func (t *Tester) AssertNotNil(obj any) {
 	if obj != nil {
 		return
 	}
-	t.t.Fatalf("want nonnil, have %#v", obj)
+	t.t.Fatalf("have %#v, want nonnil", obj)
 }
 
 func (t *Tester) AssertEquals(actual, expected any) {
 	if actual == expected {
 		return
 	}
-	t.t.Fatalf("want %#v, have %#v", expected, actual)
+	t.t.Fatalf("have %#v, want %#v", actual, expected)
 }
 
 func (t *Tester) CheckNil(obj any) bool {
 	if obj == nil || reflect.ValueOf(obj).IsNil() {
 		return true
 	}
-	t.t.Errorf("want nil, have %#v", obj)
+	t.t.Errorf("have %#v, want nil", obj)
 	return false
 }
 
@@ -906,7 +906,7 @@ func (t *Tester) CheckNotNil(obj any) bool {
 	if obj != nil && !reflect.ValueOf(obj).IsNil() {
 		return true
 	}
-	t.t.Errorf("want nonnil, have %#v", reflect.ValueOf(obj).String())
+	t.t.Errorf("have %#v, want nonnil", reflect.ValueOf(obj).String())
 	return false
 }
 
@@ -914,7 +914,7 @@ func (t *Tester) CheckEquals(actual any, expected any) bool {
 	if actual == expected {
 		return true
 	}
-	t.t.Errorf("want %#v, have %#v", expected, actual)
+	t.t.Errorf("have %#v, want %#v", actual, expected)
 	return false
 }
 
@@ -930,7 +930,7 @@ func (t *Tester) CheckDeepEquals(actual any, expected any) bool {
 	if reflect.DeepEqual(actual, expected) {
 		return true
 	}
-	t.t.Errorf("want %v, have %v", expected, actual)
+	t.t.Errorf("have %#v, want %#v", actual, expected)
 	return false
 }
 

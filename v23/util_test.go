@@ -48,12 +48,12 @@ func Test_trimCommonPrefix(t *testing.T) {
 		t.Run(test.a+"+"+test.b, func(t *testing.T) {
 			haveA, haveB := trimCommonPrefix(test.a, test.b)
 			if haveA != test.wantA {
-				t.Errorf("want %#v, have %#v for %#v and %#v",
-					test.wantA, haveA, test.a, test.b)
+				t.Errorf("have %#v, want %#v for %#v and %#v",
+					haveA, test.wantA, test.a, test.b)
 			}
 			if haveB != test.wantB {
-				t.Errorf("want %#v, have %#v for %#v and %#v",
-					test.wantB, haveB, test.a, test.b)
+				t.Errorf("have %#v, want %#v for %#v and %#v",
+					haveB, test.wantB, test.a, test.b)
 			}
 		})
 	}
@@ -528,7 +528,7 @@ func Test_isExpr(t *testing.T) {
 			t := NewTester(rt)
 			have := isExpr(test.s)
 			if have != test.want {
-				rt.Errorf("want %v, have %v for %q", test.want, have, test.s)
+				rt.Errorf("have %v, want %v for %q", have, test.want, test.s)
 			}
 			t.Done()
 		})
