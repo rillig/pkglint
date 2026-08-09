@@ -1,9 +1,10 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import "testing"
 
-func (s *Suite) Test_splitIntoShellTokens__line_continuation(c *check.C) {
-	t := s.Init(c)
+func Test_splitIntoShellTokens__line_continuation(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("filename.mk", 1, "")
 	words, rest := splitIntoShellTokens(line, "if true; then \\")
@@ -15,8 +16,9 @@ func (s *Suite) Test_splitIntoShellTokens__line_continuation(c *check.C) {
 		"WARN: filename.mk:1: Internal pkglint error in ShTokenizer.ShAtom at \"\\\\\" (quoting=plain).")
 }
 
-func (s *Suite) Test_splitIntoShellTokens__dollar_slash(c *check.C) {
-	t := s.Init(c)
+func Test_splitIntoShellTokens__dollar_slash(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("filename.mk", 1, "")
 	words, rest := splitIntoShellTokens(line, "pax -s /.*~$$//g")
@@ -25,8 +27,9 @@ func (s *Suite) Test_splitIntoShellTokens__dollar_slash(c *check.C) {
 	t.CheckEquals(rest, "")
 }
 
-func (s *Suite) Test_splitIntoShellTokens__dollar_subshell(c *check.C) {
-	t := s.Init(c)
+func Test_splitIntoShellTokens__dollar_subshell(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("filename.mk", 1, "")
 	words, rest := splitIntoShellTokens(line, "id=$$(${AWK} '{print}' < ${WRKSRC}/idfile) && echo \"$$id\"")
@@ -35,8 +38,9 @@ func (s *Suite) Test_splitIntoShellTokens__dollar_subshell(c *check.C) {
 	t.CheckEquals(rest, "")
 }
 
-func (s *Suite) Test_splitIntoShellTokens__semicolons(c *check.C) {
-	t := s.Init(c)
+func Test_splitIntoShellTokens__semicolons(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("filename.mk", 1, "")
 	words, rest := splitIntoShellTokens(line, "word1 word2;;;")
@@ -45,8 +49,9 @@ func (s *Suite) Test_splitIntoShellTokens__semicolons(c *check.C) {
 	t.CheckEquals(rest, "")
 }
 
-func (s *Suite) Test_splitIntoShellTokens__whitespace(c *check.C) {
-	t := s.Init(c)
+func Test_splitIntoShellTokens__whitespace(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	text := "\t${RUN} cd ${WRKSRC}&&(${ECHO} ${PERL5:Q};${ECHO})|${BASH} ./install"
 	line := t.NewLine("filename.mk", 1, "")
@@ -60,8 +65,9 @@ func (s *Suite) Test_splitIntoShellTokens__whitespace(c *check.C) {
 	t.CheckEquals(rest, "")
 }
 
-func (s *Suite) Test_splitIntoShellTokens__finished_dquot(c *check.C) {
-	t := s.Init(c)
+func Test_splitIntoShellTokens__finished_dquot(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	text := "\"\""
 	line := t.NewLine("filename.mk", 1, "")
@@ -71,8 +77,9 @@ func (s *Suite) Test_splitIntoShellTokens__finished_dquot(c *check.C) {
 	t.CheckEquals(rest, "")
 }
 
-func (s *Suite) Test_splitIntoShellTokens__unfinished_dquot(c *check.C) {
-	t := s.Init(c)
+func Test_splitIntoShellTokens__unfinished_dquot(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	text := "\t\""
 	line := t.NewLine("filename.mk", 1, "")
@@ -82,8 +89,9 @@ func (s *Suite) Test_splitIntoShellTokens__unfinished_dquot(c *check.C) {
 	t.CheckEquals(rest, "\"")
 }
 
-func (s *Suite) Test_splitIntoShellTokens__unescaped_dollar_in_dquot(c *check.C) {
-	t := s.Init(c)
+func Test_splitIntoShellTokens__unescaped_dollar_in_dquot(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	text := "echo \"$$\""
 	line := t.NewLine("filename.mk", 1, "")
@@ -95,8 +103,9 @@ func (s *Suite) Test_splitIntoShellTokens__unescaped_dollar_in_dquot(c *check.C)
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_splitIntoShellTokens__expr_with_embedded_space_and_other_vars(c *check.C) {
-	t := s.Init(c)
+func Test_splitIntoShellTokens__expr_with_embedded_space_and_other_vars(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	exprWord := "${GCONF_SCHEMAS:@.s.@${INSTALL_DATA} ${WRKSRC}/src/common/dbus/${.s.} ${DESTDIR}${GCONF_SCHEMAS_DIR}/@}"
 	line := t.NewLine("filename.mk", 1, "")
@@ -108,8 +117,9 @@ func (s *Suite) Test_splitIntoShellTokens__expr_with_embedded_space_and_other_va
 
 // Two shell variables, next to each other,
 // are two separate atoms but count as a single token.
-func (s *Suite) Test_splitIntoShellTokens__two_shell_variables(c *check.C) {
-	t := s.Init(c)
+func Test_splitIntoShellTokens__two_shell_variables(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	code := "echo $$i$$j"
 	line := t.NewLine("filename.mk", 1, "")
@@ -119,8 +129,9 @@ func (s *Suite) Test_splitIntoShellTokens__two_shell_variables(c *check.C) {
 	t.CheckEquals(rest, "")
 }
 
-func (s *Suite) Test_splitIntoShellTokens__expr_with_embedded_space(c *check.C) {
-	t := s.Init(c)
+func Test_splitIntoShellTokens__expr_with_embedded_space(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("filename.mk", 1, "")
 	words, rest := splitIntoShellTokens(line, "${VAR:S/ /_/g}")
@@ -129,8 +140,9 @@ func (s *Suite) Test_splitIntoShellTokens__expr_with_embedded_space(c *check.C) 
 	t.CheckEquals(rest, "")
 }
 
-func (s *Suite) Test_splitIntoShellTokens__redirect(c *check.C) {
-	t := s.Init(c)
+func Test_splitIntoShellTokens__redirect(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("filename.mk", 1, "")
 	words, rest := splitIntoShellTokens(line, "echo 1>output 2>>append 3>|clobber 4>&5 6<input >>append")
@@ -158,8 +170,9 @@ func (s *Suite) Test_splitIntoShellTokens__redirect(c *check.C) {
 	t.CheckEquals(rest, "")
 }
 
-func (s *Suite) Test_splitIntoShellTokens__expr(c *check.C) {
-	t := s.Init(c)
+func Test_splitIntoShellTokens__expr(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(text string, tokens ...string) {
 		line := t.NewLine("filename.mk", 1, "")

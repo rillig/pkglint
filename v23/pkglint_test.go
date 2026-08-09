@@ -1,17 +1,18 @@
 package pkglint
 
 import (
-	"gopkg.in/check.v1"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+	"testing"
 )
 
 func (p *Pkglint) isUsable() bool { return p.fileCache != nil }
 
-func (s *Suite) Test_Pkglint_Main(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_Main(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	out, err := os.Create(t.CreateFileLines("out").String())
 	t.CheckNil(err)
@@ -41,8 +42,9 @@ func (s *Suite) Test_Pkglint_Main(c *check.C) {
 	// outProfiling is not checked because it contains timing information.
 }
 
-func (s *Suite) Test_Pkglint_Main__help(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_Main__help(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	exitCode := t.Main("-h")
 
@@ -84,8 +86,9 @@ func (s *Suite) Test_Pkglint_Main__help(c *check.C) {
 		"  (Prefix a flag with \"no-\" to disable it.)")
 }
 
-func (s *Suite) Test_Pkglint_Main__version(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_Main__version(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	exitcode := t.Main("--version")
 
@@ -94,8 +97,9 @@ func (s *Suite) Test_Pkglint_Main__version(c *check.C) {
 		confVersion)
 }
 
-func (s *Suite) Test_Pkglint_Main__no_args(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_Main__no_args(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	exitcode := t.Main()
 
@@ -105,17 +109,19 @@ func (s *Suite) Test_Pkglint_Main__no_args(c *check.C) {
 		"FATAL: .: Must be inside a pkgsrc tree.")
 }
 
-func (s *Suite) Test_Pkglint_Main__unknown_option(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_Main__unknown_option(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	exitcode := t.Main("--unknown-option")
 
 	t.CheckEquals(exitcode, 1)
-	c.Check(t.Output(), check.Matches,
-		`\Qpkglint: unknown option: --unknown-option\E\n`+
-			`\Q\E\n`+
-			`\Qusage: pkglint [options] dir...\E\n`+
-			`(?s).+`)
+	if have, want := t.Output(), regcomp(`\Qpkglint: unknown option: --unknown-option\E\n`+
+		`\Q\E\n`+
+		`\Qusage: pkglint [options] dir...\E\n`+
+		`(?s).+`); !want.MatchString(have) {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 	// See Test_Pkglint_Main__help for the complete output.
 }
 
@@ -123,8 +129,9 @@ func (s *Suite) Test_Pkglint_Main__unknown_option(c *check.C) {
 // pkglint in a realistic scenario.
 //
 // Especially covers Pkglint.ShowSummary and Pkglint.checkReg.
-func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_Main__complete_package(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	// Since the general infrastructure setup is useful for several tests,
 	// it is available as a separate method.
@@ -255,8 +262,9 @@ func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
 		t.Shquote("(Run \"pkglint -F -Wall -Call %s\" to automatically fix some issues.)", "sysutils/checkperms"))
 }
 
-func (s *Suite) Test_Pkglint_Main__autofix_exitcode(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_Main__autofix_exitcode(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("filename.mk",
@@ -296,8 +304,9 @@ func (s *Suite) Test_Pkglint_Main__autofix_exitcode(c *check.C) {
 // runs "go test" in a temporary directory.
 //
 // See https://github.com/rillig/gobco for the tool to measure the branch coverage.
-func (s *Suite) Test_Pkglint_Main__realistic(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_Main__realistic(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	if cwd := os.Getenv("PKGLINT_TESTDIR"); cwd != "" {
 		err := os.Chdir(cwd)
@@ -312,8 +321,9 @@ func (s *Suite) Test_Pkglint_Main__realistic(c *check.C) {
 }
 
 // The option -Wall does not imply -Werror.
-func (s *Suite) Test_Pkglint_Main__Wall(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_Main__Wall(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		"UNUSED=\tvalue")
@@ -328,8 +338,9 @@ func (s *Suite) Test_Pkglint_Main__Wall(c *check.C) {
 		"(Run \"pkglint -e -Wall\" to show explanations.)")
 }
 
-func (s *Suite) Test_Pkglint_Main__Werror_no_warning(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_Main__Werror_no_warning(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.Chdir("category/package")
@@ -341,8 +352,9 @@ func (s *Suite) Test_Pkglint_Main__Werror_no_warning(c *check.C) {
 		"Looks fine.")
 }
 
-func (s *Suite) Test_Pkglint_Main__Werror_warning(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_Main__Werror_warning(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		"UNUSED=\tvalue")
@@ -357,8 +369,9 @@ func (s *Suite) Test_Pkglint_Main__Werror_warning(c *check.C) {
 		"(Run \"pkglint -e -Werror\" to show explanations.)")
 }
 
-func (s *Suite) Test_Pkglint_Main__Werror_error(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_Main__Werror_error(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		"DEPENDS+=\tother>=0:../../category/does-not-exist")
@@ -375,8 +388,9 @@ func (s *Suite) Test_Pkglint_Main__Werror_error(c *check.C) {
 }
 
 // Branch coverage for Logger.Logf, the level != Fatal case.
-func (s *Suite) Test_Pkglint_prepareMainLoop__fatal(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_prepareMainLoop__fatal(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.Chdir(".")
 	t.Main("--profiling", t.File("does-not-exist").String())
@@ -386,8 +400,9 @@ func (s *Suite) Test_Pkglint_prepareMainLoop__fatal(c *check.C) {
 		"FATAL: does-not-exist: Must be inside a pkgsrc tree.")
 }
 
-func (s *Suite) Test_Pkglint_ParseCommandLine__only(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_ParseCommandLine__only(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	exitcode := G.ParseCommandLine([]string{"pkglint", "-Wall", "--only", ":Q", "--version"})
 
@@ -399,8 +414,9 @@ func (s *Suite) Test_Pkglint_ParseCommandLine__only(c *check.C) {
 		confVersion)
 }
 
-func (s *Suite) Test_Pkglint_Check__outside(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_Check__outside(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("empty")
 
@@ -417,8 +433,9 @@ func (s *Suite) Test_Pkglint_Check__outside(c *check.C) {
 		"ERROR: Cannot determine the pkgsrc root directory for \"~\".")
 }
 
-func (s *Suite) Test_Pkglint_Check__empty_directory(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_Check__empty_directory(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("category/package/CVS/Entries")
@@ -430,8 +447,9 @@ func (s *Suite) Test_Pkglint_Check__empty_directory(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Pkglint_Check__files_directory(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_Check__files_directory(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("category/package/files/README.md")
@@ -444,8 +462,9 @@ func (s *Suite) Test_Pkglint_Check__files_directory(c *check.C) {
 		"ERROR: ~/category/package/files: Cannot check directories outside a pkgsrc tree.")
 }
 
-func (s *Suite) Test_Pkglint_Check__patches_directory(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_Check__patches_directory(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileDummyPatch("category/package/patches/patch-README.md")
@@ -459,8 +478,9 @@ func (s *Suite) Test_Pkglint_Check__patches_directory(c *check.C) {
 }
 
 // See devel/libtool for an example package that uses manual patches.
-func (s *Suite) Test_Pkglint_Check__manual_patch(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_Check__manual_patch(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("category/package/patches/unknown-file")
@@ -475,8 +495,9 @@ func (s *Suite) Test_Pkglint_Check__manual_patch(c *check.C) {
 			"followed by letters, '-', '_', '.', and digits only.")
 }
 
-func (s *Suite) Test_Pkglint_Check__doc_TODO(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_Check__doc_TODO(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.FinishSetUp()
@@ -492,8 +513,9 @@ func (s *Suite) Test_Pkglint_Check__doc_TODO(c *check.C) {
 
 // This test covers the different code paths for deciding whether a directory
 // should be checked as the top-level, a category or a package.
-func (s *Suite) Test_Pkglint_Check(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_Check(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.CreateFileLines("mk/misc/category.mk")
@@ -533,8 +555,9 @@ func (s *Suite) Test_Pkglint_Check(c *check.C) {
 		"ERROR: ~/category/package/nonexistent: No such file or directory.")
 }
 
-func (s *Suite) Test_Pkglint_Check__invalid_files_before_import(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_Check__invalid_files_before_import(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Call", "-Wall", "--import")
 	pkg := t.SetUpPackage("category/package")
@@ -552,8 +575,9 @@ func (s *Suite) Test_Pkglint_Check__invalid_files_before_import(c *check.C) {
 		"ERROR: ~/category/package/work: Must be cleaned up before committing the package.")
 }
 
-func (s *Suite) Test_Pkglint_checkMode__neither_file_nor_directory(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_checkMode__neither_file_nor_directory(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	G.checkMode(ClassifyFile("/dev/null"), os.ModeDevice)
 
@@ -564,8 +588,9 @@ func (s *Suite) Test_Pkglint_checkMode__neither_file_nor_directory(c *check.C) {
 // A package that is very incomplete may produce lots of warnings.
 // This case is unrealistic since most packages are either generated by url2pkg
 // or copied from an existing working package.
-func (s *Suite) Test_Pkglint_checkdirPackage__incomplete_package(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_checkdirPackage__incomplete_package(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.Chdir("category/package")
 	t.CreateFileLines("Makefile",
@@ -580,8 +605,9 @@ func (s *Suite) Test_Pkglint_checkdirPackage__incomplete_package(c *check.C) {
 		"ERROR: Makefile: Each package must have a DESCR file.")
 }
 
-func (s *Suite) Test_Pkglint_checkdirPackage__PKGDIR(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_checkdirPackage__PKGDIR(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("category/Makefile")
@@ -615,8 +641,9 @@ func (s *Suite) Test_Pkglint_checkdirPackage__PKGDIR(c *check.C) {
 		"ERROR: patches/patch-aa:1: Patch files must not be empty.")
 }
 
-func (s *Suite) Test_Pkglint_checkdirPackage__patch_without_distinfo(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_checkdirPackage__patch_without_distinfo(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	pkg := t.SetUpPackage("category/package")
 	t.CreateFileDummyPatch("category/package/patches/patch-aa")
@@ -630,8 +657,9 @@ func (s *Suite) Test_Pkglint_checkdirPackage__patch_without_distinfo(c *check.C)
 		"WARN: ~/category/package/distinfo: A package with patches should have a distinfo file.")
 }
 
-func (s *Suite) Test_Pkglint_checkdirPackage__meta_package_without_license(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_checkdirPackage__meta_package_without_license(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.Chdir("category/package")
 	t.CreateFileLines("Makefile",
@@ -649,8 +677,9 @@ func (s *Suite) Test_Pkglint_checkdirPackage__meta_package_without_license(c *ch
 		"ERROR: Makefile: Each package must have a DESCR file.")
 }
 
-func (s *Suite) Test_Pkglint_checkdirPackage__filename_with_variable(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_checkdirPackage__filename_with_variable(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	pkg := t.SetUpPackage("category/package",
 		".include \"../../mk/bsd.prefs.mk\"",
@@ -683,8 +712,9 @@ func (s *Suite) Test_Pkglint_checkdirPackage__filename_with_variable(c *check.C)
 		"WARN: ~/category/package/Makefile:24: RUBY_VERSIONS_ACCEPTED should not be used at load time in any file.")
 }
 
-func (s *Suite) Test_Pkglint_checkdirPackage__ALTERNATIVES(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_checkdirPackage__ALTERNATIVES(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	pkg := t.SetUpPackage("category/package")
 	t.CreateFileLines("category/package/ALTERNATIVES",
@@ -700,8 +730,9 @@ func (s *Suite) Test_Pkglint_checkdirPackage__ALTERNATIVES(c *check.C) {
 			"Alternative implementation \"bin/wrapper-impl\" must be an absolute path.")
 }
 
-func (s *Suite) Test_Pkglint_checkdirPackage__nonexistent_DISTINFO_FILE(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_checkdirPackage__nonexistent_DISTINFO_FILE(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		"DISTINFO_FILE=\tnonexistent")
@@ -717,8 +748,9 @@ func (s *Suite) Test_Pkglint_checkdirPackage__nonexistent_DISTINFO_FILE(c *check
 
 // Pkglint must never be trapped in an endless loop, even when
 // resolving the value of a variable that refers back to itself.
-func (s *Suite) Test_resolveExprs__circular_reference(c *check.C) {
-	t := s.Init(c)
+func Test_resolveExprs__circular_reference(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("filename.mk", 1, "VAR=\t1:${VAR}+ 2:${VAR}")
 	pkg := NewPackage(t.File("category/pkgbase"))
@@ -733,8 +765,9 @@ func (s *Suite) Test_resolveExprs__circular_reference(c *check.C) {
 	t.CheckEquals(resolved, "the a:1:${VAR}+ 2:${VAR} b:${VAR}")
 }
 
-func (s *Suite) Test_resolveExprs__multilevel(c *check.C) {
-	t := s.Init(c)
+func Test_resolveExprs__multilevel(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline1 := t.NewMkLine("filename.mk", 10, "FIRST=\t${SECOND}")
 	mkline2 := t.NewMkLine("filename.mk", 11, "SECOND=\t${THIRD}")
@@ -752,8 +785,9 @@ func (s *Suite) Test_resolveExprs__multilevel(c *check.C) {
 	t.CheckEquals(resolved, "you got it")
 }
 
-func (s *Suite) Test_resolveExprs__scope_precedence(c *check.C) {
-	t := s.Init(c)
+func Test_resolveExprs__scope_precedence(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
@@ -770,8 +804,9 @@ func (s *Suite) Test_resolveExprs__scope_precedence(c *check.C) {
 // Usually, a dot in a variable name means a parameterized form.
 // In this case, it is part of a version number. Resolving these
 // variables from the scope works nevertheless.
-func (s *Suite) Test_resolveExprs__special_chars(c *check.C) {
-	t := s.Init(c)
+func Test_resolveExprs__special_chars(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("filename.mk", 10, "_=x11")
 	pkg := NewPackage(t.File("category/pkg"))
@@ -782,8 +817,9 @@ func (s *Suite) Test_resolveExprs__special_chars(c *check.C) {
 	t.CheckEquals(resolved, "gst-plugins0.10-x11/distinfo")
 }
 
-func (s *Suite) Test_resolveExprs__indeterminate(c *check.C) {
-	t := s.Init(c)
+func Test_resolveExprs__indeterminate(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	pkg := NewPackage(G.Pkgsrc.File("category/package"))
 	pkg.vars.Define("PKGVAR", t.NewMkLine("filename.mk", 123, "PKGVAR!=\tcommand"))
@@ -800,8 +836,9 @@ func (s *Suite) Test_resolveExprs__indeterminate(c *check.C) {
 }
 
 // Just for code coverage.
-func (s *Suite) Test_CheckFileOther__no_tracing(c *check.C) {
-	t := s.Init(c)
+func Test_CheckFileOther__no_tracing(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.DisableTracing()
 
@@ -811,8 +848,9 @@ func (s *Suite) Test_CheckFileOther__no_tracing(c *check.C) {
 		"ERROR: ~/filename.mk: Cannot be read.")
 }
 
-func (s *Suite) Test_CheckLinesDescr(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesDescr(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	lines := t.NewLines("DESCR",
@@ -840,8 +878,9 @@ func (s *Suite) Test_CheckLinesDescr(c *check.C) {
 
 // The package author may think that variables like ${PREFIX}
 // are expanded in DESCR files too, but that doesn't happen.
-func (s *Suite) Test_CheckLinesDescr__variables(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesDescr__variables(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -874,8 +913,9 @@ func (s *Suite) Test_CheckLinesDescr__variables(c *check.C) {
 	test("$@", nil...)
 }
 
-func (s *Suite) Test_CheckLinesDescr__TODO(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesDescr__TODO(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -897,8 +937,9 @@ func (s *Suite) Test_CheckLinesDescr__TODO(c *check.C) {
 		nil...)
 }
 
-func (s *Suite) Test_CheckFileMessage(c *check.C) {
-	t := s.Init(c)
+func Test_CheckFileMessage(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("category/package/MESSAGE",
@@ -917,8 +958,9 @@ func (s *Suite) Test_CheckFileMessage(c *check.C) {
 		"")
 }
 
-func (s *Suite) Test_CheckFileMk__enoent(c *check.C) {
-	t := s.Init(c)
+func Test_CheckFileMk__enoent(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	CheckFileMk(t.File("filename.mk"), nil)
 
@@ -928,8 +970,9 @@ func (s *Suite) Test_CheckFileMk__enoent(c *check.C) {
 
 // Demonstrates that an ALTERNATIVES file can be tested individually,
 // without any dependencies on a whole package or a PLIST file.
-func (s *Suite) Test_Pkglint_checkReg__alternatives(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_checkReg__alternatives(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	lines := t.SetUpFileLines("category/package/ALTERNATIVES",
@@ -944,8 +987,9 @@ func (s *Suite) Test_Pkglint_checkReg__alternatives(c *check.C) {
 }
 
 // Just for branch coverage.
-func (s *Suite) Test_Pkglint_checkReg__file_not_found(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_checkReg__file_not_found(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.Chdir(".")
 
@@ -966,8 +1010,9 @@ func (s *Suite) Test_Pkglint_checkReg__file_not_found(c *check.C) {
 }
 
 // Just for branch coverage.
-func (s *Suite) Test_Pkglint_checkReg__no_tracing(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_checkReg__no_tracing(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.Chdir(".")
 	t.DisableTracing()
@@ -977,8 +1022,9 @@ func (s *Suite) Test_Pkglint_checkReg__no_tracing(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Pkglint_checkReg__in_current_working_directory(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_checkReg__in_current_working_directory(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.Chdir("category/package")
@@ -991,8 +1037,9 @@ func (s *Suite) Test_Pkglint_checkReg__in_current_working_directory(c *check.C) 
 		"1 warning found.")
 }
 
-func (s *Suite) Test_Pkglint_checkReg__other(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_checkReg__other(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Call", "-Wall")
 	pkg := t.SetUpPackage("category/package")
@@ -1007,8 +1054,9 @@ func (s *Suite) Test_Pkglint_checkReg__other(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Pkglint_checkReg__readme_and_todo(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_checkReg__readme_and_todo(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("category/Makefile",
 		MkCvsID)
@@ -1073,8 +1121,9 @@ func (s *Suite) Test_Pkglint_checkReg__readme_and_todo(c *check.C) {
 	)
 }
 
-func (s *Suite) Test_Pkglint_checkReg__unknown_file_in_patches(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_checkReg__unknown_file_in_patches(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileDummyPatch("category/Makefile/patches/index")
 
@@ -1085,8 +1134,9 @@ func (s *Suite) Test_Pkglint_checkReg__unknown_file_in_patches(c *check.C) {
 			"Patch files should be named \"patch-\", followed by letters, '-', '_', '.', and digits only.")
 }
 
-func (s *Suite) Test_Pkglint_checkReg__patch_for_makefile_fragment(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_checkReg__patch_for_makefile_fragment(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	// This is a patch file, and even though its name ends with ".mk", it must
 	// not be interpreted as a makefile fragment.
@@ -1098,8 +1148,9 @@ func (s *Suite) Test_Pkglint_checkReg__patch_for_makefile_fragment(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Pkglint_checkReg__file_in_files(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_checkReg__file_in_files(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("category/package/files/index")
 
@@ -1109,8 +1160,9 @@ func (s *Suite) Test_Pkglint_checkReg__file_in_files(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Pkglint_checkReg__spec(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_checkReg__spec(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("category/package/spec")
 	t.CreateFileLines("regress/package/spec")
@@ -1122,8 +1174,9 @@ func (s *Suite) Test_Pkglint_checkReg__spec(c *check.C) {
 		"WARN: ~/category/package/spec: Only packages in regress/ may have spec files.")
 }
 
-func (s *Suite) Test_Pkglint_checkReg__options_mk(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_checkReg__options_mk(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/bsd.options.mk")
@@ -1140,8 +1193,9 @@ func (s *Suite) Test_Pkglint_checkReg__options_mk(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Pkglint_checkReg__main_commit_message(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_checkReg__main_commit_message(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.Chdir("category/package")
@@ -1154,8 +1208,9 @@ func (s *Suite) Test_Pkglint_checkReg__main_commit_message(c *check.C) {
 		"WARN: COMMIT_MSG: Unexpected file found.")
 }
 
-func (s *Suite) Test_Pkglint_checkReg__wip_commit_message(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_checkReg__wip_commit_message(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("wip/package")
 	t.Chdir("wip/package")
@@ -1169,8 +1224,9 @@ func (s *Suite) Test_Pkglint_checkReg__wip_commit_message(c *check.C) {
 			"should have a COMMIT_MSG file.")
 }
 
-func (s *Suite) Test_Pkglint_checkReg__file_ignored_by_CVS(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_checkReg__file_ignored_by_CVS(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.Chdir("category/package")
@@ -1188,8 +1244,9 @@ func (s *Suite) Test_Pkglint_checkReg__file_ignored_by_CVS(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Pkglint_checkRegCvsSubst(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_checkRegCvsSubst(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.Chdir(".")
 	t.CreateFileLines("ok")
@@ -1212,8 +1269,9 @@ func (s *Suite) Test_Pkglint_checkRegCvsSubst(c *check.C) {
 // The package Makefile is loaded via a different path
 // than direct command line arguments. Same for the patches.
 // Therefore, these code paths must be tested separately.
-func (s *Suite) Test_Pkglint_checkRegCvsSubst__full_package(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_checkRegCvsSubst__full_package(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.Chdir("category/package")
@@ -1235,8 +1293,9 @@ func (s *Suite) Test_Pkglint_checkRegCvsSubst__full_package(c *check.C) {
 		"ERROR: patches/patch-any: The CVS keyword substitution must be the default one.")
 }
 
-func (s *Suite) Test_Pkglint_checkExecutable(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_checkExecutable(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	filename := t.CreateFileLines("file.mk")
 	err := filename.Chmod(0555)
@@ -1263,8 +1322,9 @@ func (s *Suite) Test_Pkglint_checkExecutable(c *check.C) {
 	}
 }
 
-func (s *Suite) Test_Pkglint_checkExecutable__error(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_checkExecutable__error(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	filename := t.File("file.mk")
 
@@ -1282,8 +1342,9 @@ func (s *Suite) Test_Pkglint_checkExecutable__error(c *check.C) {
 		`ERROR: ~/file.mk: Cannot clear executable bits: chmod ~/file.mk: .*`)
 }
 
-func (s *Suite) Test_Pkglint_checkExecutable__already_committed(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_checkExecutable__already_committed(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("CVS/Entries",
 		"/file.mk//modified//")
@@ -1295,8 +1356,9 @@ func (s *Suite) Test_Pkglint_checkExecutable__already_committed(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Pkglint_Tool__prefer_mk_over_pkgsrc(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_Tool__prefer_mk_over_pkgsrc(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("dummy.mk", 123, "DUMMY=\tvalue")
 	mklines := t.NewMkLines("Makefile", MkCvsID)
@@ -1315,8 +1377,9 @@ func (s *Suite) Test_Pkglint_Tool__prefer_mk_over_pkgsrc(c *check.C) {
 	t.CheckEquals(runTimeUsable, true)
 }
 
-func (s *Suite) Test_Pkglint_Tool__lookup_by_name_fallback(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_Tool__lookup_by_name_fallback(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile", MkCvsID)
 	t.SetUpTool("tool", "", Nowhere)
@@ -1334,8 +1397,9 @@ func (s *Suite) Test_Pkglint_Tool__lookup_by_name_fallback(c *check.C) {
 }
 
 // TODO: Document the purpose of this test.
-func (s *Suite) Test_Pkglint_Tool__lookup_by_varname(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_Tool__lookup_by_varname(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("dummy.mk", 123, "DUMMY=\tvalue")
 	mklines := t.NewMkLines("Makefile", MkCvsID)
@@ -1355,8 +1419,9 @@ func (s *Suite) Test_Pkglint_Tool__lookup_by_varname(c *check.C) {
 }
 
 // TODO: Document the purpose of this test.
-func (s *Suite) Test_Pkglint_Tool__lookup_by_varname_fallback(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_Tool__lookup_by_varname_fallback(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile", MkCvsID)
 	G.Pkgsrc.Tools.def("tool", "TOOL", false, Nowhere, nil)
@@ -1371,8 +1436,9 @@ func (s *Suite) Test_Pkglint_Tool__lookup_by_varname_fallback(c *check.C) {
 }
 
 // TODO: Document the purpose of this test.
-func (s *Suite) Test_Pkglint_Tool__lookup_by_varname_fallback_runtime(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_Tool__lookup_by_varname_fallback_runtime(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile", MkCvsID)
 	G.Pkgsrc.Tools.def("tool", "TOOL", false, AtRunTime, nil)
@@ -1386,8 +1452,9 @@ func (s *Suite) Test_Pkglint_Tool__lookup_by_varname_fallback_runtime(c *check.C
 	t.CheckEquals(runTimeUsable, true)
 }
 
-func (s *Suite) Test_Pkglint_ToolByVarname__prefer_mk_over_pkgsrc(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_ToolByVarname__prefer_mk_over_pkgsrc(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("dummy.mk", 123, "DUMMY=\tvalue")
 	mklines := t.NewMkLines("Makefile", MkCvsID)
@@ -1400,8 +1467,9 @@ func (s *Suite) Test_Pkglint_ToolByVarname__prefer_mk_over_pkgsrc(c *check.C) {
 	t.CheckEquals(G.ToolByVarname(mklines, "TOOL"), local)
 }
 
-func (s *Suite) Test_Pkglint_ToolByVarname(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_ToolByVarname(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile", MkCvsID)
 	G.Pkgsrc.Tools.def("tool", "TOOL", false, AtRunTime, nil)
@@ -1409,8 +1477,9 @@ func (s *Suite) Test_Pkglint_ToolByVarname(c *check.C) {
 	t.CheckEquals(G.ToolByVarname(mklines, "TOOL").String(), "tool:TOOL::AtRunTime")
 }
 
-func (s *Suite) Test_Pkglint_loadCvsEntries(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_loadCvsEntries(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("CVS/Entries",
 		"/invalid/",
@@ -1423,8 +1492,9 @@ func (s *Suite) Test_Pkglint_loadCvsEntries(c *check.C) {
 		"ERROR: ~/CVS/Entries:1: Invalid line: /invalid/")
 }
 
-func (s *Suite) Test_Pkglint_loadCvsEntries__with_Entries_Log(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_loadCvsEntries__with_Entries_Log(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("CVS/Entries",
 		"/invalid/",
@@ -1449,8 +1519,9 @@ func (s *Suite) Test_Pkglint_loadCvsEntries__with_Entries_Log(c *check.C) {
 		"ERROR: ~/CVS/Entries.Log:4: Invalid line: R /invalid/")
 }
 
-func (s *Suite) Test_InterPackage_Bl3__same_identifier(c *check.C) {
-	t := s.Init(c)
+func Test_InterPackage_Bl3__same_identifier(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package1",
 		"PKGNAME=\t${DISTNAME:@v@${v}@}") // Make the package name non-obvious.

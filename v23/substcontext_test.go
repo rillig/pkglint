@@ -1,6 +1,6 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import "testing"
 
 func (t *Tester) NewSubstAutofixTest(lines ...string) func(bool) {
 	return func(autofix bool) {
@@ -30,8 +30,9 @@ func (t *Tester) RunSubst(lines ...string) {
 //
 // Continuing a SUBST class in one of the branches and starting
 // a fresh one in the other seems far-fetched.
-func (s *Suite) Test_SubstContext__partially_continued_class_in_conditional(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext__partially_continued_class_in_conditional(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+=         outer",
@@ -50,8 +51,9 @@ func (s *Suite) Test_SubstContext__partially_continued_class_in_conditional(c *c
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_SubstContext__conditionals(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext__conditionals(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+=         os",
@@ -77,8 +79,9 @@ func (s *Suite) Test_SubstContext__conditionals(c *check.C) {
 			"to \"SUBST_SED.os\" should use the \"+=\" operator.")
 }
 
-func (s *Suite) Test_SubstContext_varassign__no_class(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_varassign__no_class(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"UNRELATED=anything",
@@ -90,8 +93,9 @@ func (s *Suite) Test_SubstContext_varassign__no_class(c *check.C) {
 			"the SUBST class should be declared using \"SUBST_CLASSES+= repl\".")
 }
 
-func (s *Suite) Test_SubstContext_varassign__multiple_classes_in_one_line_multiple_blocks(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_varassign__multiple_classes_in_one_line_multiple_blocks(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+=         one two",
@@ -120,8 +124,9 @@ func (s *Suite) Test_SubstContext_varassign__multiple_classes_in_one_line_multip
 			"the SUBST class should be declared using \"SUBST_CLASSES+= four\".")
 }
 
-func (s *Suite) Test_SubstContext_varassign__multiple_classes_in_one_block(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_varassign__multiple_classes_in_one_block(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+=         one",
@@ -145,8 +150,9 @@ func (s *Suite) Test_SubstContext_varassign__multiple_classes_in_one_block(c *ch
 // As of December 2019, pkglint does not check the order of the variables in
 // a SUBST block. Enforcing this order, or at least suggesting it, would
 // make pkgsrc packages more uniform, which is a good idea, but not urgent.
-func (s *Suite) Test_SubstContext_varassign__unusual_order(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_varassign__unusual_order(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+=\t\tid",
@@ -158,8 +164,9 @@ func (s *Suite) Test_SubstContext_varassign__unusual_order(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_SubstContext_varassign__blocks_in_separate_paragraphs(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_varassign__blocks_in_separate_paragraphs(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+= 1 2 3 4",
@@ -181,8 +188,9 @@ func (s *Suite) Test_SubstContext_varassign__blocks_in_separate_paragraphs(c *ch
 		"WARN: filename.mk:EOF: Missing SUBST block for \"4\".")
 }
 
-func (s *Suite) Test_SubstContext_varassign__typo_in_id(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_varassign__typo_in_id(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+= 1 2",
@@ -200,8 +208,9 @@ func (s *Suite) Test_SubstContext_varassign__typo_in_id(c *check.C) {
 		"WARN: filename.mk:EOF: Missing SUBST block for \"1\".")
 }
 
-func (s *Suite) Test_SubstContext_varassign__late_addition_to_unknown_class(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_varassign__late_addition_to_unknown_class(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		"SUBST_VARS.id=\tOPSYS",
@@ -216,8 +225,9 @@ func (s *Suite) Test_SubstContext_varassign__late_addition_to_unknown_class(c *c
 			"the SUBST class should be declared using \"SUBST_CLASSES+= id\".")
 }
 
-func (s *Suite) Test_SubstContext_varassign__rationale(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_varassign__rationale(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"# Adjust setup.py",
@@ -231,8 +241,9 @@ func (s *Suite) Test_SubstContext_varassign__rationale(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_SubstContext_varassign__interleaved(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_varassign__interleaved(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+= 1 2 3",
@@ -254,8 +265,9 @@ func (s *Suite) Test_SubstContext_varassign__interleaved(c *check.C) {
 			"Add only one class at a time to SUBST_CLASSES.")
 }
 
-func (s *Suite) Test_SubstContext_varassign__noop_ok(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_varassign__noop_ok(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+=         id",
@@ -267,8 +279,9 @@ func (s *Suite) Test_SubstContext_varassign__noop_ok(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_SubstContext_varassign__other_variables(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_varassign__other_variables(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+=         id",
@@ -281,8 +294,9 @@ func (s *Suite) Test_SubstContext_varassign__other_variables(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_SubstContext_varassignClasses__OPSYSVARS(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_varassignClasses__OPSYSVARS(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	ctx := NewSubstContext(nil)
 
@@ -302,8 +316,9 @@ func (s *Suite) Test_SubstContext_varassignClasses__OPSYSVARS(c *check.C) {
 			"can be replaced with \"SUBST_VARS.prefix= PREFIX\".")
 }
 
-func (s *Suite) Test_SubstContext_varassignClasses__duplicate_id(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_varassignClasses__duplicate_id(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+= id",
@@ -314,8 +329,9 @@ func (s *Suite) Test_SubstContext_varassignClasses__duplicate_id(c *check.C) {
 		"WARN: filename.mk:EOF: Missing SUBST block for \"id\".")
 }
 
-func (s *Suite) Test_SubstContext_varassignClasses__multiple_classes_in_one_line(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_varassignClasses__multiple_classes_in_one_line(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+=         one two",
@@ -330,8 +346,9 @@ func (s *Suite) Test_SubstContext_varassignClasses__multiple_classes_in_one_line
 		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_SED.two, SUBST_VARS.two or SUBST_FILTER_CMD.two missing.")
 }
 
-func (s *Suite) Test_SubstContext_varassignClasses__none(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_varassignClasses__none(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+=\t# none")
@@ -339,8 +356,9 @@ func (s *Suite) Test_SubstContext_varassignClasses__none(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_SubstContext_varassignClasses__indirect(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_varassignClasses__indirect(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("filename.mk",
@@ -355,8 +373,9 @@ func (s *Suite) Test_SubstContext_varassignClasses__indirect(c *check.C) {
 		"WARN: filename.mk:2: Variable \"VAR\" is used but not defined.")
 }
 
-func (s *Suite) Test_SubstContext_varassignOutsideBlock__assign(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_varassignOutsideBlock__assign(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+=\t1",
@@ -374,8 +393,9 @@ func (s *Suite) Test_SubstContext_varassignOutsideBlock__assign(c *check.C) {
 			"should use the += operator.")
 }
 
-func (s *Suite) Test_SubstContext_varassignOutsideBlock__append(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_varassignOutsideBlock__append(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+=\t1",
@@ -403,8 +423,9 @@ func (s *Suite) Test_SubstContext_varassignOutsideBlock__append(c *check.C) {
 //	.if !empty(PKG_OPTIONS:Minet6)
 //	SUBST_SED.libs+=        -e 's|@INET6@||g'
 //	.endif
-func (s *Suite) Test_SubstContext_varassignOutsideBlock__rationale(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_varassignOutsideBlock__rationale(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		// The rationale is too unspecific since it doesn't refer to the
@@ -438,8 +459,9 @@ func (s *Suite) Test_SubstContext_varassignOutsideBlock__rationale(c *check.C) {
 			"the SUBST class should be declared using \"SUBST_CLASSES+= libs\".")
 }
 
-func (s *Suite) Test_SubstContext_varassignDifferentClass__same_paragraph(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_varassignDifferentClass__same_paragraph(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+= 1",
@@ -464,8 +486,9 @@ func (s *Suite) Test_SubstContext_varassignDifferentClass__same_paragraph(c *che
 			"SUBST_SED.1, SUBST_VARS.1 or SUBST_FILTER_CMD.1 missing.")
 }
 
-func (s *Suite) Test_SubstContext_varassignDifferentClass__next_paragraph(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_varassignDifferentClass__next_paragraph(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+= 1",
@@ -487,8 +510,9 @@ func (s *Suite) Test_SubstContext_varassignDifferentClass__next_paragraph(c *che
 }
 
 // Unbalanced conditionals must not lead to a panic.
-func (s *Suite) Test_SubstContext_directive__before_SUBST_CLASSES(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_directive__before_SUBST_CLASSES(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		".if 0",
@@ -500,8 +524,9 @@ func (s *Suite) Test_SubstContext_directive__before_SUBST_CLASSES(c *check.C) {
 		"WARN: filename.mk:4: Missing SUBST block for \"os\".")
 }
 
-func (s *Suite) Test_SubstContext_directive__conditional_blocks_complete(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_directive__conditional_blocks_complete(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		".if ${OPSYS} == NetBSD",
@@ -519,8 +544,9 @@ func (s *Suite) Test_SubstContext_directive__conditional_blocks_complete(c *chec
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_SubstContext_directive__conditional_blocks_incomplete(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_directive__conditional_blocks_incomplete(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		".if ${OPSYS} == NetBSD",
@@ -541,8 +567,9 @@ func (s *Suite) Test_SubstContext_directive__conditional_blocks_incomplete(c *ch
 			"SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
 }
 
-func (s *Suite) Test_SubstContext_directive__conditional_complete(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_directive__conditional_complete(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+= id",
@@ -569,8 +596,9 @@ func (s *Suite) Test_SubstContext_directive__conditional_complete(c *check.C) {
 		"WARN: filename.mk:11: SUBST_MESSAGE.id should not be defined conditionally.")
 }
 
-func (s *Suite) Test_SubstContext_directive__conditionally_overwritten_filter(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_directive__conditionally_overwritten_filter(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+= id",
@@ -589,8 +617,9 @@ func (s *Suite) Test_SubstContext_directive__conditionally_overwritten_filter(c 
 // Hopefully nobody will ever trigger this case in real pkgsrc.
 // It's plain confusing to a casual reader to nest a complete
 // SUBST block into another SUBST block.
-func (s *Suite) Test_SubstContext_directive__conditionally_nested_block(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_directive__conditionally_nested_block(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+=         outer",
@@ -612,8 +641,9 @@ func (s *Suite) Test_SubstContext_directive__conditionally_nested_block(c *check
 // It's completely valid to have several SUBST blocks in a single paragraph.
 // As soon as a SUBST_CLASSES line appears, pkglint assumes that all previous
 // SUBST blocks are finished. That's exactly the case here.
-func (s *Suite) Test_SubstContext_directive__conditionally_following_block(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_directive__conditionally_following_block(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+=         outer",
@@ -636,8 +666,9 @@ func (s *Suite) Test_SubstContext_directive__conditionally_following_block(c *ch
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_SubstContext_directive__two_blocks_in_condition(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_directive__two_blocks_in_condition(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		".if ${OPSYS} == NetBSD",
@@ -660,8 +691,9 @@ func (s *Suite) Test_SubstContext_directive__two_blocks_in_condition(c *check.C)
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_SubstContext_directive__nested_conditional_incomplete_block(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_directive__nested_conditional_incomplete_block(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+=         outer",
@@ -684,8 +716,9 @@ func (s *Suite) Test_SubstContext_directive__nested_conditional_incomplete_block
 		"WARN: filename.mk:9: Incomplete SUBST block: SUBST_FILES.inner1 missing.")
 }
 
-func (s *Suite) Test_SubstContext_leave__details_in_then_branch(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_leave__details_in_then_branch(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+=         os",
@@ -706,8 +739,9 @@ func (s *Suite) Test_SubstContext_leave__details_in_then_branch(c *check.C) {
 			"SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
 }
 
-func (s *Suite) Test_SubstContext_leave__details_in_else_branch(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_leave__details_in_else_branch(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+=         os",
@@ -729,8 +763,9 @@ func (s *Suite) Test_SubstContext_leave__details_in_else_branch(c *check.C) {
 			"SUBST_SED.os, SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
 }
 
-func (s *Suite) Test_SubstContext_leave__empty_conditional_at_end(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_leave__empty_conditional_at_end(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+=         os",
@@ -746,8 +781,9 @@ func (s *Suite) Test_SubstContext_leave__empty_conditional_at_end(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_SubstContext_leave__missing_transformation_in_one_branch(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_leave__missing_transformation_in_one_branch(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+=         os",
@@ -772,8 +808,9 @@ func (s *Suite) Test_SubstContext_leave__missing_transformation_in_one_branch(c 
 			"SUBST_VARS.os or SUBST_FILTER_CMD.os missing.")
 }
 
-func (s *Suite) Test_SubstContext_leave__nested_conditionals(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_leave__nested_conditionals(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+=         os",
@@ -797,8 +834,9 @@ func (s *Suite) Test_SubstContext_leave__nested_conditionals(c *check.C) {
 		"WARN: filename.mk:EOF: Incomplete SUBST block: SUBST_FILES.os missing.")
 }
 
-func (s *Suite) Test_SubstContext_activeId__SUBST_CLASSES_in_separate_paragraph(c *check.C) {
-	t := s.Init(c)
+func Test_SubstContext_activeId__SUBST_CLASSES_in_separate_paragraph(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	ctx := NewSubstContext(nil)
 
@@ -854,8 +892,9 @@ func (s *Suite) Test_SubstContext_activeId__SUBST_CLASSES_in_separate_paragraph(
 // The scopes are even created when there is no SUBST variable
 // anywhere close. The conditionals must be tracked for determining
 // the end of the scope for the SUBST_CLASSES IDs.
-func (s *Suite) Test_substScope__conditionals(c *check.C) {
-	t := s.Init(c)
+func Test_substScope__conditionals(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	ctx := NewSubstContext(nil)
 
@@ -900,8 +939,9 @@ func (s *Suite) Test_substScope__conditionals(c *check.C) {
 	ctx.Finish(NewLineEOF("filename.mk"))
 }
 
-func (s *Suite) Test_substScope_define__assertion(c *check.C) {
-	t := s.Init(c)
+func Test_substScope_define__assertion(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	scope := newSubstScope()
 	scope.define("id")
@@ -912,8 +952,9 @@ func (s *Suite) Test_substScope_define__assertion(c *check.C) {
 
 // Variables mentioned in SUBST_VARS may appear in the same paragraph,
 // or alternatively anywhere else in the file.
-func (s *Suite) Test_substScope_finish__foreign_in_next_paragraph(c *check.C) {
-	t := s.Init(c)
+func Test_substScope_finish__foreign_in_next_paragraph(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+=\tos",
@@ -927,8 +968,9 @@ func (s *Suite) Test_substScope_finish__foreign_in_next_paragraph(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_substScope_finish__foreign_mixed_separate(c *check.C) {
-	t := s.Init(c)
+func Test_substScope_finish__foreign_mixed_separate(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+= 1",
@@ -945,8 +987,9 @@ func (s *Suite) Test_substScope_finish__foreign_mixed_separate(c *check.C) {
 
 // Variables mentioned in SUBST_VARS are not considered "foreign"
 // in the block and may be mixed with the other SUBST variables.
-func (s *Suite) Test_substScope_finish__foreign_in_block(c *check.C) {
-	t := s.Init(c)
+func Test_substScope_finish__foreign_in_block(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+=\tos",
@@ -960,8 +1003,9 @@ func (s *Suite) Test_substScope_finish__foreign_in_block(c *check.C) {
 		"WARN: filename.mk:6: Foreign variable \"TODAY2\" in SUBST block.")
 }
 
-func (s *Suite) Test_substScope_finish__foreign_two_blocks_one_paragraph(c *check.C) {
-	t := s.Init(c)
+func Test_substScope_finish__foreign_two_blocks_one_paragraph(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+= 1 2",
@@ -979,8 +1023,9 @@ func (s *Suite) Test_substScope_finish__foreign_two_blocks_one_paragraph(c *chec
 			"Add only one class at a time to SUBST_CLASSES.")
 }
 
-func (s *Suite) Test_substScope_finish__indirect_SUBST_FILES(c *check.C) {
-	t := s.Init(c)
+func Test_substScope_finish__indirect_SUBST_FILES(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+= 1",
@@ -995,8 +1040,9 @@ func (s *Suite) Test_substScope_finish__indirect_SUBST_FILES(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_substScope_prepareSubstClasses(c *check.C) {
-	t := s.Init(c)
+func Test_substScope_prepareSubstClasses(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+= 1",
@@ -1011,8 +1057,9 @@ func (s *Suite) Test_substScope_prepareSubstClasses(c *check.C) {
 			"SUBST_SED.1, SUBST_VARS.1 or SUBST_FILTER_CMD.1 missing.")
 }
 
-func (s *Suite) Test_substScope_prepareSubstClasses__nested(c *check.C) {
-	t := s.Init(c)
+func Test_substScope_prepareSubstClasses__nested(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+= 1",
@@ -1030,8 +1077,9 @@ func (s *Suite) Test_substScope_prepareSubstClasses__nested(c *check.C) {
 			"SUBST_SED.1, SUBST_VARS.1 or SUBST_FILTER_CMD.1 missing.")
 }
 
-func (s *Suite) Test_substBlock__enter_leave_and_finish(c *check.C) {
-	t := s.Init(c)
+func Test_substBlock__enter_leave_and_finish(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("filename.mk", 123, "")
 	b := newSubstBlock("id")
@@ -1054,8 +1102,9 @@ func (s *Suite) Test_substBlock__enter_leave_and_finish(c *check.C) {
 
 // In a conditional without an else branch, none of the variable
 // definitions from the then branch are seen in the outer scope.
-func (s *Suite) Test_substBlock__enter_and_leave_without_else(c *check.C) {
-	t := s.Init(c)
+func Test_substBlock__enter_and_leave_without_else(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	b := newSubstBlock("id")
 
@@ -1067,8 +1116,9 @@ func (s *Suite) Test_substBlock__enter_and_leave_without_else(c *check.C) {
 	t.CheckEquals(b.done, false)
 }
 
-func (s *Suite) Test_substBlock__enter_and_leave_with_else(c *check.C) {
-	t := s.Init(c)
+func Test_substBlock__enter_and_leave_with_else(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	b := newSubstBlock("id")
 
@@ -1084,8 +1134,9 @@ func (s *Suite) Test_substBlock__enter_and_leave_with_else(c *check.C) {
 	t.CheckEquals(b.done, false)
 }
 
-func (s *Suite) Test_substBlock__enter_and_leave_with_elif(c *check.C) {
-	t := s.Init(c)
+func Test_substBlock__enter_and_leave_with_elif(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	b := newSubstBlock("id")
 
@@ -1104,8 +1155,9 @@ func (s *Suite) Test_substBlock__enter_and_leave_with_elif(c *check.C) {
 	t.CheckEquals(b.done, false)
 }
 
-func (s *Suite) Test_newSubstBlock(c *check.C) {
-	t := s.Init(c)
+func Test_newSubstBlock(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	b := newSubstBlock("id")
 
@@ -1115,15 +1167,17 @@ func (s *Suite) Test_newSubstBlock(c *check.C) {
 	t.CheckEquals(b.allSeen(), ssNone)
 }
 
-func (s *Suite) Test_newSubstBlock__assertion(c *check.C) {
-	t := s.Init(c)
+func Test_newSubstBlock__assertion(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.ExpectAssert(
 		func() { newSubstBlock("") })
 }
 
-func (s *Suite) Test_substBlock_varassign__typo_in_subst_variable(c *check.C) {
-	t := s.Init(c)
+func Test_substBlock_varassign__typo_in_subst_variable(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+=\tos",
@@ -1137,8 +1191,9 @@ func (s *Suite) Test_substBlock_varassign__typo_in_subst_variable(c *check.C) {
 		"WARN: filename.mk:4: Foreign variable \"SUBST_DED.os\" in SUBST block.")
 }
 
-func (s *Suite) Test_substBlock_varassignStage__do_patch(c *check.C) {
-	t := s.Init(c)
+func Test_substBlock_varassignStage__do_patch(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+=\tos",
@@ -1151,8 +1206,9 @@ func (s *Suite) Test_substBlock_varassignStage__do_patch(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_substBlock_varassignStage__pre_patch(c *check.C) {
-	t := s.Init(c)
+func Test_substBlock_varassignStage__pre_patch(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.Chdir(".")
 
@@ -1174,8 +1230,9 @@ func (s *Suite) Test_substBlock_varassignStage__pre_patch(c *check.C) {
 		"SUBST_SED.os=   -e s,@OPSYS@,Darwin,")
 }
 
-func (s *Suite) Test_substBlock_varassignStage__post_patch(c *check.C) {
-	t := s.Init(c)
+func Test_substBlock_varassignStage__post_patch(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.Chdir(".")
 
@@ -1197,8 +1254,9 @@ func (s *Suite) Test_substBlock_varassignStage__post_patch(c *check.C) {
 		"SUBST_SED.os=   -e s,@OPSYS@,Darwin,")
 }
 
-func (s *Suite) Test_substBlock_varassignStage__empty_class(c *check.C) {
-	t := s.Init(c)
+func Test_substBlock_varassignStage__empty_class(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.Chdir(".")
 
@@ -1221,8 +1279,9 @@ func (s *Suite) Test_substBlock_varassignStage__empty_class(c *check.C) {
 // To avoid damaging anything, replacements are only done if they are
 // unambiguous. This is not the case here, since line 4 contains the
 // string "pre-patch" twice.
-func (s *Suite) Test_substBlock_varassignStage__ambiguous_replacement(c *check.C) {
-	t := s.Init(c)
+func Test_substBlock_varassignStage__ambiguous_replacement(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.Chdir(".")
 
@@ -1239,8 +1298,9 @@ func (s *Suite) Test_substBlock_varassignStage__ambiguous_replacement(c *check.C
 	t.CheckEquals(t.File("filename.mk").IsFile(), false)
 }
 
-func (s *Suite) Test_substBlock_varassignStage__with_NO_CONFIGURE(c *check.C) {
-	t := s.Init(c)
+func Test_substBlock_varassignStage__with_NO_CONFIGURE(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	pkg := t.SetUpPackage("category/package",
 		"SUBST_CLASSES+=\t\tpre",
@@ -1270,8 +1330,9 @@ func (s *Suite) Test_substBlock_varassignStage__with_NO_CONFIGURE(c *check.C) {
 			"when NO_CONFIGURE is set (in line 35).")
 }
 
-func (s *Suite) Test_substBlock_varassignStage__without_NO_CONFIGURE(c *check.C) {
-	t := s.Init(c)
+func Test_substBlock_varassignStage__without_NO_CONFIGURE(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	pkg := t.SetUpPackage("category/package",
 		"SUBST_CLASSES+=\t\tpre",
@@ -1287,8 +1348,9 @@ func (s *Suite) Test_substBlock_varassignStage__without_NO_CONFIGURE(c *check.C)
 
 // Before 2019-12-12, pkglint wrongly warned about variables that were
 // not obviously SUBST variables, even if they were used later in SUBST_VARS.
-func (s *Suite) Test_substBlock_varassignVars__var_before_SUBST_VARS(c *check.C) {
-	t := s.Init(c)
+func Test_substBlock_varassignVars__var_before_SUBST_VARS(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+= id",
@@ -1310,8 +1372,9 @@ func (s *Suite) Test_substBlock_varassignVars__var_before_SUBST_VARS(c *check.C)
 		"WARN: filename.mk:4: Foreign variable \"FOREIGN\" in SUBST block.")
 }
 
-func (s *Suite) Test_substBlock_varassignVars(c *check.C) {
-	t := s.Init(c)
+func Test_substBlock_varassignVars(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+=\tos",
@@ -1322,8 +1385,9 @@ func (s *Suite) Test_substBlock_varassignVars(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_substBlock_suggestSubstVars(c *check.C) {
-	t := s.Init(c)
+func Test_substBlock_suggestSubstVars(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.Chdir(".")
 
@@ -1446,8 +1510,9 @@ func (s *Suite) Test_substBlock_suggestSubstVars(c *check.C) {
 
 // If the SUBST_CLASS identifier ends with a plus, the generated code must
 // use the correct assignment operator and be nicely formatted.
-func (s *Suite) Test_substBlock_suggestSubstVars__plus(c *check.C) {
-	t := s.Init(c)
+func Test_substBlock_suggestSubstVars__plus(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.Chdir(".")
 
@@ -1480,8 +1545,9 @@ func (s *Suite) Test_substBlock_suggestSubstVars__plus(c *check.C) {
 // The last of the SUBST_SED variables is 15 characters wide. When SUBST_SED
 // is replaced with SUBST_VARS, this becomes 16 characters and therefore
 // requires the whole paragraph to be indented by one more tab.
-func (s *Suite) Test_substBlock_suggestSubstVars__autofix_realign_paragraph(c *check.C) {
-	t := s.Init(c)
+func Test_substBlock_suggestSubstVars__autofix_realign_paragraph(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.Chdir(".")
 
@@ -1512,8 +1578,9 @@ func (s *Suite) Test_substBlock_suggestSubstVars__autofix_realign_paragraph(c *c
 		"SUBST_VARS.pfx+=        PREFIX")
 }
 
-func (s *Suite) Test_substBlock_suggestSubstVars__autofix_plus_sed(c *check.C) {
-	t := s.Init(c)
+func Test_substBlock_suggestSubstVars__autofix_plus_sed(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.Chdir(".")
 
@@ -1543,8 +1610,9 @@ func (s *Suite) Test_substBlock_suggestSubstVars__autofix_plus_sed(c *check.C) {
 		"SUBST_SED.pfx+=         -e s,@PREFIX@,other,g")
 }
 
-func (s *Suite) Test_substBlock_suggestSubstVars__autofix_plus_vars(c *check.C) {
-	t := s.Init(c)
+func Test_substBlock_suggestSubstVars__autofix_plus_vars(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.Chdir(".")
 
@@ -1575,8 +1643,9 @@ func (s *Suite) Test_substBlock_suggestSubstVars__autofix_plus_vars(c *check.C) 
 		"SUBST_VARS.id+= PKGMANDIR")
 }
 
-func (s *Suite) Test_substBlock_suggestSubstVars__autofix_indentation(c *check.C) {
-	t := s.Init(c)
+func Test_substBlock_suggestSubstVars__autofix_indentation(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.Chdir(".")
 
@@ -1605,8 +1674,9 @@ func (s *Suite) Test_substBlock_suggestSubstVars__autofix_indentation(c *check.C
 		"SUBST_VARS.fix-paths=           PREFIX")
 }
 
-func (s *Suite) Test_substBlock_suggestSubstVars__conditional(c *check.C) {
-	t := s.Init(c)
+func Test_substBlock_suggestSubstVars__conditional(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.Chdir(".")
 
@@ -1641,8 +1711,9 @@ func (s *Suite) Test_substBlock_suggestSubstVars__conditional(c *check.C) {
 		".endif")
 }
 
-func (s *Suite) Test_substBlock_dupList__late_addition(c *check.C) {
-	t := s.Init(c)
+func Test_substBlock_dupList__late_addition(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+=\tid",
@@ -1659,8 +1730,9 @@ func (s *Suite) Test_substBlock_dupList__late_addition(c *check.C) {
 			"to \"SUBST_VARS.id\" should use the \"+=\" operator.")
 }
 
-func (s *Suite) Test_substBlock_dupList__conditional_before_unconditional(c *check.C) {
-	t := s.Init(c)
+func Test_substBlock_dupList__conditional_before_unconditional(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+= os",
@@ -1676,8 +1748,9 @@ func (s *Suite) Test_substBlock_dupList__conditional_before_unconditional(c *che
 			"to \"SUBST_FILES.os\" should use the \"+=\" operator.")
 }
 
-func (s *Suite) Test_substBlock_extractVarname(c *check.C) {
-	t := s.Init(c)
+func Test_substBlock_extractVarname(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(input, expected string) {
 		t.CheckEquals((*substBlock).extractVarname(nil, input), expected)
@@ -1723,8 +1796,9 @@ func (s *Suite) Test_substBlock_extractVarname(c *check.C) {
 	test("s,@VAR@,${VAR}suffix,", "")
 }
 
-func (s *Suite) Test_substBlock_isComplete__incomplete(c *check.C) {
-	t := s.Init(c)
+func Test_substBlock_isComplete__incomplete(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	ctx := NewSubstContext(nil)
 
@@ -1753,8 +1827,9 @@ func (s *Suite) Test_substBlock_isComplete__incomplete(c *check.C) {
 		"WARN: filename.mk:14: Incomplete SUBST block: SUBST_STAGE.interp missing.")
 }
 
-func (s *Suite) Test_substBlock_isComplete__complete(c *check.C) {
-	t := s.Init(c)
+func Test_substBlock_isComplete__complete(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	ctx := NewSubstContext(nil)
 
@@ -1776,8 +1851,9 @@ func (s *Suite) Test_substBlock_isComplete__complete(c *check.C) {
 			"can be replaced with \"SUBST_VARS.p= PREFIX\".")
 }
 
-func (s *Suite) Test_substBlock_finish__conditional_inside_then(c *check.C) {
-	t := s.Init(c)
+func Test_substBlock_finish__conditional_inside_then(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		".if ${OPSYS} == Linux",
@@ -1793,8 +1869,9 @@ func (s *Suite) Test_substBlock_finish__conditional_inside_then(c *check.C) {
 		"WARN: filename.mk:5: Incomplete SUBST block: SUBST_FILES.id missing.")
 }
 
-func (s *Suite) Test_substBlock_finish__conditional_inside_else(c *check.C) {
-	t := s.Init(c)
+func Test_substBlock_finish__conditional_inside_else(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		".if ${OPSYS} == Linux",
@@ -1810,8 +1887,9 @@ func (s *Suite) Test_substBlock_finish__conditional_inside_else(c *check.C) {
 		"WARN: filename.mk:6: Incomplete SUBST block: SUBST_FILES.id missing.")
 }
 
-func (s *Suite) Test_substBlock_finish__files_missing(c *check.C) {
-	t := s.Init(c)
+func Test_substBlock_finish__files_missing(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.RunSubst(
 		"SUBST_CLASSES+=         one",
@@ -1829,8 +1907,9 @@ func (s *Suite) Test_substBlock_finish__files_missing(c *check.C) {
 			"SUBST_SED.one, SUBST_VARS.one or SUBST_FILTER_CMD.one missing.")
 }
 
-func (s *Suite) Test_substBlock_finish__assertion(c *check.C) {
-	t := s.Init(c)
+func Test_substBlock_finish__assertion(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	b := newSubstBlock("id")
 	b.enter()
@@ -1839,8 +1918,9 @@ func (s *Suite) Test_substBlock_finish__assertion(c *check.C) {
 		func() { b.finish(nil) })
 }
 
-func (s *Suite) Test_substSeen_set__assertion(c *check.C) {
-	t := s.Init(c)
+func Test_substSeen_set__assertion(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.ExpectAssert(
 		func() {
@@ -1849,8 +1929,9 @@ func (s *Suite) Test_substSeen_set__assertion(c *check.C) {
 		})
 }
 
-func (s *Suite) Test_substSeen_has__assertion(c *check.C) {
-	t := s.Init(c)
+func Test_substSeen_has__assertion(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.ExpectAssert(
 		func() {

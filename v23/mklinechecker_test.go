@@ -1,13 +1,14 @@
 package pkglint
 
 import (
-	"gopkg.in/check.v1"
 	"runtime"
+	"testing"
 )
 
 // PR pkg/46570, item 2
-func (s *Suite) Test_MkLineChecker__unclosed_expr(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker__unclosed_expr(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -26,8 +27,9 @@ func (s *Suite) Test_MkLineChecker__unclosed_expr(c *check.C) {
 		"WARN: Makefile:2: Variable \"EGDIR/pam.d\" is used but not defined.")
 }
 
-func (s *Suite) Test_MkLineChecker_Check__buildlink3_include_prefs(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_Check__buildlink3_include_prefs(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -45,8 +47,9 @@ func (s *Suite) Test_MkLineChecker_Check__buildlink3_include_prefs(c *check.C) {
 			"include bsd.fast.prefs.mk instead of bsd.prefs.mk.")
 }
 
-func (s *Suite) Test_MkLineChecker_Check__warn_expr_LOCALBASE(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_Check__warn_expr_LOCALBASE(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("options.mk",
@@ -59,8 +62,9 @@ func (s *Suite) Test_MkLineChecker_Check__warn_expr_LOCALBASE(c *check.C) {
 		"WARN: options.mk:2: Use PREFIX instead of LOCALBASE.")
 }
 
-func (s *Suite) Test_MkLineChecker_Check__expr_modifier_L(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_Check__expr_modifier_L(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("x11/xkeyboard-config/Makefile",
@@ -89,8 +93,9 @@ func (s *Suite) Test_MkLineChecker_Check__expr_modifier_L(c *check.C) {
 		"WARN: x11/xkeyboard-config/Makefile:3: Variable \"XKBBASE\" is used but not defined.")
 }
 
-func (s *Suite) Test_MkLineChecker_checkEmptyContinuation(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkEmptyContinuation(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.SetUpFileMkLines("filename.mk",
 		MkCvsID,
@@ -109,8 +114,9 @@ func (s *Suite) Test_MkLineChecker_checkEmptyContinuation(c *check.C) {
 		"WARN: ~/filename.mk:3: This line looks empty but continues the previous line.")
 }
 
-func (s *Suite) Test_MkLineChecker_checkTextExpr(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkTextExpr(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
@@ -123,8 +129,9 @@ func (s *Suite) Test_MkLineChecker_checkTextExpr(c *check.C) {
 		"WARN: filename.mk:2: Missing closing \"}\" for \"\".")
 }
 
-func (s *Suite) Test_MkLineChecker_checkText(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkText(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 
@@ -141,8 +148,9 @@ func (s *Suite) Test_MkLineChecker_checkText(c *check.C) {
 		"WARN: ~/module.mk:3: Use of \"GAMEGRP\" is deprecated. Use GAMES_GROUP instead.")
 }
 
-func (s *Suite) Test_MkLineChecker_checkText__WRKSRC(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkText__WRKSRC(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--explain")
 	mklines := t.SetUpFileMkLines("module.mk",
@@ -171,8 +179,9 @@ func (s *Suite) Test_MkLineChecker_checkText__WRKSRC(c *check.C) {
 		"WARN: ~/module.mk:3: Variable \"WRKSRC\" is used but not defined.")
 }
 
-func (s *Suite) Test_MkLineChecker_checkTextWrksrcDotDot(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkTextWrksrcDotDot(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	t.SetUpVartypes()
 	t.SetUpTool("echo", "ECHO", AfterPrefsMk)
 
@@ -192,8 +201,9 @@ func (s *Suite) Test_MkLineChecker_checkTextWrksrcDotDot(c *check.C) {
 // In general, -Wl,-R should not appear in package Makefiles.
 // BUILDLINK_TRANSFORM is an exception to this since this command line option
 // is removed here from the compiler invocations.
-func (s *Suite) Test_MkLineChecker_checkTextRpath(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkTextRpath(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("filename.mk",
@@ -225,8 +235,9 @@ func (s *Suite) Test_MkLineChecker_checkTextRpath(c *check.C) {
 		"WARN: filename.mk:11: Use ${COMPILER_RPATH_FLAG} instead of \"-Wl,--rpath,\".")
 }
 
-func (s *Suite) Test_MkLineChecker_checkTextMissingDollar(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkTextMissingDollar(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("filename.mk",
@@ -249,8 +260,9 @@ func (s *Suite) Test_MkLineChecker_checkTextMissingDollar(c *check.C) {
 			"Maybe missing '$' in expression \"{:Ufallback}\".")
 }
 
-func (s *Suite) Test_MkLineChecker_checkVartype__simple_type(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkVartype__simple_type(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -271,8 +283,9 @@ func (s *Suite) Test_MkLineChecker_checkVartype__simple_type(c *check.C) {
 		"WARN: Makefile:2: COMMENT should not begin with \"A\".")
 }
 
-func (s *Suite) Test_MkLineChecker_checkVartype(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkVartype(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("filename.mk",
@@ -285,8 +298,9 @@ func (s *Suite) Test_MkLineChecker_checkVartype(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLineChecker_checkVartype__append_to_non_list(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkVartype__append_to_non_list(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -310,8 +324,9 @@ func (s *Suite) Test_MkLineChecker_checkVartype__append_to_non_list(c *check.C) 
 	)
 }
 
-func (s *Suite) Test_MkLineChecker_checkVartype__no_tracing(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkVartype__no_tracing(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("filename.mk",
@@ -327,8 +342,9 @@ func (s *Suite) Test_MkLineChecker_checkVartype__no_tracing(c *check.C) {
 		"WARN: filename.mk:3: Variable \"CUR_DIR\" is defined but not used.")
 }
 
-func (s *Suite) Test_MkLineChecker_checkVartype__one_per_line(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkVartype__one_per_line(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("filename.mk",
@@ -344,8 +360,9 @@ func (s *Suite) Test_MkLineChecker_checkVartype__one_per_line(c *check.C) {
 		"WARN: filename.mk:2: PKG_FAIL_REASON should only get one item per line.")
 }
 
-func (s *Suite) Test_MkLineChecker_checkVartype__CFLAGS_with_backticks(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkVartype__CFLAGS_with_backticks(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("chat/pidgin-icb/Makefile",
@@ -369,8 +386,9 @@ func (s *Suite) Test_MkLineChecker_checkVartype__CFLAGS_with_backticks(c *check.
 // See PR 46570, Ctrl+F "4. Shell quoting".
 // Pkglint is correct, since the shell sees this definition for
 // CPPFLAGS as three words, not one word.
-func (s *Suite) Test_MkLineChecker_checkVartype__CFLAGS(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkVartype__CFLAGS(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("Makefile",
@@ -384,8 +402,9 @@ func (s *Suite) Test_MkLineChecker_checkVartype__CFLAGS(c *check.C) {
 		"WARN: Makefile:2: Compiler flag \"%s\\\\\\\"\" has unbalanced double quotes.")
 }
 
-func (s *Suite) Test_MkLineChecker_CheckVartypeBasic(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_CheckVartypeBasic(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("filename.mk",
@@ -404,8 +423,9 @@ func (s *Suite) Test_MkLineChecker_CheckVartypeBasic(c *check.C) {
 			"directly in the package Makefile.")
 }
 
-func (s *Suite) Test_MkLineChecker_checkShellCommand__indentation(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkShellCommand__indentation(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	doTest := func(bool) {
 		mklines := t.SetUpFileMkLines("filename.mk",
@@ -450,8 +470,9 @@ func (s *Suite) Test_MkLineChecker_checkShellCommand__indentation(c *check.C) {
 		"                                        # comment, not a shell command")
 }
 
-func (s *Suite) Test_MkLineChecker_checkComment(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkComment(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -465,8 +486,9 @@ func (s *Suite) Test_MkLineChecker_checkComment(c *check.C) {
 		"ERROR: filename.mk:2: This comment indicates unfinished work (url2pkg).")
 }
 
-func (s *Suite) Test_MkLineChecker_checkInclude(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkInclude(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -506,8 +528,9 @@ func (s *Suite) Test_MkLineChecker_checkInclude(c *check.C) {
 			"not by other makefile fragments.")
 }
 
-func (s *Suite) Test_MkLineChecker_checkInclude__Makefile(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkInclude__Makefile(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines(t.File("Makefile"),
 		MkCvsID,
@@ -520,8 +543,9 @@ func (s *Suite) Test_MkLineChecker_checkInclude__Makefile(c *check.C) {
 		"ERROR: ~/Makefile:2: Other Makefiles must not be included directly.")
 }
 
-func (s *Suite) Test_MkLineChecker_checkInclude__Makefile_exists(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkInclude__Makefile_exists(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("other/existing/Makefile")
 	t.SetUpPackage("category/package",
@@ -535,8 +559,9 @@ func (s *Suite) Test_MkLineChecker_checkInclude__Makefile_exists(c *check.C) {
 		"ERROR: ~/category/package/Makefile:21: Cannot read \"../../other/not-found/Makefile\".")
 }
 
-func (s *Suite) Test_MkLineChecker_checkInclude__hacks(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkInclude__hacks(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("category/package/hacks.mk",
@@ -560,8 +585,9 @@ func (s *Suite) Test_MkLineChecker_checkInclude__hacks(c *check.C) {
 			"Relative path \"../../category/package/nonexistent.mk\" does not exist.")
 }
 
-func (s *Suite) Test_MkLineChecker_checkIncludePythonWheel__no_restrictions(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkIncludePythonWheel__no_restrictions(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("lang/python/egg.mk",
 		MkCvsID)
@@ -574,8 +600,9 @@ func (s *Suite) Test_MkLineChecker_checkIncludePythonWheel__no_restrictions(c *c
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLineChecker_checkIncludePythonWheel__not_Python_2(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkIncludePythonWheel__not_Python_2(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("lang/python/egg.mk",
 		MkCvsID)
@@ -591,8 +618,9 @@ func (s *Suite) Test_MkLineChecker_checkIncludePythonWheel__not_Python_2(c *chec
 		"WARN: Makefile:21: Python egg.mk is deprecated, use wheel.mk instead.")
 }
 
-func (s *Suite) Test_MkLineChecker_checkIncludePythonWheel__not_Python_3(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkIncludePythonWheel__not_Python_3(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("lang/python/egg.mk",
 		MkCvsID)
@@ -607,8 +635,9 @@ func (s *Suite) Test_MkLineChecker_checkIncludePythonWheel__not_Python_3(c *chec
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLineChecker_checkIncludePythonWheel__only_Python_2(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkIncludePythonWheel__only_Python_2(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("lang/python/egg.mk",
 		MkCvsID)
@@ -623,8 +652,9 @@ func (s *Suite) Test_MkLineChecker_checkIncludePythonWheel__only_Python_2(c *che
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLineChecker_checkIncludePythonWheel__only_Python_3(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkIncludePythonWheel__only_Python_3(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("lang/python/egg.mk",
 		MkCvsID)
@@ -641,8 +671,9 @@ func (s *Suite) Test_MkLineChecker_checkIncludePythonWheel__only_Python_3(c *che
 }
 
 // A buildlink3.mk file may include its corresponding builtin.mk file directly.
-func (s *Suite) Test_MkLineChecker_checkIncludeBuiltin__buildlink3_mk(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkIncludeBuiltin__buildlink3_mk(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	mklines := t.SetUpFileMkLines("category/package/buildlink3.mk",
@@ -657,8 +688,9 @@ func (s *Suite) Test_MkLineChecker_checkIncludeBuiltin__buildlink3_mk(c *check.C
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLineChecker_checkIncludeBuiltin__rationale(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkIncludeBuiltin__rationale(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		"# I have good reasons for including this file directly.",
@@ -678,8 +710,9 @@ func (s *Suite) Test_MkLineChecker_checkIncludeBuiltin__rationale(c *check.C) {
 			"Include \"../../category/package/buildlink3.mk\" instead.")
 }
 
-func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation__autofix(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkDirectiveIndentation__autofix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--autofix")
 	lines := t.SetUpFileLines("filename.mk",
@@ -711,8 +744,9 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation__autofix(c *check.C
 
 // Up to 2018-01-28, pkglint applied the autofix also to the continuation
 // lines, which is incorrect. It replaced the dot in "4.*" with spaces.
-func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation__autofix_multiline(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkDirectiveIndentation__autofix_multiline(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--autofix")
 	t.SetUpVartypes()
@@ -741,8 +775,9 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation__autofix_multiline(
 
 // Having a continuation line between the dot and the directive is so
 // unusual that pkglint doesn't fix it automatically. It also doesn't panic.
-func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation__multiline(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkDirectiveIndentation__multiline(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -764,8 +799,9 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation__multiline(c *check
 }
 
 // Another strange edge case that doesn't occur in practice.
-func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation__multiline_indented(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkDirectiveIndentation__multiline_indented(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -799,8 +835,9 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveIndentation__multiline_indented
 		".endif")
 }
 
-func (s *Suite) Test_MkLineChecker_CheckRelativePath(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_CheckRelativePath(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("wip/package/Makefile")
@@ -834,8 +871,9 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePath(c *check.C) {
 			"look like \"../../category/package\", not \"../package\".")
 }
 
-func (s *Suite) Test_MkLineChecker_CheckRelativePath__absolute_path(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_CheckRelativePath__absolute_path(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	absDir := condStr(runtime.GOOS == "windows", "C:/", "/")
 	// Just a random UUID, to really guarantee that the file does not exist.
@@ -853,8 +891,9 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePath__absolute_path(c *check.C) 
 		"ERROR: ~/category/package/module.mk:2: The path \"" + absPath + "\" must be relative.")
 }
 
-func (s *Suite) Test_MkLineChecker_CheckRelativePath__include_if_exists(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_CheckRelativePath__include_if_exists(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.SetUpFileMkLines("filename.mk",
 		MkCvsID,
@@ -868,8 +907,9 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePath__include_if_exists(c *check
 		"ERROR: ~/filename.mk:2: Relative path \"included.mk\" does not exist.")
 }
 
-func (s *Suite) Test_MkLineChecker_CheckRelativePath__wip_mk(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_CheckRelativePath__wip_mk(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("wip/mk/git-package.mk",
 		MkCvsID)
@@ -891,8 +931,9 @@ func (s *Suite) Test_MkLineChecker_CheckRelativePath__wip_mk(c *check.C) {
 			"package should have a COMMIT_MSG file.")
 }
 
-func (s *Suite) Test_MkLineChecker_CheckPackageDir(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_CheckPackageDir(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("other/package/Makefile")
 
@@ -925,8 +966,9 @@ func (s *Suite) Test_MkLineChecker_CheckPackageDir(c *check.C) {
 		nil...)
 }
 
-func (s *Suite) Test_MkLineChecker_checkDirective(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkDirective(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -972,8 +1014,9 @@ func (s *Suite) Test_MkLineChecker_checkDirective(c *check.C) {
 		"NOTE: category/package/filename.mk:17: Using \".undef\" after a \".for\" loop is unnecessary.")
 }
 
-func (s *Suite) Test_MkLineChecker_checkDirective__for_loop_varname(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkDirective__for_loop_varname(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -1002,8 +1045,9 @@ func (s *Suite) Test_MkLineChecker_checkDirective__for_loop_varname(c *check.C) 
 }
 
 // TODO: Split into separate tests.
-func (s *Suite) Test_MkLineChecker_checkDirectiveEnd__ending_comments(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkDirectiveEnd__ending_comments(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.Chdir("category/package")
@@ -1052,8 +1096,9 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveEnd__ending_comments(c *check.C
 // After removing the dummy indentation in commit d5a926af,
 // there was a panic: runtime error: index out of range,
 // in wip/jacorb-lib/buildlink3.mk.
-func (s *Suite) Test_MkLineChecker_checkDirectiveEnd__unbalanced(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkDirectiveEnd__unbalanced(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("filename.mk",
@@ -1069,8 +1114,9 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveEnd__unbalanced(c *check.C) {
 		"ERROR: filename.mk:4: Unmatched .endif.")
 }
 
-func (s *Suite) Test_MkLineChecker_checkDirectiveEnd__ifmake(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkDirectiveEnd__ifmake(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -1083,8 +1129,9 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveEnd__ifmake(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLineChecker_checkDirectiveFor(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkDirectiveFor(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("for.mk",
@@ -1131,8 +1178,9 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveFor(c *check.C) {
 		"WARN: for.mk:15: DISTFILES should not be used at load time in any file.")
 }
 
-func (s *Suite) Test_MkLineChecker_checkDirectiveFor__continuation(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkDirectiveFor__continuation(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("filename.mk",
@@ -1152,8 +1200,9 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveFor__continuation(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLineChecker_checkDirectiveFor__items(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkDirectiveFor__items(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("filename.mk",
@@ -1170,8 +1219,9 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveFor__items(c *check.C) {
 		"WARN: filename.mk:2: Variable \"0\" is used but not defined.")
 }
 
-func (s *Suite) Test_MkLineChecker_checkDirectiveFor__infrastructure(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkDirectiveFor__infrastructure(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/file.mk",
@@ -1190,8 +1240,9 @@ func (s *Suite) Test_MkLineChecker_checkDirectiveFor__infrastructure(c *check.C)
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLineChecker_checkDependencyRule(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkDependencyRule(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -1212,8 +1263,9 @@ func (s *Suite) Test_MkLineChecker_checkDependencyRule(c *check.C) {
 		"WARN: category/package/filename.mk:8: Undeclared target \"target-3\".")
 }
 
-func (s *Suite) Test_MkLineChecker_checkDependencyTarget(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineChecker_checkDependencyTarget(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,

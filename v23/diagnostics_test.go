@@ -1,9 +1,10 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import "testing"
 
-func (s *Suite) Test_Diagnostics_Defer(c *check.C) {
-	t := s.Init(c)
+func Test_Diagnostics_Defer(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	t.SetUpCommandLine("--explain")
 
 	line := t.NewLine("filename.mk", 123, "Text")
@@ -21,8 +22,9 @@ func (s *Suite) Test_Diagnostics_Defer(c *check.C) {
 	)
 }
 
-func (s *Suite) Test_Diagnostics_add(c *check.C) {
-	t := s.Init(c)
+func Test_Diagnostics_add(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line1 := t.NewLine("filename.mk", 1, "Line 1")
 	line2 := t.NewLine("filename.mk", 2, "Line 2")
@@ -36,8 +38,9 @@ func (s *Suite) Test_Diagnostics_add(c *check.C) {
 	t.CheckEquals(len(d.diagnostics[line2]), 1)
 }
 
-func (s *Suite) Test_Diagnostics_explain(c *check.C) {
-	t := s.Init(c)
+func Test_Diagnostics_explain(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--explain")
 
@@ -61,8 +64,9 @@ func (s *Suite) Test_Diagnostics_explain(c *check.C) {
 	)
 }
 
-func (s *Suite) Test_Diagnostics_Emit(c *check.C) {
-	t := s.Init(c)
+func Test_Diagnostics_Emit(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line1 := t.NewLine("filename.mk", 1, "Line 1")
 	line2 := t.NewLine("filename.mk", 2, "Line 2")
@@ -89,8 +93,9 @@ func (s *Suite) Test_Diagnostics_Emit(c *check.C) {
 	)
 }
 
-func (s *Suite) Test_Diagnostics_AssertEmpty(c *check.C) {
-	t := s.Init(c)
+func Test_Diagnostics_AssertEmpty(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line1 := t.NewLine("filename.mk", 1, "Line 1")
 	line2 := t.NewLine("filename.mk", 2, "Line 2")
@@ -109,8 +114,9 @@ func (s *Suite) Test_Diagnostics_AssertEmpty(c *check.C) {
 		"filename.mk:2: Line 2")
 }
 
-func (s *Suite) Test_DeferredDiagnoser_Errorf(c *check.C) {
-	t := s.Init(c)
+func Test_DeferredDiagnoser_Errorf(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("filename.mk", 123, "Text")
 	var d Diagnostics
@@ -122,8 +128,9 @@ func (s *Suite) Test_DeferredDiagnoser_Errorf(c *check.C) {
 		"ERROR: filename.mk:123: Line must contain \"error text\".")
 }
 
-func (s *Suite) Test_DeferredDiagnoser_Warnf(c *check.C) {
-	t := s.Init(c)
+func Test_DeferredDiagnoser_Warnf(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("filename.mk", 123, "Text")
 	var d Diagnostics
@@ -135,8 +142,9 @@ func (s *Suite) Test_DeferredDiagnoser_Warnf(c *check.C) {
 		"WARN: filename.mk:123: Line should contain \"warning text\".")
 }
 
-func (s *Suite) Test_DeferredDiagnoser_Notef(c *check.C) {
-	t := s.Init(c)
+func Test_DeferredDiagnoser_Notef(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("filename.mk", 123, "Text")
 	var d Diagnostics
@@ -148,8 +156,9 @@ func (s *Suite) Test_DeferredDiagnoser_Notef(c *check.C) {
 		"NOTE: filename.mk:123: Line may also contain \"note text\".")
 }
 
-func (s *Suite) Test_DeferredDiagnoser_Explain(c *check.C) {
-	t := s.Init(c)
+func Test_DeferredDiagnoser_Explain(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	t.SetUpCommandLine("--explain")
 
 	line := t.NewLine("filename.mk", 123, "Text")

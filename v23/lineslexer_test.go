@@ -1,11 +1,10 @@
 package pkglint
 
-import (
-	"gopkg.in/check.v1"
-)
+import "testing"
 
-func (s *Suite) Test_NewLinesLexer(c *check.C) {
-	t := s.Init(c)
+func Test_NewLinesLexer(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("file.txt",
 		"line 1")
@@ -15,8 +14,9 @@ func (s *Suite) Test_NewLinesLexer(c *check.C) {
 	t.CheckEquals(llex.line, lines.Lines[0])
 }
 
-func (s *Suite) Test_LinesLexer_CurrentLine(c *check.C) {
-	t := s.Init(c)
+func Test_LinesLexer_CurrentLine(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("file.txt",
 		"line 1")
@@ -30,8 +30,9 @@ func (s *Suite) Test_LinesLexer_CurrentLine(c *check.C) {
 	t.CheckEquals(llex.CurrentLine().Linenos(), "EOF")
 }
 
-func (s *Suite) Test_LinesLexer_PreviousLine(c *check.C) {
-	t := s.Init(c)
+func Test_LinesLexer_PreviousLine(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("file.txt",
 		"line 1")
@@ -45,8 +46,9 @@ func (s *Suite) Test_LinesLexer_PreviousLine(c *check.C) {
 	t.CheckEquals(llex.PreviousLine(), lines.Lines[0])
 }
 
-func (s *Suite) Test_LinesLexer_EOF(c *check.C) {
-	t := s.Init(c)
+func Test_LinesLexer_EOF(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("file.txt",
 		"line 1")
@@ -60,8 +62,9 @@ func (s *Suite) Test_LinesLexer_EOF(c *check.C) {
 	t.CheckEquals(llex.EOF(), true)
 }
 
-func (s *Suite) Test_LinesLexer_Skip(c *check.C) {
-	t := s.Init(c)
+func Test_LinesLexer_Skip(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("file.txt",
 		"line 1")
@@ -72,8 +75,9 @@ func (s *Suite) Test_LinesLexer_Skip(c *check.C) {
 	t.CheckEquals(llex.Skip(), false)
 }
 
-func (s *Suite) Test_LinesLexer_Undo(c *check.C) {
-	t := s.Init(c)
+func Test_LinesLexer_Undo(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("file.txt",
 		"line 1")
@@ -87,8 +91,9 @@ func (s *Suite) Test_LinesLexer_Undo(c *check.C) {
 	t.CheckEquals(llex.CurrentLine(), lines.Lines[0])
 }
 
-func (s *Suite) Test_LinesLexer_NextRegexp(c *check.C) {
-	t := s.Init(c)
+func Test_LinesLexer_NextRegexp(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("file.txt",
 		"line 1")
@@ -103,8 +108,9 @@ func (s *Suite) Test_LinesLexer_NextRegexp(c *check.C) {
 	t.CheckNil(llex.NextRegexp(`^`))
 }
 
-func (s *Suite) Test_LinesLexer_SkipRegexp(c *check.C) {
-	t := s.Init(c)
+func Test_LinesLexer_SkipRegexp(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("file.txt",
 		"line 1")
@@ -119,8 +125,9 @@ func (s *Suite) Test_LinesLexer_SkipRegexp(c *check.C) {
 	t.CheckEquals(llex.SkipRegexp(`^`), false)
 }
 
-func (s *Suite) Test_LinesLexer_SkipPrefix(c *check.C) {
-	t := s.Init(c)
+func Test_LinesLexer_SkipPrefix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("file.txt",
 		"line 1",
@@ -134,8 +141,9 @@ func (s *Suite) Test_LinesLexer_SkipPrefix(c *check.C) {
 	t.CheckEquals(llex.SkipPrefix(""), false)
 }
 
-func (s *Suite) Test_LinesLexer_SkipText(c *check.C) {
-	t := s.Init(c)
+func Test_LinesLexer_SkipText(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("file.txt",
 		"line 1")
@@ -148,8 +156,9 @@ func (s *Suite) Test_LinesLexer_SkipText(c *check.C) {
 	t.CheckEquals(llex.EOF(), true)
 }
 
-func (s *Suite) Test_LinesLexer_SkipEmptyOrNote__beginning_of_file(c *check.C) {
-	t := s.Init(c)
+func Test_LinesLexer_SkipEmptyOrNote__beginning_of_file(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("file.txt",
 		"line 1",
@@ -162,8 +171,9 @@ func (s *Suite) Test_LinesLexer_SkipEmptyOrNote__beginning_of_file(c *check.C) {
 		"NOTE: file.txt:1: Empty line expected above this line.")
 }
 
-func (s *Suite) Test_LinesLexer_SkipEmptyOrNote__end_of_file(c *check.C) {
-	t := s.Init(c)
+func Test_LinesLexer_SkipEmptyOrNote__end_of_file(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("file.txt",
 		"line 1",
@@ -179,8 +189,9 @@ func (s *Suite) Test_LinesLexer_SkipEmptyOrNote__end_of_file(c *check.C) {
 		"NOTE: file.txt:2: Empty line expected below this line.")
 }
 
-func (s *Suite) Test_LinesLexer_SkipTextOrWarn(c *check.C) {
-	t := s.Init(c)
+func Test_LinesLexer_SkipTextOrWarn(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("file.txt",
 		"line 1",
@@ -196,8 +207,9 @@ func (s *Suite) Test_LinesLexer_SkipTextOrWarn(c *check.C) {
 		"WARN: file.txt:1: This line should consist of the following text: ne")
 }
 
-func (s *Suite) Test_LinesLexer_setIndex(c *check.C) {
-	t := s.Init(c)
+func Test_LinesLexer_setIndex(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("file.txt",
 		"line 1",
@@ -217,8 +229,9 @@ func (s *Suite) Test_LinesLexer_setIndex(c *check.C) {
 	t.CheckEquals(llex.EOF(), true)
 }
 
-func (s *Suite) Test_LinesLexer_next(c *check.C) {
-	t := s.Init(c)
+func Test_LinesLexer_next(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("file.txt",
 		"line 1",
@@ -238,8 +251,9 @@ func (s *Suite) Test_LinesLexer_next(c *check.C) {
 	t.CheckNil(llex.line)
 }
 
-func (s *Suite) Test_NewMkLinesLexer(c *check.C) {
-	t := s.Init(c)
+func Test_NewMkLinesLexer(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		"# line 1",
@@ -249,8 +263,9 @@ func (s *Suite) Test_NewMkLinesLexer(c *check.C) {
 	t.CheckEquals(mlex.CurrentMkLine(), mklines.mklines[0])
 }
 
-func (s *Suite) Test_MkLinesLexer_PreviousMkLine(c *check.C) {
-	t := s.Init(c)
+func Test_MkLinesLexer_PreviousMkLine(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		"# line 1",
@@ -264,8 +279,9 @@ func (s *Suite) Test_MkLinesLexer_PreviousMkLine(c *check.C) {
 	t.CheckEquals(mlex.PreviousMkLine().Linenos(), "1")
 }
 
-func (s *Suite) Test_MkLinesLexer_CurrentMkLine(c *check.C) {
-	t := s.Init(c)
+func Test_MkLinesLexer_CurrentMkLine(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		"# line 1",
@@ -283,8 +299,9 @@ func (s *Suite) Test_MkLinesLexer_CurrentMkLine(c *check.C) {
 	t.ExpectPanicMatches(func() { mlex.CurrentMkLine() }, `.*index out of range.*`)
 }
 
-func (s *Suite) Test_MkLinesLexer_SkipIf(c *check.C) {
-	t := s.Init(c)
+func Test_MkLinesLexer_SkipIf(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		"# comment",

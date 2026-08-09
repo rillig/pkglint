@@ -1,16 +1,17 @@
 package pkglint
 
 import (
-	"gopkg.in/check.v1"
 	"strings"
+	"testing"
 )
 
 // This test demonstrates that the shell tokenizer is not perfect yet.
 // There are still some corner cases that trigger a parse error.
 // To get 100% code coverage, they have been found using the fuzzer
 // and trimmed down to minimal examples.
-func (s *Suite) Test_ShTokenizer__examples_from_fuzzing(c *check.C) {
-	t := s.Init(c)
+func Test_ShTokenizer__examples_from_fuzzing(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(input string, diagnostics ...string) {
 		mklines := t.NewMkLines("filename.mk",
@@ -86,8 +87,9 @@ func (s *Suite) Test_ShTokenizer__examples_from_fuzzing(c *check.C) {
 // small example programs that led to the uncovered code.
 //
 // This test is not useful as-is.
-func (s *Suite) Test_ShTokenizer__fuzzing(c *check.C) {
-	t := s.Init(c)
+func Test_ShTokenizer__fuzzing(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	fuzzer := NewFuzzer()
 	fuzzer.Char("\"'`$();|_#", 10)
@@ -106,8 +108,9 @@ func (s *Suite) Test_ShTokenizer__fuzzing(c *check.C) {
 	fuzzer.Ok()
 }
 
-func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
-	t := s.Init(c)
+func Test_ShTokenizer_ShAtom(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	// testRest ensures that the given string is parsed to the expected
 	// atoms, and returns the remaining text.
@@ -552,8 +555,9 @@ func (s *Suite) Test_ShTokenizer_ShAtom(c *check.C) {
 			"at \"\\\\${VAR.1234567890123...\" (quoting=b).")
 }
 
-func (s *Suite) Test_ShTokenizer_ShAtom__quoting(c *check.C) {
-	t := s.Init(c)
+func Test_ShTokenizer_ShAtom__quoting(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(input, expectedOutput string) {
 		line := t.NewLine("filename.mk", 1, "")
@@ -593,8 +597,9 @@ func (s *Suite) Test_ShTokenizer_ShAtom__quoting(c *check.C) {
 // If a new quoting mode is added (in which case the shell tokenizer
 // should rather be rewritten completely and correctly), it is ok
 // to panic if ShQuoting is not adjusted in the same commit.
-func (s *Suite) Test_ShTokenizer_ShAtom__internal_error(c *check.C) {
-	t := s.Init(c)
+func Test_ShTokenizer_ShAtom__internal_error(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("filename.mk", 123, "\ttoken")
 	tok := NewShTokenizer(line, line.Text)
@@ -604,8 +609,9 @@ func (s *Suite) Test_ShTokenizer_ShAtom__internal_error(c *check.C) {
 		`^runtime error: index out of range.*`)
 }
 
-func (s *Suite) Test_ShTokenizer_shExpr(c *check.C) {
-	t := s.Init(c)
+func Test_ShTokenizer_shExpr(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(input string, output *ShAtom, rest string) {
 		tok := NewShTokenizer(nil, input)
@@ -655,8 +661,9 @@ func (s *Suite) Test_ShTokenizer_shExpr(c *check.C) {
 	test("$${\\}", nil, "$${\\}")
 }
 
-func (s *Suite) Test_ShTokenizer_ShToken(c *check.C) {
-	t := s.Init(c)
+func Test_ShTokenizer_ShToken(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	// testRest ensures that the given string is parsed to the expected
 	// tokens, and returns the remaining text.

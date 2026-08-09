@@ -1,9 +1,10 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import "testing"
 
-func (s *Suite) Test_NewVarorderChecker(c *check.C) {
-	t := s.Init(c)
+func Test_NewVarorderChecker(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
@@ -19,8 +20,9 @@ func (s *Suite) Test_NewVarorderChecker(c *check.C) {
 
 // None of the relevant variables is defined,
 // so the varorder check is skipped.
-func (s *Suite) Test_VarorderChecker_Check__none(c *check.C) {
-	t := s.Init(c)
+func Test_VarorderChecker_Check__none(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -36,8 +38,9 @@ func (s *Suite) Test_VarorderChecker_Check__none(c *check.C) {
 
 // All required variables are defined,
 // all optional variables are undefined.
-func (s *Suite) Test_VarorderChecker_Check__once(c *check.C) {
-	t := s.Init(c)
+func Test_VarorderChecker_Check__once(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -57,8 +60,9 @@ func (s *Suite) Test_VarorderChecker_Check__once(c *check.C) {
 
 // All required and optional variables are defined,
 // but all repeatable variables are undefined.
-func (s *Suite) Test_VarorderChecker_Check__once_and_optional(c *check.C) {
-	t := s.Init(c)
+func Test_VarorderChecker_Check__once_and_optional(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -105,8 +109,9 @@ func (s *Suite) Test_VarorderChecker_Check__once_and_optional(c *check.C) {
 
 // All required and repeatable variables are defined,
 // but all optional variables are undefined.
-func (s *Suite) Test_VarorderChecker_Check__once_and_many(c *check.C) {
-	t := s.Init(c)
+func Test_VarorderChecker_Check__once_and_many(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -156,8 +161,9 @@ func (s *Suite) Test_VarorderChecker_Check__once_and_many(c *check.C) {
 // as this constellation does not occur in varorderVariables.
 
 // A required variable in the middle of a section is missing.
-func (s *Suite) Test_VarorderChecker_Check__missing_once_middle(c *check.C) {
-	t := s.Init(c)
+func Test_VarorderChecker_Check__missing_once_middle(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -175,8 +181,9 @@ func (s *Suite) Test_VarorderChecker_Check__missing_once_middle(c *check.C) {
 }
 
 // A required variable at the end of the section is missing.
-func (s *Suite) Test_VarorderChecker_Check__missing_once_end(c *check.C) {
-	t := s.Init(c)
+func Test_VarorderChecker_Check__missing_once_end(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -196,8 +203,9 @@ func (s *Suite) Test_VarorderChecker_Check__missing_once_end(c *check.C) {
 			"should be defined here.")
 }
 
-func (s *Suite) Test_VarorderChecker_Check__once_repeated(c *check.C) {
-	t := s.Init(c)
+func Test_VarorderChecker_Check__once_repeated(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -224,8 +232,9 @@ func (s *Suite) Test_VarorderChecker_Check__once_repeated(c *check.C) {
 
 // Two optional variables from the same section occur in the wrong order.
 // Both variables should be placed in the middle of the section.
-func (s *Suite) Test_VarorderChecker_Check__swapped_optional_middle(c *check.C) {
-	t := s.Init(c)
+func Test_VarorderChecker_Check__swapped_optional_middle(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -246,8 +255,9 @@ func (s *Suite) Test_VarorderChecker_Check__swapped_optional_middle(c *check.C) 
 			"is misplaced, should be in line 3.")
 }
 
-func (s *Suite) Test_VarorderChecker_Check__too_early(c *check.C) {
-	t := s.Init(c)
+func Test_VarorderChecker_Check__too_early(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -269,8 +279,9 @@ func (s *Suite) Test_VarorderChecker_Check__too_early(c *check.C) {
 			"occurs too early, should be after \"CATEGORIES\".")
 }
 
-func (s *Suite) Test_VarorderChecker_Check__too_late(c *check.C) {
-	t := s.Init(c)
+func Test_VarorderChecker_Check__too_late(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -295,8 +306,9 @@ func (s *Suite) Test_VarorderChecker_Check__too_late(c *check.C) {
 
 // Two optional variables from the same section occur in the wrong order.
 // The second of these variables should be placed at the end of the section.
-func (s *Suite) Test_VarorderChecker_Check__swapped_optional_end(c *check.C) {
-	t := s.Init(c)
+func Test_VarorderChecker_Check__swapped_optional_end(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -320,8 +332,9 @@ func (s *Suite) Test_VarorderChecker_Check__swapped_optional_end(c *check.C) {
 }
 
 // Two optional variables from the bottom sections occur in the wrong order.
-func (s *Suite) Test_VarorderChecker_Check__swapped_bottom(c *check.C) {
-	t := s.Init(c)
+func Test_VarorderChecker_Check__swapped_bottom(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -345,8 +358,9 @@ func (s *Suite) Test_VarorderChecker_Check__swapped_bottom(c *check.C) {
 }
 
 // Two optional variables from different sections occur in the wrong order.
-func (s *Suite) Test_VarorderChecker_Check__swapped_across_sections(c *check.C) {
-	t := s.Init(c)
+func Test_VarorderChecker_Check__swapped_across_sections(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -370,8 +384,9 @@ func (s *Suite) Test_VarorderChecker_Check__swapped_across_sections(c *check.C) 
 }
 
 // A variable is in the wrong place, it should be at the very top.
-func (s *Suite) Test_VarorderChecker_Check__move_to_top(c *check.C) {
-	t := s.Init(c)
+func Test_VarorderChecker_Check__move_to_top(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -393,8 +408,9 @@ func (s *Suite) Test_VarorderChecker_Check__move_to_top(c *check.C) {
 }
 
 // A variable is in the wrong place, it should be at the very bottom.
-func (s *Suite) Test_VarorderChecker_Check__move_to_bottom(c *check.C) {
-	t := s.Init(c)
+func Test_VarorderChecker_Check__move_to_bottom(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -416,8 +432,9 @@ func (s *Suite) Test_VarorderChecker_Check__move_to_bottom(c *check.C) {
 // In the middle of a section, there is an extra empty line.
 //
 // The sections are designed to be small enough to not need these empty lines.
-func (s *Suite) Test_VarorderChecker_Check__extra_empty_line(c *check.C) {
-	t := s.Init(c)
+func Test_VarorderChecker_Check__extra_empty_line(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -444,8 +461,9 @@ func (s *Suite) Test_VarorderChecker_Check__extra_empty_line(c *check.C) {
 //
 // The CATEGORIES variable is in a different section from COMMENT and
 // LICENSE, with an entirely optional section in-between.
-func (s *Suite) Test_VarorderChecker_Check__missing_empty_line(c *check.C) {
-	t := s.Init(c)
+func Test_VarorderChecker_Check__missing_empty_line(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -463,8 +481,9 @@ func (s *Suite) Test_VarorderChecker_Check__missing_empty_line(c *check.C) {
 		"WARN: Makefile:4: Missing empty line.")
 }
 
-func (s *Suite) Test_VarorderChecker_Check__commented_once(c *check.C) {
-	t := s.Init(c)
+func Test_VarorderChecker_Check__commented_once(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -493,8 +512,9 @@ func (s *Suite) Test_VarorderChecker_Check__commented_once(c *check.C) {
 // A commented variable assignment satisfies an "optional" as well as a "once"
 // requirement.  There may be multiple commented variable assignments, as
 // they are not active.
-func (s *Suite) Test_VarorderChecker_Check__commented_optional(c *check.C) {
-	t := s.Init(c)
+func Test_VarorderChecker_Check__commented_optional(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -519,8 +539,9 @@ func (s *Suite) Test_VarorderChecker_Check__commented_optional(c *check.C) {
 
 // When extracting the relevant lines, comments are skipped,
 // but commented variable assignments are kept.
-func (s *Suite) Test_VarorderChecker_relevantLines__comments(c *check.C) {
-	t := s.Init(c)
+func Test_VarorderChecker_relevantLines__comments(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("Makefile",
@@ -548,8 +569,9 @@ func (s *Suite) Test_VarorderChecker_relevantLines__comments(c *check.C) {
 
 // USE_TOOLS is not in the list of varorder variables and is thus skipped when
 // collecting the relevant lines.
-func (s *Suite) Test_VarorderChecker_relevantLines__foreign(c *check.C) {
-	t := s.Init(c)
+func Test_VarorderChecker_relevantLines__foreign(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -577,8 +599,9 @@ func (s *Suite) Test_VarorderChecker_relevantLines__foreign(c *check.C) {
 // deviate from the standard variable order, or may define a "once" variable
 // twice, in separate branches of the conditional.  Skip the check in these
 // cases, as covering all possible cases would become too complicated.
-func (s *Suite) Test_VarorderChecker_relevantLines__directive(c *check.C) {
-	t := s.Init(c)
+func Test_VarorderChecker_relevantLines__directive(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -602,8 +625,9 @@ func (s *Suite) Test_VarorderChecker_relevantLines__directive(c *check.C) {
 
 // A package that doesn't include bsd.pkg.mk in the last line of the package
 // makefile is not considered simple enough for the varorder check.
-func (s *Suite) Test_VarorderChecker_relevantLines__incomplete(c *check.C) {
-	t := s.Init(c)
+func Test_VarorderChecker_relevantLines__incomplete(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -620,8 +644,9 @@ func (s *Suite) Test_VarorderChecker_relevantLines__incomplete(c *check.C) {
 
 // A package may include buildlink3.mk files at the end and still be
 // considered simple enough for the varorder check.
-func (s *Suite) Test_VarorderChecker_relevantLines__buildlink(c *check.C) {
-	t := s.Init(c)
+func Test_VarorderChecker_relevantLines__buildlink(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -645,8 +670,9 @@ func (s *Suite) Test_VarorderChecker_relevantLines__buildlink(c *check.C) {
 // A package may include an options.mk file and still be considered simple
 // enough for the varorder check, as package options don't usually affect
 // the fundamental variables from the varorder check.
-func (s *Suite) Test_VarorderChecker_relevantLines__options_mk(c *check.C) {
-	t := s.Init(c)
+func Test_VarorderChecker_relevantLines__options_mk(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -671,8 +697,9 @@ func (s *Suite) Test_VarorderChecker_relevantLines__options_mk(c *check.C) {
 // A package that includes an arbitrary other makefile may define the
 // variables from the varorder check there, which is common for
 // Makefile.common files.  In such a case, skip the varorder check.
-func (s *Suite) Test_VarorderChecker_relevantLines__include(c *check.C) {
-	t := s.Init(c)
+func Test_VarorderChecker_relevantLines__include(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -692,8 +719,9 @@ func (s *Suite) Test_VarorderChecker_relevantLines__include(c *check.C) {
 }
 
 // A variable that is "once" or "optional" should not occur more than once.
-func (s *Suite) Test_VarorderChecker_check(c *check.C) {
-	t := s.Init(c)
+func Test_VarorderChecker_check(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -715,8 +743,9 @@ func (s *Suite) Test_VarorderChecker_check(c *check.C) {
 // This package does not declare its LICENSE.
 // Since this error is grave enough, treat the LICENSE variable as optional,
 // to prevent issuing two very similar diagnostics.
-func (s *Suite) Test_VarorderChecker_skipLicenseCheck(c *check.C) {
-	t := s.Init(c)
+func Test_VarorderChecker_skipLicenseCheck(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("mk/bsd.pkg.mk", "# dummy")
 	t.CreateFileLines("x11/Makefile", MkCvsID)
@@ -744,8 +773,9 @@ func (s *Suite) Test_VarorderChecker_skipLicenseCheck(c *check.C) {
 		"ERROR: ~/x11/9term/Makefile: Each package must define its LICENSE.")
 }
 
-func (s *Suite) Test_VarorderChecker_explain(c *check.C) {
-	t := s.Init(c)
+func Test_VarorderChecker_explain(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	t.SetUpCommandLine("--explain")
 
 	mklines := t.NewMkLines("Makefile",

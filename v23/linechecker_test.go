@@ -1,11 +1,10 @@
 package pkglint
 
-import (
-	"gopkg.in/check.v1"
-)
+import "testing"
 
-func (s *Suite) Test_LineChecker_CheckLength(c *check.C) {
-	t := s.Init(c)
+func Test_LineChecker_CheckLength(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line1 := t.NewLine("DESCR", 1, "A very long line with spaces")
 	line2 := t.NewLine("DESCR", 2, "A_very_long_line_without_spaces")
@@ -17,8 +16,9 @@ func (s *Suite) Test_LineChecker_CheckLength(c *check.C) {
 		"WARN: DESCR:1: Line too long (should be no more than 20 characters).")
 }
 
-func (s *Suite) Test_LineChecker_CheckValidCharacters(c *check.C) {
-	t := s.Init(c)
+func Test_LineChecker_CheckValidCharacters(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	doTest := func(autofix bool) {
 		line := t.NewLine("filename", 32, "The letter \u00DC is an umlaut.")
@@ -31,8 +31,9 @@ func (s *Suite) Test_LineChecker_CheckValidCharacters(c *check.C) {
 		"WARN: filename:32: Line contains invalid character \"U+00DC\".")
 }
 
-func (s *Suite) Test_LineChecker_CheckTrailingWhitespace(c *check.C) {
-	t := s.Init(c)
+func Test_LineChecker_CheckTrailingWhitespace(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	doTest := func(autofix bool) {
 		line := t.NewLine("Makefile", 32, "The line must go on   ")
@@ -46,8 +47,9 @@ func (s *Suite) Test_LineChecker_CheckTrailingWhitespace(c *check.C) {
 		"AUTOFIX: Makefile:32: Replacing \"   \" with \"\".")
 }
 
-func (s *Suite) Test_LineChecker_CheckTrailingWhitespace__tab(c *check.C) {
-	t := s.Init(c)
+func Test_LineChecker_CheckTrailingWhitespace__tab(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	doTest := func(autofix bool) {
 		line := t.NewLine("Makefile", 32, "The line must go on\t")
@@ -69,8 +71,9 @@ func (s *Suite) Test_LineChecker_CheckTrailingWhitespace__tab(c *check.C) {
 // any whitespace that might be trailing.
 //
 // See Test_MkLineChecker_checkEmptyContinuation.
-func (s *Suite) Test_LineChecker_CheckTrailingWhitespace__multi(c *check.C) {
-	t := s.Init(c)
+func Test_LineChecker_CheckTrailingWhitespace__multi(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	doTest := func(autofix bool) {
 		mklines := t.NewMkLines("Makefile",

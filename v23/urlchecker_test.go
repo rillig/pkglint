@@ -1,9 +1,10 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import "testing"
 
-func (s *Suite) Test_NewUrlChecker(c *check.C) {
-	t := s.Init(c)
+func Test_NewUrlChecker(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
@@ -25,8 +26,9 @@ func (s *Suite) Test_NewUrlChecker(c *check.C) {
 	t.CheckEquals(ck.varname, "MASTER_SITES")
 }
 
-func (s *Suite) Test_UrlChecker_CheckFetchURL(c *check.C) {
-	t := s.Init(c)
+func Test_UrlChecker_CheckFetchURL(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	t.SetUpVarType("HOMEPAGE", BtURL, NoVartypeOptions)
 
 	mklines := t.NewMkLines("filename.mk",
@@ -41,8 +43,9 @@ func (s *Suite) Test_UrlChecker_CheckFetchURL(c *check.C) {
 	)
 }
 
-func (s *Suite) Test_UrlChecker_CheckURL(c *check.C) {
-	t := s.Init(c)
+func Test_UrlChecker_CheckURL(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	t.SetUpVarType("MASTER_SITES", BtFetchURL, List)
 	t.SetUpMasterSite("MASTER_SITE_CPAN", "https://example.org/")
 
@@ -65,8 +68,9 @@ func (s *Suite) Test_UrlChecker_CheckURL(c *check.C) {
 	)
 }
 
-func (s *Suite) Test_UrlChecker_endsWithSlash(c *check.C) {
-	t := s.Init(c)
+func Test_UrlChecker_endsWithSlash(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(url string, expected YesNoUnknown) {
 		mklines := t.NewMkLines("filename.mk",

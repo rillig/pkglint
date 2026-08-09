@@ -1,14 +1,15 @@
 package pkglint
 
 import (
-	"gopkg.in/check.v1"
 	"strings"
+	"testing"
 )
 
 // Before 2020-03-25, pkglint ran into a parse error since it didn't
 // know that _ULIMIT_CMD brings its own semicolon.
-func (s *Suite) Test_ShellLineChecker__skip_ULIMIT_CMD(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker__skip_ULIMIT_CMD(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -20,8 +21,9 @@ func (s *Suite) Test_ShellLineChecker__skip_ULIMIT_CMD(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_ShellLineChecker__RUN(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker__RUN(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	t.SetUpTool("echo", "", AfterPrefsMk)
 
 	mklines := t.NewMkLines("Makefile",
@@ -46,8 +48,9 @@ func (s *Suite) Test_ShellLineChecker__RUN(c *check.C) {
 	)
 }
 
-func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_CheckShellCommandLine(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("[", "TEST", AtRunTime)
@@ -181,8 +184,9 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine(c *check.C) {
 }
 
 // TODO: Document in detail that strip is not a regular tool.
-func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__strip(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_CheckShellCommandLine__strip(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(shellCommand string) {
 		mklines := t.NewMkLines("filename.mk",
@@ -213,8 +217,9 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__strip(c *check.C) {
 // actively warns when someone tries to run it in parallel mode, there is
 // no point checking for chdir that might spill over to the next line.
 // That will not happen in compat mode.
-func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__chdir(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_CheckShellCommandLine__chdir(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpTool("echo", "", AfterPrefsMk)
 	t.SetUpTool("sed", "", AfterPrefsMk)
@@ -251,8 +256,9 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__chdir(c *check.C) {
 			"the | operator is ignored.")
 }
 
-func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__nofix(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_CheckShellCommandLine__nofix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("echo", "", AtRunTime)
@@ -266,8 +272,9 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__nofix(c *check.C) {
 		"NOTE: Makefile:1: The :Q modifier isn't necessary for ${PKGNAME} here.")
 }
 
-func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__show_autofix(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_CheckShellCommandLine__show_autofix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--show-autofix")
 	t.SetUpVartypes()
@@ -283,8 +290,9 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__show_autofix(c *che
 		"AUTOFIX: Makefile:1: Replacing \"${PKGNAME:Q}\" with \"${PKGNAME}\".")
 }
 
-func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__autofix(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_CheckShellCommandLine__autofix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--autofix")
 	t.SetUpVartypes()
@@ -303,8 +311,9 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__autofix(c *check.C)
 }
 
 // TODO: Document the exact purpose of this test, or split it into useful tests.
-func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__implementation(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_CheckShellCommandLine__implementation(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("filename.mk",
@@ -331,8 +340,9 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__implementation(c *c
 		"WARN: filename.mk:1: Unknown shell command \"echo\".")
 }
 
-func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__dollar_without_variable(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_CheckShellCommandLine__dollar_without_variable(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("pax", "", AtRunTime)
@@ -346,8 +356,9 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__dollar_without_vari
 		"WARN: filename.mk:1: Substitution commands like \"/.*~$$//g\" should always be quoted.")
 }
 
-func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__echo(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_CheckShellCommandLine__echo(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	echo := t.SetUpTool("echo", "ECHO", AtRunTime)
 	echo.MustUseVarForm = true
@@ -365,8 +376,9 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__echo(c *check.C) {
 		"WARN: filename.mk:3: Use \"${ECHO}\" instead of \"echo\".")
 }
 
-func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__shell_variables(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_CheckShellCommandLine__shell_variables(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("install", "INSTALL", AtRunTime)
@@ -408,8 +420,9 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__shell_variables(c *
 		"WARN: Makefile:3: Use the RCD_SCRIPTS mechanism to install rc.d scripts automatically to ${RCD_SCRIPTS_EXAMPLEDIR}.")
 }
 
-func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__sed_and_mv(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_CheckShellCommandLine__sed_and_mv(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("sed", "SED", AtRunTime)
@@ -422,8 +435,9 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__sed_and_mv(c *check
 		"NOTE: filename.mk:1: Use the SUBST framework instead of ${SED} and ${MV}.")
 }
 
-func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__sed_and_mv_explained(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_CheckShellCommandLine__sed_and_mv_explained(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--explain")
 	t.SetUpVartypes()
@@ -455,8 +469,9 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__sed_and_mv_explaine
 		"")
 }
 
-func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__sed_and_mv_autofix_explained(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_CheckShellCommandLine__sed_and_mv_autofix_explained(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--explain", "--autofix")
 	t.SetUpVartypes()
@@ -471,8 +486,9 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__sed_and_mv_autofix_
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__subshell(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_CheckShellCommandLine__subshell(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	ck := t.NewShellLineChecker("\t${RUN} uname=$$(uname)")
 
@@ -484,8 +500,9 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__subshell(c *check.C
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__install_dir(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_CheckShellCommandLine__install_dir(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	ck := t.NewShellLineChecker("\t${RUN} ${INSTALL_DATA_DIR} ${DESTDIR}${PREFIX}/dir1 ${DESTDIR}${PREFIX}/dir2")
@@ -511,8 +528,9 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__install_dir(c *chec
 		"WARN: filename.mk:1: The INSTALL_*_DIR commands can only handle one directory at a time.")
 }
 
-func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__install_option_d(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_CheckShellCommandLine__install_option_d(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	ck := t.NewShellLineChecker("\t${RUN} ${INSTALL} -d ${DESTDIR}${PREFIX}/dir1 ${DESTDIR}${PREFIX}/dir2")
@@ -524,8 +542,9 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__install_option_d(c 
 		"NOTE: filename.mk:1: You can use \"INSTALLATION_DIRS+= dir2\" instead of \"${INSTALL} -d\".")
 }
 
-func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__trailing_semicolon(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_CheckShellCommandLine__trailing_semicolon(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	t.SetUpTool("mkdir", "", AfterPrefsMk)
 	t.SetUpTool("find", "", AfterPrefsMk)
 
@@ -542,8 +561,9 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommandLine__trailing_semicolon(
 			"at the end of a shell command line is redundant.")
 }
 
-func (s *Suite) Test_ShellLineChecker_checkHiddenAndSuppress(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_checkHiddenAndSuppress(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("echo", "ECHO", AtRunTime)
@@ -591,8 +611,9 @@ func (s *Suite) Test_ShellLineChecker_checkHiddenAndSuppress(c *check.C) {
 		"WARN: Makefile:13: The shell command \"mkdir\" should not be hidden.")
 }
 
-func (s *Suite) Test_ShellLineChecker_checkHiddenAndSuppress__no_tracing(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_checkHiddenAndSuppress__no_tracing(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpTool("ls", "LS", AtRunTime)
 	mklines := t.NewMkLines("Makefile",
@@ -608,8 +629,9 @@ func (s *Suite) Test_ShellLineChecker_checkHiddenAndSuppress__no_tracing(c *chec
 		"WARN: Makefile:4: The shell command \"ls\" should not be hidden.")
 }
 
-func (s *Suite) Test_ShellLineChecker_CheckWord(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_CheckWord(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -662,8 +684,9 @@ func (s *Suite) Test_ShellLineChecker_CheckWord(c *check.C) {
 		nil...)
 }
 
-func (s *Suite) Test_ShellLineChecker_CheckWord__dollar_without_variable(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_CheckWord__dollar_without_variable(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	ck := t.NewShellLineChecker("# dummy")
 
@@ -672,8 +695,9 @@ func (s *Suite) Test_ShellLineChecker_CheckWord__dollar_without_variable(c *chec
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_ShellLineChecker_CheckWord__backslash_plus(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_CheckWord__backslash_plus(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpTool("find", "FIND", AtRunTime)
 	ck := t.NewShellLineChecker("\tfind . -exec rm -rf {} \\+")
@@ -684,8 +708,9 @@ func (s *Suite) Test_ShellLineChecker_CheckWord__backslash_plus(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_ShellLineChecker_CheckWord__squot_dollar(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_CheckWord__squot_dollar(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	ck := t.NewShellLineChecker("\t'$")
 
@@ -698,8 +723,9 @@ func (s *Suite) Test_ShellLineChecker_CheckWord__squot_dollar(c *check.C) {
 		"WARN: filename.mk:1: Internal pkglint error in ShellLine.CheckWord at \"'$\" (quoting=s), rest: $")
 }
 
-func (s *Suite) Test_ShellLineChecker_CheckWord__dquot_dollar(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_CheckWord__dquot_dollar(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	ck := t.NewShellLineChecker("\t\"$")
 
@@ -710,8 +736,9 @@ func (s *Suite) Test_ShellLineChecker_CheckWord__dquot_dollar(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_ShellLineChecker_CheckWord__PKGMANDIR(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_CheckWord__PKGMANDIR(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("chat/ircII/Makefile",
@@ -727,8 +754,9 @@ func (s *Suite) Test_ShellLineChecker_CheckWord__PKGMANDIR(c *check.C) {
 		"NOTE: chat/ircII/Makefile:3: This variable value should be aligned to column 25 instead of 17.")
 }
 
-func (s *Suite) Test_ShellLineChecker_CheckWord__empty(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_CheckWord__empty(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -742,8 +770,9 @@ func (s *Suite) Test_ShellLineChecker_CheckWord__empty(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_ShellLineChecker_checkWordQuoting(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_checkWordQuoting(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("grep", "GREP", AtRunTime)
@@ -800,8 +829,9 @@ func (s *Suite) Test_ShellLineChecker_checkWordQuoting(c *check.C) {
 		nil...)
 }
 
-func (s *Suite) Test_ShellLineChecker_CheckShellCommand__subshell(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_CheckShellCommand__subshell(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpTool("echo", "ECHO", AtRunTime)
 	t.SetUpTool("expr", "EXPR", AtRunTime)
@@ -828,8 +858,9 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommand__subshell(c *check.C) {
 		"WARN: Makefile:6: Invoking subshells via $(...) is not portable enough.")
 }
 
-func (s *Suite) Test_ShellLineChecker_CheckShellCommand__case_patterns_from_variable(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_CheckShellCommand__case_patterns_from_variable(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("Makefile",
@@ -847,8 +878,9 @@ func (s *Suite) Test_ShellLineChecker_CheckShellCommand__case_patterns_from_vari
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_ShellLineChecker_checkSetE__simple_commands(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_checkSetE__simple_commands(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpTool("echo", "", AtRunTime)
 	t.SetUpTool("rm", "", AtRunTime)
@@ -867,8 +899,9 @@ func (s *Suite) Test_ShellLineChecker_checkSetE__simple_commands(c *check.C) {
 			"(after \"touch file\") to separate commands.")
 }
 
-func (s *Suite) Test_ShellLineChecker_checkSetE__compound_commands(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_checkSetE__compound_commands(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpTool("echo", "", AtRunTime)
 	t.SetUpTool("touch", "", AtRunTime)
@@ -888,8 +921,9 @@ func (s *Suite) Test_ShellLineChecker_checkSetE__compound_commands(c *check.C) {
 			"(after \"touch 1\") to separate commands.")
 }
 
-func (s *Suite) Test_ShellLineChecker_checkSetE__no_tracing(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_checkSetE__no_tracing(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpTool("touch", "", AtRunTime)
 	mklines := t.NewMkLines("Makefile",
@@ -905,8 +939,9 @@ func (s *Suite) Test_ShellLineChecker_checkSetE__no_tracing(c *check.C) {
 			"(after \"touch 1\") to separate commands.")
 }
 
-func (s *Suite) Test_ShellLineChecker_checkPipeExitcode(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_checkPipeExitcode(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("cat", "", AtRunTime)
@@ -944,8 +979,9 @@ func (s *Suite) Test_ShellLineChecker_checkPipeExitcode(c *check.C) {
 		"WARN: Makefile:12: The exitcode of the command at the left of the | operator is ignored.")
 }
 
-func (s *Suite) Test_ShellLineChecker_canFail(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_canFail(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("basename", "", AtRunTime)
@@ -1087,8 +1123,9 @@ func (s *Suite) Test_ShellLineChecker_canFail(c *check.C) {
 		nil...)
 }
 
-func (s *Suite) Test_ShellLineChecker_unescapeBackticks__unfinished(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_unescapeBackticks__unfinished(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
@@ -1107,8 +1144,9 @@ func (s *Suite) Test_ShellLineChecker_unescapeBackticks__unfinished(c *check.C) 
 		"WARN: filename.mk:5: Pkglint ShellLine.CheckShellCommand: splitIntoShellTokens couldn't parse \"`${VAR}\"")
 }
 
-func (s *Suite) Test_ShellLineChecker_unescapeBackticks__unfinished_direct(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_unescapeBackticks__unfinished_direct(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("dummy.mk",
 		MkCvsID,
@@ -1125,8 +1163,9 @@ func (s *Suite) Test_ShellLineChecker_unescapeBackticks__unfinished_direct(c *ch
 		"ERROR: dummy.mk:2: Unfinished backticks after \"\".")
 }
 
-func (s *Suite) Test_ShellLineChecker_unescapeBackticks(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_unescapeBackticks(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(input string, expectedOutput string, expectedRest string, diagnostics ...string) {
 		ck := t.NewShellLineChecker("# dummy")
@@ -1195,8 +1234,9 @@ func (s *Suite) Test_ShellLineChecker_unescapeBackticks(c *check.C) {
 	test("`echo \\$$var`rest", "echo $$var", "rest")
 }
 
-func (s *Suite) Test_ShellLineChecker_unescapeBackticks__dquotBacktDquot(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_unescapeBackticks__dquotBacktDquot(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpTool("echo", "", AtRunTime)
 	mklines := t.NewMkLines("dummy.mk",
@@ -1209,8 +1249,9 @@ func (s *Suite) Test_ShellLineChecker_unescapeBackticks__dquotBacktDquot(c *chec
 		"WARN: dummy.mk:2: Double quotes inside backticks inside double quotes are error prone.")
 }
 
-func (s *Suite) Test_ShellLineChecker_checkShExprPlain__default_warning_level(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_checkShExprPlain__default_warning_level(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine( /* none */ )
 	t.SetUpVartypes()
@@ -1232,8 +1273,9 @@ func (s *Suite) Test_ShellLineChecker_checkShExprPlain__default_warning_level(c 
 		"WARN: filename.mk:5: The $@ shell variable should only be used in double quotes.")
 }
 
-func (s *Suite) Test_ShellLineChecker_checkShExprPlain__Wall(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_checkShExprPlain__Wall(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("echo", "", AtRunTime)
@@ -1256,8 +1298,9 @@ func (s *Suite) Test_ShellLineChecker_checkShExprPlain__Wall(c *check.C) {
 		"WARN: filename.mk:5: The $@ shell variable should only be used in double quotes.")
 }
 
-func (s *Suite) Test_ShellLineChecker_checkShExprPlain__dollarQuestion(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_checkShExprPlain__dollarQuestion(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpTool("tool", "", AtRunTime)
 
@@ -1277,8 +1320,9 @@ func (s *Suite) Test_ShellLineChecker_checkShExprPlain__dollarQuestion(c *check.
 		"WARN: filename.mk:4--6: The $? shell variable is often not available in \"set -e\" mode.")
 }
 
-func (s *Suite) Test_ShellLineChecker_variableNeedsQuoting(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_variableNeedsQuoting(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(shVarname string, expected bool) {
 		t.CheckEquals((*ShellLineChecker).variableNeedsQuoting(nil, shVarname), expected)
@@ -1311,8 +1355,9 @@ func (s *Suite) Test_ShellLineChecker_variableNeedsQuoting(c *check.C) {
 	test("comment", true) // Comments can be arbitrary strings.
 }
 
-func (s *Suite) Test_ShellLineChecker_variableNeedsQuoting__integration(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_variableNeedsQuoting__integration(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("cp", "", AtRunTime)
@@ -1333,8 +1378,9 @@ func (s *Suite) Test_ShellLineChecker_variableNeedsQuoting__integration(c *check
 		"WARN: filename.mk:3: Unquoted shell variable \"target\".")
 }
 
-func (s *Suite) Test_ShellLineChecker_checkMultiLineComment(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLineChecker_checkMultiLineComment(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpTool("echo", "", AtRunTime)
 	t.SetUpTool("sed", "", AtRunTime)

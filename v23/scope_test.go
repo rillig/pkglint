@@ -1,9 +1,10 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import "testing"
 
-func (s *Suite) Test_Scope__no_tracing(c *check.C) {
-	t := s.Init(c)
+func Test_Scope__no_tracing(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	scope := NewScope()
 	scope.Define("VAR.param", t.NewMkLine("fname.mk", 3, "VAR.param=\tvalue"))
@@ -14,8 +15,9 @@ func (s *Suite) Test_Scope__no_tracing(c *check.C) {
 	t.CheckEquals(scope.IsDefinedSimilar("OTHER"), false)
 }
 
-func (s *Suite) Test_Scope__commented_varassign(c *check.C) {
-	t := s.Init(c)
+func Test_Scope__commented_varassign(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("mk/defaults/mk.conf", 3, "#VAR=default")
 	scope := NewScope()
@@ -34,18 +36,20 @@ func (s *Suite) Test_Scope__commented_varassign(c *check.C) {
 	t.CheckEquals(indeterminate, false)
 }
 
-func (s *Suite) Test_NewScope(c *check.C) {
-	t := s.Init(c)
+func Test_NewScope(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	scope := NewScope()
 
 	t.CheckNil(scope.names)
 	t.CheckNotNil(scope.vs)
-	t.CheckLen(scope.vs, 0)
+	t.CheckEquals(len(scope.vs), 0)
 }
 
-func (s *Suite) Test_Scope_varnames(c *check.C) {
-	t := s.Init(c)
+func Test_Scope_varnames(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	scope := NewScope()
 	mkline := t.NewMkLine("filename.mk", 3, "DEFINED=\t${USED}")
@@ -60,8 +64,9 @@ func (s *Suite) Test_Scope_varnames(c *check.C) {
 	t.CheckDeepEquals(scope.varnames(), []string{"modified", "USED"})
 }
 
-func (s *Suite) Test_Scope_create(c *check.C) {
-	t := s.Init(c)
+func Test_Scope_create(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	scope := NewScope()
 
@@ -71,8 +76,9 @@ func (s *Suite) Test_Scope_create(c *check.C) {
 	t.CheckEquals(v1, v2)
 }
 
-func (s *Suite) Test_Scope_Define(c *check.C) {
-	t := s.Init(c)
+func Test_Scope_Define(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	scope := NewScope()
 
@@ -112,8 +118,9 @@ func (s *Suite) Test_Scope_Define(c *check.C) {
 		true, true, "")
 }
 
-func (s *Suite) Test_Scope_def(c *check.C) {
-	t := s.Init(c)
+func Test_Scope_def(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("filename.mk", 3, "VAR=\tvalue")
 	scope := NewScope()
@@ -125,8 +132,9 @@ func (s *Suite) Test_Scope_def(c *check.C) {
 	t.CheckNil(scope.FirstDefinition("VAR.*"))
 }
 
-func (s *Suite) Test_Scope_Fallback(c *check.C) {
-	t := s.Init(c)
+func Test_Scope_Fallback(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("filename.mk", 3, "VAR=\tvalue")
 	scope := NewScope()
@@ -139,8 +147,9 @@ func (s *Suite) Test_Scope_Fallback(c *check.C) {
 	t.CheckEquals(scope.LastValue("UNDEFINED"), "")
 }
 
-func (s *Suite) Test_Scope_Use(c *check.C) {
-	t := s.Init(c)
+func Test_Scope_Use(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("filename.mk", 3, "VAR=\t${USED}")
 	scope := NewScope()
@@ -151,8 +160,9 @@ func (s *Suite) Test_Scope_Use(c *check.C) {
 	t.CheckEquals(scope.LastValue("USED"), "")
 }
 
-func (s *Suite) Test_Scope_Mentioned(c *check.C) {
-	t := s.Init(c)
+func Test_Scope_Mentioned(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	assigned := t.NewMkLine("filename.mk", 3, "VAR=\tvalue")
 	commented := t.NewMkLine("filename.mk", 4, "#COMMENTED=\tvalue")
@@ -169,8 +179,9 @@ func (s *Suite) Test_Scope_Mentioned(c *check.C) {
 	t.CheckNil(scope.Mentioned("UNKNOWN"))
 }
 
-func (s *Suite) Test_Scope_IsDefined(c *check.C) {
-	t := s.Init(c)
+func Test_Scope_IsDefined(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	scope := NewScope()
 	scope.Define("VAR.param", t.NewMkLine("file.mk", 1, "VAR.param=value"))
@@ -180,8 +191,9 @@ func (s *Suite) Test_Scope_IsDefined(c *check.C) {
 	t.CheckEquals(scope.IsDefined("VARIABLE.*"), false)
 }
 
-func (s *Suite) Test_Scope_IsDefinedSimilar(c *check.C) {
-	t := s.Init(c)
+func Test_Scope_IsDefinedSimilar(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	scope := NewScope()
 	scope.Define("VAR.param", t.NewMkLine("file.mk", 1, "VAR.param=value"))
@@ -191,8 +203,9 @@ func (s *Suite) Test_Scope_IsDefinedSimilar(c *check.C) {
 	t.CheckEquals(scope.IsDefinedSimilar("VARIABLE.*"), false)
 }
 
-func (s *Suite) Test_Scope_IsUsed(c *check.C) {
-	t := s.Init(c)
+func Test_Scope_IsUsed(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	scope := NewScope()
 	mkline := t.NewMkLine("file.mk", 1, "\techo ${VAR.param}")
@@ -203,8 +216,9 @@ func (s *Suite) Test_Scope_IsUsed(c *check.C) {
 	t.CheckEquals(scope.IsUsed("VARIABLE.*"), false)
 }
 
-func (s *Suite) Test_Scope_IsUsedSimilar(c *check.C) {
-	t := s.Init(c)
+func Test_Scope_IsUsedSimilar(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	scope := NewScope()
 	mkline := t.NewMkLine("file.mk", 1, "\techo ${VAR.param}")
@@ -215,8 +229,9 @@ func (s *Suite) Test_Scope_IsUsedSimilar(c *check.C) {
 	t.CheckEquals(scope.IsUsedSimilar("VARIABLE.*"), false)
 }
 
-func (s *Suite) Test_Scope_IsUsedAtLoadTime(c *check.C) {
-	t := s.Init(c)
+func Test_Scope_IsUsedAtLoadTime(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	scope := NewScope()
 	mkline := t.NewMkLine("file.mk", 1, "\techo ${VAR.param}")
@@ -229,8 +244,9 @@ func (s *Suite) Test_Scope_IsUsedAtLoadTime(c *check.C) {
 	t.CheckEquals(scope.IsUsedAtLoadTime("UNDEFINED"), false)
 }
 
-func (s *Suite) Test_Scope_FirstDefinition(c *check.C) {
-	t := s.Init(c)
+func Test_Scope_FirstDefinition(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline3 := t.NewMkLine("fname.mk", 3, "VAR=\tvalue")
 	mkline4 := t.NewMkLine("fname.mk", 4, ".if ${SNEAKY::=value}")
@@ -254,8 +270,9 @@ func (s *Suite) Test_Scope_FirstDefinition(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Scope_LastDefinition(c *check.C) {
-	t := s.Init(c)
+func Test_Scope_LastDefinition(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline3 := t.NewMkLine("fname.mk", 3, "VAR=\tfirst")
 	mkline4 := t.NewMkLine("fname.mk", 4, "VAR=\t${USED}")
@@ -270,8 +287,9 @@ func (s *Suite) Test_Scope_LastDefinition(c *check.C) {
 	t.CheckNil(scope.LastDefinition("USED"))
 }
 
-func (s *Suite) Test_Scope_Commented(c *check.C) {
-	t := s.Init(c)
+func Test_Scope_Commented(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	assigned := t.NewMkLine("filename.mk", 3, "VAR=\tvalue")
 	commented := t.NewMkLine("filename.mk", 4, "#COMMENTED=\tvalue")
@@ -291,8 +309,9 @@ func (s *Suite) Test_Scope_Commented(c *check.C) {
 	t.CheckNil(scope.Commented("USED"))
 }
 
-func (s *Suite) Test_Scope_FirstUse(c *check.C) {
-	t := s.Init(c)
+func Test_Scope_FirstUse(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("file.mk",
 		MkCvsID,
@@ -311,8 +330,9 @@ func (s *Suite) Test_Scope_FirstUse(c *check.C) {
 		"WARN: file.mk:3: Variable \"VAR2\" is defined but not used.")
 }
 
-func (s *Suite) Test_Scope_LastValue(c *check.C) {
-	t := s.Init(c)
+func Test_Scope_LastValue(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("file.mk",
 		MkCvsID,
@@ -333,8 +353,9 @@ func (s *Suite) Test_Scope_LastValue(c *check.C) {
 
 // Up to 2020-01-06, pkglint wrongly returned "one" as the variable value,
 // even though Makefile.common is included before appending "two".
-func (s *Suite) Test_Scope_LastValue__append_in_multiple_files(c *check.C) {
-	t := s.Init(c)
+func Test_Scope_LastValue__append_in_multiple_files(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		".include \"Makefile.common\"",
@@ -356,8 +377,9 @@ func (s *Suite) Test_Scope_LastValue__append_in_multiple_files(c *check.C) {
 	t.CheckEquals(pkg.vars.LastValue("PLIST_VARS"), "one two")
 }
 
-func (s *Suite) Test_Scope_LastValueFound(c *check.C) {
-	t := s.Init(c)
+func Test_Scope_LastValueFound(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("file.mk",
 		MkCvsID,
@@ -380,8 +402,9 @@ func (s *Suite) Test_Scope_LastValueFound(c *check.C) {
 
 // Scope.DefineAll copies only the variable definitions,
 // but not the uses of variables.
-func (s *Suite) Test_Scope_DefineAll(c *check.C) {
-	t := s.Init(c)
+func Test_Scope_DefineAll(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("filename.mk", 123, "VAR=\t${USED}")
 
@@ -391,7 +414,7 @@ func (s *Suite) Test_Scope_DefineAll(c *check.C) {
 	dst := NewScope()
 	dst.DefineAll(&src)
 
-	t.CheckLen(dst.vs, 0)
+	t.CheckEquals(len(dst.vs), 0)
 
 	src.Define("VAR", t.NewMkLine("file.mk", 1, "VAR=value"))
 	dst.DefineAll(&src)
@@ -399,8 +422,9 @@ func (s *Suite) Test_Scope_DefineAll(c *check.C) {
 	t.CheckEquals(dst.IsDefined("VAR"), true)
 }
 
-func (s *Suite) Test_Scope_forEach(c *check.C) {
-	t := s.Init(c)
+func Test_Scope_forEach(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("filename.mk", 123, "VAR=\t${USED}")
 
@@ -418,8 +442,9 @@ func (s *Suite) Test_Scope_forEach(c *check.C) {
 		"VAR=${USED}"})
 }
 
-func (s *Suite) Test_scopeVar_append(c *check.C) {
-	t := s.Init(c)
+func Test_scopeVar_append(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	var v scopeVar
 	v.append("first")

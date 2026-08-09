@@ -3,21 +3,11 @@
 
 package pkglint
 
-import "gopkg.in/check.v1"
+import "testing"
 
-func (s *Suite) Test_MkAlignFile_AlignParas(c *check.C) {
-	t := s.Init(c)
-
-	test := func() {
-		// TODO
-		t.CheckEquals(true, true)
-	}
-
-	test()
-}
-
-func (s *Suite) Test_MkAlignPara_IsAligned(c *check.C) {
-	t := s.Init(c)
+func Test_MkAlignFile_AlignParas(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func() {
 		// TODO
@@ -27,8 +17,9 @@ func (s *Suite) Test_MkAlignPara_IsAligned(c *check.C) {
 	test()
 }
 
-func (s *Suite) Test_MkAlignPara_IsOutlier(c *check.C) {
-	t := s.Init(c)
+func Test_MkAlignPara_IsAligned(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func() {
 		// TODO
@@ -38,8 +29,9 @@ func (s *Suite) Test_MkAlignPara_IsOutlier(c *check.C) {
 	test()
 }
 
-func (s *Suite) Test_MkAlignPara_ValueAlignment(c *check.C) {
-	t := s.Init(c)
+func Test_MkAlignPara_IsOutlier(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func() {
 		// TODO
@@ -49,8 +41,9 @@ func (s *Suite) Test_MkAlignPara_ValueAlignment(c *check.C) {
 	test()
 }
 
-func (s *Suite) Test_MkAlignPara_MinValueAlignment(c *check.C) {
-	t := s.Init(c)
+func Test_MkAlignPara_ValueAlignment(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func() {
 		// TODO
@@ -60,8 +53,9 @@ func (s *Suite) Test_MkAlignPara_MinValueAlignment(c *check.C) {
 	test()
 }
 
-func (s *Suite) Test_MkAlignPara_MaxValueAlignment(c *check.C) {
-	t := s.Init(c)
+func Test_MkAlignPara_MinValueAlignment(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func() {
 		// TODO
@@ -71,8 +65,9 @@ func (s *Suite) Test_MkAlignPara_MaxValueAlignment(c *check.C) {
 	test()
 }
 
-func (s *Suite) Test_MkAlignPara_MayAlignValuesTo(c *check.C) {
-	t := s.Init(c)
+func Test_MkAlignPara_MaxValueAlignment(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func() {
 		// TODO
@@ -82,8 +77,9 @@ func (s *Suite) Test_MkAlignPara_MayAlignValuesTo(c *check.C) {
 	test()
 }
 
-func (s *Suite) Test_MkAlignPara_AlignValuesTo(c *check.C) {
-	t := s.Init(c)
+func Test_MkAlignPara_MayAlignValuesTo(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func() {
 		// TODO
@@ -93,8 +89,9 @@ func (s *Suite) Test_MkAlignPara_AlignValuesTo(c *check.C) {
 	test()
 }
 
-func (s *Suite) Test_MkAlignMkLine_RightMargin(c *check.C) {
-	t := s.Init(c)
+func Test_MkAlignPara_AlignValuesTo(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func() {
 		// TODO
@@ -104,8 +101,9 @@ func (s *Suite) Test_MkAlignMkLine_RightMargin(c *check.C) {
 	test()
 }
 
-func (s *Suite) Test_MkAlignMkLine_IsCanonical(c *check.C) {
-	t := s.Init(c)
+func Test_MkAlignMkLine_RightMargin(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func() {
 		// TODO
@@ -115,8 +113,9 @@ func (s *Suite) Test_MkAlignMkLine_IsCanonical(c *check.C) {
 	test()
 }
 
-func (s *Suite) Test_MkAlignMkLine_HasCanonicalRightMargin(c *check.C) {
-	t := s.Init(c)
+func Test_MkAlignMkLine_IsCanonical(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func() {
 		// TODO
@@ -126,8 +125,9 @@ func (s *Suite) Test_MkAlignMkLine_HasCanonicalRightMargin(c *check.C) {
 	test()
 }
 
-func (s *Suite) Test_MkAlignMkLine_CurrentValueAlign(c *check.C) {
-	t := s.Init(c)
+func Test_MkAlignMkLine_HasCanonicalRightMargin(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func() {
 		// TODO
@@ -137,16 +137,30 @@ func (s *Suite) Test_MkAlignMkLine_CurrentValueAlign(c *check.C) {
 	test()
 }
 
-func (s *Suite) Test_NewMkAlignLine(c *check.C) {
-	t := s.Init(c)
+func Test_MkAlignMkLine_CurrentValueAlign(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
+
+	test := func() {
+		// TODO
+		t.CheckEquals(true, true)
+	}
+
+	test()
+}
+
+func Test_NewMkAlignLine(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	// TODO
 
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkAlignLine_HasCanonicalRightMargin(c *check.C) {
-	t := s.Init(c)
+func Test_MkAlignLine_HasCanonicalRightMargin(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func() {
 		// TODO
@@ -156,8 +170,9 @@ func (s *Suite) Test_MkAlignLine_HasCanonicalRightMargin(c *check.C) {
 	test()
 }
 
-func (s *Suite) Test_MkAlignLine_IsCanonicalSingle(c *check.C) {
-	t := s.Init(c)
+func Test_MkAlignLine_IsCanonicalSingle(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func() {
 		// TODO
@@ -167,8 +182,9 @@ func (s *Suite) Test_MkAlignLine_IsCanonicalSingle(c *check.C) {
 	test()
 }
 
-func (s *Suite) Test_MkAlignLine_IsCanonicalLeadEmpty(c *check.C) {
-	t := s.Init(c)
+func Test_MkAlignLine_IsCanonicalLeadEmpty(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func() {
 		// TODO
@@ -178,8 +194,9 @@ func (s *Suite) Test_MkAlignLine_IsCanonicalLeadEmpty(c *check.C) {
 	test()
 }
 
-func (s *Suite) Test_MkAlignLine_IsCanonicalLeadValue(c *check.C) {
-	t := s.Init(c)
+func Test_MkAlignLine_IsCanonicalLeadValue(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func() {
 		// TODO
@@ -189,8 +206,9 @@ func (s *Suite) Test_MkAlignLine_IsCanonicalLeadValue(c *check.C) {
 	test()
 }
 
-func (s *Suite) Test_MkAlignLine_IsCanonicalFollowLead(c *check.C) {
-	t := s.Init(c)
+func Test_MkAlignLine_IsCanonicalFollowLead(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func() {
 		// TODO
@@ -200,8 +218,9 @@ func (s *Suite) Test_MkAlignLine_IsCanonicalFollowLead(c *check.C) {
 	test()
 }
 
-func (s *Suite) Test_MkAlignLine_IsCanonicalFollow(c *check.C) {
-	t := s.Init(c)
+func Test_MkAlignLine_IsCanonicalFollow(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(line string, minAlign int, isCanonical bool) {
 		t.CheckDotColumns(line)

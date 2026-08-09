@@ -1,11 +1,12 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import "testing"
 
 // In a single file, five variables get a default value and are later overridden
 // with the same value using the five different assignments operators.
-func (s *Suite) Test_RedundantScope__single_file_default(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__single_file_default(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("file.mk",
 		"VAR.def?=       value",
@@ -31,8 +32,9 @@ func (s *Suite) Test_RedundantScope__single_file_default(c *check.C) {
 
 // In a single file, five variables get assigned a value and are later overridden
 // with the same value using the five different assignments operators.
-func (s *Suite) Test_RedundantScope__single_file_assign(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__single_file_assign(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("file.mk",
 		"VAR.def=        value",
@@ -58,8 +60,9 @@ func (s *Suite) Test_RedundantScope__single_file_assign(c *check.C) {
 
 // In a single file, five variables get appended a value and are later overridden
 // with the same value using the five different assignments operators.
-func (s *Suite) Test_RedundantScope__single_file_append(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__single_file_append(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("file.mk",
 		"VAR.def+=       value",
@@ -86,8 +89,9 @@ func (s *Suite) Test_RedundantScope__single_file_append(c *check.C) {
 // In a single file, five variables get assigned a value using the := operator,
 // which in this simple case is equivalent to the = operator. The variables are
 // later overridden with the same value using the five different assignments operators.
-func (s *Suite) Test_RedundantScope__single_file_eval(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__single_file_eval(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("file.mk",
 		"VAR.def:=       value",
@@ -115,8 +119,9 @@ func (s *Suite) Test_RedundantScope__single_file_eval(c *check.C) {
 // which runs a shell command. As of March 2019 pkglint doesn't try to evaluate
 // the shell commands, therefore the variable values are unknown. The variables
 // are later overridden using the five different assignments operators.
-func (s *Suite) Test_RedundantScope__single_file_shell(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__single_file_shell(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("file.mk",
 		"VAR.def!=       value",
@@ -142,8 +147,9 @@ func (s *Suite) Test_RedundantScope__single_file_shell(c *check.C) {
 
 // In a single file, five variables get a default value and are later overridden
 // with the same value using the five different assignments operators.
-func (s *Suite) Test_RedundantScope__single_file_default_ref(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__single_file_default_ref(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("file.mk",
 		"VAR.def?=       ${OTHER}",
@@ -169,8 +175,9 @@ func (s *Suite) Test_RedundantScope__single_file_default_ref(c *check.C) {
 
 // In a single file, five variables get assigned a value and are later overridden
 // with the same value using the five different assignments operators.
-func (s *Suite) Test_RedundantScope__single_file_assign_ref(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__single_file_assign_ref(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("file.mk",
 		"VAR.def=        ${OTHER}",
@@ -196,8 +203,9 @@ func (s *Suite) Test_RedundantScope__single_file_assign_ref(c *check.C) {
 
 // In a single file, five variables get appended a value and are later overridden
 // with the same value using the five different assignments operators.
-func (s *Suite) Test_RedundantScope__single_file_append_ref(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__single_file_append_ref(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("file.mk",
 		"VAR.def+=       ${OTHER}",
@@ -224,8 +232,9 @@ func (s *Suite) Test_RedundantScope__single_file_append_ref(c *check.C) {
 // In a single file, five variables get assigned a value using the := operator,
 // which in this simple case is equivalent to the = operator. The variables are
 // later overridden with the same value using the five different assignments operators.
-func (s *Suite) Test_RedundantScope__single_file_eval_ref(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__single_file_eval_ref(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("file.mk",
 		"VAR.def:=       ${OTHER}",
@@ -253,8 +262,9 @@ func (s *Suite) Test_RedundantScope__single_file_eval_ref(c *check.C) {
 // which runs a shell command. As of March 2019 pkglint doesn't try to evaluate
 // the shell commands, therefore the variable values are unknown. The variables
 // are later overridden using the five different assignments operators.
-func (s *Suite) Test_RedundantScope__single_file_shell_ref(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__single_file_shell_ref(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("file.mk",
 		"VAR.def!=       ${OTHER}",
@@ -278,8 +288,9 @@ func (s *Suite) Test_RedundantScope__single_file_shell_ref(c *check.C) {
 	// TODO: "VAR.shl: is overwritten later"
 }
 
-func (s *Suite) Test_RedundantScope__after_including_same_value(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__after_including_same_value(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	// including.mk:1:  include "included.mk"
 	//   included.mk:1:   VAR.x.y op1 ${OTHER}
@@ -357,8 +368,9 @@ func (s *Suite) Test_RedundantScope__after_including_same_value(c *check.C) {
 	test(":=", ":=")
 }
 
-func (s *Suite) Test_RedundantScope__after_including_different_value(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__after_including_different_value(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	// Only test the ?=, = and += operators since the others are ignored,
 	// as of March 2019.
@@ -393,8 +405,9 @@ func (s *Suite) Test_RedundantScope__after_including_different_value(c *check.C)
 		"NOTE: including.mk:8: Default assignment of VAR.app.def has no effect because of included.mk:7.")
 }
 
-func (s *Suite) Test_RedundantScope__before_including_same_value(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__before_including_same_value(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	// Only test the ?=, = and += operators since the others are ignored,
 	// as of March 2019.
@@ -432,8 +445,9 @@ func (s *Suite) Test_RedundantScope__before_including_same_value(c *check.C) {
 		"WARN: including.mk:8: Variable VAR.app.asg is overwritten in included.mk:8.")
 }
 
-func (s *Suite) Test_RedundantScope__before_including_different_value(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__before_including_different_value(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	// Only test the ?=, = and += operators since the others are ignored,
 	// as of March 2019.
@@ -468,8 +482,9 @@ func (s *Suite) Test_RedundantScope__before_including_different_value(c *check.C
 		"WARN: including.mk:8: Variable VAR.app.asg is overwritten in included.mk:8.")
 }
 
-func (s *Suite) Test_RedundantScope__independent_same_value(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__independent_same_value(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	// Only test the ?=, = and += operators since the others are ignored,
 	// as of March 2019.
@@ -505,8 +520,9 @@ func (s *Suite) Test_RedundantScope__independent_same_value(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_RedundantScope__independent_different_value(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__independent_different_value(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	// Only test the ?=, = and += operators since the others are ignored,
 	// as of March 2019.
@@ -542,8 +558,9 @@ func (s *Suite) Test_RedundantScope__independent_different_value(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_RedundantScope__file_hierarchy(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__file_hierarchy(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	include, get := t.SetUpHierarchy()
 
@@ -590,8 +607,9 @@ func (s *Suite) Test_RedundantScope__file_hierarchy(c *check.C) {
 // The RedundantScope keeps track of the variable values. As a consequence,
 // it reports the variable assignment in the last line as being redundant,
 // instead of warning that it destroys the previous value.
-func (s *Suite) Test_RedundantScope__assign_and_append_followed_by_assign(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__assign_and_append_followed_by_assign(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("redundant.mk",
 		"VAR=    first",
@@ -607,8 +625,9 @@ func (s *Suite) Test_RedundantScope__assign_and_append_followed_by_assign(c *che
 // The redundancy analysis for a variable VAR is influenced by changes to
 // each variable that is referenced by VAR. The exact details also depend
 // on the assignment operators being used for VAR and OTHER.
-func (s *Suite) Test_RedundantScope__referenced_variable_is_modified(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__referenced_variable_is_modified(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(line1, line2, line3, line4 string, diagnostics ...string) {
 		mklines := t.NewMkLines("filename.mk",
@@ -667,8 +686,9 @@ func (s *Suite) Test_RedundantScope__referenced_variable_is_modified(c *check.C)
 // The redundancy analysis for a variable VAR is influenced by changes to
 // each variable that is referenced by VAR. The exact details also depend
 // on the assignment operators being used for VAR and OTHER.
-func (s *Suite) Test_RedundantScope__variable_referencing_another_is_modified(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__variable_referencing_another_is_modified(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(line1, line2, line3, line4 string, diagnostics ...string) {
 		mklines := t.NewMkLines("filename.mk",
@@ -731,8 +751,9 @@ func (s *Suite) Test_RedundantScope__variable_referencing_another_is_modified(c 
 		"NOTE: filename.mk:4: Definition of VAR is redundant because of line 2.")
 }
 
-func (s *Suite) Test_RedundantScope__incomplete_then_default(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__incomplete_then_default(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	include, get := t.SetUpHierarchy()
 
@@ -752,8 +773,9 @@ func (s *Suite) Test_RedundantScope__incomplete_then_default(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_RedundantScope__complete_then_default(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__complete_then_default(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	include, get := t.SetUpHierarchy()
 
@@ -775,8 +797,9 @@ func (s *Suite) Test_RedundantScope__complete_then_default(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_RedundantScope__conditional_then_override(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__conditional_then_override(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	include, get := t.SetUpHierarchy()
 
@@ -798,8 +821,9 @@ func (s *Suite) Test_RedundantScope__conditional_then_override(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_RedundantScope__set_then_conditional(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__set_then_conditional(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	include, get := t.SetUpHierarchy()
 
@@ -821,8 +845,9 @@ func (s *Suite) Test_RedundantScope__set_then_conditional(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_RedundantScope__branch_with_set_then_set(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__branch_with_set_then_set(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	include, get := t.SetUpHierarchy()
 
@@ -864,8 +889,9 @@ func (s *Suite) Test_RedundantScope__branch_with_set_then_set(c *check.C) {
 // A package doesn't need to override these defaults, and the redundancy check
 // should notify the package author of this redundancy.
 
-func (s *Suite) Test_RedundantScope__override_after_including(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__override_after_including(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	include, get := t.SetUpHierarchy()
 	include("including.mk",
@@ -881,8 +907,9 @@ func (s *Suite) Test_RedundantScope__override_after_including(c *check.C) {
 		"NOTE: including.mk:3: Definition of REDUNDANT is redundant because of included.mk:2.")
 }
 
-func (s *Suite) Test_RedundantScope__redundant_assign_after_including(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__redundant_assign_after_including(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	include, get := t.SetUpHierarchy()
 	include("including.mk",
@@ -896,8 +923,9 @@ func (s *Suite) Test_RedundantScope__redundant_assign_after_including(c *check.C
 		"NOTE: including.mk:2: Definition of REDUNDANT is redundant because of included.mk:1.")
 }
 
-func (s *Suite) Test_RedundantScope__override_in_Makefile_after_including(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__override_in_Makefile_after_including(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	include, get := t.SetUpHierarchy()
 	include("Makefile",
@@ -918,8 +946,9 @@ func (s *Suite) Test_RedundantScope__override_in_Makefile_after_including(c *che
 		"WARN: module.mk:2: Variable VAR is overwritten in line 3.")
 }
 
-func (s *Suite) Test_RedundantScope__default_value_definitely_unused(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__default_value_definitely_unused(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("module.mk",
 		"VAR=    value ${OTHER}",
@@ -933,8 +962,9 @@ func (s *Suite) Test_RedundantScope__default_value_definitely_unused(c *check.C)
 		"NOTE: module.mk:2: Default assignment of VAR has no effect because of line 1.")
 }
 
-func (s *Suite) Test_RedundantScope__default_value_overridden(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__default_value_overridden(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("module.mk",
 		"VAR?=   default value",
@@ -946,8 +976,9 @@ func (s *Suite) Test_RedundantScope__default_value_overridden(c *check.C) {
 		"WARN: module.mk:1: Variable VAR is overwritten in line 2.")
 }
 
-func (s *Suite) Test_RedundantScope__overwrite_same_value(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__overwrite_same_value(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("module.mk",
 		"VAR=    value ${OTHER}",
@@ -959,8 +990,9 @@ func (s *Suite) Test_RedundantScope__overwrite_same_value(c *check.C) {
 		"NOTE: module.mk:2: Definition of VAR is redundant because of line 1.")
 }
 
-func (s *Suite) Test_RedundantScope__conditional_overwrite(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__conditional_overwrite(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("module.mk",
 		"VAR=    default",
@@ -973,8 +1005,9 @@ func (s *Suite) Test_RedundantScope__conditional_overwrite(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_RedundantScope__overwrite_inside_conditional(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__overwrite_inside_conditional(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("module.mk",
 		"VAR=    generic",
@@ -990,8 +1023,9 @@ func (s *Suite) Test_RedundantScope__overwrite_inside_conditional(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_RedundantScope__conditionally_include(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__conditionally_include(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	include, get := t.SetUpHierarchy()
 	include("module.mk",
@@ -1009,8 +1043,9 @@ func (s *Suite) Test_RedundantScope__conditionally_include(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_RedundantScope__conditional_default(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__conditional_default(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("module.mk",
 		"VAR=    default",
@@ -1026,8 +1061,9 @@ func (s *Suite) Test_RedundantScope__conditional_default(c *check.C) {
 }
 
 // These warnings are precise and accurate since the value of VAR is not used between line 2 and 4.
-func (s *Suite) Test_RedundantScope__overwrite_same_variable_different_value(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__overwrite_same_variable_different_value(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("module.mk",
 		"OTHER=  value before",
@@ -1046,8 +1082,9 @@ func (s *Suite) Test_RedundantScope__overwrite_same_variable_different_value(c *
 		"NOTE: module.mk:4: Definition of VAR is redundant because of line 2.")
 }
 
-func (s *Suite) Test_RedundantScope__overwrite_different_value_used_between(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__overwrite_different_value_used_between(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("module.mk",
 		"OTHER=          value before",
@@ -1074,8 +1111,9 @@ func (s *Suite) Test_RedundantScope__overwrite_different_value_used_between(c *c
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_RedundantScope__procedure_call_to_noop(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__procedure_call_to_noop(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	include, get := t.SetUpHierarchy()
 	include("mk/pthread.buildlink3.mk",
@@ -1090,8 +1128,9 @@ func (s *Suite) Test_RedundantScope__procedure_call_to_noop(c *check.C) {
 		"WARN: mk/pthread.buildlink3.mk:1: Variable CHECK_BUILTIN.pthread is overwritten in line 3.")
 }
 
-func (s *Suite) Test_RedundantScope__procedure_call_implemented(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__procedure_call_implemented(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	include, get := t.SetUpHierarchy()
 	include("mk/pthread.buildlink3.mk",
@@ -1111,8 +1150,9 @@ func (s *Suite) Test_RedundantScope__procedure_call_implemented(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_RedundantScope__procedure_call_implemented_package(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__procedure_call_implemented_package(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.SetUpPackage("devel/gettext-lib")
@@ -1143,8 +1183,9 @@ func (s *Suite) Test_RedundantScope__procedure_call_implemented_package(c *check
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_RedundantScope__procedure_call_infrastructure(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__procedure_call_infrastructure(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("x11/alacarte",
 		".include \"../../mk/pthread.buildlink3.mk\"")
@@ -1192,8 +1233,9 @@ func (s *Suite) Test_RedundantScope__procedure_call_infrastructure(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_RedundantScope__shell_and_eval(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__shell_and_eval(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("module.mk",
 		"VAR:=    value ${OTHER}",
@@ -1220,8 +1262,9 @@ func (s *Suite) Test_RedundantScope__shell_and_eval(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_RedundantScope__shell_and_eval_literal(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__shell_and_eval_literal(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("module.mk",
 		"VAR:=    value",
@@ -1233,8 +1276,9 @@ func (s *Suite) Test_RedundantScope__shell_and_eval_literal(c *check.C) {
 		"NOTE: module.mk:1: Definition of VAR is redundant because of line 2.")
 }
 
-func (s *Suite) Test_RedundantScope__included_OPSYS_variable(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__included_OPSYS_variable(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		".include \"../../category/dependency/buildlink3.mk\"",
@@ -1254,8 +1298,9 @@ func (s *Suite) Test_RedundantScope__included_OPSYS_variable(c *check.C) {
 		"WARN: ~/category/package/Makefile:21: Variable CONFIGURE_ARGS is overwritten in line 22.")
 }
 
-func (s *Suite) Test_RedundantScope__if_then_else(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__if_then_else(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("if-then-else.mk",
 		".if exists(${FILE})",
@@ -1271,8 +1316,9 @@ func (s *Suite) Test_RedundantScope__if_then_else(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_RedundantScope__if_then_else_without_variable(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__if_then_else_without_variable(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("if-then-else.mk",
 		".if exists(/nonexistent)",
@@ -1290,8 +1336,9 @@ func (s *Suite) Test_RedundantScope__if_then_else_without_variable(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_RedundantScope__append_then_default(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__append_then_default(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("append-then-default.mk",
 		"VAR+=   value",
@@ -1303,8 +1350,9 @@ func (s *Suite) Test_RedundantScope__append_then_default(c *check.C) {
 		"NOTE: append-then-default.mk:2: Default assignment of VAR has no effect because of line 1.")
 }
 
-func (s *Suite) Test_RedundantScope__assign_then_default_in_same_file(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__assign_then_default_in_same_file(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("assign-then-default.mk",
 		"VAR=    value",
@@ -1317,8 +1365,9 @@ func (s *Suite) Test_RedundantScope__assign_then_default_in_same_file(c *check.C
 			"Default assignment of VAR has no effect because of line 1.")
 }
 
-func (s *Suite) Test_RedundantScope__eval_then_eval(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__eval_then_eval(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		"VAR:=   value",
@@ -1332,8 +1381,9 @@ func (s *Suite) Test_RedundantScope__eval_then_eval(c *check.C) {
 		"WARN: filename.mk:2: Variable VAR is overwritten in line 3.")
 }
 
-func (s *Suite) Test_RedundantScope__shell_then_assign(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__shell_then_assign(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		"VAR!=   echo echo",
@@ -1351,8 +1401,9 @@ func (s *Suite) Test_RedundantScope__shell_then_assign(c *check.C) {
 		"WARN: filename.mk:1: Variable VAR is overwritten in line 2.")
 }
 
-func (s *Suite) Test_RedundantScope__shell_then_read_then_assign(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__shell_then_read_then_assign(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.SetUpFileMkLines("filename.mk",
 		"VAR!=           echo echo",
@@ -1365,8 +1416,9 @@ func (s *Suite) Test_RedundantScope__shell_then_read_then_assign(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_RedundantScope__assign_then_default_in_included_file(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__assign_then_default_in_included_file(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	include, get := t.SetUpHierarchy()
 	include("assign-then-default.mk",
@@ -1381,8 +1433,9 @@ func (s *Suite) Test_RedundantScope__assign_then_default_in_included_file(c *che
 		"NOTE: assign-then-default.mk:1: Definition of VAR is redundant because of included.mk:1.")
 }
 
-func (s *Suite) Test_RedundantScope__conditionally_included_file(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__conditionally_included_file(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	include, get := t.SetUpHierarchy()
 	include("including.mk",
@@ -1399,8 +1452,9 @@ func (s *Suite) Test_RedundantScope__conditionally_included_file(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_RedundantScope__procedure_parameters(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__procedure_parameters(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	// TODO: make Tester.SetUpHierarchy accept a file multiple times.
 	t.CreateFileLines("mk/pkg-build-options.mk",
@@ -1423,8 +1477,9 @@ func (s *Suite) Test_RedundantScope__procedure_parameters(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_RedundantScope__is_relevant_for_infrastructure(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__is_relevant_for_infrastructure(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("mk/bsd.options.mk",
 		"PKG_OPTIONS:=\t# empty",
@@ -1475,8 +1530,9 @@ func (s *Suite) Test_RedundantScope__is_relevant_for_infrastructure(c *check.C) 
 // assignments since these would otherwise go unnoticed.
 //
 // See CheckFileMk and Package.checkfilePackageMakefile.
-func (s *Suite) Test_RedundantScope__standalone(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope__standalone(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("category/package/build.mk",
@@ -1498,8 +1554,9 @@ func (s *Suite) Test_RedundantScope__standalone(c *check.C) {
 // .if/.endif. But there are other ways. The output of shell commands is
 // unpredictable for pkglint (as of March 2019), therefore it treats these
 // variables as non-constant.
-func (s *Suite) Test_RedundantScope_handleVarassign__shell_followed_by_default(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope_handleVarassign__shell_followed_by_default(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	include, get := t.SetUpHierarchy()
 	include("including.mk",
@@ -1515,8 +1572,9 @@ func (s *Suite) Test_RedundantScope_handleVarassign__shell_followed_by_default(c
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_RedundantScope_handleVarassign__overwrite_definition_from_included_file(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope_handleVarassign__overwrite_definition_from_included_file(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	include, get := t.SetUpHierarchy()
 	include("including.mk",
@@ -1551,8 +1609,9 @@ func (s *Suite) Test_RedundantScope_handleVarassign__overwrite_definition_from_i
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_RedundantScope_handleVarassign__conditional(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope_handleVarassign__conditional(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		"VAR=    value",
@@ -1570,8 +1629,9 @@ func (s *Suite) Test_RedundantScope_handleVarassign__conditional(c *check.C) {
 }
 
 // Ensures that commented variables do not influence the redundancy check.
-func (s *Suite) Test_RedundantScope_handleVarassign__commented_variable_assignment(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope_handleVarassign__commented_variable_assignment(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	include, get := t.SetUpHierarchy()
 	include("main.mk",
@@ -1588,8 +1648,9 @@ func (s *Suite) Test_RedundantScope_handleVarassign__commented_variable_assignme
 		"NOTE: main.mk:3: Definition of VAR is redundant because of redundant.mk:1.")
 }
 
-func (s *Suite) Test_RedundantScope_handleVarassign__assign_then_eval(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope_handleVarassign__assign_then_eval(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("mk/bsd.options.mk",
 		"PKG_OPTIONS=\t# empty",
@@ -1603,8 +1664,9 @@ func (s *Suite) Test_RedundantScope_handleVarassign__assign_then_eval(c *check.C
 			"Definition of PKG_OPTIONS is redundant because of line 1.")
 }
 
-func (s *Suite) Test_RedundantScope_checkAppendUnique__redundant_before_including(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope_checkAppendUnique__redundant_before_including(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		"CATEGORIES=\tcategory perl5",
@@ -1628,8 +1690,9 @@ func (s *Suite) Test_RedundantScope_checkAppendUnique__redundant_before_includin
 			"because it will later be appended in line 3.")
 }
 
-func (s *Suite) Test_RedundantScope_checkAppendUnique__redundant_after_including(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope_checkAppendUnique__redundant_after_including(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	// The assignment to CATEGORIES must be commented out in this test.
 	// The redundancy check only works if either _all_ previous variable
@@ -1663,8 +1726,9 @@ func (s *Suite) Test_RedundantScope_checkAppendUnique__redundant_after_including
 			"because it is already added in included2.mk:2.")
 }
 
-func (s *Suite) Test_RedundantScope_checkAppendUnique__redundant_and_later_conditional(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope_checkAppendUnique__redundant_and_later_conditional(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		"CATEGORIES=\tcategory",
@@ -1694,8 +1758,9 @@ func (s *Suite) Test_RedundantScope_checkAppendUnique__redundant_and_later_condi
 
 // The := assignment operator is equivalent to the simple = operator
 // if its right-hand side does not contain references to any variables.
-func (s *Suite) Test_RedundantScope_checkAppendUnique__eval_assignment(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope_checkAppendUnique__eval_assignment(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		"CATEGORIES:=\tcategory",
@@ -1713,8 +1778,9 @@ func (s *Suite) Test_RedundantScope_checkAppendUnique__eval_assignment(c *check.
 			"because it will later be appended in included.mk:2.")
 }
 
-func (s *Suite) Test_RedundantScope_checkAppendUnique__not_redundant(c *check.C) {
-	t := s.Init(c)
+func Test_RedundantScope_checkAppendUnique__not_redundant(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCategory("perl", "")
 	t.SetUpPackage("category/package",
@@ -1737,8 +1803,9 @@ func (s *Suite) Test_RedundantScope_checkAppendUnique__not_redundant(c *check.C)
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_includePath_includes(c *check.C) {
-	t := s.Init(c)
+func Test_includePath_includes(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	path := func(locations ...CurrPath) includePath {
 		return includePath{locations}
@@ -1762,8 +1829,9 @@ func (s *Suite) Test_includePath_includes(c *check.C) {
 	t.CheckEquals(mo.includes(mc), false)
 }
 
-func (s *Suite) Test_includePath_equals(c *check.C) {
-	t := s.Init(c)
+func Test_includePath_equals(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	path := func(locations ...CurrPath) includePath {
 		return includePath{locations}

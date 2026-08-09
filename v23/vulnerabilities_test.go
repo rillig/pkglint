@@ -1,17 +1,19 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import "testing"
 
-func (s *Suite) Test_NewVulnerabilities(c *check.C) {
-	t := s.Init(c)
+func Test_NewVulnerabilities(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	v := NewVulnerabilities()
 
 	t.CheckNotNil(v.byPkgbase)
 }
 
-func (s *Suite) Test_Vulnerabilities_read(c *check.C) {
-	t := s.Init(c)
+func Test_Vulnerabilities_read(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	t.Chdir(".")
 
 	f := t.CreateFileLines("pkg-vulnerabilities",
@@ -52,8 +54,9 @@ func (s *Suite) Test_Vulnerabilities_read(c *check.C) {
 	)
 }
 
-func (s *Suite) Test_Vulnerabilities_read__empty(c *check.C) {
-	t := s.Init(c)
+func Test_Vulnerabilities_read__empty(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	t.Chdir(".")
 
 	f := t.CreateFileLines("pkg-vulnerabilities",

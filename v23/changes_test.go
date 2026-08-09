@@ -1,13 +1,13 @@
 package pkglint
 
 import (
-	"gopkg.in/check.v1"
 	"strings"
 	"testing"
 )
 
-func (s *Suite) Test_Changes_load(c *check.C) {
-	t := s.Init(c)
+func Test_Changes_load(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("doc/CHANGES-2018",
@@ -21,8 +21,9 @@ func (s *Suite) Test_Changes_load(c *check.C) {
 	t.CheckEquals(G.Pkgsrc.changes.LastChange["pkgpath"].Action, Moved)
 }
 
-func (s *Suite) Test_Changes_load__not_found(c *check.C) {
-	t := s.Init(c)
+func Test_Changes_load__not_found(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.Remove("doc/CHANGES-2018")
@@ -34,8 +35,9 @@ func (s *Suite) Test_Changes_load__not_found(c *check.C) {
 		"FATAL: ~/doc: Cannot be read for loading the package changes.")
 }
 
-func (s *Suite) Test_Changes_parseFile(c *check.C) {
-	t := s.Init(c)
+func Test_Changes_parseFile(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("doc/CHANGES-2018",
 		"\tAdded category/package version 1.0 [author1 2015-01-01]", // Wrong year
@@ -93,8 +95,9 @@ func (s *Suite) Test_Changes_parseFile(c *check.C) {
 		"WARN: ~/doc/CHANGES-2018:13: Invalid doc/CHANGES line: \tAdded another [new package]")
 }
 
-func (s *Suite) Test_Changes_parseFile__not_found(c *check.C) {
-	t := s.Init(c)
+func Test_Changes_parseFile__not_found(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.ExpectFatal(
 		func() { G.Pkgsrc.changes.parseFile(t.File("doc/CHANGES-2018"), false) },
@@ -104,8 +107,9 @@ func (s *Suite) Test_Changes_parseFile__not_found(c *check.C) {
 // Since package authors for pkgsrc-wip cannot necessarily commit to
 // main pkgsrc, don't warn about unsorted doc/CHANGES lines.
 // Only pkgsrc main committers can fix these.
-func (s *Suite) Test_Changes_parseFile__wip_suppresses_warnings(c *check.C) {
-	t := s.Init(c)
+func Test_Changes_parseFile__wip_suppresses_warnings(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("wip/package")
 	t.CreateFileLines("doc/CHANGES-2018",
@@ -132,8 +136,9 @@ func (s *Suite) Test_Changes_parseFile__wip_suppresses_warnings(c *check.C) {
 // When a single package is checked, only the lines from doc/CHANGES
 // that are related to that package are shown. The others are too
 // unrelated.
-func (s *Suite) Test_Changes_parseFile__default(c *check.C) {
-	t := s.Init(c)
+func Test_Changes_parseFile__default(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("doc/CHANGES-2018",
@@ -168,8 +173,9 @@ func (s *Suite) Test_Changes_parseFile__default(c *check.C) {
 		t.Shquote("(Run \"pkglint -e -Cglobal -Wall %s\" to show explanations.)", "."))
 }
 
-func (s *Suite) Test_Changes_parseFile__wrong_indentation(c *check.C) {
-	t := s.Init(c)
+func Test_Changes_parseFile__wrong_indentation(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("doc/CHANGES-2018",
@@ -191,8 +197,9 @@ func (s *Suite) Test_Changes_parseFile__wrong_indentation(c *check.C) {
 
 // Once or twice in a decade, changes to the pkgsrc infrastructure are also
 // documented in doc/CHANGES. These entries typically span multiple lines.
-func (s *Suite) Test_Changes_parseFile__infrastructure(c *check.C) {
-	t := s.Init(c)
+func Test_Changes_parseFile__infrastructure(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("doc/CHANGES-2018",
@@ -213,8 +220,9 @@ func (s *Suite) Test_Changes_parseFile__infrastructure(c *check.C) {
 		"Looks fine.")
 }
 
-func (s *Suite) Test_Changes_parseFile__old(c *check.C) {
-	t := s.Init(c)
+func Test_Changes_parseFile__old(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Cglobal", "-Wall")
 	t.SetUpPkgsrc()
@@ -252,8 +260,9 @@ func (s *Suite) Test_Changes_parseFile__old(c *check.C) {
 		"WARN: ~/doc/CHANGES-2018:6: Invalid doc/CHANGES line: \tUpdated pkgpath to 1.0 [author d]")
 }
 
-func (s *Suite) Test_Changes_parseLine(c *check.C) {
-	t := s.Init(c)
+func Test_Changes_parseLine(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(text string, diagnostics ...string) {
 		line := t.NewLine("doc/CHANGES-2019", 123, text)
@@ -492,8 +501,9 @@ func Test_Changes_parseAuthorAndDate(t *testing.T) {
 	}
 }
 
-func (s *Suite) Test_Changes_checkChangeVersion(c *check.C) {
-	t := s.Init(c)
+func Test_Changes_checkChangeVersion(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("doc/CHANGES-2020",
 		"\tAdded category/package version 1.0 [author1 2020-01-01]",
@@ -517,8 +527,9 @@ func (s *Suite) Test_Changes_checkChangeVersion(c *check.C) {
 		"WARN: CHANGES-2020:5: Downgrading \"category/package\" from 0.9 in line 4 to 1.0 should decrease the version number.")
 }
 
-func (s *Suite) Test_Changes_checkChangeVersionNumber(c *check.C) {
-	t := s.Init(c)
+func Test_Changes_checkChangeVersionNumber(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("doc/CHANGES-2020",
 		"\tAdded category/package version v1 [author1 2020-01-01]",
@@ -538,8 +549,9 @@ func (s *Suite) Test_Changes_checkChangeVersionNumber(c *check.C) {
 		"WARN: CHANGES-2020:4: Malformed version number \"2020/03\".")
 }
 
-func (s *Suite) Test_Changes_checkChangeDate(c *check.C) {
-	t := s.Init(c)
+func Test_Changes_checkChangeDate(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("doc/CHANGES-2020",
 		"\tAdded category/package version 1 [author 2018-01-01]")
@@ -553,8 +565,9 @@ func (s *Suite) Test_Changes_checkChangeDate(c *check.C) {
 			"does not match the filename CHANGES-2020.")
 }
 
-func (s *Suite) Test_Changes_checkRemovedAfterLastFreeze(c *check.C) {
-	t := s.Init(c)
+func Test_Changes_checkRemovedAfterLastFreeze(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--source")
 	t.CreateFileLines("doc/CHANGES-2019",
@@ -575,8 +588,9 @@ func (s *Suite) Test_Changes_checkRemovedAfterLastFreeze(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Changes_checkRemovedAfterLastFreeze__check_global(c *check.C) {
-	t := s.Init(c)
+func Test_Changes_checkRemovedAfterLastFreeze__check_global(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "-Cglobal", "--source")
 	t.CreateFileLines("doc/CHANGES-2019",
@@ -617,8 +631,9 @@ func (s *Suite) Test_Changes_checkRemovedAfterLastFreeze__check_global(c *check.
 			"must either exist or be marked as removed.")
 }
 
-func (s *Suite) Test_Changes_checkRemovedAfterLastFreeze__wip(c *check.C) {
-	t := s.Init(c)
+func Test_Changes_checkRemovedAfterLastFreeze__wip(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("wip/package")
 	t.CreateFileLines("doc/CHANGES-2019",
@@ -648,8 +663,9 @@ func (s *Suite) Test_Changes_checkRemovedAfterLastFreeze__wip(c *check.C) {
 	)
 }
 
-func (s *Suite) Test_Change_Version(c *check.C) {
-	t := s.Init(c)
+func Test_Change_Version(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	loc := Location{"doc/CHANGES-2019", 5}
 	added := Change{loc, Added, "category/path", "1.0", "author", "2019-01-01"}
@@ -663,8 +679,9 @@ func (s *Suite) Test_Change_Version(c *check.C) {
 	t.ExpectAssert(func() { removed.Version() })
 }
 
-func (s *Suite) Test_Change_Target(c *check.C) {
-	t := s.Init(c)
+func Test_Change_Target(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	loc := Location{"doc/CHANGES-2019", 5}
 	renamed := Change{loc, Renamed, "category/path", "category/other", "author", "2019-01-01"}
@@ -676,8 +693,9 @@ func (s *Suite) Test_Change_Target(c *check.C) {
 	t.ExpectAssert(func() { downgraded.Target() })
 }
 
-func (s *Suite) Test_Change_SuccessorOrVersion(c *check.C) {
-	t := s.Init(c)
+func Test_Change_SuccessorOrVersion(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	loc := Location{"doc/CHANGES-2019", 5}
 	removed := Change{loc, Removed, "category/path", "", "author", "2019-01-01"}
@@ -691,8 +709,9 @@ func (s *Suite) Test_Change_SuccessorOrVersion(c *check.C) {
 	t.ExpectAssert(func() { downgraded.SuccessorOrVersion() })
 }
 
-func (s *Suite) Test_Change_IsAbove(c *check.C) {
-	t := s.Init(c)
+func Test_Change_IsAbove(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	var changes = []*Change{
 		{Location{"", 1}, 0, "", "", "", "2011-07-01"},
@@ -716,15 +735,17 @@ func (s *Suite) Test_Change_IsAbove(c *check.C) {
 	}
 }
 
-func (s *Suite) Test_ParseChangeAction(c *check.C) {
-	t := s.Init(c)
+func Test_ParseChangeAction(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(ParseChangeAction("Added"), Added)
 	t.CheckEquals(ParseChangeAction("Unknown"), ChangeAction(0))
 }
 
-func (s *Suite) Test_ChangeAction_String(c *check.C) {
-	t := s.Init(c)
+func Test_ChangeAction_String(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(Added.String(), "Added")
 	t.CheckEquals(Removed.String(), "Removed")

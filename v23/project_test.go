@@ -1,17 +1,19 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import "testing"
 
-func (s *Suite) Test_NewNetBSDProject(c *check.C) {
-	t := s.Init(c)
+func Test_NewNetBSDProject(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	project := NewNetBSDProject()
 
 	t.CheckEquals(project.Types().IsDefinedCanon("PKGNAME"), false)
 }
 
-func (s *Suite) Test_NetBSDProject_Deprecated(c *check.C) {
-	t := s.Init(c)
+func Test_NetBSDProject_Deprecated(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	G.Pkgsrc = nil
 	G.Project = NewNetBSDProject()
@@ -24,8 +26,9 @@ func (s *Suite) Test_NetBSDProject_Deprecated(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_NetBSDProject_Types(c *check.C) {
-	t := s.Init(c)
+func Test_NetBSDProject_Types(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	project := NewNetBSDProject()
 	project.Types().acl("VAR", BtUnknown, NoVartypeOptions, "*.mk: append")

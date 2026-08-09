@@ -1,17 +1,19 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import "testing"
 
-func (s *Suite) Test_NewMkExprChecker(c *check.C) {
-	t := s.Init(c)
+func Test_NewMkExprChecker(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.ExpectPanicMatches(
 		func() { NewMkExprChecker(nil, nil, nil) },
 		`runtime error: invalid memory address or nil pointer dereference`)
 }
 
-func (s *Suite) Test_MkExprChecker_Check(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_Check(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("filename.mk",
@@ -27,8 +29,9 @@ func (s *Suite) Test_MkExprChecker_Check(c *check.C) {
 
 // The ${VARNAME:=suffix} expression should only be used with lists.
 // It typically appears in MASTER_SITE definitions.
-func (s *Suite) Test_MkExprChecker_Check__eq_nonlist(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_Check__eq_nonlist(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpMasterSite("MASTER_SITE_GITHUB", "https://github.com/")
@@ -43,8 +46,9 @@ func (s *Suite) Test_MkExprChecker_Check__eq_nonlist(c *check.C) {
 		"WARN: ~/options.mk:2: The :from=to modifier should only be used with lists, not with WRKDIR.")
 }
 
-func (s *Suite) Test_MkExprChecker_Check__for(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_Check__for(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpMasterSite("MASTER_SITE_GITHUB", "https://github.com/")
@@ -64,8 +68,9 @@ func (s *Suite) Test_MkExprChecker_Check__for(c *check.C) {
 // Even if the variable parameter differs, like .Linux and .SunOS in this
 // case. This pattern is typical for pkgsrc, therefore pkglint doesn't
 // check that the variable names match exactly.
-func (s *Suite) Test_MkExprChecker_Check__varcanon(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_Check__varcanon(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	t.SetUpPkgsrc()
@@ -97,8 +102,9 @@ func (s *Suite) Test_MkExprChecker_Check__varcanon(c *check.C) {
 // considered defined, and no "used but not defined" warning is logged for it.
 //
 // See Pkgsrc.loadUntypedVars.
-func (s *Suite) Test_MkExprChecker_Check__defined_in_infrastructure(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_Check__defined_in_infrastructure(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/deeply/nested/infra.mk",
@@ -116,8 +122,9 @@ func (s *Suite) Test_MkExprChecker_Check__defined_in_infrastructure(c *check.C) 
 		"WARN: ~/category/package/module.mk:3: Variable \"UNDEFINED\" is used but not defined.")
 }
 
-func (s *Suite) Test_MkExprChecker_Check__build_defs(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_Check__build_defs(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	// XXX: This paragraph should not be necessary since VARBASE and X11_TYPE
 	//  are also defined in vardefs.go.
@@ -141,8 +148,9 @@ func (s *Suite) Test_MkExprChecker_Check__build_defs(c *check.C) {
 
 // The LOCALBASE variable may be defined and used in the infrastructure.
 // It is always equivalent to PREFIX and only exists for historic reasons.
-func (s *Suite) Test_MkExprChecker_Check__LOCALBASE_in_infrastructure(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_Check__LOCALBASE_in_infrastructure(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/infra.mk",
@@ -162,8 +170,9 @@ func (s *Suite) Test_MkExprChecker_Check__LOCALBASE_in_infrastructure(c *check.C
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkExprChecker_Check__user_defined_variable_and_BUILD_DEFS(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_Check__user_defined_variable_and_BUILD_DEFS(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/defaults/mk.conf",
@@ -183,8 +192,9 @@ func (s *Suite) Test_MkExprChecker_Check__user_defined_variable_and_BUILD_DEFS(c
 		"WARN: file.mk:3: The user-defined variable VARBASE is used but not added to BUILD_DEFS.")
 }
 
-func (s *Suite) Test_MkExprChecker_Check__obsolete_PKG_DEBUG(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_Check__obsolete_PKG_DEBUG(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	G.Pkgsrc.initDeprecatedVars()
@@ -199,8 +209,9 @@ func (s *Suite) Test_MkExprChecker_Check__obsolete_PKG_DEBUG(c *check.C) {
 		"ERROR: module.mk:2: Use of _PKG_SILENT and _PKG_DEBUG is obsolete. Use ${RUN} instead.")
 }
 
-func (s *Suite) Test_MkExprChecker_checkUndefined(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkUndefined(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/infra.mk",
@@ -227,8 +238,9 @@ func (s *Suite) Test_MkExprChecker_checkUndefined(c *check.C) {
 }
 
 // PR 46570, item "15. net/uucp/Makefile has a make loop"
-func (s *Suite) Test_MkExprChecker_checkUndefined__indirect_variables(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkUndefined__indirect_variables(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpTool("echo", "ECHO", AfterPrefsMk)
 	mklines := t.NewMkLines("net/uucp/Makefile",
@@ -251,8 +263,9 @@ func (s *Suite) Test_MkExprChecker_checkUndefined__indirect_variables(c *check.C
 // Documented variables are declared as both defined and used since, as
 // of April 2019, pkglint doesn't yet interpret the "Package-settable
 // variables" comment.
-func (s *Suite) Test_MkExprChecker_checkUndefined__documented(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkUndefined__documented(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -274,8 +287,9 @@ func (s *Suite) Test_MkExprChecker_checkUndefined__documented(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkExprChecker_checkModifiers(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkModifiers(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(text string, diagnostics ...string) {
 		mklines := t.NewMkLines("filename.mk",
@@ -296,8 +310,9 @@ func (s *Suite) Test_MkExprChecker_checkModifiers(c *check.C) {
 		"WARN: filename.mk:1: The text \":Q\" looks like a modifier but isn't.")
 }
 
-func (s *Suite) Test_MkExprChecker_checkModifiersSuffix(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkModifiersSuffix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("file.mk",
@@ -316,8 +331,9 @@ func (s *Suite) Test_MkExprChecker_checkModifiersSuffix(c *check.C) {
 		"WARN: file.mk:4: Variable \"BIN_PROGRAMS\" is used but not defined.")
 }
 
-func (s *Suite) Test_MkExprChecker_checkModifiersRange(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkModifiersRange(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--show-autofix", "--source")
 	t.SetUpVartypes()
@@ -354,8 +370,9 @@ func (s *Suite) Test_MkExprChecker_checkModifiersRange(c *check.C) {
 	mklines.Check()
 }
 
-func (s *Suite) Test_MkExprChecker_checkModifierLoop(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkModifierLoop(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	autofixTest := func(before, after string, autofix bool) {
 		mklines := t.NewMkLines("filename.mk",
@@ -438,8 +455,9 @@ func (s *Suite) Test_MkExprChecker_checkModifierLoop(c *check.C) {
 		"WARN: filename.mk:2: Invalid variable modifier \"var@body@\" for \"VAR\".")
 }
 
-func (s *Suite) Test_MkExprChecker_checkVarname(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkVarname(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		"\t: $@",
@@ -463,8 +481,9 @@ func (s *Suite) Test_MkExprChecker_checkVarname(c *check.C) {
 		"AUTOFIX: filename.mk:3: Replacing \"LOCALBASE\" with \"PREFIX\".")
 }
 
-func (s *Suite) Test_MkExprChecker_checkVarnameBuildlink(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkVarnameBuildlink(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpOption("option", "Description.")
 	t.CreateFileLines("mk/bsd.options.mk")
@@ -510,8 +529,9 @@ func (s *Suite) Test_MkExprChecker_checkVarnameBuildlink(c *check.C) {
 		"WARN: options.mk:7: Buildlink identifier \"package\" is not known in this package.")
 }
 
-func (s *Suite) Test_MkExprChecker_checkVarnameBuildlink__no_buildlink3_file(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkVarnameBuildlink__no_buildlink3_file(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("category/package/module.mk",
@@ -526,8 +546,9 @@ func (s *Suite) Test_MkExprChecker_checkVarnameBuildlink__no_buildlink3_file(c *
 		"WARN: module.mk:2: Buildlink identifier \"package\" is not known in this package.")
 }
 
-func (s *Suite) Test_MkExprChecker_checkVarnameBuildlink__no_buildlink3_data(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkVarnameBuildlink__no_buildlink3_data(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("category/package/module.mk",
@@ -547,8 +568,9 @@ func (s *Suite) Test_MkExprChecker_checkVarnameBuildlink__no_buildlink3_data(c *
 		"WARN: module.mk:2: Buildlink identifier \"package\" is not known in this package.")
 }
 
-func (s *Suite) Test_MkExprChecker_checkVarnameBuildlink__curses_ok(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkVarnameBuildlink__curses_ok(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("mk/curses.buildlink3.mk")
@@ -564,8 +586,9 @@ func (s *Suite) Test_MkExprChecker_checkVarnameBuildlink__curses_ok(c *check.C) 
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkExprChecker_checkVarnameBuildlink__curses_bad(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkVarnameBuildlink__curses_bad(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("mk/curses.buildlink3.mk")
@@ -583,8 +606,9 @@ func (s *Suite) Test_MkExprChecker_checkVarnameBuildlink__curses_bad(c *check.C)
 		"WARN: module.mk:2: Buildlink identifier \"curses\" is not known in this package.")
 }
 
-func (s *Suite) Test_MkExprChecker_checkVarnameBuildlink__mysql_ok(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkVarnameBuildlink__mysql_ok(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("mk/mysql.buildlink3.mk")
@@ -600,8 +624,9 @@ func (s *Suite) Test_MkExprChecker_checkVarnameBuildlink__mysql_ok(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkExprChecker_checkVarnameBuildlink__mysql_bad(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkVarnameBuildlink__mysql_bad(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("mk/mysql.buildlink3.mk")
@@ -617,8 +642,9 @@ func (s *Suite) Test_MkExprChecker_checkVarnameBuildlink__mysql_bad(c *check.C) 
 		"WARN: module.mk:2: Buildlink identifier \"mysql-client\" is not known in this package.")
 }
 
-func (s *Suite) Test_MkExprChecker_checkPermissions(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkPermissions(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("options.mk",
@@ -637,8 +663,9 @@ func (s *Suite) Test_MkExprChecker_checkPermissions(c *check.C) {
 			"it would be ok in pyversion.mk only.")
 }
 
-func (s *Suite) Test_MkExprChecker_checkPermissions__explain(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkPermissions__explain(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--explain")
 	t.SetUpVartypes()
@@ -690,8 +717,9 @@ func (s *Suite) Test_MkExprChecker_checkPermissions__explain(c *check.C) {
 		"")
 }
 
-func (s *Suite) Test_MkExprChecker_checkPermissions__load_time_in_condition(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkPermissions__load_time_in_condition(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.SetUpVarType("LOAD_TIME", BtPathPattern, List,
@@ -714,8 +742,9 @@ func (s *Suite) Test_MkExprChecker_checkPermissions__load_time_in_condition(c *c
 		"WARN: filename.mk:2: RUN_TIME should not be used at load time in any file.")
 }
 
-func (s *Suite) Test_MkExprChecker_checkPermissions__load_time_in_for_loop(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkPermissions__load_time_in_for_loop(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.SetUpVarType("LOAD_TIME", BtPathPattern, List,
@@ -738,8 +767,9 @@ func (s *Suite) Test_MkExprChecker_checkPermissions__load_time_in_for_loop(c *ch
 		"WARN: filename.mk:2: RUN_TIME should not be used at load time in any file.")
 }
 
-func (s *Suite) Test_MkExprChecker_checkPermissions__load_time_guessed(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkPermissions__load_time_guessed(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("install", "", AtRunTime)
@@ -767,8 +797,9 @@ func (s *Suite) Test_MkExprChecker_checkPermissions__load_time_guessed(c *check.
 // Ensures that the warning "should not be evaluated at load time" is issued
 // only if using the variable at run time is allowed. If the latter were not
 // allowed, this warning would be confusing.
-func (s *Suite) Test_MkExprChecker_checkPermissions__load_time_run_time(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkPermissions__load_time_run_time(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.SetUpVarType("LOAD_TIME", BtUnknown, NoVartypeOptions,
@@ -808,8 +839,9 @@ func (s *Suite) Test_MkExprChecker_checkPermissions__load_time_run_time(c *check
 			"RUN_TIME_ELSEWHERE should not be used at load time in any file.")
 }
 
-func (s *Suite) Test_MkExprChecker_checkPermissions__PKGREVISION(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkPermissions__PKGREVISION(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("any.mk",
@@ -825,8 +857,9 @@ func (s *Suite) Test_MkExprChecker_checkPermissions__PKGREVISION(c *check.C) {
 		"WARN: any.mk:2: PKGREVISION should not be used in any file; it is a write-only variable.")
 }
 
-func (s *Suite) Test_MkExprChecker_checkPermissions__indirectly(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkPermissions__indirectly(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("file.mk",
@@ -842,8 +875,9 @@ func (s *Suite) Test_MkExprChecker_checkPermissions__indirectly(c *check.C) {
 
 // This test is only here for branch coverage.
 // It does not demonstrate anything useful.
-func (s *Suite) Test_MkExprChecker_checkPermissions__indirectly_tool(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkPermissions__indirectly_tool(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("file.mk",
@@ -856,8 +890,9 @@ func (s *Suite) Test_MkExprChecker_checkPermissions__indirectly_tool(c *check.C)
 		"WARN: file.mk:2: PKGREVISION should not be used in any file; it is a write-only variable.")
 }
 
-func (s *Suite) Test_MkExprChecker_checkPermissions__write_only_usable_in_other_file(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkPermissions__write_only_usable_in_other_file(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("buildlink3.mk",
@@ -873,8 +908,9 @@ func (s *Suite) Test_MkExprChecker_checkPermissions__write_only_usable_in_other_
 			"but not buildlink3.mk or builtin.mk.")
 }
 
-func (s *Suite) Test_MkExprChecker_checkPermissions__usable_only_at_loadtime_in_other_file(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkPermissions__usable_only_at_loadtime_in_other_file(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVarType("VAR", BtFilename, NoVartypeOptions,
 		"*: set, use-loadtime")
@@ -890,8 +926,9 @@ func (s *Suite) Test_MkExprChecker_checkPermissions__usable_only_at_loadtime_in_
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkExprChecker_checkPermissions__assigned_to_infrastructure_variable(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkPermissions__assigned_to_infrastructure_variable(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	// This combination of BtUnknown and all permissions is typical for
 	// otherwise unknown variables from the pkgsrc infrastructure.
@@ -922,8 +959,9 @@ func (s *Suite) Test_MkExprChecker_checkPermissions__assigned_to_infrastructure_
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkExprChecker_checkPermissions__assigned_to_load_time(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkPermissions__assigned_to_load_time(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	// LOAD_TIME may be used at load time in other.mk.
 	// Since VAR must not be used at load time at all, it would be dangerous
@@ -947,8 +985,9 @@ func (s *Suite) Test_MkExprChecker_checkPermissions__assigned_to_load_time(c *ch
 			"at load time (via LOAD_TIME).")
 }
 
-func (s *Suite) Test_MkExprChecker_checkPermissions__multiple_times_per_file(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkPermissions__multiple_times_per_file(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("buildlink3.mk",
@@ -969,8 +1008,9 @@ func (s *Suite) Test_MkExprChecker_checkPermissions__multiple_times_per_file(c *
 			"it is a write-only variable.")
 }
 
-func (s *Suite) Test_MkExprChecker_warnPermissions__not_directly_and_no_alternative_files(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_warnPermissions__not_directly_and_no_alternative_files(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("mk-c.mk",
@@ -1002,8 +1042,9 @@ func (s *Suite) Test_MkExprChecker_warnPermissions__not_directly_and_no_alternat
 		"WARN: mk-c.mk:7: BUILDLINK_PKGSRCDIR.mk-c should not be used in any file.")
 }
 
-func (s *Suite) Test_MkExprChecker_explainPermissions(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_explainPermissions(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--explain")
 	t.SetUpVartypes()
@@ -1036,8 +1077,9 @@ func (s *Suite) Test_MkExprChecker_explainPermissions(c *check.C) {
 		"")
 }
 
-func (s *Suite) Test_MkExprChecker_checkUseAtLoadTime__buildlink3_mk(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkUseAtLoadTime__buildlink3_mk(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileBuildlink3("category/package/buildlink3.mk",
@@ -1053,8 +1095,9 @@ func (s *Suite) Test_MkExprChecker_checkUseAtLoadTime__buildlink3_mk(c *check.C)
 			".include \"../../mk/bsd.fast.prefs.mk\" first.")
 }
 
-func (s *Suite) Test_MkExprChecker_checkUseAtLoadTime__pkg_build_options_mk(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkUseAtLoadTime__pkg_build_options_mk(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpOption("option", "An example option")
 	t.CreateFileLines("mk/pkg-build-options.mk",
@@ -1074,8 +1117,9 @@ func (s *Suite) Test_MkExprChecker_checkUseAtLoadTime__pkg_build_options_mk(c *c
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkExprChecker_checkUseAtLoadTime__other_mk(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkUseAtLoadTime__other_mk(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("category/package/filename.mk",
@@ -1092,8 +1136,9 @@ func (s *Suite) Test_MkExprChecker_checkUseAtLoadTime__other_mk(c *check.C) {
 			".include \"../../mk/bsd.prefs.mk\" first.")
 }
 
-func (s *Suite) Test_MkExprChecker_checkUseAtLoadTime__PKG_SYSCONFDIR(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkUseAtLoadTime__PKG_SYSCONFDIR(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.Chdir("category/package")
@@ -1110,8 +1155,9 @@ func (s *Suite) Test_MkExprChecker_checkUseAtLoadTime__PKG_SYSCONFDIR(c *check.C
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkExprChecker_checkUseAtLoadTime__package_settable(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkUseAtLoadTime__package_settable(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	btAnything := &BasicType{"Anything", func(cv *VartypeCheck) {}}
 	t.SetUpVarType("PKG", btAnything, PackageSettable)
@@ -1138,8 +1184,9 @@ func (s *Suite) Test_MkExprChecker_checkUseAtLoadTime__package_settable(c *check
 		nil...)
 }
 
-func (s *Suite) Test_MkExprChecker_warnToolLoadTime(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_warnToolLoadTime(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("nowhere", "NOWHERE", Nowhere)
@@ -1172,8 +1219,9 @@ func (s *Suite) Test_MkExprChecker_warnToolLoadTime(c *check.C) {
 // makefile that is not known to the global pkgsrc.
 //
 // This test covers the "pkgsrcTool != nil" condition.
-func (s *Suite) Test_MkExprChecker_warnToolLoadTime__local_tool(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_warnToolLoadTime__local_tool(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.CreateFileLines("mk/bsd.prefs.mk")
@@ -1195,8 +1243,9 @@ func (s *Suite) Test_MkExprChecker_warnToolLoadTime__local_tool(c *check.C) {
 		"WARN: ~/category/package/Makefile:7: The tool ${MK_TOOL} cannot be used at load time.")
 }
 
-func (s *Suite) Test_MkExprChecker_checkAssignable(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkAssignable(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("filename.mk",
@@ -1226,8 +1275,9 @@ func (s *Suite) Test_MkExprChecker_checkAssignable(c *check.C) {
 // line arguments, it's ok in that special case. This covers most of the
 // real-life situations where this type mismatch (Pathname := ShellCommand)
 // occurs.
-func (s *Suite) Test_MkExprChecker_checkAssignable__shell_command_to_pathname(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkAssignable__shell_command_to_pathname(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("sh", "SH", AtRunTime)
@@ -1248,8 +1298,9 @@ func (s *Suite) Test_MkExprChecker_checkAssignable__shell_command_to_pathname(c 
 			"instead of ${TOOLS_PLATFORM.sh}.")
 }
 
-func (s *Suite) Test_MkExprChecker_checkAssignable__shell_command_in_exists(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkAssignable__shell_command_in_exists(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpTool("sh", "SH", AfterPrefsMk)
 	t.SetUpTool("bash", "BASH", AfterPrefsMk)
@@ -1271,8 +1322,9 @@ func (s *Suite) Test_MkExprChecker_checkAssignable__shell_command_in_exists(c *c
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkExprChecker_checkQuoting(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkQuoting(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.SetUpFileMkLines("options.mk",
@@ -1297,8 +1349,9 @@ func (s *Suite) Test_MkExprChecker_checkQuoting(c *check.C) {
 		"WARN: ~/options.mk:7: The variable PATH should be quoted as part of a shell word.")
 }
 
-func (s *Suite) Test_MkExprChecker_checkQuoting__mstar(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkQuoting__mstar(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.SetUpFileMkLines("options.mk",
@@ -1320,8 +1373,9 @@ func (s *Suite) Test_MkExprChecker_checkQuoting__mstar(c *check.C) {
 		"WARN: ~/options.mk:6: Use ${CFLAGS:M*:Q} instead of ${CFLAGS:Q}.")
 }
 
-func (s *Suite) Test_MkExprChecker_checkQuoting__mstar_not_needed(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkQuoting__mstar_not_needed(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	pkg := t.SetUpPackage("category/package",
 		"MAKE_FLAGS+=\tCFLAGS=${CFLAGS:M*:Q}",
@@ -1337,8 +1391,9 @@ func (s *Suite) Test_MkExprChecker_checkQuoting__mstar_not_needed(c *check.C) {
 		"NOTE: ~/category/package/Makefile:21: The :M* modifier is only needed for GNU configure.")
 }
 
-func (s *Suite) Test_MkExprChecker_checkQuoting__q_not_needed(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkQuoting__q_not_needed(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	pkg := t.SetUpPackage("category/package",
 		"MASTER_SITES=\t${HOMEPAGE:Q}")
@@ -1350,8 +1405,9 @@ func (s *Suite) Test_MkExprChecker_checkQuoting__q_not_needed(c *check.C) {
 		"NOTE: ~/category/package/Makefile:6: The :Q modifier isn't necessary for ${HOMEPAGE} here.")
 }
 
-func (s *Suite) Test_MkExprChecker_checkQuoting__undefined_list_in_word_in_shell_command(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkQuoting__undefined_list_in_word_in_shell_command(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	pkg := t.SetUpPackage("category/package",
 		"\t${ECHO} ./${DISTFILES}")
@@ -1366,8 +1422,9 @@ func (s *Suite) Test_MkExprChecker_checkQuoting__undefined_list_in_word_in_shell
 		"WARN: ~/category/package/Makefile:20: The list variable DISTFILES should not be embedded in a word.")
 }
 
-func (s *Suite) Test_MkExprChecker_checkQuoting__list_variable_with_single_constant_value(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkQuoting__list_variable_with_single_constant_value(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	pkg := t.SetUpPackage("category/package",
 		"BUILD_DIRS=\tonly-dir",
@@ -1383,8 +1440,9 @@ func (s *Suite) Test_MkExprChecker_checkQuoting__list_variable_with_single_const
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkExprChecker_checkQuoting__list_variable_with_single_conditional_value(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkQuoting__list_variable_with_single_conditional_value(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	pkg := t.SetUpPackage("category/package",
 		"BUILD_DIRS=\tonly-dir",
@@ -1406,8 +1464,9 @@ func (s *Suite) Test_MkExprChecker_checkQuoting__list_variable_with_single_condi
 			"The list variable BUILD_DIRS should not be embedded in a word.")
 }
 
-func (s *Suite) Test_MkExprChecker_checkQuoting__list_variable_with_two_constant_words(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkQuoting__list_variable_with_two_constant_words(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	pkg := t.SetUpPackage("category/package",
 		"BUILD_DIRS=\tfirst-dir second-dir",
@@ -1424,8 +1483,9 @@ func (s *Suite) Test_MkExprChecker_checkQuoting__list_variable_with_two_constant
 			"The list variable BUILD_DIRS should not be embedded in a word.")
 }
 
-func (s *Suite) Test_MkExprChecker_checkQuotingQM(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkQuotingQM(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("filename.mk",
@@ -1443,8 +1503,9 @@ func (s *Suite) Test_MkExprChecker_checkQuotingQM(c *check.C) {
 		"WARN: filename.mk:5: Use ${CFLAGS:N*:M*:Q} instead of ${CFLAGS:N*:Q}.")
 }
 
-func (s *Suite) Test_MkExprChecker_fixQuotingModifiers(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_fixQuotingModifiers(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -1467,8 +1528,9 @@ func (s *Suite) Test_MkExprChecker_fixQuotingModifiers(c *check.C) {
 		"AUTOFIX: ~/filename.mk:5: Replacing \"${CFLAGS:N*:Q}\" with \"${CFLAGS:N*:M*:Q}\".")
 }
 
-func (s *Suite) Test_MkExprChecker_checkToolsPlatform(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkToolsPlatform(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.SetUpTool("available", "", AfterPrefsMk)
@@ -1545,8 +1607,9 @@ func (s *Suite) Test_MkExprChecker_checkToolsPlatform(c *check.C) {
 		"WARN: filename.mk:29: TOOLS_PLATFORM.undefined is undefined on SunOS.")
 }
 
-func (s *Suite) Test_MkExprChecker_checkBuildDefs(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkBuildDefs(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/defaults/mk.conf",
@@ -1570,8 +1633,9 @@ func (s *Suite) Test_MkExprChecker_checkBuildDefs(c *check.C) {
 			"USER_SETTABLE_MISSING is used but not added to BUILD_DEFS.")
 }
 
-func (s *Suite) Test_MkExprChecker_checkDeprecated(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkDeprecated(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.FinishSetUp()
@@ -1590,8 +1654,9 @@ func (s *Suite) Test_MkExprChecker_checkDeprecated(c *check.C) {
 
 // This test demonstrates some typos that an inexperienced pkgsrc developer
 // might make. This scenario is not intended to be realistic.
-func (s *Suite) Test_MkExprChecker_checkPkgBuildOptions(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprChecker_checkPkgBuildOptions(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpOption("option", "")
 	t.SetUpPackage("category/package",

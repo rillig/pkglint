@@ -3,12 +3,13 @@ package pkglint
 import (
 	"errors"
 	"github.com/rillig/pkglint/v23/histogram"
-	"gopkg.in/check.v1"
 	"strings"
+	"testing"
 )
 
-func (s *Suite) Test_Logger_Explain__only(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_Explain__only(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--only", "interesting", "--explain")
 	line := t.NewLine("Makefile", 27, "The old song")
@@ -27,8 +28,9 @@ func (s *Suite) Test_Logger_Explain__only(c *check.C) {
 		"")
 }
 
-func (s *Suite) Test_Logger_Explain__show_autofix(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_Explain__show_autofix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--explain", "--show-autofix")
 	line := t.NewLine("Makefile", 27, "The old song")
@@ -54,8 +56,9 @@ func (s *Suite) Test_Logger_Explain__show_autofix(c *check.C) {
 		"")
 }
 
-func (s *Suite) Test_Logger_Explain__show_autofix_and_source(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_Explain__show_autofix_and_source(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--explain", "--show-autofix", "--source")
 	line := t.NewLine("Makefile", 27, "The old song")
@@ -85,8 +88,9 @@ func (s *Suite) Test_Logger_Explain__show_autofix_and_source(c *check.C) {
 
 // When the --autofix option is given, the warnings are not shown, therefore it doesn't
 // make sense to show the explanation for the warning.
-func (s *Suite) Test_Logger_Explain__autofix_and_source(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_Explain__autofix_and_source(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--explain", "--autofix", "--source")
 	line := t.NewLine("Makefile", 27, "The old song")
@@ -115,8 +119,9 @@ func (s *Suite) Test_Logger_Explain__autofix_and_source(c *check.C) {
 // the normal lines.
 //
 // Since pkglint likes to complain about trailing whitespace, it should not generate it itself.
-func (s *Suite) Test_Logger_Explain__empty_lines(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_Explain__empty_lines(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--explain")
 	line := t.NewLine("Makefile", 27, "The old song")
@@ -142,8 +147,9 @@ func (s *Suite) Test_Logger_Explain__empty_lines(c *check.C) {
 // may happen because the pkgsrc root is in the temporary directory.
 //
 // In this situation, the ~ placeholder must still be properly substituted.
-func (s *Suite) Test_Logger_Explain__line_wrapped_temporary_directory(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_Explain__line_wrapped_temporary_directory(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--explain")
 	filename := t.File("filename.mk")
@@ -165,8 +171,9 @@ func (s *Suite) Test_Logger_Explain__line_wrapped_temporary_directory(c *check.C
 		"")
 }
 
-func (s *Suite) Test_Logger_Explain__trailing_space(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_Explain__trailing_space(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--explain")
 	filename := t.File("filename.mk")
@@ -184,8 +191,9 @@ func (s *Suite) Test_Logger_Explain__trailing_space(c *check.C) {
 }
 
 // Diag filters duplicate messages, unlike Logf.
-func (s *Suite) Test_Logger_Diag__duplicates(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_Diag__duplicates(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	var sw strings.Builder
 	logger := Logger{out: NewSeparatorWriter(&sw)}
@@ -200,8 +208,9 @@ func (s *Suite) Test_Logger_Diag__duplicates(c *check.C) {
 
 // Explanations are associated with their diagnostics. Therefore, when one
 // of them is suppressed, the other is suppressed, too.
-func (s *Suite) Test_Logger_Diag__explanation(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_Diag__explanation(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	var sw strings.Builder
 	logger := Logger{out: NewSeparatorWriter(&sw)}
@@ -229,8 +238,9 @@ func (s *Suite) Test_Logger_Diag__explanation(c *check.C) {
 		"\n")
 }
 
-func (s *Suite) Test_Logger_Diag__show_source(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_Diag__show_source(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--show-autofix", "--source")
 	line := t.NewLine("filename", 123, "text")
@@ -250,8 +260,9 @@ func (s *Suite) Test_Logger_Diag__show_source(c *check.C) {
 		"+\tnew line below")
 }
 
-func (s *Suite) Test_Logger_Diag__show_source_with_whole_file(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_Diag__show_source_with_whole_file(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--source")
 	line := NewLineWhole("filename")
@@ -264,8 +275,9 @@ func (s *Suite) Test_Logger_Diag__show_source_with_whole_file(c *check.C) {
 
 // Ensures that when two packages produce a warning in the same file, both the
 // warning and the corresponding source code are logged only once.
-func (s *Suite) Test_Logger_Diag__source_duplicates(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_Diag__source_duplicates(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	// Up to pkglint 19.3.10, this variable had been reset during
 	// command line parsing. In 19.3.11 the command line option has
@@ -315,34 +327,50 @@ func (s *Suite) Test_Logger_Diag__source_duplicates(c *check.C) {
 			"category/package1", "category/package2"))
 }
 
-func (s *Suite) Test_Logger_Diag__wrong_type(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_Diag__wrong_type(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
-	t.Check(
-		func() {
-			line := t.NewLine("filename.mk", 123, "")
-			line.Notef("Argument %s has wrong type.", NewCurrPathString("."))
-		},
-		check.PanicMatches,
-		`interface conversion: interface {} is pkglint.CurrPath, not pkglint.RelPath`)
-	t.Check(
-		func() {
-			line := t.NewLine("filename.mk", 123, "")
-			line.Notef("Argument %f has wrong type.", 1.0)
-		},
-		check.PanicMatches,
-		`interface conversion: interface {} is float64, not string`)
-	t.Check(
-		func() {
-			line := t.NewLine("filename.mk", 123, "")
-			line.Notef("Argument %s has wrong type.", errors.New("err"))
-		},
-		check.PanicMatches,
-		`interface conversion: interface {} is \*errors.errorString, not string`)
+	var p any
+	func() {
+		defer func() {
+			p = recover()
+		}()
+		line := t.NewLine("filename.mk", 123, "")
+		line.Notef("Argument %s has wrong type.", NewCurrPathString("."))
+	}()
+	if have, want := p.(error).Error(), regcomp(`interface conversion: interface {} is pkglint.CurrPath, not pkglint.RelPath`); !want.MatchString(have) {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+
+	p = nil
+	func() {
+		defer func() {
+			p = recover()
+		}()
+		line := t.NewLine("filename.mk", 123, "")
+		line.Notef("Argument %f has wrong type.", 1.0)
+	}()
+	if have, want := p.(error).Error(), regcomp(`interface conversion: interface {} is float64, not string`); !want.MatchString(have) {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
+
+	p = nil
+	func() {
+		defer func() {
+			p = recover()
+		}()
+		line := t.NewLine("filename.mk", 123, "")
+		line.Notef("Argument %s has wrong type.", errors.New("err"))
+	}()
+	if have, want := p.(error).Error(), regcomp(`interface conversion: interface {} is \*errors.errorString, not string`); !want.MatchString(have) {
+		t.Errorf("want %#v, have %#v", want, have)
+	}
 }
 
-func (s *Suite) Test_Logger_FirstTime__not_verbose(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_FirstTime__not_verbose(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	G.Logger.verbose = false // as in a realistic run
 
@@ -353,8 +381,9 @@ func (s *Suite) Test_Logger_FirstTime__not_verbose(c *check.C) {
 	t.CheckEquals(G.Logger.FirstTime("filename", "124", "Message."), false)
 }
 
-func (s *Suite) Test_Logger_Relevant(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_Relevant(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine(nil...)
 
@@ -383,8 +412,9 @@ func (s *Suite) Test_Logger_Relevant(c *check.C) {
 	t.CheckEquals(G.Logger.suppressExpl, false)
 }
 
-func (s *Suite) Test_Logger_shallBeLogged(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_shallBeLogged(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine( /* none */ )
 
@@ -414,8 +444,9 @@ func (s *Suite) Test_Logger_shallBeLogged(c *check.C) {
 // to first show the code and then show the diagnostic. This allows
 // the diagnostics to underline the relevant part of the source code
 // and reminds of the squiggly line used for spellchecking.
-func (s *Suite) Test_Logger_writeSource__separator(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_writeSource__separator(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--source")
 	lines := t.SetUpFileLines("DESCR",
@@ -450,8 +481,9 @@ func (s *Suite) Test_Logger_writeSource__separator(c *check.C) {
 		"WARN: ~/DESCR:4: No autofix, just a warning.")
 }
 
-func (s *Suite) Test_Logger_writeSource__with_explanation(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_writeSource__with_explanation(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--source", "--explain")
 	lines := t.SetUpFileLines("DESCR",
@@ -491,8 +523,9 @@ func (s *Suite) Test_Logger_writeSource__with_explanation(c *check.C) {
 // if there are several diagnostics for the same line. In this case though,
 // there is an explanation between the diagnostics, and because it may get
 // quite long, it's better to repeat the source code once again.
-func (s *Suite) Test_Logger_writeSource__with_explanation_in_same_line(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_writeSource__with_explanation_in_same_line(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--source", "--explain")
 	lines := t.SetUpFileLines("DESCR",
@@ -524,8 +557,9 @@ func (s *Suite) Test_Logger_writeSource__with_explanation_in_same_line(c *check.
 
 // When there is no explanation after the first diagnostic, it is not
 // necessary to repeat the source code again for the second diagnostic.
-func (s *Suite) Test_Logger_writeSource__without_explanation_in_same_line(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_writeSource__without_explanation_in_same_line(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--source", "--explain")
 	lines := t.SetUpFileLines("DESCR",
@@ -556,8 +590,9 @@ func (s *Suite) Test_Logger_writeSource__without_explanation_in_same_line(c *che
 // the "Replacing" message. Since these are shown in diff style, they
 // must be kept together. And since the "+" line must be below the "Replacing"
 // line, this order of lines seems to be the most intuitive.
-func (s *Suite) Test_Logger_writeSource__separator_show_autofix(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_writeSource__separator_show_autofix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--source", "--show-autofix")
 	lines := t.SetUpFileLines("DESCR",
@@ -592,8 +627,9 @@ func (s *Suite) Test_Logger_writeSource__separator_show_autofix(c *check.C) {
 		"+\tThe bronze medal line")
 }
 
-func (s *Suite) Test_Logger_writeSource__separator_show_autofix_with_explanation(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_writeSource__separator_show_autofix_with_explanation(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--source", "--show-autofix", "--explain")
 	lines := t.SetUpFileLines("DESCR",
@@ -638,8 +674,9 @@ func (s *Suite) Test_Logger_writeSource__separator_show_autofix_with_explanation
 // Fatal errors are not specific to a single line, therefore they only
 // take a filename as argument.
 // The --show-autofix and --source options have no effect on fatal errors.
-func (s *Suite) Test_Logger_writeSource__fatal_with_show_autofix(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_writeSource__fatal_with_show_autofix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--source", "--show-autofix")
 
@@ -653,8 +690,9 @@ func (s *Suite) Test_Logger_writeSource__fatal_with_show_autofix(c *check.C) {
 //
 // TODO: Giving the diagnostics again would be useful, but the warning and
 // error counters should not be affected, as well as the exitcode.
-func (s *Suite) Test_Logger_writeSource__separator_autofix(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_writeSource__separator_autofix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--source", "--autofix")
 	lines := t.SetUpFileLines("DESCR",
@@ -687,8 +725,9 @@ func (s *Suite) Test_Logger_writeSource__separator_autofix(c *check.C) {
 		"+\tThe bronze medal line")
 }
 
-func (s *Suite) Test_Logger_writeSource__first_warn_then_autofix(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_writeSource__first_warn_then_autofix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(diagnostics ...string) {
 		lines := t.SetUpFileLines("DESCR",
@@ -739,8 +778,9 @@ func (s *Suite) Test_Logger_writeSource__first_warn_then_autofix(c *check.C) {
 		"+\tThe last line")
 }
 
-func (s *Suite) Test_Logger_writeDiff(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_writeDiff(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--show-autofix")
 	line := t.NewLine("filename", 123, "before")
@@ -761,8 +801,9 @@ func (s *Suite) Test_Logger_writeDiff(c *check.C) {
 		"+\tafter")
 }
 
-func (s *Suite) Test_Logger_writeLine(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_writeLine(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	G.Logger.writeLine("> ", "\u0007\u00FC text")
 
@@ -770,24 +811,27 @@ func (s *Suite) Test_Logger_writeLine(c *check.C) {
 		"> <U+0007><U+00FC> text")
 }
 
-func (s *Suite) Test_Logger_IsAutofix__default(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_IsAutofix__default(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall")
 
 	t.CheckEquals(G.Logger.IsAutofix(), false)
 }
 
-func (s *Suite) Test_Logger_IsAutofix__show_autofix(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_IsAutofix__show_autofix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--show-autofix")
 
 	t.CheckEquals(G.Logger.IsAutofix(), true)
 }
 
-func (s *Suite) Test_Logger_IsAutofix__autofix(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_IsAutofix__autofix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--autofix")
 
@@ -797,8 +841,9 @@ func (s *Suite) Test_Logger_IsAutofix__autofix(c *check.C) {
 // Calling Logf without further preparation just logs the message.
 // Suppressing duplicate messages or filtering messages happens
 // in other methods of the Logger, namely Relevant, FirstTime, Diag.
-func (s *Suite) Test_Logger_Logf(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_Logf(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	var sw strings.Builder
 	logger := Logger{out: NewSeparatorWriter(&sw)}
@@ -810,8 +855,9 @@ func (s *Suite) Test_Logger_Logf(c *check.C) {
 }
 
 // Logf doesn't filter duplicates, but Diag does.
-func (s *Suite) Test_Logger_Logf__duplicates(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_Logf__duplicates(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	var sw strings.Builder
 	logger := Logger{out: NewSeparatorWriter(&sw)}
@@ -825,8 +871,9 @@ func (s *Suite) Test_Logger_Logf__duplicates(c *check.C) {
 }
 
 // Ensure that suppressing a diagnostic doesn't influence later calls to Logf.
-func (s *Suite) Test_Logger_Logf__mixed_with_Diag(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_Logf__mixed_with_Diag(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	var sw strings.Builder
 	logger := Logger{out: NewSeparatorWriter(&sw)}
@@ -845,8 +892,9 @@ func (s *Suite) Test_Logger_Logf__mixed_with_Diag(c *check.C) {
 		"ERROR: filename:3: Logf output 3.\n")
 }
 
-func (s *Suite) Test_Logger_Logf__production(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_Logf__production(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	var sw strings.Builder
 	logger := Logger{out: NewSeparatorWriter(&sw)}
@@ -861,8 +909,9 @@ func (s *Suite) Test_Logger_Logf__production(c *check.C) {
 		"ERROR: filename:3: message\n")
 }
 
-func (s *Suite) Test_Logger_Logf__profiling(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_Logf__profiling(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("filename", 123, "text")
 
@@ -877,8 +926,9 @@ func (s *Suite) Test_Logger_Logf__profiling(c *check.C) {
 		"loghisto      1 Warning.")
 }
 
-func (s *Suite) Test_Logger_Logf__profiling_autofix(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_Logf__profiling_autofix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--show-autofix", "--source", "--explain")
 	line := t.NewLine("filename", 123, "text")
@@ -914,8 +964,9 @@ func (s *Suite) Test_Logger_Logf__profiling_autofix(c *check.C) {
 //
 // An example of this was (until November 2018) DESTDIR in the check
 // for absolute pathnames.
-func (s *Suite) Test_Logger_Logf__duplicate_messages(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_Logf__duplicate_messages(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--explain")
 	G.Logger.verbose = false
@@ -937,8 +988,9 @@ func (s *Suite) Test_Logger_Logf__duplicate_messages(c *check.C) {
 		"")
 }
 
-func (s *Suite) Test_Logger_Logf__duplicate_explanations(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_Logf__duplicate_explanations(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--explain")
 	line := t.NewLine("README.txt", 123, "text")
@@ -957,8 +1009,9 @@ func (s *Suite) Test_Logger_Logf__duplicate_explanations(c *check.C) {
 		"WARN: README.txt:123: Warning 2.")
 }
 
-func (s *Suite) Test_Logger_Logf__gcc_format(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_Logf__gcc_format(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--gcc-output-format")
 
@@ -975,8 +1028,9 @@ func (s *Suite) Test_Logger_Logf__gcc_format(c *check.C) {
 		"note: Neither filename nor line number.")
 }
 
-func (s *Suite) Test_Logger_Logf__traditional_format(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_Logf__traditional_format(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--gcc-output-format=no")
 
@@ -994,8 +1048,9 @@ func (s *Suite) Test_Logger_Logf__traditional_format(c *check.C) {
 }
 
 // Ensures that pkglint never destroys the terminal emulator by sending unintended escape sequences.
-func (s *Suite) Test_Logger_Logf__strange_characters(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_Logf__strange_characters(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--gcc-output-format", "--source", "--explain")
 
@@ -1012,8 +1067,9 @@ func (s *Suite) Test_Logger_Logf__strange_characters(c *check.C) {
 
 // Even if verbose logging is disabled, the "Replacing" diagnostics
 // must not be filtered for duplicates since each of them modifies the line.
-func (s *Suite) Test_Logger_Logf__duplicate_autofix(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_Logf__duplicate_autofix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--explain", "--autofix")
 	G.Logger.verbose = false // See SetUpTest
@@ -1030,16 +1086,18 @@ func (s *Suite) Test_Logger_Logf__duplicate_autofix(c *check.C) {
 		"AUTOFIX: README.txt:123: Replacing \"t\" with \"T\".")
 }
 
-func (s *Suite) Test_Logger_Logf__panic(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_Logf__panic(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.ExpectPanic(
 		func() { G.Logger.Logf(Error, "filename", "13", "No period", "No period") },
 		"Pkglint internal error: Diagnostic format \"No period\" must end in a period.")
 }
 
-func (s *Suite) Test_Logger_Logf__wording(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_Logf__wording(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.ExpectPanic(
 		func() { G.Logger.Logf(Error, "filename", "13", "This should.", "This should.") },
@@ -1057,8 +1115,9 @@ func (s *Suite) Test_Logger_Logf__wording(c *check.C) {
 
 // In case of a fatal error, pkglint quits in a controlled manner,
 // and the trace log shows where the fatal error happened.
-func (s *Suite) Test_Logger_TechFatalf__trace(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_TechFatalf__trace(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.EnableTracingToLog()
 
@@ -1075,18 +1134,19 @@ func (s *Suite) Test_Logger_TechFatalf__trace(c *check.C) {
 
 	t.ExpectFatal(
 		outer,
-		"TRACE: + Suite.Test_Logger_TechFatalf__trace.func2()",
-		"TRACE: 1 + Suite.Test_Logger_TechFatalf__trace.func1()",
+		"TRACE: + Test_Logger_TechFatalf__trace.func2()",
+		"TRACE: 1 + Test_Logger_TechFatalf__trace.func1()",
 		"TRACE: 1 2   TechFatalf: filename: Cannot continue because of \"reason 1\" and \"reason 2\".",
-		"TRACE: 1 - Suite.Test_Logger_TechFatalf__trace.func1()",
-		"TRACE: - Suite.Test_Logger_TechFatalf__trace.func2()",
+		"TRACE: 1 - Test_Logger_TechFatalf__trace.func1()",
+		"TRACE: - Test_Logger_TechFatalf__trace.func2()",
 		"FATAL: filename: Cannot continue because of \"reason 1\" and \"reason 2\".")
 }
 
 // Technical errors are not diagnostics.
 // Therefore, --gcc-output-format has no effect on them.
-func (s *Suite) Test_Logger_TechErrorf__gcc_format(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_TechErrorf__gcc_format(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--gcc-output-format")
 
@@ -1096,8 +1156,9 @@ func (s *Suite) Test_Logger_TechErrorf__gcc_format(c *check.C) {
 		"ERROR: filename: Cannot be opened for reading.")
 }
 
-func (s *Suite) Test_Logger_ShowSummary__explanations_with_only(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_ShowSummary__explanations_with_only(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--only", "interesting")
 	line := t.NewLine("Makefile", 27, "The old song")
@@ -1126,8 +1187,9 @@ func (s *Suite) Test_Logger_ShowSummary__explanations_with_only(c *check.C) {
 		"(Run \"pkglint -e --only interesting\" to show explanations.)")
 }
 
-func (s *Suite) Test_Logger_ShowSummary__looks_fine(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_ShowSummary__looks_fine(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	logger := Logger{out: NewSeparatorWriter(&t.stdout)}
 
@@ -1137,8 +1199,9 @@ func (s *Suite) Test_Logger_ShowSummary__looks_fine(c *check.C) {
 		"Looks fine.")
 }
 
-func (s *Suite) Test_Logger_ShowSummary__1_error_1_warning(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_ShowSummary__1_error_1_warning(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	logger := Logger{out: NewSeparatorWriter(&t.stdout)}
 	logger.Logf(Error, "", "", ".", ".")
@@ -1152,8 +1215,9 @@ func (s *Suite) Test_Logger_ShowSummary__1_error_1_warning(c *check.C) {
 		"1 error and 1 warning found.")
 }
 
-func (s *Suite) Test_Logger_ShowSummary__2_errors_3_warnings(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_ShowSummary__2_errors_3_warnings(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	logger := Logger{out: NewSeparatorWriter(&t.stdout)}
 	logger.Logf(Error, "", "", "1.", "1.")
@@ -1173,8 +1237,9 @@ func (s *Suite) Test_Logger_ShowSummary__2_errors_3_warnings(c *check.C) {
 		"2 errors and 3 warnings found.")
 }
 
-func (s *Suite) Test_Logger_ShowSummary__looks_fine_quiet(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_ShowSummary__looks_fine_quiet(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	logger := Logger{out: NewSeparatorWriter(&t.stdout)}
 	logger.Opts.Quiet = true
@@ -1184,8 +1249,9 @@ func (s *Suite) Test_Logger_ShowSummary__looks_fine_quiet(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Logger_ShowSummary__1_error_1_warning_quiet(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_ShowSummary__1_error_1_warning_quiet(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	logger := Logger{out: NewSeparatorWriter(&t.stdout)}
 	logger.Opts.Quiet = true
@@ -1199,8 +1265,9 @@ func (s *Suite) Test_Logger_ShowSummary__1_error_1_warning_quiet(c *check.C) {
 		"WARN: .")
 }
 
-func (s *Suite) Test_Logger_ShowSummary__explanations_available(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_ShowSummary__explanations_available(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	logger := Logger{out: NewSeparatorWriter(&t.stdout)}
 	logger.Logf(Error, "", "", ".", ".")
@@ -1215,8 +1282,9 @@ func (s *Suite) Test_Logger_ShowSummary__explanations_available(c *check.C) {
 		"(Run \"pkglint -e\" to show explanations.)")
 }
 
-func (s *Suite) Test_Logger_ShowSummary__explanations_available_in_explain_mode(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_ShowSummary__explanations_available_in_explain_mode(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	logger := Logger{out: NewSeparatorWriter(&t.stdout)}
 	logger.Logf(Error, "", "", ".", ".")
@@ -1233,8 +1301,9 @@ func (s *Suite) Test_Logger_ShowSummary__explanations_available_in_explain_mode(
 		"1 error found.")
 }
 
-func (s *Suite) Test_Logger_ShowSummary__autofix_available(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_ShowSummary__autofix_available(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	logger := Logger{out: NewSeparatorWriter(&t.stdout)}
 	logger.autofixAvailable = true // See SaveAutofixChanges
@@ -1247,8 +1316,9 @@ func (s *Suite) Test_Logger_ShowSummary__autofix_available(c *check.C) {
 		"(Run \"pkglint -F\" to automatically fix some issues.)")
 }
 
-func (s *Suite) Test_Logger_ShowSummary__autofix_available_with_show_autofix_option(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_ShowSummary__autofix_available_with_show_autofix_option(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	logger := Logger{out: NewSeparatorWriter(&t.stdout)}
 	logger.autofixAvailable = true // See SaveAutofixChanges
@@ -1263,8 +1333,9 @@ func (s *Suite) Test_Logger_ShowSummary__autofix_available_with_show_autofix_opt
 		"(Run \"pkglint -F\" to automatically fix some issues.)")
 }
 
-func (s *Suite) Test_Logger_ShowSummary__autofix_available_with_autofix_option(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_ShowSummary__autofix_available_with_autofix_option(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	logger := Logger{out: NewSeparatorWriter(&t.stdout)}
 	logger.autofixAvailable = true // See SaveAutofixChanges
@@ -1280,8 +1351,9 @@ func (s *Suite) Test_Logger_ShowSummary__autofix_available_with_autofix_option(c
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Logger_ShowSummary__quoting(c *check.C) {
-	t := s.Init(c)
+func Test_Logger_ShowSummary__quoting(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	logger := Logger{out: NewSeparatorWriter(&t.stdout)}
 	logger.errors = 1
@@ -1294,8 +1366,9 @@ func (s *Suite) Test_Logger_ShowSummary__quoting(c *check.C) {
 		"(Run \"pkglint -e --only 'string with '\\''quotes'\\'''\" to show explanations.)")
 }
 
-func (s *Suite) Test_SeparatorWriter(c *check.C) {
-	t := s.Init(c)
+func Test_SeparatorWriter(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	var sb strings.Builder
 	wr := NewSeparatorWriter(&sb)
@@ -1314,8 +1387,9 @@ func (s *Suite) Test_SeparatorWriter(c *check.C) {
 	t.CheckEquals(sb.String(), "a\nb\n\nc\n")
 }
 
-func (s *Suite) Test_NewSeparatorWriter(c *check.C) {
-	t := s.Init(c)
+func Test_NewSeparatorWriter(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	var sb strings.Builder
 	wr := NewSeparatorWriter(&sb)
@@ -1325,8 +1399,9 @@ func (s *Suite) Test_NewSeparatorWriter(c *check.C) {
 	t.CheckEquals(wr.line.Len(), 0)
 }
 
-func (s *Suite) Test_SeparatorWriter_WriteLine(c *check.C) {
-	t := s.Init(c)
+func Test_SeparatorWriter_WriteLine(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	var sb strings.Builder
 	wr := NewSeparatorWriter(&sb)
@@ -1341,8 +1416,9 @@ func (s *Suite) Test_SeparatorWriter_WriteLine(c *check.C) {
 	t.CheckEquals(sb.String(), "first\n\nsecond\n")
 }
 
-func (s *Suite) Test_SeparatorWriter_Write(c *check.C) {
-	t := s.Init(c)
+func Test_SeparatorWriter_Write(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	var sb strings.Builder
 	wr := NewSeparatorWriter(&sb)
@@ -1366,8 +1442,9 @@ func (s *Suite) Test_SeparatorWriter_Write(c *check.C) {
 	t.CheckEquals(sb.String(), "first\n\nsecond\n")
 }
 
-func (s *Suite) Test_SeparatorWriter_Separate(c *check.C) {
-	t := s.Init(c)
+func Test_SeparatorWriter_Separate(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	var sb strings.Builder
 	wr := NewSeparatorWriter(&sb)
@@ -1391,8 +1468,9 @@ func (s *Suite) Test_SeparatorWriter_Separate(c *check.C) {
 	t.CheckEquals(sb.String(), "a\n\nc\n")
 }
 
-func (s *Suite) Test_SeparatorWriter_Separate__at_the_beginning(c *check.C) {
-	t := s.Init(c)
+func Test_SeparatorWriter_Separate__at_the_beginning(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	var sb strings.Builder
 	wr := NewSeparatorWriter(&sb)
@@ -1403,8 +1481,9 @@ func (s *Suite) Test_SeparatorWriter_Separate__at_the_beginning(c *check.C) {
 	t.CheckEquals(sb.String(), "a\n")
 }
 
-func (s *Suite) Test_SeparatorWriter_write(c *check.C) {
-	t := s.Init(c)
+func Test_SeparatorWriter_write(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	var sb strings.Builder
 	wr := NewSeparatorWriter(&sb)
@@ -1428,8 +1507,9 @@ func (s *Suite) Test_SeparatorWriter_write(c *check.C) {
 	t.CheckEquals(wr.state, uint8(3))
 }
 
-func (s *Suite) Test_SeparatorWriter_Flush(c *check.C) {
-	t := s.Init(c)
+func Test_SeparatorWriter_Flush(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	var sb strings.Builder
 	wr := NewSeparatorWriter(&sb)

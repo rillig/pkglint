@@ -1,9 +1,10 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import "testing"
 
-func (s *Suite) Test_CheckdirCategory__totally_broken(c *check.C) {
-	t := s.Init(c)
+func Test_CheckdirCategory__totally_broken(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.CreateFileLines("archivers/Makefile",
@@ -36,8 +37,9 @@ func (s *Suite) Test_CheckdirCategory__totally_broken(c *check.C) {
 		"ERROR: ~/archivers/Makefile:4: The file must end here.")
 }
 
-func (s *Suite) Test_CheckdirCategory__invalid_comment(c *check.C) {
-	t := s.Init(c)
+func Test_CheckdirCategory__invalid_comment(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.CreateFileLines("archivers/Makefile",
@@ -65,8 +67,9 @@ func (s *Suite) Test_CheckdirCategory__invalid_comment(c *check.C) {
 //
 // In all other category files, pkglint checks that directly after the
 // SUBDIR section there is only an empty line and the .include line.
-func (s *Suite) Test_CheckdirCategory__wip(c *check.C) {
-	t := s.Init(c)
+func Test_CheckdirCategory__wip(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/misc/category.mk")
@@ -90,8 +93,9 @@ func (s *Suite) Test_CheckdirCategory__wip(c *check.C) {
 		"WARN: ~/wip/Makefile:8: Unknown shell command \"wip-specific-command\".")
 }
 
-func (s *Suite) Test_CheckdirCategory__subdirs(c *check.C) {
-	t := s.Init(c)
+func Test_CheckdirCategory__subdirs(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/misc/category.mk")
@@ -130,8 +134,9 @@ func (s *Suite) Test_CheckdirCategory__subdirs(c *check.C) {
 		"ERROR: ~/category/Makefile:11: \"commented-mk-only\" does not contain a package.")
 }
 
-func (s *Suite) Test_CheckdirCategory__only_in_Makefile(c *check.C) {
-	t := s.Init(c)
+func Test_CheckdirCategory__only_in_Makefile(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/misc/category.mk")
@@ -157,8 +162,9 @@ func (s *Suite) Test_CheckdirCategory__only_in_Makefile(c *check.C) {
 			"\"only-in-makefile\" does not contain a package.")
 }
 
-func (s *Suite) Test_CheckdirCategory__only_in_file_system(c *check.C) {
-	t := s.Init(c)
+func Test_CheckdirCategory__only_in_file_system(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/misc/category.mk")
@@ -182,8 +188,9 @@ func (s *Suite) Test_CheckdirCategory__only_in_file_system(c *check.C) {
 		"ERROR: ~/category/Makefile:6: Package \"only-in-fs\" must be listed here.")
 }
 
-func (s *Suite) Test_CheckdirCategory__recursive(c *check.C) {
-	t := s.Init(c)
+func Test_CheckdirCategory__recursive(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-r")
 	t.SetUpPkgsrc()
@@ -222,8 +229,9 @@ func (s *Suite) Test_CheckdirCategory__recursive(c *check.C) {
 // since the new SUBDIR would be inserted before that empty line.
 // It would have also been possible to insert the new SUBDIR after
 // the last SUBDIR line, but that would have been three more lines of code.
-func (s *Suite) Test_CheckdirCategory__subdirs_file_system_at_the_bottom(c *check.C) {
-	t := s.Init(c)
+func Test_CheckdirCategory__subdirs_file_system_at_the_bottom(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--show-autofix")
 	t.SetUpPkgsrc()
@@ -247,8 +255,9 @@ func (s *Suite) Test_CheckdirCategory__subdirs_file_system_at_the_bottom(c *chec
 		"AUTOFIX: ~/category/Makefile:6: Inserting a line \"SUBDIR+=\\tzzz-fs-only\" above this line.")
 }
 
-func (s *Suite) Test_CheckdirCategory__indentation(c *check.C) {
-	t := s.Init(c)
+func Test_CheckdirCategory__indentation(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/misc/category.mk")
@@ -272,8 +281,9 @@ func (s *Suite) Test_CheckdirCategory__indentation(c *check.C) {
 			"with tabs, not spaces, to column 17 instead of 29.")
 }
 
-func (s *Suite) Test_CheckdirCategory__comment_at_the_top(c *check.C) {
-	t := s.Init(c)
+func Test_CheckdirCategory__comment_at_the_top(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/misc/category.mk")
@@ -307,8 +317,9 @@ func (s *Suite) Test_CheckdirCategory__comment_at_the_top(c *check.C) {
 		"ERROR: ~/category/Makefile:3: The file must end here.")
 }
 
-func (s *Suite) Test_CheckdirCategory__unexpected_EOF_while_reading_SUBDIR(c *check.C) {
-	t := s.Init(c)
+func Test_CheckdirCategory__unexpected_EOF_while_reading_SUBDIR(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/misc/category.mk")
@@ -330,8 +341,9 @@ func (s *Suite) Test_CheckdirCategory__unexpected_EOF_while_reading_SUBDIR(c *ch
 			".include \"../mk/misc/category.mk\"")
 }
 
-func (s *Suite) Test_CheckdirCategory__no_Makefile(c *check.C) {
-	t := s.Init(c)
+func Test_CheckdirCategory__no_Makefile(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("category/other-file")
@@ -343,8 +355,9 @@ func (s *Suite) Test_CheckdirCategory__no_Makefile(c *check.C) {
 		"ERROR: ~/category/Makefile: Cannot be read.")
 }
 
-func (s *Suite) Test_CheckdirCategory__case_mismatch(c *check.C) {
-	t := s.Init(c)
+func Test_CheckdirCategory__case_mismatch(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/misc/category.mk")
@@ -368,8 +381,9 @@ func (s *Suite) Test_CheckdirCategory__case_mismatch(c *check.C) {
 			"\"p5-net-dns\" does not contain a package.")
 }
 
-func (s *Suite) Test_CheckdirCategory__dot(c *check.C) {
-	t := s.Init(c)
+func Test_CheckdirCategory__dot(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/misc/category.mk")
@@ -390,8 +404,9 @@ func (s *Suite) Test_CheckdirCategory__dot(c *check.C) {
 		"ERROR: Makefile:5: \"package\" does not contain a package.")
 }
 
-func (s *Suite) Test_CheckdirCategory__absolute(c *check.C) {
-	t := s.Init(c)
+func Test_CheckdirCategory__absolute(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/misc/category.mk")
@@ -414,8 +429,9 @@ func (s *Suite) Test_CheckdirCategory__absolute(c *check.C) {
 		"ERROR: Makefile:5: \"/other\" must be a relative path.")
 }
 
-func (s *Suite) Test_CheckdirCategory__subdir_that_is_not_a_package(c *check.C) {
-	t := s.Init(c)
+func Test_CheckdirCategory__subdir_that_is_not_a_package(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/misc/category.mk")
@@ -438,8 +454,9 @@ func (s *Suite) Test_CheckdirCategory__subdir_that_is_not_a_package(c *check.C) 
 		"ERROR: Makefile:5: \"sub2\" does not contain a package.")
 }
 
-func (s *Suite) Test_CheckdirCategory__case_insensitive_file_system(c *check.C) {
-	t := s.Init(c)
+func Test_CheckdirCategory__case_insensitive_file_system(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/PACKAGE")
 	t.SetUpPackage("category/Package") // may overwrite PACKAGE
@@ -467,8 +484,9 @@ func (s *Suite) Test_CheckdirCategory__case_insensitive_file_system(c *check.C) 
 			"\"package\" is the same as \"PACKAGE\" from line 5.")
 }
 
-func (s *Suite) Test_CheckPackageDirCollision__main(c *check.C) {
-	t := s.Init(c)
+func Test_CheckPackageDirCollision__main(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	// on case-insensitive filesystems, the packages 'Package' and 'package'
 	// overwrite 'PACKAGE'.
@@ -488,8 +506,9 @@ func (s *Suite) Test_CheckPackageDirCollision__main(c *check.C) {
 			"\"Package\" is the same as \"package\".")
 }
 
-func (s *Suite) Test_CheckPackageDirCollision__wip(c *check.C) {
-	t := s.Init(c)
+func Test_CheckPackageDirCollision__wip(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	// on case-insensitive filesystems, the package 'Package' overwrites
 	// 'PACKAGE'.
@@ -515,8 +534,9 @@ func (s *Suite) Test_CheckPackageDirCollision__wip(c *check.C) {
 }
 
 // Absolute "SUBDIR" entries are skipped.
-func (s *Suite) Test_CheckPackageDirCollision__abs(c *check.C) {
-	t := s.Init(c)
+func Test_CheckPackageDirCollision__abs(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("category/Makefile",

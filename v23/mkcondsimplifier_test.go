@@ -2,20 +2,17 @@ package pkglint
 
 import (
 	"github.com/rillig/pkglint/v23/regex"
-	"gopkg.in/check.v1"
 	"testing"
 )
 
 type MkCondSimplifierTester struct {
-	c *check.C
 	*Tester
 	allowedVariableNames regex.Pattern
 }
 
-func NewMkCondSimplifierTester(c *check.C, s *Suite) *MkCondSimplifierTester {
+func NewMkCondSimplifierTester(tt *testing.T) *MkCondSimplifierTester {
 	return &MkCondSimplifierTester{
-		c,
-		s.Init(c),
+		NewTester(tt),
 		`IN_SCOPE|PREFS|LATER|UNDEFINED`,
 	}
 }
@@ -87,7 +84,7 @@ func (t *MkCondSimplifierTester) testBeforeAndAfterPrefs(before, after string, d
 func (t *MkCondSimplifierTester) doTest(prefs bool, before, after string, diagnostics ...string) {
 	if !matches(before, t.allowedVariableNames) {
 		// Prevent typos in the variable names used in the test.
-		t.c.Errorf("Condition %q must include one of the variable names %q.",
+		t.Errorf("Condition %q must include one of the variable names %q.",
 			before, t.allowedVariableNames)
 	}
 	mklines := t.SetUpFileMkLines("filename.mk",
@@ -121,8 +118,9 @@ func (t *MkCondSimplifierTester) doTest(prefs bool, before, after string, diagno
 	t.ExpectDiagnosticsAutofix(action, diagnostics...)
 }
 
-func (s *Suite) Test_MkCondSimplifier_SimplifyExpr(c *check.C) {
-	t := NewMkCondSimplifierTester(c, s)
+func Test_MkCondSimplifier_SimplifyExpr(tt *testing.T) {
+	t := NewMkCondSimplifierTester(tt)
+	defer t.Done()
 
 	t.setUp()
 
@@ -153,8 +151,9 @@ func (s *Suite) Test_MkCondSimplifier_SimplifyExpr(c *check.C) {
 //
 // The ':U' modifier can be omitted if the variable is guaranteed to be
 // defined.
-func (s *Suite) Test_MkCondSimplifier_simplifyWord__undefined(c *check.C) {
-	t := NewMkCondSimplifierTester(c, s)
+func Test_MkCondSimplifier_simplifyWord__undefined(tt *testing.T) {
+	t := NewMkCondSimplifierTester(tt)
+	defer t.Done()
 
 	// Define the variables that are used in the below tests.
 	t.setUp()
@@ -283,8 +282,9 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord__undefined(c *check.C) {
 
 // Show how different kinds of ':M'-style patterns are replaced with simpler
 // comparisons.
-func (s *Suite) Test_MkCondSimplifier_simplifyWord__patterns(c *check.C) {
-	t := NewMkCondSimplifierTester(c, s)
+func Test_MkCondSimplifier_simplifyWord__patterns(tt *testing.T) {
+	t := NewMkCondSimplifierTester(tt)
+	defer t.Done()
 
 	// Define the variables that are used in the below tests.
 	t.setUp()
@@ -426,8 +426,9 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord__patterns(c *check.C) {
 // Show in which cases the ':N' modifier is replaced.
 // That modifier is used less often than ':M',
 // therefore pkglint doesn't do much about it.
-func (s *Suite) Test_MkCondSimplifier_simplifyWord__N(c *check.C) {
-	t := NewMkCondSimplifierTester(c, s)
+func Test_MkCondSimplifier_simplifyWord__N(tt *testing.T) {
+	t := NewMkCondSimplifierTester(tt)
+	defer t.Done()
 
 	// Define the variables that are used in the below tests.
 	t.setUp()
@@ -521,8 +522,9 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord__N(c *check.C) {
 
 // Show how the conditions are simplified when the expression contains
 // several modifiers.
-func (s *Suite) Test_MkCondSimplifier_simplifyWord__modifiers(c *check.C) {
-	t := NewMkCondSimplifierTester(c, s)
+func Test_MkCondSimplifier_simplifyWord__modifiers(tt *testing.T) {
+	t := NewMkCondSimplifierTester(tt)
+	defer t.Done()
 
 	// Define the variables that are used in the below tests.
 	t.setUp()
@@ -598,8 +600,9 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord__modifiers(c *check.C) {
 }
 
 // Show how expressions in complex conditions are simplified.
-func (s *Suite) Test_MkCondSimplifier_simplifyWord__complex(c *check.C) {
-	t := NewMkCondSimplifierTester(c, s)
+func Test_MkCondSimplifier_simplifyWord__complex(tt *testing.T) {
+	t := NewMkCondSimplifierTester(tt)
+	defer t.Done()
 
 	// Define the variables that are used in the below tests.
 	t.setUp()
@@ -717,8 +720,9 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord__complex(c *check.C) {
 			"with \"${PREFS_DEFINED} == path\".")
 }
 
-func (s *Suite) Test_MkCondSimplifier_simplifyWord__defined_in_same_file(c *check.C) {
-	t := s.Init(c)
+func Test_MkCondSimplifier_simplifyWord__defined_in_same_file(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.Chdir("category/package")
@@ -798,8 +802,9 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord__defined_in_same_file(c *chec
 			"with \"${LATER_DIR:U} == pattern\".")
 }
 
-func (s *Suite) Test_MkCondSimplifier_simplifyWord__list_and_unknown(c *check.C) {
-	t := s.Init(c)
+func Test_MkCondSimplifier_simplifyWord__list_and_unknown(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVarType("YES_NO", BtYesNo, NoVartypeOptions, nil...)
 	t.SetUpVarType("YES_NO_LIST", BtYesNo, List, nil...)
@@ -848,8 +853,9 @@ func (s *Suite) Test_MkCondSimplifier_simplifyWord__list_and_unknown(c *check.C)
 
 // Show how patterns like ':M[yY][eE][sS]' are replaced with simpler
 // conditions.
-func (s *Suite) Test_MkCondSimplifier_simplifyYesNo(c *check.C) {
-	t := NewMkCondSimplifierTester(c, s)
+func Test_MkCondSimplifier_simplifyYesNo(tt *testing.T) {
+	t := NewMkCondSimplifierTester(tt)
+	defer t.Done()
 
 	t.setUp()
 	t.SetUpVarType("VAR", BtYesNo, AlwaysInScope|DefinedIfInScope,
@@ -950,8 +956,9 @@ func (s *Suite) Test_MkCondSimplifier_simplifyYesNo(c *check.C) {
 			"\"[yY][eE][sS]\" or \"[nN][oO]\", not \"[ae]\".")
 }
 
-func (s *Suite) Test_MkCondSimplifier_simplifyMatch(c *check.C) {
-	t := NewMkCondSimplifierTester(c, s)
+func Test_MkCondSimplifier_simplifyMatch(tt *testing.T) {
+	t := NewMkCondSimplifierTester(tt)
+	defer t.Done()
 
 	t.setUp()
 
@@ -1091,8 +1098,9 @@ func (s *Suite) Test_MkCondSimplifier_simplifyMatch(c *check.C) {
 		nil...)
 }
 
-func (s *Suite) Test_MkCondSimplifier_isDefined(c *check.C) {
-	t := s.Init(c)
+func Test_MkCondSimplifier_isDefined(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,

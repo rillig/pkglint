@@ -1,10 +1,11 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import "testing"
 
 // This is how each patch should look like.
-func (s *Suite) Test_CheckLinesPatch__with_comment(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPatch__with_comment(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("patch-WithComment",
 		CvsID,
@@ -30,8 +31,9 @@ func (s *Suite) Test_CheckLinesPatch__with_comment(c *check.C) {
 
 // To make the patch comment clearly visible, it should be surrounded by empty lines.
 // The missing empty lines are inserted by pkglint.
-func (s *Suite) Test_CheckLinesPatch__without_empty_line__autofix(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPatch__without_empty_line__autofix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.Chdir("category/package")
 	patchLines := t.SetUpFileLines("patch-WithoutEmptyLines",
@@ -79,8 +81,9 @@ func (s *Suite) Test_CheckLinesPatch__without_empty_line__autofix(c *check.C) {
 		"SHA1 (some patch) = 4938fc8c0b483dc2e33e741b0da883d199e78164")
 }
 
-func (s *Suite) Test_CheckLinesPatch__no_comment_and_no_empty_lines(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPatch__no_comment_and_no_empty_lines(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	patchLines := t.SetUpFileLines("patch-WithoutEmptyLines",
 		CvsID,
@@ -103,8 +106,9 @@ func (s *Suite) Test_CheckLinesPatch__no_comment_and_no_empty_lines(c *check.C) 
 		"NOTE: ~/patch-WithoutEmptyLines:2: Empty line expected.")
 }
 
-func (s *Suite) Test_CheckLinesPatch__without_comment(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPatch__without_comment(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("patch-WithoutComment",
 		CvsID,
@@ -126,8 +130,9 @@ func (s *Suite) Test_CheckLinesPatch__without_comment(c *check.C) {
 // The output of BSD Make typically contains "*** Error code".
 // In some really good patches, this output is included in the patch comment,
 // to document why the patch is necessary.
-func (s *Suite) Test_CheckLinesPatch__error_code(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPatch__error_code(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("patch-ErrorCode",
 		CvsID,
@@ -147,8 +152,9 @@ func (s *Suite) Test_CheckLinesPatch__error_code(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_CheckLinesPatch__wrong_header_order(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPatch__wrong_header_order(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("patch-WrongOrder",
 		CvsID,
@@ -171,8 +177,9 @@ func (s *Suite) Test_CheckLinesPatch__wrong_header_order(c *check.C) {
 }
 
 // Context diffs are old and deprecated. Therefore, pkglint doesn't check them thoroughly.
-func (s *Suite) Test_CheckLinesPatch__context_diff(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPatch__context_diff(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("patch-ctx",
 		CvsID,
@@ -188,8 +195,9 @@ func (s *Suite) Test_CheckLinesPatch__context_diff(c *check.C) {
 		"WARN: patch-ctx:4: Use unified diffs (diff -u) for patches.")
 }
 
-func (s *Suite) Test_CheckLinesPatch__no_patch(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPatch__no_patch(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("patch-aa",
 		CvsID,
@@ -203,8 +211,9 @@ func (s *Suite) Test_CheckLinesPatch__no_patch(c *check.C) {
 		"ERROR: patch-aa: Contains no patch.")
 }
 
-func (s *Suite) Test_CheckLinesPatch__two_patched_files(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPatch__two_patched_files(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("patch-aa",
 		CvsID,
@@ -230,8 +239,9 @@ func (s *Suite) Test_CheckLinesPatch__two_patched_files(c *check.C) {
 		"WARN: patch-aa: Contains patches for 2 files, should be only one.")
 }
 
-func (s *Suite) Test_CheckLinesPatch__two_patched_files_for_CVE(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPatch__two_patched_files_for_CVE(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("patch-CVE-2019-0001",
 		CvsID,
@@ -256,8 +266,9 @@ func (s *Suite) Test_CheckLinesPatch__two_patched_files_for_CVE(c *check.C) {
 }
 
 // The patch headers are only recognized as such if they appear directly below each other.
-func (s *Suite) Test_CheckLinesPatch__documentation_that_looks_like_patch_lines(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPatch__documentation_that_looks_like_patch_lines(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("patch-aa",
 		CvsID,
@@ -274,8 +285,9 @@ func (s *Suite) Test_CheckLinesPatch__documentation_that_looks_like_patch_lines(
 		"ERROR: patch-aa: Contains no patch.")
 }
 
-func (s *Suite) Test_CheckLinesPatch__only_unified_header_but_no_content(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPatch__only_unified_header_but_no_content(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("patch-unified",
 		CvsID,
@@ -291,8 +303,9 @@ func (s *Suite) Test_CheckLinesPatch__only_unified_header_but_no_content(c *chec
 		"ERROR: patch-unified:EOF: No patch hunks for \"unified\".")
 }
 
-func (s *Suite) Test_CheckLinesPatch__only_context_header_but_no_content(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPatch__only_context_header_but_no_content(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("patch-context",
 		CvsID,
@@ -310,8 +323,9 @@ func (s *Suite) Test_CheckLinesPatch__only_context_header_but_no_content(c *chec
 		"WARN: patch-context:5: Use unified diffs (diff -u) for patches.")
 }
 
-func (s *Suite) Test_CheckLinesPatch__no_newline_with_text_following(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPatch__no_newline_with_text_following(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("patch-aa",
 		CvsID,
@@ -333,8 +347,9 @@ func (s *Suite) Test_CheckLinesPatch__no_newline_with_text_following(c *check.C)
 		"WARN: patch-aa:12: Empty line or end of file expected.")
 }
 
-func (s *Suite) Test_CheckLinesPatch__no_newline(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPatch__no_newline(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("patch-aa",
 		CvsID,
@@ -356,8 +371,9 @@ func (s *Suite) Test_CheckLinesPatch__no_newline(c *check.C) {
 
 // Some patch files may end before reaching the expected line count (in this case 7 lines).
 // This is ok if only context lines are missing. These context lines are assumed to be empty lines.
-func (s *Suite) Test_CheckLinesPatch__empty_lines_left_out_at_eof(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPatch__empty_lines_left_out_at_eof(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("patch-aa",
 		CvsID,
@@ -381,8 +397,9 @@ func (s *Suite) Test_CheckLinesPatch__empty_lines_left_out_at_eof(c *check.C) {
 
 // In some context lines, the leading space character may be missing.
 // Since this is no problem for patch(1), pkglint also doesn't complain.
-func (s *Suite) Test_CheckLinesPatch__context_lines_with_tab_instead_of_space(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPatch__context_lines_with_tab_instead_of_space(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("patch-aa",
 		CvsID,
@@ -404,8 +421,9 @@ func (s *Suite) Test_CheckLinesPatch__context_lines_with_tab_instead_of_space(c 
 
 // Before 2018-01-28, pkglint had panicked when checking an empty
 // patch file, as a slice index was out of bounds.
-func (s *Suite) Test_CheckLinesPatch__autofix_empty_patch(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPatch__autofix_empty_patch(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--autofix")
 	lines := t.NewLines("patch-aa",
@@ -418,8 +436,9 @@ func (s *Suite) Test_CheckLinesPatch__autofix_empty_patch(c *check.C) {
 
 // Before 2018-01-28, pkglint had panicked when checking an empty
 // patch file, as a slice index was out of bounds.
-func (s *Suite) Test_CheckLinesPatch__autofix_long_empty_patch(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPatch__autofix_long_empty_patch(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--autofix")
 	lines := t.SetUpFileLines("patch-aa",
@@ -431,8 +450,9 @@ func (s *Suite) Test_CheckLinesPatch__autofix_long_empty_patch(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_CheckLinesPatch__crlf_autofix(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPatch__crlf_autofix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--autofix")
 	lines := t.SetUpFileLines("patch-aa",
@@ -455,8 +475,9 @@ func (s *Suite) Test_CheckLinesPatch__crlf_autofix(c *check.C) {
 		"AUTOFIX: ~/patch-aa:7: Replacing \"\\r\\n\" with \"\\n\".")
 }
 
-func (s *Suite) Test_CheckLinesPatch__autogenerated(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPatch__autogenerated(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("patch-aa",
 		CvsID,
@@ -475,8 +496,9 @@ func (s *Suite) Test_CheckLinesPatch__autogenerated(c *check.C) {
 		"ERROR: ~/patch-aa:9: This code must not be included in patches.")
 }
 
-func (s *Suite) Test_CheckLinesPatch__empty_context_lines_in_hunk(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPatch__empty_context_lines_in_hunk(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("patch-aa",
 		CvsID,
@@ -500,8 +522,9 @@ func (s *Suite) Test_CheckLinesPatch__empty_context_lines_in_hunk(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_CheckLinesPatch__invalid_line_in_hunk(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPatch__invalid_line_in_hunk(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("patch-aa",
 		CvsID,
@@ -522,8 +545,9 @@ func (s *Suite) Test_CheckLinesPatch__invalid_line_in_hunk(c *check.C) {
 		"ERROR: ~/patch-aa:10: Invalid line in unified patch hunk: <<<<<<<<")
 }
 
-func (s *Suite) Test_PatchChecker_Check__missing_CVS_Id(c *check.C) {
-	t := s.Init(c)
+func Test_PatchChecker_Check__missing_CVS_Id(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("patch-aa",
 		"This first line is missing the CVS Id",
@@ -538,8 +562,9 @@ func (s *Suite) Test_PatchChecker_Check__missing_CVS_Id(c *check.C) {
 		"ERROR: ~/patch-aa: Contains no patch.")
 }
 
-func (s *Suite) Test_PatchChecker_Check__add_file(c *check.C) {
-	t := s.Init(c)
+func Test_PatchChecker_Check__add_file(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("patch-aa",
 		CvsID,
@@ -556,8 +581,9 @@ func (s *Suite) Test_PatchChecker_Check__add_file(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_PatchChecker_Check__delete_file(c *check.C) {
-	t := s.Init(c)
+func Test_PatchChecker_Check__delete_file(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("patch-aa",
 		CvsID,
@@ -574,8 +600,9 @@ func (s *Suite) Test_PatchChecker_Check__delete_file(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_PatchChecker_Check__absolute_path(c *check.C) {
-	t := s.Init(c)
+func Test_PatchChecker_Check__absolute_path(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("patch-aa",
 		CvsID,
@@ -596,8 +623,9 @@ func (s *Suite) Test_PatchChecker_Check__absolute_path(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_PatchChecker_Check__add_hardcoded_usr_pkg(c *check.C) {
-	t := s.Init(c)
+func Test_PatchChecker_Check__add_hardcoded_usr_pkg(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("patch-aa",
 		CvsID,
@@ -616,8 +644,9 @@ func (s *Suite) Test_PatchChecker_Check__add_hardcoded_usr_pkg(c *check.C) {
 		"ERROR: ~/patch-aa:9: Patches must not hard-code the pkgsrc PREFIX.")
 }
 
-func (s *Suite) Test_PatchChecker_checkUnifiedDiff__lines_at_end(c *check.C) {
-	t := s.Init(c)
+func Test_PatchChecker_checkUnifiedDiff__lines_at_end(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("patch-aa",
 		CvsID,
@@ -638,8 +667,9 @@ func (s *Suite) Test_PatchChecker_checkUnifiedDiff__lines_at_end(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_PatchChecker_checkUnifiedDiff__line_number_mismatch(c *check.C) {
-	t := s.Init(c)
+func Test_PatchChecker_checkUnifiedDiff__line_number_mismatch(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("patch-aa",
 		CvsID,
@@ -662,8 +692,9 @@ func (s *Suite) Test_PatchChecker_checkUnifiedDiff__line_number_mismatch(c *chec
 		"NOTE: patch-aa:10: The difference between the line numbers 5 and 7 should be 0, not 2.")
 }
 
-func (s *Suite) Test_PatchChecker_checkBeginDiff__multiple_patches_without_documentation(c *check.C) {
-	t := s.Init(c)
+func Test_PatchChecker_checkBeginDiff__multiple_patches_without_documentation(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("patch-aa",
 		CvsID,
@@ -691,8 +722,9 @@ func (s *Suite) Test_PatchChecker_checkBeginDiff__multiple_patches_without_docum
 		"WARN: ~/patch-aa: Contains patches for 2 files, should be only one.")
 }
 
-func (s *Suite) Test_PatchChecker_checkConfigure__no_GNU(c *check.C) {
-	t := s.Init(c)
+func Test_PatchChecker_checkConfigure__no_GNU(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("patch-aa",
 		CvsID,
@@ -712,8 +744,9 @@ func (s *Suite) Test_PatchChecker_checkConfigure__no_GNU(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_PatchChecker_checkConfigure__GNU(c *check.C) {
-	t := s.Init(c)
+func Test_PatchChecker_checkConfigure__GNU(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("patch-aa",
 		CvsID,
@@ -735,8 +768,9 @@ func (s *Suite) Test_PatchChecker_checkConfigure__GNU(c *check.C) {
 // I'm not sure whether configure.in is really relevant for this check.
 // As of December 2019, there is absolutely no package that uses
 // CONFIGURE_SCRIPTS_OVERRIDE.
-func (s *Suite) Test_PatchChecker_checkConfigure__configure_in(c *check.C) {
-	t := s.Init(c)
+func Test_PatchChecker_checkConfigure__configure_in(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("patch-aa",
 		CvsID,
@@ -758,8 +792,9 @@ func (s *Suite) Test_PatchChecker_checkConfigure__configure_in(c *check.C) {
 // I'm not sure whether configure.ac is really relevant for this check.
 // As of December 2019, there is absolutely no package that uses
 // CONFIGURE_SCRIPTS_OVERRIDE.
-func (s *Suite) Test_PatchChecker_checkConfigure__configure_ac(c *check.C) {
-	t := s.Init(c)
+func Test_PatchChecker_checkConfigure__configure_ac(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("patch-aa",
 		CvsID,
@@ -778,8 +813,9 @@ func (s *Suite) Test_PatchChecker_checkConfigure__configure_ac(c *check.C) {
 		"ERROR: ~/patch-aa:9: This code must not be included in patches.")
 }
 
-func (s *Suite) Test_PatchChecker_checkAddedLine__interpreter(c *check.C) {
-	t := s.Init(c)
+func Test_PatchChecker_checkAddedLine__interpreter(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("patch-aa",
 		CvsID,
@@ -799,8 +835,9 @@ func (s *Suite) Test_PatchChecker_checkAddedLine__interpreter(c *check.C) {
 			"(/home/my/pkgsrc/pkg/bin/bash).")
 }
 
-func (s *Suite) Test_PatchChecker_checkAddedLine__interpreter_in_line_2(c *check.C) {
-	t := s.Init(c)
+func Test_PatchChecker_checkAddedLine__interpreter_in_line_2(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("patch-aa",
 		CvsID,
@@ -819,8 +856,9 @@ func (s *Suite) Test_PatchChecker_checkAddedLine__interpreter_in_line_2(c *check
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_PatchChecker_checkAddedLine__interpreter_placeholder(c *check.C) {
-	t := s.Init(c)
+func Test_PatchChecker_checkAddedLine__interpreter_placeholder(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("patch-aa",
 		CvsID,
@@ -838,8 +876,9 @@ func (s *Suite) Test_PatchChecker_checkAddedLine__interpreter_placeholder(c *che
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_PatchChecker_checkAddedAbsPath(c *check.C) {
-	t := s.Init(c)
+func Test_PatchChecker_checkAddedAbsPath(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(addedLine string, diagnostics ...string) {
 		lines := t.NewLines("patch-file",
@@ -1043,8 +1082,9 @@ func (s *Suite) Test_PatchChecker_checkAddedAbsPath(c *check.C) {
 		nil...)
 }
 
-func (s *Suite) Test_PatchChecker_checktextCvsID(c *check.C) {
-	t := s.Init(c)
+func Test_PatchChecker_checktextCvsID(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("patch-aa",
 		CvsID,
@@ -1067,8 +1107,9 @@ func (s *Suite) Test_PatchChecker_checktextCvsID(c *check.C) {
 		"WARN: ~/patch-aa:11: Remove the CVS tag \"$"+"Author$\" by reducing the number of context lines using pkgdiff or \"diff -U[210]\".")
 }
 
-func (s *Suite) Test_PatchChecker_checkCanonicalPatchName(c *check.C) {
-	t := s.Init(c)
+func Test_PatchChecker_checkCanonicalPatchName(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(patchName CurrPath, patchedFile Path, diagnostics ...string) {
 		ck := PatchChecker{lines: t.NewLines(patchName)}
@@ -1199,8 +1240,9 @@ func (s *Suite) Test_PatchChecker_checkCanonicalPatchName(c *check.C) {
 
 // Autogenerated "comments" from Git or other tools don't count as real
 // comments since they don't convey any intention of a human developer.
-func (s *Suite) Test_PatchChecker_isEmptyLine(c *check.C) {
-	t := s.Init(c)
+func Test_PatchChecker_isEmptyLine(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("patch-aa",
 		CvsID,

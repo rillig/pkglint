@@ -1,8 +1,8 @@
 package pkglint
 
 import (
-	"gopkg.in/check.v1"
 	"math/rand"
+	"testing"
 	"time"
 )
 
@@ -88,12 +88,18 @@ func (f *Fuzzer) CheckOk() {
 // Ok marks the current string as processed correctly.
 func (f *Fuzzer) Ok() { f.ok = true }
 
-func (s *Suite) Test_Fuzzer__out_of_stock(c *check.C) {
+func Test_Fuzzer__out_of_stock(tt *testing.T) {
 	fuzzer := NewFuzzer(0)
 	fuzzer.total = 1 // Intentionally damage the fuzzer to achieve full code coverage.
 
-	c.Check(
-		func() { fuzzer.Generate(1) },
-		check.Panics,
-		"Out of stock")
+	var p any
+	func() {
+		defer func() {
+			p = recover()
+		}()
+		fuzzer.Generate(1)
+	}()
+	if p != "Out of stock" {
+		tt.Error(p)
+	}
 }

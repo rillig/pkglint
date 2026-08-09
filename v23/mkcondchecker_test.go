@@ -1,9 +1,10 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import "testing"
 
-func (s *Suite) Test_NewMkCondChecker(c *check.C) {
-	t := s.Init(c)
+func Test_NewMkCondChecker(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID)
@@ -14,8 +15,9 @@ func (s *Suite) Test_NewMkCondChecker(c *check.C) {
 	t.CheckEquals(ck.MkLines, mklines)
 }
 
-func (s *Suite) Test_MkCondChecker_Check(c *check.C) {
-	t := s.Init(c)
+func Test_MkCondChecker_Check(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.Chdir("category/package")
@@ -144,8 +146,9 @@ func (s *Suite) Test_MkCondChecker_Check(c *check.C) {
 		nil...)
 }
 
-func (s *Suite) Test_MkCondChecker_Check__tracing(c *check.C) {
-	t := s.Init(c)
+func Test_MkCondChecker_Check__tracing(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.EnableTracingToLog()
 	mklines := t.NewMkLines("filename.mk",
@@ -160,8 +163,9 @@ func (s *Suite) Test_MkCondChecker_Check__tracing(c *check.C) {
 		"WARN: filename.mk:2: Variable \"VAR\" is used but not defined.")
 }
 
-func (s *Suite) Test_MkCondChecker_Check__comparison_with_shell_command(c *check.C) {
-	t := s.Init(c)
+func Test_MkCondChecker_Check__comparison_with_shell_command(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.Chdir(".")
@@ -185,8 +189,9 @@ func (s *Suite) Test_MkCondChecker_Check__comparison_with_shell_command(c *check
 // may be compared with the empty string, regardless of the variable type.
 // Effectively, the :N modifier changes the type from T to Option(T),
 // but that's something that the pkglint type system doesn't model.
-func (s *Suite) Test_MkCondChecker_Check__compare_pattern_with_empty(c *check.C) {
-	t := s.Init(c)
+func Test_MkCondChecker_Check__compare_pattern_with_empty(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.Chdir("category/package")
@@ -212,8 +217,9 @@ func (s *Suite) Test_MkCondChecker_Check__compare_pattern_with_empty(c *check.C)
 		"WARN: filename.mk:8: The pathname \"*\" contains the invalid character \"*\".")
 }
 
-func (s *Suite) Test_MkCondChecker_Check__comparing_PKGSRC_COMPILER_with_eqeq(c *check.C) {
-	t := s.Init(c)
+func Test_MkCondChecker_Check__comparing_PKGSRC_COMPILER_with_eqeq(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.Chdir("category/package")
@@ -234,8 +240,9 @@ func (s *Suite) Test_MkCondChecker_Check__comparing_PKGSRC_COMPILER_with_eqeq(c 
 		"ERROR: Makefile:6: Use ${PKGSRC_COMPILER:Ngcc} instead of the != operator.")
 }
 
-func (s *Suite) Test_MkCondChecker_Check__contradicting_conditions(c *check.C) {
-	t := s.Init(c)
+func Test_MkCondChecker_Check__contradicting_conditions(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.FinishSetUp()
@@ -375,8 +382,9 @@ func (s *Suite) Test_MkCondChecker_Check__contradicting_conditions(c *check.C) {
 		"WARN: filename.mk:5: Invalid match pattern \"[2\".")
 }
 
-func (s *Suite) Test_MkCondChecker_checkRedundantParentheses(c *check.C) {
-	t := s.Init(c)
+func Test_MkCondChecker_checkRedundantParentheses(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.Chdir("category/package")
@@ -430,8 +438,9 @@ func (s *Suite) Test_MkCondChecker_checkRedundantParentheses(c *check.C) {
 			"around the outermost condition are redundant.")
 }
 
-func (s *Suite) Test_MkCondChecker_checkAnd(c *check.C) {
-	t := s.Init(c)
+func Test_MkCondChecker_checkAnd(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.Chdir("category/package")
@@ -498,8 +507,9 @@ func (s *Suite) Test_MkCondChecker_checkAnd(c *check.C) {
 		nil...)
 }
 
-func (s *Suite) Test_MkCondChecker_checkNotEmpty(c *check.C) {
-	t := s.Init(c)
+func Test_MkCondChecker_checkNotEmpty(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -529,8 +539,9 @@ func (s *Suite) Test_MkCondChecker_checkNotEmpty(c *check.C) {
 			"can be replaced with ${PKG_BUILD_OPTIONS.package:Moption}.")
 }
 
-func (s *Suite) Test_MkCondChecker_checkEmpty(c *check.C) {
-	t := s.Init(c)
+func Test_MkCondChecker_checkEmpty(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.Chdir("category/package")
@@ -587,8 +598,9 @@ func (s *Suite) Test_MkCondChecker_checkEmpty(c *check.C) {
 			".include \"../../mk/bsd.prefs.mk\" first.")
 }
 
-func (s *Suite) Test_MkCondChecker_checkEmptyExpr(c *check.C) {
-	t := s.Init(c)
+func Test_MkCondChecker_checkEmptyExpr(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(expr string, diagnostics ...string) {
 		mklines := t.NewMkLines("filename.mk",
@@ -645,8 +657,9 @@ func (s *Suite) Test_MkCondChecker_checkEmptyExpr(c *check.C) {
 		nil...)
 }
 
-func (s *Suite) Test_MkCondChecker_checkEmptyType(c *check.C) {
-	t := s.Init(c)
+func Test_MkCondChecker_checkEmptyType(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.Chdir("category/package")
@@ -704,8 +717,9 @@ func (s *Suite) Test_MkCondChecker_checkEmptyType(c *check.C) {
 		nil...)
 }
 
-func (s *Suite) Test_MkCondChecker_checkCompare(c *check.C) {
-	t := s.Init(c)
+func Test_MkCondChecker_checkCompare(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -752,8 +766,9 @@ func (s *Suite) Test_MkCondChecker_checkCompare(c *check.C) {
 		"WARN: filename.mk:1: Invalid condition, unrecognized part \"empty{VAR}\".")
 }
 
-func (s *Suite) Test_MkCondChecker_checkCompareExprStr__no_tracing(c *check.C) {
-	t := s.Init(c)
+func Test_MkCondChecker_checkCompareExprStr__no_tracing(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	t.SetUpVartypes()
@@ -769,8 +784,9 @@ func (s *Suite) Test_MkCondChecker_checkCompareExprStr__no_tracing(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkCondChecker_checkCompareWithNum(c *check.C) {
-	t := s.Init(c)
+func Test_MkCondChecker_checkCompareWithNum(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
@@ -787,8 +803,9 @@ func (s *Suite) Test_MkCondChecker_checkCompareWithNum(c *check.C) {
 		"WARN: filename.mk:4: Variable \"_PYTHON_VERSION\" is used but not defined.")
 }
 
-func (s *Suite) Test_MkCondChecker_checkCompareWithNumVersion(c *check.C) {
-	t := s.Init(c)
+func Test_MkCondChecker_checkCompareWithNumVersion(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
@@ -808,8 +825,9 @@ func (s *Suite) Test_MkCondChecker_checkCompareWithNumVersion(c *check.C) {
 		"WARN: filename.mk:8: Numeric comparison == 6.5.")
 }
 
-func (s *Suite) Test_MkCondChecker_checkCompareWithNumPython(c *check.C) {
-	t := s.Init(c)
+func Test_MkCondChecker_checkCompareWithNumPython(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--show-autofix")
 	mklines := t.NewMkLines("filename.mk",
@@ -840,8 +858,9 @@ func (s *Suite) Test_MkCondChecker_checkCompareWithNumPython(c *check.C) {
 			"with \"${PYTHON_VERSION} < 310\".")
 }
 
-func (s *Suite) Test_MkCondChecker_checkCompareExprStrCompiler(c *check.C) {
-	t := s.Init(c)
+func Test_MkCondChecker_checkCompareExprStrCompiler(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.Chdir("category/package")
@@ -900,8 +919,9 @@ func (s *Suite) Test_MkCondChecker_checkCompareExprStrCompiler(c *check.C) {
 		nil...)
 }
 
-func (s *Suite) Test_MkCondChecker_checkNotCompare(c *check.C) {
-	t := s.Init(c)
+func Test_MkCondChecker_checkNotCompare(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(cond string, diagnostics ...string) {
 		mklines := t.NewMkLines("filename.mk",
@@ -929,8 +949,9 @@ func (s *Suite) Test_MkCondChecker_checkNotCompare(c *check.C) {
 		nil...)
 }
 
-func (s *Suite) Test_MkCondChecker_checkContradictions(c *check.C) {
-	t := s.Init(c)
+func Test_MkCondChecker_checkContradictions(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -952,8 +973,9 @@ func (s *Suite) Test_MkCondChecker_checkContradictions(c *check.C) {
 
 // A condition from a skipped .if or .elif branch does not contradict a
 // condition inside an .else branch.
-func (s *Suite) Test_MkCondChecker_checkContradictions__if_else(c *check.C) {
-	t := s.Init(c)
+func Test_MkCondChecker_checkContradictions__if_else(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -985,8 +1007,9 @@ func (s *Suite) Test_MkCondChecker_checkContradictions__if_else(c *check.C) {
 			"\"${PYTHON_FOR_BUILD_ONLY:U:tl} == yes\".")
 }
 
-func (s *Suite) Test_MkCondChecker_collectFacts(c *check.C) {
-	t := s.Init(c)
+func Test_MkCondChecker_collectFacts(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 

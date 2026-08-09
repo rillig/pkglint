@@ -1,13 +1,14 @@
 package pkglint
 
 import (
-	"gopkg.in/check.v1"
 	"sort"
 	"strings"
+	"testing"
 )
 
-func (s *Suite) Test_MkLines__quoting_LDFLAGS_for_GNU_configure(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines__quoting_LDFLAGS_for_GNU_configure(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	pkg := NewPackage(t.File("category/pkgbase"))
@@ -23,8 +24,9 @@ func (s *Suite) Test_MkLines__quoting_LDFLAGS_for_GNU_configure(c *check.C) {
 		"WARN: Makefile:3: Use ${X11_LDFLAGS:M*:Q} instead of ${X11_LDFLAGS:Q}.")
 }
 
-func (s *Suite) Test_MkLines__for_loop_multiple_variables(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines__for_loop_multiple_variables(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("echo", "ECHO", AtRunTime)
@@ -50,8 +52,9 @@ func (s *Suite) Test_MkLines__for_loop_multiple_variables(c *check.C) {
 		"WARN: Makefile:6: The exitcode of \"${FIND}\" at the left of the | operator is ignored.")
 }
 
-func (s *Suite) Test_MkLines__comparing_YesNo_variable_to_string(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines__comparing_YesNo_variable_to_string(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.Chdir(".")
@@ -74,8 +77,9 @@ func (s *Suite) Test_MkLines__comparing_YesNo_variable_to_string(c *check.C) {
 			"not compared with \"no\".")
 }
 
-func (s *Suite) Test_MkLines__expr_sh_modifier(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines__expr_sh_modifier(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("sed", "SED", AfterPrefsMk)
@@ -105,8 +109,9 @@ func (s *Suite) Test_MkLines__expr_sh_modifier(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLines__directive_indentation(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines__directive_indentation(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	// Line 2 is a multiple-inclusion guard,
 	// so the directives of the next level are indented at the same level.
@@ -133,8 +138,9 @@ func (s *Suite) Test_MkLines__directive_indentation(c *check.C) {
 		"NOTE: filename.mk:10: This directive should be indented by 2 spaces.")
 }
 
-func (s *Suite) Test_MkLines_Check__assignment_in_condition(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_Check__assignment_in_condition(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.FinishSetUp()
@@ -151,8 +157,9 @@ func (s *Suite) Test_MkLines_Check__assignment_in_condition(c *check.C) {
 		"ERROR: ~/Makefile:3: Assignment modifiers like \":=\" must not be used at all.")
 }
 
-func (s *Suite) Test_MkLines_Check__unusual_target(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_Check__unusual_target(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("cc", "CC", AtRunTime)
@@ -168,8 +175,9 @@ func (s *Suite) Test_MkLines_Check__unusual_target(c *check.C) {
 		"WARN: Makefile:3: Undeclared target \"echo\".")
 }
 
-func (s *Suite) Test_MkLines_Check__loop_variable_used_outside_loop(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_Check__loop_variable_used_outside_loop(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpTool("echo", "", AtRunTime)
 	mklines := t.NewMkLines("filename.mk",
@@ -192,8 +200,9 @@ func (s *Suite) Test_MkLines_Check__loop_variable_used_outside_loop(c *check.C) 
 // When VAR.param1 is defined or used, VAR.param2 is also regarded
 // as defined or used since often in pkgsrc, parameterized variables
 // are not referred to by their exact names but by VAR.${param}.
-func (s *Suite) Test_MkLines_Check__expr_parameterized(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_Check__expr_parameterized(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("converters/wv2/Makefile",
@@ -229,8 +238,9 @@ func (s *Suite) Test_MkLines_Check__expr_parameterized(c *check.C) {
 // Pkglint could offer to either add the missing semicolon.
 // Or, if it knows what INSTALL_DATA does, it could simply say that INSTALL_DATA
 // can handle multiple files in a single invocation.
-func (s *Suite) Test_MkLines_Check__loop_modifier(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_Check__loop_modifier(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("chat/xchat/Makefile",
@@ -246,8 +256,9 @@ func (s *Suite) Test_MkLines_Check__loop_modifier(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLines_Check__PKG_SKIP_REASON_depending_on_OPSYS(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_Check__PKG_SKIP_REASON_depending_on_OPSYS(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.Chdir("category/package")
@@ -268,8 +279,9 @@ func (s *Suite) Test_MkLines_Check__PKG_SKIP_REASON_depending_on_OPSYS(c *check.
 		"NOTE: Makefile:7: Consider setting NOT_FOR_PLATFORM instead of PKG_SKIP_REASON depending on ${OPSYS}.")
 }
 
-func (s *Suite) Test_MkLines_Check__PKG_SKIP_REASON_depending_on_OPSYS_and_others(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_Check__PKG_SKIP_REASON_depending_on_OPSYS_and_others(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.Chdir("category/package")
@@ -290,8 +302,9 @@ func (s *Suite) Test_MkLines_Check__PKG_SKIP_REASON_depending_on_OPSYS_and_other
 		"NOTE: Makefile:7: Consider setting NOT_FOR_PLATFORM instead of PKG_SKIP_REASON depending on ${OPSYS}.")
 }
 
-func (s *Suite) Test_MkLines_Check__use_list_variable_as_part_of_word(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_Check__use_list_variable_as_part_of_word(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("tr", "", AtRunTime)
@@ -305,8 +318,9 @@ func (s *Suite) Test_MkLines_Check__use_list_variable_as_part_of_word(c *check.C
 		"WARN: converters/chef/Makefile:2: The list variable DISTFILES should not be embedded in a word.")
 }
 
-func (s *Suite) Test_MkLines_Check__absolute_pathname_depending_on_OPSYS(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_Check__absolute_pathname_depending_on_OPSYS(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.Chdir(".")
@@ -336,8 +350,9 @@ func (s *Suite) Test_MkLines_Check__absolute_pathname_depending_on_OPSYS(c *chec
 // Due to the unmatched '.endif' at the end of the file,
 // pkglint is unsure about which directives belong together,
 // so it doesn't warn about wrong indentation of these directives.
-func (s *Suite) Test_MkLines_Check__indentation_unmatched(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_Check__indentation_unmatched(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.Chdir("category/package")
@@ -377,8 +392,9 @@ func (s *Suite) Test_MkLines_Check__indentation_unmatched(c *check.C) {
 
 // Due to the '.include' in line 3, line 5 is not a multiple-inclusion guard,
 // so its inner directives are indented relative to it.
-func (s *Suite) Test_MkLines_Check__indentation_unguarded(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_Check__indentation_unguarded(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.Chdir("category/package")
@@ -408,8 +424,9 @@ func (s *Suite) Test_MkLines_Check__indentation_unguarded(c *check.C) {
 //
 // Line 8 is not a multiple-inclusion guard,
 // so its inner directives are indented one level to the right.
-func (s *Suite) Test_MkLines_Check__indentation_guarded(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_Check__indentation_guarded(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.Chdir("category/package")
@@ -463,8 +480,9 @@ func (s *Suite) Test_MkLines_Check__indentation_guarded(c *check.C) {
 // syntactical form of directives but cannot be nested in a single file.
 // Therefore, they may be either indented at the correct indentation depth
 // or not indented at all.
-func (s *Suite) Test_MkLines_Check__indentation_include(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_Check__indentation_include(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.Chdir("category/package")
@@ -490,8 +508,9 @@ func (s *Suite) Test_MkLines_Check__indentation_include(c *check.C) {
 		"NOTE: module.mk:9: This directive should be indented by 2 spaces.")
 }
 
-func (s *Suite) Test_MkLines_Check__unfinished_directives(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_Check__unfinished_directives(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.Chdir("category/package")
@@ -515,8 +534,9 @@ func (s *Suite) Test_MkLines_Check__unfinished_directives(c *check.C) {
 		"ERROR: opsys.mk:EOF: .for from line 5 must be closed.")
 }
 
-func (s *Suite) Test_MkLines_Check__unbalanced_directives(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_Check__unbalanced_directives(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.Chdir("category/package")
@@ -541,8 +561,9 @@ func (s *Suite) Test_MkLines_Check__unbalanced_directives(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLines_Check__incomplete_subst_at_end(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_Check__incomplete_subst_at_end(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("subst.mk",
@@ -556,8 +577,9 @@ func (s *Suite) Test_MkLines_Check__incomplete_subst_at_end(c *check.C) {
 		"WARN: subst.mk:EOF: Missing SUBST block for \"class\".")
 }
 
-func (s *Suite) Test_MkLines_collectRationale(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_collectRationale(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(specs ...string) {
 		lines := mapStr(specs, func(s string) string { return s[4:] })
@@ -627,8 +649,9 @@ func (s *Suite) Test_MkLines_collectRationale(c *check.C) {
 		"-   VAR=\tvalue")
 }
 
-func (s *Suite) Test_MkLines_collectUsedVariables__simple(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_collectUsedVariables__simple(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		"\t${VAR}")
@@ -636,13 +659,14 @@ func (s *Suite) Test_MkLines_collectUsedVariables__simple(c *check.C) {
 
 	mklines.collectUsedVariables()
 
-	t.CheckLen(mklines.allVars.vs, 1)
+	t.CheckEquals(len(mklines.allVars.vs), 1)
 	t.CheckEquals(mklines.allVars.create("VAR").used, mkline)
 	t.CheckEquals(mklines.allVars.FirstUse("VAR"), mkline)
 }
 
-func (s *Suite) Test_MkLines_collectUsedVariables__nested(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_collectUsedVariables__nested(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
@@ -664,8 +688,9 @@ func (s *Suite) Test_MkLines_collectUsedVariables__nested(c *check.C) {
 	t.CheckEquals(mklines.allVars.FirstUse("outer.${inner}"), shellMkline)
 }
 
-func (s *Suite) Test_MkLines_collectDocumentedVariables(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_collectDocumentedVariables(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("rm", "RM", AtRunTime)
@@ -730,8 +755,9 @@ func (s *Suite) Test_MkLines_collectDocumentedVariables(c *check.C) {
 	t.CheckDeepEquals(varnames, expected)
 }
 
-func (s *Suite) Test_MkLines_collectVariables(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_collectVariables(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/tools/defaults.mk",
@@ -766,8 +792,9 @@ func (s *Suite) Test_MkLines_collectVariables(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLines_collectVariables__BUILTIN_FIND_FILES_VAR(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_collectVariables__BUILTIN_FIND_FILES_VAR(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("mk/buildlink3/bsd.builtin.mk",
@@ -790,8 +817,9 @@ func (s *Suite) Test_MkLines_collectVariables__BUILTIN_FIND_FILES_VAR(c *check.C
 		"WARN: ~/category/package/builtin.mk:8: Variable \"H_UNDEF\" is used but not defined.")
 }
 
-func (s *Suite) Test_MkLines_collectVariables__no_tracing(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_collectVariables__no_tracing(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.SetUpFileMkLines("filename.mk",
 		MkCvsID,
@@ -806,8 +834,9 @@ func (s *Suite) Test_MkLines_collectVariables__no_tracing(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLines_collectVariables__BUILD_DEFS(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_collectVariables__BUILD_DEFS(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("filename.mk",
@@ -826,8 +855,9 @@ func (s *Suite) Test_MkLines_collectVariables__BUILD_DEFS(c *check.C) {
 		[]string{"BD_VAR", "GRP", "USR"})
 }
 
-func (s *Suite) Test_MkLines_collectVariables__find_files_and_headers(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_collectVariables__find_files_and_headers(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("builtin.mk",
@@ -851,8 +881,9 @@ func (s *Suite) Test_MkLines_collectVariables__find_files_and_headers(c *check.C
 
 // Ensures that during MkLines.ForEach, the conditional variables in
 // MkLines.Indentation are correctly updated for each line.
-func (s *Suite) Test_MkLines_ForEach__conditional_variables(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_ForEach__conditional_variables(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("conditional.mk",
@@ -886,8 +917,9 @@ func (s *Suite) Test_MkLines_ForEach__conditional_variables(c *check.C) {
 	t.CheckEquals(seenUsesGettext, true)
 }
 
-func (s *Suite) Test_MkLines_ForEachEnd(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_ForEachEnd(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -908,8 +940,9 @@ func (s *Suite) Test_MkLines_ForEachEnd(c *check.C) {
 	})
 }
 
-func (s *Suite) Test_MkLines_checkAll__collect_else(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_checkAll__collect_else(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -939,8 +972,9 @@ func (s *Suite) Test_MkLines_checkAll__collect_else(c *check.C) {
 // Demonstrates how to define your own make(1) targets for creating
 // files in the current directory. The pkgsrc-wip category Makefile
 // does this, while all other categories don't need any custom code.
-func (s *Suite) Test_MkLines_checkAll__wip_category_Makefile(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_checkAll__wip_category_Makefile(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--explain")
 	t.SetUpVartypes()
@@ -981,8 +1015,9 @@ func (s *Suite) Test_MkLines_checkAll__wip_category_Makefile(c *check.C) {
 		"")
 }
 
-func (s *Suite) Test_MkLines_checkAll__undocumented_options(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_checkAll__undocumented_options(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpOption("known", "")
@@ -999,8 +1034,9 @@ func (s *Suite) Test_MkLines_checkAll__undocumented_options(c *check.C) {
 		"WARN: options.mk:4: Undocumented option \"unknown\".")
 }
 
-func (s *Suite) Test_MkLines_checkAll__PLIST_VARS(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_checkAll__PLIST_VARS(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpOption("both", "")
@@ -1034,8 +1070,9 @@ func (s *Suite) Test_MkLines_checkAll__PLIST_VARS(c *check.C) {
 		"WARN: ~/category/package/options.mk:16: PLIST.only-defined is defined, but \"only-defined\" is not added to PLIST_VARS in this file.")
 }
 
-func (s *Suite) Test_MkLines_checkAll__PLIST_VARS_indirect(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_checkAll__PLIST_VARS_indirect(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpOption("option1", "")
@@ -1069,8 +1106,9 @@ func (s *Suite) Test_MkLines_checkAll__PLIST_VARS_indirect(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLines_checkAll__PLIST_VARS_indirect_2(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_checkAll__PLIST_VARS_indirect_2(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpOption("a", "")
@@ -1095,8 +1133,9 @@ func (s *Suite) Test_MkLines_checkAll__PLIST_VARS_indirect_2(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLines_checkAll__defined_and_used_variables(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_checkAll__defined_and_used_variables(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -1121,8 +1160,9 @@ func (s *Suite) Test_MkLines_checkAll__defined_and_used_variables(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLines_checkAll__hacks_mk(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_checkAll__hacks_mk(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("hacks.mk",
@@ -1138,8 +1178,9 @@ func (s *Suite) Test_MkLines_checkAll__hacks_mk(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLines_checkAll__MASTER_SITE_in_HOMEPAGE(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_checkAll__MASTER_SITE_in_HOMEPAGE(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpMasterSite("MASTER_SITE_GITHUB", "https://github.com/")
 	t.SetUpVartypes()
@@ -1163,8 +1204,9 @@ func (s *Suite) Test_MkLines_checkAll__MASTER_SITE_in_HOMEPAGE(c *check.C) {
 
 // Up to June 2019, pkglint wrongly replaced the HOMEPAGE
 // with an empty string.
-func (s *Suite) Test_MkLines_checkAll__autofix_MASTER_SITE_in_HOMEPAGE(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_checkAll__autofix_MASTER_SITE_in_HOMEPAGE(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(diagnostics ...string) {
 		mklines := t.SetUpFileMkLines("Makefile",
@@ -1194,8 +1236,9 @@ func (s *Suite) Test_MkLines_checkAll__autofix_MASTER_SITE_in_HOMEPAGE(c *check.
 
 }
 
-func (s *Suite) Test_MkLines_checkAll__autofix_MASTER_SITE_in_HOMEPAGE_in_package(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_checkAll__autofix_MASTER_SITE_in_HOMEPAGE_in_package(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		"MASTER_SITES=\thttps://cdn1.example.org/ https://cdn2.example.org/",
@@ -1218,8 +1261,9 @@ func (s *Suite) Test_MkLines_checkAll__autofix_MASTER_SITE_in_HOMEPAGE_in_packag
 			"with \"https://cdn1.example.org/\".")
 }
 
-func (s *Suite) Test_MkLines_checkAll__VERSION_as_word_part_in_MASTER_SITES(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_checkAll__VERSION_as_word_part_in_MASTER_SITES(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpMasterSite("MASTER_SITE_SOURCEFORGE", "https://download.sf.net/")
@@ -1235,8 +1279,9 @@ func (s *Suite) Test_MkLines_checkAll__VERSION_as_word_part_in_MASTER_SITES(c *c
 		"WARN: geography/viking/Makefile:2: Variable \"VERSION\" is used but not defined.")
 }
 
-func (s *Suite) Test_MkLines_checkAll__shell_command_as_word_part_in_ENV_list(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_checkAll__shell_command_as_word_part_in_ENV_list(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("x11/lablgtk1/Makefile",
@@ -1249,8 +1294,9 @@ func (s *Suite) Test_MkLines_checkAll__shell_command_as_word_part_in_ENV_list(c 
 		"WARN: x11/lablgtk1/Makefile:2: Use ${CC:Q} instead of ${CC}.")
 }
 
-func (s *Suite) Test_MkLines_checkAll__extra_warnings(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_checkAll__extra_warnings(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wextra")
 	t.SetUpVartypes()
@@ -1279,8 +1325,9 @@ func (s *Suite) Test_MkLines_checkAll__extra_warnings(c *check.C) {
 
 // Between 2019-12-31 and 2020-01-01, pkglint panicked because it didn't
 // expect that a package would define PKGDIR to point to itself.
-func (s *Suite) Test_MkLines_checkAll__assertion(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_checkAll__assertion(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	pkg := NewPackage(t.SetUpPackage("category/package",
 		"PKGDIR=\t../../category/package"))
@@ -1294,8 +1341,9 @@ func (s *Suite) Test_MkLines_checkAll__assertion(c *check.C) {
 // At 2018-12-02, pkglint had resolved ${MY_PLIST_VARS} into a single word,
 // whereas the correct behavior is to resolve it into two words.
 // It had produced warnings about mismatched PLIST_VARS IDs.
-func (s *Suite) Test_MkLines_checkVarassignPlist__indirect(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_checkVarassignPlist__indirect(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.SetUpFileMkLines("plist.mk",
@@ -1312,8 +1360,9 @@ func (s *Suite) Test_MkLines_checkVarassignPlist__indirect(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLines_CheckUsedBy__show_autofix(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_CheckUsedBy__show_autofix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--show-autofix")
 
@@ -1400,8 +1449,9 @@ func (s *Suite) Test_MkLines_CheckUsedBy__show_autofix(c *check.C) {
 	t.CheckEquals(G.Logger.autofixAvailable, true)
 }
 
-func (s *Suite) Test_MkLines_CheckUsedBy(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_CheckUsedBy(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(pkgpath PkgsrcPath, lines []string, diagnostics []string) {
 		mklines := t.NewMkLines("Makefile.common", lines...)
@@ -1494,8 +1544,9 @@ func (s *Suite) Test_MkLines_CheckUsedBy(c *check.C) {
 	t.CheckEquals(G.Logger.autofixAvailable, true)
 }
 
-func (s *Suite) Test_MkLines_CheckUsedBy__separate_paragraph(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_CheckUsedBy__separate_paragraph(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile.common",
 		MkCvsID,
@@ -1509,8 +1560,9 @@ func (s *Suite) Test_MkLines_CheckUsedBy__separate_paragraph(c *check.C) {
 		"WARN: Makefile.common:3: The \"used by\" lines should be in a separate paragraph.")
 }
 
-func (s *Suite) Test_MkLines_SplitToParagraphs(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_SplitToParagraphs(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	type lineRange struct {
 		from, to int
@@ -1576,8 +1628,9 @@ func (s *Suite) Test_MkLines_SplitToParagraphs(c *check.C) {
 		para(0, 4))
 }
 
-func (s *Suite) Test_MkLines_ExpandLoopVar(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_ExpandLoopVar(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
@@ -1601,11 +1654,12 @@ func (s *Suite) Test_MkLines_ExpandLoopVar(c *check.C) {
 
 	t.CheckDeepEquals(files, strings.Split("abcdefgh", ""))
 	t.CheckDeepEquals(ranks, strings.Split("12345678", ""))
-	t.CheckLen(diagonals, 0)
+	t.CheckEquals(len(diagonals), 0)
 }
 
-func (s *Suite) Test_MkLines_ExpandLoopVar__multi(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_ExpandLoopVar__multi(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
@@ -1626,12 +1680,13 @@ func (s *Suite) Test_MkLines_ExpandLoopVar__multi(c *check.C) {
 	})
 
 	// As of June 2019, multi-variable .for loops are not yet implemented.
-	t.CheckLen(keys, 0)
-	t.CheckLen(values, 0)
+	t.CheckEquals(len(keys), 0)
+	t.CheckEquals(len(values), 0)
 }
 
-func (s *Suite) Test_MkLines_ExpandLoopVar__malformed_for(c *check.C) {
-	t := s.Init(c)
+func Test_MkLines_ExpandLoopVar__malformed_for(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
@@ -1647,5 +1702,5 @@ func (s *Suite) Test_MkLines_ExpandLoopVar__malformed_for(c *check.C) {
 		}
 	})
 
-	t.CheckLen(values, 0)
+	t.CheckEquals(len(values), 0)
 }

@@ -1,9 +1,10 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import "testing"
 
-func (s *Suite) Test_Tool_UsableAtLoadTime(c *check.C) {
-	t := s.Init(c)
+func Test_Tool_UsableAtLoadTime(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	nowhere := Tool{"nowhere", "", false, Nowhere, nil, nil, nil}
 	t.CheckEquals(nowhere.UsableAtLoadTime(false), false)
@@ -18,8 +19,9 @@ func (s *Suite) Test_Tool_UsableAtLoadTime(c *check.C) {
 	t.CheckEquals(run.UsableAtLoadTime(true), false)
 }
 
-func (s *Suite) Test_Tool_UsableAtLoadTime__pkgconfig_builtin_mk(c *check.C) {
-	t := s.Init(c)
+func Test_Tool_UsableAtLoadTime__pkgconfig_builtin_mk(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--explain")
 	t.SetUpTool("tool1", "TOOL1", AfterPrefsMk)
@@ -49,8 +51,9 @@ func (s *Suite) Test_Tool_UsableAtLoadTime__pkgconfig_builtin_mk(c *check.C) {
 	// whether anyone reads them.
 }
 
-func (s *Suite) Test_Tool_UsableAtRunTime(c *check.C) {
-	t := s.Init(c)
+func Test_Tool_UsableAtRunTime(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	nowhere := Tool{"nowhere", "", false, Nowhere, nil, nil, nil}
 	t.CheckEquals(nowhere.UsableAtRunTime(), false)
@@ -62,8 +65,9 @@ func (s *Suite) Test_Tool_UsableAtRunTime(c *check.C) {
 	t.CheckEquals(run.UsableAtRunTime(), true)
 }
 
-func (s *Suite) Test_Tools__USE_TOOLS_predefined_sed(c *check.C) {
-	t := s.Init(c)
+func Test_Tools__USE_TOOLS_predefined_sed(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/bsd.prefs.mk",
@@ -91,8 +95,9 @@ func (s *Suite) Test_Tools__USE_TOOLS_predefined_sed(c *check.C) {
 // It may happen that a tool is first defined without knowing its
 // variable name. When trying to define the tool with its variable name
 // later, the existing definition is amended.
-func (s *Suite) Test_Tools__add_varname_later(c *check.C) {
-	t := s.Init(c)
+func Test_Tools__add_varname_later(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("dummy.mk", 123, "DUMMY=\tvalue")
 	tools := NewTools()
@@ -108,8 +113,9 @@ func (s *Suite) Test_Tools__add_varname_later(c *check.C) {
 	t.CheckEquals(tool.Varname, "TOOL")
 }
 
-func (s *Suite) Test_Tools__load_from_infrastructure(c *check.C) {
-	t := s.Init(c)
+func Test_Tools__load_from_infrastructure(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	tools := NewTools()
 
@@ -179,8 +185,9 @@ func (s *Suite) Test_Tools__load_from_infrastructure(c *check.C) {
 	// See Test_Tools__package_Makefile for a continuation.
 }
 
-func (s *Suite) Test_Tools__package_Makefile(c *check.C) {
-	t := s.Init(c)
+func Test_Tools__package_Makefile(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/tools/defaults.mk",
@@ -234,8 +241,9 @@ func (s *Suite) Test_Tools__package_Makefile(c *check.C) {
 	t.CheckEquals(after.Validity, AtRunTime)
 }
 
-func (s *Suite) Test_Tools__builtin_mk(c *check.C) {
-	t := s.Init(c)
+func Test_Tools__builtin_mk(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/tools/defaults.mk",
@@ -283,8 +291,9 @@ func (s *Suite) Test_Tools__builtin_mk(c *check.C) {
 		"WARN: ~/category/package/builtin.mk:13: The tool ${NOWHERE} cannot be used at load time.")
 }
 
-func (s *Suite) Test_Tools__implicit_definition_in_bsd_pkg_mk(c *check.C) {
-	t := s.Init(c)
+func Test_Tools__implicit_definition_in_bsd_pkg_mk(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/tools/defaults.mk",
@@ -303,8 +312,9 @@ func (s *Suite) Test_Tools__implicit_definition_in_bsd_pkg_mk(c *check.C) {
 	t.CheckEquals(G.Pkgsrc.Tools.ByName("run").String(), "run:::AtRunTime")
 }
 
-func (s *Suite) Test_Tools__both_prefs_and_pkg_mk(c *check.C) {
-	t := s.Init(c)
+func Test_Tools__both_prefs_and_pkg_mk(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/tools/defaults.mk",
@@ -321,8 +331,9 @@ func (s *Suite) Test_Tools__both_prefs_and_pkg_mk(c *check.C) {
 	t.CheckEquals(G.Pkgsrc.Tools.ByName("both").Validity, AfterPrefsMk)
 }
 
-func (s *Suite) Test_Tools__tools_having_the_same_variable_name(c *check.C) {
-	t := s.Init(c)
+func Test_Tools__tools_having_the_same_variable_name(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/tools/defaults.mk",
@@ -380,8 +391,9 @@ func (s *Suite) Test_Tools__tools_having_the_same_variable_name(c *check.C) {
 		"TRACE: - Tools.Trace()")
 }
 
-func (s *Suite) Test_Tools__var(c *check.C) {
-	t := s.Init(c)
+func Test_Tools__var(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/tools/defaults.mk",
@@ -402,8 +414,9 @@ func (s *Suite) Test_Tools__var(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Tools__aliases(c *check.C) {
-	t := s.Init(c)
+func Test_Tools__aliases(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("mk/tools/replace.mk",
 		MkCvsID,
@@ -436,8 +449,9 @@ func (s *Suite) Test_Tools__aliases(c *check.C) {
 	t.CheckEquals(pkgTools.ByName("gsed").String(), "gsed:::AfterPrefsMk:sed")
 }
 
-func (s *Suite) Test_Tools__aliases_in_for_loop(c *check.C) {
-	t := s.Init(c)
+func Test_Tools__aliases_in_for_loop(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("mk/tools/replace.mk",
 		MkCvsID,
@@ -464,8 +478,9 @@ func (s *Suite) Test_Tools__aliases_in_for_loop(c *check.C) {
 // Therefore, there is a workaround for USE_CMAKE.
 //
 // See mk/tools/cmake.mk.
-func (s *Suite) Test_Tools__cmake(c *check.C) {
-	t := s.Init(c)
+func Test_Tools__cmake(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		"USE_CMAKE=\tyes",
@@ -486,8 +501,9 @@ func (s *Suite) Test_Tools__cmake(c *check.C) {
 			"Include \"../../devel/cmake/build.mk\" instead.")
 }
 
-func (s *Suite) Test_Tools__gmake(c *check.C) {
-	t := s.Init(c)
+func Test_Tools__gmake(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		"USE_TOOLS=\tgmake",
@@ -511,8 +527,9 @@ func (s *Suite) Test_Tools__gmake(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Tools__autoconf213(c *check.C) {
-	t := s.Init(c)
+func Test_Tools__autoconf213(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		"USE_TOOLS=\tautoconf213",
@@ -529,8 +546,9 @@ func (s *Suite) Test_Tools__autoconf213(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Tools_Define__invalid_tool_name(c *check.C) {
-	t := s.Init(c)
+func Test_Tools_Define__invalid_tool_name(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("dummy.mk", 123, "DUMMY=\tvalue")
 	reg := NewTools()
@@ -546,11 +564,12 @@ func (s *Suite) Test_Tools_Define__invalid_tool_name(c *check.C) {
 		"ERROR: dummy.mk:123: Invalid tool name \"tool:dependency\".",
 		"ERROR: dummy.mk:123: Invalid tool name \"tool:build\".")
 
-	t.CheckLen(reg.byName, 0)
+	t.CheckEquals(len(reg.byName), 0)
 }
 
-func (s *Suite) Test_Tools_Trace__coverage(c *check.C) {
-	t := s.Init(c)
+func Test_Tools_Trace__coverage(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.DisableTracing()
 
@@ -565,8 +584,9 @@ func (s *Suite) Test_Tools_Trace__coverage(c *check.C) {
 // which confused an earlier version of pkglint into
 // thinking that the below definition was about a tool
 // called "NetBSD".
-func (s *Suite) Test_Tools_ParseToolLine__opsys(c *check.C) {
-	t := s.Init(c)
+func Test_Tools_ParseToolLine__opsys(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpTool("tool1", "", Nowhere)
 	t.SetUpVartypes()
@@ -581,8 +601,9 @@ func (s *Suite) Test_Tools_ParseToolLine__opsys(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Tools_ParseToolLine__invalid_tool_name(c *check.C) {
-	t := s.Init(c)
+func Test_Tools_ParseToolLine__invalid_tool_name(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("Makefile",
@@ -598,14 +619,15 @@ func (s *Suite) Test_Tools_ParseToolLine__invalid_tool_name(c *check.C) {
 		".endfor")
 
 	mklines.collectVariables(false, true)
-	t.CheckLen(mklines.Tools.byName, 1)
+	t.CheckEquals(len(mklines.Tools.byName), 1)
 	t.CheckEquals(mklines.Tools.ByName("tool").String(), "tool:::Nowhere:abc")
 
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Tools_ParseToolLine__private_tool_undefined(c *check.C) {
-	t := s.Init(c)
+func Test_Tools_ParseToolLine__private_tool_undefined(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("filename.mk",
@@ -621,8 +643,9 @@ func (s *Suite) Test_Tools_ParseToolLine__private_tool_undefined(c *check.C) {
 
 // Tools that are defined by a package by adding to TOOLS_CREATE can
 // be used without adding them to USE_TOOLS again.
-func (s *Suite) Test_Tools_ParseToolLine__private_tool_defined(c *check.C) {
-	t := s.Init(c)
+func Test_Tools_ParseToolLine__private_tool_defined(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("filename.mk",
@@ -636,8 +659,9 @@ func (s *Suite) Test_Tools_ParseToolLine__private_tool_defined(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Tools_parseUseTools(c *check.C) {
-	t := s.Init(c)
+func Test_Tools_parseUseTools(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/triple-tool.mk",
@@ -658,8 +682,9 @@ func (s *Suite) Test_Tools_parseUseTools(c *check.C) {
 // and the GNU tool is only defined but not made available.
 //
 // See also Pkglint.Tool.
-func (s *Suite) Test_Tools_Fallback__tools_having_the_same_variable_name_realistic(c *check.C) {
-	t := s.Init(c)
+func Test_Tools_Fallback__tools_having_the_same_variable_name_realistic(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	nonGnu := NewTools()
 	nonGnu.def("sed", "SED", false, AfterPrefsMk, nil)
@@ -695,8 +720,9 @@ func (s *Suite) Test_Tools_Fallback__tools_having_the_same_variable_name_realist
 // and the non-GNU tool is only defined but not made available.
 //
 // See also Pkglint.Tool.
-func (s *Suite) Test_Tools_Fallback__tools_having_the_same_variable_name_unrealistic(c *check.C) {
-	t := s.Init(c)
+func Test_Tools_Fallback__tools_having_the_same_variable_name_unrealistic(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	// This simulates a tool defined in the tools framework but not added
 	// to USE_TOOLS, neither by bsd.prefs.mk nor by bsd.pkg.mk.
@@ -730,8 +756,9 @@ func (s *Suite) Test_Tools_Fallback__tools_having_the_same_variable_name_unreali
 	t.CheckEquals(local2.ByVarname("SED").String(), "sed:SED::AfterPrefsMk")
 }
 
-func (s *Suite) Test_Tools_Fallback__called_twice(c *check.C) {
-	t := s.Init(c)
+func Test_Tools_Fallback__called_twice(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	tools := NewTools()
 	fallback := NewTools()
@@ -741,8 +768,9 @@ func (s *Suite) Test_Tools_Fallback__called_twice(c *check.C) {
 	t.ExpectAssert(func() { tools.Fallback(fallback) })
 }
 
-func (s *Suite) Test_Tools_IsValidToolName(c *check.C) {
-	t := s.Init(c)
+func Test_Tools_IsValidToolName(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("[", "", AtRunTime)
@@ -757,8 +785,9 @@ func (s *Suite) Test_Tools_IsValidToolName(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_ToolTime_String(c *check.C) {
-	t := s.Init(c)
+func Test_ToolTime_String(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(LoadTime.String(), "LoadTime")
 	t.CheckEquals(RunTime.String(), "RunTime")

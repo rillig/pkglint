@@ -1,13 +1,14 @@
 package pkglint
 
 import (
-	"gopkg.in/check.v1"
 	"os"
 	"path/filepath"
+	"testing"
 )
 
-func (s *Suite) Test_Pkgsrc__frozen(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc__frozen(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("doc/CHANGES-2018",
@@ -17,8 +18,9 @@ func (s *Suite) Test_Pkgsrc__frozen(c *check.C) {
 	t.CheckEquals(G.Pkgsrc.changes.LastFreezeStart, "2018-03-25")
 }
 
-func (s *Suite) Test_Pkgsrc__not_frozen(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc__not_frozen(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("doc/CHANGES-2018",
@@ -30,8 +32,9 @@ func (s *Suite) Test_Pkgsrc__not_frozen(c *check.C) {
 	t.CheckEquals(G.Pkgsrc.changes.LastFreezeEnd, "2018-03-27")
 }
 
-func (s *Suite) Test_Pkgsrc__frozen_with_typo(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc__frozen_with_typo(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("doc/CHANGES-2018",
@@ -42,8 +45,9 @@ func (s *Suite) Test_Pkgsrc__frozen_with_typo(c *check.C) {
 	t.CheckEquals(G.Pkgsrc.changes.LastFreezeStart, "")
 }
 
-func (s *Suite) Test_Pkgsrc__caching(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc__caching(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("lang/Makefile")
 	t.CreateFileLines("lang/python27/Makefile")
@@ -61,8 +65,9 @@ func (s *Suite) Test_Pkgsrc__caching(c *check.C) {
 // without line continuations.
 //
 // See https://mail-index.netbsd.org/tech-pkg/2017/01/18/msg017698.html.
-func (s *Suite) Test_Pkgsrc_loadMasterSites(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_loadMasterSites(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("mk/fetch/sites.mk",
 		MkCvsID,
@@ -92,8 +97,9 @@ func (s *Suite) Test_Pkgsrc_loadMasterSites(c *check.C) {
 	t.CheckEquals(G.Pkgsrc.MasterSiteVarToURL["MASTER_SITE_BACKUP"], "")
 }
 
-func (s *Suite) Test_Pkgsrc_loadPkgOptions(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_loadPkgOptions(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("mk/defaults/options.description",
 		"option-name      Description of the option",
@@ -109,8 +115,9 @@ func (s *Suite) Test_Pkgsrc_loadPkgOptions(c *check.C) {
 		"ERROR: ~/mk/defaults/options.description:4: Invalid line format: >>>>> Merge conflict")
 }
 
-func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_parseSuggestedUpdates(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("doc/TODO",
 		CvsID,
@@ -131,8 +138,9 @@ func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates(c *check.C) {
 		{lines.Lines[7].Location, "freeciv-client", "2.5.0", "(urgent)"}})
 }
 
-func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates__wip(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_parseSuggestedUpdates__wip(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	pkg := t.SetUpPackage("wip/package",
 		"DISTNAME=\tpackage-1.11")
@@ -154,8 +162,9 @@ func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates__wip(c *check.C) {
 			"package should have a COMMIT_MSG file.")
 }
 
-func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates__parse_errors(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_parseSuggestedUpdates__parse_errors(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("doc/TODO",
 		"", // missing CvsID
@@ -183,8 +192,9 @@ func (s *Suite) Test_Pkgsrc_parseSuggestedUpdates__parse_errors(c *check.C) {
 		"WARN: doc/TODO:7: Invalid package name \"package-without-version\".")
 }
 
-func (s *Suite) Test_Pkgsrc_loadTools(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_loadTools(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("mk/tools/bsd.tools.mk",
 		".include \"flex.mk\"",
@@ -251,8 +261,9 @@ func (s *Suite) Test_Pkgsrc_loadTools(c *check.C) {
 }
 
 // As a side-benefit, loadTools also loads the _BUILD_DEFS.
-func (s *Suite) Test_Pkgsrc_loadTools__BUILD_DEFS(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_loadTools__BUILD_DEFS(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpTool("echo", "ECHO", AtRunTime)
 	pkg := t.SetUpPackage("category/package",
@@ -281,8 +292,9 @@ func (s *Suite) Test_Pkgsrc_loadTools__BUILD_DEFS(c *check.C) {
 			"The user-defined variable VARBASE is used but not added to BUILD_DEFS.")
 }
 
-func (s *Suite) Test_Pkgsrc_loadTools__conditional_in_mk_tools(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_loadTools__conditional_in_mk_tools(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/tools/defaults.mk",
@@ -302,8 +314,9 @@ func (s *Suite) Test_Pkgsrc_loadTools__conditional_in_mk_tools(c *check.C) {
 	t.CheckEquals(G.Pkgsrc.Tools.ByName("unconditional").Validity, AtRunTime)
 }
 
-func (s *Suite) Test_Pkgsrc_loadTools__conditional_in_bsd_pkg_mk(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_loadTools__conditional_in_bsd_pkg_mk(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/bsd.pkg.mk",
@@ -323,8 +336,9 @@ func (s *Suite) Test_Pkgsrc_loadTools__conditional_in_bsd_pkg_mk(c *check.C) {
 	t.CheckEquals(G.Pkgsrc.Tools.ByName("unconditional").Validity, AtRunTime)
 }
 
-func (s *Suite) Test_Pkgsrc_loadTools__no_tools_found(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_loadTools__no_tools_found(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.ExpectFatal(
 		G.Pkgsrc.loadTools,
@@ -345,8 +359,9 @@ func (s *Suite) Test_Pkgsrc_loadTools__no_tools_found(c *check.C) {
 }
 
 // Just for code coverage, for the IsRelevant callback.
-func (s *Suite) Test_Pkgsrc_loadToolsPlatform__redundant(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_loadToolsPlatform__redundant(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.SetUpTool("tool", "", AfterPrefsMk)
@@ -357,8 +372,9 @@ func (s *Suite) Test_Pkgsrc_loadToolsPlatform__redundant(c *check.C) {
 	t.FinishSetUp()
 }
 
-func (s *Suite) Test_Pkgsrc_loadToolsPlatform__Linux(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_loadToolsPlatform__Linux(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/tools/tools.Linux.mk",
@@ -383,8 +399,9 @@ func (s *Suite) Test_Pkgsrc_loadToolsPlatform__Linux(c *check.C) {
 	t.CheckDeepEquals(G.Pkgsrc.Tools.ByName("single-tool").conditionalOn, []string{"Linux"})
 }
 
-func (s *Suite) Test_Pkgsrc_initDeprecatedVars(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_initDeprecatedVars(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpTool("echo", "ECHO", AtRunTime)
 	t.SetUpVartypes()
@@ -404,8 +421,9 @@ func (s *Suite) Test_Pkgsrc_initDeprecatedVars(c *check.C) {
 			"Has been removed, as it seemed unused.")
 }
 
-func (s *Suite) Test_Pkgsrc_loadUntypedVars(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_loadUntypedVars(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.SetUpTool("echo", "ECHO", AtRunTime)
@@ -450,8 +468,9 @@ func (s *Suite) Test_Pkgsrc_loadUntypedVars(c *check.C) {
 		"WARN: filename.mk:6: Variable \"INDIRECT_param\" is used but not defined.")
 }
 
-func (s *Suite) Test_Pkgsrc_loadUntypedVars__badly_named_directory(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_loadUntypedVars__badly_named_directory(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/subdir.mk/file.mk",
@@ -462,8 +481,9 @@ func (s *Suite) Test_Pkgsrc_loadUntypedVars__badly_named_directory(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Pkgsrc_loadUntypedVars__local_varnames(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_loadUntypedVars__local_varnames(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("mk/check/check-files.mk",
 		MkCvsID,
@@ -474,7 +494,9 @@ func (s *Suite) Test_Pkgsrc_loadUntypedVars__local_varnames(c *check.C) {
 
 	ignored := func(varname string) {
 		vartype := G.Pkgsrc.VariableType(nil, varname)
-		t.Check(vartype, check.IsNil, check.Commentf("%s", varname))
+		if vartype != nil {
+			t.Errorf("%#v", varname)
+		}
 	}
 	added := func(varname string, basicType *BasicType) {
 		vartype := G.Pkgsrc.VariableType(nil, "CHECK_FILES_SKIP")
@@ -499,8 +521,9 @@ func (s *Suite) Test_Pkgsrc_loadUntypedVars__local_varnames(c *check.C) {
 
 // An optional tool is not available by default.
 // A package can choose to include a tool by adding it to USE_TOOLS.
-func (s *Suite) Test_Pkgsrc_loadUntypedVars__tools(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_loadUntypedVars__tools(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		"do-configure:",
@@ -532,8 +555,9 @@ func (s *Suite) Test_Pkgsrc_loadUntypedVars__tools(c *check.C) {
 			"Unknown shell command \"optional-tool\".")
 }
 
-func (s *Suite) Test_Pkgsrc_Latest__multiple_candidates(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_Latest__multiple_candidates(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("lang/Makefile")
 	t.CreateFileLines("lang/python27/Makefile")
@@ -544,8 +568,9 @@ func (s *Suite) Test_Pkgsrc_Latest__multiple_candidates(c *check.C) {
 	t.CheckEquals(latest, "../../lang/python35")
 }
 
-func (s *Suite) Test_Pkgsrc_Latest__not_found(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_Latest__not_found(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("lang/Makefile")
 
@@ -557,8 +582,9 @@ func (s *Suite) Test_Pkgsrc_Latest__not_found(c *check.C) {
 		"ERROR: ~/lang: Cannot find package versions of \"^python[0-9]+$\".")
 }
 
-func (s *Suite) Test_Pkgsrc_ListVersions__ensure_transitive(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_ListVersions__ensure_transitive(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	names := []string{
 		"base",
@@ -602,8 +628,9 @@ func (s *Suite) Test_Pkgsrc_ListVersions__ensure_transitive(c *check.C) {
 	}
 }
 
-func (s *Suite) Test_Pkgsrc_ListVersions__numeric_multiple_numbers(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_ListVersions__numeric_multiple_numbers(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("emulators/suse_131_32_gtk2/Makefile")
 	t.CreateFileLines("emulators/suse_131_32_qt5/Makefile")
@@ -619,8 +646,9 @@ func (s *Suite) Test_Pkgsrc_ListVersions__numeric_multiple_numbers(c *check.C) {
 		"131"})
 }
 
-func (s *Suite) Test_Pkgsrc_ListVersions__go(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_ListVersions__go(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("lang/go14/Makefile")
 	t.CreateFileLines("lang/go19/Makefile")
@@ -643,8 +671,9 @@ func (s *Suite) Test_Pkgsrc_ListVersions__go(c *check.C) {
 	t.CheckDeepEquals(versionsUpTo37, []string{"go14", "go19", "go111", "go2", "go37"})
 }
 
-func (s *Suite) Test_Pkgsrc_ListVersions__invalid_argument(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_ListVersions__invalid_argument(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.ExpectAssert(func() { G.Pkgsrc.ListVersions("databases", `postgresql[0-9]+`, "$0", true) })
 	t.ExpectAssert(func() { G.Pkgsrc.ListVersions("databases", `^postgresql[0-9]+`, "$0", true) })
@@ -652,50 +681,54 @@ func (s *Suite) Test_Pkgsrc_ListVersions__invalid_argument(c *check.C) {
 	G.Testing = false
 	versions := G.Pkgsrc.ListVersions("databases", `^postgresql[0-9]+`, "$0", false)
 
-	t.CheckLen(versions, 0)
+	t.CheckEquals(len(versions), 0)
 }
 
-func (s *Suite) Test_Pkgsrc_ListVersions__no_basedir(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_ListVersions__no_basedir(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	versions := G.Pkgsrc.ListVersions("lang", `^python[0-9]+$`, "../../lang/$0", true)
 
-	t.CheckLen(versions, 0)
+	t.CheckEquals(len(versions), 0)
 	t.CheckOutputLines(
 		"ERROR: ~/lang: Cannot find package versions of \"^python[0-9]+$\".")
 }
 
-func (s *Suite) Test_Pkgsrc_ListVersions__no_subdirs(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_ListVersions__no_subdirs(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("lang/Makefile")
 
 	versions := G.Pkgsrc.ListVersions("lang", `^python[0-9]+$`, "../../lang/$0", true)
 
-	t.CheckLen(versions, 0)
+	t.CheckEquals(len(versions), 0)
 	t.CheckOutputLines(
 		"ERROR: ~/lang: Cannot find package versions of \"^python[0-9]+$\".")
 }
 
 // Ensures that failed lookups are also cached since they can be assumed
 // not to change during a single pkglint run.
-func (s *Suite) Test_Pkgsrc_ListVersions__error_is_cached(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_ListVersions__error_is_cached(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	versions := G.Pkgsrc.ListVersions("lang", `^python[0-9]+$`, "../../lang/$0", true)
 
-	t.CheckLen(versions, 0)
+	t.CheckEquals(len(versions), 0)
 	t.CheckOutputLines(
 		"ERROR: ~/lang: Cannot find package versions of \"^python[0-9]+$\".")
 
 	versions2 := G.Pkgsrc.ListVersions("lang", `^python[0-9]+$`, "../../lang/$0", true)
 
-	t.CheckLen(versions2, 0)
+	t.CheckEquals(len(versions2), 0)
 	t.CheckOutputEmpty() // No repeated error message
 }
 
-func (s *Suite) Test_Pkgsrc_ListVersions__empty_directories_are_ignored(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_ListVersions__empty_directories_are_ignored(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("lang/lang123/Makefile")
 	t.CreateFileLines("lang/lang124/empty/empty/empty/empty/CVS/Entries")
@@ -707,8 +740,9 @@ func (s *Suite) Test_Pkgsrc_ListVersions__empty_directories_are_ignored(c *check
 }
 
 // See PR 46570, Ctrl+F "3. In lang/perl5".
-func (s *Suite) Test_Pkgsrc_VariableType(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_VariableType(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("echo", "ECHO", AtRunTime)
@@ -740,8 +774,9 @@ func (s *Suite) Test_Pkgsrc_VariableType(c *check.C) {
 }
 
 // Guessing the variable type works for both plain and parameterized variable names.
-func (s *Suite) Test_Pkgsrc_VariableType__varparam(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_VariableType__varparam(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -759,8 +794,9 @@ func (s *Suite) Test_Pkgsrc_VariableType__varparam(c *check.C) {
 // Guessing the variable type also works for variables that are
 // not known to pkglint but are found when scanning mk/* for otherwise
 // unknown variables.
-func (s *Suite) Test_Pkgsrc_VariableType__from_mk(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_VariableType__from_mk(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	// The type of OSNAME.* cannot be guessed from the variable name,
 	// but it is a known variable since the pkgsrc infrastructure uses
@@ -803,8 +839,9 @@ func (s *Suite) Test_Pkgsrc_VariableType__from_mk(c *check.C) {
 		t.Shquote("(Run \"pkglint -e -Wall %s\" to show explanations.)", "category/package"))
 }
 
-func (s *Suite) Test_Pkgsrc_guessVariableType__SKIP(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_guessVariableType__SKIP(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
@@ -830,8 +867,9 @@ func (s *Suite) Test_Pkgsrc_guessVariableType__SKIP(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Pkgsrc_checkToplevelUnusedLicenses(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_checkToplevelUnusedLicenses(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("mk/misc/category.mk")
@@ -869,8 +907,9 @@ func (s *Suite) Test_Pkgsrc_checkToplevelUnusedLicenses(c *check.C) {
 		t.Shquote("(Run \"pkglint -e -r -Cglobal %s\" to show explanations.)", "."))
 }
 
-func (s *Suite) Test_Pkgsrc_ReadDir(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_ReadDir(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("dir/aaa-subdir/file")
 	t.CreateFileLines("dir/subdir/file")
@@ -889,8 +928,9 @@ func (s *Suite) Test_Pkgsrc_ReadDir(c *check.C) {
 	t.CheckDeepEquals(names, []string{"aaa-subdir", "empty", "file", "subdir"})
 }
 
-func (s *Suite) Test_Pkgsrc_Relpath(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_Relpath(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(G.Pkgsrc.topdir, t.tmpdir)
 	t.Chdir(".")
@@ -1012,8 +1052,9 @@ func (s *Suite) Test_Pkgsrc_Relpath(c *check.C) {
 	test("../../", ".", "testdir/subdir")
 }
 
-func (s *Suite) Test_Pkgsrc_File(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_File(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	G.Pkgsrc.topdir = "$pkgsrcdir"
 
@@ -1034,8 +1075,9 @@ func (s *Suite) Test_Pkgsrc_File(c *check.C) {
 	test("filename", "filename")
 }
 
-func (s *Suite) Test_Pkgsrc_FilePkg(c *check.C) {
-	t := s.Init(c)
+func Test_Pkgsrc_FilePkg(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.Chdir(".")
 

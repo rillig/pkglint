@@ -1,9 +1,10 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import "testing"
 
-func (s *Suite) Test_VarTypeRegistry_acl__assertion(c *check.C) {
-	t := s.Init(c)
+func Test_VarTypeRegistry_acl__assertion(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	reg := NewVarTypeRegistry()
 	reg.compile("pkg", "*.mk: use")
@@ -14,8 +15,9 @@ func (s *Suite) Test_VarTypeRegistry_acl__assertion(c *check.C) {
 		"Pkglint internal error: Variable \"VARNAME\" must only be defined once.")
 }
 
-func (s *Suite) Test_VarTypeRegistry_compilerLanguages(c *check.C) {
-	t := s.Init(c)
+func Test_VarTypeRegistry_compilerLanguages(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	G.Testing = false // Just for code coverage
 	t.CreateFileLines("mk/compiler.mk",
@@ -47,8 +49,9 @@ func (s *Suite) Test_VarTypeRegistry_compilerLanguages(c *check.C) {
 	t.CheckEquals(enumValues, "empty-lang expr-lang gnu++14")
 }
 
-func (s *Suite) Test_VarTypeRegistry_gccFeatures(c *check.C) {
-	t := s.Init(c)
+func Test_VarTypeRegistry_gccFeatures(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	G.Testing = false // Just for code coverage
 	t.CreateFileLines("mk/compiler/gcc.mk",
@@ -74,8 +77,9 @@ func (s *Suite) Test_VarTypeRegistry_gccFeatures(c *check.C) {
 	t.CheckEquals(enumValues, "anonymous-members c11 c99")
 }
 
-func (s *Suite) Test_VarTypeRegistry_enumFrom(c *check.C) {
-	t := s.Init(c)
+func Test_VarTypeRegistry_enumFrom(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("editors/emacs/modules.mk",
 		MkCvsID,
@@ -119,8 +123,9 @@ func (s *Suite) Test_VarTypeRegistry_enumFrom(c *check.C) {
 	test("PKGSRC_COMPILER", "enum: ccache distcc f2c g95 gcc ido mipspro-ucode sunpro  (list, user-settable)")
 }
 
-func (s *Suite) Test_VarTypeRegistry_enumFrom__no_tracing(c *check.C) {
-	t := s.Init(c)
+func Test_VarTypeRegistry_enumFrom__no_tracing(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("mk/existing.mk",
 		MkCvsID,
@@ -137,8 +142,9 @@ func (s *Suite) Test_VarTypeRegistry_enumFrom__no_tracing(c *check.C) {
 	t.CheckEquals(nonexistentType.AllowedEnums(), "defval")
 }
 
-func (s *Suite) Test_VarTypeRegistry_enumFrom__no_testing(c *check.C) {
-	t := s.Init(c)
+func Test_VarTypeRegistry_enumFrom__no_testing(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	G.Testing = false
 
@@ -163,8 +169,9 @@ func (s *Suite) Test_VarTypeRegistry_enumFrom__no_testing(c *check.C) {
 		"FATAL: ~/editors/emacs/modules.mk: Cannot be read.")
 }
 
-func (s *Suite) Test_VarTypeRegistry_enumFromDirs(c *check.C) {
-	t := s.Init(c)
+func Test_VarTypeRegistry_enumFromDirs(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	// To make the test observable, these directories must differ from the
 	// PYPKGPREFIX default value in vardefs.go.
@@ -181,8 +188,9 @@ func (s *Suite) Test_VarTypeRegistry_enumFromDirs(c *check.C) {
 	test("PYPKGPREFIX", "enum: py28 py33  (system-provided)")
 }
 
-func (s *Suite) Test_VarTypeRegistry_enumFromDirs__no_testing(c *check.C) {
-	t := s.Init(c)
+func Test_VarTypeRegistry_enumFromDirs__no_testing(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	G.Testing = false
 
@@ -195,8 +203,9 @@ func (s *Suite) Test_VarTypeRegistry_enumFromDirs__no_testing(c *check.C) {
 			"subdirectory matching \"^pack.*\".")
 }
 
-func (s *Suite) Test_VarTypeRegistry_enumFromFiles(c *check.C) {
-	t := s.Init(c)
+func Test_VarTypeRegistry_enumFromFiles(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("mk/platform/NetBSD.mk")
 	t.CreateFileLines("mk/platform/README")
@@ -213,8 +222,9 @@ func (s *Suite) Test_VarTypeRegistry_enumFromFiles(c *check.C) {
 	test("OPSYS", "enum: NetBSD SunOS  (system-provided)")
 }
 
-func (s *Suite) Test_VarTypeRegistry_enumFromFiles__no_testing(c *check.C) {
-	t := s.Init(c)
+func Test_VarTypeRegistry_enumFromFiles__no_testing(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	G.Testing = false
 
@@ -227,8 +237,9 @@ func (s *Suite) Test_VarTypeRegistry_enumFromFiles__no_testing(c *check.C) {
 			"file matching \"^(\\\\w+)\\\\.mk$\".")
 }
 
-func (s *Suite) Test_VarTypeRegistry_options__assertion(c *check.C) {
-	t := s.Init(c)
+func Test_VarTypeRegistry_options__assertion(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	reg := NewVarTypeRegistry()
 
@@ -239,8 +250,9 @@ func (s *Suite) Test_VarTypeRegistry_options__assertion(c *check.C) {
 	})
 }
 
-func (s *Suite) Test_VarTypeRegistry_Init(c *check.C) {
-	t := s.Init(c)
+func Test_VarTypeRegistry_Init(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	src := NewPkgsrc(t.File("."))
 	src.Types().Init(src)
@@ -249,8 +261,9 @@ func (s *Suite) Test_VarTypeRegistry_Init(c *check.C) {
 	t.CheckEquals(src.Types().Canon("USE_BUILTIN.*").basicType.name, "YesNoIndirectly")
 }
 
-func (s *Suite) Test_VarTypeRegistry_Init__LP64PLATFORMS(c *check.C) {
-	t := s.Init(c)
+func Test_VarTypeRegistry_Init__LP64PLATFORMS(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	pkg := t.SetUpPackage("category/package",
 		"BROKEN_ON_PLATFORM=\t${LP64PLATFORMS}")
@@ -264,8 +277,9 @@ func (s *Suite) Test_VarTypeRegistry_Init__LP64PLATFORMS(c *check.C) {
 			"Setting variable BROKEN_ON_PLATFORM should have a rationale.")
 }
 
-func (s *Suite) Test_VarTypeRegistry_Init__no_tracing(c *check.C) {
-	t := s.Init(c)
+func Test_VarTypeRegistry_Init__no_tracing(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("editors/emacs/modules.mk",
 		MkCvsID,
@@ -279,8 +293,9 @@ func (s *Suite) Test_VarTypeRegistry_Init__no_tracing(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_VarTypeRegistry_Init__no_testing(c *check.C) {
-	t := s.Init(c)
+func Test_VarTypeRegistry_Init__no_testing(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.Remove("mk/fetch/sites.mk")
@@ -291,8 +306,9 @@ func (s *Suite) Test_VarTypeRegistry_Init__no_testing(c *check.C) {
 			"variable definition for _COMPILERS or _PSEUDO_COMPILERS.")
 }
 
-func (s *Suite) Test_VarTypeRegistry_Init__MASTER_SITES(c *check.C) {
-	t := s.Init(c)
+func Test_VarTypeRegistry_Init__MASTER_SITES(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("mk/fetch/sites.mk",
 		MkCvsID,
@@ -307,8 +323,9 @@ func (s *Suite) Test_VarTypeRegistry_Init__MASTER_SITES(c *check.C) {
 	t.CheckEquals(vartype.String(), "FetchURL (list, system-provided)")
 }
 
-func (s *Suite) Test_VarTypeRegistry_parseACLEntries__invalid_arguments(c *check.C) {
-	t := s.Init(c)
+func Test_VarTypeRegistry_parseACLEntries__invalid_arguments(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	reg := NewVarTypeRegistry()
 	parseACLEntries := reg.parseACLEntries

@@ -1,9 +1,10 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import "testing"
 
-func (s *Suite) Test_Var_ConditionalVars(c *check.C) {
-	t := s.Init(c)
+func Test_Var_ConditionalVars(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	v := NewVar("VARNAME")
 
@@ -22,8 +23,9 @@ func (s *Suite) Test_Var_ConditionalVars(c *check.C) {
 	t.CheckDeepEquals(v.ConditionalVars(), []string{"OPSYS"})
 }
 
-func (s *Suite) Test_Var_Refs(c *check.C) {
-	t := s.Init(c)
+func Test_Var_Refs(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	v := NewVar("VAR")
 
@@ -38,8 +40,9 @@ func (s *Suite) Test_Var_Refs(c *check.C) {
 	t.CheckDeepEquals(v.Refs(), []string{"OTHER", "OPSYS", "THEN", "ELSE", "COND", "FOR"})
 }
 
-func (s *Suite) Test_Var_ConstantValue__assign(c *check.C) {
-	t := s.Init(c)
+func Test_Var_ConstantValue__assign(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	v := NewVar("VARNAME")
 
@@ -56,8 +59,9 @@ func (s *Suite) Test_Var_ConstantValue__assign(c *check.C) {
 // Even if these referenced variables change their value in-between,
 // this does not affect the constant-ness of this variable, since the
 // references are resolved lazily.
-func (s *Suite) Test_Var_ConstantValue__assign_reference(c *check.C) {
-	t := s.Init(c)
+func Test_Var_ConstantValue__assign_reference(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	v := NewVar("VARNAME")
 
@@ -70,8 +74,9 @@ func (s *Suite) Test_Var_ConstantValue__assign_reference(c *check.C) {
 	t.CheckEquals(v.IsConstant(), true)
 }
 
-func (s *Suite) Test_Var_ConstantValue__assign_eval_reference(c *check.C) {
-	t := s.Init(c)
+func Test_Var_ConstantValue__assign_eval_reference(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	v := NewVar("VARNAME")
 
@@ -90,8 +95,9 @@ func (s *Suite) Test_Var_ConstantValue__assign_eval_reference(c *check.C) {
 	t.CheckEquals(v.IsConstant(), false)
 }
 
-func (s *Suite) Test_Var_ConstantValue__assign_conditional(c *check.C) {
-	t := s.Init(c)
+func Test_Var_ConstantValue__assign_conditional(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	v := NewVar("VARNAME")
 
@@ -102,8 +108,9 @@ func (s *Suite) Test_Var_ConstantValue__assign_conditional(c *check.C) {
 	t.CheckEquals(v.IsConstant(), false)
 }
 
-func (s *Suite) Test_Var_ConstantValue__default(c *check.C) {
-	t := s.Init(c)
+func Test_Var_ConstantValue__default(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	v := NewVar("VARNAME")
 
@@ -116,8 +123,9 @@ func (s *Suite) Test_Var_ConstantValue__default(c *check.C) {
 	t.CheckEquals(v.ConstantValue(), "value")
 }
 
-func (s *Suite) Test_Var_ConstantValue__eval_then_default(c *check.C) {
-	t := s.Init(c)
+func Test_Var_ConstantValue__eval_then_default(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	v := NewVar("VARNAME")
 
@@ -130,8 +138,9 @@ func (s *Suite) Test_Var_ConstantValue__eval_then_default(c *check.C) {
 	t.CheckEquals(v.ConstantValue(), "value")
 }
 
-func (s *Suite) Test_Var_ConstantValue__append(c *check.C) {
-	t := s.Init(c)
+func Test_Var_ConstantValue__append(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	v := NewVar("VARNAME")
 
@@ -144,8 +153,9 @@ func (s *Suite) Test_Var_ConstantValue__append(c *check.C) {
 	t.CheckEquals(v.ConstantValue(), "value appended")
 }
 
-func (s *Suite) Test_Var_ConstantValue__eval(c *check.C) {
-	t := s.Init(c)
+func Test_Var_ConstantValue__eval(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	v := NewVar("VARNAME")
 
@@ -159,8 +169,9 @@ func (s *Suite) Test_Var_ConstantValue__eval(c *check.C) {
 }
 
 // Variables that are based on running shell commands are never constant.
-func (s *Suite) Test_Var_ConstantValue__shell(c *check.C) {
-	t := s.Init(c)
+func Test_Var_ConstantValue__shell(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	v := NewVar("VARNAME")
 
@@ -173,8 +184,9 @@ func (s *Suite) Test_Var_ConstantValue__shell(c *check.C) {
 	t.CheckEquals(v.IsConstant(), false)
 }
 
-func (s *Suite) Test_Var_ConstantValue__referenced_before(c *check.C) {
-	t := s.Init(c)
+func Test_Var_ConstantValue__referenced_before(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	v := NewVar("VARNAME")
 
@@ -191,8 +203,9 @@ func (s *Suite) Test_Var_ConstantValue__referenced_before(c *check.C) {
 	t.CheckEquals(v.IsConstant(), false)
 }
 
-func (s *Suite) Test_Var_ConstantValue__referenced_in_between(c *check.C) {
-	t := s.Init(c)
+func Test_Var_ConstantValue__referenced_in_between(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	v := NewVar("VARNAME")
 
@@ -213,8 +226,9 @@ func (s *Suite) Test_Var_ConstantValue__referenced_in_between(c *check.C) {
 	t.CheckEquals(v.IsConstant(), false)
 }
 
-func (s *Suite) Test_Var_Value__conditional_write_after_unconditional(c *check.C) {
-	t := s.Init(c)
+func Test_Var_Value__conditional_write_after_unconditional(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	v := NewVar("VARNAME")
 
@@ -242,8 +256,9 @@ func (s *Suite) Test_Var_Value__conditional_write_after_unconditional(c *check.C
 	t.CheckEquals(v.Value(), "value appended")
 }
 
-func (s *Suite) Test_Var_Value__infrastructure(c *check.C) {
-	t := s.Init(c)
+func Test_Var_Value__infrastructure(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	v := NewVar("VARNAME")
 
@@ -260,8 +275,9 @@ func (s *Suite) Test_Var_Value__infrastructure(c *check.C) {
 	t.CheckEquals(v.Value(), "value")
 }
 
-func (s *Suite) Test_Var_Value__initial_conditional_write(c *check.C) {
-	t := s.Init(c)
+func Test_Var_Value__initial_conditional_write(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	v := NewVar("VARNAME")
 
@@ -275,8 +291,9 @@ func (s *Suite) Test_Var_Value__initial_conditional_write(c *check.C) {
 	t.CheckEquals(v.Value(), "overwritten conditionally")
 }
 
-func (s *Suite) Test_Var_ValueInfra(c *check.C) {
-	t := s.Init(c)
+func Test_Var_ValueInfra(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	v := NewVar("VARNAME")
 
@@ -293,8 +310,9 @@ func (s *Suite) Test_Var_ValueInfra(c *check.C) {
 	t.CheckEquals(v.ValueInfra(), "wip infra")
 }
 
-func (s *Suite) Test_Var_ReadLocations(c *check.C) {
-	t := s.Init(c)
+func Test_Var_ReadLocations(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	v := NewVar("VAR")
 
@@ -314,8 +332,9 @@ func (s *Suite) Test_Var_ReadLocations(c *check.C) {
 	t.CheckDeepEquals(v.ReadLocations(), []*MkLine{mkline123, mkline124, mkline124})
 }
 
-func (s *Suite) Test_Var_WriteLocations(c *check.C) {
-	t := s.Init(c)
+func Test_Var_WriteLocations(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	v := NewVar("VAR")
 
@@ -336,8 +355,9 @@ func (s *Suite) Test_Var_WriteLocations(c *check.C) {
 	t.CheckDeepEquals(v.WriteLocations(), []*MkLine{mkline123, mkline125, mkline125})
 }
 
-func (s *Suite) Test_Var_Write__conditional_without_variables(c *check.C) {
-	t := s.Init(c)
+func Test_Var_Write__conditional_without_variables(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
@@ -359,8 +379,9 @@ func (s *Suite) Test_Var_Write__conditional_without_variables(c *check.C) {
 	})
 }
 
-func (s *Suite) Test_Var_Write__assertion(c *check.C) {
-	t := s.Init(c)
+func Test_Var_Write__assertion(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	v := NewVar("VAR")
 	t.ExpectAssert(

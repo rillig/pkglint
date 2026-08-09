@@ -3,11 +3,13 @@ package pkglint
 import (
 	"encoding/json"
 	"fmt"
-	"gopkg.in/check.v1"
+	"reflect"
+	"testing"
 )
 
-func (s *Suite) Test_parseShellProgram__parse_error_for_dollar(c *check.C) {
-	t := s.Init(c)
+func Test_parseShellProgram__parse_error_for_dollar(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(text string, expProgram *MkShList, expError error, expDiagnostics ...string) {
 		mklines := t.NewMkLines("module.mk", "\t"+text)
@@ -57,24 +59,24 @@ func (s *Suite) Test_parseShellProgram__parse_error_for_dollar(c *check.C) {
 		nil...)
 }
 
-type ShSuite struct {
+type ShTester struct {
 	t *Tester
 }
 
-var _ = check.Suite(&ShSuite{})
+func NewShTester(tt *testing.T) *ShTester {
+	ResetGlobals()
+	return &ShTester{NewTester(tt)}
+}
 
-func (s *ShSuite) SetUpTest(*check.C) {
+func (t *ShTester) Done() {
+	t.t.ReportUncheckedOutput()
 	ResetGlobals()
 }
 
-func (s *ShSuite) TearDownTest(c *check.C) {
-	s.t.backend = &testerBackendCheck{c}
-	s.t.ReportUncheckedOutput()
-	ResetGlobals()
-}
-
-func (s *ShSuite) Test_parseShellProgram__program(c *check.C) {
-	b := s.init(c)
+func Test_parseShellProgram__program(tt *testing.T) {
+	s := NewShTester(tt)
+	defer s.Done()
+	b := s.init()
 
 	s.test("",
 		b.List())
@@ -150,8 +152,10 @@ func (s *ShSuite) Test_parseShellProgram__program(c *check.C) {
 			b.List().AddCommand(b.SimpleCommand("action2")).AddSemicolon())))
 }
 
-func (s *ShSuite) Test_parseShellProgram__list(c *check.C) {
-	b := s.init(c)
+func Test_parseShellProgram__list(tt *testing.T) {
+	s := NewShTester(tt)
+	defer s.Done()
+	b := s.init()
 
 	s.test("echo1 && echo2",
 		b.List().AddAndOr(
@@ -172,8 +176,10 @@ func (s *ShSuite) Test_parseShellProgram__list(c *check.C) {
 			AddBackground())
 }
 
-func (s *ShSuite) Test_parseShellProgram__and_or(c *check.C) {
-	b := s.init(c)
+func Test_parseShellProgram__and_or(tt *testing.T) {
+	s := NewShTester(tt)
+	defer s.Done()
+	b := s.init()
 
 	s.test("echo1 | echo2",
 		b.List().AddAndOr(b.AndOr(b.Pipeline(false,
@@ -201,8 +207,10 @@ func (s *ShSuite) Test_parseShellProgram__and_or(c *check.C) {
 				b.SimpleCommand("echo4")))))
 }
 
-func (s *ShSuite) Test_parseShellProgram__pipeline(c *check.C) {
-	b := s.init(c)
+func Test_parseShellProgram__pipeline(tt *testing.T) {
+	s := NewShTester(tt)
+	defer s.Done()
+	b := s.init()
 
 	s.test("command1 | command2",
 		b.List().AddAndOr(b.AndOr(b.Pipeline(false,
@@ -215,8 +223,10 @@ func (s *ShSuite) Test_parseShellProgram__pipeline(c *check.C) {
 			b.SimpleCommand("command2")))))
 }
 
-func (s *ShSuite) Test_parseShellProgram__pipe_sequence(c *check.C) {
-	b := s.init(c)
+func Test_parseShellProgram__pipe_sequence(tt *testing.T) {
+	s := NewShTester(tt)
+	defer s.Done()
+	b := s.init()
 
 	s.test("command1 | if true ; then : ; fi",
 		b.List().AddAndOr(b.AndOr(b.Pipeline(false,
@@ -226,8 +236,10 @@ func (s *ShSuite) Test_parseShellProgram__pipe_sequence(c *check.C) {
 				b.List().AddCommand(b.SimpleCommand(":")).AddSemicolon())))))
 }
 
-func (s *ShSuite) Test_parseShellProgram__command(c *check.C) {
-	b := s.init(c)
+func Test_parseShellProgram__command(tt *testing.T) {
+	s := NewShTester(tt)
+	defer s.Done()
+	b := s.init()
 
 	s.test("simple_command",
 		b.List().AddAndOr(b.AndOr(b.Pipeline(false, b.SimpleCommand("simple_command")))))
@@ -252,8 +264,10 @@ func (s *ShSuite) Test_parseShellProgram__command(c *check.C) {
 			b.Redirection(2, ">&", "1"))))
 }
 
-func (s *ShSuite) Test_parseShellProgram__compound_command(c *check.C) {
-	b := s.init(c)
+func Test_parseShellProgram__compound_command(tt *testing.T) {
+	s := NewShTester(tt)
+	defer s.Done()
+	b := s.init()
 
 	s.test("{ brace ; }",
 		b.List().AddCommand(b.Brace(
@@ -286,8 +300,10 @@ func (s *ShSuite) Test_parseShellProgram__compound_command(c *check.C) {
 			"mean a Make variable or $$i if you mean a shell variable.")
 }
 
-func (s *ShSuite) Test_parseShellProgram__subshell(c *check.C) {
-	b := s.init(c)
+func Test_parseShellProgram__subshell(tt *testing.T) {
+	s := NewShTester(tt)
+	defer s.Done()
+	b := s.init()
 
 	sub3 := b.Subshell(b.List().AddCommand(b.SimpleCommand("sub3")))
 	sub2 := b.Subshell(b.List().AddCommand(sub3).AddSemicolon().AddCommand(b.SimpleCommand("sub2")))
@@ -295,16 +311,20 @@ func (s *ShSuite) Test_parseShellProgram__subshell(c *check.C) {
 	s.test("( ( ( sub3 ) ; sub2 ) ; sub1 )", b.List().AddCommand(sub1))
 }
 
-func (s *ShSuite) Test_parseShellProgram__compound_list(c *check.C) {
-	b := s.init(c)
+func Test_parseShellProgram__compound_list(tt *testing.T) {
+	s := NewShTester(tt)
+	defer s.Done()
+	b := s.init()
 
 	s.test("( \n echo )",
 		b.List().AddCommand(b.Subshell(
 			b.List().AddCommand(b.SimpleCommand("echo")))))
 }
 
-func (s *ShSuite) Test_parseShellProgram__term(c *check.C) {
-	b := s.init(c)
+func Test_parseShellProgram__term(tt *testing.T) {
+	s := NewShTester(tt)
+	defer s.Done()
+	b := s.init()
 
 	s.test("echo1 ; echo2 ;",
 		b.List().
@@ -314,8 +334,10 @@ func (s *ShSuite) Test_parseShellProgram__term(c *check.C) {
 			AddSemicolon())
 }
 
-func (s *ShSuite) Test_parseShellProgram__for_clause(c *check.C) {
-	b := s.init(c)
+func Test_parseShellProgram__for_clause(tt *testing.T) {
+	s := NewShTester(tt)
+	defer s.Done()
+	b := s.init()
 
 	// If this test fails, the cause might be in shell.y, in the for_clause rule.
 	s.test("for var do echo $var ; done",
@@ -408,8 +430,10 @@ func (s *ShSuite) Test_parseShellProgram__for_clause(c *check.C) {
 				b.List().AddCommand(b.SimpleCommand("echo", "$$i$$j")).AddSemicolon())))))
 }
 
-func (s *ShSuite) Test_parseShellProgram__case_clause(c *check.C) {
-	b := s.init(c)
+func Test_parseShellProgram__case_clause(tt *testing.T) {
+	s := NewShTester(tt)
+	defer s.Done()
+	b := s.init()
 
 	s.test("case $var in esac",
 		b.List().AddCommand(b.Case(b.Token("$var"))))
@@ -497,8 +521,10 @@ func (s *ShSuite) Test_parseShellProgram__case_clause(c *check.C) {
 		[]string{}...)
 }
 
-func (s *ShSuite) Test_parseShellProgram__if_clause(c *check.C) {
-	b := s.init(c)
+func Test_parseShellProgram__if_clause(tt *testing.T) {
+	s := NewShTester(tt)
+	defer s.Done()
+	b := s.init()
 
 	s.test(
 		"if true ; then echo yes ; else echo no ; fi",
@@ -524,8 +550,10 @@ func (s *ShSuite) Test_parseShellProgram__if_clause(c *check.C) {
 			b.List().AddCommand(b.SimpleCommand("action3")).AddSemicolon())))
 }
 
-func (s *ShSuite) Test_parseShellProgram__while_clause(c *check.C) {
-	b := s.init(c)
+func Test_parseShellProgram__while_clause(tt *testing.T) {
+	s := NewShTester(tt)
+	defer s.Done()
+	b := s.init()
 
 	s.test("while condition ; do action ; done",
 		b.List().AddCommand(b.While(
@@ -533,8 +561,10 @@ func (s *ShSuite) Test_parseShellProgram__while_clause(c *check.C) {
 			b.List().AddCommand(b.SimpleCommand("action")).AddSemicolon())))
 }
 
-func (s *ShSuite) Test_parseShellProgram__until_clause(c *check.C) {
-	b := s.init(c)
+func Test_parseShellProgram__until_clause(tt *testing.T) {
+	s := NewShTester(tt)
+	defer s.Done()
+	b := s.init()
 
 	s.test("until condition ; do action ; done",
 		b.List().AddCommand(b.Until(
@@ -542,8 +572,10 @@ func (s *ShSuite) Test_parseShellProgram__until_clause(c *check.C) {
 			b.List().AddCommand(b.SimpleCommand("action")).AddSemicolon())))
 }
 
-func (s *ShSuite) Test_parseShellProgram__function_definition(c *check.C) {
-	b := s.init(c)
+func Test_parseShellProgram__function_definition(tt *testing.T) {
+	s := NewShTester(tt)
+	defer s.Done()
+	b := s.init()
 
 	s.test("fn() { simple-command; }",
 		b.List().AddCommand(b.Function(
@@ -557,8 +589,10 @@ func (s *ShSuite) Test_parseShellProgram__function_definition(c *check.C) {
 	// a single command without braces or parentheses.
 }
 
-func (s *ShSuite) Test_parseShellProgram__brace_group(c *check.C) {
-	b := s.init(c)
+func Test_parseShellProgram__brace_group(tt *testing.T) {
+	s := NewShTester(tt)
+	defer s.Done()
+	b := s.init()
 
 	// No semicolon necessary after the closing brace.
 	s.test("if true; then { echo yes; } fi",
@@ -568,8 +602,10 @@ func (s *ShSuite) Test_parseShellProgram__brace_group(c *check.C) {
 				b.List().AddCommand(b.SimpleCommand("echo", "yes")).AddSemicolon())))))
 }
 
-func (s *ShSuite) Test_parseShellProgram__simple_command(c *check.C) {
-	b := s.init(c)
+func Test_parseShellProgram__simple_command(tt *testing.T) {
+	s := NewShTester(tt)
+	defer s.Done()
+	b := s.init()
 
 	s.test(
 		"echo hello, world",
@@ -609,8 +645,10 @@ func (s *ShSuite) Test_parseShellProgram__simple_command(c *check.C) {
 		b.List().AddCommand(b.SimpleCommand("{OpenGrok", "args")))
 }
 
-func (s *ShSuite) Test_parseShellProgram__io_redirect(c *check.C) {
-	b := s.init(c)
+func Test_parseShellProgram__io_redirect(tt *testing.T) {
+	s := NewShTester(tt)
+	defer s.Done()
+	b := s.init()
 
 	s.test("echo >> ${PLIST_SRC}",
 		b.List().AddCommand(b.SimpleCommand("echo", ">>${PLIST_SRC}")))
@@ -670,8 +708,10 @@ func (s *ShSuite) Test_parseShellProgram__io_redirect(c *check.C) {
 				{1, ">", b.Token("output")}}}}))
 }
 
-func (s *ShSuite) Test_parseShellProgram__redirect_list(c *check.C) {
-	b := s.init(c)
+func Test_parseShellProgram__redirect_list(tt *testing.T) {
+	s := NewShTester(tt)
+	defer s.Done()
+	b := s.init()
 
 	s.test("(:) 1>out",
 		b.List().AddCommand(
@@ -687,12 +727,14 @@ func (s *ShSuite) Test_parseShellProgram__redirect_list(c *check.C) {
 				b.Redirection(2, ">", "out"))))
 }
 
-func (s *ShSuite) Test_parseShellProgram__io_here(c *check.C) {
+func Test_parseShellProgram__io_here(tt *testing.T) {
 	// In pkgsrc Makefiles, the IO here-documents cannot be used since
 	// all the text is joined into a single line. Therefore, these test
 	// cases only show that pkglint can indeed not parse <<EOF
 	// redirections.
-	b := s.init(c)
+	s := NewShTester(tt)
+	defer s.Done()
+	b := s.init()
 
 	s.test("<<EOF\ntext\nEOF",
 		b.List().
@@ -711,14 +753,13 @@ func (s *ShSuite) Test_parseShellProgram__io_here(c *check.C) {
 			AddCommand(b.SimpleCommand("EOF"))) // This is wrong.
 }
 
-func (s *ShSuite) init(c *check.C) *MkShBuilder {
-	tmpdir := NewCurrPath("The ShSuite tests don't need a temporary directory")
-	s.t = &Tester{backend: &testerBackendCheck{c}, testName: c.TestName(), tmpdir: tmpdir}
-	G = NewPkglint(&s.t.stdout, &s.t.stderr)
+func (t *ShTester) init() *MkShBuilder {
+	t.t.tmpdir = NewCurrPath("The ShSuite tests don't need a temporary directory")
+	G = NewPkglint(&t.t.stdout, &t.t.stderr)
 	return NewMkShBuilder()
 }
 
-func (s *ShSuite) test(program string, expected *MkShList) {
+func (s *ShTester) test(program string, expected *MkShList) {
 	t := s.t
 
 	// See parseShellProgram
@@ -743,7 +784,7 @@ func (s *ShSuite) test(program string, expected *MkShList) {
 	}
 }
 
-func (s *ShSuite) testFail(program string, expectedRemaining ...string) {
+func (s *ShTester) testFail(program string, expectedRemaining ...string) {
 	t := s.t
 
 	line := t.NewLine("ShSuite.testFail.mk", 1, "")
@@ -754,14 +795,19 @@ func (s *ShSuite) testFail(program string, expectedRemaining ...string) {
 
 	zeroMeansSuccess := parser.Parse(&lexer)
 
-	if t.CheckEquals(zeroMeansSuccess, 1) && t.Check(lexer.error, check.Not(check.Equals), "") {
-		t.CheckDeepEquals(lexer.remaining, expectedRemaining)
+	if zeroMeansSuccess != 1 {
+		t.Errorf("have %#v", zeroMeansSuccess)
+	} else if lexer.error == "" {
+		t.Errorf("have no error")
+	} else if !reflect.DeepEqual(lexer.remaining, expectedRemaining) {
+		t.Errorf("have %#v, want %#v", lexer.remaining, expectedRemaining)
 	}
 }
 
-func (s *ShSuite) Test_ShellLexer_Lex__redirects(c *check.C) {
-	_ = s.init(c)
-	t := s.t
+func Test_ShellLexer_Lex__redirects(tt *testing.T) {
+	sht := NewShTester(tt)
+	defer sht.Done()
+	t := sht.t
 
 	line := t.NewLine("filename.mk", 1, "")
 	tokens, rest := splitIntoShellTokens(line, "2>&1 <& <>file >>file <<EOF <<-EOF > /dev/stderr")
@@ -810,8 +856,10 @@ func (s *ShSuite) Test_ShellLexer_Lex__redirects(c *check.C) {
 	t.CheckEquals(lexer.Lex(&llval), 0)
 }
 
-func (s *ShSuite) Test_ShellLexer_Lex__keywords(c *check.C) {
-	b := s.init(c)
+func Test_ShellLexer_Lex__keywords(tt *testing.T) {
+	s := NewShTester(tt)
+	defer s.Done()
+	b := s.init()
 	t := s.t
 
 	testErr := func(program, error, remaining string) {
@@ -854,8 +902,9 @@ func (s *ShSuite) Test_ShellLexer_Lex__keywords(c *check.C) {
 		"if cond ; then : ; fi")
 }
 
-func (s *Suite) Test_ShellLexer_Lex__case_patterns(c *check.C) {
-	t := s.Init(c)
+func Test_ShellLexer_Lex__case_patterns(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(shellProgram string, expectedTokens ...int) {
 		tokens, rest := splitIntoShellTokens(nil, shellProgram)

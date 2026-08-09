@@ -1,9 +1,10 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import "testing"
 
-func (s *Suite) Test_CheckLinesPlist(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPlist(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	pkg := NewPackage(t.File("category/pkgbase"))
 	lines := t.NewLines("PLIST",
@@ -49,8 +50,9 @@ func (s *Suite) Test_CheckLinesPlist(c *check.C) {
 		"ERROR: PLIST:19: Invalid line type: /absolute")
 }
 
-func (s *Suite) Test_CheckLinesPlist__single_file_no_comment(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPlist__single_file_no_comment(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("PLIST",
 		"bin/program")
@@ -63,8 +65,9 @@ func (s *Suite) Test_CheckLinesPlist__single_file_no_comment(c *check.C) {
 
 // When a PLIST contains multiple libtool libraries, USE_LIBTOOL needs only
 // be defined once in the package Makefile. Therefore, a single warning is enough.
-func (s *Suite) Test_CheckLinesPlist__multiple_libtool_libraries(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPlist__multiple_libtool_libraries(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	pkg := NewPackage(t.File("category/pkgbase"))
 	lines := t.NewLines("PLIST",
@@ -78,8 +81,9 @@ func (s *Suite) Test_CheckLinesPlist__multiple_libtool_libraries(c *check.C) {
 		"WARN: PLIST:2: Packages that install libtool libraries should define USE_LIBTOOL.")
 }
 
-func (s *Suite) Test_CheckLinesPlist__empty(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPlist__empty(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("PLIST",
 		PlistCvsID)
@@ -90,8 +94,9 @@ func (s *Suite) Test_CheckLinesPlist__empty(c *check.C) {
 		"ERROR: PLIST:1: PLIST files must not be empty.")
 }
 
-func (s *Suite) Test_CheckLinesPlist__common_end(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPlist__common_end(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("PLIST.common",
 		PlistCvsID,
@@ -105,8 +110,9 @@ func (s *Suite) Test_CheckLinesPlist__common_end(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_CheckLinesPlist__common_end_without_common(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPlist__common_end_without_common(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("PLIST.common_end",
 		PlistCvsID,
@@ -117,8 +123,9 @@ func (s *Suite) Test_CheckLinesPlist__common_end_without_common(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_CheckLinesPlist__condition(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPlist__condition(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	pkg := NewPackage(t.File("category/pkgbase"))
 	lines := t.NewLines("PLIST",
@@ -131,8 +138,9 @@ func (s *Suite) Test_CheckLinesPlist__condition(c *check.C) {
 		"WARN: PLIST:2: The bin/ directory should not have subdirectories.")
 }
 
-func (s *Suite) Test_CheckLinesPlist__sorting(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPlist__sorting(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("PLIST",
 		PlistCvsID,
@@ -149,8 +157,9 @@ func (s *Suite) Test_CheckLinesPlist__sorting(c *check.C) {
 		"WARN: PLIST:6: \"bin/cat\" should be sorted before \"bin/otherprogram\".")
 }
 
-func (s *Suite) Test_CheckLinesPlist__sort_common(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPlist__sort_common(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.Chdir("category/package")
@@ -176,8 +185,9 @@ func (s *Suite) Test_CheckLinesPlist__sort_common(c *check.C) {
 // When a package sets PLIST_SRC, any additional PLIST files may be
 // alternative to the default PLIST, so don't warn about duplicates
 // between files having different ranks.
-func (s *Suite) Test_CheckLinesPlist__PLIST_SRC(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPlist__PLIST_SRC(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		"PLIST_SRC=\tPLIST.other")
@@ -195,8 +205,9 @@ func (s *Suite) Test_CheckLinesPlist__PLIST_SRC(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_CheckLinesPlist__only_comments(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesPlist__only_comments(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("PLIST",
 		PlistCvsID,
@@ -207,8 +218,9 @@ func (s *Suite) Test_CheckLinesPlist__only_comments(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_PlistChecker__autofix(c *check.C) {
-	t := s.Init(c)
+func Test_PlistChecker__autofix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("PLIST",
 		PlistCvsID,
@@ -276,8 +288,9 @@ func (s *Suite) Test_PlistChecker__autofix(c *check.C) {
 // the one with the condition can be removed.
 // When the same entry appears with several different conditions,
 // all of them must stay.
-func (s *Suite) Test_PlistChecker__remove_same_entries(c *check.C) {
-	t := s.Init(c)
+func Test_PlistChecker__remove_same_entries(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("PLIST",
 		PlistCvsID,
@@ -318,8 +331,9 @@ func (s *Suite) Test_PlistChecker__remove_same_entries(c *check.C) {
 // When pkglint is run with the --only option, only the matched
 // diagnostics must be autofixed. Up to 2018-03-12, the PLIST was
 // sorted even if it didn't match the --only pattern.
-func (s *Suite) Test_PlistChecker__autofix_with_only(c *check.C) {
-	t := s.Init(c)
+func Test_PlistChecker__autofix_with_only(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--autofix", "--only", "matches nothing")
 
@@ -337,8 +351,9 @@ func (s *Suite) Test_PlistChecker__autofix_with_only(c *check.C) {
 		"bin/program")
 }
 
-func (s *Suite) Test_PlistChecker__exec_MKDIR(c *check.C) {
-	t := s.Init(c)
+func Test_PlistChecker__exec_MKDIR(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("PLIST",
 		PlistCvsID,
@@ -350,8 +365,9 @@ func (s *Suite) Test_PlistChecker__exec_MKDIR(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_PlistChecker__empty_line(c *check.C) {
-	t := s.Init(c)
+func Test_PlistChecker__empty_line(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("PLIST",
 		PlistCvsID,
@@ -374,8 +390,9 @@ func (s *Suite) Test_PlistChecker__empty_line(c *check.C) {
 		"bin/program")
 }
 
-func (s *Suite) Test_PlistChecker__invalid_line_type(c *check.C) {
-	t := s.Init(c)
+func Test_PlistChecker__invalid_line_type(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("PLIST",
 		PlistCvsID,
@@ -395,8 +412,9 @@ func (s *Suite) Test_PlistChecker__invalid_line_type(c *check.C) {
 		"ERROR: ~/PLIST:6: Invalid line type: >>>>>>>> merge conflict")
 }
 
-func (s *Suite) Test_PlistChecker__doc(c *check.C) {
-	t := s.Init(c)
+func Test_PlistChecker__doc(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("PLIST",
 		PlistCvsID,
@@ -408,8 +426,9 @@ func (s *Suite) Test_PlistChecker__doc(c *check.C) {
 		"ERROR: ~/PLIST:2: Documentation must be installed under share/doc, not doc.")
 }
 
-func (s *Suite) Test_PlistChecker__PKGLOCALEDIR(c *check.C) {
-	t := s.Init(c)
+func Test_PlistChecker__PKGLOCALEDIR(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("category/package/PLIST",
@@ -424,8 +443,9 @@ func (s *Suite) Test_PlistChecker__PKGLOCALEDIR(c *check.C) {
 			"but USE_PKGLOCALEDIR is not set in the package Makefile.")
 }
 
-func (s *Suite) Test_PlistChecker__PKGLOCALEDIR_with_USE_PKGLOCALEDIR(c *check.C) {
-	t := s.Init(c)
+func Test_PlistChecker__PKGLOCALEDIR_with_USE_PKGLOCALEDIR(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		"USE_PKGLOCALEDIR=\tyes")
@@ -437,8 +457,9 @@ func (s *Suite) Test_PlistChecker__PKGLOCALEDIR_with_USE_PKGLOCALEDIR(c *check.C
 	G.Check(t.File("category/package"))
 }
 
-func (s *Suite) Test_PlistChecker__PKGLOCALEDIR_without_package(c *check.C) {
-	t := s.Init(c)
+func Test_PlistChecker__PKGLOCALEDIR_without_package(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("PLIST",
 		PlistCvsID,
@@ -452,8 +473,9 @@ func (s *Suite) Test_PlistChecker__PKGLOCALEDIR_without_package(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_NewPlistChecker(c *check.C) {
-	t := s.Init(c)
+func Test_NewPlistChecker(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	pkg := NewPackage(t.File("category/package"))
 
@@ -464,8 +486,9 @@ func (s *Suite) Test_NewPlistChecker(c *check.C) {
 	t.CheckNotNil(ck.pathChecker.allFiles)
 }
 
-func (s *Suite) Test_PlistChecker_Check(c *check.C) {
-	t := s.Init(c)
+func Test_PlistChecker_Check(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("PLIST",
 		"bin/subdir/program")
@@ -477,8 +500,9 @@ func (s *Suite) Test_PlistChecker_Check(c *check.C) {
 		"WARN: PLIST:1: The bin/ directory should not have subdirectories.")
 }
 
-func (s *Suite) Test_PlistChecker_Load__common_end(c *check.C) {
-	t := s.Init(c)
+func Test_PlistChecker_Load__common_end(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.Chdir(".")
 	t.CreateFileLines("PLIST",
@@ -498,7 +522,7 @@ func (s *Suite) Test_PlistChecker_Load__common_end(c *check.C) {
 	// The corresponding PLIST.common is loaded if possible.
 	// Its lines are not appended to plistLines since they
 	// are checked separately.
-	t.CheckLen(plistLines, 2)
+	t.CheckEquals(len(plistLines), 2)
 
 	// But the files and directories from PLIST.common are registered,
 	// to check for duplicates and to make these lists available to
@@ -512,8 +536,9 @@ func (s *Suite) Test_PlistChecker_Load__common_end(c *check.C) {
 		"PLIST.common_end:2: bin/plist_common_end")
 }
 
-func (s *Suite) Test_extractPlistConditions(c *check.C) {
-	t := s.Init(c)
+func Test_extractPlistConditions(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("PLIST",
 		"bin/program",
@@ -526,20 +551,21 @@ func (s *Suite) Test_extractPlistConditions(c *check.C) {
 	// The invalid condition in line 4 is silently skipped when the
 	// lines are parsed. The actual check happens later.
 
-	t.CheckLen(plistLines, 4)
+	t.CheckEquals(len(plistLines), 4)
 	t.CheckEquals(plistLines[0].text, "bin/program")
 	t.CheckEquals(plistLines[1].text, "bin/conditional")
 	t.CheckEquals(plistLines[2].text, "/bin/conditional-absolute")
 	t.CheckEquals(plistLines[3].text, "${PLIST.mod:Q}invalid")
 
-	t.CheckLen(plistLines[0].conditions, 0)
+	t.CheckEquals(len(plistLines[0].conditions), 0)
 	t.CheckDeepEquals(plistLines[1].conditions, []string{"PLIST.cond"})
 	t.CheckDeepEquals(plistLines[2].conditions, []string{"PLIST.abs", "PLIST.abs2"})
-	t.CheckLen(plistLines[3].conditions, 0)
+	t.CheckEquals(len(plistLines[3].conditions), 0)
 }
 
-func (s *Suite) Test_PlistChecker_collectFilesAndDirs(c *check.C) {
-	t := s.Init(c)
+func Test_PlistChecker_collectFilesAndDirs(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("PLIST",
 		PlistCvsID,
@@ -559,8 +585,9 @@ func (s *Suite) Test_PlistChecker_collectFilesAndDirs(c *check.C) {
 		[]string{"bin/program", "man/man1/program.1"})
 }
 
-func (s *Suite) Test_PlistChecker_collectDirective(c *check.C) {
-	t := s.Init(c)
+func Test_PlistChecker_collectDirective(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(directive string, dirs ...string) {
 		line := t.NewLine("PLIST", 1, directive)
@@ -569,7 +596,7 @@ func (s *Suite) Test_PlistChecker_collectDirective(c *check.C) {
 		ck.collectDirective(&PlistLine{line, nil, line.Text})
 
 		t.CheckDeepEquals(keys(ck.pathChecker.allDirs), dirs)
-		t.CheckLen(keys(ck.pathChecker.allFiles), 0)
+		t.CheckEquals(len(keys(ck.pathChecker.allFiles)), 0)
 	}
 
 	test("@exec ${MKDIR} %D/a/b/c",
@@ -585,8 +612,9 @@ func (s *Suite) Test_PlistChecker_collectDirective(c *check.C) {
 		"a", "a/..", "a/../..", "a/../../..", "a/../../../breakout")
 }
 
-func (s *Suite) Test_PlistChecker_checkLine(c *check.C) {
-	t := s.Init(c)
+func Test_PlistChecker_checkLine(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("PLIST",
 		PlistCvsID,
@@ -618,8 +646,9 @@ func (s *Suite) Test_PlistChecker_checkLine(c *check.C) {
 		"ERROR: PLIST:14: Invalid line type: <<<<<<<<< merge conflict")
 }
 
-func (s *Suite) Test_PlistPathChecker_collectPath(c *check.C) {
-	t := s.Init(c)
+func Test_PlistPathChecker_collectPath(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("PLIST", 1, "a/b/c/program")
 	ck := NewPlistChecker(nil)
@@ -632,8 +661,9 @@ func (s *Suite) Test_PlistPathChecker_collectPath(c *check.C) {
 		[]string{"a/b/c/program"})
 }
 
-func (s *Suite) Test_PlistPathChecker_Check__PKGMANDIR(c *check.C) {
-	t := s.Init(c)
+func Test_PlistPathChecker_Check__PKGMANDIR(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("PLIST",
 		PlistCvsID,
@@ -645,8 +675,9 @@ func (s *Suite) Test_PlistPathChecker_Check__PKGMANDIR(c *check.C) {
 		"NOTE: PLIST:2: PLIST files should use \"man/\" instead of \"${PKGMANDIR}\".")
 }
 
-func (s *Suite) Test_PlistPathChecker_checkPathMisc__python_egg(c *check.C) {
-	t := s.Init(c)
+func Test_PlistPathChecker_checkPathMisc__python_egg(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("PLIST",
 		PlistCvsID,
@@ -658,8 +689,9 @@ func (s *Suite) Test_PlistPathChecker_checkPathMisc__python_egg(c *check.C) {
 		"WARN: PLIST:2: Include \"../../lang/python/egg.mk\" instead of listing .egg-info files directly.")
 }
 
-func (s *Suite) Test_PlistPathChecker_checkPathMisc__python_egg_autofix(c *check.C) {
-	t := s.Init(c)
+func Test_PlistPathChecker_checkPathMisc__python_egg_autofix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--show-autofix")
 	t.SetUpPackage("category/package")
@@ -687,8 +719,9 @@ func (s *Suite) Test_PlistPathChecker_checkPathMisc__python_egg_autofix(c *check
 			"with \"${PYSITELIB}/${EGG_INFODIR}\".")
 }
 
-func (s *Suite) Test_PlistPathChecker_checkPathMisc__unwanted_entries(c *check.C) {
-	t := s.Init(c)
+func Test_PlistPathChecker_checkPathMisc__unwanted_entries(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("PLIST",
 		PlistCvsID,
@@ -721,8 +754,9 @@ func (s *Suite) Test_PlistPathChecker_checkPathMisc__unwanted_entries(c *check.C
 		"ERROR: ~/PLIST:12: Paths in PLIST files must be canonical (t/non-canonical).")
 }
 
-func (s *Suite) Test_PlistPathChecker_checkDuplicate(c *check.C) {
-	t := s.Init(c)
+func Test_PlistPathChecker_checkDuplicate(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("PLIST",
 		PlistCvsID,
@@ -736,8 +770,9 @@ func (s *Suite) Test_PlistPathChecker_checkDuplicate(c *check.C) {
 			"already appeared in line 2.")
 }
 
-func (s *Suite) Test_PlistPathChecker_checkDuplicate__OPSYS(c *check.C) {
-	t := s.Init(c)
+func Test_PlistPathChecker_checkDuplicate__OPSYS(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.Chdir("category/package")
@@ -807,8 +842,9 @@ func (s *Suite) Test_PlistPathChecker_checkDuplicate__OPSYS(c *check.C) {
 		"ERROR: PLIST.common_end:3: Path bin/conditional is already listed in PLIST.common:3.")
 }
 
-func (s *Suite) Test_PlistPathChecker_checkPathBin(c *check.C) {
-	t := s.Init(c)
+func Test_PlistPathChecker_checkPathBin(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("PLIST",
 		PlistCvsID,
@@ -821,8 +857,9 @@ func (s *Suite) Test_PlistPathChecker_checkPathBin(c *check.C) {
 		"WARN: PLIST:3: The bin/ directory should not have subdirectories.")
 }
 
-func (s *Suite) Test_PlistPathChecker_checkPathEtc(c *check.C) {
-	t := s.Init(c)
+func Test_PlistPathChecker_checkPathEtc(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("PLIST",
 		PlistCvsID,
@@ -834,8 +871,9 @@ func (s *Suite) Test_PlistPathChecker_checkPathEtc(c *check.C) {
 		"ERROR: PLIST:2: Configuration files must not be registered in the PLIST.")
 }
 
-func (s *Suite) Test_PlistPathChecker_checkPathInfo(c *check.C) {
-	t := s.Init(c)
+func Test_PlistPathChecker_checkPathInfo(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.Chdir("category/package")
@@ -850,8 +888,9 @@ func (s *Suite) Test_PlistPathChecker_checkPathInfo(c *check.C) {
 		"WARN: PLIST:2: Packages that install info files should set INFO_FILES in the Makefile.")
 }
 
-func (s *Suite) Test_PlistPathChecker_checkPathInfo__with_package(c *check.C) {
-	t := s.Init(c)
+func Test_PlistPathChecker_checkPathInfo__with_package(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		"INFO_FILES=\tyes")
@@ -866,8 +905,9 @@ func (s *Suite) Test_PlistPathChecker_checkPathInfo__with_package(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_PlistPathChecker_checkPathInfo__without_package(c *check.C) {
-	t := s.Init(c)
+func Test_PlistPathChecker_checkPathInfo__without_package(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("PLIST",
 		PlistCvsID,
@@ -878,8 +918,9 @@ func (s *Suite) Test_PlistPathChecker_checkPathInfo__without_package(c *check.C)
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_PlistPathChecker_checkPathLib(c *check.C) {
-	t := s.Init(c)
+func Test_PlistPathChecker_checkPathLib(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("PLIST",
 		PlistCvsID,
@@ -902,8 +943,9 @@ func (s *Suite) Test_PlistPathChecker_checkPathLib(c *check.C) {
 			"Use ${PKGLOCALEDIR}/locale and set USE_PKGLOCALEDIR instead.")
 }
 
-func (s *Suite) Test_PlistPathChecker_checkPathLib__libiconv(c *check.C) {
-	t := s.Init(c)
+func Test_PlistPathChecker_checkPathLib__libiconv(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("converters/libiconv")
 	t.Chdir("converters/libiconv")
@@ -917,8 +959,9 @@ func (s *Suite) Test_PlistPathChecker_checkPathLib__libiconv(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_PlistPathChecker_checkPathLib__libtool(c *check.C) {
-	t := s.Init(c)
+func Test_PlistPathChecker_checkPathLib__libtool(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		"USE_LIBTOOL=\tyes")
@@ -933,8 +976,9 @@ func (s *Suite) Test_PlistPathChecker_checkPathLib__libtool(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_PlistPathChecker_checkPathMan(c *check.C) {
-	t := s.Init(c)
+func Test_PlistPathChecker_checkPathMan(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("PLIST",
 		PlistCvsID,
@@ -951,8 +995,9 @@ func (s *Suite) Test_PlistPathChecker_checkPathMan(c *check.C) {
 		"WARN: ~/PLIST:5: Unknown section \"x\" for manual page.")
 }
 
-func (s *Suite) Test_PlistPathChecker_checkPathMan__gz(c *check.C) {
-	t := s.Init(c)
+func Test_PlistPathChecker_checkPathMan__gz(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	pkg := NewPackage(t.File("category/package"))
 	t.Chdir("category/package")
@@ -971,8 +1016,9 @@ func (s *Suite) Test_PlistPathChecker_checkPathMan__gz(c *check.C) {
 		"AUTOFIX: PLIST:2: Replacing \".gz\" with \"\".")
 }
 
-func (s *Suite) Test_PlistPathChecker_checkPathShare(c *check.C) {
-	t := s.Init(c)
+func Test_PlistPathChecker_checkPathShare(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("PLIST",
 		PlistCvsID,
@@ -996,8 +1042,9 @@ func (s *Suite) Test_PlistPathChecker_checkPathShare(c *check.C) {
 		"WARN: ~/PLIST:7: Man pages should be installed into man/, not share/man/.")
 }
 
-func (s *Suite) Test_PlistPathChecker_checkPathShareIcons__using_gnome_icon_theme(c *check.C) {
-	t := s.Init(c)
+func Test_PlistPathChecker_checkPathShareIcons__using_gnome_icon_theme(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileBuildlink3("graphics/gnome-icon-theme/buildlink3.mk")
 	t.SetUpPackage("graphics/gnome-icon-theme-extras",
@@ -1024,8 +1071,9 @@ func (s *Suite) Test_PlistPathChecker_checkPathShareIcons__using_gnome_icon_them
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_PlistPathChecker_checkPathShareIcons__gnome_icon_theme_itself(c *check.C) {
-	t := s.Init(c)
+func Test_PlistPathChecker_checkPathShareIcons__gnome_icon_theme_itself(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileBuildlink3("graphics/gnome-icon-theme/buildlink3.mk",
 		"ICON_THEMES=\tyes")
@@ -1043,8 +1091,9 @@ func (s *Suite) Test_PlistPathChecker_checkPathShareIcons__gnome_icon_theme_itse
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_PlistPathChecker_checkPathShareIcons(c *check.C) {
-	t := s.Init(c)
+func Test_PlistPathChecker_checkPathShareIcons(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("graphics/hicolor-icon-theme")
 	t.CreateFileLines("graphics/hicolor-icon-theme/PLIST",
@@ -1069,8 +1118,9 @@ func (s *Suite) Test_PlistPathChecker_checkPathShareIcons(c *check.C) {
 			"Packages that install icon theme files should set ICON_THEMES.")
 }
 
-func (s *Suite) Test_PlistPathChecker_checkPathShareIcons__hicolor_ok(c *check.C) {
-	t := s.Init(c)
+func Test_PlistPathChecker_checkPathShareIcons__hicolor_ok(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		".include \"../../graphics/hicolor-icon-theme/buildlink3.mk\"")
@@ -1087,8 +1137,9 @@ func (s *Suite) Test_PlistPathChecker_checkPathShareIcons__hicolor_ok(c *check.C
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_PlistPathChecker_checkPathCond(c *check.C) {
-	t := s.Init(c)
+func Test_PlistPathChecker_checkPathCond(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		"PLIST_VARS+=\tmk-undefined mk-yes both",
@@ -1115,8 +1166,9 @@ func (s *Suite) Test_PlistPathChecker_checkPathCond(c *check.C) {
 			"in the package Makefile.")
 }
 
-func (s *Suite) Test_PlistPathChecker_checkCond(c *check.C) {
-	t := s.Init(c)
+func Test_PlistPathChecker_checkCond(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	pkg := t.SetUpPackage("category/package",
 		"PLIST_VARS+=\tboth mk-yes",
@@ -1148,8 +1200,9 @@ func (s *Suite) Test_PlistPathChecker_checkCond(c *check.C) {
 // typically contains ${_o_} and ${_opt_}.
 //
 // See audio/cmus for an example package.
-func (s *Suite) Test_PlistPathChecker_checkCond__unresolvable_variable(c *check.C) {
-	t := s.Init(c)
+func Test_PlistPathChecker_checkCond__unresolvable_variable(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		"PLIST_VARS+=\tmk-only ${UNRESOLVABLE}",
@@ -1169,8 +1222,9 @@ func (s *Suite) Test_PlistPathChecker_checkCond__unresolvable_variable(c *check.
 			"Variable \"UNRESOLVABLE\" is used but not defined.")
 }
 
-func (s *Suite) Test_PlistPathChecker_checkCond__hacks_mk(c *check.C) {
-	t := s.Init(c)
+func Test_PlistPathChecker_checkCond__hacks_mk(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.Chdir("category/package")
@@ -1192,8 +1246,9 @@ func (s *Suite) Test_PlistPathChecker_checkCond__hacks_mk(c *check.C) {
 			"in the package Makefile.")
 }
 
-func (s *Suite) Test_PlistPathChecker_checkOmf__autofix(c *check.C) {
-	t := s.Init(c)
+func Test_PlistPathChecker_checkOmf__autofix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("mk/omf-scrollkeeper.mk",
 		MkCvsID)
@@ -1209,8 +1264,9 @@ func (s *Suite) Test_PlistPathChecker_checkOmf__autofix(c *check.C) {
 		"AUTOFIX: Makefile:20: Deleting this line.")
 }
 
-func (s *Suite) Test_PlistPathChecker_checkOmf__rationale(c *check.C) {
-	t := s.Init(c)
+func Test_PlistPathChecker_checkOmf__rationale(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("mk/omf-scrollkeeper.mk",
 		MkCvsID)
@@ -1226,8 +1282,9 @@ func (s *Suite) Test_PlistPathChecker_checkOmf__rationale(c *check.C) {
 		nil...)
 }
 
-func (s *Suite) Test_PlistPathChecker_checkOmf__ok(c *check.C) {
-	t := s.Init(c)
+func Test_PlistPathChecker_checkOmf__ok(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("mk/omf-scrollkeeper.mk",
 		MkCvsID)
@@ -1245,8 +1302,9 @@ func (s *Suite) Test_PlistPathChecker_checkOmf__ok(c *check.C) {
 		nil...)
 }
 
-func (s *Suite) Test_PlistAsciiChecker_Check(c *check.C) {
-	t := s.Init(c)
+func Test_PlistAsciiChecker_Check(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--explain")
 	lines := t.NewLines("PLIST",
@@ -1304,8 +1362,9 @@ func (s *Suite) Test_PlistAsciiChecker_Check(c *check.C) {
 		"WARN: PLIST:14: Non-ASCII filename \"unicode/00FC/<U+00FC>\".")
 }
 
-func (s *Suite) Test_PlistSortChecker__unsortable(c *check.C) {
-	t := s.Init(c)
+func Test_PlistSortChecker__unsortable(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--show-autofix")
 	lines := t.SetUpFileLines("PLIST",
@@ -1329,8 +1388,9 @@ func (s *Suite) Test_PlistSortChecker__unsortable(c *check.C) {
 
 // Two lines start with the same placeholder, but the remaining text is
 // not sorted correctly.
-func (s *Suite) Test_PlistSortChecker__placeholder_unsorted(c *check.C) {
-	t := s.Init(c)
+func Test_PlistSortChecker__placeholder_unsorted(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--show-autofix")
 	lines := t.SetUpFileLines("PLIST",
@@ -1350,8 +1410,9 @@ func (s *Suite) Test_PlistSortChecker__placeholder_unsorted(c *check.C) {
 // There are two lines containing ${GEM_HOME}, and they are far apart.
 // But assuming that ${GEM_EXTSDIR} and ${GEM_LIBDIR} are both
 // subdirectories of ${GEM_HOME}, they are correctly sorted.
-func (s *Suite) Test_PlistSortChecker__placeholder_prefix(c *check.C) {
-	t := s.Init(c)
+func Test_PlistSortChecker__placeholder_prefix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--show-autofix")
 	lines := t.SetUpFileLines("PLIST",
@@ -1369,8 +1430,9 @@ func (s *Suite) Test_PlistSortChecker__placeholder_prefix(c *check.C) {
 
 // If ${B} is "${A}/file1", the resulting PLIST is in correct order.
 // This combination is unlikely, though.
-func (s *Suite) Test_PlistSortChecker__placeholder_impossible(c *check.C) {
-	t := s.Init(c)
+func Test_PlistSortChecker__placeholder_impossible(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--show-autofix")
 	lines := t.SetUpFileLines("PLIST",
@@ -1384,8 +1446,9 @@ func (s *Suite) Test_PlistSortChecker__placeholder_impossible(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_PlistSortChecker_Check(c *check.C) {
-	t := s.Init(c)
+func Test_PlistSortChecker_Check(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("PLIST",
 		PlistCvsID,
@@ -1399,8 +1462,9 @@ func (s *Suite) Test_PlistSortChecker_Check(c *check.C) {
 			"sorted before \"bin/program2\".")
 }
 
-func (s *Suite) Test_PlistSortChecker_Sort(c *check.C) {
-	t := s.Init(c)
+func Test_PlistSortChecker_Sort(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--autofix")
 	lines := t.SetUpFileLines("PLIST",
@@ -1472,8 +1536,9 @@ func (s *Suite) Test_PlistSortChecker_Sort(c *check.C) {
 		"@exec echo \"after lib/after.la\"") // The footer starts here
 }
 
-func (s *Suite) Test_PlistLine_Autofix(c *check.C) {
-	t := s.Init(c)
+func Test_PlistLine_Autofix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("PLIST", 2, "bin/program")
 	pline := PlistLine{line, nil, line.Text}
@@ -1487,8 +1552,9 @@ func (s *Suite) Test_PlistLine_Autofix(c *check.C) {
 		"WARN: PLIST:2: Warning message.")
 }
 
-func (s *Suite) Test_PlistLine_Errorf(c *check.C) {
-	t := s.Init(c)
+func Test_PlistLine_Errorf(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("PLIST", 2, "bin/program")
 	pline := PlistLine{line, nil, line.Text}
@@ -1499,8 +1565,9 @@ func (s *Suite) Test_PlistLine_Errorf(c *check.C) {
 		"ERROR: PLIST:2: Error message.")
 }
 
-func (s *Suite) Test_PlistLine_Warnf(c *check.C) {
-	t := s.Init(c)
+func Test_PlistLine_Warnf(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("PLIST", 2, "bin/program")
 	pline := PlistLine{line, nil, line.Text}
@@ -1511,8 +1578,9 @@ func (s *Suite) Test_PlistLine_Warnf(c *check.C) {
 		"WARN: PLIST:2: Warning message.")
 }
 
-func (s *Suite) Test_PlistLine_Explain(c *check.C) {
-	t := s.Init(c)
+func Test_PlistLine_Explain(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--explain")
 	line := t.NewLine("PLIST", 2, "bin/program")
@@ -1530,8 +1598,9 @@ func (s *Suite) Test_PlistLine_Explain(c *check.C) {
 		"")
 }
 
-func (s *Suite) Test_PlistLine_RelLine(c *check.C) {
-	t := s.Init(c)
+func Test_PlistLine_RelLine(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--explain")
 	line := t.NewLine("PLIST", 2, "bin/program")
@@ -1543,8 +1612,9 @@ func (s *Suite) Test_PlistLine_RelLine(c *check.C) {
 		"WARN: PLIST:2: Warning, see line 2.")
 }
 
-func (s *Suite) Test_PlistLine_IsPath(c *check.C) {
-	t := s.Init(c)
+func Test_PlistLine_IsPath(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(text string, hasPath bool) {
 		t.CheckEquals((&PlistLine{text: text}).IsPath(), hasPath)
@@ -1564,8 +1634,9 @@ func (s *Suite) Test_PlistLine_IsPath(c *check.C) {
 	test("bin/${VAR}", true)
 }
 
-func (s *Suite) Test_PlistLine_IsPlainPath(c *check.C) {
-	t := s.Init(c)
+func Test_PlistLine_IsPlainPath(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(text string, hasPlainPath bool) {
 		t.CheckEquals((&PlistLine{text: text}).IsPlainPath(), hasPlainPath)
@@ -1585,8 +1656,9 @@ func (s *Suite) Test_PlistLine_IsPlainPath(c *check.C) {
 	test("bin/${VAR}", false)
 }
 
-func (s *Suite) Test_PlistLine_Path(c *check.C) {
-	t := s.Init(c)
+func Test_PlistLine_Path(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(
 		(&PlistLine{text: "relative"}).Path(),
@@ -1596,8 +1668,9 @@ func (s *Suite) Test_PlistLine_Path(c *check.C) {
 		func() { (&PlistLine{text: "/absolute"}).Path() })
 }
 
-func (s *Suite) Test_PlistLine_IsDirective(c *check.C) {
-	t := s.Init(c)
+func Test_PlistLine_IsDirective(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(
 		(&PlistLine{text: "@exec echo done"}).IsDirective(),
@@ -1610,8 +1683,9 @@ func (s *Suite) Test_PlistLine_IsDirective(c *check.C) {
 		false)
 }
 
-func (s *Suite) Test_PlistLine_CheckTrailingWhitespace(c *check.C) {
-	t := s.Init(c)
+func Test_PlistLine_CheckTrailingWhitespace(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("PLIST",
 		PlistCvsID,
@@ -1628,8 +1702,9 @@ func (s *Suite) Test_PlistLine_CheckTrailingWhitespace(c *check.C) {
 		"ERROR: ~/PLIST:4: Pkgsrc does not support filenames ending in whitespace.")
 }
 
-func (s *Suite) Test_PlistLine_CheckDirective(c *check.C) {
-	t := s.Init(c)
+func Test_PlistLine_CheckDirective(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("PLIST",
 		PlistCvsID,
@@ -1657,8 +1732,9 @@ func (s *Suite) Test_PlistLine_CheckDirective(c *check.C) {
 		"WARN: ~/PLIST:13: Unknown PLIST directive \"@unknown\".")
 }
 
-func (s *Suite) Test_NewPlistRank(c *check.C) {
-	t := s.Init(c)
+func Test_NewPlistRank(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -1679,8 +1755,9 @@ func (s *Suite) Test_NewPlistRank(c *check.C) {
 	//  cd $pkgsrcdir && find . -name 'PLIST*' -printf '%f\n' | sort | uniq -c | sort -nr
 }
 
-func (s *Suite) Test_PlistRank_MoreGeneric(c *check.C) {
-	t := s.Init(c)
+func Test_PlistRank_MoreGeneric(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	plain := NewPlistRank("PLIST")
@@ -1707,21 +1784,23 @@ func (s *Suite) Test_PlistRank_MoreGeneric(c *check.C) {
 	rel.reflexive = false
 	rel.transitive = true
 	rel.antisymmetric = true
-	rel.onError = func(s string) { c.Error(s) }
+	rel.onError = func(s string) { t.Errorf("%s", s) }
 
 	rel.check(func(a, b any) bool { return a.(*PlistRank).MoreGeneric(b.(*PlistRank)) })
 }
 
-func (s *Suite) Test_NewPlistLines(c *check.C) {
-	t := s.Init(c)
+func Test_NewPlistLines(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := NewPlistLines()
 
 	t.CheckNotNil(lines.all)
 }
 
-func (s *Suite) Test_PlistLines_Add(c *check.C) {
-	t := s.Init(c)
+func Test_PlistLines_Add(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpFileLines("PLIST",
 		PlistCvsID,

@@ -1,11 +1,10 @@
 package pkglint
 
-import (
-	"gopkg.in/check.v1"
-)
+import "testing"
 
-func (s *Suite) Test_LoadMk(c *check.C) {
-	t := s.Init(c)
+func Test_LoadMk(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.Chdir(".")
 	t.CreateFileLines("filename.mk",
@@ -21,8 +20,9 @@ func (s *Suite) Test_LoadMk(c *check.C) {
 	t.CheckEquals(mklines.mklines[0].Text, "# line 1  continues in line 2")
 }
 
-func (s *Suite) Test_Load(c *check.C) {
-	t := s.Init(c)
+func Test_Load(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	nonexistent := t.File("nonexistent")
 	empty := t.CreateFileLines("empty",
@@ -31,13 +31,13 @@ func (s *Suite) Test_Load(c *check.C) {
 		"hello, world")
 
 	t.CheckNil(Load(nonexistent, 0))
-	t.CheckLen(Load(empty, 0).Lines, 0)
+	t.CheckEquals(len(Load(empty, 0).Lines), 0)
 	t.CheckEquals(Load(oneLiner, 0).Lines[0].Text, "hello, world")
 
 	t.CheckOutputEmpty()
 
 	t.CheckNil(Load(nonexistent, LogErrors))
-	t.CheckLen(Load(empty, LogErrors).Lines, 0)
+	t.CheckEquals(len(Load(empty, LogErrors).Lines), 0)
 	t.CheckEquals(Load(oneLiner, LogErrors).Lines[0].Text, "hello, world")
 
 	t.CheckOutputLines(
@@ -72,8 +72,9 @@ func (s *Suite) Test_Load(c *check.C) {
 // Up to 2019-12-04, pkglint suppressed fatal errors when it was started
 // with the --autofix option. This was another case where the clear
 // separation between diagnostics and technical errors had been confused.
-func (s *Suite) Test_Load__not_found_in_autofix_mode(c *check.C) {
-	t := s.Init(c)
+func Test_Load__not_found_in_autofix_mode(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--autofix")
 	t.Chdir(".")
@@ -83,8 +84,9 @@ func (s *Suite) Test_Load__not_found_in_autofix_mode(c *check.C) {
 		"FATAL: nonexistent: Cannot be read.")
 }
 
-func (s *Suite) Test_convertToLogicalLines__no_continuation(c *check.C) {
-	t := s.Init(c)
+func Test_convertToLogicalLines__no_continuation(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	rawText := "" +
 		"first line\n" +
@@ -97,8 +99,9 @@ func (s *Suite) Test_convertToLogicalLines__no_continuation(c *check.C) {
 	t.CheckEquals(lines.Lines[1].String(), "filename:2: second line")
 }
 
-func (s *Suite) Test_convertToLogicalLines__continuation(c *check.C) {
-	t := s.Init(c)
+func Test_convertToLogicalLines__continuation(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	rawText := "" +
 		"first line, \\\n" +
@@ -119,8 +122,9 @@ func (s *Suite) Test_convertToLogicalLines__continuation(c *check.C) {
 //	"\tprintf '%s\\n' 'none none  space  space  tab\t tab'"
 //
 // This is another of the edge cases probably no-one relies on.
-func (s *Suite) Test_convertToLogicalLines__continuation_spacing(c *check.C) {
-	t := s.Init(c)
+func Test_convertToLogicalLines__continuation_spacing(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	rawText := "" +
 		"\tprintf '%s\\n' 'none\\\n" +
@@ -136,8 +140,9 @@ func (s *Suite) Test_convertToLogicalLines__continuation_spacing(c *check.C) {
 		"\tprintf '%s\\n' 'none none space space tab tab'")
 }
 
-func (s *Suite) Test_convertToLogicalLines__continuation_in_last_line(c *check.C) {
-	t := s.Init(c)
+func Test_convertToLogicalLines__continuation_in_last_line(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	rawText := "" +
 		"last line\\\n"
@@ -151,8 +156,9 @@ func (s *Suite) Test_convertToLogicalLines__continuation_in_last_line(c *check.C
 
 // In Makefiles, comment lines can also have continuations.
 // See devel/bmake/files/unit-tests/comment.mk
-func (s *Suite) Test_convertToLogicalLines__comments(c *check.C) {
-	t := s.Init(c)
+func Test_convertToLogicalLines__comments(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.SetUpFileMkLines("comment.mk",
 		"# This is a comment",
@@ -205,8 +211,9 @@ func (s *Suite) Test_convertToLogicalLines__comments(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_convertToLogicalLines__missing_newline_at_eof(c *check.C) {
-	t := s.Init(c)
+func Test_convertToLogicalLines__missing_newline_at_eof(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	rawText := "" +
 		"The package description\n" +
@@ -220,8 +227,9 @@ func (s *Suite) Test_convertToLogicalLines__missing_newline_at_eof(c *check.C) {
 		"ERROR: DESCR:2: File must end with a newline.")
 }
 
-func (s *Suite) Test_convertToLogicalLines__missing_newline_at_eof_in_continuation_line(c *check.C) {
-	t := s.Init(c)
+func Test_convertToLogicalLines__missing_newline_at_eof_in_continuation_line(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	rawText := "" +
 		"last line\\"
@@ -234,8 +242,9 @@ func (s *Suite) Test_convertToLogicalLines__missing_newline_at_eof_in_continuati
 		"ERROR: filename:1: File must end with a newline.")
 }
 
-func (s *Suite) Test_convertToLogicalLines__missing_newline_at_eof_with_source(c *check.C) {
-	t := s.Init(c)
+func Test_convertToLogicalLines__missing_newline_at_eof_with_source(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--source")
 	rawText := "" +
@@ -250,8 +259,9 @@ func (s *Suite) Test_convertToLogicalLines__missing_newline_at_eof_with_source(c
 		"ERROR: filename:1: File must end with a newline.")
 }
 
-func (s *Suite) Test_nextLogicalLine__commented_multi(c *check.C) {
-	t := s.Init(c)
+func Test_nextLogicalLine__commented_multi(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		"#COMMENTED= \\",
@@ -264,8 +274,9 @@ func (s *Suite) Test_nextLogicalLine__commented_multi(c *check.C) {
 	t.CheckEquals(mkline.HasComment(), false)
 }
 
-func (s *Suite) Test_matchContinuationLine(c *check.C) {
-	t := s.Init(c)
+func Test_matchContinuationLine(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	leadingWhitespace, text, trailingWhitespace, continuation := matchContinuationLine("")
 
@@ -282,8 +293,9 @@ func (s *Suite) Test_matchContinuationLine(c *check.C) {
 	t.CheckEquals(continuation, "\\")
 }
 
-func (s *Suite) Test_ClassifyFile(c *check.C) {
-	t := s.Init(c)
+func Test_ClassifyFile(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(path CurrPath, wantKind TypedFileKind) {
 		tf := ClassifyFile(path)

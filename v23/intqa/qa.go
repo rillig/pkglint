@@ -485,14 +485,14 @@ func (ck *QAChecker) insertionSuggestion(newTest *test) string {
 			test.testee.order >= newTest.testee.order &&
 			test.file == testFile {
 
-			if test.isMethod() {
+			if !test.isMethod() {
 				b, err := os.ReadFile(testFile)
 				if err != nil {
 					panic(err)
 				}
 				s := string(b)
-				i := strings.Index(s, "\nfunc (s *"+test.Type+") "+test.Func+"(")
-				for {
+				i := strings.Index(s, "\nfunc "+test.Func+"(")
+				for i != -1 {
 					prev := strings.LastIndex(s[:i], "\n")
 					if prev != -1 && strings.HasPrefix(s[prev:], "\n//") {
 						i = prev
@@ -501,7 +501,7 @@ func (ck *QAChecker) insertionSuggestion(newTest *test) string {
 					}
 				}
 				if i != -1 {
-					s = s[:i] + skeleton(test.Type, newTest.Func) + s[i:]
+					s = s[:i] + skeleton(newTest.Func) + s[i:]
 					err = os.WriteFile(testFile, []byte(s), 0666)
 					if err != nil {
 						panic(err)
@@ -520,17 +520,18 @@ func (ck *QAChecker) insertionSuggestion(newTest *test) string {
 	if err != nil {
 		return fmt.Sprintf("Insert it in %q.", newTest.file)
 	}
-	err = os.WriteFile(testFile, []byte(string(b)+skeleton("Suite", newTest.Func)), 0666)
+	err = os.WriteFile(testFile, []byte(string(b)+skeleton(newTest.Func)), 0666)
 	if err != nil {
 		panic(err)
 	}
 	return fmt.Sprintf("Inserted it at the bottom of %q.", newTest.file)
 }
 
-func skeleton(typeName, methodName string) string {
+func skeleton(methodName string) string {
 	return "\n" +
-		"func (s *" + typeName + ") " + methodName + "(c *check.C) {\n" +
-		"\tt := s.Init(c)\n" +
+		"func " + methodName + "(tt *testing.T) {\n" +
+		"\tt := NewTester(tt)\n" +
+		"\tdefer t.Done()\n" +
 		"\n" +
 		"\t// TODO\n" +
 		"\n" +

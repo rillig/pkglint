@@ -1,6 +1,6 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import "testing"
 
 // Exotic code examples from the pkgsrc infrastructure.
 // Hopefully, pkgsrc packages don't need such complicated code.
@@ -8,8 +8,9 @@ import "gopkg.in/check.v1"
 // be able to parse and check the infrastructure files as well.
 //
 // See Pkgsrc.loadUntypedVars.
-func (s *Suite) Test_MkLineParser_Parse__infrastructure(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineParser_Parse__infrastructure(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("infra.mk",
 		MkCvsID,
@@ -39,8 +40,9 @@ func (s *Suite) Test_MkLineParser_Parse__infrastructure(c *check.C) {
 		"NOTE: infra.mk:2: This variable value should be aligned to column 41 instead of 39.")
 }
 
-func (s *Suite) Test_MkLineParser_Parse__condition_empty(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineParser_Parse__condition_empty(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	_ = t.NewMkLines("filename.mk",
 		MkCvsID,
@@ -54,8 +56,9 @@ func (s *Suite) Test_MkLineParser_Parse__condition_empty(c *check.C) {
 // In variable assignments, a plain '#' introduces a line comment, unless
 // it is escaped by a backslash. In shell commands, on the other hand, it
 // is interpreted literally.
-func (s *Suite) Test_MkLineParser_Parse__comment_or_not(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineParser_Parse__comment_or_not(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklineVarassignEscaped := t.NewMkLine("filename.mk", 1, "SED_CMD=\t's,\\#,hash,g'")
 
@@ -81,8 +84,9 @@ func (s *Suite) Test_MkLineParser_Parse__comment_or_not(c *check.C) {
 		"WARN: filename.mk:1: The # character starts a makefile comment.")
 }
 
-func (s *Suite) Test_MkLineParser_Parse__commented_lines(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineParser_Parse__commented_lines(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(text string) {
 		mkline := t.NewMkLines("filename.mk", text).mklines[0]
@@ -99,8 +103,9 @@ func (s *Suite) Test_MkLineParser_Parse__commented_lines(c *check.C) {
 	test("\t\t# the comment")
 }
 
-func (s *Suite) Test_MkLineParser_Parse__invalid_lines(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineParser_Parse__invalid_lines(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	_ = t.NewMkLines("filename.mk",
 		MkCvsID,
@@ -119,8 +124,9 @@ func (s *Suite) Test_MkLineParser_Parse__invalid_lines(c *check.C) {
 		"ERROR: filename.mk:7: Unknown makefile line format: \"\\x00 embedded null byte\".")
 }
 
-func (s *Suite) Test_MkLineParser_parseVarassign(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineParser_parseVarassign(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("test.mk", 101,
 		"VARNAME.param?=value # varassign comment")
@@ -134,8 +140,9 @@ func (s *Suite) Test_MkLineParser_parseVarassign(c *check.C) {
 	t.CheckEquals(mkline.Comment(), " varassign comment")
 }
 
-func (s *Suite) Test_MkLineParser_parseVarassign__empty_multiline(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineParser_parseVarassign__empty_multiline(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("test.mk",
 		"VAR=\t\\",
@@ -165,8 +172,9 @@ func (s *Suite) Test_MkLineParser_parseVarassign__empty_multiline(c *check.C) {
 	t.CheckEquals(mkline.Comment(), " nothing")
 }
 
-func (s *Suite) Test_MkLineParser_parseVarassign__leading_space(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineParser_parseVarassign__leading_space(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	_ = t.NewMkLine("rubyversion.mk", 427, " _RUBYVER=\t2.15")
 	_ = t.NewMkLine("bsd.buildlink3.mk", 132, "   ok:=yes")
@@ -177,8 +185,9 @@ func (s *Suite) Test_MkLineParser_parseVarassign__leading_space(c *check.C) {
 		"WARN: rubyversion.mk:427: Makefile lines should not start with space characters.")
 }
 
-func (s *Suite) Test_MkLineParser_parseVarassign__append(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineParser_parseVarassign__append(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("test.mk", 101,
 		"VARNAME+=value")
@@ -189,8 +198,9 @@ func (s *Suite) Test_MkLineParser_parseVarassign__append(c *check.C) {
 	t.CheckEquals(mkline.Varparam(), "")
 }
 
-func (s *Suite) Test_MkLineParser_parseVarassign__varname_with_hash(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineParser_parseVarassign__varname_with_hash(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("Makefile", 123, "VARNAME.#=\tvalue")
 
@@ -210,8 +220,9 @@ func (s *Suite) Test_MkLineParser_parseVarassign__varname_with_hash(c *check.C) 
 //
 // To check that bmake parses them the same, set a breakpoint after the t.NewMkLines
 // and look in t.tmpdir for the location of the file. Then run bmake with that file.
-func (s *Suite) Test_MkLineParser_parseVarassign__escaped_hash_in_value(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineParser_parseVarassign__escaped_hash_in_value(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.SetUpFileMkLines("Makefile",
 		"VAR0=\tvalue#",
@@ -238,8 +249,9 @@ func (s *Suite) Test_MkLineParser_parseVarassign__escaped_hash_in_value(c *check
 		"WARN: ~/Makefile:5: The # character starts a makefile comment.")
 }
 
-func (s *Suite) Test_MkLineParser_matchVarassign(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineParser_matchVarassign(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	testLine := func(line *Line, commented bool, varname, spaceAfterVarname, op, align, value, spaceAfterValue, comment string, diagnostics ...string) {
 		text := line.Text
@@ -288,7 +300,7 @@ func (s *Suite) Test_MkLineParser_matchVarassign(c *check.C) {
 		splitResult.tokens = parser.tokenize(splitResult.main, nil)
 		m, _ := parser.matchVarassign(line, text, &splitResult)
 		if m {
-			c.Errorf("Text %q matches variable assignment but shouldn't.", text)
+			t.Errorf("Text %q matches variable assignment but shouldn't.", text)
 		}
 		t.CheckOutput(diagnostics)
 	}
@@ -452,8 +464,9 @@ func (s *Suite) Test_MkLineParser_matchVarassign(c *check.C) {
 		"")
 }
 
-func (s *Suite) Test_MkLineParser_fixSpaceAfterVarname__show_autofix(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineParser_fixSpaceAfterVarname__show_autofix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--show-autofix", "--source")
 	t.NewMkLine("test.mk", 101,
@@ -466,8 +479,9 @@ func (s *Suite) Test_MkLineParser_fixSpaceAfterVarname__show_autofix(c *check.C)
 		"+\tpkgbase=  package")
 }
 
-func (s *Suite) Test_MkLineParser_fixSpaceAfterVarname__autofix(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineParser_fixSpaceAfterVarname__autofix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	filename := t.CreateFileLines("Makefile",
 		MkCvsID,
@@ -504,8 +518,9 @@ func (s *Suite) Test_MkLineParser_fixSpaceAfterVarname__autofix(c *check.C) {
 		"pkgbase := pkglint")
 }
 
-func (s *Suite) Test_MkLineParser_fixSpaceAfterVarname__preserve_alignment(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineParser_fixSpaceAfterVarname__preserve_alignment(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--show-autofix")
 
@@ -534,8 +549,9 @@ func (s *Suite) Test_MkLineParser_fixSpaceAfterVarname__preserve_alignment(c *ch
 		"AUTOFIX: filename.mk:123: Replacing \"V    +=     \" with \"V+=\\t    \".")
 }
 
-func (s *Suite) Test_MkLineParser_parseShellcmd(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineParser_parseShellcmd(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("test.mk", 101,
 		"\tshell command # shell comment")
@@ -544,8 +560,9 @@ func (s *Suite) Test_MkLineParser_parseShellcmd(c *check.C) {
 	t.CheckEquals(mkline.ShellCommand(), "shell command # shell comment")
 }
 
-func (s *Suite) Test_MkLineParser_parseCommentOrEmpty__comment(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineParser_parseCommentOrEmpty__comment(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("test.mk", 101,
 		"# whole line comment")
@@ -553,16 +570,18 @@ func (s *Suite) Test_MkLineParser_parseCommentOrEmpty__comment(c *check.C) {
 	t.CheckEquals(mkline.IsComment(), true)
 }
 
-func (s *Suite) Test_MkLineParser_parseCommentOrEmpty__empty(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineParser_parseCommentOrEmpty__empty(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("test.mk", 101, "")
 
 	t.CheckEquals(mkline.IsEmpty(), true)
 }
 
-func (s *Suite) Test_MkLineParser_parseDirective(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineParser_parseDirective(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(input, expectedIndent, expectedDirective, expectedArgs, expectedComment string, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, input)
@@ -600,8 +619,9 @@ func (s *Suite) Test_MkLineParser_parseDirective(c *check.C) {
 		"WARN: filename.mk:123: Missing closing \"}\" for \"VAR\".")
 }
 
-func (s *Suite) Test_MkLineParser_parseDirective__escaped_hash(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineParser_parseDirective__escaped_hash(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("test.mk", 101,
 		".  if !empty(PKGNAME:M*-*) && ${RUBY_RAILS_SUPPORTED:[\\#]} == 1 # directive comment")
@@ -613,8 +633,9 @@ func (s *Suite) Test_MkLineParser_parseDirective__escaped_hash(c *check.C) {
 	t.CheckEquals(mkline.DirectiveComment(), "directive comment")
 }
 
-func (s *Suite) Test_MkLineParser_parseInclude(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineParser_parseInclude(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("test.mk", 101,
 		".    include \"../../mk/bsd.prefs.mk\" # include comment")
@@ -627,8 +648,9 @@ func (s *Suite) Test_MkLineParser_parseInclude(c *check.C) {
 	t.CheckEquals(mkline.IsSysinclude(), false)
 }
 
-func (s *Suite) Test_MkLineParser_parseInclude__dash_include(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineParser_parseInclude__dash_include(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("filename.mk", 123, ".-include\t\"${.PARSEDIR}/defs.mk\"")
 	p := NewMkLineParser()
@@ -639,8 +661,9 @@ func (s *Suite) Test_MkLineParser_parseInclude__dash_include(c *check.C) {
 	t.CheckEquals(mkline.IncludedFile(), NewRelPathString("${.PARSEDIR}/defs.mk"))
 }
 
-func (s *Suite) Test_MkLineParser_parseSysinclude(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineParser_parseSysinclude(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("test.mk", 101,
 		".    include <subdir.mk> # sysinclude comment")
@@ -653,8 +676,9 @@ func (s *Suite) Test_MkLineParser_parseSysinclude(c *check.C) {
 	t.CheckEquals(mkline.IsInclude(), false)
 }
 
-func (s *Suite) Test_MkLineParser_parseDependency(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineParser_parseDependency(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("test.mk", 101,
 		"target1 target2: source1 source2")
@@ -664,8 +688,9 @@ func (s *Suite) Test_MkLineParser_parseDependency(c *check.C) {
 	t.CheckEquals(mkline.Sources(), "source1 source2")
 }
 
-func (s *Suite) Test_MkLineParser_parseDependency__space(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineParser_parseDependency__space(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("test.mk", 101,
 		"target : source")
@@ -676,8 +701,9 @@ func (s *Suite) Test_MkLineParser_parseDependency__space(c *check.C) {
 		"NOTE: test.mk:101: Space before colon in dependency line.")
 }
 
-func (s *Suite) Test_MkLineParser_split(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineParser_split(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	expr := b.ExprToken
@@ -1003,8 +1029,9 @@ func (s *Suite) Test_MkLineParser_split(c *check.C) {
 		})
 }
 
-func (s *Suite) Test_MkLineParser_split__preserve_comment(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineParser_split__preserve_comment(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	tokens := b.Tokens
@@ -1061,8 +1088,9 @@ func (s *Suite) Test_MkLineParser_split__preserve_comment(c *check.C) {
 			spaceBeforeComment: " "})
 }
 
-func (s *Suite) Test_MkLineParser_split__unclosed_expr(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineParser_split__unclosed_expr(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	test := func(text string, expected mkLineSplitResult, diagnostics ...string) {
@@ -1100,8 +1128,9 @@ func (s *Suite) Test_MkLineParser_split__unclosed_expr(c *check.C) {
 		"WARN: filename.mk:123: Invalid part \"/apparmor.d ${EGDIR/dbus-1/system.d ${EGDIR/pam.d\" after variable name \"EGDIR\".")
 }
 
-func (s *Suite) Test_MkLineParser_unescapeComment(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineParser_unescapeComment(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(text string, main, comment string) {
 		aMain, aComment := NewMkLineParser().unescapeComment(text)
@@ -1219,8 +1248,9 @@ func (s *Suite) Test_MkLineParser_unescapeComment(c *check.C) {
 		"#comment")
 }
 
-func (s *Suite) Test_MkLineParser_getRawValueAlign__assertion(c *check.C) {
-	t := s.Init(c)
+func Test_MkLineParser_getRawValueAlign__assertion(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	var p MkLineParser
 

@@ -1,9 +1,9 @@
 package pkglint
 
 import (
-	"gopkg.in/check.v1"
 	"reflect"
 	"strings"
+	"testing"
 )
 
 // Path returns a representation of the path in the AST that is
@@ -30,8 +30,9 @@ func (w *MkShWalker) Path() string {
 	return strings.Join(path, ".")
 }
 
-func (s *Suite) Test_MkShWalker_Walk(c *check.C) {
-	t := s.Init(c)
+func Test_MkShWalker_Walk(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	pathFor := map[string]bool{}
 
@@ -269,8 +270,9 @@ func (s *Suite) Test_MkShWalker_Walk(c *check.C) {
 		"            Path List.AndOr.Pipeline.Command.SimpleCommand.[]MkShRedirection.Redirection[2].ShToken[2]")
 }
 
-func (s *Suite) Test_MkShWalker_Walk__empty_callback(c *check.C) {
-	t := s.Init(c)
+func Test_MkShWalker_Walk__empty_callback(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(program string) {
 		line := t.NewLine("filename.mk", 1, "")
@@ -297,8 +299,9 @@ func (s *Suite) Test_MkShWalker_Walk__empty_callback(c *check.C) {
 		"echo 'hello world' 1>/dev/null 2>&1 0</dev/random")
 }
 
-func (s *Suite) Test_MkShWalker_Walk__assertion(c *check.C) {
-	t := s.Init(c)
+func Test_MkShWalker_Walk__assertion(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("filename.mk", 1, "")
 	list, err := parseShellProgram(line, "echo \"hello, world\"")
@@ -313,13 +316,13 @@ func (s *Suite) Test_MkShWalker_Walk__assertion(c *check.C) {
 }
 
 // Just for code coverage, to keep the main code symmetrical.
-func (s *Suite) Test_MkShWalker_walkCommand__empty(c *check.C) {
+func Test_MkShWalker_walkCommand__empty(tt *testing.T) {
 	walker := NewMkShWalker()
 	walker.walkCommand(0, 1, &MkShCommand{})
 }
 
 // Just for code coverage, to keep the main code symmetrical.
-func (s *Suite) Test_MkShWalker_walkCompoundCommand__empty(c *check.C) {
+func Test_MkShWalker_walkCompoundCommand__empty(tt *testing.T) {
 	walker := NewMkShWalker()
 	walker.walkCompoundCommand(&MkShCompoundCommand{})
 }

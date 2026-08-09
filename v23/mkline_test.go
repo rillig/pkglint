@@ -1,11 +1,10 @@
 package pkglint
 
-import (
-	"gopkg.in/check.v1"
-)
+import "testing"
 
-func (s *Suite) Test_MkLine__shell_expr_in_backt_dquot(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine__shell_expr_in_backt_dquot(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("grep", "GREP", AtRunTime)
@@ -21,8 +20,9 @@ func (s *Suite) Test_MkLine__shell_expr_in_backt_dquot(c *check.C) {
 }
 
 // PR 51696, security/py-pbkdf2/Makefile, r1.2
-func (s *Suite) Test_MkLine__comment_in_comment(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine__comment_in_comment(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("Makefile",
@@ -35,8 +35,9 @@ func (s *Suite) Test_MkLine__comment_in_comment(c *check.C) {
 		"WARN: Makefile:2: The # character starts a makefile comment.")
 }
 
-func (s *Suite) Test_MkLine_Varparam(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_Varparam(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("Makefile", 2, "SUBST_SED.${param}=\tvalue")
 
@@ -45,8 +46,9 @@ func (s *Suite) Test_MkLine_Varparam(c *check.C) {
 	t.CheckEquals(varparam, "${param}")
 }
 
-func (s *Suite) Test_MkLine_ValueAlign__commented(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_ValueAlign__commented(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("Makefile", 2, "#SUBST_SED.${param}=\tvalue")
 
@@ -56,8 +58,9 @@ func (s *Suite) Test_MkLine_ValueAlign__commented(c *check.C) {
 	t.CheckEquals(valueAlign, "#SUBST_SED.${param}=\t")
 }
 
-func (s *Suite) Test_MkLine_FirstLineContainsValue(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_FirstLineContainsValue(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := func(texts ...string) []string { return texts }
 	test := func(lines []string, expected bool) {
@@ -102,8 +105,9 @@ func (s *Suite) Test_MkLine_FirstLineContainsValue(c *check.C) {
 
 // Demonstrates how a simple condition is structured internally.
 // For most of the checks, using cond.Walk is the simplest way to go.
-func (s *Suite) Test_MkLine_Cond(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_Cond(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("Makefile", 2, ".if ${VAR} == Value")
 
@@ -114,8 +118,9 @@ func (s *Suite) Test_MkLine_Cond(c *check.C) {
 	t.CheckEquals(mkline.Cond(), cond)
 }
 
-func (s *Suite) Test_MkLine_NeedsCond(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_NeedsCond(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(text string, expected bool, expectedLines ...string) {
 		defer func() {
@@ -133,8 +138,9 @@ func (s *Suite) Test_MkLine_NeedsCond(c *check.C) {
 	test(".elifnmake target", true)
 }
 
-func (s *Suite) Test_MkLine_IncludedFileFull(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_IncludedFileFull(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(including CurrPath, included RelPath, resolved CurrPath) {
 		text := sprintf(".include %q", included)
@@ -168,28 +174,31 @@ func (s *Suite) Test_MkLine_IncludedFileFull(c *check.C) {
 // is not a pointer type anymore.
 //
 // See https://github.com/golang/go/issues/28045.
-func (s *Suite) Test_MkLine_ConditionalVars(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_ConditionalVars(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("Makefile", 45, ".include \"../../category/package/buildlink3.mk\"")
 
-	t.CheckLen(mkline.ConditionalVars(), 0)
+	t.CheckEquals(len(mkline.ConditionalVars()), 0)
 
 	mkline.SetConditionalVars([]string{"OPSYS"})
 
 	t.CheckDeepEquals(mkline.ConditionalVars(), []string{"OPSYS"})
 }
 
-func (s *Suite) Test_MkLine_Tokenize__commented_varassign(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_Tokenize__commented_varassign(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("filename.mk", 123, "#VAR=\tvalue ${VAR} suffix text")
 
-	t.CheckLen(mkline.Tokenize(mkline.Value(), false), 3)
+	t.CheckEquals(len(mkline.Tokenize(mkline.Value(), false)), 3)
 }
 
-func (s *Suite) Test_MkLine_ValueSplit(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_ValueSplit(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(value string, expected ...string) {
 		mkline := t.NewMkLine("Makefile", 1, "PATH=\t"+value)
@@ -228,16 +237,18 @@ func (s *Suite) Test_MkLine_ValueSplit(c *check.C) {
 
 }
 
-func (s *Suite) Test_MkLine_ValueSplit__invalid_argument(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_ValueSplit__invalid_argument(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("filename.mk", 123, "VAR=\tvalue")
 
 	t.ExpectAssert(func() { mkline.ValueSplit("value", "") })
 }
 
-func (s *Suite) Test_MkLine_ValueFields(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_ValueFields(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(value string, expected ...string) {
 		mkline := t.NewMkLine("Makefile", 1, "VAR=\t"+value)
@@ -309,8 +320,9 @@ func (s *Suite) Test_MkLine_ValueFields(c *check.C) {
 }
 
 // Before 2018-11-26, this test panicked.
-func (s *Suite) Test_MkLine_ValueFields__adjacent_vars(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_ValueFields__adjacent_vars(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(value string, expected ...string) {
 		mkline := t.NewMkLine("Makefile", 1, "")
@@ -324,8 +336,9 @@ func (s *Suite) Test_MkLine_ValueFields__adjacent_vars(c *check.C) {
 		"${WRKSRC}")
 }
 
-func (s *Suite) Test_MkLine_ValueFields__compared_to_splitIntoShellTokens(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_ValueFields__compared_to_splitIntoShellTokens(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	url := "http://registry.gimp.org/file/fix-ca.c?action=download&id=9884&file="
 	mkline := t.NewMkLine("filename.mk", 123, "MASTER_SITES=\t"+url)
 
@@ -352,8 +365,9 @@ func (s *Suite) Test_MkLine_ValueFields__compared_to_splitIntoShellTokens(c *che
 	// Most probably, the shell will complain about it when it is executed.
 }
 
-func (s *Suite) Test_MkLine_ValueFields__escaped_number_sign(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_ValueFields__escaped_number_sign(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	mklines := t.NewMkLines("filename.mk",
 		".SHELL: \\",
 		"\tname=sh \\",
@@ -366,8 +380,9 @@ func (s *Suite) Test_MkLine_ValueFields__escaped_number_sign(c *check.C) {
 	t.CheckDeepEquals(words, []string{"name=sh", "path=${.SHELL}", "quiet=\"# .echoOff\""})
 }
 
-func (s *Suite) Test_MkLine_ValueTokens(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_ValueTokens(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 	text := b.TextToken
 	exprText := b.ExprTextToken
@@ -406,8 +421,9 @@ func (s *Suite) Test_MkLine_ValueTokens(c *check.C) {
 		"WARN: Makefile:1: Missing closing \"}\" for \"UNFINISHED\".")
 }
 
-func (s *Suite) Test_MkLine_ValueTokens__parse_error(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_ValueTokens__parse_error(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("filename.mk", 123, "VAR=\t$")
 
@@ -423,8 +439,9 @@ func (s *Suite) Test_MkLine_ValueTokens__parse_error(c *check.C) {
 	t.CheckEquals(rest, "$")
 }
 
-func (s *Suite) Test_MkLine_ValueTokens__caching(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_ValueTokens__caching(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	mkline := t.NewMkLine("Makefile", 1, "PATH=\tvalue ${UNFINISHED")
@@ -445,8 +462,9 @@ func (s *Suite) Test_MkLine_ValueTokens__caching(c *check.C) {
 	t.CheckEquals(rest2, rest)
 }
 
-func (s *Suite) Test_MkLine_ValueTokens__caching_parse_error(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_ValueTokens__caching_parse_error(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	mkline := t.NewMkLine("Makefile", 1, "PATH=\t${UNFINISHED")
@@ -464,8 +482,9 @@ func (s *Suite) Test_MkLine_ValueTokens__caching_parse_error(c *check.C) {
 	t.CheckEquals(rest2, rest)
 }
 
-func (s *Suite) Test_MkLine_ValueTokens__warnings(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_ValueTokens__warnings(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -478,8 +497,9 @@ func (s *Suite) Test_MkLine_ValueTokens__warnings(c *check.C) {
 		"WARN: Makefile:2: Use curly braces {} instead of round parentheses () for ROUND.")
 }
 
-func (s *Suite) Test_MkLine_Fields__varassign(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_Fields__varassign(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(value string, expected ...string) {
 		mkline := t.NewMkLine("Makefile", 1, "PATH=\t"+value)
@@ -505,8 +525,9 @@ func (s *Suite) Test_MkLine_Fields__varassign(c *check.C) {
 		"\"\t\"")
 }
 
-func (s *Suite) Test_MkLine_Fields__for(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_Fields__for(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(value string, expected ...string) {
 		mkline := t.NewMkLine("Makefile", 1, ".for "+value)
@@ -537,8 +558,9 @@ func (s *Suite) Test_MkLine_Fields__for(c *check.C) {
 		"\"\t\"")
 }
 
-func (s *Suite) Test_MkLine_Fields__semicolons(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_Fields__semicolons(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("filename.mk", 123, "VAR=\tword1 word2;;;")
 	words := mkline.Fields()
@@ -546,8 +568,9 @@ func (s *Suite) Test_MkLine_Fields__semicolons(c *check.C) {
 	t.CheckDeepEquals(words, []string{"word1", "word2;;;"})
 }
 
-func (s *Suite) Test_MkLine_Fields__expr_with_embedded_space(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_Fields__expr_with_embedded_space(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("filename.mk", 123, "VAR=\t${VAR:S/ /_/g}")
 
@@ -556,8 +579,9 @@ func (s *Suite) Test_MkLine_Fields__expr_with_embedded_space(c *check.C) {
 	t.CheckDeepEquals(words, []string{"${VAR:S/ /_/g}"})
 }
 
-func (s *Suite) Test_MkLine_ResolveExprsInRelPath(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_ResolveExprsInRelPath(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("lang/lua53/Makefile")
 	t.CreateFileLines("lang/php72/Makefile")
@@ -592,8 +616,9 @@ func (s *Suite) Test_MkLine_ResolveExprsInRelPath(c *check.C) {
 	test("${PKGSRCDIR}", "../..")
 }
 
-func (s *Suite) Test_MkLine_ResolveExprsInRelPath__directory_depth(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_ResolveExprsInRelPath__directory_depth(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.SetUpFileMkLines("multimedia/totem/filename.mk",
@@ -610,8 +635,9 @@ func (s *Suite) Test_MkLine_ResolveExprsInRelPath__directory_depth(c *check.C) {
 }
 
 // Just for code coverage
-func (s *Suite) Test_MkLine_ResolveExprsInRelPath__without_tracing(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_ResolveExprsInRelPath__without_tracing(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.DisableTracing()
 	t.SetUpVartypes()
@@ -625,8 +651,9 @@ func (s *Suite) Test_MkLine_ResolveExprsInRelPath__without_tracing(c *check.C) {
 		"WARN: ~/buildlink3.mk:2: Variable \"PKGPATH.multimedia/totem\" is used but not defined.")
 }
 
-func (s *Suite) Test_MkLine_ResolveExprsInRelPath__assertion(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_ResolveExprsInRelPath__assertion(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.Chdir(".")
@@ -640,8 +667,9 @@ func (s *Suite) Test_MkLine_ResolveExprsInRelPath__assertion(c *check.C) {
 
 }
 
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__unknown_rhs(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_VariableNeedsQuoting__unknown_rhs(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("filename.mk", 1, "PKGNAME:= ${UNKNOWN}")
 	t.SetUpVartypes()
@@ -652,8 +680,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__unknown_rhs(c *check.C) {
 	t.CheckEquals(nq, unknown)
 }
 
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__append_URL_to_list_of_URLs(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_VariableNeedsQuoting__append_URL_to_list_of_URLs(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpMasterSite("MASTER_SITE_SOURCEFORGE", "http://downloads.sourceforge.net/sourceforge/")
@@ -672,8 +701,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__append_URL_to_list_of_URLs(c *
 	t.CheckOutputEmpty() // Up to version 5.3.6, pkglint warned about a missing :Q here, which was wrong.
 }
 
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__assign_list_to_list(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_VariableNeedsQuoting__assign_list_to_list(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpMasterSite("MASTER_SITE_SOURCEFORGE", "http://downloads.sourceforge.net/sourceforge/")
@@ -687,8 +717,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__assign_list_to_list(c *check.C
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__eval_shell(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_VariableNeedsQuoting__eval_shell(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.Chdir("category/package")
@@ -710,8 +741,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__eval_shell(c *check.C) {
 		"NOTE: builtin.mk:5: The :Q modifier isn't necessary for ${BUILTIN_PKG.Xfixes} here.")
 }
 
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_in_single_quotes(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_VariableNeedsQuoting__command_in_single_quotes(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("Makefile",
@@ -725,8 +757,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_in_single_quotes(c *ch
 			"and make sure the variable appears outside of any quoting characters.")
 }
 
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_in_command(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_VariableNeedsQuoting__command_in_command(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("find", "FIND", AtRunTime)
@@ -743,8 +776,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_in_command(c *check.C)
 		"WARN: Makefile:2: The exitcode of \"${FIND}\" at the left of the | operator is ignored.")
 }
 
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__word_as_part_of_word(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_VariableNeedsQuoting__word_as_part_of_word(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("Makefile",
@@ -762,8 +796,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__word_as_part_of_word(c *check.
 // would be misplaced, therefore no warning is issued in both these cases.
 //
 // Based on graphics/circos/Makefile.
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_as_command_argument(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_VariableNeedsQuoting__command_as_command_argument(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpTool("perl", "PERL5", AtRunTime)
 	t.SetUpTool("bash", "BASH", AtRunTime)
@@ -781,8 +816,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_as_command_argument(c 
 }
 
 // As seen in mail/mailfront/Makefile.
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__URL_as_part_of_word_in_list(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_VariableNeedsQuoting__URL_as_part_of_word_in_list(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("Makefile",
@@ -794,8 +830,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__URL_as_part_of_word_in_list(c 
 	t.CheckOutputEmpty() // Don't suggest to use ${HOMEPAGE:Q}.
 }
 
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__MASTER_SITES_and_HOMEPAGE(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_VariableNeedsQuoting__MASTER_SITES_and_HOMEPAGE(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("Makefile",
@@ -817,8 +854,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__MASTER_SITES_and_HOMEPAGE(c *c
 // As a side effect, it sometimes issued wrong warnings about the :Q modifier.
 //
 // As seen in www/firefox31/xpi.mk.
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_in_subshell(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_VariableNeedsQuoting__command_in_subshell(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("awk", "AWK", AtRunTime)
@@ -838,8 +876,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_in_subshell(c *check.C
 // LDFLAGS (and even more so CPPFLAGS and CFLAGS) may contain special
 // shell characters like quotes or backslashes. Therefore, quoting them
 // correctly is trickier than with other variables.
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__LDFLAGS_in_single_quotes(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_VariableNeedsQuoting__LDFLAGS_in_single_quotes(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("x11/mlterm/Makefile",
@@ -855,8 +894,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__LDFLAGS_in_single_quotes(c *ch
 }
 
 // No quoting is necessary when lists of options are appended to each other.
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__package_options(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_VariableNeedsQuoting__package_options(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("Makefile",
@@ -869,8 +909,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__package_options(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__tool_in_quotes_in_subshell_in_shellwords(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_VariableNeedsQuoting__tool_in_quotes_in_subshell_in_shellwords(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpTool("echo", "ECHO", AtRunTime)
 	t.SetUpTool("sh", "SH", AtRunTime)
@@ -885,8 +926,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__tool_in_quotes_in_subshell_in_
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__LDADD_in_BUILDLINK_TRANSFORM(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_VariableNeedsQuoting__LDADD_in_BUILDLINK_TRANSFORM(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("x11/qt5-qtbase/Makefile.common",
@@ -899,8 +941,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__LDADD_in_BUILDLINK_TRANSFORM(c
 		"WARN: x11/qt5-qtbase/Makefile.common:1: Use ${BUILDLINK_LDADD.dl:Q} instead of ${BUILDLINK_LDADD.dl:M*}.")
 }
 
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_in_message(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_VariableNeedsQuoting__command_in_message(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("benchmarks/iozone/Makefile",
@@ -914,8 +957,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_in_message(c *check.C)
 
 // Since a comment may be appended to, it is not necessary to mention
 // BtComment in the SUBST_MESSAGE case in VariableNeedsQuoting.
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_in_package_comment(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_VariableNeedsQuoting__command_in_package_comment(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("benchmarks/iozone/Makefile",
@@ -927,8 +971,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__command_in_package_comment(c *
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__guessed_list_variable_in_quotes(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_VariableNeedsQuoting__guessed_list_variable_in_quotes(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("audio/jack-rack/Makefile",
@@ -942,8 +987,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__guessed_list_variable_in_quote
 		"WARN: audio/jack-rack/Makefile:3: The variable LADSPA_PLUGIN_PATH should be quoted as part of a shell word.")
 }
 
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__list_in_list(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_VariableNeedsQuoting__list_in_list(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("x11/eterm/Makefile",
@@ -957,8 +1003,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__list_in_list(c *check.C) {
 		"WARN: x11/eterm/Makefile:2: Variable \"PIXMAP_FILES\" is used but not defined.")
 }
 
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__PKGNAME_and_URL_list_in_URL_list(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_VariableNeedsQuoting__PKGNAME_and_URL_list_in_URL_list(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpMasterSite("MASTER_SITE_GNOME", "http://ftp.gnome.org/")
 	t.SetUpVartypes()
@@ -971,8 +1018,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__PKGNAME_and_URL_list_in_URL_li
 	t.CheckOutputEmpty() // Don't warn about missing :Q modifiers.
 }
 
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__tool_in_CONFIGURE_ENV(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_VariableNeedsQuoting__tool_in_CONFIGURE_ENV(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("tar", "TAR", AtRunTime)
@@ -991,8 +1039,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__tool_in_CONFIGURE_ENV(c *check
 		"NOTE: Makefile:3: The :Q modifier isn't necessary for ${TOOLS_TAR} here.")
 }
 
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__backticks(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_VariableNeedsQuoting__backticks(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("cat", "CAT", AtRunTime)
@@ -1018,8 +1067,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__backticks(c *check.C) {
 // the :Q modifier can be safely removed since pkgsrc will never support
 // having special characters in these directory names.
 // For guessed variable types, be cautious and don't autofix them.
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__only_remove_known(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_VariableNeedsQuoting__only_remove_known(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--autofix")
 	t.SetUpVartypes()
@@ -1045,8 +1095,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__only_remove_known(c *check.C) 
 
 // TODO: COMPILER_RPATH_FLAG and LINKER_RPATH_FLAG have different types
 // defined in vardefs.go; examine why.
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__shellword_part(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_VariableNeedsQuoting__shellword_part(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -1070,8 +1121,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__shellword_part(c *check.C) {
 // The original intention of having both CONFIG_SHELL and CONFIG_SHELL_FLAGS
 // was to separate the command from its arguments.
 // It doesn't hurt though if the command includes some of the arguments as well.
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__tool_in_shell_command(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_VariableNeedsQuoting__tool_in_shell_command(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("bash", "BASH", AtRunTime)
@@ -1094,8 +1146,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__tool_in_shell_command(c *check
 //
 // It is not possible to construct this scenario by calling mklines.Check(),
 // therefore it is specially crafted.
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__tool_in_unknown_quotes(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_VariableNeedsQuoting__tool_in_unknown_quotes(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("bash", "BASH", AtRunTime)
@@ -1117,8 +1170,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__tool_in_unknown_quotes(c *chec
 	t.CheckEquals(needsQuoting, yes)
 }
 
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__tool_in_quoted_word_part(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_VariableNeedsQuoting__tool_in_quoted_word_part(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("tool", "TOOL", AtRunTime)
@@ -1145,8 +1199,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__tool_in_quoted_word_part(c *ch
 		"WARN: ~/Makefile:2: Use ${TOOL:Q} instead of ${TOOL}.")
 }
 
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__D_and_U_modifiers(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_VariableNeedsQuoting__D_and_U_modifiers(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -1167,8 +1222,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__D_and_U_modifiers(c *check.C) 
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__only_D_modifier(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_VariableNeedsQuoting__only_D_modifier(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -1192,8 +1248,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__only_D_modifier(c *check.C) {
 
 // As of October 2018, these examples from real pkgsrc end up in the
 // final "unknown" case.
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__uncovered_cases(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_VariableNeedsQuoting__uncovered_cases(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--explain")
 	t.SetUpVartypes()
@@ -1286,8 +1343,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__uncovered_cases(c *check.C) {
 
 // The commands from _ULIMIT_CMD do not affect the parsing of shell commands,
 // not even if they are glued to a second variable or another shell command.
-func (s *Suite) Test_MkLine_VariableNeedsQuoting__ULIMIT_CMD(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_VariableNeedsQuoting__ULIMIT_CMD(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall")
 	t.SetUpVartypes()
@@ -1309,8 +1367,9 @@ func (s *Suite) Test_MkLine_VariableNeedsQuoting__ULIMIT_CMD(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLine_ForEachUsed(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_ForEachUsed(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -1361,8 +1420,9 @@ func (s *Suite) Test_MkLine_ForEachUsed(c *check.C) {
 		"WARN: Makefile:14: $x is ambiguous. Use ${x} if you mean a Make variable or $$x if you mean a shell variable.")
 }
 
-func (s *Suite) Test_MkLine_UnquoteShell(c *check.C) {
-	t := s.Init(c)
+func Test_MkLine_UnquoteShell(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(input, output string, diagnostics ...string) {
 		mkline := t.NewMkLine("filename.mk", 1, "")
@@ -1410,17 +1470,26 @@ func (s *Suite) Test_MkLine_UnquoteShell(c *check.C) {
 			"may lead to unintended file globbing.")
 }
 
-func (s *Suite) Test_NewMkOperator(c *check.C) {
-	t := s.Init(c)
+func Test_NewMkOperator(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(NewMkOperator(":="), opAssignEval)
 	t.CheckEquals(NewMkOperator("="), opAssign)
 
-	c.Check(func() { NewMkOperator("???") }, check.Panics, "Invalid operator: ???")
+	var p any
+	func() {
+		defer func() {
+			p = recover()
+		}()
+		NewMkOperator("???")
+	}()
+	t.CheckEquals(p, "Invalid operator: ???")
 }
 
-func (s *Suite) Test_ExprContext_String(c *check.C) {
-	t := s.Init(c)
+func Test_ExprContext_String(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	vartype := G.Pkgsrc.VariableType(nil, "PKGNAME")
@@ -1429,8 +1498,9 @@ func (s *Suite) Test_ExprContext_String(c *check.C) {
 	t.CheckEquals(ectx.String(), "(Pkgname (package-settable) time:unknown quoting:backt wordpart:false)")
 }
 
-func (s *Suite) Test_Indentation(c *check.C) {
-	t := s.Init(c)
+func Test_Indentation(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	ind := NewIndentation(nil)
 
@@ -1468,13 +1538,14 @@ func (s *Suite) Test_Indentation(c *check.C) {
 
 	ind.Pop()
 
-	t.CheckLen(ind.Varnames(), 0)
+	t.CheckEquals(len(ind.Varnames()), 0)
 	t.CheckEquals(ind.IsConditional(), false)
 	t.CheckEquals(ind.String(), "[]")
 }
 
-func (s *Suite) Test_Indentation__realistic(c *check.C) {
-	t := s.Init(c)
+func Test_Indentation__realistic(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
@@ -1501,8 +1572,9 @@ func (s *Suite) Test_Indentation__realistic(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_Indentation_String(c *check.C) {
-	t := s.Init(c)
+func Test_Indentation_String(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		".if exists(/bin)",
@@ -1521,8 +1593,9 @@ func (s *Suite) Test_Indentation_String(c *check.C) {
 	t.CheckEquals(str, "[2]")
 }
 
-func (s *Suite) Test_Indentation_RememberUsedVariables(c *check.C) {
-	t := s.Init(c)
+func Test_Indentation_RememberUsedVariables(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("Makefile", 123, ".if ${PKGREVISION} > 0")
 	ind := NewIndentation(nil)
@@ -1534,8 +1607,9 @@ func (s *Suite) Test_Indentation_RememberUsedVariables(c *check.C) {
 	t.CheckDeepEquals(ind.Varnames(), []string{"PKGREVISION"})
 }
 
-func (s *Suite) Test_Indentation_Varnames__repetition(c *check.C) {
-	t := s.Init(c)
+func Test_Indentation_Varnames__repetition(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/other")
 	t.CreateFileBuildlink3("category/other/buildlink3.mk")
@@ -1564,8 +1638,9 @@ func (s *Suite) Test_Indentation_Varnames__repetition(c *check.C) {
 // Multiple-inclusion guards are too technical to be of any use on
 // the application level. Therefore, they are filtered out early, in
 // Indentation.AddVar.
-func (s *Suite) Test_Indentation_Varnames__guard(c *check.C) {
-	t := s.Init(c)
+func Test_Indentation_Varnames__guard(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
@@ -1585,8 +1660,9 @@ func (s *Suite) Test_Indentation_Varnames__guard(c *check.C) {
 	t.CheckDeepEquals(varnames, []string{"VAR"})
 }
 
-func (s *Suite) Test_Indentation_TrackAfter__checked_files(c *check.C) {
-	t := s.Init(c)
+func Test_Indentation_TrackAfter__checked_files(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("file.mk",
 		MkCvsID,
@@ -1607,8 +1683,9 @@ func (s *Suite) Test_Indentation_TrackAfter__checked_files(c *check.C) {
 		"ERROR: file.mk:4: Relative path \"other.mk\" does not exist.")
 }
 
-func (s *Suite) Test_Indentation_TrackAfter__lonely_else(c *check.C) {
-	t := s.Init(c)
+func Test_Indentation_TrackAfter__lonely_else(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("file.mk",
 		MkCvsID,
@@ -1623,8 +1700,9 @@ func (s *Suite) Test_Indentation_TrackAfter__lonely_else(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MatchMkInclude(c *check.C) {
-	t := s.Init(c)
+func Test_MatchMkInclude(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(input, expectedIndent, expectedDirective string, expectedFilename RelPath, expectedComment string) {
 		parser := NewMkLineParser()
@@ -1639,7 +1717,7 @@ func (s *Suite) Test_MatchMkInclude(c *check.C) {
 	testFail := func(input string) {
 		m, _, _, _ := MatchMkInclude(input)
 		if m {
-			c.Errorf("Text %q unexpectedly matched.", input)
+			tt.Errorf("Text %q unexpectedly matched.", input)
 		}
 	}
 

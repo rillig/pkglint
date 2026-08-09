@@ -1,8 +1,8 @@
 package pkglint
 
 import (
-	"gopkg.in/check.v1"
 	"strings"
+	"testing"
 )
 
 type MkTokenBuilder struct{}
@@ -35,8 +35,9 @@ func (MkTokenBuilder) Expr(varname string, modifiers ...MkExprModifier) *MkExpr 
 	return NewMkExpr(varname, modifiers...)
 }
 
-func (s *Suite) Test_NewMkExpr(c *check.C) {
-	t := s.Init(c)
+func Test_NewMkExpr(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	expr := NewMkExpr("VARNAME", "Q")
 
@@ -45,16 +46,18 @@ func (s *Suite) Test_NewMkExpr(c *check.C) {
 	t.CheckDeepEquals(expr.modifiers, []MkExprModifier{"Q"})
 }
 
-func (s *Suite) Test_MkExpr_String(c *check.C) {
-	t := s.Init(c)
+func Test_MkExpr_String(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	expr := NewMkExpr("VARNAME", "S,:,colon,", "Q")
 
 	t.CheckEquals(expr.String(), "${VARNAME:S,:,colon,:Q}")
 }
 
-func (s *Suite) Test_MkExprModifier_String(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprModifier_String(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(mod MkExprModifier, str string) {
 		t.CheckEquals(mod.String(), str)
@@ -65,8 +68,9 @@ func (s *Suite) Test_MkExprModifier_String(c *check.C) {
 	test(":", ":")
 }
 
-func (s *Suite) Test_MkExprModifier_Quoted(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprModifier_Quoted(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(mod MkExprModifier, quoted string) {
 		t.CheckEquals(mod.Quoted("}"), quoted)
@@ -79,29 +83,33 @@ func (s *Suite) Test_MkExprModifier_Quoted(c *check.C) {
 	test("#", "\\#")
 }
 
-func (s *Suite) Test_MkExprModifier_HasPrefix(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprModifier_HasPrefix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(MkExprModifier("Q").HasPrefix("Q"), true)
 	t.CheckEquals(MkExprModifier("S/from/to/1g").HasPrefix("Q"), false)
 }
 
-func (s *Suite) Test_MkExprModifier_IsQ(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprModifier_IsQ(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(MkExprModifier("Q").IsQ(), true)
 	t.CheckEquals(MkExprModifier("S/from/to/1g").IsQ(), false)
 }
 
-func (s *Suite) Test_MkExprModifier_IsSuffixSubst(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprModifier_IsSuffixSubst(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(MkExprModifier("=suffix").IsSuffixSubst(), true)
 	t.CheckEquals(MkExprModifier("S,=,eq,").IsSuffixSubst(), false)
 }
 
-func (s *Suite) Test_MkExprModifier_MatchSubst(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprModifier_MatchSubst(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mod := MkExprModifier("S/from/to/1g")
 
@@ -114,8 +122,9 @@ func (s *Suite) Test_MkExprModifier_MatchSubst(c *check.C) {
 	t.CheckEquals(options, "1g")
 }
 
-func (s *Suite) Test_MkExprModifier_MatchSubst__backslash(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprModifier_MatchSubst__backslash(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mod := MkExprModifier("S/\\//\\:/")
 
@@ -134,8 +143,9 @@ func (s *Suite) Test_MkExprModifier_MatchSubst__backslash(c *check.C) {
 //
 // Using the backslash as separator means that it cannot be used for anything
 // else, not even for escaping other characters.
-func (s *Suite) Test_MkExprModifier_MatchSubst__backslash_as_separator(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprModifier_MatchSubst__backslash_as_separator(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mod := MkExprModifier("S\\.post1\\\\1")
 
@@ -148,8 +158,9 @@ func (s *Suite) Test_MkExprModifier_MatchSubst__backslash_as_separator(c *check.
 	t.CheckEquals(options, "1")
 }
 
-func (s *Suite) Test_MkExprModifier_Subst(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprModifier_Subst(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(mod, str string, ok bool, result string) {
 		m := MkExprModifier(mod)
@@ -211,8 +222,9 @@ func (s *Suite) Test_MkExprModifier_Subst(c *check.C) {
 			"\"S,long,long long,g\" => \"A long long story\"")
 }
 
-func (s *Suite) Test_MkExprModifier_EvalSubst(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprModifier_EvalSubst(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(s string, left bool, from string, right bool, to string, flags string, ok bool, result string) {
 		mod := MkExprModifier("")
@@ -253,8 +265,9 @@ func (s *Suite) Test_MkExprModifier_EvalSubst(c *check.C) {
 	test("echo $$$$", false, "$$", false, "dollar", "g", true, "echo dollardollar")
 }
 
-func (s *Suite) Test_MkExprModifier_MatchMatch(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprModifier_MatchMatch(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	testFail := func(modifier MkExprModifier) {
 		mod := modifier
@@ -277,15 +290,17 @@ func (s *Suite) Test_MkExprModifier_MatchMatch(c *check.C) {
 	test("Npattern", false, "pattern", true)
 }
 
-func (s *Suite) Test_MkExprModifier_IsToLower(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprModifier_IsToLower(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(MkExprModifier("tl").IsToLower(), true)
 	t.CheckEquals(MkExprModifier("tu").IsToLower(), false)
 }
 
-func (s *Suite) Test_MkExprModifier_ChangesList(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprModifier_ChangesList(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(mod MkExprModifier, changes bool) {
 		t.CheckEquals(mod.ChangesList(), changes)
@@ -316,8 +331,9 @@ func (s *Suite) Test_MkExprModifier_ChangesList(c *check.C) {
 
 // Ensures that ChangesList cannot be called with an empty string as modifier.
 // Therefore, it is safe to index text[0] without a preceding length check.
-func (s *Suite) Test_MkExprModifier_ChangesList__empty(c *check.C) {
-	t := s.Init(c)
+func Test_MkExprModifier_ChangesList__empty(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("filename.mk", 123, "\t${VAR:}")
 
@@ -334,8 +350,9 @@ func (s *Suite) Test_MkExprModifier_ChangesList__empty(c *check.C) {
 	t.CheckEquals(n, 100)
 }
 
-func (s *Suite) Test_MkExpr_Mod(c *check.C) {
-	t := s.Init(c)
+func Test_MkExpr_Mod(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(exprText string, mod string) {
 		line := t.NewLine("filename.mk", 123, "")
@@ -348,16 +365,18 @@ func (s *Suite) Test_MkExpr_Mod(c *check.C) {
 	test("${PATH:ts::Q}", ":ts::Q")
 }
 
-func (s *Suite) Test_MkExpr_IsExpression(c *check.C) {
-	t := s.Init(c)
+func Test_MkExpr_IsExpression(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(ToExpr("${VAR}").IsExpression(), false)
 	t.CheckEquals(ToExpr("${expr:L}").IsExpression(), true)
 	t.CheckEquals(ToExpr("${expr:?then:else}").IsExpression(), true)
 }
 
-func (s *Suite) Test_MkExpr_IsQ(c *check.C) {
-	t := s.Init(c)
+func Test_MkExpr_IsQ(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(ToExpr("${VAR}").IsQ(), false)
 	t.CheckEquals(ToExpr("${VAR:Q}").IsQ(), true)
@@ -366,8 +385,9 @@ func (s *Suite) Test_MkExpr_IsQ(c *check.C) {
 	t.CheckEquals(ToExpr("${VAR:Q:tl}").IsQ(), false)
 }
 
-func (s *Suite) Test_MkExpr_HasModifier(c *check.C) {
-	t := s.Init(c)
+func Test_MkExpr_HasModifier(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(ToExpr("${VAR}").HasModifier("Q"), false)
 	t.CheckEquals(ToExpr("${VAR:Q}").HasModifier("Q"), true)

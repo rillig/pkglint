@@ -1,21 +1,21 @@
 package pkglint
 
-import (
-	"gopkg.in/check.v1"
-)
+import "testing"
 
 func NewShAtom(typ ShAtomType, text string, quoting ShQuoting) *ShAtom {
 	return &ShAtom{typ, text, quoting, nil}
 }
 
-func (s *Suite) Test_ShAtomType_String(c *check.C) {
-	t := s.Init(c)
+func Test_ShAtomType_String(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(shtComment.String(), "comment")
 }
 
-func (s *Suite) Test_ShAtom_String(c *check.C) {
-	t := s.Init(c)
+func Test_ShAtom_String(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("filename.mk", 1, "")
 	tokenizer := NewShTokenizer(line, "${ECHO} \"hello, world\"")
@@ -30,21 +30,24 @@ func (s *Suite) Test_ShAtom_String(c *check.C) {
 	t.CheckEquals(atoms[4].String(), "\"\\\"\"")
 }
 
-func (s *Suite) Test_ShQuoting_String(c *check.C) {
-	t := s.Init(c)
+func Test_ShQuoting_String(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(shqDquotBacktSquot.String(), "dbs")
 }
 
-func (s *Suite) Test_NewShToken__no_atoms(c *check.C) {
-	t := s.Init(c)
+func Test_NewShToken__no_atoms(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.ExpectAssert(func() { NewShToken("", NewShAtom(shtText, "text", shqPlain)) })
 	t.ExpectAssert(func() { NewShToken(" ", nil...) })
 }
 
-func (s *Suite) Test_ShToken_String(c *check.C) {
-	t := s.Init(c)
+func Test_ShToken_String(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("filename.mk", 1, "")
 	tokenizer := NewShTokenizer(line, "${ECHO} \"hello, world\"")

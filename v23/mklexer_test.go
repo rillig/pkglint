@@ -2,11 +2,12 @@ package pkglint
 
 import (
 	"github.com/rillig/pkglint/v23/textproc"
-	"gopkg.in/check.v1"
+	"testing"
 )
 
-func (s *Suite) Test_NewMkLexer__with_diag(c *check.C) {
-	t := s.Init(c)
+func Test_NewMkLexer__with_diag(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	diag := t.NewLine("filename.mk", 123, "")
 
@@ -19,8 +20,9 @@ func (s *Suite) Test_NewMkLexer__with_diag(c *check.C) {
 		"WARN: filename.mk:123: Missing closing \"}\" for \"\".")
 }
 
-func (s *Suite) Test_NewMkLexer__without_diag(c *check.C) {
-	t := s.Init(c)
+func Test_NewMkLexer__without_diag(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lex := NewMkLexer("${", nil)
 
@@ -30,8 +32,9 @@ func (s *Suite) Test_NewMkLexer__without_diag(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLexer_MkTokens(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_MkTokens(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	testRest := func(input string, expectedTokens []*MkToken, expectedRest string) {
@@ -101,8 +104,9 @@ func (s *Suite) Test_MkLexer_MkTokens(c *check.C) {
 		"")
 }
 
-func (s *Suite) Test_MkLexer_MkToken(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_MkToken(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(input string, expectedToken *MkToken, expectedRest string, diagnostics ...string) {
 		lexer := NewMkLexer(input, t.NewLine("Test_MkLexer_Expr.mk", 1, ""))
@@ -130,8 +134,9 @@ func (s *Suite) Test_MkLexer_MkToken(c *check.C) {
 		nil, "")
 }
 
-func (s *Suite) Test_MkLexer_Expr(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_Expr(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 	expr := b.ExprToken
 	exprText := b.ExprTextToken
@@ -444,8 +449,9 @@ func (s *Suite) Test_MkLexer_Expr(c *check.C) {
 // of nested expressions though because this case is not important enough to
 // invest much development time. It occurs so seldom that it is acceptable
 // to run pkglint multiple times in such a case.
-func (s *Suite) Test_MkLexer_exprBrace__autofix_parentheses(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_exprBrace__autofix_parentheses(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(autofix bool) {
 		mklines := t.SetUpFileMkLines("Makefile",
@@ -477,8 +483,9 @@ func (s *Suite) Test_MkLexer_exprBrace__autofix_parentheses(c *check.C) {
 		"AUTOFIX: ~/Makefile:2: Replacing \"$(C)\" with \"${C}\".")
 }
 
-func (s *Suite) Test_MkLexer_Varname(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_Varname(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(text string) {
 		line := t.NewLine("filename.mk", 1, text)
@@ -513,8 +520,9 @@ func (s *Suite) Test_MkLexer_Varname(c *check.C) {
 	testRest("<:T", "<", ":T")
 }
 
-func (s *Suite) Test_MkLexer_exprText(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_exprText(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(text string, expected string, diagnostics ...string) {
 		line := t.NewLine("Makefile", 20, "\t"+text)
@@ -551,8 +559,9 @@ func (s *Suite) Test_MkLexer_exprText(c *check.C) {
 	test("a\\\\:a", "a\\\\")
 }
 
-func (s *Suite) Test_MkLexer_exprModifierSysV(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_exprModifierSysV(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(input string, closing byte, mod, modNoVar string, rest string, diagnostics ...string) {
 		diag := t.NewLine("filename.mk", 123, "")
@@ -580,8 +589,9 @@ func (s *Suite) Test_MkLexer_exprModifierSysV(c *check.C) {
 		nil...)
 }
 
-func (s *Suite) Test_MkLexer_ExprModifiers(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_ExprModifiers(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	expr := NewMkTokenBuilder().Expr
 	test := func(text string, expr *MkExpr, diagnostics ...string) {
@@ -623,8 +633,9 @@ func (s *Suite) Test_MkLexer_ExprModifiers(c *check.C) {
 		"WARN: Makefile:20: The text \":Q\" looks like a modifier but isn't.")
 }
 
-func (s *Suite) Test_MkLexer_exprModifier(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_exprModifier(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("filename.mk", 123, "")
 
@@ -641,8 +652,9 @@ func (s *Suite) Test_MkLexer_exprModifier(c *check.C) {
 	test("${VAR:!cmd!}", "!cmd!")
 }
 
-func (s *Suite) Test_MkLexer_exprModifier__S_parse_error(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_exprModifier__S_parse_error(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	diag := t.NewLine("filename.mk", 123, "")
 	p := NewMkLexer("S,}", diag)
@@ -657,8 +669,9 @@ func (s *Suite) Test_MkLexer_exprModifier__S_parse_error(c *check.C) {
 		"WARN: filename.mk:123: Invalid variable modifier \"S,\" for \"VAR\".")
 }
 
-func (s *Suite) Test_MkLexer_exprModifier__indirect(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_exprModifier__indirect(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("filename.mk", 123, "${VAR:${M_modifier}}")
 	p := NewMkLexer("${M_modifier}}", line)
@@ -670,8 +683,9 @@ func (s *Suite) Test_MkLexer_exprModifier__indirect(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLexer_exprModifier__invalid_ts_modifier_with_warning(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_exprModifier__invalid_ts_modifier_with_warning(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--explain")
 	line := t.NewLine("filename.mk", 123, "${VAR:tsabc}")
@@ -690,8 +704,9 @@ func (s *Suite) Test_MkLexer_exprModifier__invalid_ts_modifier_with_warning(c *c
 		"")
 }
 
-func (s *Suite) Test_MkLexer_exprModifier__invalid_ts_modifier_without_warning(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_exprModifier__invalid_ts_modifier_without_warning(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	p := NewMkLexer("tsabc}", nil)
 
@@ -701,8 +716,9 @@ func (s *Suite) Test_MkLexer_exprModifier__invalid_ts_modifier_without_warning(c
 	t.CheckEquals(p.Rest(), "}")
 }
 
-func (s *Suite) Test_MkLexer_exprModifier__square_bracket(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_exprModifier__square_bracket(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("filename.mk", 123, "\t${VAR:[asdf]}")
 	p := NewMkLexer("[asdf]", line)
@@ -716,8 +732,9 @@ func (s *Suite) Test_MkLexer_exprModifier__square_bracket(c *check.C) {
 		"WARN: filename.mk:123: Invalid variable modifier \"[asdf]\" for \"VAR\".")
 }
 
-func (s *Suite) Test_MkLexer_exprModifier__condition_without_colon(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_exprModifier__condition_without_colon(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	line := t.NewLine("filename.mk", 123, "${${VAR}:?yes:no}${${VAR}:?yes}")
@@ -734,8 +751,9 @@ func (s *Suite) Test_MkLexer_exprModifier__condition_without_colon(c *check.C) {
 		"WARN: filename.mk:123: Invalid variable modifier \"?yes\" for \"${VAR}\".")
 }
 
-func (s *Suite) Test_MkLexer_exprModifier__malformed_in_parentheses(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_exprModifier__malformed_in_parentheses(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	line := t.NewLine("filename.mk", 123, "$(${VAR}:?yes)")
@@ -751,8 +769,9 @@ func (s *Suite) Test_MkLexer_exprModifier__malformed_in_parentheses(c *check.C) 
 		"WARN: filename.mk:123: Use curly braces {} instead of round parentheses () for ${VAR}.")
 }
 
-func (s *Suite) Test_MkLexer_exprModifier__expr_in_malformed_modifier(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_exprModifier__expr_in_malformed_modifier(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	line := t.NewLine("filename.mk", 123, "${${VAR}:?yes${INNER}}")
@@ -767,8 +786,9 @@ func (s *Suite) Test_MkLexer_exprModifier__expr_in_malformed_modifier(c *check.C
 		"WARN: filename.mk:123: Invalid variable modifier \"?yes${INNER}\" for \"${VAR}\".")
 }
 
-func (s *Suite) Test_MkLexer_exprModifier__eq_suffix_replacement(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_exprModifier__eq_suffix_replacement(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(input string, modifier MkExprModifier, rest string, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, "")
@@ -809,8 +829,9 @@ func (s *Suite) Test_MkLexer_exprModifier__eq_suffix_replacement(c *check.C) {
 		nil...)
 }
 
-func (s *Suite) Test_MkLexer_exprModifier__assigment(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_exprModifier__assigment(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(varname, input string, mod MkExprModifier, rest string, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, "")
@@ -854,8 +875,9 @@ func (s *Suite) Test_MkLexer_exprModifier__assigment(c *check.C) {
 			"looks like a modifier but isn't.")
 }
 
-func (s *Suite) Test_MkLexer_exprModifier__assign_in_infrastructure(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_exprModifier__assign_in_infrastructure(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("mk/infra.mk",
@@ -868,8 +890,9 @@ func (s *Suite) Test_MkLexer_exprModifier__assign_in_infrastructure(c *check.C) 
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLexer_exprModifierTs(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_exprModifierTs(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(input string, closing byte, mod MkExprModifier, rest string, diagnostics ...string) {
 		diag := t.NewLine("filename.mk", 123, "")
@@ -912,8 +935,9 @@ func (s *Suite) Test_MkLexer_exprModifierTs(c *check.C) {
 		nil...)
 }
 
-func (s *Suite) Test_MkLexer_exprModifierMatch(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_exprModifierMatch(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	testClosing := func(input string, closing byte, mod MkExprModifier, rest string, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, "")
@@ -966,8 +990,9 @@ func (s *Suite) Test_MkLexer_exprModifierMatch(c *check.C) {
 // and can only be made visible by adding a fprintf to Str_Match or by
 // carefully analyzing the result of Str_Match, which removes another level
 // of backslashes.
-func (s *Suite) Test_MkLexer_exprModifierMatch__varmod_edge(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_exprModifierMatch__varmod_edge(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(input string, mod MkExprModifier, rest string, diagnostics ...string) {
 		line := t.NewLine("filename.mk", 123, "")
@@ -1007,8 +1032,9 @@ func (s *Suite) Test_MkLexer_exprModifierMatch__varmod_edge(c *check.C) {
 	test("M\\\\(:M*}}", "M\\\\(:M*}", "}")
 }
 
-func (s *Suite) Test_MkLexer_exprModifierSubst(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_exprModifierSubst(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(mod string, regex bool, from, to, options, rest string, diagnostics ...string) {
 		line := t.NewLine("Makefile", 20, "")
@@ -1084,8 +1110,9 @@ func (s *Suite) Test_MkLexer_exprModifierSubst(c *check.C) {
 	test("C [0-5][0-9]$ 00 } -D${ts}", true, "[0-5][0-9]$", "00", "", "} -D${ts}")
 }
 
-func (s *Suite) Test_MkLexer_exprModifierAt__missing_at_after_variable_name(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_exprModifierAt__missing_at_after_variable_name(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	line := t.NewLine("filename.mk", 123, "${VAR:@varname}")
@@ -1100,8 +1127,9 @@ func (s *Suite) Test_MkLexer_exprModifierAt__missing_at_after_variable_name(c *c
 		"WARN: filename.mk:123: Invalid variable modifier \"@varname\" for \"VAR\".")
 }
 
-func (s *Suite) Test_MkLexer_exprModifierAt__dollar(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_exprModifierAt__dollar(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	line := t.NewLine("filename.mk", 123, "${VAR:@var@$$var@}")
@@ -1114,8 +1142,9 @@ func (s *Suite) Test_MkLexer_exprModifierAt__dollar(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLexer_exprModifierAt__incomplete_without_warning(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_exprModifierAt__incomplete_without_warning(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	p := NewMkLexer("${VAR:@var@$$var}rest", nil)
@@ -1127,8 +1156,9 @@ func (s *Suite) Test_MkLexer_exprModifierAt__incomplete_without_warning(c *check
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_MkLexer_exprModifierAt(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_exprModifierAt(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	expr := NewMkTokenBuilder().Expr
 	test := func(text string, expr *MkExpr, rest string, diagnostics ...string) {
@@ -1159,8 +1189,9 @@ func (s *Suite) Test_MkLexer_exprModifierAt(c *check.C) {
 		"")
 }
 
-func (s *Suite) Test_MkLexer_parseModifierPart(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_parseModifierPart(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("filename.mk", 123, "")
 
@@ -1181,8 +1212,9 @@ func (s *Suite) Test_MkLexer_parseModifierPart(c *check.C) {
 		"WARN: filename.mk:123: Missing closing \"}\" for \"VAR\".")
 }
 
-func (s *Suite) Test_MkLexer_isEscapedModifierPart(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_isEscapedModifierPart(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("filename.mk", 123, "")
 
@@ -1200,8 +1232,9 @@ func (s *Suite) Test_MkLexer_isEscapedModifierPart(c *check.C) {
 	test("${VAR:!cmd\\!!}", "!cmd\\!!")
 }
 
-func (s *Suite) Test_MkLexer_exprAlnum(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_exprAlnum(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--explain")
 
@@ -1241,8 +1274,9 @@ func (s *Suite) Test_MkLexer_exprAlnum(c *check.C) {
 		"")
 }
 
-func (s *Suite) Test_MkLexer_EOF(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_EOF(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(input string, eof bool) {
 		lex := NewMkLexer(input, nil)
@@ -1255,8 +1289,9 @@ func (s *Suite) Test_MkLexer_EOF(c *check.C) {
 	test("${VAR}", false)
 }
 
-func (s *Suite) Test_MkLexer_Rest(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_Rest(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(input, str, rest string) {
 		lex := NewMkLexer(input, nil)
@@ -1273,8 +1308,9 @@ func (s *Suite) Test_MkLexer_Rest(c *check.C) {
 	test("${VAR}rest", "${VAR}", "rest")
 }
 
-func (s *Suite) Test_MkLexer_Errorf(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_Errorf(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(diag Autofixer, diagnostics ...string) {
 		lex := NewMkLexer("", diag)
@@ -1293,8 +1329,9 @@ func (s *Suite) Test_MkLexer_Errorf(c *check.C) {
 		"ERROR: filename.mk:123: Must \"arg\".")
 }
 
-func (s *Suite) Test_MkLexer_Warnf(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_Warnf(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(diag Autofixer, diagnostics ...string) {
 		lex := NewMkLexer("", diag)
@@ -1313,8 +1350,9 @@ func (s *Suite) Test_MkLexer_Warnf(c *check.C) {
 		"WARN: filename.mk:123: Should \"arg\".")
 }
 
-func (s *Suite) Test_MkLexer_Notef(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_Notef(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(diag Autofixer, diagnostics ...string) {
 		lex := NewMkLexer("", diag)
@@ -1333,8 +1371,9 @@ func (s *Suite) Test_MkLexer_Notef(c *check.C) {
 		"NOTE: filename.mk:123: Can \"arg\".")
 }
 
-func (s *Suite) Test_MkLexer_Explain(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_Explain(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(option string, diag Autofixer, diagnostics ...string) {
 		t.SetUpCommandLine(option)
@@ -1375,8 +1414,9 @@ func (s *Suite) Test_MkLexer_Explain(c *check.C) {
 		"WARN: filename.mk:123: Should \"arg\".")
 }
 
-func (s *Suite) Test_MkLexer_Autofix(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_Autofix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(autofix bool) {
 		mklines := t.SetUpFileMkLines("filename.mk",
@@ -1395,16 +1435,18 @@ func (s *Suite) Test_MkLexer_Autofix(c *check.C) {
 		"AUTOFIX: ~/filename.mk:1: Replacing \"before\" with \"after\".")
 }
 
-func (s *Suite) Test_MkLexer_Autofix__nil(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_Autofix__nil(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.ExpectPanicMatches(
 		func() { NewMkLexer("", nil).Autofix() },
 		`^runtime error: invalid memory address or nil pointer dereference`)
 }
 
-func (s *Suite) Test_MkLexer_HasDiag(c *check.C) {
-	t := s.Init(c)
+func Test_MkLexer_HasDiag(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(diag Autofixer, hasDiag bool) {
 		t.CheckEquals(NewMkLexer("", diag).HasDiag(), hasDiag)

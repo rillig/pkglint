@@ -1,9 +1,10 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import "testing"
 
-func (s *Suite) Test_ParseMkStmts(c *check.C) {
-	t := s.Init(c)
+func Test_ParseMkStmts(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
 		".if 1",
@@ -43,8 +44,9 @@ func (s *Suite) Test_ParseMkStmts(c *check.C) {
 		})
 }
 
-func (s *Suite) Test_WalkMkStmt(c *check.C) {
-	t := s.Init(c)
+func Test_WalkMkStmt(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
 		".if 1",
@@ -92,8 +94,9 @@ func (s *Suite) Test_WalkMkStmt(c *check.C) {
 		"NOTE: filename.mk:7: Line.")
 }
 
-func (s *Suite) Test_WalkMkStmt__invalid(c *check.C) {
-	t := s.Init(c)
+func Test_WalkMkStmt__invalid(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(lines ...string) {
 		mklines := t.NewMkLines("filename.mk", lines...)

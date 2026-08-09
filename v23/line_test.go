@@ -2,11 +2,12 @@ package pkglint
 
 import (
 	"github.com/rillig/pkglint/v23/regex"
-	"gopkg.in/check.v1"
+	"testing"
 )
 
-func (s *Suite) Test_RawLine_Orig(c *check.C) {
-	t := s.Init(c)
+func Test_RawLine_Orig(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("filename", 123, "text")
 
@@ -14,8 +15,9 @@ func (s *Suite) Test_RawLine_Orig(c *check.C) {
 	t.CheckEquals(line.raw[0].Orig(), "text")
 }
 
-func (s *Suite) Test_NewLocation(c *check.C) {
-	t := s.Init(c)
+func Test_NewLocation(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	loc := NewLocation("subdir/filename", 123)
 
@@ -23,30 +25,34 @@ func (s *Suite) Test_NewLocation(c *check.C) {
 	t.CheckEquals(loc.lineno, 123)
 }
 
-func (s *Suite) Test_Location_Lineno(c *check.C) {
-	t := s.Init(c)
+func Test_Location_Lineno(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	loc := NewLocation("subdir/filename", 123)
 
 	t.CheckEquals(loc.Lineno(0), 123)
 }
 
-func (s *Suite) Test_Location_File(c *check.C) {
-	t := s.Init(c)
+func Test_Location_File(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	loc := NewLocation("subdir/filename", 123)
 
 	t.CheckEquals(loc.File("other"), NewCurrPathString("subdir/other"))
 }
 
-func (s *Suite) Test_NewLine__assertion(c *check.C) {
-	t := s.Init(c)
+func Test_NewLine__assertion(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.ExpectAssert(func() { NewLine("filename", 123, "text", nil) })
 }
 
-func (s *Suite) Test_NewLineMulti(c *check.C) {
-	t := s.Init(c)
+func Test_NewLineMulti(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := NewLineMulti("subdir/filename", 123, "", []*RawLine{nil, nil, nil})
 
@@ -54,8 +60,9 @@ func (s *Suite) Test_NewLineMulti(c *check.C) {
 	t.CheckEquals(line.Linenos(), "123--125")
 }
 
-func (s *Suite) Test_NewLineEOF(c *check.C) {
-	t := s.Init(c)
+func Test_NewLineEOF(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := NewLineEOF("subdir/filename")
 
@@ -63,8 +70,9 @@ func (s *Suite) Test_NewLineEOF(c *check.C) {
 	t.CheckEquals(line.Linenos(), "EOF")
 }
 
-func (s *Suite) Test_NewLineWhole(c *check.C) {
-	t := s.Init(c)
+func Test_NewLineWhole(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := NewLineWhole("subdir/filename")
 
@@ -72,16 +80,18 @@ func (s *Suite) Test_NewLineWhole(c *check.C) {
 	t.CheckEquals(line.Linenos(), "")
 }
 
-func (s *Suite) Test_Line_Filename(c *check.C) {
-	t := s.Init(c)
+func Test_Line_Filename(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("subdir/filename", 123, "")
 
 	t.CheckEquals(line.Filename(), NewCurrPathString("subdir/filename"))
 }
 
-func (s *Suite) Test_Line_File(c *check.C) {
-	t := s.Init(c)
+func Test_Line_File(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("subdir/filename", 123, "")
 
@@ -89,8 +99,9 @@ func (s *Suite) Test_Line_File(c *check.C) {
 		NewCurrPathString("subdir/subsub/nested"))
 }
 
-func (s *Suite) Test_Line_Linenos(c *check.C) {
-	t := s.Init(c)
+func Test_Line_Linenos(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	single := t.NewLine("filename", 123, "")
 	whole := NewLineWhole("filename")
@@ -101,8 +112,9 @@ func (s *Suite) Test_Line_Linenos(c *check.C) {
 	t.CheckEquals(multi.Linenos(), "123--125")
 }
 
-func (s *Suite) Test_Line_RelLine__assertion(c *check.C) {
-	t := s.Init(c)
+func Test_Line_RelLine__assertion(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("filename", 123, "")
 	whole := NewLineWhole("filename")
@@ -110,8 +122,9 @@ func (s *Suite) Test_Line_RelLine__assertion(c *check.C) {
 	t.ExpectAssert(func() { line.RelLine(whole) })
 }
 
-func (s *Suite) Test_Line_RelLocation__assertion(c *check.C) {
-	t := s.Init(c)
+func Test_Line_RelLocation__assertion(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("filename", 123, "")
 	whole := NewLineWhole("filename")
@@ -119,8 +132,9 @@ func (s *Suite) Test_Line_RelLocation__assertion(c *check.C) {
 	t.ExpectAssert(func() { line.RelLocation(whole.Location) })
 }
 
-func (s *Suite) Test_Line_Rel(c *check.C) {
-	t := s.Init(c)
+func Test_Line_Rel(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.Chdir(".")
 	line1 := t.NewLine("subdir/filename", 123, "from")
@@ -130,8 +144,9 @@ func (s *Suite) Test_Line_Rel(c *check.C) {
 	t.CheckEquals(rel, NewRelPathString("../other/filename"))
 }
 
-func (s *Suite) Test_Line_IsMultiline(c *check.C) {
-	t := s.Init(c)
+func Test_Line_IsMultiline(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(t.NewLine("filename", 123, "text").IsMultiline(), false)
 
@@ -141,8 +156,9 @@ func (s *Suite) Test_Line_IsMultiline(c *check.C) {
 	t.CheckEquals(multi.IsMultiline(), true)
 }
 
-func (s *Suite) Test_Line_RawText(c *check.C) {
-	t := s.Init(c)
+func Test_Line_RawText(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--show-autofix")
 	line := t.NewLine("filename", 123, "text")
@@ -161,8 +177,9 @@ func (s *Suite) Test_Line_RawText(c *check.C) {
 		"AUTOFIX: filename:123: Replacing \"text\" with \"replaced\".")
 }
 
-func (s *Suite) Test_Line_IsCvsID(c *check.C) {
-	t := s.Init(c)
+func Test_Line_IsCvsID(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(text string, prefix regex.Pattern, expectedID bool, expectedExpanded bool) {
 		line := t.NewLine("filename", 123, text)
@@ -178,8 +195,9 @@ func (s *Suite) Test_Line_IsCvsID(c *check.C) {
 	test("$"+"NetBSD: ... $", ``, true, true)
 }
 
-func (s *Suite) Test_Line_Errorf(c *check.C) {
-	t := s.Init(c)
+func Test_Line_Errorf(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("filename", 123, "text")
 
@@ -189,8 +207,9 @@ func (s *Suite) Test_Line_Errorf(c *check.C) {
 		"ERROR: filename:123: For your information.")
 }
 
-func (s *Suite) Test_Line_Warnf(c *check.C) {
-	t := s.Init(c)
+func Test_Line_Warnf(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("filename", 123, "text")
 
@@ -200,8 +219,9 @@ func (s *Suite) Test_Line_Warnf(c *check.C) {
 		"WARN: filename:123: For your information.")
 }
 
-func (s *Suite) Test_Line_Notef(c *check.C) {
-	t := s.Init(c)
+func Test_Line_Notef(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("filename", 123, "text")
 
@@ -211,8 +231,9 @@ func (s *Suite) Test_Line_Notef(c *check.C) {
 		"NOTE: filename:123: For your information.")
 }
 
-func (s *Suite) Test_Line_Explain(c *check.C) {
-	t := s.Init(c)
+func Test_Line_Explain(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--explain")
 	line := t.NewLine("filename", 123, "text")
@@ -229,8 +250,9 @@ func (s *Suite) Test_Line_Explain(c *check.C) {
 		"")
 }
 
-func (s *Suite) Test_Line_Explain__without_diagnostic(c *check.C) {
-	t := s.Init(c)
+func Test_Line_Explain__without_diagnostic(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--explain")
 	line := t.NewLine("filename", 123, "text")
@@ -249,8 +271,9 @@ func (s *Suite) Test_Line_Explain__without_diagnostic(c *check.C) {
 		"")
 }
 
-func (s *Suite) Test_Line_String(c *check.C) {
-	t := s.Init(c)
+func Test_Line_String(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("filename", 123, "text")
 	t.CheckEquals(line.String(), "filename:123: text")
@@ -263,8 +286,9 @@ func (s *Suite) Test_Line_String(c *check.C) {
 	t.CheckEquals(multi.String(), "filename:123--125: text")
 }
 
-func (s *Suite) Test_Line_Autofix__reuse_incomplete(c *check.C) {
-	t := s.Init(c)
+func Test_Line_Autofix__reuse_incomplete(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("filename.mk", 1, "")
 

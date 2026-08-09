@@ -1,9 +1,10 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import "testing"
 
-func (s *Suite) Test_CheckLinesOptionsMk__autofix(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesOptionsMk__autofix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpOption("opt", "")
 	t.CreateFileLines("mk/bsd.options.mk")
@@ -62,8 +63,9 @@ func (s *Suite) Test_CheckLinesOptionsMk__autofix(c *check.C) {
 		".endif")
 }
 
-func (s *Suite) Test_CheckLinesOptionsMk__literal(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesOptionsMk__literal(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpOption("declared", "")
 	t.SetUpOption("both", "")
@@ -97,8 +99,9 @@ func (s *Suite) Test_CheckLinesOptionsMk__literal(c *check.C) {
 			"Option \"handled\" is handled but not added to PKG_SUPPORTED_OPTIONS.")
 }
 
-func (s *Suite) Test_CheckLinesOptionsMk__literal_in_for_loop(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesOptionsMk__literal_in_for_loop(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpOption("declared", "")
 	t.SetUpOption("both", "")
@@ -135,8 +138,9 @@ func (s *Suite) Test_CheckLinesOptionsMk__literal_in_for_loop(c *check.C) {
 
 // Before version 19.3.5, pkglint warned when bsd.prefs.mk was
 // included in the top half of the file.
-func (s *Suite) Test_CheckLinesOptionsMk__prefs(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesOptionsMk__prefs(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpOption("option", "")
 	t.SetUpPackage("category/package",
@@ -163,8 +167,9 @@ func (s *Suite) Test_CheckLinesOptionsMk__prefs(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_CheckLinesOptionsMk__variable_order(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesOptionsMk__variable_order(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpOption("option", "")
 	t.SetUpPackage("category/package",
@@ -191,8 +196,9 @@ func (s *Suite) Test_CheckLinesOptionsMk__variable_order(c *check.C) {
 			"Expected definition of PKG_OPTIONS_VAR.")
 }
 
-func (s *Suite) Test_CheckLinesOptionsMk__empty(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesOptionsMk__empty(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		".include \"options.mk\"")
@@ -210,8 +216,9 @@ func (s *Suite) Test_CheckLinesOptionsMk__empty(c *check.C) {
 			"Each options.mk file must .include \"../../mk/bsd.options.mk\".")
 }
 
-func (s *Suite) Test_CheckLinesOptionsMk__conditionals(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesOptionsMk__conditionals(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpOption("option", "")
 	t.SetUpPackage("category/package",
@@ -249,8 +256,9 @@ func (s *Suite) Test_CheckLinesOptionsMk__conditionals(c *check.C) {
 			"Option \"option\" should be handled below in an .if block.")
 }
 
-func (s *Suite) Test_CheckLinesOptionsMk(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesOptionsMk(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpOption("mc-charset", "")
@@ -319,8 +327,9 @@ func (s *Suite) Test_CheckLinesOptionsMk(c *check.C) {
 // variables, the whole analysis stops.
 //
 // This case doesn't happen in practice and thus is not worth being handled in detail.
-func (s *Suite) Test_CheckLinesOptionsMk__unexpected_line(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesOptionsMk__unexpected_line(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -344,8 +353,9 @@ func (s *Suite) Test_CheckLinesOptionsMk__unexpected_line(c *check.C) {
 			"Each options.mk file must .include \"../../mk/bsd.options.mk\".")
 }
 
-func (s *Suite) Test_CheckLinesOptionsMk__malformed_condition(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesOptionsMk__malformed_condition(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.Chdir(".")
@@ -381,8 +391,9 @@ func (s *Suite) Test_CheckLinesOptionsMk__malformed_condition(c *check.C) {
 		"WARN: category/package/options.mk:15: Invalid condition, unrecognized part \"${OPSYS} == 'Darwin'\".")
 }
 
-func (s *Suite) Test_CheckLinesOptionsMk__PLIST_VARS_based_on_PKG_SUPPORTED_OPTIONS(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesOptionsMk__PLIST_VARS_based_on_PKG_SUPPORTED_OPTIONS(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpOption("one", "")
 	t.SetUpOption("two", "")
@@ -425,8 +436,9 @@ func (s *Suite) Test_CheckLinesOptionsMk__PLIST_VARS_based_on_PKG_SUPPORTED_OPTI
 }
 
 // https://gnats.netbsd.org/57038
-func (s *Suite) Test_CheckLinesOptionsMk__PLIST_VARS_based_on_groups(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesOptionsMk__PLIST_VARS_based_on_groups(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpOption("one", "")
 	t.SetUpOption("two", "")
@@ -490,8 +502,9 @@ func (s *Suite) Test_CheckLinesOptionsMk__PLIST_VARS_based_on_groups(c *check.C)
 
 // A few packages (such as www/w3m) define several options that are
 // handled by a single .if block in the lower part.
-func (s *Suite) Test_CheckLinesOptionsMk__combined_option_handling(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesOptionsMk__combined_option_handling(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpOption("opt-variant1", "")
 	t.SetUpOption("opt-variant2", "")
@@ -520,8 +533,9 @@ func (s *Suite) Test_CheckLinesOptionsMk__combined_option_handling(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_CheckLinesOptionsMk__combined_option_handling_coverage(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesOptionsMk__combined_option_handling_coverage(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpOption("opt-variant", "")
 	t.CreateFileLines("mk/bsd.options.mk")
@@ -558,8 +572,9 @@ func (s *Suite) Test_CheckLinesOptionsMk__combined_option_handling_coverage(c *c
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_CheckLinesOptionsMk__options_in_for_loop(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesOptionsMk__options_in_for_loop(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpOption("idea", "")
 	t.SetUpOption("md2", "")
@@ -593,8 +608,9 @@ func (s *Suite) Test_CheckLinesOptionsMk__options_in_for_loop(c *check.C) {
 // loop over the PLIST_VARS, which is quite indirect, compared to a
 // direct ${PKG_OPTIONS:Mnetbsd}. In most practical cases, the identifiers
 // in PLIST_VARS are literals, which still allows that they are analyzed.
-func (s *Suite) Test_CheckLinesOptionsMk__indirect(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesOptionsMk__indirect(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpOption("generic", "")
 	t.SetUpOption("netbsd", "")
@@ -639,8 +655,9 @@ func (s *Suite) Test_CheckLinesOptionsMk__indirect(c *check.C) {
 }
 
 // An unrealistic scenario, but necessary for code coverage.
-func (s *Suite) Test_CheckLinesOptionsMk__partly_indirect(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesOptionsMk__partly_indirect(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("mk/bsd.options.mk")
 	t.SetUpPackage("category/package",
@@ -670,8 +687,9 @@ func (s *Suite) Test_CheckLinesOptionsMk__partly_indirect(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_CheckLinesOptionsMk__indirect_supported_options_parentheses(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesOptionsMk__indirect_supported_options_parentheses(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpOption("indirect", "")
 	t.SetUpOption("direct", "")
@@ -701,8 +719,9 @@ func (s *Suite) Test_CheckLinesOptionsMk__indirect_supported_options_parentheses
 			"Option \"direct\" should be handled below in an .if block.")
 }
 
-func (s *Suite) Test_CheckLinesOptionsMk__handled_but_not_supported(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesOptionsMk__handled_but_not_supported(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpOption("option", "")
 	t.SetUpVartypes()
@@ -726,8 +745,9 @@ func (s *Suite) Test_CheckLinesOptionsMk__handled_but_not_supported(c *check.C) 
 			"Option \"option\" is handled but not added to PKG_SUPPORTED_OPTIONS.")
 }
 
-func (s *Suite) Test_CheckLinesOptionsMk__supported_but_not_checked(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesOptionsMk__supported_but_not_checked(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpOption("option", "")
 	t.SetUpVartypes()
@@ -755,8 +775,9 @@ func (s *Suite) Test_CheckLinesOptionsMk__supported_but_not_checked(c *check.C) 
 // Up to April 2019, pkglint logged a wrong note saying that OTHER_VARIABLE
 // should have the positive branch first. That note was only ever intended
 // for PKG_OPTIONS.
-func (s *Suite) Test_OptionsLinesChecker_handleLowerCondition__foreign_variable(c *check.C) {
-	t := s.Init(c)
+func Test_OptionsLinesChecker_handleLowerCondition__foreign_variable(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpOption("opt", "")
 	t.CreateFileLines("mk/bsd.options.mk")

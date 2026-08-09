@@ -1,11 +1,10 @@
 package pkglint
 
-import (
-	"gopkg.in/check.v1"
-)
+import "testing"
 
-func (s *Suite) Test_ACLPermissions_Contains(c *check.C) {
-	t := s.Init(c)
+func Test_ACLPermissions_Contains(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	perms := aclpAllRuntime
 
@@ -14,15 +13,17 @@ func (s *Suite) Test_ACLPermissions_Contains(c *check.C) {
 	t.CheckEquals(perms.Contains(aclpUseLoadtime), false)
 }
 
-func (s *Suite) Test_ACLPermissions_String(c *check.C) {
-	t := s.Init(c)
+func Test_ACLPermissions_String(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(ACLPermissions(0).String(), "none")
 	t.CheckEquals(aclpAll.String(), "set, set-default, append, use-loadtime, use")
 }
 
-func (s *Suite) Test_ACLPermissions_HumanString(c *check.C) {
-	t := s.Init(c)
+func Test_ACLPermissions_HumanString(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	// Doesn't happen in practice
 	t.CheckEquals(ACLPermissions(0).HumanString(), "")
@@ -32,8 +33,9 @@ func (s *Suite) Test_ACLPermissions_HumanString(c *check.C) {
 		"set, given a default value, appended to, used at load time, or used")
 }
 
-func (s *Suite) Test_Vartype_IsNonemptyIfDefined(c *check.C) {
-	t := s.Init(c)
+func Test_Vartype_IsNonemptyIfDefined(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -49,8 +51,9 @@ func (s *Suite) Test_Vartype_IsNonemptyIfDefined(c *check.C) {
 	test("OS_VERSION", false)
 }
 
-func (s *Suite) Test_Vartype_EffectivePermissions(c *check.C) {
-	t := s.Init(c)
+func Test_Vartype_EffectivePermissions(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -68,8 +71,9 @@ func (s *Suite) Test_Vartype_EffectivePermissions(c *check.C) {
 	}
 }
 
-func (s *Suite) Test_Vartype_AlternativeFiles(c *check.C) {
-	t := s.Init(c)
+func Test_Vartype_AlternativeFiles(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	// test generates the files description for the "set" permission.
 	test := func(rules []string, alternatives string) {
@@ -160,8 +164,9 @@ func (s *Suite) Test_Vartype_AlternativeFiles(c *check.C) {
 		"builtin.mk, but not buildlink3.mk, Makefile or *.mk")
 }
 
-func (s *Suite) Test_Vartype_MayBeAppendedTo(c *check.C) {
-	t := s.Init(c)
+func Test_Vartype_MayBeAppendedTo(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpVarType("UNKNOWN_THINGS", BtUnknown, NoVartypeOptions)
@@ -201,8 +206,9 @@ func (s *Suite) Test_Vartype_MayBeAppendedTo(c *check.C) {
 	test("UNKNOWN_THINGS", true)
 }
 
-func (s *Suite) Test_Vartype_String(c *check.C) {
-	t := s.Init(c)
+func Test_Vartype_String(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -210,8 +216,9 @@ func (s *Suite) Test_Vartype_String(c *check.C) {
 	t.CheckEquals(vartype.String(), "Integer (command-line-provided)")
 }
 
-func (s *Suite) Test_BasicType_NeedsQ(c *check.C) {
-	t := s.Init(c)
+func Test_BasicType_NeedsQ(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -262,8 +269,9 @@ func (s *Suite) Test_BasicType_NeedsQ(c *check.C) {
 	test("TOOLS_NOOP", false)
 }
 
-func (s *Suite) Test_BasicType_HasEnum(c *check.C) {
-	t := s.Init(c)
+func Test_BasicType_HasEnum(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	vc := enum("start middle end")
 

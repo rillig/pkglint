@@ -1,11 +1,10 @@
 package pkglint
 
-import (
-	"gopkg.in/check.v1"
-)
+import "testing"
 
-func (s *Suite) Test_LicenseChecker_Check(c *check.C) {
-	t := s.Init(c)
+func Test_LicenseChecker_Check(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("licenses/gnu-gpl-v2",
 		"The licenses for most software are designed to take away ...")
@@ -50,8 +49,9 @@ func (s *Suite) Test_LicenseChecker_Check(c *check.C) {
 		nil...)
 }
 
-func (s *Suite) Test_LicenseChecker_checkNode(c *check.C) {
-	t := s.Init(c)
+func Test_LicenseChecker_checkNode(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("licenses/gnu-gpl-v2",
 		"The licenses for most software are designed to take away ...")
@@ -75,8 +75,9 @@ func (s *Suite) Test_LicenseChecker_checkNode(c *check.C) {
 		"ERROR: ~/Makefile:1: Parse error for appended license condition \"added\".")
 }
 
-func (s *Suite) Test_LicenseChecker_checkName__LICENSE_FILE(c *check.C) {
-	t := s.Init(c)
+func Test_LicenseChecker_checkName__LICENSE_FILE(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.SetUpPackage("category/package",
@@ -95,8 +96,9 @@ func (s *Suite) Test_LicenseChecker_checkName__LICENSE_FILE(c *check.C) {
 		"Looks fine.")
 }
 
-func (s *Suite) Test_LicenseChecker_checkName__LICENSE_FILE_absolute(c *check.C) {
-	t := s.Init(c)
+func Test_LicenseChecker_checkName__LICENSE_FILE_absolute(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.SetUpPackage("category/package",

@@ -50,7 +50,7 @@ The code for setting up the tests looks similar to the main code:
 
 ```codewalk
 file     check_test.go
-go:func  Suite.SetUpTest
+go:func  NewTester
 ```
 
 ## First contact: checking a single DESCR file
@@ -333,8 +333,9 @@ Some types that provide these methods are `Pkgsrc`, `Package`, `Line`.
 ### Standard shape of a test
 
 ```go
-func (s *Suite) Test_Type_Method__description(c *check.C) {
-	t := s.Init(c)       // Every test needs this.
+func Test_Type_Method__description(tt *testing.T) {
+	t := NewTester(tt)   // Every test needs this.
+	defer t.Done()       // Clean up properly
 
 	t.SetUp…(…)          // Set up the testing environment.
 
@@ -355,16 +356,11 @@ file     check_test.go
 go:type  Tester
 ```
 
-The `s` variable is not used in tests.
-The only purpose of its type `Suite` is to group the tests so they are all run together.
-
-The `c` variable comes from [gocheck](https://godoc.org/gopkg.in/check.v1),
-which is the underlying testing framework.
-Most pkglint tests don't need this variable.
+Here's a simple test function:
 
 ```codewalk
 file     util_test.go
-go:func  Suite.Test_tabWidth
+go:func  Test_tabWidth
 ```
 
 ### Logging detailed information during tests
@@ -384,7 +380,7 @@ which sets up a realistic environment to run the tests in.
 
 ```codewalk
 file     pkglint_test.go
-go:func  Suite.Test_Pkglint_Main__complete_package
+go:func  Test_Pkglint_Main__complete_package
 ```
 
 ### Typical mistakes during a test

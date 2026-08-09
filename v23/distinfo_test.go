@@ -1,9 +1,10 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import "testing"
 
-func (s *Suite) Test_CheckLinesDistinfo__parse_errors(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesDistinfo__parse_errors(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.Chdir("category/package")
 	t.CreateFileLines("patches/patch-aa",
@@ -36,8 +37,9 @@ func (s *Suite) Test_CheckLinesDistinfo__parse_errors(c *check.C) {
 		"WARN: distinfo:9: Patch file \"patch-nonexistent\" does not exist in directory \"patches\".")
 }
 
-func (s *Suite) Test_CheckLinesDistinfo__DISTINFO_FILE(c *check.C) {
-	t := s.Init(c)
+func Test_CheckLinesDistinfo__DISTINFO_FILE(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		"DISTINFO_FILE=\t${.CURDIR}/../../category/package/distinfo",
@@ -63,8 +65,9 @@ func (s *Suite) Test_CheckLinesDistinfo__DISTINFO_FILE(c *check.C) {
 			"is registered in distinfo but not added to CVS.")
 }
 
-func (s *Suite) Test_distinfoLinesChecker_parse__trailing_empty_line(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoLinesChecker_parse__trailing_empty_line(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("distinfo",
 		CvsID,
@@ -76,8 +79,9 @@ func (s *Suite) Test_distinfoLinesChecker_parse__trailing_empty_line(c *check.C)
 		"NOTE: ~/distinfo:2: Trailing empty lines.")
 }
 
-func (s *Suite) Test_distinfoLinesChecker_parse__empty_file(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoLinesChecker_parse__empty_file(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("distinfo",
 		CvsID)
@@ -88,8 +92,9 @@ func (s *Suite) Test_distinfoLinesChecker_parse__empty_file(c *check.C) {
 		"NOTE: ~/distinfo:1: Empty line expected below this line.")
 }
 
-func (s *Suite) Test_distinfoLinesChecker_parse__commented_first_line(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoLinesChecker_parse__commented_first_line(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	// This mismatch can happen for inexperienced pkgsrc users.
 	// It's not easy to keep all these different file types apart.
@@ -104,8 +109,9 @@ func (s *Suite) Test_distinfoLinesChecker_parse__commented_first_line(c *check.C
 		"ERROR: ~/distinfo:1: Invalid line: "+PlistCvsID)
 }
 
-func (s *Suite) Test_distinfoLinesChecker_parse__completely_empty_file(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoLinesChecker_parse__completely_empty_file(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("distinfo",
 		nil...)
@@ -118,8 +124,9 @@ func (s *Suite) Test_distinfoLinesChecker_parse__completely_empty_file(c *check.
 
 // When the distinfo file and the patches are placed in the same package,
 // their diagnostics use short relative paths.
-func (s *Suite) Test_distinfoLinesChecker_check__distinfo_and_patches_in_separate_directory(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoLinesChecker_check__distinfo_and_patches_in_separate_directory(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		"DISTINFO_FILE=\t../../other/common/distinfo",
@@ -147,8 +154,9 @@ func (s *Suite) Test_distinfoLinesChecker_check__distinfo_and_patches_in_separat
 			"is not recorded. Run \""+confMake+" makepatchsum\".")
 }
 
-func (s *Suite) Test_distinfoLinesChecker_check__manual_patches(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoLinesChecker_check__manual_patches(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.Chdir("category/package")
 	t.CreateFileLines("patches/manual-libtool.m4")
@@ -179,8 +187,9 @@ func (s *Suite) Test_distinfoLinesChecker_check__manual_patches(c *check.C) {
 // infrastructure, there is nothing a package author can do.
 //
 // XXX: Re-check the documentation for this test.
-func (s *Suite) Test_distinfoLinesChecker_check__missing_php_patches(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoLinesChecker_check__missing_php_patches(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("licenses/unknown-license")
@@ -233,8 +242,9 @@ func (s *Suite) Test_distinfoLinesChecker_check__missing_php_patches(c *check.C)
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_distinfoLinesChecker_checkFilename(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoLinesChecker_checkFilename(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("category/package/distinfo",
@@ -264,8 +274,9 @@ func (s *Suite) Test_distinfoLinesChecker_checkFilename(c *check.C) {
 			"should be placed in a versioned DIST_SUBDIR.")
 }
 
-func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__nonexistent_distfile_called_patch(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoLinesChecker_checkAlgorithms__nonexistent_distfile_called_patch(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.Chdir("category/package")
 	lines := t.SetUpFileLines("distinfo",
@@ -285,8 +296,9 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__nonexistent_distfile_
 			"for \"patch-5.3.tar.gz\", got MD5, SHA1.")
 }
 
-func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__wrong_distfile_algorithms(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoLinesChecker_checkAlgorithms__wrong_distfile_algorithms(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.Chdir("category/package")
 	lines := t.SetUpFileLines("distinfo",
@@ -308,8 +320,9 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__wrong_distfile_algori
 // for both distfile or patch.
 //
 // This test only demonstrates the edge case.
-func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__ambiguous_distfile(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoLinesChecker_checkAlgorithms__ambiguous_distfile(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--explain")
 	t.Chdir("category/package")
@@ -330,8 +343,9 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__ambiguous_distfile(c 
 		"")
 }
 
-func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__wrong_patch_algorithms(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoLinesChecker_checkAlgorithms__wrong_patch_algorithms(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.Chdir("category/package")
@@ -352,8 +366,9 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__wrong_patch_algorithm
 			"patch file has 9a93207561abfef7e7550598c5a08f2c3226995b).")
 }
 
-func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__missing_patch_with_distfile_checksums(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoLinesChecker_checkAlgorithms__missing_patch_with_distfile_checksums(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.SetUpFileLines("distinfo",
 		CvsID,
@@ -372,8 +387,9 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__missing_patch_with_di
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__existing_patch_with_distfile_checksums(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoLinesChecker_checkAlgorithms__existing_patch_with_distfile_checksums(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("category/package/distinfo",
@@ -398,8 +414,9 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__existing_patch_with_d
 			"Expected SHA1 hash for patch-aa, got BLAKE2s, SHA512, Size.")
 }
 
-func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__missing_patch_with_wrong_algorithms(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoLinesChecker_checkAlgorithms__missing_patch_with_wrong_algorithms(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.SetUpFileLines("category/package/distinfo",
@@ -421,8 +438,9 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithms__missing_patch_with_wr
 // When there is at least one correct hash for a distfile and the distfile
 // has already been downloaded to pkgsrc/distfiles, which is the standard
 // distfiles location, running pkglint --autofix adds the missing hashes.
-func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__add_missing_hashes_for_existing_distfile(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoLinesChecker_checkAlgorithmsDistfile__add_missing_hashes_for_existing_distfile(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--explain")
 	t.SetUpPackage("category/package")
@@ -479,8 +497,9 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__add_missing_h
 //
 // Since the distfile has not been downloaded in this test case, pkglint can
 // only explain how to download the distfile.
-func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__add_missing_hashes_for_nonexistent_distfile(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoLinesChecker_checkAlgorithmsDistfile__add_missing_hashes_for_nonexistent_distfile(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--explain")
 	t.SetUpPackage("category/package")
@@ -524,8 +543,9 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__add_missing_h
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__wrong_distfile_hash(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoLinesChecker_checkAlgorithmsDistfile__wrong_distfile_hash(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("category/package/distinfo",
@@ -547,8 +567,9 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__wrong_distfil
 			"ee494623e60caeda840ed7de4fb70db4a36bc92b445b09f12b9ed46094e9bd59 in ../../distfiles/package-1.0.txt.")
 }
 
-func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__no_usual_algorithm(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoLinesChecker_checkAlgorithmsDistfile__no_usual_algorithm(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("category/package/distinfo",
@@ -567,8 +588,9 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__no_usual_algo
 			"got MD5.")
 }
 
-func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__top_algorithm_missing(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoLinesChecker_checkAlgorithmsDistfile__top_algorithm_missing(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("category/package/distinfo",
@@ -590,8 +612,9 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__top_algorithm
 		"ERROR: ~/category/package/distinfo:3: Missing BLAKE2s hash for package-1.0.txt.")
 }
 
-func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__bottom_algorithms_missing(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoLinesChecker_checkAlgorithmsDistfile__bottom_algorithms_missing(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("category/package/distinfo",
@@ -624,8 +647,9 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__bottom_algori
 			"Inserting a line \"Size (package-1.0.txt) = 13 bytes\" below this line.")
 }
 
-func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__algorithms_in_wrong_order(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoLinesChecker_checkAlgorithmsDistfile__algorithms_in_wrong_order(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("category/package/distinfo",
@@ -649,8 +673,9 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__algorithms_in
 			"got BLAKE2s, Size, SHA512.")
 }
 
-func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__wrong_order_and_SHA512_missing(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoLinesChecker_checkAlgorithmsDistfile__wrong_order_and_SHA512_missing(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("category/package/distinfo",
@@ -675,8 +700,9 @@ func (s *Suite) Test_distinfoLinesChecker_checkAlgorithmsDistfile__wrong_order_a
 	)
 }
 
-func (s *Suite) Test_distinfoLinesChecker_checkUnrecordedPatches(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoLinesChecker_checkUnrecordedPatches(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.Chdir("category/package")
@@ -703,8 +729,9 @@ func (s *Suite) Test_distinfoLinesChecker_checkUnrecordedPatches(c *check.C) {
 		"ERROR: distinfo: Patch \"patches/patch-src-Makefile\" is not recorded. Run \""+confMake+" makepatchsum\".")
 }
 
-func (s *Suite) Test_distinfoLinesChecker_isPatch(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoLinesChecker_isPatch(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(filename RelPath, want bool) {
 		t.CheckEquals((&distinfoLinesChecker{}).isPatch(filename), want)
@@ -730,8 +757,9 @@ func (s *Suite) Test_distinfoLinesChecker_isPatch(c *check.C) {
 //
 // In such a case, typically one of the packages should put its distfiles into
 // a DIST_SUBDIR.
-func (s *Suite) Test_distinfoLinesChecker_checkGlobalDistfileMismatch(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoLinesChecker_checkGlobalDistfileMismatch(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.SetUpPackage("category/package1")
@@ -798,8 +826,9 @@ func (s *Suite) Test_distinfoLinesChecker_checkGlobalDistfileMismatch(c *check.C
 	t.CheckEquals(cap(G.InterPackage.hashes["SHA512:distfile-1.0.tar.gz"].hash), 8)
 }
 
-func (s *Suite) Test_distinfoLinesChecker_checkUncommittedPatch__bad(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoLinesChecker_checkUncommittedPatch__bad(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.Chdir("category/package")
@@ -818,8 +847,9 @@ func (s *Suite) Test_distinfoLinesChecker_checkUncommittedPatch__bad(c *check.C)
 		"WARN: distinfo:3: patches/patch-aa is registered in distinfo but not added to CVS.")
 }
 
-func (s *Suite) Test_distinfoLinesChecker_checkUncommittedPatch__good(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoLinesChecker_checkUncommittedPatch__good(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.Chdir("category/package")
@@ -842,8 +872,9 @@ func (s *Suite) Test_distinfoLinesChecker_checkUncommittedPatch__good(c *check.C
 // The distinfo file and the patches are usually placed in the package
 // directory. By defining PATCHDIR or DISTINFO_FILE, a package can define
 // that they are somewhere else in pkgsrc.
-func (s *Suite) Test_distinfoLinesChecker_checkPatchSha1__relative_path_in_distinfo(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoLinesChecker_checkPatchSha1__relative_path_in_distinfo(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		"DISTINFO_FILE=\t../../other/common/distinfo",
@@ -874,8 +905,9 @@ func (s *Suite) Test_distinfoLinesChecker_checkPatchSha1__relative_path_in_disti
 			"PATCHDIR \"../../devel/patches/patches\" from line 21.")
 }
 
-func (s *Suite) Test_distinfoLinesChecker_checkPatchSha1(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoLinesChecker_checkPatchSha1(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	pkg := NewPackage(t.File("category/package"))
 	distinfoLine := t.NewLine(t.File("category/package/distinfo"), 5, "")
@@ -887,8 +919,9 @@ func (s *Suite) Test_distinfoLinesChecker_checkPatchSha1(c *check.C) {
 		"ERROR: ~/category/package/distinfo:5: Patch patch-nonexistent does not exist.")
 }
 
-func (s *Suite) Test_distinfoFileInfo_filename(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoFileInfo_filename(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	info := distinfoFileInfo{
 		isPatch: no,
@@ -903,8 +936,9 @@ func (s *Suite) Test_distinfoFileInfo_filename(c *check.C) {
 	t.CheckEquals(info.filename(), RelPath("distinfo"))
 }
 
-func (s *Suite) Test_distinfoFileInfo_line(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoFileInfo_line(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	line := t.NewLine("irrelevant", 12345, "irrelevant")
 	info := distinfoFileInfo{
@@ -920,8 +954,9 @@ func (s *Suite) Test_distinfoFileInfo_line(c *check.C) {
 	t.CheckEquals(info.line(), line)
 }
 
-func (s *Suite) Test_distinfoFileInfo_algorithms(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoFileInfo_algorithms(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	info := distinfoFileInfo{
 		isPatch: no,
@@ -946,8 +981,9 @@ func (s *Suite) Test_distinfoFileInfo_algorithms(c *check.C) {
 
 // The check for versioned distfiles only makes sense if the file
 // has the usual hashes for distfiles.
-func (s *Suite) Test_distinfoFileInfo_hasDistfileAlgorithms__code_coverage(c *check.C) {
-	t := s.Init(c)
+func Test_distinfoFileInfo_hasDistfileAlgorithms__code_coverage(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	t.CreateFileLines("category/package/distinfo",
@@ -985,8 +1021,9 @@ func (s *Suite) Test_distinfoFileInfo_hasDistfileAlgorithms__code_coverage(c *ch
 			"\"dist-d.tar.gz\", got BLAKE2s, SHA512, other.")
 }
 
-func (s *Suite) Test_computePatchSha1Hex(c *check.C) {
-	t := s.Init(c)
+func Test_computePatchSha1Hex(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(expectedHash string, lines ...string) {
 		fileLines := t.NewLines("irrelevant", lines...)

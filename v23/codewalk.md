@@ -11,7 +11,8 @@ This directory is commonly called `cmd`.
 
 ```go
 func main() {
-	exit(pkglint.G.Main(os.Stdout, os.Stderr, os.Args))
+	pkglint.G = pkglint.NewPkglint(os.Stdout, os.Stderr)
+	exit(pkglint.G.Main(os.Args))
 }
 ```
 
@@ -25,7 +26,7 @@ therefore the decision whether each element should be exported or not is not car
 If you want to use some of the code in your own pkgsrc programs,
 [just ask](mailto:%72%69%6C%6C%69%67%40NetBSD.org?subject=using%20pkglint%20as%20a%20library).
 
-> from [pkglint.go](pkglint.go#L94):
+> from [pkglint.go](pkglint.go#L98):
 
 ```go
 // Main runs the main program with the given arguments.
@@ -36,19 +37,19 @@ If you want to use some of the code in your own pkgsrc programs,
 // One of these options is trace.Tracing, which is connected to --debug.
 //
 // It also discards the -Wall option that is used by default in other tests.
-func (p *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) (exitCode int) {
+func (p *Pkglint) Main(args []string) (exitCode int) {
 ```
 
 When running pkglint, the `G` variable is set up first.
 It contains the whole global state of pkglint:
 
-> from [pkglint.go](pkglint.go#L87):
+> from [pkglint.go](pkglint.go#L83):
 
 ```go
 // G is the abbreviation for "global state";
 // this and the tracer are the only global variables in this Go package.
 var (
-	G     = NewPkglint(os.Stdout, os.Stderr)
+	G     Pkglint
 	trace tracePkg.Tracer
 )
 ```
@@ -56,7 +57,7 @@ var (
 All the interesting code is in the `Pkglint` type.
 Having only two global variables makes it easy to reset the global state during testing.
 
-> from [pkglint.go](pkglint.go#L94):
+> from [pkglint.go](pkglint.go#L98):
 
 ```go
 // Main runs the main program with the given arguments.
@@ -67,10 +68,8 @@ Having only two global variables makes it easy to reset the global state during 
 // One of these options is trace.Tracing, which is connected to --debug.
 //
 // It also discards the -Wall option that is used by default in other tests.
-func (p *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) (exitCode int) {
-	G.Logger.out = NewSeparatorWriter(stdout)
-	G.Logger.err = NewSeparatorWriter(stderr)
-	trace.Out = stdout
+func (p *Pkglint) Main(args []string) (exitCode int) {
+	trace.Out = p.Logger.out.out
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -112,13 +111,11 @@ func (p *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) (exitC
 
 The code for setting up the tests looks similar to the main code:
 
-> from [check_test.go](check_test.go#L56):
+> from [check_test.go](check_test.go#L128):
 
 ```go
-func (s *Suite) SetUpTest(c *check.C) {
-	t := Tester{c: c, testName: c.TestName()}
-	s.Tester = &t
-
+func NewTester(tt *testing.T) *Tester {
+	t := Tester{t: tt, testName: tt.Name()}
 	G = NewPkglint(&t.stdout, &t.stderr)
 	G.Testing = true
 	trace.Out = &t.stdout
@@ -126,7 +123,6 @@ func (s *Suite) SetUpTest(c *check.C) {
 	G.Pkgsrc = NewPkgsrc(t.File("."))
 	G.Project = G.Pkgsrc
 
-	t.c = c
 	t.SetUpCommandLine("-Wall")    // To catch duplicate warnings
 	G.Todo.Pop()                   // The "." was inserted by default.
 	t.seenSetUpCommandLine = false // This default call doesn't count.
@@ -135,12 +131,8 @@ func (s *Suite) SetUpTest(c *check.C) {
 	// in all cases. The latter cannot be ensured at compile time.
 	t.EnableSilentTracing()
 
-	prevdir, err := os.Getwd()
-	assertNil(err, "Cannot get current working directory: %s", err)
-	t.prevdir = NewCurrPathString(prevdir)
-
-	// No longer usable; see https://github.com/go-check/check/issues/22
-	t.c = nil
+	t.prevdir = G.cwd
+	return &t
 }
 ```
 
@@ -158,11 +150,12 @@ the actual checks happen.
 
 ```go
 func main() {
-	exit(pkglint.G.Main(os.Stdout, os.Stderr, os.Args))
+	pkglint.G = pkglint.NewPkglint(os.Stdout, os.Stderr)
+	exit(pkglint.G.Main(os.Args))
 }
 ```
 
-> from [pkglint.go](pkglint.go#L94):
+> from [pkglint.go](pkglint.go#L98):
 
 ```go
 // Main runs the main program with the given arguments.
@@ -173,10 +166,10 @@ func main() {
 // One of these options is trace.Tracing, which is connected to --debug.
 //
 // It also discards the -Wall option that is used by default in other tests.
-func (p *Pkglint) Main(stdout io.Writer, stderr io.Writer, args []string) (exitCode int) {
+func (p *Pkglint) Main(args []string) (exitCode int) {
 ```
 
-> from [pkglint.go](pkglint.go#L116):
+> from [pkglint.go](pkglint.go#L118):
 
 ```go
 	if exitcode := p.ParseCommandLine(args); exitcode != -1 {
@@ -191,7 +184,7 @@ and that is saved in `pkglint.Todo`, which contains all items that still need to
 The default use case for pkglint is to check the package from the
 current working directory, therefore this is done if no arguments are given.
 
-> from [pkglint.go](pkglint.go#L238):
+> from [pkglint.go](pkglint.go#L240):
 
 ```go
 	for _, arg := range remainingArgs {
@@ -212,7 +205,7 @@ In this example run, the first and only argument is `DESCR`.
 From there, the pkgsrc root is usually reachable via `../../`,
 and this is what pkglint tries.
 
-> from [pkglint.go](pkglint.go#L154):
+> from [pkglint.go](pkglint.go#L156):
 
 ```go
 	firstDir := p.Todo.Front()
@@ -244,7 +237,7 @@ one after another. When pkglint is called with the `-r` option,
 some entries may be added to the `Todo` list,
 but that doesn't happen in this simple example run.
 
-> from [pkglint.go](pkglint.go#L126):
+> from [pkglint.go](pkglint.go#L128):
 
 ```go
 	for !p.Todo.IsEmpty() {
@@ -254,7 +247,7 @@ but that doesn't happen in this simple example run.
 
 The main work is done in `Pkglint.Check` and `Pkglint.checkMode`:
 
-> from [pkglint.go](pkglint.go#L283):
+> from [pkglint.go](pkglint.go#L285):
 
 ```go
 	if isReg && p.Pkgsrc == nil {
@@ -267,7 +260,7 @@ Since `DESCR` is a regular file, the next function to call is `checkReg`.
 For directories, the next function would depend on the depth from the
 pkgsrc root directory.
 
-> from [pkglint.go](pkglint.go#L508):
+> from [pkglint.go](pkglint.go#L510):
 
 ```go
 // checkReg checks the given regular file.
@@ -278,7 +271,7 @@ func (p *Pkglint) checkReg(tf TypedFile, basename RelPath, depth int, pkg *Packa
 
 The relevant part of `Pkglint.checkReg` is:
 
-> from [pkglint.go](pkglint.go#L544):
+> from [pkglint.go](pkglint.go#L546):
 
 ```go
 	case basename == "buildlink3.mk":
@@ -313,7 +306,7 @@ The actual checks usually work on `Line` objects instead of files
 because the lines offer nice methods for logging the diagnostics
 and for automatically fixing the text (in pkglint's `--autofix` mode).
 
-> from [pkglint.go](pkglint.go#L432):
+> from [pkglint.go](pkglint.go#L434):
 
 ```go
 func CheckLinesDescr(lines *Lines) {
@@ -783,8 +776,9 @@ Some types that provide these methods are `Pkgsrc`, `Package`, `Line`.
 ### Standard shape of a test
 
 ```go
-func (s *Suite) Test_Type_Method__description(c *check.C) {
-	t := s.Init(c)       // Every test needs this.
+func Test_Type_Method__description(tt *testing.T) {
+	t := NewTester(tt)   // Every test needs this.
+	defer t.Done()       // Clean up properly
 
 	t.SetUp…(…)          // Set up the testing environment.
 
@@ -800,15 +794,26 @@ The `t` variable is the center of most tests.
 It is of type `Tester` and provides a high-level interface
 for setting up tests and checking the results.
 
-> from [check_test.go](check_test.go#L182):
+> from [check_test.go](check_test.go#L96):
 
 ```go
-// Tester provides utility methods for testing pkglint.
-// It is separated from the Suite since the latter contains
-// all the test methods, which makes it difficult to find
-// a method by auto-completion.
+// Tester provides utility methods for testing pkglint:
+//
+// * create files for the test:
+// CreateFileLines, SetUpPkgsrc, SetUpPackage
+//
+// * load these files into Line and MkLine objects (for tests spanning multiple files):
+// SetUpFileLines, SetUpFileMkLines
+//
+// * create new in-memory Line and MkLine objects (for simple tests):
+// NewLine, NewLines, NewMkLine, NewMkLines
+//
+// * check the files that have been changed by the --autofix feature:
+// CheckFileLines
+//
+// * check the pkglint diagnostics: CheckOutputEmpty, CheckOutputLines
 type Tester struct {
-	c        *check.C // Only usable during the test method itself
+	t        *testing.T
 	testName string
 	argv     []string // from the last invocation of Tester.SetUpCommandLine
 
@@ -825,18 +830,14 @@ type Tester struct {
 }
 ```
 
-The `s` variable is not used in tests.
-The only purpose of its type `Suite` is to group the tests so they are all run together.
+Here's a simple test function:
 
-The `c` variable comes from [gocheck](https://godoc.org/gopkg.in/check.v1),
-which is the underlying testing framework.
-Most pkglint tests don't need this variable.
-
-> from [util_test.go](util_test.go#L276):
+> from [util_test.go](util_test.go#L288):
 
 ```go
-func (s *Suite) Test_tabWidth(c *check.C) {
-	t := s.Init(c)
+func Test_tabWidth(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(tabWidth("12345"), 5)
 	t.CheckEquals(tabWidth("\t"), 8)
@@ -861,15 +862,16 @@ t.DisableTracing()
 To see how to set up complicated tests, have a look at the following test,
 which sets up a realistic environment to run the tests in.
 
-> from [pkglint_test.go](pkglint_test.go#L120):
+> from [pkglint_test.go](pkglint_test.go#L128):
 
 ```go
 // Demonstrates which infrastructure files are necessary to actually run
 // pkglint in a realistic scenario.
 //
 // Especially covers Pkglint.ShowSummary and Pkglint.checkReg.
-func (s *Suite) Test_Pkglint_Main__complete_package(c *check.C) {
-	t := s.Init(c)
+func Test_Pkglint_Main__complete_package(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	// Since the general infrastructure setup is useful for several tests,
 	// it is available as a separate method.

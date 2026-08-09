@@ -1,9 +1,10 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import "testing"
 
-func (s *Suite) Test_CheckdirToplevel(c *check.C) {
-	t := s.Init(c)
+func Test_CheckdirToplevel(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("Makefile",
 		MkCvsID,
@@ -35,8 +36,9 @@ func (s *Suite) Test_CheckdirToplevel(c *check.C) {
 			"with tabs, not spaces, to column 17 instead of 10.")
 }
 
-func (s *Suite) Test_CheckdirToplevel__recursive(c *check.C) {
-	t := s.Init(c)
+func Test_CheckdirToplevel__recursive(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("mk/misc/category.mk",
 		MkCvsID)
@@ -64,8 +66,9 @@ func (s *Suite) Test_CheckdirToplevel__recursive(c *check.C) {
 		t.Shquote("(Run \"pkglint -e -Wall -r %s\" to show explanations.)", "."))
 }
 
-func (s *Suite) Test_CheckdirToplevel__recursive_inter_package(c *check.C) {
-	t := s.Init(c)
+func Test_CheckdirToplevel__recursive_inter_package(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("mk/misc/category.mk",
 		MkCvsID)
@@ -93,8 +96,9 @@ func (s *Suite) Test_CheckdirToplevel__recursive_inter_package(c *check.C) {
 		t.Shquote("(Run \"pkglint -e -Wall -Call -r %s\" to show explanations.)", "."))
 }
 
-func (s *Suite) Test_CheckdirToplevel__indentation(c *check.C) {
-	t := s.Init(c)
+func Test_CheckdirToplevel__indentation(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.CreateFileLines("category1/Makefile")
@@ -115,8 +119,9 @@ func (s *Suite) Test_CheckdirToplevel__indentation(c *check.C) {
 		t.Shquote("(Run \"pkglint -F -Wall %s\" to automatically fix some issues.)", "."))
 }
 
-func (s *Suite) Test_CheckdirToplevel__absent(c *check.C) {
-	t := s.Init(c)
+func Test_CheckdirToplevel__absent(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 
@@ -126,8 +131,9 @@ func (s *Suite) Test_CheckdirToplevel__absent(c *check.C) {
 		"ERROR: ~/Makefile: Cannot be read.")
 }
 
-func (s *Suite) Test_Toplevel_checkSubdir__sorting_x11(c *check.C) {
-	t := s.Init(c)
+func Test_Toplevel_checkSubdir__sorting_x11(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("Makefile",
 		MkCvsID,
@@ -147,8 +153,9 @@ func (s *Suite) Test_Toplevel_checkSubdir__sorting_x11(c *check.C) {
 		"WARN: ~/Makefile:5: archivers should come before sysutils.")
 }
 
-func (s *Suite) Test_Toplevel_checkSubdir__commented_without_reason(c *check.C) {
-	t := s.Init(c)
+func Test_Toplevel_checkSubdir__commented_without_reason(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("Makefile",
 		MkCvsID,

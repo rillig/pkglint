@@ -1,9 +1,10 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import "testing"
 
-func (s *Suite) Test_SimpleCommandChecker__case_continue_with_loop(c *check.C) {
-	t := s.Init(c)
+func Test_SimpleCommandChecker__case_continue_with_loop(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	code := "case $$fname in ${CHECK_PORTABILITY_SKIP:@p@${p}) continue;; @} esac"
 	line := t.NewLine("filename.mk", 123, "\t"+code)
@@ -15,8 +16,9 @@ func (s *Suite) Test_SimpleCommandChecker__case_continue_with_loop(c *check.C) {
 		"${CHECK_PORTABILITY_SKIP:@p@${p}) continue;; @}")
 }
 
-func (s *Suite) Test_SimpleCommandChecker__case_continue_with_suffix(c *check.C) {
-	t := s.Init(c)
+func Test_SimpleCommandChecker__case_continue_with_suffix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	code := "case $$fname in ${CHECK_PORTABILITY_SKIP:=) continue;; } esac"
 	line := t.NewLine("filename.mk", 123, "\t"+code)
@@ -32,8 +34,9 @@ func (s *Suite) Test_SimpleCommandChecker__case_continue_with_suffix(c *check.C)
 // When pkglint is called without -Wextra, the check for unknown shell
 // commands is disabled, as it is still unreliable. As of December 2019
 // there are around 500 warnings in pkgsrc, and several of them are wrong.
-func (s *Suite) Test_SimpleCommandChecker_checkCommandStart__unknown_default(c *check.C) {
-	t := s.Init(c)
+func Test_SimpleCommandChecker_checkCommandStart__unknown_default(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	var pkg *Package
 	test := func(commandLineArg string, diagnostics ...string) {
@@ -71,8 +74,9 @@ func (s *Suite) Test_SimpleCommandChecker_checkCommandStart__unknown_default(c *
 
 // Despite its name, the TOOLS_PATH.* name the whole shell command,
 // not just the path of its executable.
-func (s *Suite) Test_SimpleCommandChecker_checkCommandStart__TOOLS_PATH(c *check.C) {
-	t := s.Init(c)
+func Test_SimpleCommandChecker_checkCommandStart__TOOLS_PATH(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		"CONFIG_SHELL=\t${TOOLS_PATH.bash}")
@@ -83,8 +87,9 @@ func (s *Suite) Test_SimpleCommandChecker_checkCommandStart__TOOLS_PATH(c *check
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_SimpleCommandChecker_checkInstallCommand(c *check.C) {
-	t := s.Init(c)
+func Test_SimpleCommandChecker_checkInstallCommand(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := func(lines ...string) []string { return lines }
 
@@ -151,8 +156,9 @@ func (s *Suite) Test_SimpleCommandChecker_checkInstallCommand(c *check.C) {
 		nil...)
 }
 
-func (s *Suite) Test_SimpleCommandChecker_handleForbiddenCommand(c *check.C) {
-	t := s.Init(c)
+func Test_SimpleCommandChecker_handleForbiddenCommand(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("Makefile",
 		MkCvsID,
@@ -166,8 +172,9 @@ func (s *Suite) Test_SimpleCommandChecker_handleForbiddenCommand(c *check.C) {
 		"ERROR: Makefile:3: \"texconfig\" must not be used in Makefiles.")
 }
 
-func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable(c *check.C) {
-	t := s.Init(c)
+func Test_SimpleCommandChecker_handleCommandVariable(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("runtime", "RUNTIME", AtRunTime)
@@ -198,8 +205,9 @@ func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable(c *check.C) {
 		"WARN: Makefile:11: Unknown shell command \"${PKGNAME}\".")
 }
 
-func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable__parameterized(c *check.C) {
-	t := s.Init(c)
+func Test_SimpleCommandChecker_handleCommandVariable__parameterized(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	pkg := NewPackage(t.File("category/package"))
@@ -222,8 +230,9 @@ func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable__parameterized(c
 		"WARN: Makefile:8: Variable \"UNKNOWN_TOOL\" is used but not defined.")
 }
 
-func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable__followed_by_literal(c *check.C) {
-	t := s.Init(c)
+func Test_SimpleCommandChecker_handleCommandVariable__followed_by_literal(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package")
 	pkg := NewPackage(t.File("category/package"))
@@ -252,8 +261,9 @@ func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable__followed_by_lit
 // TODO: This paragraph sounds wrong. All commands from included files should be valid.
 //
 // The PYTHON_BIN variable below must not be called *_CMD, or another code path is taken.
-func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable__from_package(c *check.C) {
-	t := s.Init(c)
+func Test_SimpleCommandChecker_handleCommandVariable__from_package(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	pkg := t.SetUpPackage("category/package",
 		"post-install:",
@@ -270,8 +280,9 @@ func (s *Suite) Test_SimpleCommandChecker_handleCommandVariable__from_package(c 
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_SimpleCommandChecker_handleShellBuiltin(c *check.C) {
-	t := s.Init(c)
+func Test_SimpleCommandChecker_handleShellBuiltin(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		"\t:")
@@ -301,8 +312,9 @@ func (s *Suite) Test_SimpleCommandChecker_handleShellBuiltin(c *check.C) {
 	test("git", false)
 }
 
-func (s *Suite) Test_SimpleCommandChecker_checkRegexReplace(c *check.C) {
-	t := s.Init(c)
+func Test_SimpleCommandChecker_checkRegexReplace(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(cmd string, diagnostics ...string) {
 		t.SetUpTool("pax", "PAX", AtRunTime)
@@ -353,8 +365,9 @@ func (s *Suite) Test_SimpleCommandChecker_checkRegexReplace(c *check.C) {
 	G.Testing = true
 }
 
-func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs(c *check.C) {
-	t := s.Init(c)
+func Test_SimpleCommandChecker_checkAutoMkdirs(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	// TODO: Check whether these tools are actually necessary for this test.
@@ -412,8 +425,9 @@ func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs(c *check.C) {
 		"NOTE: filename.mk:1: You can use \"INSTALLATION_DIRS+= share/other\" instead of \"${INSTALL_DATA_DIR}\".")
 }
 
-func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs__redundant(c *check.C) {
-	t := s.Init(c)
+func Test_SimpleCommandChecker_checkAutoMkdirs__redundant(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		"AUTO_MKDIRS=\t\tyes",
@@ -441,8 +455,9 @@ func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs__redundant(c *check.C)
 
 // The AUTO_MKDIRS code in mk/install/install.mk (install-dirs-from-PLIST)
 // skips conditional directories, as well as directories with placeholders.
-func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs__conditional_PLIST(c *check.C) {
-	t := s.Init(c)
+func Test_SimpleCommandChecker_checkAutoMkdirs__conditional_PLIST(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		"LIB_SUBDIR=\tsubdir",
@@ -476,8 +491,9 @@ func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs__conditional_PLIST(c *
 			"instead of \"${INSTALL_DATA_DIR}\".")
 }
 
-func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs__strange_paths(c *check.C) {
-	t := s.Init(c)
+func Test_SimpleCommandChecker_checkAutoMkdirs__strange_paths(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(path string, diagnostics ...string) {
 		mklines := t.NewMkLines("filename.mk",
@@ -555,8 +571,9 @@ func (s *Suite) Test_SimpleCommandChecker_checkAutoMkdirs__strange_paths(c *chec
 
 // This test ensures that the command line options to INSTALL_*_DIR are properly
 // parsed and do not lead to "can only handle one directory at a time" warnings.
-func (s *Suite) Test_SimpleCommandChecker_checkInstallMulti(c *check.C) {
-	t := s.Init(c)
+func Test_SimpleCommandChecker_checkInstallMulti(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("install.mk",
@@ -573,8 +590,9 @@ func (s *Suite) Test_SimpleCommandChecker_checkInstallMulti(c *check.C) {
 			"instead of \"${INSTALL_PROGRAM_DIR}\".")
 }
 
-func (s *Suite) Test_SimpleCommandChecker_checkPaxPe(c *check.C) {
-	t := s.Init(c)
+func Test_SimpleCommandChecker_checkPaxPe(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("pax", "PAX", AtRunTime)
@@ -592,8 +610,9 @@ func (s *Suite) Test_SimpleCommandChecker_checkPaxPe(c *check.C) {
 		"WARN: Makefile:5: Use the -pp option to pax(1) instead of -pe.")
 }
 
-func (s *Suite) Test_SimpleCommandChecker_checkEchoN(c *check.C) {
-	t := s.Init(c)
+func Test_SimpleCommandChecker_checkEchoN(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpTool("echo", "ECHO", AtRunTime)
 	t.SetUpTool("echo -n", "ECHO_N", AtRunTime)

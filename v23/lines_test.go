@@ -1,9 +1,10 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import "testing"
 
-func (s *Suite) Test_NewLines(c *check.C) {
-	t := s.Init(c)
+func Test_NewLines(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("filename",
 		"text")
@@ -11,8 +12,9 @@ func (s *Suite) Test_NewLines(c *check.C) {
 	t.CheckEquals(lines.Filename, NewCurrPathString("filename"))
 }
 
-func (s *Suite) Test_Lines_Len(c *check.C) {
-	t := s.Init(c)
+func Test_Lines_Len(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("filename",
 		"one",
@@ -22,8 +24,9 @@ func (s *Suite) Test_Lines_Len(c *check.C) {
 	t.CheckEquals(lines.Len(), 3)
 }
 
-func (s *Suite) Test_Lines_LastLine(c *check.C) {
-	t := s.Init(c)
+func Test_Lines_LastLine(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("filename",
 		"text")
@@ -33,8 +36,9 @@ func (s *Suite) Test_Lines_LastLine(c *check.C) {
 	t.CheckEquals(whole.String(), "filename:1: text")
 }
 
-func (s *Suite) Test_Lines_EOFLine(c *check.C) {
-	t := s.Init(c)
+func Test_Lines_EOFLine(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("filename",
 		"text")
@@ -45,8 +49,9 @@ func (s *Suite) Test_Lines_EOFLine(c *check.C) {
 	t.CheckEquals(whole.String(), "filename:EOF: ")
 }
 
-func (s *Suite) Test_Lines_Whole(c *check.C) {
-	t := s.Init(c)
+func Test_Lines_Whole(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("filename",
 		"text")
@@ -58,8 +63,9 @@ func (s *Suite) Test_Lines_Whole(c *check.C) {
 	t.CheckEquals(whole.String(), "filename:: ")
 }
 
-func (s *Suite) Test_Lines_SaveAutofixChanges(c *check.C) {
-	t := s.Init(c)
+func Test_Lines_SaveAutofixChanges(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	doTest := func(autofix bool) {
 		lines := t.SetUpFileLines("filename",
@@ -79,8 +85,9 @@ func (s *Suite) Test_Lines_SaveAutofixChanges(c *check.C) {
 		"AUTOFIX: ~/filename:1: Replacing \"before\" with \"after\".")
 }
 
-func (s *Suite) Test_Lines_CheckCvsID(c *check.C) {
-	t := s.Init(c)
+func Test_Lines_CheckCvsID(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("filename",
 		"$"+"NetBSD: dummy $",
@@ -104,8 +111,9 @@ func (s *Suite) Test_Lines_CheckCvsID(c *check.C) {
 // "$NetBSD:" is a copy-and-paste mistake rather than an intentional
 // documentation of the file's history. Therefore, pkgsrc-wip files should
 // only use the unexpanded form.
-func (s *Suite) Test_Lines_CheckCvsID__wip(c *check.C) {
-	t := s.Init(c)
+func Test_Lines_CheckCvsID__wip(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	G.Experimental = true
 	t.SetUpPkgsrc()

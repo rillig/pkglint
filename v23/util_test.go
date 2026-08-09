@@ -3,7 +3,6 @@ package pkglint
 import (
 	"errors"
 	"fmt"
-	"gopkg.in/check.v1"
 	"os"
 	"reflect"
 	"sort"
@@ -11,16 +10,18 @@ import (
 	"time"
 )
 
-func (s *Suite) Test_YesNoUnknown_String(c *check.C) {
-	t := s.Init(c)
+func Test_YesNoUnknown_String(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(yes.String(), "yes")
 	t.CheckEquals(no.String(), "no")
 	t.CheckEquals(unknown.String(), "unknown")
 }
 
-func (s *Suite) Test_trimHspace(c *check.C) {
-	t := s.Init(c)
+func Test_trimHspace(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(trimHspace("a b"), "a b")
 	t.CheckEquals(trimHspace(" a b "), "a b")
@@ -58,8 +59,9 @@ func Test_trimCommonPrefix(t *testing.T) {
 	}
 }
 
-func (s *Suite) Test_trimCommon(c *check.C) {
-	t := s.Init(c)
+func Test_trimCommon(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(a, b, trimmedA, trimmedB string) {
 		ta, tb := trimCommon(a, b)
@@ -89,8 +91,9 @@ func (s *Suite) Test_trimCommon(c *check.C) {
 		"a", "")
 }
 
-func (s *Suite) Test_replaceOnce(c *check.C) {
-	t := s.Init(c)
+func Test_replaceOnce(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(s, from, to, result string) {
 		ok, actualResult := replaceOnce(s, from, to)
@@ -115,22 +118,25 @@ func (s *Suite) Test_replaceOnce(c *check.C) {
 	test("aaa", "aa", "b", "aaa")
 }
 
-func (s *Suite) Test_condStr(c *check.C) {
-	t := s.Init(c)
+func Test_condStr(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(condStr(true, "T", "F"), "T")
 	t.CheckEquals(condStr(false, "T", "F"), "F")
 }
 
-func (s *Suite) Test_condInt(c *check.C) {
-	t := s.Init(c)
+func Test_condInt(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(condInt(true, 123, 456), 123)
 	t.CheckEquals(condInt(false, 123, 456), 456)
 }
 
-func (s *Suite) Test_assertNil(c *check.C) {
-	t := s.Init(c)
+func Test_assertNil(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	assertNil(nil, "this is not an error")
 
@@ -139,8 +145,9 @@ func (s *Suite) Test_assertNil(c *check.C) {
 		"Pkglint internal error: Oops: unexpected error")
 }
 
-func (s *Suite) Test_assertNotNil(c *check.C) {
-	t := s.Init(c)
+func Test_assertNotNil(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	assertNotNil("this string is not nil")
 
@@ -152,15 +159,17 @@ func (s *Suite) Test_assertNotNil(c *check.C) {
 		"Pkglint internal error: unexpected nil pointer")
 }
 
-func (s *Suite) Test_assert(c *check.C) {
-	t := s.Init(c)
+func Test_assert(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	assert(true)
 	t.ExpectAssert(func() { assert(false) })
 }
 
-func (s *Suite) Test_isEmptyDir(c *check.C) {
-	t := s.Init(c)
+func Test_isEmptyDir(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("CVS/Entries",
 		"dummy")
@@ -176,8 +185,9 @@ func (s *Suite) Test_isEmptyDir(c *check.C) {
 	t.CheckEquals(isEmptyDir("CVS"), true)
 }
 
-func (s *Suite) Test_isEmptyDir__and_getSubdirs(c *check.C) {
-	t := s.Init(c)
+func Test_isEmptyDir__and_getSubdirs(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("CVS/Entries",
 		"dummy")
@@ -202,8 +212,9 @@ func (s *Suite) Test_isEmptyDir__and_getSubdirs(c *check.C) {
 	}
 }
 
-func (s *Suite) Test_getSubdirs(c *check.C) {
-	t := s.Init(c)
+func Test_getSubdirs(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CreateFileLines("subdir/file")
 	t.CreateFileLines("empty/file")
@@ -212,8 +223,9 @@ func (s *Suite) Test_getSubdirs(c *check.C) {
 	t.CheckDeepEquals(getSubdirs(t.File(".")), []RelPath{"subdir"})
 }
 
-func (s *Suite) Test_isIgnoredFilename(c *check.C) {
-	t := s.Init(c)
+func Test_isIgnoredFilename(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(filename string, isIgnored bool) {
 		t.CheckEquals(isIgnoredFilename(filename), isIgnored)
@@ -239,8 +251,9 @@ func (s *Suite) Test_isIgnoredFilename(c *check.C) {
 	test("PLIST.~1.7.~", true)
 }
 
-func (s *Suite) Test_isLocallyModified(c *check.C) {
-	t := s.Init(c)
+func Test_isLocallyModified(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	unmodified := t.CreateFileLines("unmodified")
 	modTime := time.Unix(1136239445, 0).UTC()
@@ -272,8 +285,9 @@ func (s *Suite) Test_isLocallyModified(c *check.C) {
 	t.CheckEquals(isLocallyModified(t.File("unmodified")), false)
 }
 
-func (s *Suite) Test_tabWidth(c *check.C) {
-	t := s.Init(c)
+func Test_tabWidth(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(tabWidth("12345"), 5)
 	t.CheckEquals(tabWidth("\t"), 8)
@@ -285,14 +299,16 @@ func (s *Suite) Test_tabWidth(c *check.C) {
 // Since tabWidthAppend is used with logical lines (Line.Text) as well as with
 // raw lines (RawLine.textnl or RawLine.orignl), and since the width only
 // makes sense for a single line, better panic.
-func (s *Suite) Test_tabWidthAppend__panic(c *check.C) {
-	t := s.Init(c)
+func Test_tabWidthAppend__panic(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.ExpectAssert(func() { tabWidthAppend(0, "\n") })
 }
 
-func (s *Suite) Test_detab(c *check.C) {
-	t := s.Init(c)
+func Test_detab(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(detab(""), "")
 	t.CheckEquals(detab("\t"), "        ")
@@ -301,8 +317,9 @@ func (s *Suite) Test_detab(c *check.C) {
 	t.CheckEquals(detab("12345678\t"), "12345678        ")
 }
 
-func (s *Suite) Test_alignWith(c *check.C) {
-	t := s.Init(c)
+func Test_alignWith(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(str, other, expected string) {
 		aligned := alignWith(str, other)
@@ -327,14 +344,16 @@ func (s *Suite) Test_alignWith(c *check.C) {
 	test("1234567890=", "V=", "1234567890=")
 }
 
-func (s *Suite) Test_alignmentToWidths(c *check.C) {
-	t := s.Init(c)
+func Test_alignmentToWidths(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(alignmentToWidths(8, 72), "\t\t\t\t\t\t\t\t")
 }
 
-func (s *Suite) Test_indent(c *check.C) {
-	t := s.Init(c)
+func Test_indent(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(width int, ind string) {
 		actual := indent(width)
@@ -354,8 +373,9 @@ func (s *Suite) Test_indent(c *check.C) {
 	test(87, "\t\t\t\t\t\t\t\t\t\t       ")
 }
 
-func (s *Suite) Test_alignmentAfter(c *check.C) {
-	t := s.Init(c)
+func Test_alignmentAfter(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(prefix string, width int, ind string) {
 		actual := alignmentAfter(prefix, width)
@@ -380,40 +400,45 @@ func (s *Suite) Test_alignmentAfter(c *check.C) {
 	t.ExpectAssert(func() { test("\t", 7, "") })
 }
 
-func (s *Suite) Test_shorten(c *check.C) {
-	t := s.Init(c)
+func Test_shorten(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(shorten("aaaaa", 3), "aaa...")
 	t.CheckEquals(shorten("aaaaa", 5), "aaaaa")
 	t.CheckEquals(shorten("aaa", 5), "aaa")
 }
 
-func (s *Suite) Test_varnameBase(c *check.C) {
-	t := s.Init(c)
+func Test_varnameBase(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(varnameBase("VAR"), "VAR")
 	t.CheckEquals(varnameBase("VAR.param"), "VAR")
 	t.CheckEquals(varnameBase(".CURDIR"), ".CURDIR")
 }
 
-func (s *Suite) Test_varnameCanon(c *check.C) {
-	t := s.Init(c)
+func Test_varnameCanon(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(varnameCanon("VAR"), "VAR")
 	t.CheckEquals(varnameCanon("VAR.param"), "VAR.*")
 	t.CheckEquals(varnameCanon(".CURDIR"), ".CURDIR")
 }
 
-func (s *Suite) Test_varnameParam(c *check.C) {
-	t := s.Init(c)
+func Test_varnameParam(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(varnameParam("VAR"), "")
 	t.CheckEquals(varnameParam("VAR.param"), "param")
 	t.CheckEquals(varnameParam(".CURDIR"), "")
 }
 
-func (s *Suite) Test__regex_ReplaceFirst(c *check.C) {
-	t := s.Init(c)
+func Test__regex_ReplaceFirst(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	m, rest := G.res.ReplaceFirst("a+b+c+d", `(\w)(.)(\w)`, "X")
 
@@ -553,8 +578,9 @@ func Test_containsExpr(t *testing.T) {
 	}
 }
 
-func (s *Suite) Test_OncePerStringSlice(c *check.C) {
-	t := s.Init(c)
+func Test_OncePerStringSlice(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	var once OncePerStringSlice
 
@@ -563,8 +589,9 @@ func (s *Suite) Test_OncePerStringSlice(c *check.C) {
 	t.CheckEquals(once.FirstTime("str", "str2"), false)
 }
 
-func (s *Suite) Test_naturalLess(c *check.C) {
-	t := s.Init(c)
+func Test_naturalLess(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	var elements = []string{
 		"",
@@ -589,8 +616,9 @@ func (s *Suite) Test_naturalLess(c *check.C) {
 	}
 }
 
-func (s *Suite) Test_FileCache(c *check.C) {
-	t := s.Init(c)
+func Test_FileCache(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.EnableTracingToLog()
 
@@ -609,13 +637,13 @@ func (s *Suite) Test_FileCache(c *check.C) {
 
 	linesFromCache := cache.Get("Makefile", 0)
 	t.CheckEquals(linesFromCache.Filename, NewCurrPath("Makefile"))
-	t.CheckLen(linesFromCache.Lines, 2)
+	t.CheckEquals(len(linesFromCache.Lines), 2)
 	t.CheckEquals(linesFromCache.Lines[0].Filename(), NewCurrPath("Makefile"))
 
 	// Cache keys are normalized using path.Clean.
 	linesFromCache2 := cache.Get("./Makefile", 0)
 	t.CheckEquals(linesFromCache2.Filename, NewCurrPath("./Makefile"))
-	t.CheckLen(linesFromCache2.Lines, 2)
+	t.CheckEquals(len(linesFromCache2.Lines), 2)
 	t.CheckEquals(linesFromCache2.Lines[0].Filename(), NewCurrPath("./Makefile"))
 
 	cache.Put("file1.mk", 0, lines)
@@ -639,8 +667,8 @@ func (s *Suite) Test_FileCache(c *check.C) {
 	cache.Evict("Makefile")
 
 	t.CheckNil(cache.Get("Makefile", 0))
-	t.CheckLen(cache.table, 1)
-	t.CheckLen(cache.mapping, 1)
+	t.CheckEquals(len(cache.table), 1)
+	t.CheckEquals(len(cache.mapping), 1)
 	t.CheckEquals(cache.hits, 7)
 	t.CheckEquals(cache.misses, 5)
 
@@ -653,8 +681,9 @@ func (s *Suite) Test_FileCache(c *check.C) {
 		"TRACE:   FileCache.Halve \"Makefile\" with count 4.")
 }
 
-func (s *Suite) Test_FileCache_removeOldEntries__branch_coverage(c *check.C) {
-	t := s.Init(c)
+func Test_FileCache_removeOldEntries__branch_coverage(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.EnableTracingToLog()
 	G.Testing = false
@@ -675,8 +704,9 @@ func (s *Suite) Test_FileCache_removeOldEntries__branch_coverage(c *check.C) {
 		"TRACE:   FileCache.Halve \"filename2.mk\" with count 3.")
 }
 
-func (s *Suite) Test_FileCache_removeOldEntries__no_tracing(c *check.C) {
-	t := s.Init(c)
+func Test_FileCache_removeOldEntries__no_tracing(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.DisableTracing()
 
@@ -694,8 +724,9 @@ func (s *Suite) Test_FileCache_removeOldEntries__no_tracing(c *check.C) {
 }
 
 // Covers the newLen > 0 condition.
-func (s *Suite) Test_FileCache_removeOldEntries__zero_capacity(c *check.C) {
-	t := s.Init(c)
+func Test_FileCache_removeOldEntries__zero_capacity(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("filename.mk",
 		MkCvsID)
@@ -707,8 +738,9 @@ func (s *Suite) Test_FileCache_removeOldEntries__zero_capacity(c *check.C) {
 	cache.Put("filename2.mk", 0, lines)
 }
 
-func (s *Suite) Test_FileCache_Evict__sort(c *check.C) {
-	t := s.Init(c)
+func Test_FileCache_Evict__sort(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	lines := t.NewLines("filename.mk",
 		MkCvsID)
@@ -726,19 +758,21 @@ func (s *Suite) Test_FileCache_Evict__sort(c *check.C) {
 
 	cache.Evict("filename5.mk")
 
-	t.CheckLen(cache.table, 9)
+	t.CheckEquals(len(cache.table), 9)
 	t.CheckNil(cache.Get("filename5.mk", 0))
 	t.CheckNotNil(cache.Get("filename6.mk", 0))
 }
 
-func (s *Suite) Test_bmakeHelp(c *check.C) {
-	t := s.Init(c)
+func Test_bmakeHelp(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(bmakeHelp("subst"), confMake+" help topic=subst")
 }
 
-func (s *Suite) Test_wrap(c *check.C) {
-	t := s.Init(c)
+func Test_wrap(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	wrapped := wrap(20,
 		"See the pkgsrc guide, section \"Package components, Makefile\":",
@@ -796,8 +830,9 @@ func (s *Suite) Test_wrap(c *check.C) {
 	t.CheckDeepEquals(wrapped, expected)
 }
 
-func (s *Suite) Test_escapePrintable(c *check.C) {
-	t := s.Init(c)
+func Test_escapePrintable(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckEquals(escapePrintable(""), "")
 	t.CheckEquals(escapePrintable("ASCII only~\n\t"), "ASCII only~\n\t")
@@ -806,8 +841,9 @@ func (s *Suite) Test_escapePrintable(c *check.C) {
 	t.CheckEquals(escapePrintable("Unicode \uFFFD replacement"), "Unicode <U+FFFD> replacement")
 }
 
-func (s *Suite) Test_stringSliceLess(c *check.C) {
-	t := s.Init(c)
+func Test_stringSliceLess(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	var elements = [][][]string{
 		{nil, {}},
@@ -838,16 +874,18 @@ func (s *Suite) Test_stringSliceLess(c *check.C) {
 	}
 }
 
-func (s *Suite) Test_joinSkipEmpty(c *check.C) {
-	t := s.Init(c)
+func Test_joinSkipEmpty(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckDeepEquals(
 		joinSkipEmpty(", ", "", "one", "", "", "two", "", "three"),
 		"one, two, three")
 }
 
-func (s *Suite) Test_joinCambridge(c *check.C) {
-	t := s.Init(c)
+func Test_joinCambridge(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckDeepEquals(
 		joinCambridge("and", "", "one", "", "", "two", "", "three"),
@@ -858,8 +896,9 @@ func (s *Suite) Test_joinCambridge(c *check.C) {
 		"one")
 }
 
-func (s *Suite) Test_joinOxford(c *check.C) {
-	t := s.Init(c)
+func Test_joinOxford(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.CheckDeepEquals(
 		joinOxford("and", "", "one", "", "", "two", "", "three"),
@@ -890,8 +929,9 @@ func Test_expandCurlyBraces(t *testing.T) {
 	}
 }
 
-func (s *Suite) Test_newPathMatcher(c *check.C) {
-	t := s.Init(c)
+func Test_newPathMatcher(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(pattern string, matchType pathMatchType, matchPattern string) {
 		t.CheckEquals(*newPathMatcher(pattern), pathMatcher{matchType, matchPattern, pattern})
@@ -917,8 +957,9 @@ func (s *Suite) Test_newPathMatcher(c *check.C) {
 	testPanic("malformed[")
 }
 
-func (s *Suite) Test_pathMatcher_matches(c *check.C) {
-	t := s.Init(c)
+func Test_pathMatcher_matches(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(pattern string, subject string, expected bool) {
 		matcher := newPathMatcher(pattern)
@@ -941,8 +982,9 @@ func (s *Suite) Test_pathMatcher_matches(c *check.C) {
 	test("Makefile.*", "makefile.txt", false)
 }
 
-func (s *Suite) Test_StringInterner(c *check.C) {
-	t := s.Init(c)
+func Test_StringInterner(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	si := NewStringInterner()
 
@@ -952,8 +994,9 @@ func (s *Suite) Test_StringInterner(c *check.C) {
 	t.CheckEquals(si.Intern("Hello, world"[0:5]), "Hello")
 }
 
-func (s *Suite) Test_shquote(c *check.C) {
-	t := s.Init(c)
+func Test_shquote(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(in, out string) {
 		t.CheckEquals(shquote(in), out)
@@ -965,8 +1008,9 @@ func (s *Suite) Test_shquote(c *check.C) {
 	test("~", "'~'")
 }
 
-func (s *Suite) Test_LazyStringBuilder_WriteByte__exact_match(c *check.C) {
-	t := s.Init(c)
+func Test_LazyStringBuilder_WriteByte__exact_match(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	sb := NewLazyStringBuilder("word")
 
@@ -979,8 +1023,9 @@ func (s *Suite) Test_LazyStringBuilder_WriteByte__exact_match(c *check.C) {
 	t.CheckNil(sb.buf)
 }
 
-func (s *Suite) Test_LazyStringBuilder_WriteByte__longer_than_expected(c *check.C) {
-	t := s.Init(c)
+func Test_LazyStringBuilder_WriteByte__longer_than_expected(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	sb := NewLazyStringBuilder("word")
 	sb.WriteByte('w')
@@ -993,8 +1038,9 @@ func (s *Suite) Test_LazyStringBuilder_WriteByte__longer_than_expected(c *check.
 	t.CheckDeepEquals(sb.buf, []byte{'w', 'o', 'r', 'd', 's'})
 }
 
-func (s *Suite) Test_LazyStringBuilder_WriteByte__shorter_than_expected(c *check.C) {
-	t := s.Init(c)
+func Test_LazyStringBuilder_WriteByte__shorter_than_expected(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	sb := NewLazyStringBuilder("word")
 	sb.WriteByte('w')
@@ -1010,8 +1056,9 @@ func (s *Suite) Test_LazyStringBuilder_WriteByte__shorter_than_expected(c *check
 	t.CheckNil(sb.buf)
 }
 
-func (s *Suite) Test_LazyStringBuilder_WriteByte__other_than_expected(c *check.C) {
-	t := s.Init(c)
+func Test_LazyStringBuilder_WriteByte__other_than_expected(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	sb := NewLazyStringBuilder("word")
 	sb.WriteByte('w')
@@ -1023,8 +1070,9 @@ func (s *Suite) Test_LazyStringBuilder_WriteByte__other_than_expected(c *check.C
 	t.CheckDeepEquals(sb.buf, []byte{'w', 'o', 'l', 'f'})
 }
 
-func (s *Suite) Test_LazyStringBuilder_writeToBuf__assertion(c *check.C) {
-	t := s.Init(c)
+func Test_LazyStringBuilder_writeToBuf__assertion(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	sb := NewLazyStringBuilder("0123456789abcdef0123456789abcdef")
 	sb.WriteString("0123456789abcdef0123456789abcdeX")
@@ -1040,8 +1088,9 @@ func (s *Suite) Test_LazyStringBuilder_writeToBuf__assertion(c *check.C) {
 	t.ExpectAssert(func() { sb.writeToBuf('x') })
 }
 
-func (s *Suite) Test_LazyStringBuilder_Reset(c *check.C) {
-	t := s.Init(c)
+func Test_LazyStringBuilder_Reset(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	sb := NewLazyStringBuilder("word")
 	sb.WriteByte('w')
@@ -1089,8 +1138,9 @@ func keys(m any) []string {
 	return keys
 }
 
-func (s *Suite) Test_interval(c *check.C) {
-	t := s.Init(c)
+func Test_interval(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	i := newInterval()
 

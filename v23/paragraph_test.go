@@ -1,9 +1,10 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import "testing"
 
-func (s *Suite) Test_Paragraph__empty_line(c *check.C) {
-	t := s.Init(c)
+func Test_Paragraph__empty_line(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		"")
@@ -11,8 +12,9 @@ func (s *Suite) Test_Paragraph__empty_line(c *check.C) {
 	t.ExpectAssert(func() { _ = NewParagraph(mklines, 0, 1) })
 }
 
-func (s *Suite) Test_Paragraph_Align(c *check.C) {
-	t := s.Init(c)
+func Test_Paragraph_Align(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--autofix")
 	mklines := t.SetUpFileMkLines("filename.mk",
@@ -34,8 +36,9 @@ func (s *Suite) Test_Paragraph_Align(c *check.C) {
 		"VAR=    value")
 }
 
-func (s *Suite) Test_Paragraph_AlignTo(c *check.C) {
-	t := s.Init(c)
+func Test_Paragraph_AlignTo(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--autofix")
 	mklines := t.SetUpFileMkLines("filename.mk",
@@ -64,8 +67,9 @@ func (s *Suite) Test_Paragraph_AlignTo(c *check.C) {
 		"VAR=            value")
 }
 
-func (s *Suite) Test_Paragraph_AlignTo__continued_lines(c *check.C) {
-	t := s.Init(c)
+func Test_Paragraph_AlignTo__continued_lines(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--autofix")
 	mklines := t.SetUpFileMkLines("filename.mk",
@@ -94,8 +98,9 @@ func (s *Suite) Test_Paragraph_AlignTo__continued_lines(c *check.C) {
 		"                value3")
 }
 
-func (s *Suite) Test_Paragraph_AlignTo__outlier(c *check.C) {
-	t := s.Init(c)
+func Test_Paragraph_AlignTo__outlier(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("-Wall", "--autofix")
 	mklines := t.SetUpFileMkLines("filename.mk",

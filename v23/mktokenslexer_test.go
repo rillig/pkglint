@@ -2,12 +2,13 @@ package pkglint
 
 import (
 	"github.com/rillig/pkglint/v23/textproc"
-	"gopkg.in/check.v1"
+	"testing"
 )
 
 // A slice of a single token behaves like textproc.Lexer.
-func (s *Suite) Test_MkTokensLexer__single_plain_text_token(c *check.C) {
-	t := s.Init(c)
+func Test_MkTokensLexer__single_plain_text_token(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	lexer := NewMkTokensLexer(b.Tokens(b.TextToken("\\# $$ [#] $V")))
@@ -31,8 +32,9 @@ func (s *Suite) Test_MkTokensLexer__single_plain_text_token(c *check.C) {
 //
 // Because all these cases are only theoretical, the MkTokensLexer doesn't
 // bother to make this unnecessary copy and works on the shared slice.
-func (s *Suite) Test_NewMkTokensLexer__shared_array(c *check.C) {
-	t := s.Init(c)
+func Test_NewMkTokensLexer__shared_array(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	tokens := b.Tokens(b.ExprToken("VAR"))
@@ -46,8 +48,9 @@ func (s *Suite) Test_NewMkTokensLexer__shared_array(c *check.C) {
 	t.CheckEquals(lexer.Rest(), "modified text")
 }
 
-func (s *Suite) Test_MkTokensLexer_next(c *check.C) {
-	t := s.Init(c)
+func Test_MkTokensLexer_next(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	tokens := b.Tokens(b.ExprToken("VAR"))
@@ -56,8 +59,9 @@ func (s *Suite) Test_MkTokensLexer_next(c *check.C) {
 	t.CheckEquals(lexer.Lexer.Rest(), "")
 }
 
-func (s *Suite) Test_MkTokensLexer_EOF__plain_text(c *check.C) {
-	t := s.Init(c)
+func Test_MkTokensLexer_EOF__plain_text(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	lexer := NewMkTokensLexer(b.Tokens(b.TextToken("rest")))
@@ -69,8 +73,9 @@ func (s *Suite) Test_MkTokensLexer_EOF__plain_text(c *check.C) {
 	t.CheckEquals(lexer.EOF(), true)
 }
 
-func (s *Suite) Test_MkTokensLexer_EOF__expr(c *check.C) {
-	t := s.Init(c)
+func Test_MkTokensLexer_EOF__expr(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	lexer := NewMkTokensLexer(b.Tokens(b.ExprToken("VAR")))
@@ -82,8 +87,9 @@ func (s *Suite) Test_MkTokensLexer_EOF__expr(c *check.C) {
 	t.CheckEquals(lexer.EOF(), true)
 }
 
-func (s *Suite) Test_MkTokensLexer_Rest(c *check.C) {
-	t := s.Init(c)
+func Test_MkTokensLexer_Rest(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	lexer := NewMkTokensLexer(b.Tokens(b.ExprToken("VAR"), b.TextToken("text"), b.ExprToken("VAR2")))
@@ -97,8 +103,9 @@ func (s *Suite) Test_MkTokensLexer_Rest(c *check.C) {
 	t.CheckEquals(lexer.Rest(), "")
 }
 
-func (s *Suite) Test_MkTokensLexer_Skip(c *check.C) {
-	t := s.Init(c)
+func Test_MkTokensLexer_Skip(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	lexer := NewMkTokensLexer(b.Tokens(b.ExprToken("VAR"), b.TextToken("text"), b.ExprToken("VAR2")))
@@ -112,8 +119,9 @@ func (s *Suite) Test_MkTokensLexer_Skip(c *check.C) {
 	t.CheckEquals(lexer.Rest(), "")
 }
 
-func (s *Suite) Test_MkTokensLexer_SkipMixed__exact(c *check.C) {
-	t := s.Init(c)
+func Test_MkTokensLexer_SkipMixed__exact(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	lexer := NewMkTokensLexer(b.Tokens(b.ExprToken("VAR"), b.TextToken("text"), b.ExprToken("VAR2")))
@@ -122,8 +130,9 @@ func (s *Suite) Test_MkTokensLexer_SkipMixed__exact(c *check.C) {
 	t.CheckEquals(lexer.EOF(), true)
 }
 
-func (s *Suite) Test_MkTokensLexer_SkipMixed__short(c *check.C) {
-	t := s.Init(c)
+func Test_MkTokensLexer_SkipMixed__short(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	lexer := NewMkTokensLexer(b.Tokens(b.ExprToken("VAR"), b.TextToken("text"), b.ExprToken("VAR2")))
@@ -132,8 +141,9 @@ func (s *Suite) Test_MkTokensLexer_SkipMixed__short(c *check.C) {
 	t.ExpectAssert(func() { lexer.SkipMixed(15) })
 }
 
-func (s *Suite) Test_MkTokensLexer_SkipMixed__long(c *check.C) {
-	t := s.Init(c)
+func Test_MkTokensLexer_SkipMixed__long(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	lexer := NewMkTokensLexer(b.Tokens(b.ExprToken("VAR"), b.TextToken("text"), b.ExprToken("VAR2")))
@@ -147,8 +157,9 @@ func (s *Suite) Test_MkTokensLexer_SkipMixed__long(c *check.C) {
 // The code that uses the MkTokensLexer needs to distinguish these cases
 // anyway, therefore it doesn't make sense to treat expressions as plain
 // text.
-func (s *Suite) Test_MkTokensLexer_NextExpr__single_expr_token(c *check.C) {
-	t := s.Init(c)
+func Test_MkTokensLexer_NextExpr__single_expr_token(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	tokens := b.Tokens(b.ExprToken("VAR", "Mpattern"))
@@ -159,8 +170,9 @@ func (s *Suite) Test_MkTokensLexer_NextExpr__single_expr_token(c *check.C) {
 	t.CheckDeepEquals(lexer.NextExpr(), tokens[0])
 }
 
-func (s *Suite) Test_MkTokensLexer_NextExpr__plain_then_expr(c *check.C) {
-	t := s.Init(c)
+func Test_MkTokensLexer_NextExpr__plain_then_expr(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	tokens := b.Tokens(
@@ -173,8 +185,9 @@ func (s *Suite) Test_MkTokensLexer_NextExpr__plain_then_expr(c *check.C) {
 	t.CheckEquals(lexer.EOF(), true)
 }
 
-func (s *Suite) Test_MkTokensLexer_NextExpr__expr_expr_expr(c *check.C) {
-	t := s.Init(c)
+func Test_MkTokensLexer_NextExpr__expr_expr_expr(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	tokens := b.Tokens(
@@ -189,8 +202,9 @@ func (s *Suite) Test_MkTokensLexer_NextExpr__expr_expr_expr(c *check.C) {
 	t.CheckNil(lexer.NextExpr())
 }
 
-func (s *Suite) Test_MkTokensLexer_NextExpr__expr_when_plain_text(c *check.C) {
-	t := s.Init(c)
+func Test_MkTokensLexer_NextExpr__expr_when_plain_text(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	lexer := NewMkTokensLexer(b.Tokens(b.TextToken("text")))
@@ -202,8 +216,9 @@ func (s *Suite) Test_MkTokensLexer_NextExpr__expr_when_plain_text(c *check.C) {
 	t.CheckNil(lexer.NextExpr())
 }
 
-func (s *Suite) Test_MkTokensLexer_NextExpr__peek_after_expr(c *check.C) {
-	t := s.Init(c)
+func Test_MkTokensLexer_NextExpr__peek_after_expr(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	tokens := b.Tokens(
@@ -223,8 +238,9 @@ func (s *Suite) Test_MkTokensLexer_NextExpr__peek_after_expr(c *check.C) {
 // plain text MkTokens besides each other. There's no point in doing
 // that since they could have been combined into a single token from
 // the beginning.
-func (s *Suite) Test_MkTokensLexer_NextExpr__adjacent_plain_text(c *check.C) {
-	t := s.Init(c)
+func Test_MkTokensLexer_NextExpr__adjacent_plain_text(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	lexer := NewMkTokensLexer(b.Tokens(
@@ -253,8 +269,9 @@ func (s *Suite) Test_MkTokensLexer_NextExpr__adjacent_plain_text(c *check.C) {
 	t.CheckEquals(lexer.SkipString("text2"), false)
 }
 
-func (s *Suite) Test_MkTokensLexer_Mark__multiple_marks_in_expr(c *check.C) {
-	t := s.Init(c)
+func Test_MkTokensLexer_Mark__multiple_marks_in_expr(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	tokens := b.Tokens(
@@ -281,8 +298,9 @@ func (s *Suite) Test_MkTokensLexer_Mark__multiple_marks_in_expr(c *check.C) {
 	t.CheckEquals(lexer.Rest(), "")
 }
 
-func (s *Suite) Test_MkTokensLexer_Mark__multiple_marks_in_same_plain_text(c *check.C) {
-	t := s.Init(c)
+func Test_MkTokensLexer_Mark__multiple_marks_in_same_plain_text(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	lexer := NewMkTokensLexer(b.Tokens(
@@ -304,8 +322,9 @@ func (s *Suite) Test_MkTokensLexer_Mark__multiple_marks_in_same_plain_text(c *ch
 	t.CheckEquals(lexer.Rest(), "${VAR:Mpattern}rest")
 }
 
-func (s *Suite) Test_MkTokensLexer_Since(c *check.C) {
-	t := s.Init(c)
+func Test_MkTokensLexer_Since(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	tokens := b.Tokens(
@@ -321,8 +340,9 @@ func (s *Suite) Test_MkTokensLexer_Since(c *check.C) {
 	t.CheckEquals(lexer.Since(middle), "")
 }
 
-func (s *Suite) Test_MkTokensLexer_Reset__initial_state(c *check.C) {
-	t := s.Init(c)
+func Test_MkTokensLexer_Reset__initial_state(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	tokens := b.Tokens(
@@ -341,8 +361,9 @@ func (s *Suite) Test_MkTokensLexer_Reset__initial_state(c *check.C) {
 	t.CheckEquals(lexer.Rest(), "${VAR:Mpattern}${.TARGET}")
 }
 
-func (s *Suite) Test_MkTokensLexer_Reset__inside_plain_text(c *check.C) {
-	t := s.Init(c)
+func Test_MkTokensLexer_Reset__inside_plain_text(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	lexer := NewMkTokensLexer(b.Tokens(
@@ -360,8 +381,9 @@ func (s *Suite) Test_MkTokensLexer_Reset__inside_plain_text(c *check.C) {
 	t.CheckEquals(lexer.Rest(), " text${VAR:Mpattern}rest")
 }
 
-func (s *Suite) Test_MkTokensLexer_Reset__after_plain_text(c *check.C) {
-	t := s.Init(c)
+func Test_MkTokensLexer_Reset__after_plain_text(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	lexer := NewMkTokensLexer(b.Tokens(
@@ -379,8 +401,9 @@ func (s *Suite) Test_MkTokensLexer_Reset__after_plain_text(c *check.C) {
 	t.CheckEquals(lexer.Rest(), "${VAR:Mpattern}rest")
 }
 
-func (s *Suite) Test_MkTokensLexer_Reset__after_expr(c *check.C) {
-	t := s.Init(c)
+func Test_MkTokensLexer_Reset__after_expr(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 	b := NewMkTokenBuilder()
 
 	tokens := b.Tokens(

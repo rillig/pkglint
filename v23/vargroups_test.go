@@ -1,9 +1,10 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import "testing"
 
-func (s *Suite) Test_VargroupsChecker__typo_in_group_name(c *check.C) {
-	t := s.Init(c)
+func Test_VargroupsChecker__typo_in_group_name(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -21,8 +22,9 @@ func (s *Suite) Test_VargroupsChecker__typo_in_group_name(c *check.C) {
 		"WARN: Makefile:5: Expected _LISTED_VARS.group, but found \"typo\".")
 }
 
-func (s *Suite) Test_VargroupsChecker__duplicate_variable_name(c *check.C) {
-	t := s.Init(c)
+func Test_VargroupsChecker__duplicate_variable_name(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -51,8 +53,9 @@ func (s *Suite) Test_VargroupsChecker__duplicate_variable_name(c *check.C) {
 		"WARN: Makefile:9: Duplicate variable name VAR, already appeared in line 4.")
 }
 
-func (s *Suite) Test_VargroupsChecker__variable_reference(c *check.C) {
-	t := s.Init(c)
+func Test_VargroupsChecker__variable_reference(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -76,8 +79,9 @@ func (s *Suite) Test_VargroupsChecker__variable_reference(c *check.C) {
 		"WARN: Makefile:8: Variable \"VAR.${:Uindirect}\" is defined but not used.")
 }
 
-func (s *Suite) Test_VargroupsChecker__public_underscore(c *check.C) {
-	t := s.Init(c)
+func Test_VargroupsChecker__public_underscore(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -94,8 +98,9 @@ func (s *Suite) Test_VargroupsChecker__public_underscore(c *check.C) {
 			"start with a letter, not \"_VARGROUPS\".")
 }
 
-func (s *Suite) Test_VargroupsChecker__declared_but_undefined(c *check.C) {
-	t := s.Init(c)
+func Test_VargroupsChecker__declared_but_undefined(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -119,8 +124,9 @@ func (s *Suite) Test_VargroupsChecker__declared_but_undefined(c *check.C) {
 		"WARN: Makefile:8: The variable UNDEFINED is not actually defined in this file.")
 }
 
-func (s *Suite) Test_VargroupsChecker__defined_but_undeclared(c *check.C) {
-	t := s.Init(c)
+func Test_VargroupsChecker__defined_but_undeclared(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	mklines := t.NewMkLines("Makefile",
@@ -140,8 +146,9 @@ func (s *Suite) Test_VargroupsChecker__defined_but_undeclared(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_VargroupsChecker__used_but_undeclared(c *check.C) {
-	t := s.Init(c)
+func Test_VargroupsChecker__used_but_undeclared(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 	t.SetUpTool("touch", "TOUCH", AtRunTime)
@@ -162,8 +169,9 @@ func (s *Suite) Test_VargroupsChecker__used_but_undeclared(c *check.C) {
 			"but not mentioned in the _VARGROUPS section.")
 }
 
-func (s *Suite) Test_VargroupsChecker__declared_but_unused(c *check.C) {
-	t := s.Init(c)
+func Test_VargroupsChecker__declared_but_unused(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -188,8 +196,9 @@ func (s *Suite) Test_VargroupsChecker__declared_but_unused(c *check.C) {
 		"WARN: Makefile:8: The variable UNUSED is not actually used in this file.")
 }
 
-func (s *Suite) Test_VargroupsChecker__used_in_BUILD_DEFS(c *check.C) {
-	t := s.Init(c)
+func Test_VargroupsChecker__used_in_BUILD_DEFS(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 
@@ -214,8 +223,9 @@ func (s *Suite) Test_VargroupsChecker__used_in_BUILD_DEFS(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_VargroupsChecker__ignore(c *check.C) {
-	t := s.Init(c)
+func Test_VargroupsChecker__ignore(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPkgsrc()
 	t.Chdir("category/package")
@@ -246,8 +256,9 @@ func (s *Suite) Test_VargroupsChecker__ignore(c *check.C) {
 		"WARN: Makefile:11: Variable WRKOBJDIR is used but not mentioned in the _VARGROUPS section.")
 }
 
-func (s *Suite) Test_VargroupsChecker__private_before_public(c *check.C) {
-	t := s.Init(c)
+func Test_VargroupsChecker__private_before_public(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpVartypes()
 

@@ -4,16 +4,17 @@ import (
 	"context"
 	"errors"
 	"github.com/rillig/pkglint/v23/regex"
-	"gopkg.in/check.v1"
 	"net"
 	"net/http"
 	"strconv"
 	"syscall"
+	"testing"
 	"time"
 )
 
-func (s *Suite) Test_NewHomepageChecker(c *check.C) {
-	t := s.Init(c)
+func Test_NewHomepageChecker(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		"HOMEPAGE=\t# none")
@@ -25,8 +26,9 @@ func (s *Suite) Test_NewHomepageChecker(c *check.C) {
 	t.CheckEquals(ck.ValueNoVar, "valueNoVar")
 }
 
-func (s *Suite) Test_HomepageChecker_Check(c *check.C) {
-	t := s.Init(c)
+func Test_HomepageChecker_Check(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		"HOMEPAGE=\tftp://example.org/")
@@ -41,18 +43,17 @@ func (s *Suite) Test_HomepageChecker_Check(c *check.C) {
 		"WARN: filename.mk:1: An FTP URL is not a user-friendly homepage.")
 }
 
-func (s *Suite) Test_HomepageChecker_checkBasedOnMasterSites(c *check.C) {
-	t := s.Init(c)
-	vt := NewVartypeCheckTester(t, BtHomepage)
+func Test_HomepageChecker_checkBasedOnMasterSites(tt *testing.T) {
+	vt := NewVartypeCheckTester(tt, "HOMEPAGE", BtHomepage)
+	defer vt.Done()
 
-	vt.Varname("HOMEPAGE")
 	vt.Values(
 		"${MASTER_SITES}")
 
 	vt.Output(
 		"WARN: filename.mk:1: HOMEPAGE should not be defined in terms of MASTER_SITEs.")
 
-	pkg := NewPackage(t.File("category/package"))
+	pkg := NewPackage(vt.tester.File("category/package"))
 	vt.Package(pkg)
 
 	vt.Values(
@@ -66,7 +67,7 @@ func (s *Suite) Test_HomepageChecker_checkBasedOnMasterSites(c *check.C) {
 
 	pkg.vars.create("MASTER_SITES").firstDef = nil
 	pkg.vars.create("MASTER_SITES").lastDef = nil
-	pkg.vars.Define("MASTER_SITES", t.NewMkLine(pkg.File("Makefile"), 5,
+	pkg.vars.Define("MASTER_SITES", vt.tester.NewMkLine(pkg.File("Makefile"), 5,
 		"MASTER_SITES=\thttps://cdn.NetBSD.org/pub/pkgsrc/distfiles/"))
 
 	vt.Values(
@@ -78,7 +79,7 @@ func (s *Suite) Test_HomepageChecker_checkBasedOnMasterSites(c *check.C) {
 
 	pkg.vars.create("MASTER_SITES").firstDef = nil
 	pkg.vars.create("MASTER_SITES").lastDef = nil
-	pkg.vars.Define("MASTER_SITES", t.NewMkLine(pkg.File("Makefile"), 5,
+	pkg.vars.Define("MASTER_SITES", vt.tester.NewMkLine(pkg.File("Makefile"), 5,
 		"MASTER_SITES=\t${MASTER_SITE_GITHUB}"))
 
 	vt.Values(
@@ -91,7 +92,7 @@ func (s *Suite) Test_HomepageChecker_checkBasedOnMasterSites(c *check.C) {
 
 	pkg.vars.create("MASTER_SITES").firstDef = nil
 	pkg.vars.create("MASTER_SITES").lastDef = nil
-	pkg.vars.Define("MASTER_SITES", t.NewMkLine(pkg.File("Makefile"), 5,
+	pkg.vars.Define("MASTER_SITES", vt.tester.NewMkLine(pkg.File("Makefile"), 5,
 		"MASTER_SITES=\t# none"))
 
 	vt.Values(
@@ -103,11 +104,10 @@ func (s *Suite) Test_HomepageChecker_checkBasedOnMasterSites(c *check.C) {
 		"WARN: filename.mk:41: HOMEPAGE should not be defined in terms of MASTER_SITEs.")
 }
 
-func (s *Suite) Test_HomepageChecker_checkFtp(c *check.C) {
-	t := s.Init(c)
-	vt := NewVartypeCheckTester(t, BtHomepage)
+func Test_HomepageChecker_checkFtp(tt *testing.T) {
+	vt := NewVartypeCheckTester(tt, "HOMEPAGE", BtHomepage)
+	defer vt.Done()
 
-	vt.Varname("HOMEPAGE")
 	vt.Values(
 		"ftp://example.org/",
 		"ftp://example.org/ # no HTTP homepage available")
@@ -117,11 +117,10 @@ func (s *Suite) Test_HomepageChecker_checkFtp(c *check.C) {
 			"An FTP URL is not a user-friendly homepage.")
 }
 
-func (s *Suite) Test_HomepageChecker_checkHttp(c *check.C) {
-	t := s.Init(c)
-	vt := NewVartypeCheckTester(t, BtHomepage)
+func Test_HomepageChecker_checkHttp(tt *testing.T) {
+	vt := NewVartypeCheckTester(tt, "HOMEPAGE", BtHomepage)
+	defer vt.Done()
 
-	vt.Varname("HOMEPAGE")
 	vt.Values(
 		"http://www.gnustep.org/",
 		"http://www.pkgsrc.org/",
@@ -136,7 +135,7 @@ func (s *Suite) Test_HomepageChecker_checkHttp(c *check.C) {
 		"WARN: filename.mk:4: HOMEPAGE should migrate " +
 			"from http://sf.net to https://sourceforge.net.")
 
-	t.SetUpCommandLine("--autofix")
+	vt.tester.SetUpCommandLine("--autofix")
 	vt.Values(
 		"http://www.gnustep.org/",
 		"http://www.pkgsrc.org/",
@@ -157,8 +156,9 @@ func (s *Suite) Test_HomepageChecker_checkHttp(c *check.C) {
 		"AUTOFIX: filename.mk:18: Replacing \"http\" with \"https\".")
 }
 
-func (s *Suite) Test_HomepageChecker_migrate(c *check.C) {
-	t := s.Init(c)
+func Test_HomepageChecker_migrate(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	reachable := map[string]YesNoUnknown{}
 	used := map[string]bool{}
@@ -272,11 +272,10 @@ func (s *Suite) Test_HomepageChecker_migrate(c *check.C) {
 		"")
 }
 
-func (s *Suite) Test_HomepageChecker_checkBadUrls(c *check.C) {
-	t := s.Init(c)
-	vt := NewVartypeCheckTester(t, BtHomepage)
+func Test_HomepageChecker_checkBadUrls(tt *testing.T) {
+	vt := NewVartypeCheckTester(tt, "HOMEPAGE", BtHomepage)
+	defer vt.Done()
 
-	vt.Varname("HOMEPAGE")
 	vt.Values(
 		"http://garr.dl.sourceforge.net/project/name/dir/subdir/",
 		"https://downloads.sourceforge.net/project/name/dir/subdir/",
@@ -288,8 +287,9 @@ func (s *Suite) Test_HomepageChecker_checkBadUrls(c *check.C) {
 		"WARN: filename.mk:3: A direct download URL is not a user-friendly homepage.")
 }
 
-func (s *Suite) Test_HomepageChecker_checkReachable(c *check.C) {
-	t := s.Init(c)
+func Test_HomepageChecker_checkReachable(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--network")
 
@@ -410,8 +410,9 @@ func (s *Suite) Test_HomepageChecker_checkReachable(c *check.C) {
 		nil...)
 }
 
-func (s *Suite) Test_HomepageChecker_isReachableOnline(c *check.C) {
-	t := s.Init(c)
+func Test_HomepageChecker_isReachableOnline(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpCommandLine("--network")
 
@@ -468,8 +469,9 @@ func (s *Suite) Test_HomepageChecker_isReachableOnline(c *check.C) {
 	test("http://localhost:28781/", no)
 }
 
-func (s *Suite) Test_HomepageChecker_hasAnySuffix(c *check.C) {
-	t := s.Init(c)
+func Test_HomepageChecker_hasAnySuffix(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(s string, hasAnySuffix bool, suffix string) {
 		actual := (*HomepageChecker).hasAnySuffix(nil, s, suffix)
@@ -485,8 +487,9 @@ func (s *Suite) Test_HomepageChecker_hasAnySuffix(c *check.C) {
 	test("borg", false, "org")
 }
 
-func (s *Suite) Test_HomepageChecker_classifyNetworkError(c *check.C) {
-	t := s.Init(c)
+func Test_HomepageChecker_classifyNetworkError(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	test := func(err error, expectedClass string) {
 		actual := (*HomepageChecker).classifyNetworkError(nil, err)

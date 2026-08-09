@@ -1,9 +1,10 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import "testing"
 
-func (s *Suite) Test_ParsePackagePattern(c *check.C) {
-	t := s.Init(c)
+func Test_ParsePackagePattern(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	testRest := func(pattern string, expected PackagePattern, rest string) {
 		parser := NewMkParser(nil, pattern)
@@ -161,10 +162,10 @@ func (s *Suite) Test_ParsePackagePattern(c *check.C) {
 		PackagePattern{"mysql*-server", "", "", "", "", "[0-9]*"})
 }
 
-func (s *Suite) Test_PackagePatternChecker_Check(c *check.C) {
-	vt := NewVartypeCheckTester(s.Init(c), BtPackagePattern)
+func Test_PackagePatternChecker_Check(tt *testing.T) {
+	vt := NewVartypeCheckTester(tt, "CONFLICTS", BtPackagePattern, List)
+	defer vt.Done()
 
-	vt.Varname("CONFLICTS")
 	vt.Op(opAssignAppend)
 
 	// alternative patterns, using braces or brackets
@@ -185,10 +186,10 @@ func (s *Suite) Test_PackagePatternChecker_Check(c *check.C) {
 	vt.OutputEmpty()
 }
 
-func (s *Suite) Test_PackagePatternChecker_checkSingle(c *check.C) {
-	vt := NewVartypeCheckTester(s.Init(c), BtPackagePattern)
+func Test_PackagePatternChecker_checkSingle(tt *testing.T) {
+	vt := NewVartypeCheckTester(tt, "CONFLICTS", BtPackagePattern, List)
+	defer vt.Done()
 
-	vt.Varname("CONFLICTS")
 	vt.Op(opAssignAppend)
 
 	// numeric version comparison operators
@@ -304,8 +305,9 @@ func (s *Suite) Test_PackagePatternChecker_checkSingle(c *check.C) {
 		"ERROR: filename.mk:62: The lower bound \"2\" is greater than the upper bound \"1\".")
 }
 
-func (s *Suite) Test_PackagePatternChecker_checkDepends__smaller_version(c *check.C) {
-	t := s.Init(c)
+func Test_PackagePatternChecker_checkDepends__smaller_version(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		"LIB_VERSION_SMALL=\t1.0",
@@ -334,8 +336,9 @@ func (s *Suite) Test_PackagePatternChecker_checkDepends__smaller_version(c *chec
 			"by the >=1.4abi from ../../category/lib/buildlink3.mk:13.")
 }
 
-func (s *Suite) Test_PackagePatternChecker_checkDepends__different_operators(c *check.C) {
-	t := s.Init(c)
+func Test_PackagePatternChecker_checkDepends__different_operators(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		".include \"../../category/lib/buildlink3.mk\"",
@@ -359,8 +362,9 @@ func (s *Suite) Test_PackagePatternChecker_checkDepends__different_operators(c *
 			"by the >1.4abi from ../../category/lib/buildlink3.mk:13.")
 }
 
-func (s *Suite) Test_PackagePatternChecker_checkDepends__additional_greater(c *check.C) {
-	t := s.Init(c)
+func Test_PackagePatternChecker_checkDepends__additional_greater(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		".include \"../../category/lib/buildlink3.mk\"",
@@ -384,8 +388,9 @@ func (s *Suite) Test_PackagePatternChecker_checkDepends__additional_greater(c *c
 			"by the >=1.4abi from ../../category/lib/buildlink3.mk:13.")
 }
 
-func (s *Suite) Test_PackagePatternChecker_checkDepends__upper_limit(c *check.C) {
-	t := s.Init(c)
+func Test_PackagePatternChecker_checkDepends__upper_limit(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		".include \"../../category/lib/buildlink3.mk\"",
@@ -409,8 +414,9 @@ func (s *Suite) Test_PackagePatternChecker_checkDepends__upper_limit(c *check.C)
 
 // Having an upper bound for a library dependency is unusual.
 // A combined lower and upper bound makes sense though.
-func (s *Suite) Test_PackagePatternChecker_checkDepends__upper_limit_in_buildlink3(c *check.C) {
-	t := s.Init(c)
+func Test_PackagePatternChecker_checkDepends__upper_limit_in_buildlink3(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		".include \"../../category/lib/buildlink3.mk\"",
@@ -432,8 +438,9 @@ func (s *Suite) Test_PackagePatternChecker_checkDepends__upper_limit_in_buildlin
 			"not ABI versions of dependencies.")
 }
 
-func (s *Suite) Test_PackagePatternChecker_checkDepends__API_ABI(c *check.C) {
-	t := s.Init(c)
+func Test_PackagePatternChecker_checkDepends__API_ABI(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		".include \"../../category/lib/buildlink3.mk\"",
@@ -454,8 +461,9 @@ func (s *Suite) Test_PackagePatternChecker_checkDepends__API_ABI(c *check.C) {
 	t.CheckOutputEmpty()
 }
 
-func (s *Suite) Test_PackagePatternChecker_checkDepends__ABI_API(c *check.C) {
-	t := s.Init(c)
+func Test_PackagePatternChecker_checkDepends__ABI_API(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	t.SetUpPackage("category/package",
 		".include \"../../category/lib/buildlink3.mk\"",

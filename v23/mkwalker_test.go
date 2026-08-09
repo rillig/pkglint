@@ -1,9 +1,10 @@
 package pkglint
 
-import "gopkg.in/check.v1"
+import "testing"
 
-func (s *Suite) Test_NewMkWalker(c *check.C) {
-	t := s.Init(c)
+func Test_NewMkWalker(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mkline := t.NewMkLine("filename.mk", 123, "LEFT.$p=\t${RIGHT}")
 	action := func(expr *MkExpr, time EctxTime) {
@@ -19,8 +20,9 @@ func (s *Suite) Test_NewMkWalker(c *check.C) {
 		"NOTE: filename.mk:123: Expression \"${RIGHT}\" at \"run\" time.")
 }
 
-func (s *Suite) Test_MkWalker_WalkLine(c *check.C) {
-	t := s.Init(c)
+func Test_MkWalker_WalkLine(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
@@ -52,8 +54,9 @@ func (s *Suite) Test_MkWalker_WalkLine(c *check.C) {
 		"NOTE: filename.mk:7: Expression \"${DIR}\" at \"load\" time.")
 }
 
-func (s *Suite) Test_MkWalker_WalkText(c *check.C) {
-	t := s.Init(c)
+func Test_MkWalker_WalkText(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		MkCvsID,
@@ -71,8 +74,9 @@ func (s *Suite) Test_MkWalker_WalkText(c *check.C) {
 		"NOTE: filename.mk:2: Expression \"${COMMAND}\" at \"run\" time.")
 }
 
-func (s *Suite) Test_MkWalker_walkDirective(c *check.C) {
-	t := s.Init(c)
+func Test_MkWalker_walkDirective(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		".info ${INFO:S<from$<to<}",
@@ -92,8 +96,9 @@ func (s *Suite) Test_MkWalker_walkDirective(c *check.C) {
 		"NOTE: filename.mk:2: Expression \"${COND:S<from$<to<}\" at \"load\" time.")
 }
 
-func (s *Suite) Test_MkWalker_walkExpr(c *check.C) {
-	t := s.Init(c)
+func Test_MkWalker_walkExpr(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		"${LEFT:S<from$<to<}=\t${RIGHT:S<from$<to<}")
@@ -111,8 +116,9 @@ func (s *Suite) Test_MkWalker_walkExpr(c *check.C) {
 		"NOTE: filename.mk:1: Expression \"${RIGHT:S<from$<to<}\" at \"run\" time.")
 }
 
-func (s *Suite) Test_MkWalker_walkModifier(c *check.C) {
-	t := s.Init(c)
+func Test_MkWalker_walkModifier(tt *testing.T) {
+	t := NewTester(tt)
+	defer t.Done()
 
 	mklines := t.NewMkLines("filename.mk",
 		"MOD.S=\t${VAR:S<from$<to<}",
