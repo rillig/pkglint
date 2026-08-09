@@ -294,23 +294,28 @@ func Test_matchContinuationLine(tt *testing.T) {
 }
 
 func Test_ClassifyFile(tt *testing.T) {
-	t := NewTester(tt)
-	defer t.Done()
+	tests := []struct {
+		filename string
+		want     TypedFileKind
+	}{
+		{"Makefile", MkFile},
+		{"Makefile.common", MkFile},
+		{"module.mk", MkFile},
 
-	test := func(path CurrPath, wantKind TypedFileKind) {
-		tf := ClassifyFile(path)
-		t.CheckEquals(tf.kind, wantKind)
+		{"distinfo", DistinfoFile},
+
+		// Patch files are not classified by this function, as they only
+		// occur in special directories called "patches".
+		{"patches/patch-aa", OtherFile},
+
+		{"README", OtherFile},
 	}
-
-	test("Makefile", MkFile)
-	test("Makefile.common", MkFile)
-	test("module.mk", MkFile)
-
-	test("distinfo", DistinfoFile)
-
-	// Patch files are not classified by this function, as they only
-	// occur in special directories called "patches".
-	test("patches/patch-aa", OtherFile)
-
-	test("README", OtherFile)
+	for _, test := range tests {
+		tt.Run(test.filename, func(t *testing.T) {
+			have := ClassifyFile(NewCurrPathString(test.filename))
+			if have, want := have.kind, test.want; have != want {
+				t.Errorf("have %#v, want %#v", have, want)
+			}
+		})
+	}
 }

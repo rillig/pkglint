@@ -730,25 +730,30 @@ func Test_distinfoLinesChecker_checkUnrecordedPatches(tt *testing.T) {
 }
 
 func Test_distinfoLinesChecker_isPatch(tt *testing.T) {
-	t := NewTester(tt)
-	defer t.Done()
+	tests := []struct {
+		filename string
+		want     bool
+	}{
+		{"patch-Makefile", true},
+		{"patch-local-Makefile", false},
+		{"patch-Makefile.orig", false},
+		{"patch-Makefile.rej", false},
+		{"patch-Makefile~", false},
+		{"other", false},
 
-	test := func(filename RelPath, want bool) {
-		t.CheckEquals((&distinfoLinesChecker{}).isPatch(filename), want)
+		// Mentioned in is_patch in mk/checksum/distinfo.awk
+		// but not used in practice.
+		{"emul-linux-patch-Makefile", false},
 	}
-
-	test("patch-Makefile", true)
-	test("patch-local-Makefile", false)
-	test("patch-Makefile.orig", false)
-	test("patch-Makefile.rej", false)
-	test("patch-Makefile~", false)
-	test("other", false)
-
-	// Mentioned in is_patch in mk/checksum/distinfo.awk
-	// but not used in practice.
-	test("emul-linux-patch-Makefile", false)
-
-	t.CheckOutputEmpty()
+	for _, test := range tests {
+		tt.Run(test.filename, func(t *testing.T) {
+			filename := NewRelPathString(test.filename)
+			have := (&distinfoLinesChecker{}).isPatch(filename)
+			if have != test.want {
+				t.Errorf("have %#v, want %#v", have, test.want)
+			}
+		})
+	}
 }
 
 // When checking the complete pkgsrc tree, pkglint has all the information it
