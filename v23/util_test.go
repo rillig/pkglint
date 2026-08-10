@@ -149,7 +149,11 @@ func Test_assertNotNil(tt *testing.T) {
 	t := NewTester(tt)
 	defer t.Done()
 
-	assertNotNil("this string is not nil")
+	// assertNotNil is only intended to be called with values that
+	// could actually be nil.
+	t.ExpectPanicMatches(
+		func() { assertNotNil("this string is not nil") },
+		`^reflect: call of reflect\.Value\.IsNil on string Value$`)
 
 	t.ExpectPanic(
 		func() { assertNotNil(nil) },

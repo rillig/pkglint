@@ -275,14 +275,7 @@ func assertNil(err error, format string, args ...any) {
 }
 
 func assertNotNil(obj any) {
-
-	// https://stackoverflow.com/questions/13476349/check-for-nil-and-nil-interface-in-go
-	isNil := func() bool {
-		defer func() { _ = recover() }()
-		return reflect.ValueOf(obj).IsNil()
-	}
-
-	if obj == nil || isNil() {
+	if obj == nil || reflect.ValueOf(obj).IsNil() {
 		panic("Pkglint internal error: unexpected nil pointer")
 	}
 }
