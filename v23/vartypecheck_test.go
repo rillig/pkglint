@@ -379,7 +379,6 @@ func Test_VartypeCheck_ConfFiles(tt *testing.T) {
 	vt.Output(
 		"WARN: filename.mk:21: The pathname \"\\\\*.conf\" contains the invalid character \"*\".",
 		"WARN: filename.mk:21: The pathname \"${PKG_SYSCONFDIR}/\\\\*.conf\" contains the invalid character \"*\".")
-
 }
 
 func Test_VartypeCheck_DependencyWithPath(tt *testing.T) {

@@ -369,7 +369,6 @@ func Test_Pattern_CanMatch(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func Test_Number(t *testing.T) {

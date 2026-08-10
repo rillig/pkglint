@@ -407,7 +407,6 @@ func Test_Package__different_package_identifiers(tt *testing.T) {
 			"between \"bl3id\" in this file and \"pkgname\" from Makefile:4.",
 		"WARN: options.mk:3: The buildlink3 identifier \"bl3id\" "+
 			"should be the same as the options identifier \"optid\".")
-
 }
 
 func Test_Package__TOOL_DEPENDS(tt *testing.T) {

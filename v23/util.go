@@ -365,7 +365,6 @@ func isIgnoredFilename(filename string) bool {
 	}
 
 	return false
-
 }
 
 // Checks whether a file is already committed to the CVS repository

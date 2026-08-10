@@ -16,7 +16,6 @@ type SimpleCommandChecker struct {
 func NewSimpleCommandChecker(cmd *MkShSimpleCommand, time ToolTime, mkline *MkLine, mklines *MkLines) *SimpleCommandChecker {
 	strcmd := NewStrCommand(cmd)
 	return &SimpleCommandChecker{cmd, strcmd, time, mkline, mklines}
-
 }
 
 func (scc *SimpleCommandChecker) Check() {

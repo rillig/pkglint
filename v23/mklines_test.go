@@ -1233,7 +1233,6 @@ func Test_MkLines_checkAll__autofix_MASTER_SITE_in_HOMEPAGE(tt *testing.T) {
 	t.SetUpCommandLine("-Wall", "--autofix")
 	test(
 		nil...)
-
 }
 
 func Test_MkLines_checkAll__autofix_MASTER_SITE_in_HOMEPAGE_in_package(tt *testing.T) {

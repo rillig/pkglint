@@ -614,7 +614,6 @@ func (mkline *MkLine) Fields() []string {
 
 	directive.fields = mkline.ValueFields(args)
 	return directive.fields
-
 }
 
 func (*MkLine) WithoutMakeVariables(value string) string {

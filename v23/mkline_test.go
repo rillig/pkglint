@@ -664,7 +664,6 @@ func Test_MkLine_ResolveExprsInRelPath__assertion(tt *testing.T) {
 		"Pkglint internal error: "+
 			"Relative path \"../../../../../..\" for \"a/b/c/d/e/f\" is too deep "+
 			"below the pkgsrc root \".\".")
-
 }
 
 func Test_MkLine_VariableNeedsQuoting__unknown_rhs(tt *testing.T) {

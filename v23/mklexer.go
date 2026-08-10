@@ -615,7 +615,6 @@ func (p *MkLexer) isEscapedModifierPart(end byte, subst bool) bool {
 		return true
 	}
 	return rest[1] == '&' && subst
-
 }
 
 // exprAlnum parses a single-letter or single-digit expression, such as $i or

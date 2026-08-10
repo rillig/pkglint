@@ -1353,7 +1353,6 @@ func Test_PackagePath_JoinNoClean(tt *testing.T) {
 
 	test := func(pp PackagePath, other RelPath, joined PackagePath) {
 		t.CheckEquals(pp.JoinNoClean(other), joined)
-
 	}
 
 	test("../../category/package/patches", "patch-aa",
@@ -1504,7 +1503,6 @@ func Test_RelPath_Split(tt *testing.T) {
 
 	t.ExpectAssert(
 		func() { test("/", "/", "") })
-
 }
 
 func Test_RelPath_Dir(tt *testing.T) {
