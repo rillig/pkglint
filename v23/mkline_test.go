@@ -119,23 +119,25 @@ func Test_MkLine_Cond(tt *testing.T) {
 }
 
 func Test_MkLine_NeedsCond(tt *testing.T) {
-	t := NewTester(tt)
-	defer t.Done()
-
-	test := func(text string, expected bool, expectedLines ...string) {
-		defer func() {
-			t.CheckOutput(expectedLines)
-		}()
-		mkline := t.NewMkLine("filename.mk", 123, text)
-		t.CheckEquals(mkline.NeedsCond(), expected)
+	tests := []struct {
+		line string
+		want bool
+	}{
+		{".if 0", true},
+		{".ifndef VAR", true},
+		{".ifmake target", true},
+		{".else", false},
+		{".elif 0", true},
+		{".elifnmake target", true},
 	}
-
-	test(".if 0", true)
-	test(".ifndef VAR", true)
-	test(".ifmake target", true)
-	test(".else", false)
-	test(".elif 0", true)
-	test(".elifnmake target", true)
+	for _, test := range tests {
+		tt.Run(test.line, func(tt *testing.T) {
+			t := NewTester(tt)
+			defer t.Done()
+			mkline := t.NewMkLine("filename.mk", 123, test.line)
+			t.CheckEquals(mkline.NeedsCond(), test.want)
+		})
+	}
 }
 
 func Test_MkLine_IncludedFileFull(tt *testing.T) {
