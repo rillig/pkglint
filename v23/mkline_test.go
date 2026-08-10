@@ -209,7 +209,6 @@ func Test_MkLine_ValueSplit(tt *testing.T) {
 	test("Platform-independent C# compiler #5",
 		"Platform-independent C# compiler #5")
 
-	// This warning refers to the #5 since it starts a word, but not to the C#.
 	t.CheckOutputLines(
 		"WARN: Makefile:1: The # character starts a makefile comment.")
 
@@ -234,7 +233,6 @@ func Test_MkLine_ValueSplit(tt *testing.T) {
 		"",
 		"${VAR2}two",
 		"words")
-
 }
 
 func Test_MkLine_ValueSplit__invalid_argument(tt *testing.T) {
