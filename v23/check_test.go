@@ -1093,7 +1093,9 @@ func (t *Tester) NewMkLine(filename CurrPath, lineno int, text string) *MkLine {
 			basename == "mk.conf",
 		"filename %q must be realistic, otherwise the variable permissions are wrong", filename)
 
-	return NewMkLineParser().Parse(t.NewLine(filename, lineno, text))
+	line := t.NewLine(filename, lineno, text)
+	parser := NewMkLineParser()
+	return parser.Parse(line)
 }
 
 func (t *Tester) NewShellLineChecker(text string) *ShellLineChecker {
