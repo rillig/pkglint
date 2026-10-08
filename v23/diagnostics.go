@@ -4,7 +4,7 @@ package pkglint
 // in source code order, no matter in which order they were generated.
 //
 // The typical workflow is:
-// First, add is called to collect the diagnostics.
+// First, Errorf, Warnf and Notef are called to collect the diagnostics.
 // Then Emit is called for each line that might be affected.
 // Finally, AssertEmpty ensures that all diagnostics have been emitted.
 type Diagnostics struct {
