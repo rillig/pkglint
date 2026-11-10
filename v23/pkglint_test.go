@@ -693,6 +693,7 @@ func Test_Pkglint_checkdirPackage__filename_with_variable(tt *testing.T) {
 		"RUBY_PKGDIR=\t../../lang/ruby-${RUBY_VER}-base",
 		"DISTINFO_FILE=\t${RUBY_PKGDIR}/distinfo",
 		"PATCHDIR=\t${RUBY_PKGDIR}/patches")
+	t.Remove("category/package/distinfo")
 	t.FinishSetUp()
 
 	// As of January 2019, pkglint cannot resolve the location of DISTINFO_FILE completely
@@ -743,6 +744,7 @@ func Test_Pkglint_checkdirPackage__nonexistent_DISTINFO_FILE(tt *testing.T) {
 	t.CheckOutputLines(
 		"WARN: ~/category/package/nonexistent: A package that downloads files should have a distinfo file.",
 		"ERROR: ~/category/package/Makefile:20: Relative path \"nonexistent\" does not exist.",
+		"WARN: ~/category/package/distinfo: DISTINFO_FILE points to \"nonexistent\" instead of this file.",
 		"WARN: ~/category/package/Makefile:20: DISTINFO_FILE \"nonexistent\" has no corresponding PATCHDIR.")
 }
 

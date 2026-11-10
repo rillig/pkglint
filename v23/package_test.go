@@ -540,7 +540,7 @@ func Test_Package_load__extra_files(tt *testing.T) {
 		"ERROR: gnu-style.mk:3: Unknown makefile line format: \"else\".",
 		"ERROR: gnu-style.mk:5: Unknown makefile line format: \"endif\".",
 
-		"ERROR: distinfo: Patch \"patches/patch-Makefile.mk\" is not recorded. Run \""+confMake+" makepatchsum\".",
+		"WARN: distinfo: DISTINFO_FILE points to \"../../category/other/distinfo\" instead of this file.",
 
 		// The following diagnostics are duplicated because the files from
 		// the package directory are loaded once during Package.load, just
@@ -1494,9 +1494,9 @@ func Test_Package_check__DISTINFO_FILE_without_PATCHDIR(tt *testing.T) {
 		"WARN: devel/ocaml-dune/Makefile.common:4: "+
 			"DISTINFO_FILE \"${.CURDIR}/../../devel/ocaml-dune/distinfo\" "+
 			"has no corresponding PATCHDIR.",
-		"ERROR: devel/ocaml-dune-configurator/distinfo: "+
-			"Patch \"patches/patch-README\" is not recorded. "+
-			sprintf("Run %q.", bmake("makepatchsum")),
+		"WARN: devel/ocaml-dune-configurator/distinfo: "+
+			"DISTINFO_FILE points to \"../../devel/ocaml-dune/distinfo\" "+
+			"instead of this file.",
 		"ERROR: devel/ocaml-dune-configurator/../../devel/ocaml-dune/distinfo: "+
 			"Patch \"../../devel/ocaml-dune-configurator/patches/patch-README\" is not recorded. "+
 			sprintf("Run %q.", bmake("makepatchsum")),
@@ -1521,6 +1521,7 @@ func Test_Package_check__nonexistent_PATCHDIR(tt *testing.T) {
 
 	t.SetUpPackage("category/package",
 		".include \"../../category/pkg-common/Makefile.common\"")
+	t.Remove("category/package/distinfo")
 
 	t.Chdir(".")
 	t.FinishSetUp()

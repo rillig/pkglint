@@ -19,6 +19,19 @@ func CheckLinesDistinfo(pkg *Package, lines *Lines) {
 		defer trace.Call(lines.Filename)()
 	}
 
+	if pkg != nil &&
+		G.Pkgsrc != nil &&
+		pkg.DistinfoFile != "distinfo" &&
+		lines.Filename.Dir() == pkg.dir &&
+		G.Pkgsrc.Rel(pkg.File(pkg.DistinfoFile)) != G.Pkgsrc.Rel(pkg.File("distinfo")) {
+		line := lines.Whole()
+		line.Warnf("DISTINFO_FILE points to %q instead of this file.",
+			line.Rel(pkg.File(pkg.DistinfoFile)))
+		line.Explain(
+			"This means that this distinfo file is probably unused.")
+		return
+	}
+
 	filename := lines.Filename
 	patchdir := NewPackagePath("patches")
 	if pkg != nil && pkg.File(pkg.Patchdir).IsDir() {
