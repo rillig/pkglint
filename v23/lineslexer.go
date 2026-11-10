@@ -46,10 +46,6 @@ func (llex *LinesLexer) Undo() {
 }
 
 func (llex *LinesLexer) NextRegexp(re regex.Pattern) []string {
-	if trace.Tracing {
-		defer trace.Call(llex.CurrentLine().Text, re)()
-	}
-
 	if !llex.EOF() {
 		if m := match(llex.line.Text, re); m != nil {
 			llex.next()
@@ -64,10 +60,6 @@ func (llex *LinesLexer) SkipRegexp(re regex.Pattern) bool {
 }
 
 func (llex *LinesLexer) SkipPrefix(prefix string) bool {
-	if trace.Tracing {
-		defer trace.Call2(llex.CurrentLine().Text, prefix)()
-	}
-
 	if !llex.EOF() && hasPrefix(llex.line.Text, prefix) {
 		llex.next()
 		return true
@@ -76,10 +68,6 @@ func (llex *LinesLexer) SkipPrefix(prefix string) bool {
 }
 
 func (llex *LinesLexer) SkipText(text string) bool {
-	if trace.Tracing {
-		defer trace.Call2(llex.CurrentLine().Text, text)()
-	}
-
 	if !llex.EOF() && llex.line.Text == text {
 		llex.Skip()
 		return true

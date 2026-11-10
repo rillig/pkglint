@@ -88,10 +88,6 @@ func (p *MkParser) mkCondAnd() *MkCond {
 }
 
 func (p *MkParser) mkCondCompare() *MkCond {
-	if trace.Tracing {
-		defer trace.Call1(p.Rest())()
-	}
-
 	lexer := p.lexer
 	mark := lexer.Mark()
 	lexer.SkipHspace()

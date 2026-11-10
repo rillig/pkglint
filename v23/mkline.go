@@ -387,10 +387,6 @@ func (mkline *MkLine) SetConditionalVars(varnames []string) {
 //
 // See ValueTokens, which is the tokenized version of Value.
 func (mkline *MkLine) Tokenize(text string, warn bool) []*MkToken {
-	if trace.Tracing {
-		defer trace.Call(mkline, text)()
-	}
-
 	var tokens []*MkToken
 	var rest string
 	if mkline.IsVarassignMaybeCommented() && text == mkline.Value() {
