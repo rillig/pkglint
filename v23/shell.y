@@ -36,7 +36,7 @@ package pkglint
 	Redirection *MkShRedirection
 }
 
-%type <List> start program compound_list brace_group subshell term do_group
+%type <List> start program_opt compound_list brace_group subshell term do_group
 %type <AndOr> and_or
 %type <Pipeline> pipeline pipe_sequence
 %type <Command> command
@@ -56,24 +56,24 @@ package pkglint
 
 %%
 
-start : program {
+start : program_opt {
 	shyylex.(*ShellLexer).result = $$
 }
 
-program : compound_list {
+program_opt : compound_list {
 	/* empty */
 }
-program : /* empty */ {
+program_opt : /* empty */ {
 	$$ = &MkShList{}
 }
 
 and_or : pipeline {
 	$$ = NewMkShAndOr($1)
 }
-and_or : and_or tkAND linebreak pipeline {
+and_or : and_or tkAND linebreak_opt pipeline {
 	$$.Add("&&", $4)
 }
-and_or : and_or tkOR linebreak pipeline {
+and_or : and_or tkOR linebreak_opt pipeline {
 	$$.Add("||", $4)
 }
 
@@ -88,7 +88,7 @@ pipeline : tkEXCLAM pipe_sequence {
 pipe_sequence : command {
 	$$ = NewMkShPipeline(false, []*MkShCommand{$1})
 }
-pipe_sequence : pipe_sequence tkPIPE linebreak command {
+pipe_sequence : pipe_sequence tkPIPE linebreak_opt command {
 	$$.Add($4)
 }
 
@@ -134,10 +134,10 @@ subshell : tkLPAREN compound_list tkRPAREN {
 	$$ = $2
 }
 
-compound_list : linebreak term {
+compound_list : linebreak_opt term {
 	$$ = $2
 }
-compound_list : linebreak term separator {
+compound_list : linebreak_opt term separator {
 	$$ = $2
 	$$.AddSeparator($3)
 }
@@ -151,17 +151,17 @@ term : term separator and_or {
 	$$.AddAndOr($3)
 }
 
-for_clause : tkFOR tkWORD linebreak do_group {
+for_clause : tkFOR tkWORD linebreak_opt do_group {
 	args := NewShToken("\"$$@\"",
 		&ShAtom{shtText, "\"", shqDquot, nil},
 		&ShAtom{shtShExpr, "$$@", shqDquot, "@"},
 		&ShAtom{shtText, "\"", shqPlain, nil})
 	$$ = &MkShFor{$2.MkText, []*ShToken{args}, $4}
 }
-for_clause : tkFOR tkWORD linebreak tkIN sequential_sep do_group {
+for_clause : tkFOR tkWORD linebreak_opt tkIN sequential_sep do_group {
 	$$ = &MkShFor{$2.MkText, nil, $6}
 }
-for_clause : tkFOR tkWORD linebreak tkIN wordlist sequential_sep do_group {
+for_clause : tkFOR tkWORD linebreak_opt tkIN wordlist sequential_sep do_group {
 	$$ = &MkShFor{$2.MkText, $5, $7}
 }
 
@@ -172,15 +172,15 @@ wordlist : wordlist tkWORD {
 	$$ = append($$, $2)
 }
 
-case_clause : tkCASE tkWORD linebreak tkIN linebreak case_list tkESAC {
+case_clause : tkCASE tkWORD linebreak_opt tkIN linebreak_opt case_list tkESAC {
 	$$ = $6
 	$$.Word = $2
 }
-case_clause : tkCASE tkWORD linebreak tkIN linebreak case_list_ns tkESAC {
+case_clause : tkCASE tkWORD linebreak_opt tkIN linebreak_opt case_list_ns tkESAC {
 	$$ = $6
 	$$.Word = $2
 }
-case_clause : tkCASE tkWORD linebreak tkIN linebreak tkESAC {
+case_clause : tkCASE tkWORD linebreak_opt tkIN linebreak_opt tkESAC {
 	$$ = &MkShCase{$2, nil}
 }
 
@@ -207,20 +207,20 @@ case_selector : pattern tkRPAREN {
 	/* empty */
 }
 
-case_item_ns : case_selector linebreak {
+case_item_ns : case_selector linebreak_opt {
 	$$ = &MkShCaseItem{$1, &MkShList{}, sepNone, nil}
 }
-case_item_ns : case_selector linebreak term linebreak {
+case_item_ns : case_selector linebreak_opt term linebreak_opt {
 	$$ = &MkShCaseItem{$1, $3, sepNone, nil}
 }
-case_item_ns : case_selector linebreak term separator_op linebreak {
+case_item_ns : case_selector linebreak_opt term separator_op linebreak_opt {
 	$$ = &MkShCaseItem{$1, $3, $4, nil}
 }
 
-case_item : case_selector linebreak tkSEMISEMI linebreak {
+case_item : case_selector linebreak_opt tkSEMISEMI linebreak_opt {
 	$$ = &MkShCaseItem{$1, &MkShList{}, sepNone, nil}
 }
-case_item : case_selector compound_list tkSEMISEMI linebreak {
+case_item : case_selector compound_list tkSEMISEMI linebreak_opt {
 	$$ = &MkShCaseItem{$1, $2, sepNone, nil}
 }
 case_item : tkWORD {
@@ -264,7 +264,7 @@ until_clause : tkUNTIL compound_list do_group {
 	$$ = &MkShLoop{$2, $3, true}
 }
 
-function_definition : tkWORD tkLPAREN tkRPAREN linebreak compound_command { /* Apply rule 9 */
+function_definition : tkWORD tkLPAREN tkRPAREN linebreak_opt compound_command { /* Apply rule 9 */
 	$$ = &MkShFunctionDefinition{$1.MkText, $5}
 }
 
@@ -397,10 +397,10 @@ newline_list : newline_list tkNEWLINE {
 	/* empty */
 }
 
-linebreak : newline_list {
+linebreak_opt : newline_list {
 	/* empty */
 }
-linebreak : /* empty */ {
+linebreak_opt : /* empty */ {
 	/* empty */
 }
 
@@ -411,16 +411,16 @@ separator_op : tkSEMI {
 	$$ = sepSemicolon
 }
 
-separator : separator_op linebreak {
+separator : separator_op linebreak_opt {
 	/* empty */
 }
 separator : newline_list {
 	$$ = sepNewline
 }
 
-sequential_sep : tkSEMI linebreak {
+sequential_sep : tkSEMI linebreak_opt {
 	$$ = sepSemicolon
 }
-sequential_sep : tkNEWLINE linebreak {
+sequential_sep : tkNEWLINE linebreak_opt {
 	$$ = sepNewline
 }
